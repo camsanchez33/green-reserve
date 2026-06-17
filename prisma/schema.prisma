@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CourseOperator {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  course    Course?
+}
+
+model Course {
+  id             String         @id @default(cuid())
+  slug           String         @unique
+  name           String
+  type           String
+  city           String
+  state          String
+  address        String
+  phone          String
+  website        String
+  bookingUrl     String
+  holes          Int            @default(18)
+  par            Int            @default(72)
+  description    String
+  amenities      String[]
+  walkingAllowed Boolean        @default(true)
+  cartRequired   Boolean        @default(false)
+  rating         Float          @default(4.5)
+  reviewCount    Int            @default(0)
+  imageGradient  String
+  featured       Boolean        @default(false)
+  baseGreenFee   Float          @default(0)
+  cartFee        Float          @default(0)
+  active         Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  operatorId     String?        @unique
+  operator       CourseOperator? @relation(fields: [operatorId], references: [id])
+  teeTimes       TeeTime[]
+  bookings       Booking[]
+}
+
+model TeeTime {
+  id               String    @id @default(cuid())
+  courseId         String
+  course           Course    @relation(fields: [courseId], references: [id])
+  date             String
+  time             String
+  holes            Int       @default(18)
+  playersAvailable Int       @default(4)
+  greenFee         Float
+  cartFee          Float     @default(0)
+  walkingAllowed   Boolean   @default(true)
+  status           String    @default("available")
+  createdAt        DateTime  @default(now())
+  bookings         Booking[]
+
+  @@index([courseId, date])
+}
+
+model Booking {
+  id           String   @id @default(cuid())
+  teeTimeId    String
+  teeTime      TeeTime  @relation(fields: [teeTimeId], references: [id])
+  courseId     String
+  course       Course   @relation(fields: [courseId], references: [id])
+  golferName   String
+  golferEmail  String
+  players      Int
+  accessFee    Float    @default(1.00)
+  status       String   @default("confirmed")
+  createdAt    DateTime @default(now())
+}
