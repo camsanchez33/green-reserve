@@ -46,6 +46,8 @@ model Course {
   operator       CourseOperator? @relation(fields: [operatorId], references: [id])
   teeTimes       TeeTime[]
   bookings       Booking[]
+  schedules      TeeTimeSchedule[]
+  blackouts      Blackout[]
 }
 
 model TeeTime {
@@ -78,4 +80,28 @@ model Booking {
   accessFee    Float    @default(1.00)
   status       String   @default("confirmed")
   createdAt    DateTime @default(now())
+}
+
+model TeeTimeSchedule {
+  id               String   @id @default(cuid())
+  courseId         String
+  course           Course   @relation(fields: [courseId], references: [id])
+  daysOfWeek       Int[]
+  startTime        String
+  endTime          String
+  intervalMinutes  Int      @default(8)
+  greenFeeWeekday  Float
+  greenFeeWeekend  Float
+  cartFee          Float    @default(0)
+  walkingAllowed   Boolean  @default(true)
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+}
+
+model Blackout {
+  id       String @id @default(cuid())
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id])
+  date     String
+  reason   String @default("")
 }

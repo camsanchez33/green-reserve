@@ -96,6 +96,10 @@ export default function DashboardPage() {
           <span className="text-white font-bold">Operator Dashboard</span>
         </div>
         <div className="flex items-center gap-3">
+          <button onClick={() => router.push("/dashboard/schedule")}
+            className="text-white/50 hover:text-white flex items-center gap-1.5 text-sm transition-colors">
+            <Clock size={15} /> Tee Sheet Setup
+          </button>
           <button onClick={() => router.push("/dashboard/settings")}
             className="text-white/50 hover:text-white flex items-center gap-1.5 text-sm transition-colors">
             <Settings size={15} /> Settings
