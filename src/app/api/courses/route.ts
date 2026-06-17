@@ -9,9 +9,12 @@ export async function GET(req: NextRequest) {
   const state = searchParams.get('state') || undefined;
   const featured = searchParams.get('featured') === '1' || undefined;
 
+  // Always load static courses as the base
+  const staticCourses = searchCourses({ q, type, state, featured });
+
   try {
-    // Try live DB courses first
-    const where: Record<string, unknown> = { active: true };
+    // Load active DB courses that have at least a name and city filled in
+    const where: Record<string, unknown> = { active: true, city: { not: '' } };
     if (type) where.type = type;
     if (state) where.state = state;
     if (featured) where.featured = true;
@@ -22,11 +25,16 @@ export async function GET(req: NextRequest) {
         { state: { contains: q, mode: 'insensitive' } },
       ];
     }
-    const dbCourses = await prisma.course.findMany({ where, orderBy: [{ featured: 'desc' }, { rating: 'desc' }] });
-    if (dbCourses.length > 0) return NextResponse.json(dbCourses);
-  } catch { /* fall through to static */ }
+    const dbCourses = await prisma.course.findMany({
+      where,
+      orderBy: [{ featured: 'desc' }, { rating: 'desc' }],
+    });
 
-  // Fallback to static data
-  const courses = searchCourses({ q, type, state, featured });
-  return NextResponse.json(courses);
+    // Merge: DB courses first, then static courses that aren't already in DB (by slug)
+    const dbSlugs = new Set(dbCourses.map((c) => c.slug));
+    const filteredStatic = staticCourses.filter((c) => !dbSlugs.has(c.slug));
+    return NextResponse.json([...dbCourses, ...filteredStatic]);
+  } catch {
+    return NextResponse.json(staticCourses);
+  }
 }
