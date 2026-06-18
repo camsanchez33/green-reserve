@@ -1,206 +1,304 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, Copy, Users, Eye, EyeOff } from 'lucide-react';
 
-interface CourseData {
-  name: string;
-  type: string;
-  city: string;
-  state: string;
-  address: string;
-  phone: string;
-  website: string;
-  bookingUrl: string;
-  description: string;
-  holes: number;
-  par: number;
-  yardage: number;
-  rating: number;
-  slope: number;
-  active: boolean;
+type Course = Record<string, unknown>;
+interface StaffMember { id: string; name: string; email: string; role: string; active: boolean; }
+const SECTIONS = ['Course Info', 'Pricing Policy', 'Course Policy', 'Facilities', 'Staff'] as const;
+type Section = typeof SECTIONS[number];
+const inputCls = 'w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white';
+
+function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 p-5">
+      <h3 className="font-bold mb-4 text-xs uppercase tracking-wide text-gray-400">{title}</h3>
+      <div className="space-y-4">{children}</div>
+    </div>
+  );
 }
-
-const STATES = ['NJ','NY','CT','PA','MA','MD','VA','DE','RI','NH','VT','ME'];
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return <div><label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">{label}</label>{children}</div>;
+}
+function FInput({ value, onChange, type='text', placeholder='', maxLength, step }: { value: string|number; onChange:(v:string)=>void; type?:string; placeholder?:string; maxLength?:number; step?:string }) {
+  return <input type={type} value={value??''} onChange={e=>onChange(e.target.value)} placeholder={placeholder} maxLength={maxLength} step={step} className={inputCls} />;
+}
+function Toggle({ label, checked, onChange }: { label:string; checked:boolean; onChange:()=>void }) {
+  return (
+    <div className="flex items-center justify-between py-1">
+      <span className="text-sm text-gray-700">{label}</span>
+      <button onClick={onChange} className={`relative w-11 h-6 rounded-full transition-colors ${checked?'bg-green-600':'bg-gray-200'}`}>
+        <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${checked?'translate-x-5':''}`} />
+      </button>
+    </div>
+  );
+}
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [form, setForm] = useState<CourseData>({
-    name: '', type: 'public', city: '', state: 'NJ', address: '',
-    phone: '', website: '', bookingUrl: '', description: '',
-    holes: 18, par: 72, yardage: 6500, rating: 4.0, slope: 120, active: false,
-  });
+  const [active, setActive] = useState<Section>('Course Info');
+  const [form, setForm] = useState<Record<string,unknown>>({});
   const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState('');
-  const [loaded, setLoaded] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [newStaff, setNewStaff] = useState({ name:'', email:'', role:'staff' });
+  const [addingStaff, setAddingStaff] = useState(false);
+  const [staffResult, setStaffResult] = useState<{tempPassword:string;name:string}|null>(null);
+  const [showPass, setShowPass] = useState(false);
 
   useEffect(() => {
-    fetch('/api/operator/courses').then(r => {
-      if (r.status === 401) { router.push('/dashboard/login'); return null; }
-      return r.json();
-    }).then(data => {
-      if (data) { setForm(f => ({ ...f, ...data })); setLoaded(true); }
-    });
-  }, [router]);
+    fetch('/api/operator/settings').then(r=>r.json()).then(d=>{ setForm(d); });
+    fetch('/api/operator/staff').then(r=>r.json()).then(setStaff);
+  }, []);
 
-  const set = (k: keyof CourseData, v: string | number | boolean) =>
-    setForm(f => ({ ...f, [k]: v }));
+  const set = (k:string, v:unknown) => setForm(f=>({...f,[k]:v}));
+  const tog = (k:string) => setForm(f=>({...f,[k]:!f[k]}));
 
-  const save = async () => {
+  async function save() {
     setSaving(true);
-    setMsg('');
-    const res = await fetch('/api/operator/courses', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    });
-    setSaving(false);
-    if (res.ok) setMsg('✅ Course info saved!');
-    else setMsg('❌ Error saving — try again');
-  };
+    await fetch('/api/operator/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(form)});
+    setSaving(false); setSaved(true); setTimeout(()=>setSaved(false),2000);
+  }
 
-  if (!loaded) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-gray-500">Loading...</div>
-    </div>
-  );
+  async function addStaffMember() {
+    if(!newStaff.name||!newStaff.email) return;
+    setAddingStaff(true);
+    const res = await fetch('/api/operator/staff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(newStaff)});
+    const data = await res.json();
+    setAddingStaff(false);
+    if(res.ok){ setStaffResult({tempPassword:data.tempPassword,name:newStaff.name}); setNewStaff({name:'',email:'',role:'staff'}); fetch('/api/operator/staff').then(r=>r.json()).then(setStaff); }
+    else alert(data.error);
+  }
+
+  async function removeStaff(id:string) {
+    if(!confirm('Remove this staff member?')) return;
+    await fetch('/api/operator/staff',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+    setStaff(s=>s.filter(m=>m.id!==id));
+  }
+
+  async function toggleStaff(id:string, active:boolean) {
+    await fetch('/api/operator/staff',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,active})});
+    setStaff(s=>s.map(m=>m.id===id?{...m,active}:m));
+  }
+
+  const dresscodes = (form.dresscode as string[])||[];
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b px-6 py-4 flex items-center justify-between">
+      <div className="bg-[#1b4332] px-4 py-4 flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push('/dashboard')} className="text-gray-500 hover:text-gray-700">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-xl font-semibold text-gray-900">Course Settings</h1>
+          <button onClick={()=>router.push('/dashboard')} className="text-white/60 hover:text-white"><ArrowLeft className="w-5 h-5"/></button>
+          <span className="text-white font-black text-lg">Settings</span>
         </div>
-        <button onClick={save} disabled={saving}
-          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50">
-          <Save className="w-4 h-4" />
-          {saving ? 'Saving...' : 'Save Changes'}
-        </button>
+        {active!=='Staff'&&(
+          <button onClick={save} disabled={saving} className="flex items-center gap-2 bg-white text-[#1b4332] px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-50 disabled:opacity-50">
+            <Save className="w-4 h-4"/> {saved?'Saved!':saving?'Saving...':'Save Changes'}
+          </button>
+        )}
       </div>
 
-      <div className="max-w-2xl mx-auto p-6 space-y-6">
-        {msg && (
-          <div className={`rounded-lg px-4 py-3 text-sm ${msg.startsWith('✅') ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-red-50 border border-red-200 text-red-800'}`}>
-            {msg}
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        <div className="flex gap-1 bg-white rounded-xl border border-gray-200 p-1 mb-6 overflow-x-auto">
+          {SECTIONS.map(s=>(
+            <button key={s} onClick={()=>setActive(s)} className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${active===s?'bg-[#1b4332] text-white':'text-gray-500 hover:text-gray-800'}`}>{s}</button>
+          ))}
+        </div>
+
+        {active==='Course Info'&&(
+          <div className="space-y-5">
+            <SectionCard title="Basic Information">
+              <Field label="Course Name"><FInput value={form.name as string} onChange={v=>set('name',v)}/></Field>
+              <Field label="Phone"><FInput value={form.phone as string} onChange={v=>set('phone',v)} type="tel"/></Field>
+              <Field label="Website"><FInput value={form.website as string} onChange={v=>set('website',v)} placeholder="https://"/></Field>
+              <Field label="Address"><FInput value={form.address as string} onChange={v=>set('address',v)}/></Field>
+              <div className="grid grid-cols-3 gap-3">
+                <Field label="City"><FInput value={form.city as string} onChange={v=>set('city',v)}/></Field>
+                <Field label="State"><FInput value={form.state as string} onChange={v=>set('state',v)} maxLength={2}/></Field>
+                <Field label="ZIP"><FInput value={form.zipCode as string} onChange={v=>set('zipCode',v)}/></Field>
+              </div>
+              <Field label="Course Type">
+                <select value={form.type as string} onChange={e=>set('type',e.target.value)} className={inputCls}>
+                  {['public','semi-private','private','resort','municipal'].map(t=><option key={t} value={t}>{t.charAt(0).toUpperCase()+t.slice(1)}</option>)}
+                </select>
+              </Field>
+              <Field label="Description">
+                <textarea value={form.description as string||''} onChange={e=>set('description',e.target.value)} rows={4} className={inputCls} placeholder="Tell golfers what makes your course special — history, signature holes, views, etc."/>
+              </Field>
+            </SectionCard>
+            <SectionCard title="Course Details">
+              <div className="grid grid-cols-3 gap-3">
+                <Field label="Holes"><FInput value={form.holes as number} onChange={v=>set('holes',Number(v))} type="number"/></Field>
+                <Field label="Par"><FInput value={form.par as number} onChange={v=>set('par',Number(v))} type="number"/></Field>
+                <Field label="Yardage"><FInput value={form.yardage as number} onChange={v=>set('yardage',Number(v))} type="number"/></Field>
+                <Field label="Slope"><FInput value={form.slope as number} onChange={v=>set('slope',Number(v))} type="number"/></Field>
+                <Field label="Course Rating"><FInput value={form.courseRating as number} onChange={v=>set('courseRating',Number(v))} type="number" step="0.1"/></Field>
+              </div>
+            </SectionCard>
           </div>
         )}
 
-        {/* Visibility toggle */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="font-semibold text-gray-900">Course Visibility</div>
-              <div className="text-sm text-gray-500 mt-0.5">
-                {form.active ? 'Your course is live on Green Reserve' : 'Your course is hidden — fill in your details then go live'}
+        {active==='Pricing Policy'&&(
+          <div className="space-y-5">
+            <SectionCard title="Member Pricing">
+              <Toggle label="Enable member pricing" checked={!!form.hasMemberPricing} onChange={()=>tog('hasMemberPricing')}/>
+              {form.hasMemberPricing&&<Field label="Member advance booking (days)"><FInput value={form.memberAdvanceDays as number} onChange={v=>set('memberAdvanceDays',Number(v))} type="number"/></Field>}
+              <div className="text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">Member rates are set per-schedule in your Schedule setup page.</div>
+            </SectionCard>
+            <SectionCard title="Resident Pricing">
+              <Toggle label="Enable resident pricing" checked={!!form.hasResidentPricing} onChange={()=>tog('hasResidentPricing')}/>
+              {form.hasResidentPricing&&<>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Resident County"><FInput value={form.residentCounty as string} onChange={v=>set('residentCounty',v)} placeholder="e.g. Bergen"/></Field>
+                  <Field label="Resident State"><FInput value={form.residentState as string} onChange={v=>set('residentState',v)} maxLength={2} placeholder="NJ"/></Field>
+                </div>
+                <Toggle label="Proof of residency required at check-in" checked={!!form.residentProofRequired} onChange={()=>tog('residentProofRequired')}/>
+              </>}
+            </SectionCard>
+            <SectionCard title="Booking Windows">
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Public advance (days)"><FInput value={form.publicAdvanceDays as number} onChange={v=>set('publicAdvanceDays',Number(v))} type="number"/></Field>
+                <Field label="Member advance (days)"><FInput value={form.memberAdvanceDays as number} onChange={v=>set('memberAdvanceDays',Number(v))} type="number"/></Field>
               </div>
-            </div>
-            <button
-              onClick={() => set('active', !form.active)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                form.active
-                  ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
-                  : 'bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100'
-              }`}
-            >
-              {form.active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-              {form.active ? 'Live' : 'Hidden'}
-            </button>
+            </SectionCard>
           </div>
-        </div>
+        )}
 
-        {/* Basic Info */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-          <h2 className="font-semibold text-gray-900">Basic Info</h2>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Course Name</label>
-              <input value={form.name} onChange={e => set('name', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-              <select value={form.type} onChange={e => set('type', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
-                <option value="public">Public</option>
-                <option value="semi-private">Semi-Private</option>
-                <option value="private">Private</option>
-                <option value="resort">Resort</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-              <input value={form.phone} onChange={e => set('phone', e.target.value)}
-                placeholder="(201) 555-0100"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-              <input value={form.city} onChange={e => set('city', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-              <select value={form.state} onChange={e => set('state', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500">
-                {STATES.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-              <input value={form.address} onChange={e => set('address', e.target.value)}
-                placeholder="123 Golf Rd"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
-              <input value={form.website} onChange={e => set('website', e.target.value)}
-                placeholder="https://yourcourse.com"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Booking URL</label>
-              <input value={form.bookingUrl} onChange={e => set('bookingUrl', e.target.value)}
-                placeholder="https://yourcourse.com/book"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500" />
-            </div>
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <textarea value={form.description} onChange={e => set('description', e.target.value)}
-                rows={3} placeholder="Tell golfers about your course..."
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500" />
-            </div>
-          </div>
-        </div>
-
-        {/* Course Stats */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-          <h2 className="font-semibold text-gray-900">Course Stats</h2>
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { label: 'Holes', key: 'holes' as const, placeholder: '18' },
-              { label: 'Par', key: 'par' as const, placeholder: '72' },
-              { label: 'Yardage', key: 'yardage' as const, placeholder: '6500' },
-              { label: 'Course Rating', key: 'rating' as const, placeholder: '4.2' },
-              { label: 'Slope', key: 'slope' as const, placeholder: '120' },
-            ].map(({ label, key, placeholder }) => (
-              <div key={key}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-                <input type="number" value={form[key] as number} onChange={e => set(key, Number(e.target.value))}
-                  placeholder={placeholder}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500" />
+        {active==='Course Policy'&&(
+          <div className="space-y-5">
+            <SectionCard title="Walking & Cart">
+              <Field label="Walking policy">
+                <select value={form.walkingAllowed as string} onChange={e=>set('walkingAllowed',e.target.value)} className={inputCls}>
+                  <option value="always">Always allowed</option>
+                  <option value="weekdays">Weekdays only</option>
+                  <option value="after12">After 12pm only</option>
+                  <option value="never">Cart required</option>
+                </select>
+              </Field>
+              <Field label="Walking note (optional)"><FInput value={form.walkingNote as string} onChange={v=>set('walkingNote',v)} placeholder="e.g. Walking allowed after 1pm weekends"/></Field>
+            </SectionCard>
+            <SectionCard title="Cancellation">
+              <Field label="Free cancellation window (hours)">
+                <FInput value={form.cancellationHours as number} onChange={v=>set('cancellationHours',Number(v))} type="number"/>
+                <p className="text-xs text-gray-400 mt-1">Golfers get a full refund if they cancel at least this many hours before tee time</p>
+              </Field>
+              <Field label="Rain check policy"><FInput value={form.rainCheckPolicy as string} onChange={v=>set('rainCheckPolicy',v)} placeholder="e.g. Rain checks issued for 9+ holes of rain"/></Field>
+            </SectionCard>
+            <SectionCard title="Player Limits">
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Min players per booking"><FInput value={form.minPlayers as number} onChange={v=>set('minPlayers',Number(v))} type="number"/></Field>
+                <Field label="Max players per booking"><FInput value={form.maxPlayers as number} onChange={v=>set('maxPlayers',Number(v))} type="number"/></Field>
               </div>
-            ))}
+            </SectionCard>
+            <SectionCard title="Dress Code">
+              <div className="flex flex-wrap gap-2">
+                {['Collared shirt required','No denim','Soft spikes only','Golf shoes required','No shorts','Proper golf attire'].map(rule=>{
+                  const on=dresscodes.includes(rule);
+                  return <button key={rule} onClick={()=>set('dresscode',on?dresscodes.filter(c=>c!==rule):[...dresscodes,rule])} className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${on?'bg-green-600 text-white border-green-600':'bg-white text-gray-600 border-gray-200 hover:border-green-400'}`}>{rule}</button>;
+                })}
+              </div>
+            </SectionCard>
           </div>
-        </div>
+        )}
 
-        <button onClick={save} disabled={saving}
-          className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50">
-          {saving ? 'Saving...' : 'Save All Changes'}
-        </button>
+        {active==='Facilities'&&(
+          <div className="space-y-5">
+            <SectionCard title="Practice">
+              <Toggle label="Driving Range" checked={!!form.hasDrivingRange} onChange={()=>tog('hasDrivingRange')}/>
+              {form.hasDrivingRange&&<Field label="Range type"><select value={form.drivingRangeType as string} onChange={e=>set('drivingRangeType',e.target.value)} className={inputCls}><option value="">Select...</option><option value="grass">Grass tees</option><option value="mat">Mat only</option><option value="both">Grass + Mat</option><option value="toptracer">TopTracer</option></select></Field>}
+              <Toggle label="Putting Green" checked={!!form.hasPuttingGreen} onChange={()=>tog('hasPuttingGreen')}/>
+              <Toggle label="Short Game / Chipping Area" checked={!!form.hasShortGameArea} onChange={()=>tog('hasShortGameArea')}/>
+            </SectionCard>
+            <SectionCard title="Amenities">
+              <Toggle label="Pro Shop" checked={!!form.hasProShop} onChange={()=>tog('hasProShop')}/>
+              <Toggle label="Lessons Available" checked={!!form.hasLessons} onChange={()=>tog('hasLessons')}/>
+              <Toggle label="Club Rental" checked={!!form.hasClubRental} onChange={()=>tog('hasClubRental')}/>
+              {form.hasClubRental&&<Field label="Club rental rate ($)"><FInput value={form.clubRentalRate as number} onChange={v=>set('clubRentalRate',Number(v))} type="number"/></Field>}
+              <Toggle label="Push Cart Rental" checked={!!form.hasPushCartRental} onChange={()=>tog('hasPushCartRental')}/>
+              {form.hasPushCartRental&&<Field label="Push cart rate ($)"><FInput value={form.pushCartRate as number} onChange={v=>set('pushCartRate',Number(v))} type="number"/></Field>}
+              <Toggle label="Bag Storage" checked={!!form.hasBagStorage} onChange={()=>tog('hasBagStorage')}/>
+              <Toggle label="Locker Room" checked={!!form.hasLockerRoom} onChange={()=>tog('hasLockerRoom')}/>
+              <Toggle label="GPS Carts" checked={!!form.hasGpsCarts} onChange={()=>tog('hasGpsCarts')}/>
+              <Toggle label="Tournaments Hosted" checked={!!form.hasTournaments} onChange={()=>tog('hasTournaments')}/>
+            </SectionCard>
+            <SectionCard title="Food & Beverage">
+              <Field label="Restaurant / Bar">
+                <select value={form.restaurantType as string} onChange={e=>set('restaurantType',e.target.value)} className={inputCls}>
+                  <option value="none">None</option><option value="snack_bar">Snack Bar</option><option value="bar">Bar Only</option><option value="full">Full Restaurant</option><option value="beverage_cart">Beverage Cart</option>
+                </select>
+              </Field>
+            </SectionCard>
+            <SectionCard title="Caddies">
+              <Toggle label="Caddies Available" checked={!!form.hasCaddies} onChange={()=>tog('hasCaddies')}/>
+              {form.hasCaddies&&<>
+                <Field label="Caddie type"><select value={form.caddieType as string} onChange={e=>set('caddieType',e.target.value)} className={inputCls}><option value="looper">Looper only</option><option value="fore_caddie">Fore caddie</option><option value="both">Both</option></select></Field>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Looper rate ($)"><FInput value={form.caddieLooperRate as number} onChange={v=>set('caddieLooperRate',Number(v))} type="number"/></Field>
+                  <Field label="Fore caddie rate ($)"><FInput value={form.caddieForeRate as number} onChange={v=>set('caddieForeRate',Number(v))} type="number"/></Field>
+                </div>
+                <Field label="Caddie note"><FInput value={form.caddieNote as string} onChange={v=>set('caddieNote',v)} placeholder="e.g. Must request 48hrs in advance"/></Field>
+              </>}
+            </SectionCard>
+          </div>
+        )}
+
+        {active==='Staff'&&(
+          <div className="space-y-5">
+            <SectionCard title="Staff Accounts">
+              <p className="text-sm text-gray-500">Staff members get their own login credentials and full dashboard access for your course.</p>
+
+              {staffResult&&(
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                  <div className="font-semibold text-green-800 mb-2">✅ {staffResult.name} added — share these login credentials:</div>
+                  <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-green-200 mb-2">
+                    <span className="text-sm font-mono">{showPass?staffResult.tempPassword:'••••••••••••'}</span>
+                    <div className="flex gap-2">
+                      <button onClick={()=>setShowPass(!showPass)} className="text-gray-400 hover:text-gray-600">{showPass?<EyeOff className="w-4 h-4"/>:<Eye className="w-4 h-4"/>}</button>
+                      <button onClick={()=>navigator.clipboard.writeText(staffResult.tempPassword)} className="text-gray-400 hover:text-gray-600"><Copy className="w-4 h-4"/></button>
+                    </div>
+                  </div>
+                  <button onClick={()=>setStaffResult(null)} className="text-xs text-green-700 underline">Dismiss</button>
+                </div>
+              )}
+
+              {staff.length>0&&(
+                <div className="space-y-2">
+                  {staff.map(m=>(
+                    <div key={m.id} className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold text-sm">{m.name[0]}</div>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 text-sm">{m.name}</div>
+                        <div className="text-xs text-gray-500">{m.email} · <span className="capitalize">{m.role}</span></div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${m.active?'bg-green-100 text-green-700':'bg-gray-100 text-gray-500'}`}>{m.active?'Active':'Disabled'}</span>
+                        <button onClick={()=>toggleStaff(m.id,!m.active)} className="text-xs text-blue-600 hover:underline">{m.active?'Disable':'Enable'}</button>
+                        <button onClick={()=>removeStaff(m.id)} className="text-red-400 hover:text-red-600"><Trash2 className="w-4 h-4"/></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-4">
+                <div className="font-semibold text-gray-700 text-sm mb-3 flex items-center gap-2"><Users className="w-4 h-4"/> Add Staff Member</div>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <Field label="Name"><FInput value={newStaff.name} onChange={v=>setNewStaff(s=>({...s,name:v}))} placeholder="First Last"/></Field>
+                  <Field label="Email"><FInput value={newStaff.email} onChange={v=>setNewStaff(s=>({...s,email:v}))} type="email"/></Field>
+                </div>
+                <Field label="Role">
+                  <select value={newStaff.role} onChange={e=>setNewStaff(s=>({...s,role:e.target.value}))} className={inputCls}>
+                    <option value="staff">Staff (tee sheet access)</option>
+                    <option value="manager">Manager (full access)</option>
+                  </select>
+                </Field>
+                <button onClick={addStaffMember} disabled={addingStaff||!newStaff.name||!newStaff.email}
+                  className="mt-3 w-full bg-[#1b4332] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-50 flex items-center justify-center gap-2">
+                  <Plus className="w-4 h-4"/> {addingStaff?'Adding...':'Add Staff Member'}
+                </button>
+              </div>
+            </SectionCard>
+          </div>
+        )}
       </div>
     </div>
   );

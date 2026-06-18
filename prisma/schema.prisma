@@ -92,6 +92,19 @@ model Course {
   blackouts               Blackout[]
   memberships             CourseMembership[]
   waitlist                Waitlist[]
+  staff                   CourseStaff[]
+}
+
+model CourseStaff {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("staff")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
 }
 
 model GolferAccount {

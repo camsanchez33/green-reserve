@@ -1,18 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getOperatorSession } from '@/lib/auth';
+import { resolveDashboardSession } from '@/lib/session';
 
 export async function GET() {
-  const session = await getOperatorSession();
+  const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const operator = await prisma.courseOperator.findUnique({
-    where: { id: session.operatorId },
-    include: { course: { select: { id: true } } },
-  });
-  if (!operator?.course) return NextResponse.json({ error: 'No course' }, { status: 404 });
-
-  const courseId = operator.course.id;
+  const courseId = session.courseId;
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];

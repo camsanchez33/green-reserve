@@ -1,7 +1,12 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Copy, ExternalLink, RefreshCw } from 'lucide-react';
+import {
+  CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Copy, ExternalLink,
+  RefreshCw, BarChart2, Users, DollarSign, TrendingUp, AlertCircle,
+  Building2, Star, Power, ArrowLeft, Eye, X, Globe, Phone, Mail,
+} from 'lucide-react';
 
+/* ─── Types ─── */
 interface Inquiry {
   id: string; contactName: string; contactTitle: string; email: string; phone: string;
   courseName: string; address: string; city: string; state: string; zipCode: string;
@@ -10,250 +15,407 @@ interface Inquiry {
   hasCaddies: boolean; pricingNotes: string; lookingFor: string[]; additionalNotes: string;
   status: string; createdAt: string;
 }
-
 interface Course {
-  id: string; name: string; city: string; state: string; active: boolean; stripeAccountActive: boolean;
+  id: string; name: string; city: string; state: string; active: boolean; featured: boolean;
+  stripeAccountActive: boolean; slug: string;
   operator: { email: string; name: string; onboardingStep: number; emailVerified: boolean } | null;
   createdAt: string;
 }
-
+interface Stats {
+  totalCourses: number; activeCourses: number; pendingInquiries: number;
+  totalBookings: number; recentBookings: number; totalGolfers: number;
+  platformRevenue30d: number;
+  revenueByDay: { date: string; platform: number; gross: number }[];
+}
+interface CourseDetail {
+  course: Course & { operator: Record<string,unknown>|null; schedules: unknown[] };
+  staff: { id:string;name:string;email:string;role:string;active:boolean }[];
+  recentBookings: { id:string;golferName:string;golferEmail:string;players:number;totalAmount:number;createdAt:string;teeTime:{date:string;time:string} }[];
+  totalBookings: number;
+  revenue30d: { gross:number; platform:number; greenFees:number };
+}
 interface ApproveResult { tempPassword: string; setupLink: string; }
 
+/* ─── Helpers ─── */
 const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
   approved: 'bg-green-100 text-green-800 border-green-200',
   rejected: 'bg-red-100 text-red-800 border-red-200',
-  setup: 'bg-blue-100 text-blue-800 border-blue-200',
 };
+const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+const fmtMoney = (n: number) => '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
 
+function Stat({ label, value, sub, icon, color='text-gray-900' }: { label:string; value:string|number; sub?:string; icon:React.ReactNode; color?:string }) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 p-5">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{label}</span>
+        <span className="text-gray-300">{icon}</span>
+      </div>
+      <div className={`text-2xl font-black ${color}`}>{value}</div>
+      {sub&&<div className="text-xs text-gray-400 mt-0.5">{sub}</div>}
+    </div>
+  );
+}
+
+/* ─── Mini bar chart ─── */
+function TinyBars({ data }: { data: {date:string;platform:number}[] }) {
+  if(!data.length) return null;
+  const max = Math.max(...data.map(d=>d.platform), 0.01);
+  return (
+    <div className="flex items-end gap-px h-10">
+      {data.map(d=>(
+        <div key={d.date} className="flex-1 bg-green-500 rounded-sm opacity-80 hover:opacity-100 transition-opacity" style={{height:`${Math.max(2,(d.platform/max)*100)}%`}} title={`${d.date}: ${fmtMoney(d.platform)}`}/>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Main ─── */
 export default function AdminPage() {
   const [key, setKey] = useState('');
   const [authed, setAuthed] = useState(false);
-  const [tab, setTab] = useState<'inquiries' | 'courses'>('inquiries');
+  const [tab, setTab] = useState<'overview'|'inquiries'|'courses'>('overview');
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [stats, setStats] = useState<Stats|null>(null);
   const [loading, setLoading] = useState(false);
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const [approveResults, setApproveResults] = useState<Record<string, ApproveResult>>({});
-  const [processing, setProcessing] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string|null>(null);
+  const [approveResults, setApproveResults] = useState<Record<string,ApproveResult>>({});
+  const [processing, setProcessing] = useState<string|null>(null);
+  const [detail, setDetail] = useState<CourseDetail|null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [search, setSearch] = useState('');
 
-  const headers = useCallback(() => ({ 'Content-Type': 'application/json', 'x-admin-key': key }), [key]);
+  const H = useCallback(() => ({ 'Content-Type':'application/json','x-admin-key':key }), [key]);
 
-  const loadInquiries = useCallback(async () => {
-    setLoading(true);
-    const res = await fetch('/api/admin/inquiries', { headers: headers() });
-    if (res.ok) setInquiries(await res.json());
-    setLoading(false);
-  }, [headers]);
+  const loadStats    = useCallback(async()=>{ const r=await fetch('/api/admin/stats',{headers:H()}); if(r.ok) setStats(await r.json()); },[H]);
+  const loadInquiries= useCallback(async()=>{ setLoading(true); const r=await fetch('/api/admin/inquiries',{headers:H()}); if(r.ok) setInquiries(await r.json()); setLoading(false); },[H]);
+  const loadCourses  = useCallback(async()=>{ setLoading(true); const r=await fetch('/api/admin/courses',{headers:H()}); if(r.ok) setCourses(await r.json()); setLoading(false); },[H]);
 
-  const loadCourses = useCallback(async () => {
-    setLoading(true);
-    const res = await fetch('/api/admin/courses', { headers: headers() });
-    if (res.ok) setCourses(await res.json());
-    setLoading(false);
-  }, [headers]);
-
-  useEffect(() => {
-    if (!authed) return;
-    if (tab === 'inquiries') loadInquiries();
-    else loadCourses();
-  }, [authed, tab, loadInquiries, loadCourses]);
+  useEffect(()=>{ if(!authed) return; loadStats(); if(tab==='inquiries') loadInquiries(); else if(tab==='courses') loadCourses(); },[authed,tab,loadStats,loadInquiries,loadCourses]);
 
   async function login() {
-    const res = await fetch('/api/admin/inquiries', { headers: { 'x-admin-key': key } });
-    if (res.ok) setAuthed(true);
-    else alert('Wrong key');
+    const r = await fetch('/api/admin/inquiries',{headers:H()});
+    if(r.ok) { setAuthed(true); } else alert('Wrong key');
   }
 
   async function approve(id: string) {
     setProcessing(id);
-    const res = await fetch('/api/admin/inquiries', {
-      method: 'POST',
-      headers: headers(),
-      body: JSON.stringify({ inquiryId: id, action: 'approve' }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      setApproveResults(r => ({ ...r, [id]: { tempPassword: data.tempPassword, setupLink: data.setupLink } }));
-      loadInquiries();
-    } else alert(data.error);
+    const r = await fetch('/api/admin/inquiries',{method:'PATCH',headers:H(),body:JSON.stringify({id,action:'approve'})});
+    if(r.ok){ const d=await r.json(); setApproveResults(p=>({...p,[id]:d})); loadInquiries(); }
     setProcessing(null);
   }
-
   async function reject(id: string) {
+    if(!confirm('Reject this inquiry?')) return;
     setProcessing(id);
-    await fetch('/api/admin/inquiries', {
-      method: 'POST',
-      headers: headers(),
-      body: JSON.stringify({ inquiryId: id, action: 'reject' }),
-    });
-    loadInquiries();
-    setProcessing(null);
+    await fetch('/api/admin/inquiries',{method:'PATCH',headers:H(),body:JSON.stringify({id,action:'reject'})});
+    loadInquiries(); setProcessing(null);
   }
 
-  function copy(text: string) { navigator.clipboard.writeText(text); }
+  async function openDetail(course: Course) {
+    setDetailLoading(true); setDetail(null);
+    const r = await fetch(`/api/admin/course-detail?courseId=${course.id}`,{headers:H()});
+    if(r.ok) setDetail(await r.json());
+    setDetailLoading(false);
+  }
 
-  if (!authed) return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-      <div className="bg-white rounded-2xl p-8 w-80">
-        <h1 className="text-xl font-black mb-4 text-gray-900">Admin Access</h1>
-        <input type="password" value={key} onChange={e => setKey(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && login()}
-          placeholder="Admin secret key" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm mb-3 focus:ring-2 focus:ring-green-500" />
+  async function toggleCourseActive(courseId: string, active: boolean) {
+    await fetch('/api/admin/course-detail',{method:'PATCH',headers:H(),body:JSON.stringify({courseId,active})});
+    setCourses(c=>c.map(x=>x.id===courseId?{...x,active}:x));
+    if(detail?.course?.id===courseId) setDetail(d=>d?{...d,course:{...d.course,active}}:d);
+  }
+  async function toggleFeatured(courseId: string, featured: boolean) {
+    await fetch('/api/admin/course-detail',{method:'PATCH',headers:H(),body:JSON.stringify({courseId,featured})});
+    setCourses(c=>c.map(x=>x.id===courseId?{...x,featured}:x));
+  }
+
+  const filteredCourses = courses.filter(c=>
+    !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.city.toLowerCase().includes(search.toLowerCase()) || c.state.toLowerCase().includes(search.toLowerCase())
+  );
+
+  /* ── Login screen ── */
+  if(!authed) return (
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl p-8 w-full max-w-sm shadow-xl">
+        <div className="text-center mb-6">
+          <div className="text-3xl font-black text-[#1b4332] mb-1">GreenReserve</div>
+          <div className="text-sm text-gray-400 font-medium">Admin Dashboard</div>
+        </div>
+        <input type="password" placeholder="Admin key" value={key} onChange={e=>setKey(e.target.value)} onKeyDown={e=>e.key==='Enter'&&login()}
+          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm mb-3 focus:ring-2 focus:ring-green-500 outline-none"/>
         <button onClick={login} className="w-full bg-[#1b4332] text-white py-3 rounded-xl font-bold hover:bg-[#2d6a4f]">Enter</button>
       </div>
     </div>
   );
 
+  /* ── Course Detail Drawer ── */
+  const DetailDrawer = () => {
+    if(!detail && !detailLoading) return null;
+    const c = detail?.course;
+    return (
+      <div className="fixed inset-0 bg-black/50 z-50 flex justify-end">
+        <div className="bg-white w-full max-w-2xl h-full overflow-y-auto shadow-2xl">
+          <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
+            <div className="flex items-center gap-3">
+              <button onClick={()=>setDetail(null)} className="text-gray-400 hover:text-gray-600"><ArrowLeft className="w-5 h-5"/></button>
+              <span className="font-bold text-gray-900">{c?.name||'Loading...'}</span>
+            </div>
+            <div className="flex gap-2">
+              {c&&<>
+                <button onClick={()=>toggleFeatured(c.id,!c.featured)} className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors flex items-center gap-1 ${c.featured?'bg-yellow-50 text-yellow-700 border-yellow-300':'bg-white text-gray-500 border-gray-200 hover:border-yellow-300'}`}><Star className="w-3 h-3"/>{c.featured?'Featured':'Feature'}</button>
+                <button onClick={()=>toggleCourseActive(c.id,!c.active)} className={`px-3 py-1.5 rounded-lg text-xs font-bold border flex items-center gap-1 ${c.active?'bg-green-50 text-green-700 border-green-200':'bg-red-50 text-red-700 border-red-200'}`}><Power className="w-3 h-3"/>{c.active?'Active':'Inactive'}</button>
+              </>}
+            </div>
+          </div>
+
+          {detailLoading&&<div className="p-12 text-center text-gray-400">Loading...</div>}
+
+          {detail&&<div className="p-6 space-y-6">
+            {/* Revenue */}
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                {label:'Gross (30d)',value:fmtMoney(detail.revenue30d.gross)},
+                {label:'GR Fees (30d)',value:fmtMoney(detail.revenue30d.platform),color:'text-green-700'},
+                {label:'Total Bookings',value:detail.totalBookings},
+              ].map(({label,value,color})=>(
+                <div key={label} className="bg-gray-50 rounded-xl p-4 text-center">
+                  <div className="text-xs text-gray-400 font-medium mb-1">{label}</div>
+                  <div className={`font-black text-lg ${color||'text-gray-900'}`}>{value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Operator */}
+            {c?.operator&&<div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+              <div className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-2">Operator</div>
+              <div className="text-sm font-semibold text-gray-900">{String(c.operator.name)}</div>
+              <div className="text-sm text-gray-600">{String(c.operator.email)}</div>
+              <div className="flex gap-3 mt-2">
+                <span className={`text-xs px-2 py-0.5 rounded-full ${c.operator.emailVerified?'bg-green-100 text-green-700':'bg-red-100 text-red-600'}`}>{c.operator.emailVerified?'Email verified':'Not verified'}</span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Step {String(c.operator.onboardingStep)}/3</span>
+                {c.stripeAccountActive&&<span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">Stripe ✓</span>}
+              </div>
+            </div>}
+
+            {/* Staff */}
+            {detail.staff.length>0&&<div>
+              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Staff ({detail.staff.length})</div>
+              <div className="space-y-2">
+                {detail.staff.map(s=>(
+                  <div key={s.id} className="flex items-center gap-3 bg-gray-50 rounded-lg px-3 py-2">
+                    <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-xs">{s.name[0]}</div>
+                    <div className="flex-1 text-sm"><span className="font-medium">{s.name}</span> <span className="text-gray-400 text-xs">· {s.email} · {s.role}</span></div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${s.active?'bg-green-100 text-green-700':'bg-gray-100 text-gray-400'}`}>{s.active?'Active':'Off'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>}
+
+            {/* Schedules */}
+            {(c?.schedules as unknown[])?.length>0&&<div>
+              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Tee Sheet Schedules ({(c?.schedules as unknown[]).length})</div>
+              <div className="text-sm text-gray-600">{(c?.schedules as unknown[]).length} schedule{(c?.schedules as unknown[]).length!==1?'s':''} configured</div>
+            </div>}
+
+            {/* Recent Bookings */}
+            {detail.recentBookings.length>0&&<div>
+              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Recent Bookings (30d)</div>
+              <div className="space-y-2">
+                {detail.recentBookings.map(b=>(
+                  <div key={b.id} className="bg-gray-50 rounded-xl px-4 py-3 flex items-center justify-between">
+                    <div>
+                      <div className="font-medium text-sm text-gray-900">{b.golferName}</div>
+                      <div className="text-xs text-gray-400">{b.teeTime.date} {b.teeTime.time} · {b.players} player{b.players!==1?'s':''}</div>
+                    </div>
+                    <div className="text-sm font-bold text-gray-900">{fmtMoney(b.totalAmount/100)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>}
+          </div>}
+        </div>
+      </div>
+    );
+  };
+
+  /* ── Main layout ── */
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-[#1b4332] px-6 py-4 flex items-center justify-between">
-        <span className="text-white font-black text-xl">Green<span className="text-green-300">Reserve</span> <span className="text-green-200/60 font-normal text-sm">Admin</span></span>
-        <div className="flex gap-2">
-          {(['inquiries', 'courses'] as const).map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors capitalize ${tab === t ? 'bg-white text-[#1b4332]' : 'text-white/60 hover:text-white'}`}>
-              {t}
+    <div className="min-h-screen bg-gray-950 text-white">
+      {/* Sidebar */}
+      <div className="fixed left-0 top-0 h-full w-56 bg-gray-900 border-r border-gray-800 flex flex-col z-10">
+        <div className="px-5 py-5 border-b border-gray-800">
+          <div className="font-black text-lg text-white">GreenReserve</div>
+          <div className="text-xs text-gray-500 font-medium">Admin Console</div>
+        </div>
+        <nav className="flex-1 p-3 space-y-1">
+          {([['overview','Overview',<BarChart2 key="b" className="w-4 h-4"/>],['inquiries','Inquiries',<AlertCircle key="a" className="w-4 h-4"/>],['courses','Courses',<Building2 key="c" className="w-4 h-4"/>]] as const).map(([id,label,icon])=>(
+            <button key={id} onClick={()=>setTab(id)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${tab===id?'bg-[#1b4332] text-white':'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
+              {icon}{label}
+              {id==='inquiries'&&stats?.pendingInquiries>0&&<span className="ml-auto bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">{stats.pendingInquiries}</span>}
             </button>
           ))}
-          <button onClick={() => tab === 'inquiries' ? loadInquiries() : loadCourses()}
-            className="text-white/60 hover:text-white p-1.5 rounded-lg hover:bg-white/10">
-            <RefreshCw className="w-4 h-4" />
-          </button>
+        </nav>
+        <div className="p-3 border-t border-gray-800">
+          <button onClick={()=>setAuthed(false)} className="w-full text-left text-xs text-gray-500 hover:text-gray-300 px-3 py-2">Sign out</button>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto p-6">
-        {loading && <div className="text-center py-12 text-gray-400">Loading...</div>}
+      {/* Content */}
+      <div className="ml-56 min-h-screen">
+        <div className="px-8 py-6">
 
-        {/* Inquiries */}
-        {tab === 'inquiries' && !loading && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-black text-gray-900">Course Inquiries</h2>
-              <span className="text-sm text-gray-500">{inquiries.length} total · {inquiries.filter(i => i.status === 'pending').length} pending</span>
+          {/* ── Overview ── */}
+          {tab==='overview'&&<>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl font-black text-white">Platform Overview</h1>
+              <button onClick={loadStats} className="text-gray-400 hover:text-white flex items-center gap-2 text-sm"><RefreshCw className="w-4 h-4"/>Refresh</button>
             </div>
-            {inquiries.length === 0 && <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-gray-200">No inquiries yet</div>}
-            {inquiries.map(inq => (
-              <div key={inq.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-                <div className="px-5 py-4 flex items-start justify-between">
+            {stats&&<>
+              <div className="grid grid-cols-4 gap-4 mb-6">
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-2"><Building2 className="w-3.5 h-3.5"/>Courses</div>
+                  <div className="text-3xl font-black text-white">{stats.activeCourses}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">{stats.totalCourses} total · {stats.activeCourses} live</div>
+                </div>
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-2"><Users className="w-3.5 h-3.5"/>Golfers</div>
+                  <div className="text-3xl font-black text-white">{stats.totalGolfers}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">registered accounts</div>
+                </div>
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5"/>Bookings (30d)</div>
+                  <div className="text-3xl font-black text-white">{stats.recentBookings}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">{stats.totalBookings} all time</div>
+                </div>
+                <div className="bg-gray-900 border border-green-900 rounded-2xl p-5">
+                  <div className="text-xs font-semibold text-green-600 uppercase tracking-wide mb-2 flex items-center gap-2"><DollarSign className="w-3.5 h-3.5"/>GR Revenue (30d)</div>
+                  <div className="text-3xl font-black text-green-400">{fmtMoney(stats.platformRevenue30d)}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">$1.50/player service fee</div>
+                </div>
+              </div>
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 mb-6">
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Platform Revenue — Last 30 Days</div>
+                {stats.revenueByDay.length>0
+                  ? <div className="flex items-end gap-px h-16">{(() => { const max=Math.max(...stats.revenueByDay.map(d=>d.platform),0.01); return stats.revenueByDay.map(d=><div key={d.date} className="flex-1 bg-green-500 rounded-sm opacity-70 hover:opacity-100" style={{height:`${Math.max(2,(d.platform/max)*100)}%`}} title={`${d.date}: ${fmtMoney(d.platform)}`}/>); })()}</div>
+                  : <div className="text-sm text-gray-600 py-4 text-center">No bookings yet</div>
+                }
+              </div>
+              {stats.pendingInquiries>0&&(
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3"><AlertCircle className="w-5 h-5 text-yellow-500"/><span className="text-yellow-200 font-semibold">{stats.pendingInquiries} pending course inquir{stats.pendingInquiries===1?'y':'ies'} need review</span></div>
+                  <button onClick={()=>setTab('inquiries')} className="text-xs font-bold text-yellow-400 hover:text-yellow-200 underline">Review →</button>
+                </div>
+              )}
+            </>}
+            {!stats&&<div className="text-gray-500 text-center py-20">Loading stats...</div>}
+          </>}
+
+          {/* ── Inquiries ── */}
+          {tab==='inquiries'&&<>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl font-black text-white">Course Inquiries</h1>
+              <button onClick={loadInquiries} className="text-gray-400 hover:text-white flex items-center gap-2 text-sm"><RefreshCw className="w-4 h-4"/>Refresh</button>
+            </div>
+            {loading&&<div className="text-gray-500 py-20 text-center">Loading...</div>}
+            <div className="space-y-3">
+              {inquiries.map(inq=>(
+                <div key={inq.id} className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                  <div className="px-5 py-4 flex items-start gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-1">
+                        <span className="font-bold text-white">{inq.courseName}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full border font-medium capitalize ${STATUS_COLORS[inq.status]||'bg-gray-700 text-gray-300 border-gray-600'}`}>{inq.status}</span>
+                        {inq.hasMemberPricing&&<span className="text-xs px-2 py-0.5 rounded-full bg-blue-900 text-blue-300 border border-blue-800">Members</span>}
+                        {inq.hasResidentPricing&&<span className="text-xs px-2 py-0.5 rounded-full bg-purple-900 text-purple-300 border border-purple-800">Residents</span>}
+                        {inq.hasCaddies&&<span className="text-xs px-2 py-0.5 rounded-full bg-green-900 text-green-300 border border-green-800">Caddies</span>}
+                      </div>
+                      <div className="text-sm text-gray-400">{inq.contactName} · {inq.contactTitle} · {inq.email}</div>
+                      <div className="text-xs text-gray-500 mt-0.5">{inq.city}, {inq.state} · {inq.courseType} · {fmtDate(inq.createdAt)}</div>
+                      {inq.greenFeeRange&&<div className="text-xs text-gray-500">Fees: {inq.greenFeeRange}</div>}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {inq.status==='pending'&&<>
+                        <button onClick={()=>approve(inq.id)} disabled={processing===inq.id} className="bg-green-700 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5"/>Approve</button>
+                        <button onClick={()=>reject(inq.id)} disabled={processing===inq.id} className="bg-red-900 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><XCircle className="w-3.5 h-3.5"/>Reject</button>
+                      </>}
+                      <button onClick={()=>setExpanded(expanded===inq.id?null:inq.id)} className="text-gray-500 hover:text-gray-300 p-1">
+                        {expanded===inq.id?<ChevronUp className="w-4 h-4"/>:<ChevronDown className="w-4 h-4"/>}
+                      </button>
+                    </div>
+                  </div>
+
+                  {approveResults[inq.id]&&(
+                    <div className="px-5 pb-4 bg-green-950 border-t border-green-900">
+                      <div className="text-xs font-semibold text-green-400 mb-2 mt-3">✅ Approved — share these with the course:</div>
+                      <div className="space-y-2">
+                        {[['Temp Password',approveResults[inq.id].tempPassword],['Setup Link',approveResults[inq.id].setupLink]].map(([label,val])=>(
+                          <div key={label} className="flex items-center gap-2 bg-gray-900 rounded-lg px-3 py-2">
+                            <span className="text-xs text-gray-400 w-28 shrink-0">{label}</span>
+                            <span className="text-xs text-gray-100 font-mono flex-1 truncate">{val}</span>
+                            <button onClick={()=>navigator.clipboard.writeText(val)} className="text-gray-500 hover:text-green-400"><Copy className="w-3.5 h-3.5"/></button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {expanded===inq.id&&(
+                    <div className="px-5 pb-4 border-t border-gray-800 pt-3 grid grid-cols-2 gap-3 text-sm">
+                      <div><span className="text-gray-500">Phone: </span><span className="text-gray-300">{inq.phone}</span></div>
+                      <div><span className="text-gray-500">Website: </span><span className="text-gray-300">{inq.website||'—'}</span></div>
+                      <div><span className="text-gray-500">Current booking: </span><span className="text-gray-300">{inq.currentBookingMethod}</span></div>
+                      <div><span className="text-gray-500">Tee times/day: </span><span className="text-gray-300">{inq.teeTimesPerDay||'—'}</span></div>
+                      <div className="col-span-2"><span className="text-gray-500">Looking for: </span><span className="text-gray-300">{inq.lookingFor.join(', ')}</span></div>
+                      {inq.additionalNotes&&<div className="col-span-2"><span className="text-gray-500">Notes: </span><span className="text-gray-300">{inq.additionalNotes}</span></div>}
+                      {inq.pricingNotes&&<div className="col-span-2"><span className="text-gray-500">Pricing notes: </span><span className="text-gray-300">{inq.pricingNotes}</span></div>}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {!loading&&inquiries.length===0&&<div className="text-gray-500 text-center py-20">No inquiries yet</div>}
+            </div>
+          </>}
+
+          {/* ── Courses ── */}
+          {tab==='courses'&&<>
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-2xl font-black text-white">All Courses</h1>
+              <div className="flex gap-3">
+                <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search courses..." className="bg-gray-800 border border-gray-700 text-white text-sm rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-green-500 w-48"/>
+                <button onClick={loadCourses} className="text-gray-400 hover:text-white flex items-center gap-2 text-sm"><RefreshCw className="w-4 h-4"/>Refresh</button>
+              </div>
+            </div>
+            <div className="text-xs text-gray-500 mb-4">{filteredCourses.length} of {courses.length} courses</div>
+            {loading&&<div className="text-gray-500 py-20 text-center">Loading...</div>}
+            <div className="space-y-2">
+              {filteredCourses.map(c=>(
+                <div key={c.id} className="bg-gray-900 border border-gray-800 rounded-xl px-5 py-4 flex items-center gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
-                      <span className="font-black text-gray-900">{inq.courseName}</span>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${STATUS_COLORS[inq.status] || STATUS_COLORS.pending}`}>
-                        {inq.status}
-                      </span>
-                      <span className="text-xs text-gray-400">{new Date(inq.createdAt).toLocaleDateString()}</span>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="font-semibold text-white">{c.name}</span>
+                      {c.featured&&<Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400"/>}
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${c.active?'bg-green-900 text-green-400':'bg-gray-800 text-gray-500'}`}>{c.active?'Live':'Offline'}</span>
+                      {c.stripeAccountActive&&<span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-900 text-purple-400">Stripe ✓</span>}
                     </div>
-                    <div className="text-sm text-gray-600">{inq.city}, {inq.state} · {inq.courseType} · {inq.contactName} ({inq.contactTitle})</div>
-                    <div className="text-sm text-gray-500 mt-0.5">{inq.email} · {inq.phone}</div>
+                    <div className="text-xs text-gray-500">{c.city}, {c.state}</div>
+                    {c.operator&&<div className="text-xs text-gray-600 mt-0.5">{c.operator.email} · Step {c.operator.onboardingStep}/3</div>}
                   </div>
-                  <div className="flex items-center gap-2 ml-4">
-                    {inq.status === 'pending' && (
-                      <>
-                        <button onClick={() => approve(inq.id)} disabled={processing === inq.id}
-                          className="flex items-center gap-1.5 bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-700 disabled:opacity-50">
-                          <CheckCircle className="w-3.5 h-3.5" /> Approve
-                        </button>
-                        <button onClick={() => reject(inq.id)} disabled={processing === inq.id}
-                          className="flex items-center gap-1.5 border border-red-200 text-red-600 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-50 disabled:opacity-50">
-                          <XCircle className="w-3.5 h-3.5" /> Reject
-                        </button>
-                      </>
-                    )}
-                    <button onClick={() => setExpanded(expanded === inq.id ? null : inq.id)}
-                      className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
-                      {expanded === inq.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button onClick={()=>toggleFeatured(c.id,!c.featured)} className={`p-1.5 rounded-lg transition-colors ${c.featured?'text-yellow-400':'text-gray-600 hover:text-yellow-400'}`}><Star className="w-4 h-4"/></button>
+                    <button onClick={()=>toggleCourseActive(c.id,!c.active)} className={`p-1.5 rounded-lg transition-colors ${c.active?'text-green-400':'text-gray-600 hover:text-green-400'}`}><Power className="w-4 h-4"/></button>
+                    <a href={`/courses/${c.slug}`} target="_blank" className="p-1.5 rounded-lg text-gray-600 hover:text-blue-400 transition-colors"><Globe className="w-4 h-4"/></a>
+                    <button onClick={()=>openDetail(c)} className="p-1.5 rounded-lg text-gray-600 hover:text-white transition-colors"><Eye className="w-4 h-4"/></button>
                   </div>
                 </div>
-
-                {/* Approve result */}
-                {approveResults[inq.id] && (
-                  <div className="mx-5 mb-4 bg-green-50 border border-green-200 rounded-xl p-4 space-y-2">
-                    <div className="text-sm font-semibold text-green-800">✅ Account created — send these to {inq.contactName}:</div>
-                    <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-green-200">
-                      <div className="text-xs text-gray-500">Setup link</div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-green-700 font-mono truncate max-w-xs">{approveResults[inq.id].setupLink}</span>
-                        <button onClick={() => copy(approveResults[inq.id].setupLink)} className="text-gray-400 hover:text-gray-600"><Copy className="w-3.5 h-3.5" /></button>
-                        <a href={approveResults[inq.id].setupLink} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-gray-600"><ExternalLink className="w-3.5 h-3.5" /></a>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-green-200">
-                      <div className="text-xs text-gray-500">Temp password</div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono text-gray-700">{approveResults[inq.id].tempPassword}</span>
-                        <button onClick={() => copy(approveResults[inq.id].tempPassword)} className="text-gray-400 hover:text-gray-600"><Copy className="w-3.5 h-3.5" /></button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Expanded details */}
-                {expanded === inq.id && (
-                  <div className="border-t border-gray-100 px-5 py-4 grid grid-cols-2 gap-4 text-sm bg-gray-50">
-                    <div><span className="text-gray-500">Address: </span>{inq.address}, {inq.city}, {inq.state} {inq.zipCode}</div>
-                    <div><span className="text-gray-500">Website: </span>{inq.website || '—'}</div>
-                    <div><span className="text-gray-500">Current booking: </span>{inq.currentBookingMethod}</div>
-                    <div><span className="text-gray-500">Tee times/day: </span>{inq.teeTimesPerDay || '—'}</div>
-                    <div><span className="text-gray-500">Fee range: </span>{inq.greenFeeRange || '—'}</div>
-                    <div><span className="text-gray-500">Resident pricing: </span>{inq.hasResidentPricing ? 'Yes' : 'No'}</div>
-                    <div><span className="text-gray-500">Member pricing: </span>{inq.hasMemberPricing ? 'Yes' : 'No'}</div>
-                    <div><span className="text-gray-500">Caddies: </span>{inq.hasCaddies ? 'Yes' : 'No'}</div>
-                    {inq.pricingNotes && <div className="col-span-2"><span className="text-gray-500">Pricing notes: </span>{inq.pricingNotes}</div>}
-                    {inq.lookingFor?.length > 0 && <div className="col-span-2"><span className="text-gray-500">Looking for: </span>{inq.lookingFor.join(', ')}</div>}
-                    {inq.additionalNotes && <div className="col-span-2"><span className="text-gray-500">Notes: </span>{inq.additionalNotes}</div>}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Courses */}
-        {tab === 'courses' && !loading && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-black text-gray-900">All Courses</h2>
-              <span className="text-sm text-gray-500">{courses.length} total · {courses.filter(c => c.active).length} live</span>
+              ))}
+              {!loading&&filteredCourses.length===0&&<div className="text-gray-500 text-center py-20">No courses found</div>}
             </div>
-            {courses.length === 0 && <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-gray-200">No courses yet</div>}
-            {courses.map(c => (
-              <div key={c.id} className="bg-white rounded-2xl border border-gray-200 px-5 py-4 flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-gray-900">{c.name}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${c.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                      {c.active ? 'Live' : 'Inactive'}
-                    </span>
-                    {c.stripeAccountActive && <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-medium">Stripe ✓</span>}
-                  </div>
-                  <div className="text-sm text-gray-500">{c.city}, {c.state}</div>
-                  {c.operator && (
-                    <div className="text-xs text-gray-400 mt-0.5 flex items-center gap-2">
-                      {c.operator.email}
-                      <span className={`px-1.5 py-0.5 rounded ${c.operator.emailVerified ? 'bg-green-50 text-green-600' : 'bg-yellow-50 text-yellow-600'}`}>
-                        {c.operator.emailVerified ? 'Verified' : 'Unverified'}
-                      </span>
-                      <span className="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">
-                        Step {c.operator.onboardingStep}/3
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  {c.operator?.onboardingStep === 3 ? (
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                  ) : (
-                    <Clock className="w-5 h-5 text-yellow-400" />
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+          </>}
+        </div>
       </div>
+
+      {(detail||detailLoading)&&<DetailDrawer/>}
     </div>
   );
 }
