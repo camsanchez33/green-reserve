@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getGolferSession } from '@/lib/auth';
 import { stripe } from '@/lib/stripe';
-import { sendCancellationEmail } from '@/lib/email';
+import { sendCancellationEmail, sendWaitlistNotification } from '@/lib/email';
 
 export async function POST(req: NextRequest) {
   const golferSession = await getGolferSession();
@@ -69,8 +69,6 @@ export async function POST(req: NextRequest) {
   });
   if (waitlisted) {
     await prisma.waitlist.update({ where: { id: waitlisted.id }, data: { notified: true } });
-    // Send waitlist notification email
-    const { sendWaitlistNotification } = await import('@/lib/email');
     await sendWaitlistNotification({
       name: waitlisted.name,
       email: waitlisted.email,
