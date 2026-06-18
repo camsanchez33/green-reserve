@@ -1,33 +1,30 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { CheckCircle } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
-  const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [form, setForm] = useState({ name: '', courseName: '', email: '', password: '' });
+  const params = useSearchParams();
+  const justVerified = params.get('verified') === '1';
+
+  const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
   const submit = async () => {
     setLoading(true);
     setError('');
-    const url = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
-    const res = await fetch(url, {
+    const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
     });
     const data = await res.json();
     setLoading(false);
-    if (!res.ok) { setError(data.error || 'Something went wrong'); return; }
-    if (mode === 'register') {
-      router.push('/dashboard/verify');
-    } else {
-      router.push(data.redirect || '/dashboard');
-    }
+    if (!res.ok) { setError(data.error || 'Invalid email or password'); return; }
+    router.push(data.redirect || '/dashboard');
   };
 
   return (
@@ -40,64 +37,47 @@ export default function LoginPage() {
           <p className="text-green-200/60 text-sm mt-2">Course Operator Portal</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          {/* Tab switcher */}
-          <div className="flex">
-            <button onClick={() => setMode('login')}
-              className={`flex-1 py-4 text-sm font-semibold transition-colors ${mode === 'login' ? 'bg-white text-gray-900 border-b-2 border-green-600' : 'bg-gray-50 text-gray-500 hover:text-gray-700'}`}>
-              Sign In
-            </button>
-            <button onClick={() => setMode('register')}
-              className={`flex-1 py-4 text-sm font-semibold transition-colors ${mode === 'register' ? 'bg-white text-gray-900 border-b-2 border-green-600' : 'bg-gray-50 text-gray-500 hover:text-gray-700'}`}>
-              Get Listed
-            </button>
+        {justVerified && (
+          <div className="flex items-center gap-3 bg-green-900/50 border border-green-700 rounded-xl px-4 py-3 mb-4 text-green-300 text-sm">
+            <CheckCircle className="w-4 h-4 flex-shrink-0" />
+            Email verified! Sign in to continue setup.
           </div>
+        )}
 
-          <div className="p-8 space-y-4">
-            {mode === 'register' && (
-              <>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Your Name</label>
-                  <input value={form.name} onChange={e => set('name', e.target.value)}
-                    placeholder="John Smith"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Course Name</label>
-                  <input value={form.courseName} onChange={e => set('courseName', e.target.value)}
-                    placeholder="Skyview Golf Club"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors" />
-                </div>
-              </>
-            )}
+        <div className="bg-white rounded-2xl shadow-2xl p-8">
+          <h2 className="text-xl font-black text-gray-900 mb-6">Sign In</h2>
 
+          {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-4">{error}</div>}
+
+          <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Email</label>
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Email</label>
               <input type="email" value={form.email} onChange={e => set('email', e.target.value)}
-                placeholder="you@course.com"
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors" />
+                onKeyDown={e => e.key === 'Enter' && submit()}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none" />
             </div>
-
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Password</label>
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Password</label>
               <input type="password" value={form.password} onChange={e => set('password', e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && submit()}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors" />
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none" />
             </div>
-
-            {error && <p className="text-red-500 text-sm bg-red-50 rounded-lg px-3 py-2">{error}</p>}
-
-            <button onClick={submit} disabled={loading}
-              className="w-full bg-[#1b4332] text-white py-3.5 rounded-xl font-bold text-sm hover:bg-[#2d6a4f] disabled:opacity-60 transition-colors mt-2">
-              {loading ? (mode === 'login' ? 'Signing in...' : 'Creating account...') : (mode === 'login' ? 'Sign In' : 'Create Account')}
-            </button>
-
-            <p className="text-center text-xs text-gray-400 pt-1">
-              No commission. $0 to list. We charge golfers $1 — not you.
-            </p>
           </div>
+
+          <button onClick={submit} disabled={loading}
+            className="mt-6 w-full bg-[#1b4332] text-white py-3 rounded-xl font-bold text-sm hover:bg-[#2d6a4f] disabled:opacity-50 transition-colors">
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
+
+          <p className="mt-6 text-center text-xs text-gray-400">
+            Don&apos;t have an account? <a href="/for-courses" className="text-green-700 font-medium hover:underline">Submit an inquiry →</a>
+          </p>
         </div>
       </div>
     </div>
   );
+}
+
+export default function LoginPage() {
+  return <Suspense><LoginContent /></Suspense>;
 }
