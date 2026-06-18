@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { randomBytes } from 'crypto';
 
 function checkAdmin(req: NextRequest) {
   return req.headers.get('x-admin-key') === process.env.ADMIN_SECRET;
@@ -23,14 +24,15 @@ export async function POST(req: NextRequest) {
   const { email } = await req.json();
   const op = await prisma.courseOperator.findUnique({ where: { email } });
   if (!op) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  // Generate a fresh token if missing
+  const token = op.verificationToken || randomBytes(32).toString('hex');
   await prisma.courseOperator.update({
     where: { email },
-    data: { emailVerified: true, onboardingStep: Math.max(op.onboardingStep, 1) },
+    data: { emailVerified: true, onboardingStep: Math.max(op.onboardingStep, 1), verificationToken: token },
   });
   const base = process.env.NEXT_PUBLIC_URL || 'https://green-reserve.vercel.app';
   return NextResponse.json({
     success: true,
-    setupLink: `${base}/dashboard/verify?token=${op.verificationToken}`,
-    message: `${email} verified. They can now log in and continue onboarding.`,
+    message: `${email} is now verified. They can log in and continue onboarding.`,
   });
 }
