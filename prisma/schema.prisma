@@ -20,40 +20,104 @@ model CourseOperator {
 }
 
 model Course {
-  id             String            @id @default(cuid())
-  slug           String            @unique
-  name           String
-  type           String            @default("public")
-  city           String            @default("")
-  state          String            @default("")
-  zipCode        String            @default("")
-  address        String            @default("")
-  phone          String            @default("")
-  website        String            @default("")
-  bookingUrl     String            @default("")
-  holes          Int               @default(18)
-  par            Int               @default(72)
-  yardage        Int               @default(0)
-  slope          Int               @default(0)
-  description    String            @default("")
-  amenities      String[]
-  walkingAllowed Boolean           @default(true)
-  cartRequired   Boolean           @default(false)
-  rating         Float             @default(4.5)
-  reviewCount    Int               @default(0)
-  imageGradient  String            @default("linear-gradient(160deg,#071810 0%,#1b4332 60%,#2d6a4f 100%)")
-  featured       Boolean           @default(false)
-  baseGreenFee   Float             @default(0)
-  cartFee        Float             @default(0)
-  active         Boolean           @default(false)
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  operatorId     String?           @unique
-  operator       CourseOperator?   @relation(fields: [operatorId], references: [id])
-  teeTimes       TeeTime[]
-  bookings       Booking[]
-  schedules      TeeTimeSchedule[]
-  blackouts      Blackout[]
+  id                      String            @id @default(cuid())
+  slug                    String            @unique
+  name                    String
+  type                    String            @default("public")
+  city                    String            @default("")
+  state                   String            @default("")
+  zipCode                 String            @default("")
+  address                 String            @default("")
+  phone                   String            @default("")
+  website                 String            @default("")
+  bookingUrl              String            @default("")
+  holes                   Int               @default(18)
+  par                     Int               @default(72)
+  yardage                 Int               @default(0)
+  slope                   Int               @default(0)
+  courseRating            Float             @default(0)
+  description             String            @default("")
+  amenities               String[]
+  walkingAllowed          String            @default("always")
+  walkingNote             String            @default("")
+  cartRequired            Boolean           @default(false)
+  dresscode               String[]
+  minPlayers              Int               @default(1)
+  maxPlayers              Int               @default(4)
+  cancellationHours       Int               @default(24)
+  rainCheckPolicy         String            @default("")
+  publicAdvanceDays       Int               @default(7)
+  memberAdvanceDays       Int               @default(14)
+  hasMemberPricing        Boolean           @default(false)
+  hasResidentPricing      Boolean           @default(false)
+  residentCounty          String            @default("")
+  residentState           String            @default("")
+  residentProofRequired   Boolean           @default(false)
+  hasCaddies              Boolean           @default(false)
+  caddieType              String            @default("")
+  caddieLooperRate        Float             @default(0)
+  caddieForeRate          Float             @default(0)
+  caddieNote              String            @default("")
+  hasDrivingRange         Boolean           @default(false)
+  drivingRangeType        String            @default("")
+  hasPuttingGreen         Boolean           @default(false)
+  hasShortGameArea        Boolean           @default(false)
+  hasProShop              Boolean           @default(false)
+  restaurantType          String            @default("none")
+  hasLessons              Boolean           @default(false)
+  hasClubRental           Boolean           @default(false)
+  clubRentalRate          Float             @default(0)
+  hasPushCartRental       Boolean           @default(false)
+  pushCartRate            Float             @default(0)
+  hasBagStorage           Boolean           @default(false)
+  hasLockerRoom           Boolean           @default(false)
+  hasGpsCarts             Boolean           @default(false)
+  hasTournaments          Boolean           @default(false)
+  stripeAccountId         String            @default("")
+  stripeAccountActive     Boolean           @default(false)
+  rating                  Float             @default(4.5)
+  reviewCount             Int               @default(0)
+  imageGradient           String            @default("linear-gradient(160deg,#071810 0%,#1b4332 60%,#2d6a4f 100%)")
+  featured                Boolean           @default(false)
+  active                  Boolean           @default(false)
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+  operatorId              String?           @unique
+  operator                CourseOperator?   @relation(fields: [operatorId], references: [id])
+  teeTimes                TeeTime[]
+  bookings                Booking[]
+  schedules               TeeTimeSchedule[]
+  blackouts               Blackout[]
+  memberships             CourseMembership[]
+}
+
+model GolferAccount {
+  id               String             @id @default(cuid())
+  email            String             @unique
+  password         String
+  firstName        String
+  lastName         String
+  phone            String             @default("")
+  stripeCustomerId String             @default("")
+  createdAt        DateTime           @default(now())
+  bookings         Booking[]
+  memberships      CourseMembership[]
+}
+
+model CourseMembership {
+  id             String        @id @default(cuid())
+  golferId       String
+  golfer         GolferAccount @relation(fields: [golferId], references: [id])
+  courseId       String
+  course         Course        @relation(fields: [courseId], references: [id])
+  membershipType String        @default("member")
+  status         String        @default("active")
+  addedBy        String        @default("operator")
+  expiresAt      DateTime?
+  notes          String        @default("")
+  createdAt      DateTime      @default(now())
+
+  @@unique([golferId, courseId])
 }
 
 model TeeTime {
@@ -66,8 +130,11 @@ model TeeTime {
   playersAvailable Int       @default(4)
   playersBooked    Int       @default(0)
   greenFee         Float
+  memberRate       Float?
+  residentRate     Float?
   cartFee          Float     @default(0)
   walkingAllowed   Boolean   @default(true)
+  tierName         String    @default("standard")
   status           String    @default("available")
   createdAt        DateTime  @default(now())
   bookings         Booking[]
@@ -76,33 +143,48 @@ model TeeTime {
 }
 
 model Booking {
-  id           String   @id @default(cuid())
-  teeTimeId    String
-  teeTime      TeeTime  @relation(fields: [teeTimeId], references: [id])
-  courseId     String
-  course       Course   @relation(fields: [courseId], references: [id])
-  golferName   String
-  golferEmail  String
-  players      Int
-  accessFee    Float    @default(1.00)
-  status       String   @default("confirmed")
-  createdAt    DateTime @default(now())
+  id                   String         @id @default(cuid())
+  teeTimeId            String
+  teeTime              TeeTime        @relation(fields: [teeTimeId], references: [id])
+  courseId             String
+  course               Course         @relation(fields: [courseId], references: [id])
+  golferAccountId      String?
+  golferAccount        GolferAccount? @relation(fields: [golferAccountId], references: [id])
+  golferName           String
+  golferEmail          String
+  golferPhone          String         @default("")
+  players              Int
+  appliedRate          String         @default("standard")
+  greenFeeTotal        Float
+  cartFeeTotal         Float          @default(0)
+  accessFeeTotal       Float
+  totalAmount          Float
+  stripePaymentIntentId String        @default("")
+  paymentStatus        String         @default("pending")
+  status               String         @default("confirmed")
+  createdAt            DateTime       @default(now())
 }
 
 model TeeTimeSchedule {
-  id              String   @id @default(cuid())
-  courseId        String
-  course          Course   @relation(fields: [courseId], references: [id])
-  daysOfWeek      Int[]
-  startTime       String
-  endTime         String
-  intervalMinutes Int      @default(8)
-  greenFeeWeekday Float
-  greenFeeWeekend Float
-  cartFee         Float    @default(0)
-  walkingAllowed  Boolean  @default(true)
-  active          Boolean  @default(true)
-  createdAt       DateTime @default(now())
+  id                  String   @id @default(cuid())
+  courseId            String
+  course              Course   @relation(fields: [courseId], references: [id])
+  tierName            String   @default("standard")
+  daysOfWeek          Int[]
+  startTime           String
+  endTime             String
+  intervalMinutes     Int      @default(8)
+  holes               Int      @default(18)
+  greenFeeWeekday     Float
+  greenFeeWeekend     Float
+  memberRateWeekday   Float?
+  memberRateWeekend   Float?
+  residentRateWeekday Float?
+  residentRateWeekend Float?
+  cartFee             Float    @default(0)
+  walkingAllowed      Boolean  @default(true)
+  active              Boolean  @default(true)
+  createdAt           DateTime @default(now())
 }
 
 model Blackout {
@@ -111,4 +193,31 @@ model Blackout {
   course   Course @relation(fields: [courseId], references: [id])
   date     String
   reason   String @default("")
+}
+
+model CourseInquiry {
+  id                  String   @id @default(cuid())
+  contactName         String
+  contactTitle        String
+  email               String
+  phone               String
+  courseName          String
+  address             String
+  city                String
+  state               String
+  zipCode             String
+  website             String   @default("")
+  courseType          String
+  currentBookingMethod String
+  teeTimesPerDay      Int?
+  greenFeeRange       String   @default("")
+  hasResidentPricing  Boolean  @default(false)
+  hasMemberPricing    Boolean  @default(false)
+  hasCaddies          Boolean  @default(false)
+  pricingNotes        String   @default("")
+  facilitiesNotes     String   @default("")
+  lookingFor          String[]
+  additionalNotes     String   @default("")
+  status              String   @default("pending")
+  createdAt           DateTime @default(now())
 }
