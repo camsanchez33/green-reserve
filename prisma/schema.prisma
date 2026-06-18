@@ -214,44 +214,44 @@ model Blackout {
 }
 
 model Waitlist {
-  id        String        @id @default(cuid())
+  id        String         @id @default(cuid())
   teeTimeId String
-  teeTime   TeeTime       @relation(fields: [teeTimeId], references: [id])
+  teeTime   TeeTime        @relation(fields: [teeTimeId], references: [id])
   courseId  String
-  course    Course        @relation(fields: [courseId], references: [id])
+  course    Course         @relation(fields: [courseId], references: [id])
   golferId  String?
   golfer    GolferAccount? @relation(fields: [golferId], references: [id])
   name      String
   email     String
-  phone     String        @default("")
-  players   Int           @default(1)
-  notified  Boolean       @default(false)
-  createdAt DateTime      @default(now())
+  phone     String         @default("")
+  players   Int            @default(1)
+  notified  Boolean        @default(false)
+  createdAt DateTime       @default(now())
 }
 
 model CourseInquiry {
-  id                  String   @id @default(cuid())
-  contactName         String
-  contactTitle        String
-  email               String
-  phone               String
-  courseName          String
-  address             String
-  city                String
-  state               String
-  zipCode             String
-  website             String   @default("")
-  courseType          String
+  id                   String   @id @default(cuid())
+  contactName          String
+  contactTitle         String
+  email                String
+  phone                String
+  courseName           String
+  address              String
+  city                 String
+  state                String
+  zipCode              String
+  website              String   @default("")
+  courseType           String
   currentBookingMethod String
-  teeTimesPerDay      Int?
-  greenFeeRange       String   @default("")
-  hasResidentPricing  Boolean  @default(false)
-  hasMemberPricing    Boolean  @default(false)
-  hasCaddies          Boolean  @default(false)
-  pricingNotes        String   @default("")
-  facilitiesNotes     String   @default("")
-  lookingFor          String[]
-  additionalNotes     String   @default("")
-  status              String   @default("pending")
-  createdAt           DateTime @default(now())
+  teeTimesPerDay       Int?
+  greenFeeRange        String   @default("")
+  hasResidentPricing   Boolean  @default(false)
+  hasMemberPricing     Boolean  @default(false)
+  hasCaddies           Boolean  @default(false)
+  pricingNotes         String   @default("")
+  facilitiesNotes      String   @default("")
+  lookingFor           String[]
+  additionalNotes      String   @default("")
+  status               String   @default("pending")
+  createdAt            DateTime @default(now())
 }
