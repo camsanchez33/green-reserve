@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogOut, Settings, Clock, Calendar, Users, DollarSign, Ban, Plus, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { LogOut, Settings, Clock, Calendar, Users, DollarSign, Ban, Plus, ChevronLeft, ChevronRight, RefreshCw, BarChart2, AlertTriangle, X } from 'lucide-react';
 
 type TeeTime = {
   id: string; date: string; time: string; holes: number;
@@ -47,8 +47,15 @@ function statusBadge(tt: TeeTime) {
   return <span className="text-xs font-semibold text-green-700">{avail} open</span>;
 }
 
+interface AnalyticsData {
+  summary: { totalRevenue: number; totalBookings: number; totalPlayers: number; utilization: number };
+  revenueByDay: { date: string; revenue: number; bookings: number }[];
+  utilizationByDow: { dow: number; label: string; pct: number }[];
+}
+
 export default function DashboardPage() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<'teesheet' | 'analytics'>('teesheet');
   const [selectedDate, setSelectedDate] = useState(today());
   const [dateOffset, setDateOffset] = useState(0);
   const [teeTimes, setTeeTimes] = useState<TeeTime[]>([]);
@@ -56,6 +63,12 @@ export default function DashboardPage() {
   const [courseName, setCourseName] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [conditions, setConditions] = useState('');
+  const [conditionsInput, setConditionsInput] = useState('');
+  const [showConditions, setShowConditions] = useState(false);
+  const [savingConditions, setSavingConditions] = useState(false);
 
   // Stats
   const totalSlots = teeTimes.filter(t => t.status !== 'blocked').reduce((s, t) => s + t.playersAvailable, 0);
@@ -76,15 +89,33 @@ export default function DashboardPage() {
   }, [router]);
 
   useEffect(() => {
-    // Check onboarding
     fetch('/api/operator/profile').then(r => r.json()).then(p => {
       if (!p || !p.emailVerified) { router.push('/dashboard/verify'); return; }
       if (p.onboardingStep < 3) { router.push('/dashboard/onboarding'); return; }
     });
     fetch('/api/operator/courses').then(r => r.json()).then(c => {
       if (c?.name) setCourseName(c.name);
+      if (c?.conditions) { setConditions(c.conditions); setConditionsInput(c.conditions); }
     });
   }, [router]);
+
+  useEffect(() => {
+    if (activeTab === 'analytics' && !analytics) {
+      setAnalyticsLoading(true);
+      fetch('/api/operator/analytics').then(r => r.json()).then(d => { setAnalytics(d); setAnalyticsLoading(false); });
+    }
+  }, [activeTab, analytics]);
+
+  async function saveConditions() {
+    setSavingConditions(true);
+    await fetch('/api/operator/conditions', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conditions: conditionsInput }),
+    });
+    setConditions(conditionsInput);
+    setSavingConditions(false);
+    setShowConditions(false);
+  }
 
   useEffect(() => { load(selectedDate); }, [selectedDate, load]);
 
@@ -112,6 +143,14 @@ export default function DashboardPage() {
           {courseName && <span className="text-green-200/60 text-sm hidden sm:block">· {courseName}</span>}
         </div>
         <div className="flex items-center gap-1">
+          <button onClick={() => setActiveTab('teesheet')}
+            className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors ${activeTab === 'teesheet' ? 'bg-white/20 text-white' : 'text-white/60 hover:text-white hover:bg-white/10'}`}>
+            <Calendar className="w-3.5 h-3.5" /> Tee Sheet
+          </button>
+          <button onClick={() => setActiveTab('analytics')}
+            className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors ${activeTab === 'analytics' ? 'bg-white/20 text-white' : 'text-white/60 hover:text-white hover:bg-white/10'}`}>
+            <BarChart2 className="w-3.5 h-3.5" /> Analytics
+          </button>
           <button onClick={() => router.push('/dashboard/schedule')}
             className="text-white/60 hover:text-white flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">
             <Clock className="w-3.5 h-3.5" /> Schedule
@@ -127,7 +166,118 @@ export default function DashboardPage() {
         </div>
       </nav>
 
+      {/* Conditions banner */}
+      {conditions && (
+        <div className="bg-yellow-500 px-4 py-2 flex items-center gap-2 text-sm font-medium text-yellow-900">
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          <span>Course alert: {conditions}</span>
+          <button onClick={() => setShowConditions(true)} className="ml-auto underline text-xs">Update</button>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto px-4 py-6">
+        {/* Conditions modal */}
+        {showConditions && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-black text-gray-900">Course Conditions</h3>
+                <button onClick={() => setShowConditions(false)}><X className="w-5 h-5 text-gray-400" /></button>
+              </div>
+              <p className="text-sm text-gray-500 mb-3">Set a status visible to golfers before they book (e.g. "Cart paths only today", "Closed for tournament 6/20"). Clear to remove.</p>
+              <input value={conditionsInput} onChange={e => setConditionsInput(e.target.value)}
+                placeholder="e.g. Cart paths only through Sunday"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 outline-none mb-4" />
+              <div className="flex gap-2">
+                <button onClick={() => { setConditionsInput(''); saveConditions(); }}
+                  className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50">
+                  Clear Alert
+                </button>
+                <button onClick={saveConditions} disabled={savingConditions}
+                  className="flex-1 bg-[#1b4332] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-50">
+                  {savingConditions ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <div>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="font-black text-gray-900 text-lg">Last 30 Days</h2>
+              <button onClick={() => setShowConditions(true)}
+                className="flex items-center gap-1.5 text-sm border border-yellow-300 bg-yellow-50 text-yellow-800 px-3 py-1.5 rounded-lg font-medium hover:bg-yellow-100">
+                <AlertTriangle className="w-4 h-4" /> Course Alert
+              </button>
+            </div>
+
+            {analyticsLoading && <div className="text-center py-20 text-gray-400">Loading analytics...</div>}
+            {analytics && (
+              <div className="space-y-5">
+                {/* Summary cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: 'Revenue', value: `$${analytics.summary.totalRevenue.toFixed(0)}`, sub: 'green fees', color: 'text-green-700' },
+                    { label: 'Bookings', value: analytics.summary.totalBookings, sub: 'confirmed', color: 'text-blue-700' },
+                    { label: 'Players', value: analytics.summary.totalPlayers, sub: 'total rounds', color: 'text-purple-700' },
+                    { label: 'Utilization', value: `${analytics.summary.utilization}%`, sub: 'slots filled', color: 'text-orange-600' },
+                  ].map(s => (
+                    <div key={s.label} className="bg-white rounded-2xl border border-gray-200 p-4">
+                      <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
+                      <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
+                      <div className="text-xs text-gray-400">{s.sub}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Revenue chart */}
+                <div className="bg-white rounded-2xl border border-gray-200 p-5">
+                  <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wide">Daily Revenue</h3>
+                  <div className="flex items-end gap-0.5 h-24">
+                    {analytics.revenueByDay.map(d => {
+                      const max = Math.max(...analytics.revenueByDay.map(x => x.revenue), 1);
+                      const pct = (d.revenue / max) * 100;
+                      return (
+                        <div key={d.date} className="flex-1 flex flex-col items-center group relative">
+                          <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10">
+                            ${d.revenue.toFixed(0)}
+                          </div>
+                          <div className="w-full rounded-t transition-all"
+                            style={{ height: `${Math.max(pct, 2)}%`, background: pct > 0 ? '#1b4332' : '#e5e7eb' }} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-400 mt-1">
+                    <span>{analytics.revenueByDay[0]?.date}</span>
+                    <span>{analytics.revenueByDay[analytics.revenueByDay.length - 1]?.date}</span>
+                  </div>
+                </div>
+
+                {/* Utilization by day of week */}
+                <div className="bg-white rounded-2xl border border-gray-200 p-5">
+                  <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wide">Utilization by Day</h3>
+                  <div className="space-y-2">
+                    {analytics.utilizationByDow.map(d => (
+                      <div key={d.dow} className="flex items-center gap-3">
+                        <span className="text-sm text-gray-500 w-8">{d.label}</span>
+                        <div className="flex-1 bg-gray-100 rounded-full h-3">
+                          <div className="h-3 rounded-full transition-all"
+                            style={{ width: `${d.pct}%`, background: d.pct > 70 ? '#166534' : d.pct > 40 ? '#1b4332' : '#86efac' }} />
+                        </div>
+                        <span className="text-sm font-semibold text-gray-700 w-10 text-right">{d.pct}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'teesheet' && (<>
         {/* Stats row */}
         <div className="grid grid-cols-4 gap-3 mb-6">
           {[
@@ -277,6 +427,7 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+        </>)}
       </div>
 
       {/* Add tee time modal */}

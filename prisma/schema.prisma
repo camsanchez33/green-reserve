@@ -84,11 +84,14 @@ model Course {
   updatedAt               DateTime          @updatedAt
   operatorId              String?           @unique
   operator                CourseOperator?   @relation(fields: [operatorId], references: [id])
+  conditions              String            @default("")
+  conditionsUpdatedAt     DateTime?
   teeTimes                TeeTime[]
   bookings                Booking[]
   schedules               TeeTimeSchedule[]
   blackouts               Blackout[]
   memberships             CourseMembership[]
+  waitlist                Waitlist[]
 }
 
 model GolferAccount {
@@ -102,6 +105,7 @@ model GolferAccount {
   createdAt        DateTime           @default(now())
   bookings         Booking[]
   memberships      CourseMembership[]
+  waitlist         Waitlist[]
 }
 
 model CourseMembership {
@@ -138,6 +142,7 @@ model TeeTime {
   status           String    @default("available")
   createdAt        DateTime  @default(now())
   bookings         Booking[]
+  waitlist         Waitlist[]
 
   @@index([courseId, date])
 }
@@ -193,6 +198,22 @@ model Blackout {
   course   Course @relation(fields: [courseId], references: [id])
   date     String
   reason   String @default("")
+}
+
+model Waitlist {
+  id        String        @id @default(cuid())
+  teeTimeId String
+  teeTime   TeeTime       @relation(fields: [teeTimeId], references: [id])
+  courseId  String
+  course    Course        @relation(fields: [courseId], references: [id])
+  golferId  String?
+  golfer    GolferAccount? @relation(fields: [golferId], references: [id])
+  name      String
+  email     String
+  phone     String        @default("")
+  players   Int           @default(1)
+  notified  Boolean       @default(false)
+  createdAt DateTime      @default(now())
 }
 
 model CourseInquiry {
