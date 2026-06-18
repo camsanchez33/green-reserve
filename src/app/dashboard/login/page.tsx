@@ -1,126 +1,101 @@
-"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+'use client';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [tab, setTab] = useState<"login" | "register">("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [courseName, setCourseName] = useState("");
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [form, setForm] = useState({ name: '', courseName: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true); setError("");
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    if (res.ok) {
-      router.push("/dashboard");
-    } else {
-      const d = await res.json();
-      setError(d.error ?? "Login failed");
-    }
-    setLoading(false);
-  }
+  const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
-  async function handleRegister(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true); setError("");
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, name, courseName }),
+  const submit = async () => {
+    setLoading(true);
+    setError('');
+    const url = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
     });
-    if (res.ok) {
-      router.push("/dashboard");
-    } else {
-      const d = await res.json();
-      setError(d.error ?? "Registration failed");
-    }
+    const data = await res.json();
     setLoading(false);
-  }
+    if (!res.ok) { setError(data.error || 'Something went wrong'); return; }
+    if (mode === 'register') {
+      router.push('/dashboard/verify');
+    } else {
+      router.push(data.redirect || '/dashboard');
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#0f2218] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#0a1f0f] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-[#c9a84c] flex items-center justify-center">
-              <span className="text-white font-black text-sm">GR</span>
-            </div>
-            <span className="text-white font-bold text-xl">Green<span style={{ color: "#c9a84c" }}>Reserve</span></span>
-          </div>
-          <h1 className="text-white font-black text-2xl">Course Operator Portal</h1>
-          <p className="text-white/50 text-sm mt-1">Manage your tee sheet and get discovered by thousands of golfers.</p>
+          <span className="text-white font-black text-3xl tracking-tight">
+            Green<span className="text-green-400">Reserve</span>
+          </span>
+          <p className="text-green-200/60 text-sm mt-2">Course Operator Portal</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-8 shadow-2xl">
-          {/* Tabs */}
-          <div className="flex rounded-xl overflow-hidden border border-gray-100 mb-6">
-            {(["login", "register"] as const).map(t => (
-              <button key={t} onClick={() => setTab(t)}
-                className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${tab === t ? "bg-[#1b4332] text-white" : "text-gray-500 hover:text-gray-700"}`}>
-                {t === "login" ? "Sign In" : "Get Listed"}
-              </button>
-            ))}
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+          {/* Tab switcher */}
+          <div className="flex">
+            <button onClick={() => setMode('login')}
+              className={`flex-1 py-4 text-sm font-semibold transition-colors ${mode === 'login' ? 'bg-white text-gray-900 border-b-2 border-green-600' : 'bg-gray-50 text-gray-500 hover:text-gray-700'}`}>
+              Sign In
+            </button>
+            <button onClick={() => setMode('register')}
+              className={`flex-1 py-4 text-sm font-semibold transition-colors ${mode === 'register' ? 'bg-white text-gray-900 border-b-2 border-green-600' : 'bg-gray-50 text-gray-500 hover:text-gray-700'}`}>
+              Get Listed
+            </button>
           </div>
 
-          {tab === "login" ? (
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Email</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-[#1b4332]" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Password</label>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} required
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-[#1b4332]" />
-              </div>
-              {error && <p className="text-red-500 text-sm">{error}</p>}
-              <button type="submit" disabled={loading}
-                className="w-full py-3 rounded-xl font-bold text-white text-sm disabled:opacity-70"
-                style={{ background: "#1b4332" }}>
-                {loading ? "Signing in…" : "Sign In"}
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handleRegister} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Your Name</label>
-                <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="Pro shop manager, owner, etc."
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-[#1b4332]" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Course Name</label>
-                <input type="text" value={courseName} onChange={e => setCourseName(e.target.value)} required placeholder="Darlington Golf Course"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-[#1b4332]" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Email</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-[#1b4332]" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Password</label>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-[#1b4332]" />
-              </div>
-              {error && <p className="text-red-500 text-sm">{error}</p>}
-              <button type="submit" disabled={loading}
-                className="w-full py-3 rounded-xl font-bold text-white text-sm disabled:opacity-70"
-                style={{ background: "#1b4332" }}>
-                {loading ? "Creating account…" : "Get Listed Free"}
-              </button>
-              <p className="text-center text-xs text-gray-400">No commission. $0 to list. We charge golfers $1 — not you.</p>
-            </form>
-          )}
+          <div className="p-8 space-y-4">
+            {mode === 'register' && (
+              <>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Your Name</label>
+                  <input value={form.name} onChange={e => set('name', e.target.value)}
+                    placeholder="John Smith"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Course Name</label>
+                  <input value={form.courseName} onChange={e => set('courseName', e.target.value)}
+                    placeholder="Skyview Golf Club"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors" />
+                </div>
+              </>
+            )}
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Email</label>
+              <input type="email" value={form.email} onChange={e => set('email', e.target.value)}
+                placeholder="you@course.com"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors" />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Password</label>
+              <input type="password" value={form.password} onChange={e => set('password', e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && submit()}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors" />
+            </div>
+
+            {error && <p className="text-red-500 text-sm bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+
+            <button onClick={submit} disabled={loading}
+              className="w-full bg-[#1b4332] text-white py-3.5 rounded-xl font-bold text-sm hover:bg-[#2d6a4f] disabled:opacity-60 transition-colors mt-2">
+              {loading ? (mode === 'login' ? 'Signing in...' : 'Creating account...') : (mode === 'login' ? 'Sign In' : 'Create Account')}
+            </button>
+
+            <p className="text-center text-xs text-gray-400 pt-1">
+              No commission. $0 to list. We charge golfers $1 — not you.
+            </p>
+          </div>
         </div>
       </div>
     </div>

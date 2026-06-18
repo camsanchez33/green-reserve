@@ -1,238 +1,353 @@
-"use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Plus, Trash2, LogOut, Settings, Calendar, Clock } from "lucide-react";
+'use client';
+import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { LogOut, Settings, Clock, Calendar, Users, DollarSign, Ban, Plus, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 
 type TeeTime = {
-  id: string;
-  date: string;
-  time: string;
-  holes: number;
-  playersAvailable: number;
-  greenFee: number;
-  cartFee: number;
-  walkingAllowed: boolean;
+  id: string; date: string; time: string; holes: number;
+  playersAvailable: number; playersBooked: number;
+  greenFee: number; cartFee: number; walkingAllowed: boolean;
   status: string;
+  bookings?: Booking[];
 };
 
-function today() { return new Date().toISOString().split("T")[0]; }
+type Booking = {
+  id: string; golferName: string; golferEmail: string; players: number; createdAt: string;
+};
+
+function today() { return new Date().toISOString().split('T')[0]; }
 function addDays(d: string, n: number) {
-  const dt = new Date(d + "T12:00:00");
-  dt.setDate(dt.getDate() + n);
-  return dt.toISOString().split("T")[0];
+  const dt = new Date(d + 'T12:00:00'); dt.setDate(dt.getDate() + n);
+  return dt.toISOString().split('T')[0];
 }
 function fmtDate(d: string) {
-  return new Date(d + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+function fmtTime(t: string) {
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  return `${h % 12 || 12}:${m.toString().padStart(2,'0')} ${ampm}`;
+}
+
+function statusColor(tt: TeeTime) {
+  if (tt.status === 'blocked') return 'bg-gray-100 border-gray-200 text-gray-400';
+  const booked = tt.playersBooked ?? 0;
+  const avail = tt.playersAvailable - booked;
+  if (avail === 0) return 'bg-red-50 border-red-200';
+  if (avail <= 2) return 'bg-yellow-50 border-yellow-200';
+  return 'bg-green-50 border-green-200';
+}
+
+function statusBadge(tt: TeeTime) {
+  if (tt.status === 'blocked') return <span className="text-xs text-gray-400 font-medium">Blocked</span>;
+  const booked = tt.playersBooked ?? 0;
+  const avail = tt.playersAvailable - booked;
+  if (avail === 0) return <span className="text-xs font-semibold text-red-600">Full</span>;
+  if (booked > 0) return <span className="text-xs font-semibold text-yellow-600">{avail} left</span>;
+  return <span className="text-xs font-semibold text-green-700">{avail} open</span>;
 }
 
 export default function DashboardPage() {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(today());
+  const [dateOffset, setDateOffset] = useState(0);
   const [teeTimes, setTeeTimes] = useState<TeeTime[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAdd, setShowAdd] = useState(false);
-  const dates = Array.from({ length: 14 }, (_, i) => addDays(today(), i));
+  const [courseName, setCourseName] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Add tee time form state
-  const [time, setTime] = useState("08:00");
-  const [greenFee, setGreenFee] = useState("45");
-  const [cartFee, setCartFee] = useState("18");
-  const [players, setPlayers] = useState("4");
-  const [walking, setWalking] = useState(true);
-  const [saving, setSaving] = useState(false);
+  // Stats
+  const totalSlots = teeTimes.filter(t => t.status !== 'blocked').reduce((s, t) => s + t.playersAvailable, 0);
+  const bookedSlots = teeTimes.reduce((s, t) => s + (t.playersBooked ?? 0), 0);
+  const revenue = teeTimes.reduce((s, t) => s + ((t.playersBooked ?? 0) * t.greenFee), 0);
+  const blocked = teeTimes.filter(t => t.status === 'blocked').length;
 
-  async function fetchTeeTimes(date: string) {
+  // 7-day strip (starting from offset)
+  const dates = Array.from({ length: 7 }, (_, i) => addDays(today(), i + dateOffset));
+
+  const load = useCallback(async (date: string) => {
     setLoading(true);
-    const res = await fetch(`/api/operator/tee-times?date=${date}`);
-    if (res.status === 401) { router.push("/dashboard/login"); return; }
-    setTeeTimes(await res.json());
+    const res = await fetch(`/api/operator/tee-times?date=${date}&withBookings=1`);
+    if (res.status === 401) { router.push('/dashboard/login'); return; }
+    const data = await res.json();
+    setTeeTimes(Array.isArray(data) ? data : []);
     setLoading(false);
-  }
+  }, [router]);
 
-  useEffect(() => { fetchTeeTimes(selectedDate); }, [selectedDate]);
-
-  async function addTeeTime(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    await fetch("/api/operator/tee-times", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        date: selectedDate,
-        time,
-        greenFee: parseFloat(greenFee),
-        cartFee: parseFloat(cartFee),
-        playersAvailable: parseInt(players),
-        walkingAllowed: walking,
-      }),
+  useEffect(() => {
+    // Check onboarding
+    fetch('/api/operator/profile').then(r => r.json()).then(p => {
+      if (!p || !p.emailVerified) { router.push('/dashboard/verify'); return; }
+      if (p.onboardingStep < 3) { router.push('/dashboard/onboarding'); return; }
     });
-    setShowAdd(false);
-    setSaving(false);
-    fetchTeeTimes(selectedDate);
-  }
-
-  async function deleteTeeTime(id: string) {
-    await fetch("/api/operator/tee-times", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+    fetch('/api/operator/courses').then(r => r.json()).then(c => {
+      if (c?.name) setCourseName(c.name);
     });
-    setTeeTimes(t => t.filter(x => x.id !== id));
+  }, [router]);
+
+  useEffect(() => { load(selectedDate); }, [selectedDate, load]);
+
+  async function toggleBlock(tt: TeeTime) {
+    const newStatus = tt.status === 'blocked' ? 'available' : 'blocked';
+    await fetch('/api/operator/tee-times', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: tt.id, status: newStatus }),
+    });
+    load(selectedDate);
   }
 
   async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/dashboard/login");
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/dashboard/login');
   }
 
   return (
-    <div className="min-h-screen bg-[#f8faf9]">
-      {/* Top nav */}
-      <nav className="bg-[#0f2218] border-b border-white/10 px-6 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[#c9a84c] flex items-center justify-center">
-            <span className="text-white font-black text-xs">GR</span>
-          </div>
-          <span className="text-white font-bold">Operator Dashboard</span>
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Nav */}
+      <nav className="bg-[#1b4332] px-4 py-3 flex items-center justify-between sticky top-0 z-10 shadow-lg">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push("/dashboard/schedule")}
-            className="text-white/50 hover:text-white flex items-center gap-1.5 text-sm transition-colors">
-            <Clock size={15} /> Tee Sheet Setup
+          <span className="text-white font-black text-lg tracking-tight">Green<span className="text-green-300">Reserve</span></span>
+          {courseName && <span className="text-green-200/60 text-sm hidden sm:block">· {courseName}</span>}
+        </div>
+        <div className="flex items-center gap-1">
+          <button onClick={() => router.push('/dashboard/schedule')}
+            className="text-white/60 hover:text-white flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">
+            <Clock className="w-3.5 h-3.5" /> Schedule
           </button>
-          <button onClick={() => router.push("/dashboard/settings")}
-            className="text-white/50 hover:text-white flex items-center gap-1.5 text-sm transition-colors">
-            <Settings size={15} /> Settings
+          <button onClick={() => router.push('/dashboard/settings')}
+            className="text-white/60 hover:text-white flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">
+            <Settings className="w-3.5 h-3.5" /> Settings
           </button>
           <button onClick={logout}
-            className="text-white/50 hover:text-white flex items-center gap-1.5 text-sm transition-colors">
-            <LogOut size={15} /> Sign out
+            className="text-white/60 hover:text-white flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">
+            <LogOut className="w-3.5 h-3.5" /> Sign out
           </button>
         </div>
       </nav>
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-black text-gray-900">Tee Sheet</h1>
-            <p className="text-gray-500 text-sm">Manage your live tee times — they appear instantly on Green Reserve.</p>
-          </div>
-          <button onClick={() => setShowAdd(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white"
-            style={{ background: "#1b4332" }}>
-            <Plus size={15} /> Add Tee Time
-          </button>
-        </div>
-
-        {/* Date strip */}
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-6">
-          {dates.map(d => (
-            <button key={d} onClick={() => setSelectedDate(d)}
-              className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                selectedDate === d ? "bg-[#1b4332] text-white shadow-sm" : "bg-white border border-gray-100 text-gray-600 hover:border-[#1b4332]"
-              }`}>
-              {fmtDate(d)}
-            </button>
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        {/* Stats row */}
+        <div className="grid grid-cols-4 gap-3 mb-6">
+          {[
+            { label: 'Total Slots', value: totalSlots, icon: <Users className="w-4 h-4" />, color: 'text-blue-600' },
+            { label: 'Booked', value: bookedSlots, icon: <Calendar className="w-4 h-4" />, color: 'text-green-600' },
+            { label: 'Revenue', value: `$${revenue.toFixed(0)}`, icon: <DollarSign className="w-4 h-4" />, color: 'text-emerald-600' },
+            { label: 'Blocked', value: blocked, icon: <Ban className="w-4 h-4" />, color: 'text-gray-500' },
+          ].map(s => (
+            <div key={s.label} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+              <div className={`flex items-center gap-1.5 text-xs font-medium mb-1 ${s.color}`}>
+                {s.icon} {s.label}
+              </div>
+              <div className="text-xl font-black text-gray-900">{s.value}</div>
+            </div>
           ))}
         </div>
 
-        {/* Tee time list */}
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-gray-700 font-semibold">
-              <Calendar size={16} />
-              {fmtDate(selectedDate)}
+        {/* Date strip */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm mb-4 p-3">
+          <div className="flex items-center gap-2">
+            <button onClick={() => setDateOffset(o => Math.max(0, o - 7))}
+              disabled={dateOffset === 0}
+              className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-30 transition-colors">
+              <ChevronLeft className="w-4 h-4 text-gray-600" />
+            </button>
+            <div className="flex gap-1.5 flex-1 overflow-x-auto">
+              {dates.map(d => (
+                <button key={d} onClick={() => setSelectedDate(d)}
+                  className={`flex-1 min-w-[70px] py-2 px-1 rounded-lg text-center transition-colors ${
+                    selectedDate === d
+                      ? 'bg-[#1b4332] text-white'
+                      : 'hover:bg-gray-50 text-gray-600'
+                  }`}>
+                  <div className="text-xs font-medium">{new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                  <div className="text-sm font-bold">{new Date(d + 'T12:00:00').getDate()}</div>
+                </button>
+              ))}
             </div>
-            <span className="text-gray-400 text-sm">{teeTimes.length} tee times</span>
+            <button onClick={() => setDateOffset(o => o + 7)}
+              className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+              <ChevronRight className="w-4 h-4 text-gray-600" />
+            </button>
           </div>
+        </div>
 
-          {loading ? (
-            <div className="p-10 text-center text-gray-400 text-sm">Loading…</div>
-          ) : teeTimes.length === 0 ? (
-            <div className="p-10 text-center">
-              <Clock size={32} className="text-gray-200 mx-auto mb-3" />
-              <p className="text-gray-500 font-medium">No tee times for this day</p>
-              <p className="text-gray-400 text-sm mt-1">Click "Add Tee Time" to add availability.</p>
+        {/* Tee sheet header */}
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-lg font-black text-gray-900">{fmtDate(selectedDate)}</h2>
+            <p className="text-xs text-gray-400">
+              {teeTimes.filter(t => t.status !== 'blocked').length} tee times ·{' '}
+              {teeTimes.filter(t => (t.playersBooked ?? 0) > 0).length} booked
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => load(selectedDate)}
+              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+              <RefreshCw className="w-3.5 h-3.5" /> Refresh
+            </button>
+            <button onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-1.5 text-xs bg-[#1b4332] text-white px-3 py-1.5 rounded-lg hover:bg-[#2d6a4f] transition-colors">
+              <Plus className="w-3.5 h-3.5" /> Add Time
+            </button>
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div className="flex gap-3 mb-3 text-xs text-gray-500">
+          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-green-100 border border-green-300 inline-block" /> Open</span>
+          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-yellow-100 border border-yellow-300 inline-block" /> Filling up</span>
+          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-100 border border-red-300 inline-block" /> Full</span>
+          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-gray-100 border border-gray-300 inline-block" /> Blocked</span>
+        </div>
+
+        {/* Tee time grid */}
+        {loading ? (
+          <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
+            <RefreshCw className="w-6 h-6 text-gray-300 animate-spin mx-auto mb-2" />
+            <p className="text-gray-400 text-sm">Loading tee sheet...</p>
+          </div>
+        ) : teeTimes.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
+            <Calendar className="w-8 h-8 text-gray-200 mx-auto mb-3" />
+            <p className="text-gray-500 font-medium">No tee times for this day</p>
+            <p className="text-gray-400 text-sm mt-1">Check your schedule settings or add times manually</p>
+            <button onClick={() => router.push('/dashboard/schedule')}
+              className="mt-4 text-sm text-green-600 underline">Go to Schedule Setup</button>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            {/* Column headers */}
+            <div className="grid grid-cols-12 gap-0 px-4 py-2 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+              <div className="col-span-2">Time</div>
+              <div className="col-span-2">Status</div>
+              <div className="col-span-2">Players</div>
+              <div className="col-span-2">Green Fee</div>
+              <div className="col-span-2">Cart</div>
+              <div className="col-span-2 text-right">Actions</div>
             </div>
-          ) : (
+
             <div className="divide-y divide-gray-50">
               {teeTimes.map(tt => (
-                <div key={tt.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
-                  <div className="flex items-center gap-6">
-                    <span className="font-black text-gray-900 text-lg w-20">{tt.time}</span>
-                    <div className="text-sm">
-                      <span className="font-semibold text-[#1b4332]">${tt.greenFee}</span>
-                      <span className="text-gray-400"> green fee</span>
-                      {tt.cartFee > 0 && <span className="text-gray-400"> · ${tt.cartFee} cart</span>}
+                <div key={tt.id}>
+                  <div
+                    onClick={() => tt.bookings && tt.bookings.length > 0 && setExpandedId(expandedId === tt.id ? null : tt.id)}
+                    className={`grid grid-cols-12 gap-0 px-4 py-3 border-l-4 transition-colors ${statusColor(tt)} ${tt.bookings && tt.bookings.length > 0 ? 'cursor-pointer hover:brightness-95' : ''}`}>
+                    <div className="col-span-2 font-bold text-sm text-gray-900">{fmtTime(tt.time)}</div>
+                    <div className="col-span-2 flex items-center">{statusBadge(tt)}</div>
+                    <div className="col-span-2 text-sm text-gray-600">
+                      {tt.status === 'blocked' ? '—' : `${tt.playersBooked ?? 0} / ${tt.playersAvailable}`}
                     </div>
-                    <div className="text-sm text-gray-500">{tt.playersAvailable} spots</div>
-                    <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
-                      tt.status === "available" ? "bg-emerald-50 text-emerald-700" :
-                      tt.status === "limited" ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-600"
-                    }`}>{tt.status}</span>
+                    <div className="col-span-2 text-sm text-gray-600">${tt.greenFee}</div>
+                    <div className="col-span-2 text-sm text-gray-600">{tt.cartFee > 0 ? `$${tt.cartFee}` : 'Incl.'}</div>
+                    <div className="col-span-2 flex items-center justify-end gap-1">
+                      {tt.bookings && tt.bookings.length > 0 && (
+                        <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-medium">
+                          {tt.bookings.length} booking{tt.bookings.length > 1 ? 's' : ''}
+                        </span>
+                      )}
+                      <button
+                        onClick={e => { e.stopPropagation(); toggleBlock(tt); }}
+                        title={tt.status === 'blocked' ? 'Unblock' : 'Block this time'}
+                        className={`p-1.5 rounded-lg transition-colors ${tt.status === 'blocked' ? 'bg-gray-200 text-gray-600 hover:bg-gray-300' : 'text-gray-300 hover:text-red-500 hover:bg-red-50'}`}>
+                        <Ban className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                  <button onClick={() => deleteTeeTime(tt.id)}
-                    className="text-gray-300 hover:text-red-400 transition-colors p-1">
-                    <Trash2 size={15} />
-                  </button>
+
+                  {/* Expanded bookings */}
+                  {expandedId === tt.id && tt.bookings && tt.bookings.length > 0 && (
+                    <div className="bg-blue-50 border-t border-blue-100 px-6 py-3 space-y-2">
+                      {tt.bookings.map(b => (
+                        <div key={b.id} className="flex items-center justify-between text-sm">
+                          <div>
+                            <span className="font-semibold text-gray-900">{b.golferName}</span>
+                            <span className="text-gray-500 ml-2">{b.golferEmail}</span>
+                          </div>
+                          <span className="text-gray-600 bg-white border border-gray-200 px-2 py-0.5 rounded text-xs font-medium">
+                            {b.players} player{b.players > 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-          )}
-        </div>
-
-        {/* Add Tee Time Modal */}
-        {showAdd && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-            <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
-              <h2 className="text-xl font-black text-gray-900 mb-6">Add Tee Time — {fmtDate(selectedDate)}</h2>
-              <form onSubmit={addTeeTime} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Time</label>
-                    <input type="time" value={time} onChange={e => setTime(e.target.value)} required
-                      className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-[#1b4332]" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Spots</label>
-                    <select value={players} onChange={e => setPlayers(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none">
-                      {[1,2,3,4].map(n => <option key={n} value={n}>{n} player{n>1?"s":""}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Green Fee ($)</label>
-                    <input type="number" value={greenFee} onChange={e => setGreenFee(e.target.value)} required min="0"
-                      className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-[#1b4332]" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Cart Fee ($)</label>
-                    <input type="number" value={cartFee} onChange={e => setCartFee(e.target.value)} min="0"
-                      className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-[#1b4332]" />
-                  </div>
-                </div>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input type="checkbox" checked={walking} onChange={e => setWalking(e.target.checked)}
-                    className="w-4 h-4 rounded" />
-                  <span className="text-sm text-gray-700 font-medium">Walking allowed</span>
-                </label>
-                <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={() => setShowAdd(false)}
-                    className="flex-1 py-3 rounded-xl font-semibold text-sm text-gray-600 border border-gray-200">
-                    Cancel
-                  </button>
-                  <button type="submit" disabled={saving}
-                    className="flex-1 py-3 rounded-xl font-bold text-sm text-white disabled:opacity-70"
-                    style={{ background: "#1b4332" }}>
-                    {saving ? "Saving…" : "Add Tee Time"}
-                  </button>
-                </div>
-              </form>
-            </div>
           </div>
         )}
+      </div>
+
+      {/* Add tee time modal */}
+      {showAddModal && (
+        <AddTeeTimeModal date={selectedDate} onClose={() => setShowAddModal(false)} onSaved={() => { setShowAddModal(false); load(selectedDate); }} />
+      )}
+    </div>
+  );
+}
+
+function AddTeeTimeModal({ date, onClose, onSaved }: { date: string; onClose: () => void; onSaved: () => void }) {
+  const [form, setForm] = useState({ time: '08:00', greenFee: '65', cartFee: '18', players: '4', walking: true });
+  const [saving, setSaving] = useState(false);
+  const set = (k: string, v: string | boolean) => setForm(f => ({ ...f, [k]: v }));
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    await fetch('/api/operator/tee-times', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        date, time: form.time, greenFee: Number(form.greenFee),
+        cartFee: Number(form.cartFee), playersAvailable: Number(form.players),
+        walkingAllowed: form.walking, holes: 18,
+      }),
+    });
+    setSaving(false);
+    onSaved();
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+        <h3 className="font-black text-gray-900 mb-4">Add Tee Time</h3>
+        <form onSubmit={save} className="space-y-3">
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Time</label>
+            <input type="time" value={form.time} onChange={e => set('time', e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500" />
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Green $</label>
+              <input type="number" value={form.greenFee} onChange={e => set('greenFee', e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Cart $</label>
+              <input type="number" value={form.cartFee} onChange={e => set('cartFee', e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Players</label>
+              <select value={form.players} onChange={e => set('players', e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500">
+                {[1,2,3,4].map(n => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <input type="checkbox" id="walk" checked={form.walking} onChange={e => set('walking', e.target.checked)} className="w-4 h-4 text-green-600 rounded" />
+            <label htmlFor="walk" className="text-sm text-gray-600">Walking allowed</label>
+          </div>
+          <div className="flex gap-2 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50">Cancel</button>
+            <button type="submit" disabled={saving} className="flex-1 py-2.5 bg-[#1b4332] text-white rounded-xl text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-50">
+              {saving ? 'Adding...' : 'Add'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

@@ -8,42 +8,48 @@ datasource db {
 }
 
 model CourseOperator {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  createdAt DateTime @default(now())
-  course    Course?
+  id                String   @id @default(cuid())
+  email             String   @unique
+  password          String
+  name              String
+  emailVerified     Boolean  @default(false)
+  verificationToken String?
+  onboardingStep    Int      @default(0)
+  createdAt         DateTime @default(now())
+  course            Course?
 }
 
 model Course {
-  id             String         @id @default(cuid())
-  slug           String         @unique
+  id             String            @id @default(cuid())
+  slug           String            @unique
   name           String
-  type           String
-  city           String
-  state          String
-  address        String
-  phone          String
-  website        String
-  bookingUrl     String
-  holes          Int            @default(18)
-  par            Int            @default(72)
-  description    String
+  type           String            @default("public")
+  city           String            @default("")
+  state          String            @default("")
+  zipCode        String            @default("")
+  address        String            @default("")
+  phone          String            @default("")
+  website        String            @default("")
+  bookingUrl     String            @default("")
+  holes          Int               @default(18)
+  par            Int               @default(72)
+  yardage        Int               @default(0)
+  slope          Int               @default(0)
+  description    String            @default("")
   amenities      String[]
-  walkingAllowed Boolean        @default(true)
-  cartRequired   Boolean        @default(false)
-  rating         Float          @default(4.5)
-  reviewCount    Int            @default(0)
-  imageGradient  String
-  featured       Boolean        @default(false)
-  baseGreenFee   Float          @default(0)
-  cartFee        Float          @default(0)
-  active         Boolean        @default(true)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  operatorId     String?        @unique
-  operator       CourseOperator? @relation(fields: [operatorId], references: [id])
+  walkingAllowed Boolean           @default(true)
+  cartRequired   Boolean           @default(false)
+  rating         Float             @default(4.5)
+  reviewCount    Int               @default(0)
+  imageGradient  String            @default("linear-gradient(160deg,#071810 0%,#1b4332 60%,#2d6a4f 100%)")
+  featured       Boolean           @default(false)
+  baseGreenFee   Float             @default(0)
+  cartFee        Float             @default(0)
+  active         Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  operatorId     String?           @unique
+  operator       CourseOperator?   @relation(fields: [operatorId], references: [id])
   teeTimes       TeeTime[]
   bookings       Booking[]
   schedules      TeeTimeSchedule[]
@@ -58,6 +64,7 @@ model TeeTime {
   time             String
   holes            Int       @default(18)
   playersAvailable Int       @default(4)
+  playersBooked    Int       @default(0)
   greenFee         Float
   cartFee          Float     @default(0)
   walkingAllowed   Boolean   @default(true)
@@ -83,19 +90,19 @@ model Booking {
 }
 
 model TeeTimeSchedule {
-  id               String   @id @default(cuid())
-  courseId         String
-  course           Course   @relation(fields: [courseId], references: [id])
-  daysOfWeek       Int[]
-  startTime        String
-  endTime          String
-  intervalMinutes  Int      @default(8)
-  greenFeeWeekday  Float
-  greenFeeWeekend  Float
-  cartFee          Float    @default(0)
-  walkingAllowed   Boolean  @default(true)
-  active           Boolean  @default(true)
-  createdAt        DateTime @default(now())
+  id              String   @id @default(cuid())
+  courseId        String
+  course          Course   @relation(fields: [courseId], references: [id])
+  daysOfWeek      Int[]
+  startTime       String
+  endTime         String
+  intervalMinutes Int      @default(8)
+  greenFeeWeekday Float
+  greenFeeWeekend Float
+  cartFee         Float    @default(0)
+  walkingAllowed  Boolean  @default(true)
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
 }
 
 model Blackout {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { signToken } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 
 export async function POST(req: NextRequest) {
   const { email, password, name, courseName } = await req.json();
@@ -14,26 +15,20 @@ export async function POST(req: NextRequest) {
 
   const hashed = await bcrypt.hash(password, 12);
   const slug = courseName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const verificationToken = randomBytes(32).toString('hex');
 
   const operator = await prisma.courseOperator.create({
     data: {
       email,
       password: hashed,
       name,
+      emailVerified: false,
+      verificationToken,
+      onboardingStep: 0,
       course: {
         create: {
           slug,
           name: courseName,
-          type: 'public',
-          city: '',
-          state: '',
-          address: '',
-          phone: '',
-          website: '',
-          bookingUrl: '',
-          description: '',
-          amenities: [],
-          imageGradient: 'linear-gradient(160deg,#071810 0%,#1b4332 60%,#2d6a4f 100%)',
           active: false,
         },
       },
@@ -41,7 +36,7 @@ export async function POST(req: NextRequest) {
   });
 
   const token = await signToken({ operatorId: operator.id, email: operator.email });
-  const res = NextResponse.json({ success: true });
+  const res = NextResponse.json({ success: true, verificationToken });
   res.cookies.set('gr_operator', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
