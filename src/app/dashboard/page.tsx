@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogOut, Settings, Clock, Calendar, Users, DollarSign, Ban, Plus, ChevronLeft, ChevronRight, RefreshCw, BarChart2, AlertTriangle, X } from 'lucide-react';
+import { LogOut, Settings, Clock, Calendar, Users, DollarSign, Ban, Plus, ChevronLeft, ChevronRight, RefreshCw, BarChart2, AlertTriangle, X, Loader2 } from 'lucide-react';
 
 type TeeTime = {
   id: string; date: string; time: string; holes: number;
