@@ -155,6 +155,10 @@ export default function DashboardPage() {
             className="text-white/60 hover:text-white flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">
             <Clock className="w-3.5 h-3.5" /> Schedule
           </button>
+          <button onClick={() => router.push('/dashboard/members')}
+            className="text-white/60 hover:text-white flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">
+            <Users className="w-3.5 h-3.5" /> Members
+          </button>
           <button onClick={() => router.push('/dashboard/settings')}
             className="text-white/60 hover:text-white flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">
             <Settings className="w-3.5 h-3.5" /> Settings

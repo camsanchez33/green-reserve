@@ -5,60 +5,162 @@ import { resolveDashboardSession } from '@/lib/session';
 export async function GET() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const course = await prisma.course.findFirst({ where: { operator: { id: session.operatorId } } });
-  if (!course) return NextResponse.json([]);
-  const members = await prisma.courseMembership.findMany({
-    where: { courseId: course.id },
-    include: { golfer: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } } },
+
+  const memberships = await prisma.courseMembership.findMany({
+    where: { courseId: session.courseId },
+    include: {
+      golfer: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
+      tier:   { select: { id: true, name: true, color: true } },
+    },
     orderBy: { createdAt: 'desc' },
   });
-  return NextResponse.json(members);
+
+  const normalized = memberships.map(m => ({
+    id:             m.id,
+    golferId:       m.golferId,
+    name:           m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}`.trim() : m.inviteName,
+    email:          m.golfer?.email ?? m.inviteEmail,
+    phone:          m.golfer?.phone ?? m.invitePhone,
+    tierId:         m.tierId,
+    tierName:       m.tier?.name ?? m.membershipType,
+    tierColor:      m.tier?.color ?? '#6b7280',
+    status:         m.status,
+    inviteAccepted: m.inviteAccepted,
+    expiresAt:      m.expiresAt,
+    notes:          m.notes,
+    createdAt:      m.createdAt,
+    linked:         !!m.golferId,
+  }));
+
+  return NextResponse.json(normalized);
 }
 
-// Operator adds a member by email
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const course = await prisma.course.findFirst({ where: { operator: { id: session.operatorId } } });
-  if (!course) return NextResponse.json({ error: 'No course' }, { status: 404 });
 
-  const { email, membershipType, expiresAt, notes } = await req.json();
-  const golfer = await prisma.golferAccount.findUnique({ where: { email } });
-  if (!golfer) return NextResponse.json({ error: 'No golfer account found with that email — they need to sign up first' }, { status: 404 });
+  const body = await req.json();
+  const { email, name, phone, tierId, notes, expiresAt } = body;
 
-  const existing = await prisma.courseMembership.findUnique({
-    where: { golferId_courseId: { golferId: golfer.id, courseId: course.id } },
-  });
-  if (existing) {
-    const updated = await prisma.courseMembership.update({
-      where: { id: existing.id },
-      data: { status: 'active', membershipType: membershipType || 'member', notes: notes || '', expiresAt: expiresAt ? new Date(expiresAt) : null },
-    });
-    return NextResponse.json(updated);
+  if (!email?.trim()) return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+  if (!tierId)        return NextResponse.json({ error: 'Tier is required' }, { status: 400 });
+
+  const tier = await prisma.membershipTier.findUnique({ where: { id: tierId } });
+  if (!tier || tier.courseId !== session.courseId) {
+    return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
   }
 
-  const membership = await prisma.courseMembership.create({
-    data: {
-      golferId: golfer.id,
-      courseId: course.id,
-      membershipType: membershipType || 'member',
-      status: 'active',
-      addedBy: 'operator',
-      notes: notes || '',
-      expiresAt: expiresAt ? new Date(expiresAt) : null,
-    },
-  });
-  return NextResponse.json(membership);
+  const lowerEmail = email.trim().toLowerCase();
+  const golfer = await prisma.golferAccount.findUnique({ where: { email: lowerEmail } });
+
+  if (golfer) {
+    const existing = await prisma.courseMembership.findUnique({
+      where: { golferId_courseId: { golferId: golfer.id, courseId: session.courseId } },
+    });
+    if (existing) {
+      return NextResponse.json({ error: `${email} is already a member of this course` }, { status: 409 });
+    }
+    const membership = await prisma.courseMembership.create({
+      data: {
+        courseId:       session.courseId,
+        golferId:       golfer.id,
+        tierId,
+        membershipType: tier.name,
+        status:         'active',
+        addedBy:        'operator',
+        notes:          notes || '',
+        expiresAt:      expiresAt ? new Date(expiresAt) : null,
+        inviteEmail:    lowerEmail,
+        inviteName:     name || `${golfer.firstName} ${golfer.lastName}`,
+        invitePhone:    phone || golfer.phone,
+        inviteAccepted: true,
+      },
+      include: {
+        golfer: { select: { firstName: true, lastName: true, email: true, phone: true } },
+        tier:   { select: { id: true, name: true, color: true } },
+      },
+    });
+    return NextResponse.json({ ...membership, linked: true }, { status: 201 });
+  } else {
+    if (!name?.trim()) {
+      return NextResponse.json({ error: 'Name is required for members without an existing account' }, { status: 400 });
+    }
+    const existingInvite = await prisma.courseMembership.findFirst({
+      where: { courseId: session.courseId, inviteEmail: lowerEmail },
+    });
+    if (existingInvite) {
+      return NextResponse.json({ error: `${email} already has a pending membership` }, { status: 409 });
+    }
+    const membership = await prisma.courseMembership.create({
+      data: {
+        courseId:       session.courseId,
+        golferId:       null,
+        tierId,
+        membershipType: tier.name,
+        status:         'active',
+        addedBy:        'operator',
+        notes:          notes || '',
+        expiresAt:      expiresAt ? new Date(expiresAt) : null,
+        inviteEmail:    lowerEmail,
+        inviteName:     name.trim(),
+        invitePhone:    phone || '',
+        inviteAccepted: false,
+      },
+      include: { tier: { select: { id: true, name: true, color: true } } },
+    });
+    return NextResponse.json({ ...membership, linked: false }, { status: 201 });
+  }
 }
 
-// Operator updates or removes a member
 export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const { id, status, membershipType } = await req.json();
+
+  const body = await req.json();
+  const { id, tierId, status, notes, expiresAt } = body;
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+
+  const membership = await prisma.courseMembership.findUnique({ where: { id } });
+  if (!membership || membership.courseId !== session.courseId) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
+  if (tierId) {
+    const tier = await prisma.membershipTier.findUnique({ where: { id: tierId } });
+    if (!tier || tier.courseId !== session.courseId) {
+      return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
+    }
+  }
+
   const updated = await prisma.courseMembership.update({
     where: { id },
-    data: { status, membershipType },
+    data: {
+      tierId:    tierId    ?? membership.tierId,
+      status:    status    ?? membership.status,
+      notes:     notes     ?? membership.notes,
+      expiresAt: expiresAt !== undefined ? (expiresAt ? new Date(expiresAt) : null) : membership.expiresAt,
+    },
+    include: {
+      golfer: { select: { firstName: true, lastName: true, email: true, phone: true } },
+      tier:   { select: { id: true, name: true, color: true } },
+    },
   });
   return NextResponse.json(updated);
+}
+
+export async function DELETE(req: NextRequest) {
+  const session = await resolveDashboardSession();
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get('id');
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+
+  const membership = await prisma.courseMembership.findUnique({ where: { id } });
+  if (!membership || membership.courseId !== session.courseId) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
+  await prisma.courseMembership.delete({ where: { id } });
+  return NextResponse.json({ success: true });
 }

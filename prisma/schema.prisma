@@ -93,6 +93,7 @@ model Course {
   schedules               TeeTimeSchedule[]
   blackouts               Blackout[]
   memberships             CourseMembership[]
+  membershipTiers         MembershipTier[]
   waitlist                Waitlist[]
   staff                   CourseStaff[]
 }
@@ -123,18 +124,50 @@ model GolferAccount {
   waitlist         Waitlist[]
 }
 
+model MembershipTier {
+  id                 String             @id @default(cuid())
+  courseId           String
+  course             Course             @relation(fields: [courseId], references: [id])
+  name               String             // "Full Member", "Junior", "Senior Associate"
+  color              String             @default("#1b4332")
+  // Pricing — flat rate overrides. null = fall back to discountPct or standard rate
+  greenFeeWeekday    Float?
+  greenFeeWeekend    Float?
+  cartFeeWeekday     Float?
+  cartFeeWeekend     Float?
+  // Alternative: percentage off the standard rate (0–100)
+  discountPct        Float?
+  // Access privileges
+  advanceBookingDays Int                @default(14)
+  guestPassesPerYear Int                @default(0)
+  // Informational
+  annualFee          Float              @default(0)
+  notes              String             @default("")
+  active             Boolean            @default(true)
+  createdAt          DateTime           @default(now())
+  memberships        CourseMembership[]
+}
+
 model CourseMembership {
-  id             String        @id @default(cuid())
-  golferId       String
-  golfer         GolferAccount @relation(fields: [golferId], references: [id])
+  id             String          @id @default(cuid())
+  golferId       String?
+  golfer         GolferAccount?  @relation(fields: [golferId], references: [id])
   courseId       String
-  course         Course        @relation(fields: [courseId], references: [id])
-  membershipType String        @default("member")
-  status         String        @default("active")
-  addedBy        String        @default("operator")
+  course         Course          @relation(fields: [courseId], references: [id])
+  tierId         String?
+  tier           MembershipTier? @relation(fields: [tierId], references: [id])
+  // Fallback name when no tier selected, or for non-golfer-account members
+  membershipType String          @default("member")
+  // For members without a GolferAccount — invite flow
+  inviteEmail    String          @default("")
+  inviteName     String          @default("")
+  invitePhone    String          @default("")
+  inviteAccepted Boolean         @default(false)
+  status         String          @default("active")
+  addedBy        String          @default("operator")
   expiresAt      DateTime?
-  notes          String        @default("")
-  createdAt      DateTime      @default(now())
+  notes          String          @default("")
+  createdAt      DateTime        @default(now())
 
   @@unique([golferId, courseId])
 }

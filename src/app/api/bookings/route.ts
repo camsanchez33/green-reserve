@@ -4,6 +4,57 @@ import { getGolferSession } from '@/lib/auth';
 import { stripe, ACCESS_FEE_CENTS } from '@/lib/stripe';
 import { sendBookingConfirmation, sendOperatorBookingNotification } from '@/lib/email';
 
+/** Returns true for Sat/Sun given a date string like "2026-06-21" */
+function isWeekend(dateStr: string): boolean {
+  const day = new Date(dateStr + 'T12:00:00').getDay(); // 0=Sun, 6=Sat
+  return day === 0 || day === 6;
+}
+
+/**
+ * Resolves the green fee and cart fee for a golfer based on their membership tier.
+ * Falls back to the tee time's standard rates if no membership or no override.
+ */
+function applyTierRates(
+  teeTime: { greenFee: number; cartFee: number; memberRate: number | null; date: string },
+  tier: {
+    greenFeeWeekday: number | null;
+    greenFeeWeekend: number | null;
+    cartFeeWeekday:  number | null;
+    cartFeeWeekend:  number | null;
+    discountPct:     number | null;
+  } | null
+): { greenFee: number; cartFee: number } {
+  if (!tier) return { greenFee: teeTime.greenFee, cartFee: teeTime.cartFee };
+
+  const weekend = isWeekend(teeTime.date);
+
+  // Flat rate overrides
+  if (tier.greenFeeWeekday != null || tier.greenFeeWeekend != null) {
+    const greenFee = weekend
+      ? (tier.greenFeeWeekend ?? tier.greenFeeWeekday ?? teeTime.greenFee)
+      : (tier.greenFeeWeekday ?? teeTime.greenFee);
+    const cartFee = weekend
+      ? (tier.cartFeeWeekend ?? tier.cartFeeWeekday ?? teeTime.cartFee)
+      : (tier.cartFeeWeekday ?? teeTime.cartFee);
+    return { greenFee, cartFee };
+  }
+
+  // Percentage discount off standard
+  if (tier.discountPct != null) {
+    const mult = 1 - tier.discountPct / 100;
+    return {
+      greenFee: Math.round(teeTime.greenFee * mult * 100) / 100,
+      cartFee:  Math.round(teeTime.cartFee  * mult * 100) / 100,
+    };
+  }
+
+  // No override — fall back to legacy memberRate if set, else standard
+  return {
+    greenFee: teeTime.memberRate ?? teeTime.greenFee,
+    cartFee:  teeTime.cartFee,
+  };
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const { teeTimeId, players, golferName, golferEmail, golferPhone, paymentMethodId } = body;
@@ -11,45 +62,62 @@ export async function POST(req: NextRequest) {
   if (!teeTimeId || !players || !golferName || !golferEmail)
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
 
-  // Determine rate — check membership before transaction
   const golferSession = await getGolferSession();
   let appliedRate = 'standard';
-  let membershipType = 'standard';
+  let appliedTierName = 'standard';
 
-  // Atomic transaction: check availability + create booking + decrement in one shot
+  // Look up membership tier BEFORE entering the transaction (read-only, safe)
+  let resolvedGreenFeeOverride: number | null = null;
+  let resolvedCartFeeOverride:  number | null = null;
+
+  if (golferSession) {
+    const membership = await prisma.courseMembership.findFirst({
+      where: {
+        courseId: (await prisma.teeTime.findUnique({ where: { id: teeTimeId }, select: { courseId: true } }))?.courseId,
+        golferId: golferSession.golferId,
+        status: 'active',
+      },
+      include: { tier: true },
+    });
+
+    if (membership?.tier) {
+      const teeTimePreview = await prisma.teeTime.findUnique({
+        where: { id: teeTimeId },
+        select: { greenFee: true, cartFee: true, memberRate: true, date: true },
+      });
+      if (teeTimePreview) {
+        const rates = applyTierRates(teeTimePreview, membership.tier);
+        resolvedGreenFeeOverride = rates.greenFee;
+        resolvedCartFeeOverride  = rates.cartFee;
+        appliedTierName = membership.tier.name;
+        appliedRate     = membership.tier.name;
+      }
+    }
+  }
+
+  // Atomic transaction
   const result = await prisma.$transaction(async (tx) => {
     const teeTime = await tx.teeTime.findUnique({
       where: { id: teeTimeId },
       include: {
-        course: {
-          include: { operator: { select: { email: true } } },
-        },
+        course: { include: { operator: { select: { email: true } } } },
       },
     });
     if (!teeTime) throw new Error('NOT_FOUND');
     if (teeTime.status === 'blocked') throw new Error('BLOCKED');
-    if (teeTime.status === 'full') throw new Error('FULL');
+    if (teeTime.status === 'full')    throw new Error('FULL');
 
     const spotsLeft = teeTime.playersAvailable - teeTime.playersBooked;
     if (players > spotsLeft) throw new Error(`SPOTS:${spotsLeft}`);
 
-    // Check membership
-    let greenFeePerPlayer = teeTime.greenFee;
-    if (golferSession && teeTime.memberRate) {
-      const membership = await tx.courseMembership.findUnique({
-        where: { golferId_courseId: { golferId: golferSession.golferId, courseId: teeTime.courseId } },
-      });
-      if (membership?.status === 'active') {
-        greenFeePerPlayer = teeTime.memberRate;
-        membershipType = membership.membershipType;
-        appliedRate = membershipType;
-      }
-    }
+    // Apply resolved rates (or standard if no membership)
+    const greenFeePerPlayer = resolvedGreenFeeOverride ?? teeTime.greenFee;
+    const cartFeePerPlayer  = resolvedCartFeeOverride  ?? teeTime.cartFee;
 
-    const greenFeeTotal = Math.round(greenFeePerPlayer * players * 100); // in cents
-    const cartFeeTotal = Math.round(teeTime.cartFee * players * 100);
+    const greenFeeTotal  = Math.round(greenFeePerPlayer * players * 100); // cents
+    const cartFeeTotal   = Math.round(cartFeePerPlayer  * players * 100);
     const accessFeeTotal = ACCESS_FEE_CENTS * players;
-    const totalCents = greenFeeTotal + cartFeeTotal + accessFeeTotal;
+    const totalCents     = greenFeeTotal + cartFeeTotal + accessFeeTotal;
 
     // Stripe payment
     let stripePaymentIntentId = '';
@@ -63,34 +131,32 @@ export async function POST(req: NextRequest) {
         return_url: `${process.env.NEXT_PUBLIC_URL}/book/confirm`,
         application_fee_amount: accessFeeTotal,
         transfer_data: { destination: teeTime.course.stripeAccountId },
-        metadata: { teeTimeId, players: String(players), golferEmail },
+        metadata: { teeTimeId, players: String(players), golferEmail, appliedRate },
       });
       stripePaymentIntentId = intent.id;
       if (intent.status !== 'succeeded') clientSecret = intent.client_secret || '';
     }
 
-    // Create booking
     const booking = await tx.booking.create({
       data: {
         teeTimeId,
-        courseId: teeTime.courseId,
-        golferAccountId: golferSession?.golferId || null,
+        courseId:         teeTime.courseId,
+        golferAccountId:  golferSession?.golferId || null,
         golferName,
         golferEmail,
-        golferPhone: golferPhone || '',
+        golferPhone:      golferPhone || '',
         players,
         appliedRate,
         greenFeeTotal,
         cartFeeTotal,
         accessFeeTotal,
-        totalAmount: totalCents,
+        totalAmount:      totalCents,
         stripePaymentIntentId,
-        paymentStatus: stripePaymentIntentId ? 'paid' : 'pending',
-        status: 'confirmed',
+        paymentStatus:    stripePaymentIntentId ? 'paid' : 'pending',
+        status:           'confirmed',
       },
     });
 
-    // Atomically decrement players
     const newBooked = teeTime.playersBooked + players;
     await tx.teeTime.update({
       where: { id: teeTimeId },
@@ -103,23 +169,25 @@ export async function POST(req: NextRequest) {
     return { booking, teeTime, totalCents, greenFeeTotal, cartFeeTotal, accessFeeTotal, clientSecret };
   });
 
-  // Send emails (outside transaction, non-blocking)
+  // Send confirmation emails (fire-and-forget)
   try {
     const emailData = {
       golferName,
       golferEmail,
-      courseName: result.teeTime.course.name,
+      courseName:    result.teeTime.course.name,
       courseAddress: `${result.teeTime.course.address || ''}, ${result.teeTime.course.city}, ${result.teeTime.course.state}`,
-      date: result.teeTime.date,
-      time: result.teeTime.time,
-      holes: result.teeTime.holes,
+      date:          result.teeTime.date,
+      time:          result.teeTime.time,
+      holes:         result.teeTime.holes,
       players,
-      greenFeeTotal: result.greenFeeTotal / 100,
-      cartFeeTotal: result.cartFeeTotal / 100,
+      greenFeeTotal:  result.greenFeeTotal  / 100,
+      cartFeeTotal:   result.cartFeeTotal   / 100,
       accessFeeTotal: result.accessFeeTotal / 100,
-      totalAmount: result.totalCents / 100,
+      totalAmount:    result.totalCents     / 100,
+      memberRate:     appliedTierName !== 'standard' ? appliedTierName : undefined,
     };
     await sendBookingConfirmation(emailData);
+    const courseId = result.teeTime.courseId;
     const operator = await prisma.courseOperator.findFirst({ where: { course: { id: courseId } } });
     if (operator?.email) {
       await sendOperatorBookingNotification({ ...emailData, operatorEmail: operator.email });
@@ -128,7 +196,12 @@ export async function POST(req: NextRequest) {
     console.error('Email error:', err);
   }
 
-  return NextResponse.json({ clientSecret: result.clientSecret, bookingId: result.booking.id });
+  return NextResponse.json({
+    clientSecret: result.clientSecret,
+    bookingId:    result.booking.id,
+    appliedRate,
+    memberRate:   appliedTierName !== 'standard',
+  });
 }
 
 export async function GET() {
@@ -139,7 +212,7 @@ export async function GET() {
     where: { golferAccountId: golferSession.golferId },
     include: {
       teeTime: { select: { date: true, time: true, holes: true } },
-      course: { select: { name: true, city: true, state: true, slug: true } },
+      course:  { select: { name: true, city: true, state: true, slug: true } },
     },
     orderBy: { createdAt: 'desc' },
   });
