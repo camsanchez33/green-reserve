@@ -4,6 +4,7 @@ import {
   CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Copy, ExternalLink,
   RefreshCw, BarChart2, Users, DollarSign, TrendingUp, AlertCircle,
   Building2, Star, Power, ArrowLeft, Eye, X, Globe, Phone, Mail,
+  Ban, Plus, Calendar,
 } from 'lucide-react';
 
 /* ─── Types ─── */
@@ -35,6 +36,11 @@ interface CourseDetail {
   revenue30d: { gross:number; platform:number; greenFees:number };
 }
 interface ApproveResult { tempPassword: string; setupLink: string; }
+interface TeeSlot {
+  id: string; time: string; holes: number; playersAvailable: number; playersBooked: number;
+  greenFee: number; cartFee: number; status: string; tierName: string;
+  bookings: { id:string; golferName:string; golferEmail:string; golferPhone:string; players:number; totalAmount:number; paymentStatus:string }[];
+}
 
 /* ─── Helpers ─── */
 const STATUS_COLORS: Record<string, string> = {
@@ -86,6 +92,12 @@ export default function AdminPage() {
   const [detail, setDetail] = useState<CourseDetail|null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [search, setSearch] = useState('');
+  const [drawerTab, setDrawerTab] = useState<'overview'|'contact'|'teesheet'>('overview');
+  const [tsDate, setTsDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [tsSlots, setTsSlots] = useState<TeeSlot[]>([]);
+  const [tsLoading, setTsLoading] = useState(false);
+  const [manualSlot, setManualSlot] = useState<string|null>(null);
+  const [manualForm, setManualForm] = useState({ name:'', email:'', phone:'', players: 1 });
 
   const H = useCallback(() => ({ 'Content-Type':'application/json','x-admin-key':key }), [key]);
 
@@ -158,89 +170,254 @@ export default function AdminPage() {
   );
 
   /* ── Course Detail Drawer ── */
+  const loadTeeSheet = useCallback(async (courseId: string, date: string) => {
+    setTsLoading(true); setTsSlots([]);
+    const r = await fetch(`/api/admin/tee-sheet?courseId=${courseId}&date=${date}`, { headers: H() });
+    if (r.ok) setTsSlots(await r.json());
+    setTsLoading(false);
+  }, [H]);
+
+  async function blockSlot(teeTimeId: string, block: boolean) {
+    await fetch('/api/admin/tee-sheet', { method:'PATCH', headers:H(), body:JSON.stringify({ action: block?'block':'unblock', teeTimeId }) });
+    if (detail?.course) loadTeeSheet(detail.course.id, tsDate);
+  }
+
+  async function cancelBooking(bookingId: string) {
+    if (!confirm('Cancel this booking?')) return;
+    await fetch('/api/admin/tee-sheet', { method:'PATCH', headers:H(), body:JSON.stringify({ action:'cancel_booking', bookingId }) });
+    if (detail?.course) loadTeeSheet(detail.course.id, tsDate);
+  }
+
+  async function addManualBooking() {
+    if (!manualSlot) return;
+    const r = await fetch('/api/admin/tee-sheet', { method:'POST', headers:H(), body:JSON.stringify({ teeTimeId: manualSlot, ...manualForm }) });
+    if (r.ok) { setManualSlot(null); setManualForm({ name:'', email:'', phone:'', players:1 }); if (detail?.course) loadTeeSheet(detail.course.id, tsDate); }
+    else { const d = await r.json(); alert(d.error); }
+  }
+
   const DetailDrawer = () => {
     if(!detail && !detailLoading) return null;
     const c = detail?.course;
+
     return (
       <div className="fixed inset-0 bg-black/50 z-50 flex justify-end">
-        <div className="bg-white w-full max-w-2xl h-full overflow-y-auto shadow-2xl">
-          <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
-            <div className="flex items-center gap-3">
-              <button onClick={()=>setDetail(null)} className="text-gray-400 hover:text-gray-600"><ArrowLeft className="w-5 h-5"/></button>
-              <span className="font-bold text-gray-900">{c?.name||'Loading...'}</span>
+        <div className="bg-white w-full max-w-2xl h-full overflow-y-auto shadow-2xl flex flex-col">
+          {/* Header */}
+          <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 z-10">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <button onClick={()=>setDetail(null)} className="text-gray-400 hover:text-gray-600"><ArrowLeft className="w-5 h-5"/></button>
+                <span className="font-bold text-gray-900">{c?.name||'Loading...'}</span>
+                {c&&<span className={`text-xs px-2 py-0.5 rounded-full font-medium ${c.active?'bg-green-100 text-green-700':'bg-gray-100 text-gray-500'}`}>{c.active?'Live':'Offline'}</span>}
+              </div>
+              <div className="flex gap-2">
+                {c&&<>
+                  <button onClick={()=>toggleFeatured(c.id,!c.featured)} className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors flex items-center gap-1 ${c.featured?'bg-yellow-50 text-yellow-700 border-yellow-300':'bg-white text-gray-500 border-gray-200 hover:border-yellow-300'}`}><Star className="w-3 h-3"/>{c.featured?'Featured':'Feature'}</button>
+                  <button onClick={()=>toggleCourseActive(c.id,!c.active)} className={`px-3 py-1.5 rounded-lg text-xs font-bold border flex items-center gap-1 ${c.active?'bg-green-50 text-green-700 border-green-200':'bg-red-50 text-red-700 border-red-200'}`}><Power className="w-3 h-3"/>{c.active?'Set Offline':'Set Live'}</button>
+                </>}
+              </div>
             </div>
-            <div className="flex gap-2">
-              {c&&<>
-                <button onClick={()=>toggleFeatured(c.id,!c.featured)} className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors flex items-center gap-1 ${c.featured?'bg-yellow-50 text-yellow-700 border-yellow-300':'bg-white text-gray-500 border-gray-200 hover:border-yellow-300'}`}><Star className="w-3 h-3"/>{c.featured?'Featured':'Feature'}</button>
-                <button onClick={()=>toggleCourseActive(c.id,!c.active)} className={`px-3 py-1.5 rounded-lg text-xs font-bold border flex items-center gap-1 ${c.active?'bg-green-50 text-green-700 border-green-200':'bg-red-50 text-red-700 border-red-200'}`}><Power className="w-3 h-3"/>{c.active?'Active':'Inactive'}</button>
-              </>}
+            {/* Tabs */}
+            <div className="flex gap-1">
+              {(['overview','contact','teesheet'] as const).map(t=>(
+                <button key={t} onClick={()=>{ setDrawerTab(t); if(t==='teesheet'&&c) loadTeeSheet(c.id,tsDate); }} className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors capitalize ${drawerTab===t?'bg-[#1b4332] text-white':'text-gray-500 hover:text-gray-800'}`}>
+                  {t==='teesheet'?'Tee Sheet':t.charAt(0).toUpperCase()+t.slice(1)}
+                </button>
+              ))}
             </div>
           </div>
 
           {detailLoading&&<div className="p-12 text-center text-gray-400">Loading...</div>}
 
-          {detail&&<div className="p-6 space-y-6">
-            {/* Revenue */}
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                {label:'Gross (30d)',value:fmtMoney(detail.revenue30d.gross)},
-                {label:'GR Fees (30d)',value:fmtMoney(detail.revenue30d.platform),color:'text-green-700'},
-                {label:'Total Bookings',value:detail.totalBookings},
-              ].map(({label,value,color})=>(
-                <div key={label} className="bg-gray-50 rounded-xl p-4 text-center">
-                  <div className="text-xs text-gray-400 font-medium mb-1">{label}</div>
-                  <div className={`font-black text-lg ${color||'text-gray-900'}`}>{value}</div>
-                </div>
-              ))}
-            </div>
+          {detail&&<div className="p-6 flex-1 overflow-y-auto">
 
-            {/* Operator */}
-            {c?.operator&&<div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-              <div className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-2">Operator</div>
-              <div className="text-sm font-semibold text-gray-900">{String(c.operator.name)}</div>
-              <div className="text-sm text-gray-600">{String(c.operator.email)}</div>
-              <div className="flex gap-3 mt-2">
-                <span className={`text-xs px-2 py-0.5 rounded-full ${c.operator.emailVerified?'bg-green-100 text-green-700':'bg-red-100 text-red-600'}`}>{c.operator.emailVerified?'Email verified':'Not verified'}</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Step {String(c.operator.onboardingStep)}/3</span>
-                {c.stripeAccountActive&&<span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">Stripe ✓</span>}
-              </div>
-            </div>}
-
-            {/* Staff */}
-            {detail.staff.length>0&&<div>
-              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Staff ({detail.staff.length})</div>
-              <div className="space-y-2">
-                {detail.staff.map(s=>(
-                  <div key={s.id} className="flex items-center gap-3 bg-gray-50 rounded-lg px-3 py-2">
-                    <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-xs">{s.name[0]}</div>
-                    <div className="flex-1 text-sm"><span className="font-medium">{s.name}</span> <span className="text-gray-400 text-xs">· {s.email} · {s.role}</span></div>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${s.active?'bg-green-100 text-green-700':'bg-gray-100 text-gray-400'}`}>{s.active?'Active':'Off'}</span>
+            {/* ── Overview Tab ── */}
+            {drawerTab==='overview'&&<div className="space-y-6">
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  {label:'Gross (30d)',value:fmtMoney(detail.revenue30d.gross)},
+                  {label:'GR Fees (30d)',value:fmtMoney(detail.revenue30d.platform),color:'text-green-700'},
+                  {label:'Total Bookings',value:detail.totalBookings},
+                ].map(({label,value,color})=>(
+                  <div key={label} className="bg-gray-50 rounded-xl p-4 text-center">
+                    <div className="text-xs text-gray-400 font-medium mb-1">{label}</div>
+                    <div className={`font-black text-lg ${color||'text-gray-900'}`}>{value}</div>
                   </div>
                 ))}
               </div>
-            </div>}
 
-            {/* Schedules */}
-            {(c?.schedules as unknown[])?.length>0&&<div>
-              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Tee Sheet Schedules ({(c?.schedules as unknown[]).length})</div>
-              <div className="text-sm text-gray-600">{(c?.schedules as unknown[]).length} schedule{(c?.schedules as unknown[]).length!==1?'s':''} configured</div>
-            </div>}
-
-            {/* Recent Bookings */}
-            {detail.recentBookings.length>0&&<div>
-              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Recent Bookings (30d)</div>
-              <div className="space-y-2">
-                {detail.recentBookings.map(b=>(
-                  <div key={b.id} className="bg-gray-50 rounded-xl px-4 py-3 flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-sm text-gray-900">{b.golferName}</div>
-                      <div className="text-xs text-gray-400">{b.teeTime.date} {b.teeTime.time} · {b.players} player{b.players!==1?'s':''}</div>
+              {detail.staff.length>0&&<div>
+                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Staff ({detail.staff.length})</div>
+                <div className="space-y-2">
+                  {detail.staff.map(s=>(
+                    <div key={s.id} className="flex items-center gap-3 bg-gray-50 rounded-lg px-3 py-2">
+                      <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-xs">{s.name[0]}</div>
+                      <div className="flex-1 text-sm"><span className="font-medium">{s.name}</span><span className="text-gray-400 text-xs"> · {s.email} · {s.role}</span></div>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${s.active?'bg-green-100 text-green-700':'bg-gray-100 text-gray-400'}`}>{s.active?'Active':'Off'}</span>
                     </div>
-                    <div className="text-sm font-bold text-gray-900">{fmtMoney(b.totalAmount/100)}</div>
+                  ))}
+                </div>
+              </div>}
+
+              {detail.recentBookings.length>0&&<div>
+                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Recent Bookings (30d)</div>
+                <div className="space-y-2">
+                  {detail.recentBookings.map(b=>(
+                    <div key={b.id} className="bg-gray-50 rounded-xl px-4 py-3 flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-sm text-gray-900">{b.golferName}</div>
+                        <div className="text-xs text-gray-400">{b.teeTime.date} {b.teeTime.time} · {b.players} player{b.players!==1?'s':''}</div>
+                        <div className="text-xs text-gray-400">{b.golferEmail}</div>
+                      </div>
+                      <div className="text-sm font-bold text-gray-900">{fmtMoney(b.totalAmount/100)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>}
+            </div>}
+
+            {/* ── Contact Tab ── */}
+            {drawerTab==='contact'&&<div className="space-y-4">
+              {c?.operator&&<>
+                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">
+                  <div className="text-xs font-semibold text-blue-500 uppercase tracking-wide mb-3">Operator / Owner</div>
+                  <div className="text-lg font-black text-gray-900 mb-0.5">{String(c.operator.name)}</div>
+                  <div className="space-y-3 mt-3">
+                    <a href={`mailto:${String(c.operator.email)}`} className="flex items-center gap-3 text-sm text-gray-700 hover:text-blue-600">
+                      <Mail className="w-4 h-4 text-gray-400"/>{String(c.operator.email)}
+                    </a>
+                    {String((c.operator as Record<string,unknown>).phone||'')&&(
+                      <a href={`tel:${String((c.operator as Record<string,unknown>).phone)}`} className="flex items-center gap-3 text-sm text-gray-700 hover:text-blue-600">
+                        <Phone className="w-4 h-4 text-gray-400"/>{String((c.operator as Record<string,unknown>).phone)}
+                      </a>
+                    )}
+                  </div>
+                  <div className="flex gap-2 mt-4 flex-wrap">
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${c.operator.emailVerified?'bg-green-100 text-green-700':'bg-red-100 text-red-600'}`}>{c.operator.emailVerified?'✓ Email verified':'✗ Not verified'}</span>
+                    <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600 font-medium">Onboarding step {String(c.operator.onboardingStep)}/3</span>
+                    {c.stripeAccountActive&&<span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700 font-medium">Stripe connected ✓</span>}
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+                  <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Course Info</div>
+                  <div className="space-y-2 text-sm">
+                    {[
+                      ['Address', String((c as Record<string,unknown>).address||'—')],
+                      ['Phone', String((c as Record<string,unknown>).phone||'—')],
+                      ['Website', String((c as Record<string,unknown>).website||'—')],
+                      ['Type', String((c as Record<string,unknown>).type||'—')],
+                    ].map(([label, val])=>(
+                      <div key={label} className="flex gap-2">
+                        <span className="text-gray-400 w-20 shrink-0">{label}</span>
+                        <span className="text-gray-800 font-medium">{val}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>}
+
+              {detail.staff.length>0&&<div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Staff Contacts</div>
+                <div className="space-y-3">
+                  {detail.staff.map(s=>(
+                    <div key={s.id} className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-xs shrink-0">{s.name[0]}</div>
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-gray-900">{s.name} <span className="text-xs text-gray-400 font-normal">· {s.role}</span></div>
+                        <a href={`mailto:${s.email}`} className="text-xs text-blue-600 hover:underline">{s.email}</a>
+                      </div>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${s.active?'bg-green-100 text-green-700':'bg-gray-100 text-gray-400'}`}>{s.active?'Active':'Off'}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>}
+            </div>}
+
+            {/* ── Tee Sheet Tab ── */}
+            {drawerTab==='teesheet'&&<div>
+              {/* Date picker */}
+              <div className="flex items-center gap-3 mb-5">
+                <Calendar className="w-4 h-4 text-gray-400"/>
+                <input type="date" value={tsDate} onChange={e=>{ setTsDate(e.target.value); if(c) loadTeeSheet(c.id,e.target.value); }}
+                  className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-green-500"/>
+                <span className="text-sm text-gray-400">{tsSlots.length} slots</span>
+              </div>
+
+              {tsLoading&&<div className="text-center text-gray-400 py-12">Loading tee sheet...</div>}
+
+              {!tsLoading&&tsSlots.length===0&&<div className="text-center text-gray-400 py-12">No tee times for this date</div>}
+
+              <div className="space-y-3">
+                {tsSlots.map(slot=>(
+                  <div key={slot.id} className={`rounded-xl border ${slot.status==='blocked'?'border-red-200 bg-red-50':slot.bookings.length>0?'border-green-200 bg-green-50':'border-gray-200 bg-white'}`}>
+                    <div className="px-4 py-3 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-gray-900 text-sm w-16">{slot.time}</span>
+                        <span className="text-xs text-gray-500">{slot.holes}h · ${slot.greenFee}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${slot.status==='blocked'?'bg-red-100 text-red-700':slot.playersAvailable===0?'bg-gray-100 text-gray-500':'bg-green-100 text-green-700'}`}>
+                          {slot.status==='blocked'?'Blocked':`${slot.playersAvailable} open`}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={()=>setManualSlot(slot.id)} className="text-xs px-2 py-1 bg-[#1b4332] text-white rounded-lg flex items-center gap-1 hover:bg-[#2d6a4f]"><Plus className="w-3 h-3"/>Add</button>
+                        <button onClick={()=>blockSlot(slot.id, slot.status!=='blocked')} className={`text-xs px-2 py-1 rounded-lg flex items-center gap-1 border transition-colors ${slot.status==='blocked'?'border-green-300 text-green-700 bg-green-50 hover:bg-green-100':'border-red-200 text-red-600 bg-white hover:bg-red-50'}`}>
+                          <Ban className="w-3 h-3"/>{slot.status==='blocked'?'Unblock':'Block'}
+                        </button>
+                      </div>
+                    </div>
+                    {slot.bookings.length>0&&<div className="border-t border-gray-100 px-4 py-2 space-y-2">
+                      {slot.bookings.map(b=>(
+                        <div key={b.id} className="flex items-center justify-between text-sm">
+                          <div>
+                            <span className="font-medium text-gray-900">{b.golferName}</span>
+                            <span className="text-gray-400 text-xs"> · {b.players} player{b.players!==1?'s':''} · </span>
+                            <a href={`mailto:${b.golferEmail}`} className="text-xs text-blue-600 hover:underline">{b.golferEmail}</a>
+                            {b.golferPhone&&<span className="text-xs text-gray-400"> · {b.golferPhone}</span>}
+                            {b.paymentStatus==='manual'&&<span className="ml-2 text-xs px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded">Manual</span>}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-gray-700">{fmtMoney(b.totalAmount/100)}</span>
+                            <button onClick={()=>cancelBooking(b.id)} className="text-xs text-red-500 hover:text-red-700 px-2 py-0.5 border border-red-200 rounded-lg">Cancel</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>}
                   </div>
                 ))}
               </div>
+
+              {/* Manual booking modal */}
+              {manualSlot&&<div className="fixed inset-0 bg-black/40 z-60 flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-gray-900">Add Manual Booking</h3>
+                    <button onClick={()=>setManualSlot(null)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5"/></button>
+                  </div>
+                  <div className="space-y-3">
+                    {[['Golfer Name*','name','text'],['Email*','email','email'],['Phone','phone','tel']].map(([label,field,type])=>(
+                      <div key={field}>
+                        <label className="text-xs font-semibold text-gray-500 block mb-1">{label}</label>
+                        <input type={type} value={(manualForm as Record<string,unknown>)[field] as string} onChange={e=>setManualForm(f=>({...f,[field]:e.target.value}))}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500"/>
+                      </div>
+                    ))}
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 block mb-1">Players*</label>
+                      <select value={manualForm.players} onChange={e=>setManualForm(f=>({...f,players:Number(e.target.value)}))}
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500">
+                        {[1,2,3,4].map(n=><option key={n} value={n}>{n}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 mt-5">
+                    <button onClick={()=>setManualSlot(null)} className="flex-1 px-4 py-2 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600">Cancel</button>
+                    <button onClick={addManualBooking} className="flex-1 px-4 py-2 bg-[#1b4332] text-white rounded-xl text-sm font-semibold hover:bg-[#2d6a4f]">Add Booking</button>
+                  </div>
+                </div>
+              </div>}
             </div>}
+
           </div>}
         </div>
       </div>
