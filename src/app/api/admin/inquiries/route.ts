@@ -24,9 +24,14 @@ async function handleAction(inquiryId: string, action: string) {
   }
 
   if (action === 'approve') {
+    try {
     const tempPassword = randomBytes(8).toString('hex');
     const hashed = await bcrypt.hash(tempPassword, 12);
-    const slug = inquiry.courseName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const baseSlug = inquiry.courseName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    // Make slug unique if it already exists
+    let slug = baseSlug;
+    const slugExists = await prisma.course.findUnique({ where: { slug } });
+    if (slugExists) slug = `${baseSlug}-${randomBytes(3).toString('hex')}`;
     const verificationToken = randomBytes(32).toString('hex');
 
     const existing = await prisma.courseOperator.findUnique({ where: { email: inquiry.email } });
@@ -64,6 +69,10 @@ async function handleAction(inquiryId: string, action: string) {
 
     const setupLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/verify?token=${verificationToken}`;
     return NextResponse.json({ success: true, tempPassword, setupLink, operatorId: operator.id });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return NextResponse.json({ error: `Approve failed: ${msg}` }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
