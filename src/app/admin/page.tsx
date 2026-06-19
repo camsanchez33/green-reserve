@@ -104,6 +104,12 @@ export default function AdminPage() {
   const loadStats    = useCallback(async()=>{ const r=await fetch('/api/admin/stats',{headers:H()}); if(r.ok) setStats(await r.json()); },[H]);
   const loadInquiries= useCallback(async()=>{ setLoading(true); const r=await fetch('/api/admin/inquiries',{headers:H()}); if(r.ok) setInquiries(await r.json()); setLoading(false); },[H]);
   const loadCourses  = useCallback(async()=>{ setLoading(true); const r=await fetch('/api/admin/courses',{headers:H()}); if(r.ok) setCourses(await r.json()); setLoading(false); },[H]);
+  const loadTeeSheet = useCallback(async (courseId: string, date: string) => {
+    setTsLoading(true); setTsSlots([]);
+    const r = await fetch(`/api/admin/tee-sheet?courseId=${courseId}&date=${date}`, { headers: H() });
+    if (r.ok) setTsSlots(await r.json());
+    setTsLoading(false);
+  }, [H]);
 
   useEffect(()=>{ if(!authed) return; loadStats(); if(tab==='inquiries') loadInquiries(); else if(tab==='courses') loadCourses(); },[authed,tab,loadStats,loadInquiries,loadCourses]);
 
@@ -170,13 +176,6 @@ export default function AdminPage() {
   );
 
   /* ── Course Detail Drawer ── */
-  const loadTeeSheet = useCallback(async (courseId: string, date: string) => {
-    setTsLoading(true); setTsSlots([]);
-    const r = await fetch(`/api/admin/tee-sheet?courseId=${courseId}&date=${date}`, { headers: H() });
-    if (r.ok) setTsSlots(await r.json());
-    setTsLoading(false);
-  }, [H]);
-
   async function blockSlot(teeTimeId: string, block: boolean) {
     await fetch('/api/admin/tee-sheet', { method:'PATCH', headers:H(), body:JSON.stringify({ action: block?'block':'unblock', teeTimeId }) });
     if (detail?.course) loadTeeSheet(detail.course.id, tsDate);
