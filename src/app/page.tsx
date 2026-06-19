@@ -3,17 +3,6 @@ import Link from 'next/link';
 export default function HomePage() {
   return (
     <>
-      {/* ── NAV ── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a1f0f]/90 backdrop-blur border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <span className="text-white font-black text-xl">Green<span className="text-green-400">Reserve</span></span>
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard/login" className="text-white/60 hover:text-white text-sm font-medium transition-colors">Operator Login</Link>
-            <Link href="/for-courses" className="bg-green-600 hover:bg-green-500 text-white text-sm font-bold px-4 py-2 rounded-xl transition-colors">List Your Course</Link>
-          </div>
-        </div>
-      </nav>
-
       {/* ── HERO ── */}
       <section className="relative min-h-screen flex flex-col justify-center overflow-hidden" style={{ background: 'linear-gradient(150deg,#050f09 0%,#0f2218 50%,#1b4332 100%)' }}>
         <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle,rgba(255,255,255,0.04) 1px,transparent 1px)', backgroundSize: '28px 28px' }} />

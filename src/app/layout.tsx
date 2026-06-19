@@ -7,9 +7,8 @@ import Footer from '@/components/Footer';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Green Reserve — Find Golf. Book Direct.',
-  description:
-    "Green Reserve is golf's transparent discovery layer. Find tee times, understand access rules, and book directly with each course.",
+  title: 'GreenReserve — Online Tee Sheet for Golf Courses',
+  description: 'Free online booking platform for golf courses. Set up your tee sheet in minutes. Golfers book direct — you keep 100% of green fees.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
