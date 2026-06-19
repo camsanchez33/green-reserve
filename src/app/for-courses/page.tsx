@@ -1,11 +1,14 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckCircle, ChevronDown, ChevronUp, Phone, Calendar } from 'lucide-react';
 
 const STATES = ['CT','DE','MA','MD','ME','NH','NJ','NY','PA','RI','VA','VT'];
 const BOOKING_METHODS = ['Phone only','Our own website','GolfNow','EZLinks','foreUp','Chronogolf','TeeItUp','Other'];
 const FEE_RANGES = ['Under $40','$40–$70','$70–$100','$100–$150','$150+'];
+
+// Calendly link — swap this out once you have one
+const CALENDLY_URL = 'https://calendly.com/greenreserve';
 
 type FormData = {
   contactName: string; contactTitle: string; email: string; phone: string;
@@ -53,12 +56,13 @@ function Section({ title, open, toggle, children }: { title: string; open: boole
   );
 }
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) {
   return (
     <div>
       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
         {label}{required && <span className="text-red-400 ml-0.5">*</span>}
       </label>
+      {hint && <p className="text-xs text-gray-400 mb-1.5">{hint}</p>}
       {children}
     </div>
   );
@@ -67,12 +71,25 @@ function Field({ label, required, children }: { label: string; required?: boolea
 const inp = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors";
 const sel = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 bg-gray-50";
 
+const GOALS = [
+  'More online bookings',
+  'Replace current software',
+  'Tee sheet management',
+  'Accept online payments',
+  'Reduce phone calls',
+];
+
 export default function ForCoursesPage() {
   const router = useRouter();
   const [form, setForm] = useState<FormData>(init);
-  const [sections, setSections] = useState({ contact: true, course: true, booking: false, pricing: false, policies: false, facilities: false, goals: false });
+  // All sections open by default
+  const [sections, setSections] = useState({
+    contact: true, course: true, goals: true,
+    booking: true, pricing: true, policies: true, facilities: true,
+  });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedData, setSubmittedData] = useState<{ courseName: string; phone: string } | null>(null);
   const [error, setError] = useState('');
 
   const set = (k: keyof FormData, v: string | boolean | string[]) => setForm(f => ({ ...f, [k]: v }));
@@ -91,17 +108,56 @@ export default function ForCoursesPage() {
       body: JSON.stringify({ ...form, teeTimesPerDay: form.teeTimesPerDay ? Number(form.teeTimesPerDay) : null }),
     });
     setSubmitting(false);
-    if (res.ok) setSubmitted(true);
-    else { const d = await res.json(); setError(d.error || 'Something went wrong'); }
+    if (res.ok) {
+      setSubmittedData({ courseName: form.courseName, phone: form.phone });
+      setSubmitted(true);
+    } else {
+      const d = await res.json();
+      setError(d.error || 'Something went wrong');
+    }
   };
 
-  if (submitted) return (
+  if (submitted && submittedData) return (
     <div className="min-h-screen bg-[#0a1f0f] flex items-center justify-center p-6">
-      <div className="bg-white rounded-2xl p-10 max-w-md w-full text-center">
-        <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-        <h1 className="text-2xl font-black text-gray-900 mb-2">We've got it!</h1>
-        <p className="text-gray-500 mb-6">We'll review your submission and reach out within 1–2 business days to get you set up.</p>
-        <button onClick={() => router.push('/')} className="w-full bg-[#1b4332] text-white py-3 rounded-xl font-semibold hover:bg-[#2d6a4f]">Back to Green Reserve</button>
+      <div className="bg-white rounded-2xl p-10 max-w-lg w-full">
+        <CheckCircle className="w-14 h-14 text-green-500 mx-auto mb-5" />
+        <h1 className="text-2xl font-black text-gray-900 mb-1 text-center">Got it — we'll be in touch!</h1>
+        <p className="text-gray-500 text-center mb-6 text-sm">
+          We received the inquiry for <span className="font-semibold text-gray-800">{submittedData.courseName}</span>.
+        </p>
+
+        {/* What happens next */}
+        <div className="bg-gray-50 rounded-xl p-5 mb-6 space-y-3">
+          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">What happens next</div>
+          <div className="flex gap-3 text-sm text-gray-700">
+            <span className="text-green-500 font-bold shrink-0">1.</span>
+            <span>We'll review your submission and call you at <span className="font-semibold">{submittedData.phone}</span> within 1 business day.</span>
+          </div>
+          <div className="flex gap-3 text-sm text-gray-700">
+            <span className="text-green-500 font-bold shrink-0">2.</span>
+            <span>On the call we'll confirm your setup and answer any questions.</span>
+          </div>
+          <div className="flex gap-3 text-sm text-gray-700">
+            <span className="text-green-500 font-bold shrink-0">3.</span>
+            <span>We build your booking page and send you login credentials — usually same day.</span>
+          </div>
+        </div>
+
+        {/* Calendly CTA */}
+        <a
+          href={CALENDLY_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full bg-[#1b4332] text-white py-3.5 rounded-xl font-bold hover:bg-[#2d6a4f] transition-colors mb-3"
+        >
+          <Calendar className="w-4 h-4" />
+          Don't want to wait? Pick a time →
+        </a>
+        <p className="text-center text-xs text-gray-400 mb-4">Book a 15-min call at a time that works for you.</p>
+
+        <button onClick={() => router.push('/')} className="w-full border border-gray-200 text-gray-500 py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-colors">
+          Back to GreenReserve
+        </button>
       </div>
     </div>
   );
@@ -111,11 +167,14 @@ export default function ForCoursesPage() {
       <div className="max-w-2xl mx-auto px-4 py-10">
         <div className="text-center mb-8">
           <span className="text-white font-black text-3xl">Green<span className="text-green-400">Reserve</span></span>
-          <h1 className="text-white text-2xl font-black mt-4 mb-2">Get your course listed</h1>
-          <p className="text-green-200/60 text-sm">Free to list. $0 per month. We charge golfers $1.50/player — not you.</p>
+          <h1 className="text-white text-2xl font-black mt-4 mb-1">Get your course listed</h1>
+          <p className="text-green-200/60 text-sm mb-1">Free to list. $0 per month. We charge golfers $1.50/player — not you.</p>
+          <p className="text-white/30 text-xs">7 short sections · ~4 minutes</p>
         </div>
 
         <div className="space-y-3">
+
+          {/* 1. Contact */}
           <Section title="1. Your contact info" open={sections.contact} toggle={() => toggle('contact')}>
             <div className="grid grid-cols-2 gap-4">
               <Field label="Your name" required><input className={inp} value={form.contactName} onChange={e => set('contactName', e.target.value)} placeholder="John Smith" /></Field>
@@ -125,6 +184,7 @@ export default function ForCoursesPage() {
             </div>
           </Section>
 
+          {/* 2. Course info */}
           <Section title="2. Course info" open={sections.course} toggle={() => toggle('course')}>
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2"><Field label="Course name" required><input className={inp} value={form.courseName} onChange={e => set('courseName', e.target.value)} /></Field></div>
@@ -146,7 +206,23 @@ export default function ForCoursesPage() {
             </div>
           </Section>
 
-          <Section title="3. Current booking setup" open={sections.booking} toggle={() => toggle('booking')}>
+          {/* 3. Goals — moved up from section 7 */}
+          <Section title="3. What are you looking for?" open={sections.goals} toggle={() => toggle('goals')}>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-500">Select all that apply.</p>
+              <div className="flex flex-wrap gap-2">
+                {GOALS.map(g => (
+                  <button key={g} onClick={() => toggleArr('lookingFor', g)} className={`text-sm px-4 py-2 rounded-xl border transition-colors ${form.lookingFor.includes(g) ? 'bg-green-600 text-white border-green-600' : 'border-gray-300 text-gray-600 hover:border-green-400'}`}>{g}</button>
+                ))}
+              </div>
+              <Field label="Anything else we should know?">
+                <textarea rows={3} className={inp} value={form.additionalNotes} onChange={e => set('additionalNotes', e.target.value)} placeholder="Special circumstances, questions, timeline..." />
+              </Field>
+            </div>
+          </Section>
+
+          {/* 4. Current booking setup */}
+          <Section title="4. Current booking setup" open={sections.booking} toggle={() => toggle('booking')}>
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <Field label="How do you currently take bookings?" required>
@@ -156,7 +232,9 @@ export default function ForCoursesPage() {
                   </select>
                 </Field>
               </div>
-              <Field label="Approx. tee times per day"><input type="number" className={inp} value={form.teeTimesPerDay} onChange={e => set('teeTimesPerDay', e.target.value)} placeholder="70" /></Field>
+              <Field label="Approx. tee times per day" hint="Total slots across all tee intervals">
+                <input type="number" className={inp} value={form.teeTimesPerDay} onChange={e => set('teeTimesPerDay', e.target.value)} placeholder="e.g. 40" />
+              </Field>
               <Field label="Green fee range">
                 <select className={sel} value={form.greenFeeRange} onChange={e => set('greenFeeRange', e.target.value)}>
                   <option value="">Select...</option>
@@ -166,7 +244,8 @@ export default function ForCoursesPage() {
             </div>
           </Section>
 
-          <Section title="4. Pricing structure" open={sections.pricing} toggle={() => toggle('pricing')}>
+          {/* 5. Pricing */}
+          <Section title="5. Pricing structure" open={sections.pricing} toggle={() => toggle('pricing')}>
             <div className="space-y-5">
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                 <div><div className="text-sm font-medium text-gray-800">Resident / county pricing</div><div className="text-xs text-gray-500">Municipal courses with separate resident rates</div></div>
@@ -189,7 +268,8 @@ export default function ForCoursesPage() {
             </div>
           </Section>
 
-          <Section title="5. Policies &amp; access" open={sections.policies} toggle={() => toggle('policies')}>
+          {/* 6. Policies */}
+          <Section title="6. Policies &amp; access" open={sections.policies} toggle={() => toggle('policies')}>
             <div className="grid grid-cols-2 gap-4">
               <Field label="Walking policy">
                 <select className={sel} value={form.walkingPolicy} onChange={e => set('walkingPolicy', e.target.value)}>
@@ -240,7 +320,8 @@ export default function ForCoursesPage() {
             </div>
           </Section>
 
-          <Section title="6. Facilities" open={sections.facilities} toggle={() => toggle('facilities')}>
+          {/* 7. Facilities */}
+          <Section title="7. Facilities" open={sections.facilities} toggle={() => toggle('facilities')}>
             <div className="grid grid-cols-2 gap-3">
               {[
                 { key: 'hasDrivingRange', label: 'Driving range' },
@@ -273,25 +354,12 @@ export default function ForCoursesPage() {
             </div>
           </Section>
 
-          <Section title="7. What are you looking for?" open={sections.goals} toggle={() => toggle('goals')}>
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                {['More online bookings','Replace current software','Tee sheet management','Member management','Both tee sheet + bookings'].map(g => (
-                  <button key={g} onClick={() => toggleArr('lookingFor', g)} className={`text-sm px-4 py-2 rounded-xl border transition-colors ${form.lookingFor.includes(g) ? 'bg-green-600 text-white border-green-600' : 'border-gray-300 text-gray-600 hover:border-green-400'}`}>{g}</button>
-                ))}
-              </div>
-              <Field label="Anything else we should know?">
-                <textarea rows={3} className={inp} value={form.additionalNotes} onChange={e => set('additionalNotes', e.target.value)} placeholder="Special circumstances, questions, timeline..." />
-              </Field>
-            </div>
-          </Section>
-
           {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</div>}
 
           <button onClick={submit} disabled={submitting} className="w-full bg-green-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-green-700 disabled:opacity-50 transition-colors shadow-lg">
             {submitting ? 'Submitting...' : 'Submit Interest Form →'}
           </button>
-          <p className="text-center text-green-200/40 text-xs pb-4">We review every submission and reach out within 1–2 business days.</p>
+          <p className="text-center text-green-200/40 text-xs pb-4">We review every submission and reach out within 1 business day.</p>
         </div>
       </div>
     </div>
