@@ -130,10 +130,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ clientSecret: result.clientSecret, bookingId: result.booking.id });
 }
-alCents / 100,
-    clientSecret: result.clientSecret || null,
-  });
-}
 
 export async function GET() {
   const golferSession = await getGolferSession();

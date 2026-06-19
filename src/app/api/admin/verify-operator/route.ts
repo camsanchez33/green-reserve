@@ -37,6 +37,3 @@ export async function POST(req: NextRequest) {
     verified: true,
   });
 }
-
-  });
-}
