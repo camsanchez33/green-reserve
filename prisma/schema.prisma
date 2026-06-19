@@ -80,6 +80,8 @@ model Course {
   imageGradient           String            @default("linear-gradient(160deg,#071810 0%,#1b4332 60%,#2d6a4f 100%)")
   featured                Boolean           @default(false)
   active                  Boolean           @default(false)
+  liveStatus              String            @default("draft")
+  adminNotes              String            @default("")
   createdAt               DateTime          @default(now())
   updatedAt               DateTime          @updatedAt
   operatorId              String?           @unique
@@ -253,5 +255,7 @@ model CourseInquiry {
   lookingFor           String[]
   additionalNotes      String   @default("")
   status               String   @default("pending")
+  adminNotes           String   @default("")
+  builtCourseId        String?
   createdAt            DateTime @default(now())
 }

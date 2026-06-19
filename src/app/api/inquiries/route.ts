@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendInquiryNotification } from '@/lib/email';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -32,6 +33,21 @@ export async function POST(req: NextRequest) {
       additionalNotes: body.additionalNotes || '',
     },
   });
+  // Notify admin — fire-and-forget, don't block the response
+  sendInquiryNotification({
+    contactName: body.contactName,
+    contactTitle: body.contactTitle,
+    email: body.email,
+    phone: body.phone,
+    courseName: body.courseName,
+    city: body.city,
+    state: body.state,
+    courseType: body.courseType,
+    currentBookingMethod: body.currentBookingMethod,
+    greenFeeRange: body.greenFeeRange || '',
+    additionalNotes: body.additionalNotes || '',
+  }).catch(err => console.error('Inquiry notification email failed:', err));
+
   return NextResponse.json({ success: true, id: inquiry.id });
 }
 

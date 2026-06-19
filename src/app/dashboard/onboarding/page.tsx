@@ -89,12 +89,7 @@ export default function OnboardingPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(schedule),
     });
-    // Mark onboarding complete, set course active
-    await fetch('/api/operator/courses', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ active: true }),
-    });
+    // Mark onboarding complete — do NOT auto-activate; admin sets live status
     await fetch('/api/operator/onboarding-complete', { method: 'POST' });
     setSaving(false);
     setStep(3);
@@ -337,9 +332,10 @@ export default function OnboardingPage() {
         {/* Step 3 — Done */}
         {step === 3 && (
           <div className="bg-white rounded-2xl p-10 shadow-2xl text-center">
-            <div className="text-5xl mb-4">🎉</div>
-            <h2 className="text-2xl font-black text-gray-900 mb-2">You're live!</h2>
-            <p className="text-gray-500 mb-6">Your course is now on Green Reserve. Tee times are already being generated.</p>
+            <div className="text-5xl mb-4">✅</div>
+            <h2 className="text-2xl font-black text-gray-900 mb-2">Setup complete!</h2>
+            <p className="text-gray-500 mb-2">Your tee sheet is configured and ready. GreenReserve will review everything and take your course live — usually within 1 business day.</p>
+            <p className="text-sm text-gray-400 mb-6">We'll email you at {` `}<span className="font-medium text-gray-600">hello@greenreserve.app</span> once you're live.</p>
             <button onClick={() => router.push('/dashboard')}
               className="w-full bg-green-600 text-white py-3.5 rounded-xl font-bold hover:bg-green-700">
               Go to Dashboard →

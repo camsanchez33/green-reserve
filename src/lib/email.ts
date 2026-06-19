@@ -184,3 +184,42 @@ export async function sendOperatorWelcomeEmail(data: {
     html,
   });
 }
+
+export async function sendInquiryNotification(data: {
+  contactName: string;
+  contactTitle: string;
+  email: string;
+  phone: string;
+  courseName: string;
+  city: string;
+  state: string;
+  courseType: string;
+  currentBookingMethod: string;
+  greenFeeRange: string;
+  additionalNotes: string;
+}) {
+  const html = baseTemplate(`
+    <h2 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:900;">New Course Inquiry ⛳</h2>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">A new course has submitted interest on GreenReserve.</p>
+    <div style="background:#f9fafb;border-radius:12px;padding:20px;margin-bottom:20px;">
+      <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#111827;">${data.courseName}</p>
+      <p style="margin:0 0 4px;color:#6b7280;font-size:14px;">${data.city}, ${data.state} · ${data.courseType}</p>
+      <p style="margin:0 0 12px;color:#6b7280;font-size:14px;">Current booking: ${data.currentBookingMethod}</p>
+      <p style="margin:0 0 4px;color:#374151;font-size:14px;"><strong>Contact:</strong> ${data.contactName} — ${data.contactTitle}</p>
+      <p style="margin:0 0 4px;color:#374151;font-size:14px;"><strong>Email:</strong> ${data.email}</p>
+      <p style="margin:0 0 4px;color:#374151;font-size:14px;"><strong>Phone:</strong> ${data.phone}</p>
+      ${data.greenFeeRange ? `<p style="margin:8px 0 0;color:#374151;font-size:14px;"><strong>Fee range:</strong> ${data.greenFeeRange}</p>` : ''}
+      ${data.additionalNotes ? `<p style="margin:8px 0 0;color:#374151;font-size:14px;"><strong>Notes:</strong> ${data.additionalNotes}</p>` : ''}
+    </div>
+    <a href="${process.env.NEXT_PUBLIC_URL}/admin" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;">
+      Review in Admin →
+    </a>
+  `);
+
+  await getResend().emails.send({
+    from: FROM,
+    to: 'hello@greenreserve.app',
+    subject: `New inquiry: ${data.courseName} — ${data.city}, ${data.state}`,
+    html,
+  });
+}

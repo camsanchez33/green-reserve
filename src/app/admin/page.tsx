@@ -14,7 +14,7 @@ interface Inquiry {
   website: string; courseType: string; currentBookingMethod: string; teeTimesPerDay: number | null;
   greenFeeRange: string; hasResidentPricing: boolean; hasMemberPricing: boolean;
   hasCaddies: boolean; pricingNotes: string; lookingFor: string[]; additionalNotes: string;
-  status: string; createdAt: string;
+  status: string; adminNotes: string; builtCourseId: string | null; createdAt: string;
 }
 interface Course {
   id: string; name: string; city: string; state: string; active: boolean; featured: boolean;
@@ -44,9 +44,17 @@ interface TeeSlot {
 
 /* ─── Helpers ─── */
 const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  approved: 'bg-green-100 text-green-800 border-green-200',
-  rejected: 'bg-red-100 text-red-800 border-red-200',
+  pending:    'bg-yellow-100 text-yellow-800 border-yellow-200',
+  in_review:  'bg-blue-100 text-blue-800 border-blue-200',
+  building:   'bg-orange-100 text-orange-800 border-orange-200',
+  live:       'bg-green-100 text-green-800 border-green-200',
+  rejected:   'bg-red-100 text-red-800 border-red-200',
+  // legacy
+  approved:   'bg-green-100 text-green-800 border-green-200',
+};
+const STATUS_LABEL: Record<string, string> = {
+  pending: 'Pending', in_review: 'In Review', building: 'Building',
+  live: 'Live', rejected: 'Rejected', approved: 'Approved',
 };
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 const fmtMoney = (n: number) => '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
@@ -92,6 +100,7 @@ export default function AdminPage() {
   const [expanded, setExpanded] = useState<string|null>(null);
   const [approveResults, setApproveResults] = useState<Record<string,ApproveResult>>({});
   const [processing, setProcessing] = useState<string|null>(null);
+  const [noteTexts, setNoteTexts] = useState<Record<string,string>>({});
   const [detail, setDetail] = useState<CourseDetail|null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -121,25 +130,28 @@ export default function AdminPage() {
     if(r.ok) { setAuthed(true); } else alert('Wrong key');
   }
 
-  async function approve(id: string) {
+  async function inquiryAction(id: string, action: string, extraPayload: Record<string,unknown> = {}) {
     setProcessing(id);
     try {
-      const r = await fetch('/api/admin/inquiries',{method:'PATCH',headers:H(),body:JSON.stringify({id,action:'approve'})});
+      const r = await fetch('/api/admin/inquiries', { method:'PATCH', headers:H(), body: JSON.stringify({ id, action, ...extraPayload }) });
       const text = await r.text();
       let d: Record<string,unknown> = {};
       try { d = JSON.parse(text); } catch { /* not json */ }
-      if(r.ok){ setApproveResults(p=>({...p,[id]:d})); loadInquiries(); }
-      else { alert(`Approve failed (${r.status}): ${(d.error as string) || text.slice(0,200)}`); }
-    } catch(e) {
-      alert(`Approve error: ${e}`);
+      if (r.ok) {
+        if (action === 'build_course') setApproveResults(p => ({ ...p, [id]: d }));
+        if (action === 'add_note') {
+          setInquiries(prev => prev.map(inq => inq.id === id ? { ...inq, adminNotes: d.adminNotes as string } : inq));
+          setNoteTexts(p => ({ ...p, [id]: '' }));
+        } else {
+          loadInquiries();
+        }
+      } else {
+        alert(`Failed (${r.status}): ${(d.error as string) || text.slice(0, 200)}`);
+      }
+    } catch (e) {
+      alert(`Error: ${e}`);
     }
     setProcessing(null);
-  }
-  async function reject(id: string) {
-    if(!confirm('Reject this inquiry?')) return;
-    setProcessing(id);
-    await fetch('/api/admin/inquiries',{method:'PATCH',headers:H(),body:JSON.stringify({id,action:'reject'})});
-    loadInquiries(); setProcessing(null);
   }
 
   async function openDetail(course: Course) {
@@ -523,7 +535,7 @@ export default function AdminPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-1">
                         <span className="font-bold text-white">{inq.courseName}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full border font-medium capitalize ${STATUS_COLORS[inq.status]||'bg-gray-700 text-gray-300 border-gray-600'}`}>{inq.status}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${STATUS_COLORS[inq.status]||'bg-gray-700 text-gray-300 border-gray-600'}`}>{STATUS_LABEL[inq.status]||inq.status}</span>
                         {inq.hasMemberPricing&&<span className="text-xs px-2 py-0.5 rounded-full bg-blue-900 text-blue-300 border border-blue-800">Members</span>}
                         {inq.hasResidentPricing&&<span className="text-xs px-2 py-0.5 rounded-full bg-purple-900 text-purple-300 border border-purple-800">Residents</span>}
                         {inq.hasCaddies&&<span className="text-xs px-2 py-0.5 rounded-full bg-green-900 text-green-300 border border-green-800">Caddies</span>}
@@ -532,10 +544,17 @@ export default function AdminPage() {
                       <div className="text-xs text-gray-500 mt-0.5">{inq.city}, {inq.state} · {inq.courseType} · {fmtDate(inq.createdAt)}</div>
                       {inq.greenFeeRange&&<div className="text-xs text-gray-500">Fees: {inq.greenFeeRange}</div>}
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
                       {inq.status==='pending'&&<>
-                        <button onClick={()=>approve(inq.id)} disabled={processing===inq.id} className="bg-green-700 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5"/>Approve</button>
-                        <button onClick={()=>reject(inq.id)} disabled={processing===inq.id} className="bg-red-900 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><XCircle className="w-3.5 h-3.5"/>Reject</button>
+                        <button onClick={()=>inquiryAction(inq.id,'mark_in_review')} disabled={processing===inq.id} className="bg-blue-700 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Clock className="w-3.5 h-3.5"/>In Review</button>
+                        <button onClick={()=>{ if(confirm('Reject this inquiry?')) inquiryAction(inq.id,'reject'); }} disabled={processing===inq.id} className="bg-red-900 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><XCircle className="w-3.5 h-3.5"/>Reject</button>
+                      </>}
+                      {inq.status==='in_review'&&<>
+                        <button onClick={()=>{ if(confirm(`Build course draft for ${inq.courseName}? This creates their operator account and sends welcome email.`)) inquiryAction(inq.id,'build_course'); }} disabled={processing===inq.id} className="bg-green-700 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5"/>Build Course</button>
+                        <button onClick={()=>{ if(confirm('Reject this inquiry?')) inquiryAction(inq.id,'reject'); }} disabled={processing===inq.id} className="bg-red-900 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><XCircle className="w-3.5 h-3.5"/>Reject</button>
+                      </>}
+                      {inq.status==='building'&&<>
+                        <button onClick={()=>{ if(confirm(`Set ${inq.courseName} LIVE? This makes it publicly bookable.`)) inquiryAction(inq.id,'mark_live'); }} disabled={processing===inq.id} className="bg-green-700 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Power className="w-3.5 h-3.5"/>Go Live</button>
                       </>}
                       <button onClick={()=>setExpanded(expanded===inq.id?null:inq.id)} className="text-gray-500 hover:text-gray-300 p-1">
                         {expanded===inq.id?<ChevronUp className="w-4 h-4"/>:<ChevronDown className="w-4 h-4"/>}
@@ -545,9 +564,9 @@ export default function AdminPage() {
 
                   {approveResults[inq.id]&&(
                     <div className="px-5 pb-4 bg-green-950 border-t border-green-900">
-                      <div className="text-xs font-semibold text-green-400 mb-2 mt-3">✅ Approved — share these with the course:</div>
+                      <div className="text-xs font-semibold text-green-400 mb-2 mt-3">✅ Course built — welcome email sent. Share credentials if needed:</div>
                       <div className="space-y-2">
-                        {[['Temp Password',approveResults[inq.id].tempPassword],['Setup Link',approveResults[inq.id].setupLink]].map(([label,val])=>(
+                        {[['Temp Password',(approveResults[inq.id] as Record<string,unknown>).tempPassword as string],['Setup Link',(approveResults[inq.id] as Record<string,unknown>).setupLink as string]].map(([label,val])=>(
                           <div key={label} className="flex items-center gap-2 bg-gray-900 rounded-lg px-3 py-2">
                             <span className="text-xs text-gray-400 w-28 shrink-0">{label}</span>
                             <span className="text-xs text-gray-100 font-mono flex-1 truncate">{val}</span>
@@ -559,14 +578,39 @@ export default function AdminPage() {
                   )}
 
                   {expanded===inq.id&&(
-                    <div className="px-5 pb-4 border-t border-gray-800 pt-3 grid grid-cols-2 gap-3 text-sm">
-                      <div><span className="text-gray-500">Phone: </span><span className="text-gray-300">{inq.phone}</span></div>
-                      <div><span className="text-gray-500">Website: </span><span className="text-gray-300">{inq.website||'—'}</span></div>
-                      <div><span className="text-gray-500">Current booking: </span><span className="text-gray-300">{inq.currentBookingMethod}</span></div>
-                      <div><span className="text-gray-500">Tee times/day: </span><span className="text-gray-300">{inq.teeTimesPerDay||'—'}</span></div>
-                      <div className="col-span-2"><span className="text-gray-500">Looking for: </span><span className="text-gray-300">{inq.lookingFor.join(', ')}</span></div>
-                      {inq.additionalNotes&&<div className="col-span-2"><span className="text-gray-500">Notes: </span><span className="text-gray-300">{inq.additionalNotes}</span></div>}
-                      {inq.pricingNotes&&<div className="col-span-2"><span className="text-gray-500">Pricing notes: </span><span className="text-gray-300">{inq.pricingNotes}</span></div>}
+                    <div className="px-5 pb-5 border-t border-gray-800 pt-4 space-y-4">
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div><span className="text-gray-500">Phone: </span><span className="text-gray-300">{inq.phone}</span></div>
+                        <div><span className="text-gray-500">Website: </span><span className="text-gray-300">{inq.website||'—'}</span></div>
+                        <div><span className="text-gray-500">Current booking: </span><span className="text-gray-300">{inq.currentBookingMethod}</span></div>
+                        <div><span className="text-gray-500">Tee times/day: </span><span className="text-gray-300">{inq.teeTimesPerDay||'—'}</span></div>
+                        {inq.greenFeeRange&&<div><span className="text-gray-500">Fees: </span><span className="text-gray-300">{inq.greenFeeRange}</span></div>}
+                        <div className="col-span-2"><span className="text-gray-500">Looking for: </span><span className="text-gray-300">{inq.lookingFor?.join(', ')||'—'}</span></div>
+                        {inq.additionalNotes&&<div className="col-span-2"><span className="text-gray-500">Notes: </span><span className="text-gray-300">{inq.additionalNotes}</span></div>}
+                        {inq.pricingNotes&&<div className="col-span-2"><span className="text-gray-500">Pricing notes: </span><span className="text-gray-300">{inq.pricingNotes}</span></div>}
+                      </div>
+
+                      {/* Admin notes */}
+                      <div className="border-t border-gray-800 pt-4">
+                        <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Internal Notes</div>
+                        {inq.adminNotes&&(
+                          <pre className="text-xs text-gray-400 bg-gray-800 rounded-lg px-3 py-2 mb-3 whitespace-pre-wrap font-sans">{inq.adminNotes}</pre>
+                        )}
+                        <div className="flex gap-2">
+                          <textarea
+                            value={noteTexts[inq.id]||''}
+                            onChange={e=>setNoteTexts(p=>({...p,[inq.id]:e.target.value}))}
+                            placeholder="Add a note..."
+                            rows={2}
+                            className="flex-1 bg-gray-800 border border-gray-700 text-white text-xs rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                          />
+                          <button
+                            onClick={()=>inquiryAction(inq.id,'add_note',{note:noteTexts[inq.id]||''})}
+                            disabled={!noteTexts[inq.id]?.trim()||processing===inq.id}
+                            className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-white text-xs font-bold rounded-lg transition-colors self-start"
+                          >Save</button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
