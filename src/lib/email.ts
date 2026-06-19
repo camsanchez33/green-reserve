@@ -5,7 +5,7 @@ function getResend() {
   if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
   return _resend;
 }
-const FROM = 'Green Reserve <onboarding@resend.dev>';
+const FROM = 'GreenReserve <hello@greenreserve.app>';
 
 function baseTemplate(content: string) {
   return `<!DOCTYPE html>
@@ -23,7 +23,7 @@ function baseTemplate(content: string) {
         <tr><td style="background:#fff;padding:40px;border-radius:0 0 16px 16px;">${content}</td></tr>
         <tr>
           <td style="padding:24px 0;text-align:center;color:#9ca3af;font-size:12px;">
-            Green Reserve &middot; <a href="https://green-reserve.vercel.app" style="color:#6b7280;">green-reserve.vercel.app</a>
+            Green Reserve &middot; <a href="https://greenreserve.app" style="color:#6b7280;">greenreserve.app</a>
           </td>
         </tr>
       </table>
@@ -61,7 +61,7 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
       <p style="margin:0;color:#92400e;font-size:13px;font-weight:600;">&#128205; ${data.courseAddress}</p>
       <p style="margin:8px 0 0;color:#92400e;font-size:12px;">Arrive 15 minutes early and check in at the pro shop.</p>
     </div>
-    <a href="https://green-reserve.vercel.app/account" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:16px;">Manage My Booking &rarr;</a>
+    <a href="https://greenreserve.app/account" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:16px;">Manage My Booking &rarr;</a>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
   `);
   await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Confirmed: ${data.courseName} — ${data.date} at ${data.time}`, html });
@@ -77,7 +77,7 @@ export async function sendOperatorBookingNotification(data: BookingEmailData & {
       <p style="margin:0 0 8px;"><strong>Players:</strong> ${data.players} &middot; ${data.holes} holes</p>
       <p style="margin:0;"><strong>Green Fee Revenue:</strong> $${(data.greenFeeTotal / 100).toFixed(2)}</p>
     </div>
-    <a href="https://green-reserve.vercel.app/dashboard" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;margin-top:20px;">View Tee Sheet &rarr;</a>
+    <a href="https://greenreserve.app/dashboard" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;margin-top:20px;">View Tee Sheet &rarr;</a>
   `);
   await getResend().emails.send({ from: FROM, to: data.operatorEmail, subject: `New booking: ${data.players} player${data.players > 1 ? 's' : ''} — ${data.date} at ${data.time}`, html });
 }
@@ -109,7 +109,7 @@ export async function sendWaitlistNotification(data: {
       <p style="margin:0 0 4px;font-weight:700;color:#111827;font-size:18px;">${data.time}</p>
       <p style="margin:0;color:#6b7280;">${data.date} &middot; ${data.courseName}</p>
     </div>
-    <a href="https://green-reserve.vercel.app/courses" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;">Book Now &rarr;</a>
+    <a href="https://greenreserve.app/courses" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;">Book Now &rarr;</a>
   `);
   await getResend().emails.send({ from: FROM, to: data.email, subject: `Spot available: ${data.time} at ${data.courseName}`, html });
 }
@@ -130,7 +130,57 @@ export async function sendReminderEmail(data: {
     <div style="background:#fefce8;border:1px solid #fde68a;border-radius:12px;padding:14px;margin-bottom:20px;">
       <p style="margin:0;color:#92400e;font-size:13px;">&#128336; Arrive 15 minutes early and check in at the pro shop.</p>
     </div>
-    <a href="https://green-reserve.vercel.app/account" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;">View or Cancel Booking &rarr;</a>
+    <a href="https://greenreserve.app/account" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;">View or Cancel Booking &rarr;</a>
   `);
   await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Tomorrow: ${data.time} at ${data.courseName}`, html });
+}
+
+export async function sendOperatorWelcomeEmail(data: {
+  operatorName: string;
+  operatorEmail: string;
+  courseName: string;
+  tempPassword: string;
+  setupLink: string;
+}) {
+  const html = baseTemplate(`
+    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 14px;border-radius:20px;">✓ You're approved</span></div>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">Welcome to GreenReserve, ${data.operatorName}.</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      <strong>${data.courseName}</strong> has been approved and your dashboard is ready to set up.
+      It takes about 5 minutes to go live.
+    </p>
+
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:24px;margin-bottom:24px;">
+      <p style="margin:0 0 4px;color:#6b7280;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Login Email</p>
+      <p style="margin:0 0 16px;color:#111827;font-size:15px;font-weight:600;">${data.operatorEmail}</p>
+      <p style="margin:0 0 4px;color:#6b7280;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Temporary Password</p>
+      <p style="margin:0;color:#111827;font-size:18px;font-weight:900;font-family:monospace;letter-spacing:0.1em;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;display:inline-block;">${data.tempPassword}</p>
+    </div>
+
+    <p style="margin:0 0 16px;color:#374151;font-size:14px;">When you log in for the first time you'll be walked through:</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      ${['Set your permanent password','Connect your bank via Stripe (for payouts)','Set your tee time schedule and pricing','Go live — golfers can start booking'].map((step, i) => `
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#1b4332;color:#fff;border-radius:50%;font-size:11px;font-weight:700;margin-right:10px;">${i + 1}</span>
+          <span style="color:#374151;font-size:14px;">${step}</span>
+        </td>
+      </tr>`).join('')}
+    </table>
+
+    <a href="${data.setupLink}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:12px;font-weight:800;font-size:16px;margin-bottom:16px;">
+      Set Up My Dashboard &rarr;
+    </a>
+
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+    </p>
+  `);
+
+  await getResend().emails.send({
+    from: FROM,
+    to: data.operatorEmail,
+    subject: `You're approved — set up ${data.courseName} on GreenReserve`,
+    html,
+  });
 }

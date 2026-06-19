@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
+import { sendOperatorWelcomeEmail } from '@/lib/email';
 
 function checkAdmin(req: NextRequest) {
   const key = req.headers.get('x-admin-key');
@@ -68,6 +69,21 @@ async function handleAction(inquiryId: string, action: string) {
     await prisma.courseInquiry.update({ where: { id: inquiryId }, data: { status: 'approved' } });
 
     const setupLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/verify?token=${verificationToken}`;
+
+    // Send welcome email to operator
+    try {
+      await sendOperatorWelcomeEmail({
+        operatorName: inquiry.contactName,
+        operatorEmail: inquiry.email,
+        courseName: inquiry.courseName,
+        tempPassword,
+        setupLink,
+      });
+    } catch (emailErr) {
+      console.error('Welcome email failed:', emailErr);
+      // Don't block the approve response if email fails
+    }
+
     return NextResponse.json({ success: true, tempPassword, setupLink, operatorId: operator.id });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
