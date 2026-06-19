@@ -14,10 +14,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(inquiries);
 }
 
-export async function POST(req: NextRequest) {
-  if (!checkAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const { inquiryId, action } = await req.json();
-
+async function handleAction(inquiryId: string, action: string) {
   const inquiry = await prisma.courseInquiry.findUnique({ where: { id: inquiryId } });
   if (!inquiry) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
@@ -27,7 +24,6 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === 'approve') {
-    // Create operator account with temp password
     const tempPassword = randomBytes(8).toString('hex');
     const hashed = await bcrypt.hash(tempPassword, 12);
     const slug = inquiry.courseName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -71,4 +67,19 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
+}
+
+// Admin dashboard sends PATCH
+export async function PATCH(req: NextRequest) {
+  if (!checkAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const body = await req.json();
+  const inquiryId = body.id || body.inquiryId;
+  return handleAction(inquiryId, body.action);
+}
+
+// Keep POST for backwards compat
+export async function POST(req: NextRequest) {
+  if (!checkAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { inquiryId, action } = await req.json();
+  return handleAction(inquiryId, action);
 }
