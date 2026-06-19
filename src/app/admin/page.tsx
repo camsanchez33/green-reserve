@@ -1,10 +1,10 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import {
-  CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Copy, ExternalLink,
+  CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Copy,
   RefreshCw, BarChart2, Users, DollarSign, TrendingUp, AlertCircle,
   Building2, Star, Power, ArrowLeft, Eye, X, Globe, Phone, Mail,
-  Ban, Plus, Calendar,
+  Ban, Plus, Calendar, Trash2,
 } from 'lucide-react';
 
 /* ─── Types ─── */
@@ -101,6 +101,7 @@ export default function AdminPage() {
   const [approveResults, setApproveResults] = useState<Record<string,ApproveResult>>({});
   const [processing, setProcessing] = useState<string|null>(null);
   const [noteTexts, setNoteTexts] = useState<Record<string,string>>({});
+  const [inquiryView, setInquiryView] = useState<'active'|'past'>('active');
   const [detail, setDetail] = useState<CourseDetail|null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -152,6 +153,24 @@ export default function AdminPage() {
       alert(`Error: ${e}`);
     }
     setProcessing(null);
+  }
+
+  async function deleteInquiry(id: string, name: string) {
+    if (!confirm(`Permanently delete inquiry for "${name}"? This cannot be undone.`)) return;
+    await fetch(`/api/admin/inquiries?id=${id}`, { method: 'DELETE', headers: H() });
+    setInquiries(prev => prev.filter(i => i.id !== id));
+  }
+
+  async function deleteCourse(id: string, name: string) {
+    if (!confirm(`Permanently delete "${name}" and ALL its data (tee times, bookings, schedules)? This cannot be undone.`)) return;
+    const r = await fetch(`/api/admin/courses?id=${id}`, { method: 'DELETE', headers: H() });
+    if (r.ok) {
+      setCourses(prev => prev.filter(c => c.id !== id));
+      setDetail(null);
+    } else {
+      const d = await r.json();
+      alert(`Delete failed: ${d.error}`);
+    }
   }
 
   async function openDetail(course: Course) {
@@ -239,6 +258,7 @@ export default function AdminPage() {
                 {c&&<>
                   <button onClick={()=>toggleFeatured(c.id,!c.featured)} className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors flex items-center gap-1 ${c.featured?'bg-yellow-50 text-yellow-700 border-yellow-300':'bg-white text-gray-500 border-gray-200 hover:border-yellow-300'}`}><Star className="w-3 h-3"/>{c.featured?'Featured':'Feature'}</button>
                   <button onClick={()=>toggleCourseActive(c.id,!c.active)} className={`px-3 py-1.5 rounded-lg text-xs font-bold border flex items-center gap-1 ${c.active?'bg-green-50 text-green-700 border-green-200':'bg-red-50 text-red-700 border-red-200'}`}><Power className="w-3 h-3"/>{c.active?'Set Offline':'Set Live'}</button>
+                  <button onClick={()=>deleteCourse(c.id,c.name)} className="px-3 py-1.5 rounded-lg text-xs font-bold border border-red-200 text-red-600 bg-white hover:bg-red-50 flex items-center gap-1"><Trash2 className="w-3 h-3"/>Delete</button>
                 </>}
               </div>
             </div>
@@ -523,13 +543,21 @@ export default function AdminPage() {
 
           {/* ── Inquiries ── */}
           {tab==='inquiries'&&<>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
               <h1 className="text-2xl font-black text-white">Course Inquiries</h1>
               <button onClick={loadInquiries} className="text-gray-400 hover:text-white flex items-center gap-2 text-sm"><RefreshCw className="w-4 h-4"/>Refresh</button>
             </div>
+            {/* Active / Past toggle */}
+            <div className="flex gap-1 mb-5 bg-gray-800 rounded-xl p-1 w-fit">
+              {(['active','past'] as const).map(v=>(
+                <button key={v} onClick={()=>setInquiryView(v)} className={`px-5 py-1.5 rounded-lg text-sm font-semibold transition-colors capitalize ${inquiryView===v?'bg-white text-gray-900':'text-gray-400 hover:text-white'}`}>
+                  {v==='active'?`Active (${inquiries.filter(i=>['pending','in_review'].includes(i.status)).length})`:`Past (${inquiries.filter(i=>['building','live','rejected'].includes(i.status)).length})`}
+                </button>
+              ))}
+            </div>
             {loading&&<div className="text-gray-500 py-20 text-center">Loading...</div>}
             <div className="space-y-3">
-              {inquiries.map(inq=>(
+              {inquiries.filter(inq=>inquiryView==='active'?['pending','in_review'].includes(inq.status):['building','live','rejected'].includes(inq.status)).map(inq=>(
                 <div key={inq.id} className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
                   <div className="px-5 py-4 flex items-start gap-4">
                     <div className="flex-1">
@@ -556,6 +584,9 @@ export default function AdminPage() {
                       {inq.status==='building'&&<>
                         <button onClick={()=>{ if(confirm(`Set ${inq.courseName} LIVE? This makes it publicly bookable.`)) inquiryAction(inq.id,'mark_live'); }} disabled={processing===inq.id} className="bg-green-700 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Power className="w-3.5 h-3.5"/>Go Live</button>
                       </>}
+                      {['building','live','rejected'].includes(inq.status)&&(
+                        <button onClick={()=>deleteInquiry(inq.id, inq.courseName)} className="p-1.5 text-gray-600 hover:text-red-400 transition-colors" title="Delete inquiry"><Trash2 className="w-3.5 h-3.5"/></button>
+                      )}
                       <button onClick={()=>setExpanded(expanded===inq.id?null:inq.id)} className="text-gray-500 hover:text-gray-300 p-1">
                         {expanded===inq.id?<ChevronUp className="w-4 h-4"/>:<ChevronDown className="w-4 h-4"/>}
                       </button>
@@ -615,7 +646,11 @@ export default function AdminPage() {
                   )}
                 </div>
               ))}
-              {!loading&&inquiries.length===0&&<div className="text-gray-500 text-center py-20">No inquiries yet</div>}
+              {!loading&&inquiries.filter(inq=>inquiryView==='active'?['pending','in_review'].includes(inq.status):['building','live','rejected'].includes(inq.status)).length===0&&(
+                <div className="text-gray-500 text-center py-20">
+                  {inquiryView==='active'?'No active inquiries — all caught up ✓':'No past inquiries yet'}
+                </div>
+              )}
             </div>
           </>}
 
@@ -648,6 +683,7 @@ export default function AdminPage() {
                     <button onClick={()=>toggleCourseActive(c.id,!c.active)} className={`p-1.5 rounded-lg transition-colors ${c.active?'text-green-400':'text-gray-600 hover:text-green-400'}`}><Power className="w-4 h-4"/></button>
                     <a href={`/courses/${c.slug}`} target="_blank" className="p-1.5 rounded-lg text-gray-600 hover:text-blue-400 transition-colors"><Globe className="w-4 h-4"/></a>
                     <button onClick={()=>openDetail(c)} className="p-1.5 rounded-lg text-gray-600 hover:text-white transition-colors"><Eye className="w-4 h-4"/></button>
+                    <button onClick={()=>deleteCourse(c.id,c.name)} className="p-1.5 rounded-lg text-gray-600 hover:text-red-400 transition-colors" title="Delete course"><Trash2 className="w-4 h-4"/></button>
                   </div>
                 </div>
               ))}

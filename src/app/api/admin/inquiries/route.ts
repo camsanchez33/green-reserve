@@ -145,3 +145,12 @@ export async function POST(req: NextRequest) {
   const inquiryId = body.id || body.inquiryId;
   return handleAction(inquiryId, body.action, body);
 }
+
+export async function DELETE(req: NextRequest) {
+  if (!checkAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get('id');
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+  await prisma.courseInquiry.delete({ where: { id } });
+  return NextResponse.json({ success: true });
+}
