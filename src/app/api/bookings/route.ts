@@ -112,27 +112,25 @@ export async function POST(req: NextRequest) {
       courseAddress: `${result.teeTime.course.address || ''}, ${result.teeTime.course.city}, ${result.teeTime.course.state}`,
       date: result.teeTime.date,
       time: result.teeTime.time,
-      players,
       holes: result.teeTime.holes,
-      greenFeeTotal: result.greenFeeTotal,
-      cartFeeTotal: result.cartFeeTotal,
-      accessFeeTotal: result.accessFeeTotal,
-      totalAmount: result.totalCents,
-      bookingId: result.booking.id,
-      appliedRate,
+      players,
+      greenFeeTotal: result.greenFeeTotal / 100,
+      cartFeeTotal: result.cartFeeTotal / 100,
+      accessFeeTotal: result.accessFeeTotal / 100,
+      totalAmount: result.totalCents / 100,
     };
     await sendBookingConfirmation(emailData);
-    if (result.teeTime.course.operator?.email) {
-      await sendOperatorBookingNotification({ ...emailData, operatorEmail: result.teeTime.course.operator.email });
+    const operator = await prisma.courseOperator.findFirst({ where: { course: { id: courseId } } });
+    if (operator?.email) {
+      await sendOperatorBookingNotification({ ...emailData, operatorEmail: operator.email });
     }
-  } catch (emailErr) {
-    console.error('Email send failed:', emailErr);
+  } catch (err) {
+    console.error('Email error:', err);
   }
 
-  return NextResponse.json({
-    success: true,
-    bookingId: result.booking.id,
-    totalAmount: result.totalCents / 100,
+  return NextResponse.json({ clientSecret: result.clientSecret, bookingId: result.booking.id });
+}
+alCents / 100,
     clientSecret: result.clientSecret || null,
   });
 }

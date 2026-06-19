@@ -32,7 +32,11 @@ export async function POST(req: NextRequest) {
   });
   const base = process.env.NEXT_PUBLIC_URL || 'https://green-reserve.vercel.app';
   return NextResponse.json({
-    success: true,
-    message: `${email} is now verified. They can log in and continue onboarding.`,
+        email,
+    setupLink: `${base}/dashboard/verify?token=${token}`,
+    verified: true,
+  });
+}
+
   });
 }

@@ -348,4 +348,143 @@ export default function DashboardPage() {
         <div className="flex gap-3 mb-3 text-xs text-gray-500">
           <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-green-100 border border-green-300 inline-block" /> Open</span>
           <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-yellow-100 border border-yellow-300 inline-block" /> Filling up</span>
-          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-s
+          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-100 border border-red-300 inline-block" /> Full</span>
+          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-gray-100 border border-gray-200 inline-block" /> Blocked</span>
+        </div>
+
+        {/* Tee time grid */}
+        {loading ? (
+          <div className="flex items-center justify-center py-16 text-gray-400 gap-2">
+            <Loader2 className="w-5 h-5 animate-spin" /> Loading tee times...
+          </div>
+        ) : teeTimes.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-300">
+            <div className="text-4xl mb-3">⛳</div>
+            <p className="font-semibold text-gray-700 mb-1">No tee times for this date</p>
+            <p className="text-sm text-gray-400 mb-4">Add times manually or check your schedule generates for this day</p>
+            <button onClick={() => setShowAddModal(true)} className="bg-[#1b4332] text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-[#2d6a4f]">
+              Add Tee Time
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {teeTimes.map(tt => (
+              <div key={tt.id} className={`rounded-xl border p-3 transition-colors cursor-pointer ${statusColor(tt)}`}
+                onClick={() => setExpandedId(expandedId === tt.id ? null : tt.id)}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="font-black text-gray-900 text-sm w-20">{fmtTime(tt.time)}</span>
+                    <span className="text-xs text-gray-500">{tt.holes}h</span>
+                    {statusBadge(tt)}
+                    <span className="text-xs text-gray-400">{tt.playersBooked}/{tt.playersAvailable}</span>
+                    <span className="text-xs font-semibold text-gray-700">${tt.greenFee}{tt.cartFee > 0 ? ` + $${tt.cartFee}` : ''}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={e => { e.stopPropagation(); fetch('/api/operator/tee-times', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: tt.id, status: tt.status === 'blocked' ? 'available' : 'blocked' }) }).then(() => load(selectedDate)); }}
+                      className="text-xs px-2 py-1 rounded-lg border border-gray-200 bg-white text-gray-500 hover:text-gray-700 transition-colors">
+                      {tt.status === 'blocked' ? 'Unblock' : 'Block'}
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); if (confirm('Delete this tee time?')) fetch('/api/operator/tee-times', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: tt.id }) }).then(() => load(selectedDate)); }}
+                      className="text-xs px-2 py-1 rounded-lg border border-red-100 bg-white text-red-400 hover:text-red-600 transition-colors">
+                      Del
+                    </button>
+                  </div>
+                </div>
+                {expandedId === tt.id && tt.bookings && tt.bookings.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-200 space-y-1.5">
+                    {tt.bookings.map(b => (
+                      <div key={b.id} className="flex items-center justify-between text-xs bg-white rounded-lg px-3 py-2 border border-gray-100">
+                        <span className="font-semibold text-gray-800">{b.golferName}</span>
+                        <span className="text-gray-400">{b.players} player{b.players !== 1 ? 's' : ''}</span>
+                        <span className="text-gray-500">{b.golferEmail}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {expandedId === tt.id && tt.bookings && tt.bookings.length === 0 && (
+                  <div className="mt-2 pt-2 border-t border-gray-200 text-xs text-gray-400">No bookings yet</div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        </>)}
+      </div>
+
+      {/* Add Tee Time Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl p-6">
+            <h3 className="font-bold text-gray-900 mb-4">Add Tee Time — {fmtDate(selectedDate)}</h3>
+            <AddTeeTimeForm date={selectedDate} onSave={() => { setShowAddModal(false); load(selectedDate); }} onCancel={() => setShowAddModal(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Conditions Modal */}
+      {showConditions && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl p-6">
+            <h3 className="font-bold text-gray-900 mb-2">Course Conditions Alert</h3>
+            <p className="text-sm text-gray-500 mb-4">Shown as a banner to golfers browsing your tee times. Leave blank to clear.</p>
+            <textarea value={conditionsInput} onChange={e => setConditionsInput(e.target.value)} rows={3} placeholder="e.g. Cart path only due to wet fairways — holes 7–12" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none mb-4" />
+            <div className="flex gap-3">
+              <button onClick={() => setShowConditions(false)} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50">Cancel</button>
+              <button onClick={async () => { setSavingConditions(true); await fetch('/api/operator/conditions', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conditions: conditionsInput }) }); setConditions(conditionsInput); setSavingConditions(false); setShowConditions(false); }} disabled={savingConditions} className="flex-1 bg-[#1b4332] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-50">
+                {savingConditions ? 'Saving...' : conditionsInput ? 'Save Alert' : 'Clear Alert'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AddTeeTimeForm({ date, onSave, onCancel }: { date: string; onSave: () => void; onCancel: () => void }) {
+  const [time, setTime] = useState('08:00');
+  const [holes, setHoles] = useState(18);
+  const [players, setPlayers] = useState(4);
+  const [greenFee, setGreenFee] = useState(65);
+  const [cartFee, setCartFee] = useState(18);
+  const [walking, setWalking] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    await fetch('/api/operator/tee-times', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date, time, holes, playersAvailable: players, greenFee, cartFee, walkingAllowed: walking }),
+    });
+    setSaving(false);
+    onSave();
+  }
+
+  const inp = 'w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none';
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <div><label className="block text-xs font-semibold text-gray-500 mb-1">Time</label><input type="time" value={time} onChange={e => setTime(e.target.value)} className={inp} /></div>
+        <div><label className="block text-xs font-semibold text-gray-500 mb-1">Holes</label><select value={holes} onChange={e => setHoles(Number(e.target.value))} className={inp}><option value={9}>9</option><option value={18}>18</option></select></div>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <div><label className="block text-xs font-semibold text-gray-500 mb-1">Slots</label><input type="number" value={players} min={1} max={8} onChange={e => setPlayers(Number(e.target.value))} className={inp} /></div>
+        <div><label className="block text-xs font-semibold text-gray-500 mb-1">Green $</label><input type="number" value={greenFee} min={0} onChange={e => setGreenFee(Number(e.target.value))} className={inp} /></div>
+        <div><label className="block text-xs font-semibold text-gray-500 mb-1">Cart $</label><input type="number" value={cartFee} min={0} onChange={e => setCartFee(Number(e.target.value))} className={inp} /></div>
+      </div>
+      <div className="flex items-center justify-between py-1">
+        <span className="text-sm text-gray-700">Walking allowed</span>
+        <button onClick={() => setWalking(!walking)} className={`relative w-11 h-6 rounded-full transition-colors ${walking ? 'bg-green-600' : 'bg-gray-200'}`}>
+          <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${walking ? 'translate-x-5' : ''}`} />
+        </button>
+      </div>
+      <div className="flex gap-3 pt-1">
+        <button onClick={onCancel} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50">Cancel</button>
+        <button onClick={save} disabled={saving} className="flex-1 bg-[#1b4332] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-50">
+          {saving ? 'Adding...' : 'Add Time'}
+        </button>
+      </div>
+    </div>
+  );
+}
