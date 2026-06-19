@@ -103,7 +103,9 @@ export default function AdminPage() {
   async function approve(id: string) {
     setProcessing(id);
     const r = await fetch('/api/admin/inquiries',{method:'PATCH',headers:H(),body:JSON.stringify({id,action:'approve'})});
-    if(r.ok){ const d=await r.json(); setApproveResults(p=>({...p,[id]:d})); loadInquiries(); }
+    const d = await r.json();
+    if(r.ok){ setApproveResults(p=>({...p,[id]:d})); loadInquiries(); }
+    else { alert(`Approve failed: ${d.error || r.status}`); }
     setProcessing(null);
   }
   async function reject(id: string) {
