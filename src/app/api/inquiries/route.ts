@@ -7,7 +7,31 @@ export async function POST(req: NextRequest) {
   for (const field of required) {
     if (!body[field]) return NextResponse.json({ error: `Missing: ${field}` }, { status: 400 });
   }
-  const inquiry = await prisma.courseInquiry.create({ data: body });
+  const inquiry = await prisma.courseInquiry.create({
+    data: {
+      contactName: body.contactName,
+      contactTitle: body.contactTitle,
+      email: body.email,
+      phone: body.phone,
+      courseName: body.courseName,
+      address: body.address,
+      city: body.city,
+      state: body.state,
+      zipCode: body.zipCode,
+      website: body.website || '',
+      courseType: body.courseType,
+      currentBookingMethod: body.currentBookingMethod,
+      teeTimesPerDay: body.teeTimesPerDay || null,
+      greenFeeRange: body.greenFeeRange || '',
+      hasResidentPricing: body.hasResidentPricing || false,
+      hasMemberPricing: body.hasMemberPricing || false,
+      hasCaddies: body.hasCaddies || false,
+      pricingNotes: body.pricingNotes || '',
+      facilitiesNotes: body.facilitiesNotes || '',
+      lookingFor: body.lookingFor || [],
+      additionalNotes: body.additionalNotes || '',
+    },
+  });
   return NextResponse.json({ success: true, id: inquiry.id });
 }
 
