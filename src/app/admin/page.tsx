@@ -81,7 +81,10 @@ function TinyBars({ data }: { data: {date:string;platform:number}[] }) {
 export default function AdminPage() {
   const [key, setKey] = useState('');
   const [authed, setAuthed] = useState(false);
-  const [tab, setTab] = useState<'overview'|'inquiries'|'courses'>('overview');
+  const [tab, setTab] = useState<'overview'|'inquiries'|'courses'|'create'>('overview');
+  const [createForm, setCreateForm] = useState({ courseName:'', courseType:'public', address:'', city:'', state:'NJ', zipCode:'', phone:'', website:'', contactName:'', contactEmail:'', holes:18, par:72, description:'', hasMemberPricing:false, hasResidentPricing:false });
+  const [creating, setCreating] = useState(false);
+  const [createResult, setCreateResult] = useState<{tempPassword:string;setupLink:string;slug:string}|null>(null);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [stats, setStats] = useState<Stats|null>(null);
@@ -154,6 +157,17 @@ export default function AdminPage() {
   async function toggleFeatured(courseId: string, featured: boolean) {
     await fetch('/api/admin/course-detail',{method:'PATCH',headers:H(),body:JSON.stringify({courseId,featured})});
     setCourses(c=>c.map(x=>x.id===courseId?{...x,featured}:x));
+  }
+
+  async function createCourse() {
+    setCreating(true); setCreateResult(null);
+    try {
+      const r = await fetch('/api/admin/create-course', { method:'POST', headers:H(), body:JSON.stringify(createForm) });
+      const d = await r.json();
+      if (r.ok) { setCreateResult(d); }
+      else alert(`Error: ${d.error}`);
+    } catch(e) { alert(`Error: ${e}`); }
+    setCreating(false);
   }
 
   const filteredCourses = courses.filter(c=>
@@ -433,7 +447,7 @@ export default function AdminPage() {
           <div className="text-xs text-gray-500 font-medium">Admin Console</div>
         </div>
         <nav className="flex-1 p-3 space-y-1">
-          {([['overview','Overview',<BarChart2 key="b" className="w-4 h-4"/>],['inquiries','Inquiries',<AlertCircle key="a" className="w-4 h-4"/>],['courses','Courses',<Building2 key="c" className="w-4 h-4"/>]] as const).map(([id,label,icon])=>(
+          {([['overview','Overview',<BarChart2 key="b" className="w-4 h-4"/>],['inquiries','Inquiries',<AlertCircle key="a" className="w-4 h-4"/>],['courses','Courses',<Building2 key="c" className="w-4 h-4"/>],['create','Add Course',<Plus key="p" className="w-4 h-4"/>]] as const).map(([id,label,icon])=>(
             <button key={id} onClick={()=>setTab(id)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${tab===id?'bg-[#1b4332] text-white':'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
               {icon}{label}
               {id==='inquiries'&&stats?.pendingInquiries>0&&<span className="ml-auto bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">{stats.pendingInquiries}</span>}
@@ -595,6 +609,125 @@ export default function AdminPage() {
               ))}
               {!loading&&filteredCourses.length===0&&<div className="text-gray-500 text-center py-20">No courses found</div>}
             </div>
+          </>}
+
+          {/* ── Add Course ── */}
+          {tab==='create'&&<>
+            <h1 className="text-2xl font-black text-white mb-6">Add New Course</h1>
+
+            {createResult ? (
+              <div className="bg-green-950 border border-green-800 rounded-2xl p-8 max-w-xl">
+                <div className="text-green-400 font-black text-lg mb-4">✓ Course created!</div>
+                <div className="space-y-3 mb-6">
+                  {[
+                    ['Booking page', `greenreserve.app/courses/${createResult.slug}`],
+                    ['Operator login', 'greenreserve.app/dashboard/login'],
+                    ['Temp password', createResult.tempPassword],
+                    ['Setup link', createResult.setupLink],
+                  ].map(([label, val]) => (
+                    <div key={label} className="flex items-center gap-3 bg-gray-900 rounded-xl px-4 py-3">
+                      <span className="text-gray-400 text-xs w-32 shrink-0">{label}</span>
+                      <span className="text-gray-100 text-xs font-mono flex-1 truncate">{val}</span>
+                      <button onClick={()=>navigator.clipboard.writeText(val)} className="text-gray-500 hover:text-green-400 shrink-0"><Copy className="w-3.5 h-3.5"/></button>
+                    </div>
+                  ))}
+                </div>
+                <button onClick={()=>{ setCreateResult(null); setCreateForm({ courseName:'', courseType:'public', address:'', city:'', state:'NJ', zipCode:'', phone:'', website:'', contactName:'', contactEmail:'', holes:18, par:72, description:'', hasMemberPricing:false, hasResidentPricing:false }); }} className="px-4 py-2 bg-green-700 hover:bg-green-600 text-white rounded-xl text-sm font-bold">
+                  Add Another Course
+                </button>
+              </div>
+            ) : (
+              <div className="max-w-2xl space-y-6">
+                {/* Course details */}
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
+                  <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Course Details</div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2">
+                      <label className="text-xs text-gray-400 block mb-1">Course Name *</label>
+                      <input value={createForm.courseName} onChange={e=>setCreateForm(f=>({...f,courseName:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="Pine Brook Golf Club"/>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-400 block mb-1">Type</label>
+                      <select value={createForm.courseType} onChange={e=>setCreateForm(f=>({...f,courseType:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500">
+                        {['public','semi-private','member','resident','resort','municipal'].map(t=><option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-400 block mb-1">Phone</label>
+                      <input value={createForm.phone} onChange={e=>setCreateForm(f=>({...f,phone:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="(201) 555-0100"/>
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-xs text-gray-400 block mb-1">Address</label>
+                      <input value={createForm.address} onChange={e=>setCreateForm(f=>({...f,address:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="123 Fairway Dr"/>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-400 block mb-1">City</label>
+                      <input value={createForm.city} onChange={e=>setCreateForm(f=>({...f,city:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500"/>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs text-gray-400 block mb-1">State</label>
+                        <input value={createForm.state} onChange={e=>setCreateForm(f=>({...f,state:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500"/>
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-400 block mb-1">Zip</label>
+                        <input value={createForm.zipCode} onChange={e=>setCreateForm(f=>({...f,zipCode:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500"/>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-400 block mb-1">Website</label>
+                      <input value={createForm.website} onChange={e=>setCreateForm(f=>({...f,website:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="https://"/>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs text-gray-400 block mb-1">Holes</label>
+                        <select value={createForm.holes} onChange={e=>setCreateForm(f=>({...f,holes:Number(e.target.value)}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500">
+                          <option value={9}>9</option><option value={18}>18</option><option value={27}>27</option><option value={36}>36</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-400 block mb-1">Par</label>
+                        <input type="number" value={createForm.par} onChange={e=>setCreateForm(f=>({...f,par:Number(e.target.value)}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500"/>
+                      </div>
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-xs text-gray-400 block mb-1">Description</label>
+                      <textarea value={createForm.description} onChange={e=>setCreateForm(f=>({...f,description:e.target.value}))} rows={3} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 resize-none"/>
+                    </div>
+                    <div className="col-span-2 flex gap-6">
+                      <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                        <input type="checkbox" checked={createForm.hasMemberPricing} onChange={e=>setCreateForm(f=>({...f,hasMemberPricing:e.target.checked}))} className="accent-green-500"/>
+                        Member pricing
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                        <input type="checkbox" checked={createForm.hasResidentPricing} onChange={e=>setCreateForm(f=>({...f,hasResidentPricing:e.target.checked}))} className="accent-green-500"/>
+                        Resident pricing
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Operator/contact */}
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
+                  <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Operator Account</div>
+                  <p className="text-xs text-gray-500">This creates their login. They&apos;ll get a welcome email with their temp password and setup link.</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs text-gray-400 block mb-1">Contact Name *</label>
+                      <input value={createForm.contactName} onChange={e=>setCreateForm(f=>({...f,contactName:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="John Smith"/>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-400 block mb-1">Contact Email *</label>
+                      <input type="email" value={createForm.contactEmail} onChange={e=>setCreateForm(f=>({...f,contactEmail:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="gm@pinecreek.com"/>
+                    </div>
+                  </div>
+                </div>
+
+                <button onClick={createCourse} disabled={creating||!createForm.courseName||!createForm.contactEmail||!createForm.contactName} className="w-full py-4 bg-green-600 hover:bg-green-500 disabled:opacity-40 text-white font-black rounded-2xl text-base transition-colors">
+                  {creating ? 'Creating...' : 'Create Course & Send Welcome Email →'}
+                </button>
+              </div>
+            )}
           </>}
         </div>
       </div>
