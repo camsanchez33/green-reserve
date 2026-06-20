@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession } from '@/lib/session';
+import { signMemberInviteToken } from '@/lib/auth';
+import { sendMemberInviteEmail, sendMemberLinkedNotification } from '@/lib/email';
 
 export async function GET() {
   const session = await resolveDashboardSession();
@@ -80,6 +82,16 @@ export async function POST(req: NextRequest) {
         tier:   { select: { id: true, name: true, color: true } },
       },
     });
+
+    // Existing golfer account — just let them know, no password setup needed.
+    const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { name: true } });
+    sendMemberLinkedNotification({
+      name: membership.golfer ? `${membership.golfer.firstName} ${membership.golfer.lastName}`.trim() : (name || ''),
+      email: lowerEmail,
+      courseName: course?.name || 'your course',
+      tierName: tier.name,
+    }).catch(err => console.error('Member linked email error:', err));
+
     return NextResponse.json({ ...membership, linked: true }, { status: 201 });
   } else {
     if (!name?.trim()) {
@@ -108,6 +120,18 @@ export async function POST(req: NextRequest) {
       },
       include: { tier: { select: { id: true, name: true, color: true } } },
     });
+
+    // No GolferAccount yet — send a set-password invite link.
+    const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { name: true } });
+    const token = await signMemberInviteToken({ membershipId: membership.id, email: lowerEmail });
+    sendMemberInviteEmail({
+      name: name.trim(),
+      email: lowerEmail,
+      courseName: course?.name || 'your course',
+      tierName: tier.name,
+      setupLink: `${process.env.NEXT_PUBLIC_URL}/account/accept-invite?token=${token}`,
+    }).catch(err => console.error('Member invite email error:', err));
+
     return NextResponse.json({ ...membership, linked: false }, { status: 201 });
   }
 }

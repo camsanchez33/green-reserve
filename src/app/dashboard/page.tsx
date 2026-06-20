@@ -1,11 +1,12 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  LogOut, Settings, Clock, Calendar, Users, DollarSign, Ban,
-  Plus, ChevronLeft, ChevronRight, RefreshCw, BarChart2,
+  Calendar, Users, DollarSign, Ban,
+  Plus, ChevronLeft, ChevronRight, RefreshCw,
   AlertTriangle, X, Loader2,
 } from 'lucide-react';
+import OperatorSidebar from '@/components/OperatorSidebar';
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 type TeeTime = {
@@ -43,26 +44,11 @@ function slotBadge(tt: TeeTime) {
   return <span className="text-xs font-semibold text-green-700">{avail} open</span>;
 }
 
-/* ─── Sidebar nav item ───────────────────────────────────────────────── */
-function NavItem({ icon, label, active, onClick, danger }: {
-  icon: React.ReactNode; label: string; active?: boolean; onClick: () => void; danger?: boolean;
-}) {
-  return (
-    <button onClick={onClick} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left ${
-      danger   ? 'text-red-400 hover:bg-red-500/10 hover:text-red-300' :
-      active   ? 'bg-white/15 text-white' :
-                 'text-white/60 hover:bg-white/10 hover:text-white'
-    }`}>
-      <span className="w-4 h-4 shrink-0">{icon}</span>
-      {label}
-    </button>
-  );
-}
-
 /* ─── Main ───────────────────────────────────────────────────────────── */
-export default function DashboardPage() {
+function DashboardPageInner() {
   const router = useRouter();
-  const [tab, setTab]           = useState<'teesheet' | 'analytics'>('teesheet');
+  const searchParams = useSearchParams();
+  const [tab, setTab] = useState<'teesheet' | 'analytics'>(searchParams.get('tab') === 'analytics' ? 'analytics' : 'teesheet');
   const [selectedDate, setSelectedDate] = useState(today());
   const [dateOffset, setDateOffset]     = useState(0);
   const [teeTimes, setTeeTimes]   = useState<TeeTime[]>([]);
@@ -114,10 +100,11 @@ export default function DashboardPage() {
 
   useEffect(() => { loadTimes(selectedDate); }, [selectedDate, loadTimes]);
 
-  async function logout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/dashboard/login');
-  }
+  // Sidebar navigates via ?tab=analytics rather than calling a local setter
+  // directly (so the link works from anywhere) — sync local tab state to it.
+  useEffect(() => {
+    setTab(searchParams.get('tab') === 'analytics' ? 'analytics' : 'teesheet');
+  }, [searchParams]);
 
   async function saveConditions() {
     setSavingConditions(true);
@@ -128,37 +115,7 @@ export default function DashboardPage() {
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden">
 
-      {/* ── Sidebar ─────────────────────────────────────────── */}
-      <aside className="w-56 shrink-0 bg-[#0f2218] flex flex-col h-full overflow-y-auto">
-        {/* Logo */}
-        <div className="px-4 py-5 border-b border-white/10">
-          <div className="font-black text-lg text-white leading-none">
-            Green<span className="text-green-400">Reserve</span>
-          </div>
-          {courseName && <div className="text-xs text-white/40 mt-1 truncate">{courseName}</div>}
-        </div>
-
-        {/* Nav */}
-        <nav className="flex-1 p-3 space-y-0.5">
-          <div className="text-xs font-semibold text-white/25 uppercase tracking-widest px-3 py-2">Dashboard</div>
-          <NavItem icon={<Calendar className="w-4 h-4"/>} label="Tee Sheet"  active={tab==='teesheet'}  onClick={() => setTab('teesheet')} />
-          <NavItem icon={<BarChart2 className="w-4 h-4"/>} label="Analytics" active={tab==='analytics'} onClick={() => setTab('analytics')} />
-
-          <div className="text-xs font-semibold text-white/25 uppercase tracking-widest px-3 py-2 mt-3">Manage</div>
-          <NavItem icon={<Clock className="w-4 h-4"/>}    label="Schedule" onClick={() => router.push('/dashboard/schedules')} />
-          <NavItem icon={<Users className="w-4 h-4"/>}    label="Members"  onClick={() => router.push('/dashboard/members')} />
-          <NavItem icon={<Settings className="w-4 h-4"/>} label="Settings" onClick={() => router.push('/dashboard/settings')} />
-
-          <div className="pt-2">
-            <NavItem icon={<AlertTriangle className="w-4 h-4"/>} label="Course Alert" onClick={() => setShowConditions(true)} />
-          </div>
-        </nav>
-
-        {/* Sign out */}
-        <div className="p-3 border-t border-white/10">
-          <NavItem icon={<LogOut className="w-4 h-4"/>} label="Sign Out" onClick={logout} danger />
-        </div>
-      </aside>
+      <OperatorSidebar active={tab} courseName={courseName} onAlertClick={() => setShowConditions(true)} />
 
       {/* ── Main content ─────────────────────────────────────── */}
       <main className="flex-1 overflow-y-auto">
@@ -380,6 +337,14 @@ export default function DashboardPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-100" />}>
+      <DashboardPageInner />
+    </Suspense>
   );
 }
 

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Plus, Trash2, Pencil, Check, X, Power } from 'lucide-react';
+import { Plus, Trash2, Pencil, Check, X, Power } from 'lucide-react';
+import OperatorSidebar from '@/components/OperatorSidebar';
 
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
@@ -30,7 +30,6 @@ const emptyForm = () => ({
 });
 
 export default function SchedulesPage() {
-  const router = useRouter();
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -39,10 +38,12 @@ export default function SchedulesPage() {
   const [saving, setSaving] = useState(false);
   const [hasMember, setHasMember] = useState(false);
   const [hasResident, setHasResident] = useState(false);
+  const [courseName, setCourseName] = useState('');
 
   useEffect(()=>{
     fetch('/api/operator/schedule').then(r=>r.json()).then(d=>{ setSchedules(Array.isArray(d)?d:[]); setLoading(false); });
     fetch('/api/operator/settings').then(r=>r.json()).then(c=>{ setHasMember(!!c.hasMemberPricing); setHasResident(!!c.hasResidentPricing); });
+    fetch('/api/operator/courses').then(r=>r.json()).then(c=>{ if (c?.name) setCourseName(c.name); });
   },[]);
 
   function openAdd() { setForm(emptyForm()); setEditId(null); setShowAdd(true); }
@@ -98,12 +99,11 @@ export default function SchedulesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-[#1b4332] px-4 py-4 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <button onClick={()=>router.push('/dashboard')} className="text-white/60 hover:text-white"><ArrowLeft className="w-5 h-5"/></button>
-          <span className="text-white font-black text-lg">Tee Sheet Schedules</span>
-        </div>
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
+      <OperatorSidebar active="schedule" courseName={courseName} />
+      <main className="flex-1 overflow-y-auto bg-gray-50">
+      <div className="bg-[#1b4332] px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+        <span className="text-white font-black text-lg">Tee Sheet Schedules</span>
         <button onClick={openAdd} className="flex items-center gap-2 bg-white text-[#1b4332] px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-50">
           <Plus className="w-4 h-4"/> Add Schedule
         </button>
@@ -270,6 +270,7 @@ export default function SchedulesPage() {
           </div>
         </div>
       )}
+      </main>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Plus, Trash2, Copy, Users, Eye, EyeOff } from 'lucide-react';
+import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff } from 'lucide-react';
+import OperatorSidebar from '@/components/OperatorSidebar';
 
 type Course = Record<string, unknown>;
 interface StaffMember { id: string; name: string; email: string; role: string; active: boolean; }
@@ -35,7 +35,6 @@ function Toggle({ label, checked, onChange }: { label:string; checked:boolean; o
 }
 
 export default function SettingsPage() {
-  const router = useRouter();
   const [active, setActive] = useState<Section>('Course Info');
   const [form, setForm] = useState<Record<string,unknown>>({});
   const [saving, setSaving] = useState(false);
@@ -84,12 +83,11 @@ export default function SettingsPage() {
   const dresscodes = (form.dresscode as string[])||[];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-[#1b4332] px-4 py-4 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <button onClick={()=>router.push('/dashboard')} className="text-white/60 hover:text-white"><ArrowLeft className="w-5 h-5"/></button>
-          <span className="text-white font-black text-lg">Settings</span>
-        </div>
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
+      <OperatorSidebar active="settings" courseName={form.name as string} />
+      <main className="flex-1 overflow-y-auto bg-gray-50">
+      <div className="bg-[#1b4332] px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+        <span className="text-white font-black text-lg">Settings</span>
         {active!=='Staff'&&(
           <button onClick={save} disabled={saving} className="flex items-center gap-2 bg-white text-[#1b4332] px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-50 disabled:opacity-50">
             <Save className="w-4 h-4"/> {saved?'Saved!':saving?'Saving...':'Save Changes'}
@@ -300,6 +298,7 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+      </main>
     </div>
   );
 }

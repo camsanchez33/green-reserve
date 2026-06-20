@@ -1,10 +1,10 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft, Plus, Trash2, Users, Edit2, Check, X,
+  Plus, Trash2, Users, Edit2, Check, X,
   RefreshCw, UserCheck, UserX, ChevronDown, AlertCircle,
 } from 'lucide-react';
+import OperatorSidebar from '@/components/OperatorSidebar';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 interface Tier {
@@ -59,11 +59,11 @@ type PricingMode = 'flat' | 'pct';
 
 /* ─── Main ────────────────────────────────────────────────────────────── */
 export default function MembersPage() {
-  const router = useRouter();
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [panel, setPanel] = useState<'tiers' | 'members'>('tiers');
+  const [courseName, setCourseName] = useState('');
 
   // Tier form
   const [tierForm, setTierForm] = useState<Partial<Tier>>(emptyTier());
@@ -95,6 +95,7 @@ export default function MembersPage() {
   }, []);
 
   useEffect(() => { loadAll(); }, [loadAll]);
+  useEffect(() => { fetch('/api/operator/courses').then(r => r.json()).then(c => { if (c?.name) setCourseName(c.name); }); }, []);
 
   /* ── Tier CRUD ── */
   const startEditTier = (t: Tier) => {
@@ -183,17 +184,21 @@ export default function MembersPage() {
   const setTF = (k: keyof typeof tierForm, v: unknown) => setTierForm(f => ({ ...f, [k]: v }));
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <RefreshCw className="w-6 h-6 text-gray-400 animate-spin" />
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
+      <OperatorSidebar active="members" courseName={courseName} />
+      <main className="flex-1 flex items-center justify-center">
+        <RefreshCw className="w-6 h-6 text-gray-400 animate-spin" />
+      </main>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
+      <OperatorSidebar active="members" courseName={courseName} />
+      <main className="flex-1 overflow-y-auto bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-4">
-          <button onClick={() => router.push('/dashboard')} className="text-gray-400 hover:text-gray-700"><ArrowLeft className="w-5 h-5" /></button>
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-green-700" />
             <h1 className="font-black text-gray-900 text-lg">Member Management</h1>
@@ -521,6 +526,7 @@ export default function MembersPage() {
           </div>
         )}
       </div>
+      </main>
     </div>
   );
 }

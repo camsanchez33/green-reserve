@@ -185,6 +185,53 @@ export async function sendOperatorWelcomeEmail(data: {
   });
 }
 
+export async function sendMemberInviteEmail(data: {
+  name: string; email: string; courseName: string; tierName: string; setupLink: string;
+}) {
+  const html = baseTemplate(`
+    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 14px;border-radius:20px;">⛳ You've been added as a member</span></div>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">Welcome, ${data.name}.</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      <strong>${data.courseName}</strong> has added you as a <strong>${data.tierName}</strong> member on GreenReserve.
+      Set up your account to start booking your member rate online.
+    </p>
+    <a href="${data.setupLink}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:12px;font-weight:800;font-size:16px;margin-bottom:16px;">
+      Set Up My Account &rarr;
+    </a>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      This link expires in 14 days. Questions? Reach out to ${data.courseName} directly.
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.email,
+    subject: `You're a member at ${data.courseName} — set up your account`,
+    html,
+  });
+}
+
+export async function sendMemberLinkedNotification(data: {
+  name: string; email: string; courseName: string; tierName: string;
+}) {
+  const html = baseTemplate(`
+    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 14px;border-radius:20px;">⛳ Membership added</span></div>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:24px;font-weight:900;">You're now a member at ${data.courseName}.</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      You've been added as a <strong>${data.tierName}</strong> member. Your member rate will automatically apply
+      next time you book a tee time there — just log in with this email.
+    </p>
+    <a href="${process.env.NEXT_PUBLIC_URL}/account" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;">
+      View My Account &rarr;
+    </a>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.email,
+    subject: `You're a member at ${data.courseName}`,
+    html,
+  });
+}
+
 export async function sendInquiryNotification(data: {
   contactName: string;
   contactTitle: string;

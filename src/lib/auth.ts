@@ -66,3 +66,22 @@ export async function getGolferSession() {
     return p;
   } catch { return null; }
 }
+
+// ── Member invite (set-password) tokens ─────────────────────────────────────────
+// Lets an operator-added member who has no GolferAccount yet land on a link and
+// set a password, without needing a golferId (which doesn't exist until they do).
+export async function signMemberInviteToken(payload: { membershipId: string; email: string }) {
+  return new SignJWT({ ...payload, type: 'member_invite' })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('14d')
+    .sign(secret);
+}
+
+export async function verifyMemberInviteToken(token: string) {
+  try {
+    const { payload } = await jwtVerify(token, secret);
+    const p = payload as { membershipId: string; email: string; type: string };
+    if (p.type !== 'member_invite') return null;
+    return p;
+  } catch { return null; }
+}
