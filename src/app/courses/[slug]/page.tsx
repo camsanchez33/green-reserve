@@ -135,17 +135,15 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
 
   function handleBook() {
     if (!selectedTime) return;
+    // Price is intentionally left out of the URL — /book re-fetches live pricing
+    // from the server rather than trusting query params.
     const params = new URLSearchParams({
       tee_time_id: String(selectedTime.id),
-      course_id: String(course!.id),
       course_name: course!.name,
       course_slug: course!.slug,
       date: selectedDate,
       time: selectedTime.time,
       players: String(players),
-      green_fee: String(selectedTime.green_fee),
-      cart_fee: String(selectedTime.cart_fee),
-      booking_url: course!.booking_url || '',
     });
     router.push(`/book?${params}`);
   }
@@ -272,7 +270,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                 <div className="p-6 border-b border-gray-100">
                   <h2 className="font-bold text-gray-900 text-lg mb-1">Book a Tee Time</h2>
                   {course.type !== 'member' && (
-                    <p className="text-gray-400 text-xs">$1 Green Reserve access fee · Book direct with course</p>
+                    <p className="text-gray-400 text-xs">$1.50/player GreenReserve access fee · Book & pay securely online</p>
                   )}
                 </div>
 
@@ -470,11 +468,11 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                           )}
                           <div className="flex justify-between border-t border-gray-200 pt-1.5">
                             <span className="text-gray-500">GR access fee</span>
-                            <span className="font-semibold text-gray-900">$1.00</span>
+                            <span className="font-semibold text-gray-900">${(1.5 * players).toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between font-bold text-gray-900 text-base">
                             <span>Total</span>
-                            <span>${((selectedTime.green_fee + selectedTime.cart_fee) * players + 1).toFixed(2)}</span>
+                            <span>${((selectedTime.green_fee + selectedTime.cart_fee) * players + 1.5 * players).toFixed(2)}</span>
                           </div>
                         </div>
                         <button
@@ -485,7 +483,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                           Continue to Book →
                         </button>
                         <p className="text-center text-xs text-gray-400">
-                          You&apos;ll be directed to {course.name}&apos;s own booking system.
+                          Secure checkout — pay online, no need to call ahead.
                         </p>
                       </div>
                     )}

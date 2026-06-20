@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.0.0",
+    "@stripe/react-stripe-js": "^2.8.0",
     "@stripe/stripe-js": "^4.0.0",
     "bcryptjs": "^2.4.3",
     "jose": "^5.0.0",

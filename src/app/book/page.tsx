@@ -1,7 +1,26 @@
 'use client';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useState, Suspense } from 'react';
-import { ChevronLeft, ExternalLink, Lock, CheckCircle } from 'lucide-react';
+import { useState, useEffect, Suspense } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
+import {
+  Elements, CardElement, useStripe, useElements,
+} from '@stripe/react-stripe-js';
+import { ChevronLeft, Lock, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
+
+const ACCESS_FEE_PER_PLAYER = 1.5; // matches ACCESS_FEE_CENTS in src/lib/stripe.ts — display only, server is the source of truth
+
+type LiveTeeTime = {
+  id: string; date: string; time: string; holes: number;
+  players_available: number; green_fee: number; cart_fee: number; status: string;
+};
+type CourseInfo = { name: string; city: string; state: string; address: string };
+type GolferProfile = { firstName: string; lastName: string; email: string; phone: string };
+type ConfirmedData = {
+  courseName: string; date: string; time: string; players: number;
+  greenFeeTotal: number; cartFeeTotal: number; accessFeeTotal: number; totalAmount: number;
+};
 
 function formatTime(t: string) {
   if (!t) return '';
@@ -10,74 +29,58 @@ function formatTime(t: string) {
   const hour = h % 12 || 12;
   return `${hour}:${m.toString().padStart(2, '0')} ${period}`;
 }
-
 function displayDate(dateStr: string) {
   if (!dateStr) return '';
   const d = new Date(dateStr + 'T12:00:00');
   return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
+const cardStyle = {
+  style: {
+    base: { fontSize: '15px', color: '#111827', '::placeholder': { color: '#9ca3af' } },
+    invalid: { color: '#dc2626' },
+  },
+};
+
 function BookPageInner() {
   const params = useSearchParams();
   const router = useRouter();
 
-  const teeTimeId = params.get('tee_time_id') || '';
-  const courseId = params.get('course_id') || '';
-  const courseName = params.get('course_name') || '';
+  const teeTimeId  = params.get('tee_time_id') || '';
   const courseSlug = params.get('course_slug') || '';
-  const date = params.get('date') || '';
-  const time = params.get('time') || '';
-  const players = parseInt(params.get('players') || '2');
-  const greenFee = parseFloat(params.get('green_fee') || '0');
-  const cartFee = parseFloat(params.get('cart_fee') || '0');
-  const bookingUrl = params.get('booking_url') || '';
+  const date        = params.get('date') || '';
+  const requestedPlayers = parseInt(params.get('players') || '2');
 
-  const totalCourse = (greenFee + cartFee) * players;
-  const accessFee = 1.0;
-  const total = totalCourse + accessFee;
+  const [course, setCourse]   = useState<CourseInfo | null>(null);
+  const [teeTime, setTeeTime] = useState<LiveTeeTime | null>(null);
+  const [loadError, setLoadError] = useState('');
+  const [loadingInfo, setLoadingInfo] = useState(true);
+  const [golfer, setGolfer]   = useState<GolferProfile | null>(null);
+  const [confirmedData, setConfirmedData] = useState<ConfirmedData | null>(null);
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
-  const [error, setError] = useState('');
+  // Re-fetch live course + tee time data — never trust price from the URL
+  useEffect(() => {
+    if (!courseSlug || !teeTimeId || !date) { setLoadError('Missing booking details.'); setLoadingInfo(false); return; }
 
-  async function handleConfirm() {
-    if (!name.trim() || !email.trim()) {
-      setError('Please enter your name and email.');
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Please enter a valid email address.');
-      return;
-    }
+    Promise.all([
+      fetch(`/api/courses/${courseSlug}`).then(r => r.ok ? r.json() : null),
+      fetch(`/api/courses/${courseSlug}/tee-times?date=${date}`).then(r => r.ok ? r.json() : []),
+      fetch('/api/golfer/auth/me').then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([courseData, teeTimes, golferData]) => {
+      if (!courseData) { setLoadError('Course not found.'); setLoadingInfo(false); return; }
+      setCourse(courseData);
+      const match = Array.isArray(teeTimes) ? teeTimes.find((t: LiveTeeTime) => String(t.id) === String(teeTimeId)) : null;
+      if (!match) {
+        setLoadError('This tee time is no longer available. Please pick another.');
+      } else {
+        setTeeTime(match);
+      }
+      if (golferData) setGolfer(golferData);
+      setLoadingInfo(false);
+    }).catch(() => { setLoadError('Something went wrong loading this tee time.'); setLoadingInfo(false); });
+  }, [courseSlug, teeTimeId, date]);
 
-    setLoading(true);
-    setError('');
-
-    try {
-      const res = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tee_time_id: parseInt(teeTimeId),
-          course_id: parseInt(courseId),
-          golfer_name: name,
-          golfer_email: email,
-          players,
-        }),
-      });
-
-      if (!res.ok) throw new Error('Booking failed');
-      setConfirmed(true);
-    } catch {
-      setError('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  if (confirmed) {
+  if (confirmedData) {
     return (
       <div className="min-h-screen bg-[#f8faf9] flex items-center justify-center px-4">
         <div className="max-w-lg w-full bg-white rounded-3xl border border-gray-100 shadow-sm p-10 text-center">
@@ -85,54 +88,22 @@ function BookPageInner() {
             <CheckCircle size={32} className="text-emerald-500" />
           </div>
           <h1 className="text-2xl font-black text-gray-900 mb-2">You&apos;re all set!</h1>
-          <p className="text-gray-500 mb-1">A confirmation email is on its way to <strong>{email}</strong>.</p>
-          <p className="text-gray-500 mb-8 text-sm">
-            Now head to {courseName}&apos;s booking system to complete your reservation.
-          </p>
+          <p className="text-gray-500 mb-8 text-sm">A confirmation email is on its way. See you on the course.</p>
 
           <div className="bg-[#f8faf9] rounded-2xl p-5 mb-8 text-left space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-400">Course</span>
-              <span className="font-semibold text-gray-900">{courseName}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Date</span>
-              <span className="font-semibold text-gray-900">{displayDate(date)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Tee Time</span>
-              <span className="font-semibold text-gray-900">{formatTime(time)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Players</span>
-              <span className="font-semibold text-gray-900">{players}</span>
+            <div className="flex justify-between"><span className="text-gray-400">Course</span><span className="font-semibold text-gray-900">{confirmedData.courseName}</span></div>
+            <div className="flex justify-between"><span className="text-gray-400">Date</span><span className="font-semibold text-gray-900">{displayDate(confirmedData.date)}</span></div>
+            <div className="flex justify-between"><span className="text-gray-400">Tee Time</span><span className="font-semibold text-gray-900">{formatTime(confirmedData.time)}</span></div>
+            <div className="flex justify-between"><span className="text-gray-400">Players</span><span className="font-semibold text-gray-900">{confirmedData.players}</span></div>
+            <div className="border-t border-gray-200 mt-2 pt-2 flex justify-between font-bold text-gray-900">
+              <span>Total charged</span><span>${confirmedData.totalAmount.toFixed(2)}</span>
             </div>
           </div>
 
-          {bookingUrl ? (
-            <a
-              href={bookingUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 w-full justify-center py-4 rounded-xl font-bold text-white text-sm transition-all hover:shadow-lg hover:-translate-y-0.5 mb-3"
-              style={{ background: '#1b4332' }}
-            >
-              Go to {courseName}&apos;s Booking Page
-              <ExternalLink size={15} />
-            </a>
-          ) : (
-            <button
-              onClick={() => router.push('/courses')}
-              className="inline-flex items-center gap-2 w-full justify-center py-4 rounded-xl font-bold text-white text-sm mb-3"
-              style={{ background: '#1b4332' }}
-            >
-              Browse More Courses
-            </button>
-          )}
-          <button
-            onClick={() => router.push('/courses')}
-            className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
-          >
+          <button onClick={() => router.push('/account')} className="inline-flex items-center justify-center w-full py-4 rounded-xl font-bold text-white text-sm mb-3" style={{ background: '#1b4332' }}>
+            View My Bookings
+          </button>
+          <button onClick={() => router.push('/courses')} className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
             Back to course search
           </button>
         </div>
@@ -140,128 +111,198 @@ function BookPageInner() {
     );
   }
 
+  if (loadingInfo) {
+    return <div className="min-h-screen bg-[#f8faf9] flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-gray-400" /></div>;
+  }
+
+  if (loadError || !teeTime || !course) {
+    return (
+      <div className="min-h-screen bg-[#f8faf9] flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+          <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-4" />
+          <h1 className="font-bold text-gray-900 mb-2">Can&apos;t complete this booking</h1>
+          <p className="text-gray-500 text-sm mb-6">{loadError || 'This tee time is no longer available.'}</p>
+          <button onClick={() => router.push(courseSlug ? `/courses/${courseSlug}` : '/courses')} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white" style={{ background: '#1b4332' }}>
+            Pick Another Time
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const players = Math.min(requestedPlayers, Math.max(teeTime.players_available, 1));
+  const greenTotal  = teeTime.green_fee * players;
+  const cartTotal    = teeTime.cart_fee * players;
+  const accessTotal  = ACCESS_FEE_PER_PLAYER * players;
+  const total         = greenTotal + cartTotal + accessTotal;
+
   return (
     <div className="min-h-screen bg-[#f8faf9]">
       <div className="max-w-2xl mx-auto px-4 py-10">
-
-        {/* Back */}
-        <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-1.5 text-gray-500 hover:text-gray-900 text-sm mb-6 transition-colors"
-        >
+        <button onClick={() => router.back()} className="inline-flex items-center gap-1.5 text-gray-500 hover:text-gray-900 text-sm mb-6 transition-colors">
           <ChevronLeft size={16} /> Back to tee times
         </button>
 
         <h1 className="text-2xl font-black text-gray-900 mb-2">Confirm Your Tee Time</h1>
-        <p className="text-gray-500 text-sm mb-8">
-          Review your details below. After confirming, you&apos;ll be directed to {courseName}&apos;s own booking page to complete the reservation.
-        </p>
+        <p className="text-gray-500 text-sm mb-8">Enter your details and card to lock in your tee time at {course.name}.</p>
 
         <div className="grid gap-6">
-
-          {/* Booking summary */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div
-              className="h-14 flex items-center px-6"
-              style={{ background: 'linear-gradient(135deg,#0f2218,#1b4332)' }}
-            >
-              <span className="text-white font-bold">{courseName}</span>
+            <div className="h-14 flex items-center px-6" style={{ background: 'linear-gradient(135deg,#0f2218,#1b4332)' }}>
+              <span className="text-white font-bold">{course.name}</span>
             </div>
             <div className="p-6 space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Date</span>
-                <span className="font-semibold text-gray-900">{displayDate(date)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Tee Time</span>
-                <span className="font-semibold text-gray-900">{formatTime(time)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Players</span>
-                <span className="font-semibold text-gray-900">{players}</span>
-              </div>
+              <div className="flex justify-between"><span className="text-gray-400">Date</span><span className="font-semibold text-gray-900">{displayDate(date)}</span></div>
+              <div className="flex justify-between"><span className="text-gray-400">Tee Time</span><span className="font-semibold text-gray-900">{formatTime(teeTime.time)}</span></div>
+              <div className="flex justify-between"><span className="text-gray-400">Players</span><span className="font-semibold text-gray-900">{players}</span></div>
               <div className="border-t border-gray-100 pt-3 space-y-2">
+                <div className="flex justify-between text-gray-500"><span>Green fee (×{players})</span><span>${greenTotal.toFixed(2)}</span></div>
+                {cartTotal > 0 && <div className="flex justify-between text-gray-500"><span>Cart fee (×{players})</span><span>${cartTotal.toFixed(2)}</span></div>}
                 <div className="flex justify-between text-gray-500">
-                  <span>Green fee (×{players})</span>
-                  <span>${(greenFee * players).toFixed(2)}</span>
-                </div>
-                {cartFee > 0 && (
-                  <div className="flex justify-between text-gray-500">
-                    <span>Cart fee (×{players})</span>
-                    <span>${(cartFee * players).toFixed(2)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-gray-500">
-                  <span className="flex items-center gap-1">
-                    Green Reserve access fee
-                    <span className="text-[10px] bg-[#f0fdf4] text-[#065f46] px-1.5 py-0.5 rounded font-semibold">1×</span>
-                  </span>
-                  <span>$1.00</span>
+                  <span className="flex items-center gap-1">GreenReserve access fee <span className="text-[10px] bg-[#f0fdf4] text-[#065f46] px-1.5 py-0.5 rounded font-semibold">${ACCESS_FEE_PER_PLAYER.toFixed(2)}/player</span></span>
+                  <span>${accessTotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-gray-900 text-base border-t border-gray-100 pt-2">
-                  <span>Total charged today</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>Total charged today</span><span>${total.toFixed(2)}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Golfer info */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-            <h2 className="font-bold text-gray-900">Your Details</h2>
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                Full Name
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="John Smith"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="john@example.com"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all"
-              />
-            </div>
-            {error && (
-              <p className="text-red-500 text-sm">{error}</p>
-            )}
-          </div>
+          <Elements stripe={stripePromise}>
+            <CheckoutForm
+              teeTimeId={teeTime.id}
+              players={players}
+              golfer={golfer}
+              onConfirmed={setConfirmedData}
+            />
+          </Elements>
 
-          {/* CTA */}
-          <div className="space-y-3">
-            <button
-              onClick={handleConfirm}
-              disabled={loading}
-              className="w-full py-4 rounded-xl font-bold text-white text-sm transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed"
-              style={{ background: '#1b4332' }}
-            >
-              {loading ? 'Processing…' : `Confirm & Pay $${total.toFixed(2)}`}
-            </button>
-            <div className="flex items-center justify-center gap-2 text-gray-400 text-xs">
-              <Lock size={12} />
-              <span>Secure checkout · $1 goes to Green Reserve · Green fees paid directly to the course</span>
-            </div>
-          </div>
-
-          {/* Transparency note */}
           <div className="bg-[#f0fdf4] rounded-2xl p-5 border border-emerald-100">
             <p className="text-emerald-800 text-sm font-medium mb-1">How this works</p>
             <p className="text-emerald-700 text-xs leading-relaxed">
-              Green Reserve charges a $1 access fee — that&apos;s it. After you confirm, you&apos;ll be redirected to {courseName}&apos;s own booking system where you&apos;ll complete your tee time reservation directly with them. They control the pricing, tee sheet, and everything else.
+              Your green fee goes directly to {course.name}. GreenReserve charges a small ${ACCESS_FEE_PER_PLAYER.toFixed(2)}/player access fee. Everything is processed securely through Stripe — your card details never touch our servers.
             </p>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CheckoutForm({ teeTimeId, players, golfer, onConfirmed }: {
+  teeTimeId: string;
+  players: number;
+  golfer: GolferProfile | null;
+  onConfirmed: (data: ConfirmedData) => void;
+}) {
+  const stripe   = useStripe();
+  const elements = useElements();
+
+  const [name, setName]   = useState(golfer ? `${golfer.firstName} ${golfer.lastName}`.trim() : '');
+  const [email, setEmail] = useState(golfer?.email || '');
+  const [phone, setPhone] = useState(golfer?.phone || '');
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState('');
+
+  useEffect(() => {
+    if (golfer) {
+      setName(`${golfer.firstName} ${golfer.lastName}`.trim());
+      setEmail(golfer.email);
+      setPhone(golfer.phone || '');
+    }
+  }, [golfer]);
+
+  async function handleSubmit() {
+    setError('');
+    if (!name.trim() || !email.trim()) { setError('Please enter your name and email.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Please enter a valid email address.'); return; }
+    if (!stripe || !elements) { setError('Payment form is still loading — try again in a moment.'); return; }
+
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) { setError('Card details are required.'); return; }
+
+    setLoading(true);
+    try {
+      const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({
+        type: 'card',
+        card: cardElement,
+        billing_details: { name, email },
+      });
+      if (pmError) { setError(pmError.message || 'Your card could not be processed.'); setLoading(false); return; }
+
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          teeTimeId,
+          players,
+          golferName: name,
+          golferEmail: email,
+          golferPhone: phone,
+          paymentMethodId: paymentMethod.id,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || 'Something went wrong. Please try again.'); setLoading(false); return; }
+
+      if (data.clientSecret) {
+        const { error: confirmError } = await stripe.confirmCardPayment(data.clientSecret);
+        if (confirmError) { setError(confirmError.message || 'Payment could not be confirmed.'); setLoading(false); return; }
+      }
+
+      onConfirmed({
+        courseName: data.courseName, date: data.date, time: data.time, players: data.players,
+        greenFeeTotal: data.greenFeeTotal, cartFeeTotal: data.cartFeeTotal,
+        accessFeeTotal: data.accessFeeTotal, totalAmount: data.totalAmount,
+      });
+    } catch {
+      setError('Something went wrong. Please try again.');
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+      <h2 className="font-bold text-gray-900">Your Details</h2>
+      <div>
+        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Full Name</label>
+        <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="John Smith"
+          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all" />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Email</label>
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="john@example.com"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all" />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Phone (optional)</label>
+          <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="(555) 555-5555"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all" />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Card Details</label>
+        <div className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus-within:border-[#1b4332] focus-within:ring-2 focus-within:ring-[#1b4332]/10 transition-all">
+          <CardElement options={cardStyle} />
+        </div>
+      </div>
+
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+
+      <button
+        onClick={handleSubmit}
+        disabled={loading || !stripe}
+        className="w-full py-4 rounded-xl font-bold text-white text-sm transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        style={{ background: '#1b4332' }}
+      >
+        {loading ? <><Loader2 size={16} className="animate-spin" /> Processing…</> : 'Confirm & Pay'}
+      </button>
+      <div className="flex items-center justify-center gap-2 text-gray-400 text-xs">
+        <Lock size={12} />
+        <span>Secure checkout powered by Stripe</span>
       </div>
     </div>
   );

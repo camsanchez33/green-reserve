@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
 import { getGolferSession } from '@/lib/auth';
 import { stripe, ACCESS_FEE_CENTS } from '@/lib/stripe';
@@ -96,7 +97,9 @@ export async function POST(req: NextRequest) {
   }
 
   // Atomic transaction
-  const result = await prisma.$transaction(async (tx) => {
+  let result;
+  try {
+  result = await prisma.$transaction(async (tx) => {
     const teeTime = await tx.teeTime.findUnique({
       where: { id: teeTimeId },
       include: {
@@ -168,6 +171,22 @@ export async function POST(req: NextRequest) {
 
     return { booking, teeTime, totalCents, greenFeeTotal, cartFeeTotal, accessFeeTotal, clientSecret };
   });
+  } catch (err) {
+    if (err instanceof Stripe.errors.StripeCardError) {
+      return NextResponse.json({ error: err.message || 'Your card was declined.' }, { status: 402 });
+    }
+    if (err instanceof Error) {
+      if (err.message === 'NOT_FOUND') return NextResponse.json({ error: 'Tee time not found.' }, { status: 404 });
+      if (err.message === 'BLOCKED')   return NextResponse.json({ error: 'This tee time is no longer available.' }, { status: 409 });
+      if (err.message === 'FULL')      return NextResponse.json({ error: 'This tee time is fully booked.' }, { status: 409 });
+      if (err.message.startsWith('SPOTS:')) {
+        const left = err.message.split(':')[1];
+        return NextResponse.json({ error: `Only ${left} spot${left === '1' ? '' : 's'} left for this tee time.` }, { status: 409 });
+      }
+    }
+    console.error('Booking transaction error:', err);
+    return NextResponse.json({ error: 'Something went wrong processing your booking. Please try again.' }, { status: 500 });
+  }
 
   // Send confirmation emails (fire-and-forget)
   try {
@@ -197,10 +216,18 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({
-    clientSecret: result.clientSecret,
-    bookingId:    result.booking.id,
+    clientSecret:   result.clientSecret,
+    bookingId:      result.booking.id,
     appliedRate,
-    memberRate:   appliedTierName !== 'standard',
+    memberRate:     appliedTierName !== 'standard',
+    greenFeeTotal:  result.greenFeeTotal  / 100,
+    cartFeeTotal:   result.cartFeeTotal   / 100,
+    accessFeeTotal: result.accessFeeTotal / 100,
+    totalAmount:    result.totalCents     / 100,
+    courseName:     result.teeTime.course.name,
+    date:           result.teeTime.date,
+    time:           result.teeTime.time,
+    players,
   });
 }
 

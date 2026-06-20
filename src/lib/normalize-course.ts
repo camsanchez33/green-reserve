@@ -1,0 +1,35 @@
+/**
+ * Maps a Prisma Course row (camelCase) onto the snake_case shape the golfer-facing
+ * UI (CourseCard, /courses, /courses/[slug]) was built against. Used by every public
+ * course-facing API route so there's exactly one mapping to keep in sync, instead of
+ * each route inventing its own (which is how green_fee/par/image_gradient silently
+ * went undefined on real DB courses before).
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function normalizeDbCourse(c: any, startingGreenFee = 0) {
+  return {
+    id: c.id,
+    slug: c.slug,
+    name: c.name,
+    type: c.type,
+    city: c.city,
+    state: c.state,
+    address: c.address,
+    phone: c.phone,
+    website: c.website,
+    booking_url: c.bookingUrl ?? '',
+    holes: c.holes,
+    par: c.par,
+    description: c.description,
+    amenities: Array.isArray(c.amenities) ? c.amenities.join(', ') : (c.amenities ?? ''),
+    walking_allowed: c.walkingAllowed === 'always' || c.walkingAllowed === 'allowed',
+    cart_required: c.cartRequired ?? false,
+    rating: c.rating ?? 4.5,
+    review_count: c.reviewCount ?? 0,
+    image_gradient: c.imageGradient ?? 'linear-gradient(160deg,#071810 0%,#1b4332 60%,#2d6a4f 100%)',
+    featured: c.featured ?? false,
+    base_green_fee: startingGreenFee,
+    cart_fee: 0,
+    active: c.active ?? false,
+  };
+}

@@ -117,6 +117,10 @@ async function handleAction(inquiryId: string, action: string, payload?: Record<
   if (action === 'mark_live') {
     try {
       if (!inquiry.builtCourseId) return NextResponse.json({ error: 'No course built for this inquiry yet' }, { status: 400 });
+      const builtCourse = await prisma.course.findUnique({ where: { id: inquiry.builtCourseId } });
+      if (!builtCourse?.stripeAccountActive) {
+        return NextResponse.json({ error: 'This course has not finished connecting Stripe (charges/payouts not enabled yet). They need to complete onboarding from their dashboard before going live.' }, { status: 400 });
+      }
       await prisma.course.update({
         where: { id: inquiry.builtCourseId },
         data: { active: true, liveStatus: 'live' },
