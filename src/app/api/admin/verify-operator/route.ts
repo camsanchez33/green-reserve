@@ -21,7 +21,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   if (!checkAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const { email } = await req.json();
+  const { email: rawEmail } = await req.json();
+  const email = String(rawEmail).trim().toLowerCase();
   const op = await prisma.courseOperator.findUnique({ where: { email } });
   if (!op) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   // Generate a fresh token if missing

@@ -4,9 +4,10 @@ import { signGolferToken } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 
 export async function POST(req: NextRequest) {
-  const { email, password, firstName, lastName, phone } = await req.json();
-  if (!email || !password || !firstName || !lastName)
+  const { email: rawEmail, password, firstName, lastName, phone } = await req.json();
+  if (!rawEmail || !password || !firstName || !lastName)
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  const email = String(rawEmail).trim().toLowerCase();
 
   const existing = await prisma.golferAccount.findUnique({ where: { email } });
   if (existing) return NextResponse.json({ error: 'Email already registered' }, { status: 409 });

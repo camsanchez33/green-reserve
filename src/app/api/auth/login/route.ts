@@ -4,8 +4,9 @@ import { signToken, signStaffToken } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 
 export async function POST(req: NextRequest) {
-  const { email, password } = await req.json();
-  if (!email || !password) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+  const { email: rawEmail, password } = await req.json();
+  if (!rawEmail || !password) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+  const email = String(rawEmail).trim().toLowerCase();
 
   // Try operator first
   const operator = await prisma.courseOperator.findUnique({ where: { email } });

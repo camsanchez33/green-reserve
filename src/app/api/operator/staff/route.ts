@@ -18,8 +18,9 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const { name, email, role } = await req.json();
-  if (!name || !email) return NextResponse.json({ error: 'Name and email required' }, { status: 400 });
+  const { name, email: rawEmail, role } = await req.json();
+  if (!name || !rawEmail) return NextResponse.json({ error: 'Name and email required' }, { status: 400 });
+  const email = String(rawEmail).trim().toLowerCase();
 
   const existing = await prisma.courseStaff.findUnique({ where: { email } });
   if (existing) return NextResponse.json({ error: 'Email already in use' }, { status: 409 });

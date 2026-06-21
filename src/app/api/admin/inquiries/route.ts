@@ -85,7 +85,8 @@ async function handleAction(inquiryId: string, action: string, payload?: Record<
       if (slugExists) slug = `${baseSlug}-${randomBytes(3).toString('hex')}`;
       const verificationToken = randomBytes(32).toString('hex');
 
-      const existing = await prisma.courseOperator.findUnique({ where: { email: inquiry.email } });
+      const operatorEmail = inquiry.email.trim().toLowerCase();
+      const existing = await prisma.courseOperator.findUnique({ where: { email: operatorEmail } });
       if (existing) return NextResponse.json({ error: 'Operator with this email already exists' }, { status: 409 });
 
       // Pull in the submitted detail sheet (policies/facilities/pricing) if there is one,
@@ -99,7 +100,7 @@ async function handleAction(inquiryId: string, action: string, payload?: Record<
 
       const operator = await prisma.courseOperator.create({
         data: {
-          email: inquiry.email,
+          email: operatorEmail,
           password: hashed,
           name: inquiry.contactName,
           emailVerified: false,

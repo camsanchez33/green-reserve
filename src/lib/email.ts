@@ -185,6 +185,32 @@ export async function sendOperatorWelcomeEmail(data: {
   });
 }
 
+export async function sendOperatorPasswordResetEmail(data: {
+  operatorName: string;
+  operatorEmail: string;
+  resetLink: string;
+}) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:900;">Reset your password</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      Hi ${data.operatorName} — we got a request to reset the password on your GreenReserve dashboard (${data.operatorEmail}).
+      If this wasn't you, you can safely ignore this email.
+    </p>
+    <a href="${data.resetLink}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:12px;font-weight:800;font-size:16px;margin-bottom:16px;">
+      Set a New Password &rarr;
+    </a>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      This link expires in 1 hour. Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.operatorEmail,
+    subject: `Reset your GreenReserve password`,
+    html,
+  });
+}
+
 export async function sendMemberInviteEmail(data: {
   name: string; email: string; courseName: string; tierName: string; setupLink: string;
 }) {

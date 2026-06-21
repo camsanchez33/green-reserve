@@ -13,11 +13,12 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { courseName, courseType, address, city, state, zipCode, phone, website, contactName, contactEmail, holes, par, description, hasMemberPricing, hasResidentPricing } = body;
+    const { courseName, courseType, address, city, state, zipCode, phone, website, contactName, contactEmail: rawContactEmail, holes, par, description, hasMemberPricing, hasResidentPricing } = body;
 
-    if (!courseName || !contactName || !contactEmail) {
+    if (!courseName || !contactName || !rawContactEmail) {
       return NextResponse.json({ error: 'Course name, contact name, and email are required' }, { status: 400 });
     }
+    const contactEmail = String(rawContactEmail).trim().toLowerCase();
 
     // Check for existing operator
     const existing = await prisma.courseOperator.findUnique({ where: { email: contactEmail } });

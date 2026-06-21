@@ -5,10 +5,11 @@ import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 
 export async function POST(req: NextRequest) {
-  const { email, password, name, courseName } = await req.json();
-  if (!email || !password || !name || !courseName) {
+  const { email: rawEmail, password, name, courseName } = await req.json();
+  if (!rawEmail || !password || !name || !courseName) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
+  const email = String(rawEmail).trim().toLowerCase();
 
   const existing = await prisma.courseOperator.findUnique({ where: { email } });
   if (existing) return NextResponse.json({ error: 'Email already registered' }, { status: 409 });

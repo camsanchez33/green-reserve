@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     data: {
       contactName: body.contactName,
       contactTitle: body.contactTitle,
-      email: body.email,
+      email: String(body.email).trim().toLowerCase(),
       phone: body.phone,
       courseName: body.courseName,
       address: body.address,

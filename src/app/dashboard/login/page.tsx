@@ -57,7 +57,10 @@ function LoginContent() {
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Password</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Password</label>
+                <a href="/dashboard/forgot-password" className="text-xs text-green-700 font-medium hover:underline">Forgot password?</a>
+              </div>
               <input type="password" value={form.password} onChange={e => set('password', e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && submit()}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none" />
