@@ -1,11 +1,12 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff } from 'lucide-react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff, CreditCard, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 
 type Course = Record<string, unknown>;
 interface StaffMember { id: string; name: string; email: string; role: string; active: boolean; }
-const SECTIONS = ['Course Info', 'Pricing Policy', 'Course Policy', 'Facilities', 'Staff'] as const;
+const SECTIONS = ['Course Info', 'Payments', 'Pricing Policy', 'Course Policy', 'Facilities', 'Staff'] as const;
 type Section = typeof SECTIONS[number];
 const inputCls = 'w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white';
 
@@ -34,8 +35,11 @@ function Toggle({ label, checked, onChange }: { label:string; checked:boolean; o
   );
 }
 
-export default function SettingsPage() {
-  const [active, setActive] = useState<Section>('Course Info');
+function SettingsPageInner() {
+  const searchParams = useSearchParams();
+  const stripeParam = searchParams.get('stripe'); // 'success' | 'pending' | 'error' on return from Stripe
+
+  const [active, setActive] = useState<Section>(stripeParam ? 'Payments' : 'Course Info');
   const [form, setForm] = useState<Record<string,unknown>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -44,11 +48,30 @@ export default function SettingsPage() {
   const [addingStaff, setAddingStaff] = useState(false);
   const [staffResult, setStaffResult] = useState<{tempPassword:string;name:string}|null>(null);
   const [showPass, setShowPass] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const [stripeError, setStripeError] = useState('');
+
+  const refreshForm = () => fetch('/api/operator/settings').then(r=>r.json()).then(setForm);
 
   useEffect(() => {
-    fetch('/api/operator/settings').then(r=>r.json()).then(d=>{ setForm(d); });
+    refreshForm();
     fetch('/api/operator/staff').then(r=>r.json()).then(setStaff);
   }, []);
+
+  async function connectStripe() {
+    setConnecting(true);
+    setStripeError('');
+    try {
+      const res = await fetch('/api/operator/stripe/connect');
+      const data = await res.json();
+      if (!res.ok) { setStripeError(data.error || 'Could not start Stripe Connect.'); setConnecting(false); return; }
+      if (data.url) { window.location.href = data.url; return; }
+      if (data.connected) { await refreshForm(); }
+    } catch {
+      setStripeError('Could not reach Stripe. Try again.');
+    }
+    setConnecting(false);
+  }
 
   const set = (k:string, v:unknown) => setForm(f=>({...f,[k]:v}));
   const tog = (k:string) => setForm(f=>({...f,[k]:!f[k]}));
@@ -130,6 +153,57 @@ export default function SettingsPage() {
                 <Field label="Yardage"><FInput value={form.yardage as number} onChange={v=>set('yardage',Number(v))} type="number"/></Field>
                 <Field label="Slope"><FInput value={form.slope as number} onChange={v=>set('slope',Number(v))} type="number"/></Field>
                 <Field label="Course Rating"><FInput value={form.courseRating as number} onChange={v=>set('courseRating',Number(v))} type="number" step="0.1"/></Field>
+              </div>
+            </SectionCard>
+          </div>
+        )}
+
+        {active==='Payments'&&(
+          <div className="space-y-5">
+            <SectionCard title="Stripe Payouts">
+              {stripeParam === 'pending' && (
+                <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-800 text-sm">
+                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  Stripe says your account isn&apos;t fully verified yet (charges or payouts not enabled). Finish any remaining steps on Stripe, or click Connect again to pick back up.
+                </div>
+              )}
+              {stripeParam === 'error' && (
+                <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl p-3 text-red-700 text-sm">
+                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  Something went wrong connecting to Stripe. Try again below.
+                </div>
+              )}
+              {stripeError && (
+                <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl p-3 text-red-700 text-sm">
+                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  {stripeError}
+                </div>
+              )}
+
+              {form.stripeAccountActive ? (
+                <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl p-4">
+                  <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />
+                  <div>
+                    <div className="font-bold text-green-800 text-sm">Stripe connected</div>
+                    <div className="text-green-700 text-xs">Charges and payouts are enabled. Green fees go straight to your bank account.</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-500">
+                    Connect your bank account through Stripe so you can get paid for bookings. This takes about 5 minutes — you&apos;ll need your business/bank details.
+                    GreenReserve can&apos;t take your course live until this is connected.
+                  </p>
+                  <button onClick={connectStripe} disabled={connecting}
+                    className="flex items-center justify-center gap-2 w-full bg-[#1b4332] text-white py-3 rounded-xl font-bold text-sm hover:bg-[#2d6a4f] disabled:opacity-50 transition-colors">
+                    {connecting ? <><Loader2 className="w-4 h-4 animate-spin" /> Connecting...</> : <><CreditCard className="w-4 h-4" /> Connect with Stripe</>}
+                  </button>
+                </div>
+              )}
+
+              <div className="text-xs text-gray-400 pt-2 border-t border-gray-100">
+                Current status: <span className="font-semibold text-gray-600 capitalize">{(form.liveStatus as string) || 'draft'}</span>
+                {form.liveStatus !== 'live' && form.stripeAccountActive ? ' — Stripe is connected. GreenReserve will review and take you live shortly.' : ''}
               </div>
             </SectionCard>
           </div>
@@ -301,4 +375,8 @@ export default function SettingsPage() {
       </main>
     </div>
   );
+}
+
+export default function SettingsPage() {
+  return <Suspense><SettingsPageInner /></Suspense>;
 }
