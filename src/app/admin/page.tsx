@@ -15,6 +15,7 @@ interface Inquiry {
   greenFeeRange: string; hasResidentPricing: boolean; hasMemberPricing: boolean;
   hasCaddies: boolean; pricingNotes: string; lookingFor: string[]; additionalNotes: string;
   status: string; adminNotes: string; builtCourseId: string | null; createdAt: string;
+  detailsToken?: string | null; detailsJson?: string;
 }
 interface Course {
   id: string; name: string; city: string; state: string; active: boolean; featured: boolean;
@@ -35,7 +36,7 @@ interface CourseDetail {
   totalBookings: number;
   revenue30d: { gross:number; platform:number; greenFees:number };
 }
-interface ApproveResult { tempPassword: string; setupLink: string; }
+interface ApproveResult { tempPassword?: string; setupLink?: string; detailsLink?: string; emailSent?: boolean; emailError?: string; }
 interface TeeSlot {
   id: string; time: string; holes: number; playersAvailable: number; playersBooked: number;
   greenFee: number; cartFee: number; status: string; tierName: string;
@@ -44,17 +45,20 @@ interface TeeSlot {
 
 /* ─── Helpers ─── */
 const STATUS_COLORS: Record<string, string> = {
-  pending:    'bg-yellow-100 text-yellow-800 border-yellow-200',
-  in_review:  'bg-blue-100 text-blue-800 border-blue-200',
-  building:   'bg-orange-100 text-orange-800 border-orange-200',
-  live:       'bg-green-100 text-green-800 border-green-200',
-  rejected:   'bg-red-100 text-red-800 border-red-200',
+  pending:           'bg-yellow-100 text-yellow-800 border-yellow-200',
+  in_review:         'bg-blue-100 text-blue-800 border-blue-200',
+  details_requested: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+  details_submitted: 'bg-teal-100 text-teal-800 border-teal-200',
+  building:          'bg-orange-100 text-orange-800 border-orange-200',
+  live:              'bg-green-100 text-green-800 border-green-200',
+  rejected:          'bg-red-100 text-red-800 border-red-200',
   // legacy
-  approved:   'bg-green-100 text-green-800 border-green-200',
+  approved:          'bg-green-100 text-green-800 border-green-200',
 };
 const STATUS_LABEL: Record<string, string> = {
-  pending: 'Pending', in_review: 'In Review', building: 'Building',
-  live: 'Live', rejected: 'Rejected', approved: 'Approved',
+  pending: 'Pending', in_review: 'In Review',
+  details_requested: 'Setup Sheet Sent', details_submitted: 'Setup Sheet In',
+  building: 'Building', live: 'Live', rejected: 'Rejected', approved: 'Approved',
 };
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 const fmtMoney = (n: number) => '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
@@ -139,7 +143,7 @@ export default function AdminPage() {
       let d: Record<string,unknown> = {};
       try { d = JSON.parse(text); } catch { /* not json */ }
       if (r.ok) {
-        if (action === 'build_course') setApproveResults(p => ({ ...p, [id]: d }));
+        if (['build_course','resend_welcome','request_details','resend_details'].includes(action)) setApproveResults(p => ({ ...p, [id]: d as unknown as ApproveResult }));
         if (action === 'add_note') {
           setInquiries(prev => prev.map(inq => inq.id === id ? { ...inq, adminNotes: d.adminNotes as string } : inq));
           setNoteTexts(p => ({ ...p, [id]: '' }));
@@ -551,13 +555,13 @@ export default function AdminPage() {
             <div className="flex gap-1 mb-5 bg-gray-800 rounded-xl p-1 w-fit">
               {(['active','past'] as const).map(v=>(
                 <button key={v} onClick={()=>setInquiryView(v)} className={`px-5 py-1.5 rounded-lg text-sm font-semibold transition-colors capitalize ${inquiryView===v?'bg-white text-gray-900':'text-gray-400 hover:text-white'}`}>
-                  {v==='active'?`Active (${inquiries.filter(i=>['pending','in_review'].includes(i.status)).length})`:`Past (${inquiries.filter(i=>['building','live','rejected'].includes(i.status)).length})`}
+                  {v==='active'?`Active (${inquiries.filter(i=>['pending','in_review','details_requested','details_submitted'].includes(i.status)).length})`:`Past (${inquiries.filter(i=>['building','live','rejected'].includes(i.status)).length})`}
                 </button>
               ))}
             </div>
             {loading&&<div className="text-gray-500 py-20 text-center">Loading...</div>}
             <div className="space-y-3">
-              {inquiries.filter(inq=>inquiryView==='active'?['pending','in_review'].includes(inq.status):['building','live','rejected'].includes(inq.status)).map(inq=>(
+              {inquiries.filter(inq=>inquiryView==='active'?['pending','in_review','details_requested','details_submitted'].includes(inq.status):['building','live','rejected'].includes(inq.status)).map(inq=>(
                 <div key={inq.id} className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
                   <div className="px-5 py-4 flex items-start gap-4">
                     <div className="flex-1">
@@ -578,10 +582,19 @@ export default function AdminPage() {
                         <button onClick={()=>{ if(confirm('Reject this inquiry?')) inquiryAction(inq.id,'reject'); }} disabled={processing===inq.id} className="bg-red-900 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><XCircle className="w-3.5 h-3.5"/>Reject</button>
                       </>}
                       {inq.status==='in_review'&&<>
-                        <button onClick={()=>{ if(confirm(`Build course draft for ${inq.courseName}? This creates their operator account and sends welcome email.`)) inquiryAction(inq.id,'build_course'); }} disabled={processing===inq.id} className="bg-green-700 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5"/>Build Course</button>
+                        <button onClick={()=>{ if(confirm(`Send ${inq.contactName} the setup sheet? They'll fill in pricing, policies, and facilities before we build their page.`)) inquiryAction(inq.id,'request_details'); }} disabled={processing===inq.id} className="bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Mail className="w-3.5 h-3.5"/>Request Setup Sheet</button>
+                        <button onClick={()=>{ if(confirm('Reject this inquiry?')) inquiryAction(inq.id,'reject'); }} disabled={processing===inq.id} className="bg-red-900 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><XCircle className="w-3.5 h-3.5"/>Reject</button>
+                      </>}
+                      {inq.status==='details_requested'&&<>
+                        <button onClick={()=>{ if(confirm(`Resend the setup-sheet link to ${inq.contactName}?`)) inquiryAction(inq.id,'resend_details'); }} disabled={processing===inq.id} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Mail className="w-3.5 h-3.5"/>Resend Setup Sheet</button>
+                        <button onClick={()=>{ if(confirm('Reject this inquiry?')) inquiryAction(inq.id,'reject'); }} disabled={processing===inq.id} className="bg-red-900 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><XCircle className="w-3.5 h-3.5"/>Reject</button>
+                      </>}
+                      {inq.status==='details_submitted'&&<>
+                        <button onClick={()=>{ if(confirm(`Build course draft for ${inq.courseName}? This creates their operator account, pre-fills their settings from the setup sheet, and sends the welcome email.`)) inquiryAction(inq.id,'build_course'); }} disabled={processing===inq.id} className="bg-green-700 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5"/>Build Course</button>
                         <button onClick={()=>{ if(confirm('Reject this inquiry?')) inquiryAction(inq.id,'reject'); }} disabled={processing===inq.id} className="bg-red-900 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><XCircle className="w-3.5 h-3.5"/>Reject</button>
                       </>}
                       {inq.status==='building'&&<>
+                        <button onClick={()=>{ if(confirm(`Resend welcome email to ${inq.contactName}? This generates a fresh temp password — the old one will stop working.`)) inquiryAction(inq.id,'resend_welcome'); }} disabled={processing===inq.id} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Mail className="w-3.5 h-3.5"/>Resend Email</button>
                         <button onClick={()=>{ if(confirm(`Set ${inq.courseName} LIVE? This makes it publicly bookable.`)) inquiryAction(inq.id,'mark_live'); }} disabled={processing===inq.id} className="bg-green-700 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Power className="w-3.5 h-3.5"/>Go Live</button>
                       </>}
                       {['building','live','rejected'].includes(inq.status)&&(
@@ -593,20 +606,33 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  {approveResults[inq.id]&&(
-                    <div className="px-5 pb-4 bg-green-950 border-t border-green-900">
-                      <div className="text-xs font-semibold text-green-400 mb-2 mt-3">✅ Course built — welcome email sent. Share credentials if needed:</div>
-                      <div className="space-y-2">
-                        {[['Temp Password',(approveResults[inq.id] as Record<string,unknown>).tempPassword as string],['Setup Link',(approveResults[inq.id] as Record<string,unknown>).setupLink as string]].map(([label,val])=>(
-                          <div key={label} className="flex items-center gap-2 bg-gray-900 rounded-lg px-3 py-2">
-                            <span className="text-xs text-gray-400 w-28 shrink-0">{label}</span>
-                            <span className="text-xs text-gray-100 font-mono flex-1 truncate">{val}</span>
-                            <button onClick={()=>navigator.clipboard.writeText(val)} className="text-gray-500 hover:text-green-400"><Copy className="w-3.5 h-3.5"/></button>
+                  {approveResults[inq.id]&&(()=>{
+                    const res = approveResults[inq.id];
+                    const isDetailsAction = !!res.detailsLink;
+                    const rows: [string,string][] = isDetailsAction
+                      ? [['Setup Sheet Link', res.detailsLink as string]]
+                      : [['Temp Password', res.tempPassword||''],['Setup Link', res.setupLink||'']];
+                    return (
+                      <div className={`px-5 pb-4 border-t ${res.emailSent===false?'bg-red-950 border-red-900':'bg-green-950 border-green-900'}`}>
+                        {res.emailSent===false ? (
+                          <div className="text-xs font-semibold text-red-400 mb-2 mt-3">
+                            ⚠️ {isDetailsAction?'Saved, but the setup-sheet email failed to send':'Course built, but the welcome email failed to send'} ({res.emailError || 'unknown error'}). Share this link manually, or fix email and hit Resend:
                           </div>
-                        ))}
+                        ) : (
+                          <div className="text-xs font-semibold text-green-400 mb-2 mt-3">✅ {isDetailsAction?'Setup-sheet email sent.':'Course built — welcome email sent.'} Share manually if needed:</div>
+                        )}
+                        <div className="space-y-2">
+                          {rows.map(([label,val])=>(
+                            <div key={label} className="flex items-center gap-2 bg-gray-900 rounded-lg px-3 py-2">
+                              <span className="text-xs text-gray-400 w-28 shrink-0">{label}</span>
+                              <span className="text-xs text-gray-100 font-mono flex-1 truncate">{val}</span>
+                              <button onClick={()=>navigator.clipboard.writeText(val)} className="text-gray-500 hover:text-green-400"><Copy className="w-3.5 h-3.5"/></button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {expanded===inq.id&&(
                     <div className="px-5 pb-5 border-t border-gray-800 pt-4 space-y-4">
@@ -620,6 +646,18 @@ export default function AdminPage() {
                         {inq.additionalNotes&&<div className="col-span-2"><span className="text-gray-500">Notes: </span><span className="text-gray-300">{inq.additionalNotes}</span></div>}
                         {inq.pricingNotes&&<div className="col-span-2"><span className="text-gray-500">Pricing notes: </span><span className="text-gray-300">{inq.pricingNotes}</span></div>}
                       </div>
+
+                      {/* Submitted setup sheet (once they've sent it back) */}
+                      {inq.detailsJson&&(()=>{ let d:Record<string,unknown>={}; try{d=JSON.parse(inq.detailsJson||'');}catch{ /* ignore */ } return Object.keys(d).length>0 ? (
+                        <div className="border-t border-gray-800 pt-4">
+                          <div className="text-xs font-semibold text-teal-400 uppercase tracking-wide mb-2">Submitted Setup Sheet</div>
+                          <div className="grid grid-cols-2 gap-2 text-sm bg-gray-800 rounded-lg p-3">
+                            {Object.entries(d).filter(([,v])=>v!==''&&v!==null&&!(Array.isArray(v)&&v.length===0)).map(([k,v])=>(
+                              <div key={k}><span className="text-gray-500">{k}: </span><span className="text-gray-300">{Array.isArray(v)?v.join(', '):String(v)}</span></div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null; })()}
 
                       {/* Admin notes */}
                       <div className="border-t border-gray-800 pt-4">
@@ -646,7 +684,7 @@ export default function AdminPage() {
                   )}
                 </div>
               ))}
-              {!loading&&inquiries.filter(inq=>inquiryView==='active'?['pending','in_review'].includes(inq.status):['building','live','rejected'].includes(inq.status)).length===0&&(
+              {!loading&&inquiries.filter(inq=>inquiryView==='active'?['pending','in_review','details_requested','details_submitted'].includes(inq.status):['building','live','rejected'].includes(inq.status)).length===0&&(
                 <div className="text-gray-500 text-center py-20">
                   {inquiryView==='active'?'No active inquiries — all caught up ✓':'No past inquiries yet'}
                 </div>

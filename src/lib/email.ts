@@ -270,3 +270,48 @@ export async function sendInquiryNotification(data: {
     html,
   });
 }
+
+export async function sendDetailsRequestEmail(data: {
+  contactName: string; email: string; courseName: string; detailsLink: string;
+}) {
+  const html = baseTemplate(`
+    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 14px;border-radius:20px;">⛳ Next step</span></div>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:24px;font-weight:900;">Let's get ${data.courseName} set up.</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      Hi ${data.contactName} — thanks for your interest in GreenReserve. We just need a few more details
+      about your pricing, policies, and facilities so we can build your booking page correctly the first time.
+      Takes about 5 minutes.
+    </p>
+    <a href="${data.detailsLink}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:12px;font-weight:800;font-size:16px;margin-bottom:16px;">
+      Complete Setup Sheet &rarr;
+    </a>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      Once we receive this, we'll build your page and send your login — usually same day.
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.email,
+    subject: `Quick setup sheet for ${data.courseName}`,
+    html,
+  });
+}
+
+export async function sendDetailsSubmittedNotification(data: { courseName: string; contactName: string }) {
+  const html = baseTemplate(`
+    <h2 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:900;">Setup sheet submitted ✅</h2>
+    <p style="margin:0 0 20px;color:#6b7280;font-size:14px;">
+      <strong>${data.contactName}</strong> from <strong>${data.courseName}</strong> just submitted their detail sheet.
+      It's ready to build.
+    </p>
+    <a href="${process.env.NEXT_PUBLIC_URL}/admin" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;">
+      Review in Admin &rarr;
+    </a>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: 'hello@greenreserve.app',
+    subject: `Setup sheet ready: ${data.courseName}`,
+    html,
+  });
+}

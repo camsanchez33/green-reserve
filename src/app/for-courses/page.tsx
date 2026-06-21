@@ -1,11 +1,10 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, ChevronDown, ChevronUp, Phone, Calendar } from 'lucide-react';
+import { CheckCircle, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
 
 const STATES = ['CT','DE','MA','MD','ME','NH','NJ','NY','PA','RI','VA','VT'];
 const BOOKING_METHODS = ['Phone only','Our own website','GolfNow','EZLinks','foreUp','Chronogolf','TeeItUp','Other'];
-const FEE_RANGES = ['Under $40','$40–$70','$70–$100','$100–$150','$150+'];
 
 // Calendly link — swap this out once you have one
 const CALENDLY_URL = 'https://calendly.com/greenreserve';
@@ -13,35 +12,15 @@ const CALENDLY_URL = 'https://calendly.com/greenreserve';
 type FormData = {
   contactName: string; contactTitle: string; email: string; phone: string;
   courseName: string; address: string; city: string; state: string; zipCode: string; website: string;
-  courseType: string; currentBookingMethod: string; teeTimesPerDay: string; greenFeeRange: string;
-  hasResidentPricing: boolean; residentCounty: string;
-  hasMemberPricing: boolean;
-  hasCaddies: boolean; caddieType: string;
-  walkingPolicy: string; cartPolicy: string;
-  dresscode: string[];
-  cancellationHours: string; rainCheckPolicy: string;
-  publicAdvanceDays: string; memberAdvanceDays: string;
-  hasDrivingRange: boolean; hasPuttingGreen: boolean; hasShortGameArea: boolean;
-  hasProShop: boolean; restaurantType: string; hasLessons: boolean;
-  hasClubRental: boolean; hasBagStorage: boolean; hasGpsCarts: boolean; hasTournaments: boolean;
-  pricingNotes: string; lookingFor: string[]; additionalNotes: string;
+  courseType: string; currentBookingMethod: string;
+  lookingFor: string[]; additionalNotes: string;
 };
 
 const init: FormData = {
   contactName:'',contactTitle:'',email:'',phone:'',
   courseName:'',address:'',city:'',state:'NJ',zipCode:'',website:'',
-  courseType:'public',currentBookingMethod:'',teeTimesPerDay:'',greenFeeRange:'',
-  hasResidentPricing:false,residentCounty:'',
-  hasMemberPricing:false,
-  hasCaddies:false,caddieType:'',
-  walkingPolicy:'always',cartPolicy:'optional',
-  dresscode:[],
-  cancellationHours:'24',rainCheckPolicy:'',
-  publicAdvanceDays:'7',memberAdvanceDays:'14',
-  hasDrivingRange:false,hasPuttingGreen:false,hasShortGameArea:false,
-  hasProShop:false,restaurantType:'none',hasLessons:false,
-  hasClubRental:false,hasBagStorage:false,hasGpsCarts:false,hasTournaments:false,
-  pricingNotes:'',lookingFor:[],additionalNotes:'',
+  courseType:'public',currentBookingMethod:'',
+  lookingFor:[],additionalNotes:'',
 };
 
 function Section({ title, open, toggle, children }: { title: string; open: boolean; toggle: () => void; children: React.ReactNode }) {
@@ -56,13 +35,12 @@ function Section({ title, open, toggle, children }: { title: string; open: boole
   );
 }
 
-function Field({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) {
+function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div>
       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
         {label}{required && <span className="text-red-400 ml-0.5">*</span>}
       </label>
-      {hint && <p className="text-xs text-gray-400 mb-1.5">{hint}</p>}
       {children}
     </div>
   );
@@ -82,30 +60,22 @@ const GOALS = [
 export default function ForCoursesPage() {
   const router = useRouter();
   const [form, setForm] = useState<FormData>(init);
-  // All sections open by default
-  const [sections, setSections] = useState({
-    contact: true, course: true, goals: true,
-    booking: true, pricing: true, policies: true, facilities: true,
-  });
+  const [sections, setSections] = useState({ contact: true, course: true, goals: true });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submittedData, setSubmittedData] = useState<{ courseName: string; phone: string } | null>(null);
   const [error, setError] = useState('');
 
-  const set = (k: keyof FormData, v: string | boolean | string[]) => setForm(f => ({ ...f, [k]: v }));
+  const set = (k: keyof FormData, v: string | string[]) => setForm(f => ({ ...f, [k]: v }));
   const toggle = (s: keyof typeof sections) => setSections(p => ({ ...p, [s]: !p[s] }));
-
-  const toggleArr = (k: keyof FormData, v: string) => {
-    const arr = form[k] as string[];
-    set(k, arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]);
-  };
+  const toggleGoal = (g: string) => set('lookingFor', form.lookingFor.includes(g) ? form.lookingFor.filter(x => x !== g) : [...form.lookingFor, g]);
 
   const submit = async () => {
     setSubmitting(true); setError('');
     const res = await fetch('/api/inquiries', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, teeTimesPerDay: form.teeTimesPerDay ? Number(form.teeTimesPerDay) : null }),
+      body: JSON.stringify(form),
     });
     setSubmitting(false);
     if (res.ok) {
@@ -121,21 +91,20 @@ export default function ForCoursesPage() {
     <div className="min-h-screen bg-[#0a1f0f] flex items-center justify-center p-6">
       <div className="bg-white rounded-2xl p-10 max-w-lg w-full">
         <CheckCircle className="w-14 h-14 text-green-500 mx-auto mb-5" />
-        <h1 className="text-2xl font-black text-gray-900 mb-1 text-center">Got it — we'll be in touch!</h1>
+        <h1 className="text-2xl font-black text-gray-900 mb-1 text-center">Got it — we&apos;ll be in touch!</h1>
         <p className="text-gray-500 text-center mb-6 text-sm">
           We received the inquiry for <span className="font-semibold text-gray-800">{submittedData.courseName}</span>.
         </p>
 
-        {/* What happens next */}
         <div className="bg-gray-50 rounded-xl p-5 mb-6 space-y-3">
           <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">What happens next</div>
           <div className="flex gap-3 text-sm text-gray-700">
             <span className="text-green-500 font-bold shrink-0">1.</span>
-            <span>We'll review your submission and call you at <span className="font-semibold">{submittedData.phone}</span> within 1 business day.</span>
+            <span>We&apos;ll review your submission and call you at <span className="font-semibold">{submittedData.phone}</span> within 1 business day.</span>
           </div>
           <div className="flex gap-3 text-sm text-gray-700">
             <span className="text-green-500 font-bold shrink-0">2.</span>
-            <span>On the call we'll confirm your setup and answer any questions.</span>
+            <span>If it&apos;s a good fit, we&apos;ll email you a short setup sheet to confirm your pricing, policies, and facilities.</span>
           </div>
           <div className="flex gap-3 text-sm text-gray-700">
             <span className="text-green-500 font-bold shrink-0">3.</span>
@@ -143,7 +112,6 @@ export default function ForCoursesPage() {
           </div>
         </div>
 
-        {/* Calendly CTA */}
         <a
           href={CALENDLY_URL}
           target="_blank"
@@ -151,7 +119,7 @@ export default function ForCoursesPage() {
           className="flex items-center justify-center gap-2 w-full bg-[#1b4332] text-white py-3.5 rounded-xl font-bold hover:bg-[#2d6a4f] transition-colors mb-3"
         >
           <Calendar className="w-4 h-4" />
-          Don't want to wait? Pick a time →
+          Don&apos;t want to wait? Pick a time →
         </a>
         <p className="text-center text-xs text-gray-400 mb-4">Book a 15-min call at a time that works for you.</p>
 
@@ -169,7 +137,7 @@ export default function ForCoursesPage() {
           <span className="text-white font-black text-3xl">Green<span className="text-green-400">Reserve</span></span>
           <h1 className="text-white text-2xl font-black mt-4 mb-1">Get your course listed</h1>
           <p className="text-green-200/60 text-sm mb-1">Free to list. $0 per month. We charge golfers $1.50/player — not you.</p>
-          <p className="text-white/30 text-xs">7 short sections · ~4 minutes</p>
+          <p className="text-white/30 text-xs">3 quick sections · under 2 minutes</p>
         </div>
 
         <div className="space-y-3">
@@ -203,16 +171,22 @@ export default function ForCoursesPage() {
                   <option value="resort">Resort</option>
                 </select>
               </Field>
+              <Field label="How do you currently take bookings?" required>
+                <select className={sel} value={form.currentBookingMethod} onChange={e => set('currentBookingMethod', e.target.value)}>
+                  <option value="">Select...</option>
+                  {BOOKING_METHODS.map(m => <option key={m}>{m}</option>)}
+                </select>
+              </Field>
             </div>
           </Section>
 
-          {/* 3. Goals — moved up from section 7 */}
+          {/* 3. Goals */}
           <Section title="3. What are you looking for?" open={sections.goals} toggle={() => toggle('goals')}>
             <div className="space-y-4">
               <p className="text-sm text-gray-500">Select all that apply.</p>
               <div className="flex flex-wrap gap-2">
                 {GOALS.map(g => (
-                  <button key={g} onClick={() => toggleArr('lookingFor', g)} className={`text-sm px-4 py-2 rounded-xl border transition-colors ${form.lookingFor.includes(g) ? 'bg-green-600 text-white border-green-600' : 'border-gray-300 text-gray-600 hover:border-green-400'}`}>{g}</button>
+                  <button key={g} onClick={() => toggleGoal(g)} className={`text-sm px-4 py-2 rounded-xl border transition-colors ${form.lookingFor.includes(g) ? 'bg-green-600 text-white border-green-600' : 'border-gray-300 text-gray-600 hover:border-green-400'}`}>{g}</button>
                 ))}
               </div>
               <Field label="Anything else we should know?">
@@ -221,145 +195,12 @@ export default function ForCoursesPage() {
             </div>
           </Section>
 
-          {/* 4. Current booking setup */}
-          <Section title="4. Current booking setup" open={sections.booking} toggle={() => toggle('booking')}>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <Field label="How do you currently take bookings?" required>
-                  <select className={sel} value={form.currentBookingMethod} onChange={e => set('currentBookingMethod', e.target.value)}>
-                    <option value="">Select...</option>
-                    {BOOKING_METHODS.map(m => <option key={m}>{m}</option>)}
-                  </select>
-                </Field>
-              </div>
-              <Field label="Approx. tee times per day" hint="Total slots across all tee intervals">
-                <input type="number" className={inp} value={form.teeTimesPerDay} onChange={e => set('teeTimesPerDay', e.target.value)} placeholder="e.g. 40" />
-              </Field>
-              <Field label="Green fee range">
-                <select className={sel} value={form.greenFeeRange} onChange={e => set('greenFeeRange', e.target.value)}>
-                  <option value="">Select...</option>
-                  {FEE_RANGES.map(r => <option key={r}>{r}</option>)}
-                </select>
-              </Field>
-            </div>
-          </Section>
-
-          {/* 5. Pricing */}
-          <Section title="5. Pricing structure" open={sections.pricing} toggle={() => toggle('pricing')}>
-            <div className="space-y-5">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                <div><div className="text-sm font-medium text-gray-800">Resident / county pricing</div><div className="text-xs text-gray-500">Municipal courses with separate resident rates</div></div>
-                <button onClick={() => set('hasResidentPricing', !form.hasResidentPricing)} className={`relative w-10 h-6 rounded-full transition-colors ${form.hasResidentPricing ? 'bg-green-600' : 'bg-gray-300'}`}>
-                  <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform shadow ${form.hasResidentPricing ? 'translate-x-5' : 'translate-x-1'}`} />
-                </button>
-              </div>
-              {form.hasResidentPricing && <Field label="Resident county / town"><input className={inp} value={form.residentCounty} onChange={e => set('residentCounty', e.target.value)} placeholder="e.g. Bergen County, NJ" /></Field>}
-
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                <div><div className="text-sm font-medium text-gray-800">Member pricing</div><div className="text-xs text-gray-500">Members get discounted rates and earlier booking</div></div>
-                <button onClick={() => set('hasMemberPricing', !form.hasMemberPricing)} className={`relative w-10 h-6 rounded-full transition-colors ${form.hasMemberPricing ? 'bg-green-600' : 'bg-gray-300'}`}>
-                  <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform shadow ${form.hasMemberPricing ? 'translate-x-5' : 'translate-x-1'}`} />
-                </button>
-              </div>
-
-              <Field label="Pricing notes (rates, special rules, etc.)">
-                <textarea rows={3} className={inp} value={form.pricingNotes} onChange={e => set('pricingNotes', e.target.value)} placeholder="e.g. Weekday $65, Weekend $85, Twilight after 3pm $45, Senior Mon–Fri $50..." />
-              </Field>
-            </div>
-          </Section>
-
-          {/* 6. Policies */}
-          <Section title="6. Policies &amp; access" open={sections.policies} toggle={() => toggle('policies')}>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Walking policy">
-                <select className={sel} value={form.walkingPolicy} onChange={e => set('walkingPolicy', e.target.value)}>
-                  <option value="always">Always allowed</option>
-                  <option value="weekday">Weekday only</option>
-                  <option value="time-based">Time-based</option>
-                  <option value="never">Cart required</option>
-                </select>
-              </Field>
-              <Field label="Cart policy">
-                <select className={sel} value={form.cartPolicy} onChange={e => set('cartPolicy', e.target.value)}>
-                  <option value="optional">Optional</option>
-                  <option value="required">Required always</option>
-                  <option value="required-weekends">Required weekends</option>
-                  <option value="included">Included in fee</option>
-                </select>
-              </Field>
-              <Field label="Public advance booking (days)"><input type="number" className={inp} value={form.publicAdvanceDays} onChange={e => set('publicAdvanceDays', e.target.value)} /></Field>
-              <Field label="Member advance booking (days)"><input type="number" className={inp} value={form.memberAdvanceDays} onChange={e => set('memberAdvanceDays', e.target.value)} /></Field>
-              <Field label="Cancellation window (hours)"><input type="number" className={inp} value={form.cancellationHours} onChange={e => set('cancellationHours', e.target.value)} /></Field>
-              <Field label="Dress code">
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {['Collared shirt','No denim','Soft spikes','No shorts'].map(d => (
-                    <button key={d} onClick={() => toggleArr('dresscode', d)} className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${form.dresscode.includes(d) ? 'bg-green-600 text-white border-green-600' : 'border-gray-300 text-gray-600 hover:border-green-400'}`}>{d}</button>
-                  ))}
-                </div>
-              </Field>
-              <div className="col-span-2">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <div><div className="text-sm font-medium text-gray-800">Caddies available</div></div>
-                  <button onClick={() => set('hasCaddies', !form.hasCaddies)} className={`relative w-10 h-6 rounded-full transition-colors ${form.hasCaddies ? 'bg-green-600' : 'bg-gray-300'}`}>
-                    <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform shadow ${form.hasCaddies ? 'translate-x-5' : 'translate-x-1'}`} />
-                  </button>
-                </div>
-              </div>
-              {form.hasCaddies && (
-                <div className="col-span-2">
-                  <Field label="Caddie type">
-                    <select className={sel} value={form.caddieType} onChange={e => set('caddieType', e.target.value)}>
-                      <option value="">Select...</option>
-                      <option value="looper">Looper</option>
-                      <option value="forecaddie">Forecaddie</option>
-                      <option value="both">Both</option>
-                    </select>
-                  </Field>
-                </div>
-              )}
-            </div>
-          </Section>
-
-          {/* 7. Facilities */}
-          <Section title="7. Facilities" open={sections.facilities} toggle={() => toggle('facilities')}>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { key: 'hasDrivingRange', label: 'Driving range' },
-                { key: 'hasPuttingGreen', label: 'Putting green' },
-                { key: 'hasShortGameArea', label: 'Short game area' },
-                { key: 'hasProShop', label: 'Pro shop' },
-                { key: 'hasLessons', label: 'Lessons (PGA pro)' },
-                { key: 'hasClubRental', label: 'Club rental' },
-                { key: 'hasBagStorage', label: 'Bag storage' },
-                { key: 'hasGpsCarts', label: 'GPS carts' },
-                { key: 'hasTournaments', label: 'Tournament hosting' },
-              ].map(({ key, label }) => (
-                <div key={key} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <span className="text-sm text-gray-700">{label}</span>
-                  <button onClick={() => set(key as keyof FormData, !form[key as keyof FormData])} className={`relative w-10 h-6 rounded-full transition-colors ${form[key as keyof FormData] ? 'bg-green-600' : 'bg-gray-300'}`}>
-                    <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform shadow ${form[key as keyof FormData] ? 'translate-x-5' : 'translate-x-1'}`} />
-                  </button>
-                </div>
-              ))}
-              <div className="col-span-2">
-                <Field label="Restaurant / food">
-                  <select className={sel} value={form.restaurantType} onChange={e => set('restaurantType', e.target.value)}>
-                    <option value="none">None</option>
-                    <option value="snack-bar">Snack bar</option>
-                    <option value="bar">Bar only</option>
-                    <option value="full">Full restaurant</option>
-                  </select>
-                </Field>
-              </div>
-            </div>
-          </Section>
-
           {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</div>}
 
           <button onClick={submit} disabled={submitting} className="w-full bg-green-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-green-700 disabled:opacity-50 transition-colors shadow-lg">
             {submitting ? 'Submitting...' : 'Submit Interest Form →'}
           </button>
-          <p className="text-center text-green-200/40 text-xs pb-4">We review every submission and reach out within 1 business day.</p>
+          <p className="text-center text-green-200/40 text-xs pb-4">We review every submission and reach out within 1 business day. If it&apos;s a fit, we&apos;ll send a short follow-up sheet to confirm pricing, policies, and facilities before building your page.</p>
         </div>
       </div>
     </div>

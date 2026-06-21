@@ -290,5 +290,7 @@ model CourseInquiry {
   status               String   @default("pending")
   adminNotes           String   @default("")
   builtCourseId        String?
+  detailsToken         String?  @unique
+  detailsJson          String   @default("")
   createdAt            DateTime @default(now())
 }
