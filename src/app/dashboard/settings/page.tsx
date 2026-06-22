@@ -283,14 +283,26 @@ function SettingsPageInner() {
               <Field label="Walking note (optional)"><FInput value={form.walkingNote as string} onChange={v=>set('walkingNote',v)} placeholder="e.g. Walking allowed after 1pm weekends"/></Field>
             </SectionCard>
             <SectionCard title="Cancellation">
-              <Field label="Free cancellation window (hours)">
-                <FInput value={form.cancellationHours as number} onChange={v=>set('cancellationHours',Number(v))} type="number"/>
-                <p className="text-xs text-gray-400 mt-1">Golfers can cancel for free up to this many hours before their tee time — after this, the late fee below applies (or an email reminder if no fee is set).</p>
-              </Field>
-              <Field label="Late cancellation fee ($)">
-                <FInput value={form.lateCancellationFee as number} onChange={v=>set('lateCancellationFee',Number(v))} type="number"/>
-                <p className="text-xs text-gray-400 mt-1">Automatically charged when the free window closes and the golfer hasn't cancelled. Set to 0 if you have no cancellation fee — golfers just get a check-in reminder instead.</p>
-              </Field>
+              <Toggle
+                label="Cancellation fee"
+                checked={!!form.lateCancellationFee}
+                onChange={() => set('lateCancellationFee', form.lateCancellationFee ? 0 : 10)}
+              />
+              {!!form.lateCancellationFee && (
+                <>
+                  <Field label="Free cancellation window (hours)">
+                    <FInput value={form.cancellationHours as number} onChange={v=>set('cancellationHours',Number(v))} type="number"/>
+                    <p className="text-xs text-gray-400 mt-1">Golfers can cancel free up to this many hours before their tee time.</p>
+                  </Field>
+                  <Field label="Late cancellation fee ($)">
+                    <FInput value={form.lateCancellationFee as number} onChange={v=>set('lateCancellationFee',Number(v))} type="number"/>
+                    <p className="text-xs text-gray-400 mt-1">Charged automatically when the free window closes and the golfer hasn&apos;t cancelled.</p>
+                  </Field>
+                </>
+              )}
+              {!form.lateCancellationFee && (
+                <p className="text-xs text-gray-400">No fee — golfers get a same-day check-in reminder and pay at the course. No card is collected at booking.</p>
+              )}
               <Field label="Rain check policy"><FInput value={form.rainCheckPolicy as string} onChange={v=>set('rainCheckPolicy',v)} placeholder="e.g. Rain checks issued for 9+ holes of rain"/></Field>
             </SectionCard>
             <SectionCard title="Player Limits">

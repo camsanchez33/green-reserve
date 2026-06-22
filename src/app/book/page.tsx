@@ -168,8 +168,9 @@ function BookPageInner() {
   const accessTotal  = ACCESS_FEE_PER_PLAYER * players;
   const total         = greenTotal + cartTotal + rangeBallsTotal + accessTotal;
 
-  // No-fee policy courses: skip card collection entirely
-  const hasNoFeePolicy = course.late_cancellation_fee === 0;
+  // No-fee policy courses: skip card collection entirely.
+  // late_cancellation_fee may be 0 (explicit) or null (never set) — both mean no fee.
+  const hasNoFeePolicy = !course.late_cancellation_fee;
 
   return (
     <div className="min-h-screen bg-[#f8faf9]">
@@ -179,7 +180,11 @@ function BookPageInner() {
         </button>
 
         <h1 className="text-2xl font-black text-gray-900 mb-2">Confirm Your Tee Time</h1>
-        <p className="text-gray-500 text-sm mb-8">Save your card to lock in your tee time at {course.name} — you won&apos;t be charged today.</p>
+        <p className="text-gray-500 text-sm mb-8">
+          {hasNoFeePolicy
+            ? <>Lock in your tee time at {course.name} — no card required.</>
+            : <>Save your card to lock in your tee time at {course.name} — you won&apos;t be charged today.</>}
+        </p>
 
         <div className="grid gap-6">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
