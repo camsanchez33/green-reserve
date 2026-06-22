@@ -161,11 +161,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer className="bg-[#0a1f0f] py-8 text-center">
-        <span className="text-white font-black">Green<span className="text-green-400">Reserve</span></span>
-        <p className="text-white/30 text-xs mt-2">© {new Date().getFullYear()} GreenReserve · <a href="mailto:hello@greenreserve.app" className="hover:text-white/50">hello@greenreserve.app</a></p>
-      </footer>
     </>
   );
 }

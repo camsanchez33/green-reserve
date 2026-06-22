@@ -4,13 +4,16 @@ import { sendInquiryNotification } from '@/lib/email';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const required = ['contactName', 'contactTitle', 'email', 'phone', 'courseName', 'address', 'city', 'state', 'zipCode', 'courseType', 'currentBookingMethod'];
+  const required = ['firstName', 'lastName', 'contactTitle', 'email', 'phone', 'courseName', 'address', 'city', 'state', 'zipCode', 'courseType'];
   for (const field of required) {
     if (!body[field]) return NextResponse.json({ error: `Missing: ${field}` }, { status: 400 });
   }
+  const contactName = `${body.firstName} ${body.lastName}`.trim();
   const inquiry = await prisma.courseInquiry.create({
     data: {
-      contactName: body.contactName,
+      firstName: body.firstName,
+      lastName: body.lastName,
+      contactName,
       contactTitle: body.contactTitle,
       email: String(body.email).trim().toLowerCase(),
       phone: body.phone,
@@ -21,7 +24,6 @@ export async function POST(req: NextRequest) {
       zipCode: body.zipCode,
       website: body.website || '',
       courseType: body.courseType,
-      currentBookingMethod: body.currentBookingMethod,
       teeTimesPerDay: body.teeTimesPerDay || null,
       greenFeeRange: body.greenFeeRange || '',
       hasResidentPricing: body.hasResidentPricing || false,
@@ -31,11 +33,12 @@ export async function POST(req: NextRequest) {
       facilitiesNotes: body.facilitiesNotes || '',
       lookingFor: body.lookingFor || [],
       additionalNotes: body.additionalNotes || '',
+      needsJson: body.needs ? JSON.stringify(body.needs) : '',
     },
   });
   // Notify admin — fire-and-forget, don't block the response
   sendInquiryNotification({
-    contactName: body.contactName,
+    contactName,
     contactTitle: body.contactTitle,
     email: body.email,
     phone: body.phone,
@@ -43,7 +46,7 @@ export async function POST(req: NextRequest) {
     city: body.city,
     state: body.state,
     courseType: body.courseType,
-    currentBookingMethod: body.currentBookingMethod,
+    currentBookingMethod: '',
     greenFeeRange: body.greenFeeRange || '',
     additionalNotes: body.additionalNotes || '',
   }).catch(err => console.error('Inquiry notification email failed:', err));

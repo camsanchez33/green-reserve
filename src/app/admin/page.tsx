@@ -15,7 +15,7 @@ interface Inquiry {
   greenFeeRange: string; hasResidentPricing: boolean; hasMemberPricing: boolean;
   hasCaddies: boolean; pricingNotes: string; lookingFor: string[]; additionalNotes: string;
   status: string; adminNotes: string; builtCourseId: string | null; createdAt: string;
-  detailsToken?: string | null; detailsJson?: string;
+  detailsToken?: string | null; detailsJson?: string; needsJson?: string;
 }
 interface Course {
   id: string; name: string; city: string; state: string; active: boolean; featured: boolean;
@@ -639,13 +639,25 @@ export default function AdminPage() {
                       <div className="grid grid-cols-2 gap-3 text-sm">
                         <div><span className="text-gray-500">Phone: </span><span className="text-gray-300">{inq.phone}</span></div>
                         <div><span className="text-gray-500">Website: </span><span className="text-gray-300">{inq.website||'—'}</span></div>
-                        <div><span className="text-gray-500">Current booking: </span><span className="text-gray-300">{inq.currentBookingMethod}</span></div>
+                        {inq.currentBookingMethod&&<div><span className="text-gray-500">Current booking: </span><span className="text-gray-300">{inq.currentBookingMethod}</span></div>}
                         <div><span className="text-gray-500">Tee times/day: </span><span className="text-gray-300">{inq.teeTimesPerDay||'—'}</span></div>
                         {inq.greenFeeRange&&<div><span className="text-gray-500">Fees: </span><span className="text-gray-300">{inq.greenFeeRange}</span></div>}
-                        <div className="col-span-2"><span className="text-gray-500">Looking for: </span><span className="text-gray-300">{inq.lookingFor?.join(', ')||'—'}</span></div>
+                        {inq.lookingFor?.length>0&&<div className="col-span-2"><span className="text-gray-500">Looking for: </span><span className="text-gray-300">{inq.lookingFor.join(', ')}</span></div>}
                         {inq.additionalNotes&&<div className="col-span-2"><span className="text-gray-500">Notes: </span><span className="text-gray-300">{inq.additionalNotes}</span></div>}
                         {inq.pricingNotes&&<div className="col-span-2"><span className="text-gray-500">Pricing notes: </span><span className="text-gray-300">{inq.pricingNotes}</span></div>}
                       </div>
+
+                      {/* What they need (from the interest form's type-specific questions) */}
+                      {inq.needsJson&&(()=>{ let n:Record<string,unknown>={}; try{n=JSON.parse(inq.needsJson||'');}catch{ /* ignore */ } return Object.keys(n).length>0 ? (
+                        <div className="border-t border-gray-800 pt-4">
+                          <div className="text-xs font-semibold text-amber-400 uppercase tracking-wide mb-2">What They Need</div>
+                          <div className="grid grid-cols-2 gap-2 text-sm bg-gray-800 rounded-lg p-3">
+                            {Object.entries(n).map(([k,v])=>(
+                              <div key={k}><span className="text-gray-500">{k}: </span><span className="text-gray-300">{String(v)}</span></div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null; })()}
 
                       {/* Submitted setup sheet (once they've sent it back) */}
                       {inq.detailsJson&&(()=>{ let d:Record<string,unknown>={}; try{d=JSON.parse(inq.detailsJson||'');}catch{ /* ignore */ } return Object.keys(d).length>0 ? (

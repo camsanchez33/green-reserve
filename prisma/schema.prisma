@@ -268,6 +268,8 @@ model Waitlist {
 
 model CourseInquiry {
   id                   String   @id @default(cuid())
+  firstName            String   @default("")
+  lastName             String   @default("")
   contactName          String
   contactTitle         String
   email                String
@@ -279,7 +281,7 @@ model CourseInquiry {
   zipCode              String
   website              String   @default("")
   courseType           String
-  currentBookingMethod String
+  currentBookingMethod String   @default("")
   teeTimesPerDay       Int?
   greenFeeRange        String   @default("")
   hasResidentPricing   Boolean  @default(false)
@@ -289,6 +291,7 @@ model CourseInquiry {
   facilitiesNotes      String   @default("")
   lookingFor           String[]
   additionalNotes      String   @default("")
+  needsJson            String   @default("")
   status               String   @default("pending")
   adminNotes           String   @default("")
   builtCourseId        String?
