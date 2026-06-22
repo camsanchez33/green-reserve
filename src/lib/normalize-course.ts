@@ -31,5 +31,13 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     base_green_fee: startingGreenFee,
     cart_fee: 0,
     active: c.active ?? false,
+    // Deferred-payment booking flow (range balls / cancellation policy display)
+    has_driving_range:       c.hasDrivingRange ?? false,
+    range_balls_free:        c.rangeBallsFree ?? true,
+    range_balls_small_price: c.rangeBallsSmallPrice ?? 0,
+    range_balls_medium_price: c.rangeBallsMediumPrice ?? 0,
+    range_balls_large_price: c.rangeBallsLargePrice ?? 0,
+    cancellation_hours:      c.cancellationHours ?? 24,
+    late_cancellation_fee:   c.lateCancellationFee ?? 10,
   };
 }

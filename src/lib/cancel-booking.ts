@@ -1,13 +1,18 @@
 import { prisma } from './prisma';
-import { stripe } from './stripe';
 import { sendCancellationEmail, sendWaitlistNotification } from './email';
 
 /**
  * Shared cancellation logic used by both the golfer-initiated cancel route and
  * the operator-initiated cancel (dashboard "Cancellations" tab). Authorization
  * (does this golfer own the booking / does this operator own the course) is the
- * caller's responsibility — this just does the actual refund + slot restore +
- * waitlist promotion + emails once a cancellation has been authorized.
+ * caller's responsibility — this just does the slot restore + waitlist
+ * promotion + emails once a cancellation has been authorized.
+ *
+ * Under the deferred-payment flow nothing is charged at booking time, so
+ * there's no refund to issue for an early cancellation — the card is simply
+ * never charged. The only money question is whether the cancellation-fee cron
+ * already fired (paymentStatus === 'cancellation_fee_charged'): if so, that
+ * fee is non-refundable per the course's late-cancellation policy.
  */
 export async function performCancellation(bookingId: string) {
   const booking = await prisma.booking.findUnique({
@@ -20,32 +25,14 @@ export async function performCancellation(bookingId: string) {
 
   if (!booking) return { error: 'Booking not found', status: 404 } as const;
   if (booking.status === 'cancelled') return { error: 'Already cancelled', status: 409 } as const;
+  if (booking.status === 'completed') return { error: 'This round was already checked in and paid for — nothing to cancel', status: 409 } as const;
 
-  const teeDateTime = new Date(`${booking.teeTime.date}T${booking.teeTime.time}`);
-  const hoursUntilTeeTime = (teeDateTime.getTime() - Date.now()) / (1000 * 60 * 60);
-  const cancellationHours = booking.course.cancellationHours ?? 24;
-  const withinWindow = hoursUntilTeeTime >= cancellationHours;
-
-  // Refund green fee + cart fee (not the access fee — that's non-refundable)
-  let refundAmount = 0;
-  if (withinWindow && booking.stripePaymentIntentId) {
-    try {
-      const refundCents = booking.greenFeeTotal + booking.cartFeeTotal;
-      await stripe.refunds.create({
-        payment_intent: booking.stripePaymentIntentId,
-        amount: refundCents,
-        reason: 'requested_by_customer',
-      });
-      refundAmount = refundCents;
-    } catch (err) {
-      console.error('Stripe refund failed:', err);
-    }
-  }
+  const feeAlreadyCharged = booking.paymentStatus === 'cancellation_fee_charged';
 
   await prisma.$transaction([
     prisma.booking.update({
       where: { id: bookingId },
-      data: { status: 'cancelled', paymentStatus: refundAmount > 0 ? 'refunded' : booking.paymentStatus },
+      data: { status: 'cancelled' },
     }),
     prisma.teeTime.update({
       where: { id: booking.teeTimeId },
@@ -75,9 +62,10 @@ export async function performCancellation(bookingId: string) {
     date: booking.teeTime.date,
     time: booking.teeTime.time,
     players: booking.players,
-    refundAmount,
+    feeCharged: feeAlreadyCharged,
+    feeAmount: booking.cancellationFeeTotal,
     bookingId: booking.id,
   }).catch(console.error);
 
-  return { success: true, refundAmount, refundIssued: refundAmount > 0 } as const;
+  return { success: true, feeCharged: feeAlreadyCharged } as const;
 }

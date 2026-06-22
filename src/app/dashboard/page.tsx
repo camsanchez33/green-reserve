@@ -7,6 +7,7 @@ import {
   AlertTriangle, X, Loader2,
 } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { getBookingStatus, statusBadgeClass } from '@/lib/booking-status';
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 type TeeTime = {
@@ -15,7 +16,10 @@ type TeeTime = {
   greenFee: number; cartFee: number; walkingAllowed: boolean;
   status: string; bookings?: Booking[];
 };
-type Booking = { id: string; golferName: string; golferEmail: string; players: number; createdAt: string; };
+type Booking = {
+  id: string; golferName: string; golferEmail: string; players: number; createdAt: string;
+  status: string; paymentStatus: string; totalAmount: number;
+};
 interface AnalyticsData {
   summary: { totalRevenue: number; totalBookings: number; totalPlayers: number; utilization: number };
   revenueByDay: { date: string; revenue: number; bookings: number }[];
@@ -62,6 +66,23 @@ function DashboardPageInner() {
   const [conditions, setConditions]       = useState('');
   const [conditionsInput, setConditionsInput] = useState('');
   const [savingConditions, setSavingConditions] = useState(false);
+  const [checkingInId, setCheckingInId] = useState<string | null>(null);
+
+  async function checkInBooking(b: Booking) {
+    if (!confirm(`Check in ${b.golferName} and charge their card $${(b.totalAmount / 100).toFixed(2)} for the round?`)) return;
+    setCheckingInId(b.id);
+    const res = await fetch('/api/operator/bookings', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: b.id, action: 'checkin' }),
+    });
+    const data = await res.json();
+    setCheckingInId(null);
+    if (!res.ok) { alert(data.error || 'Check-in failed'); return; }
+    alert(data.feeRefunded
+      ? `Checked in — charged $${(data.totalCharged / 100).toFixed(2)}, and refunded the $${(data.feeRefundAmount / 100).toFixed(2)} late-cancellation fee.`
+      : `Checked in — charged $${(data.totalCharged / 100).toFixed(2)}.`);
+    loadTimes(selectedDate);
+  }
 
   const dates = Array.from({ length: 7 }, (_, i) => addDays(today(), i + dateOffset));
   const totalSlots = teeTimes.filter(t => t.status !== 'blocked').reduce((s, t) => s + t.playersAvailable, 0);
@@ -290,10 +311,24 @@ function DashboardPageInner() {
                     {expandedId===tt.id&&tt.bookings&&tt.bookings.length>0&&(
                       <div className="mt-3 pt-3 border-t border-gray-200 space-y-1.5">
                         {tt.bookings.map(b=>(
-                          <div key={b.id} className="flex items-center justify-between text-xs bg-white rounded-lg px-3 py-2 border border-gray-100">
-                            <span className="font-semibold text-gray-800">{b.golferName}</span>
-                            <span className="text-gray-400">{b.players} player{b.players!==1?'s':''}</span>
-                            <span className="text-gray-500">{b.golferEmail}</span>
+                          <div key={b.id} className="flex items-center justify-between text-xs bg-white rounded-lg px-3 py-2 border border-gray-100 gap-2">
+                            <div className="flex-1 min-w-0">
+                              <span className="font-semibold text-gray-800">{b.golferName}</span>
+                              <span className="text-gray-400 ml-2">{b.players} player{b.players!==1?'s':''}</span>
+                              <div className="text-xs text-gray-400 truncate">{b.golferEmail}</div>
+                            </div>
+                            {(() => { const s = getBookingStatus(b.status, b.paymentStatus); return (
+                              <span className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${statusBadgeClass(s.tone)}`}>{s.label}</span>
+                            ); })()}
+                            {b.status !== 'completed' && b.status !== 'cancelled' && (
+                              <button
+                                onClick={e=>{e.stopPropagation();checkInBooking(b);}}
+                                disabled={checkingInId===b.id}
+                                className="shrink-0 text-white bg-[#1b4332] px-2.5 py-1 rounded-full text-xs font-semibold hover:bg-[#2d6a4f] disabled:opacity-50"
+                              >
+                                {checkingInId===b.id ? 'Charging…' : 'Check In'}
+                              </button>
+                            )}
                           </div>
                         ))}
                       </div>

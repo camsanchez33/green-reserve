@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { getGolferSession } from '@/lib/auth';
 import { stripe, ACCESS_FEE_CENTS } from '@/lib/stripe';
@@ -58,7 +59,7 @@ function applyTierRates(
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { teeTimeId, players, golferName, golferEmail, golferPhone, paymentMethodId } = body;
+  const { teeTimeId, players, golferName, golferEmail, golferPhone, paymentMethodId, customerId, cartSelected, rangeBallsSize } = body;
 
   if (!teeTimeId || !players || !golferName || !golferEmail)
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -116,28 +117,44 @@ export async function POST(req: NextRequest) {
     // Apply resolved rates (or standard if no membership)
     const greenFeePerPlayer = resolvedGreenFeeOverride ?? teeTime.greenFee;
     const cartFeePerPlayer  = resolvedCartFeeOverride  ?? teeTime.cartFee;
+    const wantsCart = teeTime.course.cartRequired ? true : !!cartSelected;
 
     const greenFeeTotal  = Math.round(greenFeePerPlayer * players * 100); // cents
-    const cartFeeTotal   = Math.round(cartFeePerPlayer  * players * 100);
-    const accessFeeTotal = ACCESS_FEE_CENTS * players;
-    const totalCents     = greenFeeTotal + cartFeeTotal + accessFeeTotal;
+    const cartFeeTotal   = wantsCart ? Math.round(cartFeePerPlayer * players * 100) : 0;
 
-    // Stripe payment
-    let stripePaymentIntentId = '';
-    let clientSecret = '';
-    if (teeTime.course.stripeAccountActive && teeTime.course.stripeAccountId && paymentMethodId) {
-      const intent = await stripe.paymentIntents.create({
-        amount: totalCents,
-        currency: 'usd',
-        payment_method: paymentMethodId,
-        confirm: true,
-        return_url: `${process.env.NEXT_PUBLIC_URL}/book/confirm`,
-        application_fee_amount: accessFeeTotal,
-        transfer_data: { destination: teeTime.course.stripeAccountId },
-        metadata: { teeTimeId, players: String(players), golferEmail, appliedRate },
-      });
-      stripePaymentIntentId = intent.id;
-      if (intent.status !== 'succeeded') clientSecret = intent.client_secret || '';
+    // Range balls — flat per-booking add-on, size priced by the course. Free
+    // if the course includes them; otherwise only a size they've actually priced is purchasable.
+    let rangeBallsTotal = 0;
+    const ballsSize = String(rangeBallsSize || '');
+    if (teeTime.course.hasDrivingRange && !teeTime.course.rangeBallsFree && ballsSize) {
+      const priceMap: Record<string, number> = {
+        small: teeTime.course.rangeBallsSmallPrice,
+        medium: teeTime.course.rangeBallsMediumPrice,
+        large: teeTime.course.rangeBallsLargePrice,
+      };
+      rangeBallsTotal = Math.round((priceMap[ballsSize] || 0) * 100);
+    }
+
+    const accessFeeTotal = ACCESS_FEE_CENTS * players;
+    const totalCents     = greenFeeTotal + cartFeeTotal + rangeBallsTotal + accessFeeTotal;
+    const cancellationFeeTotal = Math.round((teeTime.course.lateCancellationFee || 0) * 100);
+
+    // Card-on-file flow — save the card, charge NOTHING right now. The
+    // cancellation-fee cron charges cancellationFeeTotal if they don't cancel
+    // by the course's cancellationHours cutoff; the actual round total gets
+    // charged later at check-in (separate flow).
+    let savedCustomerId = '';
+    let savedPaymentMethodId = '';
+    if (teeTime.course.stripeAccountActive && paymentMethodId && customerId) {
+      try {
+        await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
+        await stripe.customers.update(customerId, { invoice_settings: { default_payment_method: paymentMethodId } });
+        savedCustomerId = customerId;
+        savedPaymentMethodId = paymentMethodId;
+      } catch (attachErr) {
+        console.error('Could not attach payment method to customer:', attachErr);
+        throw new Error('CARD_SAVE_FAILED');
+      }
     }
 
     const booking = await tx.booking.create({
@@ -152,10 +169,16 @@ export async function POST(req: NextRequest) {
         appliedRate,
         greenFeeTotal,
         cartFeeTotal,
+        cartSelected:     wantsCart,
+        rangeBallsSize:   rangeBallsTotal > 0 ? ballsSize : '',
+        rangeBallsTotal,
         accessFeeTotal,
         totalAmount:      totalCents,
-        stripePaymentIntentId,
-        paymentStatus:    stripePaymentIntentId ? 'paid' : 'pending',
+        stripeCustomerId:      savedCustomerId,
+        stripePaymentMethodId: savedPaymentMethodId,
+        cancellationFeeTotal,
+        checkInToken:     randomUUID(),
+        paymentStatus:    'card_on_file',
         status:           'confirmed',
       },
     });
@@ -169,7 +192,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return { booking, teeTime, totalCents, greenFeeTotal, cartFeeTotal, accessFeeTotal, clientSecret };
+    return { booking, teeTime, totalCents, greenFeeTotal, cartFeeTotal, rangeBallsTotal, accessFeeTotal, cancellationFeeTotal };
   });
   } catch (err) {
     if (err instanceof Stripe.errors.StripeCardError) {
@@ -179,6 +202,7 @@ export async function POST(req: NextRequest) {
       if (err.message === 'NOT_FOUND') return NextResponse.json({ error: 'Tee time not found.' }, { status: 404 });
       if (err.message === 'BLOCKED')   return NextResponse.json({ error: 'This tee time is no longer available.' }, { status: 409 });
       if (err.message === 'FULL')      return NextResponse.json({ error: 'This tee time is fully booked.' }, { status: 409 });
+      if (err.message === 'CARD_SAVE_FAILED') return NextResponse.json({ error: 'Your card could not be saved. Please check your details and try again.' }, { status: 402 });
       if (err.message.startsWith('SPOTS:')) {
         const left = err.message.split(':')[1];
         return NextResponse.json({ error: `Only ${left} spot${left === '1' ? '' : 's'} left for this tee time.` }, { status: 409 });
@@ -199,11 +223,16 @@ export async function POST(req: NextRequest) {
       time:          result.teeTime.time,
       holes:         result.teeTime.holes,
       players,
+      appliedRate,
       greenFeeTotal:  result.greenFeeTotal  / 100,
       cartFeeTotal:   result.cartFeeTotal   / 100,
+      rangeBallsTotal: result.rangeBallsTotal / 100,
       accessFeeTotal: result.accessFeeTotal / 100,
       totalAmount:    result.totalCents     / 100,
-      memberRate:     appliedTierName !== 'standard' ? appliedTierName : undefined,
+      cancellationFeeTotal: result.cancellationFeeTotal / 100,
+      cancellationHours: result.teeTime.course.cancellationHours,
+      bookingId: result.booking.id,
+      checkInToken: result.booking.checkInToken || undefined,
     };
     await sendBookingConfirmation(emailData);
     const courseId = result.teeTime.courseId;
@@ -216,14 +245,16 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({
-    clientSecret:   result.clientSecret,
     bookingId:      result.booking.id,
     appliedRate,
     memberRate:     appliedTierName !== 'standard',
     greenFeeTotal:  result.greenFeeTotal  / 100,
     cartFeeTotal:   result.cartFeeTotal   / 100,
+    rangeBallsTotal: result.rangeBallsTotal / 100,
     accessFeeTotal: result.accessFeeTotal / 100,
     totalAmount:    result.totalCents     / 100,
+    cancellationFeeTotal: result.cancellationFeeTotal / 100,
+    cancellationHours: result.teeTime.course.cancellationHours,
     courseName:     result.teeTime.course.name,
     date:           result.teeTime.date,
     time:           result.teeTime.time,

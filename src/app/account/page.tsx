@@ -3,10 +3,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Calendar, Clock, MapPin, Users, ChevronRight, LogOut, Trophy } from 'lucide-react';
+import { getBookingStatus, statusBadgeClass } from '@/lib/booking-status';
 
 interface Booking {
   id: string; players: number; appliedRate: string; totalAmount: number;
-  paymentStatus: string; status: string; createdAt: string;
+  paymentStatus: string; status: string; createdAt: string; checkInToken: string | null;
   teeTime: { date: string; time: string; holes: number };
   course: { name: string; city: string; state: string; slug: string };
 }
@@ -36,14 +37,14 @@ export default function AccountPage() {
   }, [router]);
 
   async function cancelBooking(bookingId: string) {
-    if (!confirm('Cancel this booking? Refunds follow the course\'s cancellation policy.')) return;
+    if (!confirm('Cancel this booking? Your card was never charged, so there\'s nothing to refund — unless a late-cancellation fee already applied, which is non-refundable.')) return;
     setCancelling(bookingId);
     const res = await fetch('/api/bookings/cancel', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bookingId }),
     });
     const data = await res.json();
     if (res.ok) {
-      setCancelResult(r => ({ ...r, [bookingId]: data.refundIssued ? `Refund of $${(data.refundAmount / 100).toFixed(2)} issued` : 'Cancelled (no refund — outside window)' }));
+      setCancelResult(r => ({ ...r, [bookingId]: data.feeCharged ? 'Cancelled — late-cancellation fee already charged is non-refundable' : 'Cancelled — no charge was made' }));
       setBookings(bks => bks.map(b => b.id === bookingId ? { ...b, status: 'cancelled' } : b));
     }
     setCancelling(null);
@@ -139,6 +140,8 @@ function BookingCard({ b, onCancel, cancelling, cancelResult, past }: {
   cancelResult?: Record<string, string>;
 }) {
   const isCancelled = b.status === 'cancelled';
+  const isCompleted = b.status === 'completed';
+  const bStatus = getBookingStatus(b.status, b.paymentStatus);
   return (
     <div className={`bg-white rounded-2xl border p-5 ${isCancelled ? 'border-gray-100 opacity-60' : 'border-gray-200'}`}>
       <div className="flex items-start justify-between">
@@ -146,6 +149,7 @@ function BookingCard({ b, onCancel, cancelling, cancelResult, past }: {
           <div className="flex items-center gap-2 mb-1">
             <span className="font-black text-gray-900">{b.course.name}</span>
             {isCancelled && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-medium">Cancelled</span>}
+            {isCompleted && <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Checked In &amp; Paid</span>}
             {b.appliedRate !== 'standard' && !isCancelled && (
               <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium capitalize">{b.appliedRate} rate</span>
             )}
@@ -161,7 +165,7 @@ function BookingCard({ b, onCancel, cancelling, cancelResult, past }: {
         </div>
         <div className="text-right ml-4">
           <div className="font-black text-gray-900">${(b.totalAmount / 100).toFixed(2)}</div>
-          <div className="text-xs text-gray-400 capitalize">{b.paymentStatus}</div>
+          <div className={`text-xs font-semibold mt-0.5 inline-block px-1.5 py-0.5 rounded-full ${statusBadgeClass(bStatus.tone)}`}>{bStatus.label}</div>
         </div>
       </div>
 
@@ -169,12 +173,18 @@ function BookingCard({ b, onCancel, cancelling, cancelResult, past }: {
         <div className="mt-3 text-xs text-green-700 bg-green-50 rounded-lg px-3 py-2">{cancelResult[b.id]}</div>
       )}
 
-      {!past && !isCancelled && onCancel && (
-        <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
+      {!past && !isCancelled && !isCompleted && onCancel && (
+        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-100">
           <Link href={`/courses/${b.course.slug}`}
             className="flex items-center gap-1 text-xs text-green-700 font-medium hover:underline">
             View course <ChevronRight className="w-3 h-3" />
           </Link>
+          {b.checkInToken && (
+            <Link href={`/checkin/${b.id}?token=${b.checkInToken}`}
+              className="text-xs bg-[#1b4332] text-white font-semibold px-3 py-1.5 rounded-full hover:bg-[#2d6a4f]">
+              Check In &amp; Pay
+            </Link>
+          )}
           <button onClick={() => onCancel(b.id)} disabled={cancelling === b.id}
             className="ml-auto text-xs text-red-500 hover:text-red-700 font-medium disabled:opacity-50">
             {cancelling === b.id ? 'Cancelling...' : 'Cancel booking'}

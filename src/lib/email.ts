@@ -38,14 +38,19 @@ export interface BookingEmailData {
   date: string; time: string; players: number; holes: number;
   greenFeeTotal: number; cartFeeTotal: number; accessFeeTotal: number; totalAmount: number;
   bookingId: string; appliedRate: string;
+  rangeBallsTotal?: number; cancellationFeeTotal?: number; cancellationHours?: number;
+  checkInToken?: string;
 }
 
 export async function sendBookingConfirmation(data: BookingEmailData) {
+  const cancellationHours = data.cancellationHours ?? 24;
+  const cancellationFee = data.cancellationFeeTotal ?? 0;
+  const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 12px;border-radius:20px;">&#10003; Booking Confirmed</span></div>
     <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">You're on the tee sheet.</h1>
-    <p style="margin:0 0 32px;color:#6b7280;font-size:15px;">Here are your booking details for ${data.courseName}.</p>
-    <div style="background:#f9fafb;border-radius:12px;padding:24px;margin-bottom:24px;">
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">Here are your booking details for ${data.courseName}. <strong>Nothing has been charged yet</strong> — your card is just saved to hold your spot.</p>
+    <div style="background:#f9fafb;border-radius:12px;padding:24px;margin-bottom:20px;">
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Course</span><br><span style="color:#111827;font-size:15px;font-weight:600;">${data.courseName}</span></td></tr>
         <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Date &amp; Time</span><br><span style="color:#111827;font-size:15px;font-weight:600;">${data.date} at ${data.time}</span></td></tr>
@@ -53,15 +58,21 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
         ${data.appliedRate !== 'standard' ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Rate</span><br><span style="color:#166534;font-size:15px;font-weight:600;text-transform:capitalize;">${data.appliedRate}</span></td></tr>` : ''}
         <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Green Fee</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</span></td></tr>
         ${data.cartFeeTotal > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Cart Fee</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</span></td></tr>` : ''}
-        <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Service Fee</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</span></td></tr>
-        <tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">Total Charged</span><br><span style="color:#111827;font-size:20px;font-weight:900;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>
+        ${(data.rangeBallsTotal ?? 0) > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Range Balls</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.rangeBallsTotal! / 100).toFixed(2)}</span></td></tr>` : ''}
+        <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Fees</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</span></td></tr>
+        <tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">Total due (if you don't cancel)</span><br><span style="color:#111827;font-size:20px;font-weight:900;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>
       </table>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:16px;margin-bottom:24px;">
+      <p style="margin:0 0 4px;color:#1e3a8a;font-size:13px;font-weight:700;">Cancellation policy</p>
+      <p style="margin:0;color:#1e40af;font-size:13px;">Cancel any time up to ${cancellationHours} hours before your tee time and you won't be charged anything. After that, we'll automatically charge your card a $${(cancellationFee / 100).toFixed(2)} fee to hold your spot — it's refunded when you check in and pay for your round.</p>
     </div>
     <div style="background:#fefce8;border:1px solid #fde68a;border-radius:12px;padding:16px;margin-bottom:24px;">
       <p style="margin:0;color:#92400e;font-size:13px;font-weight:600;">&#128205; ${data.courseAddress}</p>
       <p style="margin:8px 0 0;color:#92400e;font-size:12px;">Arrive 15 minutes early and check in at the pro shop.</p>
     </div>
-    <a href="https://greenreserve.app/account" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:16px;">Manage My Booking &rarr;</a>
+    ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}
+    <a href="https://greenreserve.app/account" style="display:block;${checkInUrl ? 'color:#1b4332;' : 'background:#1b4332;color:#fff;'}text-decoration:none;text-align:center;padding:${checkInUrl ? '8px' : '14px'};border-radius:10px;font-weight:700;font-size:${checkInUrl ? '13px' : '15px'};margin-bottom:16px;">Manage My Booking &rarr;</a>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
   `);
   await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Confirmed: ${data.courseName} — ${data.date} at ${data.time}`, html });
@@ -69,12 +80,12 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
 
 export async function sendOperatorBookingNotification(data: BookingEmailData & { operatorEmail: string }) {
   // "Your Revenue" = green + cart fee — matches the Payments page and dashboard
-  // tee sheet exactly. The access fee line is shown but called out as not theirs,
-  // so this number always correlates with what they see elsewhere in the app.
+  // tee sheet exactly. Nothing's actually charged yet under the deferred-payment
+  // flow, so this is what's EXPECTED once the golfer checks in and pays, not a paid amount.
   const yourRevenue = (data.greenFeeTotal + data.cartFeeTotal) / 100;
   const html = baseTemplate(`
     <h2 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:900;">New Booking &#127949;</h2>
-    <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">A tee time has been booked at ${data.courseName}.</p>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">A tee time has been booked at ${data.courseName}. Their card is on file — nothing's charged until they check in (or the cancellation window closes).</p>
     <div style="background:#f9fafb;border-radius:12px;padding:20px;">
       <p style="margin:0 0 8px;"><strong>Golfer:</strong> ${data.golferName} (${data.golferEmail})</p>
       <p style="margin:0 0 8px;"><strong>Date:</strong> ${data.date} at ${data.time}</p>
@@ -82,8 +93,9 @@ export async function sendOperatorBookingNotification(data: BookingEmailData & {
       <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e5e7eb;padding-top:10px;">
         <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Green Fee</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</td></tr>
         ${data.cartFeeTotal > 0 ? `<tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Cart Fee</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</td></tr>` : ''}
-        <tr><td style="padding:8px 0 4px;color:#166534;font-size:14px;font-weight:800;">Your Revenue</td><td style="padding:8px 0 4px;text-align:right;color:#166534;font-size:16px;font-weight:900;">$${yourRevenue.toFixed(2)}</td></tr>
-        <tr><td colspan="2" style="padding:6px 0 0;color:#9ca3af;font-size:11px;">+ $${(data.accessFeeTotal / 100).toFixed(2)} GreenReserve access fee, charged to the golfer — not deducted from you.</td></tr>
+        ${(data.rangeBallsTotal ?? 0) > 0 ? `<tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Range Balls</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.rangeBallsTotal! / 100).toFixed(2)}</td></tr>` : ''}
+        <tr><td style="padding:8px 0 4px;color:#166534;font-size:14px;font-weight:800;">Expected Revenue</td><td style="padding:8px 0 4px;text-align:right;color:#166534;font-size:16px;font-weight:900;">$${yourRevenue.toFixed(2)}</td></tr>
+        <tr><td colspan="2" style="padding:6px 0 0;color:#9ca3af;font-size:11px;">Once they check in and pay. + $${(data.accessFeeTotal / 100).toFixed(2)} GreenReserve fee, charged to the golfer — not deducted from you.</td></tr>
       </table>
     </div>
     <a href="https://greenreserve.app/dashboard" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;margin-top:20px;">View Tee Sheet &rarr;</a>
@@ -94,19 +106,93 @@ export async function sendOperatorBookingNotification(data: BookingEmailData & {
 
 export async function sendCancellationEmail(data: {
   golferName: string; golferEmail: string; courseName: string;
-  date: string; time: string; players: number; refundAmount: number; bookingId: string;
+  date: string; time: string; players: number; bookingId: string;
+  feeCharged: boolean; feeAmount: number; // feeCharged = cancelled after the window closed, fee already taken & non-refundable
 }) {
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#fee2e2;color:#991b1b;font-size:13px;font-weight:600;padding:4px 12px;border-radius:20px;">Booking Cancelled</span></div>
     <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">Your booking has been cancelled.</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">${data.courseName} &middot; ${data.date} at ${data.time} &middot; ${data.players} player${data.players > 1 ? 's' : ''}</p>
-    ${data.refundAmount > 0
-      ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#166534;font-size:15px;font-weight:600;">&#128176; Refund of $${(data.refundAmount / 100).toFixed(2)} issued to your original payment method.</p><p style="margin:8px 0 0;color:#166534;font-size:13px;">Allow 5&ndash;10 business days.</p></div>`
-      : `<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:12px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#92400e;font-size:14px;">Outside the refund window &mdash; no refund per the course&rsquo;s cancellation policy.</p></div>`
+    ${!data.feeCharged
+      ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#166534;font-size:15px;font-weight:600;">&#10003; You weren't charged anything &mdash; your card has been released.</p></div>`
+      : `<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:12px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#92400e;font-size:14px;font-weight:600;">The $${(data.feeAmount / 100).toFixed(2)} cancellation fee you were charged is non-refundable &mdash; this cancellation came after the course&rsquo;s free-cancellation window closed.</p></div>`
     }
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
   `);
   await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Cancelled: ${data.courseName} — ${data.date} at ${data.time}`, html });
+}
+
+// Fired by the cancellation-fee cron the moment it successfully auto-charges
+// someone for not cancelling in time. Refundable later at check-in, so this
+// is explicitly NOT framed as a final charge.
+export async function sendCancellationFeeChargedEmail(data: {
+  golferName: string; golferEmail: string; courseName: string;
+  date: string; time: string; feeAmount: number; bookingId: string; checkInToken?: string | null;
+}) {
+  const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
+  const html = baseTemplate(`
+    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#fef3c7;color:#92400e;font-size:13px;font-weight:600;padding:4px 12px;border-radius:20px;">Cancellation window closed</span></div>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:24px;font-weight:900;">You've been charged $${(data.feeAmount / 100).toFixed(2)}.</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      You didn't cancel your ${data.date} at ${data.time} tee time at ${data.courseName} before the free-cancellation window closed, so we charged your card $${(data.feeAmount / 100).toFixed(2)} to hold your spot.
+    </p>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;margin-bottom:24px;">
+      <p style="margin:0;color:#166534;font-size:14px;font-weight:600;">This fee is refunded automatically when you check in and pay for your round — tap the button below to check in now.</p>
+    </div>
+    ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:16px;">Check In &amp; Pay &rarr;</a>` : ''}
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
+  `);
+  await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Charged $${(data.feeAmount / 100).toFixed(2)} — ${data.courseName} cancellation window closed`, html });
+}
+
+// Fired by the cutoff cron for courses with NO cancellation fee policy — no
+// charge is made, but the free-cancel window is closed, so we let the golfer
+// know they're locked in and give them a direct check-in link.
+export async function sendCheckInAvailableEmail(data: {
+  golferName: string; golferEmail: string; courseName: string;
+  date: string; time: string; bookingId: string; checkInToken?: string | null;
+}) {
+  const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
+  const html = baseTemplate(`
+    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 12px;border-radius:20px;">&#9971; Ready to check in</span></div>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">You're locked in — check in any time.</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      The free-cancellation window for your ${data.date} at ${data.time} tee time at ${data.courseName} has closed.
+      You can check in and pay online now, or just show up and check in at the pro shop.
+    </p>
+    ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:16px;">Check In &amp; Pay Online &rarr;</a>` : ''}
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
+  `);
+  await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Ready to check in — ${data.courseName} ${data.date} at ${data.time}`, html });
+}
+
+// Fired the moment performCheckIn() successfully charges a golfer for their
+// round at check-in. Itemizes the same numbers as the original booking
+// confirmation, plus the late-cancellation fee refund if one applied.
+export async function sendCheckInReceiptEmail(data: {
+  golferName: string; golferEmail: string; courseName: string;
+  date: string; time: string;
+  greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number; totalAmount: number;
+  feeRefunded: boolean; feeRefundAmount: number;
+  bookingId: string;
+}) {
+  const html = baseTemplate(`
+    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 12px;border-radius:20px;">&#10003; Checked in</span></div>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">You're charged $${(data.totalAmount / 100).toFixed(2)} — enjoy your round!</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">${data.courseName} &middot; ${data.date} at ${data.time}</p>
+    <div style="background:#f9fafb;border-radius:12px;padding:24px;margin-bottom:20px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Green Fee</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</td></tr>
+        ${data.cartFeeTotal > 0 ? `<tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Cart Fee</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</td></tr>` : ''}
+        ${data.rangeBallsTotal > 0 ? `<tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Range Balls</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.rangeBallsTotal / 100).toFixed(2)}</td></tr>` : ''}
+        <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Fees</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</td></tr>
+        <tr><td style="padding:10px 0 0;color:#111827;font-size:14px;font-weight:800;border-top:1px solid #e5e7eb;">Total Charged</td><td style="padding:10px 0 0;text-align:right;color:#111827;font-size:18px;font-weight:900;border-top:1px solid #e5e7eb;">$${(data.totalAmount / 100).toFixed(2)}</td></tr>
+      </table>
+    </div>
+    ${data.feeRefunded ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#166534;font-size:14px;font-weight:600;">&#10003; The $${(data.feeRefundAmount / 100).toFixed(2)} late-cancellation fee you were charged earlier has been refunded.</p></div>` : ''}
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
+  `);
+  await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Receipt: ${data.courseName} — $${(data.totalAmount / 100).toFixed(2)}`, html });
 }
 
 export async function sendWaitlistNotification(data: {
@@ -126,8 +212,9 @@ export async function sendWaitlistNotification(data: {
 
 export async function sendReminderEmail(data: {
   golferName: string; golferEmail: string; courseName: string; courseAddress: string;
-  date: string; time: string; players: number; holes: number; bookingId: string;
+  date: string; time: string; players: number; holes: number; bookingId: string; checkInToken?: string | null;
 }) {
+  const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
   const html = baseTemplate(`
     <h1 style="margin:0 0 4px;color:#111827;font-size:26px;font-weight:900;">&#9971; Tee time tomorrow!</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">You&rsquo;re on the tee sheet at ${data.courseName}.</p>
@@ -138,9 +225,10 @@ export async function sendReminderEmail(data: {
       <p style="margin:0;color:#6b7280;font-size:14px;">${data.players} player${data.players > 1 ? 's' : ''} &middot; ${data.holes} holes</p>
     </div>
     <div style="background:#fefce8;border:1px solid #fde68a;border-radius:12px;padding:14px;margin-bottom:20px;">
-      <p style="margin:0;color:#92400e;font-size:13px;">&#128336; Arrive 15 minutes early and check in at the pro shop.</p>
+      <p style="margin:0;color:#92400e;font-size:13px;">&#128336; ${checkInUrl ? 'Check in and pay below before you head out, or do it at the pro shop when you arrive.' : 'Arrive 15 minutes early and check in at the pro shop.'}</p>
     </div>
-    <a href="https://greenreserve.app/account" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;">View or Cancel Booking &rarr;</a>
+    ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}
+    <a href="https://greenreserve.app/account" style="display:block;${checkInUrl ? 'color:#1b4332;' : 'background:#1b4332;color:#fff;'}text-decoration:none;text-align:center;padding:${checkInUrl ? '8px' : '14px'};font-weight:600;font-size:${checkInUrl ? '13px' : '15px'};">View or Cancel Booking &rarr;</a>
   `);
   await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Tomorrow: ${data.time} at ${data.courseName}`, html });
 }

@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
         courseAddress: `${booking.course.address}, ${booking.course.city}, ${booking.course.state}`,
         date: booking.teeTime.date, time: booking.teeTime.time,
         players: booking.players, holes: booking.teeTime.holes, bookingId: booking.id,
+        checkInToken: booking.checkInToken,
       });
       sent++;
     } catch (err) { console.error(`Reminder failed for ${booking.golferEmail}:`, err); }

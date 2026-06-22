@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, XCircle, RefreshCw, Undo2 } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { getBookingStatus, statusBadgeClass } from '@/lib/booking-status';
 
 type Booking = {
   id: string; golferName: string; golferEmail: string; players: number;
@@ -41,7 +42,7 @@ export default function CancellationsPage() {
   }, [load]);
 
   async function cancelBooking(id: string, name: string) {
-    if (!confirm(`Cancel ${name}'s booking? This will refund their green/cart fee if within the cancellation window and reopen the slot.`)) return;
+    if (!confirm(`Cancel ${name}'s booking? Their card was never charged, so there's nothing to refund — unless the late-cancellation fee already went through, in which case it's non-refundable.`)) return;
     setCancelingId(id);
     const res = await fetch('/api/operator/bookings', {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
@@ -50,7 +51,7 @@ export default function CancellationsPage() {
     const data = await res.json();
     setCancelingId(null);
     if (!res.ok) { alert(data.error || 'Cancel failed'); return; }
-    alert(data.refundIssued ? `Cancelled — $${(data.refundAmount / 100).toFixed(2)} refunded.` : 'Cancelled — outside refund window, no refund issued.');
+    alert(data.feeCharged ? 'Cancelled — the late-cancellation fee already charged to this golfer is non-refundable.' : 'Cancelled — no charge was made, nothing to refund.');
     load();
   }
 
@@ -113,9 +114,9 @@ export default function CancellationsPage() {
                           <div className="font-semibold text-gray-700 text-sm flex items-center gap-1.5"><Undo2 className="w-3.5 h-3.5 text-gray-400" />{b.golferName} <span className="text-gray-400 font-normal">· {b.players} player{b.players !== 1 ? 's' : ''}</span></div>
                           <div className="text-xs text-gray-400">{fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)}</div>
                         </div>
-                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${b.paymentStatus === 'refunded' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
-                          {b.paymentStatus === 'refunded' ? 'Refunded' : 'No refund'}
-                        </span>
+                        {(() => { const s = getBookingStatus(b.status, b.paymentStatus); return (
+                          <span className={`text-xs font-semibold px-2 py-1 rounded-full ${statusBadgeClass(s.tone)}`}>{s.label}</span>
+                        ); })()}
                       </div>
                     ))}
                   </div>

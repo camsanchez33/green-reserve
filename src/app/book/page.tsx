@@ -15,11 +15,22 @@ type LiveTeeTime = {
   id: string; date: string; time: string; holes: number;
   players_available: number; green_fee: number; cart_fee: number; status: string;
 };
-type CourseInfo = { name: string; city: string; state: string; address: string };
+type CourseInfo = {
+  name: string; city: string; state: string; address: string;
+  cart_required: boolean;
+  has_driving_range: boolean;
+  range_balls_free: boolean;
+  range_balls_small_price: number;
+  range_balls_medium_price: number;
+  range_balls_large_price: number;
+  cancellation_hours: number;
+  late_cancellation_fee: number;
+};
 type GolferProfile = { firstName: string; lastName: string; email: string; phone: string };
 type ConfirmedData = {
   courseName: string; date: string; time: string; players: number;
-  greenFeeTotal: number; cartFeeTotal: number; accessFeeTotal: number; totalAmount: number;
+  greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number; totalAmount: number;
+  cancellationFeeTotal: number; cancellationHours: number;
 };
 
 function formatTime(t: string) {
@@ -57,6 +68,8 @@ function BookPageInner() {
   const [loadingInfo, setLoadingInfo] = useState(true);
   const [golfer, setGolfer]   = useState<GolferProfile | null>(null);
   const [confirmedData, setConfirmedData] = useState<ConfirmedData | null>(null);
+  const [cartSelected, setCartSelected] = useState(false);
+  const [rangeBallsSize, setRangeBallsSize] = useState<'' | 'small' | 'medium' | 'large'>('');
 
   // Re-fetch live course + tee time data — never trust price from the URL
   useEffect(() => {
@@ -69,6 +82,7 @@ function BookPageInner() {
     ]).then(([courseData, teeTimes, golferData]) => {
       if (!courseData) { setLoadError('Course not found.'); setLoadingInfo(false); return; }
       setCourse(courseData);
+      if (courseData.cart_required) setCartSelected(true);
       const match = Array.isArray(teeTimes) ? teeTimes.find((t: LiveTeeTime) => String(t.id) === String(teeTimeId)) : null;
       if (!match) {
         setLoadError('This tee time is no longer available. Please pick another.');
@@ -88,7 +102,9 @@ function BookPageInner() {
             <CheckCircle size={32} className="text-emerald-500" />
           </div>
           <h1 className="text-2xl font-black text-gray-900 mb-2">You&apos;re all set!</h1>
-          <p className="text-gray-500 mb-8 text-sm">A confirmation email is on its way. See you on the course.</p>
+          <p className="text-gray-500 mb-8 text-sm">
+            Your card is on file but <strong>nothing has been charged</strong>. We&apos;ll email you a reminder to check in and pay before your round.
+          </p>
 
           <div className="bg-[#f8faf9] rounded-2xl p-5 mb-8 text-left space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-gray-400">Course</span><span className="font-semibold text-gray-900">{confirmedData.courseName}</span></div>
@@ -96,9 +112,17 @@ function BookPageInner() {
             <div className="flex justify-between"><span className="text-gray-400">Tee Time</span><span className="font-semibold text-gray-900">{formatTime(confirmedData.time)}</span></div>
             <div className="flex justify-between"><span className="text-gray-400">Players</span><span className="font-semibold text-gray-900">{confirmedData.players}</span></div>
             <div className="border-t border-gray-200 mt-2 pt-2 flex justify-between font-bold text-gray-900">
-              <span>Total charged</span><span>${confirmedData.totalAmount.toFixed(2)}</span>
+              <span>Estimated total at check-in</span><span>${confirmedData.totalAmount.toFixed(2)}</span>
             </div>
           </div>
+
+          {confirmedData.cancellationFeeTotal > 0 && (
+            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 mb-8 text-left">
+              <p className="text-amber-800 text-xs leading-relaxed">
+                Cancel at least {confirmedData.cancellationHours} hours before your tee time to avoid a ${confirmedData.cancellationFeeTotal.toFixed(2)} late-cancellation fee charged to your card on file.
+              </p>
+            </div>
+          )}
 
           <button onClick={() => router.push('/account')} className="inline-flex items-center justify-center w-full py-4 rounded-xl font-bold text-white text-sm mb-3" style={{ background: '#1b4332' }}>
             View My Bookings
@@ -132,9 +156,14 @@ function BookPageInner() {
 
   const players = Math.min(requestedPlayers, Math.max(teeTime.players_available, 1));
   const greenTotal  = teeTime.green_fee * players;
-  const cartTotal    = teeTime.cart_fee * players;
+  const cartTotal    = cartSelected ? teeTime.cart_fee * players : 0;
+  const rangeBallsPrice = rangeBallsSize === 'small' ? course.range_balls_small_price
+    : rangeBallsSize === 'medium' ? course.range_balls_medium_price
+    : rangeBallsSize === 'large' ? course.range_balls_large_price
+    : 0;
+  const rangeBallsTotal = course.range_balls_free ? 0 : rangeBallsPrice;
   const accessTotal  = ACCESS_FEE_PER_PLAYER * players;
-  const total         = greenTotal + cartTotal + accessTotal;
+  const total         = greenTotal + cartTotal + rangeBallsTotal + accessTotal;
 
   return (
     <div className="min-h-screen bg-[#f8faf9]">
@@ -144,7 +173,7 @@ function BookPageInner() {
         </button>
 
         <h1 className="text-2xl font-black text-gray-900 mb-2">Confirm Your Tee Time</h1>
-        <p className="text-gray-500 text-sm mb-8">Enter your details and card to lock in your tee time at {course.name}.</p>
+        <p className="text-gray-500 text-sm mb-8">Save your card to lock in your tee time at {course.name} — you won&apos;t be charged today.</p>
 
         <div className="grid gap-6">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -155,16 +184,65 @@ function BookPageInner() {
               <div className="flex justify-between"><span className="text-gray-400">Date</span><span className="font-semibold text-gray-900">{displayDate(date)}</span></div>
               <div className="flex justify-between"><span className="text-gray-400">Tee Time</span><span className="font-semibold text-gray-900">{formatTime(teeTime.time)}</span></div>
               <div className="flex justify-between"><span className="text-gray-400">Players</span><span className="font-semibold text-gray-900">{players}</span></div>
+
+              {teeTime.cart_fee > 0 && (
+                <div className="flex items-center justify-between border-t border-gray-100 pt-3">
+                  <div>
+                    <p className="font-medium text-gray-900">Cart</p>
+                    <p className="text-xs text-gray-400">${teeTime.cart_fee.toFixed(2)} per player</p>
+                  </div>
+                  {course.cart_required ? (
+                    <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">Required</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setCartSelected(s => !s)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${cartSelected ? 'bg-[#1b4332] text-white' : 'bg-gray-100 text-gray-600'}`}
+                    >
+                      {cartSelected ? 'Added' : 'Add cart'}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {course.has_driving_range && !course.range_balls_free && (
+                <div className="border-t border-gray-100 pt-3">
+                  <p className="font-medium text-gray-900 mb-2">Range balls (optional)</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {(['', 'small', 'medium', 'large'] as const).map(size => (
+                      <button
+                        key={size || 'none'}
+                        type="button"
+                        onClick={() => setRangeBallsSize(size)}
+                        className={`py-2 rounded-lg text-xs font-semibold capitalize transition-colors ${rangeBallsSize === size ? 'bg-[#1b4332] text-white' : 'bg-gray-100 text-gray-600'}`}
+                      >
+                        {size || 'None'}
+                      </button>
+                    ))}
+                  </div>
+                  {rangeBallsSize && (
+                    <p className="text-xs text-gray-400 mt-1.5">${rangeBallsPrice.toFixed(2)} — added to your check-in total</p>
+                  )}
+                </div>
+              )}
+              {course.has_driving_range && course.range_balls_free && (
+                <div className="border-t border-gray-100 pt-3">
+                  <p className="text-xs text-emerald-700 bg-[#f0fdf4] inline-block px-2.5 py-1 rounded-full font-medium">Range balls included, free of charge</p>
+                </div>
+              )}
+
               <div className="border-t border-gray-100 pt-3 space-y-2">
                 <div className="flex justify-between text-gray-500"><span>Green fee (×{players})</span><span>${greenTotal.toFixed(2)}</span></div>
                 {cartTotal > 0 && <div className="flex justify-between text-gray-500"><span>Cart fee (×{players})</span><span>${cartTotal.toFixed(2)}</span></div>}
+                {rangeBallsTotal > 0 && <div className="flex justify-between text-gray-500"><span>Range balls ({rangeBallsSize})</span><span>${rangeBallsTotal.toFixed(2)}</span></div>}
                 <div className="flex justify-between text-gray-500">
-                  <span className="flex items-center gap-1">GreenReserve access fee <span className="text-[10px] bg-[#f0fdf4] text-[#065f46] px-1.5 py-0.5 rounded font-semibold">${ACCESS_FEE_PER_PLAYER.toFixed(2)}/player</span></span>
+                  <span>Fees</span>
                   <span>${accessTotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-gray-900 text-base border-t border-gray-100 pt-2">
-                  <span>Total charged today</span><span>${total.toFixed(2)}</span>
+                  <span>Estimated total at check-in</span><span>${total.toFixed(2)}</span>
                 </div>
+                <p className="text-xs text-gray-400 pt-1">Nothing is charged today. You&apos;ll pay this when you check in for your round.</p>
               </div>
             </div>
           </div>
@@ -174,6 +252,8 @@ function BookPageInner() {
               teeTimeId={teeTime.id}
               players={players}
               golfer={golfer}
+              cartSelected={cartSelected}
+              rangeBallsSize={rangeBallsTotal > 0 ? rangeBallsSize : ''}
               onConfirmed={setConfirmedData}
             />
           </Elements>
@@ -181,7 +261,7 @@ function BookPageInner() {
           <div className="bg-[#f0fdf4] rounded-2xl p-5 border border-emerald-100">
             <p className="text-emerald-800 text-sm font-medium mb-1">How this works</p>
             <p className="text-emerald-700 text-xs leading-relaxed">
-              Your green fee goes directly to {course.name}. GreenReserve charges a small ${ACCESS_FEE_PER_PLAYER.toFixed(2)}/player access fee. Everything is processed securely through Stripe — your card details never touch our servers.
+              We save your card to hold your tee time — you&apos;re not charged now. Cancel at least {course.cancellation_hours} hours ahead and it&apos;s free; cancelling later (or no-showing) triggers a ${course.late_cancellation_fee.toFixed(2)} late-cancellation fee. Otherwise, you pay for your round when you check in at the course.
             </p>
           </div>
         </div>
@@ -190,10 +270,12 @@ function BookPageInner() {
   );
 }
 
-function CheckoutForm({ teeTimeId, players, golfer, onConfirmed }: {
+function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize, onConfirmed }: {
   teeTimeId: string;
   players: number;
   golfer: GolferProfile | null;
+  cartSelected: boolean;
+  rangeBallsSize: string;
   onConfirmed: (data: ConfirmedData) => void;
 }) {
   const stripe   = useStripe();
@@ -224,12 +306,26 @@ function CheckoutForm({ teeTimeId, players, golfer, onConfirmed }: {
 
     setLoading(true);
     try {
-      const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({
-        type: 'card',
-        card: cardElement,
-        billing_details: { name, email },
+      // Create a SetupIntent server-side (no charge), then confirm it with the card
+      // the golfer entered — this saves the card for later off-session use (the
+      // cancellation-fee cron, and eventually check-in) instead of charging now.
+      const siRes = await fetch('/api/bookings/setup-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name }),
       });
-      if (pmError) { setError(pmError.message || 'Your card could not be processed.'); setLoading(false); return; }
+      const siData = await siRes.json();
+      if (!siRes.ok) { setError(siData.error || 'Could not prepare card setup.'); setLoading(false); return; }
+
+      const { error: setupError, setupIntent } = await stripe.confirmCardSetup(siData.clientSecret, {
+        payment_method: { card: cardElement, billing_details: { name, email } },
+      });
+      if (setupError) { setError(setupError.message || 'Your card could not be saved.'); setLoading(false); return; }
+
+      const paymentMethodId = typeof setupIntent?.payment_method === 'string'
+        ? setupIntent.payment_method
+        : setupIntent?.payment_method?.id;
+      if (!paymentMethodId) { setError('Your card could not be saved. Please try again.'); setLoading(false); return; }
 
       const res = await fetch('/api/bookings', {
         method: 'POST',
@@ -240,21 +336,20 @@ function CheckoutForm({ teeTimeId, players, golfer, onConfirmed }: {
           golferName: name,
           golferEmail: email,
           golferPhone: phone,
-          paymentMethodId: paymentMethod.id,
+          paymentMethodId,
+          customerId: siData.customerId,
+          cartSelected,
+          rangeBallsSize,
         }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Something went wrong. Please try again.'); setLoading(false); return; }
 
-      if (data.clientSecret) {
-        const { error: confirmError } = await stripe.confirmCardPayment(data.clientSecret);
-        if (confirmError) { setError(confirmError.message || 'Payment could not be confirmed.'); setLoading(false); return; }
-      }
-
       onConfirmed({
         courseName: data.courseName, date: data.date, time: data.time, players: data.players,
-        greenFeeTotal: data.greenFeeTotal, cartFeeTotal: data.cartFeeTotal,
+        greenFeeTotal: data.greenFeeTotal, cartFeeTotal: data.cartFeeTotal, rangeBallsTotal: data.rangeBallsTotal,
         accessFeeTotal: data.accessFeeTotal, totalAmount: data.totalAmount,
+        cancellationFeeTotal: data.cancellationFeeTotal, cancellationHours: data.cancellationHours ?? 24,
       });
     } catch {
       setError('Something went wrong. Please try again.');
@@ -288,6 +383,7 @@ function CheckoutForm({ teeTimeId, players, golfer, onConfirmed }: {
         <div className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus-within:border-[#1b4332] focus-within:ring-2 focus-within:ring-[#1b4332]/10 transition-all">
           <CardElement options={cardStyle} />
         </div>
+        <p className="text-xs text-gray-400 mt-1.5">Your card is saved, not charged. You&apos;ll pay when you check in for your round.</p>
       </div>
 
       {error && <p className="text-red-500 text-sm">{error}</p>}
@@ -298,7 +394,7 @@ function CheckoutForm({ teeTimeId, players, golfer, onConfirmed }: {
         className="w-full py-4 rounded-xl font-bold text-white text-sm transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         style={{ background: '#1b4332' }}
       >
-        {loading ? <><Loader2 size={16} className="animate-spin" /> Processing…</> : 'Confirm & Pay'}
+        {loading ? <><Loader2 size={16} className="animate-spin" /> Saving card…</> : 'Confirm Tee Time'}
       </button>
       <div className="flex items-center justify-center gap-2 text-gray-400 text-xs">
         <Lock size={12} />

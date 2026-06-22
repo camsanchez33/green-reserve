@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const teeTimes = await prisma.teeTime.findMany({
     where: { courseId: session.courseId, date },
     orderBy: { time: 'asc' },
-    include: withBookings ? { bookings: { where: { status: 'confirmed' }, orderBy: { createdAt: 'asc' } } } : undefined,
+    include: withBookings ? { bookings: { where: { status: { in: ['confirmed', 'completed'] } }, orderBy: { createdAt: 'asc' } } } : undefined,
   });
 
   return NextResponse.json(teeTimes);

@@ -47,6 +47,7 @@ model Course {
   minPlayers              Int               @default(1)
   maxPlayers              Int               @default(4)
   cancellationHours       Int               @default(24)
+  lateCancellationFee     Float             @default(10)
   rainCheckPolicy         String            @default("")
   publicAdvanceDays       Int               @default(7)
   memberAdvanceDays       Int               @default(14)
@@ -63,6 +64,9 @@ model Course {
   hasDrivingRange         Boolean           @default(false)
   drivingRangeType        String            @default("")
   rangeBallsFree          Boolean           @default(true)
+  rangeBallsSmallPrice    Float             @default(0)
+  rangeBallsMediumPrice   Float             @default(0)
+  rangeBallsLargePrice    Float             @default(0)
   hasPuttingGreen         Boolean           @default(false)
   hasShortGameArea        Boolean           @default(false)
   hasProShop              Boolean           @default(false)
@@ -232,10 +236,28 @@ model Booking {
   appliedRate          String         @default("standard")
   greenFeeTotal        Float
   cartFeeTotal         Float          @default(0)
+  cartSelected         Boolean        @default(false)
+  rangeBallsSize       String         @default("")
+  rangeBallsTotal      Float          @default(0)
   accessFeeTotal       Float
   totalAmount          Float
+  // Card-on-file, deferred-payment flow — nothing is charged at booking time.
+  stripeCustomerId      String        @default("")
+  stripePaymentMethodId String        @default("")
   stripePaymentIntentId String        @default("")
-  paymentStatus        String         @default("pending")
+  cancellationFeeTotal       Float     @default(0)
+  cancellationFeeChargeId    String    @default("")
+  cancellationFeeChargedAt   DateTime?
+  // Check-in / round-charge flow (Phase 2) — direct charge on the course's
+  // connected Stripe account, refunding the cancellation fee above if one was
+  // already taken. checkInToken lets a golfer check in from the reminder
+  // email on a fresh device without needing to be logged in.
+  checkInToken          String?        @unique // generated explicitly in app code at booking creation, not a DB default —
+  // existing rows added before this column existed will be null and just won't have a self-checkin link (staff can still check them in manually)
+  checkedInAt           DateTime?
+  roundPaymentIntentId  String         @default("")
+  checkInFailReason     String         @default("")
+  paymentStatus        String         @default("card_on_file")
   status               String         @default("confirmed")
   createdAt            DateTime       @default(now())
 }
