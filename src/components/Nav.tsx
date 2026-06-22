@@ -14,6 +14,15 @@ export default function Nav() {
         </Link>
 
         <div className="hidden md:flex items-center gap-6">
+          <Link href="/#how-it-works" className="text-white/60 hover:text-white text-sm font-medium transition-colors">
+            How It Works
+          </Link>
+          <Link href="/#pricing" className="text-white/60 hover:text-white text-sm font-medium transition-colors">
+            Pricing
+          </Link>
+          <Link href="/#faq" className="text-white/60 hover:text-white text-sm font-medium transition-colors">
+            FAQ
+          </Link>
           <Link href="/dashboard/login" className="text-white/60 hover:text-white text-sm font-medium transition-colors">
             Operator Login
           </Link>
@@ -29,6 +38,15 @@ export default function Nav() {
 
       {open && (
         <div className="md:hidden bg-[#0a1f0f] border-t border-white/10 px-6 py-4 space-y-2">
+          <Link href="/#how-it-works" onClick={() => setOpen(false)} className="block px-4 py-3 text-sm text-white/70 hover:text-white">
+            How It Works
+          </Link>
+          <Link href="/#pricing" onClick={() => setOpen(false)} className="block px-4 py-3 text-sm text-white/70 hover:text-white">
+            Pricing
+          </Link>
+          <Link href="/#faq" onClick={() => setOpen(false)} className="block px-4 py-3 text-sm text-white/70 hover:text-white">
+            FAQ
+          </Link>
           <Link href="/dashboard/login" onClick={() => setOpen(false)} className="block px-4 py-3 text-sm text-white/70 hover:text-white">
             Operator Login
           </Link>

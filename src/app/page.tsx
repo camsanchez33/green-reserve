@@ -36,7 +36,7 @@ export default function HomePage() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section className="bg-[#f8faf9] py-24">
+      <section id="how-it-works" className="bg-[#f8faf9] py-24">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-16">
             <p className="text-green-700 text-sm font-bold uppercase tracking-widest mb-3">How It Works</p>
@@ -93,7 +93,7 @@ export default function HomePage() {
       </section>
 
       {/* ── PRICING ── */}
-      <section className="py-24" style={{ background: 'linear-gradient(150deg,#050f09 0%,#0f2218 50%,#1b4332 100%)' }}>
+      <section id="pricing" className="py-24" style={{ background: 'linear-gradient(150deg,#050f09 0%,#0f2218 50%,#1b4332 100%)' }}>
         <div className="max-w-3xl mx-auto px-6 text-center">
           <p className="text-green-400 text-sm font-bold uppercase tracking-widest mb-3">Pricing</p>
           <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">Simple and honest</h2>
@@ -125,7 +125,7 @@ export default function HomePage() {
       </section>
 
       {/* ── FAQ ── */}
-      <section className="bg-[#f8faf9] py-24">
+      <section id="faq" className="bg-[#f8faf9] py-24">
         <div className="max-w-3xl mx-auto px-6">
           <div className="text-center mb-14">
             <h2 className="text-3xl font-black text-gray-900">Common questions</h2>
