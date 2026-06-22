@@ -14,7 +14,7 @@ export async function GET() {
   const [bookings, teeTimes] = await Promise.all([
     prisma.booking.findMany({
       where: { courseId, status: 'confirmed', createdAt: { gte: thirtyDaysAgo } },
-      select: { createdAt: true, totalAmount: true, greenFeeTotal: true, players: true },
+      select: { createdAt: true, totalAmount: true, greenFeeTotal: true, cartFeeTotal: true, players: true },
     }),
     prisma.teeTime.findMany({
       where: { courseId, date: { gte: thirtyDaysAgoStr } },
@@ -32,7 +32,9 @@ export async function GET() {
   bookings.forEach(b => {
     const key = b.createdAt.toISOString().split('T')[0];
     if (revenueByDay[key]) {
-      revenueByDay[key].revenue += b.greenFeeTotal / 100;
+      // Green + cart fee — the actual money that lands with the course.
+      // Matches the Payments page and tee sheet; the $1.50/player access fee is GreenReserve's, not theirs.
+      revenueByDay[key].revenue += (b.greenFeeTotal + b.cartFeeTotal) / 100;
       revenueByDay[key].bookings += 1;
       revenueByDay[key].players += b.players;
     }
@@ -46,7 +48,7 @@ export async function GET() {
     utilizationByDow[dow].booked += tt.playersBooked;
   });
 
-  const totalRevenue = bookings.reduce((s, b) => s + b.greenFeeTotal / 100, 0);
+  const totalRevenue = bookings.reduce((s, b) => s + (b.greenFeeTotal + b.cartFeeTotal) / 100, 0);
   const totalBookings = bookings.length;
   const totalPlayers = bookings.reduce((s, b) => s + b.players, 0);
   const totalSlots = teeTimes.reduce((s, t) => s + t.playersAvailable, 0);

@@ -10,12 +10,17 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const status = req.nextUrl.searchParams.get('status') || undefined;
+  const date = req.nextUrl.searchParams.get('date') || undefined;
 
   const bookings = await prisma.booking.findMany({
-    where: { courseId: session.courseId, ...(status ? { status } : {}) },
+    where: {
+      courseId: session.courseId,
+      ...(status ? { status } : {}),
+      ...(date ? { teeTime: { date } } : {}),
+    },
     include: { teeTime: { select: { date: true, time: true, holes: true } } },
     orderBy: { createdAt: 'desc' },
-    take: 200,
+    take: date ? undefined : 200,
   });
 
   return NextResponse.json(bookings);

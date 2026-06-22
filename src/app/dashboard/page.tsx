@@ -66,7 +66,9 @@ function DashboardPageInner() {
   const dates = Array.from({ length: 7 }, (_, i) => addDays(today(), i + dateOffset));
   const totalSlots = teeTimes.filter(t => t.status !== 'blocked').reduce((s, t) => s + t.playersAvailable, 0);
   const bookedSlots = teeTimes.reduce((s, t) => s + (t.playersBooked ?? 0), 0);
-  const revenue = teeTimes.reduce((s, t) => s + ((t.playersBooked ?? 0) * t.greenFee), 0);
+  // Matches the Payments page definition: green fee + cart fee, the actual money
+  // that lands with the course (the $1.50/player access fee is GreenReserve's, not theirs).
+  const revenue = teeTimes.reduce((s, t) => s + ((t.playersBooked ?? 0) * (t.greenFee + (t.cartFee || 0))), 0);
   const blocked = teeTimes.filter(t => t.status === 'blocked').length;
 
   const loadTimes = useCallback(async (date: string) => {
@@ -140,16 +142,16 @@ function DashboardPageInner() {
                 <div className="space-y-5">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {[
-                      { label:'Revenue',     value:`$${analytics.summary.totalRevenue.toFixed(0)}`, sub:'green fees',    color:'text-green-700' },
-                      { label:'Bookings',    value:analytics.summary.totalBookings,                 sub:'confirmed',     color:'text-blue-700'  },
-                      { label:'Players',     value:analytics.summary.totalPlayers,                  sub:'total rounds',  color:'text-purple-700'},
-                      { label:'Utilization', value:`${analytics.summary.utilization}%`,             sub:'slots filled',  color:'text-orange-600'},
+                      { label:'Revenue',     value:`$${analytics.summary.totalRevenue.toFixed(0)}`, sub:'green + cart fees', color:'text-green-700', onClick:()=>router.push('/dashboard/payments') },
+                      { label:'Bookings',    value:analytics.summary.totalBookings,                 sub:'confirmed',     color:'text-blue-700',   onClick:undefined },
+                      { label:'Players',     value:analytics.summary.totalPlayers,                  sub:'total rounds',  color:'text-purple-700', onClick:undefined },
+                      { label:'Utilization', value:`${analytics.summary.utilization}%`,             sub:'slots filled',  color:'text-orange-600', onClick:undefined },
                     ].map(s => (
-                      <div key={s.label} className="bg-white rounded-2xl border border-gray-200 p-4">
+                      <button key={s.label} onClick={s.onClick} disabled={!s.onClick} className={`bg-white rounded-2xl border border-gray-200 p-4 text-left ${s.onClick?'hover:border-green-300 hover:shadow-md transition-all cursor-pointer':'cursor-default'}`}>
                         <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
                         <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
                         <div className="text-xs text-gray-400">{s.sub}</div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                   <div className="bg-white rounded-2xl border border-gray-200 p-5">
@@ -195,15 +197,15 @@ function DashboardPageInner() {
             {/* Stats */}
             <div className="grid grid-cols-4 gap-3 mb-6">
               {[
-                { label:'Total Slots', value:totalSlots,           icon:<Users className="w-4 h-4"/>,     color:'text-blue-600'   },
-                { label:'Booked',      value:bookedSlots,          icon:<Calendar className="w-4 h-4"/>,  color:'text-green-600'  },
-                { label:'Revenue',     value:`$${revenue.toFixed(0)}`, icon:<DollarSign className="w-4 h-4"/>, color:'text-emerald-600'},
-                { label:'Blocked',     value:blocked,              icon:<Ban className="w-4 h-4"/>,       color:'text-gray-500'   },
+                { label:'Total Slots', value:totalSlots,           icon:<Users className="w-4 h-4"/>,     color:'text-blue-600',   onClick:undefined },
+                { label:'Booked',      value:bookedSlots,          icon:<Calendar className="w-4 h-4"/>,  color:'text-green-600',  onClick:undefined },
+                { label:'Revenue',     value:`$${revenue.toFixed(0)}`, icon:<DollarSign className="w-4 h-4"/>, color:'text-emerald-600', onClick:()=>router.push(`/dashboard/payments?date=${selectedDate}`) },
+                { label:'Blocked',     value:blocked,              icon:<Ban className="w-4 h-4"/>,       color:'text-gray-500',   onClick:undefined },
               ].map(s => (
-                <div key={s.label} className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-                  <div className={`flex items-center gap-1.5 text-xs font-medium mb-1 ${s.color}`}>{s.icon}{s.label}</div>
+                <button key={s.label} onClick={s.onClick} disabled={!s.onClick} className={`bg-white rounded-xl p-4 border border-gray-200 shadow-sm text-left ${s.onClick?'hover:border-emerald-300 hover:shadow-md transition-all cursor-pointer':'cursor-default'}`}>
+                  <div className={`flex items-center gap-1.5 text-xs font-medium mb-1 ${s.color}`}>{s.icon}{s.label}{s.onClick&&<span className="text-gray-300 ml-auto">→</span>}</div>
                   <div className="text-xl font-black text-gray-900">{s.value}</div>
-                </div>
+                </button>
               ))}
             </div>
 

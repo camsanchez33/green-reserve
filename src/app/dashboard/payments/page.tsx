@@ -1,7 +1,7 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { Loader2, RefreshCw, DollarSign, CreditCard, Clock3 } from 'lucide-react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Loader2, RefreshCw, DollarSign, CreditCard, Clock3, X } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 
 type Booking = {
@@ -27,20 +27,23 @@ function statusBadge(status: string) {
   return map[status] || 'bg-gray-100 text-gray-500';
 }
 
-export default function PaymentsPage() {
+function PaymentsPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const dateFilter = searchParams.get('date') || '';
   const [courseName, setCourseName] = useState('');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch('/api/operator/bookings');
+    const url = dateFilter ? `/api/operator/bookings?date=${dateFilter}` : '/api/operator/bookings';
+    const res = await fetch(url);
     if (res.status === 401) { router.push('/dashboard/login'); return; }
     const data = await res.json();
     setBookings(Array.isArray(data) ? data : []);
     setLoading(false);
-  }, [router]);
+  }, [router, dateFilter]);
 
   useEffect(() => {
     fetch('/api/operator/courses').then(r => r.json()).then(c => { if (c?.name) setCourseName(c.name); });
@@ -67,6 +70,15 @@ export default function PaymentsPage() {
             </button>
           </div>
 
+          {dateFilter && (
+            <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-4 py-2.5 mb-4 text-sm">
+              <span className="text-green-800 font-medium">Showing bookings for {fmtDate(dateFilter)}</span>
+              <button onClick={() => router.push('/dashboard/payments')} className="flex items-center gap-1 text-green-700 hover:underline text-xs font-semibold">
+                <X className="w-3.5 h-3.5" />Clear filter
+              </button>
+            </div>
+          )}
+
           <div className="grid grid-cols-3 gap-3 mb-6">
             <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
               <div className="flex items-center gap-1.5 text-xs font-medium mb-1 text-emerald-600"><DollarSign className="w-4 h-4" />Your Revenue</div>
@@ -88,7 +100,7 @@ export default function PaymentsPage() {
           {loading ? (
             <div className="flex items-center justify-center py-16 text-gray-400 gap-2"><Loader2 className="w-5 h-5 animate-spin" />Loading...</div>
           ) : paid.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-300 text-gray-400 text-sm">No transactions yet.</div>
+            <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-300 text-gray-400 text-sm">{dateFilter ? `No transactions for ${fmtDate(dateFilter)}.` : 'No transactions yet.'}</div>
           ) : (
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
               <table className="w-full text-sm">
@@ -125,5 +137,13 @@ export default function PaymentsPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function PaymentsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-100" />}>
+      <PaymentsPageInner />
+    </Suspense>
   );
 }

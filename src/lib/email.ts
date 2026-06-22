@@ -68,16 +68,26 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
 }
 
 export async function sendOperatorBookingNotification(data: BookingEmailData & { operatorEmail: string }) {
+  // "Your Revenue" = green + cart fee — matches the Payments page and dashboard
+  // tee sheet exactly. The access fee line is shown but called out as not theirs,
+  // so this number always correlates with what they see elsewhere in the app.
+  const yourRevenue = (data.greenFeeTotal + data.cartFeeTotal) / 100;
   const html = baseTemplate(`
     <h2 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:900;">New Booking &#127949;</h2>
     <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">A tee time has been booked at ${data.courseName}.</p>
     <div style="background:#f9fafb;border-radius:12px;padding:20px;">
       <p style="margin:0 0 8px;"><strong>Golfer:</strong> ${data.golferName} (${data.golferEmail})</p>
       <p style="margin:0 0 8px;"><strong>Date:</strong> ${data.date} at ${data.time}</p>
-      <p style="margin:0 0 8px;"><strong>Players:</strong> ${data.players} &middot; ${data.holes} holes</p>
-      <p style="margin:0;"><strong>Green Fee Revenue:</strong> $${(data.greenFeeTotal / 100).toFixed(2)}</p>
+      <p style="margin:0 0 12px;"><strong>Players:</strong> ${data.players} &middot; ${data.holes} holes</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e5e7eb;padding-top:10px;">
+        <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Green Fee</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</td></tr>
+        ${data.cartFeeTotal > 0 ? `<tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Cart Fee</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</td></tr>` : ''}
+        <tr><td style="padding:8px 0 4px;color:#166534;font-size:14px;font-weight:800;">Your Revenue</td><td style="padding:8px 0 4px;text-align:right;color:#166534;font-size:16px;font-weight:900;">$${yourRevenue.toFixed(2)}</td></tr>
+        <tr><td colspan="2" style="padding:6px 0 0;color:#9ca3af;font-size:11px;">+ $${(data.accessFeeTotal / 100).toFixed(2)} GreenReserve access fee, charged to the golfer — not deducted from you.</td></tr>
+      </table>
     </div>
     <a href="https://greenreserve.app/dashboard" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;margin-top:20px;">View Tee Sheet &rarr;</a>
+    <a href="https://greenreserve.app/dashboard/payments" style="display:block;color:#1b4332;text-decoration:none;text-align:center;padding:8px;font-weight:600;font-size:13px;">See it in Payments &rarr;</a>
   `);
   await getResend().emails.send({ from: FROM, to: data.operatorEmail, subject: `New booking: ${data.players} player${data.players > 1 ? 's' : ''} — ${data.date} at ${data.time}`, html });
 }
