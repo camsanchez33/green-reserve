@@ -4,7 +4,6 @@ import { useSearchParams } from 'next/navigation';
 import { CheckCircle, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
 
 const STATES = ['CT','DE','MA','MD','ME','NH','NJ','NY','PA','RI','VA','VT'];
-const DRESSCODE_OPTIONS = ['Collared shirt required','No denim','No metal spikes','Soft spikes only','No tank tops'];
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 type ScheduleData = {
@@ -17,19 +16,23 @@ type ScheduleData = {
 };
 
 type Details = {
-  walkingAllowed: string; cartRequired: boolean;
-  dresscode: string[];
+  walkingAllowed: string; walkingNote: string; cartRequired: boolean;
+  dresscode: string;
   cancellationHours: number; rainCheckPolicy: string;
   publicAdvanceDays: number; memberAdvanceDays: number;
   hasMemberPricing: boolean; hasResidentPricing: boolean; residentCounty: string; residentState: string;
-  hasCaddies: boolean; caddieType: string;
-  hasDrivingRange: boolean; hasPuttingGreen: boolean; hasShortGameArea: boolean; hasProShop: boolean;
-  restaurantType: string; hasLessons: boolean; hasClubRental: boolean; hasBagStorage: boolean;
-  hasGpsCarts: boolean; hasTournaments: boolean;
+  hasGuestFee: boolean;
+  hasCaddies: boolean; caddieType: string; caddieLooperRate: string; caddieForeRate: string; caddieNote: string;
+  hasDrivingRange: boolean; rangeBallsFree: boolean;
+  hasPuttingGreen: boolean; hasShortGameArea: boolean;
+  hasProShop: boolean; proShopPhone: string;
+  restaurantType: string; hasCartGirl: boolean;
+  hasLessons: boolean; hasClubRental: boolean; hasBagStorage: boolean;
+  hasGpsCarts: boolean; hasTournaments: boolean; tournamentFrequency: string;
   pricingNotes: string;
   schedule: ScheduleData;
-  // Type-specific follow-up — label/relevance depends on courseType
-  guestFee: string; reciprocalPolicy: string; memberPriorityNote: string;
+  // Type-specific follow-up — relevance depends on courseType
+  reciprocalPolicy: string; memberPriorityNote: string;
   hotelGuestRate: string; stayAndPlayNote: string;
   typeSpecificNotes: string;
 };
@@ -44,18 +47,22 @@ const initSchedule: ScheduleData = {
 };
 
 const init: Details = {
-  walkingAllowed: 'always', cartRequired: false,
-  dresscode: [],
+  walkingAllowed: 'always', walkingNote: '', cartRequired: false,
+  dresscode: '',
   cancellationHours: 24, rainCheckPolicy: '',
   publicAdvanceDays: 7, memberAdvanceDays: 14,
   hasMemberPricing: false, hasResidentPricing: false, residentCounty: '', residentState: 'NJ',
-  hasCaddies: false, caddieType: '',
-  hasDrivingRange: false, hasPuttingGreen: false, hasShortGameArea: false, hasProShop: false,
-  restaurantType: 'none', hasLessons: false, hasClubRental: false, hasBagStorage: false,
-  hasGpsCarts: false, hasTournaments: false,
+  hasGuestFee: true,
+  hasCaddies: false, caddieType: 'looper', caddieLooperRate: '', caddieForeRate: '', caddieNote: '',
+  hasDrivingRange: false, rangeBallsFree: true,
+  hasPuttingGreen: false, hasShortGameArea: false,
+  hasProShop: false, proShopPhone: '',
+  restaurantType: 'none', hasCartGirl: false,
+  hasLessons: false, hasClubRental: false, hasBagStorage: false,
+  hasGpsCarts: false, hasTournaments: false, tournamentFrequency: '',
   pricingNotes: '',
   schedule: initSchedule,
-  guestFee: '', reciprocalPolicy: '', memberPriorityNote: '',
+  reciprocalPolicy: '', memberPriorityNote: '',
   hotelGuestRate: '', stayAndPlayNote: '',
   typeSpecificNotes: '',
 };
@@ -110,6 +117,8 @@ function DetailsForm() {
   const [submitError, setSubmitError] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
+  const isPrivate = courseType === 'private';
+
   useEffect(() => {
     if (!token) { setLoadError('Missing setup link token.'); setLoading(false); return; }
     fetch(`/api/inquiries/details?token=${encodeURIComponent(token)}`)
@@ -122,14 +131,17 @@ function DetailsForm() {
         setCourseName(d.courseName);
         setCourseType(d.courseType || 'public');
         setNeeds(d.needs || {});
+        const saved = d.details || {};
         setForm(f => ({
           ...f,
           // Sensible defaults from the inquiry, before any saved-draft details override them
           hasMemberPricing: d.courseType === 'private' ? true : !!d.hasMemberPricing,
           hasResidentPricing: !!d.hasResidentPricing,
           hasCaddies: !!d.hasCaddies,
-          ...(d.details || {}),
-          schedule: { ...initSchedule, ...((d.details || {}).schedule || {}) },
+          ...saved,
+          // dresscode used to be stored as a multi-select array — coerce old drafts to text
+          dresscode: Array.isArray(saved.dresscode) ? saved.dresscode.join(', ') : (saved.dresscode || ''),
+          schedule: { ...initSchedule, ...(saved.schedule || {}) },
         }));
       })
       .catch(e => setLoadError(e.message))
@@ -138,15 +150,18 @@ function DetailsForm() {
 
   const set = <K extends keyof Details>(k: K, v: Details[K]) => setForm(f => ({ ...f, [k]: v }));
   const setSchedule = <K extends keyof ScheduleData>(k: K, v: ScheduleData[K]) => setForm(f => ({ ...f, schedule: { ...f.schedule, [k]: v } }));
+  const setFlatRate = (which: 'greenFee' | 'memberRate', v: string) => setForm(f => ({ ...f, schedule: { ...f.schedule, [`${which}Weekday`]: v, [`${which}Weekend`]: v } }));
   const toggleScheduleDay = (d: number) => setSchedule('daysOfWeek', form.schedule.daysOfWeek.includes(d) ? form.schedule.daysOfWeek.filter(x => x !== d) : [...form.schedule.daysOfWeek, d]);
   const toggleSection = (s: keyof typeof sections) => setSections(p => ({ ...p, [s]: !p[s] }));
-  const toggleDress = (d: string) => set('dresscode', form.dresscode.includes(d) ? form.dresscode.filter(x => x !== d) : [...form.dresscode, d]);
+
+  const toggleGuestFee = (on: boolean) => { set('hasGuestFee', on); setFlatRate('greenFee', on ? '' : '0'); };
+  const toggleMemberCharge = (on: boolean) => { set('hasMemberPricing', on); if (!on) setFlatRate('memberRate', ''); };
 
   const validate = () => {
     const s = form.schedule;
-    if (s.greenFeeWeekday === '' || s.greenFeeWeekend === '') return 'Please fill in your weekday and weekend green fees in section 2 (Your tee sheet schedule).';
+    if (s.greenFeeWeekday === '' || s.greenFeeWeekend === '') return isPrivate ? 'Please answer the guest fee question in section 1.' : 'Please fill in your weekday and weekend green fees in section 2.';
     if (!s.startTime || !s.endTime) return 'Please set your first and last tee time in section 2 (Your tee sheet schedule).';
-    if (form.hasMemberPricing && (s.memberRateWeekday === '' || s.memberRateWeekend === '')) return 'You said you offer member pricing — please fill in your member rates in section 2.';
+    if (form.hasMemberPricing && (s.memberRateWeekday === '' || s.memberRateWeekend === '')) return isPrivate ? 'Please fill in your member rate in section 1.' : 'You said you offer member pricing — please fill in your member rates in section 2.';
     if (form.hasResidentPricing && (s.residentRateWeekday === '' || s.residentRateWeekend === '')) return 'You said you offer resident pricing — please fill in your resident rates in section 2.';
     return '';
   };
@@ -155,7 +170,7 @@ function DetailsForm() {
     const validationError = validate();
     if (validationError) {
       setSubmitError(validationError);
-      setSections(p => ({ ...p, schedule: true }));
+      setSections(p => ({ ...p, pricing: true, schedule: true }));
       return;
     }
     setSubmitting(true); setSubmitError('');
@@ -164,6 +179,7 @@ function DetailsForm() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         token, ...form,
+        dresscode: form.dresscode ? [form.dresscode] : [],
         cancellationHours: Number(form.cancellationHours),
         publicAdvanceDays: Number(form.publicAdvanceDays),
         memberAdvanceDays: Number(form.memberAdvanceDays),
@@ -227,21 +243,52 @@ function DetailsForm() {
 
         <div className="space-y-3">
 
-          {/* Pricing structure — comes first since the schedule section below depends on these toggles */}
-          <Section title="1. Pricing structure" open={sections.pricing} toggle={() => toggleSection('pricing')}>
-            <div className="flex flex-wrap gap-2">
-              <Toggle label="We offer member pricing" checked={form.hasMemberPricing} onChange={v => set('hasMemberPricing', v)} />
-              <Toggle label="We offer resident pricing" checked={form.hasResidentPricing} onChange={v => set('hasResidentPricing', v)} />
-              <Toggle label="We have caddies" checked={form.hasCaddies} onChange={v => set('hasCaddies', v)} />
-            </div>
-            {form.hasResidentPricing && (
+          {/* Pricing — structure is genuinely different for a private club, so this branches hard */}
+          <Section title={isPrivate ? '1. Membership pricing' : '1. Pricing structure'} open={sections.pricing} toggle={() => toggleSection('pricing')}>
+            {isPrivate ? (
+              <>
+                <Toggle label="We charge members for tee times" checked={form.hasMemberPricing} onChange={toggleMemberCharge} />
+                {form.hasMemberPricing ? (
+                  <Field label="Member rate ($)"><input type="number" className={inp} value={form.schedule.memberRateWeekday} onChange={e => setFlatRate('memberRate', e.target.value)} /></Field>
+                ) : (
+                  <p className="text-xs text-gray-400">Got it — golf is included in membership dues, members won&apos;t be charged per round.</p>
+                )}
+                <Toggle label="There's a guest fee for non-members" checked={form.hasGuestFee} onChange={toggleGuestFee} />
+                {form.hasGuestFee ? (
+                  <Field label="Guest fee ($)"><input type="number" className={inp} value={form.schedule.greenFeeWeekday} onChange={e => setFlatRate('greenFee', e.target.value)} /></Field>
+                ) : (
+                  <p className="text-xs text-gray-400">Got it — no general guest fee (e.g. members-only or by invitation).</p>
+                )}
+              </>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                <Toggle label="We offer member pricing" checked={form.hasMemberPricing} onChange={toggleMemberCharge} />
+                <Toggle label="We offer resident pricing" checked={form.hasResidentPricing} onChange={v => set('hasResidentPricing', v)} />
+              </div>
+            )}
+            {!isPrivate && form.hasResidentPricing && (
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Resident county"><input className={inp} value={form.residentCounty} onChange={e => set('residentCounty', e.target.value)} /></Field>
                 <Field label="Resident state"><select className={sel} value={form.residentState} onChange={e => set('residentState', e.target.value)}>{STATES.map(s => <option key={s}>{s}</option>)}</select></Field>
               </div>
             )}
+
+            <Toggle label="We have caddies" checked={form.hasCaddies} onChange={v => set('hasCaddies', v)} />
             {form.hasCaddies && (
-              <Field label="Caddie type"><input className={inp} value={form.caddieType} onChange={e => set('caddieType', e.target.value)} placeholder="e.g. Looper, Forecaddie" /></Field>
+              <div className="space-y-3 bg-gray-50 border border-gray-100 rounded-xl p-4">
+                <Field label="Caddie type">
+                  <select className={sel} value={form.caddieType} onChange={e => set('caddieType', e.target.value)}>
+                    <option value="looper">Looper only</option>
+                    <option value="fore_caddie">Fore caddie</option>
+                    <option value="both">Both</option>
+                  </select>
+                </Field>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Looper rate ($)"><input type="number" className={inp} value={form.caddieLooperRate} onChange={e => set('caddieLooperRate', e.target.value)} /></Field>
+                  <Field label="Fore caddie rate ($)"><input type="number" className={inp} value={form.caddieForeRate} onChange={e => set('caddieForeRate', e.target.value)} /></Field>
+                </div>
+                <Field label="Caddie note (optional)"><input className={inp} value={form.caddieNote} onChange={e => set('caddieNote', e.target.value)} placeholder="e.g. Must request 48hrs in advance" /></Field>
+              </div>
             )}
             <Field label="Anything else about pricing?"><textarea rows={2} className={inp} value={form.pricingNotes} onChange={e => set('pricingNotes', e.target.value)} /></Field>
           </Section>
@@ -266,22 +313,29 @@ function DetailsForm() {
                 </select>
               </Field>
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              <Field label="Green fee — weekday ($)"><input type="number" className={inp} value={form.schedule.greenFeeWeekday} onChange={e => setSchedule('greenFeeWeekday', e.target.value)} placeholder="65" /></Field>
-              <Field label="Green fee — weekend ($)"><input type="number" className={inp} value={form.schedule.greenFeeWeekend} onChange={e => setSchedule('greenFeeWeekend', e.target.value)} placeholder="85" /></Field>
-              <Field label="Cart fee ($)"><input type="number" className={inp} value={form.schedule.cartFee} onChange={e => setSchedule('cartFee', e.target.value)} placeholder="18" /></Field>
-            </div>
-            {form.hasMemberPricing && (
-              <div className="grid grid-cols-2 gap-4 bg-blue-50 border border-blue-100 rounded-xl p-4">
-                <Field label="Member rate — weekday ($)"><input type="number" className={inp} value={form.schedule.memberRateWeekday} onChange={e => setSchedule('memberRateWeekday', e.target.value)} /></Field>
-                <Field label="Member rate — weekend ($)"><input type="number" className={inp} value={form.schedule.memberRateWeekend} onChange={e => setSchedule('memberRateWeekend', e.target.value)} /></Field>
-              </div>
+            {!isPrivate && (
+              <>
+                <div className="grid grid-cols-3 gap-4">
+                  <Field label="Green fee — weekday ($)"><input type="number" className={inp} value={form.schedule.greenFeeWeekday} onChange={e => setSchedule('greenFeeWeekday', e.target.value)} placeholder="65" /></Field>
+                  <Field label="Green fee — weekend ($)"><input type="number" className={inp} value={form.schedule.greenFeeWeekend} onChange={e => setSchedule('greenFeeWeekend', e.target.value)} placeholder="85" /></Field>
+                  <Field label="Cart fee ($)"><input type="number" className={inp} value={form.schedule.cartFee} onChange={e => setSchedule('cartFee', e.target.value)} placeholder="18" /></Field>
+                </div>
+                {form.hasMemberPricing && (
+                  <div className="grid grid-cols-2 gap-4 bg-blue-50 border border-blue-100 rounded-xl p-4">
+                    <Field label="Member rate — weekday ($)"><input type="number" className={inp} value={form.schedule.memberRateWeekday} onChange={e => setSchedule('memberRateWeekday', e.target.value)} /></Field>
+                    <Field label="Member rate — weekend ($)"><input type="number" className={inp} value={form.schedule.memberRateWeekend} onChange={e => setSchedule('memberRateWeekend', e.target.value)} /></Field>
+                  </div>
+                )}
+                {form.hasResidentPricing && (
+                  <div className="grid grid-cols-2 gap-4 bg-purple-50 border border-purple-100 rounded-xl p-4">
+                    <Field label="Resident rate — weekday ($)"><input type="number" className={inp} value={form.schedule.residentRateWeekday} onChange={e => setSchedule('residentRateWeekday', e.target.value)} /></Field>
+                    <Field label="Resident rate — weekend ($)"><input type="number" className={inp} value={form.schedule.residentRateWeekend} onChange={e => setSchedule('residentRateWeekend', e.target.value)} /></Field>
+                  </div>
+                )}
+              </>
             )}
-            {form.hasResidentPricing && (
-              <div className="grid grid-cols-2 gap-4 bg-purple-50 border border-purple-100 rounded-xl p-4">
-                <Field label="Resident rate — weekday ($)"><input type="number" className={inp} value={form.schedule.residentRateWeekday} onChange={e => setSchedule('residentRateWeekday', e.target.value)} /></Field>
-                <Field label="Resident rate — weekend ($)"><input type="number" className={inp} value={form.schedule.residentRateWeekend} onChange={e => setSchedule('residentRateWeekend', e.target.value)} /></Field>
-              </div>
+            {isPrivate && (
+              <Field label="Cart fee ($)"><input type="number" className={inp} value={form.schedule.cartFee} onChange={e => setSchedule('cartFee', e.target.value)} placeholder="18" /></Field>
             )}
             <Toggle label="Walking allowed on this schedule" checked={form.schedule.walkingAllowed} onChange={v => setSchedule('walkingAllowed', v)} />
           </Section>
@@ -289,10 +343,7 @@ function DetailsForm() {
           {/* Type-specific follow-up */}
           {courseType === 'private' && (
             <Section title="3. Membership details" open={sections.typeSpecific} toggle={() => toggleSection('typeSpecific')}>
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="Guest fee ($, if applicable)"><input type="number" className={inp} value={form.guestFee} onChange={e => set('guestFee', e.target.value)} /></Field>
-                <Field label="Reciprocal club fee ($, if applicable)"><input type="number" className={inp} value={form.reciprocalPolicy} onChange={e => set('reciprocalPolicy', e.target.value)} /></Field>
-              </div>
+              <Field label="Reciprocal club fee ($, if applicable)"><input type="number" className={inp} value={form.reciprocalPolicy} onChange={e => set('reciprocalPolicy', e.target.value)} /></Field>
               <Field label="Member-only tee time windows (e.g. weekday mornings before 11am)"><textarea rows={2} className={inp} value={form.memberPriorityNote} onChange={e => set('memberPriorityNote', e.target.value)} /></Field>
             </Section>
           )}
@@ -325,15 +376,11 @@ function DetailsForm() {
                 </select>
               </Field>
               <Field label="Cancellation window (hours)"><input type="number" className={inp} value={form.cancellationHours} onChange={e => set('cancellationHours', Number(e.target.value))} /></Field>
-              <Field label="Public advance booking (days)"><input type="number" className={inp} value={form.publicAdvanceDays} onChange={e => set('publicAdvanceDays', Number(e.target.value))} /></Field>
+              {!isPrivate && <Field label="Public advance booking (days)"><input type="number" className={inp} value={form.publicAdvanceDays} onChange={e => set('publicAdvanceDays', Number(e.target.value))} /></Field>}
               <Field label="Member advance booking (days)"><input type="number" className={inp} value={form.memberAdvanceDays} onChange={e => set('memberAdvanceDays', Number(e.target.value))} /></Field>
             </div>
             <Field label="Rain check policy"><textarea rows={2} className={inp} value={form.rainCheckPolicy} onChange={e => set('rainCheckPolicy', e.target.value)} /></Field>
-            <Field label="Dress code">
-              <div className="flex flex-wrap gap-2">
-                {DRESSCODE_OPTIONS.map(d => <Toggle key={d} label={d} checked={form.dresscode.includes(d)} onChange={() => toggleDress(d)} />)}
-              </div>
-            </Field>
+            <Field label="Dress code"><textarea rows={2} className={inp} value={form.dresscode} onChange={e => set('dresscode', e.target.value)} placeholder="e.g. Collared shirts required, no denim, soft spikes only" /></Field>
           </Section>
 
           <Section title="5. Facilities" open={sections.facilities} toggle={() => toggleSection('facilities')}>
@@ -348,14 +395,37 @@ function DetailsForm() {
               <Toggle label="GPS carts" checked={form.hasGpsCarts} onChange={v => set('hasGpsCarts', v)} />
               <Toggle label="Hosts tournaments" checked={form.hasTournaments} onChange={v => set('hasTournaments', v)} />
             </div>
+
+            {form.hasDrivingRange && (
+              <Toggle label="Range balls are free / included" checked={form.rangeBallsFree} onChange={v => set('rangeBallsFree', v)} />
+            )}
+            {form.hasProShop && (
+              <Field label="Pro shop phone number"><input className={inp} value={form.proShopPhone} onChange={e => set('proShopPhone', e.target.value)} placeholder="(201) 555-0100" /></Field>
+            )}
+            {form.hasTournaments && (
+              <Field label="How often do you host tournaments / outings?">
+                <select className={sel} value={form.tournamentFrequency} onChange={e => set('tournamentFrequency', e.target.value)}>
+                  <option value="">Select...</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="seasonally">A few times a season</option>
+                  <option value="rarely">Rarely</option>
+                </select>
+              </Field>
+            )}
+
             <Field label="Restaurant / food service">
               <select className={sel} value={form.restaurantType} onChange={e => set('restaurantType', e.target.value)}>
                 <option value="none">None</option>
-                <option value="snack-bar">Snack bar</option>
-                <option value="grill">Grill</option>
-                <option value="full-restaurant">Full restaurant</option>
+                <option value="snack_bar">Snack bar</option>
+                <option value="bar">Bar only</option>
+                <option value="full">Full restaurant</option>
+                <option value="beverage_cart">Beverage cart only</option>
               </select>
             </Field>
+            {['snack_bar', 'bar', 'full'].includes(form.restaurantType) && (
+              <Toggle label="Also have a beverage cart / cart girl on the course" checked={form.hasCartGirl} onChange={v => set('hasCartGirl', v)} />
+            )}
           </Section>
 
           {submitError && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{submitError}</div>}

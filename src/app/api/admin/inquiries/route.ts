@@ -98,6 +98,12 @@ async function handleAction(inquiryId: string, action: string, payload?: Record<
       const num = (v: unknown, fallback: number) => (typeof v === 'number' && !Number.isNaN(v) ? v : fallback);
       const bool = (v: unknown, fallback = false) => (typeof v === 'boolean' ? v : fallback);
       const arr = (v: unknown): string[] => (Array.isArray(v) ? v.filter(x => typeof x === 'string') : []);
+      // Setup-sheet number inputs come through as strings (or '' when left blank) — unlike num(), this parses them.
+      const flt = (v: unknown, fallback: number) => {
+        if (typeof v === 'number' && !Number.isNaN(v)) return v;
+        if (typeof v === 'string' && v !== '' && !Number.isNaN(Number(v))) return Number(v);
+        return fallback;
+      };
 
       const operator = await prisma.courseOperator.create({
         data: {
@@ -122,6 +128,7 @@ async function handleAction(inquiryId: string, action: string, payload?: Record<
               liveStatus: 'draft',
               // ── From the detail sheet (defaults if not submitted) ──
               walkingAllowed: str(d.walkingAllowed, 'always'),
+              walkingNote: str(d.walkingNote, ''),
               cartRequired: bool(d.cartRequired, false),
               dresscode: arr(d.dresscode),
               cancellationHours: num(d.cancellationHours, 24),
@@ -134,16 +141,23 @@ async function handleAction(inquiryId: string, action: string, payload?: Record<
               residentState: str(d.residentState, inquiry.state),
               hasCaddies: bool(d.hasCaddies, inquiry.hasCaddies),
               caddieType: str(d.caddieType, ''),
+              caddieLooperRate: flt(d.caddieLooperRate, 0),
+              caddieForeRate: flt(d.caddieForeRate, 0),
+              caddieNote: str(d.caddieNote, ''),
               hasDrivingRange: bool(d.hasDrivingRange, false),
+              rangeBallsFree: bool(d.rangeBallsFree, true),
               hasPuttingGreen: bool(d.hasPuttingGreen, false),
               hasShortGameArea: bool(d.hasShortGameArea, false),
               hasProShop: bool(d.hasProShop, false),
+              proShopPhone: str(d.proShopPhone, ''),
               restaurantType: str(d.restaurantType, 'none'),
+              hasCartGirl: bool(d.hasCartGirl, false),
               hasLessons: bool(d.hasLessons, false),
               hasClubRental: bool(d.hasClubRental, false),
               hasBagStorage: bool(d.hasBagStorage, false),
               hasGpsCarts: bool(d.hasGpsCarts, false),
               hasTournaments: bool(d.hasTournaments, false),
+              tournamentFrequency: str(d.tournamentFrequency, ''),
             },
           },
         },

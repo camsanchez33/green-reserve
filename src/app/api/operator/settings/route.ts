@@ -23,10 +23,10 @@ export async function PATCH(req: NextRequest) {
     'walkingAllowed','walkingNote','cartRequired',
     'cancellationHours','rainCheckPolicy','publicAdvanceDays',
     'dresscode','minPlayers','maxPlayers',
-    'hasDrivingRange','drivingRangeType','hasPuttingGreen','hasShortGameArea',
-    'hasProShop','restaurantType','hasLessons','hasClubRental','clubRentalRate',
+    'hasDrivingRange','drivingRangeType','rangeBallsFree','hasPuttingGreen','hasShortGameArea',
+    'hasProShop','proShopPhone','restaurantType','hasCartGirl','hasLessons','hasClubRental','clubRentalRate',
     'hasPushCartRental','pushCartRate','hasBagStorage','hasLockerRoom','hasGpsCarts',
-    'hasTournaments','hasCaddies','caddieType','caddieLooperRate','caddieForeRate','caddieNote',
+    'hasTournaments','tournamentFrequency','hasCaddies','caddieType','caddieLooperRate','caddieForeRate','caddieNote',
     'amenities',
   ];
   const data: Record<string, unknown> = {};

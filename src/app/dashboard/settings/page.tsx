@@ -276,12 +276,16 @@ function SettingsPageInner() {
           <div className="space-y-5">
             <SectionCard title="Practice">
               <Toggle label="Driving Range" checked={!!form.hasDrivingRange} onChange={()=>tog('hasDrivingRange')}/>
-              {form.hasDrivingRange&&<Field label="Range type"><select value={form.drivingRangeType as string} onChange={e=>set('drivingRangeType',e.target.value)} className={inputCls}><option value="">Select...</option><option value="grass">Grass tees</option><option value="mat">Mat only</option><option value="both">Grass + Mat</option><option value="toptracer">TopTracer</option></select></Field>}
+              {form.hasDrivingRange&&<>
+                <Field label="Range type"><select value={form.drivingRangeType as string} onChange={e=>set('drivingRangeType',e.target.value)} className={inputCls}><option value="">Select...</option><option value="grass">Grass tees</option><option value="mat">Mat only</option><option value="both">Grass + Mat</option><option value="toptracer">TopTracer</option></select></Field>
+                <Toggle label="Range Balls Free / Included" checked={form.rangeBallsFree!==false} onChange={()=>tog('rangeBallsFree')}/>
+              </>}
               <Toggle label="Putting Green" checked={!!form.hasPuttingGreen} onChange={()=>tog('hasPuttingGreen')}/>
               <Toggle label="Short Game / Chipping Area" checked={!!form.hasShortGameArea} onChange={()=>tog('hasShortGameArea')}/>
             </SectionCard>
             <SectionCard title="Amenities">
               <Toggle label="Pro Shop" checked={!!form.hasProShop} onChange={()=>tog('hasProShop')}/>
+              {form.hasProShop&&<Field label="Pro shop phone number"><FInput value={form.proShopPhone as string} onChange={v=>set('proShopPhone',v)} placeholder="(201) 555-0100"/></Field>}
               <Toggle label="Lessons Available" checked={!!form.hasLessons} onChange={()=>tog('hasLessons')}/>
               <Toggle label="Club Rental" checked={!!form.hasClubRental} onChange={()=>tog('hasClubRental')}/>
               {form.hasClubRental&&<Field label="Club rental rate ($)"><FInput value={form.clubRentalRate as number} onChange={v=>set('clubRentalRate',Number(v))} type="number"/></Field>}
@@ -291,6 +295,7 @@ function SettingsPageInner() {
               <Toggle label="Locker Room" checked={!!form.hasLockerRoom} onChange={()=>tog('hasLockerRoom')}/>
               <Toggle label="GPS Carts" checked={!!form.hasGpsCarts} onChange={()=>tog('hasGpsCarts')}/>
               <Toggle label="Tournaments Hosted" checked={!!form.hasTournaments} onChange={()=>tog('hasTournaments')}/>
+              {form.hasTournaments&&<Field label="How often?"><select value={form.tournamentFrequency as string} onChange={e=>set('tournamentFrequency',e.target.value)} className={inputCls}><option value="">Select...</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="seasonally">A few times a season</option><option value="rarely">Rarely</option></select></Field>}
             </SectionCard>
             <SectionCard title="Food & Beverage">
               <Field label="Restaurant / Bar">
@@ -298,6 +303,7 @@ function SettingsPageInner() {
                   <option value="none">None</option><option value="snack_bar">Snack Bar</option><option value="bar">Bar Only</option><option value="full">Full Restaurant</option><option value="beverage_cart">Beverage Cart</option>
                 </select>
               </Field>
+              {['snack_bar','bar','full'].includes(form.restaurantType as string)&&<Toggle label="Also Have a Beverage Cart / Cart Girl" checked={!!form.hasCartGirl} onChange={()=>tog('hasCartGirl')}/>}
             </SectionCard>
             <SectionCard title="Caddies">
               <Toggle label="Caddies Available" checked={!!form.hasCaddies} onChange={()=>tog('hasCaddies')}/>
