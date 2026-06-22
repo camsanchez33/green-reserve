@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { sendOperatorWelcomeEmail, sendDetailsRequestEmail } from '@/lib/email';
+import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 
 function checkAdmin(req: NextRequest) {
   const key = req.headers.get('x-admin-key');
@@ -155,6 +156,39 @@ async function handleAction(inquiryId: string, action: string, payload?: Record<
         where: { id: inquiryId },
         data: { status: 'building', builtCourseId },
       });
+
+      // If the operator submitted a tee-sheet schedule on the setup sheet,
+      // create it now and generate the first 8 days of bookable tee times —
+      // this is the "almost automated" part: admin reviews/tweaks instead of
+      // building a schedule from a blank slate.
+      const sch = d.schedule as Record<string, unknown> | undefined;
+      if (builtCourseId && sch && (sch.greenFeeWeekday || sch.greenFeeWeekend)) {
+        await prisma.teeTimeSchedule.create({
+          data: {
+            courseId: builtCourseId,
+            tierName: 'standard',
+            daysOfWeek: Array.isArray(sch.daysOfWeek) ? sch.daysOfWeek as number[] : [],
+            startTime: str(sch.startTime, '06:00'),
+            endTime: str(sch.endTime, '18:00'),
+            intervalMinutes: num(sch.intervalMinutes, 8),
+            holes: 18,
+            greenFeeWeekday: num(Number(sch.greenFeeWeekday), 0),
+            greenFeeWeekend: num(Number(sch.greenFeeWeekend), 0),
+            memberRateWeekday: sch.memberRateWeekday ? Number(sch.memberRateWeekday) : null,
+            memberRateWeekend: sch.memberRateWeekend ? Number(sch.memberRateWeekend) : null,
+            residentRateWeekday: sch.residentRateWeekday ? Number(sch.residentRateWeekday) : null,
+            residentRateWeekend: sch.residentRateWeekend ? Number(sch.residentRateWeekend) : null,
+            cartFee: num(Number(sch.cartFee), 0),
+            walkingAllowed: bool(sch.walkingAllowed, true),
+          },
+        });
+        const today = new Date();
+        for (let i = 0; i < 8; i++) {
+          const dt = new Date(today);
+          dt.setDate(dt.getDate() + i);
+          await generateTeeTimes(builtCourseId, dt.toISOString().split('T')[0]);
+        }
+      }
 
       const setupLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/verify?token=${verificationToken}`;
 

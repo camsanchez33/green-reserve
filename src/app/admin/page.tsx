@@ -4,7 +4,7 @@ import {
   CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Copy,
   RefreshCw, BarChart2, Users, DollarSign, TrendingUp, AlertCircle,
   Building2, Star, Power, ArrowLeft, Eye, X, Globe, Phone, Mail,
-  Ban, Plus, Calendar, Trash2,
+  Ban, Plus, Calendar, Trash2, Wrench,
 } from 'lucide-react';
 
 /* ─── Types ─── */
@@ -109,7 +109,13 @@ export default function AdminPage() {
   const [detail, setDetail] = useState<CourseDetail|null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [search, setSearch] = useState('');
-  const [drawerTab, setDrawerTab] = useState<'overview'|'contact'|'teesheet'>('overview');
+  const [drawerTab, setDrawerTab] = useState<'overview'|'contact'|'teesheet'|'setup'>('overview');
+  const [setupForm, setSetupForm] = useState<Record<string, unknown>>({});
+  const [setupSaving, setSetupSaving] = useState(false);
+  const [setupMsg, setSetupMsg] = useState('');
+  const [schedules, setSchedules] = useState<{id:string;daysOfWeek:number[];startTime:string;endTime:string;intervalMinutes:number;greenFeeWeekday:number;greenFeeWeekend:number;memberRateWeekday:number|null;memberRateWeekend:number|null;cartFee:number;walkingAllowed:boolean}[]>([]);
+  const [newSchedule, setNewSchedule] = useState({ daysOfWeek: [] as number[], startTime: '06:00', endTime: '18:00', intervalMinutes: 8, greenFeeWeekday: 65, greenFeeWeekend: 85, memberRateWeekday: '', memberRateWeekend: '', cartFee: 18, walkingAllowed: true });
+  const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const [tsDate, setTsDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [tsSlots, setTsSlots] = useState<TeeSlot[]>([]);
   const [tsLoading, setTsLoading] = useState(false);
@@ -182,6 +188,87 @@ export default function AdminPage() {
     const r = await fetch(`/api/admin/course-detail?courseId=${course.id}`,{headers:H()});
     if(r.ok) setDetail(await r.json());
     setDetailLoading(false);
+  }
+
+  async function loadSchedules(courseId: string) {
+    const r = await fetch(`/api/admin/schedule?courseId=${courseId}`, { headers: H() });
+    if (r.ok) setSchedules(await r.json());
+  }
+
+  // Jump straight into a course's setup from the Inquiries tab — used for
+  // "Manage Tee Sheet", since admin configures courses directly now instead
+  // of waiting on the operator's own onboarding.
+  async function openCourseSetup(courseId: string, originatingCourseType?: string) {
+    setTab('courses');
+    setDetailLoading(true); setDetail(null);
+    const r = await fetch(`/api/admin/course-detail?courseId=${courseId}`, { headers: H() });
+    if (r.ok) {
+      const d = await r.json();
+      setDetail(d);
+      setSetupForm(d.course);
+      // First-time setup nudge: if this came from a private-club inquiry and
+      // member pricing isn't already on, default it on so the rate fields show.
+      if (originatingCourseType === 'private' && !d.course.hasMemberPricing) {
+        setSetupForm((f: Record<string, unknown>) => ({ ...f, hasMemberPricing: true }));
+      }
+    }
+    setDetailLoading(false);
+    setDrawerTab('setup');
+    loadSchedules(courseId);
+  }
+
+  // Skip the "send setup sheet, wait for the operator to fill it out" loop —
+  // build the course right now from whatever's on the inquiry, then jump
+  // straight into the Setup tab so the admin configures pricing/schedule themselves.
+  async function buildAndConfigure(inq: Inquiry) {
+    setProcessing(inq.id);
+    try {
+      const r = await fetch('/api/admin/inquiries', { method: 'PATCH', headers: H(), body: JSON.stringify({ id: inq.id, action: 'build_course' }) });
+      const d = await r.json();
+      if (!r.ok) { alert(`Failed: ${d.error || 'unknown error'}`); setProcessing(null); return; }
+      setApproveResults(p => ({ ...p, [inq.id]: d as unknown as ApproveResult }));
+      await loadInquiries();
+      if (d.emailSent === false) alert(`Course built, but the welcome email failed to send (${d.emailError || 'unknown error'}). You can resend it from the Inquiries tab once email is fixed.`);
+      // Find the freshly-built course id and jump into Setup.
+      const list = await fetch('/api/admin/inquiries', { headers: H() }).then(res => res.json());
+      const updated = (list as Inquiry[]).find(i => i.id === inq.id);
+      if (updated?.builtCourseId) await openCourseSetup(updated.builtCourseId, inq.courseType);
+    } catch (e) {
+      alert(`Error: ${e}`);
+    }
+    setProcessing(null);
+  }
+
+  async function saveSetup() {
+    if (!detail?.course?.id) return;
+    setSetupSaving(true); setSetupMsg('');
+    const r = await fetch('/api/admin/course-settings', { method: 'PATCH', headers: H(), body: JSON.stringify({ courseId: detail.course.id, ...setupForm }) });
+    setSetupSaving(false);
+    setSetupMsg(r.ok ? '✅ Settings saved' : '❌ Error saving settings');
+    if (r.ok) loadCourses();
+  }
+
+  function toggleNewScheduleDay(d: number) {
+    setNewSchedule(s => ({ ...s, daysOfWeek: s.daysOfWeek.includes(d) ? s.daysOfWeek.filter(x => x !== d) : [...s.daysOfWeek, d] }));
+  }
+
+  async function addSchedule() {
+    if (!detail?.course?.id) return;
+    setSetupSaving(true); setSetupMsg('');
+    const r = await fetch('/api/admin/schedule', { method: 'POST', headers: H(), body: JSON.stringify({ courseId: detail.course.id, ...newSchedule }) });
+    setSetupSaving(false);
+    if (r.ok) {
+      setSetupMsg('✅ Schedule saved — tee times generated for the next 8 days');
+      loadSchedules(detail.course.id);
+    } else {
+      setSetupMsg('❌ Error saving schedule');
+    }
+  }
+
+  async function deleteSchedule(id: string) {
+    if (!detail?.course?.id) return;
+    await fetch('/api/admin/schedule', { method: 'DELETE', headers: H(), body: JSON.stringify({ id }) });
+    loadSchedules(detail.course.id);
   }
 
   async function toggleCourseActive(courseId: string, active: boolean) {
@@ -268,8 +355,8 @@ export default function AdminPage() {
             </div>
             {/* Tabs */}
             <div className="flex gap-1">
-              {(['overview','contact','teesheet'] as const).map(t=>(
-                <button key={t} onClick={()=>{ setDrawerTab(t); if(t==='teesheet'&&c) loadTeeSheet(c.id,tsDate); }} className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors capitalize ${drawerTab===t?'bg-[#1b4332] text-white':'text-gray-500 hover:text-gray-800'}`}>
+              {(['overview','contact','setup','teesheet'] as const).map(t=>(
+                <button key={t} onClick={()=>{ setDrawerTab(t); if(t==='teesheet'&&c) loadTeeSheet(c.id,tsDate); if(t==='setup'&&c){ setSetupForm(c as Record<string, unknown>); loadSchedules(c.id); } }} className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors capitalize ${drawerTab===t?'bg-[#1b4332] text-white':'text-gray-500 hover:text-gray-800'}`}>
                   {t==='teesheet'?'Tee Sheet':t.charAt(0).toUpperCase()+t.slice(1)}
                 </button>
               ))}
@@ -381,6 +468,117 @@ export default function AdminPage() {
                   ))}
                 </div>
               </div>}
+            </div>}
+
+            {/* ── Setup Tab — admin configures the course directly ── */}
+            {drawerTab==='setup'&&<div className="space-y-6">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800">
+                You're editing this course's live settings directly. The operator can still log in and adjust their own dashboard anytime — this doesn't lock them out.
+              </div>
+
+              {setupMsg&&<div className="text-sm font-semibold">{setupMsg}</div>}
+
+              {/* Quick policy settings */}
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 space-y-4">
+                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Course Policy</div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 block mb-1">Walking policy</label>
+                    <select value={String(setupForm.walkingAllowed??'always')} onChange={e=>setSetupForm(f=>({...f,walkingAllowed:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500">
+                      <option value="always">Always allowed</option>
+                      <option value="weekdays">Weekdays only</option>
+                      <option value="after12">After 12pm only</option>
+                      <option value="never">Cart required</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 block mb-1">Cancellation window (hrs)</label>
+                    <input type="number" value={Number(setupForm.cancellationHours??24)} onChange={e=>setSetupForm(f=>({...f,cancellationHours:Number(e.target.value)}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500"/>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-4">
+                  {[['hasMemberPricing','Member pricing'],['hasResidentPricing','Resident pricing'],['hasCaddies','Caddies available'],['cartRequired','Cart required']].map(([key,label])=>(
+                    <label key={key} className="flex items-center gap-2 text-sm text-gray-700">
+                      <input type="checkbox" checked={!!setupForm[key]} onChange={e=>setSetupForm(f=>({...f,[key]:e.target.checked}))} className="w-4 h-4 text-green-600 rounded"/>
+                      {label}
+                    </label>
+                  ))}
+                </div>
+                {!!setupForm.hasResidentPricing&&(
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 block mb-1">Resident county</label>
+                      <input value={String(setupForm.residentCounty??'')} onChange={e=>setSetupForm(f=>({...f,residentCounty:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500"/>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 block mb-1">Resident state</label>
+                      <input value={String(setupForm.residentState??'')} maxLength={2} onChange={e=>setSetupForm(f=>({...f,residentState:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500"/>
+                    </div>
+                  </div>
+                )}
+                <button onClick={saveSetup} disabled={setupSaving} className="bg-[#1b4332] text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-50">{setupSaving?'Saving...':'Save Policy Settings'}</button>
+              </div>
+
+              {/* Tee time schedule */}
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 space-y-4">
+                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Tee Time Schedule</div>
+
+                {schedules.length>0&&<div className="space-y-2">
+                  {schedules.map(s=>(
+                    <div key={s.id} className="flex items-center justify-between bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm">
+                      <div>
+                        <div className="font-semibold text-gray-900">
+                          {s.daysOfWeek.length===0?'Every day':s.daysOfWeek.map(d=>DAYS[d]).join(', ')} — {s.startTime} to {s.endTime}, every {s.intervalMinutes} min
+                        </div>
+                        <div className="text-gray-500 text-xs mt-0.5">
+                          Weekday ${s.greenFeeWeekday} / Weekend ${s.greenFeeWeekend} · Cart ${s.cartFee}
+                          {s.memberRateWeekday!=null&&` · Member $${s.memberRateWeekday}`}
+                          {s.walkingAllowed?' · Walking OK':''}
+                        </div>
+                      </div>
+                      <button onClick={()=>deleteSchedule(s.id)} className="text-red-400 hover:text-red-600"><Trash2 className="w-4 h-4"/></button>
+                    </div>
+                  ))}
+                </div>}
+                {schedules.length===0&&<p className="text-sm text-gray-400">No schedule set yet — nothing is bookable until one is added below.</p>}
+
+                <div className="border-t border-gray-200 pt-4 space-y-3">
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Add Schedule</div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 block mb-1.5">Days open <span className="text-gray-400 font-normal">(none = every day)</span></label>
+                    <div className="flex gap-1.5">
+                      {DAYS.map((day,i)=>(
+                        <button key={day} onClick={()=>toggleNewScheduleDay(i)} className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${newSchedule.daysOfWeek.includes(i)?'bg-green-600 text-white border-green-600':'bg-white text-gray-700 border-gray-300 hover:border-green-400'}`}>{day}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div><label className="text-xs font-semibold text-gray-500 block mb-1">First tee</label><input type="time" value={newSchedule.startTime} onChange={e=>setNewSchedule(s=>({...s,startTime:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500"/></div>
+                    <div><label className="text-xs font-semibold text-gray-500 block mb-1">Last tee</label><input type="time" value={newSchedule.endTime} onChange={e=>setNewSchedule(s=>({...s,endTime:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500"/></div>
+                    <div><label className="text-xs font-semibold text-gray-500 block mb-1">Interval</label>
+                      <select value={newSchedule.intervalMinutes} onChange={e=>setNewSchedule(s=>({...s,intervalMinutes:Number(e.target.value)}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500">
+                        {[7,8,9,10,12,15].map(v=><option key={v} value={v}>{v} min</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div><label className="text-xs font-semibold text-gray-500 block mb-1">Green fee (weekday) $</label><input type="number" value={newSchedule.greenFeeWeekday} onChange={e=>setNewSchedule(s=>({...s,greenFeeWeekday:Number(e.target.value)}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500"/></div>
+                    <div><label className="text-xs font-semibold text-gray-500 block mb-1">Green fee (weekend) $</label><input type="number" value={newSchedule.greenFeeWeekend} onChange={e=>setNewSchedule(s=>({...s,greenFeeWeekend:Number(e.target.value)}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500"/></div>
+                    <div><label className="text-xs font-semibold text-gray-500 block mb-1">Cart fee $</label><input type="number" value={newSchedule.cartFee} onChange={e=>setNewSchedule(s=>({...s,cartFee:Number(e.target.value)}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500"/></div>
+                  </div>
+                  {!!setupForm.hasMemberPricing&&(
+                    <div className="grid grid-cols-2 gap-3 bg-blue-50 border border-blue-100 rounded-xl p-3">
+                      <div><label className="text-xs font-semibold text-blue-700 block mb-1">Member rate (weekday) $</label><input type="number" value={newSchedule.memberRateWeekday} onChange={e=>setNewSchedule(s=>({...s,memberRateWeekday:e.target.value}))} className="w-full border border-blue-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400"/></div>
+                      <div><label className="text-xs font-semibold text-blue-700 block mb-1">Member rate (weekend) $</label><input type="number" value={newSchedule.memberRateWeekend} onChange={e=>setNewSchedule(s=>({...s,memberRateWeekend:e.target.value}))} className="w-full border border-blue-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400"/></div>
+                    </div>
+                  )}
+                  <label className="flex items-center gap-2 text-sm text-gray-700">
+                    <input type="checkbox" checked={newSchedule.walkingAllowed} onChange={e=>setNewSchedule(s=>({...s,walkingAllowed:e.target.checked}))} className="w-4 h-4 text-green-600 rounded"/>
+                    Walking allowed
+                  </label>
+                  <button onClick={addSchedule} disabled={setupSaving} className="w-full bg-[#1b4332] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-50">{setupSaving?'Saving...':'Save Schedule & Generate Tee Times'}</button>
+                </div>
+              </div>
             </div>}
 
             {/* ── Tee Sheet Tab ── */}
@@ -582,21 +780,26 @@ export default function AdminPage() {
                         <button onClick={()=>{ if(confirm('Reject this inquiry?')) inquiryAction(inq.id,'reject'); }} disabled={processing===inq.id} className="bg-red-900 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><XCircle className="w-3.5 h-3.5"/>Reject</button>
                       </>}
                       {inq.status==='in_review'&&<>
-                        <button onClick={()=>{ if(confirm(`Send ${inq.contactName} the setup sheet? They'll fill in pricing, policies, and facilities before we build their page.`)) inquiryAction(inq.id,'request_details'); }} disabled={processing===inq.id} className="bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Mail className="w-3.5 h-3.5"/>Request Setup Sheet</button>
+                        <button onClick={()=>{ if(confirm(`Send ${inq.contactName} the setup sheet? They'll fill in pricing, policies, schedule, and facilities before we build their page.`)) inquiryAction(inq.id,'request_details'); }} disabled={processing===inq.id} className="bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Mail className="w-3.5 h-3.5"/>Request Setup Sheet</button>
                         <button onClick={()=>{ if(confirm('Reject this inquiry?')) inquiryAction(inq.id,'reject'); }} disabled={processing===inq.id} className="bg-red-900 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><XCircle className="w-3.5 h-3.5"/>Reject</button>
+                        <button onClick={()=>{ if(confirm(`Skip the setup sheet and build ${inq.courseName} now with defaults? Use this only when you can't wait on the operator — you'll configure pricing/schedule yourself afterward.`)) buildAndConfigure(inq); }} disabled={processing===inq.id} className="text-gray-500 hover:text-gray-300 px-2 py-1.5 rounded-lg text-[11px] font-medium flex items-center gap-1 border border-gray-700"><Wrench className="w-3 h-3"/>Skip &amp; Build Now</button>
                       </>}
                       {inq.status==='details_requested'&&<>
                         <button onClick={()=>{ if(confirm(`Resend the setup-sheet link to ${inq.contactName}?`)) inquiryAction(inq.id,'resend_details'); }} disabled={processing===inq.id} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Mail className="w-3.5 h-3.5"/>Resend Setup Sheet</button>
                         <button onClick={()=>{ if(confirm('Reject this inquiry?')) inquiryAction(inq.id,'reject'); }} disabled={processing===inq.id} className="bg-red-900 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><XCircle className="w-3.5 h-3.5"/>Reject</button>
                       </>}
                       {inq.status==='details_submitted'&&<>
-                        <button onClick={()=>{ if(confirm(`Build course draft for ${inq.courseName}? This creates their operator account, pre-fills their settings from the setup sheet, and sends the welcome email.`)) inquiryAction(inq.id,'build_course'); }} disabled={processing===inq.id} className="bg-green-700 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5"/>Build Course</button>
+                        <button onClick={()=>{ if(confirm(`Build course draft for ${inq.courseName}? This creates their operator account, pre-fills settings and tee sheet from the setup sheet, sends the welcome email, and opens it for your review.`)) buildAndConfigure(inq); }} disabled={processing===inq.id} className="bg-green-700 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5"/>Build Course</button>
                         <button onClick={()=>{ if(confirm('Reject this inquiry?')) inquiryAction(inq.id,'reject'); }} disabled={processing===inq.id} className="bg-red-900 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><XCircle className="w-3.5 h-3.5"/>Reject</button>
                       </>}
                       {inq.status==='building'&&<>
+                        {inq.builtCourseId&&<button onClick={()=>openCourseSetup(inq.builtCourseId as string, inq.courseType)} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Wrench className="w-3.5 h-3.5"/>Manage Tee Sheet</button>}
                         <button onClick={()=>{ if(confirm(`Resend welcome email to ${inq.contactName}? This generates a fresh temp password — the old one will stop working.`)) inquiryAction(inq.id,'resend_welcome'); }} disabled={processing===inq.id} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Mail className="w-3.5 h-3.5"/>Resend Email</button>
                         <button onClick={()=>{ if(confirm(`Set ${inq.courseName} LIVE? This makes it publicly bookable.`)) inquiryAction(inq.id,'mark_live'); }} disabled={processing===inq.id} className="bg-green-700 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Power className="w-3.5 h-3.5"/>Go Live</button>
                       </>}
+                      {inq.status==='live'&&inq.builtCourseId&&(
+                        <button onClick={()=>openCourseSetup(inq.builtCourseId as string, inq.courseType)} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Wrench className="w-3.5 h-3.5"/>Manage Tee Sheet</button>
+                      )}
                       {['building','live','rejected'].includes(inq.status)&&(
                         <button onClick={()=>deleteInquiry(inq.id, inq.courseName)} className="p-1.5 text-gray-600 hover:text-red-400 transition-colors" title="Delete inquiry"><Trash2 className="w-3.5 h-3.5"/></button>
                       )}
@@ -660,16 +863,35 @@ export default function AdminPage() {
                       ) : null; })()}
 
                       {/* Submitted setup sheet (once they've sent it back) */}
-                      {inq.detailsJson&&(()=>{ let d:Record<string,unknown>={}; try{d=JSON.parse(inq.detailsJson||'');}catch{ /* ignore */ } return Object.keys(d).length>0 ? (
-                        <div className="border-t border-gray-800 pt-4">
-                          <div className="text-xs font-semibold text-teal-400 uppercase tracking-wide mb-2">Submitted Setup Sheet</div>
+                      {inq.detailsJson&&(()=>{
+                        let d:Record<string,unknown>={}; try{d=JSON.parse(inq.detailsJson||'');}catch{ /* ignore */ }
+                        if (Object.keys(d).length===0) return null;
+                        const sch = d.schedule as Record<string,unknown>|undefined;
+                        const rest = Object.fromEntries(Object.entries(d).filter(([k])=>k!=='schedule'));
+                        return (
+                        <div className="border-t border-gray-800 pt-4 space-y-3">
+                          <div className="text-xs font-semibold text-teal-400 uppercase tracking-wide">Submitted Setup Sheet</div>
+                          {sch&&(sch.greenFeeWeekday||sch.greenFeeWeekend)&&(
+                            <div className="bg-teal-950 border border-teal-900 rounded-lg p-3 text-sm">
+                              <div className="text-teal-300 font-semibold mb-1">Proposed Tee Sheet</div>
+                              <div className="text-gray-300">
+                                {Array.isArray(sch.daysOfWeek)&&(sch.daysOfWeek as number[]).length>0?(sch.daysOfWeek as number[]).map(d=>['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d]).join(', '):'Every day'} · {String(sch.startTime)}–{String(sch.endTime)} · every {String(sch.intervalMinutes)} min
+                              </div>
+                              <div className="text-gray-400 text-xs mt-1">
+                                Weekday ${String(sch.greenFeeWeekday||0)} / Weekend ${String(sch.greenFeeWeekend||0)} · Cart ${String(sch.cartFee||0)}
+                                {sch.memberRateWeekday?` · Member $${sch.memberRateWeekday}`:''}
+                                {sch.residentRateWeekday?` · Resident $${sch.residentRateWeekday}`:''}
+                                {sch.walkingAllowed?' · Walking OK':' · Cart required'}
+                              </div>
+                            </div>
+                          )}
                           <div className="grid grid-cols-2 gap-2 text-sm bg-gray-800 rounded-lg p-3">
-                            {Object.entries(d).filter(([,v])=>v!==''&&v!==null&&!(Array.isArray(v)&&v.length===0)).map(([k,v])=>(
+                            {Object.entries(rest).filter(([,v])=>v!==''&&v!==null&&!(Array.isArray(v)&&v.length===0)).map(([k,v])=>(
                               <div key={k}><span className="text-gray-500">{k}: </span><span className="text-gray-300">{Array.isArray(v)?v.join(', '):String(v)}</span></div>
                             ))}
                           </div>
                         </div>
-                      ) : null; })()}
+                        ); })()}
 
                       {/* Admin notes */}
                       <div className="border-t border-gray-800 pt-4">
