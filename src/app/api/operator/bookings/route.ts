@@ -34,7 +34,7 @@ export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id, action } = await req.json();
+  const { id, action, paymentMethodId } = await req.json();
   if (!id || (action !== 'cancel' && action !== 'checkin')) {
     return NextResponse.json({ error: 'Missing id or unsupported action' }, { status: 400 });
   }
@@ -44,7 +44,9 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  const result = action === 'cancel' ? await performCancellation(id) : await performCheckIn(id);
+  const result = action === 'cancel'
+    ? await performCancellation(id)
+    : await performCheckIn(id, paymentMethodId ? { externalPaymentMethodId: paymentMethodId } : undefined);
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status });
   return NextResponse.json(result);
 }

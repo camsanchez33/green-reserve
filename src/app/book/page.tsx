@@ -31,6 +31,7 @@ type ConfirmedData = {
   courseName: string; date: string; time: string; players: number;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number; totalAmount: number;
   cancellationFeeTotal: number; cancellationHours: number;
+  noCard?: boolean;
 };
 
 function formatTime(t: string) {
@@ -103,7 +104,9 @@ function BookPageInner() {
           </div>
           <h1 className="text-2xl font-black text-gray-900 mb-2">You&apos;re all set!</h1>
           <p className="text-gray-500 mb-8 text-sm">
-            Your card is on file but <strong>nothing has been charged</strong>. We&apos;ll email you a reminder to check in and pay before your round.
+            {confirmedData.noCard
+              ? <>Your spot is reserved — <strong>no card required</strong>. Pay at the course or use the check-in link in your confirmation email.</>
+              : <>Your card is on file but <strong>nothing has been charged</strong>. We&apos;ll email you a reminder to check in and pay before your round.</>}
           </p>
 
           <div className="bg-[#f8faf9] rounded-2xl p-5 mb-8 text-left space-y-2 text-sm">
@@ -164,6 +167,9 @@ function BookPageInner() {
   const rangeBallsTotal = course.range_balls_free ? 0 : rangeBallsPrice;
   const accessTotal  = ACCESS_FEE_PER_PLAYER * players;
   const total         = greenTotal + cartTotal + rangeBallsTotal + accessTotal;
+
+  // No-fee policy courses: skip card collection entirely
+  const hasNoFeePolicy = course.late_cancellation_fee === 0;
 
   return (
     <div className="min-h-screen bg-[#f8faf9]">
@@ -247,8 +253,8 @@ function BookPageInner() {
             </div>
           </div>
 
-          <Elements stripe={stripePromise}>
-            <CheckoutForm
+          {hasNoFeePolicy ? (
+            <SimpleConfirmForm
               teeTimeId={teeTime.id}
               players={players}
               golfer={golfer}
@@ -256,13 +262,30 @@ function BookPageInner() {
               rangeBallsSize={rangeBallsTotal > 0 ? rangeBallsSize : ''}
               onConfirmed={setConfirmedData}
             />
-          </Elements>
+          ) : (
+            <Elements stripe={stripePromise}>
+              <CheckoutForm
+                teeTimeId={teeTime.id}
+                players={players}
+                golfer={golfer}
+                cartSelected={cartSelected}
+                rangeBallsSize={rangeBallsTotal > 0 ? rangeBallsSize : ''}
+                onConfirmed={setConfirmedData}
+              />
+            </Elements>
+          )}
 
           <div className="bg-[#f0fdf4] rounded-2xl p-5 border border-emerald-100">
             <p className="text-emerald-800 text-sm font-medium mb-1">How this works</p>
-            <p className="text-emerald-700 text-xs leading-relaxed">
-              We save your card to hold your tee time — you&apos;re not charged now. Cancel at least {course.cancellation_hours} hours ahead and it&apos;s free; cancelling later (or no-showing) triggers a ${course.late_cancellation_fee.toFixed(2)} late-cancellation fee. Otherwise, you pay for your round when you check in at the course.
-            </p>
+            {hasNoFeePolicy ? (
+              <p className="text-emerald-700 text-xs leading-relaxed">
+                No card required. Book your spot now and pay at the course when you check in — or use the check-in link in your confirmation email to pay online before your round.
+              </p>
+            ) : (
+              <p className="text-emerald-700 text-xs leading-relaxed">
+                We save your card to hold your tee time — you&apos;re not charged now. Cancel at least {course.cancellation_hours} hours ahead and it&apos;s free; cancelling later (or no-showing) triggers a ${course.late_cancellation_fee.toFixed(2)} late-cancellation fee. Otherwise, you pay for your round when you check in at the course.
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -400,6 +423,86 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
         <Lock size={12} />
         <span>Secure checkout powered by Stripe</span>
       </div>
+    </div>
+  );
+}
+
+/** No-card booking form for courses with no cancellation fee policy. */
+function SimpleConfirmForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize, onConfirmed }: {
+  teeTimeId: string; players: number; golfer: GolferProfile | null;
+  cartSelected: boolean; rangeBallsSize: string;
+  onConfirmed: (data: ConfirmedData) => void;
+}) {
+  const [name, setName]   = useState(golfer ? `${golfer.firstName} ${golfer.lastName}`.trim() : '');
+  const [email, setEmail] = useState(golfer?.email || '');
+  const [phone, setPhone] = useState(golfer?.phone || '');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (golfer) {
+      setName(`${golfer.firstName} ${golfer.lastName}`.trim());
+      setEmail(golfer.email);
+      setPhone(golfer.phone || '');
+    }
+  }, [golfer]);
+
+  async function handleSubmit() {
+    setError('');
+    if (!name.trim() || !email.trim()) { setError('Please enter your name and email.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Please enter a valid email address.'); return; }
+    setLoading(true);
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teeTimeId, players, golferName: name, golferEmail: email, golferPhone: phone, cartSelected, rangeBallsSize }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || 'Something went wrong. Please try again.'); setLoading(false); return; }
+      onConfirmed({
+        courseName: data.courseName, date: data.date, time: data.time, players: data.players,
+        greenFeeTotal: data.greenFeeTotal, cartFeeTotal: data.cartFeeTotal, rangeBallsTotal: data.rangeBallsTotal,
+        accessFeeTotal: data.accessFeeTotal, totalAmount: data.totalAmount,
+        cancellationFeeTotal: data.cancellationFeeTotal, cancellationHours: data.cancellationHours ?? 24,
+        noCard: true,
+      });
+    } catch {
+      setError('Something went wrong. Please try again.');
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+      <h2 className="font-bold text-gray-900">Your Details</h2>
+      <div>
+        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Full Name</label>
+        <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="John Smith"
+          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all" />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Email</label>
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="john@example.com"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all" />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Phone (optional)</label>
+          <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="(555) 555-5555"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all" />
+        </div>
+      </div>
+      <p className="text-xs text-gray-400">No card needed — you&apos;ll pay at the course or via the check-in link in your confirmation email.</p>
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+      <button
+        onClick={handleSubmit}
+        disabled={loading}
+        className="w-full py-4 rounded-xl font-bold text-white text-sm transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        style={{ background: '#1b4332' }}
+      >
+        {loading ? <><Loader2 size={16} className="animate-spin" /> Reserving spot…</> : 'Reserve Tee Time'}
+      </button>
     </div>
   );
 }

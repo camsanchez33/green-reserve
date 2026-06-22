@@ -4,10 +4,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Calendar, Users, DollarSign, Ban,
   Plus, ChevronLeft, ChevronRight, RefreshCw,
-  AlertTriangle, X, Loader2,
+  AlertTriangle, X, Loader2, Lock,
 } from 'lucide-react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { getBookingStatus, statusBadgeClass } from '@/lib/booking-status';
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 type TeeTime = {
@@ -67,8 +71,14 @@ function DashboardPageInner() {
   const [conditionsInput, setConditionsInput] = useState('');
   const [savingConditions, setSavingConditions] = useState(false);
   const [checkingInId, setCheckingInId] = useState<string | null>(null);
+  const [cardModalBooking, setCardModalBooking] = useState<Booking | null>(null);
 
   async function checkInBooking(b: Booking) {
+    // No-card bookings need manual card entry — open the card modal instead
+    if (b.paymentStatus === 'no_payment_method') {
+      setCardModalBooking(b);
+      return;
+    }
     if (!confirm(`Check in ${b.golferName} and charge their card $${(b.totalAmount / 100).toFixed(2)} for the round?`)) return;
     setCheckingInId(b.id);
     const res = await fetch('/api/operator/bookings', {
@@ -82,6 +92,24 @@ function DashboardPageInner() {
       ? `Checked in — charged $${(data.totalCharged / 100).toFixed(2)}, and refunded the $${(data.feeRefundAmount / 100).toFixed(2)} late-cancellation fee.`
       : `Checked in — charged $${(data.totalCharged / 100).toFixed(2)}.`);
     loadTimes(selectedDate);
+  }
+
+  async function checkInWithCard(b: Booking, paymentMethodId: string) {
+    setCheckingInId(b.id);
+    const res = await fetch('/api/operator/bookings', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: b.id, action: 'checkin', paymentMethodId }),
+    });
+    const data = await res.json();
+    setCheckingInId(null);
+    if (!res.ok) { return data.error || 'Check-in failed'; }
+    const msg = data.feeRefunded
+      ? `Checked in — charged $${(data.totalCharged / 100).toFixed(2)}, refunded $${(data.feeRefundAmount / 100).toFixed(2)} late-cancellation fee.`
+      : `Checked in — charged $${(data.totalCharged / 100).toFixed(2)}.`;
+    alert(msg);
+    setCardModalBooking(null);
+    loadTimes(selectedDate);
+    return null;
   }
 
   const dates = Array.from({ length: 7 }, (_, i) => addDays(today(), i + dateOffset));
@@ -354,6 +382,19 @@ function DashboardPageInner() {
         </div>
       )}
 
+      {/* ── Card Check-In Modal (for no-card bookings) ── */}
+      {cardModalBooking && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <Elements stripe={stripePromise}>
+            <CardCheckInModal
+              booking={cardModalBooking}
+              onConfirm={(pmId) => checkInWithCard(cardModalBooking, pmId)}
+              onCancel={() => setCardModalBooking(null)}
+            />
+          </Elements>
+        </div>
+      )}
+
       {/* ── Conditions Modal ── */}
       {showConditions&&(
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
@@ -425,6 +466,76 @@ function AddTeeTimeForm({ date, onSave, onCancel }: { date: string; onSave: ()=>
         <button onClick={save} disabled={saving} className="flex-1 bg-[#1b4332] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-50">
           {saving?'Adding...':'Add Time'}
         </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Card Check-In Modal ────────────────────────────────────────────── */
+// Used when staff checks in a no-card booking — the golfer hands over their
+// card and the staff member enters it here to charge in real time.
+function CardCheckInModal({ booking, onConfirm, onCancel }: {
+  booking: Booking;
+  onConfirm: (paymentMethodId: string) => Promise<string | null>;
+  onCancel: () => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const cardStyle = {
+    style: {
+      base: { fontSize: '14px', color: '#111827', '::placeholder': { color: '#9ca3af' } },
+      invalid: { color: '#dc2626' },
+    },
+  };
+
+  async function handleCharge() {
+    if (!stripe || !elements) return;
+    const card = elements.getElement(CardElement);
+    if (!card) return;
+    setLoading(true);
+    setError('');
+    try {
+      const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({
+        type: 'card', card,
+        billing_details: { name: booking.golferName },
+      });
+      if (pmError) { setError(pmError.message || 'Card error.'); setLoading(false); return; }
+      const err = await onConfirm(paymentMethod.id);
+      if (err) { setError(err); setLoading(false); }
+    } catch {
+      setError('Something went wrong — try again.');
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="font-bold text-gray-900">Check In — {booking.golferName}</h3>
+          <p className="text-xs text-gray-400 mt-0.5">Enter golfer&apos;s card to charge ${(booking.totalAmount / 100).toFixed(2)}</p>
+        </div>
+        <button onClick={onCancel}><X className="w-5 h-5 text-gray-400" /></button>
+      </div>
+      <div className="mb-4">
+        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Card Details</label>
+        <div className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus-within:border-[#1b4332] focus-within:ring-2 focus-within:ring-[#1b4332]/10 transition-all">
+          <CardElement options={cardStyle} />
+        </div>
+      </div>
+      {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
+      <button
+        onClick={handleCharge}
+        disabled={loading || !stripe}
+        className="w-full bg-[#1b4332] text-white py-3 rounded-xl text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-50 flex items-center justify-center gap-2 mb-2"
+      >
+        {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Charging…</> : `Charge $${(booking.totalAmount / 100).toFixed(2)}`}
+      </button>
+      <div className="flex items-center justify-center gap-1.5 text-gray-400 text-xs">
+        <Lock className="w-3 h-3" /><span>Powered by Stripe</span>
       </div>
     </div>
   );

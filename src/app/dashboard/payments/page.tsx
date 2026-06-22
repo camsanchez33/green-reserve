@@ -65,9 +65,10 @@ function PaymentsPageInner() {
   const collectedRevenue = collected.reduce((s, b) => s + b.greenFeeTotal + b.cartFeeTotal, 0);
   const collectedAccessFees = collected.reduce((s, b) => s + b.accessFeeTotal, 0);
 
-  // Card on file, free-cancel window not yet closed (before cutoff)
-  const cardOnFile = nonCancelled.filter(b => b.paymentStatus === 'card_on_file');
+  // Card on file OR no-card-required (no-fee-policy courses) — all open bookings not yet paid
+  const cardOnFile = nonCancelled.filter(b => b.paymentStatus === 'card_on_file' || b.paymentStatus === 'no_payment_method');
   const expectedCardOnFile = cardOnFile.reduce((s, b) => s + b.greenFeeTotal + b.cartFeeTotal, 0);
+  const noCardCount = cardOnFile.filter(b => b.paymentStatus === 'no_payment_method').length;
 
   // Cutoff passed, no fee policy — awaiting check-in, nothing charged
   const awaitingNoFee = nonCancelled.filter(b => b.paymentStatus === 'awaiting_checkin');
@@ -127,7 +128,7 @@ function PaymentsPageInner() {
           <div className="grid grid-cols-3 gap-3 mb-6">
             <StatCard tone="blue" icon={<Clock3 className="w-4 h-4"/>} label="Card on File"
               value={`${cardOnFile.length} booking${cardOnFile.length!==1?'s':''}`}
-              sub={`~$${(expectedCardOnFile / 100).toFixed(2)} expected · free cancel window still open`} />
+              sub={`~$${(expectedCardOnFile / 100).toFixed(2)} expected${noCardCount > 0 ? ` · ${noCardCount} no card required` : ' · free cancel window still open'}`} />
             <StatCard tone="amber" icon={<Clock3 className="w-4 h-4"/>} label="Awaiting Check-In"
               value={`${awaitingNoFee.length + feesHeld.length} booking${awaitingNoFee.length + feesHeld.length!==1?'s':''}`}
               sub={`~$${((expectedAwaitingNoFee + feesHeldExpectedRevenue) / 100).toFixed(2)} expected · cancel window closed`} />

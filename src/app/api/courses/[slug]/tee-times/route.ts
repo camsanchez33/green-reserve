@@ -41,5 +41,16 @@ export async function GET(
     where: { courseId: dbCourse.id, date, status: { not: 'blocked' } },
     orderBy: { time: 'asc' },
   });
-  return NextResponse.json(teeTimes.map(normalizeDbTeeTime));
+
+  // If the requested date is today, strip out tee times that have already passed.
+  // Use UTC+0 time from the server — consistent regardless of server timezone.
+  const nowUtc = new Date();
+  const todayUtc = nowUtc.toISOString().split('T')[0];
+  const currentTimeStr = `${nowUtc.getUTCHours().toString().padStart(2, '0')}:${nowUtc.getUTCMinutes().toString().padStart(2, '0')}`;
+
+  const visible = date === todayUtc
+    ? teeTimes.filter(t => t.time > currentTimeStr)
+    : teeTimes;
+
+  return NextResponse.json(visible.map(normalizeDbTeeTime));
 }

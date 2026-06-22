@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { chargeOnConnectedAccount, refundOnConnectedAccount } from './stripe';
+import { stripe, chargeOnConnectedAccount, refundOnConnectedAccount } from './stripe';
 import { sendCheckInReceiptEmail } from './email';
 
 /**
@@ -15,7 +15,14 @@ import { sendCheckInReceiptEmail } from './email';
  * Authorization (is this the golfer's own booking / does this operator own
  * the course / does the token match) is the caller's responsibility.
  */
-export async function performCheckIn(bookingId: string) {
+/**
+ * opts.externalPaymentMethodId — for walk-up check-ins where no card was saved
+ * at booking time (no-fee-policy courses). A PaymentMethod created from a fresh
+ * card entry on the check-in page or by staff in the dashboard is passed here.
+ * performCheckIn will create a temporary platform Customer, attach it, and then
+ * clone-and-charge on the connected account exactly like a saved card.
+ */
+export async function performCheckIn(bookingId: string, opts?: { externalPaymentMethodId?: string }) {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -24,24 +31,48 @@ export async function performCheckIn(bookingId: string) {
     },
   });
 
-  if (!booking) return { error: 'Booking not found', status: 404 } as const;
-  if (booking.status === 'cancelled') return { error: 'This booking was cancelled', status: 409 } as const;
-  if (booking.status === 'completed') return { error: 'Already checked in', status: 409 } as const;
+  if (!booking) return { error: ‘Booking not found’, status: 404 } as const;
+  if (booking.status === ‘cancelled’) return { error: ‘This booking was cancelled’, status: 409 } as const;
+  if (booking.status === ‘completed’) return { error: ‘Already checked in’, status: 409 } as const;
 
-  if (!booking.stripeCustomerId || !booking.stripePaymentMethodId) {
-    return { error: 'No card on file for this booking — collect payment in person and contact support.', status: 422 } as const;
-  }
   if (!booking.course.stripeAccountActive || !booking.course.stripeAccountId) {
-    return { error: 'This course isn’t connected to Stripe yet — collect payment in person.', status: 422 } as const;
+    return { error: ‘This course isn\’t connected to Stripe yet — collect payment in person.’, status: 422 } as const;
   }
 
-  const refundPendingFee = booking.paymentStatus === 'cancellation_fee_charged' && !!booking.cancellationFeeChargeId;
+  // Determine which customer + PM to charge.
+  // For saved-card bookings: use the stored IDs.
+  // For walk-up (no card at booking time): create a temporary platform Customer,
+  // attach the freshly entered PM, then clone-and-charge below.
+  let chargeCustomerId = booking.stripeCustomerId;
+  let chargePaymentMethodId = booking.stripePaymentMethodId;
+  const externalPm = opts?.externalPaymentMethodId;
+
+  if (!chargePaymentMethodId) {
+    if (!externalPm) {
+      return { error: ‘No card on file — enter card details to complete check-in.’, status: 422 } as const;
+    }
+    try {
+      const tempCustomer = await stripe.customers.create({
+        email: booking.golferEmail,
+        name: booking.golferName,
+        metadata: { bookingId: booking.id, source: ‘walk_up_checkin’ },
+      });
+      await stripe.paymentMethods.attach(externalPm, { customer: tempCustomer.id });
+      chargeCustomerId = tempCustomer.id;
+      chargePaymentMethodId = externalPm;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : ‘Could not save card.’;
+      return { error: `Card setup failed: ${message}`, status: 402 } as const;
+    }
+  }
+
+  const refundPendingFee = booking.paymentStatus === ‘cancellation_fee_charged’ && !!booking.cancellationFeeChargeId;
 
   let paymentIntentId: string;
   try {
     const paymentIntent = await chargeOnConnectedAccount({
-      customerId: booking.stripeCustomerId,
-      paymentMethodId: booking.stripePaymentMethodId,
+      customerId: chargeCustomerId,
+      paymentMethodId: chargePaymentMethodId,
       connectedAccountId: booking.course.stripeAccountId,
       amountCents: Math.round(booking.totalAmount),
       applicationFeeCents: Math.round(booking.accessFeeTotal),
@@ -49,7 +80,7 @@ export async function performCheckIn(bookingId: string) {
     });
     paymentIntentId = paymentIntent.id;
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Card could not be charged.';
+    const message = err instanceof Error ? err.message : ‘Card could not be charged.’;
     await prisma.booking.update({ where: { id: bookingId }, data: { checkInFailReason: message } });
     return { error: `Payment failed: ${message}. Collect payment in person and contact support.`, status: 402 } as const;
   }

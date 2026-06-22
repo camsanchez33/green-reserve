@@ -39,16 +39,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     cartFeeTotal: booking.cartFeeTotal,
     rangeBallsTotal: booking.rangeBallsTotal,
     accessFeeTotal: booking.accessFeeTotal,
+    hasCard: !!booking.stripePaymentMethodId,
   });
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
-  const { token } = await req.json();
+  const { token, paymentMethodId } = await req.json();
   const booking = await authorize(bookingId, token);
   if (!booking) return NextResponse.json({ error: 'Invalid or expired check-in link.' }, { status: 404 });
 
-  const result = await performCheckIn(bookingId);
+  const result = await performCheckIn(bookingId, paymentMethodId ? { externalPaymentMethodId: paymentMethodId } : undefined);
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status });
   return NextResponse.json(result);
 }

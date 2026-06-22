@@ -111,6 +111,14 @@ export async function POST(req: NextRequest) {
     if (teeTime.status === 'blocked') throw new Error('BLOCKED');
     if (teeTime.status === 'full')    throw new Error('FULL');
 
+    // Reject bookings for tee times that have already started
+    const nowUtc = new Date();
+    const todayUtc = nowUtc.toISOString().split('T')[0];
+    const currentTimeStr = `${nowUtc.getUTCHours().toString().padStart(2, '0')}:${nowUtc.getUTCMinutes().toString().padStart(2, '0')}`;
+    if (teeTime.date < todayUtc || (teeTime.date === todayUtc && teeTime.time <= currentTimeStr)) {
+      throw new Error('PAST');
+    }
+
     const spotsLeft = teeTime.playersAvailable - teeTime.playersBooked;
     if (players > spotsLeft) throw new Error(`SPOTS:${spotsLeft}`);
 
@@ -178,7 +186,7 @@ export async function POST(req: NextRequest) {
         stripePaymentMethodId: savedPaymentMethodId,
         cancellationFeeTotal,
         checkInToken:     randomUUID(),
-        paymentStatus:    'card_on_file',
+        paymentStatus:    savedPaymentMethodId ? 'card_on_file' : 'no_payment_method',
         status:           'confirmed',
       },
     });
@@ -202,6 +210,7 @@ export async function POST(req: NextRequest) {
       if (err.message === 'NOT_FOUND') return NextResponse.json({ error: 'Tee time not found.' }, { status: 404 });
       if (err.message === 'BLOCKED')   return NextResponse.json({ error: 'This tee time is no longer available.' }, { status: 409 });
       if (err.message === 'FULL')      return NextResponse.json({ error: 'This tee time is fully booked.' }, { status: 409 });
+      if (err.message === 'PAST')      return NextResponse.json({ error: 'This tee time has already passed.' }, { status: 409 });
       if (err.message === 'CARD_SAVE_FAILED') return NextResponse.json({ error: 'Your card could not be saved. Please check your details and try again.' }, { status: 402 });
       if (err.message.startsWith('SPOTS:')) {
         const left = err.message.split(':')[1];
@@ -224,15 +233,17 @@ export async function POST(req: NextRequest) {
       holes:         result.teeTime.holes,
       players,
       appliedRate,
-      greenFeeTotal:  result.greenFeeTotal  / 100,
-      cartFeeTotal:   result.cartFeeTotal   / 100,
-      rangeBallsTotal: result.rangeBallsTotal / 100,
-      accessFeeTotal: result.accessFeeTotal / 100,
-      totalAmount:    result.totalCents     / 100,
-      cancellationFeeTotal: result.cancellationFeeTotal / 100,
+      // Pass cents — email templates divide by 100 themselves
+      greenFeeTotal:  result.greenFeeTotal,
+      cartFeeTotal:   result.cartFeeTotal,
+      rangeBallsTotal: result.rangeBallsTotal,
+      accessFeeTotal: result.accessFeeTotal,
+      totalAmount:    result.totalCents,
+      cancellationFeeTotal: result.cancellationFeeTotal,
       cancellationHours: result.teeTime.course.cancellationHours,
       bookingId: result.booking.id,
       checkInToken: result.booking.checkInToken || undefined,
+      noCard: !result.booking.stripePaymentMethodId,
     };
     await sendBookingConfirmation(emailData);
     const courseId = result.teeTime.courseId;

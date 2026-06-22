@@ -4,6 +4,7 @@
  * renders a booking badge imports from here rather than maintaining its own map.
  *
  * paymentStatus state machine (for status === 'confirmed'):
+ *   'no_payment_method'          — no-fee-policy course; no card was collected at booking; golfer pays at course or via online check-in
  *   'card_on_file'               — confirmed, before cancellation cutoff, nothing charged
  *   'awaiting_checkin'           — cutoff passed, NO cancellation fee policy at this course;
  *                                  a reminder email with a Check-In link was sent instead of charging
@@ -36,6 +37,9 @@ export function getBookingStatus(status: string, paymentStatus: string): Booking
   }
 
   // status === 'confirmed'
+  if (paymentStatus === 'no_payment_method') {
+    return { label: 'No Card Required', sublabel: 'Pay at the course or via check-in link', tone: 'blue' };
+  }
   if (paymentStatus === 'cancellation_fee_charged') {
     return { label: 'Fee Charged', sublabel: 'Awaiting check-in — fee refunded when they pay', tone: 'amber' };
   }
