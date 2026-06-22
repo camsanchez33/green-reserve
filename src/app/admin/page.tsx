@@ -150,6 +150,7 @@ export default function AdminPage() {
       try { d = JSON.parse(text); } catch { /* not json */ }
       if (r.ok) {
         if (['build_course','resend_welcome','request_details','resend_details'].includes(action)) setApproveResults(p => ({ ...p, [id]: d as unknown as ApproveResult }));
+        if (action === 'mark_live' && d.emailSent === false) alert(`Course is live, but the orientation email failed to send (${d.emailError || 'unknown error'}). You may want to follow up with them directly.`);
         if (action === 'add_note') {
           setInquiries(prev => prev.map(inq => inq.id === id ? { ...inq, adminNotes: d.adminNotes as string } : inq));
           setNoteTexts(p => ({ ...p, [id]: '' }));

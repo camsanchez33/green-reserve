@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { getOperatorSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const from = req.nextUrl.searchParams.get('from') === 'onboarding' ? 'onboarding' : 'settings';
     const session = await getOperatorSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -28,10 +29,11 @@ export async function GET() {
       await prisma.course.update({ where: { id: course.id }, data: { stripeAccountId: accountId } });
     }
 
+    const refreshPage = from === 'onboarding' ? '/dashboard/onboarding' : '/dashboard/settings';
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: `${process.env.NEXT_PUBLIC_URL}/dashboard/settings?stripe=refresh`,
-      return_url: `${process.env.NEXT_PUBLIC_URL}/api/operator/stripe/callback?accountId=${accountId}`,
+      refresh_url: `${process.env.NEXT_PUBLIC_URL}${refreshPage}?stripe=refresh`,
+      return_url: `${process.env.NEXT_PUBLIC_URL}/api/operator/stripe/callback?accountId=${accountId}&from=${from}`,
       type: 'account_onboarding',
     });
 

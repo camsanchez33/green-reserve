@@ -341,3 +341,66 @@ export async function sendDetailsSubmittedNotification(data: { courseName: strin
     html,
   });
 }
+
+// Sent the moment a course actually goes live (mark_live), not at account
+// creation — this is the "now that golfers can book, here's how to run the
+// place" orientation, distinct from sendOperatorWelcomeEmail's initial login.
+export async function sendCourseLiveOrientationEmail(data: {
+  operatorName: string;
+  operatorEmail: string;
+  courseName: string;
+  courseSlug: string;
+}) {
+  const dashboardUrl = `${process.env.NEXT_PUBLIC_URL}/dashboard`;
+  const bookingUrl = `${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}`;
+
+  const sections = [
+    ['Settings', 'Course info, pricing structure, policies (walking/cancellation/dress code), and all your facilities — driving range, pro shop, restaurant, caddies.'],
+    ['Payments', 'Check your Stripe connection status and payout details. Found inside Settings.'],
+    ['Schedule', 'Your tee time templates — hours, interval, green fees, cart fee, member/resident rates. Change this anytime; it regenerates future tee times automatically.'],
+    ['Bookings', 'Every reservation on your tee sheet, with golfer contact info and payment status.'],
+    ['Members', 'If you offer member pricing, manage member accounts and tiers here.'],
+    ['Staff', 'Add staff logins for your pro shop team — they get their own access to bookings and the tee sheet, without your owner credentials.'],
+  ];
+
+  const html = baseTemplate(`
+    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 14px;border-radius:20px;">✓ You're live</span></div>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">${data.courseName} is bookable right now.</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      Golfers can find and book your tee sheet at <a href="${bookingUrl}" style="color:#1b4332;font-weight:600;">${bookingUrl.replace('https://', '')}</a>.
+      Here's a quick map of your dashboard so you know where everything lives.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      ${sections.map(([title, desc]) => `
+      <tr>
+        <td style="padding:12px 0;border-bottom:1px solid #f3f4f6;">
+          <p style="margin:0 0 2px;color:#111827;font-size:14px;font-weight:700;">${title}</p>
+          <p style="margin:0;color:#6b7280;font-size:13px;">${desc}</p>
+        </td>
+      </tr>`).join('')}
+    </table>
+
+    <a href="${dashboardUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:12px;font-weight:800;font-size:16px;margin-bottom:20px;">
+      Go to My Dashboard &rarr;
+    </a>
+
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:18px 20px;margin-bottom:8px;">
+      <p style="margin:0 0 6px;color:#111827;font-size:13px;font-weight:700;">A few things worth knowing:</p>
+      <p style="margin:0 0 4px;color:#6b7280;font-size:13px;">• You keep 100% of green fees and cart fees — GreenReserve's $1.50 access fee is charged to the golfer, not deducted from you.</p>
+      <p style="margin:0 0 4px;color:#6b7280;font-size:13px;">• Need to close for a day (weather, maintenance, outing)? Block it from Schedule.</p>
+      <p style="margin:0;color:#6b7280;font-size:13px;">• Payouts come from Stripe on its normal payout schedule for your account — check Settings → Payments for your payout status.</p>
+    </div>
+
+    <p style="margin:16px 0 0;color:#9ca3af;font-size:12px;text-align:center;">
+      Questions or something looks wrong? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a> — a real person reads it.
+    </p>
+  `);
+
+  await getResend().emails.send({
+    from: FROM,
+    to: data.operatorEmail,
+    subject: `You're live! Here's how to run ${data.courseName} on GreenReserve`,
+    html,
+  });
+}

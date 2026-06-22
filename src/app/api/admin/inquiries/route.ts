@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
-import { sendOperatorWelcomeEmail, sendDetailsRequestEmail } from '@/lib/email';
+import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail } from '@/lib/email';
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 
 function checkAdmin(req: NextRequest) {
@@ -286,7 +286,23 @@ async function handleAction(inquiryId: string, action: string, payload?: Record<
         data: { active: true, liveStatus: 'live' },
       });
       await prisma.courseInquiry.update({ where: { id: inquiryId }, data: { status: 'live' } });
-      return NextResponse.json({ success: true });
+
+      let emailSent = true;
+      let emailError = '';
+      try {
+        await sendCourseLiveOrientationEmail({
+          operatorName: inquiry.contactName,
+          operatorEmail: inquiry.email,
+          courseName: inquiry.courseName,
+          courseSlug: builtCourse.slug,
+        });
+      } catch (emailErr) {
+        emailSent = false;
+        emailError = emailErr instanceof Error ? emailErr.message : String(emailErr);
+        console.error('Go-live orientation email failed:', emailErr);
+      }
+
+      return NextResponse.json({ success: true, emailSent, emailError });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       return NextResponse.json({ error: msg }, { status: 500 });

@@ -1,33 +1,37 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { CheckCircle, ChevronRight, MapPin, Phone, Globe, Clock, Loader2 } from 'lucide-react';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { CheckCircle, ChevronRight, Loader2, CreditCard, Plus, Trash2, AlertCircle } from 'lucide-react';
 
-const STEPS = ['Course Details', 'Tee Sheet Setup', 'Go Live'];
-const STATES = ['NJ','NY','CT','PA','MA','MD','VA','DE','RI','NH','VT','ME'];
-const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const STEPS = ['Course Details', 'Connect Payments', 'Go Live'];
 
-export default function OnboardingPage() {
+type TeeSet = { id: string; name: string; yardage: string; rating: string; slope: string };
+
+const blankTeeSet = (): TeeSet => ({ id: Math.random().toString(36).slice(2), name: '', yardage: '', rating: '', slope: '' });
+
+function OnboardingInner() {
   const router = useRouter();
+  const params = useSearchParams();
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Course details form
-  const [details, setDetails] = useState({
-    name: '', type: 'public', address: '', city: '', state: 'NJ', zipCode: '',
-    phone: '', website: '', description: '', holes: 18, par: 72, yardage: 6500,
-  });
+  // Course details — identity (name/address/phone/etc) is already collected
+  // via the inquiry + setup sheet by this point, so step 1 is just play details.
+  const [details, setDetails] = useState({ description: '', holes: 18, par: 72 });
+  const [teeSets, setTeeSets] = useState<TeeSet[]>([blankTeeSet()]);
 
-  // Schedule form
-  const [schedule, setSchedule] = useState({
-    daysOfWeek: [] as number[],
-    startTime: '06:30', endTime: '17:30',
-    intervalMinutes: 8,
-    greenFeeWeekday: 65, greenFeeWeekend: 85,
-    cartFee: 18, walkingAllowed: true,
-  });
+  // Stripe Connect status
+  const [stripeActive, setStripeActive] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const [stripeBanner, setStripeBanner] = useState('');
+
+  useEffect(() => {
+    const stripeParam = params.get('stripe');
+    if (stripeParam === 'success') setStripeBanner('connected');
+    else if (stripeParam === 'pending') setStripeBanner('pending');
+    else if (stripeParam === 'error' || stripeParam === 'refresh') setStripeBanner('error');
+  }, [params]);
 
   useEffect(() => {
     fetch('/api/operator/profile').then(r => {
@@ -40,56 +44,52 @@ export default function OnboardingPage() {
       setStep(data.onboardingStep >= 2 ? 2 : 1);
       setLoading(false);
     });
-    // Pre-fill course name
     fetch('/api/operator/courses').then(r => r.json()).then(c => {
-      if (c?.name) setDetails(d => ({ ...d, name: c.name, ...c }));
+      if (!c) return;
+      setDetails(d => ({ ...d, description: c.description ?? '', holes: c.holes ?? 18, par: c.par ?? 72 }));
+      setStripeActive(!!c.stripeAccountActive);
+    });
+    fetch('/api/operator/tee-sets').then(r => r.json()).then(rows => {
+      if (Array.isArray(rows) && rows.length > 0) {
+        setTeeSets(rows.map((r: { id: string; name: string; yardage: number; rating: number; slope: number }) => ({
+          id: r.id, name: r.name, yardage: String(r.yardage || ''), rating: String(r.rating || ''), slope: String(r.slope || ''),
+        })));
+      }
     });
   }, [router]);
 
-  const set = (k: string, v: string | number | boolean) =>
-    setDetails(d => ({ ...d, [k]: v }));
-
-  const toggleDay = (d: number) =>
-    setSchedule(s => ({
-      ...s,
-      daysOfWeek: s.daysOfWeek.includes(d)
-        ? s.daysOfWeek.filter(x => x !== d)
-        : [...s.daysOfWeek, d],
-    }));
-
-  const validateDetails = () => {
-    const e: Record<string, string> = {};
-    if (!details.name.trim()) e.name = 'Required';
-    if (!details.address.trim()) e.address = 'Required';
-    if (!details.city.trim()) e.city = 'Required';
-    if (!details.zipCode.trim()) e.zipCode = 'Required';
-    if (!details.phone.trim()) e.phone = 'Required';
-    if (!details.description.trim()) e.description = 'Required';
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
+  const set = (k: keyof typeof details, v: string | number) => setDetails(d => ({ ...d, [k]: v }));
+  const setTee = (id: string, k: keyof TeeSet, v: string) => setTeeSets(ts => ts.map(t => t.id === id ? { ...t, [k]: v } : t));
+  const addTee = () => setTeeSets(ts => [...ts, blankTeeSet()]);
+  const removeTee = (id: string) => setTeeSets(ts => ts.filter(t => t.id !== id));
 
   const saveDetails = async () => {
-    if (!validateDetails()) return;
     setSaving(true);
     await fetch('/api/operator/courses', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(details),
     });
-    await fetch('/api/operator/profile', { method: 'PATCH' });
+    await fetch('/api/operator/tee-sets', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ teeSets: teeSets.filter(t => t.name.trim()) }),
+    });
     setSaving(false);
     setStep(2);
   };
 
-  const saveSchedule = async () => {
+  const connectStripe = async () => {
+    setConnecting(true);
+    const r = await fetch('/api/operator/stripe/connect?from=onboarding');
+    const d = await r.json();
+    setConnecting(false);
+    if (d.url) window.location.href = d.url;
+    else setStripeBanner('error');
+  };
+
+  const finishOnboarding = async () => {
     setSaving(true);
-    await fetch('/api/operator/schedule', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(schedule),
-    });
-    // Mark onboarding complete — do NOT auto-activate; admin sets live status
     await fetch('/api/operator/onboarding-complete', { method: 'POST' });
     setSaving(false);
     setStep(3);
@@ -100,6 +100,8 @@ export default function OnboardingPage() {
       <Loader2 className="w-8 h-8 text-white animate-spin" />
     </div>
   );
+
+  const isConnected = stripeActive || stripeBanner === 'connected';
 
   return (
     <div className="min-h-screen bg-[#0a1f0f] p-4">
@@ -128,106 +130,51 @@ export default function OnboardingPage() {
           ))}
         </div>
 
-        {/* Step 1 — Course Details */}
+        {/* Step 1 — Course Details (play details only — identity already on file) */}
         {step === 1 && (
           <div className="bg-white rounded-2xl p-6 shadow-2xl">
-            <h2 className="text-xl font-black text-gray-900 mb-1">Tell us about your course</h2>
-            <p className="text-gray-500 text-sm mb-6">This info appears on your public listing. All fields are required.</p>
+            <h2 className="text-xl font-black text-gray-900 mb-1">A few details about the course itself</h2>
+            <p className="text-gray-500 text-sm mb-6">Your contact info and address are already on file from your setup sheet. This is just the playing details.</p>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Description <span className="font-normal text-gray-400">(optional)</span></label>
+                <textarea value={details.description} onChange={e => set('description', e.target.value)}
+                  rows={3} placeholder="Tell golfers what makes your course special..."
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 resize-none" />
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
-                  <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Course Name *</label>
-                  <input value={details.name} onChange={e => set('name', e.target.value)}
-                    className={`w-full border rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 ${errors.name ? 'border-red-400 bg-red-50' : 'border-gray-300'}`} />
-                  {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Type</label>
-                  <select value={details.type} onChange={e => set('type', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500">
-                    <option value="public">Public</option>
-                    <option value="semi-private">Semi-Private</option>
-                    <option value="resort">Resort</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide flex items-center gap-1"><Phone className="w-3 h-3" /> Phone *</label>
-                  <input value={details.phone} onChange={e => set('phone', e.target.value)}
-                    placeholder="(201) 555-0100"
-                    className={`w-full border rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 ${errors.phone ? 'border-red-400 bg-red-50' : 'border-gray-300'}`} />
-                  {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
-                </div>
-
-                <div className="col-span-2">
-                  <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide flex items-center gap-1"><MapPin className="w-3 h-3" /> Street Address *</label>
-                  <input value={details.address} onChange={e => set('address', e.target.value)}
-                    placeholder="123 Fairway Dr"
-                    className={`w-full border rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 ${errors.address ? 'border-red-400 bg-red-50' : 'border-gray-300'}`} />
-                  {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">City *</label>
-                  <input value={details.city} onChange={e => set('city', e.target.value)}
-                    className={`w-full border rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 ${errors.city ? 'border-red-400 bg-red-50' : 'border-gray-300'}`} />
-                  {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">State</label>
-                    <select value={details.state} onChange={e => set('state', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500">
-                      {STATES.map(s => <option key={s}>{s}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">ZIP *</label>
-                    <input value={details.zipCode} onChange={e => set('zipCode', e.target.value)}
-                      placeholder="07430"
-                      className={`w-full border rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 ${errors.zipCode ? 'border-red-400 bg-red-50' : 'border-gray-300'}`} />
-                  </div>
-                </div>
-
-                <div className="col-span-2">
-                  <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide flex items-center gap-1"><Globe className="w-3 h-3" /> Website</label>
-                  <input value={details.website} onChange={e => set('website', e.target.value)}
-                    placeholder="https://yourcourse.com"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500" />
-                </div>
-
-                <div className="col-span-2">
-                  <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Description *</label>
-                  <textarea value={details.description} onChange={e => set('description', e.target.value)}
-                    rows={3} placeholder="Tell golfers what makes your course special..."
-                    className={`w-full border rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 resize-none ${errors.description ? 'border-red-400 bg-red-50' : 'border-gray-300'}`} />
-                  {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
-                </div>
-
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Holes</label>
-                  <select value={details.holes} onChange={e => set('holes', Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500">
-                    <option value={9}>9</option>
-                    <option value={18}>18</option>
-                    <option value={27}>27</option>
-                    <option value={36}>36</option>
-                  </select>
+                  <input type="number" value={details.holes} onChange={e => set('holes', Number(e.target.value))}
+                    placeholder="18"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500" />
+                  <p className="text-xs text-gray-400 mt-1">Enter whatever you actually have — 9, 18, 27, 36, etc.</p>
                 </div>
-
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Par</label>
                   <input type="number" value={details.par} onChange={e => set('par', Number(e.target.value))}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500" />
                 </div>
+              </div>
 
-                <div className="col-span-2">
-                  <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Yardage (back tees)</label>
-                  <input type="number" value={details.yardage} onChange={e => set('yardage', Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500" />
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Tee sets <span className="font-normal text-gray-400">(optional)</span></label>
+                  <button onClick={addTee} className="text-xs font-bold text-green-600 hover:text-green-700 flex items-center gap-1"><Plus className="w-3.5 h-3.5" /> Add tee</button>
+                </div>
+                <p className="text-xs text-gray-400 mb-3">If you have multiple tee boxes (Black, Blue, White, Red...) with different yardage, list them here. Leave blank if you just want one overall yardage.</p>
+                <div className="space-y-2">
+                  {teeSets.map(t => (
+                    <div key={t.id} className="grid grid-cols-[1.2fr_1fr_1fr_1fr_auto] gap-2 items-center">
+                      <input value={t.name} onChange={e => setTee(t.id, 'name', e.target.value)} placeholder="Black" className="border border-gray-300 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-green-500" />
+                      <input type="number" value={t.yardage} onChange={e => setTee(t.id, 'yardage', e.target.value)} placeholder="Yardage" className="border border-gray-300 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-green-500" />
+                      <input type="number" step="0.1" value={t.rating} onChange={e => setTee(t.id, 'rating', e.target.value)} placeholder="Rating" className="border border-gray-300 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-green-500" />
+                      <input type="number" value={t.slope} onChange={e => setTee(t.id, 'slope', e.target.value)} placeholder="Slope" className="border border-gray-300 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-green-500" />
+                      <button onClick={() => removeTee(t.id)} className="text-gray-400 hover:text-red-500 p-1"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -239,92 +186,45 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* Step 2 — Schedule */}
+        {/* Step 2 — Connect Payments */}
         {step === 2 && (
           <div className="bg-white rounded-2xl p-6 shadow-2xl">
             <h2 className="text-xl font-black text-gray-900 mb-1 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-green-600" /> Set your tee sheet
+              <CreditCard className="w-5 h-5 text-green-600" /> Connect your payments
             </h2>
-            <p className="text-gray-500 text-sm mb-6">Set your schedule once — tee times auto-generate daily.</p>
+            <p className="text-gray-500 text-sm mb-6">Golfers pay through Stripe at checkout — green fees go straight to your bank account. This is required before you can go live.</p>
 
-            <div className="space-y-5">
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Open days <span className="font-normal text-gray-400">(leave blank = every day)</span></label>
-                <div className="flex gap-1.5 flex-wrap">
-                  {DAYS.map((day, i) => (
-                    <button key={day} onClick={() => toggleDay(i)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                        schedule.daysOfWeek.includes(i)
-                          ? 'bg-green-600 text-white border-green-600'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-green-400'
-                      }`}>
-                      {day}
-                    </button>
-                  ))}
+            {isConnected ? (
+              <div className="bg-green-50 border border-green-200 rounded-xl p-5 flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+                <div>
+                  <div className="font-bold text-green-800">Stripe connected</div>
+                  <div className="text-sm text-green-700">You&apos;re all set to accept payments. You can manage this anytime from Settings → Payments.</div>
                 </div>
               </div>
+            ) : (
+              <>
+                {stripeBanner === 'pending' && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 flex items-start gap-2 text-sm text-amber-800">
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /> Stripe said your account isn&apos;t fully verified yet — you may need to finish a step on their end. Try connecting again.
+                  </div>
+                )}
+                {stripeBanner === 'error' && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 flex items-start gap-2 text-sm text-red-700">
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /> Something interrupted the connection. Try again.
+                  </div>
+                )}
+                <button onClick={connectStripe} disabled={connecting}
+                  className="w-full bg-[#635bff] text-white py-3.5 rounded-xl font-bold hover:bg-[#564fe0] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+                  {connecting ? <><Loader2 className="w-4 h-4 animate-spin" /> Connecting...</> : 'Connect with Stripe'}
+                </button>
+                <p className="text-xs text-gray-400 mt-2 text-center">You&apos;ll be redirected to Stripe to verify your bank details, then brought back here.</p>
+              </>
+            )}
 
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">First Tee</label>
-                  <input type="time" value={schedule.startTime}
-                    onChange={e => setSchedule(s => ({ ...s, startTime: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Last Tee</label>
-                  <input type="time" value={schedule.endTime}
-                    onChange={e => setSchedule(s => ({ ...s, endTime: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Interval</label>
-                  <select value={schedule.intervalMinutes}
-                    onChange={e => setSchedule(s => ({ ...s, intervalMinutes: Number(e.target.value) }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500">
-                    {[7,8,9,10,12,15].map(v => <option key={v} value={v}>{v} min</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Weekday $</label>
-                  <input type="number" value={schedule.greenFeeWeekday}
-                    onChange={e => setSchedule(s => ({ ...s, greenFeeWeekday: Number(e.target.value) }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Weekend $</label>
-                  <input type="number" value={schedule.greenFeeWeekend}
-                    onChange={e => setSchedule(s => ({ ...s, greenFeeWeekend: Number(e.target.value) }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Cart Fee $</label>
-                  <input type="number" value={schedule.cartFee}
-                    onChange={e => setSchedule(s => ({ ...s, cartFee: Number(e.target.value) }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500" />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <input type="checkbox" id="walking" checked={schedule.walkingAllowed}
-                  onChange={e => setSchedule(s => ({ ...s, walkingAllowed: e.target.checked }))}
-                  className="w-4 h-4 text-green-600 rounded" />
-                <label htmlFor="walking" className="text-sm text-gray-700">Walking allowed</label>
-              </div>
-
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-xs text-green-800">
-                Based on your settings, your tee sheet will have approximately{' '}
-                <strong>{Math.floor((parseInt(schedule.endTime) - parseInt(schedule.startTime)) * 60 / schedule.intervalMinutes) || '~70'}</strong> tee times per day,
-                auto-generated every morning.
-              </div>
-            </div>
-
-            <button onClick={saveSchedule} disabled={saving}
-              className="w-full mt-6 bg-green-600 text-white py-3.5 rounded-xl font-bold hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
-              {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Launching...</> : '🚀 Launch My Course'}
+            <button onClick={finishOnboarding} disabled={saving || !isConnected}
+              className="w-full mt-4 bg-green-600 text-white py-3.5 rounded-xl font-bold hover:bg-green-700 disabled:opacity-50 disabled:bg-gray-300 transition-colors flex items-center justify-center gap-2">
+              {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Finishing...</> : '🚀 Continue'}
             </button>
           </div>
         )}
@@ -334,8 +234,8 @@ export default function OnboardingPage() {
           <div className="bg-white rounded-2xl p-10 shadow-2xl text-center">
             <div className="text-5xl mb-4">✅</div>
             <h2 className="text-2xl font-black text-gray-900 mb-2">Setup complete!</h2>
-            <p className="text-gray-500 mb-2">Your tee sheet is configured and ready. GreenReserve will review everything and take your course live — usually within 1 business day.</p>
-            <p className="text-sm text-gray-400 mb-6">We'll email you at {` `}<span className="font-medium text-gray-600">hello@greenreserve.app</span> once you're live.</p>
+            <p className="text-gray-500 mb-2">Your course details are saved and payments are connected. GreenReserve will review everything and take your course live — usually within 1 business day.</p>
+            <p className="text-sm text-gray-400 mb-6">We&apos;ll email you a full walkthrough of your dashboard once you&apos;re live.</p>
             <button onClick={() => router.push('/dashboard')}
               className="w-full bg-green-600 text-white py-3.5 rounded-xl font-bold hover:bg-green-700">
               Go to Dashboard →
@@ -344,5 +244,13 @@ export default function OnboardingPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0a1f0f]" />}>
+      <OnboardingInner />
+    </Suspense>
   );
 }

@@ -102,6 +102,22 @@ model Course {
   membershipTiers         MembershipTier[]
   waitlist                Waitlist[]
   staff                   CourseStaff[]
+  teeSets                 TeeSet[]
+}
+
+// A single tee box (Black/Blue/White/Red/Gold...) — courses with one set of
+// markers just have one row here; courses with multiple tee options list them
+// all so golfers/admin can see yardage/rating/slope per tee, not one flat number.
+model TeeSet {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+  name      String
+  yardage   Int      @default(0)
+  rating    Float    @default(0)
+  slope     Int      @default(0)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
 }
 
 model CourseStaff {
