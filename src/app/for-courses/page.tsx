@@ -12,10 +12,6 @@ const COURSE_TYPES = [
   { value: 'other', label: 'Other' },
 ];
 const GUEST_POLICY_OPTIONS = ['Yes, regularly', 'Occasionally', 'No, members only'];
-const ROUNDS_PER_DAY_OPTIONS = ['Under 50', '50–100', '100–150', '150+'];
-const PUBLIC_CHALLENGE_OPTIONS = ['Reducing phone call volume', 'Reducing no-shows', 'Tracking real-time availability', 'Increasing online bookings', 'Other'];
-const MULTI_COURSE_OPTIONS = ['Single course', 'Part of a multi-course property'];
-const BUNDLED_OPTIONS = ['Always bundled with a room/stay', 'Sometimes bundled', 'Always booked separately'];
 
 // Calendly link — swap this out once you have one
 const CALENDLY_URL = 'https://calendly.com/greenreserve';
@@ -27,11 +23,8 @@ type FormData = {
   courseName: string; address: string; city: string; state: string; zipCode: string; website: string;
   courseType: string; courseTypeOther: string;
   privateMemberCount: string; privateGuestPolicy: string;
-  publicRoundsPerDay: string; publicChallenge: string;
-  privateMemberOnlyWindows: string; privateOutsideEvents: string;
-  resortMultiCourse: string; resortBundled: string; resortSeasonalPricing: string;
-  otherNeeds: string;
-  additionalNotes: string;
+  teeSheetNeeds: string;
+  specialRequests: string;
 };
 
 const init: FormData = {
@@ -41,11 +34,8 @@ const init: FormData = {
   courseName: '', address: '', city: '', state: 'NJ', zipCode: '', website: '',
   courseType: 'public', courseTypeOther: '',
   privateMemberCount: '', privateGuestPolicy: '',
-  publicRoundsPerDay: '', publicChallenge: '',
-  privateMemberOnlyWindows: '', privateOutsideEvents: '',
-  resortMultiCourse: '', resortBundled: '', resortSeasonalPricing: '',
-  otherNeeds: '',
-  additionalNotes: '',
+  teeSheetNeeds: '',
+  specialRequests: '',
 };
 
 function Section({ title, open, toggle, children }: { title: string; open: boolean; toggle: () => void; children: React.ReactNode }) {
@@ -105,21 +95,9 @@ export default function ForCoursesPage() {
     const contactTitle = form.contactTitle === 'Other' ? form.contactTitleOther.trim() : form.contactTitle;
 
     const needs: Record<string, string> = {};
-    if (form.courseType === 'public') {
-      if (form.publicRoundsPerDay) needs['Rounds per day'] = form.publicRoundsPerDay;
-      if (form.publicChallenge) needs['Biggest challenge'] = form.publicChallenge;
-    } else if (form.courseType === 'private') {
-      if (form.privateMemberCount) needs['Approx. members'] = form.privateMemberCount;
-      if (form.privateGuestPolicy) needs['Guest / reciprocal play'] = form.privateGuestPolicy;
-      if (form.privateMemberOnlyWindows) needs['Needs member-only booking windows'] = form.privateMemberOnlyWindows;
-      if (form.privateOutsideEvents) needs['Hosts outings that block the tee sheet'] = form.privateOutsideEvents;
-    } else if (form.courseType === 'resort') {
-      if (form.resortMultiCourse) needs['Property type'] = form.resortMultiCourse;
-      if (form.resortBundled) needs['Booking bundled with stay'] = form.resortBundled;
-      if (form.resortSeasonalPricing) needs['Needs seasonal/demand pricing'] = form.resortSeasonalPricing;
-    } else if (form.otherNeeds) {
-      needs['What they need'] = form.otherNeeds;
-    }
+    if (form.privateMemberCount) needs['Approx. members'] = form.privateMemberCount;
+    if (form.privateGuestPolicy) needs['Guest / reciprocal play'] = form.privateGuestPolicy;
+    if (form.teeSheetNeeds) needs['What they need in their tee sheet'] = form.teeSheetNeeds;
 
     const res = await fetch('/api/inquiries', {
       method: 'POST',
@@ -130,7 +108,7 @@ export default function ForCoursesPage() {
         courseName: form.courseName, address: form.address, city: form.city, state: form.state, zipCode: form.zipCode, website: form.website,
         courseType,
         needs,
-        additionalNotes: form.additionalNotes,
+        additionalNotes: form.specialRequests,
       }),
     });
     setSubmitting(false);
@@ -260,74 +238,11 @@ export default function ForCoursesPage() {
           {/* 3. What Does Your Course Need */}
           <Section title="3. What Does Your Course Need" open={sections.needs} toggle={() => toggle('needs')}>
             <div className="space-y-4">
-              {form.courseType === 'public' && (
-                <>
-                  <Field label="About how many rounds do you host per day?">
-                    <select className={sel} value={form.publicRoundsPerDay} onChange={e => set('publicRoundsPerDay', e.target.value)}>
-                      <option value="">Select...</option>
-                      {ROUNDS_PER_DAY_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                  </Field>
-                  <Field label="What's the biggest reason you're looking for online booking?">
-                    <select className={sel} value={form.publicChallenge} onChange={e => set('publicChallenge', e.target.value)}>
-                      <option value="">Select...</option>
-                      {PUBLIC_CHALLENGE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                  </Field>
-                </>
-              )}
-
-              {form.courseType === 'private' && (
-                <>
-                  <Field label="Do you need member-only booking windows before opening to guests?">
-                    <select className={sel} value={form.privateMemberOnlyWindows} onChange={e => set('privateMemberOnlyWindows', e.target.value)}>
-                      <option value="">Select...</option>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                  </Field>
-                  <Field label="Do you regularly host outings or events that need to block off the tee sheet?">
-                    <select className={sel} value={form.privateOutsideEvents} onChange={e => set('privateOutsideEvents', e.target.value)}>
-                      <option value="">Select...</option>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                  </Field>
-                </>
-              )}
-
-              {form.courseType === 'resort' && (
-                <>
-                  <Field label="Is this a single course or part of a multi-course property?">
-                    <select className={sel} value={form.resortMultiCourse} onChange={e => set('resortMultiCourse', e.target.value)}>
-                      <option value="">Select...</option>
-                      {MULTI_COURSE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                  </Field>
-                  <Field label="Do golfers typically book bundled with a room/stay, or separately?">
-                    <select className={sel} value={form.resortBundled} onChange={e => set('resortBundled', e.target.value)}>
-                      <option value="">Select...</option>
-                      {BUNDLED_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                  </Field>
-                  <Field label="Do you need seasonal or demand-based pricing?">
-                    <select className={sel} value={form.resortSeasonalPricing} onChange={e => set('resortSeasonalPricing', e.target.value)}>
-                      <option value="">Select...</option>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                  </Field>
-                </>
-              )}
-
-              {form.courseType === 'other' && (
-                <Field label="Tell us what your course needs from a tee sheet system">
-                  <textarea rows={3} className={inp} value={form.otherNeeds} onChange={e => set('otherNeeds', e.target.value)} placeholder="What are you looking for?" />
-                </Field>
-              )}
-
-              <Field label="Anything else we should know?">
-                <textarea rows={3} className={inp} value={form.additionalNotes} onChange={e => set('additionalNotes', e.target.value)} placeholder="Special circumstances, questions, timeline..." />
+              <Field label="What do you need in your tee sheet?">
+                <textarea rows={3} className={inp} value={form.teeSheetNeeds} onChange={e => set('teeSheetNeeds', e.target.value)} placeholder="e.g. online payments, member rates, staff logins, blackout dates..." />
+              </Field>
+              <Field label="Any special requests?">
+                <textarea rows={3} className={inp} value={form.specialRequests} onChange={e => set('specialRequests', e.target.value)} placeholder="Anything specific we should know before we build your page..." />
               </Field>
             </div>
           </Section>
