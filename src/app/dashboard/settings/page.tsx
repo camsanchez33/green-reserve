@@ -1,12 +1,13 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff, CreditCard, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff, CreditCard, CheckCircle2, AlertCircle, Loader2, KeyRound } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
 
 type Course = Record<string, unknown>;
 interface StaffMember { id: string; name: string; email: string; role: string; active: boolean; }
-const SECTIONS = ['Course Info', 'Payments', 'Pricing Policy', 'Course Policy', 'Facilities', 'Staff'] as const;
+const SECTIONS = ['Course Info', 'Payments', 'Pricing Policy', 'Course Policy', 'Facilities', 'Staff', 'Account'] as const;
 type Section = typeof SECTIONS[number];
 const inputCls = 'w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white';
 
@@ -50,13 +51,29 @@ function SettingsPageInner() {
   const [showPass, setShowPass] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [stripeError, setStripeError] = useState('');
+  const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwMsg, setPwMsg] = useState('');
+  const [pwError, setPwError] = useState('');
+  const [operatorEmail, setOperatorEmail] = useState('');
+  const [emailingReset, setEmailingReset] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
 
   const refreshForm = () => fetch('/api/operator/settings').then(r=>r.json()).then(setForm);
 
   useEffect(() => {
     refreshForm();
     fetch('/api/operator/staff').then(r=>r.json()).then(setStaff);
+    fetch('/api/operator/profile').then(r=>r.json()).then(p=>{ if(p?.email) setOperatorEmail(p.email); });
   }, []);
+
+  async function emailResetLinkInstead() {
+    if (!operatorEmail) return;
+    setEmailingReset(true);
+    await fetch('/api/auth/forgot-password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email: operatorEmail }) });
+    setEmailingReset(false);
+    setResetEmailSent(true);
+  }
 
   async function connectStripe() {
     setConnecting(true);
@@ -103,6 +120,23 @@ function SettingsPageInner() {
     setStaff(s=>s.map(m=>m.id===id?{...m,active}:m));
   }
 
+  async function changePassword() {
+    setPwMsg(''); setPwError('');
+    if (!pwForm.currentPassword || !pwForm.newPassword) { setPwError('Fill in both password fields.'); return; }
+    const strengthError = validatePasswordStrength(pwForm.newPassword);
+    if (strengthError) { setPwError(strengthError); return; }
+    if (pwForm.newPassword !== pwForm.confirmPassword) { setPwError('New passwords do not match.'); return; }
+    setPwSaving(true);
+    const res = await fetch('/api/operator/change-password', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword }),
+    });
+    const data = await res.json();
+    setPwSaving(false);
+    if (res.ok) { setPwMsg('Password updated.'); setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' }); }
+    else setPwError(data.error || 'Something went wrong.');
+  }
+
   const dresscodes = (form.dresscode as string[])||[];
 
   return (
@@ -111,7 +145,7 @@ function SettingsPageInner() {
       <main className="flex-1 overflow-y-auto bg-gray-50">
       <div className="bg-[#1b4332] px-6 py-4 flex items-center justify-between sticky top-0 z-10">
         <span className="text-white font-black text-lg">Settings</span>
-        {active!=='Staff'&&(
+        {active!=='Staff'&&active!=='Account'&&(
           <button onClick={save} disabled={saving} className="flex items-center gap-2 bg-white text-[#1b4332] px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-50 disabled:opacity-50">
             <Save className="w-4 h-4"/> {saved?'Saved!':saving?'Saving...':'Save Changes'}
           </button>
@@ -373,6 +407,39 @@ function SettingsPageInner() {
                   className="mt-3 w-full bg-[#1b4332] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-50 flex items-center justify-center gap-2">
                   <Plus className="w-4 h-4"/> {addingStaff?'Adding...':'Add Staff Member'}
                 </button>
+              </div>
+            </SectionCard>
+          </div>
+        )}
+
+        {active==='Account'&&(
+          <div className="space-y-5">
+            <SectionCard title="Change Password">
+              <p className="text-sm text-gray-500">Update the password for your own login. This doesn&apos;t affect staff accounts.</p>
+              {pwMsg&&<div className="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm flex items-center gap-2"><CheckCircle2 className="w-4 h-4"/>{pwMsg}</div>}
+              {pwError&&<div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm flex items-center gap-2"><AlertCircle className="w-4 h-4"/>{pwError}</div>}
+              <Field label="Current Password"><FInput type="password" value={pwForm.currentPassword} onChange={v=>setPwForm(f=>({...f,currentPassword:v}))}/></Field>
+              <Field label="New Password">
+                <FInput type="password" value={pwForm.newPassword} onChange={v=>setPwForm(f=>({...f,newPassword:v}))}/>
+                <p className="text-xs text-gray-400 mt-1.5">{PASSWORD_REQUIREMENTS_HINT}</p>
+              </Field>
+              <Field label="Confirm New Password"><FInput type="password" value={pwForm.confirmPassword} onChange={v=>setPwForm(f=>({...f,confirmPassword:v}))}/></Field>
+              <button onClick={changePassword} disabled={pwSaving}
+                className="w-full bg-[#1b4332] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-50 flex items-center justify-center gap-2">
+                <KeyRound className="w-4 h-4"/> {pwSaving?'Updating...':'Update Password'}
+              </button>
+
+              <div className="border-t border-gray-100 pt-4 text-center">
+                {resetEmailSent ? (
+                  <p className="text-sm text-green-700 flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4"/> Check {operatorEmail} for a reset link.</p>
+                ) : (
+                  <>
+                    <p className="text-xs text-gray-400 mb-2">Don&apos;t remember your current password?</p>
+                    <button onClick={emailResetLinkInstead} disabled={emailingReset||!operatorEmail} className="text-sm font-semibold text-green-700 hover:underline disabled:opacity-50">
+                      {emailingReset?'Sending...':`Email me a reset link instead`}
+                    </button>
+                  </>
+                )}
               </div>
             </SectionCard>
           </div>

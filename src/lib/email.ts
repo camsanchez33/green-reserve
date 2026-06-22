@@ -211,6 +211,33 @@ export async function sendOperatorPasswordResetEmail(data: {
   });
 }
 
+// Fired after ANY successful password change (in-dashboard change-password,
+// or the emailed reset-link flow) — pure notification, doesn't gate anything.
+// Lets the real owner know if a change wasn't them.
+export async function sendPasswordChangedNotification(data: {
+  operatorName: string;
+  operatorEmail: string;
+}) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:900;">Your password was changed</h1>
+    <p style="margin:0 0 20px;color:#6b7280;font-size:15px;">
+      Hi ${data.operatorName} — this confirms the password on your GreenReserve dashboard (${data.operatorEmail}) was just changed.
+    </p>
+    <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:16px 20px;margin-bottom:20px;">
+      <p style="margin:0;color:#92400e;font-size:13px;"><strong>Wasn't you?</strong> Reply to this email or reach <a href="mailto:hello@greenreserve.app" style="color:#92400e;text-decoration:underline;">hello@greenreserve.app</a> right away.</p>
+    </div>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      Green Reserve &middot; <a href="https://greenreserve.app" style="color:#6b7280;">greenreserve.app</a>
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.operatorEmail,
+    subject: `Your GreenReserve password was changed`,
+    html,
+  });
+}
+
 export async function sendMemberInviteEmail(data: {
   name: string; email: string; courseName: string; tierName: string; setupLink: string;
 }) {

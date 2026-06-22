@@ -2,6 +2,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
 
 function ResetPasswordContent() {
   const router = useRouter();
@@ -32,7 +33,8 @@ function ResetPasswordContent() {
 
   const submit = async () => {
     setError('');
-    if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
+    const strengthError = validatePasswordStrength(password);
+    if (strengthError) { setError(strengthError); return; }
     if (password !== confirm) { setError('Passwords do not match.'); return; }
 
     setLoading(true);
@@ -93,6 +95,7 @@ function ResetPasswordContent() {
                   <input type="password" value={password} onChange={e => setPassword(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && submit()}
                     className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none" />
+                  <p className="text-xs text-gray-400 mt-1.5">{PASSWORD_REQUIREMENTS_HINT}</p>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Confirm Password</label>

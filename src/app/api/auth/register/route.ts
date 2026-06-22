@@ -3,12 +3,15 @@ import { prisma } from '@/lib/prisma';
 import { signToken } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
+import { validatePasswordStrength } from '@/lib/password';
 
 export async function POST(req: NextRequest) {
   const { email: rawEmail, password, name, courseName } = await req.json();
   if (!rawEmail || !password || !name || !courseName) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
+  const passwordError = validatePasswordStrength(password);
+  if (passwordError) return NextResponse.json({ error: passwordError }, { status: 400 });
   const email = String(rawEmail).trim().toLowerCase();
 
   const existing = await prisma.courseOperator.findUnique({ where: { email } });
