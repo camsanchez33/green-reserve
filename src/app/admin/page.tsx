@@ -4,7 +4,8 @@ import {
   CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Copy,
   RefreshCw, BarChart2, Users, DollarSign, TrendingUp, AlertCircle,
   Building2, Star, Power, ArrowLeft, Eye, X, Globe, Phone, Mail,
-  Ban, Plus, Calendar, Trash2, Wrench,
+  Ban, Plus, Calendar, Trash2, Wrench, Activity, ArrowUpRight,
+  Shield, Layers, ChevronRight, Zap,
 } from 'lucide-react';
 
 /* ─── Types ─── */
@@ -19,7 +20,7 @@ interface Inquiry {
 }
 interface Course {
   id: string; name: string; city: string; state: string; active: boolean; featured: boolean;
-  stripeAccountActive: boolean; slug: string;
+  stripeAccountActive: boolean; slug: string; type?: string;
   operator: { email: string; name: string; onboardingStep: number; emailVerified: boolean } | null;
   createdAt: string;
 }
@@ -43,48 +44,128 @@ interface TeeSlot {
   bookings: { id:string; golferName:string; golferEmail:string; golferPhone:string; players:number; totalAmount:number; paymentStatus:string }[];
 }
 
-/* ─── Helpers ─── */
-const STATUS_COLORS: Record<string, string> = {
-  pending:           'bg-yellow-100 text-yellow-800 border-yellow-200',
-  in_review:         'bg-blue-100 text-blue-800 border-blue-200',
-  details_requested: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-  details_submitted: 'bg-teal-100 text-teal-800 border-teal-200',
-  building:          'bg-orange-100 text-orange-800 border-orange-200',
-  live:              'bg-green-100 text-green-800 border-green-200',
-  rejected:          'bg-red-100 text-red-800 border-red-200',
-  // legacy
-  approved:          'bg-green-100 text-green-800 border-green-200',
+/* ─── Constants ─── */
+const STATUS_PIPELINE = [
+  { key: 'pending',           label: 'Pending',        color: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/30' },
+  { key: 'in_review',         label: 'In Review',      color: 'text-blue-400',   bg: 'bg-blue-500/10 border-blue-500/30' },
+  { key: 'details_requested', label: 'Sheet Sent',     color: 'text-indigo-400', bg: 'bg-indigo-500/10 border-indigo-500/30' },
+  { key: 'details_submitted', label: 'Sheet In',       color: 'text-teal-400',   bg: 'bg-teal-500/10 border-teal-500/30' },
+  { key: 'building',          label: 'Building',       color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/30' },
+  { key: 'live',              label: 'Live',            color: 'text-green-400',  bg: 'bg-green-500/10 border-green-500/30' },
+  { key: 'rejected',          label: 'Rejected',       color: 'text-red-400',    bg: 'bg-red-500/10 border-red-500/30' },
+];
+
+const STATUS_BADGE: Record<string, string> = {
+  pending:           'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40',
+  in_review:         'bg-blue-500/20 text-blue-300 border border-blue-500/40',
+  details_requested: 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40',
+  details_submitted: 'bg-teal-500/20 text-teal-300 border border-teal-500/40',
+  building:          'bg-orange-500/20 text-orange-300 border border-orange-500/40',
+  live:              'bg-green-500/20 text-green-300 border border-green-500/40',
+  rejected:          'bg-red-500/20 text-red-300 border border-red-500/40',
+  approved:          'bg-green-500/20 text-green-300 border border-green-500/40',
 };
 const STATUS_LABEL: Record<string, string> = {
   pending: 'Pending', in_review: 'In Review',
-  details_requested: 'Setup Sheet Sent', details_submitted: 'Setup Sheet In',
+  details_requested: 'Sheet Sent', details_submitted: 'Sheet In',
   building: 'Building', live: 'Live', rejected: 'Rejected', approved: 'Approved',
 };
-const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-const fmtMoney = (n: number) => '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
 
-function Stat({ label, value, sub, icon, color='text-gray-900' }: { label:string; value:string|number; sub?:string; icon:React.ReactNode; color?:string }) {
+const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+const fmtDateShort = (d: string) => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+const fmtMoney = (n: number) => '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+const fmtTime = (t: string) => { const [h,m]=t.split(':'); const hr=Number(h); return `${hr>12?hr-12:hr||12}:${m} ${hr>=12?'PM':'AM'}`; };
+
+/* ─── Shared input class ─── */
+const iCls = 'w-full bg-gray-800/80 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 placeholder-gray-600 transition-colors';
+
+/* ─── Inquiry view toggle ─── */
+function InquiryToggle({ view, onSwitch, activeCount, pastCount }: {
+  view: 'active'|'past'; onSwitch: (v: 'active'|'past') => void; activeCount: number; pastCount: number;
+}) {
+  const btnCls = (v: 'active'|'past') => 'px-5 py-1.5 rounded-lg text-sm font-semibold transition-colors ' + (view === v ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-white');
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-5">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{label}</span>
-        <span className="text-gray-300">{icon}</span>
-      </div>
-      <div className={`text-2xl font-black ${color}`}>{value}</div>
-      {sub&&<div className="text-xs text-gray-400 mt-0.5">{sub}</div>}
+    <div className="flex gap-1 mb-5 bg-gray-800/50 border border-gray-800 rounded-xl p-1 w-fit">
+      <button onClick={() => onSwitch('active')} className={btnCls('active')}>{'Active (' + activeCount + ')'}</button>
+      <button onClick={() => onSwitch('past')} className={btnCls('past')}>{'Past (' + pastCount + ')'}</button>
     </div>
   );
 }
 
-/* ─── Mini bar chart ─── */
-function TinyBars({ data }: { data: {date:string;platform:number}[] }) {
-  if(!data.length) return null;
-  const max = Math.max(...data.map(d=>d.platform), 0.01);
+/* ─── Pipeline status bar ─── */
+function PipelineBar({ inquiries }: { inquiries: { status: string }[] }) {
   return (
-    <div className="flex items-end gap-px h-10">
-      {data.map(d=>(
-        <div key={d.date} className="flex-1 bg-green-500 rounded-sm opacity-80 hover:opacity-100 transition-opacity" style={{height:`${Math.max(2,(d.platform/max)*100)}%`}} title={`${d.date}: ${fmtMoney(d.platform)}`}/>
-      ))}
+    <div className="grid grid-cols-7 gap-2 mb-5">
+      {STATUS_PIPELINE.map(s => {
+        const count = inquiries.filter(i => i.status === s.key).length;
+        const numCls = count > 0 ? s.color : 'text-gray-700';
+        const labelCls = 'text-[10px] font-semibold uppercase tracking-wide mt-0.5 ' + (count > 0 ? s.color : 'text-gray-700');
+        const wrapCls = 'rounded-xl border px-2 py-2.5 text-center ' + (count > 0 ? s.bg : 'bg-gray-900 border-gray-800');
+        return (
+          <div key={s.key} className={wrapCls}>
+            <div className={'text-xl font-black ' + numCls}>{count}</div>
+            <div className={labelCls}>{s.label}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─── Stat Card ─── */
+function StatCard({ label, value, sub, icon, accent = false, trend }: {
+  label: string; value: string|number; sub?: string; icon: React.ReactNode; accent?: boolean; trend?: string;
+}) {
+  return (
+    <div className={`rounded-2xl border p-5 relative overflow-hidden ${accent ? 'bg-gradient-to-br from-emerald-900/60 to-emerald-800/30 border-emerald-700/50' : 'bg-gray-900 border-gray-800'}`}>
+      <div className="flex items-start justify-between mb-3">
+        <div className={`p-2 rounded-xl ${accent ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-400'}`}>{icon}</div>
+        {trend && <span className="text-xs text-emerald-400 font-semibold flex items-center gap-0.5"><ArrowUpRight className="w-3 h-3"/>{trend}</span>}
+      </div>
+      <div className={`text-3xl font-black mb-0.5 ${accent ? 'text-emerald-300' : 'text-white'}`}>{value}</div>
+      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{label}</div>
+      {sub && <div className="text-xs text-gray-600 mt-0.5">{sub}</div>}
+    </div>
+  );
+}
+
+/* ─── Revenue Chart ─── */
+function RevenueChart({ data }: { data: {date:string;platform:number;gross:number}[] }) {
+  if (!data.length) return <div className="text-center text-gray-600 py-12 text-sm">No bookings yet — chart appears once revenue comes in</div>;
+  const max = Math.max(...data.map(d => d.gross), 0.01);
+  const platformMax = Math.max(...data.map(d => d.platform), 0.01);
+  const totalGross = data.reduce((s,d)=>s+d.gross,0);
+  const totalPlatform = data.reduce((s,d)=>s+d.platform,0);
+
+  return (
+    <div>
+      <div className="flex items-center gap-6 mb-4">
+        <div>
+          <div className="text-xs text-gray-500 uppercase tracking-wide">Total Gross</div>
+          <div className="text-xl font-black text-white">{fmtMoney(totalGross)}</div>
+        </div>
+        <div>
+          <div className="text-xs text-gray-500 uppercase tracking-wide">GR Fees Earned</div>
+          <div className="text-xl font-black text-emerald-400">{fmtMoney(totalPlatform)}</div>
+        </div>
+        <div className="ml-auto flex items-center gap-4 text-xs text-gray-500">
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-gray-600 inline-block"/>Gross</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-500 inline-block"/>GR Fees</span>
+        </div>
+      </div>
+      <div className="flex items-end gap-1 h-24">
+        {data.map(d => (
+          <div key={d.date} className="flex-1 flex items-end gap-px group relative" title={`${fmtDateShort(d.date)}\nGross: ${fmtMoney(d.gross)}\nFees: ${fmtMoney(d.platform)}`}>
+            <div className="flex-1 bg-gray-700/50 rounded-t-sm transition-all group-hover:bg-gray-600/70" style={{height:`${Math.max(2,(d.gross/max)*100)}%`}}/>
+            <div className="flex-1 bg-emerald-500/80 rounded-t-sm transition-all group-hover:bg-emerald-400" style={{height:`${Math.max(2,(d.platform/platformMax)*100)}%`}}/>
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-between mt-2 text-[10px] text-gray-600">
+        <span>{data.length > 0 ? fmtDateShort(data[0].date) : ''}</span>
+        <span>{data.length > 0 ? fmtDateShort(data[Math.floor(data.length/2)].date) : ''}</span>
+        <span>{data.length > 0 ? fmtDateShort(data[data.length-1].date) : ''}</span>
+      </div>
     </div>
   );
 }
@@ -150,19 +231,13 @@ export default function AdminPage() {
       try { d = JSON.parse(text); } catch { /* not json */ }
       if (r.ok) {
         if (['build_course','resend_welcome','request_details','resend_details'].includes(action)) setApproveResults(p => ({ ...p, [id]: d as unknown as ApproveResult }));
-        if (action === 'mark_live' && d.emailSent === false) alert(`Course is live, but the orientation email failed to send (${d.emailError || 'unknown error'}). You may want to follow up with them directly.`);
+        if (action === 'mark_live' && d.emailSent === false) alert(`Course is live, but the orientation email failed to send (${d.emailError || 'unknown error'}). You may want to follow up directly.`);
         if (action === 'add_note') {
           setInquiries(prev => prev.map(inq => inq.id === id ? { ...inq, adminNotes: d.adminNotes as string } : inq));
           setNoteTexts(p => ({ ...p, [id]: '' }));
-        } else {
-          loadInquiries();
-        }
-      } else {
-        alert(`Failed (${r.status}): ${(d.error as string) || text.slice(0, 200)}`);
-      }
-    } catch (e) {
-      alert(`Error: ${e}`);
-    }
+        } else { loadInquiries(); }
+      } else { alert(`Failed (${r.status}): ${(d.error as string) || text.slice(0, 200)}`); }
+    } catch (e) { alert(`Error: ${e}`); }
     setProcessing(null);
   }
 
@@ -173,19 +248,14 @@ export default function AdminPage() {
   }
 
   async function deleteCourse(id: string, name: string) {
-    if (!confirm(`Permanently delete "${name}" and ALL its data (tee times, bookings, schedules)? This cannot be undone.`)) return;
+    if (!confirm(`Permanently delete "${name}" and ALL its data? This cannot be undone.`)) return;
     const r = await fetch(`/api/admin/courses?id=${id}`, { method: 'DELETE', headers: H() });
-    if (r.ok) {
-      setCourses(prev => prev.filter(c => c.id !== id));
-      setDetail(null);
-    } else {
-      const d = await r.json();
-      alert(`Delete failed: ${d.error}`);
-    }
+    if (r.ok) { setCourses(prev => prev.filter(c => c.id !== id)); setDetail(null); }
+    else { const d = await r.json(); alert(`Delete failed: ${d.error}`); }
   }
 
   async function openDetail(course: Course) {
-    setDetailLoading(true); setDetail(null);
+    setDetailLoading(true); setDetail(null); setDrawerTab('overview');
     const r = await fetch(`/api/admin/course-detail?courseId=${course.id}`,{headers:H()});
     if(r.ok) setDetail(await r.json());
     setDetailLoading(false);
@@ -196,9 +266,6 @@ export default function AdminPage() {
     if (r.ok) setSchedules(await r.json());
   }
 
-  // Jump straight into a course's setup from the Inquiries tab — used for
-  // "Manage Tee Sheet", since admin configures courses directly now instead
-  // of waiting on the operator's own onboarding.
   async function openCourseSetup(courseId: string, originatingCourseType?: string) {
     setTab('courses');
     setDetailLoading(true); setDetail(null);
@@ -207,8 +274,6 @@ export default function AdminPage() {
       const d = await r.json();
       setDetail(d);
       setSetupForm(d.course);
-      // First-time setup nudge: if this came from a private-club inquiry and
-      // member pricing isn't already on, default it on so the rate fields show.
       if (originatingCourseType === 'private' && !d.course.hasMemberPricing) {
         setSetupForm((f: Record<string, unknown>) => ({ ...f, hasMemberPricing: true }));
       }
@@ -218,9 +283,6 @@ export default function AdminPage() {
     loadSchedules(courseId);
   }
 
-  // Skip the "send setup sheet, wait for the operator to fill it out" loop —
-  // build the course right now from whatever's on the inquiry, then jump
-  // straight into the Setup tab so the admin configures pricing/schedule themselves.
   async function buildAndConfigure(inq: Inquiry) {
     setProcessing(inq.id);
     try {
@@ -229,14 +291,11 @@ export default function AdminPage() {
       if (!r.ok) { alert(`Failed: ${d.error || 'unknown error'}`); setProcessing(null); return; }
       setApproveResults(p => ({ ...p, [inq.id]: d as unknown as ApproveResult }));
       await loadInquiries();
-      if (d.emailSent === false) alert(`Course built, but the welcome email failed to send (${d.emailError || 'unknown error'}). You can resend it from the Inquiries tab once email is fixed.`);
-      // Find the freshly-built course id and jump into Setup.
+      if (d.emailSent === false) alert(`Course built, but the welcome email failed to send (${d.emailError || 'unknown error'}).`);
       const list = await fetch('/api/admin/inquiries', { headers: H() }).then(res => res.json());
       const updated = (list as Inquiry[]).find(i => i.id === inq.id);
       if (updated?.builtCourseId) await openCourseSetup(updated.builtCourseId, inq.courseType);
-    } catch (e) {
-      alert(`Error: ${e}`);
-    }
+    } catch (e) { alert(`Error: ${e}`); }
     setProcessing(null);
   }
 
@@ -245,7 +304,7 @@ export default function AdminPage() {
     setSetupSaving(true); setSetupMsg('');
     const r = await fetch('/api/admin/course-settings', { method: 'PATCH', headers: H(), body: JSON.stringify({ courseId: detail.course.id, ...setupForm }) });
     setSetupSaving(false);
-    setSetupMsg(r.ok ? '✅ Settings saved' : '❌ Error saving settings');
+    setSetupMsg(r.ok ? 'saved' : 'error');
     if (r.ok) loadCourses();
   }
 
@@ -258,12 +317,8 @@ export default function AdminPage() {
     setSetupSaving(true); setSetupMsg('');
     const r = await fetch('/api/admin/schedule', { method: 'POST', headers: H(), body: JSON.stringify({ courseId: detail.course.id, ...newSchedule }) });
     setSetupSaving(false);
-    if (r.ok) {
-      setSetupMsg('✅ Schedule saved — tee times generated for the next 8 days');
-      loadSchedules(detail.course.id);
-    } else {
-      setSetupMsg('❌ Error saving schedule');
-    }
+    if (r.ok) { setSetupMsg('schedule_saved'); loadSchedules(detail.course.id); }
+    else { setSetupMsg('error'); }
   }
 
   async function deleteSchedule(id: string) {
@@ -293,26 +348,6 @@ export default function AdminPage() {
     setCreating(false);
   }
 
-  const filteredCourses = courses.filter(c=>
-    !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.city.toLowerCase().includes(search.toLowerCase()) || c.state.toLowerCase().includes(search.toLowerCase())
-  );
-
-  /* ── Login screen ── */
-  if(!authed) return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl p-8 w-full max-w-sm shadow-xl">
-        <div className="text-center mb-6">
-          <div className="text-3xl font-black text-[#1b4332] mb-1">GreenReserve</div>
-          <div className="text-sm text-gray-400 font-medium">Admin Dashboard</div>
-        </div>
-        <input type="password" placeholder="Admin key" value={key} onChange={e=>setKey(e.target.value)} onKeyDown={e=>e.key==='Enter'&&login()}
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm mb-3 focus:ring-2 focus:ring-green-500 outline-none"/>
-        <button onClick={login} className="w-full bg-[#1b4332] text-white py-3 rounded-xl font-bold hover:bg-[#2d6a4f]">Enter</button>
-      </div>
-    </div>
-  );
-
-  /* ── Course Detail Drawer ── */
   async function blockSlot(teeTimeId: string, block: boolean) {
     await fetch('/api/admin/tee-sheet', { method:'PATCH', headers:H(), body:JSON.stringify({ action: block?'block':'unblock', teeTimeId }) });
     if (detail?.course) loadTeeSheet(detail.course.id, tsDate);
@@ -331,342 +366,439 @@ export default function AdminPage() {
     else { const d = await r.json(); alert(d.error); }
   }
 
+  const filteredCourses = courses.filter(c=>
+    !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.city.toLowerCase().includes(search.toLowerCase()) || c.state.toLowerCase().includes(search.toLowerCase())
+  );
+
+  /* ── Login screen ── */
+  if (!authed) return (
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 mb-4">
+            <Shield className="w-7 h-7 text-emerald-400"/>
+          </div>
+          <div className="text-2xl font-black text-white">GreenReserve</div>
+          <div className="text-sm text-gray-500 mt-1">Admin Console</div>
+        </div>
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-2xl">
+          <input type="password" placeholder="Enter admin key" value={key}
+            onChange={e=>setKey(e.target.value)} onKeyDown={e=>e.key==='Enter'&&login()}
+            className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 text-sm mb-3 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none placeholder-gray-600"/>
+          <button onClick={login} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-bold transition-colors text-sm">
+            Sign In →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  /* ── Detail Drawer ── */
   const DetailDrawer = () => {
-    if(!detail && !detailLoading) return null;
+    if (!detail && !detailLoading) return null;
     const c = detail?.course;
 
     return (
-      <div className="fixed inset-0 bg-black/50 z-50 flex justify-end">
-        <div className="bg-white w-full max-w-2xl h-full overflow-y-auto shadow-2xl flex flex-col">
-          {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 z-10">
-            <div className="flex items-center justify-between mb-3">
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-end">
+        <div className="bg-gray-950 border-l border-gray-800 w-full max-w-2xl h-full flex flex-col shadow-2xl">
+
+          {/* Drawer Header */}
+          <div className="border-b border-gray-800 px-6 py-4 shrink-0">
+            <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-3">
-                <button onClick={()=>setDetail(null)} className="text-gray-400 hover:text-gray-600"><ArrowLeft className="w-5 h-5"/></button>
-                <span className="font-bold text-gray-900">{c?.name||'Loading...'}</span>
-                {c&&<span className={`text-xs px-2 py-0.5 rounded-full font-medium ${c.active?'bg-green-100 text-green-700':'bg-gray-100 text-gray-500'}`}>{c.active?'Live':'Offline'}</span>}
+                <button onClick={()=>setDetail(null)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors">
+                  <ArrowLeft className="w-4 h-4"/>
+                </button>
+                <div>
+                  <div className="font-bold text-white text-sm">{c?.name || 'Loading...'}</div>
+                  {c && <div className="text-xs text-gray-500">{String((c as Record<string,unknown>).city||'')} · {String((c as Record<string,unknown>).type||'')}</div>}
+                </div>
               </div>
-              <div className="flex gap-2">
-                {c&&<>
-                  <button onClick={()=>toggleFeatured(c.id,!c.featured)} className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors flex items-center gap-1 ${c.featured?'bg-yellow-50 text-yellow-700 border-yellow-300':'bg-white text-gray-500 border-gray-200 hover:border-yellow-300'}`}><Star className="w-3 h-3"/>{c.featured?'Featured':'Feature'}</button>
-                  <button onClick={()=>toggleCourseActive(c.id,!c.active)} className={`px-3 py-1.5 rounded-lg text-xs font-bold border flex items-center gap-1 ${c.active?'bg-green-50 text-green-700 border-green-200':'bg-red-50 text-red-700 border-red-200'}`}><Power className="w-3 h-3"/>{c.active?'Set Offline':'Set Live'}</button>
-                  <button onClick={()=>deleteCourse(c.id,c.name)} className="px-3 py-1.5 rounded-lg text-xs font-bold border border-red-200 text-red-600 bg-white hover:bg-red-50 flex items-center gap-1"><Trash2 className="w-3 h-3"/>Delete</button>
+              <div className="flex items-center gap-2">
+                {c && <>
+                  {c.active
+                    ? <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">Live</span>
+                    : <span className="text-xs px-2.5 py-1 rounded-full bg-gray-800 text-gray-400 border border-gray-700 font-semibold">Offline</span>
+                  }
+                  <a href={`/courses/${c.slug}`} target="_blank" className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-800 text-gray-500 hover:text-blue-400 transition-colors" title="View public page">
+                    <Globe className="w-4 h-4"/>
+                  </a>
+                  <button onClick={()=>toggleFeatured(c.id,!c.featured)} className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${c.featured?'text-yellow-400 bg-yellow-500/10':'text-gray-600 hover:text-yellow-400 hover:bg-gray-800'}`} title={c.featured?'Unfeature':'Feature'}>
+                    <Star className="w-4 h-4"/>
+                  </button>
+                  <button onClick={()=>toggleCourseActive(c.id,!c.active)} className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${c.active?'bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/20':'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'}`}>
+                    <Power className="w-3.5 h-3.5"/>
+                  </button>
+                  <button onClick={()=>deleteCourse(c.id,c.name)} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Delete">
+                    <Trash2 className="w-4 h-4"/>
+                  </button>
                 </>}
               </div>
             </div>
-            {/* Tabs */}
-            <div className="flex gap-1">
-              {(['overview','contact','setup','teesheet'] as const).map(t=>(
-                <button key={t} onClick={()=>{ setDrawerTab(t); if(t==='teesheet'&&c) loadTeeSheet(c.id,tsDate); if(t==='setup'&&c){ setSetupForm(c as Record<string, unknown>); loadSchedules(c.id); } }} className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors capitalize ${drawerTab===t?'bg-[#1b4332] text-white':'text-gray-500 hover:text-gray-800'}`}>
+
+            {/* Drawer Tabs */}
+            <div className="flex gap-0.5 mt-3 bg-gray-900 rounded-xl p-1">
+              {(['overview','contact','setup','teesheet'] as const).map(t => (
+                <button key={t} onClick={()=>{ setDrawerTab(t); if(t==='teesheet'&&c) loadTeeSheet(c.id,tsDate); if(t==='setup'&&c){ setSetupForm(c as Record<string,unknown>); loadSchedules(c.id); } }}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${drawerTab===t?'bg-gray-700 text-white shadow-sm':'text-gray-500 hover:text-gray-300'}`}>
                   {t==='teesheet'?'Tee Sheet':t.charAt(0).toUpperCase()+t.slice(1)}
                 </button>
               ))}
             </div>
           </div>
 
-          {detailLoading&&<div className="p-12 text-center text-gray-400">Loading...</div>}
+          {detailLoading && <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">Loading course data...</div>}
 
-          {detail&&<div className="p-6 flex-1 overflow-y-auto">
+          {detail && (
+            <div className="flex-1 overflow-y-auto p-6 space-y-5">
 
-            {/* ── Overview Tab ── */}
-            {drawerTab==='overview'&&<div className="space-y-6">
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  {label:'Gross (30d)',value:fmtMoney(detail.revenue30d.gross)},
-                  {label:'GR Fees (30d)',value:fmtMoney(detail.revenue30d.platform),color:'text-green-700'},
-                  {label:'Total Bookings',value:detail.totalBookings},
-                ].map(({label,value,color})=>(
-                  <div key={label} className="bg-gray-50 rounded-xl p-4 text-center">
-                    <div className="text-xs text-gray-400 font-medium mb-1">{label}</div>
-                    <div className={`font-black text-lg ${color||'text-gray-900'}`}>{value}</div>
-                  </div>
-                ))}
-              </div>
-
-              {detail.staff.length>0&&<div>
-                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Staff ({detail.staff.length})</div>
-                <div className="space-y-2">
-                  {detail.staff.map(s=>(
-                    <div key={s.id} className="flex items-center gap-3 bg-gray-50 rounded-lg px-3 py-2">
-                      <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-xs">{s.name[0]}</div>
-                      <div className="flex-1 text-sm"><span className="font-medium">{s.name}</span><span className="text-gray-400 text-xs"> · {s.email} · {s.role}</span></div>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${s.active?'bg-green-100 text-green-700':'bg-gray-100 text-gray-400'}`}>{s.active?'Active':'Off'}</span>
+              {/* ── Overview Tab ── */}
+              {drawerTab==='overview' && <div className="space-y-5">
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { label: 'Gross (30d)', value: fmtMoney(detail.revenue30d.gross), color: 'text-white' },
+                    { label: 'GR Fees (30d)', value: fmtMoney(detail.revenue30d.platform), color: 'text-emerald-400' },
+                    { label: 'All-time Bookings', value: detail.totalBookings, color: 'text-white' },
+                  ].map(({ label, value, color }) => (
+                    <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                      <div className="text-xs text-gray-500 uppercase tracking-wide mb-1.5">{label}</div>
+                      <div className={`text-xl font-black ${color}`}>{value}</div>
                     </div>
                   ))}
                 </div>
-              </div>}
 
-              {detail.recentBookings.length>0&&<div>
-                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Recent Bookings (30d)</div>
-                <div className="space-y-2">
-                  {detail.recentBookings.map(b=>(
-                    <div key={b.id} className="bg-gray-50 rounded-xl px-4 py-3 flex items-center justify-between">
-                      <div>
-                        <div className="font-medium text-sm text-gray-900">{b.golferName}</div>
-                        <div className="text-xs text-gray-400">{b.teeTime.date} {b.teeTime.time} · {b.players} player{b.players!==1?'s':''}</div>
-                        <div className="text-xs text-gray-400">{b.golferEmail}</div>
-                      </div>
-                      <div className="text-sm font-bold text-gray-900">{fmtMoney(b.totalAmount/100)}</div>
+                {/* Operator status strip */}
+                {c?.operator && (
+                  <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-black text-base shrink-0">
+                      {String(c.operator.name)[0]}
                     </div>
-                  ))}
-                </div>
-              </div>}
-            </div>}
-
-            {/* ── Contact Tab ── */}
-            {drawerTab==='contact'&&<div className="space-y-4">
-              {c?.operator&&<>
-                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">
-                  <div className="text-xs font-semibold text-blue-500 uppercase tracking-wide mb-3">Operator / Owner</div>
-                  <div className="text-lg font-black text-gray-900 mb-0.5">{String(c.operator.name)}</div>
-                  <div className="space-y-3 mt-3">
-                    <a href={`mailto:${String(c.operator.email)}`} className="flex items-center gap-3 text-sm text-gray-700 hover:text-blue-600">
-                      <Mail className="w-4 h-4 text-gray-400"/>{String(c.operator.email)}
-                    </a>
-                    {String((c.operator as Record<string,unknown>).phone||'')&&(
-                      <a href={`tel:${String((c.operator as Record<string,unknown>).phone)}`} className="flex items-center gap-3 text-sm text-gray-700 hover:text-blue-600">
-                        <Phone className="w-4 h-4 text-gray-400"/>{String((c.operator as Record<string,unknown>).phone)}
-                      </a>
-                    )}
-                  </div>
-                  <div className="flex gap-2 mt-4 flex-wrap">
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${c.operator.emailVerified?'bg-green-100 text-green-700':'bg-red-100 text-red-600'}`}>{c.operator.emailVerified?'✓ Email verified':'✗ Not verified'}</span>
-                    <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600 font-medium">Onboarding step {String(c.operator.onboardingStep)}/3</span>
-                    {c.stripeAccountActive&&<span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700 font-medium">Stripe connected ✓</span>}
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
-                  <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Course Info</div>
-                  <div className="space-y-2 text-sm">
-                    {[
-                      ['Address', String((c as Record<string,unknown>).address||'—')],
-                      ['Phone', String((c as Record<string,unknown>).phone||'—')],
-                      ['Website', String((c as Record<string,unknown>).website||'—')],
-                      ['Type', String((c as Record<string,unknown>).type||'—')],
-                    ].map(([label, val])=>(
-                      <div key={label} className="flex gap-2">
-                        <span className="text-gray-400 w-20 shrink-0">{label}</span>
-                        <span className="text-gray-800 font-medium">{val}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </>}
-
-              {detail.staff.length>0&&<div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
-                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Staff Contacts</div>
-                <div className="space-y-3">
-                  {detail.staff.map(s=>(
-                    <div key={s.id} className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-xs shrink-0">{s.name[0]}</div>
-                      <div className="flex-1">
-                        <div className="text-sm font-semibold text-gray-900">{s.name} <span className="text-xs text-gray-400 font-normal">· {s.role}</span></div>
-                        <a href={`mailto:${s.email}`} className="text-xs text-blue-600 hover:underline">{s.email}</a>
-                      </div>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${s.active?'bg-green-100 text-green-700':'bg-gray-100 text-gray-400'}`}>{s.active?'Active':'Off'}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-white text-sm truncate">{String(c.operator.name)}</div>
+                      <div className="text-xs text-gray-500 truncate">{String(c.operator.email)}</div>
                     </div>
-                  ))}
-                </div>
-              </div>}
-            </div>}
-
-            {/* ── Setup Tab — admin configures the course directly ── */}
-            {drawerTab==='setup'&&<div className="space-y-6">
-              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800">
-                You're editing this course's live settings directly. The operator can still log in and adjust their own dashboard anytime — this doesn't lock them out.
-              </div>
-
-              {setupMsg&&<div className="text-sm font-semibold">{setupMsg}</div>}
-
-              {/* Quick policy settings */}
-              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 space-y-4">
-                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Course Policy</div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-500 block mb-1">Walking policy</label>
-                    <select value={String(setupForm.walkingAllowed??'always')} onChange={e=>setSetupForm(f=>({...f,walkingAllowed:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500">
-                      <option value="always">Always allowed</option>
-                      <option value="weekdays">Weekdays only</option>
-                      <option value="after12">After 12pm only</option>
-                      <option value="never">Cart required</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-gray-500 block mb-1">Cancellation window (hrs)</label>
-                    <input type="number" value={Number(setupForm.cancellationHours??24)} onChange={e=>setSetupForm(f=>({...f,cancellationHours:Number(e.target.value)}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500"/>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-4">
-                  {[['hasMemberPricing','Member pricing'],['hasResidentPricing','Resident pricing'],['hasCaddies','Caddies available'],['cartRequired','Cart required']].map(([key,label])=>(
-                    <label key={key} className="flex items-center gap-2 text-sm text-gray-700">
-                      <input type="checkbox" checked={!!setupForm[key]} onChange={e=>setSetupForm(f=>({...f,[key]:e.target.checked}))} className="w-4 h-4 text-green-600 rounded"/>
-                      {label}
-                    </label>
-                  ))}
-                </div>
-                {!!setupForm.hasResidentPricing&&(
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs font-semibold text-gray-500 block mb-1">Resident county</label>
-                      <input value={String(setupForm.residentCounty??'')} onChange={e=>setSetupForm(f=>({...f,residentCounty:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500"/>
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-gray-500 block mb-1">Resident state</label>
-                      <input value={String(setupForm.residentState??'')} maxLength={2} onChange={e=>setSetupForm(f=>({...f,residentState:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500"/>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {c.operator.emailVerified
+                        ? <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Verified</span>
+                        : <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/30">Not verified</span>
+                      }
+                      {c.stripeAccountActive && <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/30">Stripe ✓</span>}
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-800 text-gray-400">Step {c.operator.onboardingStep}/3</span>
                     </div>
                   </div>
                 )}
-                <button onClick={saveSetup} disabled={setupSaving} className="bg-[#1b4332] text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-50">{setupSaving?'Saving...':'Save Policy Settings'}</button>
-              </div>
 
-              {/* Tee time schedule */}
-              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 space-y-4">
-                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Tee Time Schedule</div>
-
-                {schedules.length>0&&<div className="space-y-2">
-                  {schedules.map(s=>(
-                    <div key={s.id} className="flex items-center justify-between bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm">
-                      <div>
-                        <div className="font-semibold text-gray-900">
-                          {s.daysOfWeek.length===0?'Every day':s.daysOfWeek.map(d=>DAYS[d]).join(', ')} — {s.startTime} to {s.endTime}, every {s.intervalMinutes} min
-                        </div>
-                        <div className="text-gray-500 text-xs mt-0.5">
-                          Weekday ${s.greenFeeWeekday} / Weekend ${s.greenFeeWeekend} · Cart ${s.cartFee}
-                          {s.memberRateWeekday!=null&&` · Member $${s.memberRateWeekday}`}
-                          {s.walkingAllowed?' · Walking OK':''}
-                        </div>
-                      </div>
-                      <button onClick={()=>deleteSchedule(s.id)} className="text-red-400 hover:text-red-600"><Trash2 className="w-4 h-4"/></button>
-                    </div>
-                  ))}
-                </div>}
-                {schedules.length===0&&<p className="text-sm text-gray-400">No schedule set yet — nothing is bookable until one is added below.</p>}
-
-                <div className="border-t border-gray-200 pt-4 space-y-3">
-                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Add Schedule</div>
+                {detail.staff.length > 0 && (
                   <div>
-                    <label className="text-xs font-semibold text-gray-500 block mb-1.5">Days open <span className="text-gray-400 font-normal">(none = every day)</span></label>
-                    <div className="flex gap-1.5">
-                      {DAYS.map((day,i)=>(
-                        <button key={day} onClick={()=>toggleNewScheduleDay(i)} className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${newSchedule.daysOfWeek.includes(i)?'bg-green-600 text-white border-green-600':'bg-white text-gray-700 border-gray-300 hover:border-green-400'}`}>{day}</button>
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Staff — {detail.staff.length} member{detail.staff.length!==1?'s':''}</div>
+                    <div className="space-y-1.5">
+                      {detail.staff.map(s => (
+                        <div key={s.id} className="flex items-center gap-3 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5">
+                          <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-bold text-xs shrink-0">{s.name[0]}</div>
+                          <div className="flex-1 text-sm"><span className="font-medium text-white">{s.name}</span><span className="text-gray-500 text-xs"> · {s.email} · {s.role}</span></div>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${s.active?'bg-emerald-500/10 text-emerald-400':'bg-gray-800 text-gray-500'}`}>{s.active?'Active':'Off'}</span>
+                        </div>
                       ))}
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div><label className="text-xs font-semibold text-gray-500 block mb-1">First tee</label><input type="time" value={newSchedule.startTime} onChange={e=>setNewSchedule(s=>({...s,startTime:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500"/></div>
-                    <div><label className="text-xs font-semibold text-gray-500 block mb-1">Last tee</label><input type="time" value={newSchedule.endTime} onChange={e=>setNewSchedule(s=>({...s,endTime:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500"/></div>
-                    <div><label className="text-xs font-semibold text-gray-500 block mb-1">Interval</label>
-                      <select value={newSchedule.intervalMinutes} onChange={e=>setNewSchedule(s=>({...s,intervalMinutes:Number(e.target.value)}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500">
-                        {[7,8,9,10,12,15].map(v=><option key={v} value={v}>{v} min</option>)}
-                      </select>
+                )}
+
+                {detail.recentBookings.length > 0 && (
+                  <div>
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Recent Bookings</div>
+                    <div className="space-y-1.5">
+                      {detail.recentBookings.map(b => (
+                        <div key={b.id} className="flex items-center gap-4 bg-gray-900 border border-gray-800 rounded-xl px-4 py-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-white text-sm truncate">{b.golferName}</div>
+                            <div className="text-xs text-gray-500">{fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)} · {b.players} player{b.players!==1?'s':''}</div>
+                          </div>
+                          <div className="text-sm font-black text-emerald-400">{fmtMoney(b.totalAmount/100)}</div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div><label className="text-xs font-semibold text-gray-500 block mb-1">Green fee (weekday) $</label><input type="number" value={newSchedule.greenFeeWeekday} onChange={e=>setNewSchedule(s=>({...s,greenFeeWeekday:Number(e.target.value)}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500"/></div>
-                    <div><label className="text-xs font-semibold text-gray-500 block mb-1">Green fee (weekend) $</label><input type="number" value={newSchedule.greenFeeWeekend} onChange={e=>setNewSchedule(s=>({...s,greenFeeWeekend:Number(e.target.value)}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500"/></div>
-                    <div><label className="text-xs font-semibold text-gray-500 block mb-1">Cart fee $</label><input type="number" value={newSchedule.cartFee} onChange={e=>setNewSchedule(s=>({...s,cartFee:Number(e.target.value)}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500"/></div>
+                )}
+
+                {detail.recentBookings.length === 0 && detail.totalBookings === 0 && (
+                  <div className="text-center py-10 text-gray-600 text-sm">No bookings yet for this course</div>
+                )}
+              </div>}
+
+              {/* ── Contact Tab ── */}
+              {drawerTab==='contact' && <div className="space-y-4">
+                {c?.operator && <>
+                  <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/10 border border-blue-700/30 rounded-2xl p-5">
+                    <div className="text-xs font-semibold text-blue-400 uppercase tracking-wide mb-3">Operator / Owner</div>
+                    <div className="text-lg font-black text-white mb-1">{String(c.operator.name)}</div>
+                    <div className="space-y-2 mt-3">
+                      <a href={`mailto:${String(c.operator.email)}`} className="flex items-center gap-3 text-sm text-gray-300 hover:text-blue-400 transition-colors">
+                        <Mail className="w-4 h-4 text-gray-500"/>{String(c.operator.email)}
+                      </a>
+                      {String((c.operator as Record<string,unknown>).phone||'') && (
+                        <a href={`tel:${String((c.operator as Record<string,unknown>).phone)}`} className="flex items-center gap-3 text-sm text-gray-300 hover:text-blue-400 transition-colors">
+                          <Phone className="w-4 h-4 text-gray-500"/>{String((c.operator as Record<string,unknown>).phone)}
+                        </a>
+                      )}
+                    </div>
+                    <div className="flex gap-2 mt-4 flex-wrap">
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium border ${c.operator.emailVerified?'bg-emerald-500/10 text-emerald-400 border-emerald-500/30':'bg-red-500/10 text-red-400 border-red-500/30'}`}>
+                        {c.operator.emailVerified?'✓ Email verified':'✗ Not verified'}
+                      </span>
+                      <span className="text-xs px-2.5 py-1 rounded-full bg-gray-800 text-gray-400 border border-gray-700 font-medium">Onboarding {c.operator.onboardingStep}/3</span>
+                      {c.stripeAccountActive && <span className="text-xs px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/30 font-medium">Stripe connected ✓</span>}
+                    </div>
                   </div>
-                  {!!setupForm.hasMemberPricing&&(
-                    <div className="grid grid-cols-2 gap-3 bg-blue-50 border border-blue-100 rounded-xl p-3">
-                      <div><label className="text-xs font-semibold text-blue-700 block mb-1">Member rate (weekday) $</label><input type="number" value={newSchedule.memberRateWeekday} onChange={e=>setNewSchedule(s=>({...s,memberRateWeekday:e.target.value}))} className="w-full border border-blue-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400"/></div>
-                      <div><label className="text-xs font-semibold text-blue-700 block mb-1">Member rate (weekend) $</label><input type="number" value={newSchedule.memberRateWeekend} onChange={e=>setNewSchedule(s=>({...s,memberRateWeekend:e.target.value}))} className="w-full border border-blue-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400"/></div>
+
+                  <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Course Info</div>
+                    <div className="space-y-2.5">
+                      {[
+                        ['Address', String((c as Record<string,unknown>).address||'—')],
+                        ['Phone',   String((c as Record<string,unknown>).phone||'—')],
+                        ['Website', String((c as Record<string,unknown>).website||'—')],
+                        ['Type',    String((c as Record<string,unknown>).type||'—')],
+                        ['Slug',    c.slug],
+                      ].map(([label, val]) => (
+                        <div key={label} className="flex gap-3 text-sm">
+                          <span className="text-gray-500 w-16 shrink-0">{label}</span>
+                          <span className="text-gray-200 font-medium break-all">{val}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>}
+
+                {detail.staff.length > 0 && (
+                  <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Staff Contacts</div>
+                    <div className="space-y-3">
+                      {detail.staff.map(s => (
+                        <div key={s.id} className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-bold text-sm shrink-0">{s.name[0]}</div>
+                          <div className="flex-1">
+                            <div className="text-sm font-semibold text-white">{s.name} <span className="text-xs text-gray-500 font-normal">· {s.role}</span></div>
+                            <a href={`mailto:${s.email}`} className="text-xs text-blue-400 hover:underline">{s.email}</a>
+                          </div>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${s.active?'bg-emerald-500/10 text-emerald-400':'bg-gray-800 text-gray-500'}`}>{s.active?'Active':'Off'}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>}
+
+              {/* ── Setup Tab ── */}
+              {drawerTab==='setup' && <div className="space-y-5">
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3 text-xs text-amber-300">
+                  You&apos;re editing live settings directly. The operator can still adjust their own dashboard — this doesn&apos;t lock them out.
+                </div>
+
+                {setupMsg && (
+                  <div className={`text-sm font-semibold px-4 py-2.5 rounded-xl border ${setupMsg==='error'?'bg-red-500/10 text-red-400 border-red-500/30':setupMsg==='schedule_saved'?'bg-emerald-500/10 text-emerald-400 border-emerald-500/30':'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'}`}>
+                    {setupMsg==='error'?'❌ Error saving':setupMsg==='schedule_saved'?'✅ Schedule saved — tee times generated for next 8 days':'✅ Settings saved'}
+                  </div>
+                )}
+
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+                  <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Course Policy</div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 block mb-1.5">Walking policy</label>
+                      <select value={String(setupForm.walkingAllowed??'always')} onChange={e=>setSetupForm(f=>({...f,walkingAllowed:e.target.value}))} className={iCls}>
+                        <option value="always">Always allowed</option>
+                        <option value="weekdays">Weekdays only</option>
+                        <option value="after12">After 12pm only</option>
+                        <option value="never">Cart required</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 block mb-1.5">Cancellation window (hrs)</label>
+                      <input type="number" value={Number(setupForm.cancellationHours??24)} onChange={e=>setSetupForm(f=>({...f,cancellationHours:Number(e.target.value)}))} className={iCls}/>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-4">
+                    {[['hasMemberPricing','Member pricing'],['hasResidentPricing','Resident pricing'],['hasCaddies','Caddies'],['cartRequired','Cart required']].map(([k,label])=>(
+                      <label key={k} className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none">
+                        <input type="checkbox" checked={!!setupForm[k]} onChange={e=>setSetupForm(f=>({...f,[k]:e.target.checked}))} className="w-4 h-4 accent-emerald-500 rounded"/>
+                        {label}
+                      </label>
+                    ))}
+                  </div>
+                  {!!setupForm.hasResidentPricing && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-semibold text-gray-500 block mb-1.5">Resident county</label>
+                        <input value={String(setupForm.residentCounty??'')} onChange={e=>setSetupForm(f=>({...f,residentCounty:e.target.value}))} className={iCls}/>
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-gray-500 block mb-1.5">Resident state</label>
+                        <input value={String(setupForm.residentState??'')} maxLength={2} onChange={e=>setSetupForm(f=>({...f,residentState:e.target.value}))} className={iCls}/>
+                      </div>
                     </div>
                   )}
-                  <label className="flex items-center gap-2 text-sm text-gray-700">
-                    <input type="checkbox" checked={newSchedule.walkingAllowed} onChange={e=>setNewSchedule(s=>({...s,walkingAllowed:e.target.checked}))} className="w-4 h-4 text-green-600 rounded"/>
-                    Walking allowed
-                  </label>
-                  <button onClick={addSchedule} disabled={setupSaving} className="w-full bg-[#1b4332] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-50">{setupSaving?'Saving...':'Save Schedule & Generate Tee Times'}</button>
+                  <button onClick={saveSetup} disabled={setupSaving} className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors">
+                    {setupSaving?'Saving...':'Save Policy Settings'}
+                  </button>
                 </div>
-              </div>
-            </div>}
 
-            {/* ── Tee Sheet Tab ── */}
-            {drawerTab==='teesheet'&&<div>
-              {/* Date picker */}
-              <div className="flex items-center gap-3 mb-5">
-                <Calendar className="w-4 h-4 text-gray-400"/>
-                <input type="date" value={tsDate} onChange={e=>{ setTsDate(e.target.value); if(c) loadTeeSheet(c.id,e.target.value); }}
-                  className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-green-500"/>
-                <span className="text-sm text-gray-400">{tsSlots.length} slots</span>
-              </div>
-
-              {tsLoading&&<div className="text-center text-gray-400 py-12">Loading tee sheet...</div>}
-
-              {!tsLoading&&tsSlots.length===0&&<div className="text-center text-gray-400 py-12">No tee times for this date</div>}
-
-              <div className="space-y-3">
-                {tsSlots.map(slot=>(
-                  <div key={slot.id} className={`rounded-xl border ${slot.status==='blocked'?'border-red-200 bg-red-50':slot.bookings.length>0?'border-green-200 bg-green-50':'border-gray-200 bg-white'}`}>
-                    <div className="px-4 py-3 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-gray-900 text-sm w-16">{slot.time}</span>
-                        <span className="text-xs text-gray-500">{slot.holes}h · ${slot.greenFee}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${slot.status==='blocked'?'bg-red-100 text-red-700':slot.playersAvailable===0?'bg-gray-100 text-gray-500':'bg-green-100 text-green-700'}`}>
-                          {slot.status==='blocked'?'Blocked':`${slot.playersAvailable} open`}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button onClick={()=>setManualSlot(slot.id)} className="text-xs px-2 py-1 bg-[#1b4332] text-white rounded-lg flex items-center gap-1 hover:bg-[#2d6a4f]"><Plus className="w-3 h-3"/>Add</button>
-                        <button onClick={()=>blockSlot(slot.id, slot.status!=='blocked')} className={`text-xs px-2 py-1 rounded-lg flex items-center gap-1 border transition-colors ${slot.status==='blocked'?'border-green-300 text-green-700 bg-green-50 hover:bg-green-100':'border-red-200 text-red-600 bg-white hover:bg-red-50'}`}>
-                          <Ban className="w-3 h-3"/>{slot.status==='blocked'?'Unblock':'Block'}
-                        </button>
-                      </div>
-                    </div>
-                    {slot.bookings.length>0&&<div className="border-t border-gray-100 px-4 py-2 space-y-2">
-                      {slot.bookings.map(b=>(
-                        <div key={b.id} className="flex items-center justify-between text-sm">
+                {/* Schedule */}
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+                  <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Tee Time Schedules</div>
+                  {schedules.length > 0 ? (
+                    <div className="space-y-2">
+                      {schedules.map(s => (
+                        <div key={s.id} className="flex items-center justify-between bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
                           <div>
-                            <span className="font-medium text-gray-900">{b.golferName}</span>
-                            <span className="text-gray-400 text-xs"> · {b.players} player{b.players!==1?'s':''} · </span>
-                            <a href={`mailto:${b.golferEmail}`} className="text-xs text-blue-600 hover:underline">{b.golferEmail}</a>
-                            {b.golferPhone&&<span className="text-xs text-gray-400"> · {b.golferPhone}</span>}
-                            {b.paymentStatus==='manual'&&<span className="ml-2 text-xs px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded">Manual</span>}
+                            <div className="font-semibold text-white text-sm">
+                              {s.daysOfWeek.length===0?'Every day':s.daysOfWeek.map(d=>DAYS[d]).join(', ')} · {s.startTime}–{s.endTime} every {s.intervalMinutes}min
+                            </div>
+                            <div className="text-gray-500 text-xs mt-0.5">
+                              WD ${s.greenFeeWeekday} / WE ${s.greenFeeWeekend} · Cart ${s.cartFee}
+                              {s.memberRateWeekday!=null&&` · Member $${s.memberRateWeekday}`}
+                              {s.walkingAllowed?' · Walking ✓':''}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-gray-700">{fmtMoney(b.totalAmount/100)}</span>
-                            <button onClick={()=>cancelBooking(b.id)} className="text-xs text-red-500 hover:text-red-700 px-2 py-0.5 border border-red-200 rounded-lg">Cancel</button>
-                          </div>
+                          <button onClick={()=>deleteSchedule(s.id)} className="text-gray-600 hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-red-500/10">
+                            <Trash2 className="w-4 h-4"/>
+                          </button>
                         </div>
                       ))}
-                    </div>}
-                  </div>
-                ))}
-              </div>
-
-              {/* Manual booking modal */}
-              {manualSlot&&<div className="fixed inset-0 bg-black/40 z-60 flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-gray-900">Add Manual Booking</h3>
-                    <button onClick={()=>setManualSlot(null)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5"/></button>
-                  </div>
-                  <div className="space-y-3">
-                    {[['Golfer Name*','name','text'],['Email*','email','email'],['Phone','phone','tel']].map(([label,field,type])=>(
-                      <div key={field}>
-                        <label className="text-xs font-semibold text-gray-500 block mb-1">{label}</label>
-                        <input type={type} value={(manualForm as Record<string,unknown>)[field] as string} onChange={e=>setManualForm(f=>({...f,[field]:e.target.value}))}
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500"/>
-                      </div>
-                    ))}
-                    <div>
-                      <label className="text-xs font-semibold text-gray-500 block mb-1">Players*</label>
-                      <select value={manualForm.players} onChange={e=>setManualForm(f=>({...f,players:Number(e.target.value)}))}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-500">
-                        {[1,2,3,4].map(n=><option key={n} value={n}>{n}</option>)}
-                      </select>
                     </div>
-                  </div>
-                  <div className="flex gap-3 mt-5">
-                    <button onClick={()=>setManualSlot(null)} className="flex-1 px-4 py-2 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600">Cancel</button>
-                    <button onClick={addManualBooking} className="flex-1 px-4 py-2 bg-[#1b4332] text-white rounded-xl text-sm font-semibold hover:bg-[#2d6a4f]">Add Booking</button>
+                  ) : (
+                    <p className="text-sm text-gray-500 bg-gray-800/50 rounded-xl p-4">No schedule yet — add one below to make this course bookable.</p>
+                  )}
+
+                  <div className="border-t border-gray-800 pt-4 space-y-3">
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Add Schedule</div>
+                    <div>
+                      <label className="text-xs text-gray-500 block mb-1.5">Days <span className="text-gray-600">(none = every day)</span></label>
+                      <div className="flex gap-1.5">
+                        {DAYS.map((day,i)=>(
+                          <button key={day} onClick={()=>toggleNewScheduleDay(i)} className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-colors ${newSchedule.daysOfWeek.includes(i)?'bg-emerald-600 text-white border-emerald-600':'bg-gray-800 text-gray-400 border-gray-700 hover:border-emerald-500 hover:text-white'}`}>{day}</button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div><label className="text-xs text-gray-500 block mb-1">First tee</label><input type="time" value={newSchedule.startTime} onChange={e=>setNewSchedule(s=>({...s,startTime:e.target.value}))} className={iCls}/></div>
+                      <div><label className="text-xs text-gray-500 block mb-1">Last tee</label><input type="time" value={newSchedule.endTime} onChange={e=>setNewSchedule(s=>({...s,endTime:e.target.value}))} className={iCls}/></div>
+                      <div><label className="text-xs text-gray-500 block mb-1">Interval</label>
+                        <select value={newSchedule.intervalMinutes} onChange={e=>setNewSchedule(s=>({...s,intervalMinutes:Number(e.target.value)}))} className={iCls}>
+                          {[7,8,9,10,12,15].map(v=><option key={v} value={v}>{v} min</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div><label className="text-xs text-gray-500 block mb-1">WD Green fee $</label><input type="number" value={newSchedule.greenFeeWeekday} onChange={e=>setNewSchedule(s=>({...s,greenFeeWeekday:Number(e.target.value)}))} className={iCls}/></div>
+                      <div><label className="text-xs text-gray-500 block mb-1">WE Green fee $</label><input type="number" value={newSchedule.greenFeeWeekend} onChange={e=>setNewSchedule(s=>({...s,greenFeeWeekend:Number(e.target.value)}))} className={iCls}/></div>
+                      <div><label className="text-xs text-gray-500 block mb-1">Cart fee $</label><input type="number" value={newSchedule.cartFee} onChange={e=>setNewSchedule(s=>({...s,cartFee:Number(e.target.value)}))} className={iCls}/></div>
+                    </div>
+                    {!!setupForm.hasMemberPricing && (
+                      <div className="grid grid-cols-2 gap-3 bg-blue-500/10 border border-blue-500/20 rounded-xl p-3">
+                        <div><label className="text-xs font-semibold text-blue-400 block mb-1">Member rate WD $</label><input type="number" value={newSchedule.memberRateWeekday} onChange={e=>setNewSchedule(s=>({...s,memberRateWeekday:e.target.value}))} className={iCls}/></div>
+                        <div><label className="text-xs font-semibold text-blue-400 block mb-1">Member rate WE $</label><input type="number" value={newSchedule.memberRateWeekend} onChange={e=>setNewSchedule(s=>({...s,memberRateWeekend:e.target.value}))} className={iCls}/></div>
+                      </div>
+                    )}
+                    <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none">
+                      <input type="checkbox" checked={newSchedule.walkingAllowed} onChange={e=>setNewSchedule(s=>({...s,walkingAllowed:e.target.checked}))} className="w-4 h-4 accent-emerald-500 rounded"/>
+                      Walking allowed
+                    </label>
+                    <button onClick={addSchedule} disabled={setupSaving} className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-bold transition-colors">
+                      {setupSaving?'Saving...':'Save Schedule & Generate Tee Times'}
+                    </button>
                   </div>
                 </div>
               </div>}
-            </div>}
 
-          </div>}
+              {/* ── Tee Sheet Tab ── */}
+              {drawerTab==='teesheet' && <div>
+                <div className="flex items-center gap-3 mb-5">
+                  <Calendar className="w-4 h-4 text-gray-500"/>
+                  <input type="date" value={tsDate} onChange={e=>{ setTsDate(e.target.value); if(c) loadTeeSheet(c.id,e.target.value); }}
+                    className="bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500/50"/>
+                  {!tsLoading && <span className="text-xs text-gray-500">{tsSlots.length} slots · {tsSlots.filter(s=>s.bookings.length>0).length} booked</span>}
+                </div>
+
+                {tsLoading && <div className="text-center text-gray-500 py-12 text-sm">Loading tee sheet...</div>}
+                {!tsLoading && tsSlots.length===0 && <div className="text-center text-gray-600 py-12 text-sm">No tee times for this date</div>}
+
+                <div className="space-y-2">
+                  {tsSlots.map(slot => (
+                    <div key={slot.id} className={`rounded-xl border overflow-hidden ${slot.status==='blocked'?'border-red-500/30 bg-red-500/5':slot.bookings.length>0?'border-emerald-500/30 bg-emerald-500/5':'border-gray-800 bg-gray-900'}`}>
+                      <div className="px-4 py-3 flex items-center gap-3">
+                        <span className="font-mono font-bold text-white text-sm w-14 shrink-0">{slot.time}</span>
+                        <span className="text-xs text-gray-500">{slot.holes}h · ${slot.greenFee}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${slot.status==='blocked'?'bg-red-500/20 text-red-400':slot.bookings.length>0?'bg-emerald-500/20 text-emerald-400':'bg-gray-800 text-gray-400'}`}>
+                          {slot.status==='blocked'?'Blocked':slot.bookings.length>0?`${slot.bookings.length} booked`:`${slot.playersAvailable} open`}
+                        </span>
+                        <div className="ml-auto flex items-center gap-1.5">
+                          <button onClick={()=>setManualSlot(slot.id)} className="text-xs px-2.5 py-1 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded-lg flex items-center gap-1 transition-colors">
+                            <Plus className="w-3 h-3"/>Add
+                          </button>
+                          <button onClick={()=>blockSlot(slot.id,slot.status!=='blocked')} className={`text-xs px-2.5 py-1 rounded-lg flex items-center gap-1 border transition-colors ${slot.status==='blocked'?'border-emerald-500/30 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20':'border-red-500/30 text-red-400 bg-red-500/10 hover:bg-red-500/20'}`}>
+                            <Ban className="w-3 h-3"/>{slot.status==='blocked'?'Unblock':'Block'}
+                          </button>
+                        </div>
+                      </div>
+                      {slot.bookings.length > 0 && (
+                        <div className="border-t border-gray-800/50 px-4 py-2 space-y-2">
+                          {slot.bookings.map(b => (
+                            <div key={b.id} className="flex items-center justify-between text-sm py-0.5">
+                              <div className="flex items-center gap-3">
+                                <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-bold text-xs shrink-0">{b.golferName[0]}</div>
+                                <div>
+                                  <div className="font-semibold text-white text-xs">{b.golferName} <span className="text-gray-500 font-normal">· {b.players}p</span></div>
+                                  <div className="flex items-center gap-2">
+                                    <a href={`mailto:${b.golferEmail}`} className="text-xs text-blue-400 hover:underline">{b.golferEmail}</a>
+                                    {b.golferPhone && <span className="text-xs text-gray-500">{b.golferPhone}</span>}
+                                    {b.paymentStatus==='manual' && <span className="text-xs px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded">Manual</span>}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs font-bold text-emerald-400">{fmtMoney(b.totalAmount/100)}</span>
+                                <button onClick={()=>cancelBooking(b.id)} className="text-xs text-red-400 hover:text-red-300 px-2 py-0.5 border border-red-500/30 rounded-lg hover:bg-red-500/10 transition-colors">Cancel</button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Manual booking modal */}
+                {manualSlot && (
+                  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-60 flex items-center justify-center p-4">
+                    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+                      <div className="flex items-center justify-between mb-5">
+                        <h3 className="font-bold text-white">Add Manual Booking</h3>
+                        <button onClick={()=>setManualSlot(null)} className="text-gray-500 hover:text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-800 transition-colors"><X className="w-4 h-4"/></button>
+                      </div>
+                      <div className="space-y-3">
+                        {[['Golfer Name *','name','text'],['Email *','email','email'],['Phone','phone','tel']].map(([label,field,type])=>(
+                          <div key={field}>
+                            <label className="text-xs font-semibold text-gray-500 block mb-1.5">{label}</label>
+                            <input type={type} value={(manualForm as Record<string,unknown>)[field] as string} onChange={e=>setManualForm(f=>({...f,[field]:e.target.value}))} className={iCls}/>
+                          </div>
+                        ))}
+                        <div>
+                          <label className="text-xs font-semibold text-gray-500 block mb-1.5">Players *</label>
+                          <select value={manualForm.players} onChange={e=>setManualForm(f=>({...f,players:Number(e.target.value)}))} className={iCls}>
+                            {[1,2,3,4].map(n=><option key={n} value={n}>{n}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="flex gap-3 mt-5">
+                        <button onClick={()=>setManualSlot(null)} className="flex-1 px-4 py-2.5 border border-gray-700 rounded-xl text-sm font-semibold text-gray-400 hover:text-white hover:border-gray-600 transition-colors">Cancel</button>
+                        <button onClick={addManualBooking} className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-colors">Add Booking</button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -674,163 +806,247 @@ export default function AdminPage() {
 
   /* ── Main layout ── */
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-gray-950 text-white flex">
+
       {/* Sidebar */}
       <div className="fixed left-0 top-0 h-full w-56 bg-gray-900 border-r border-gray-800 flex flex-col z-10">
         <div className="px-5 py-5 border-b border-gray-800">
-          <div className="font-black text-lg text-white">GreenReserve</div>
-          <div className="text-xs text-gray-500 font-medium">Admin Console</div>
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+              <Layers className="w-4 h-4 text-emerald-400"/>
+            </div>
+            <div>
+              <div className="font-black text-sm text-white leading-tight">GreenReserve</div>
+              <div className="text-[10px] text-gray-600 font-medium uppercase tracking-wider">Admin</div>
+            </div>
+          </div>
         </div>
-        <nav className="flex-1 p-3 space-y-1">
-          {([['overview','Overview',<BarChart2 key="b" className="w-4 h-4"/>],['inquiries','Inquiries',<AlertCircle key="a" className="w-4 h-4"/>],['courses','Courses',<Building2 key="c" className="w-4 h-4"/>],['create','Add Course',<Plus key="p" className="w-4 h-4"/>]] as const).map(([id,label,icon])=>(
-            <button key={id} onClick={()=>setTab(id)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${tab===id?'bg-[#1b4332] text-white':'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
+
+        {stats && (
+          <div className="px-4 py-3 border-b border-gray-800/50 grid grid-cols-2 gap-2">
+            <div className="bg-gray-800/50 rounded-lg p-2 text-center">
+              <div className="text-lg font-black text-white leading-none">{stats.activeCourses}</div>
+              <div className="text-[10px] text-gray-500 mt-0.5">Live</div>
+            </div>
+            <div className="bg-gray-800/50 rounded-lg p-2 text-center">
+              <div className="text-lg font-black text-emerald-400 leading-none">{fmtMoney(stats.platformRevenue30d).replace('$','$')}</div>
+              <div className="text-[10px] text-gray-500 mt-0.5">30d fees</div>
+            </div>
+          </div>
+        )}
+
+        <nav className="flex-1 p-3 space-y-0.5">
+          {([
+            ['overview',   'Overview',    <BarChart2 key="b" className="w-4 h-4"/>],
+            ['inquiries',  'Inquiries',   <AlertCircle key="a" className="w-4 h-4"/>],
+            ['courses',    'Courses',     <Building2 key="c" className="w-4 h-4"/>],
+            ['create',     'Add Course',  <Plus key="p" className="w-4 h-4"/>],
+          ] as const).map(([id,label,icon])=>(
+            <button key={id} onClick={()=>setTab(id)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${tab===id?'bg-emerald-600/20 text-emerald-400 border border-emerald-500/20':'text-gray-500 hover:text-white hover:bg-gray-800 border border-transparent'}`}>
               {icon}{label}
-              {id==='inquiries'&&stats?.pendingInquiries>0&&<span className="ml-auto bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">{stats.pendingInquiries}</span>}
+              {id==='inquiries' && stats?.pendingInquiries > 0 && (
+                <span className="ml-auto bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none">{stats.pendingInquiries}</span>
+              )}
             </button>
           ))}
         </nav>
+
         <div className="p-3 border-t border-gray-800">
-          <button onClick={()=>setAuthed(false)} className="w-full text-left text-xs text-gray-500 hover:text-gray-300 px-3 py-2">Sign out</button>
+          <div className="text-[10px] text-gray-700 uppercase tracking-wider px-3 mb-1">Signed in</div>
+          <button onClick={()=>setAuthed(false)} className="w-full text-left text-xs text-gray-500 hover:text-gray-300 px-3 py-2 rounded-xl hover:bg-gray-800 transition-colors">Sign out</button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="ml-56 min-h-screen">
-        <div className="px-8 py-6">
+      <div className="ml-56 flex-1 min-h-screen">
+        <div className="px-8 py-7 max-w-6xl">
 
-          {/* ── Overview ── */}
-          {tab==='overview'&&<>
-            <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-black text-white">Platform Overview</h1>
-              <button onClick={loadStats} className="text-gray-400 hover:text-white flex items-center gap-2 text-sm"><RefreshCw className="w-4 h-4"/>Refresh</button>
+          {/* ══ OVERVIEW ══ */}
+          {tab==='overview' && <>
+            <div className="flex items-center justify-between mb-7">
+              <div>
+                <h1 className="text-2xl font-black text-white">Platform Overview</h1>
+                <div className="text-sm text-gray-500 mt-0.5">Everything happening across GreenReserve</div>
+              </div>
+              <button onClick={loadStats} className="flex items-center gap-2 text-sm text-gray-500 hover:text-white px-3 py-2 rounded-xl hover:bg-gray-800 border border-transparent hover:border-gray-700 transition-colors">
+                <RefreshCw className="w-4 h-4"/>Refresh
+              </button>
             </div>
-            {stats&&<>
-              <div className="grid grid-cols-4 gap-4 mb-6">
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-2"><Building2 className="w-3.5 h-3.5"/>Courses</div>
-                  <div className="text-3xl font-black text-white">{stats.activeCourses}</div>
-                  <div className="text-xs text-gray-500 mt-0.5">{stats.totalCourses} total · {stats.activeCourses} live</div>
+
+            {stats ? <>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <StatCard label="Live Courses" value={stats.activeCourses} sub={`${stats.totalCourses} total`} icon={<Building2 className="w-4 h-4"/>}/>
+                <StatCard label="Golfer Accounts" value={stats.totalGolfers} sub="registered" icon={<Users className="w-4 h-4"/>}/>
+                <StatCard label="Bookings (30d)" value={stats.recentBookings} sub={`${stats.totalBookings} all time`} icon={<TrendingUp className="w-4 h-4"/>}/>
+                <StatCard label="GR Revenue (30d)" value={fmtMoney(stats.platformRevenue30d)} sub="$1.50/player access fee" icon={<DollarSign className="w-4 h-4"/>} accent/>
+              </div>
+
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-5">
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">Revenue — Last 30 Days</div>
+                <RevenueChart data={stats.revenueByDay}/>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4 mb-5">
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 col-span-1">
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-2"><Activity className="w-3.5 h-3.5"/>Pipeline</div>
+                  <div className="space-y-2">
+                    {STATUS_PIPELINE.slice(0,5).map(s=>{
+                      const count = inquiries.filter(i=>i.status===s.key).length;
+                      return count > 0 ? (
+                        <div key={s.key} className="flex items-center justify-between">
+                          <span className={`text-xs font-medium ${s.color}`}>{s.label}</span>
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${s.bg} ${s.color}`}>{count}</span>
+                        </div>
+                      ) : null;
+                    })}
+                    {inquiries.length === 0 && <div className="text-xs text-gray-600">No inquiries yet</div>}
+                  </div>
                 </div>
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-2"><Users className="w-3.5 h-3.5"/>Golfers</div>
-                  <div className="text-3xl font-black text-white">{stats.totalGolfers}</div>
-                  <div className="text-xs text-gray-500 mt-0.5">registered accounts</div>
-                </div>
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5"/>Bookings (30d)</div>
-                  <div className="text-3xl font-black text-white">{stats.recentBookings}</div>
-                  <div className="text-xs text-gray-500 mt-0.5">{stats.totalBookings} all time</div>
-                </div>
-                <div className="bg-gray-900 border border-green-900 rounded-2xl p-5">
-                  <div className="text-xs font-semibold text-green-600 uppercase tracking-wide mb-2 flex items-center gap-2"><DollarSign className="w-3.5 h-3.5"/>GR Revenue (30d)</div>
-                  <div className="text-3xl font-black text-green-400">{fmtMoney(stats.platformRevenue30d)}</div>
-                  <div className="text-xs text-gray-500 mt-0.5">$1.50/player service fee</div>
+
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 col-span-2">
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-2"><Zap className="w-3.5 h-3.5"/>Quick Actions</div>
+                  <div className="space-y-2">
+                    {stats.pendingInquiries > 0 && (
+                      <button onClick={()=>setTab('inquiries')} className="w-full flex items-center justify-between px-4 py-2.5 bg-yellow-500/10 border border-yellow-500/30 rounded-xl hover:bg-yellow-500/15 transition-colors group">
+                        <div className="flex items-center gap-3">
+                          <AlertCircle className="w-4 h-4 text-yellow-400"/>
+                          <span className="text-sm font-semibold text-yellow-300">{stats.pendingInquiries} pending inquir{stats.pendingInquiries===1?'y':'ies'} need review</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-yellow-500 group-hover:translate-x-0.5 transition-transform"/>
+                      </button>
+                    )}
+                    <button onClick={()=>setTab('courses')} className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl hover:bg-gray-750 transition-colors group">
+                      <div className="flex items-center gap-3">
+                        <Building2 className="w-4 h-4 text-gray-400"/>
+                        <span className="text-sm font-medium text-gray-300">Manage all courses</span>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-gray-600 group-hover:translate-x-0.5 transition-transform"/>
+                    </button>
+                    <button onClick={()=>setTab('create')} className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl hover:bg-gray-750 transition-colors group">
+                      <div className="flex items-center gap-3">
+                        <Plus className="w-4 h-4 text-gray-400"/>
+                        <span className="text-sm font-medium text-gray-300">Add a new course</span>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-gray-600 group-hover:translate-x-0.5 transition-transform"/>
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 mb-6">
-                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Platform Revenue — Last 30 Days</div>
-                {stats.revenueByDay.length>0
-                  ? <div className="flex items-end gap-px h-16">{(() => { const max=Math.max(...stats.revenueByDay.map(d=>d.platform),0.01); return stats.revenueByDay.map(d=><div key={d.date} className="flex-1 bg-green-500 rounded-sm opacity-70 hover:opacity-100" style={{height:`${Math.max(2,(d.platform/max)*100)}%`}} title={`${d.date}: ${fmtMoney(d.platform)}`}/>); })()}</div>
-                  : <div className="text-sm text-gray-600 py-4 text-center">No bookings yet</div>
-                }
-              </div>
-              {stats.pendingInquiries>0&&(
-                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3"><AlertCircle className="w-5 h-5 text-yellow-500"/><span className="text-yellow-200 font-semibold">{stats.pendingInquiries} pending course inquir{stats.pendingInquiries===1?'y':'ies'} need review</span></div>
-                  <button onClick={()=>setTab('inquiries')} className="text-xs font-bold text-yellow-400 hover:text-yellow-200 underline">Review →</button>
-                </div>
-              )}
-            </>}
-            {!stats&&<div className="text-gray-500 text-center py-20">Loading stats...</div>}
+            </> : <div className="text-gray-600 text-center py-20 text-sm">Loading...</div>}
           </>}
 
-          {/* ── Inquiries ── */}
-          {tab==='inquiries'&&<>
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-black text-white">Course Inquiries</h1>
-              <button onClick={loadInquiries} className="text-gray-400 hover:text-white flex items-center gap-2 text-sm"><RefreshCw className="w-4 h-4"/>Refresh</button>
+          {/* ══ INQUIRIES ══ */}
+          {tab==='inquiries' && <>
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h1 className="text-2xl font-black text-white">Course Inquiries</h1>
+                <div className="text-sm text-gray-500 mt-0.5">Manage the pipeline from interest to live</div>
+              </div>
+              <button onClick={loadInquiries} className="flex items-center gap-2 text-sm text-gray-500 hover:text-white px-3 py-2 rounded-xl hover:bg-gray-800 border border-transparent hover:border-gray-700 transition-colors">
+                <RefreshCw className="w-4 h-4"/>Refresh
+              </button>
             </div>
-            {/* Active / Past toggle */}
-            <div className="flex gap-1 mb-5 bg-gray-800 rounded-xl p-1 w-fit">
-              {(['active','past'] as const).map(v=>(
-                <button key={v} onClick={()=>setInquiryView(v)} className={`px-5 py-1.5 rounded-lg text-sm font-semibold transition-colors capitalize ${inquiryView===v?'bg-white text-gray-900':'text-gray-400 hover:text-white'}`}>
-                  {v==='active'?`Active (${inquiries.filter(i=>['pending','in_review','details_requested','details_submitted'].includes(i.status)).length})`:`Past (${inquiries.filter(i=>['building','live','rejected'].includes(i.status)).length})`}
-                </button>
-              ))}
-            </div>
-            {loading&&<div className="text-gray-500 py-20 text-center">Loading...</div>}
+
+            <PipelineBar inquiries={inquiries}/>
+
+            <InquiryToggle
+              view={inquiryView}
+              onSwitch={setInquiryView}
+              activeCount={inquiries.filter(i => ['pending','in_review','details_requested','details_submitted'].includes(i.status)).length}
+              pastCount={inquiries.filter(i => ['building','live','rejected'].includes(i.status)).length}
+            />
+
+            {loading && <div className="text-gray-600 py-20 text-center text-sm">Loading...</div>}
+
             <div className="space-y-3">
-              {inquiries.filter(inq=>inquiryView==='active'?['pending','in_review','details_requested','details_submitted'].includes(inq.status):['building','live','rejected'].includes(inq.status)).map(inq=>(
-                <div key={inq.id} className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+              {inquiries
+                .filter(inq => inquiryView==='active'
+                  ? ['pending','in_review','details_requested','details_submitted'].includes(inq.status)
+                  : ['building','live','rejected'].includes(inq.status))
+                .map(inq => (
+                <div key={inq.id} className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-gray-700 transition-colors">
                   <div className="px-5 py-4 flex items-start gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-1">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
                         <span className="font-bold text-white">{inq.courseName}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${STATUS_COLORS[inq.status]||'bg-gray-700 text-gray-300 border-gray-600'}`}>{STATUS_LABEL[inq.status]||inq.status}</span>
-                        {inq.hasMemberPricing&&<span className="text-xs px-2 py-0.5 rounded-full bg-blue-900 text-blue-300 border border-blue-800">Members</span>}
-                        {inq.hasResidentPricing&&<span className="text-xs px-2 py-0.5 rounded-full bg-purple-900 text-purple-300 border border-purple-800">Residents</span>}
-                        {inq.hasCaddies&&<span className="text-xs px-2 py-0.5 rounded-full bg-green-900 text-green-300 border border-green-800">Caddies</span>}
+                        <span className={'text-xs px-2.5 py-0.5 rounded-full font-semibold ' + (STATUS_BADGE[inq.status]||'bg-gray-800 text-gray-400')}>{STATUS_LABEL[inq.status]||inq.status}</span>
+                        {inq.hasMemberPricing && <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">Members</span>}
+                        {inq.hasResidentPricing && <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">Residents</span>}
+                        {inq.hasCaddies && <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Caddies</span>}
                       </div>
-                      <div className="text-sm text-gray-400">{inq.contactName} · {inq.contactTitle} · {inq.email}</div>
-                      <div className="text-xs text-gray-500 mt-0.5">{inq.city}, {inq.state} · {inq.courseType} · {fmtDate(inq.createdAt)}</div>
-                      {inq.greenFeeRange&&<div className="text-xs text-gray-500">Fees: {inq.greenFeeRange}</div>}
+                      <div className="text-sm text-gray-400">{inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''} · <a href={'mailto:' + inq.email} className="hover:text-blue-400 transition-colors">{inq.email}</a></div>
+                      <div className="text-xs text-gray-600 mt-0.5 flex items-center gap-2">
+                        <span>{inq.city}, {inq.state}</span>
+                        <span>·</span>
+                        <span className="capitalize">{inq.courseType}</span>
+                        <span>·</span>
+                        <span>{fmtDate(inq.createdAt)}</span>
+                        {inq.greenFeeRange && <><span>·</span><span>Fees: {inq.greenFeeRange}</span></>}
+                      </div>
+                      {inq.adminNotes && (
+                        <div className="mt-2 text-xs text-gray-500 bg-gray-800/50 rounded-lg px-3 py-1.5 border border-gray-700/50">
+                          {'📝 ' + inq.adminNotes.split('\n')[0].slice(0,100) + (inq.adminNotes.length > 100 ? '...' : '')}
+                        </div>
+                      )}
                     </div>
+
                     <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-                      {inq.status==='pending'&&<>
-                        <button onClick={()=>inquiryAction(inq.id,'mark_in_review')} disabled={processing===inq.id} className="bg-blue-700 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Clock className="w-3.5 h-3.5"/>In Review</button>
-                        <button onClick={()=>{ if(confirm('Reject this inquiry?')) inquiryAction(inq.id,'reject'); }} disabled={processing===inq.id} className="bg-red-900 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><XCircle className="w-3.5 h-3.5"/>Reject</button>
+                      {inq.status==='pending' && <>
+                        <button onClick={()=>inquiryAction(inq.id,'mark_in_review')} disabled={processing===inq.id} className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50"><Clock className="w-3.5 h-3.5"/>In Review</button>
+                        <button onClick={()=>{ if(confirm('Reject this inquiry?')) inquiryAction(inq.id,'reject'); }} disabled={processing===inq.id} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"><XCircle className="w-3.5 h-3.5"/>Reject</button>
                       </>}
-                      {inq.status==='in_review'&&<>
-                        <button onClick={()=>{ if(confirm(`Send ${inq.contactName} the setup sheet? They'll fill in pricing, policies, schedule, and facilities before we build their page.`)) inquiryAction(inq.id,'request_details'); }} disabled={processing===inq.id} className="bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Mail className="w-3.5 h-3.5"/>Request Setup Sheet</button>
-                        <button onClick={()=>{ if(confirm('Reject this inquiry?')) inquiryAction(inq.id,'reject'); }} disabled={processing===inq.id} className="bg-red-900 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><XCircle className="w-3.5 h-3.5"/>Reject</button>
-                        <button onClick={()=>{ if(confirm(`Skip the setup sheet and build ${inq.courseName} now with defaults? Use this only when you can't wait on the operator — you'll configure pricing/schedule yourself afterward.`)) buildAndConfigure(inq); }} disabled={processing===inq.id} className="text-gray-500 hover:text-gray-300 px-2 py-1.5 rounded-lg text-[11px] font-medium flex items-center gap-1 border border-gray-700"><Wrench className="w-3 h-3"/>Skip &amp; Build Now</button>
+                      {inq.status==='in_review' && <>
+                        <button onClick={()=>{ if(confirm('Send ' + inq.contactName + ' the setup sheet?')) inquiryAction(inq.id,'request_details'); }} disabled={processing===inq.id} className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50"><Mail className="w-3.5 h-3.5"/>Send Setup Sheet</button>
+                        <button onClick={()=>{ if(confirm('Reject?')) inquiryAction(inq.id,'reject'); }} disabled={processing===inq.id} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"><XCircle className="w-3.5 h-3.5"/>Reject</button>
+                        <button onClick={()=>{ if(confirm('Build ' + inq.courseName + ' now and configure yourself?')) buildAndConfigure(inq); }} disabled={processing===inq.id} className="text-gray-500 hover:text-gray-300 px-2 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 border border-gray-700 hover:border-gray-600 transition-colors"><Wrench className="w-3 h-3"/>Skip &amp; Build</button>
                       </>}
-                      {inq.status==='details_requested'&&<>
-                        <button onClick={()=>{ if(confirm(`Resend the setup-sheet link to ${inq.contactName}?`)) inquiryAction(inq.id,'resend_details'); }} disabled={processing===inq.id} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Mail className="w-3.5 h-3.5"/>Resend Setup Sheet</button>
-                        <button onClick={()=>{ if(confirm('Reject this inquiry?')) inquiryAction(inq.id,'reject'); }} disabled={processing===inq.id} className="bg-red-900 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><XCircle className="w-3.5 h-3.5"/>Reject</button>
+                      {inq.status==='details_requested' && <>
+                        <button onClick={()=>{ if(confirm('Resend setup-sheet link to ' + inq.contactName + '?')) inquiryAction(inq.id,'resend_details'); }} disabled={processing===inq.id} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50"><Mail className="w-3.5 h-3.5"/>Resend Sheet</button>
+                        <button onClick={()=>{ if(confirm('Reject?')) inquiryAction(inq.id,'reject'); }} disabled={processing===inq.id} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"><XCircle className="w-3.5 h-3.5"/>Reject</button>
                       </>}
-                      {inq.status==='details_submitted'&&<>
-                        <button onClick={()=>{ if(confirm(`Build course draft for ${inq.courseName}? This creates their operator account, pre-fills settings and tee sheet from the setup sheet, sends the welcome email, and opens it for your review.`)) buildAndConfigure(inq); }} disabled={processing===inq.id} className="bg-green-700 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5"/>Build Course</button>
-                        <button onClick={()=>{ if(confirm('Reject this inquiry?')) inquiryAction(inq.id,'reject'); }} disabled={processing===inq.id} className="bg-red-900 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><XCircle className="w-3.5 h-3.5"/>Reject</button>
+                      {inq.status==='details_submitted' && <>
+                        <button onClick={()=>{ if(confirm('Build ' + inq.courseName + '? Creates operator account and opens Setup.')) buildAndConfigure(inq); }} disabled={processing===inq.id} className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50"><CheckCircle className="w-3.5 h-3.5"/>Build Course</button>
+                        <button onClick={()=>{ if(confirm('Reject?')) inquiryAction(inq.id,'reject'); }} disabled={processing===inq.id} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"><XCircle className="w-3.5 h-3.5"/>Reject</button>
                       </>}
-                      {inq.status==='building'&&<>
-                        {inq.builtCourseId&&<button onClick={()=>openCourseSetup(inq.builtCourseId as string, inq.courseType)} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Wrench className="w-3.5 h-3.5"/>Manage Tee Sheet</button>}
-                        <button onClick={()=>{ if(confirm(`Resend welcome email to ${inq.contactName}? This generates a fresh temp password — the old one will stop working.`)) inquiryAction(inq.id,'resend_welcome'); }} disabled={processing===inq.id} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Mail className="w-3.5 h-3.5"/>Resend Email</button>
-                        <button onClick={()=>{ if(confirm(`Set ${inq.courseName} LIVE? This makes it publicly bookable.`)) inquiryAction(inq.id,'mark_live'); }} disabled={processing===inq.id} className="bg-green-700 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Power className="w-3.5 h-3.5"/>Go Live</button>
+                      {inq.status==='building' && <>
+                        {inq.builtCourseId && <button onClick={()=>openCourseSetup(inq.builtCourseId as string, inq.courseType)} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"><Wrench className="w-3.5 h-3.5"/>Manage Setup</button>}
+                        <button onClick={()=>{ if(confirm('Resend welcome email to ' + inq.contactName + '?')) inquiryAction(inq.id,'resend_welcome'); }} disabled={processing===inq.id} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"><Mail className="w-3.5 h-3.5"/>Resend Email</button>
+                        <button onClick={()=>{ if(confirm('Set ' + inq.courseName + ' LIVE?')) inquiryAction(inq.id,'mark_live'); }} disabled={processing===inq.id} className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50"><Power className="w-3.5 h-3.5"/>Go Live</button>
                       </>}
-                      {inq.status==='live'&&inq.builtCourseId&&(
-                        <button onClick={()=>openCourseSetup(inq.builtCourseId as string, inq.courseType)} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"><Wrench className="w-3.5 h-3.5"/>Manage Tee Sheet</button>
+                      {inq.status==='live' && inq.builtCourseId && (
+                        <button onClick={()=>openCourseSetup(inq.builtCourseId as string, inq.courseType)} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"><Wrench className="w-3.5 h-3.5"/>Manage</button>
                       )}
-                      {['building','live','rejected'].includes(inq.status)&&(
-                        <button onClick={()=>deleteInquiry(inq.id, inq.courseName)} className="p-1.5 text-gray-600 hover:text-red-400 transition-colors" title="Delete inquiry"><Trash2 className="w-3.5 h-3.5"/></button>
+                      {['building','live','rejected'].includes(inq.status) && (
+                        <button onClick={()=>deleteInquiry(inq.id,inq.courseName)} className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Delete"><Trash2 className="w-3.5 h-3.5"/></button>
                       )}
-                      <button onClick={()=>setExpanded(expanded===inq.id?null:inq.id)} className="text-gray-500 hover:text-gray-300 p-1">
-                        {expanded===inq.id?<ChevronUp className="w-4 h-4"/>:<ChevronDown className="w-4 h-4"/>}
+                      <button onClick={()=>setExpanded(expanded===inq.id?null:inq.id)} className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-gray-300 rounded-lg hover:bg-gray-800 transition-colors">
+                        {expanded===inq.id ? <ChevronUp className="w-4 h-4"/> : <ChevronDown className="w-4 h-4"/>}
                       </button>
                     </div>
                   </div>
 
-                  {approveResults[inq.id]&&(()=>{
+                  {approveResults[inq.id] && (() => {
                     const res = approveResults[inq.id];
-                    const isDetailsAction = !!res.detailsLink;
-                    const rows: [string,string][] = isDetailsAction
+                    const isDetails = !!res.detailsLink;
+                    const rows: [string,string][] = isDetails
                       ? [['Setup Sheet Link', res.detailsLink as string]]
                       : [['Temp Password', res.tempPassword||''],['Setup Link', res.setupLink||'']];
+                    const failed = res.emailSent === false;
+                    const bannerCls = 'px-5 pb-4 border-t ' + (failed ? 'bg-red-500/5 border-red-500/20' : 'bg-emerald-500/5 border-emerald-500/20');
+                    const msgCls = 'text-xs font-semibold mb-2 mt-3 ' + (failed ? 'text-red-400' : 'text-emerald-400');
+                    const msg = failed
+                      ? ('Warning: ' + (isDetails ? 'Setup-sheet email failed' : 'Welcome email failed') + ' (' + (res.emailError || 'unknown') + '). Share manually:')
+                      : ('Done: ' + (isDetails ? 'Setup-sheet sent.' : 'Course built - welcome email sent.'));
                     return (
-                      <div className={`px-5 pb-4 border-t ${res.emailSent===false?'bg-red-950 border-red-900':'bg-green-950 border-green-900'}`}>
-                        {res.emailSent===false ? (
-                          <div className="text-xs font-semibold text-red-400 mb-2 mt-3">
-                            ⚠️ {isDetailsAction?'Saved, but the setup-sheet email failed to send':'Course built, but the welcome email failed to send'} ({res.emailError || 'unknown error'}). Share this link manually, or fix email and hit Resend:
-                          </div>
-                        ) : (
-                          <div className="text-xs font-semibold text-green-400 mb-2 mt-3">✅ {isDetailsAction?'Setup-sheet email sent.':'Course built — welcome email sent.'} Share manually if needed:</div>
-                        )}
-                        <div className="space-y-2">
+                      <div className={bannerCls}>
+                        <div className={msgCls}>{msg}</div>
+                        <div className="space-y-1.5">
                           {rows.map(([label,val])=>(
-                            <div key={label} className="flex items-center gap-2 bg-gray-900 rounded-lg px-3 py-2">
-                              <span className="text-xs text-gray-400 w-28 shrink-0">{label}</span>
-                              <span className="text-xs text-gray-100 font-mono flex-1 truncate">{val}</span>
-                              <button onClick={()=>navigator.clipboard.writeText(val)} className="text-gray-500 hover:text-green-400"><Copy className="w-3.5 h-3.5"/></button>
+                            <div key={label} className="flex items-center gap-3 bg-gray-900 rounded-lg px-3 py-2 border border-gray-800">
+                              <span className="text-xs text-gray-500 w-28 shrink-0">{label}</span>
+                              <span className="text-xs text-gray-200 font-mono flex-1 truncate">{val}</span>
+                              <button onClick={()=>navigator.clipboard.writeText(val)} className="text-gray-600 hover:text-emerald-400 transition-colors" title="Copy"><Copy className="w-3.5 h-3.5"/></button>
                             </div>
                           ))}
                         </div>
@@ -838,246 +1054,303 @@ export default function AdminPage() {
                     );
                   })()}
 
-                  {expanded===inq.id&&(
+                  {expanded===inq.id && (
                     <div className="px-5 pb-5 border-t border-gray-800 pt-4 space-y-4">
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div><span className="text-gray-500">Phone: </span><span className="text-gray-300">{inq.phone}</span></div>
-                        <div><span className="text-gray-500">Website: </span><span className="text-gray-300">{inq.website||'—'}</span></div>
-                        {inq.currentBookingMethod&&<div><span className="text-gray-500">Current booking: </span><span className="text-gray-300">{inq.currentBookingMethod}</span></div>}
-                        <div><span className="text-gray-500">Tee times/day: </span><span className="text-gray-300">{inq.teeTimesPerDay||'—'}</span></div>
-                        {inq.greenFeeRange&&<div><span className="text-gray-500">Fees: </span><span className="text-gray-300">{inq.greenFeeRange}</span></div>}
-                        {inq.lookingFor?.length>0&&<div className="col-span-2"><span className="text-gray-500">Looking for: </span><span className="text-gray-300">{inq.lookingFor.join(', ')}</span></div>}
-                        {inq.additionalNotes&&<div className="col-span-2"><span className="text-gray-500">Notes: </span><span className="text-gray-300">{inq.additionalNotes}</span></div>}
-                        {inq.pricingNotes&&<div className="col-span-2"><span className="text-gray-500">Pricing notes: </span><span className="text-gray-300">{inq.pricingNotes}</span></div>}
+                      <div className="grid grid-cols-2 gap-2.5 text-sm">
+                        {[
+                          ['Phone', inq.phone],
+                          ['Website', inq.website||'—'],
+                          ['Booking method', inq.currentBookingMethod||'—'],
+                          ['Tee times/day', String(inq.teeTimesPerDay||'—')],
+                          ['Green fees', inq.greenFeeRange||'—'],
+                        ].map(([label,val])=>(
+                          <div key={label} className="bg-gray-800/50 rounded-lg px-3 py-2">
+                            <div className="text-xs text-gray-500 mb-0.5">{label}</div>
+                            <div className="text-gray-200 font-medium text-sm">{val}</div>
+                          </div>
+                        ))}
+                        {inq.lookingFor?.length > 0 && (
+                          <div className="col-span-2 bg-gray-800/50 rounded-lg px-3 py-2">
+                            <div className="text-xs text-gray-500 mb-0.5">Looking for</div>
+                            <div className="text-gray-200 font-medium text-sm">{inq.lookingFor.join(', ')}</div>
+                          </div>
+                        )}
+                        {inq.additionalNotes && (
+                          <div className="col-span-2 bg-gray-800/50 rounded-lg px-3 py-2">
+                            <div className="text-xs text-gray-500 mb-0.5">Additional notes</div>
+                            <div className="text-gray-200 text-sm">{inq.additionalNotes}</div>
+                          </div>
+                        )}
+                        {inq.pricingNotes && (
+                          <div className="col-span-2 bg-gray-800/50 rounded-lg px-3 py-2">
+                            <div className="text-xs text-gray-500 mb-0.5">Pricing notes</div>
+                            <div className="text-gray-200 text-sm">{inq.pricingNotes}</div>
+                          </div>
+                        )}
                       </div>
 
-                      {/* What they need (from the interest form's type-specific questions) */}
-                      {inq.needsJson&&(()=>{ let n:Record<string,unknown>={}; try{n=JSON.parse(inq.needsJson||'');}catch{ /* ignore */ } return Object.keys(n).length>0 ? (
-                        <div className="border-t border-gray-800 pt-4">
-                          <div className="text-xs font-semibold text-amber-400 uppercase tracking-wide mb-2">What They Need</div>
-                          <div className="grid grid-cols-2 gap-2 text-sm bg-gray-800 rounded-lg p-3">
-                            {Object.entries(n).map(([k,v])=>(
-                              <div key={k}><span className="text-gray-500">{k}: </span><span className="text-gray-300">{String(v)}</span></div>
-                            ))}
+                      {inq.needsJson && (() => {
+                        let n: Record<string,unknown>={};
+                        try { n=JSON.parse(inq.needsJson||''); } catch { /* ignore */ }
+                        if (Object.keys(n).length === 0) return null;
+                        return (
+                          <div className="border-t border-gray-800 pt-4">
+                            <div className="text-xs font-semibold text-amber-400 uppercase tracking-wide mb-2">What They Need</div>
+                            <div className="grid grid-cols-2 gap-2">
+                              {Object.entries(n).map(([k,v])=>(
+                                <div key={k} className="bg-amber-500/5 border border-amber-500/20 rounded-lg px-3 py-2">
+                                  <div className="text-xs text-amber-600 mb-0.5">{k}</div>
+                                  <div className="text-amber-200 text-sm font-medium">{String(v)}</div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      ) : null; })()}
+                        );
+                      })()}
 
-                      {/* Submitted setup sheet (once they've sent it back) */}
-                      {inq.detailsJson&&(()=>{
-                        let d:Record<string,unknown>={}; try{d=JSON.parse(inq.detailsJson||'');}catch{ /* ignore */ }
-                        if (Object.keys(d).length===0) return null;
+                      {inq.detailsJson && (() => {
+                        let d: Record<string,unknown>={};
+                        try { d=JSON.parse(inq.detailsJson||''); } catch { /* ignore */ }
+                        if (Object.keys(d).length === 0) return null;
                         const sch = d.schedule as Record<string,unknown>|undefined;
                         const rest = Object.fromEntries(Object.entries(d).filter(([k])=>k!=='schedule'));
                         return (
-                        <div className="border-t border-gray-800 pt-4 space-y-3">
-                          <div className="text-xs font-semibold text-teal-400 uppercase tracking-wide">Submitted Setup Sheet</div>
-                          {sch&&(sch.greenFeeWeekday||sch.greenFeeWeekend)&&(
-                            <div className="bg-teal-950 border border-teal-900 rounded-lg p-3 text-sm">
-                              <div className="text-teal-300 font-semibold mb-1">Proposed Tee Sheet</div>
-                              <div className="text-gray-300">
-                                {Array.isArray(sch.daysOfWeek)&&(sch.daysOfWeek as number[]).length>0?(sch.daysOfWeek as number[]).map(d=>['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d]).join(', '):'Every day'} · {String(sch.startTime)}–{String(sch.endTime)} · every {String(sch.intervalMinutes)} min
+                          <div className="border-t border-gray-800 pt-4 space-y-3">
+                            <div className="text-xs font-semibold text-teal-400 uppercase tracking-wide">Setup Sheet Submitted</div>
+                            {sch && (sch.greenFeeWeekday || sch.greenFeeWeekend) && (
+                              <div className="bg-teal-500/10 border border-teal-500/20 rounded-xl p-4">
+                                <div className="text-teal-300 font-semibold text-sm mb-2">Proposed Tee Sheet</div>
+                                <div className="text-gray-300 text-sm">
+                                  {Array.isArray(sch.daysOfWeek) && (sch.daysOfWeek as number[]).length > 0
+                                    ? (sch.daysOfWeek as number[]).map(dd => ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dd]).join(', ')
+                                    : 'Every day'} {' · '} {String(sch.startTime)}{'–'}{String(sch.endTime)} every {String(sch.intervalMinutes)}min
+                                </div>
+                                <div className="text-gray-500 text-xs mt-1">
+                                  {'WD $' + String(sch.greenFeeWeekday||0) + ' / WE $' + String(sch.greenFeeWeekend||0) + ' · Cart $' + String(sch.cartFee||0) + (sch.memberRateWeekday ? ' · Member $' + String(sch.memberRateWeekday) : '') + (sch.residentRateWeekday ? ' · Resident $' + String(sch.residentRateWeekday) : '') + (sch.walkingAllowed ? ' · Walking' : '')}
+                                </div>
                               </div>
-                              <div className="text-gray-400 text-xs mt-1">
-                                Weekday ${String(sch.greenFeeWeekday||0)} / Weekend ${String(sch.greenFeeWeekend||0)} · Cart ${String(sch.cartFee||0)}
-                                {sch.memberRateWeekday?` · Member $${sch.memberRateWeekday}`:''}
-                                {sch.residentRateWeekday?` · Resident $${sch.residentRateWeekday}`:''}
-                                {sch.walkingAllowed?' · Walking OK':' · Cart required'}
-                              </div>
+                            )}
+                            <div className="grid grid-cols-2 gap-2">
+                              {Object.entries(rest).filter(([,v])=>v!==''&&v!==null&&!(Array.isArray(v)&&v.length===0)).map(([k,v])=>(
+                                <div key={k} className="bg-gray-800/50 border border-gray-700/50 rounded-lg px-3 py-2">
+                                  <div className="text-xs text-gray-500 mb-0.5">{k}</div>
+                                  <div className="text-gray-200 text-sm">{Array.isArray(v)?v.join(', '):String(v)}</div>
+                                </div>
+                              ))}
                             </div>
-                          )}
-                          <div className="grid grid-cols-2 gap-2 text-sm bg-gray-800 rounded-lg p-3">
-                            {Object.entries(rest).filter(([,v])=>v!==''&&v!==null&&!(Array.isArray(v)&&v.length===0)).map(([k,v])=>(
-                              <div key={k}><span className="text-gray-500">{k}: </span><span className="text-gray-300">{Array.isArray(v)?v.join(', '):String(v)}</span></div>
-                            ))}
                           </div>
-                        </div>
-                        ); })()}
+                        );
+                      })()}
 
-                      {/* Admin notes */}
                       <div className="border-t border-gray-800 pt-4">
-                        <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Internal Notes</div>
-                        {inq.adminNotes&&(
-                          <pre className="text-xs text-gray-400 bg-gray-800 rounded-lg px-3 py-2 mb-3 whitespace-pre-wrap font-sans">{inq.adminNotes}</pre>
+                        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Internal Notes</div>
+                        {inq.adminNotes && (
+                          <pre className="text-xs text-gray-400 bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-3 mb-3 whitespace-pre-wrap font-sans">{inq.adminNotes}</pre>
                         )}
                         <div className="flex gap-2">
-                          <textarea
-                            value={noteTexts[inq.id]||''}
-                            onChange={e=>setNoteTexts(p=>({...p,[inq.id]:e.target.value}))}
-                            placeholder="Add a note..."
-                            rows={2}
-                            className="flex-1 bg-gray-800 border border-gray-700 text-white text-xs rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-green-500 resize-none"
-                          />
-                          <button
-                            onClick={()=>inquiryAction(inq.id,'add_note',{note:noteTexts[inq.id]||''})}
-                            disabled={!noteTexts[inq.id]?.trim()||processing===inq.id}
-                            className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-white text-xs font-bold rounded-lg transition-colors self-start"
-                          >Save</button>
+                          <textarea value={noteTexts[inq.id]||''} onChange={e=>setNoteTexts(p=>({...p,[inq.id]:e.target.value}))} placeholder="Add a note..." rows={2}
+                            className="flex-1 bg-gray-800 border border-gray-700 text-white text-xs rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none placeholder-gray-600"/>
+                          <button onClick={()=>inquiryAction(inq.id,'add_note',{note:noteTexts[inq.id]||''})} disabled={!noteTexts[inq.id]?.trim()||processing===inq.id}
+                            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-white text-xs font-bold rounded-xl transition-colors self-start">Save</button>
                         </div>
                       </div>
                     </div>
                   )}
                 </div>
               ))}
-              {!loading&&inquiries.filter(inq=>inquiryView==='active'?['pending','in_review','details_requested','details_submitted'].includes(inq.status):['building','live','rejected'].includes(inq.status)).length===0&&(
-                <div className="text-gray-500 text-center py-20">
-                  {inquiryView==='active'?'No active inquiries — all caught up ✓':'No past inquiries yet'}
+              {!loading && inquiries.filter(inq => {
+                const active = ['pending','in_review','details_requested','details_submitted'].includes(inq.status);
+                return inquiryView === 'active' ? active : !active;
+              }).length === 0 && (
+                <div className="text-gray-600 text-center py-20 text-sm">
+                  {inquiryView === 'active' ? 'No active inquiries — all caught up' : 'No past inquiries yet'}
                 </div>
               )}
             </div>
           </>}
 
-          {/* ── Courses ── */}
-          {tab==='courses'&&<>
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-black text-white">All Courses</h1>
+          {/* ══ COURSES ══ */}
+          {tab==='courses' && <>
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h1 className="text-2xl font-black text-white">All Courses</h1>
+                <div className="text-sm text-gray-500 mt-0.5">{courses.filter(c=>c.active).length} live · {courses.filter(c=>!c.active).length} offline</div>
+              </div>
               <div className="flex gap-3">
-                <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search courses..." className="bg-gray-800 border border-gray-700 text-white text-sm rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-green-500 w-48"/>
-                <button onClick={loadCourses} className="text-gray-400 hover:text-white flex items-center gap-2 text-sm"><RefreshCw className="w-4 h-4"/>Refresh</button>
+                <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, city, state..." className="bg-gray-800 border border-gray-700 text-white text-sm rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-500/50 w-52 placeholder-gray-600"/>
+                <button onClick={loadCourses} className="flex items-center gap-2 text-sm text-gray-500 hover:text-white px-3 py-2 rounded-xl hover:bg-gray-800 border border-gray-700 transition-colors"><RefreshCw className="w-4 h-4"/>Refresh</button>
               </div>
             </div>
-            <div className="text-xs text-gray-500 mb-4">{filteredCourses.length} of {courses.length} courses</div>
-            {loading&&<div className="text-gray-500 py-20 text-center">Loading...</div>}
+
+            {loading && <div className="text-gray-600 py-20 text-center text-sm">Loading...</div>}
+
             <div className="space-y-2">
-              {filteredCourses.map(c=>(
-                <div key={c.id} className="bg-gray-900 border border-gray-800 rounded-xl px-5 py-4 flex items-center gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="font-semibold text-white">{c.name}</span>
-                      {c.featured&&<Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400"/>}
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${c.active?'bg-green-900 text-green-400':'bg-gray-800 text-gray-500'}`}>{c.active?'Live':'Offline'}</span>
-                      {c.stripeAccountActive&&<span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-900 text-purple-400">Stripe ✓</span>}
+              {filteredCourses.map(c => (
+                <div key={c.id} className="bg-gray-900 border border-gray-800 rounded-xl px-5 py-3.5 flex items-center gap-5 hover:border-gray-700 transition-colors">
+                  <div className={'w-2 h-2 rounded-full shrink-0 ' + (c.active ? 'bg-emerald-500' : 'bg-gray-600')}/>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2.5 mb-0.5">
+                      <span className="font-semibold text-white truncate">{c.name}</span>
+                      {c.featured && <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 shrink-0"/>}
+                      {c.stripeAccountActive && <span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/30 shrink-0">Stripe</span>}
                     </div>
-                    <div className="text-xs text-gray-500">{c.city}, {c.state}</div>
-                    {c.operator&&<div className="text-xs text-gray-600 mt-0.5">{c.operator.email} · Step {c.operator.onboardingStep}/3</div>}
+                    <div className="text-xs text-gray-500">{c.city}, {c.state} · <span className="capitalize">{c.type||'public'}</span></div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button onClick={()=>toggleFeatured(c.id,!c.featured)} className={`p-1.5 rounded-lg transition-colors ${c.featured?'text-yellow-400':'text-gray-600 hover:text-yellow-400'}`}><Star className="w-4 h-4"/></button>
-                    <button onClick={()=>toggleCourseActive(c.id,!c.active)} className={`p-1.5 rounded-lg transition-colors ${c.active?'text-green-400':'text-gray-600 hover:text-green-400'}`}><Power className="w-4 h-4"/></button>
-                    <a href={`/courses/${c.slug}`} target="_blank" className="p-1.5 rounded-lg text-gray-600 hover:text-blue-400 transition-colors"><Globe className="w-4 h-4"/></a>
-                    <button onClick={()=>openDetail(c)} className="p-1.5 rounded-lg text-gray-600 hover:text-white transition-colors"><Eye className="w-4 h-4"/></button>
-                    <button onClick={()=>deleteCourse(c.id,c.name)} className="p-1.5 rounded-lg text-gray-600 hover:text-red-400 transition-colors" title="Delete course"><Trash2 className="w-4 h-4"/></button>
+                  <div className="w-56 min-w-0 hidden md:block">
+                    {c.operator ? <>
+                      <div className="text-xs text-gray-300 truncate">{c.operator.name}</div>
+                      <div className="text-xs text-gray-600 truncate">{c.operator.email}</div>
+                    </> : <div className="text-xs text-gray-700">No operator</div>}
+                  </div>
+                  <div className="w-28 shrink-0 hidden lg:block">
+                    <div className={'text-xs font-semibold mb-1 ' + (c.active ? 'text-emerald-400' : 'text-gray-600')}>{c.active ? 'Live' : 'Offline'}</div>
+                    {c.operator && (
+                      <div className="flex items-center gap-1.5">
+                        <div className="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-emerald-500 rounded-full" style={{width: (c.operator.onboardingStep / 3 * 100) + '%'}}/>
+                        </div>
+                        <span className="text-xs text-gray-600">{c.operator.onboardingStep}/3</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={()=>toggleFeatured(c.id,!c.featured)} className={'w-8 h-8 flex items-center justify-center rounded-lg transition-colors ' + (c.featured ? 'text-yellow-400 bg-yellow-500/10' : 'text-gray-600 hover:text-yellow-400 hover:bg-gray-800')} title={c.featured ? 'Unfeature' : 'Feature'}><Star className="w-4 h-4"/></button>
+                    <button onClick={()=>toggleCourseActive(c.id,!c.active)} className={'w-8 h-8 flex items-center justify-center rounded-lg transition-colors ' + (c.active ? 'text-emerald-400 hover:text-red-400 hover:bg-red-500/10' : 'text-gray-600 hover:text-emerald-400 hover:bg-emerald-500/10')} title={c.active ? 'Take offline' : 'Set live'}><Power className="w-4 h-4"/></button>
+                    <a href={'/courses/' + c.slug} target="_blank" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-600 hover:text-blue-400 hover:bg-blue-500/10 transition-colors" title="View page"><Globe className="w-4 h-4"/></a>
+                    <button onClick={()=>openDetail(c)} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-600 hover:text-white hover:bg-gray-800 transition-colors" title="Details"><Eye className="w-4 h-4"/></button>
+                    <button onClick={()=>deleteCourse(c.id,c.name)} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Delete"><Trash2 className="w-4 h-4"/></button>
                   </div>
                 </div>
               ))}
-              {!loading&&filteredCourses.length===0&&<div className="text-gray-500 text-center py-20">No courses found</div>}
+              {!loading && filteredCourses.length === 0 && (
+                <div className="text-gray-600 text-center py-20 text-sm">No courses found</div>
+              )}
             </div>
           </>}
 
-          {/* ── Add Course ── */}
-          {tab==='create'&&<>
-            <h1 className="text-2xl font-black text-white mb-6">Add New Course</h1>
+          {/* ══ ADD COURSE ══ */}
+          {tab==='create' && <>
+            <div className="mb-7">
+              <h1 className="text-2xl font-black text-white">Add New Course</h1>
+              <div className="text-sm text-gray-500 mt-0.5">Create an operator account and course page in one step</div>
+            </div>
 
             {createResult ? (
-              <div className="bg-green-950 border border-green-800 rounded-2xl p-8 max-w-xl">
-                <div className="text-green-400 font-black text-lg mb-4">✓ Course created!</div>
-                <div className="space-y-3 mb-6">
+              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-8 max-w-xl">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5 text-emerald-400"/>
+                  </div>
+                  <div>
+                    <div className="font-black text-white">Course created!</div>
+                    <div className="text-xs text-emerald-400">Welcome email sent to operator</div>
+                  </div>
+                </div>
+                <div className="space-y-2 mb-6">
                   {[
-                    ['Booking page', `greenreserve.app/courses/${createResult.slug}`],
+                    ['Booking page', 'greenreserve.app/courses/' + createResult.slug],
                     ['Operator login', 'greenreserve.app/dashboard/login'],
                     ['Temp password', createResult.tempPassword],
                     ['Setup link', createResult.setupLink],
-                  ].map(([label, val]) => (
-                    <div key={label} className="flex items-center gap-3 bg-gray-900 rounded-xl px-4 py-3">
-                      <span className="text-gray-400 text-xs w-32 shrink-0">{label}</span>
-                      <span className="text-gray-100 text-xs font-mono flex-1 truncate">{val}</span>
-                      <button onClick={()=>navigator.clipboard.writeText(val)} className="text-gray-500 hover:text-green-400 shrink-0"><Copy className="w-3.5 h-3.5"/></button>
+                  ].map(([label,val])=>(
+                    <div key={label} className="flex items-center gap-3 bg-gray-900 border border-gray-800 rounded-xl px-4 py-3">
+                      <span className="text-gray-500 text-xs w-28 shrink-0">{label}</span>
+                      <span className="text-gray-200 text-xs font-mono flex-1 truncate">{val}</span>
+                      <button onClick={()=>navigator.clipboard.writeText(val)} className="text-gray-600 hover:text-emerald-400 transition-colors shrink-0"><Copy className="w-3.5 h-3.5"/></button>
                     </div>
                   ))}
                 </div>
-                <button onClick={()=>{ setCreateResult(null); setCreateForm({ courseName:'', courseType:'public', address:'', city:'', state:'NJ', zipCode:'', phone:'', website:'', contactName:'', contactEmail:'', holes:18, par:72, description:'', hasMemberPricing:false, hasResidentPricing:false }); }} className="px-4 py-2 bg-green-700 hover:bg-green-600 text-white rounded-xl text-sm font-bold">
+                <button onClick={()=>{ setCreateResult(null); setCreateForm({ courseName:'', courseType:'public', address:'', city:'', state:'NJ', zipCode:'', phone:'', website:'', contactName:'', contactEmail:'', holes:18, par:72, description:'', hasMemberPricing:false, hasResidentPricing:false }); }}
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-colors">
                   Add Another Course
                 </button>
               </div>
             ) : (
-              <div className="max-w-2xl space-y-6">
-                {/* Course details */}
+              <div className="max-w-2xl space-y-5">
                 <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
-                  <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Course Details</div>
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Course Details</div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="col-span-2">
-                      <label className="text-xs text-gray-400 block mb-1">Course Name *</label>
-                      <input value={createForm.courseName} onChange={e=>setCreateForm(f=>({...f,courseName:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="Pine Brook Golf Club"/>
+                      <label className="text-xs text-gray-500 block mb-1.5">Course Name *</label>
+                      <input value={createForm.courseName} onChange={e=>setCreateForm(f=>({...f,courseName:e.target.value}))} className={iCls} placeholder="Pine Brook Golf Club"/>
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400 block mb-1">Type</label>
-                      <select value={createForm.courseType} onChange={e=>setCreateForm(f=>({...f,courseType:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500">
-                        {['public','semi-private','member','resident','resort','municipal'].map(t=><option key={t} value={t}>{t}</option>)}
+                      <label className="text-xs text-gray-500 block mb-1.5">Type</label>
+                      <select value={createForm.courseType} onChange={e=>setCreateForm(f=>({...f,courseType:e.target.value}))} className={iCls}>
+                        {['public','semi-private','member','resident','resort','municipal'].map(t=><option key={t} value={t} className="capitalize">{t}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400 block mb-1">Phone</label>
-                      <input value={createForm.phone} onChange={e=>setCreateForm(f=>({...f,phone:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="(201) 555-0100"/>
+                      <label className="text-xs text-gray-500 block mb-1.5">Phone</label>
+                      <input value={createForm.phone} onChange={e=>setCreateForm(f=>({...f,phone:e.target.value}))} className={iCls} placeholder="(201) 555-0100"/>
                     </div>
                     <div className="col-span-2">
-                      <label className="text-xs text-gray-400 block mb-1">Address</label>
-                      <input value={createForm.address} onChange={e=>setCreateForm(f=>({...f,address:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="123 Fairway Dr"/>
+                      <label className="text-xs text-gray-500 block mb-1.5">Address</label>
+                      <input value={createForm.address} onChange={e=>setCreateForm(f=>({...f,address:e.target.value}))} className={iCls} placeholder="123 Fairway Dr"/>
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400 block mb-1">City</label>
-                      <input value={createForm.city} onChange={e=>setCreateForm(f=>({...f,city:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500"/>
+                      <label className="text-xs text-gray-500 block mb-1.5">City</label>
+                      <input value={createForm.city} onChange={e=>setCreateForm(f=>({...f,city:e.target.value}))} className={iCls}/>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-xs text-gray-400 block mb-1">State</label>
-                        <input value={createForm.state} onChange={e=>setCreateForm(f=>({...f,state:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500"/>
+                        <label className="text-xs text-gray-500 block mb-1.5">State</label>
+                        <input value={createForm.state} onChange={e=>setCreateForm(f=>({...f,state:e.target.value}))} className={iCls}/>
                       </div>
                       <div>
-                        <label className="text-xs text-gray-400 block mb-1">Zip</label>
-                        <input value={createForm.zipCode} onChange={e=>setCreateForm(f=>({...f,zipCode:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500"/>
+                        <label className="text-xs text-gray-500 block mb-1.5">Zip</label>
+                        <input value={createForm.zipCode} onChange={e=>setCreateForm(f=>({...f,zipCode:e.target.value}))} className={iCls}/>
                       </div>
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400 block mb-1">Website</label>
-                      <input value={createForm.website} onChange={e=>setCreateForm(f=>({...f,website:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="https://"/>
+                      <label className="text-xs text-gray-500 block mb-1.5">Website</label>
+                      <input value={createForm.website} onChange={e=>setCreateForm(f=>({...f,website:e.target.value}))} className={iCls} placeholder="https://"/>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-xs text-gray-400 block mb-1">Holes</label>
-                        <select value={createForm.holes} onChange={e=>setCreateForm(f=>({...f,holes:Number(e.target.value)}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500">
-                          <option value={9}>9</option><option value={18}>18</option><option value={27}>27</option><option value={36}>36</option>
+                        <label className="text-xs text-gray-500 block mb-1.5">Holes</label>
+                        <select value={createForm.holes} onChange={e=>setCreateForm(f=>({...f,holes:Number(e.target.value)}))} className={iCls}>
+                          {[9,18,27,36].map(n=><option key={n} value={n}>{n}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label className="text-xs text-gray-400 block mb-1">Par</label>
-                        <input type="number" value={createForm.par} onChange={e=>setCreateForm(f=>({...f,par:Number(e.target.value)}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500"/>
+                        <label className="text-xs text-gray-500 block mb-1.5">Par</label>
+                        <input type="number" value={createForm.par} onChange={e=>setCreateForm(f=>({...f,par:Number(e.target.value)}))} className={iCls}/>
                       </div>
                     </div>
                     <div className="col-span-2">
-                      <label className="text-xs text-gray-400 block mb-1">Description</label>
-                      <textarea value={createForm.description} onChange={e=>setCreateForm(f=>({...f,description:e.target.value}))} rows={3} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 resize-none"/>
+                      <label className="text-xs text-gray-500 block mb-1.5">Description</label>
+                      <textarea value={createForm.description} onChange={e=>setCreateForm(f=>({...f,description:e.target.value}))} rows={3} className={iCls + ' resize-none'}/>
                     </div>
                     <div className="col-span-2 flex gap-6">
-                      <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                        <input type="checkbox" checked={createForm.hasMemberPricing} onChange={e=>setCreateForm(f=>({...f,hasMemberPricing:e.target.checked}))} className="accent-green-500"/>
-                        Member pricing
-                      </label>
-                      <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                        <input type="checkbox" checked={createForm.hasResidentPricing} onChange={e=>setCreateForm(f=>({...f,hasResidentPricing:e.target.checked}))} className="accent-green-500"/>
-                        Resident pricing
-                      </label>
+                      {[['hasMemberPricing','Member pricing'],['hasResidentPricing','Resident pricing']].map(([k,label])=>(
+                        <label key={k} className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none">
+                          <input type="checkbox" checked={!!createForm[k as keyof typeof createForm]} onChange={e=>setCreateForm(f=>({...f,[k]:e.target.checked}))} className="w-4 h-4 accent-emerald-500 rounded"/>
+                          {label}
+                        </label>
+                      ))}
                     </div>
                   </div>
                 </div>
 
-                {/* Operator/contact */}
                 <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
-                  <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Operator Account</div>
-                  <p className="text-xs text-gray-500">This creates their login. They&apos;ll get a welcome email with their temp password and setup link.</p>
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Operator Account</div>
+                  <p className="text-xs text-gray-600">Creates their login. They will get a welcome email with temp password and setup link.</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs text-gray-400 block mb-1">Contact Name *</label>
-                      <input value={createForm.contactName} onChange={e=>setCreateForm(f=>({...f,contactName:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="John Smith"/>
+                      <label className="text-xs text-gray-500 block mb-1.5">Contact Name *</label>
+                      <input value={createForm.contactName} onChange={e=>setCreateForm(f=>({...f,contactName:e.target.value}))} className={iCls} placeholder="John Smith"/>
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400 block mb-1">Contact Email *</label>
-                      <input type="email" value={createForm.contactEmail} onChange={e=>setCreateForm(f=>({...f,contactEmail:e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="gm@pinecreek.com"/>
+                      <label className="text-xs text-gray-500 block mb-1.5">Contact Email *</label>
+                      <input type="email" value={createForm.contactEmail} onChange={e=>setCreateForm(f=>({...f,contactEmail:e.target.value}))} className={iCls} placeholder="gm@pinecreek.com"/>
                     </div>
                   </div>
                 </div>
 
-                <button onClick={createCourse} disabled={creating||!createForm.courseName||!createForm.contactEmail||!createForm.contactName} className="w-full py-4 bg-green-600 hover:bg-green-500 disabled:opacity-40 text-white font-black rounded-2xl text-base transition-colors">
-                  {creating ? 'Creating...' : 'Create Course & Send Welcome Email →'}
+                <button onClick={createCourse} disabled={creating||!createForm.courseName||!createForm.contactEmail||!createForm.contactName}
+                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-black rounded-2xl text-base transition-colors">
+                  {creating ? 'Creating...' : 'Create Course and Send Welcome Email'}
                 </button>
               </div>
             )}
@@ -1085,7 +1358,7 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {(detail||detailLoading)&&<DetailDrawer/>}
+      {(detail || detailLoading) && <DetailDrawer/>}
     </div>
   );
 }
