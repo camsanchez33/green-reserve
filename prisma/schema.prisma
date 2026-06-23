@@ -8,17 +8,22 @@ datasource db {
 }
 
 model CourseOperator {
-  id                String    @id @default(cuid())
-  email             String    @unique
-  password          String
-  name              String
-  emailVerified     Boolean   @default(false)
-  verificationToken String?
-  resetToken        String?   @unique
-  resetTokenExpiry  DateTime?
-  onboardingStep    Int       @default(0)
-  createdAt         DateTime  @default(now())
-  course            Course?
+  id                  String    @id @default(cuid())
+  email               String    @unique
+  password            String
+  name                String
+  emailVerified       Boolean   @default(false)
+  verificationToken   String?
+  resetToken          String?   @unique
+  resetTokenExpiry    DateTime?
+  onboardingStep      Int       @default(0)
+  failedLoginAttempts Int       @default(0)
+  lockoutUntil        DateTime?
+  twoFactorEnabled    Boolean   @default(false)
+  twoFactorCode       String?
+  twoFactorCodeExpiry DateTime?
+  createdAt           DateTime  @default(now())
+  course              Course?
 }
 
 model Course {
@@ -125,29 +130,35 @@ model TeeSet {
 }
 
 model CourseStaff {
-  id        String   @id @default(cuid())
-  courseId  String
-  course    Course   @relation(fields: [courseId], references: [id])
-  email     String   @unique
-  password  String
-  name      String
-  role      String   @default("staff")
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
+  id                  String    @id @default(cuid())
+  courseId            String
+  course              Course    @relation(fields: [courseId], references: [id])
+  email               String    @unique
+  password            String
+  name                String
+  role                String    @default("staff")
+  active              Boolean   @default(true)
+  failedLoginAttempts Int       @default(0)
+  lockoutUntil        DateTime?
+  createdAt           DateTime  @default(now())
 }
 
 model GolferAccount {
-  id               String             @id @default(cuid())
-  email            String             @unique
-  password         String
-  firstName        String
-  lastName         String
-  phone            String             @default("")
-  stripeCustomerId String             @default("")
-  createdAt        DateTime           @default(now())
-  bookings         Booking[]
-  memberships      CourseMembership[]
-  waitlist         Waitlist[]
+  id                  String             @id @default(cuid())
+  email               String             @unique
+  password            String
+  firstName           String
+  lastName            String
+  phone               String             @default("")
+  stripeCustomerId    String             @default("")
+  resetToken          String?            @unique
+  resetTokenExpiry    DateTime?
+  failedLoginAttempts Int                @default(0)
+  lockoutUntil        DateTime?
+  createdAt           DateTime           @default(now())
+  bookings            Booking[]
+  memberships         CourseMembership[]
+  waitlist            Waitlist[]
 }
 
 model MembershipTier {

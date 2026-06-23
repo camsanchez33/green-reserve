@@ -354,6 +354,59 @@ export async function sendOperatorPasswordResetEmail(data: {
   });
 }
 
+export async function sendGolferPasswordResetEmail(data: {
+  golferName: string;
+  golferEmail: string;
+  resetLink: string;
+}) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:900;">Reset your password</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      Hi ${data.golferName} — we got a request to reset the password on your GreenReserve account (${data.golferEmail}).
+      If this wasn't you, you can safely ignore this email.
+    </p>
+    <a href="${data.resetLink}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:800;font-size:16px;margin-bottom:16px;">
+      Set a New Password &rarr;
+    </a>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      This link expires in 1 hour. Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.golferEmail,
+    subject: `Reset your GreenReserve password`,
+    html,
+  });
+}
+
+// Fired right after a correct password when the operator has 2FA enabled —
+// gates issuing the real session cookie until this code is verified.
+export async function sendTwoFactorCodeEmail(data: {
+  operatorName: string;
+  operatorEmail: string;
+  code: string;
+}) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:900;">Your verification code</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      Hi ${data.operatorName} — enter this code to finish signing in to your GreenReserve dashboard.
+    </p>
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:24px;margin-bottom:20px;text-align:center;">
+      <p style="margin:0;color:#111827;font-size:32px;font-weight:900;font-family:monospace;letter-spacing:0.2em;">${data.code}</p>
+    </div>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      This code expires in 10 minutes. Didn't try to sign in? Reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.operatorEmail,
+    subject: `Your GreenReserve verification code: ${data.code}`,
+    html,
+  });
+}
+
 // Fired after ANY successful password change (in-dashboard change-password,
 // or the emailed reset-link flow) — pure notification, doesn't gate anything.
 // Lets the real owner know if a change wasn't them.

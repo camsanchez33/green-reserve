@@ -41,7 +41,10 @@ export default function GolferLoginPage() {
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 outline-none" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Password</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Password</label>
+                <Link href="/account/forgot-password" className="text-xs text-green-700 font-medium hover:underline">Forgot password?</Link>
+              </div>
               <input type="password" value={form.password} onChange={e => set('password', e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && submit()}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 outline-none" />

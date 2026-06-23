@@ -120,6 +120,13 @@ function SettingsPageInner() {
     setStaff(s=>s.map(m=>m.id===id?{...m,active}:m));
   }
 
+  async function toggle2FA() {
+    const turningOn = !form.twoFactorEnabled;
+    if (turningOn && !confirm("Enable two-factor authentication? You'll need to enter a 6-digit code emailed to you every time you log in.")) return;
+    const res = await fetch('/api/operator/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ twoFactorEnabled: turningOn }) });
+    if (res.ok) set('twoFactorEnabled', turningOn);
+  }
+
   async function changePassword() {
     setPwMsg(''); setPwError('');
     if (!pwForm.currentPassword || !pwForm.newPassword) { setPwError('Fill in both password fields.'); return; }
@@ -430,6 +437,10 @@ function SettingsPageInner() {
 
         {active==='Account'&&(
           <div className="space-y-5">
+            <SectionCard title="Two-Factor Authentication">
+              <p className="text-sm text-gray-500">Require a 6-digit code emailed to you on every login, in addition to your password.</p>
+              <Toggle label="Email two-factor authentication" checked={!!form.twoFactorEnabled} onChange={toggle2FA}/>
+            </SectionCard>
             <SectionCard title="Change Password">
               <p className="text-sm text-gray-500">Update the password for your own login. This doesn&apos;t affect staff accounts.</p>
               {pwMsg&&<div className="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm flex items-center gap-2"><CheckCircle2 className="w-4 h-4"/>{pwMsg}</div>}

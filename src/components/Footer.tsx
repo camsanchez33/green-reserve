@@ -29,6 +29,8 @@ export default function Footer() {
           <div className="text-white text-sm font-semibold mb-4">Company</div>
           <ul className="space-y-2.5 text-sm">
             <li><a href="mailto:hello@greenreserve.app" className="hover:text-white transition-colors">hello@greenreserve.app</a></li>
+            <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+            <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
           </ul>
         </div>
       </div>

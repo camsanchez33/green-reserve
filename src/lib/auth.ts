@@ -25,6 +25,17 @@ export async function verifyToken(token: string) {
   } catch { return null; }
 }
 
+// ── Pending 2FA tokens ───────────────────────────────────────────────────────
+// Short-lived token issued after a correct password when the operator has 2FA
+// enabled — does NOT grant dashboard access on its own, only lets /api/auth/2fa/verify
+// know which operator is mid-login.
+export async function signPendingTwoFactorToken(payload: { operatorId: string }) {
+  return new SignJWT({ ...payload, type: 'pending_2fa' })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('10m')
+    .sign(secret);
+}
+
 // Returns session for both operators and staff — unified shape
 export type DashboardSession =
   | { kind: 'operator'; operatorId: string; email: string }
