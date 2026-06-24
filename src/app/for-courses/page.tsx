@@ -40,7 +40,7 @@ const init: FormData = {
 
 function Section({ title, open, toggle, children }: { title: string; open: boolean; toggle: () => void; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded border border-gray-200 overflow-hidden">
       <button onClick={toggle} className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50">
         <span className="font-semibold text-gray-900">{title}</span>
         {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
@@ -61,8 +61,8 @@ function Field({ label, required, children }: { label: string; required?: boolea
   );
 }
 
-const inp = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors";
-const sel = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 bg-gray-50";
+const inp = "w-full border border-gray-200 rounded-md px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors";
+const sel = "w-full border border-gray-200 rounded-md px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 bg-gray-50";
 
 export default function ForCoursesPage() {
   const router = useRouter();
@@ -123,14 +123,14 @@ export default function ForCoursesPage() {
 
   if (submitted && submittedData) return (
     <div className="min-h-screen bg-[#0a1f0f] flex items-center justify-center p-6">
-      <div className="bg-white rounded-2xl p-10 max-w-lg w-full">
+      <div className="bg-white rounded-lg p-10 max-w-lg w-full">
         <CheckCircle className="w-14 h-14 text-green-500 mx-auto mb-5" />
         <h1 className="text-2xl font-black text-gray-900 mb-1 text-center">Got it — we&apos;ll be in touch!</h1>
         <p className="text-gray-500 text-center mb-6 text-sm">
           We received the inquiry for <span className="font-semibold text-gray-800">{submittedData.courseName}</span>.
         </p>
 
-        <div className="bg-gray-50 rounded-xl p-5 mb-6 space-y-3">
+        <div className="bg-gray-50 rounded-md p-5 mb-6 space-y-3">
           <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">What happens next</div>
           <div className="flex gap-3 text-sm text-gray-700">
             <span className="text-green-500 font-bold shrink-0">1.</span>
@@ -150,14 +150,14 @@ export default function ForCoursesPage() {
           href={CALENDLY_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full bg-[#1b4332] text-white py-3.5 rounded-xl font-bold hover:bg-[#2d6a4f] transition-colors mb-3"
+          className="flex items-center justify-center gap-2 w-full bg-emerald-800 text-white py-3.5 rounded-md font-bold hover:bg-[#2d6a4f] transition-colors mb-3"
         >
           <Calendar className="w-4 h-4" />
           Don&apos;t want to wait? Pick a time →
         </a>
         <p className="text-center text-xs text-gray-400 mb-4">Book a 15-min call at a time that works for you.</p>
 
-        <button onClick={() => router.push('/')} className="w-full border border-gray-200 text-gray-500 py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-colors">
+        <button onClick={() => router.push('/')} className="w-full border border-gray-200 text-gray-500 py-2.5 rounded-md text-sm hover:bg-gray-50 transition-colors">
           Back to GreenReserve
         </button>
       </div>
@@ -221,7 +221,7 @@ export default function ForCoursesPage() {
 
               {/* Private-specific follow-up */}
               {form.courseType === 'private' && (
-                <div className="col-span-2 space-y-4 bg-violet-50 border border-violet-100 rounded-xl p-4">
+                <div className="col-span-2 space-y-4 bg-violet-50 border border-violet-100 rounded-md p-4">
                   <p className="text-xs font-semibold text-violet-700 uppercase tracking-wide">A few questions about your club</p>
                   <Field label="Approximate number of members"><input className={inp} value={form.privateMemberCount} onChange={e => set('privateMemberCount', e.target.value)} placeholder="e.g. 250" /></Field>
                   <Field label="Do you currently allow guest or reciprocal play?">
@@ -247,9 +247,9 @@ export default function ForCoursesPage() {
             </div>
           </Section>
 
-          {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</div>}
+          {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-md px-4 py-3 text-sm">{error}</div>}
 
-          <button onClick={submit} disabled={submitting} className="w-full bg-green-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-green-700 disabled:opacity-50 transition-colors shadow-lg">
+          <button onClick={submit} disabled={submitting} className="w-full bg-emerald-600 text-white py-4 rounded-lg font-black text-lg hover:bg-green-700 disabled:opacity-50 transition-colors shadow-lg">
             {submitting ? 'Submitting...' : 'Submit Interest Form →'}
           </button>
           <p className="text-center text-green-200/40 text-xs pb-4">We review every submission and reach out within 1 business day. If it&apos;s a fit, we&apos;ll send a short follow-up sheet to confirm pricing, policies, and facilities before building your page.</p>

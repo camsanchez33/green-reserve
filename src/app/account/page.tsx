@@ -61,16 +61,16 @@ export default function AccountPage() {
 
   if (loading) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin" />
+      <div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded animate-spin" />
     </div>
   );
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-[#1b4332] px-4 py-4 flex items-center justify-between">
+      <div className="bg-emerald-800 px-4 py-4 flex items-center justify-between">
         <Link href="/" className="text-white font-black text-xl tracking-tight">
-          Green<span className="text-green-300">Reserve</span>
+          Green<span className="text-emerald-300">Reserve</span>
         </Link>
         <button onClick={logout} className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm">
           <LogOut className="w-4 h-4" /> Sign out
@@ -79,8 +79,8 @@ export default function AccountPage() {
 
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Profile card */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6 flex items-center gap-4">
-          <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-black text-xl">
+        <div className="bg-white rounded border border-gray-200 p-6 mb-6 flex items-center gap-4">
+          <div className="w-14 h-14 bg-emerald-50 rounded flex items-center justify-center text-emerald-700 font-black text-xl">
             {profile?.firstName[0]}{profile?.lastName[0]}
           </div>
           <div>
@@ -88,19 +88,19 @@ export default function AccountPage() {
             <div className="text-sm text-gray-500">{profile?.email}</div>
           </div>
           <div className="ml-auto text-right">
-            <div className="text-2xl font-black text-green-700">{bookings.filter(b => b.status === 'confirmed').length}</div>
+            <div className="text-2xl font-black text-emerald-700">{bookings.filter(b => b.status === 'confirmed').length}</div>
             <div className="text-xs text-gray-500">total rounds</div>
           </div>
         </div>
 
         {/* Upcoming */}
         <h2 className="font-black text-gray-900 text-lg mb-3 flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-green-600" /> Upcoming Tee Times
+          <Trophy className="w-5 h-5 text-emerald-600" /> Upcoming Tee Times
         </h2>
         {upcoming.length === 0 && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center mb-6">
+          <div className="bg-white rounded border border-gray-200 p-8 text-center mb-6">
             <p className="text-gray-400 mb-3">No upcoming tee times.</p>
-            <Link href="/courses" className="text-green-700 font-semibold text-sm hover:underline">Find a course →</Link>
+            <Link href="/courses" className="text-emerald-700 font-semibold text-sm hover:underline">Find a course →</Link>
           </div>
         )}
         <div className="space-y-3 mb-6">
@@ -143,15 +143,15 @@ function BookingCard({ b, onCancel, cancelling, cancelResult, past }: {
   const isCompleted = b.status === 'completed';
   const bStatus = getBookingStatus(b.status, b.paymentStatus);
   return (
-    <div className={`bg-white rounded-2xl border p-5 ${isCancelled ? 'border-gray-100 opacity-60' : 'border-gray-200'}`}>
+    <div className={`bg-white rounded-lg border p-5 ${isCancelled ? 'border-gray-100 opacity-60' : 'border-gray-200'}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
             <span className="font-black text-gray-900">{b.course.name}</span>
-            {isCancelled && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-medium">Cancelled</span>}
-            {isCompleted && <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Checked In &amp; Paid</span>}
+            {isCancelled && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded font-medium">Cancelled</span>}
+            {isCompleted && <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-medium">Checked In &amp; Paid</span>}
             {b.appliedRate !== 'standard' && !isCancelled && (
-              <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium capitalize">{b.appliedRate} rate</span>
+              <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-medium capitalize">{b.appliedRate} rate</span>
             )}
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-500">
@@ -165,23 +165,23 @@ function BookingCard({ b, onCancel, cancelling, cancelResult, past }: {
         </div>
         <div className="text-right ml-4">
           <div className="font-black text-gray-900">${(b.totalAmount / 100).toFixed(2)}</div>
-          <div className={`text-xs font-semibold mt-0.5 inline-block px-1.5 py-0.5 rounded-full ${statusBadgeClass(bStatus.tone)}`}>{bStatus.label}</div>
+          <div className={`text-xs font-semibold mt-0.5 inline-block px-1.5 py-0.5 rounded ${statusBadgeClass(bStatus.tone)}`}>{bStatus.label}</div>
         </div>
       </div>
 
       {cancelResult?.[b.id] && (
-        <div className="mt-3 text-xs text-green-700 bg-green-50 rounded-lg px-3 py-2">{cancelResult[b.id]}</div>
+        <div className="mt-3 text-xs text-emerald-700 bg-green-50 rounded-lg px-3 py-2">{cancelResult[b.id]}</div>
       )}
 
       {!past && !isCancelled && !isCompleted && onCancel && (
         <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-100">
           <Link href={`/courses/${b.course.slug}`}
-            className="flex items-center gap-1 text-xs text-green-700 font-medium hover:underline">
+            className="flex items-center gap-1 text-xs text-emerald-700 font-medium hover:underline">
             View course <ChevronRight className="w-3 h-3" />
           </Link>
           {b.checkInToken && (
             <Link href={`/checkin/${b.id}?token=${b.checkInToken}`}
-              className="text-xs bg-[#1b4332] text-white font-semibold px-3 py-1.5 rounded-full hover:bg-[#2d6a4f]">
+              className="text-xs bg-emerald-800 text-white font-semibold px-3 py-1.5 rounded hover:bg-[#2d6a4f]">
               Check In &amp; Pay
             </Link>
           )}

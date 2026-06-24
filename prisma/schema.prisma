@@ -27,91 +27,92 @@ model CourseOperator {
 }
 
 model Course {
-  id                      String            @id @default(cuid())
-  slug                    String            @unique
-  name                    String
-  type                    String            @default("public")
-  city                    String            @default("")
-  state                   String            @default("")
-  zipCode                 String            @default("")
-  address                 String            @default("")
-  phone                   String            @default("")
-  website                 String            @default("")
-  bookingUrl              String            @default("")
-  holes                   Int               @default(18)
-  par                     Int               @default(72)
-  yardage                 Int               @default(0)
-  slope                   Int               @default(0)
-  courseRating            Float             @default(0)
-  description             String            @default("")
-  amenities               String[]
-  walkingAllowed          String            @default("always")
-  walkingNote             String            @default("")
-  cartRequired            Boolean           @default(false)
-  dresscode               String[]
-  minPlayers              Int               @default(1)
-  maxPlayers              Int               @default(4)
-  cancellationHours       Int               @default(24)
-  lateCancellationFee     Float             @default(10)
-  rainCheckPolicy         String            @default("")
-  publicAdvanceDays       Int               @default(7)
-  memberAdvanceDays       Int               @default(14)
-  hasMemberPricing        Boolean           @default(false)
-  hasResidentPricing      Boolean           @default(false)
-  residentCounty          String            @default("")
-  residentState           String            @default("")
-  residentProofRequired   Boolean           @default(false)
-  hasCaddies              Boolean           @default(false)
-  caddieType              String            @default("")
-  caddieLooperRate        Float             @default(0)
-  caddieForeRate          Float             @default(0)
-  caddieNote              String            @default("")
-  hasDrivingRange         Boolean           @default(false)
-  drivingRangeType        String            @default("")
-  rangeBallsFree          Boolean           @default(true)
-  rangeBallsSmallPrice    Float             @default(0)
-  rangeBallsMediumPrice   Float             @default(0)
-  rangeBallsLargePrice    Float             @default(0)
-  hasPuttingGreen         Boolean           @default(false)
-  hasShortGameArea        Boolean           @default(false)
-  hasProShop              Boolean           @default(false)
-  proShopPhone            String            @default("")
-  restaurantType          String            @default("none")
-  hasCartGirl             Boolean           @default(false)
-  tournamentFrequency     String            @default("")
-  hasLessons              Boolean           @default(false)
-  hasClubRental           Boolean           @default(false)
-  clubRentalRate          Float             @default(0)
-  hasPushCartRental       Boolean           @default(false)
-  pushCartRate            Float             @default(0)
-  hasBagStorage           Boolean           @default(false)
-  hasLockerRoom           Boolean           @default(false)
-  hasGpsCarts             Boolean           @default(false)
-  hasTournaments          Boolean           @default(false)
-  stripeAccountId         String            @default("")
-  stripeAccountActive     Boolean           @default(false)
-  rating                  Float             @default(4.5)
-  reviewCount             Int               @default(0)
-  imageGradient           String            @default("linear-gradient(160deg,#071810 0%,#1b4332 60%,#2d6a4f 100%)")
-  featured                Boolean           @default(false)
-  active                  Boolean           @default(false)
-  liveStatus              String            @default("draft")
-  adminNotes              String            @default("")
-  createdAt               DateTime          @default(now())
-  updatedAt               DateTime          @updatedAt
-  operatorId              String?           @unique
-  operator                CourseOperator?   @relation(fields: [operatorId], references: [id])
-  conditions              String            @default("")
-  conditionsUpdatedAt     DateTime?
-  teeTimes                TeeTime[]
-  bookings                Booking[]
-  schedules               TeeTimeSchedule[]
-  blackouts               Blackout[]
-  memberships             CourseMembership[]
-  membershipTiers         MembershipTier[]
-  waitlist                Waitlist[]
-  staff                   CourseStaff[]
-  teeSets                 TeeSet[]
+  id                    String             @id @default(cuid())
+  slug                  String             @unique
+  name                  String
+  type                  String             @default("public")
+  city                  String             @default("")
+  state                 String             @default("")
+  zipCode               String             @default("")
+  address               String             @default("")
+  phone                 String             @default("")
+  website               String             @default("")
+  bookingUrl            String             @default("")
+  holes                 Int                @default(18)
+  par                   Int                @default(72)
+  yardage               Int                @default(0)
+  slope                 Int                @default(0)
+  courseRating          Float              @default(0)
+  description           String             @default("")
+  amenities             String[]
+  walkingAllowed        String             @default("always")
+  walkingNote           String             @default("")
+  cartRequired          Boolean            @default(false)
+  dresscode             String[]
+  minPlayers            Int                @default(1)
+  maxPlayers            Int                @default(4)
+  cancellationHours     Int                @default(24)
+  lateCancellationFee   Float              @default(10)
+  timezone              String             @default("America/New_York")
+  rainCheckPolicy       String             @default("")
+  publicAdvanceDays     Int                @default(7)
+  memberAdvanceDays     Int                @default(14)
+  hasMemberPricing      Boolean            @default(false)
+  hasResidentPricing    Boolean            @default(false)
+  residentCounty        String             @default("")
+  residentState         String             @default("")
+  residentProofRequired Boolean            @default(false)
+  hasCaddies            Boolean            @default(false)
+  caddieType            String             @default("")
+  caddieLooperRate      Float              @default(0)
+  caddieForeRate        Float              @default(0)
+  caddieNote            String             @default("")
+  hasDrivingRange       Boolean            @default(false)
+  drivingRangeType      String             @default("")
+  rangeBallsFree        Boolean            @default(true)
+  rangeBallsSmallPrice  Float              @default(0)
+  rangeBallsMediumPrice Float              @default(0)
+  rangeBallsLargePrice  Float              @default(0)
+  hasPuttingGreen       Boolean            @default(false)
+  hasShortGameArea      Boolean            @default(false)
+  hasProShop            Boolean            @default(false)
+  proShopPhone          String             @default("")
+  restaurantType        String             @default("none")
+  hasCartGirl           Boolean            @default(false)
+  tournamentFrequency   String             @default("")
+  hasLessons            Boolean            @default(false)
+  hasClubRental         Boolean            @default(false)
+  clubRentalRate        Float              @default(0)
+  hasPushCartRental     Boolean            @default(false)
+  pushCartRate          Float              @default(0)
+  hasBagStorage         Boolean            @default(false)
+  hasLockerRoom         Boolean            @default(false)
+  hasGpsCarts           Boolean            @default(false)
+  hasTournaments        Boolean            @default(false)
+  stripeAccountId       String             @default("")
+  stripeAccountActive   Boolean            @default(false)
+  rating                Float              @default(4.5)
+  reviewCount           Int                @default(0)
+  imageGradient         String             @default("linear-gradient(160deg,#071810 0%,#1b4332 60%,#2d6a4f 100%)")
+  featured              Boolean            @default(false)
+  active                Boolean            @default(false)
+  liveStatus            String             @default("draft")
+  adminNotes            String             @default("")
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  operatorId            String?            @unique
+  operator              CourseOperator?    @relation(fields: [operatorId], references: [id])
+  conditions            String             @default("")
+  conditionsUpdatedAt   DateTime?
+  teeTimes              TeeTime[]
+  bookings              Booking[]
+  schedules             TeeTimeSchedule[]
+  blackouts             Blackout[]
+  memberships           CourseMembership[]
+  membershipTiers       MembershipTier[]
+  waitlist              Waitlist[]
+  staff                 CourseStaff[]
+  teeSets               TeeSet[]
 }
 
 // A single tee box (Black/Blue/White/Red/Gold...) — courses with one set of
@@ -165,7 +166,7 @@ model MembershipTier {
   id                 String             @id @default(cuid())
   courseId           String
   course             Course             @relation(fields: [courseId], references: [id])
-  name               String             // "Full Member", "Junior", "Senior Associate"
+  name               String // "Full Member", "Junior", "Senior Associate"
   color              String             @default("#1b4332")
   // Pricing — flat rate overrides. null = fall back to discountPct or standard rate
   greenFeeWeekday    Float?
@@ -210,22 +211,22 @@ model CourseMembership {
 }
 
 model TeeTime {
-  id               String    @id @default(cuid())
+  id               String     @id @default(cuid())
   courseId         String
-  course           Course    @relation(fields: [courseId], references: [id])
+  course           Course     @relation(fields: [courseId], references: [id])
   date             String
   time             String
-  holes            Int       @default(18)
-  playersAvailable Int       @default(4)
-  playersBooked    Int       @default(0)
+  holes            Int        @default(18)
+  playersAvailable Int        @default(4)
+  playersBooked    Int        @default(0)
   greenFee         Float
   memberRate       Float?
   residentRate     Float?
-  cartFee          Float     @default(0)
-  walkingAllowed   Boolean   @default(true)
-  tierName         String    @default("standard")
-  status           String    @default("available")
-  createdAt        DateTime  @default(now())
+  cartFee          Float      @default(0)
+  walkingAllowed   Boolean    @default(true)
+  tierName         String     @default("standard")
+  status           String     @default("available")
+  createdAt        DateTime   @default(now())
   bookings         Booking[]
   waitlist         Waitlist[]
 
@@ -233,44 +234,44 @@ model TeeTime {
 }
 
 model Booking {
-  id                   String         @id @default(cuid())
-  teeTimeId            String
-  teeTime              TeeTime        @relation(fields: [teeTimeId], references: [id])
-  courseId             String
-  course               Course         @relation(fields: [courseId], references: [id])
-  golferAccountId      String?
-  golferAccount        GolferAccount? @relation(fields: [golferAccountId], references: [id])
-  golferName           String
-  golferEmail          String
-  golferPhone          String         @default("")
-  players              Int
-  appliedRate          String         @default("standard")
-  greenFeeTotal        Float
-  cartFeeTotal         Float          @default(0)
-  cartSelected         Boolean        @default(false)
-  rangeBallsSize       String         @default("")
-  rangeBallsTotal      Float          @default(0)
-  accessFeeTotal       Float
-  totalAmount          Float
+  id                       String         @id @default(cuid())
+  teeTimeId                String
+  teeTime                  TeeTime        @relation(fields: [teeTimeId], references: [id])
+  courseId                 String
+  course                   Course         @relation(fields: [courseId], references: [id])
+  golferAccountId          String?
+  golferAccount            GolferAccount? @relation(fields: [golferAccountId], references: [id])
+  golferName               String
+  golferEmail              String
+  golferPhone              String         @default("")
+  players                  Int
+  appliedRate              String         @default("standard")
+  greenFeeTotal            Float
+  cartFeeTotal             Float          @default(0)
+  cartSelected             Boolean        @default(false)
+  rangeBallsSize           String         @default("")
+  rangeBallsTotal          Float          @default(0)
+  accessFeeTotal           Float
+  totalAmount              Float
   // Card-on-file, deferred-payment flow — nothing is charged at booking time.
-  stripeCustomerId      String        @default("")
-  stripePaymentMethodId String        @default("")
-  stripePaymentIntentId String        @default("")
-  cancellationFeeTotal       Float     @default(0)
-  cancellationFeeChargeId    String    @default("")
-  cancellationFeeChargedAt   DateTime?
+  stripeCustomerId         String         @default("")
+  stripePaymentMethodId    String         @default("")
+  stripePaymentIntentId    String         @default("")
+  cancellationFeeTotal     Float          @default(0)
+  cancellationFeeChargeId  String         @default("")
+  cancellationFeeChargedAt DateTime?
   // Check-in / round-charge flow (Phase 2) — direct charge on the course's
   // connected Stripe account, refunding the cancellation fee above if one was
   // already taken. checkInToken lets a golfer check in from the reminder
   // email on a fresh device without needing to be logged in.
-  checkInToken          String?        @unique // generated explicitly in app code at booking creation, not a DB default —
+  checkInToken             String?        @unique // generated explicitly in app code at booking creation, not a DB default —
   // existing rows added before this column existed will be null and just won't have a self-checkin link (staff can still check them in manually)
-  checkedInAt           DateTime?
-  roundPaymentIntentId  String         @default("")
-  checkInFailReason     String         @default("")
-  paymentStatus        String         @default("card_on_file")
-  status               String         @default("confirmed")
-  createdAt            DateTime       @default(now())
+  checkedInAt              DateTime?
+  roundPaymentIntentId     String         @default("")
+  checkInFailReason        String         @default("")
+  paymentStatus            String         @default("card_on_file")
+  status                   String         @default("confirmed")
+  createdAt                DateTime       @default(now())
 }
 
 model TeeTimeSchedule {

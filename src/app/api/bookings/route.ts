@@ -4,7 +4,8 @@ import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { getGolferSession } from '@/lib/auth';
 import { stripe, ACCESS_FEE_CENTS } from '@/lib/stripe';
-import { sendBookingConfirmation, sendOperatorBookingNotification } from '@/lib/email';
+import { sendBookingConfirmation, sendOperatorBookingNotification, sendCancellationWarningEmail, sendCheckInAvailableEmail } from '@/lib/email';
+import { teeToUtcMs } from '@/lib/tee-time-utils';
 
 /** Returns true for Sat/Sun given a date string like "2026-06-21" */
 function isWeekend(dateStr: string): boolean {
@@ -250,6 +251,61 @@ export async function POST(req: NextRequest) {
     const operator = await prisma.courseOperator.findFirst({ where: { course: { id: courseId } } });
     if (operator?.email) {
       await sendOperatorBookingNotification({ ...emailData, operatorEmail: operator.email });
+    }
+
+    // If the cancellation cutoff has already passed at booking time (golfer booked
+    // within the cancellation window), the hourly cron will never send the warning.
+    // Send it immediately instead so the golfer knows where things stand.
+    //
+    // IMPORTANT: tee times are stored in local course time (e.g. "10:56" = 10:56 AM Eastern).
+    // teeToUtcMs handles the conversion correctly including DST.
+    const tz = result.teeTime.course.timezone || 'America/New_York';
+    const teeUtcMs = teeToUtcMs(result.teeTime.date, result.teeTime.time, tz);
+    const now = new Date();
+    const cutoffMs = teeUtcMs - result.teeTime.course.cancellationHours * 3600 * 1000;
+    const minsUntilCutoff = (cutoffMs - now.getTime()) / 60000;
+
+    if (result.cancellationFeeTotal > 0 && result.booking.stripePaymentMethodId) {
+      if (minsUntilCutoff < 0) {
+        // Cutoff already passed — fee will be charged by the next hourly cron run.
+        // Send the "you've been charged" email proactively (the cron will charge soon).
+        // Actually just warn them that they're past the free window.
+        await sendCancellationWarningEmail({
+          golferName,
+          golferEmail,
+          courseName: result.teeTime.course.name,
+          date: result.teeTime.date,
+          time: result.teeTime.time,
+          feeAmount: result.cancellationFeeTotal,
+          bookingId: result.booking.id,
+          cancellationHours: result.teeTime.course.cancellationHours,
+        }).catch(console.error);
+      } else if (minsUntilCutoff < 75) {
+        // Cutoff is within the next 75 min — the warning cron window may miss it.
+        // Send the warning immediately.
+        await sendCancellationWarningEmail({
+          golferName,
+          golferEmail,
+          courseName: result.teeTime.course.name,
+          date: result.teeTime.date,
+          time: result.teeTime.time,
+          feeAmount: result.cancellationFeeTotal,
+          bookingId: result.booking.id,
+          cancellationHours: result.teeTime.course.cancellationHours,
+        }).catch(console.error);
+      }
+    } else if (!result.booking.stripePaymentMethodId && minsUntilCutoff < 165) {
+      // No-fee course: tee time is less than 2h45m away — hourly cron won't catch
+      // the 3-hour check-in window. Send the check-in email immediately.
+      await sendCheckInAvailableEmail({
+        golferName,
+        golferEmail,
+        courseName: result.teeTime.course.name,
+        date: result.teeTime.date,
+        time: result.teeTime.time,
+        bookingId: result.booking.id,
+        checkInToken: result.booking.checkInToken || undefined,
+      }).catch(console.error);
     }
   } catch (err) {
     console.error('Email error:', err);

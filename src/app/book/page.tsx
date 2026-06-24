@@ -97,9 +97,9 @@ function BookPageInner() {
 
   if (confirmedData) {
     return (
-      <div className="min-h-screen bg-[#f8faf9] flex items-center justify-center px-4">
-        <div className="max-w-lg w-full bg-white rounded-3xl border border-gray-100 shadow-sm p-10 text-center">
-          <div className="w-16 h-16 rounded-full bg-[#f0fdf4] flex items-center justify-center mx-auto mb-6">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="max-w-lg w-full bg-white rounded-lg border border-gray-100  p-10 text-center">
+          <div className="w-16 h-16 rounded bg-[#f0fdf4] flex items-center justify-center mx-auto mb-6">
             <CheckCircle size={32} className="text-emerald-500" />
           </div>
           <h1 className="text-2xl font-black text-gray-900 mb-2">You&apos;re all set!</h1>
@@ -109,7 +109,7 @@ function BookPageInner() {
               : <>Your card is on file but <strong>nothing has been charged</strong>. We&apos;ll email you a reminder to check in and pay before your round.</>}
           </p>
 
-          <div className="bg-[#f8faf9] rounded-2xl p-5 mb-8 text-left space-y-2 text-sm">
+          <div className="bg-gray-50 rounded-lg p-5 mb-8 text-left space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-gray-400">Course</span><span className="font-semibold text-gray-900">{confirmedData.courseName}</span></div>
             <div className="flex justify-between"><span className="text-gray-400">Date</span><span className="font-semibold text-gray-900">{displayDate(confirmedData.date)}</span></div>
             <div className="flex justify-between"><span className="text-gray-400">Tee Time</span><span className="font-semibold text-gray-900">{formatTime(confirmedData.time)}</span></div>
@@ -120,14 +120,14 @@ function BookPageInner() {
           </div>
 
           {confirmedData.cancellationFeeTotal > 0 && (
-            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 mb-8 text-left">
+            <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 mb-8 text-left">
               <p className="text-amber-800 text-xs leading-relaxed">
                 Cancel at least {confirmedData.cancellationHours} hours before your tee time to avoid a ${confirmedData.cancellationFeeTotal.toFixed(2)} late-cancellation fee charged to your card on file.
               </p>
             </div>
           )}
 
-          <button onClick={() => router.push('/account')} className="inline-flex items-center justify-center w-full py-4 rounded-xl font-bold text-white text-sm mb-3" style={{ background: '#1b4332' }}>
+          <button onClick={() => router.push('/account')} className="inline-flex items-center justify-center w-full py-4 rounded-md font-bold text-white text-sm mb-3" style={{ background: '#1b4332' }}>
             View My Bookings
           </button>
           <button onClick={() => router.push('/courses')} className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
@@ -139,17 +139,17 @@ function BookPageInner() {
   }
 
   if (loadingInfo) {
-    return <div className="min-h-screen bg-[#f8faf9] flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-gray-400" /></div>;
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-gray-400" /></div>;
   }
 
   if (loadError || !teeTime || !course) {
     return (
-      <div className="min-h-screen bg-[#f8faf9] flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-lg border border-gray-100  p-8 text-center">
           <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-4" />
           <h1 className="font-bold text-gray-900 mb-2">Can&apos;t complete this booking</h1>
           <p className="text-gray-500 text-sm mb-6">{loadError || 'This tee time is no longer available.'}</p>
-          <button onClick={() => router.push(courseSlug ? `/courses/${courseSlug}` : '/courses')} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white" style={{ background: '#1b4332' }}>
+          <button onClick={() => router.push(courseSlug ? `/courses/${courseSlug}` : '/courses')} className="px-5 py-2.5 rounded-md text-sm font-semibold text-white" style={{ background: '#1b4332' }}>
             Pick Another Time
           </button>
         </div>
@@ -173,7 +173,7 @@ function BookPageInner() {
   const hasNoFeePolicy = !course.late_cancellation_fee;
 
   return (
-    <div className="min-h-screen bg-[#f8faf9]">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 py-10">
         <button onClick={() => router.back()} className="inline-flex items-center gap-1.5 text-gray-500 hover:text-gray-900 text-sm mb-6 transition-colors">
           <ChevronLeft size={16} /> Back to tee times
@@ -187,8 +187,8 @@ function BookPageInner() {
         </p>
 
         <div className="grid gap-6">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="h-14 flex items-center px-6" style={{ background: 'linear-gradient(135deg,#0f2218,#1b4332)' }}>
+          <div className="bg-white rounded-lg border border-gray-100  overflow-hidden">
+            <div className="h-14 flex items-center px-6" className="bg-black">
               <span className="text-white font-bold">{course.name}</span>
             </div>
             <div className="p-6 space-y-3 text-sm">
@@ -203,12 +203,12 @@ function BookPageInner() {
                     <p className="text-xs text-gray-400">${teeTime.cart_fee.toFixed(2)} per player</p>
                   </div>
                   {course.cart_required ? (
-                    <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">Required</span>
+                    <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded">Required</span>
                   ) : (
                     <button
                       type="button"
                       onClick={() => setCartSelected(s => !s)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${cartSelected ? 'bg-[#1b4332] text-white' : 'bg-gray-100 text-gray-600'}`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${cartSelected ? 'bg-emerald-800 text-white' : 'bg-gray-100 text-gray-600'}`}
                     >
                       {cartSelected ? 'Added' : 'Add cart'}
                     </button>
@@ -225,7 +225,7 @@ function BookPageInner() {
                         key={size || 'none'}
                         type="button"
                         onClick={() => setRangeBallsSize(size)}
-                        className={`py-2 rounded-lg text-xs font-semibold capitalize transition-colors ${rangeBallsSize === size ? 'bg-[#1b4332] text-white' : 'bg-gray-100 text-gray-600'}`}
+                        className={`py-2 rounded-lg text-xs font-semibold capitalize transition-colors ${rangeBallsSize === size ? 'bg-emerald-800 text-white' : 'bg-gray-100 text-gray-600'}`}
                       >
                         {size || 'None'}
                       </button>
@@ -238,7 +238,7 @@ function BookPageInner() {
               )}
               {course.has_driving_range && course.range_balls_free && (
                 <div className="border-t border-gray-100 pt-3">
-                  <p className="text-xs text-emerald-700 bg-[#f0fdf4] inline-block px-2.5 py-1 rounded-full font-medium">Range balls included, free of charge</p>
+                  <p className="text-xs text-emerald-700 bg-[#f0fdf4] inline-block px-2.5 py-1 rounded font-medium">Range balls included, free of charge</p>
                 </div>
               )}
 
@@ -280,7 +280,7 @@ function BookPageInner() {
             </Elements>
           )}
 
-          <div className="bg-[#f0fdf4] rounded-2xl p-5 border border-emerald-100">
+          <div className="bg-[#f0fdf4] rounded-lg p-5 border border-emerald-100">
             <p className="text-emerald-800 text-sm font-medium mb-1">How this works</p>
             {hasNoFeePolicy ? (
               <p className="text-emerald-700 text-xs leading-relaxed">
@@ -386,29 +386,29 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+    <div className="bg-white rounded-lg border border-gray-100  p-6 space-y-4">
       <h2 className="font-bold text-gray-900">Your Details</h2>
       <div>
         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Full Name</label>
         <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="John Smith"
-          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all" />
+          className="w-full px-4 py-3 rounded border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Email</label>
           <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="john@example.com"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all" />
+            className="w-full px-4 py-3 rounded border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all" />
         </div>
         <div>
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Phone (optional)</label>
           <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="(555) 555-5555"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all" />
+            className="w-full px-4 py-3 rounded border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all" />
         </div>
       </div>
 
       <div>
         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Card Details</label>
-        <div className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus-within:border-[#1b4332] focus-within:ring-2 focus-within:ring-[#1b4332]/10 transition-all">
+        <div className="w-full px-4 py-3.5 rounded border border-gray-200 focus-within:border-[#1b4332] focus-within:ring-2 focus-within:ring-[#1b4332]/10 transition-all">
           <CardElement options={cardStyle} />
         </div>
         <p className="text-xs text-gray-400 mt-1.5">Your card is saved, not charged. You&apos;ll pay when you check in for your round.</p>
@@ -419,7 +419,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
       <button
         onClick={handleSubmit}
         disabled={loading || !stripe}
-        className="w-full py-4 rounded-xl font-bold text-white text-sm transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full py-4 rounded-md font-bold text-white text-sm transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         style={{ background: '#1b4332' }}
       >
         {loading ? <><Loader2 size={16} className="animate-spin" /> Saving card…</> : 'Confirm Tee Time'}
@@ -479,23 +479,23 @@ function SimpleConfirmForm({ teeTimeId, players, golfer, cartSelected, rangeBall
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+    <div className="bg-white rounded-lg border border-gray-100  p-6 space-y-4">
       <h2 className="font-bold text-gray-900">Your Details</h2>
       <div>
         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Full Name</label>
         <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="John Smith"
-          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all" />
+          className="w-full px-4 py-3 rounded border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Email</label>
           <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="john@example.com"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all" />
+            className="w-full px-4 py-3 rounded border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all" />
         </div>
         <div>
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Phone (optional)</label>
           <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="(555) 555-5555"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all" />
+            className="w-full px-4 py-3 rounded border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#1b4332] focus:ring-2 focus:ring-[#1b4332]/10 transition-all" />
         </div>
       </div>
       <p className="text-xs text-gray-400">No card needed — you&apos;ll pay at the course or via the check-in link in your confirmation email.</p>
@@ -503,7 +503,7 @@ function SimpleConfirmForm({ teeTimeId, players, golfer, cartSelected, rangeBall
       <button
         onClick={handleSubmit}
         disabled={loading}
-        className="w-full py-4 rounded-xl font-bold text-white text-sm transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full py-4 rounded-md font-bold text-white text-sm transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         style={{ background: '#1b4332' }}
       >
         {loading ? <><Loader2 size={16} className="animate-spin" /> Reserving spot…</> : 'Reserve Tee Time'}
@@ -514,7 +514,7 @@ function SimpleConfirmForm({ teeTimeId, players, golfer, cartSelected, rangeBall
 
 export default function BookPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#f8faf9]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
       <BookPageInner />
     </Suspense>
   );

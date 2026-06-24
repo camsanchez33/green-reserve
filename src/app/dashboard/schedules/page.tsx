@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Pencil, Check, X, Power } from 'lucide-react';
+import { Plus, Trash2, Pencil, Check, X, Power, RefreshCw } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -36,6 +36,7 @@ export default function SchedulesPage() {
   const [editId, setEditId] = useState<string|null>(null);
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const [hasMember, setHasMember] = useState(false);
   const [hasResident, setHasResident] = useState(false);
   const [courseName, setCourseName] = useState('');
@@ -86,6 +87,19 @@ export default function SchedulesPage() {
     setSaving(false); setShowAdd(false); setEditId(null);
   }
 
+  async function regenerate() {
+    if (!confirm('Regenerate tee times for the next 8 days based on current schedules? Booked slots will not be affected.')) return;
+    setRegenerating(true);
+    const r = await fetch('/api/operator/regenerate-tee-times', { method: 'POST' });
+    const data = await r.json();
+    setRegenerating(false);
+    if (data.errors?.length) {
+      alert(`Done with some errors: ${data.errors.join(', ')}`);
+    } else {
+      alert(`Done! ${data.created} new tee time slot${data.created !== 1 ? 's' : ''} created across the next 8 days.`);
+    }
+  }
+
   async function del(id: string) {
     if(!confirm('Delete this schedule? Future tee times from this schedule will not be re-generated.')) return;
     await fetch('/api/operator/schedule',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
@@ -104,9 +118,14 @@ export default function SchedulesPage() {
       <main className="flex-1 overflow-y-auto bg-gray-50">
       <div className="bg-[#1b4332] px-6 py-4 flex items-center justify-between sticky top-0 z-10">
         <span className="text-white font-black text-lg">Tee Sheet Schedules</span>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-white text-[#1b4332] px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-50">
-          <Plus className="w-4 h-4"/> Add Schedule
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={regenerate} disabled={regenerating} className="flex items-center gap-2 bg-white/20 text-white px-3 py-2 rounded-lg font-semibold text-sm hover:bg-white/30 disabled:opacity-50">
+            <RefreshCw className={`w-4 h-4 ${regenerating ? 'animate-spin' : ''}`}/> {regenerating ? 'Regenerating…' : 'Apply to Tee Sheet'}
+          </button>
+          <button onClick={openAdd} className="flex items-center gap-2 bg-white text-[#1b4332] px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-50">
+            <Plus className="w-4 h-4"/> Add Schedule
+          </button>
+        </div>
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">

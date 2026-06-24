@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { chargeOnConnectedAccount } from '@/lib/stripe';
 import { sendCancellationFeeChargedEmail, sendCheckInAvailableEmail } from '@/lib/email';
+import { teeToUtcMs } from '@/lib/tee-time-utils';
 
 /**
  * Runs once daily (Vercel Hobby plan caps frequency at once/day). Processes
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
     },
     include: {
       teeTime: { select: { date: true, time: true } },
-      course: { select: { name: true, cancellationHours: true, stripeAccountId: true, stripeAccountActive: true } },
+      course: { select: { name: true, cancellationHours: true, timezone: true, stripeAccountId: true, stripeAccountActive: true } },
     },
   });
 
@@ -48,9 +49,10 @@ export async function GET(req: NextRequest) {
   let failed = 0;
 
   for (const booking of candidates) {
-    const teeDateTime = new Date(`${booking.teeTime.date}T${booking.teeTime.time}:00`);
-    const cutoff = new Date(teeDateTime.getTime() - booking.course.cancellationHours * 60 * 60 * 1000);
-    if (cutoff > now) continue; // cancellation window still open — nothing to do yet
+    const tz = booking.course.timezone || 'America/New_York';
+    const teeMs = teeToUtcMs(booking.teeTime.date, booking.teeTime.time, tz);
+    const cutoffMs = teeMs - booking.course.cancellationHours * 60 * 60 * 1000;
+    if (cutoffMs > now.getTime()) continue; // cancellation window still open — nothing to do yet
 
     if (booking.cancellationFeeTotal > 0) {
       // ── Fee policy: charge the card ─────────────────────────────────────────
