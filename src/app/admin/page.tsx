@@ -175,7 +175,7 @@ export default function AdminPage() {
   const [key, setKey] = useState('');
   const [authed, setAuthed] = useState(false);
   const [tab, setTab] = useState<'overview'|'inquiries'|'courses'|'create'>('overview');
-  const [createForm, setCreateForm] = useState({ courseName:'', courseType:'public', address:'', city:'', state:'NJ', zipCode:'', phone:'', website:'', contactName:'', contactEmail:'', holes:18, par:72, description:'', hasMemberPricing:false, hasResidentPricing:false });
+  const [createForm, setCreateForm] = useState({ courseName:'', courseType:'public', address:'', city:'', state:'NJ', zipCode:'', phone:'', website:'', contactName:'', contactEmail:'', contactPhone:'', holes:18, par:72, description:'', hasMemberPricing:false, hasResidentPricing:false });
   const [creating, setCreating] = useState(false);
   const [createResult, setCreateResult] = useState<{tempPassword:string;setupLink:string;slug:string}|null>(null);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
@@ -1260,7 +1260,7 @@ export default function AdminPage() {
                     </div>
                   ))}
                 </div>
-                <button onClick={()=>{ setCreateResult(null); setCreateForm({ courseName:'', courseType:'public', address:'', city:'', state:'NJ', zipCode:'', phone:'', website:'', contactName:'', contactEmail:'', holes:18, par:72, description:'', hasMemberPricing:false, hasResidentPricing:false }); }}
+                <button onClick={()=>{ setCreateResult(null); setCreateForm({ courseName:'', courseType:'public', address:'', city:'', state:'NJ', zipCode:'', phone:'', website:'', contactName:'', contactEmail:'', contactPhone:'', holes:18, par:72, description:'', hasMemberPricing:false, hasResidentPricing:false }); }}
                   className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-colors">
                   Add Another Course
                 </button>
@@ -1345,10 +1345,15 @@ export default function AdminPage() {
                       <label className="text-xs text-gray-500 block mb-1.5">Contact Email *</label>
                       <input type="email" value={createForm.contactEmail} onChange={e=>setCreateForm(f=>({...f,contactEmail:e.target.value}))} className={iCls} placeholder="gm@pinecreek.com"/>
                     </div>
+                    <div>
+                      <label className="text-xs text-gray-500 block mb-1.5">Contact Phone *</label>
+                      <input type="tel" value={createForm.contactPhone} onChange={e=>setCreateForm(f=>({...f,contactPhone:e.target.value}))} className={iCls} placeholder="(201) 555-0100"/>
+                      <p className="text-xs text-gray-600 mt-1">Used for SMS two-factor login codes.</p>
+                    </div>
                   </div>
                 </div>
 
-                <button onClick={createCourse} disabled={creating||!createForm.courseName||!createForm.contactEmail||!createForm.contactName}
+                <button onClick={createCourse} disabled={creating||!createForm.courseName||!createForm.contactEmail||!createForm.contactName||!createForm.contactPhone}
                   className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-black rounded-2xl text-base transition-colors">
                   {creating ? 'Creating...' : 'Create Course and Send Welcome Email'}
                 </button>

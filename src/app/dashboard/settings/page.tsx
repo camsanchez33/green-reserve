@@ -461,6 +461,7 @@ function SettingsPageInner() {
                   <Smartphone className="w-4 h-4"/> SMS
                 </button>
               </div>
+              {!form.twoFactorPhone&&<p className="text-xs text-gray-400">Add a phone number to enable SMS verification.</p>}
               {(form.twoFactorMethod as string)==='sms'&&(
                 <Field label="Phone number for codes">
                   <FInput value={form.twoFactorPhone as string} onChange={v=>set('twoFactorPhone',v)} type="tel" placeholder="+1 (201) 555-0100"/>

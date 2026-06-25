@@ -92,17 +92,19 @@ export default function TwoFactorVerifyPage() {
             {loading ? 'Verifying...' : 'Verify & Sign In'}
           </button>
 
-          <p className="mt-4 text-center text-xs text-white/30">
-            {method === 'sms' ? (
-              <button onClick={() => resendVia('email')} disabled={resending} className="text-emerald-400 font-medium hover:underline disabled:opacity-50">
-                {resending ? 'Sending...' : 'Use email instead'}
-              </button>
-            ) : (
-              <button onClick={() => resendVia('sms')} disabled={resending} className="text-emerald-400 font-medium hover:underline disabled:opacity-50">
-                {resending ? 'Sending...' : 'Use SMS instead'}
-              </button>
-            )}
-          </p>
+          {(method === 'sms' || phoneLast4) && (
+            <p className="mt-4 text-center text-xs text-white/30">
+              {method === 'sms' ? (
+                <button onClick={() => resendVia('email')} disabled={resending} className="text-emerald-400 font-medium hover:underline disabled:opacity-50">
+                  {resending ? 'Sending...' : 'Use email instead'}
+                </button>
+              ) : (
+                <button onClick={() => resendVia('sms')} disabled={resending} className="text-emerald-400 font-medium hover:underline disabled:opacity-50">
+                  {resending ? 'Sending...' : 'Use SMS instead'}
+                </button>
+              )}
+            </p>
+          )}
 
           <p className="mt-6 text-center text-xs text-white/30">
             <a href="/dashboard/login" className="text-emerald-400 font-medium hover:underline">Back to login</a>
