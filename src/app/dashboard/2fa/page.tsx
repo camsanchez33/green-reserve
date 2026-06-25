@@ -1,13 +1,24 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, ShieldCheck } from 'lucide-react';
+import { Mail, Smartphone, ShieldCheck } from 'lucide-react';
 
 export default function TwoFactorVerifyPage() {
   const router = useRouter();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [method, setMethod] = useState<'email' | 'sms'>('email');
+  const [phoneLast4, setPhoneLast4] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/auth/2fa/status').then(r => r.json()).then(data => {
+      if (data?.method) setMethod(data.method);
+      if (data?.phoneLast4) setPhoneLast4(data.phoneLast4);
+    });
+  }, []);
 
   const submit = async () => {
     if (code.length !== 6) { setError('Enter the 6-digit code.'); return; }
@@ -22,6 +33,19 @@ export default function TwoFactorVerifyPage() {
     setLoading(false);
     if (!res.ok) { setError(data.error || 'Invalid or expired code.'); return; }
     router.push(data.redirect || '/dashboard');
+  };
+
+  const resendVia = async (target: 'email' | 'sms') => {
+    setResending(true);
+    setError('');
+    setResent(false);
+    const res = await fetch(`/api/auth/2fa/resend?method=${target}`, { method: 'POST' });
+    const data = await res.json();
+    setResending(false);
+    if (!res.ok) { setError(data.error || 'Could not resend code.'); return; }
+    setMethod(data.method);
+    setPhoneLast4(data.phoneLast4);
+    setResent(true);
   };
 
   return (
@@ -40,10 +64,15 @@ export default function TwoFactorVerifyPage() {
             <h2 className="text-xl font-black tracking-tight text-white">Two-factor verification</h2>
           </div>
           <p className="text-white/40 text-sm mb-6 flex items-center gap-1.5">
-            <Mail className="w-3.5 h-3.5" /> Check your email for a code.
+            {method === 'sms' ? (
+              <><Smartphone className="w-3.5 h-3.5" /> We sent a code to your phone{phoneLast4 ? ` ending in ${phoneLast4}` : ''}.</>
+            ) : (
+              <><Mail className="w-3.5 h-3.5" /> We sent a code to your email.</>
+            )}
           </p>
 
           {error && <div className="bg-red-950/50 border border-red-800 text-red-300 rounded-md px-4 py-3 text-sm mb-4">{error}</div>}
+          {resent && !error && <div className="bg-emerald-950/50 border border-emerald-800 text-emerald-300 rounded-md px-4 py-3 text-sm mb-4">New code sent.</div>}
 
           <label className="block text-xs font-bold uppercase tracking-widest text-white/40 mb-1.5">6-Digit Code</label>
           <input
@@ -62,6 +91,18 @@ export default function TwoFactorVerifyPage() {
             className="mt-6 w-full bg-emerald-600 text-white py-3 rounded-md font-bold text-sm hover:bg-emerald-500 disabled:opacity-50 transition-colors">
             {loading ? 'Verifying...' : 'Verify & Sign In'}
           </button>
+
+          <p className="mt-4 text-center text-xs text-white/30">
+            {method === 'sms' ? (
+              <button onClick={() => resendVia('email')} disabled={resending} className="text-emerald-400 font-medium hover:underline disabled:opacity-50">
+                {resending ? 'Sending...' : 'Use email instead'}
+              </button>
+            ) : (
+              <button onClick={() => resendVia('sms')} disabled={resending} className="text-emerald-400 font-medium hover:underline disabled:opacity-50">
+                {resending ? 'Sending...' : 'Use SMS instead'}
+              </button>
+            )}
+          </p>
 
           <p className="mt-6 text-center text-xs text-white/30">
             <a href="/dashboard/login" className="text-emerald-400 font-medium hover:underline">Back to login</a>

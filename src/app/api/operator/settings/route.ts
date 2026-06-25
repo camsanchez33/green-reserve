@@ -8,14 +8,17 @@ export async function GET() {
   const course = await prisma.course.findUnique({ where: { id: session.courseId } });
   if (!course) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  // twoFactorEnabled lives on CourseOperator, not Course — staff have no such setting.
-  let twoFactorEnabled = false;
+  // 2FA settings live on CourseOperator, not Course — staff have no such setting.
+  // Exposed as twoFactorPhone (not phone) to avoid clobbering the course's business phone number.
+  let twoFactorMethod = 'email';
+  let twoFactorPhone = '';
   if (session.operatorId) {
-    const operator = await prisma.courseOperator.findUnique({ where: { id: session.operatorId }, select: { twoFactorEnabled: true } });
-    twoFactorEnabled = operator?.twoFactorEnabled ?? false;
+    const operator = await prisma.courseOperator.findUnique({ where: { id: session.operatorId }, select: { twoFactorMethod: true, phone: true } });
+    twoFactorMethod = operator?.twoFactorMethod ?? 'email';
+    twoFactorPhone = operator?.phone ?? '';
   }
 
-  return NextResponse.json({ ...course, twoFactorEnabled });
+  return NextResponse.json({ ...course, twoFactorMethod, twoFactorPhone });
 }
 
 export async function PATCH(req: NextRequest) {
@@ -43,9 +46,12 @@ export async function PATCH(req: NextRequest) {
   }
   const updated = await prisma.course.update({ where: { id: session.courseId }, data });
 
-  // twoFactorEnabled lives on CourseOperator, not Course — can't go in the whitelist above.
-  if ('twoFactorEnabled' in body && session.operatorId) {
-    await prisma.courseOperator.update({ where: { id: session.operatorId }, data: { twoFactorEnabled: !!body.twoFactorEnabled } });
+  // 2FA settings live on CourseOperator, not Course — can't go in the whitelist above.
+  if (session.operatorId && ('twoFactorMethod' in body || 'twoFactorPhone' in body)) {
+    const operatorData: Record<string, unknown> = {};
+    if ('twoFactorMethod' in body) operatorData.twoFactorMethod = body.twoFactorMethod === 'sms' ? 'sms' : 'email';
+    if ('twoFactorPhone' in body) operatorData.phone = String(body.twoFactorPhone || '');
+    await prisma.courseOperator.update({ where: { id: session.operatorId }, data: operatorData });
   }
 
   return NextResponse.json(updated);

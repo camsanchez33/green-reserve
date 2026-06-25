@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { signToken, signStaffToken, signPendingTwoFactorToken } from '@/lib/auth';
-import { sendTwoFactorCodeEmail } from '@/lib/email';
+import { issueTwoFactorCode } from '@/lib/two-factor';
 import bcrypt from 'bcryptjs';
 
 const MAX_ATTEMPTS = 5;
@@ -33,34 +33,16 @@ export async function POST(req: NextRequest) {
 
     await prisma.courseOperator.update({ where: { id: operator.id }, data: { failedLoginAttempts: 0, lockoutUntil: null } });
 
-    if (operator.twoFactorEnabled) {
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      const hashedCode = await bcrypt.hash(code, 10);
-      await prisma.courseOperator.update({
-        where: { id: operator.id },
-        data: { twoFactorCode: hashedCode, twoFactorCodeExpiry: new Date(Date.now() + 10 * 60 * 1000) },
-      });
-
-      try {
-        await sendTwoFactorCodeEmail({ operatorName: operator.name, operatorEmail: operator.email, code });
-      } catch (err) {
-        console.error('2FA code email failed:', err);
-        return NextResponse.json({ error: 'Could not send verification code. Try again shortly.' }, { status: 500 });
-      }
-
-      const pendingToken = await signPendingTwoFactorToken({ operatorId: operator.id });
-      const res = NextResponse.json({ success: true, redirect: '/dashboard/2fa' });
-      res.cookies.set('gr_2fa_pending', pendingToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 600, path: '/' });
-      return res;
+    try {
+      await issueTwoFactorCode(operator);
+    } catch (err) {
+      console.error('2FA code send failed:', err);
+      return NextResponse.json({ error: 'Could not send verification code. Try again shortly.' }, { status: 500 });
     }
 
-    const token = await signToken({ operatorId: operator.id, email: operator.email });
-    let redirect = '/dashboard';
-    if (!operator.emailVerified) redirect = '/dashboard/verify';
-    else if (operator.onboardingStep < 3) redirect = '/dashboard/onboarding';
-
-    const res = NextResponse.json({ success: true, redirect });
-    res.cookies.set('gr_operator', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 60 * 60 * 24 * 7, path: '/' });
+    const pendingToken = await signPendingTwoFactorToken({ operatorId: operator.id });
+    const res = NextResponse.json({ success: true, redirect: '/dashboard/2fa' });
+    res.cookies.set('gr_2fa_pending', pendingToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 600, path: '/' });
     return res;
   }
 

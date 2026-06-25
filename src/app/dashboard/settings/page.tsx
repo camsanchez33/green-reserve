@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff, CreditCard, CheckCircle2, AlertCircle, Loader2, KeyRound } from 'lucide-react';
+import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff, CreditCard, CheckCircle2, AlertCircle, Loader2, KeyRound, Mail, Smartphone } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
 
@@ -58,6 +58,9 @@ function SettingsPageInner() {
   const [operatorEmail, setOperatorEmail] = useState('');
   const [emailingReset, setEmailingReset] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [saving2FA, setSaving2FA] = useState(false);
+  const [saved2FA, setSaved2FA] = useState(false);
+  const [error2FA, setError2FA] = useState('');
 
   const refreshForm = () => fetch('/api/operator/settings').then(r=>r.json()).then(setForm);
 
@@ -120,11 +123,19 @@ function SettingsPageInner() {
     setStaff(s=>s.map(m=>m.id===id?{...m,active}:m));
   }
 
-  async function toggle2FA() {
-    const turningOn = !form.twoFactorEnabled;
-    if (turningOn && !confirm("Enable two-factor authentication? You'll need to enter a 6-digit code emailed to you every time you log in.")) return;
-    const res = await fetch('/api/operator/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ twoFactorEnabled: turningOn }) });
-    if (res.ok) set('twoFactorEnabled', turningOn);
+  async function save2FA() {
+    const method = (form.twoFactorMethod as string) || 'email';
+    const phone = (form.twoFactorPhone as string) || '';
+    if (method === 'sms' && !phone.trim()) { setError2FA('Enter a phone number to receive SMS codes.'); return; }
+    setError2FA('');
+    setSaving2FA(true);
+    const res = await fetch('/api/operator/settings', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ twoFactorMethod: method, twoFactorPhone: phone }),
+    });
+    setSaving2FA(false);
+    if (res.ok) { setSaved2FA(true); setTimeout(() => setSaved2FA(false), 2000); }
+    else setError2FA('Could not save. Try again.');
   }
 
   async function changePassword() {
@@ -438,8 +449,27 @@ function SettingsPageInner() {
         {active==='Account'&&(
           <div className="space-y-5">
             <SectionCard title="Two-Factor Authentication">
-              <p className="text-sm text-gray-500">Require a 6-digit code emailed to you on every login, in addition to your password.</p>
-              <Toggle label="Email two-factor authentication" checked={!!form.twoFactorEnabled} onChange={toggle2FA}/>
+              <p className="text-sm text-gray-500">Required on every login. Choose how you&apos;d like to receive your 6-digit code.</p>
+              {error2FA&&<div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm flex items-center gap-2"><AlertCircle className="w-4 h-4"/>{error2FA}</div>}
+              <div className="flex gap-2">
+                <button onClick={()=>set('twoFactorMethod','email')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${(form.twoFactorMethod as string)!=='sms'?'bg-green-600 text-white border-green-600':'bg-white text-gray-600 border-gray-200 hover:border-green-400'}`}>
+                  <Mail className="w-4 h-4"/> Email
+                </button>
+                <button onClick={()=>set('twoFactorMethod','sms')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${(form.twoFactorMethod as string)==='sms'?'bg-green-600 text-white border-green-600':'bg-white text-gray-600 border-gray-200 hover:border-green-400'}`}>
+                  <Smartphone className="w-4 h-4"/> SMS
+                </button>
+              </div>
+              {(form.twoFactorMethod as string)==='sms'&&(
+                <Field label="Phone number for codes">
+                  <FInput value={form.twoFactorPhone as string} onChange={v=>set('twoFactorPhone',v)} type="tel" placeholder="+1 (201) 555-0100"/>
+                </Field>
+              )}
+              <button onClick={save2FA} disabled={saving2FA}
+                className="w-full bg-[#1b4332] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-50 flex items-center justify-center gap-2">
+                <Save className="w-4 h-4"/> {saving2FA?'Saving...':saved2FA?'Saved!':'Save 2FA Settings'}
+              </button>
             </SectionCard>
             <SectionCard title="Change Password">
               <p className="text-sm text-gray-500">Update the password for your own login. This doesn&apos;t affect staff accounts.</p>

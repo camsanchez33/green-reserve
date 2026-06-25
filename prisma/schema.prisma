@@ -20,8 +20,10 @@ model CourseOperator {
   failedLoginAttempts Int       @default(0)
   lockoutUntil        DateTime?
   twoFactorEnabled    Boolean   @default(false)
+  twoFactorMethod     String    @default("email")
   twoFactorCode       String?
   twoFactorCodeExpiry DateTime?
+  phone               String    @default("")
   createdAt           DateTime  @default(now())
   course              Course?
 }
