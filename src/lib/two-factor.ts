@@ -10,6 +10,7 @@ import type { CourseOperator } from '@prisma/client';
 export async function issueTwoFactorCode(operator: CourseOperator, methodOverride?: string) {
   const requested = methodOverride || operator.twoFactorMethod;
   const method = requested === 'sms' && operator.phone ? 'sms' : 'email';
+  console.log('[2fa] issueTwoFactorCode — operatorId:', operator.id, '| requested:', requested, '| resolved:', method, '| hasPhone:', !!operator.phone);
 
   const code = Math.floor(100000 + Math.random() * 900000).toString();
   const hashedCode = await bcrypt.hash(code, 10);
@@ -19,8 +20,10 @@ export async function issueTwoFactorCode(operator: CourseOperator, methodOverrid
   });
 
   if (method === 'sms') {
+    console.log('[2fa] sending via SMS');
     await sendSmsOtp(operator.phone, code);
   } else {
+    console.log('[2fa] sending via email to:', operator.email);
     await sendTwoFactorCodeEmail({ operatorName: operator.name, operatorEmail: operator.email, code });
   }
 
