@@ -1,18 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getOperatorSession } from '@/lib/auth';
+import { resolveDashboardSession } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 
-/**
- * POST /api/operator/regenerate-tee-times
- * Replays tee time generation for the next 8 days using current schedules.
- * Safe to run at any time — booked and manually-blocked slots are never touched.
- */
 export async function POST() {
-  const session = await getOperatorSession();
+  const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const course = await prisma.course.findFirst({ where: { operator: { id: session.operatorId } } });
+  const course = await prisma.course.findUnique({ where: { id: session.courseId } });
   if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
 
   const today = new Date();
