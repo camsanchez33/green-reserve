@@ -27,10 +27,10 @@ function StatCard({ icon, label, value, sub, tone = 'gray' }: {
 }) {
   const colors = { emerald:'text-emerald-600', blue:'text-blue-600', amber:'text-amber-600', red:'text-red-500', gray:'text-gray-500' };
   return (
-    <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+    <div className="bg-gray-900 rounded-lg p-4 border border-white/10">
       <div className={`flex items-center gap-1.5 text-xs font-medium mb-1 ${colors[tone]}`}>{icon}{label}</div>
-      <div className="text-xl font-black text-gray-900">{value}</div>
-      <div className="text-xs text-gray-400 leading-relaxed">{sub}</div>
+      <div className="text-xl font-black text-white">{value}</div>
+      <div className="text-xs text-gray-500 leading-relaxed">{sub}</div>
     </div>
   );
 }
@@ -86,31 +86,31 @@ function PaymentsPageInner() {
   const allRows = bookings; // show ALL bookings including cancelled in the table
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="flex h-screen bg-gray-950 overflow-hidden">
       <OperatorSidebar active="payments" courseName={courseName} />
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-5xl mx-auto px-6 py-6">
+        <div className="max-w-5xl mx-auto px-6 py-6 text-white">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-xl font-black text-gray-900">Payments</h1>
-              <p className="text-xs text-gray-400">Full booking ledger — actual charges, pending amounts, and held fees.</p>
+              <h1 className="text-xl font-black text-white">Payments</h1>
+              <p className="text-xs text-gray-500">Full booking ledger — actual charges, pending amounts, and held fees.</p>
             </div>
-            <button onClick={load} className="flex items-center gap-1.5 text-xs text-gray-500 px-3 py-1.5 rounded-lg border border-gray-200 hover:border-gray-300">
+            <button onClick={load} className="flex items-center gap-1.5 text-xs text-gray-400 px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20">
               <RefreshCw className="w-3.5 h-3.5" />Refresh
             </button>
           </div>
 
           {dateFilter && (
-            <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-4 py-2.5 mb-4 text-sm">
-              <span className="text-green-800 font-medium">Showing bookings for {fmtDate(dateFilter)}</span>
-              <button onClick={() => router.push('/dashboard/payments')} className="flex items-center gap-1 text-green-700 hover:underline text-xs font-semibold">
+            <div className="flex items-center justify-between bg-emerald-950/40 border border-emerald-800/40 rounded-md px-4 py-2.5 mb-4 text-sm">
+              <span className="text-emerald-300 font-medium">Showing bookings for {fmtDate(dateFilter)}</span>
+              <button onClick={() => router.push('/dashboard/payments')} className="flex items-center gap-1 text-emerald-400 hover:underline text-xs font-semibold">
                 <X className="w-3.5 h-3.5" />Clear filter
               </button>
             </div>
           )}
 
           {/* ── Collected (real money) ── */}
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Collected</p>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Collected</p>
           <div className="grid grid-cols-3 gap-3 mb-5">
             <StatCard tone="emerald" icon={<DollarSign className="w-4 h-4"/>} label="Revenue Collected"
               value={`$${(collectedRevenue / 100).toFixed(2)}`}
@@ -124,7 +124,7 @@ function PaymentsPageInner() {
           </div>
 
           {/* ── Pending / expected ── */}
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Pending</p>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Pending</p>
           <div className="grid grid-cols-3 gap-3 mb-6">
             <StatCard tone="blue" icon={<Clock3 className="w-4 h-4"/>} label="Card on File"
               value={`${cardOnFile.length} booking${cardOnFile.length!==1?'s':''}`}
@@ -139,14 +139,14 @@ function PaymentsPageInner() {
 
           {/* ── Table ── */}
           {loading ? (
-            <div className="flex items-center justify-center py-16 text-gray-400 gap-2"><Loader2 className="w-5 h-5 animate-spin" />Loading...</div>
+            <div className="flex items-center justify-center py-16 text-gray-500 gap-2"><Loader2 className="w-5 h-5 animate-spin" />Loading...</div>
           ) : allRows.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-300 text-gray-400 text-sm">{dateFilter ? `No bookings for ${fmtDate(dateFilter)}.` : 'No bookings yet.'}</div>
+            <div className="text-center py-16 bg-gray-900 rounded-lg border border-dashed border-white/10 text-gray-500 text-sm">{dateFilter ? `No bookings for ${fmtDate(dateFilter)}.` : 'No bookings yet.'}</div>
           ) : (
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="bg-gray-900 rounded-lg border border-white/10 overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-xs text-gray-400 uppercase tracking-wide border-b border-gray-100">
+                  <tr className="text-left text-xs text-gray-500 uppercase tracking-wide border-b border-white/10">
                     <th className="px-4 py-3 font-semibold">Golfer</th>
                     <th className="px-4 py-3 font-semibold">Tee Time</th>
                     <th className="px-4 py-3 font-semibold text-right">Green + Cart</th>
@@ -159,18 +159,18 @@ function PaymentsPageInner() {
                   {allRows.map(b => {
                     const bStatus = getBookingStatus(b.status, b.paymentStatus);
                     return (
-                      <tr key={b.id} className={`border-b border-gray-50 last:border-0 ${b.status==='cancelled'?'opacity-50':''}`}>
+                      <tr key={b.id} className={`border-b border-white/5 last:border-0 ${b.status==='cancelled'?'opacity-50':''}`}>
                         <td className="px-4 py-3">
-                          <div className="font-semibold text-gray-900">{b.golferName}</div>
-                          <div className="text-xs text-gray-400">{b.golferEmail} · {b.players} player{b.players!==1?'s':''}</div>
+                          <div className="font-semibold text-white">{b.golferName}</div>
+                          <div className="text-xs text-gray-500">{b.golferEmail} · {b.players} player{b.players!==1?'s':''}</div>
                         </td>
-                        <td className="px-4 py-3 text-gray-600 text-xs">
+                        <td className="px-4 py-3 text-gray-400 text-xs">
                           <div>{fmtDate(b.teeTime.date)}</div>
                           <div>{fmtTime(b.teeTime.time)}</div>
                         </td>
-                        <td className="px-4 py-3 text-right font-semibold text-gray-900">
+                        <td className="px-4 py-3 text-right font-semibold text-white">
                           ${((b.greenFeeTotal + b.cartFeeTotal) / 100).toFixed(2)}
-                          {b.paymentStatus !== 'paid' && b.status !== 'cancelled' && <span className="text-gray-300 text-xs"> est.</span>}
+                          {b.paymentStatus !== 'paid' && b.status !== 'cancelled' && <span className="text-gray-600 text-xs"> est.</span>}
                         </td>
                         <td className="px-4 py-3 text-right text-xs">
                           {b.cancellationFeeTotal > 0 ? (
@@ -179,9 +179,9 @@ function PaymentsPageInner() {
                             </span>
                           ) : <span className="text-gray-300">—</span>}
                         </td>
-                        <td className="px-4 py-3 text-right text-gray-500">
+                        <td className="px-4 py-3 text-right text-gray-400">
                           ${(b.totalAmount / 100).toFixed(2)}
-                          {b.paymentStatus !== 'paid' && b.status !== 'cancelled' && <span className="text-gray-300 text-xs"> est.</span>}
+                          {b.paymentStatus !== 'paid' && b.status !== 'cancelled' && <span className="text-gray-600 text-xs"> est.</span>}
                         </td>
                         <td className="px-4 py-3">
                           <span className={`text-xs font-semibold px-2 py-1 rounded-full ${statusBadgeClass(bStatus.tone)}`}>{bStatus.label}</span>
@@ -201,7 +201,7 @@ function PaymentsPageInner() {
 
 export default function PaymentsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-100" />}>
+    <Suspense fallback={<div className="min-h-screen bg-gray-950" />}>
       <PaymentsPageInner />
     </Suspense>
   );

@@ -37,19 +37,19 @@ const fmtDate = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('en-
 const fmtTime = (t: string) => { const [h, m] = t.split(':').map(Number); return `${h % 12 || 12}:${m.toString().padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`; };
 
 function slotColor(tt: TeeTime) {
-  if (tt.status === 'blocked') return 'bg-gray-100 border-gray-200';
+  if (tt.status === 'blocked') return 'bg-white/5 border-white/10';
   const avail = tt.playersAvailable - (tt.playersBooked ?? 0);
-  if (avail === 0) return 'bg-red-50 border-red-200';
-  if (avail <= 2)  return 'bg-yellow-50 border-yellow-200';
-  return 'bg-green-50 border-green-200';
+  if (avail === 0) return 'bg-red-950/30 border-red-800/30';
+  if (avail <= 2)  return 'bg-yellow-950/30 border-yellow-700/30';
+  return 'bg-emerald-950/30 border-emerald-800/30';
 }
 function slotBadge(tt: TeeTime) {
-  if (tt.status === 'blocked') return <span className="text-xs text-gray-400 font-medium">Blocked</span>;
+  if (tt.status === 'blocked') return <span className="text-xs text-gray-500 font-medium">Blocked</span>;
   const booked = tt.playersBooked ?? 0;
   const avail  = tt.playersAvailable - booked;
-  if (avail === 0) return <span className="text-xs font-semibold text-red-600">Full</span>;
-  if (booked > 0)  return <span className="text-xs font-semibold text-yellow-600">{avail} left</span>;
-  return <span className="text-xs font-semibold text-green-700">{avail} open</span>;
+  if (avail === 0) return <span className="text-xs font-semibold text-red-400">Full</span>;
+  if (booked > 0)  return <span className="text-xs font-semibold text-yellow-400">{avail} left</span>;
+  return <span className="text-xs font-semibold text-emerald-400">{avail} open</span>;
 }
 
 /* ─── Main ───────────────────────────────────────────────────────────── */
@@ -164,7 +164,7 @@ function DashboardPageInner() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="flex h-screen bg-gray-950 overflow-hidden">
 
       <OperatorSidebar active={tab} courseName={courseName} onAlertClick={() => setShowConditions(true)} />
 
@@ -185,7 +185,7 @@ function DashboardPageInner() {
           {/* ── Analytics ── */}
           {tab === 'analytics' && (
             <div>
-              <h2 className="font-black text-gray-900 text-xl mb-5">Analytics — Last 30 Days</h2>
+              <h2 className="font-black text-white text-xl mb-5">Analytics — Last 30 Days</h2>
               {analyticsLoading && <div className="text-center py-20 text-gray-400"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}
               {analytics && (
                 <div className="space-y-5">
@@ -196,15 +196,15 @@ function DashboardPageInner() {
                       { label:'Players',     value:analytics.summary.totalPlayers,                  sub:'total rounds',  color:'text-purple-700', onClick:undefined },
                       { label:'Utilization', value:`${analytics.summary.utilization}%`,             sub:'slots filled',  color:'text-orange-600', onClick:undefined },
                     ].map(s => (
-                      <button key={s.label} onClick={s.onClick} disabled={!s.onClick} className={`bg-white rounded-2xl border border-gray-200 p-4 text-left ${s.onClick?'hover:border-green-300 hover:shadow-md transition-all cursor-pointer':'cursor-default'}`}>
-                        <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
+                      <button key={s.label} onClick={s.onClick} disabled={!s.onClick} className={`bg-gray-900 rounded-lg border border-white/10 p-4 text-left ${s.onClick?'hover:border-green-300 hover:shadow-md transition-all cursor-pointer':'cursor-default'}`}>
+                        <div className={`text-2xl font-black text-white`}>{s.value}</div>
                         <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
                         <div className="text-xs text-gray-400">{s.sub}</div>
                       </button>
                     ))}
                   </div>
-                  <div className="bg-white rounded-2xl border border-gray-200 p-5">
-                    <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wide">Daily Revenue</h3>
+                  <div className="bg-gray-900 rounded-lg border border-white/10 p-5">
+                    <h3 className="font-bold text-white mb-4 text-sm uppercase tracking-wide">Daily Revenue</h3>
                     <div className="flex items-end gap-0.5 h-24">
                       {analytics.revenueByDay.map(d => {
                         const max = Math.max(...analytics.revenueByDay.map(x => x.revenue), 1);
@@ -222,16 +222,16 @@ function DashboardPageInner() {
                       <span>{analytics.revenueByDay[analytics.revenueByDay.length-1]?.date}</span>
                     </div>
                   </div>
-                  <div className="bg-white rounded-2xl border border-gray-200 p-5">
-                    <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wide">Utilization by Day</h3>
+                  <div className="bg-gray-900 rounded-lg border border-white/10 p-5">
+                    <h3 className="font-bold text-white mb-4 text-sm uppercase tracking-wide">Utilization by Day</h3>
                     <div className="space-y-2">
                       {analytics.utilizationByDow.map(d => (
                         <div key={d.dow} className="flex items-center gap-3">
-                          <span className="text-sm text-gray-500 w-8">{d.label}</span>
-                          <div className="flex-1 bg-gray-100 rounded-full h-3">
+                          <span className="text-sm text-gray-400 w-8">{d.label}</span>
+                          <div className="flex-1 bg-white/10 rounded-full h-3">
                             <div className="h-3 rounded-full" style={{ width:`${d.pct}%`, background: d.pct>70?'#166534':d.pct>40?'#1b4332':'#86efac' }} />
                           </div>
-                          <span className="text-sm font-semibold text-gray-700 w-10 text-right">{d.pct}%</span>
+                          <span className="text-sm font-semibold text-white w-10 text-right">{d.pct}%</span>
                         </div>
                       ))}
                     </div>
@@ -251,7 +251,7 @@ function DashboardPageInner() {
                 { label:'Revenue',     value:`$${revenue.toFixed(0)}`, icon:<DollarSign className="w-4 h-4"/>, color:'text-emerald-600', onClick:()=>router.push(`/dashboard/payments?date=${selectedDate}`) },
                 { label:'Blocked',     value:blocked,              icon:<Ban className="w-4 h-4"/>,       color:'text-gray-500',   onClick:undefined },
               ].map(s => (
-                <button key={s.label} onClick={s.onClick} disabled={!s.onClick} className={`bg-white rounded-xl p-4 border border-gray-200 shadow-sm text-left ${s.onClick?'hover:border-emerald-300 hover:shadow-md transition-all cursor-pointer':'cursor-default'}`}>
+                <button key={s.label} onClick={s.onClick} disabled={!s.onClick} className={`bg-gray-900 rounded-lg p-4 border border-white/10 text-left ${s.onClick?'hover:border-emerald-300 hover:shadow-md transition-all cursor-pointer':'cursor-default'}`}>
                   <div className={`flex items-center gap-1.5 text-xs font-medium mb-1 ${s.color}`}>{s.icon}{s.label}{s.onClick&&<span className="text-gray-300 ml-auto">→</span>}</div>
                   <div className="text-xl font-black text-gray-900">{s.value}</div>
                 </button>
@@ -259,21 +259,21 @@ function DashboardPageInner() {
             </div>
 
             {/* Date strip */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm mb-4 p-3">
+            <div className="bg-gray-900 rounded-lg border border-white/10 mb-4 p-3">
               <div className="flex items-center gap-2">
-                <button onClick={() => setDateOffset(o => Math.max(0,o-7))} disabled={dateOffset===0} className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-30">
-                  <ChevronLeft className="w-4 h-4 text-gray-600"/>
+                <button onClick={() => setDateOffset(o => Math.max(0,o-7))} disabled={dateOffset===0} className="p-1.5 rounded-lg hover:bg-white/10 disabled:opacity-30">
+                  <ChevronLeft className="w-4 h-4 text-gray-400"/>
                 </button>
                 <div className="flex gap-1.5 flex-1 overflow-x-auto">
                   {dates.map(d => (
-                    <button key={d} onClick={() => setSelectedDate(d)} className={`flex-1 min-w-[70px] py-2 px-1 rounded-lg text-center transition-colors ${selectedDate===d?'bg-[#1b4332] text-white':'hover:bg-gray-50 text-gray-600'}`}>
+                    <button key={d} onClick={() => setSelectedDate(d)} className={`flex-1 min-w-[70px] py-2 px-1 rounded-lg text-center transition-colors ${selectedDate===d?'bg-emerald-600 text-white':'hover:bg-white/10 text-gray-400'}`}>
                       <div className="text-xs font-medium">{new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'})}</div>
                       <div className="text-sm font-bold">{new Date(d+'T12:00:00').getDate()}</div>
                     </button>
                   ))}
                 </div>
-                <button onClick={() => setDateOffset(o => o+7)} className="p-1.5 rounded-lg hover:bg-gray-100">
-                  <ChevronRight className="w-4 h-4 text-gray-600"/>
+                <button onClick={() => setDateOffset(o => o+7)} className="p-1.5 rounded-lg hover:bg-white/10">
+                  <ChevronRight className="w-4 h-4 text-gray-400"/>
                 </button>
               </div>
             </div>
@@ -281,21 +281,21 @@ function DashboardPageInner() {
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h2 className="text-lg font-black text-gray-900">{fmtDate(selectedDate)}</h2>
+                <h2 className="text-lg font-black text-white">{fmtDate(selectedDate)}</h2>
                 <p className="text-xs text-gray-400">{teeTimes.filter(t=>t.status!=='blocked').length} tee times · {teeTimes.filter(t=>(t.playersBooked??0)>0).length} booked</p>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => loadTimes(selectedDate)} className="flex items-center gap-1.5 text-xs text-gray-500 px-3 py-1.5 rounded-lg border border-gray-200 hover:border-gray-300">
+                <button onClick={() => loadTimes(selectedDate)} className="flex items-center gap-1.5 text-xs text-gray-400 px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20">
                   <RefreshCw className="w-3.5 h-3.5"/>Refresh
                 </button>
-                <button onClick={() => setShowAddModal(true)} className="flex items-center gap-1.5 text-xs bg-[#1b4332] text-white px-3 py-1.5 rounded-lg hover:bg-[#2d6a4f]">
+                <button onClick={() => setShowAddModal(true)} className="flex items-center gap-1.5 text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-500">
                   <Plus className="w-3.5 h-3.5"/>Add Time
                 </button>
               </div>
             </div>
 
             {/* Legend */}
-            <div className="flex gap-3 mb-3 text-xs text-gray-500">
+            <div className="flex gap-3 mb-3 text-xs text-gray-400">
               {[['bg-green-100 border-green-300','Open'],['bg-yellow-100 border-yellow-300','Filling'],['bg-red-100 border-red-300','Full'],['bg-gray-100 border-gray-200','Blocked']].map(([cls,label])=>(
                 <span key={label} className="flex items-center gap-1"><span className={`w-2.5 h-2.5 rounded-sm border inline-block ${cls}`}/>{label}</span>
               ))}
@@ -303,15 +303,15 @@ function DashboardPageInner() {
 
             {/* Tee times */}
             {loading ? (
-              <div className="flex items-center justify-center py-16 text-gray-400 gap-2">
+              <div className="flex items-center justify-center py-16 text-gray-500 gap-2">
                 <Loader2 className="w-5 h-5 animate-spin"/>Loading tee times...
               </div>
             ) : teeTimes.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-300">
-                <div className="text-4xl mb-3">⛳</div>
-                <p className="font-semibold text-gray-700 mb-1">No tee times for this date</p>
+              <div className="text-center py-16 bg-gray-900 rounded-lg border border-dashed border-white/10">
+                
+                <p className="font-semibold text-white mb-1">No tee times for this date</p>
                 <p className="text-sm text-gray-400 mb-4">Add times manually or check your schedule covers this day</p>
-                <button onClick={() => setShowAddModal(true)} className="bg-[#1b4332] text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-[#2d6a4f]">Add Tee Time</button>
+                <button onClick={() => setShowAddModal(true)} className="bg-emerald-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-emerald-500">Add Tee Time</button>
               </div>
             ) : (
               <div className="space-y-2">
@@ -319,31 +319,31 @@ function DashboardPageInner() {
                   <div key={tt.id} className={`rounded-xl border p-3 cursor-pointer ${slotColor(tt)}`} onClick={() => setExpandedId(expandedId===tt.id?null:tt.id)}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <span className="font-black text-gray-900 text-sm w-20">{fmtTime(tt.time)}</span>
+                        <span className="font-black text-white text-sm w-20">{fmtTime(tt.time)}</span>
                         <span className="text-xs text-gray-500">{tt.holes}h</span>
                         {slotBadge(tt)}
-                        <span className="text-xs text-gray-400">{tt.playersBooked}/{tt.playersAvailable}</span>
-                        <span className="text-xs font-semibold text-gray-700">${tt.greenFee}{tt.cartFee>0?` +$${tt.cartFee}`:''}</span>
+                        <span className="text-xs text-gray-500">{tt.playersBooked}/{tt.playersAvailable}</span>
+                        <span className="text-xs font-semibold text-gray-300">${tt.greenFee}{tt.cartFee>0?` +$${tt.cartFee}`:''}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <button onClick={e=>{e.stopPropagation();fetch('/api/operator/tee-times',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:tt.id,status:tt.status==='blocked'?'available':'blocked'})}).then(()=>loadTimes(selectedDate));}}
-                          className="text-xs px-2 py-1 rounded-lg border border-gray-200 bg-white text-gray-500 hover:text-gray-700">
+                          className="text-xs px-2 py-1 rounded-lg border border-white/10 bg-white/5 text-gray-400 hover:text-white">
                           {tt.status==='blocked'?'Unblock':'Block'}
                         </button>
                         <button onClick={e=>{e.stopPropagation();if(confirm('Delete this tee time?'))fetch('/api/operator/tee-times',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:tt.id})}).then(()=>loadTimes(selectedDate));}}
-                          className="text-xs px-2 py-1 rounded-lg border border-red-100 bg-white text-red-400 hover:text-red-600">
+                          className="text-xs px-2 py-1 rounded-lg border border-red-900/30 bg-transparent text-red-400 hover:text-red-300">
                           Del
                         </button>
                       </div>
                     </div>
                     {expandedId===tt.id&&tt.bookings&&tt.bookings.length>0&&(
-                      <div className="mt-3 pt-3 border-t border-gray-200 space-y-1.5">
+                      <div className="mt-3 pt-3 border-t border-white/10 space-y-1.5">
                         {tt.bookings.map(b=>(
-                          <div key={b.id} className="flex items-center justify-between text-xs bg-white rounded-lg px-3 py-2 border border-gray-100 gap-2">
+                          <div key={b.id} className="flex items-center justify-between text-xs bg-white/5 rounded-lg px-3 py-2 border border-white/5 gap-2">
                             <div className="flex-1 min-w-0">
-                              <span className="font-semibold text-gray-800">{b.golferName}</span>
-                              <span className="text-gray-400 ml-2">{b.players} player{b.players!==1?'s':''}</span>
-                              <div className="text-xs text-gray-400 truncate">{b.golferEmail}</div>
+                              <span className="font-semibold text-white">{b.golferName}</span>
+                              <span className="text-gray-500 ml-2">{b.players} player{b.players!==1?'s':''}</span>
+                              <div className="text-xs text-gray-500 truncate">{b.golferEmail}</div>
                             </div>
                             {(() => { const s = getBookingStatus(b.status, b.paymentStatus); return (
                               <span className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${statusBadgeClass(s.tone)}`}>{s.label}</span>
@@ -352,7 +352,7 @@ function DashboardPageInner() {
                               <button
                                 onClick={e=>{e.stopPropagation();checkInBooking(b);}}
                                 disabled={checkingInId===b.id}
-                                className="shrink-0 text-white bg-[#1b4332] px-2.5 py-1 rounded-full text-xs font-semibold hover:bg-[#2d6a4f] disabled:opacity-50"
+                                className="shrink-0 text-white bg-emerald-600 px-2.5 py-1 rounded-full text-xs font-semibold hover:bg-emerald-500 disabled:opacity-50"
                               >
                                 {checkingInId===b.id ? 'Charging…' : 'Check In'}
                               </button>
@@ -362,7 +362,7 @@ function DashboardPageInner() {
                       </div>
                     )}
                     {expandedId===tt.id&&tt.bookings&&tt.bookings.length===0&&(
-                      <div className="mt-2 pt-2 border-t border-gray-200 text-xs text-gray-400">No bookings yet</div>
+                      <div className="mt-2 pt-2 border-t border-white/10 text-xs text-gray-500">No bookings yet</div>
                     )}
                   </div>
                 ))}
@@ -375,8 +375,8 @@ function DashboardPageInner() {
       {/* ── Add Tee Time Modal ── */}
       {showAddModal&&(
         <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-white w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl p-6">
-            <h3 className="font-bold text-gray-900 mb-4">Add Tee Time — {fmtDate(selectedDate)}</h3>
+          <div className="bg-gray-900 w-full sm:max-w-sm rounded-t-lg sm:rounded-lg p-6">
+            <h3 className="font-bold text-white mb-4">Add Tee Time — {fmtDate(selectedDate)}</h3>
             <AddTeeTimeForm date={selectedDate} onSave={()=>{setShowAddModal(false);loadTimes(selectedDate);}} onCancel={()=>setShowAddModal(false)}/>
           </div>
         </div>
@@ -398,16 +398,16 @@ function DashboardPageInner() {
       {/* ── Conditions Modal ── */}
       {showConditions&&(
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl">
+          <div className="bg-gray-900 w-full max-w-sm rounded-lg p-6">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-gray-900">Course Alert</h3>
+              <h3 className="font-bold text-white">Course Alert</h3>
               <button onClick={()=>setShowConditions(false)}><X className="w-5 h-5 text-gray-400"/></button>
             </div>
-            <p className="text-sm text-gray-500 mb-3">Shown as a banner to golfers before they book. Leave blank to clear.</p>
-            <textarea value={conditionsInput} onChange={e=>setConditionsInput(e.target.value)} rows={3} placeholder="e.g. Cart paths only through Sunday" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none mb-4 resize-none"/>
+            <p className="text-sm text-gray-400 mb-3">Shown as a banner to golfers before they book. Leave blank to clear.</p>
+            <textarea value={conditionsInput} onChange={e=>setConditionsInput(e.target.value)} rows={3} placeholder="e.g. Cart paths only through Sunday" className="w-full border border-white/10 rounded-md px-3 py-2.5 text-sm bg-gray-800 text-white focus:ring-2 focus:ring-emerald-500 outline-none mb-4 resize-none placeholder:text-gray-500"/>
             <div className="flex gap-3">
-              <button onClick={()=>setShowConditions(false)} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold">Cancel</button>
-              <button onClick={saveConditions} disabled={savingConditions} className="flex-1 bg-[#1b4332] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-50">
+              <button onClick={()=>setShowConditions(false)} className="flex-1 border border-white/10 text-gray-400 py-2.5 rounded-md text-sm font-semibold">Cancel</button>
+              <button onClick={saveConditions} disabled={savingConditions} className="flex-1 bg-emerald-600 text-white py-2.5 rounded-md text-sm font-bold hover:bg-emerald-500 disabled:opacity-50">
                 {savingConditions?'Saving...':conditionsInput?'Save Alert':'Clear Alert'}
               </button>
             </div>
@@ -420,7 +420,7 @@ function DashboardPageInner() {
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-100" />}>
+    <Suspense fallback={<div className="min-h-screen bg-gray-950" />}>
       <DashboardPageInner />
     </Suspense>
   );
@@ -436,7 +436,7 @@ function AddTeeTimeForm({ date, onSave, onCancel }: { date: string; onSave: ()=>
   const [walking,  setWalking]  = useState(true);
   const [saving,   setSaving]   = useState(false);
 
-  const inp = 'w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none';
+  const inp = 'w-full border border-white/10 rounded-md px-3 py-2.5 text-sm bg-gray-800 text-white focus:ring-2 focus:ring-emerald-500 outline-none';
 
   async function save() {
     setSaving(true);
@@ -447,23 +447,23 @@ function AddTeeTimeForm({ date, onSave, onCancel }: { date: string; onSave: ()=>
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
-        <div><label className="block text-xs font-semibold text-gray-500 mb-1">Time</label><input type="time" value={time} onChange={e=>setTime(e.target.value)} className={inp}/></div>
-        <div><label className="block text-xs font-semibold text-gray-500 mb-1">Holes</label><select value={holes} onChange={e=>setHoles(Number(e.target.value))} className={inp}><option value={9}>9</option><option value={18}>18</option></select></div>
+        <div><label className="block text-xs font-semibold text-gray-400 mb-1">Time</label><input type="time" value={time} onChange={e=>setTime(e.target.value)} className={inp}/></div>
+        <div><label className="block text-xs font-semibold text-gray-400 mb-1">Holes</label><select value={holes} onChange={e=>setHoles(Number(e.target.value))} className={inp}><option value={9}>9</option><option value={18}>18</option></select></div>
       </div>
       <div className="grid grid-cols-3 gap-3">
-        <div><label className="block text-xs font-semibold text-gray-500 mb-1">Slots</label><input type="number" value={players} min={1} max={8} onChange={e=>setPlayers(Number(e.target.value))} className={inp}/></div>
-        <div><label className="block text-xs font-semibold text-gray-500 mb-1">Green $</label><input type="number" value={greenFee} min={0} onChange={e=>setGreenFee(Number(e.target.value))} className={inp}/></div>
-        <div><label className="block text-xs font-semibold text-gray-500 mb-1">Cart $</label><input type="number" value={cartFee} min={0} onChange={e=>setCartFee(Number(e.target.value))} className={inp}/></div>
+        <div><label className="block text-xs font-semibold text-gray-400 mb-1">Slots</label><input type="number" value={players} min={1} max={8} onChange={e=>setPlayers(Number(e.target.value))} className={inp}/></div>
+        <div><label className="block text-xs font-semibold text-gray-400 mb-1">Green $</label><input type="number" value={greenFee} min={0} onChange={e=>setGreenFee(Number(e.target.value))} className={inp}/></div>
+        <div><label className="block text-xs font-semibold text-gray-400 mb-1">Cart $</label><input type="number" value={cartFee} min={0} onChange={e=>setCartFee(Number(e.target.value))} className={inp}/></div>
       </div>
       <div className="flex items-center justify-between py-1">
-        <span className="text-sm text-gray-700">Walking allowed</span>
+        <span className="text-sm text-gray-300">Walking allowed</span>
         <button onClick={()=>setWalking(!walking)} className={`relative w-11 h-6 rounded-full transition-colors ${walking?'bg-green-600':'bg-gray-200'}`}>
           <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${walking?'translate-x-5':''}`}/>
         </button>
       </div>
       <div className="flex gap-3 pt-1">
-        <button onClick={onCancel} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold">Cancel</button>
-        <button onClick={save} disabled={saving} className="flex-1 bg-[#1b4332] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-50">
+        <button onClick={onCancel} className="flex-1 border border-white/10 text-gray-400 py-2.5 rounded-md text-sm font-semibold">Cancel</button>
+        <button onClick={save} disabled={saving} className="flex-1 bg-emerald-600 text-white py-2.5 rounded-md text-sm font-bold hover:bg-emerald-500 disabled:opacity-50">
           {saving?'Adding...':'Add Time'}
         </button>
       </div>
@@ -512,17 +512,17 @@ function CardCheckInModal({ booking, onConfirm, onCancel }: {
   }
 
   return (
-    <div className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl">
+    <div className="bg-gray-900 w-full max-w-sm rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="font-bold text-gray-900">Check In — {booking.golferName}</h3>
-          <p className="text-xs text-gray-400 mt-0.5">Enter golfer&apos;s card to charge ${(booking.totalAmount / 100).toFixed(2)}</p>
+          <h3 className="font-bold text-white">Check In — {booking.golferName}</h3>
+          <p className="text-xs text-gray-500 mt-0.5">Enter golfer&apos;s card to charge ${(booking.totalAmount / 100).toFixed(2)}</p>
         </div>
         <button onClick={onCancel}><X className="w-5 h-5 text-gray-400" /></button>
       </div>
       <div className="mb-4">
-        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Card Details</label>
-        <div className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus-within:border-[#1b4332] focus-within:ring-2 focus-within:ring-[#1b4332]/10 transition-all">
+        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Card Details</label>
+        <div className="w-full px-4 py-3.5 rounded-md border border-white/10 bg-white focus-within:border-emerald-600 transition-all">
           <CardElement options={cardStyle} />
         </div>
       </div>
@@ -530,11 +530,11 @@ function CardCheckInModal({ booking, onConfirm, onCancel }: {
       <button
         onClick={handleCharge}
         disabled={loading || !stripe}
-        className="w-full bg-[#1b4332] text-white py-3 rounded-xl text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-50 flex items-center justify-center gap-2 mb-2"
+        className="w-full bg-emerald-600 text-white py-3 rounded-md text-sm font-bold hover:bg-emerald-500 disabled:opacity-50 flex items-center justify-center gap-2 mb-2"
       >
         {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Charging…</> : `Charge $${(booking.totalAmount / 100).toFixed(2)}`}
       </button>
-      <div className="flex items-center justify-center gap-1.5 text-gray-400 text-xs">
+      <div className="flex items-center justify-center gap-1.5 text-gray-500 text-xs">
         <Lock className="w-3 h-3" /><span>Powered by Stripe</span>
       </div>
     </div>

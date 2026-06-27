@@ -122,8 +122,8 @@ export default function ForCoursesPage() {
   };
 
   if (submitted && submittedData) return (
-    <div className="min-h-screen bg-[#0a1f0f] flex items-center justify-center p-6">
-      <div className="bg-white rounded-lg p-10 max-w-lg w-full">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="bg-white rounded-lg p-10 max-w-lg w-full border border-gray-200">
         <CheckCircle className="w-14 h-14 text-green-500 mx-auto mb-5" />
         <h1 className="text-2xl font-black text-gray-900 mb-1 text-center">Got it — we&apos;ll be in touch!</h1>
         <p className="text-gray-500 text-center mb-6 text-sm">
@@ -165,15 +165,16 @@ export default function ForCoursesPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0a1f0f]">
-      <div className="max-w-2xl mx-auto px-4 py-10">
-        <div className="text-center mb-8">
-          <span className="text-white font-black text-3xl">Green<span className="text-green-400">Reserve</span></span>
-          <h1 className="text-white text-2xl font-black mt-4 mb-1">Get your course listed</h1>
-          <p className="text-green-200/60 text-sm mb-1">Free to list. $0 per month. We charge golfers $1.50/player — not you.</p>
-          <p className="text-white/30 text-xs">3 quick sections · under 3 minutes</p>
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-black px-6 py-10 text-center">
+        <span className="text-white font-black text-3xl tracking-tight">Green<span className="text-emerald-400">Reserve</span></span>
+        <h1 className="text-white text-2xl font-black mt-4 mb-1 tracking-tight">Get your course listed</h1>
+        <p className="text-white/50 text-sm mb-1">Free to list. $0 per month. We charge golfers $1.50/player — not you.</p>
+        <p className="text-white/30 text-xs">3 quick sections · under 3 minutes</p>
+      </div>
 
+      <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="space-y-3">
 
           {/* 1. Contact Information */}
@@ -249,10 +250,10 @@ export default function ForCoursesPage() {
 
           {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-md px-4 py-3 text-sm">{error}</div>}
 
-          <button onClick={submit} disabled={submitting} className="w-full bg-emerald-600 text-white py-4 rounded-lg font-black text-lg hover:bg-green-700 disabled:opacity-50 transition-colors shadow-lg">
-            {submitting ? 'Submitting...' : 'Submit Interest Form →'}
+          <button onClick={submit} disabled={submitting} className="w-full bg-emerald-600 text-white py-4 rounded-md font-black text-lg hover:bg-emerald-500 disabled:opacity-50 transition-colors">
+            {submitting ? 'Submitting...' : 'Submit Interest Form'}
           </button>
-          <p className="text-center text-green-200/40 text-xs pb-4">We review every submission and reach out within 1 business day. If it&apos;s a fit, we&apos;ll send a short follow-up sheet to confirm pricing, policies, and facilities before building your page.</p>
+          <p className="text-center text-gray-400 text-xs pb-4">We review every submission and reach out within 1 business day. If it&apos;s a fit, we&apos;ll send a short follow-up sheet to confirm pricing, policies, and facilities before building your page.</p>
         </div>
       </div>
     </div>
