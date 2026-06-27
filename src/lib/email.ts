@@ -193,6 +193,30 @@ export async function sendCancellationFeeChargedEmail(data: {
   await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Charged $${(data.feeAmount / 100).toFixed(2)} — ${data.courseName} cancellation window closed`, html });
 }
 
+// Sent ~1 hour before the free-cancellation window closes for bookings that
+// have a card on file and a cancellation fee. Gives the golfer a heads-up so
+// they can cancel for free before the cutoff charges their card automatically.
+export async function sendCancellationWarningEmail(data: {
+  golferName: string; golferEmail: string; courseName: string;
+  date: string; time: string; feeAmount: number; bookingId: string; cancellationHours: number;
+}) {
+  const html = baseTemplate(`
+    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#fef3c7;color:#92400e;font-size:13px;font-weight:600;padding:4px 12px;border-radius:3px;">Action required</span></div>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:24px;font-weight:900;">Your cancellation window closes soon.</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      Hi ${data.golferName} — your tee time at <strong style="color:#111827;">${data.courseName}</strong> on ${data.date} at ${data.time} is coming up.
+      The free-cancellation window (${data.cancellationHours} hours before your tee time) closes within the next hour.
+    </p>
+    <div style="background:#fef9c3;border:1px solid #fde68a;border-radius:4px;padding:16px;margin-bottom:24px;">
+      <p style="margin:0 0 6px;color:#92400e;font-size:14px;font-weight:700;">If you need to cancel, do it now.</p>
+      <p style="margin:0;color:#92400e;font-size:14px;">After the window closes, a $${(data.feeAmount / 100).toFixed(2)} late-cancellation fee will be charged to your card automatically.</p>
+    </div>
+    <a href="${process.env.NEXT_PUBLIC_URL}/account" style="display:block;background:#111827;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:16px;">Cancel for Free &rarr;</a>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">If you're keeping your tee time, no action needed — we'll see you on the course.</p>
+  `);
+  await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Heads up — your free cancellation window closes soon (${data.courseName})`, html });
+}
+
 // Fired by the cutoff cron for courses with NO cancellation fee policy — no
 // charge is made, but the free-cancel window is closed, so we let the golfer
 // know they're locked in and give them a direct check-in link.
