@@ -92,19 +92,21 @@ export default function TwoFactorVerifyPage() {
             {loading ? 'Verifying...' : 'Verify & Sign In'}
           </button>
 
-          {(method === 'sms' || phoneLast4) && (
-            <p className="mt-4 text-center text-xs text-white/30">
-              {method === 'sms' ? (
-                <button onClick={() => resendVia('email')} disabled={resending} className="text-emerald-400 font-medium hover:underline disabled:opacity-50">
-                  {resending ? 'Sending...' : 'Use email instead'}
-                </button>
-              ) : (
-                <button onClick={() => resendVia('sms')} disabled={resending} className="text-emerald-400 font-medium hover:underline disabled:opacity-50">
-                  {resending ? 'Sending...' : 'Use SMS instead'}
-                </button>
-              )}
-            </p>
-          )}
+          <div className="mt-5 flex flex-col gap-2">
+            <p className="text-xs text-white/30 text-center mb-1">Didn&apos;t get the code?</p>
+            <button onClick={() => resendVia('email')} disabled={resending}
+              className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-md text-sm border transition-colors disabled:opacity-50 ${method === 'email' ? 'border-emerald-600 text-emerald-400 bg-emerald-950/30' : 'border-white/10 text-white/50 hover:border-white/20 hover:text-white/70'}`}>
+              <Mail className="w-3.5 h-3.5" />
+              {resending ? 'Sending...' : 'Send to my email'}
+            </button>
+            {phoneLast4 && (
+              <button onClick={() => resendVia('sms')} disabled={resending}
+                className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-md text-sm border transition-colors disabled:opacity-50 ${method === 'sms' ? 'border-emerald-600 text-emerald-400 bg-emerald-950/30' : 'border-white/10 text-white/50 hover:border-white/20 hover:text-white/70'}`}>
+                <Smartphone className="w-3.5 h-3.5" />
+                {resending ? 'Sending...' : `Send to phone ending in ${phoneLast4}`}
+              </button>
+            )}
+          </div>
 
           <p className="mt-6 text-center text-xs text-white/30">
             <a href="/dashboard/login" className="text-emerald-400 font-medium hover:underline">Back to login</a>

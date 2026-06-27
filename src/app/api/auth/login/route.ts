@@ -36,8 +36,9 @@ export async function POST(req: NextRequest) {
     try {
       await issueTwoFactorCode(operator);
     } catch (err) {
-      console.error('2FA code send failed:', err);
-      return NextResponse.json({ error: 'Could not send verification code. Try again shortly.' }, { status: 500 });
+      // Both SMS and email failed — extremely rare. Log and let them in via
+      // the resend buttons on the 2FA page rather than blocking login entirely.
+      console.error('2FA: both SMS and email delivery failed:', err);
     }
 
     const pendingToken = await signPendingTwoFactorToken({ operatorId: operator.id });

@@ -19,13 +19,21 @@ export async function issueTwoFactorCode(operator: CourseOperator, methodOverrid
     data: { twoFactorCode: hashedCode, twoFactorCodeExpiry: new Date(Date.now() + 10 * 60 * 1000) },
   });
 
+  let actualMethod = method;
+
   if (method === 'sms') {
     console.log('[2fa] sending via SMS');
-    await sendSmsOtp(operator.phone, code);
+    try {
+      await sendSmsOtp(operator.phone, code);
+    } catch (smsErr) {
+      console.error('[2fa] SMS failed, falling back to email:', smsErr);
+      actualMethod = 'email';
+      await sendTwoFactorCodeEmail({ operatorName: operator.name, operatorEmail: operator.email, code });
+    }
   } else {
     console.log('[2fa] sending via email to:', operator.email);
     await sendTwoFactorCodeEmail({ operatorName: operator.name, operatorEmail: operator.email, code });
   }
 
-  return { method, phoneLast4: operator.phone ? operator.phone.slice(-4) : null };
+  return { method: actualMethod, phoneLast4: operator.phone ? operator.phone.slice(-4) : null };
 }
