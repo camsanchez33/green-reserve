@@ -62,6 +62,7 @@ function BookPageInner() {
   const courseSlug = params.get('course_slug') || '';
   const date        = params.get('date') || '';
   const requestedPlayers = parseInt(params.get('players') || '2');
+  const cartParam = params.get('cart') === '1';
 
   const [course, setCourse]   = useState<CourseInfo | null>(null);
   const [teeTime, setTeeTime] = useState<LiveTeeTime | null>(null);
@@ -83,7 +84,7 @@ function BookPageInner() {
     ]).then(([courseData, teeTimes, golferData]) => {
       if (!courseData) { setLoadError('Course not found.'); setLoadingInfo(false); return; }
       setCourse(courseData);
-      if (courseData.cart_required) setCartSelected(true);
+      if (courseData.cart_required || cartParam) setCartSelected(true);
       const match = Array.isArray(teeTimes) ? teeTimes.find((t: LiveTeeTime) => String(t.id) === String(teeTimeId)) : null;
       if (!match) {
         setLoadError('This tee time is no longer available. Please pick another.');
