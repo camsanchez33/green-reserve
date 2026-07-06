@@ -98,10 +98,8 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
         <div className="text-center">
           <Flag size={40} className="mx-auto mb-4 text-emerald-600" />
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Course Not Found</h1>
-          <p className="text-gray-400 mb-6">We couldn&apos;t find that course.</p>
-          <button onClick={() => router.push('/courses')} className="px-5 py-2.5 rounded-md text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500 transition-colors">
-            Back to Courses
-          </button>
+          <p className="text-gray-400">We couldn&apos;t find that course.</p>
+          <p className="text-gray-400 text-sm mt-2">Please use the booking link on your course&apos;s website, or contact <a href="mailto:hello@greenreserve.app" className="text-emerald-600 hover:text-emerald-500">hello@greenreserve.app</a>.</p>
         </div>
       </div>
     );
@@ -174,12 +172,6 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
           }}
         />
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-8">
-          <button
-            onClick={() => router.back()}
-            className="inline-flex items-center gap-1.5 text-white/70 hover:text-white text-sm mb-4 transition-colors"
-          >
-            <ChevronLeft size={16} /> Back to courses
-          </button>
           <div className="flex items-end justify-between gap-4 flex-wrap">
             <div>
               <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${badge.className} mb-3 inline-block`}>

@@ -1,10 +1,27 @@
 'use client';
 import Link from 'next/link';
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
+import { isBookingMode } from '@/lib/booking-mode';
 
 export default function Nav() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Booking mode: golfer arrived from a course's own website — show only the
+  // wordmark, no marketing links, nothing that leads to other courses.
+  if (isBookingMode(pathname)) {
+    return (
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-white/10">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center">
+          <span className="text-white font-bold text-lg tracking-tight">
+            Green<span className="text-emerald-400">Reserve</span>
+          </span>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-white/10">

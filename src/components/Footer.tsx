@@ -1,6 +1,28 @@
+'use client';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { isBookingMode } from '@/lib/booking-mode';
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  // Booking mode: trimmed footer — legal links and support only, no
+  // operator marketing links.
+  if (isBookingMode(pathname)) {
+    return (
+      <footer className="bg-black border-t border-white/10">
+        <div className="max-w-6xl mx-auto px-6 py-5 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-white/30">
+          <span>© {new Date().getFullYear()} Green Reserve. All rights reserved.</span>
+          <div className="flex items-center gap-5">
+            <a href="mailto:hello@greenreserve.app" className="hover:text-white transition-colors">hello@greenreserve.app</a>
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
+          </div>
+        </div>
+      </footer>
+    );
+  }
+
   return (
     <footer className="bg-black border-t border-white/10">
       <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
