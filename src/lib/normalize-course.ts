@@ -27,6 +27,8 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     rating: c.rating ?? 4.5,
     review_count: c.reviewCount ?? 0,
     image_gradient: c.imageGradient ?? 'linear-gradient(160deg,#071810 0%,#1b4332 60%,#2d6a4f 100%)',
+    logo_url: c.logoUrl ?? '',
+    hero_image_url: c.heroImageUrl ?? '',
     featured: c.featured ?? false,
     base_green_fee: startingGreenFee,
     cart_fee: 0,

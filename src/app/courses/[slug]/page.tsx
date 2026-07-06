@@ -135,7 +135,10 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
       .finally(() => setLoadingTimes(false));
   }, [slug, selectedDate, course]);
 
-  const hasHolesData = useMemo(() => teeTimes.some(t => holesOf(t) !== undefined), [teeTimes]);
+  const hasHolesData = useMemo(() => {
+    const vals = new Set(teeTimes.map(t => holesOf(t)).filter(h => h !== undefined));
+    return vals.size > 1; // only offer the filter when the course sells both 9- and 18-hole times
+  }, [teeTimes]);
 
   const priceBounds = useMemo(() => {
     if (teeTimes.length === 0) return null;
@@ -236,23 +239,44 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
     router.push(`/book?${qp}`);
   }
 
+  const heroStyle = course.hero_image_url
+    ? { backgroundImage: `url(${course.hero_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+    : { background: course.image_gradient };
+  const heroOverlay = course.hero_image_url ? (
+    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/5" />
+  ) : (
+    <div
+      className="absolute inset-0 opacity-10"
+      style={{
+        backgroundImage: 'repeating-linear-gradient(45deg,rgba(255,255,255,.3) 0,rgba(255,255,255,.3) 1px,transparent 0,transparent 50%)',
+        backgroundSize: '14px 14px',
+      }}
+    />
+  );
+
   return (
     <>
-      {/* Course hero header */}
+      {/* Course hero header — uses the course's own photo/logo when set */}
       <div
-        className="relative h-44 sm:h-56 flex items-end"
-        style={{ background: course.image_gradient }}
+        className="relative h-44 sm:h-56 flex items-end overflow-hidden"
+        style={heroStyle}
       >
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: 'repeating-linear-gradient(45deg,rgba(255,255,255,.3) 0,rgba(255,255,255,.3) 1px,transparent 0,transparent 50%)',
-            backgroundSize: '14px 14px',
-          }}
-        />
+        {heroOverlay}
+        <div className="absolute bottom-2.5 right-4 z-10 text-[10px] font-semibold uppercase tracking-widest text-white/40">
+          Powered by GreenReserve
+        </div>
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-6">
           <div className="flex items-end justify-between gap-4 flex-wrap">
-            <div>
+            <div className="flex items-end gap-4">
+              {course.logo_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={course.logo_url}
+                  alt={`${course.name} logo`}
+                  className="h-12 w-12 sm:h-16 sm:w-16 rounded-md bg-white object-contain p-1 shadow-lg flex-shrink-0"
+                />
+              )}
+              <div>
               <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${badge.className} mb-2 inline-block`}>
                 {badge.label}
               </span>
@@ -261,6 +285,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                 <MapPin size={14} />
                 {course.city}, {course.state} · {course.holes} holes · Par {course.par}
               </p>
+              </div>
             </div>
             {course.review_count > 0 && (
               <div className="flex items-center gap-2 bg-white/10 backdrop-blur rounded-lg px-4 py-2">

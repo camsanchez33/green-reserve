@@ -18,6 +18,8 @@ export type Course = {
   rating: number;
   review_count: number;
   image_gradient: string;
+  logo_url?: string;
+  hero_image_url?: string;
   featured: boolean;
   base_green_fee: number;
   cart_fee: number;

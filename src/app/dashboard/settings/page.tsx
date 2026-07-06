@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff, CreditCard, CheckCircle2, AlertCircle, Loader2, KeyRound, Mail, Smartphone } from 'lucide-react';
+import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff, CreditCard, CheckCircle2, AlertCircle, Loader2, KeyRound, Mail, Smartphone, Image as ImageIcon } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
 
@@ -32,6 +32,60 @@ function Toggle({ label, checked, onChange }: { label:string; checked:boolean; o
       <button onClick={onChange} className={`relative w-11 h-6 rounded-full transition-colors ${checked?'bg-emerald-600':'bg-white/15'}`}>
         <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${checked?'translate-x-5':''}`} />
       </button>
+    </div>
+  );
+}
+
+function ImageUpload({ label, kind, value, onUploaded, hint }: { label: string; kind: 'logo' | 'hero'; value: string; onUploaded: (url: string) => void; hint: string }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function handleFile(file: File | null) {
+    if (!file) return;
+    setBusy(true); setErr('');
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('kind', kind);
+    try {
+      const res = await fetch('/api/operator/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (res.ok) onUploaded(data.url);
+      else setErr(data.error || 'Upload failed');
+    } catch {
+      setErr('Upload failed — try again.');
+    }
+    setBusy(false);
+  }
+
+  async function remove() {
+    setBusy(true); setErr('');
+    await fetch(`/api/operator/upload?kind=${kind}`, { method: 'DELETE' });
+    setBusy(false);
+    onUploaded('');
+  }
+
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">{label}</label>
+      <div className="flex items-center gap-4">
+        {value ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={value} alt="" className={kind === 'logo' ? 'h-14 w-14 object-contain bg-white rounded-md p-1' : 'h-14 w-24 object-cover rounded-md'} />
+        ) : (
+          <div className="h-14 w-24 rounded-md bg-gray-800 border border-dashed border-white/15 flex items-center justify-center text-gray-500">
+            <ImageIcon size={16} />
+          </div>
+        )}
+        <div className="flex flex-col gap-1.5">
+          <label className="cursor-pointer inline-flex px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/15 text-xs font-semibold text-white w-fit">
+            {busy ? 'Working…' : value ? 'Replace' : 'Upload image'}
+            <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={busy} onChange={e => handleFile(e.target.files?.[0] ?? null)} />
+          </label>
+          {value && <button onClick={remove} disabled={busy} className="text-xs text-gray-500 hover:text-red-400 text-left">Remove</button>}
+        </div>
+      </div>
+      <p className="text-xs text-gray-500 mt-1.5">{hint}</p>
+      {err && <p className="text-xs text-red-400 mt-1">{err}</p>}
     </div>
   );
 }
@@ -197,6 +251,23 @@ function SettingsPageInner() {
               <Field label="Description">
                 <textarea value={form.description as string||''} onChange={e=>set('description',e.target.value)} rows={4} className={inputCls} placeholder="Tell golfers what makes your course special — history, signature holes, views, etc."/>
               </Field>
+            </SectionCard>
+            <SectionCard title="Branding">
+              <p className="text-sm text-gray-400 -mt-1">These appear on your public tee sheet — the page golfers see when they book. Uploads save immediately.</p>
+              <ImageUpload
+                label="Course Logo"
+                kind="logo"
+                value={(form.logoUrl as string) || ''}
+                onUploaded={url => set('logoUrl', url)}
+                hint="Square works best (PNG with transparent background ideal). Max 5MB."
+              />
+              <ImageUpload
+                label="Course Photo"
+                kind="hero"
+                value={(form.heroImageUrl as string) || ''}
+                onUploaded={url => set('heroImageUrl', url)}
+                hint="Wide landscape shot of your course — shown as the banner behind your course name. Max 5MB."
+              />
             </SectionCard>
             <SectionCard title="Course Details">
               <div className="grid grid-cols-3 gap-3">
