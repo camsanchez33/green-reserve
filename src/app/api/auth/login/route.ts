@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { signToken, signStaffToken, signPendingTwoFactorToken } from '@/lib/auth';
 import { issueTwoFactorCode } from '@/lib/two-factor';
 import bcrypt from 'bcryptjs';
+import { rateLimit, clientIp } from '@/lib/rate-limit';
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 15 * 60 * 1000;
@@ -16,6 +17,11 @@ export async function POST(req: NextRequest) {
   const { email: rawEmail, password } = await req.json();
   if (!rawEmail || !password) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   const email = String(rawEmail).trim().toLowerCase();
+
+  // Per-IP limit (credential stuffing) — per-account lockout below handles
+  // targeted attacks on a single account.
+  const ipAllowed = await rateLimit(`login:op:${clientIp(req)}`, 20, 600);
+  if (!ipAllowed) return NextResponse.json({ error: 'Too many attempts from your network, try again in a few minutes' }, { status: 429 });
 
   // Try operator first
   const operator = await prisma.courseOperator.findUnique({ where: { email } });

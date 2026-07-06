@@ -356,3 +356,10 @@ model CourseInquiry {
   detailsJson          String   @default("")
   createdAt            DateTime @default(now())
 }
+
+// Per-IP fixed-window rate limiting (shared across serverless instances)
+model RateLimit {
+  key         String   @id
+  count       Int      @default(1)
+  windowStart DateTime @default(now())
+}
