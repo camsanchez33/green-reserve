@@ -76,6 +76,7 @@ export async function performCheckIn(bookingId: string, opts?: { externalPayment
       amountCents: Math.round(booking.totalAmount),
       applicationFeeCents: Math.round(booking.accessFeeTotal),
       description: `Round charge - ${booking.course.name} - booking ${booking.id}`,
+      idempotencyKey: `checkin-${booking.id}-${chargePaymentMethodId}`,
     });
     paymentIntentId = paymentIntent.id;
   } catch (err) {

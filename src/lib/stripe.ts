@@ -31,10 +31,20 @@ export async function chargeOnConnectedAccount(opts: {
   amountCents: number;
   applicationFeeCents: number;
   description: string;
+  /**
+   * Dedup key so a double-click, race, or overlapping cron run can never
+   * charge the same booking twice — Stripe returns the original request's
+   * result for a repeated key instead of creating a second charge. Include
+   * the PaymentMethod id in the key at the call site so a legitimate retry
+   * with a NEW card (walk-up decline -> different card) gets a fresh key.
+   */
+  idempotencyKey?: string;
 }) {
+  // The clone must be idempotent too: on a retry, a fresh clone would change
+  // the PaymentIntent params under the same key, which Stripe rejects.
   const clonedPaymentMethod = await stripe.paymentMethods.create(
     { customer: opts.customerId, payment_method: opts.paymentMethodId },
-    { stripeAccount: opts.connectedAccountId }
+    { stripeAccount: opts.connectedAccountId, idempotencyKey: opts.idempotencyKey ? `${opts.idempotencyKey}-pm` : undefined }
   );
 
   return stripe.paymentIntents.create(
@@ -47,7 +57,7 @@ export async function chargeOnConnectedAccount(opts: {
       application_fee_amount: opts.applicationFeeCents > 0 ? opts.applicationFeeCents : undefined,
       description: opts.description,
     },
-    { stripeAccount: opts.connectedAccountId }
+    { stripeAccount: opts.connectedAccountId, idempotencyKey: opts.idempotencyKey }
   );
 }
 
