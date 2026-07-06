@@ -42,6 +42,8 @@ function PaymentsPageInner() {
   const [courseName, setCourseName] = useState('');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -83,7 +85,16 @@ function PaymentsPageInner() {
   const cancelledWithFee = bookings.filter(b => b.status === 'cancelled' && b.paymentStatus === 'cancellation_fee_charged');
   const lateFeesKept = cancelledWithFee.reduce((s, b) => s + b.cancellationFeeTotal, 0);
 
-  const allRows = bookings; // show ALL bookings including cancelled in the table
+  // Table rows: searchable by golfer, filterable by money state
+  const q = search.trim().toLowerCase();
+  const allRows = bookings.filter(b => {
+    if (q && !b.golferName.toLowerCase().includes(q) && !b.golferEmail.toLowerCase().includes(q)) return false;
+    if (statusFilter === 'paid')      return b.paymentStatus === 'paid' && b.status !== 'cancelled';
+    if (statusFilter === 'upcoming')  return b.status === 'confirmed';
+    if (statusFilter === 'fee')       return b.paymentStatus === 'cancellation_fee_charged';
+    if (statusFilter === 'cancelled') return b.status === 'cancelled';
+    return true;
+  });
 
   return (
     <div className="flex h-screen bg-gray-950 overflow-hidden">
@@ -137,17 +148,41 @@ function PaymentsPageInner() {
               sub={`${feesHeld.length} booking${feesHeld.length!==1?'s':''} — charged but refundable if they check in`} />
           </div>
 
+          {/* ── Table controls ── */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search golfer name or email..."
+              className="w-64 bg-gray-900 border border-white/10 rounded-md px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:ring-2 focus:ring-emerald-500 outline-none"
+            />
+            <div className="flex gap-1 bg-gray-900 rounded-lg border border-white/10 p-1">
+              {[['all','All'],['paid','Paid'],['upcoming','Upcoming'],['fee','Fee Charged'],['cancelled','Cancelled']].map(([key, label]) => (
+                <button key={key} onClick={() => setStatusFilter(key)}
+                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${statusFilter === key ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-white'}`}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            {(q || statusFilter !== 'all') && (
+              <span className="text-xs text-gray-500">{allRows.length} of {bookings.length} bookings</span>
+            )}
+          </div>
+
           {/* ── Table ── */}
           {loading ? (
             <div className="flex items-center justify-center py-16 text-gray-500 gap-2"><Loader2 className="w-5 h-5 animate-spin" />Loading...</div>
           ) : allRows.length === 0 ? (
-            <div className="text-center py-16 bg-gray-900 rounded-lg border border-dashed border-white/10 text-gray-500 text-sm">{dateFilter ? `No bookings for ${fmtDate(dateFilter)}.` : 'No bookings yet.'}</div>
+            <div className="text-center py-16 bg-gray-900 rounded-lg border border-dashed border-white/10 text-gray-500 text-sm">
+              {q || statusFilter !== 'all' ? 'No bookings match your search or filter.' : dateFilter ? `No bookings for ${fmtDate(dateFilter)}.` : 'No bookings yet.'}
+            </div>
           ) : (
             <div className="bg-gray-900 rounded-lg border border-white/10 overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-xs text-gray-500 uppercase tracking-wide border-b border-white/10">
                     <th className="px-4 py-3 font-semibold">Golfer</th>
+                    <th className="px-4 py-3 font-semibold">Booked On</th>
                     <th className="px-4 py-3 font-semibold">Tee Time</th>
                     <th className="px-4 py-3 font-semibold text-right">Green + Cart</th>
                     <th className="px-4 py-3 font-semibold text-right">Fee Held</th>
@@ -163,6 +198,10 @@ function PaymentsPageInner() {
                         <td className="px-4 py-3">
                           <div className="font-semibold text-white">{b.golferName}</div>
                           <div className="text-xs text-gray-500">{b.golferEmail} · {b.players} player{b.players!==1?'s':''}</div>
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">
+                          {new Date(b.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          <div>{new Date(b.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</div>
                         </td>
                         <td className="px-4 py-3 text-gray-400 text-xs">
                           <div>{fmtDate(b.teeTime.date)}</div>

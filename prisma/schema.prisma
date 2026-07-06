@@ -265,6 +265,7 @@ model Booking {
   cancellationFeeTotal     Float          @default(0)
   cancellationFeeChargeId  String         @default("")
   cancellationFeeChargedAt DateTime?
+  cancelledAt              DateTime?
   // Check-in / round-charge flow (Phase 2) — direct charge on the course's
   // connected Stripe account, refunding the cancellation fee above if one was
   // already taken. checkInToken lets a golfer check in from the reminder

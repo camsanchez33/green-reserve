@@ -8,9 +8,15 @@ import { getBookingStatus, statusBadgeClass } from '@/lib/booking-status';
 type Booking = {
   id: string; golferName: string; golferEmail: string; players: number;
   totalAmount: number; greenFeeTotal: number; cartFeeTotal: number;
+  cancellationFeeTotal: number; cancelledAt?: string | null; cancellationFeeChargedAt?: string | null;
   paymentStatus: string; status: string; createdAt: string;
   teeTime: { date: string; time: string; holes: number };
 };
+
+function fmtStamp(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' +
+    new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
 
 function fmtTime(t: string) {
   const [h, m] = t.split(':').map(Number);
@@ -26,6 +32,18 @@ export default function CancellationsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelingId, setCancelingId] = useState<string | null>(null);
+  const [policy, setPolicy] = useState({ cancellationHours: 24, lateCancellationFee: 10 });
+  const [policySaving, setPolicySaving] = useState(false);
+  const [policySaved, setPolicySaved] = useState(false);
+
+  async function savePolicy() {
+    setPolicySaving(true);
+    await fetch('/api/operator/settings', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cancellationHours: Number(policy.cancellationHours), lateCancellationFee: Number(policy.lateCancellationFee) }),
+    });
+    setPolicySaving(false); setPolicySaved(true); setTimeout(() => setPolicySaved(false), 2000);
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -37,12 +55,20 @@ export default function CancellationsPage() {
   }, [router]);
 
   useEffect(() => {
-    fetch('/api/operator/courses').then(r => r.json()).then(c => { if (c?.name) setCourseName(c.name); });
+    fetch('/api/operator/courses').then(r => r.json()).then(c => {
+      if (c?.name) setCourseName(c.name);
+      if (c) setPolicy({ cancellationHours: c.cancellationHours ?? 24, lateCancellationFee: c.lateCancellationFee ?? 10 });
+    });
     load();
   }, [load]);
 
-  async function cancelBooking(id: string, name: string) {
-    if (!confirm(`Cancel ${name}'s booking? Their card was never charged, so there's nothing to refund — unless the late-cancellation fee already went through, in which case it's non-refundable.`)) return;
+  async function cancelBooking(b: Booking) {
+    const feeCharged = b.paymentStatus === 'cancellation_fee_charged';
+    const msg = feeCharged
+      ? `Cancel ${b.golferName}'s booking?\n\nTheir $${(b.cancellationFeeTotal / 100).toFixed(2)} late-cancellation fee was already charged and will NOT be refunded.`
+      : `Cancel ${b.golferName}'s booking?\n\nNo money has been charged — their card will simply never be billed. Nothing to refund.`;
+    if (!confirm(msg)) return;
+    const id = b.id;
     setCancelingId(id);
     const res = await fetch('/api/operator/bookings', {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
@@ -80,6 +106,29 @@ export default function CancellationsPage() {
             <div className="flex items-center justify-center py-16 text-gray-400 gap-2"><Loader2 className="w-5 h-5 animate-spin" />Loading...</div>
           ) : (
             <div className="space-y-8">
+              <div className="bg-gray-900 rounded-lg border border-white/10 p-5">
+                <h2 className="text-sm font-bold text-white mb-1">Your Cancellation Policy</h2>
+                <p className="text-xs text-gray-500 mb-4">Golfers can cancel free until this many hours before their tee time. After that, the fee below is automatically charged to their card — and refunded if they still show up and check in.</p>
+                <div className="flex flex-wrap items-end gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Free Cancel Window (hours)</label>
+                    <input type="number" min={0} value={policy.cancellationHours}
+                      onChange={e => setPolicy(pol => ({ ...pol, cancellationHours: Number(e.target.value) }))}
+                      className="w-32 bg-gray-800 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:ring-2 focus:ring-emerald-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Late-Cancel Fee ($)</label>
+                    <input type="number" min={0} step="0.01" value={policy.lateCancellationFee}
+                      onChange={e => setPolicy(pol => ({ ...pol, lateCancellationFee: Number(e.target.value) }))}
+                      className="w-32 bg-gray-800 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:ring-2 focus:ring-emerald-500 outline-none" />
+                  </div>
+                  <button onClick={savePolicy} disabled={policySaving}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold px-4 py-2 rounded-md disabled:opacity-50">
+                    {policySaved ? 'Saved!' : policySaving ? 'Saving...' : 'Save Policy'}
+                  </button>
+                  <span className="text-xs text-gray-500 pb-2">Set the fee to $0 to skip card collection at booking entirely.</span>
+                </div>
+              </div>
               <div>
                 <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-3">Upcoming Bookings ({upcoming.length})</h2>
                 {upcoming.length === 0 ? (
@@ -92,7 +141,7 @@ export default function CancellationsPage() {
                           <div className="font-semibold text-white text-sm">{b.golferName} <span className="text-gray-400 font-normal">· {b.players} player{b.players !== 1 ? 's' : ''}</span></div>
                           <div className="text-xs text-gray-400">{fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)} · {b.golferEmail}</div>
                         </div>
-                        <button onClick={() => cancelBooking(b.id, b.golferName)} disabled={cancelingId === b.id}
+                        <button onClick={() => cancelBooking(b)} disabled={cancelingId === b.id}
                           className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-red-900/40 text-red-400 hover:bg-red-950/40 disabled:opacity-50">
                           <XCircle className="w-3.5 h-3.5" />{cancelingId === b.id ? 'Cancelling...' : 'Cancel'}
                         </button>
@@ -112,7 +161,15 @@ export default function CancellationsPage() {
                       <div key={b.id} className="bg-gray-900 rounded-lg border border-white/10 p-3 flex items-center justify-between opacity-70">
                         <div>
                           <div className="font-semibold text-gray-300 text-sm flex items-center gap-1.5"><Undo2 className="w-3.5 h-3.5 text-gray-400" />{b.golferName} <span className="text-gray-400 font-normal">· {b.players} player{b.players !== 1 ? 's' : ''}</span></div>
-                          <div className="text-xs text-gray-400">{fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)}</div>
+                          <div className="text-xs text-gray-400">Tee time: {fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)}</div>
+                          <div className="text-xs mt-0.5">
+                            <span className="text-gray-500">{b.cancelledAt ? `Cancelled ${fmtStamp(b.cancelledAt)}` : 'Cancelled'}</span>
+                            {b.paymentStatus === 'cancellation_fee_charged' ? (
+                              <span className="text-amber-500 font-semibold"> · ${(b.cancellationFeeTotal / 100).toFixed(2)} fee charged{b.cancellationFeeChargedAt ? ` on ${fmtStamp(b.cancellationFeeChargedAt)}` : ''}</span>
+                            ) : (
+                              <span className="text-emerald-500"> · no fee — cancelled in time</span>
+                            )}
+                          </div>
                         </div>
                         {(() => { const s = getBookingStatus(b.status, b.paymentStatus); return (
                           <span className={`text-xs font-semibold px-2 py-1 rounded-full ${statusBadgeClass(s.tone)}`}>{s.label}</span>

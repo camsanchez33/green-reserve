@@ -32,7 +32,7 @@ export async function performCancellation(bookingId: string) {
   await prisma.$transaction([
     prisma.booking.update({
       where: { id: bookingId },
-      data: { status: 'cancelled' },
+      data: { status: 'cancelled', cancelledAt: new Date() },
     }),
     prisma.teeTime.update({
       where: { id: booking.teeTimeId },

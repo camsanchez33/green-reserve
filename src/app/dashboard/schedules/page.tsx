@@ -67,6 +67,26 @@ export default function SchedulesPage() {
 
   async function save() {
     if(!form.daysOfWeek.length) return alert('Select at least one day');
+
+    // Prevent overlapping schedules: same day + overlapping time window would
+    // generate duplicate tee times on the sheet.
+    const clash = schedules.find(s => {
+      if (editId && s.id === editId) return false;
+      if (!s.active) return false;
+      const sharesDay = s.daysOfWeek.some(d => form.daysOfWeek.includes(d));
+      if (!sharesDay) return false;
+      return form.startTime < s.endTime && s.startTime < form.endTime;
+    });
+    if (clash) {
+      const days = clash.daysOfWeek.filter(d => form.daysOfWeek.includes(d)).map(d => DAYS[d]).join(', ');
+      alert(`This overlaps your "${clash.tierName}" schedule on ${days} (${fmtTime(clash.startTime)} – ${fmtTime(clash.endTime)}).\n\nTwo schedules can't cover the same time on the same day — that would create duplicate tee times. Adjust the times or edit the existing schedule instead.`);
+      return;
+    }
+
+    if (form.startTime >= form.endTime) {
+      alert('End time must be after start time.');
+      return;
+    }
     setSaving(true);
     const payload = {
       ...form,
@@ -88,7 +108,7 @@ export default function SchedulesPage() {
   }
 
   async function regenerate() {
-    if (!confirm('Regenerate tee times for the next 8 days based on current schedules? Booked slots will not be affected.')) return;
+    if (!confirm('Update the tee sheet now?\n\nThis rebuilds open tee times for the next 8 days from your current schedules. Times that already have bookings are never touched.')) return;
     setRegenerating(true);
     const r = await fetch('/api/operator/regenerate-tee-times', { method: 'POST' });
     const data = await r.json();
@@ -129,6 +149,9 @@ export default function SchedulesPage() {
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
+        <div className="bg-emerald-950/30 border border-emerald-800/30 rounded-lg p-4 text-sm text-gray-300 leading-relaxed">
+          <span className="font-bold text-emerald-400">How this works:</span> each schedule is a recipe — days, hours, interval, and pricing — and GreenReserve automatically generates your bookable tee times from it every night for the next 8 days. Editing a schedule changes <span className="font-semibold text-white">future</span> generation only; to update the tee sheet right now, hit <span className="font-semibold text-white">Apply to Tee Sheet</span> above. Times that already have bookings are never touched.
+        </div>
         {loading && <div className="text-center py-12 text-gray-500">Loading schedules...</div>}
         {!loading && schedules.length === 0 && (
           <div className="text-center py-16 bg-gray-900 rounded-lg border border-dashed border-white/10">
@@ -166,11 +189,11 @@ export default function SchedulesPage() {
                 <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Weekend</div>
                 <div className="font-semibold text-white">${s.greenFeeWeekend} + ${s.cartFee} cart</div>
               </div>
-              {s.memberRateWeekday&&<div className="bg-blue-50 rounded-lg px-3 py-2">
+              {s.memberRateWeekday&&<div className="bg-blue-950/40 rounded-md px-3 py-2">
                 <div className="text-xs text-blue-500 font-medium uppercase tracking-wide">Member WD/WE</div>
                 <div className="font-semibold text-blue-800">${s.memberRateWeekday} / ${s.memberRateWeekend}</div>
               </div>}
-              {s.residentRateWeekday&&<div className="bg-purple-50 rounded-lg px-3 py-2">
+              {s.residentRateWeekday&&<div className="bg-purple-950/40 rounded-md px-3 py-2">
                 <div className="text-xs text-purple-500 font-medium uppercase tracking-wide">Resident WD/WE</div>
                 <div className="font-semibold text-purple-800">${s.residentRateWeekday} / ${s.residentRateWeekend}</div>
               </div>}
