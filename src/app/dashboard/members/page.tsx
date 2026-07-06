@@ -50,6 +50,7 @@ const btnPrimary = 'bg-emerald-600 hover:bg-emerald-500 text-white rounded-md te
 const btnGhost = 'border border-white/10 text-gray-300 hover:bg-white/5 rounded-md text-sm font-semibold transition-colors';
 const fmtMoney = (n: number | null) => n == null ? '—' : `$${n.toFixed(2)}`;
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+const addMonthsISO = (months: number) => { const d = new Date(); d.setMonth(d.getMonth() + months); return d.toISOString().slice(0, 10); };
 
 const emptyTier = (): Partial<Tier> => ({
   name: '', color: '#10b981',
@@ -174,7 +175,8 @@ export default function MembersPage() {
 
   /* ── Member CRUD ── */
   const startAddMember = (tierId?: string) => {
-    setMemberForm({ ...emptyMember(), tierId: tierId ?? '' });
+    const t = tiers.find(x => x.id === tierId);
+    setMemberForm({ ...emptyMember(), tierId: tierId ?? '', expiresAt: t ? addMonthsISO(t.termMonths || 12) : '' });
     setMemberError('');
     setPanel('members');
     setAddOpen(true);
@@ -608,7 +610,6 @@ export default function MembersPage() {
                   <div className="col-span-2">
                     <label className={lbl}>Email *</label>
                     <input className={inp} value={memberForm.email} onChange={e => setMemberForm(f => ({ ...f, email: e.target.value }))} placeholder="member@email.com" type="email" />
-                    <p className="text-xs text-gray-500 mt-1">If they already have a GreenReserve account, rates apply automatically at checkout.</p>
                   </div>
                   <div>
                     <label className={lbl}>Full name</label>
@@ -620,14 +621,18 @@ export default function MembersPage() {
                   </div>
                   <div>
                     <label className={lbl}>Tier *</label>
-                    <select className={inp} value={memberForm.tierId} onChange={e => setMemberForm(f => ({ ...f, tierId: e.target.value }))}>
+                    <select className={inp} value={memberForm.tierId} onChange={e => {
+                      const t = tiers.find(x => x.id === e.target.value);
+                      setMemberForm(f => ({ ...f, tierId: e.target.value, expiresAt: t ? addMonthsISO(t.termMonths || 12) : f.expiresAt }));
+                    }}>
                       <option value="">Select tier...</option>
                       {tiers.filter(t => t.active).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className={lbl}>Expires (optional)</label>
+                    <label className={lbl}>Expires</label>
                     <input type="date" className={inp} value={memberForm.expiresAt} onChange={e => setMemberForm(f => ({ ...f, expiresAt: e.target.value }))} />
+                    <p className="text-xs text-gray-500 mt-1">Auto-set from the tier&apos;s term — adjust if needed.</p>
                   </div>
                   <div className="col-span-2">
                     <label className={lbl}>Internal notes</label>
