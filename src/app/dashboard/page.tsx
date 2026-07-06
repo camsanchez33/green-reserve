@@ -316,7 +316,7 @@ function DashboardPageInner() {
             ) : (
               <div className="space-y-2">
                 {teeTimes.map(tt => (
-                  <div key={tt.id} className={`rounded-xl border p-3 cursor-pointer ${slotColor(tt)}`} onClick={() => setExpandedId(expandedId===tt.id?null:tt.id)}>
+                  <div key={tt.id} className={`rounded-lg border p-3 cursor-pointer ${slotColor(tt)}`} onClick={() => setExpandedId(expandedId===tt.id?null:tt.id)}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <span className="font-black text-white text-sm w-20">{fmtTime(tt.time)}</span>

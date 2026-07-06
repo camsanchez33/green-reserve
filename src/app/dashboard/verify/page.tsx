@@ -50,7 +50,7 @@ function VerifyContent() {
 
   return (
     <div className="min-h-screen bg-[#0a1f0f] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl p-10 max-w-md w-full text-center shadow-2xl">
+      <div className="bg-white rounded-lg p-10 max-w-md w-full text-center shadow-2xl">
         {status === 'idle' && !urlToken && (
           <>
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
@@ -63,7 +63,7 @@ function VerifyContent() {
             <p className="text-xs text-gray-400 mb-8 bg-gray-50 rounded-lg p-3">
               📬 In production, a link gets sent to your inbox. Click below to verify instantly.
             </p>
-            <button onClick={() => verify()} className="w-full bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 transition-colors">
+            <button onClick={() => verify()} className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">
               Verify My Email
             </button>
           </>

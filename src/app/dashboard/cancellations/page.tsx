@@ -83,11 +83,11 @@ export default function CancellationsPage() {
               <div>
                 <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">Upcoming Bookings ({upcoming.length})</h2>
                 {upcoming.length === 0 ? (
-                  <div className="text-center py-10 bg-white rounded-2xl border border-dashed border-gray-300 text-gray-400 text-sm">No upcoming confirmed bookings.</div>
+                  <div className="text-center py-10 bg-white rounded-lg border border-dashed border-gray-300 text-gray-400 text-sm">No upcoming confirmed bookings.</div>
                 ) : (
                   <div className="space-y-2">
                     {upcoming.map(b => (
-                      <div key={b.id} className="bg-white rounded-xl border border-gray-200 p-3 flex items-center justify-between">
+                      <div key={b.id} className="bg-white rounded-lg border border-gray-200 p-3 flex items-center justify-between">
                         <div>
                           <div className="font-semibold text-gray-900 text-sm">{b.golferName} <span className="text-gray-400 font-normal">· {b.players} player{b.players !== 1 ? 's' : ''}</span></div>
                           <div className="text-xs text-gray-400">{fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)} · {b.golferEmail}</div>
@@ -105,11 +105,11 @@ export default function CancellationsPage() {
               <div>
                 <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">Cancellation History ({cancelled.length})</h2>
                 {cancelled.length === 0 ? (
-                  <div className="text-center py-10 bg-white rounded-2xl border border-dashed border-gray-300 text-gray-400 text-sm">No cancellations yet.</div>
+                  <div className="text-center py-10 bg-white rounded-lg border border-dashed border-gray-300 text-gray-400 text-sm">No cancellations yet.</div>
                 ) : (
                   <div className="space-y-2">
                     {cancelled.map(b => (
-                      <div key={b.id} className="bg-white rounded-xl border border-gray-200 p-3 flex items-center justify-between opacity-75">
+                      <div key={b.id} className="bg-white rounded-lg border border-gray-200 p-3 flex items-center justify-between opacity-75">
                         <div>
                           <div className="font-semibold text-gray-700 text-sm flex items-center gap-1.5"><Undo2 className="w-3.5 h-3.5 text-gray-400" />{b.golferName} <span className="text-gray-400 font-normal">· {b.players} player{b.players !== 1 ? 's' : ''}</span></div>
                           <div className="text-xs text-gray-400">{fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)}</div>

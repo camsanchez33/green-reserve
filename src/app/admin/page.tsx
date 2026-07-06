@@ -77,7 +77,7 @@ const fmtMoney = (n: number) => '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))
 const fmtTime = (t: string) => { const [h,m]=t.split(':'); const hr=Number(h); return `${hr>12?hr-12:hr||12}:${m} ${hr>=12?'PM':'AM'}`; };
 
 /* ─── Shared input class ─── */
-const iCls = 'w-full bg-gray-800/80 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 placeholder-gray-600 transition-colors';
+const iCls = 'w-full bg-gray-800/80 border border-gray-700 text-white rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 placeholder-gray-600 transition-colors';
 
 /* ─── Inquiry view toggle ─── */
 function InquiryToggle({ view, onSwitch, activeCount, pastCount }: {
@@ -85,7 +85,7 @@ function InquiryToggle({ view, onSwitch, activeCount, pastCount }: {
 }) {
   const btnCls = (v: 'active'|'past') => 'px-5 py-1.5 rounded-lg text-sm font-semibold transition-colors ' + (view === v ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-white');
   return (
-    <div className="flex gap-1 mb-5 bg-gray-800/50 border border-gray-800 rounded-xl p-1 w-fit">
+    <div className="flex gap-1 mb-5 bg-gray-800/50 border border-gray-800 rounded-lg p-1 w-fit">
       <button onClick={() => onSwitch('active')} className={btnCls('active')}>{'Active (' + activeCount + ')'}</button>
       <button onClick={() => onSwitch('past')} className={btnCls('past')}>{'Past (' + pastCount + ')'}</button>
     </div>
@@ -100,7 +100,7 @@ function PipelineBar({ inquiries }: { inquiries: { status: string }[] }) {
         const count = inquiries.filter(i => i.status === s.key).length;
         const numCls = count > 0 ? s.color : 'text-gray-700';
         const labelCls = 'text-[10px] font-semibold uppercase tracking-wide mt-0.5 ' + (count > 0 ? s.color : 'text-gray-700');
-        const wrapCls = 'rounded-xl border px-2 py-2.5 text-center ' + (count > 0 ? s.bg : 'bg-gray-900 border-gray-800');
+        const wrapCls = 'rounded-lg border px-2 py-2.5 text-center ' + (count > 0 ? s.bg : 'bg-gray-900 border-gray-800');
         return (
           <div key={s.key} className={wrapCls}>
             <div className={'text-xl font-black ' + numCls}>{count}</div>
@@ -117,9 +117,9 @@ function StatCard({ label, value, sub, icon, accent = false, trend }: {
   label: string; value: string|number; sub?: string; icon: React.ReactNode; accent?: boolean; trend?: string;
 }) {
   return (
-    <div className={`rounded-2xl border p-5 relative overflow-hidden ${accent ? 'bg-gradient-to-br from-emerald-900/60 to-emerald-800/30 border-emerald-700/50' : 'bg-gray-900 border-gray-800'}`}>
+    <div className={`rounded-lg border p-5 relative overflow-hidden ${accent ? 'bg-gradient-to-br from-emerald-900/60 to-emerald-800/30 border-emerald-700/50' : 'bg-gray-900 border-gray-800'}`}>
       <div className="flex items-start justify-between mb-3">
-        <div className={`p-2 rounded-xl ${accent ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-400'}`}>{icon}</div>
+        <div className={`p-2 rounded-lg ${accent ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-400'}`}>{icon}</div>
         {trend && <span className="text-xs text-emerald-400 font-semibold flex items-center gap-0.5"><ArrowUpRight className="w-3 h-3"/>{trend}</span>}
       </div>
       <div className={`text-3xl font-black mb-0.5 ${accent ? 'text-emerald-300' : 'text-white'}`}>{value}</div>
@@ -375,17 +375,17 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 mb-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-lg bg-emerald-500/10 border border-emerald-500/30 mb-4">
             <Shield className="w-7 h-7 text-emerald-400"/>
           </div>
           <div className="text-2xl font-black text-white">GreenReserve</div>
           <div className="text-sm text-gray-500 mt-1">Admin Console</div>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-2xl">
+        <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 shadow-2xl">
           <input type="password" placeholder="Enter admin key" value={key}
             onChange={e=>setKey(e.target.value)} onKeyDown={e=>e.key==='Enter'&&login()}
-            className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-3 text-sm mb-3 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none placeholder-gray-600"/>
-          <button onClick={login} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-bold transition-colors text-sm">
+            className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-3 text-sm mb-3 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none placeholder-gray-600"/>
+          <button onClick={login} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-lg font-bold transition-colors text-sm">
             Sign In →
           </button>
         </div>
@@ -437,7 +437,7 @@ export default function AdminPage() {
             </div>
 
             {/* Drawer Tabs */}
-            <div className="flex gap-0.5 mt-3 bg-gray-900 rounded-xl p-1">
+            <div className="flex gap-0.5 mt-3 bg-gray-900 rounded-lg p-1">
               {(['overview','contact','setup','teesheet'] as const).map(t => (
                 <button key={t} onClick={()=>{ setDrawerTab(t); if(t==='teesheet'&&c) loadTeeSheet(c.id,tsDate); if(t==='setup'&&c){ setSetupForm(c as Record<string,unknown>); loadSchedules(c.id); } }}
                   className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${drawerTab===t?'bg-gray-700 text-white shadow-sm':'text-gray-500 hover:text-gray-300'}`}>
@@ -460,7 +460,7 @@ export default function AdminPage() {
                     { label: 'GR Fees (30d)', value: fmtMoney(detail.revenue30d.platform), color: 'text-emerald-400' },
                     { label: 'All-time Bookings', value: detail.totalBookings, color: 'text-white' },
                   ].map(({ label, value, color }) => (
-                    <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                    <div key={label} className="bg-gray-900 border border-gray-800 rounded-lg p-4">
                       <div className="text-xs text-gray-500 uppercase tracking-wide mb-1.5">{label}</div>
                       <div className={`text-xl font-black ${color}`}>{value}</div>
                     </div>
@@ -469,8 +469,8 @@ export default function AdminPage() {
 
                 {/* Operator status strip */}
                 {c?.operator && (
-                  <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-black text-base shrink-0">
+                  <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-black text-base shrink-0">
                       {String(c.operator.name)[0]}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -493,7 +493,7 @@ export default function AdminPage() {
                     <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Staff — {detail.staff.length} member{detail.staff.length!==1?'s':''}</div>
                     <div className="space-y-1.5">
                       {detail.staff.map(s => (
-                        <div key={s.id} className="flex items-center gap-3 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5">
+                        <div key={s.id} className="flex items-center gap-3 bg-gray-900 border border-gray-800 rounded-lg px-4 py-2.5">
                           <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-bold text-xs shrink-0">{s.name[0]}</div>
                           <div className="flex-1 text-sm"><span className="font-medium text-white">{s.name}</span><span className="text-gray-500 text-xs"> · {s.email} · {s.role}</span></div>
                           <span className={`text-xs px-2 py-0.5 rounded-full ${s.active?'bg-emerald-500/10 text-emerald-400':'bg-gray-800 text-gray-500'}`}>{s.active?'Active':'Off'}</span>
@@ -508,7 +508,7 @@ export default function AdminPage() {
                     <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Recent Bookings</div>
                     <div className="space-y-1.5">
                       {detail.recentBookings.map(b => (
-                        <div key={b.id} className="flex items-center gap-4 bg-gray-900 border border-gray-800 rounded-xl px-4 py-3">
+                        <div key={b.id} className="flex items-center gap-4 bg-gray-900 border border-gray-800 rounded-lg px-4 py-3">
                           <div className="flex-1 min-w-0">
                             <div className="font-semibold text-white text-sm truncate">{b.golferName}</div>
                             <div className="text-xs text-gray-500">{fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)} · {b.players} player{b.players!==1?'s':''}</div>
@@ -528,7 +528,7 @@ export default function AdminPage() {
               {/* ── Contact Tab ── */}
               {drawerTab==='contact' && <div className="space-y-4">
                 {c?.operator && <>
-                  <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/10 border border-blue-700/30 rounded-2xl p-5">
+                  <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/10 border border-blue-700/30 rounded-lg p-5">
                     <div className="text-xs font-semibold text-blue-400 uppercase tracking-wide mb-3">Operator / Owner</div>
                     <div className="text-lg font-black text-white mb-1">{String(c.operator.name)}</div>
                     <div className="space-y-2 mt-3">
@@ -550,7 +550,7 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                  <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
                     <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Course Info</div>
                     <div className="space-y-2.5">
                       {[
@@ -570,12 +570,12 @@ export default function AdminPage() {
                 </>}
 
                 {detail.staff.length > 0 && (
-                  <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                  <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
                     <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Staff Contacts</div>
                     <div className="space-y-3">
                       {detail.staff.map(s => (
                         <div key={s.id} className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-bold text-sm shrink-0">{s.name[0]}</div>
+                          <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-bold text-sm shrink-0">{s.name[0]}</div>
                           <div className="flex-1">
                             <div className="text-sm font-semibold text-white">{s.name} <span className="text-xs text-gray-500 font-normal">· {s.role}</span></div>
                             <a href={`mailto:${s.email}`} className="text-xs text-blue-400 hover:underline">{s.email}</a>
@@ -590,17 +590,17 @@ export default function AdminPage() {
 
               {/* ── Setup Tab ── */}
               {drawerTab==='setup' && <div className="space-y-5">
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3 text-xs text-amber-300">
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-3 text-xs text-amber-300">
                   You&apos;re editing live settings directly. The operator can still adjust their own dashboard — this doesn&apos;t lock them out.
                 </div>
 
                 {setupMsg && (
-                  <div className={`text-sm font-semibold px-4 py-2.5 rounded-xl border ${setupMsg==='error'?'bg-red-500/10 text-red-400 border-red-500/30':setupMsg==='schedule_saved'?'bg-emerald-500/10 text-emerald-400 border-emerald-500/30':'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'}`}>
+                  <div className={`text-sm font-semibold px-4 py-2.5 rounded-lg border ${setupMsg==='error'?'bg-red-500/10 text-red-400 border-red-500/30':setupMsg==='schedule_saved'?'bg-emerald-500/10 text-emerald-400 border-emerald-500/30':'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'}`}>
                     {setupMsg==='error'?'❌ Error saving':setupMsg==='schedule_saved'?'✅ Schedule saved — tee times generated for next 8 days':'✅ Settings saved'}
                   </div>
                 )}
 
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+                <div className="bg-gray-900 border border-gray-800 rounded-lg p-5 space-y-4">
                   <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Course Policy</div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -637,18 +637,18 @@ export default function AdminPage() {
                       </div>
                     </div>
                   )}
-                  <button onClick={saveSetup} disabled={setupSaving} className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors">
+                  <button onClick={saveSetup} disabled={setupSaving} className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition-colors">
                     {setupSaving?'Saving...':'Save Policy Settings'}
                   </button>
                 </div>
 
                 {/* Schedule */}
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+                <div className="bg-gray-900 border border-gray-800 rounded-lg p-5 space-y-4">
                   <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Tee Time Schedules</div>
                   {schedules.length > 0 ? (
                     <div className="space-y-2">
                       {schedules.map(s => (
-                        <div key={s.id} className="flex items-center justify-between bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+                        <div key={s.id} className="flex items-center justify-between bg-gray-800 border border-gray-700 rounded-lg px-4 py-3">
                           <div>
                             <div className="font-semibold text-white text-sm">
                               {s.daysOfWeek.length===0?'Every day':s.daysOfWeek.map(d=>DAYS[d]).join(', ')} · {s.startTime}–{s.endTime} every {s.intervalMinutes}min
@@ -666,7 +666,7 @@ export default function AdminPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-500 bg-gray-800/50 rounded-xl p-4">No schedule yet — add one below to make this course bookable.</p>
+                    <p className="text-sm text-gray-500 bg-gray-800/50 rounded-lg p-4">No schedule yet — add one below to make this course bookable.</p>
                   )}
 
                   <div className="border-t border-gray-800 pt-4 space-y-3">
@@ -694,7 +694,7 @@ export default function AdminPage() {
                       <div><label className="text-xs text-gray-500 block mb-1">Cart fee $</label><input type="number" value={newSchedule.cartFee} onChange={e=>setNewSchedule(s=>({...s,cartFee:Number(e.target.value)}))} className={iCls}/></div>
                     </div>
                     {!!setupForm.hasMemberPricing && (
-                      <div className="grid grid-cols-2 gap-3 bg-blue-500/10 border border-blue-500/20 rounded-xl p-3">
+                      <div className="grid grid-cols-2 gap-3 bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
                         <div><label className="text-xs font-semibold text-blue-400 block mb-1">Member rate WD $</label><input type="number" value={newSchedule.memberRateWeekday} onChange={e=>setNewSchedule(s=>({...s,memberRateWeekday:e.target.value}))} className={iCls}/></div>
                         <div><label className="text-xs font-semibold text-blue-400 block mb-1">Member rate WE $</label><input type="number" value={newSchedule.memberRateWeekend} onChange={e=>setNewSchedule(s=>({...s,memberRateWeekend:e.target.value}))} className={iCls}/></div>
                       </div>
@@ -703,7 +703,7 @@ export default function AdminPage() {
                       <input type="checkbox" checked={newSchedule.walkingAllowed} onChange={e=>setNewSchedule(s=>({...s,walkingAllowed:e.target.checked}))} className="w-4 h-4 accent-emerald-500 rounded"/>
                       Walking allowed
                     </label>
-                    <button onClick={addSchedule} disabled={setupSaving} className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-bold transition-colors">
+                    <button onClick={addSchedule} disabled={setupSaving} className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white py-2.5 rounded-lg text-sm font-bold transition-colors">
                       {setupSaving?'Saving...':'Save Schedule & Generate Tee Times'}
                     </button>
                   </div>
@@ -715,7 +715,7 @@ export default function AdminPage() {
                 <div className="flex items-center gap-3 mb-5">
                   <Calendar className="w-4 h-4 text-gray-500"/>
                   <input type="date" value={tsDate} onChange={e=>{ setTsDate(e.target.value); if(c) loadTeeSheet(c.id,e.target.value); }}
-                    className="bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500/50"/>
+                    className="bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500/50"/>
                   {!tsLoading && <span className="text-xs text-gray-500">{tsSlots.length} slots · {tsSlots.filter(s=>s.bookings.length>0).length} booked</span>}
                 </div>
 
@@ -724,7 +724,7 @@ export default function AdminPage() {
 
                 <div className="space-y-2">
                   {tsSlots.map(slot => (
-                    <div key={slot.id} className={`rounded-xl border overflow-hidden ${slot.status==='blocked'?'border-red-500/30 bg-red-500/5':slot.bookings.length>0?'border-emerald-500/30 bg-emerald-500/5':'border-gray-800 bg-gray-900'}`}>
+                    <div key={slot.id} className={`rounded-lg border overflow-hidden ${slot.status==='blocked'?'border-red-500/30 bg-red-500/5':slot.bookings.length>0?'border-emerald-500/30 bg-emerald-500/5':'border-gray-800 bg-gray-900'}`}>
                       <div className="px-4 py-3 flex items-center gap-3">
                         <span className="font-mono font-bold text-white text-sm w-14 shrink-0">{slot.time}</span>
                         <span className="text-xs text-gray-500">{slot.holes}h · ${slot.greenFee}</span>
@@ -770,7 +770,7 @@ export default function AdminPage() {
                 {/* Manual booking modal */}
                 {manualSlot && (
                   <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-60 flex items-center justify-center p-4">
-                    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+                    <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 w-full max-w-sm shadow-2xl">
                       <div className="flex items-center justify-between mb-5">
                         <h3 className="font-bold text-white">Add Manual Booking</h3>
                         <button onClick={()=>setManualSlot(null)} className="text-gray-500 hover:text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-800 transition-colors"><X className="w-4 h-4"/></button>
@@ -790,8 +790,8 @@ export default function AdminPage() {
                         </div>
                       </div>
                       <div className="flex gap-3 mt-5">
-                        <button onClick={()=>setManualSlot(null)} className="flex-1 px-4 py-2.5 border border-gray-700 rounded-xl text-sm font-semibold text-gray-400 hover:text-white hover:border-gray-600 transition-colors">Cancel</button>
-                        <button onClick={addManualBooking} className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-colors">Add Booking</button>
+                        <button onClick={()=>setManualSlot(null)} className="flex-1 px-4 py-2.5 border border-gray-700 rounded-lg text-sm font-semibold text-gray-400 hover:text-white hover:border-gray-600 transition-colors">Cancel</button>
+                        <button onClick={addManualBooking} className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold transition-colors">Add Booking</button>
                       </div>
                     </div>
                   </div>
@@ -843,7 +843,7 @@ export default function AdminPage() {
             ['create',     'Add Course',  <Plus key="p" className="w-4 h-4"/>],
           ] as const).map(([id,label,icon])=>(
             <button key={id} onClick={()=>setTab(id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${tab===id?'bg-emerald-600/20 text-emerald-400 border border-emerald-500/20':'text-gray-500 hover:text-white hover:bg-gray-800 border border-transparent'}`}>
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${tab===id?'bg-emerald-600/20 text-emerald-400 border border-emerald-500/20':'text-gray-500 hover:text-white hover:bg-gray-800 border border-transparent'}`}>
               {icon}{label}
               {id==='inquiries' && stats?.pendingInquiries > 0 && (
                 <span className="ml-auto bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none">{stats.pendingInquiries}</span>
@@ -854,7 +854,7 @@ export default function AdminPage() {
 
         <div className="p-3 border-t border-gray-800">
           <div className="text-[10px] text-gray-700 uppercase tracking-wider px-3 mb-1">Signed in</div>
-          <button onClick={()=>setAuthed(false)} className="w-full text-left text-xs text-gray-500 hover:text-gray-300 px-3 py-2 rounded-xl hover:bg-gray-800 transition-colors">Sign out</button>
+          <button onClick={()=>setAuthed(false)} className="w-full text-left text-xs text-gray-500 hover:text-gray-300 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors">Sign out</button>
         </div>
       </div>
 
@@ -869,7 +869,7 @@ export default function AdminPage() {
                 <h1 className="text-2xl font-black text-white">Platform Overview</h1>
                 <div className="text-sm text-gray-500 mt-0.5">Everything happening across GreenReserve</div>
               </div>
-              <button onClick={loadStats} className="flex items-center gap-2 text-sm text-gray-500 hover:text-white px-3 py-2 rounded-xl hover:bg-gray-800 border border-transparent hover:border-gray-700 transition-colors">
+              <button onClick={loadStats} className="flex items-center gap-2 text-sm text-gray-500 hover:text-white px-3 py-2 rounded-lg hover:bg-gray-800 border border-transparent hover:border-gray-700 transition-colors">
                 <RefreshCw className="w-4 h-4"/>Refresh
               </button>
             </div>
@@ -882,13 +882,13 @@ export default function AdminPage() {
                 <StatCard label="GR Revenue (30d)" value={fmtMoney(stats.platformRevenue30d)} sub="$1.50/player access fee" icon={<DollarSign className="w-4 h-4"/>} accent/>
               </div>
 
-              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-5">
+              <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 mb-5">
                 <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">Revenue — Last 30 Days</div>
                 <RevenueChart data={stats.revenueByDay}/>
               </div>
 
               <div className="grid grid-cols-3 gap-4 mb-5">
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 col-span-1">
+                <div className="bg-gray-900 border border-gray-800 rounded-lg p-5 col-span-1">
                   <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-2"><Activity className="w-3.5 h-3.5"/>Pipeline</div>
                   <div className="space-y-2">
                     {STATUS_PIPELINE.slice(0,5).map(s=>{
@@ -904,11 +904,11 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 col-span-2">
+                <div className="bg-gray-900 border border-gray-800 rounded-lg p-5 col-span-2">
                   <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-2"><Zap className="w-3.5 h-3.5"/>Quick Actions</div>
                   <div className="space-y-2">
                     {stats.pendingInquiries > 0 && (
-                      <button onClick={()=>setTab('inquiries')} className="w-full flex items-center justify-between px-4 py-2.5 bg-yellow-500/10 border border-yellow-500/30 rounded-xl hover:bg-yellow-500/15 transition-colors group">
+                      <button onClick={()=>setTab('inquiries')} className="w-full flex items-center justify-between px-4 py-2.5 bg-yellow-500/10 border border-yellow-500/30 rounded-lg hover:bg-yellow-500/15 transition-colors group">
                         <div className="flex items-center gap-3">
                           <AlertCircle className="w-4 h-4 text-yellow-400"/>
                           <span className="text-sm font-semibold text-yellow-300">{stats.pendingInquiries} pending inquir{stats.pendingInquiries===1?'y':'ies'} need review</span>
@@ -916,14 +916,14 @@ export default function AdminPage() {
                         <ChevronRight className="w-4 h-4 text-yellow-500 group-hover:translate-x-0.5 transition-transform"/>
                       </button>
                     )}
-                    <button onClick={()=>setTab('courses')} className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl hover:bg-gray-750 transition-colors group">
+                    <button onClick={()=>setTab('courses')} className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-750 transition-colors group">
                       <div className="flex items-center gap-3">
                         <Building2 className="w-4 h-4 text-gray-400"/>
                         <span className="text-sm font-medium text-gray-300">Manage all courses</span>
                       </div>
                       <ChevronRight className="w-4 h-4 text-gray-600 group-hover:translate-x-0.5 transition-transform"/>
                     </button>
-                    <button onClick={()=>setTab('create')} className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl hover:bg-gray-750 transition-colors group">
+                    <button onClick={()=>setTab('create')} className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-750 transition-colors group">
                       <div className="flex items-center gap-3">
                         <Plus className="w-4 h-4 text-gray-400"/>
                         <span className="text-sm font-medium text-gray-300">Add a new course</span>
@@ -943,7 +943,7 @@ export default function AdminPage() {
                 <h1 className="text-2xl font-black text-white">Course Inquiries</h1>
                 <div className="text-sm text-gray-500 mt-0.5">Manage the pipeline from interest to live</div>
               </div>
-              <button onClick={loadInquiries} className="flex items-center gap-2 text-sm text-gray-500 hover:text-white px-3 py-2 rounded-xl hover:bg-gray-800 border border-transparent hover:border-gray-700 transition-colors">
+              <button onClick={loadInquiries} className="flex items-center gap-2 text-sm text-gray-500 hover:text-white px-3 py-2 rounded-lg hover:bg-gray-800 border border-transparent hover:border-gray-700 transition-colors">
                 <RefreshCw className="w-4 h-4"/>Refresh
               </button>
             </div>
@@ -965,7 +965,7 @@ export default function AdminPage() {
                   ? ['pending','in_review','details_requested','details_submitted'].includes(inq.status)
                   : ['building','live','rejected'].includes(inq.status))
                 .map(inq => (
-                <div key={inq.id} className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-gray-700 transition-colors">
+                <div key={inq.id} className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden hover:border-gray-700 transition-colors">
                   <div className="px-5 py-4 flex items-start gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
@@ -1118,7 +1118,7 @@ export default function AdminPage() {
                           <div className="border-t border-gray-800 pt-4 space-y-3">
                             <div className="text-xs font-semibold text-teal-400 uppercase tracking-wide">Setup Sheet Submitted</div>
                             {sch && (sch.greenFeeWeekday || sch.greenFeeWeekend) && (
-                              <div className="bg-teal-500/10 border border-teal-500/20 rounded-xl p-4">
+                              <div className="bg-teal-500/10 border border-teal-500/20 rounded-lg p-4">
                                 <div className="text-teal-300 font-semibold text-sm mb-2">Proposed Tee Sheet</div>
                                 <div className="text-gray-300 text-sm">
                                   {Array.isArray(sch.daysOfWeek) && (sch.daysOfWeek as number[]).length > 0
@@ -1145,13 +1145,13 @@ export default function AdminPage() {
                       <div className="border-t border-gray-800 pt-4">
                         <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Internal Notes</div>
                         {inq.adminNotes && (
-                          <pre className="text-xs text-gray-400 bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-3 mb-3 whitespace-pre-wrap font-sans">{inq.adminNotes}</pre>
+                          <pre className="text-xs text-gray-400 bg-gray-800/50 border border-gray-700/50 rounded-lg px-4 py-3 mb-3 whitespace-pre-wrap font-sans">{inq.adminNotes}</pre>
                         )}
                         <div className="flex gap-2">
                           <textarea value={noteTexts[inq.id]||''} onChange={e=>setNoteTexts(p=>({...p,[inq.id]:e.target.value}))} placeholder="Add a note..." rows={2}
-                            className="flex-1 bg-gray-800 border border-gray-700 text-white text-xs rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none placeholder-gray-600"/>
+                            className="flex-1 bg-gray-800 border border-gray-700 text-white text-xs rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none placeholder-gray-600"/>
                           <button onClick={()=>inquiryAction(inq.id,'add_note',{note:noteTexts[inq.id]||''})} disabled={!noteTexts[inq.id]?.trim()||processing===inq.id}
-                            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-white text-xs font-bold rounded-xl transition-colors self-start">Save</button>
+                            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-white text-xs font-bold rounded-lg transition-colors self-start">Save</button>
                         </div>
                       </div>
                     </div>
@@ -1177,8 +1177,8 @@ export default function AdminPage() {
                 <div className="text-sm text-gray-500 mt-0.5">{courses.filter(c=>c.active).length} live · {courses.filter(c=>!c.active).length} offline</div>
               </div>
               <div className="flex gap-3">
-                <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, city, state..." className="bg-gray-800 border border-gray-700 text-white text-sm rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-500/50 w-52 placeholder-gray-600"/>
-                <button onClick={loadCourses} className="flex items-center gap-2 text-sm text-gray-500 hover:text-white px-3 py-2 rounded-xl hover:bg-gray-800 border border-gray-700 transition-colors"><RefreshCw className="w-4 h-4"/>Refresh</button>
+                <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, city, state..." className="bg-gray-800 border border-gray-700 text-white text-sm rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-500/50 w-52 placeholder-gray-600"/>
+                <button onClick={loadCourses} className="flex items-center gap-2 text-sm text-gray-500 hover:text-white px-3 py-2 rounded-lg hover:bg-gray-800 border border-gray-700 transition-colors"><RefreshCw className="w-4 h-4"/>Refresh</button>
               </div>
             </div>
 
@@ -1186,7 +1186,7 @@ export default function AdminPage() {
 
             <div className="space-y-2">
               {filteredCourses.map(c => (
-                <div key={c.id} className="bg-gray-900 border border-gray-800 rounded-xl px-5 py-3.5 flex items-center gap-5 hover:border-gray-700 transition-colors">
+                <div key={c.id} className="bg-gray-900 border border-gray-800 rounded-lg px-5 py-3.5 flex items-center gap-5 hover:border-gray-700 transition-colors">
                   <div className={'w-2 h-2 rounded-full shrink-0 ' + (c.active ? 'bg-emerald-500' : 'bg-gray-600')}/>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2.5 mb-0.5">
@@ -1236,9 +1236,9 @@ export default function AdminPage() {
             </div>
 
             {createResult ? (
-              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-8 max-w-xl">
+              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-8 max-w-xl">
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
                     <CheckCircle className="w-5 h-5 text-emerald-400"/>
                   </div>
                   <div>
@@ -1253,7 +1253,7 @@ export default function AdminPage() {
                     ['Temp password', createResult.tempPassword],
                     ['Setup link', createResult.setupLink],
                   ].map(([label,val])=>(
-                    <div key={label} className="flex items-center gap-3 bg-gray-900 border border-gray-800 rounded-xl px-4 py-3">
+                    <div key={label} className="flex items-center gap-3 bg-gray-900 border border-gray-800 rounded-lg px-4 py-3">
                       <span className="text-gray-500 text-xs w-28 shrink-0">{label}</span>
                       <span className="text-gray-200 text-xs font-mono flex-1 truncate">{val}</span>
                       <button onClick={()=>navigator.clipboard.writeText(val)} className="text-gray-600 hover:text-emerald-400 transition-colors shrink-0"><Copy className="w-3.5 h-3.5"/></button>
@@ -1261,13 +1261,13 @@ export default function AdminPage() {
                   ))}
                 </div>
                 <button onClick={()=>{ setCreateResult(null); setCreateForm({ courseName:'', courseType:'public', address:'', city:'', state:'NJ', zipCode:'', phone:'', website:'', contactName:'', contactEmail:'', contactPhone:'', holes:18, par:72, description:'', hasMemberPricing:false, hasResidentPricing:false }); }}
-                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-colors">
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold transition-colors">
                   Add Another Course
                 </button>
               </div>
             ) : (
               <div className="max-w-2xl space-y-5">
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
+                <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
                   <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Course Details</div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="col-span-2">
@@ -1333,7 +1333,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
+                <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
                   <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Operator Account</div>
                   <p className="text-xs text-gray-600">Creates their login. They will get a welcome email with temp password and setup link.</p>
                   <div className="grid grid-cols-2 gap-4">
@@ -1354,7 +1354,7 @@ export default function AdminPage() {
                 </div>
 
                 <button onClick={createCourse} disabled={creating||!createForm.courseName||!createForm.contactEmail||!createForm.contactName||!createForm.contactPhone}
-                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-black rounded-2xl text-base transition-colors">
+                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-black rounded-lg text-base transition-colors">
                   {creating ? 'Creating...' : 'Create Course and Send Welcome Email'}
                 </button>
               </div>

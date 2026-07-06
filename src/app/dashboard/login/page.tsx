@@ -38,23 +38,23 @@ function LoginContent() {
         </div>
 
         {justVerified && (
-          <div className="flex items-center gap-3 bg-green-900/50 border border-green-700 rounded-xl px-4 py-3 mb-4 text-green-300 text-sm">
+          <div className="flex items-center gap-3 bg-green-900/50 border border-green-700 rounded-lg px-4 py-3 mb-4 text-green-300 text-sm">
             <CheckCircle className="w-4 h-4 flex-shrink-0" />
             Email verified! Sign in to continue setup.
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className="bg-white rounded-lg shadow-2xl p-8">
           <h2 className="text-xl font-black text-gray-900 mb-6">Sign In</h2>
 
-          {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-4">{error}</div>}
+          {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-4">{error}</div>}
 
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Email</label>
               <input type="email" value={form.email} onChange={e => set('email', e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && submit()}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none" />
+                className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none" />
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">
@@ -63,12 +63,12 @@ function LoginContent() {
               </div>
               <input type="password" value={form.password} onChange={e => set('password', e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && submit()}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none" />
+                className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none" />
             </div>
           </div>
 
           <button onClick={submit} disabled={loading}
-            className="mt-6 w-full bg-[#1b4332] text-white py-3 rounded-xl font-bold text-sm hover:bg-[#2d6a4f] disabled:opacity-50 transition-colors">
+            className="mt-6 w-full bg-[#1b4332] text-white py-3 rounded-lg font-bold text-sm hover:bg-[#2d6a4f] disabled:opacity-50 transition-colors">
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
 

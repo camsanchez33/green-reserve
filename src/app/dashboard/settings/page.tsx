@@ -465,7 +465,7 @@ function SettingsPageInner() {
 
               {staffResult&&(
                 <div className="bg-emerald-950/40 border border-emerald-800/40 rounded-md p-4">
-                  <div className="font-semibold text-emerald-300 mb-2">✅ {staffResult.name} added — share these login credentials:</div>
+                  <div className="font-semibold text-emerald-300 mb-2">{staffResult.name} added — share these login credentials:</div>
                   <div className="flex items-center justify-between bg-white/5 rounded-md px-3 py-2 border border-white/10 mb-2">
                     <span className="text-sm font-mono">{showPass?staffResult.tempPassword:'••••••••••••'}</span>
                     <div className="flex gap-2">

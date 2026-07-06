@@ -42,7 +42,7 @@ interface Member {
 
 /* ─── Helpers ─────────────────────────────────────────────────────────── */
 const TIER_COLORS = ['#1b4332','#1d4ed8','#7c3aed','#b45309','#be123c','#0f766e','#374151'];
-const inp = 'w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white';
+const inp = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white';
 const fmtMoney = (n: number | null) => n == null ? '—' : `$${n.toFixed(2)}`;
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
@@ -203,7 +203,7 @@ export default function MembersPage() {
             <Users className="w-5 h-5 text-green-700" />
             <h1 className="font-black text-gray-900 text-lg">Member Management</h1>
           </div>
-          <div className="ml-auto flex gap-1 bg-gray-100 rounded-xl p-1">
+          <div className="ml-auto flex gap-1 bg-gray-100 rounded-lg p-1">
             {(['tiers', 'members'] as const).map(p => (
               <button key={p} onClick={() => setPanel(p)} className={`px-4 py-1.5 rounded-lg text-sm font-semibold capitalize transition-colors ${panel === p ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
                 {p === 'tiers' ? `Tiers (${tiers.length})` : `Members (${members.filter(m => m.status === 'active').length})`}
@@ -223,12 +223,12 @@ export default function MembersPage() {
             <div className="space-y-3">
               <h2 className="font-bold text-gray-700 text-sm uppercase tracking-wide">Your Tiers</h2>
               {tiers.length === 0 && (
-                <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-8 text-center text-gray-400 text-sm">
+                <div className="bg-white rounded-lg border border-dashed border-gray-300 p-8 text-center text-gray-400 text-sm">
                   No tiers yet — create your first one →
                 </div>
               )}
               {tiers.map(t => (
-                <div key={t.id} className="bg-white rounded-2xl border border-gray-200 p-5">
+                <div key={t.id} className="bg-white rounded-lg border border-gray-200 p-5">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-3 h-3 rounded-full shrink-0" style={{ background: t.color }} />
@@ -245,7 +245,7 @@ export default function MembersPage() {
 
                   {/* Rates grid */}
                   {t.discountPct != null ? (
-                    <div className="bg-green-50 rounded-xl px-4 py-2 text-sm text-green-800 font-semibold">
+                    <div className="bg-green-50 rounded-lg px-4 py-2 text-sm text-green-800 font-semibold">
                       {t.discountPct}% off standard rate
                     </div>
                   ) : (
@@ -265,9 +265,9 @@ export default function MembersPage() {
                   )}
 
                   <div className="mt-3 flex flex-wrap gap-3 text-xs text-gray-500">
-                    <span>⏰ Book {t.advanceBookingDays}d ahead</span>
-                    {t.guestPassesPerYear > 0 && <span>🏌️ {t.guestPassesPerYear} guest pass{t.guestPassesPerYear !== 1 ? 'es' : ''}/yr</span>}
-                    {t.annualFee > 0 && <span>💳 ${t.annualFee}/yr</span>}
+                    <span>Book {t.advanceBookingDays}d ahead</span>
+                    {t.guestPassesPerYear > 0 && <span>{t.guestPassesPerYear} guest pass{t.guestPassesPerYear !== 1 ? 'es' : ''}/yr</span>}
+                    {t.annualFee > 0 && <span>${t.annualFee}/yr</span>}
                     {t.notes && <span className="text-gray-400 italic">{t.notes}</span>}
                   </div>
                 </div>
@@ -279,7 +279,7 @@ export default function MembersPage() {
               <h2 className="font-bold text-gray-700 text-sm uppercase tracking-wide mb-3">
                 {editingTier ? 'Edit Tier' : 'Create New Tier'}
               </h2>
-              <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
+              <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-5">
 
                 {/* Name + color */}
                 <div className="flex gap-3">
@@ -302,7 +302,7 @@ export default function MembersPage() {
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Pricing type</label>
                   <div className="flex gap-2">
                     {(['flat', 'pct'] as PricingMode[]).map(m => (
-                      <button key={m} onClick={() => setPricingMode(m)} className={`flex-1 py-2 rounded-xl text-sm font-semibold border transition-colors ${pricingMode === m ? 'bg-[#1b4332] text-white border-[#1b4332]' : 'border-gray-200 text-gray-600 hover:border-gray-400'}`}>
+                      <button key={m} onClick={() => setPricingMode(m)} className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors ${pricingMode === m ? 'bg-[#1b4332] text-white border-[#1b4332]' : 'border-gray-200 text-gray-600 hover:border-gray-400'}`}>
                         {m === 'flat' ? 'Flat rates' : '% discount'}
                       </button>
                     ))}
@@ -371,11 +371,11 @@ export default function MembersPage() {
                   <textarea rows={2} className={`${inp} resize-none`} value={tierForm.notes ?? ''} onChange={e => setTF('notes', e.target.value)} placeholder="Any extra details about this tier..." />
                 </div>
 
-                {tierError && <div className="flex gap-2 items-center text-red-600 text-sm bg-red-50 rounded-xl px-4 py-2"><AlertCircle className="w-4 h-4 shrink-0" />{tierError}</div>}
+                {tierError && <div className="flex gap-2 items-center text-red-600 text-sm bg-red-50 rounded-lg px-4 py-2"><AlertCircle className="w-4 h-4 shrink-0" />{tierError}</div>}
 
                 <div className="flex gap-3">
-                  {editingTier && <button onClick={cancelTierEdit} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50"><X className="w-4 h-4 inline mr-1" />Cancel</button>}
-                  <button onClick={saveTier} disabled={tierSaving || !tierForm.name?.trim()} className="flex-1 bg-[#1b4332] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-40 transition-colors">
+                  {editingTier && <button onClick={cancelTierEdit} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-50"><X className="w-4 h-4 inline mr-1" />Cancel</button>}
+                  <button onClick={saveTier} disabled={tierSaving || !tierForm.name?.trim()} className="flex-1 bg-[#1b4332] text-white py-2.5 rounded-lg text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-40 transition-colors">
                     {tierSaving ? 'Saving...' : editingTier ? 'Save Changes' : 'Create Tier'}
                   </button>
                 </div>
@@ -389,24 +389,24 @@ export default function MembersPage() {
           <div className="space-y-4">
             {/* Toolbar */}
             <div className="flex items-center gap-3 flex-wrap">
-              <select value={filterTier} onChange={e => setFilterTier(e.target.value)} className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-green-500">
+              <select value={filterTier} onChange={e => setFilterTier(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-green-500">
                 <option value="all">All tiers</option>
                 {tiers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
-              <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-green-500">
+              <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-green-500">
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
                 <option value="all">All statuses</option>
               </select>
               <span className="text-sm text-gray-400">{filteredMembers.length} member{filteredMembers.length !== 1 ? 's' : ''}</span>
-              <button onClick={() => setAddOpen(o => !o)} className="ml-auto flex items-center gap-2 bg-[#1b4332] text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#2d6a4f] transition-colors">
+              <button onClick={() => setAddOpen(o => !o)} className="ml-auto flex items-center gap-2 bg-[#1b4332] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#2d6a4f] transition-colors">
                 <Plus className="w-4 h-4" />Add Member
               </button>
             </div>
 
             {/* Add member form */}
             {addOpen && (
-              <div className="bg-white rounded-2xl border border-gray-200 p-6">
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-gray-900">Add Member</h3>
                   <button onClick={() => { setAddOpen(false); setMemberError(''); }} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
@@ -441,10 +441,10 @@ export default function MembersPage() {
                     <input className={inp} value={memberForm.notes} onChange={e => setMemberForm(f => ({ ...f, notes: e.target.value }))} placeholder="Optional" />
                   </div>
                 </div>
-                {memberError && <div className="flex gap-2 items-center text-red-600 text-sm bg-red-50 rounded-xl px-4 py-2 mt-3"><AlertCircle className="w-4 h-4 shrink-0" />{memberError}</div>}
+                {memberError && <div className="flex gap-2 items-center text-red-600 text-sm bg-red-50 rounded-lg px-4 py-2 mt-3"><AlertCircle className="w-4 h-4 shrink-0" />{memberError}</div>}
                 <div className="flex gap-3 mt-4">
-                  <button onClick={() => { setAddOpen(false); setMemberError(''); }} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold">Cancel</button>
-                  <button onClick={addMember} disabled={memberSaving || !memberForm.email || !memberForm.tierId} className="flex-1 bg-[#1b4332] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-40 transition-colors">
+                  <button onClick={() => { setAddOpen(false); setMemberError(''); }} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-lg text-sm font-semibold">Cancel</button>
+                  <button onClick={addMember} disabled={memberSaving || !memberForm.email || !memberForm.tierId} className="flex-1 bg-[#1b4332] text-white py-2.5 rounded-lg text-sm font-bold hover:bg-[#2d6a4f] disabled:opacity-40 transition-colors">
                     {memberSaving ? 'Adding...' : 'Add Member'}
                   </button>
                 </div>
@@ -453,7 +453,7 @@ export default function MembersPage() {
 
             {/* No tiers warning */}
             {tiers.length === 0 && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-5 flex gap-3 items-center text-sm text-yellow-800">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-5 flex gap-3 items-center text-sm text-yellow-800">
                 <AlertCircle className="w-5 h-5 shrink-0 text-yellow-500" />
                 You need at least one tier before adding members. <button onClick={() => setPanel('tiers')} className="underline font-semibold ml-1">Create a tier →</button>
               </div>
@@ -461,14 +461,14 @@ export default function MembersPage() {
 
             {/* Member list */}
             {filteredMembers.length === 0 && tiers.length > 0 && (
-              <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-400 text-sm">
+              <div className="bg-white rounded-lg border border-dashed border-gray-300 p-10 text-center text-gray-400 text-sm">
                 No members match this filter.
               </div>
             )}
 
             <div className="space-y-2">
               {filteredMembers.map(m => (
-                <div key={m.id} className={`bg-white rounded-2xl border px-5 py-4 flex items-center gap-4 ${m.status !== 'active' ? 'opacity-60 border-gray-200' : 'border-gray-200'}`}>
+                <div key={m.id} className={`bg-white rounded-lg border px-5 py-4 flex items-center gap-4 ${m.status !== 'active' ? 'opacity-60 border-gray-200' : 'border-gray-200'}`}>
                   {/* Avatar */}
                   <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm text-white shrink-0" style={{ background: m.tierColor }}>
                     {m.name?.[0]?.toUpperCase() ?? '?'}

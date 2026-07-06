@@ -63,7 +63,7 @@ function ResetPasswordContent() {
           <p className="text-green-200/60 text-sm mt-2">Course Operator Portal</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className="bg-white rounded-lg shadow-2xl p-8">
           {checking && (
             <div className="text-center py-6">
               <Loader2 className="w-10 h-10 text-green-600 animate-spin mx-auto mb-4" />
@@ -76,7 +76,7 @@ function ResetPasswordContent() {
               <XCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
               <h2 className="text-lg font-black text-gray-900 mb-2">Link invalid or expired</h2>
               <p className="text-gray-500 text-sm mb-6">Reset links expire after 1 hour. Request a new one below.</p>
-              <a href="/dashboard/forgot-password" className="inline-block w-full bg-[#1b4332] text-white py-3 rounded-xl font-bold text-sm hover:bg-[#2d6a4f] transition-colors">
+              <a href="/dashboard/forgot-password" className="inline-block w-full bg-[#1b4332] text-white py-3 rounded-lg font-bold text-sm hover:bg-[#2d6a4f] transition-colors">
                 Request New Link
               </a>
             </div>
@@ -87,26 +87,26 @@ function ResetPasswordContent() {
               <h2 className="text-xl font-black text-gray-900 mb-1">Set a new password</h2>
               <p className="text-gray-500 text-sm mb-6">For <span className="font-semibold text-gray-700">{email}</span></p>
 
-              {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-4">{error}</div>}
+              {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-4">{error}</div>}
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">New Password</label>
                   <input type="password" value={password} onChange={e => setPassword(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && submit()}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none" />
+                    className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none" />
                   <p className="text-xs text-gray-400 mt-1.5">{PASSWORD_REQUIREMENTS_HINT}</p>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Confirm Password</label>
                   <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && submit()}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none" />
+                    className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none" />
                 </div>
               </div>
 
               <button onClick={submit} disabled={loading}
-                className="mt-6 w-full bg-[#1b4332] text-white py-3 rounded-xl font-bold text-sm hover:bg-[#2d6a4f] disabled:opacity-50 transition-colors">
+                className="mt-6 w-full bg-[#1b4332] text-white py-3 rounded-lg font-bold text-sm hover:bg-[#2d6a4f] disabled:opacity-50 transition-colors">
                 {loading ? 'Saving...' : 'Set New Password'}
               </button>
             </>

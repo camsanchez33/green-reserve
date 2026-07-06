@@ -132,7 +132,7 @@ function OnboardingInner() {
 
         {/* Step 1 — Course Details (play details only — identity already on file) */}
         {step === 1 && (
-          <div className="bg-white rounded-2xl p-6 shadow-2xl">
+          <div className="bg-white rounded-lg p-6 shadow-2xl">
             <h2 className="text-xl font-black text-gray-900 mb-1">A few details about the course itself</h2>
             <p className="text-gray-500 text-sm mb-6">Your contact info and address are already on file from your setup sheet. This is just the playing details.</p>
 
@@ -180,7 +180,7 @@ function OnboardingInner() {
             </div>
 
             <button onClick={saveDetails} disabled={saving}
-              className="w-full mt-6 bg-green-600 text-white py-3.5 rounded-xl font-bold hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+              className="w-full mt-6 bg-green-600 text-white py-3.5 rounded-lg font-bold hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
               {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : <>Continue <ChevronRight className="w-4 h-4" /></>}
             </button>
           </div>
@@ -188,14 +188,14 @@ function OnboardingInner() {
 
         {/* Step 2 — Connect Payments */}
         {step === 2 && (
-          <div className="bg-white rounded-2xl p-6 shadow-2xl">
+          <div className="bg-white rounded-lg p-6 shadow-2xl">
             <h2 className="text-xl font-black text-gray-900 mb-1 flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-green-600" /> Connect your payments
             </h2>
             <p className="text-gray-500 text-sm mb-6">Golfers pay through Stripe at checkout — green fees go straight to your bank account. This is required before you can go live.</p>
 
             {isConnected ? (
-              <div className="bg-green-50 border border-green-200 rounded-xl p-5 flex items-start gap-3">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-5 flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
                 <div>
                   <div className="font-bold text-green-800">Stripe connected</div>
@@ -205,17 +205,17 @@ function OnboardingInner() {
             ) : (
               <>
                 {stripeBanner === 'pending' && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 flex items-start gap-2 text-sm text-amber-800">
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4 flex items-start gap-2 text-sm text-amber-800">
                     <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /> Stripe said your account isn&apos;t fully verified yet — you may need to finish a step on their end. Try connecting again.
                   </div>
                 )}
                 {stripeBanner === 'error' && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 flex items-start gap-2 text-sm text-red-700">
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 flex items-start gap-2 text-sm text-red-700">
                     <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /> Something interrupted the connection. Try again.
                   </div>
                 )}
                 <button onClick={connectStripe} disabled={connecting}
-                  className="w-full bg-[#635bff] text-white py-3.5 rounded-xl font-bold hover:bg-[#564fe0] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+                  className="w-full bg-[#635bff] text-white py-3.5 rounded-lg font-bold hover:bg-[#564fe0] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
                   {connecting ? <><Loader2 className="w-4 h-4 animate-spin" /> Connecting...</> : 'Connect with Stripe'}
                 </button>
                 <p className="text-xs text-gray-400 mt-2 text-center">You&apos;ll be redirected to Stripe to verify your bank details, then brought back here.</p>
@@ -223,21 +223,21 @@ function OnboardingInner() {
             )}
 
             <button onClick={finishOnboarding} disabled={saving || !isConnected}
-              className="w-full mt-4 bg-green-600 text-white py-3.5 rounded-xl font-bold hover:bg-green-700 disabled:opacity-50 disabled:bg-gray-300 transition-colors flex items-center justify-center gap-2">
-              {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Finishing...</> : '🚀 Continue'}
+              className="w-full mt-4 bg-green-600 text-white py-3.5 rounded-lg font-bold hover:bg-green-700 disabled:opacity-50 disabled:bg-gray-300 transition-colors flex items-center justify-center gap-2">
+              {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Finishing...</> : 'Continue'}
             </button>
           </div>
         )}
 
         {/* Step 3 — Done */}
         {step === 3 && (
-          <div className="bg-white rounded-2xl p-10 shadow-2xl text-center">
-            <div className="text-5xl mb-4">✅</div>
+          <div className="bg-white rounded-lg p-10 shadow-2xl text-center">
+            <CheckCircle className="w-14 h-14 text-emerald-500 mx-auto mb-4" />
             <h2 className="text-2xl font-black text-gray-900 mb-2">Setup complete!</h2>
             <p className="text-gray-500 mb-2">Your course details are saved and payments are connected. GreenReserve will review everything and take your course live — usually within 1 business day.</p>
             <p className="text-sm text-gray-400 mb-6">We&apos;ll email you a full walkthrough of your dashboard once you&apos;re live.</p>
             <button onClick={() => router.push('/dashboard')}
-              className="w-full bg-green-600 text-white py-3.5 rounded-xl font-bold hover:bg-green-700">
+              className="w-full bg-green-600 text-white py-3.5 rounded-lg font-bold hover:bg-green-700">
               Go to Dashboard →
             </button>
           </div>
