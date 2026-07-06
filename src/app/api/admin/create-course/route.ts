@@ -3,13 +3,10 @@ import { prisma } from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { sendOperatorWelcomeEmail } from '@/lib/email';
-
-function checkAdmin(req: NextRequest) {
-  return req.headers.get('x-admin-key') === process.env.ADMIN_SECRET;
-}
+import { resolveAdminSession } from '@/lib/admin-session';
 
 export async function POST(req: NextRequest) {
-  if (!checkAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await req.json();

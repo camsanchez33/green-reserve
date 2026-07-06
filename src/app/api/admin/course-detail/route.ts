@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
-function checkAdmin(req: NextRequest) {
-  return req.headers.get('x-admin-key') === process.env.ADMIN_SECRET;
-}
+import { resolveAdminSession } from '@/lib/admin-session';
 
 export async function GET(req: NextRequest) {
-  if (!checkAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const courseId = req.nextUrl.searchParams.get('courseId');
   if (!courseId) return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });
 
@@ -35,7 +32,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  if (!checkAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { courseId, active, featured } = await req.json();
   if (!courseId) return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });
   const data: Record<string, unknown> = {};

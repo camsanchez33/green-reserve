@@ -375,3 +375,16 @@ model RateLimit {
   count       Int      @default(1)
   windowStart DateTime @default(now())
 }
+
+model AdminUser {
+  id                     String    @id @default(cuid())
+  email                  String    @unique
+  name                   String
+  passwordHash           String
+  role                   String    @default("staff")  // "owner" | "staff"
+  active                 Boolean   @default(true)
+  lastLoginAt            DateTime?
+  createdAt              DateTime  @default(now())
+  setPasswordToken       String?   @unique
+  setPasswordTokenExpiry DateTime?
+}

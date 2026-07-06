@@ -5,13 +5,10 @@ import bcrypt from 'bcryptjs';
 import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail } from '@/lib/email';
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 
-function checkAdmin(req: NextRequest) {
-  const key = req.headers.get('x-admin-key');
-  return key === process.env.ADMIN_SECRET;
-}
+import { resolveAdminSession } from '@/lib/admin-session';
 
 export async function GET(req: NextRequest) {
-  if (!checkAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const inquiries = await prisma.courseInquiry.findMany({ orderBy: { createdAt: 'desc' } });
   return NextResponse.json(inquiries);
 }
@@ -313,21 +310,21 @@ async function handleAction(inquiryId: string, action: string, payload?: Record<
 }
 
 export async function PATCH(req: NextRequest) {
-  if (!checkAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const body = await req.json();
   const inquiryId = body.id || body.inquiryId;
   return handleAction(inquiryId, body.action, body);
 }
 
 export async function POST(req: NextRequest) {
-  if (!checkAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const body = await req.json();
   const inquiryId = body.id || body.inquiryId;
   return handleAction(inquiryId, body.action, body);
 }
 
 export async function DELETE(req: NextRequest) {
-  if (!checkAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });

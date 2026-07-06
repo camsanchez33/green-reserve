@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Copy,
   RefreshCw, BarChart2, Users, DollarSign, TrendingUp, AlertCircle,
@@ -172,8 +173,8 @@ function RevenueChart({ data }: { data: {date:string;platform:number;gross:numbe
 
 /* ─── Main ─── */
 export default function AdminPage() {
-  const [key, setKey] = useState('');
-  const [authed, setAuthed] = useState(false);
+  const router = useRouter();
+  const [adminReady, setAdminReady] = useState(false);
   const [tab, setTab] = useState<'overview'|'inquiries'|'courses'|'create'>('overview');
   const [createForm, setCreateForm] = useState({ courseName:'', courseType:'public', address:'', city:'', state:'NJ', zipCode:'', phone:'', website:'', contactName:'', contactEmail:'', contactPhone:'', holes:18, par:72, description:'', hasMemberPricing:false, hasResidentPricing:false });
   const [creating, setCreating] = useState(false);
@@ -203,7 +204,7 @@ export default function AdminPage() {
   const [manualSlot, setManualSlot] = useState<string|null>(null);
   const [manualForm, setManualForm] = useState({ name:'', email:'', phone:'', players: 1 });
 
-  const H = useCallback(() => ({ 'Content-Type':'application/json','x-admin-key':key }), [key]);
+  const H = useCallback(() => ({ 'Content-Type':'application/json' }), []);
 
   const loadStats    = useCallback(async()=>{ const r=await fetch('/api/admin/stats',{headers:H()}); if(r.ok) setStats(await r.json()); },[H]);
   const loadInquiries= useCallback(async()=>{ setLoading(true); const r=await fetch('/api/admin/inquiries',{headers:H()}); if(r.ok) setInquiries(await r.json()); setLoading(false); },[H]);
@@ -215,12 +216,14 @@ export default function AdminPage() {
     setTsLoading(false);
   }, [H]);
 
-  useEffect(()=>{ if(!authed) return; loadStats(); if(tab==='inquiries') loadInquiries(); else if(tab==='courses') loadCourses(); },[authed,tab,loadStats,loadInquiries,loadCourses]);
+  useEffect(() => {
+    fetch('/api/admin/session').then(r => {
+      if (!r.ok) { router.push('/admin/login'); return; }
+      setAdminReady(true);
+    }).catch(() => router.push('/admin/login'));
+  }, [router]);
 
-  async function login() {
-    const r = await fetch('/api/admin/inquiries',{headers:H()});
-    if(r.ok) { setAuthed(true); } else alert('Wrong key');
-  }
+  useEffect(()=>{ if(!adminReady) return; loadStats(); if(tab==='inquiries') loadInquiries(); else if(tab==='courses') loadCourses(); },[adminReady,tab,loadStats,loadInquiries,loadCourses]);
 
   async function inquiryAction(id: string, action: string, extraPayload: Record<string,unknown> = {}) {
     setProcessing(id);
@@ -370,28 +373,8 @@ export default function AdminPage() {
     !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.city.toLowerCase().includes(search.toLowerCase()) || c.state.toLowerCase().includes(search.toLowerCase())
   );
 
-  /* ── Login screen ── */
-  if (!authed) return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-lg bg-emerald-500/10 border border-emerald-500/30 mb-4">
-            <Shield className="w-7 h-7 text-emerald-400"/>
-          </div>
-          <div className="text-2xl font-black text-white">GreenReserve</div>
-          <div className="text-sm text-gray-500 mt-1">Admin Console</div>
-        </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 shadow-2xl">
-          <input type="password" placeholder="Enter admin key" value={key}
-            onChange={e=>setKey(e.target.value)} onKeyDown={e=>e.key==='Enter'&&login()}
-            className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-3 text-sm mb-3 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none placeholder-gray-600"/>
-          <button onClick={login} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-lg font-bold transition-colors text-sm">
-            Sign In →
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  /* ── Auth gate — redirect handled in useEffect above ── */
+  if (!adminReady) return null;
 
   /* ── Detail Drawer ── */
   const DetailDrawer = () => {
@@ -854,7 +837,7 @@ export default function AdminPage() {
 
         <div className="p-3 border-t border-gray-800">
           <div className="text-[10px] text-gray-700 uppercase tracking-wider px-3 mb-1">Signed in</div>
-          <button onClick={()=>setAuthed(false)} className="w-full text-left text-xs text-gray-500 hover:text-gray-300 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors">Sign out</button>
+          <button onClick={async()=>{ await fetch('/api/admin/logout',{method:'POST'}); router.push('/admin/login'); }} className="w-full text-left text-xs text-gray-500 hover:text-gray-300 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors">Sign out</button>
         </div>
       </div>
 

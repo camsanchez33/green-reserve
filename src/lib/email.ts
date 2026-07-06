@@ -690,6 +690,29 @@ export async function sendMembershipPaymentLinkEmail(data: {
   });
 }
 
+export async function sendAdminSetPasswordEmail(data: {
+  name: string; email: string; setPasswordLink: string;
+}) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:900;">Set your admin password</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      Hi ${data.name} — you've been added as a GreenReserve admin. Click the button below to set your password and activate your account. This link expires in 24 hours.
+    </p>
+    <a href="${data.setPasswordLink}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:800;font-size:16px;margin-bottom:16px;">
+      Set My Password &rarr;
+    </a>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      If you weren't expecting this, you can safely ignore it.
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.email,
+    subject: 'Set your GreenReserve admin password',
+    html,
+  });
+}
+
 export async function sendMemberMagicLink(data: {
   name: string; email: string; courseName: string; magicLink: string;
 }) {

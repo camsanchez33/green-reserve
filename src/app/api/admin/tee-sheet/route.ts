@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
-function checkAdmin(req: NextRequest) {
-  return req.headers.get('x-admin-key') === process.env.ADMIN_SECRET;
-}
+import { resolveAdminSession } from '@/lib/admin-session';
 
 // GET /api/admin/tee-sheet?courseId=X&date=Y
 export async function GET(req: NextRequest) {
-  if (!checkAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const courseId = req.nextUrl.searchParams.get('courseId');
   const date = req.nextUrl.searchParams.get('date');
   if (!courseId || !date) return NextResponse.json({ error: 'Missing params' }, { status: 400 });
@@ -28,7 +25,7 @@ export async function GET(req: NextRequest) {
 
 // PATCH — block/unblock or cancel booking
 export async function PATCH(req: NextRequest) {
-  if (!checkAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const body = await req.json();
 
   if (body.action === 'cancel_booking') {
@@ -54,7 +51,7 @@ export async function PATCH(req: NextRequest) {
 
 // POST — manually add a booking
 export async function POST(req: NextRequest) {
-  if (!checkAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { teeTimeId, golferName, golferEmail, golferPhone, players } = await req.json();
   if (!teeTimeId || !golferName || !golferEmail || !players) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
