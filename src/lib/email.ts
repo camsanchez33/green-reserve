@@ -690,6 +690,29 @@ export async function sendMembershipPaymentLinkEmail(data: {
   });
 }
 
+export async function sendMemberMagicLink(data: {
+  name: string; email: string; courseName: string; magicLink: string;
+}) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:900;">Sign in to your member account</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      Click the button below to sign in to your <strong>${data.courseName}</strong> member portal. This link expires in 15 minutes.
+    </p>
+    <a href="${data.magicLink}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:800;font-size:16px;margin-bottom:16px;">
+      Sign In to Member Portal &rarr;
+    </a>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      If you didn't request this, you can safely ignore this email.
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.email,
+    subject: `Sign in to ${data.courseName} member portal`,
+    html,
+  });
+}
+
 export async function sendMembershipReceiptEmail(data: {
   name: string; email: string; courseName: string; tierName: string;
   amountPaid: number; expiresAt: Date | null;

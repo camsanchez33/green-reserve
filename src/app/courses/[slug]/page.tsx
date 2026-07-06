@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Check, Flag, SlidersHorizontal, X } from 'lucide-react';
 import type { Course, TeeTime } from '@/lib/courses-data';
 
@@ -516,13 +517,21 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                 </div>
 
                 {/* Header */}
-                <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
-                  <h2 className="font-bold text-gray-900 text-lg">
-                    Tee times for <span className="text-emerald-700">{displayDate(selectedDate)}</span>
-                  </h2>
-                  {!loadingTimes && teeTimes.length > 0 && (
-                    <span className="text-sm text-gray-400">{filtered.length} available</span>
-                  )}
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                  <div className="flex items-baseline gap-3 flex-wrap">
+                    <h2 className="font-bold text-gray-900 text-lg">
+                      Tee times for <span className="text-emerald-700">{displayDate(selectedDate)}</span>
+                    </h2>
+                    {!loadingTimes && teeTimes.length > 0 && (
+                      <span className="text-sm text-gray-400">{filtered.length} available</span>
+                    )}
+                  </div>
+                  <Link
+                    href={`/courses/${slug}/member`}
+                    className="text-xs font-semibold text-emerald-700 hover:text-emerald-600 border border-emerald-200 hover:border-emerald-400 bg-emerald-50 px-3 py-1.5 rounded-md transition-colors flex-shrink-0"
+                  >
+                    Member sign in
+                  </Link>
                 </div>
 
                 {/* List */}
