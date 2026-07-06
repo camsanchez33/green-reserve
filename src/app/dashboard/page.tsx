@@ -72,6 +72,7 @@ function DashboardPageInner() {
   const [savingConditions, setSavingConditions] = useState(false);
   const [checkingInId, setCheckingInId] = useState<string | null>(null);
   const [cardModalBooking, setCardModalBooking] = useState<Booking | null>(null);
+  const [search, setSearch] = useState('');
 
   async function checkInBooking(b: Booking) {
     // No-card bookings need manual card entry — open the card modal instead
@@ -163,6 +164,18 @@ function DashboardPageInner() {
     setConditions(conditionsInput); setSavingConditions(false); setShowConditions(false);
   }
 
+  // "Next up" highlight — only meaningful when viewing today
+  const nowHM = `${new Date().getHours().toString().padStart(2, '0')}:${new Date().getMinutes().toString().padStart(2, '0')}`;
+  const nextUpId = selectedDate === today()
+    ? (teeTimes.find(t => t.time >= nowHM && t.status !== 'blocked')?.id ?? null)
+    : null;
+
+  // Golfer search — filter to tee times with a matching booking name/email
+  const q = search.trim().toLowerCase();
+  const visibleTimes = q
+    ? teeTimes.filter(t => t.bookings?.some(b => b.golferName.toLowerCase().includes(q) || b.golferEmail.toLowerCase().includes(q)))
+    : teeTimes;
+
   return (
     <div className="flex h-screen bg-gray-950 overflow-hidden">
 
@@ -253,7 +266,7 @@ function DashboardPageInner() {
               ].map(s => (
                 <button key={s.label} onClick={s.onClick} disabled={!s.onClick} className={`bg-gray-900 rounded-lg p-4 border border-white/10 text-left ${s.onClick?'hover:border-emerald-300 hover:shadow-md transition-all cursor-pointer':'cursor-default'}`}>
                   <div className={`flex items-center gap-1.5 text-xs font-medium mb-1 ${s.color}`}>{s.icon}{s.label}{s.onClick&&<span className="text-gray-300 ml-auto">→</span>}</div>
-                  <div className="text-xl font-black text-gray-900">{s.value}</div>
+                  <div className="text-xl font-black text-white">{s.value}</div>
                 </button>
               ))}
             </div>
@@ -284,7 +297,13 @@ function DashboardPageInner() {
                 <h2 className="text-lg font-black text-white">{fmtDate(selectedDate)}</h2>
                 <p className="text-xs text-gray-400">{teeTimes.filter(t=>t.status!=='blocked').length} tee times · {teeTimes.filter(t=>(t.playersBooked??0)>0).length} booked</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                <input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Find golfer..."
+                  className="w-36 sm:w-44 bg-gray-900 border border-white/10 rounded-md px-3 py-1.5 text-xs text-white placeholder:text-gray-500 focus:ring-2 focus:ring-emerald-500 outline-none"
+                />
                 <button onClick={() => loadTimes(selectedDate)} className="flex items-center gap-1.5 text-xs text-gray-400 px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20">
                   <RefreshCw className="w-3.5 h-3.5"/>Refresh
                 </button>
@@ -296,7 +315,7 @@ function DashboardPageInner() {
 
             {/* Legend */}
             <div className="flex gap-3 mb-3 text-xs text-gray-400">
-              {[['bg-green-100 border-green-300','Open'],['bg-yellow-100 border-yellow-300','Filling'],['bg-red-100 border-red-300','Full'],['bg-gray-100 border-gray-200','Blocked']].map(([cls,label])=>(
+              {[['bg-emerald-950/30 border-emerald-800/30','Open'],['bg-yellow-950/30 border-yellow-700/30','Filling'],['bg-red-950/30 border-red-800/30','Full'],['bg-white/5 border-white/10','Blocked']].map(([cls,label])=>(
                 <span key={label} className="flex items-center gap-1"><span className={`w-2.5 h-2.5 rounded-sm border inline-block ${cls}`}/>{label}</span>
               ))}
             </div>
@@ -315,15 +334,31 @@ function DashboardPageInner() {
               </div>
             ) : (
               <div className="space-y-2">
-                {teeTimes.map(tt => (
-                  <div key={tt.id} className={`rounded-lg border p-3 cursor-pointer ${slotColor(tt)}`} onClick={() => setExpandedId(expandedId===tt.id?null:tt.id)}>
+                {q && visibleTimes.length === 0 && (
+                  <div className="text-center py-10 text-gray-500 text-sm bg-gray-900 rounded-lg border border-dashed border-white/10">
+                    No bookings match &quot;{search}&quot; on this date.
+                  </div>
+                )}
+                {visibleTimes.map(tt => (
+                  <div key={tt.id} className={`rounded-lg border p-3 cursor-pointer ${slotColor(tt)} ${tt.id===nextUpId ? 'ring-1 ring-emerald-500/70' : ''}`} onClick={() => setExpandedId(expandedId===tt.id?null:tt.id)}>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-wrap">
                         <span className="font-black text-white text-sm w-20">{fmtTime(tt.time)}</span>
+                        {tt.id===nextUpId && <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Next up</span>}
                         <span className="text-xs text-gray-500">{tt.holes}h</span>
                         {slotBadge(tt)}
                         <span className="text-xs text-gray-500">{tt.playersBooked}/{tt.playersAvailable}</span>
                         <span className="text-xs font-semibold text-gray-300">${tt.greenFee}{tt.cartFee>0?` +$${tt.cartFee}`:''}</span>
+                        {expandedId!==tt.id && (tt.bookings?.length ?? 0) > 0 && (
+                          <span className="hidden sm:flex items-center gap-1 flex-wrap min-w-0">
+                            {tt.bookings!.slice(0, 3).map(b => (
+                              <span key={b.id} className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-gray-300 whitespace-nowrap">
+                                {b.golferName} · {b.players}
+                              </span>
+                            ))}
+                            {tt.bookings!.length > 3 && <span className="text-[11px] text-gray-500">+{tt.bookings!.length - 3} more</span>}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <button onClick={e=>{e.stopPropagation();fetch('/api/operator/tee-times',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:tt.id,status:tt.status==='blocked'?'available':'blocked'})}).then(()=>loadTimes(selectedDate));}}
