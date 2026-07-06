@@ -62,16 +62,16 @@ export default function CancellationsPage() {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="flex h-screen bg-gray-950 overflow-hidden">
       <OperatorSidebar active="cancellations" courseName={courseName} />
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-xl font-black text-gray-900">Cancellations</h1>
+              <h1 className="text-xl font-black text-white">Cancellations</h1>
               <p className="text-xs text-gray-400">Cancel a booking on a golfer's behalf, or review cancellation history.</p>
             </div>
-            <button onClick={load} className="flex items-center gap-1.5 text-xs text-gray-500 px-3 py-1.5 rounded-lg border border-gray-200 hover:border-gray-300">
+            <button onClick={load} className="flex items-center gap-1.5 text-xs text-gray-400 px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20">
               <RefreshCw className="w-3.5 h-3.5" />Refresh
             </button>
           </div>
@@ -81,19 +81,19 @@ export default function CancellationsPage() {
           ) : (
             <div className="space-y-8">
               <div>
-                <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">Upcoming Bookings ({upcoming.length})</h2>
+                <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-3">Upcoming Bookings ({upcoming.length})</h2>
                 {upcoming.length === 0 ? (
-                  <div className="text-center py-10 bg-white rounded-lg border border-dashed border-gray-300 text-gray-400 text-sm">No upcoming confirmed bookings.</div>
+                  <div className="text-center py-10 bg-gray-900 rounded-lg border border-dashed border-white/10 text-gray-500 text-sm">No upcoming confirmed bookings.</div>
                 ) : (
                   <div className="space-y-2">
                     {upcoming.map(b => (
-                      <div key={b.id} className="bg-white rounded-lg border border-gray-200 p-3 flex items-center justify-between">
+                      <div key={b.id} className="bg-gray-900 rounded-lg border border-white/10 p-3 flex items-center justify-between">
                         <div>
-                          <div className="font-semibold text-gray-900 text-sm">{b.golferName} <span className="text-gray-400 font-normal">· {b.players} player{b.players !== 1 ? 's' : ''}</span></div>
+                          <div className="font-semibold text-white text-sm">{b.golferName} <span className="text-gray-400 font-normal">· {b.players} player{b.players !== 1 ? 's' : ''}</span></div>
                           <div className="text-xs text-gray-400">{fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)} · {b.golferEmail}</div>
                         </div>
                         <button onClick={() => cancelBooking(b.id, b.golferName)} disabled={cancelingId === b.id}
-                          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50">
+                          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-red-900/40 text-red-400 hover:bg-red-950/40 disabled:opacity-50">
                           <XCircle className="w-3.5 h-3.5" />{cancelingId === b.id ? 'Cancelling...' : 'Cancel'}
                         </button>
                       </div>
@@ -103,15 +103,15 @@ export default function CancellationsPage() {
               </div>
 
               <div>
-                <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">Cancellation History ({cancelled.length})</h2>
+                <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-3">Cancellation History ({cancelled.length})</h2>
                 {cancelled.length === 0 ? (
-                  <div className="text-center py-10 bg-white rounded-lg border border-dashed border-gray-300 text-gray-400 text-sm">No cancellations yet.</div>
+                  <div className="text-center py-10 bg-gray-900 rounded-lg border border-dashed border-white/10 text-gray-500 text-sm">No cancellations yet.</div>
                 ) : (
                   <div className="space-y-2">
                     {cancelled.map(b => (
-                      <div key={b.id} className="bg-white rounded-lg border border-gray-200 p-3 flex items-center justify-between opacity-75">
+                      <div key={b.id} className="bg-gray-900 rounded-lg border border-white/10 p-3 flex items-center justify-between opacity-70">
                         <div>
-                          <div className="font-semibold text-gray-700 text-sm flex items-center gap-1.5"><Undo2 className="w-3.5 h-3.5 text-gray-400" />{b.golferName} <span className="text-gray-400 font-normal">· {b.players} player{b.players !== 1 ? 's' : ''}</span></div>
+                          <div className="font-semibold text-gray-300 text-sm flex items-center gap-1.5"><Undo2 className="w-3.5 h-3.5 text-gray-400" />{b.golferName} <span className="text-gray-400 font-normal">· {b.players} player{b.players !== 1 ? 's' : ''}</span></div>
                           <div className="text-xs text-gray-400">{fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)}</div>
                         </div>
                         {(() => { const s = getBookingStatus(b.status, b.paymentStatus); return (

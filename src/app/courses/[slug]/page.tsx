@@ -298,6 +298,16 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
         </div>
       </div>
 
+      {/* Course alert banner (set by the course in their dashboard) */}
+      {course.conditions && (
+        <div className="bg-amber-50 border-b border-amber-200">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-2 text-sm text-amber-900">
+            <Flag size={14} className="flex-shrink-0 text-amber-600" />
+            <span><span className="font-semibold">Course notice:</span> {course.conditions}</span>
+          </div>
+        </div>
+      )}
+
       {/* Main content */}
       <div className="bg-[#f8faf9] min-h-screen">
         <div className={`max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${selectedTime ? 'pb-48' : ''}`}>

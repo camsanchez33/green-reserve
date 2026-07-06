@@ -225,7 +225,7 @@ function DashboardPageInner() {
                         return (
                           <div key={d.date} className="flex-1 group relative flex flex-col justify-end h-full">
                             <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10">${d.revenue.toFixed(0)}</div>
-                            <div className="w-full rounded-t" style={{ height:`${Math.max(pct,2)}%`, background: pct > 0 ? '#1b4332' : '#e5e7eb' }} />
+                            <div className="w-full rounded-t" style={{ height:`${Math.max(pct,2)}%`, background: pct > 0 ? '#10b981' : '#1f2937' }} />
                           </div>
                         );
                       })}
@@ -242,7 +242,7 @@ function DashboardPageInner() {
                         <div key={d.dow} className="flex items-center gap-3">
                           <span className="text-sm text-gray-400 w-8">{d.label}</span>
                           <div className="flex-1 bg-white/10 rounded-full h-3">
-                            <div className="h-3 rounded-full" style={{ width:`${d.pct}%`, background: d.pct>70?'#166534':d.pct>40?'#1b4332':'#86efac' }} />
+                            <div className="h-3 rounded-full" style={{ width:`${d.pct}%`, background: d.pct>70?'#10b981':d.pct>40?'#059669':'#065f46' }} />
                           </div>
                           <span className="text-sm font-semibold text-white w-10 text-right">{d.pct}%</span>
                         </div>
