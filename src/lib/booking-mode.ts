@@ -5,5 +5,6 @@ export function isBookingMode(pathname: string): boolean {
   if (/^\/courses\/[^/]+/.test(pathname)) return true; // course detail (not /courses index)
   if (pathname === '/book' || pathname.startsWith('/book/')) return true;
   if (pathname.startsWith('/checkin/')) return true;
+  if (pathname.startsWith('/membership/')) return true;
   return false;
 }

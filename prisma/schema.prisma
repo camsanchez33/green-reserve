@@ -185,6 +185,8 @@ model MembershipTier {
   guestPassesPerYear Int                @default(0)
   // Informational
   annualFee          Float              @default(0)
+  initiationFee      Float              @default(0) // one-time, charged with the first dues payment
+  termMonths         Int                @default(12)
   notes              String             @default("")
   active             Boolean            @default(true)
   createdAt          DateTime           @default(now())
@@ -209,6 +211,13 @@ model CourseMembership {
   status         String          @default("active")
   addedBy        String          @default("operator")
   expiresAt      DateTime?
+  startedAt      DateTime?
+  // Dues: unpaid | paid | paid_offline (cash/check at the shop) | comped
+  paymentStatus  String          @default("unpaid")
+  payToken       String          @default("")
+  lastPaidAt     DateTime?
+  lastPaymentIntentId String     @default("")
+  renewalRemindedAt   DateTime?
   notes          String          @default("")
   createdAt      DateTime        @default(now())
 

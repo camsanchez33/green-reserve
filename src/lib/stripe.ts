@@ -9,6 +9,7 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_place
 });
 
 export const ACCESS_FEE_CENTS = 150; // $1.50 per player in cents
+export const MEMBERSHIP_FEE_CENTS = 50; // GreenReserve's flat cut per membership payment
 
 /**
  * Charges a card the platform saved (via SetupIntent on a platform Customer)

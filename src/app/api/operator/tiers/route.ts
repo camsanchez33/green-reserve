@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const { name, color, greenFeeWeekday, greenFeeWeekend, cartFeeWeekday, cartFeeWeekend,
-          discountPct, advanceBookingDays, guestPassesPerYear, annualFee, notes } = body;
+          discountPct, advanceBookingDays, guestPassesPerYear, annualFee, initiationFee, termMonths, notes } = body;
 
   if (!name?.trim()) return NextResponse.json({ error: 'Tier name is required' }, { status: 400 });
 
@@ -44,6 +44,8 @@ export async function POST(req: NextRequest) {
       advanceBookingDays: advanceBookingDays != null ? Number(advanceBookingDays) : 14,
       guestPassesPerYear: guestPassesPerYear != null ? Number(guestPassesPerYear) : 0,
       annualFee:          annualFee          != null ? Number(annualFee)          : 0,
+      initiationFee:      initiationFee      != null ? Number(initiationFee)      : 0,
+      termMonths:         termMonths         != null ? Number(termMonths)         : 12,
       notes: notes || '',
     },
   });
@@ -74,6 +76,8 @@ export async function PATCH(req: NextRequest) {
       advanceBookingDays: updates.advanceBookingDays != null ? Number(updates.advanceBookingDays) : tier.advanceBookingDays,
       guestPassesPerYear: updates.guestPassesPerYear != null ? Number(updates.guestPassesPerYear) : tier.guestPassesPerYear,
       annualFee:          updates.annualFee          != null ? Number(updates.annualFee)          : tier.annualFee,
+      initiationFee:      updates.initiationFee      != null ? Number(updates.initiationFee)      : tier.initiationFee,
+      termMonths:         updates.termMonths         != null ? Number(updates.termMonths)         : tier.termMonths,
       notes:              updates.notes              ?? tier.notes,
       active:             updates.active             !== undefined ? updates.active : tier.active,
     },

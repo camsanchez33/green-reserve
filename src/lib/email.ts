@@ -654,3 +654,62 @@ export async function sendCourseLiveOrientationEmail(data: {
     html,
   });
 }
+
+export async function sendMembershipPaymentLinkEmail(data: {
+  name: string; email: string; courseName: string; tierName: string;
+  annualFee: number; initiationFee: number; payLink: string; isRenewal?: boolean;
+}) {
+  const total = data.annualFee + data.initiationFee;
+  const html = baseTemplate(`
+    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 14px;border-radius:3px;">${data.isRenewal ? 'Membership renewal' : 'Membership dues'}</span></div>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">${data.isRenewal ? `Time to renew, ${data.name}.` : `Complete your membership, ${data.name}.`}</h1>
+    <p style="margin:0 0 20px;color:#6b7280;font-size:15px;">
+      ${data.isRenewal
+        ? `Your <strong>${data.tierName}</strong> membership at <strong>${data.courseName}</strong> is coming up for renewal. Pay your dues online to keep your member rates and booking privileges.`
+        : `<strong>${data.courseName}</strong> has set you up as a <strong>${data.tierName}</strong> member. Pay your dues online to activate your membership.`}
+    </p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:14px;color:#374151;">
+      ${data.initiationFee > 0 ? `<tr><td style="padding:6px 0;">One-time initiation fee</td><td style="text-align:right;font-weight:700;">$${data.initiationFee.toFixed(2)}</td></tr>` : ''}
+      <tr><td style="padding:6px 0;">${data.tierName} dues</td><td style="text-align:right;font-weight:700;">$${data.annualFee.toFixed(2)}</td></tr>
+      <tr><td style="padding:10px 0;border-top:1px solid #e5e7eb;font-weight:800;color:#111827;">Total due</td><td style="text-align:right;border-top:1px solid #e5e7eb;font-weight:900;color:#111827;">$${total.toFixed(2)}</td></tr>
+    </table>
+    <a href="${data.payLink}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:800;font-size:16px;margin-bottom:16px;">
+      Pay Membership Dues &rarr;
+    </a>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      Payment goes directly to ${data.courseName}. Paying at the pro shop instead? Just let the course know.
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.email,
+    subject: data.isRenewal
+      ? `Renew your membership at ${data.courseName}`
+      : `Pay your membership dues — ${data.courseName}`,
+    html,
+  });
+}
+
+export async function sendMembershipReceiptEmail(data: {
+  name: string; email: string; courseName: string; tierName: string;
+  amountPaid: number; expiresAt: Date | null;
+}) {
+  const until = data.expiresAt
+    ? data.expiresAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : null;
+  const html = baseTemplate(`
+    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 14px;border-radius:3px;">Payment received</span></div>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">You're all set, ${data.name}.</h1>
+    <p style="margin:0 0 20px;color:#6b7280;font-size:15px;">
+      Your payment of <strong>$${data.amountPaid.toFixed(2)}</strong> to <strong>${data.courseName}</strong> went through.
+      Your <strong>${data.tierName}</strong> membership is active${until ? ` through <strong>${until}</strong>` : ''}.
+    </p>
+    <p style="margin:0;color:#9ca3af;font-size:12px;">Keep this email as your receipt. Member rates apply automatically when you book while signed in.</p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.email,
+    subject: `Receipt — ${data.tierName} membership at ${data.courseName}`,
+    html,
+  });
+}

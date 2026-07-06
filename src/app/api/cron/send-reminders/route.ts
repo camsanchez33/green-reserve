@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendReminderEmail } from '@/lib/email';
+import { sendReminderEmail, sendMembershipPaymentLinkEmail } from '@/lib/email';
 
 export async function GET(req: NextRequest) {
   const auth = req.headers.get('authorization');
@@ -39,5 +39,42 @@ export async function GET(req: NextRequest) {
     } catch (err) { console.error(`Reminder failed for ${booking.golferEmail}:`, err); }
   }
 
-  return NextResponse.json({ success: true, sent, total: tomorrowBookings.length });
+  // ── Membership renewal reminders ──
+  // Paid memberships expiring within 30 days get one renewal email with their
+  // payment link. renewalRemindedAt is the dedup — cleared when they pay.
+  const cutoff = new Date(now);
+  cutoff.setDate(cutoff.getDate() + 30);
+  const expiring = await prisma.courseMembership.findMany({
+    where: {
+      status: 'active',
+      paymentStatus: { in: ['paid', 'paid_offline'] },
+      renewalRemindedAt: null,
+      expiresAt: { not: null, lte: cutoff, gte: now },
+      payToken: { not: '' },
+    },
+    include: { tier: true, course: { select: { name: true, stripeAccountActive: true } } },
+  });
+
+  let renewalsSent = 0;
+  for (const m of expiring) {
+    if (!m.tier || m.tier.annualFee <= 0 || !m.course.stripeAccountActive) continue;
+    try {
+      await sendMembershipPaymentLinkEmail({
+        name: m.inviteName,
+        email: m.inviteEmail,
+        courseName: m.course.name,
+        tierName: m.tier.name,
+        annualFee: m.tier.annualFee,
+        initiationFee: 0,
+        payLink: `${process.env.NEXT_PUBLIC_URL}/membership/${m.id}?token=${m.payToken}`,
+        isRenewal: true,
+      });
+      await prisma.courseMembership.update({ where: { id: m.id }, data: { renewalRemindedAt: new Date() } });
+      renewalsSent++;
+    } catch (err) {
+      console.error(`Renewal reminder failed for membership ${m.id}:`, err);
+    }
+  }
+
+  return NextResponse.json({ success: true, sent, total: tomorrowBookings.length, renewalsSent });
 }
