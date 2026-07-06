@@ -1,7 +1,15 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 
-const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'dev-secret-change-me');
+// Fail closed: in production a missing JWT_SECRET must never silently fall
+// back to a publicly known dev secret (forged tokens would verify).
+const rawSecret =
+  process.env.JWT_SECRET ||
+  (process.env.NODE_ENV !== 'production' ? 'dev-secret-change-me' : undefined);
+if (!rawSecret) {
+  throw new Error('JWT_SECRET is not set — refusing to sign/verify tokens in production');
+}
+const secret = new TextEncoder().encode(rawSecret);
 
 // ── Operator auth ─────────────────────────────────────────────────────────────
 export async function signToken(payload: { operatorId: string; email: string }) {

@@ -44,3 +44,6 @@ package-lock.json
 
 .vercel
 .env*
+
+# claude local settings
+.claude/settings.local.json
