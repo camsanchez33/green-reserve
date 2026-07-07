@@ -399,8 +399,9 @@ model AdminUser {
   email                  String    @unique
   name                   String
   passwordHash           String
-  role                   String    @default("staff")  // "owner" | "staff"
+  role                   String    @default("manager") // "owner" | "manager" | "support" | "viewer"
   active                 Boolean   @default(true)
+  mustChangePassword     Boolean   @default(false)
   lastLoginAt            DateTime?
   createdAt              DateTime  @default(now())
   setPasswordToken       String?   @unique

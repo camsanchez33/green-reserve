@@ -35,6 +35,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.role !== 'owner') return NextResponse.json({ error: 'Forbidden — owner only' }, { status: 403 });
 
   const { title, body, sendEmail } = await req.json();
   if (!title?.trim() || !body?.trim()) {

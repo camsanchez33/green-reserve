@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { signAdminToken } from '@/lib/admin-session';
+import { signAdminToken, signAdminSetPasswordToken } from '@/lib/admin-session';
 import bcrypt from 'bcryptjs';
 
 export async function POST(req: NextRequest) {
@@ -13,7 +13,6 @@ export async function POST(req: NextRequest) {
   if (!admin || !admin.active)
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
 
-  // passwordHash is empty string until the user completes set-password
   if (!admin.passwordHash)
     return NextResponse.json({ error: 'Account not activated — check your email for a set-password link' }, { status: 401 });
 
@@ -22,6 +21,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
 
   await prisma.adminUser.update({ where: { id: admin.id }, data: { lastLoginAt: new Date() } });
+
+  // Temp password — force change before granting full access
+  if (admin.mustChangePassword) {
+    const token = await signAdminSetPasswordToken({ adminId: admin.id, email: admin.email });
+    await prisma.adminUser.update({
+      where: { id: admin.id },
+      data: {
+        setPasswordToken: token,
+        setPasswordTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      },
+    });
+    return NextResponse.json({ mustChangePassword: true, setPasswordToken: token });
+  }
 
   const token = await signAdminToken({
     adminId: admin.id,

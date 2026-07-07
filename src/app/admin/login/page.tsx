@@ -24,6 +24,10 @@ export default function AdminLoginPage() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Login failed'); return; }
+      if (data.mustChangePassword && data.setPasswordToken) {
+        router.push(`/admin/set-password?token=${encodeURIComponent(data.setPasswordToken)}`);
+        return;
+      }
       router.push('/admin');
     } catch {
       setError('Network error');

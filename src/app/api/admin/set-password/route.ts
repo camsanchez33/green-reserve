@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
       passwordHash,
       setPasswordToken: null,
       setPasswordTokenExpiry: null,
+      mustChangePassword: false,
       active: true,
     },
   });
