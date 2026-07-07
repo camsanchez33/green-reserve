@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Star, Power, Globe, Eye, ArrowLeft, Trash2, RefreshCw, Calendar,
-  Ban, Plus, X, Mail, Phone, Wrench, CheckCircle,
+  Ban, Plus, X, Mail, Phone, Search,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
@@ -12,6 +12,7 @@ interface Course {
   stripeAccountActive: boolean; slug: string; type?: string;
   operator: { email: string; name: string; onboardingStep: number; emailVerified: boolean } | null;
   createdAt: string;
+  bookings30d: number; revenue30d: number; activeMemberCount: number;
 }
 interface CourseDetail {
   course: Course & { operator: Record<string,unknown>|null; schedules: unknown[] };
@@ -39,6 +40,11 @@ function CoursesContent() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'all'|'live'|'offline'>('all');
+  const [filterStripe, setFilterStripe] = useState<'all'|'yes'|'no'>('all');
+  const [filterFeatured, setFilterFeatured] = useState(false);
+  const [filterType, setFilterType] = useState('');
+  const [sortBy, setSortBy] = useState<'newest'|'name'|'bookings'|'revenue'>('newest');
   const [detail, setDetail] = useState<CourseDetail|null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [drawerTab, setDrawerTab] = useState<'overview'|'contact'|'setup'|'teesheet'>('overview');
@@ -181,9 +187,25 @@ function CoursesContent() {
     else { const d = await r.json(); alert(d.error); }
   }
 
-  const filteredCourses = courses.filter(c =>
-    !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.city.toLowerCase().includes(search.toLowerCase()) || c.state.toLowerCase().includes(search.toLowerCase())
-  );
+  const q = search.toLowerCase().trim();
+  let filteredCourses = q
+    ? courses.filter(c =>
+        c.name.toLowerCase().includes(q) ||
+        c.slug.toLowerCase().includes(q) ||
+        c.city.toLowerCase().includes(q) ||
+        c.state.toLowerCase().includes(q) ||
+        (c.operator?.email || '').toLowerCase().includes(q)
+      )
+    : [...courses];
+  if (filterStatus === 'live') filteredCourses = filteredCourses.filter(c => c.active);
+  else if (filterStatus === 'offline') filteredCourses = filteredCourses.filter(c => !c.active);
+  if (filterStripe === 'yes') filteredCourses = filteredCourses.filter(c => c.stripeAccountActive);
+  else if (filterStripe === 'no') filteredCourses = filteredCourses.filter(c => !c.stripeAccountActive);
+  if (filterFeatured) filteredCourses = filteredCourses.filter(c => c.featured);
+  if (filterType) filteredCourses = filteredCourses.filter(c => (c.type || 'public') === filterType);
+  if (sortBy === 'name') filteredCourses = [...filteredCourses].sort((a, b) => a.name.localeCompare(b.name));
+  else if (sortBy === 'bookings') filteredCourses = [...filteredCourses].sort((a, b) => b.bookings30d - a.bookings30d);
+  else if (sortBy === 'revenue') filteredCourses = [...filteredCourses].sort((a, b) => b.revenue30d - a.revenue30d);
 
   const c = detail?.course;
 
@@ -194,14 +216,56 @@ function CoursesContent() {
       <AdminSidebar active="courses" />
       <div className="ml-56 flex-1 min-h-screen">
         <div className="px-8 py-7 max-w-6xl">
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-black text-white">All Courses</h1>
               <div className="text-sm text-gray-500 mt-0.5">{courses.filter(c => c.active).length} live · {courses.filter(c => !c.active).length} offline</div>
             </div>
-            <div className="flex gap-3">
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, city, state..." className="bg-gray-800 border border-gray-700 text-white text-sm rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-500/50 w-52 placeholder-gray-600"/>
+            <div className="flex gap-2 items-center">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-600 pointer-events-none"/>
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, slug, email..." className="bg-gray-800 border border-gray-700 text-white text-sm rounded-lg pl-8 pr-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500/50 w-56 placeholder-gray-600"/>
+              </div>
               <button onClick={loadCourses} className="flex items-center gap-2 text-sm text-gray-500 hover:text-white px-3 py-2 rounded-lg hover:bg-gray-800 border border-gray-700 transition-colors"><RefreshCw className="w-4 h-4"/>Refresh</button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 mb-5 flex-wrap">
+            <div className="flex items-center gap-1 bg-gray-900 border border-gray-800 rounded-lg p-1">
+              {(['all','live','offline'] as const).map(s => (
+                <button key={s} onClick={() => setFilterStatus(s)}
+                  className={'px-3 py-1 rounded-md text-xs font-semibold capitalize transition-colors ' + (filterStatus === s ? 'bg-gray-700 text-white' : 'text-gray-600 hover:text-gray-300')}>
+                  {s === 'all' ? 'All status' : s.charAt(0).toUpperCase() + s.slice(1)}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-1 bg-gray-900 border border-gray-800 rounded-lg p-1">
+              {(['all','yes','no'] as const).map(s => (
+                <button key={s} onClick={() => setFilterStripe(s)}
+                  className={'px-3 py-1 rounded-md text-xs font-semibold transition-colors ' + (filterStripe === s ? 'bg-gray-700 text-white' : 'text-gray-600 hover:text-gray-300')}>
+                  {s === 'all' ? 'All Stripe' : s === 'yes' ? 'Connected' : 'No Stripe'}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setFilterFeatured(v => !v)}
+              className={'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ' + (filterFeatured ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' : 'text-gray-600 border-gray-800 hover:text-gray-300 hover:border-gray-700')}>
+              <Star className="w-3 h-3"/>Featured
+            </button>
+            <select value={filterType} onChange={e => setFilterType(e.target.value)}
+              className="bg-gray-900 border border-gray-800 text-gray-400 text-xs rounded-lg px-3 py-1.5 outline-none focus:border-gray-700 cursor-pointer">
+              <option value="">All types</option>
+              <option value="public">Public</option>
+              <option value="private">Private</option>
+              <option value="semi-private">Semi-private</option>
+              <option value="resort">Resort</option>
+            </select>
+            <div className="flex items-center gap-1 bg-gray-900 border border-gray-800 rounded-lg p-1 ml-auto">
+              {(['newest','name','bookings','revenue'] as const).map(s => (
+                <button key={s} onClick={() => setSortBy(s)}
+                  className={'px-3 py-1 rounded-md text-xs font-semibold transition-colors ' + (sortBy === s ? 'bg-gray-700 text-white' : 'text-gray-600 hover:text-gray-300')}>
+                  {s === 'newest' ? 'Newest' : s === 'name' ? 'Name A–Z' : s === 'bookings' ? 'Bookings' : 'Revenue'}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -219,22 +283,26 @@ function CoursesContent() {
                   </div>
                   <div className="text-xs text-gray-500">{course.city}, {course.state} · <span className="capitalize">{course.type || 'public'}</span></div>
                 </div>
-                <div className="w-56 min-w-0 hidden md:block">
-                  {course.operator ? <>
-                    <div className="text-xs text-gray-300 truncate">{course.operator.name}</div>
-                    <div className="text-xs text-gray-600 truncate">{course.operator.email}</div>
-                  </> : <div className="text-xs text-gray-700">No operator</div>}
-                </div>
-                <div className="w-28 shrink-0 hidden lg:block">
-                  <div className={'text-xs font-semibold mb-1 ' + (course.active ? 'text-emerald-400' : 'text-gray-600')}>{course.active ? 'Live' : 'Offline'}</div>
-                  {course.operator && (
-                    <div className="flex items-center gap-1.5">
-                      <div className="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: (course.operator.onboardingStep / 3 * 100) + '%' }}/>
+                <div className="w-48 min-w-0 hidden md:block">
+                  {course.operator ? (
+                    <div>
+                      <div className="text-xs text-gray-300 truncate">{course.operator.name}</div>
+                      <div className="text-xs text-gray-600 truncate">{course.operator.email}</div>
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        {course.operator.emailVerified
+                          ? <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">Verified</span>
+                          : <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-800 text-gray-600 border border-gray-700">Unverified</span>}
+                        <span className="text-[10px] text-gray-700">{course.operator.onboardingStep}/3</span>
                       </div>
-                      <span className="text-xs text-gray-600">{course.operator.onboardingStep}/3</span>
                     </div>
-                  )}
+                  ) : <div className="text-xs text-gray-700">No operator</div>}
+                </div>
+                <div className="w-32 shrink-0 hidden lg:block text-right">
+                  <div className="text-base font-black text-white leading-none">{course.bookings30d}</div>
+                  <div className="text-[10px] text-gray-600 mb-1.5">30d bk</div>
+                  <div className="text-xs font-bold text-emerald-500">{fmtMoney(course.revenue30d)}</div>
+                  <div className="text-[10px] text-gray-600">30d rev</div>
+                  {course.activeMemberCount > 0 && <div className="text-[10px] text-blue-400 mt-1">{course.activeMemberCount} mbr</div>}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   <button onClick={() => toggleFeatured(course.id, !course.featured)} className={'w-8 h-8 flex items-center justify-center rounded-lg transition-colors ' + (course.featured ? 'text-yellow-400 bg-yellow-500/10' : 'text-gray-600 hover:text-yellow-400 hover:bg-gray-800')} title={course.featured ? 'Unfeature' : 'Feature'}><Star className="w-4 h-4"/></button>
@@ -621,10 +689,6 @@ function CoursesContent() {
     </div>
   );
 }
-
-// Suppress unused import warnings
-const _unused = { CheckCircle, Wrench };
-void _unused;
 
 export default function CoursesPage() {
   return (
