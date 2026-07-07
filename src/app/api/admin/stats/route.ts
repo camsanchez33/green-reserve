@@ -55,7 +55,7 @@ export async function GET() {
     }),
     prisma.courseOperator.findMany({
       where: { onboardingStep: { lt: 3 }, createdAt: { lt: sevenDaysAgo } },
-      select: { id: true, email: true, name: true, onboardingStep: true, createdAt: true },
+      select: { id: true, email: true, name: true, onboardingStep: true, createdAt: true, courseId: true },
       take: 20,
       orderBy: { createdAt: 'asc' },
     }),
@@ -112,7 +112,7 @@ export async function GET() {
     orderBy: { createdAt: 'desc' },
     take: 10,
     include: {
-      course: { select: { name: true } },
+      course: { select: { id: true, name: true } },
       teeTime: { select: { date: true, time: true } },
     },
   });
@@ -141,6 +141,7 @@ export async function GET() {
     recentActivity: {
       bookings: recentBookingsActivity.map(b => ({
         id: b.id,
+        courseId: b.course.id,
         courseName: b.course.name,
         golferName: b.golferName,
         players: b.players,

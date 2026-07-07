@@ -4,6 +4,7 @@ import {
   Calendar, BarChart2, Clock, Users, Settings, LogOut, XCircle,
   Trophy, PartyPopper, DollarSign, AlertTriangle,
 } from 'lucide-react';
+import AnnouncementBanner from '@/components/AnnouncementBanner';
 
 export type OperatorNavKey =
   | 'teesheet' | 'analytics' | 'cancellations' | 'tournaments' | 'outings'
@@ -39,6 +40,8 @@ export default function OperatorSidebar({ active, courseName, onAlertClick }: {
   }
 
   return (
+    <>
+    <AnnouncementBanner />
     <aside className="w-56 shrink-0 bg-[#0f2218] flex flex-col h-full overflow-y-auto">
       <div className="px-4 py-5 border-b border-white/10">
         <div className="font-black text-lg text-white leading-none">
@@ -72,5 +75,6 @@ export default function OperatorSidebar({ active, courseName, onAlertClick }: {
         <NavItem icon={<LogOut className="w-4 h-4"/>} label="Sign Out" onClick={logout} danger />
       </div>
     </aside>
+    </>
   );
 }

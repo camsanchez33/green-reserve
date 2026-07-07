@@ -2,8 +2,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  BarChart2, Users, DollarSign, TrendingUp, Building2, RefreshCw,
-  ArrowUpRight, ArrowDownRight, AlertCircle, ChevronRight, Activity,
+  BarChart2, AlertCircle, DollarSign, TrendingUp, Building2, RefreshCw,
+  ArrowUpRight, ArrowDownRight, ChevronRight, Activity,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
@@ -18,10 +18,10 @@ interface Stats {
   attentionItems: {
     staleInquiries: { id: string; courseName: string; status: string; createdAt: string }[];
     noStripe: { id: string; name: string; slug: string }[];
-    stuckOperators: { id: string; email: string; name: string; onboardingStep: number; createdAt: string }[];
+    stuckOperators: { id: string; email: string; name: string; onboardingStep: number; createdAt: string; courseId: string | null }[];
   };
   recentActivity: {
-    bookings: { id: string; courseName: string; golferName: string; players: number; totalAmount: number; teeDate: string; teeTime: string; createdAt: string }[];
+    bookings: { id: string; courseId: string; courseName: string; golferName: string; players: number; totalAmount: number; teeDate: string; teeTime: string; createdAt: string }[];
     inquiries: { id: string; courseName: string; contactName: string; status: string; createdAt: string }[];
   };
 }
@@ -114,6 +114,45 @@ export default function AdminOverviewPage() {
     ? stats.attentionItems.staleInquiries.length + stats.attentionItems.noStripe.length + stats.attentionItems.stuckOperators.length
     : 0;
 
+  const statCards = stats ? [
+    {
+      label: 'Live Courses',
+      value: stats.activeCourses,
+      sub: `${stats.totalCourses} total`,
+      icon: <Building2 className="w-4 h-4"/>,
+      accent: false,
+      href: '/admin/courses',
+      trend: <Trend current={stats.newCourses30d} prev={stats.newCoursesPrev30d}/>,
+    },
+    {
+      label: 'Pending Inquiries',
+      value: stats.pendingInquiries,
+      sub: 'awaiting review',
+      icon: <AlertCircle className="w-4 h-4"/>,
+      accent: false,
+      href: '/admin/inquiries',
+      trend: null,
+    },
+    {
+      label: 'Bookings (30d)',
+      value: stats.recentBookings,
+      sub: `${stats.totalBookings} all time`,
+      icon: <TrendingUp className="w-4 h-4"/>,
+      accent: false,
+      href: '/admin/activity',
+      trend: <Trend current={stats.recentBookings} prev={stats.recentBookingsPrev30d}/>,
+    },
+    {
+      label: 'GR Revenue (30d)',
+      value: fmtMoney(stats.platformRevenue30d),
+      sub: '$1.50/player access fee',
+      icon: <DollarSign className="w-4 h-4"/>,
+      accent: true,
+      href: '/admin/activity',
+      trend: <Trend current={stats.platformRevenue30d} prev={stats.platformRevenuePrev30d}/>,
+    },
+  ] : [];
+
   return (
     <div className="min-h-screen bg-gray-950 text-white flex">
       <AdminSidebar active="overview" pendingInquiries={stats?.pendingInquiries ?? 0} />
@@ -132,31 +171,18 @@ export default function AdminOverviewPage() {
           {!stats && loading && <div className="text-gray-600 text-center py-20 text-sm">Loading...</div>}
 
           {stats && <>
-            {/* Stat cards */}
+            {/* Stat cards — all clickable */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              {[
-                {
-                  label: 'Live Courses', value: stats.activeCourses, sub: `${stats.totalCourses} total`,
-                  icon: <Building2 className="w-4 h-4"/>, accent: false,
-                  trend: <Trend current={stats.newCourses30d} prev={stats.newCoursesPrev30d}/>,
-                },
-                {
-                  label: 'Golfer Accounts', value: stats.totalGolfers, sub: `+${stats.newGolfers30d} this month`,
-                  icon: <Users className="w-4 h-4"/>, accent: false,
-                  trend: <Trend current={stats.newGolfers30d} prev={stats.newGolfersPrev30d}/>,
-                },
-                {
-                  label: 'Bookings (30d)', value: stats.recentBookings, sub: `${stats.totalBookings} all time`,
-                  icon: <TrendingUp className="w-4 h-4"/>, accent: false,
-                  trend: <Trend current={stats.recentBookings} prev={stats.recentBookingsPrev30d}/>,
-                },
-                {
-                  label: 'GR Revenue (30d)', value: fmtMoney(stats.platformRevenue30d), sub: '$1.50/player access fee',
-                  icon: <DollarSign className="w-4 h-4"/>, accent: true,
-                  trend: <Trend current={stats.platformRevenue30d} prev={stats.platformRevenuePrev30d}/>,
-                },
-              ].map(card => (
-                <div key={card.label} className={`rounded-lg border p-5 relative overflow-hidden ${card.accent ? 'bg-gradient-to-br from-emerald-900/60 to-emerald-800/30 border-emerald-700/50' : 'bg-gray-900 border-gray-800'}`}>
+              {statCards.map(card => (
+                <div
+                  key={card.label}
+                  onClick={() => router.push(card.href)}
+                  className={`rounded-lg border p-5 relative overflow-hidden cursor-pointer transition-all group ${
+                    card.accent
+                      ? 'bg-gradient-to-br from-emerald-900/60 to-emerald-800/30 border-emerald-700/50 hover:border-emerald-600'
+                      : 'bg-gray-900 border-gray-800 hover:border-gray-700 hover:bg-gray-800/50'
+                  }`}
+                >
                   <div className="flex items-start justify-between mb-3">
                     <div className={`p-2 rounded-lg ${card.accent ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-400'}`}>{card.icon}</div>
                     {card.trend}
@@ -164,6 +190,7 @@ export default function AdminOverviewPage() {
                   <div className={`text-3xl font-black mb-0.5 ${card.accent ? 'text-emerald-300' : 'text-white'}`}>{card.value}</div>
                   <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{card.label}</div>
                   {card.sub && <div className="text-xs text-gray-600 mt-0.5">{card.sub}</div>}
+                  <ChevronRight className={`absolute bottom-4 right-4 w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity ${card.accent ? 'text-emerald-500' : 'text-gray-600'}`}/>
                 </div>
               ))}
             </div>
@@ -178,18 +205,23 @@ export default function AdminOverviewPage() {
             </div>
 
             <div className="grid grid-cols-5 gap-4 mb-5">
-              {/* Top courses */}
+              {/* Top courses — clickable to course drawer */}
               <div className="col-span-2 bg-gray-900 border border-gray-800 rounded-lg p-5">
                 <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Top Courses (30d)</div>
                 {stats.topCourses.length === 0 && <div className="text-xs text-gray-700 py-4">No bookings yet</div>}
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {stats.topCourses.map((tc, idx) => (
-                    <div key={tc.id} className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-lg bg-gray-800 flex items-center justify-center text-[10px] font-black text-gray-500 shrink-0">{idx + 1}</div>
+                    <div
+                      key={tc.id}
+                      onClick={() => router.push(`/admin/courses?courseId=${tc.id}`)}
+                      className="flex items-center gap-3 -mx-2 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors group"
+                    >
+                      <div className="w-5 h-5 rounded-lg bg-gray-800 group-hover:bg-gray-700 flex items-center justify-center text-[10px] font-black text-gray-500 shrink-0 transition-colors">{idx + 1}</div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium text-white truncate">{tc.name}</div>
                         <div className="text-xs text-gray-600">{tc.bookings} bookings · {fmtMoney(tc.revenue)} fees</div>
                       </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-gray-700 opacity-0 group-hover:opacity-100 shrink-0 transition-opacity"/>
                     </div>
                   ))}
                 </div>
@@ -224,12 +256,15 @@ export default function AdminOverviewPage() {
                     </button>
                   ))}
                   {stats.attentionItems.stuckOperators.map(o => (
-                    <div key={o.id} className="flex items-center gap-3 px-3 py-2 bg-gray-800/50 border border-gray-700/50 rounded-lg">
+                    <button key={o.id}
+                      onClick={() => router.push(o.courseId ? `/admin/courses?courseId=${o.courseId}` : '/admin/courses')}
+                      className="w-full flex items-center gap-3 px-3 py-2 bg-gray-800/50 border border-gray-700/50 rounded-lg hover:bg-gray-800 hover:border-gray-700 transition-colors text-left">
                       <div className="flex-1 min-w-0">
                         <div className="text-xs font-semibold text-gray-300 truncate">{o.name}</div>
                         <div className="text-[10px] text-gray-600">Onboarding stuck at step {o.onboardingStep}/3 · {o.email}</div>
                       </div>
-                    </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-gray-600 shrink-0"/>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -262,32 +297,45 @@ export default function AdminOverviewPage() {
               </div>
             </div>
 
-            {/* Recent activity */}
+            {/* Recent activity — rows clickable to course drawer or inquiries */}
             <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
               <div className="flex items-center gap-2 mb-3">
                 <Activity className="w-3.5 h-3.5 text-gray-500"/>
                 <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Recent Activity</div>
+                <button onClick={() => router.push('/admin/activity')} className="ml-auto text-xs text-gray-600 hover:text-gray-400 transition-colors flex items-center gap-1">
+                  View all<ChevronRight className="w-3 h-3"/>
+                </button>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {stats.recentActivity.bookings.map(b => (
-                  <div key={b.id} className="flex items-center gap-3 py-2 border-b border-gray-800/50 last:border-0">
+                  <div
+                    key={b.id}
+                    onClick={() => router.push(`/admin/courses?courseId=${b.courseId}`)}
+                    className="flex items-center gap-3 py-2 px-2 -mx-2 rounded-lg border-b border-gray-800/50 last:border-0 cursor-pointer hover:bg-gray-800/50 transition-colors group"
+                  >
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"/>
                     <div className="flex-1 min-w-0">
                       <span className="text-sm text-white font-medium">{b.golferName}</span>
                       <span className="text-xs text-gray-500"> booked {b.courseName} · {b.players}p</span>
                     </div>
                     <div className="text-xs font-bold text-emerald-400 shrink-0">{fmtMoney(b.totalAmount / 100)}</div>
-                    <div className="text-[10px] text-gray-600 shrink-0">{fmtDate(b.createdAt)}</div>
+                    <div className="text-[10px] text-gray-600 shrink-0 hidden sm:block">{fmtDate(b.createdAt)}</div>
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-700 opacity-0 group-hover:opacity-100 shrink-0 transition-opacity"/>
                   </div>
                 ))}
                 {stats.recentActivity.inquiries.map(i => (
-                  <div key={i.id} className="flex items-center gap-3 py-2 border-b border-gray-800/50 last:border-0">
+                  <div
+                    key={i.id}
+                    onClick={() => router.push('/admin/inquiries')}
+                    className="flex items-center gap-3 py-2 px-2 -mx-2 rounded-lg border-b border-gray-800/50 last:border-0 cursor-pointer hover:bg-gray-800/50 transition-colors group"
+                  >
                     <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 shrink-0"/>
                     <div className="flex-1 min-w-0">
                       <span className="text-sm text-white font-medium">{i.courseName}</span>
                       <span className="text-xs text-gray-500"> inquiry from {i.contactName} · {i.status}</span>
                     </div>
-                    <div className="text-[10px] text-gray-600 shrink-0">{fmtDate(i.createdAt)}</div>
+                    <div className="text-[10px] text-gray-600 shrink-0 hidden sm:block">{fmtDate(i.createdAt)}</div>
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-700 opacity-0 group-hover:opacity-100 shrink-0 transition-opacity"/>
                   </div>
                 ))}
                 {stats.recentActivity.bookings.length === 0 && stats.recentActivity.inquiries.length === 0 && (
