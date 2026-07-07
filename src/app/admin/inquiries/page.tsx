@@ -409,6 +409,7 @@ export default function InquiriesPage() {
                       <th className="text-left px-3 py-2.5 text-[10px] uppercase tracking-[0.06em] text-ink-muted font-medium">Status</th>
                       <th className="text-left px-3 py-2.5 text-[10px] uppercase tracking-[0.06em] text-ink-muted font-medium hidden lg:table-cell">Why archived</th>
                       <th className="text-left px-3 py-2.5 text-[10px] uppercase tracking-[0.06em] text-ink-muted font-medium hidden xl:table-cell">Submitted</th>
+                      <th className="w-10"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -446,6 +447,15 @@ export default function InquiriesPage() {
                           </td>
                           <td className="px-3 py-3 hidden xl:table-cell">
                             <span className="text-xs text-ink-faint">{fmtDate(inq.createdAt)}</span>
+                          </td>
+                          <td className="px-2 py-3">
+                            <button
+                              onClick={e => { e.stopPropagation(); deleteInquiry(inq.id, inq.courseName); }}
+                              className="w-7 h-7 flex items-center justify-center rounded text-ink-faint hover:text-bad hover:bg-bad/5 transition-colors"
+                              title="Delete permanently"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           </td>
                         </tr>
                       );
