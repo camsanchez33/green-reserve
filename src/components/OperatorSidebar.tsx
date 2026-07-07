@@ -1,17 +1,19 @@
 'use client';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import {
   Calendar, BarChart2, Clock, Users, Settings, LogOut, XCircle,
-  Trophy, PartyPopper, DollarSign, AlertTriangle,
+  Trophy, PartyPopper, DollarSign, AlertTriangle, MessageSquare,
 } from 'lucide-react';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
 
 export type OperatorNavKey =
   | 'teesheet' | 'analytics' | 'cancellations' | 'tournaments' | 'outings'
-  | 'schedule' | 'members' | 'payments' | 'settings';
+  | 'schedule' | 'members' | 'payments' | 'settings' | 'messages';
 
-function NavItem({ icon, label, active, onClick, danger, badge }: {
-  icon: React.ReactNode; label: string; active?: boolean; onClick: () => void; danger?: boolean; badge?: string;
+function NavItem({ icon, label, active, onClick, danger, badge, unreadCount }: {
+  icon: React.ReactNode; label: string; active?: boolean; onClick: () => void;
+  danger?: boolean; badge?: string; unreadCount?: number;
 }) {
   return (
     <button onClick={onClick} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left ${
@@ -21,7 +23,11 @@ function NavItem({ icon, label, active, onClick, danger, badge }: {
     }`}>
       <span className="w-4 h-4 shrink-0">{icon}</span>
       <span className="flex-1">{label}</span>
-      {badge && <span className="text-[9px] font-bold uppercase tracking-wide bg-white/10 text-white/40 px-1.5 py-0.5 rounded-full">{badge}</span>}
+      {unreadCount && unreadCount > 0 ? (
+        <span className="text-[10px] font-bold bg-emerald-500 text-white px-1.5 py-0.5 rounded-full leading-none">{unreadCount > 99 ? '99+' : unreadCount}</span>
+      ) : badge ? (
+        <span className="text-[9px] font-bold uppercase tracking-wide bg-white/10 text-white/40 px-1.5 py-0.5 rounded-full">{badge}</span>
+      ) : null}
     </button>
   );
 }
@@ -29,10 +35,17 @@ function NavItem({ icon, label, active, onClick, danger, badge }: {
 export default function OperatorSidebar({ active, courseName, onAlertClick }: {
   active: OperatorNavKey;
   courseName?: string;
-  /** If provided (only the main /dashboard page does), opens the conditions modal in place. Otherwise navigates to /dashboard. */
   onAlertClick?: () => void;
 }) {
   const router = useRouter();
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  useEffect(() => {
+    fetch('/api/operator/messages?unreadCount=1')
+      .then(r => r.ok ? r.json() : { count: 0 })
+      .then(d => setUnreadMessages(d.count ?? 0))
+      .catch(() => {});
+  }, []);
 
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -61,10 +74,11 @@ export default function OperatorSidebar({ active, courseName, onAlertClick }: {
         <NavItem icon={<PartyPopper className="w-4 h-4"/>}  label="Outings"       active={active==='outings'}       onClick={() => router.push('/dashboard/outings')} badge="Soon" />
 
         <div className="text-xs font-semibold text-white/25 uppercase tracking-widest px-3 py-2 mt-3">Manage</div>
-        <NavItem icon={<Clock className="w-4 h-4"/>}      label="Schedule" active={active==='schedule'} onClick={() => router.push('/dashboard/schedules')} />
-        <NavItem icon={<Users className="w-4 h-4"/>}      label="Members"  active={active==='members'}  onClick={() => router.push('/dashboard/members')} />
-        <NavItem icon={<DollarSign className="w-4 h-4"/>} label="Payments" active={active==='payments'} onClick={() => router.push('/dashboard/payments')} />
-        <NavItem icon={<Settings className="w-4 h-4"/>}   label="Settings" active={active==='settings'} onClick={() => router.push('/dashboard/settings')} />
+        <NavItem icon={<Clock className="w-4 h-4"/>}         label="Schedule"  active={active==='schedule'}  onClick={() => router.push('/dashboard/schedules')} />
+        <NavItem icon={<Users className="w-4 h-4"/>}         label="Members"   active={active==='members'}   onClick={() => router.push('/dashboard/members')} />
+        <NavItem icon={<DollarSign className="w-4 h-4"/>}    label="Payments"  active={active==='payments'}  onClick={() => router.push('/dashboard/payments')} />
+        <NavItem icon={<MessageSquare className="w-4 h-4"/>} label="Messages"  active={active==='messages'}  onClick={() => router.push('/dashboard/messages')} unreadCount={unreadMessages} />
+        <NavItem icon={<Settings className="w-4 h-4"/>}      label="Settings"  active={active==='settings'}  onClick={() => router.push('/dashboard/settings')} />
 
         <div className="pt-2">
           <NavItem icon={<AlertTriangle className="w-4 h-4"/>} label="Course Alert" onClick={onAlertClick || (() => router.push('/dashboard'))} />

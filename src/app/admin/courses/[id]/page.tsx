@@ -141,6 +141,12 @@ export default function CourseDetailPage() {
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [resendMsg, setResendMsg] = useState('');
 
+  // Messages tab
+  const [msgThread, setMsgThread] = useState<{ id: string; messages: { id: string; senderType: string; senderName: string; body: string; readAt: string | null; isBroadcast: boolean; createdAt: string }[] } | null>(null);
+  const [msgLoading, setMsgLoading] = useState(false);
+  const [msgCompose, setMsgCompose] = useState('');
+  const [msgSending, setMsgSending] = useState(false);
+
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
   const loadSchedules = useCallback(async () => {
@@ -177,6 +183,15 @@ export default function CourseDetailPage() {
     const r = await fetch(`/api/admin/course-members?courseId=${courseId}`, { headers: H() });
     if (r.ok) setMembersData(await r.json());
     setMembersLoading(false);
+  }, [courseId, H]);
+
+  const loadCourseThread = useCallback(async () => {
+    setMsgLoading(true);
+    const r = await fetch(`/api/admin/messages?courseId=${courseId}`, { headers: H() });
+    if (r.ok) setMsgThread(await r.json());
+    setMsgLoading(false);
+    // Mark operator messages as read
+    await fetch('/api/admin/messages', { method: 'PATCH', headers: H(), body: JSON.stringify({ courseId }) });
   }, [courseId, H]);
 
   const loadDetail = useCallback(async () => {
@@ -421,6 +436,7 @@ export default function CourseDetailPage() {
                   if (t === 'schedule') loadSchedules();
                   if (t === 'transactions') loadTransactions(1, '', '', '');
                   if (t === 'members') loadMembers();
+                  if (t === 'messages') loadCourseThread();
                 }}
                 className={'px-4 py-1.5 rounded-md text-[12px] font-medium transition-colors whitespace-nowrap ' + (tab === t ? 'bg-white text-ink border border-line shadow-sm' : 'text-ink-muted hover:text-ink')}
               >
@@ -951,11 +967,91 @@ export default function CourseDetailPage() {
 
           {/* MESSAGES */}
           {tab === 'messages' && (
-            <div className="max-w-xl">
-              <div className="bg-white border border-line rounded-lg p-10 text-center">
-                <MessageSquare className="w-8 h-8 text-ink-muted mx-auto mb-3" />
-                <div className="text-sm font-medium text-ink mb-1">Two-way messaging coming soon</div>
-                <div className="text-xs text-ink-muted">Admin ↔ course messaging arrives with Phase 3</div>
+            <div className="max-w-2xl">
+              <div className="bg-white border border-line rounded-lg flex flex-col" style={{ minHeight: 480 }}>
+                {/* Messages list */}
+                <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4" style={{ maxHeight: 420 }}>
+                  {msgLoading && <div className="py-8 text-center text-ink-muted text-sm">Loading...</div>}
+                  {!msgLoading && (!msgThread || msgThread.messages.length === 0) && (
+                    <div className="py-8 text-center">
+                      <MessageSquare className="w-8 h-8 text-ink-muted mx-auto mb-2" />
+                      <div className="text-sm text-ink-muted">No messages yet. Start the conversation below.</div>
+                    </div>
+                  )}
+                  {!msgLoading && msgThread && msgThread.messages.map(msg => {
+                    const isAdmin = msg.senderType === 'admin';
+                    return (
+                      <div key={msg.id} className={isAdmin ? 'flex justify-end' : 'flex justify-start'}>
+                        <div className="max-w-[70%]">
+                          {msg.isBroadcast && (
+                            <div className="text-[10px] text-ink-muted mb-1 flex items-center gap-1">
+                              <Send className="w-3 h-3" /> Announcement
+                            </div>
+                          )}
+                          <div className={
+                            'px-4 py-2.5 rounded-lg text-sm whitespace-pre-wrap leading-relaxed ' + (
+                              isAdmin
+                                ? 'bg-pine text-white rounded-br-none'
+                                : 'bg-paper border border-line text-ink rounded-bl-none'
+                            )
+                          }>
+                            {msg.body}
+                          </div>
+                          <div className={'text-[10px] mt-1 text-ink-faint ' + (isAdmin ? 'text-right' : '')}>
+                            {msg.senderName} · {new Date(msg.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}
+                            {isAdmin && msg.readAt && <span className="ml-1 text-pine/60">· Read</span>}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Composer */}
+                <div className="border-t border-line px-5 py-4 shrink-0">
+                  <div className="flex gap-3 items-end">
+                    <textarea
+                      value={msgCompose}
+                      onChange={e => setMsgCompose(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && msgCompose.trim() && !msgSending) {
+                          e.preventDefault();
+                          (async () => {
+                            setMsgSending(true);
+                            const r = await fetch('/api/admin/messages', {
+                              method: 'POST', headers: H(),
+                              body: JSON.stringify({ courseId, body: msgCompose.trim() }),
+                            });
+                            if (r.ok) { setMsgCompose(''); await loadCourseThread(); }
+                            else { const d = await r.json(); alert(d.error || 'Send failed'); }
+                            setMsgSending(false);
+                          })();
+                        }
+                      }}
+                      placeholder="Message this course..."
+                      rows={2}
+                      className="flex-1 bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40 resize-none"
+                    />
+                    <button
+                      disabled={!msgCompose.trim() || msgSending}
+                      onClick={async () => {
+                        if (!msgCompose.trim() || msgSending) return;
+                        setMsgSending(true);
+                        const r = await fetch('/api/admin/messages', {
+                          method: 'POST', headers: H(),
+                          body: JSON.stringify({ courseId, body: msgCompose.trim() }),
+                        });
+                        if (r.ok) { setMsgCompose(''); await loadCourseThread(); }
+                        else { const d = await r.json(); alert(d.error || 'Send failed'); }
+                        setMsgSending(false);
+                      }}
+                      className="flex items-center gap-1.5 px-4 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white text-sm font-medium rounded-md transition-colors shrink-0"
+                    >
+                      <Send className="w-3.5 h-3.5" />Send
+                    </button>
+                  </div>
+                  <div className="text-[10px] text-ink-faint mt-1.5">⌘/Ctrl + Enter to send · <button onClick={() => window.open('/admin/messages?courseId=' + courseId, '_blank')} className="text-pine hover:underline">Open full view</button></div>
+                </div>
               </div>
             </div>
           )}

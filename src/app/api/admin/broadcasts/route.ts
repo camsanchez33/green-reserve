@@ -49,6 +49,33 @@ export async function POST(req: NextRequest) {
   let emailError = '';
   let emailCount = 0;
 
+  // Insert broadcast message into every active course's thread (create thread if needed)
+  const activeCourses = await prisma.course.findMany({
+    where: { active: true, archivedAt: null },
+    select: { id: true },
+  });
+  for (const course of activeCourses) {
+    try {
+      const thread = await prisma.messageThread.upsert({
+        where: { courseId: course.id },
+        create: { courseId: course.id },
+        update: {},
+      });
+      await prisma.message.create({
+        data: {
+          threadId: thread.id,
+          senderType: 'admin',
+          senderId: session.adminId,
+          senderName: session.name,
+          body: `[Announcement] ${title.trim()}\n\n${body.trim()}`,
+          isBroadcast: true,
+        },
+      });
+    } catch (e) {
+      console.error('Broadcast message insert failed for course', course.id, e);
+    }
+  }
+
   if (sendEmail) {
     const operators = await prisma.courseOperator.findMany({
       where: { course: { active: true } },

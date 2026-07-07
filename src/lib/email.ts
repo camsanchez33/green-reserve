@@ -760,6 +760,31 @@ export async function sendMembershipReceiptEmail(data: {
   });
 }
 
+export async function sendMessageNotificationEmail(data: {
+  recipientEmail: string;
+  recipientName: string;
+  senderName: string;
+  courseName: string;
+  messageBody: string;
+  replyUrl: string;
+}) {
+  const preview = data.messageBody.length > 200 ? data.messageBody.slice(0, 200) + '…' : data.messageBody;
+  const bodyLines = preview.split('\n').map(l => `<p style="margin:0 0 8px;color:#374151;font-size:15px;">${l}</p>`).join('');
+  const html = baseTemplate(`
+    <p style="color:#374151;font-size:15px;margin:0 0 16px;">Hi ${data.recipientName},</p>
+    <p style="color:#374151;font-size:15px;margin:0 0 20px;"><strong>${data.senderName}</strong> sent a message about <strong>${data.courseName}</strong>:</p>
+    <div style="background:#f9fafb;border-left:3px solid #24513b;padding:14px 18px;margin:0 0 24px;border-radius:0 4px 4px 0;">${bodyLines}</div>
+    <a href="${data.replyUrl}" style="display:inline-block;background:#24513b;color:#ffffff;font-size:14px;font-weight:600;padding:10px 22px;border-radius:4px;text-decoration:none;">View &amp; Reply</a>
+    <p style="color:#9ca3af;font-size:12px;margin:20px 0 0;">Reply directly at greenreserve.app — no need to respond to this email.</p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.recipientEmail,
+    subject: `Message from ${data.senderName} — ${data.courseName}`,
+    html,
+  });
+}
+
 export async function sendAnnouncementEmail(data: {
   operatorName: string;
   operatorEmail: string;

@@ -1,14 +1,28 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { Layers, BarChart2, AlertCircle, Building2, Plus, Users, Radio, Activity } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Layers, BarChart2, AlertCircle, Building2, Plus, Users, Radio, Activity, MessageSquare } from 'lucide-react';
 
-export type AdminNavKey = 'overview' | 'inquiries' | 'courses' | 'create' | 'employees' | 'broadcasts' | 'activity';
+export type AdminNavKey = 'overview' | 'inquiries' | 'courses' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages';
 
-export default function AdminSidebar({ active, pendingInquiries = 0 }: {
+export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessages = 0 }: {
   active: AdminNavKey;
   pendingInquiries?: number;
+  unreadMessages?: number;
 }) {
   const router = useRouter();
+  const [unread, setUnread] = useState(unreadMessages);
+
+  useEffect(() => { setUnread(unreadMessages); }, [unreadMessages]);
+
+  // Fetch unread count independently when not provided by caller
+  useEffect(() => {
+    if (unreadMessages > 0) return; // caller already has it
+    fetch('/api/admin/messages?unreadCount=1')
+      .then(r => r.ok ? r.json() : { count: 0 })
+      .then(d => setUnread(d.count ?? 0))
+      .catch(() => {});
+  }, [unreadMessages]);
 
   async function signOut() {
     await fetch('/api/admin/logout', { method: 'POST' });
@@ -19,6 +33,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0 }: {
     { key: 'overview',   label: 'Overview',   href: '/admin',            icon: <BarChart2 className="w-4 h-4"/> },
     { key: 'inquiries',  label: 'Inquiries',  href: '/admin/inquiries',  icon: <AlertCircle className="w-4 h-4"/> },
     { key: 'courses',    label: 'Courses',    href: '/admin/courses',    icon: <Building2 className="w-4 h-4"/> },
+    { key: 'messages',   label: 'Messages',   href: '/admin/messages',   icon: <MessageSquare className="w-4 h-4"/> },
     { key: 'create',     label: 'Add Course', href: '/admin/create',     icon: <Plus className="w-4 h-4"/> },
     { key: 'employees',  label: 'Employees',  href: '/admin/employees',  icon: <Users className="w-4 h-4"/> },
     { key: 'broadcasts', label: 'Broadcasts', href: '/admin/broadcasts', icon: <Radio className="w-4 h-4"/> },
@@ -62,6 +77,11 @@ export default function AdminSidebar({ active, pendingInquiries = 0 }: {
               {item.key === 'inquiries' && pendingInquiries > 0 && (
                 <span className="bg-warn text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium leading-none">
                   {pendingInquiries}
+                </span>
+              )}
+              {item.key === 'messages' && unread > 0 && (
+                <span className="bg-ok text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium leading-none">
+                  {unread > 99 ? '99+' : unread}
                 </span>
               )}
               {item.soon && (
