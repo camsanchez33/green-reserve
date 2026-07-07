@@ -55,7 +55,7 @@ export async function GET() {
     }),
     prisma.courseOperator.findMany({
       where: { onboardingStep: { lt: 3 }, createdAt: { lt: sevenDaysAgo } },
-      select: { id: true, email: true, name: true, onboardingStep: true, createdAt: true, courseId: true },
+      select: { id: true, email: true, name: true, onboardingStep: true, createdAt: true, course: { select: { id: true } } },
       take: 20,
       orderBy: { createdAt: 'asc' },
     }),
@@ -136,7 +136,7 @@ export async function GET() {
     attentionItems: {
       staleInquiries: staleInquiries.map(i => ({ ...i, createdAt: i.createdAt.toISOString() })),
       noStripe,
-      stuckOperators: stuckOperators.map(o => ({ ...o, createdAt: o.createdAt.toISOString() })),
+      stuckOperators: stuckOperators.map(({ course, createdAt, ...rest }) => ({ ...rest, courseId: course?.id ?? null, createdAt: createdAt.toISOString() })),
     },
     recentActivity: {
       bookings: recentBookingsActivity.map(b => ({
