@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Copy,
-  RefreshCw, Mail, Trash2, Wrench, Power, Search,
+  RefreshCw, Mail, Trash2, Wrench, Power, Search, ArrowUpRight,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
@@ -273,6 +273,8 @@ export default function InquiriesPage() {
             {visibleInqs.map(inq => {
               const stageDays = daysAgo(inq.updatedAt || inq.createdAt);
               const staleStage = stageDays > 7;
+              const showWizard = !inq.builtCourseId && !['building','live','rejected'].includes(inq.status);
+              const wizardUrl = `/admin/create?${new URLSearchParams({ name: inq.courseName||'', city: inq.city||'', state: inq.state||'', zip: inq.zipCode||'', address: inq.address||'', website: inq.website||'', type: inq.courseType||'public', contactName: inq.contactName||'', contactEmail: inq.email||'', inquiryId: inq.id }).toString()}`;
               return (
                 <div key={inq.id} className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden hover:border-gray-700 transition-colors">
                   <div className="px-5 py-4 flex items-start gap-4">
@@ -378,6 +380,18 @@ export default function InquiriesPage() {
 
                   {expanded === inq.id && (
                     <div className="px-5 pb-5 border-t border-gray-800 pt-4 space-y-4">
+                      {showWizard && (
+                        <div className="flex items-center justify-between bg-blue-500/10 border border-blue-500/20 rounded-lg px-4 py-3">
+                          <div>
+                            <div className="text-xs font-semibold text-blue-300">Build course from this inquiry</div>
+                            <div className="text-[10px] text-blue-400/60 mt-0.5">Opens the wizard pre-filled with this inquiry's data</div>
+                          </div>
+                          <button onClick={() => router.push(wizardUrl)}
+                            className="flex items-center gap-1.5 text-xs font-bold text-blue-300 hover:text-white bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 px-3 py-1.5 rounded-lg transition-colors shrink-0">
+                            Open Wizard <ArrowUpRight className="w-3.5 h-3.5"/>
+                          </button>
+                        </div>
+                      )}
                       <div className="grid grid-cols-2 gap-2.5 text-sm">
                         {([
                           ['Phone', inq.phone],

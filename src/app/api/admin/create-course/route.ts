@@ -5,26 +5,41 @@ import bcrypt from 'bcryptjs';
 import { sendOperatorWelcomeEmail } from '@/lib/email';
 import { resolveAdminSession } from '@/lib/admin-session';
 
+export async function GET(req: NextRequest) {
+  if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const slug = new URL(req.url).searchParams.get('slug') || '';
+  if (!slug) return NextResponse.json({ available: false });
+  const exists = await prisma.course.findUnique({ where: { slug }, select: { id: true } });
+  return NextResponse.json({ available: !exists });
+}
+
 export async function POST(req: NextRequest) {
   if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await req.json();
-    const { courseName, courseType, address, city, state, zipCode, phone, website, contactName, contactEmail: rawContactEmail, contactPhone, holes, par, description, hasMemberPricing, hasResidentPricing } = body;
+    const {
+      courseName, courseType, address, city, state, zipCode, phone, website,
+      contactName, contactEmail: rawContactEmail, contactPhone,
+      holes, par, description, hasMemberPricing, hasResidentPricing,
+      slug: requestedSlug, inquiryId,
+    } = body;
 
     if (!courseName || !contactName || !rawContactEmail || !contactPhone) {
       return NextResponse.json({ error: 'Course name, contact name, contact email, and contact phone are required' }, { status: 400 });
     }
     const contactEmail = String(rawContactEmail).trim().toLowerCase();
 
-    // Check for existing operator
     const existing = await prisma.courseOperator.findUnique({ where: { email: contactEmail } });
     if (existing) return NextResponse.json({ error: 'An operator with this email already exists' }, { status: 409 });
 
-    // Generate slug — make unique if needed
-    const baseSlug = courseName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    // Use requested slug if provided and valid, otherwise auto-generate
+    const baseSlug = requestedSlug
+      ? String(requestedSlug).toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/^-|-$/g, '') ||
+        courseName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+      : courseName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     let slug = baseSlug;
-    const slugExists = await prisma.course.findUnique({ where: { slug } });
+    const slugExists = await prisma.course.findUnique({ where: { slug }, select: { id: true } });
     if (slugExists) slug = `${baseSlug}-${randomBytes(3).toString('hex')}`;
 
     const tempPassword = randomBytes(8).toString('hex');
@@ -37,9 +52,9 @@ export async function POST(req: NextRequest) {
         password: hashed,
         name: contactName,
         phone: contactPhone,
-        emailVerified: true, // admin created = pre-verified
+        emailVerified: true,
         verificationToken,
-        onboardingStep: 1,   // skip verify step, go straight to setup
+        onboardingStep: 1,
         course: {
           create: {
             slug,
@@ -60,30 +75,31 @@ export async function POST(req: NextRequest) {
           },
         },
       },
+      include: { course: { select: { id: true } } },
     });
 
+    const courseId = operator.course?.id ?? null;
     const setupLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/verify?token=${verificationToken}`;
 
-    // Send welcome email
-    try {
-      await sendOperatorWelcomeEmail({
-        operatorName: contactName,
-        operatorEmail: contactEmail,
-        courseName,
-        tempPassword,
-        setupLink,
-      });
-    } catch (emailErr) {
-      console.error('Welcome email failed:', emailErr);
+    // If this was created from an inquiry, mark it
+    if (inquiryId && courseId) {
+      await prisma.courseInquiry.update({
+        where: { id: String(inquiryId) },
+        data: { builtCourseId: courseId, status: 'building' },
+      }).catch(() => {});
     }
 
-    return NextResponse.json({
-      success: true,
-      slug,
-      tempPassword,
-      setupLink,
-      operatorId: operator.id,
-    });
+    let emailSent = true;
+    let emailError = '';
+    try {
+      await sendOperatorWelcomeEmail({ operatorName: contactName, operatorEmail: contactEmail, courseName, tempPassword, setupLink });
+    } catch (e) {
+      emailSent = false;
+      emailError = e instanceof Error ? e.message : String(e);
+      console.error('Welcome email failed:', e);
+    }
+
+    return NextResponse.json({ success: true, slug, tempPassword, setupLink, courseId, operatorId: operator.id, emailSent, emailError });
 
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
