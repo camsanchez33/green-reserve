@@ -1,9 +1,9 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Layers, BarChart2, AlertCircle, Building2, Plus, Users, Radio, Activity, MessageSquare } from 'lucide-react';
+import { Layers, BarChart2, AlertCircle, Building2, Plus, Users, Radio, Activity, MessageSquare, UserCircle } from 'lucide-react';
 
-export type AdminNavKey = 'overview' | 'inquiries' | 'courses' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages';
+export type AdminNavKey = 'overview' | 'inquiries' | 'courses' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages' | 'profile';
 
 export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessages = 0 }: {
   active: AdminNavKey;
@@ -38,6 +38,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     { key: 'employees',  label: 'Employees',  href: '/admin/employees',  icon: <Users className="w-4 h-4"/> },
     { key: 'broadcasts', label: 'Broadcasts', href: '/admin/broadcasts', icon: <Radio className="w-4 h-4"/> },
     { key: 'activity',   label: 'Activity',   href: '/admin/activity',   icon: <Activity className="w-4 h-4"/> },
+    { key: 'profile',    label: 'My profile', href: '/admin/profile',    icon: <UserCircle className="w-4 h-4"/> },
   ];
 
   return (

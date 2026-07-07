@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS, OWNER_ONLY } from '@/lib/admin-session';
 
 export async function POST(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { courseId, action, confirmName } = await req.json();
   if (!courseId || !action) return NextResponse.json({ error: 'Missing courseId or action' }, { status: 400 });
@@ -64,6 +65,7 @@ export async function POST(req: NextRequest) {
 
   // ── Hard delete (only for already-archived courses) ─────────────────
   if (action === 'hard_delete') {
+    if (!requireRole(session, OWNER_ONLY)) return NextResponse.json({ error: 'Forbidden — owner only' }, { status: 403 });
     if (!course.archivedAt) {
       return NextResponse.json({ error: 'Course must be archived before permanent deletion' }, { status: 400 });
     }

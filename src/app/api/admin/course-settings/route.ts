@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
 
 // GET /api/admin/course-settings?courseId=X — full course record for the admin editor
 export async function GET(req: NextRequest) {
@@ -13,7 +13,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const session = await resolveAdminSession();
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const body = await req.json();
   const { courseId, ...rest } = body;
   if (!courseId) return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });

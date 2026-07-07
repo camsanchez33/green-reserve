@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
 import { sendMessageNotificationEmail } from '@/lib/email';
 
 const ADMIN_EMAIL = 'hello@greenreserve.app';
@@ -75,6 +75,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { courseId, body } = await req.json();
   if (!courseId || !body?.trim()) return NextResponse.json({ error: 'Missing courseId or body' }, { status: 400 });
@@ -142,6 +143,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { courseId } = await req.json();
   if (!courseId) return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });

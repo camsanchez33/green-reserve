@@ -434,6 +434,27 @@ export async function sendTwoFactorCodeEmail(data: {
   });
 }
 
+export async function sendAdminTwoFactorCode(data: { email: string; name: string; code: string }) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:900;">Admin verification code</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      Hi ${data.name} — enter this code to complete your secure admin login.
+    </p>
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:24px;margin-bottom:20px;text-align:center;">
+      <p style="margin:0;color:#111827;font-size:36px;font-weight:900;font-family:monospace;letter-spacing:0.25em;">${data.code}</p>
+    </div>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      Expires in 10 minutes. Not you? Reply to this email immediately — <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.email,
+    subject: `GreenReserve admin code: ${data.code}`,
+    html,
+  });
+}
+
 // Fired after ANY successful password change (in-dashboard change-password,
 // or the emailed reset-link flow) — pure notification, doesn't gate anything.
 // Lets the real owner know if a change wasn't them.

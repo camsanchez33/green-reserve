@@ -67,8 +67,12 @@ export async function PATCH(req: NextRequest) {
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
   if (id === session.adminId) return NextResponse.json({ error: 'Cannot modify your own account here' }, { status: 400 });
 
-  // Owner resets someone else's password
+  // Owner resets someone else's password — cannot reset another owner's password
   if (action === 'reset_password') {
+    const target = await prisma.adminUser.findUnique({ where: { id }, select: { role: true } });
+    if (target?.role === 'owner') {
+      return NextResponse.json({ error: 'Owner passwords cannot be reset by other owners. The owner must change their own password via the Change password form or use Forgot password.' }, { status: 403 });
+    }
     const tempPassword = genTempPassword();
     const passwordHash = await bcrypt.hash(tempPassword, 12);
     await prisma.adminUser.update({

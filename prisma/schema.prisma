@@ -406,6 +406,8 @@ model AdminUser {
   createdAt              DateTime  @default(now())
   setPasswordToken       String?   @unique
   setPasswordTokenExpiry DateTime?
+  twoFactorCode          String?
+  twoFactorCodeExpiry    DateTime?
 }
 
 model Announcement {

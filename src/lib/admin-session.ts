@@ -16,6 +16,14 @@ export interface AdminSession {
   role: string;
 }
 
+export const OWNER_ONLY   = ['owner'];
+export const MANAGER_PLUS = ['owner', 'manager'];
+export const SUPPORT_PLUS = ['owner', 'manager', 'support'];
+
+export function requireRole(session: AdminSession, roles: string[]): boolean {
+  return roles.includes(session.role);
+}
+
 export async function signAdminToken(payload: AdminSession) {
   return new SignJWT({ ...payload, type: 'admin_session' })
     .setProtectedHeader({ alg: 'HS256' })
