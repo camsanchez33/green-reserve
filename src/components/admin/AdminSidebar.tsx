@@ -22,7 +22,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0 }: {
     { key: 'create',     label: 'Add Course', href: '/admin/create',     icon: <Plus className="w-4 h-4"/> },
     { key: 'employees',  label: 'Employees',  href: '/admin/employees',  icon: <Users className="w-4 h-4"/> },
     { key: 'broadcasts', label: 'Broadcasts', href: '/admin/broadcasts', icon: <Radio className="w-4 h-4"/> },
-    { key: 'activity',   label: 'Activity',   href: '/admin/activity',   icon: <Activity className="w-4 h-4"/>, soon: true },
+    { key: 'activity',   label: 'Activity',   href: '/admin/activity',   icon: <Activity className="w-4 h-4"/> },
   ];
 
   return (
