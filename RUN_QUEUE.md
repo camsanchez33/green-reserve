@@ -25,7 +25,7 @@ and verified on the live site. After every run: `git status` — if dirty, `git 
 - [x] DESIGN_SYSTEM_SPEC Phase D1 — Clubhouse tokens, shared UI components, admin sweep, CLAUDE.md design section rewrite — 99cbc9a
 - [x] ADMIN_V2 Phase 1 — full course detail page at /admin/courses/[id] (build in Clubhouse style)
 - [x] ADMIN_V2 Phase 2 — inquiries kanban board (build in Clubhouse style) — ad20254
-- [ ] ADMIN_V2 Phase 2b — pipeline automation: auto stage transitions, status timeline, needs-action ordering (schema change, run attended)
+- [x] ADMIN_V2 Phase 2b — pipeline automation: auto stage transitions, status timeline, needs-action ordering (schema change, run attended) — f4192cf
 - [ ] ADMIN_V2 Phase 3 — two-way admin↔course messages (schema change, run attended)
 - [ ] ADMIN_V2 Phase 4 — employee roles + temp-password provisioning (schema change, run attended)
 - [ ] ADMIN_V2 Phase 5 — type-aware add-course wizard
