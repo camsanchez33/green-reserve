@@ -26,15 +26,16 @@ export default function AdminSidebar({ active, pendingInquiries = 0 }: {
   ];
 
   return (
-    <div className="fixed left-0 top-0 h-full w-56 bg-gray-900 border-r border-gray-800 flex flex-col z-10">
-      <div className="px-5 py-5 border-b border-gray-800">
+    <div className="fixed left-0 top-0 h-full w-56 bg-pine flex flex-col z-10">
+      {/* Wordmark */}
+      <div className="px-5 py-5 border-b border-white/10">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-            <Layers className="w-4 h-4 text-emerald-400"/>
+          <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center">
+            <Layers className="w-4 h-4 text-paper"/>
           </div>
           <div>
-            <div className="font-black text-sm text-white leading-tight">GreenReserve</div>
-            <div className="text-[10px] text-gray-600 font-medium uppercase tracking-wider">Admin</div>
+            <div className="font-serif text-[15.5px] text-paper leading-tight">GreenReserve</div>
+            <div className="text-[10px] text-[#A9BFAF] font-medium uppercase tracking-wider">Admin</div>
           </div>
         </div>
       </div>
@@ -42,12 +43,12 @@ export default function AdminSidebar({ active, pendingInquiries = 0 }: {
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         {nav.map(item => {
           const isActive = active === item.key;
-          const cls = `w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors border ${
+          const cls = `w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-medium transition-colors text-left ${
             isActive
-              ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/20'
+              ? 'bg-white/10 text-paper'
               : item.soon
-                ? 'text-gray-700 border-transparent cursor-default'
-                : 'text-gray-500 hover:text-white hover:bg-gray-800 border-transparent'
+                ? 'text-[#A9BFAF]/40 cursor-default'
+                : 'text-[#A9BFAF] hover:text-paper hover:bg-white/10'
           }`;
           return (
             <button
@@ -59,12 +60,12 @@ export default function AdminSidebar({ active, pendingInquiries = 0 }: {
               {item.icon}
               <span className="flex-1 text-left">{item.label}</span>
               {item.key === 'inquiries' && pendingInquiries > 0 && (
-                <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none">
+                <span className="bg-warn text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium leading-none">
                   {pendingInquiries}
                 </span>
               )}
               {item.soon && (
-                <span className="text-[9px] font-bold uppercase tracking-wide text-gray-700 px-1.5 py-0.5 bg-gray-800 rounded-full">
+                <span className="text-[9px] font-medium uppercase tracking-wide text-[#A9BFAF]/50">
                   Soon
                 </span>
               )}
@@ -73,11 +74,10 @@ export default function AdminSidebar({ active, pendingInquiries = 0 }: {
         })}
       </nav>
 
-      <div className="p-3 border-t border-gray-800">
-        <div className="text-[10px] text-gray-700 uppercase tracking-wider px-3 mb-1">Admin</div>
+      <div className="p-3 border-t border-white/10">
         <button
           onClick={signOut}
-          className="w-full text-left text-xs text-gray-500 hover:text-gray-300 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+          className="w-full text-left text-[13px] text-[#A9BFAF] hover:text-paper px-3 py-2 hover:bg-white/10 transition-colors"
         >
           Sign out
         </button>

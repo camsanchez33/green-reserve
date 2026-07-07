@@ -6,6 +6,9 @@ import { isBookingMode } from '@/lib/booking-mode';
 export default function Footer() {
   const pathname = usePathname();
 
+  // Admin and dashboard pages render their own full-screen layouts with no public footer.
+  if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard')) return null;
+
   // Booking mode: trimmed footer — legal links and support only, no
   // operator marketing links.
   if (isBookingMode(pathname)) {

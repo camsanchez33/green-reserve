@@ -1,17 +1,40 @@
 @import "tailwindcss";
 
+@theme {
+  /* Clubhouse palette */
+  --color-paper:       #F6F4EC;
+  --color-card:        #FFFFFF;
+  --color-ink:         #1C1C18;
+  --color-ink-soft:    #6E6D64;
+  --color-ink-muted:   #87867C;
+  --color-ink-faint:   #98968B;
+  --color-line:        #E6E3D7;
+  --color-line-soft:   #F0EDE2;
+  --color-line-strong: #D9D6C8;
+  --color-pine:        #24513B;
+  --color-pine-hover:  #2E6349;
+  --color-ok:          #3D6B4C;
+  --color-bad:         #A3452F;
+  --color-warn:        #8A6116;
+  --color-dot-neutral: #B3B1A6;
+
+  /* Fonts */
+  --font-sans:  'Inter', system-ui, sans-serif;
+  --font-serif: 'Fraunces', Georgia, serif;
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 
 :root {
-  --green: #1b4332;
-  --green-light: #2d6a4f;
+  --green: #24513B;
+  --green-light: #2E6349;
   --gold: #c9a84c;
   --gold-hover: #b8942a;
 }
 
 body {
-  background: #ffffff;
-  color: #111827;
+  background: #F6F4EC;
+  color: #1C1C18;
 }
 
 /* Scroll reveal */

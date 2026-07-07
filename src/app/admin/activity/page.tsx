@@ -1,245 +1,165 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, XCircle, Users, DollarSign, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { RefreshCw, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import { StatusDot } from '@/components/ui/StatusDot';
 
-interface ActivityItem {
-  type: 'booking' | 'cancellation' | 'membership' | 'membership_payment';
-  id: string;
-  timestamp: string;
-  courseName: string;
-  golferName?: string;
-  golferEmail?: string;
-  players?: number;
-  totalAmount?: number;
-  cancellationFeeTotal?: number;
-  teeDate?: string;
-  teeTime?: string;
-  memberName?: string;
-  memberEmail?: string;
-  tierName?: string | null;
-  amount?: number;
+interface Course { id: string; name: string; }
+interface EventRow {
+  id: string; type: 'booking' | 'cancellation' | 'membership' | 'membership_payment';
+  courseName: string; courseId: string;
+  golferName?: string; golferEmail?: string;
+  description: string; amount?: number; timestamp: string;
 }
 
-const todayStr = () => new Date().toISOString().split('T')[0];
-const thirtyAgoStr = () => new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+const fmtDate = (d: string) => new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+const fmtMoney = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
-function fmtMoney(n: number) { return '$' + n.toFixed(2); }
-
-function fmtTs(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' · ' +
-    d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-}
-
-function fmtTeeSlot(date: string, time: string) {
-  const label = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  const [h, m] = time.split(':').map(Number);
-  const ap = h >= 12 ? 'PM' : 'AM';
-  return `${label} ${h % 12 || 12}:${m.toString().padStart(2, '0')} ${ap}`;
-}
-
-const TYPE_META = {
-  booking:            { label: 'Booking', icon: Calendar,   chip: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
-  cancellation:       { label: 'Cancel',  icon: XCircle,    chip: 'bg-red-500/15 text-red-400 border-red-500/30' },
-  membership:         { label: 'Member',  icon: Users,      chip: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
-  membership_payment: { label: 'Dues',    icon: DollarSign, chip: 'bg-violet-500/15 text-violet-400 border-violet-500/30' },
+const TYPE_DOT: Record<EventRow['type'], string> = {
+  booking: 'ok',
+  cancellation: 'bad',
+  membership: 'neutral',
+  membership_payment: 'warn',
 };
-
-function EventRow({ item }: { item: ActivityItem }) {
-  const meta = TYPE_META[item.type];
-  const Icon = meta.icon;
-
-  const isBookingLike = item.type === 'booking' || item.type === 'cancellation';
-  const who = isBookingLike ? (item.golferName || '—') : (item.memberName || '—');
-  const email = isBookingLike ? item.golferEmail : item.memberEmail;
-
-  const detailParts: string[] = [];
-  if (isBookingLike) {
-    if (item.players) detailParts.push(`${item.players}p`);
-    if (item.teeDate && item.teeTime) detailParts.push(fmtTeeSlot(item.teeDate, item.teeTime));
-  }
-  if (!isBookingLike && item.tierName) detailParts.push(item.tierName);
-
-  const amountNode = (() => {
-    if (item.type === 'booking' && item.totalAmount != null && item.totalAmount > 0) {
-      return <span className="text-sm font-bold text-emerald-400 whitespace-nowrap">{fmtMoney(item.totalAmount)}</span>;
-    }
-    if (item.type === 'cancellation' && item.cancellationFeeTotal != null && item.cancellationFeeTotal > 0) {
-      return <span className="text-sm font-bold text-red-400 whitespace-nowrap">{fmtMoney(item.cancellationFeeTotal)} fee</span>;
-    }
-    if (item.type === 'membership_payment' && item.amount != null && item.amount > 0) {
-      return <span className="text-sm font-bold text-violet-400 whitespace-nowrap">{fmtMoney(item.amount)}/yr</span>;
-    }
-    return null;
-  })();
-
-  return (
-    <div className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-800/30 transition-colors min-w-0">
-      <span className={'flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap shrink-0 ' + meta.chip}>
-        <Icon className="w-3 h-3"/>{meta.label}
-      </span>
-      <div className="text-xs text-gray-500 w-36 shrink-0 truncate hidden lg:block">{item.courseName}</div>
-      <div className="flex-1 min-w-0 overflow-hidden">
-        <span className="text-sm text-white font-medium">{who}</span>
-        {email && <span className="text-xs text-gray-600 ml-2 hidden sm:inline truncate">{email}</span>}
-        {detailParts.length > 0 && (
-          <span className="text-xs text-gray-500 ml-2 hidden md:inline">{detailParts.join(' · ')}</span>
-        )}
-      </div>
-      <div className="flex items-center gap-4 shrink-0">
-        {amountNode}
-        <span className="text-xs text-gray-600 whitespace-nowrap hidden sm:block w-28 text-right">{fmtTs(item.timestamp)}</span>
-      </div>
-    </div>
-  );
-}
+const TYPE_LABEL: Record<EventRow['type'], string> = {
+  booking: 'Booking',
+  cancellation: 'Cancellation',
+  membership: 'Membership',
+  membership_payment: 'Payment',
+};
 
 export default function ActivityPage() {
   const router = useRouter();
-  const [adminReady, setAdminReady] = useState(false);
+  const [events, setEvents] = useState<EventRow[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
-  const [courses, setCourses] = useState<{ id: string; name: string }[]>([]);
-  const [items, setItems] = useState<ActivityItem[]>([]);
-  const [total, setTotal] = useState(0);
-  const [pages, setPages] = useState(1);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
   const [courseId, setCourseId] = useState('');
-  const [from, setFrom] = useState(thirtyAgoStr());
-  const [to, setTo] = useState(todayStr());
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const initRef = useRef(false);
 
-  async function doLoad(p: number, cId: string, f: string, t: string) {
+  const doLoad = useCallback(async (p: number, cId: string, f: string, t: string) => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(p) });
-    if (cId) params.set('courseId', cId);
-    if (f) params.set('from', f);
-    if (t) params.set('to', t);
     try {
-      const [sRes, dRes] = await Promise.all([
-        fetch('/api/admin/session'),
-        fetch('/api/admin/activity?' + params.toString()),
-      ]);
+      const sRes = await fetch('/api/admin/session');
       if (!sRes.ok) { router.push('/admin/login'); return; }
-      const data = await dRes.json();
-      setItems(data.items ?? []);
-      setTotal(data.total ?? 0);
-      setPages(data.pages ?? 1);
-      setCurrentPage(p);
-      if (Array.isArray(data.courses) && data.courses.length > 0) setCourses(data.courses);
-      setAdminReady(true);
-    } catch { router.push('/admin/login'); }
+      const params = new URLSearchParams({ page: String(p), limit: '50' });
+      if (cId) params.set('courseId', cId);
+      if (f) params.set('from', f);
+      if (t) params.set('to', t);
+      const [aRes, cRes] = await Promise.all([
+        fetch(`/api/admin/activity?${params}`),
+        fetch('/api/admin/courses?simple=1'),
+      ]);
+      const [aData, cData] = await Promise.all([aRes.json(), cRes.json()]);
+      setEvents(Array.isArray(aData.events) ? aData.events : []);
+      setHasMore(aData.hasMore ?? false);
+      setCourses(Array.isArray(cData) ? cData : (Array.isArray(cData.courses) ? cData.courses : []));
+    } catch { /* stay on page */ }
     finally { setLoading(false); }
-  }
+  }, [router]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { doLoad(1, '', thirtyAgoStr(), todayStr()); }, []);
+  useEffect(() => {
+    if (!initRef.current) { initRef.current = true; doLoad(1, '', '', ''); }
+  }, [doLoad]);
 
-  function apply() { doLoad(1, courseId, from, to); }
+  function handleLoad() { doLoad(page, courseId, from, to); }
+  function handlePrev() { const p = Math.max(1, page - 1); setPage(p); doLoad(p, courseId, from, to); }
+  function handleNext() { const p = page + 1; setPage(p); doLoad(p, courseId, from, to); }
 
-  function onCourseChange(id: string) {
-    setCourseId(id);
-    doLoad(1, id, from, to);
-  }
-
-  function goPage(p: number) { doLoad(p, courseId, from, to); }
-
-  if (!adminReady) return null;
-
-  const iCls = 'bg-gray-800 border border-gray-700 text-white text-sm rounded-lg px-3 py-2 outline-none focus:border-gray-600 transition-colors';
+  const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-ink text-sm placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex">
+    <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="activity" />
       <div className="ml-56 flex-1 min-h-screen">
         <div className="px-8 py-7">
-
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-black text-white">Activity</h1>
-              <div className="text-sm text-gray-500 mt-0.5">Cross-course event feed</div>
+              <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Activity</h1>
+              <p className="text-sm text-ink-soft mt-0.5">Cross-course event feed</p>
             </div>
-            <button onClick={() => doLoad(currentPage, courseId, from, to)} className="flex items-center gap-2 text-sm text-gray-500 hover:text-white px-3 py-2 rounded-lg hover:bg-gray-800 border border-transparent hover:border-gray-700 transition-colors">
+            <button onClick={() => doLoad(page, courseId, from, to)} className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors">
               <RefreshCw className="w-4 h-4"/>Refresh
             </button>
           </div>
 
-          {/* Filter bar */}
-          <div className="flex items-center gap-3 mb-5 flex-wrap">
-            <select value={courseId} onChange={e => onCourseChange(e.target.value)} className={iCls + ' cursor-pointer'}>
-              <option value="">All courses</option>
-              {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-            <div className="flex items-center gap-2">
-              <input type="date" value={from} onChange={e => setFrom(e.target.value)} className={iCls}/>
-              <span className="text-gray-600 text-sm">to</span>
-              <input type="date" value={to} onChange={e => setTo(e.target.value)} className={iCls}/>
+          {/* Filters */}
+          <div className="bg-white border border-line rounded-lg p-4 mb-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Filter className="w-4 h-4 text-pine"/>
+              <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Filters</span>
             </div>
-            <button onClick={apply} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-lg transition-colors">
-              Load
-            </button>
-            {!loading && (
-              <span className="text-xs text-gray-600 ml-auto">
-                {total} event{total !== 1 ? 's' : ''}{pages > 1 ? ` · page ${currentPage} of ${pages}` : ''}
-              </span>
-            )}
+            <div className="flex flex-wrap gap-3">
+              <select value={courseId} onChange={e => setCourseId(e.target.value)} className={iCls + ' flex-1 min-w-44 cursor-pointer'}>
+                <option value="">All courses</option>
+                {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+              <input type="date" value={from} onChange={e => setFrom(e.target.value)} className={iCls + ' flex-1 min-w-36'}/>
+              <input type="date" value={to} onChange={e => setTo(e.target.value)} className={iCls + ' flex-1 min-w-36'}/>
+              <button onClick={handleLoad} className="bg-pine hover:bg-pine-hover text-white text-[12.5px] font-medium px-4 py-2 rounded-md transition-colors">
+                Load
+              </button>
+            </div>
           </div>
 
-          {/* Legend */}
-          <div className="flex items-center gap-3 mb-4 flex-wrap">
-            {(Object.entries(TYPE_META) as [string, typeof TYPE_META['booking']][]).map(([, m]) => {
-              const I = m.icon;
-              return (
-                <span key={m.label} className={'flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ' + m.chip}>
-                  <I className="w-3 h-3"/>{m.label}
-                </span>
-              );
-            })}
-          </div>
-
-          {/* Event list */}
-          <div className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
-            <div className="flex items-center gap-4 px-5 py-2.5 border-b border-gray-800 bg-gray-900">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 w-20 shrink-0">Type</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 w-36 shrink-0 hidden lg:block">Course</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 flex-1">Who · Detail</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 text-right">Amount · When</span>
-            </div>
-
-            {loading && <div className="py-16 text-center text-sm text-gray-600">Loading...</div>}
-
-            {!loading && items.length === 0 && (
-              <div className="py-16 text-center text-sm text-gray-600">No activity in this date range</div>
-            )}
-
-            {!loading && items.length > 0 && (
-              <div className="divide-y divide-gray-800/50">
-                {items.map(item => <EventRow key={item.id + item.type} item={item}/>)}
+          {/* Events */}
+          <div className="bg-white border border-line rounded-lg overflow-hidden">
+            {loading ? (
+              <div className="py-12 text-center text-ink-muted text-sm">Loading...</div>
+            ) : events.length === 0 ? (
+              <div className="py-12 text-center text-ink-muted text-sm">No events found</div>
+            ) : (
+              <div className="divide-y divide-line-soft">
+                {events.map(ev => (
+                  <div key={ev.id} className="px-5 py-3.5 flex items-start gap-4 hover:bg-paper/60 transition-colors">
+                    <div className="pt-0.5">
+                      <StatusDot status={TYPE_DOT[ev.type]} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                        <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{TYPE_LABEL[ev.type]}</span>
+                        <span className="text-[11px] text-ink-faint">·</span>
+                        <span className="text-[11px] text-ink-muted">{ev.courseName}</span>
+                      </div>
+                      <div className="text-sm text-ink">{ev.description}</div>
+                      {ev.golferName && (
+                        <div className="text-xs text-ink-soft mt-0.5">{ev.golferName} · {ev.golferEmail}</div>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      {ev.amount !== undefined && ev.amount !== null && (
+                        <div className={`text-sm font-medium tabular-nums mb-0.5 ${ev.type === 'cancellation' ? 'text-bad' : ev.type === 'membership_payment' ? 'text-warn' : 'text-ok'}`}>
+                          {ev.type === 'cancellation' ? '-' : ''}{fmtMoney(ev.amount)}
+                        </div>
+                      )}
+                      <div className="text-xs text-ink-muted tabular-nums">{fmtDate(ev.timestamp)}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
 
           {/* Pagination */}
-          {pages > 1 && (
-            <div className="flex items-center justify-center gap-3 mt-5">
-              <button
-                onClick={() => goPage(currentPage - 1)}
-                disabled={currentPage <= 1 || loading}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 hover:border-gray-600 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4"/>Prev
-              </button>
-              <span className="text-sm text-gray-500">Page {currentPage} of {pages}</span>
-              <button
-                onClick={() => goPage(currentPage + 1)}
-                disabled={currentPage >= pages || loading}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 hover:border-gray-600 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                Next<ChevronRight className="w-4 h-4"/>
-              </button>
+          {!loading && events.length > 0 && (
+            <div className="flex items-center justify-between mt-4">
+              <span className="text-sm text-ink-muted">Page {page}</span>
+              <div className="flex items-center gap-2">
+                <button onClick={handlePrev} disabled={page <= 1}
+                  className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink disabled:opacity-30 px-3 py-1.5 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors">
+                  <ChevronLeft className="w-4 h-4"/>Prev
+                </button>
+                <button onClick={handleNext} disabled={!hasMore}
+                  className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink disabled:opacity-30 px-3 py-1.5 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors">
+                  Next<ChevronRight className="w-4 h-4"/>
+                </button>
+              </div>
             </div>
           )}
-
         </div>
       </div>
     </div>

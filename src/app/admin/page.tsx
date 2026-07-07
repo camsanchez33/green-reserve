@@ -30,22 +30,21 @@ const fmtMoney = (n: number) => '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))
 const fmtDateShort = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-function Trend({ current, prev, prefix = '', suffix = '' }: { current: number; prev: number; prefix?: string; suffix?: string }) {
+function Trend({ current, prev }: { current: number; prev: number }) {
   if (prev === 0 && current === 0) return null;
   const delta = prev === 0 ? 100 : ((current - prev) / prev) * 100;
   const up = delta >= 0;
-  const cls = up ? 'text-emerald-400' : 'text-red-400';
+  const cls = up ? 'text-ok' : 'text-bad';
   const Icon = up ? ArrowUpRight : ArrowDownRight;
   return (
-    <span className={`flex items-center gap-0.5 text-xs font-semibold ${cls}`}>
-      <Icon className="w-3 h-3"/>
-      {prefix}{Math.abs(delta).toFixed(0)}{suffix}% vs prior 30d
+    <span className={`flex items-center gap-0.5 text-[11px] font-medium ${cls}`}>
+      <Icon className="w-3 h-3"/>{Math.abs(delta).toFixed(0)}% vs prior 30d
     </span>
   );
 }
 
 function RevenueChart({ data }: { data: { date: string; platform: number; gross: number }[] }) {
-  if (!data.length) return <div className="text-center text-gray-600 py-12 text-sm">No bookings yet</div>;
+  if (!data.length) return <div className="text-center text-ink-muted py-12 text-sm">No bookings yet</div>;
   const max = Math.max(...data.map(d => d.gross), 0.01);
   const platformMax = Math.max(...data.map(d => d.platform), 0.01);
   const totalGross = data.reduce((s, d) => s + d.gross, 0);
@@ -55,27 +54,27 @@ function RevenueChart({ data }: { data: { date: string; platform: number; gross:
     <div>
       <div className="flex items-center gap-6 mb-4">
         <div>
-          <div className="text-xs text-gray-500 uppercase tracking-wide">Total Gross</div>
-          <div className="text-xl font-black text-white">{fmtMoney(totalGross)}</div>
+          <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Total Gross</div>
+          <div className="text-xl font-serif font-medium text-ink">{fmtMoney(totalGross)}</div>
         </div>
         <div>
-          <div className="text-xs text-gray-500 uppercase tracking-wide">GR Fees Earned</div>
-          <div className="text-xl font-black text-emerald-400">{fmtMoney(totalPlatform)}</div>
+          <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">GR Fees Earned</div>
+          <div className="text-xl font-serif font-medium text-ok">{fmtMoney(totalPlatform)}</div>
         </div>
-        <div className="ml-auto flex items-center gap-4 text-xs text-gray-500">
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-gray-600 inline-block"/>Gross</span>
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-500 inline-block"/>GR Fees</span>
+        <div className="ml-auto flex items-center gap-4 text-[11px] text-ink-muted">
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-line-strong inline-block"/>Gross</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-ok inline-block"/>GR Fees</span>
         </div>
       </div>
       <div className="flex items-end gap-1 h-24">
         {data.map(d => (
           <div key={d.date} className="flex-1 flex items-end gap-px group relative" title={`${fmtDateShort(d.date)}\nGross: ${fmtMoney(d.gross)}\nFees: ${fmtMoney(d.platform)}`}>
-            <div className="flex-1 bg-gray-700/50 rounded-t-sm transition-all group-hover:bg-gray-600/70" style={{ height: `${Math.max(2, (d.gross / max) * 100)}%` }}/>
-            <div className="flex-1 bg-emerald-500/80 rounded-t-sm transition-all group-hover:bg-emerald-400" style={{ height: `${Math.max(2, (d.platform / platformMax) * 100)}%` }}/>
+            <div className="flex-1 bg-line rounded-t-sm transition-all group-hover:bg-line-strong" style={{ height: `${Math.max(2, (d.gross / max) * 100)}%` }}/>
+            <div className="flex-1 bg-ok/60 rounded-t-sm transition-all group-hover:bg-ok/80" style={{ height: `${Math.max(2, (d.platform / platformMax) * 100)}%` }}/>
           </div>
         ))}
       </div>
-      <div className="flex justify-between mt-2 text-[10px] text-gray-600">
+      <div className="flex justify-between mt-2 text-[10px] text-ink-muted">
         <span>{data.length > 0 ? fmtDateShort(data[0].date) : ''}</span>
         <span>{data.length > 0 ? fmtDateShort(data[Math.floor(data.length / 2)].date) : ''}</span>
         <span>{data.length > 0 ? fmtDateShort(data[data.length - 1].date) : ''}</span>
@@ -119,7 +118,7 @@ export default function AdminOverviewPage() {
       label: 'Live Courses',
       value: stats.activeCourses,
       sub: `${stats.totalCourses} total`,
-      icon: <Building2 className="w-4 h-4"/>,
+      icon: <Building2 className="w-4 h-4 text-ink-muted"/>,
       accent: false,
       href: '/admin/courses',
       trend: <Trend current={stats.newCourses30d} prev={stats.newCoursesPrev30d}/>,
@@ -128,7 +127,7 @@ export default function AdminOverviewPage() {
       label: 'Pending Inquiries',
       value: stats.pendingInquiries,
       sub: 'awaiting review',
-      icon: <AlertCircle className="w-4 h-4"/>,
+      icon: <AlertCircle className="w-4 h-4 text-ink-muted"/>,
       accent: false,
       href: '/admin/inquiries',
       trend: null,
@@ -137,7 +136,7 @@ export default function AdminOverviewPage() {
       label: 'Bookings (30d)',
       value: stats.recentBookings,
       sub: `${stats.totalBookings} all time`,
-      icon: <TrendingUp className="w-4 h-4"/>,
+      icon: <TrendingUp className="w-4 h-4 text-ink-muted"/>,
       accent: false,
       href: '/admin/activity',
       trend: <Trend current={stats.recentBookings} prev={stats.recentBookingsPrev30d}/>,
@@ -146,7 +145,7 @@ export default function AdminOverviewPage() {
       label: 'GR Revenue (30d)',
       value: fmtMoney(stats.platformRevenue30d),
       sub: '$1.50/player access fee',
-      icon: <DollarSign className="w-4 h-4"/>,
+      icon: <DollarSign className="w-4 h-4 text-ok"/>,
       accent: true,
       href: '/admin/activity',
       trend: <Trend current={stats.platformRevenue30d} prev={stats.platformRevenuePrev30d}/>,
@@ -154,24 +153,24 @@ export default function AdminOverviewPage() {
   ] : [];
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex">
+    <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="overview" pendingInquiries={stats?.pendingInquiries ?? 0} />
       <div className="ml-56 flex-1 min-h-screen">
         <div className="px-8 py-7 max-w-6xl">
           <div className="flex items-center justify-between mb-7">
             <div>
-              <h1 className="text-2xl font-black text-white">Platform Overview</h1>
-              <div className="text-sm text-gray-500 mt-0.5">Everything happening across GreenReserve</div>
+              <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Platform Overview</h1>
+              <p className="text-sm text-ink-soft mt-0.5">Everything happening across GreenReserve</p>
             </div>
-            <button onClick={loadStats} disabled={loading} className="flex items-center gap-2 text-sm text-gray-500 hover:text-white px-3 py-2 rounded-lg hover:bg-gray-800 border border-transparent hover:border-gray-700 transition-colors disabled:opacity-50">
+            <button onClick={loadStats} disabled={loading} className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors disabled:opacity-50">
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}/>Refresh
             </button>
           </div>
 
-          {!stats && loading && <div className="text-gray-600 text-center py-20 text-sm">Loading...</div>}
+          {!stats && loading && <div className="text-ink-muted text-center py-20 text-sm">Loading...</div>}
 
           {stats && <>
-            {/* Stat cards — all clickable */}
+            {/* Stat cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               {statCards.map(card => (
                 <div
@@ -179,91 +178,93 @@ export default function AdminOverviewPage() {
                   onClick={() => router.push(card.href)}
                   className={`rounded-lg border p-5 relative overflow-hidden cursor-pointer transition-all group ${
                     card.accent
-                      ? 'bg-gradient-to-br from-emerald-900/60 to-emerald-800/30 border-emerald-700/50 hover:border-emerald-600'
-                      : 'bg-gray-900 border-gray-800 hover:border-gray-700 hover:bg-gray-800/50'
+                      ? 'bg-pine/5 border-pine/20 hover:border-pine/40'
+                      : 'bg-white border-line hover:border-line-strong'
                   }`}
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <div className={`p-2 rounded-lg ${card.accent ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-400'}`}>{card.icon}</div>
+                    <div className={`p-2 rounded-md ${card.accent ? 'bg-pine/10' : 'bg-paper'}`}>{card.icon}</div>
                     {card.trend}
                   </div>
-                  <div className={`text-3xl font-black mb-0.5 ${card.accent ? 'text-emerald-300' : 'text-white'}`}>{card.value}</div>
-                  <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{card.label}</div>
-                  {card.sub && <div className="text-xs text-gray-600 mt-0.5">{card.sub}</div>}
-                  <ChevronRight className={`absolute bottom-4 right-4 w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity ${card.accent ? 'text-emerald-500' : 'text-gray-600'}`}/>
+                  <div className={`text-[26px] font-serif font-medium mb-0.5 ${card.accent ? 'text-pine' : 'text-ink'}`}>{card.value}</div>
+                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{card.label}</div>
+                  {card.sub && <div className="text-xs text-ink-faint mt-0.5">{card.sub}</div>}
+                  <ChevronRight className="absolute bottom-4 right-4 w-3.5 h-3.5 text-ink-faint opacity-0 group-hover:opacity-100 transition-opacity"/>
                 </div>
               ))}
             </div>
 
             {/* Revenue chart */}
-            <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 mb-5">
+            <div className="bg-white border border-line rounded-lg p-6 mb-5">
               <div className="flex items-center gap-2 mb-4">
-                <BarChart2 className="w-4 h-4 text-gray-500"/>
-                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Revenue — Last 30 Days</div>
+                <BarChart2 className="w-4 h-4 text-ink-muted"/>
+                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Revenue — Last 30 Days</div>
               </div>
               <RevenueChart data={stats.revenueByDay}/>
             </div>
 
             <div className="grid grid-cols-5 gap-4 mb-5">
-              {/* Top courses — clickable to course drawer */}
-              <div className="col-span-2 bg-gray-900 border border-gray-800 rounded-lg p-5">
-                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Top Courses (30d)</div>
-                {stats.topCourses.length === 0 && <div className="text-xs text-gray-700 py-4">No bookings yet</div>}
-                <div className="space-y-1">
+              {/* Top courses */}
+              <div className="col-span-2 bg-white border border-line rounded-lg p-5">
+                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Top Courses (30d)</div>
+                {stats.topCourses.length === 0 && <div className="text-xs text-ink-faint py-4">No bookings yet</div>}
+                <div className="space-y-0.5">
                   {stats.topCourses.map((tc, idx) => (
                     <div
                       key={tc.id}
                       onClick={() => router.push(`/admin/courses?courseId=${tc.id}`)}
-                      className="flex items-center gap-3 -mx-2 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors group"
+                      className="flex items-center gap-3 -mx-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-paper transition-colors group"
                     >
-                      <div className="w-5 h-5 rounded-lg bg-gray-800 group-hover:bg-gray-700 flex items-center justify-center text-[10px] font-black text-gray-500 shrink-0 transition-colors">{idx + 1}</div>
+                      <div className="w-5 h-5 rounded bg-paper group-hover:bg-line flex items-center justify-center text-[10px] font-medium text-ink-muted shrink-0 transition-colors">{idx + 1}</div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-white truncate">{tc.name}</div>
-                        <div className="text-xs text-gray-600">{tc.bookings} bookings · {fmtMoney(tc.revenue)} fees</div>
+                        <div className="text-sm font-medium text-ink truncate">{tc.name}</div>
+                        <div className="text-xs text-ink-muted">{tc.bookings} bookings · {fmtMoney(tc.revenue)} fees</div>
                       </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-700 opacity-0 group-hover:opacity-100 shrink-0 transition-opacity"/>
+                      <ChevronRight className="w-3.5 h-3.5 text-ink-faint opacity-0 group-hover:opacity-100 shrink-0 transition-opacity"/>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Attention items */}
-              <div className="col-span-3 bg-gray-900 border border-gray-800 rounded-lg p-5">
+              <div className="col-span-3 bg-white border border-line rounded-lg p-5">
                 <div className="flex items-center gap-2 mb-3">
-                  <AlertCircle className="w-3.5 h-3.5 text-amber-500"/>
-                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Needs Attention {attentionCount > 0 && <span className="text-amber-400">({attentionCount})</span>}</div>
+                  <AlertCircle className="w-3.5 h-3.5 text-warn"/>
+                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">
+                    Needs Attention {attentionCount > 0 && <span className="text-warn">({attentionCount})</span>}
+                  </div>
                 </div>
-                {attentionCount === 0 && <div className="text-xs text-gray-700 py-4">All good — nothing stuck</div>}
+                {attentionCount === 0 && <div className="text-xs text-ink-faint py-4">All good — nothing stuck</div>}
                 <div className="space-y-1.5">
                   {stats.attentionItems.staleInquiries.map(i => (
                     <button key={i.id} onClick={() => router.push('/admin/inquiries')}
-                      className="w-full flex items-center gap-3 px-3 py-2 bg-amber-500/5 border border-amber-500/20 rounded-lg hover:bg-amber-500/10 transition-colors text-left">
+                      className="w-full flex items-center gap-3 px-3 py-2 bg-warn/5 border border-warn/20 rounded-md hover:bg-warn/10 transition-colors text-left">
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs font-semibold text-amber-300 truncate">{i.courseName}</div>
-                        <div className="text-[10px] text-amber-600">Stale inquiry · {i.status} · since {fmtDate(i.createdAt)}</div>
+                        <div className="text-xs font-medium text-warn truncate">{i.courseName}</div>
+                        <div className="text-[10px] text-ink-muted">Stale inquiry · {i.status} · since {fmtDate(i.createdAt)}</div>
                       </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-amber-600 shrink-0"/>
+                      <ChevronRight className="w-3.5 h-3.5 text-warn/60 shrink-0"/>
                     </button>
                   ))}
                   {stats.attentionItems.noStripe.map(c => (
                     <button key={c.id} onClick={() => router.push(`/admin/courses?courseId=${c.id}&tab=overview`)}
-                      className="w-full flex items-center gap-3 px-3 py-2 bg-purple-500/5 border border-purple-500/20 rounded-lg hover:bg-purple-500/10 transition-colors text-left">
+                      className="w-full flex items-center gap-3 px-3 py-2 bg-bad/5 border border-bad/20 rounded-md hover:bg-bad/10 transition-colors text-left">
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs font-semibold text-purple-300 truncate">{c.name}</div>
-                        <div className="text-[10px] text-purple-600">Live but no Stripe — can&apos;t take payments</div>
+                        <div className="text-xs font-medium text-bad truncate">{c.name}</div>
+                        <div className="text-[10px] text-ink-muted">Live but no Stripe — can&apos;t take payments</div>
                       </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-purple-600 shrink-0"/>
+                      <ChevronRight className="w-3.5 h-3.5 text-bad/60 shrink-0"/>
                     </button>
                   ))}
                   {stats.attentionItems.stuckOperators.map(o => (
                     <button key={o.id}
                       onClick={() => router.push(o.courseId ? `/admin/courses?courseId=${o.courseId}` : '/admin/courses')}
-                      className="w-full flex items-center gap-3 px-3 py-2 bg-gray-800/50 border border-gray-700/50 rounded-lg hover:bg-gray-800 hover:border-gray-700 transition-colors text-left">
+                      className="w-full flex items-center gap-3 px-3 py-2 bg-paper border border-line rounded-md hover:border-line-strong hover:bg-white transition-colors text-left">
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs font-semibold text-gray-300 truncate">{o.name}</div>
-                        <div className="text-[10px] text-gray-600">Onboarding stuck at step {o.onboardingStep}/3 · {o.email}</div>
+                        <div className="text-xs font-medium text-ink truncate">{o.name}</div>
+                        <div className="text-[10px] text-ink-muted">Onboarding stuck at step {o.onboardingStep}/3 · {o.email}</div>
                       </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-gray-600 shrink-0"/>
+                      <ChevronRight className="w-3.5 h-3.5 text-ink-faint shrink-0"/>
                     </button>
                   ))}
                 </div>
@@ -271,38 +272,38 @@ export default function AdminOverviewPage() {
             </div>
 
             {/* Quick actions */}
-            <div className="bg-gray-900 border border-gray-800 rounded-lg p-5 mb-5">
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Quick Actions</div>
+            <div className="bg-white border border-line rounded-lg p-5 mb-5">
+              <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Quick Actions</div>
               <div className="flex gap-3 flex-wrap">
                 {stats.pendingInquiries > 0 && (
                   <button onClick={() => router.push('/admin/inquiries')}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-yellow-500/10 border border-yellow-500/30 rounded-lg hover:bg-yellow-500/15 transition-colors group">
-                    <AlertCircle className="w-4 h-4 text-yellow-400"/>
-                    <span className="text-sm font-semibold text-yellow-300">{stats.pendingInquiries} pending inquir{stats.pendingInquiries === 1 ? 'y' : 'ies'}</span>
-                    <ChevronRight className="w-3.5 h-3.5 text-yellow-500 group-hover:translate-x-0.5 transition-transform"/>
+                    className="flex items-center gap-2 px-4 py-2.5 bg-warn/5 border border-warn/30 rounded-md hover:bg-warn/10 transition-colors group">
+                    <AlertCircle className="w-4 h-4 text-warn"/>
+                    <span className="text-[12.5px] font-medium text-warn">{stats.pendingInquiries} pending inquir{stats.pendingInquiries === 1 ? 'y' : 'ies'}</span>
+                    <ChevronRight className="w-3.5 h-3.5 text-warn/60 group-hover:translate-x-0.5 transition-transform"/>
                   </button>
                 )}
                 <button onClick={() => router.push('/admin/courses')}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-750 transition-colors group">
-                  <Building2 className="w-4 h-4 text-gray-400"/>
-                  <span className="text-sm font-medium text-gray-300">Manage courses</span>
-                  <ChevronRight className="w-3.5 h-3.5 text-gray-600 group-hover:translate-x-0.5 transition-transform"/>
+                  className="flex items-center gap-2 px-4 py-2.5 bg-paper border border-line rounded-md hover:border-line-strong hover:bg-white transition-colors group">
+                  <Building2 className="w-4 h-4 text-ink-muted"/>
+                  <span className="text-[12.5px] font-medium text-ink-soft">Manage courses</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-ink-faint group-hover:translate-x-0.5 transition-transform"/>
                 </button>
                 <button onClick={() => router.push('/admin/create')}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-750 transition-colors group">
-                  <Building2 className="w-4 h-4 text-gray-400"/>
-                  <span className="text-sm font-medium text-gray-300">Add course</span>
-                  <ChevronRight className="w-3.5 h-3.5 text-gray-600 group-hover:translate-x-0.5 transition-transform"/>
+                  className="flex items-center gap-2 px-4 py-2.5 bg-paper border border-line rounded-md hover:border-line-strong hover:bg-white transition-colors group">
+                  <Building2 className="w-4 h-4 text-ink-muted"/>
+                  <span className="text-[12.5px] font-medium text-ink-soft">Add course</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-ink-faint group-hover:translate-x-0.5 transition-transform"/>
                 </button>
               </div>
             </div>
 
-            {/* Recent activity — rows clickable to course drawer or inquiries */}
-            <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
+            {/* Recent activity */}
+            <div className="bg-white border border-line rounded-lg p-5">
               <div className="flex items-center gap-2 mb-3">
-                <Activity className="w-3.5 h-3.5 text-gray-500"/>
-                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Recent Activity</div>
-                <button onClick={() => router.push('/admin/activity')} className="ml-auto text-xs text-gray-600 hover:text-gray-400 transition-colors flex items-center gap-1">
+                <Activity className="w-3.5 h-3.5 text-ink-muted"/>
+                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Recent Activity</div>
+                <button onClick={() => router.push('/admin/activity')} className="ml-auto text-xs text-ink-muted hover:text-ink transition-colors flex items-center gap-1">
                   View all<ChevronRight className="w-3 h-3"/>
                 </button>
               </div>
@@ -311,35 +312,35 @@ export default function AdminOverviewPage() {
                   <div
                     key={b.id}
                     onClick={() => router.push(`/admin/courses?courseId=${b.courseId}`)}
-                    className="flex items-center gap-3 py-2 px-2 -mx-2 rounded-lg border-b border-gray-800/50 last:border-0 cursor-pointer hover:bg-gray-800/50 transition-colors group"
+                    className="flex items-center gap-3 py-2 px-2 -mx-2 rounded-md border-b border-line-soft last:border-0 cursor-pointer hover:bg-paper transition-colors group"
                   >
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"/>
+                    <div className="w-1.5 h-1.5 rounded-full bg-ok shrink-0"/>
                     <div className="flex-1 min-w-0">
-                      <span className="text-sm text-white font-medium">{b.golferName}</span>
-                      <span className="text-xs text-gray-500"> booked {b.courseName} · {b.players}p</span>
+                      <span className="text-sm text-ink font-medium">{b.golferName}</span>
+                      <span className="text-xs text-ink-soft"> booked {b.courseName} · {b.players}p</span>
                     </div>
-                    <div className="text-xs font-bold text-emerald-400 shrink-0">{fmtMoney(b.totalAmount / 100)}</div>
-                    <div className="text-[10px] text-gray-600 shrink-0 hidden sm:block">{fmtDate(b.createdAt)}</div>
-                    <ChevronRight className="w-3.5 h-3.5 text-gray-700 opacity-0 group-hover:opacity-100 shrink-0 transition-opacity"/>
+                    <div className="text-xs font-medium text-ok shrink-0">{fmtMoney(b.totalAmount / 100)}</div>
+                    <div className="text-[10px] text-ink-muted shrink-0 hidden sm:block">{fmtDate(b.createdAt)}</div>
+                    <ChevronRight className="w-3.5 h-3.5 text-ink-faint opacity-0 group-hover:opacity-100 shrink-0 transition-opacity"/>
                   </div>
                 ))}
                 {stats.recentActivity.inquiries.map(i => (
                   <div
                     key={i.id}
                     onClick={() => router.push('/admin/inquiries')}
-                    className="flex items-center gap-3 py-2 px-2 -mx-2 rounded-lg border-b border-gray-800/50 last:border-0 cursor-pointer hover:bg-gray-800/50 transition-colors group"
+                    className="flex items-center gap-3 py-2 px-2 -mx-2 rounded-md border-b border-line-soft last:border-0 cursor-pointer hover:bg-paper transition-colors group"
                   >
-                    <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 shrink-0"/>
+                    <div className="w-1.5 h-1.5 rounded-full bg-warn shrink-0"/>
                     <div className="flex-1 min-w-0">
-                      <span className="text-sm text-white font-medium">{i.courseName}</span>
-                      <span className="text-xs text-gray-500"> inquiry from {i.contactName} · {i.status}</span>
+                      <span className="text-sm text-ink font-medium">{i.courseName}</span>
+                      <span className="text-xs text-ink-soft"> inquiry from {i.contactName} · {i.status}</span>
                     </div>
-                    <div className="text-[10px] text-gray-600 shrink-0 hidden sm:block">{fmtDate(i.createdAt)}</div>
-                    <ChevronRight className="w-3.5 h-3.5 text-gray-700 opacity-0 group-hover:opacity-100 shrink-0 transition-opacity"/>
+                    <div className="text-[10px] text-ink-muted shrink-0 hidden sm:block">{fmtDate(i.createdAt)}</div>
+                    <ChevronRight className="w-3.5 h-3.5 text-ink-faint opacity-0 group-hover:opacity-100 shrink-0 transition-opacity"/>
                   </div>
                 ))}
                 {stats.recentActivity.bookings.length === 0 && stats.recentActivity.inquiries.length === 0 && (
-                  <div className="text-xs text-gray-700 py-4 text-center">No activity yet</div>
+                  <div className="text-xs text-ink-faint py-4 text-center">No activity yet</div>
                 )}
               </div>
             </div>

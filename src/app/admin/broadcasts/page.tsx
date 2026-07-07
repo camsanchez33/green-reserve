@@ -9,7 +9,7 @@ interface Broadcast {
   sentByName: string; createdAt: string; dismissalCount: number;
 }
 
-const iCls = 'w-full bg-gray-800/80 border border-gray-700 text-white rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 placeholder-gray-600 transition-colors';
+const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 
@@ -63,28 +63,28 @@ export default function BroadcastsPage() {
   if (!adminReady) return null;
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex">
+    <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="broadcasts" />
       <div className="ml-56 flex-1 min-h-screen">
         <div className="px-8 py-7 max-w-4xl">
           <div className="flex items-center justify-between mb-7">
             <div>
-              <h1 className="text-2xl font-black text-white">Broadcasts</h1>
-              <div className="text-sm text-gray-500 mt-0.5">Send a message to every course operator</div>
+              <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Broadcasts</h1>
+              <p className="text-sm text-ink-soft mt-0.5">Send a message to every course operator</p>
             </div>
-            <button onClick={load} className="flex items-center gap-2 text-sm text-gray-500 hover:text-white px-3 py-2 rounded-lg hover:bg-gray-800 border border-transparent hover:border-gray-700 transition-colors">
+            <button onClick={load} className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors">
               <RefreshCw className="w-4 h-4"/>Refresh
             </button>
           </div>
 
           {/* Compose */}
-          <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 mb-7">
+          <div className="bg-white border border-line rounded-lg p-6 mb-7">
             <div className="flex items-center gap-2 mb-4">
-              <Radio className="w-4 h-4 text-emerald-500"/>
-              <span className="text-sm font-bold text-white">New broadcast</span>
+              <Radio className="w-4 h-4 text-pine"/>
+              <span className="text-sm font-medium text-ink">New broadcast</span>
             </div>
             {sendResult && (
-              <div className={`rounded-lg px-4 py-3 text-sm mb-4 border ${sendResult.error ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'}`}>
+              <div className={`rounded-md px-3 py-2.5 text-sm mb-4 border ${sendResult.error ? 'bg-bad/5 border-bad/20 text-bad' : 'bg-ok/5 border-ok/20 text-ok'}`}>
                 {sendResult.error
                   ? `Error: ${sendResult.error}`
                   : `Broadcast sent${sendResult.emailCount ? ` · ${sendResult.emailCount} email${sendResult.emailCount !== 1 ? 's' : ''} delivered` : ''}`}
@@ -92,29 +92,32 @@ export default function BroadcastsPage() {
             )}
             <div className="space-y-4">
               <div>
-                <label className="text-xs text-gray-500 block mb-1.5">Title *</label>
+                <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Title</label>
                 <input value={title} onChange={e => setTitle(e.target.value)} className={iCls} placeholder="Maintenance window this weekend"/>
               </div>
               <div>
-                <label className="text-xs text-gray-500 block mb-1.5">Message *</label>
+                <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Message</label>
                 <textarea value={body} onChange={e => setBody(e.target.value)} rows={5} className={iCls + ' resize-none'} placeholder="Write your message here. Separate paragraphs with blank lines."/>
               </div>
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <label className="flex items-center gap-3 cursor-pointer select-none">
-                  <div className={'relative w-9 h-5 rounded-full transition-colors cursor-pointer ' + (sendEmail ? 'bg-emerald-600' : 'bg-gray-700')} onClick={() => setSendEmail(v => !v)}>
+                  <div
+                    className={'relative w-9 h-5 rounded-full transition-colors cursor-pointer ' + (sendEmail ? 'bg-pine' : 'bg-line-strong')}
+                    onClick={() => setSendEmail(v => !v)}
+                  >
                     <div className={'absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ' + (sendEmail ? 'translate-x-4' : 'translate-x-0.5')}/>
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-white flex items-center gap-1.5">
-                      <Mail className="w-3.5 h-3.5 text-gray-500"/>Also send as email
+                    <div className="text-sm font-medium text-ink flex items-center gap-1.5">
+                      <Mail className="w-3.5 h-3.5 text-ink-muted"/>Also send as email
                     </div>
-                    <div className="text-xs text-gray-600 mt-0.5">Sends to every operator with an active course</div>
+                    <div className="text-xs text-ink-muted mt-0.5">Sends to every operator with an active course</div>
                   </div>
                 </label>
                 <button
                   onClick={sendBroadcast}
                   disabled={sending || !title.trim() || !body.trim()}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-bold rounded-lg text-sm transition-colors"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white font-medium rounded-md text-[12.5px] transition-colors"
                 >
                   <Send className="w-4 h-4"/>
                   {sending ? 'Sending...' : 'Send broadcast'}
@@ -125,33 +128,33 @@ export default function BroadcastsPage() {
 
           {/* History */}
           <div>
-            <div className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">History</div>
-            {loading && <div className="text-gray-600 text-sm py-8 text-center">Loading...</div>}
+            <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">History</div>
+            {loading && <div className="text-ink-muted text-sm py-8 text-center">Loading...</div>}
             {!loading && broadcasts.length === 0 && (
-              <div className="text-gray-700 text-sm py-12 text-center bg-gray-900 border border-gray-800 rounded-lg">
+              <div className="text-ink-muted text-sm py-12 text-center bg-white border border-line rounded-lg">
                 No broadcasts yet
               </div>
             )}
             <div className="space-y-3">
               {broadcasts.map(b => (
-                <div key={b.id} className="bg-gray-900 border border-gray-800 rounded-lg p-5">
+                <div key={b.id} className="bg-white border border-line rounded-lg p-5">
                   <div className="flex items-start justify-between gap-4 mb-2">
-                    <div className="font-bold text-white">{b.title}</div>
+                    <div className="font-medium text-ink text-sm">{b.title}</div>
                     <div className="flex items-center gap-2 shrink-0">
                       {b.emailSent && (
-                        <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                        <span className="flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded bg-pine/5 text-pine border border-pine/15">
                           <Mail className="w-3 h-3"/>Email sent
                         </span>
                       )}
                       {b.dismissalCount > 0 && (
-                        <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-800 text-gray-500 border border-gray-700">
+                        <span className="flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded bg-paper text-ink-muted border border-line">
                           <Users className="w-3 h-3"/>{b.dismissalCount} dismissed
                         </span>
                       )}
                     </div>
                   </div>
-                  <div className="text-sm text-gray-400 whitespace-pre-line line-clamp-3 mb-3">{b.body}</div>
-                  <div className="text-xs text-gray-600">{fmtDate(b.createdAt)} · by {b.sentByName}</div>
+                  <div className="text-sm text-ink-soft whitespace-pre-line line-clamp-3 mb-3">{b.body}</div>
+                  <div className="text-xs text-ink-muted">{fmtDate(b.createdAt)} · by {b.sentByName}</div>
                 </div>
               ))}
             </div>

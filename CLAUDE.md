@@ -127,19 +127,35 @@ TWILIO_FROM_NUMBER
 
 ---
 
-## Design system (as of June 2026 redesign)
+## Design system — Clubhouse (July 2026)
 
-**Golfer-facing pages:** light mode, white/gray-50 backgrounds
-**Operator dashboard + admin:** dark mode (`bg-gray-950`, `bg-gray-900`)
+**All admin pages:** light mode, Clubhouse palette. Golfer pages still use white/gray-50 (D3 phase pending).
+
+### Tailwind v4 custom tokens (defined in `globals.css` `@theme {}`)
+- `paper` (#F6F4EC) — page bg; `card` (#FFFFFF) — card bg; `ink` (#1C1C18) — body text
+- `ink-soft` (#6E6D64), `ink-muted` (#87867C), `ink-faint` (#98968B)
+- `line` (#E6E3D7), `line-soft` (#F0EDE2), `line-strong` (#D9D6C8)
+- `pine` (#24513B) / `pine-hover` (#2E6349) — admin accent
+- `ok` (#3D6B4C), `bad` (#A3452F), `warn` (#8A6116), `dot-neutral` (#B3B1A6)
+- `font-sans` = Inter, `font-serif` = Fraunces (page titles + stat numbers)
 
 ### Rules
-- Max border-radius: `rounded-md` (6px) for buttons/inputs, `rounded-lg` (8px) for cards. Never `rounded-xl/2xl/3xl` on content.
-- No emojis in UI — use lucide-react icons
-- Nav/Footer: `bg-black`, `border-white/10`
-- Primary accent: `emerald-600` (hover: `emerald-500`)
-- Headings: `font-black tracking-tight`
-- Labels/eyebrows: `text-xs font-bold uppercase tracking-widest`
+- Max border-radius: `rounded-md` for buttons/inputs, `rounded-lg` for cards. Never `rounded-xl/2xl/3xl`.
+- No emojis — use lucide-react icons
+- Nav/Footer: suppressed on `/admin/*` and `/dashboard/*` paths (return null)
+- Admin sidebar: `bg-pine`, inactive `text-[#A9BFAF]`, active `bg-white/10 text-paper`
+- Page titles: `text-[22px] font-serif font-medium tracking-tight text-ink`
+- Eyebrows: `text-[11px] uppercase tracking-[0.06em] text-ink-muted`
+- Status indicators: `<StatusDot status="ok|bad|warn|neutral" label="..."/>` — 5px dot, no pill badges
+- Input class: `bg-paper border border-line rounded-md px-3 py-2.5 text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10`
+- Primary button: `bg-pine hover:bg-pine-hover text-white font-medium rounded-md`
 - Email template: sharp corners (`border-radius:4px`), black header bar, zinc border
+
+### BANNED
+- `font-black`, `tracking-widest` — use `font-medium`/`font-semibold` and `tracking-[0.06em]`
+- Dark backgrounds (`bg-gray-950`, `bg-gray-900`) on admin/dashboard
+- Tinted colored pill badges — use `<StatusDot>` instead
+- `emerald-600` as accent — use `pine` / `ok` tokens
 
 ---
 

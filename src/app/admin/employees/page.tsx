@@ -1,8 +1,9 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, RefreshCw, CheckCircle, XCircle, Lock } from 'lucide-react';
+import { Plus, RefreshCw, Lock } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 interface Admin {
   id: string;
@@ -17,7 +18,7 @@ interface Admin {
 
 interface Session { adminId: string; email: string; name: string; role: string; }
 
-const iCls = 'bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/30 transition-colors';
+const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-ink text-sm placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
 function fmt(d: string | null) {
   if (!d) return 'Never';
@@ -37,7 +38,6 @@ export default function EmployeesPage() {
   const [createSuccess, setCreateSuccess] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // Change-password state
   const [cpCurrentPassword, setCpCurrentPassword] = useState('');
   const [cpNewPassword, setCpNewPassword] = useState('');
   const [cpConfirm, setCpConfirm] = useState('');
@@ -124,8 +124,8 @@ export default function EmployeesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="text-gray-600 text-sm">Loading...</div>
+      <div className="min-h-screen bg-paper flex items-center justify-center">
+        <div className="text-ink-muted text-sm">Loading...</div>
       </div>
     );
   }
@@ -133,42 +133,43 @@ export default function EmployeesPage() {
   const isOwner = session?.role === 'owner';
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex">
+    <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="employees" />
       <div className="ml-56 flex-1 min-h-screen">
         <div className="px-8 py-7 max-w-4xl">
-          <div className="flex items-center justify-between mb-7">
+
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-black text-white">Employees</h1>
-              <div className="text-sm text-gray-500 mt-0.5">Admin account management</div>
+              <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Employees</h1>
+              <p className="text-sm text-ink-soft mt-0.5">Admin account management</p>
             </div>
-            <button onClick={load} className="flex items-center gap-2 text-sm text-gray-500 hover:text-white px-3 py-2 rounded-lg hover:bg-gray-800 border border-transparent hover:border-gray-700 transition-colors">
+            <button onClick={load} className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors">
               <RefreshCw className="w-4 h-4"/>Refresh
             </button>
           </div>
 
-          {/* Create form — owner only */}
+          {/* Add employee — owner only */}
           {isOwner && (
-            <div className="bg-gray-900 border border-gray-800 rounded-lg p-5 mb-6">
+            <div className="bg-white border border-line rounded-lg p-5 mb-6">
               <div className="flex items-center gap-2 mb-4">
-                <Plus className="w-4 h-4 text-emerald-500"/>
-                <span className="text-sm font-bold text-white">Add employee</span>
+                <Plus className="w-4 h-4 text-pine"/>
+                <span className="text-sm font-medium text-ink">Add employee</span>
               </div>
               {createError && (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 text-red-400 text-sm mb-4">{createError}</div>
+                <div className="bg-bad/5 border border-bad/20 rounded-md px-3 py-2 text-bad text-sm mb-4">{createError}</div>
               )}
               {createSuccess && (
-                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2 text-emerald-400 text-sm mb-4">{createSuccess}</div>
+                <div className="bg-ok/5 border border-ok/20 rounded-md px-3 py-2 text-ok text-sm mb-4">{createSuccess}</div>
               )}
               <form onSubmit={handleCreate} className="flex gap-3 flex-wrap">
                 <input value={newName} onChange={e => setNewName(e.target.value)} required placeholder="Full name" className={iCls + ' flex-1 min-w-32'}/>
                 <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} required placeholder="Email" className={iCls + ' flex-1 min-w-48'}/>
-                <select value={newRole} onChange={e => setNewRole(e.target.value)} className={iCls}>
+                <select value={newRole} onChange={e => setNewRole(e.target.value)} className={iCls + ' cursor-pointer'}>
                   <option value="staff">Staff</option>
                   <option value="owner">Owner</option>
                 </select>
                 <button type="submit" disabled={creating}
-                  className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-sm px-4 py-2 rounded-lg transition-colors">
+                  className="bg-pine hover:bg-pine-hover disabled:opacity-50 text-white text-[12.5px] font-medium px-4 py-2 rounded-md transition-colors">
                   {creating ? 'Sending...' : 'Send invite'}
                 </button>
               </form>
@@ -176,45 +177,45 @@ export default function EmployeesPage() {
           )}
 
           {/* Employee list */}
-          <div className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden mb-6">
+          <div className="bg-white border border-line rounded-lg overflow-hidden mb-6">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="text-left text-[10px] font-bold uppercase tracking-widest text-gray-500 px-5 py-3">Name</th>
-                  <th className="text-left text-[10px] font-bold uppercase tracking-widest text-gray-500 px-5 py-3">Role</th>
-                  <th className="text-left text-[10px] font-bold uppercase tracking-widest text-gray-500 px-5 py-3">Last login</th>
-                  <th className="text-left text-[10px] font-bold uppercase tracking-widest text-gray-500 px-5 py-3">Status</th>
+                <tr className="border-b border-line">
+                  <th className="text-left text-[11px] uppercase tracking-[0.06em] text-ink-muted px-5 py-3">Name</th>
+                  <th className="text-left text-[11px] uppercase tracking-[0.06em] text-ink-muted px-5 py-3">Role</th>
+                  <th className="text-left text-[11px] uppercase tracking-[0.06em] text-ink-muted px-5 py-3">Last login</th>
+                  <th className="text-left text-[11px] uppercase tracking-[0.06em] text-ink-muted px-5 py-3">Status</th>
                   {isOwner && <th className="px-5 py-3"/>}
                 </tr>
               </thead>
               <tbody>
                 {admins.map((admin, i) => (
-                  <tr key={admin.id} className={i < admins.length - 1 ? 'border-b border-gray-800/50' : ''}>
+                  <tr key={admin.id} className={i < admins.length - 1 ? 'border-b border-line-soft' : ''}>
                     <td className="px-5 py-3.5">
-                      <div className="text-sm font-medium text-white">{admin.name}</div>
-                      <div className="text-xs text-gray-500">{admin.email}</div>
+                      <div className="text-sm font-medium text-ink">{admin.name}</div>
+                      <div className="text-xs text-ink-soft">{admin.email}</div>
                     </td>
                     <td className="px-5 py-3.5">
-                      <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded ${admin.role === 'owner' ? 'bg-emerald-600/20 text-emerald-400' : 'bg-gray-800 text-gray-400'}`}>
+                      <span className={`text-[11px] uppercase tracking-[0.06em] px-2 py-1 rounded ${admin.role === 'owner' ? 'bg-pine/10 text-pine' : 'bg-paper text-ink-muted border border-line'}`}>
                         {admin.role}
                       </span>
                     </td>
-                    <td className="px-5 py-3.5 text-sm text-gray-400">{fmt(admin.lastLoginAt)}</td>
+                    <td className="px-5 py-3.5 text-sm text-ink-soft tabular-nums">{fmt(admin.lastLoginAt)}</td>
                     <td className="px-5 py-3.5">
                       {admin.active
-                        ? <span className="flex items-center gap-1.5 text-xs text-emerald-400"><CheckCircle className="w-3.5 h-3.5"/>Active</span>
-                        : <span className="flex items-center gap-1.5 text-xs text-gray-600"><XCircle className="w-3.5 h-3.5"/>Inactive</span>}
+                        ? <StatusDot status="ok" label="Active" />
+                        : <StatusDot status="neutral" label="Inactive" />}
                     </td>
                     {isOwner && (
                       <td className="px-5 py-3.5">
                         {admin.id !== session?.adminId && (
                           <div className="flex items-center gap-2 justify-end">
                             <button onClick={() => toggleRole(admin)} disabled={actionLoading === admin.id + '_role'}
-                              className="text-xs text-gray-500 hover:text-white px-2 py-1 rounded hover:bg-gray-800 transition-colors">
+                              className="text-xs text-ink-soft hover:text-ink px-2 py-1 rounded hover:bg-paper transition-colors">
                               {admin.role === 'owner' ? 'Make staff' : 'Make owner'}
                             </button>
                             <button onClick={() => toggleActive(admin)} disabled={actionLoading === admin.id}
-                              className="text-xs text-gray-500 hover:text-white px-2 py-1 rounded hover:bg-gray-800 transition-colors">
+                              className="text-xs text-ink-soft hover:text-ink px-2 py-1 rounded hover:bg-paper transition-colors">
                               {admin.active ? 'Deactivate' : 'Reactivate'}
                             </button>
                           </div>
@@ -225,7 +226,7 @@ export default function EmployeesPage() {
                 ))}
                 {admins.length === 0 && (
                   <tr>
-                    <td colSpan={isOwner ? 5 : 4} className="px-5 py-8 text-center text-sm text-gray-600">
+                    <td colSpan={isOwner ? 5 : 4} className="px-5 py-8 text-center text-sm text-ink-muted">
                       No admin accounts yet
                     </td>
                   </tr>
@@ -235,58 +236,34 @@ export default function EmployeesPage() {
           </div>
 
           {/* Change password */}
-          <div className="bg-gray-900 border border-gray-800 rounded-lg p-5">
+          <div className="bg-white border border-line rounded-lg p-5">
             <div className="flex items-center gap-2 mb-4">
-              <Lock className="w-4 h-4 text-emerald-500"/>
-              <span className="text-sm font-bold text-white">Change your password</span>
+              <Lock className="w-4 h-4 text-pine"/>
+              <span className="text-sm font-medium text-ink">Change your password</span>
             </div>
             {cpError && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 text-red-400 text-sm mb-4">{cpError}</div>
+              <div className="bg-bad/5 border border-bad/20 rounded-md px-3 py-2 text-bad text-sm mb-4">{cpError}</div>
             )}
             {cpSuccess && (
-              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2 text-emerald-400 text-sm mb-4">{cpSuccess}</div>
+              <div className="bg-ok/5 border border-ok/20 rounded-md px-3 py-2 text-ok text-sm mb-4">{cpSuccess}</div>
             )}
             <form onSubmit={handleChangePassword} className="grid grid-cols-3 gap-3">
               <div>
-                <label className="text-xs text-gray-500 block mb-1.5">Current password</label>
-                <input
-                  type="password"
-                  value={cpCurrentPassword}
-                  onChange={e => setCpCurrentPassword(e.target.value)}
-                  required
-                  placeholder="Current password"
-                  className={iCls + ' w-full'}
-                />
+                <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Current password</label>
+                <input type="password" value={cpCurrentPassword} onChange={e => setCpCurrentPassword(e.target.value)} required placeholder="Current password" className={iCls + ' w-full'}/>
               </div>
               <div>
-                <label className="text-xs text-gray-500 block mb-1.5">New password</label>
-                <input
-                  type="password"
-                  value={cpNewPassword}
-                  onChange={e => setCpNewPassword(e.target.value)}
-                  required
-                  placeholder="Min 8 characters"
-                  className={iCls + ' w-full'}
-                />
+                <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">New password</label>
+                <input type="password" value={cpNewPassword} onChange={e => setCpNewPassword(e.target.value)} required placeholder="Min 8 characters" className={iCls + ' w-full'}/>
               </div>
               <div>
-                <label className="text-xs text-gray-500 block mb-1.5">Confirm new password</label>
-                <input
-                  type="password"
-                  value={cpConfirm}
-                  onChange={e => setCpConfirm(e.target.value)}
-                  required
-                  placeholder="Confirm password"
-                  className={iCls + ' w-full'}
-                />
+                <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Confirm new password</label>
+                <input type="password" value={cpConfirm} onChange={e => setCpConfirm(e.target.value)} required placeholder="Confirm password" className={iCls + ' w-full'}/>
               </div>
-              <div className="col-span-3 flex justify-start">
-                <button
-                  type="submit"
-                  disabled={cpLoading || !cpCurrentPassword || !cpNewPassword || !cpConfirm}
-                  className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-sm px-5 py-2.5 rounded-lg transition-colors"
-                >
-                  {cpLoading ? 'Changing...' : 'Change Password'}
+              <div className="col-span-3">
+                <button type="submit" disabled={cpLoading || !cpCurrentPassword || !cpNewPassword || !cpConfirm}
+                  className="bg-pine hover:bg-pine-hover disabled:opacity-50 text-white text-[12.5px] font-medium px-5 py-2 rounded-md transition-colors">
+                  {cpLoading ? 'Changing...' : 'Change password'}
                 </button>
               </div>
             </form>

@@ -6,6 +6,7 @@ import {
   RefreshCw, Mail, Trash2, Wrench, Power, Search, ArrowUpRight,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 interface Inquiry {
   id: string; contactName: string; contactTitle: string; email: string; phone: string;
@@ -21,36 +22,27 @@ interface ApproveResult { tempPassword?: string; setupLink?: string; detailsLink
 
 type SortOrder = 'newest' | 'oldest' | 'longest';
 
-const STATUS_PIPELINE = [
-  { key: 'pending',           label: 'Pending',    color: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/30' },
-  { key: 'in_review',         label: 'In Review',  color: 'text-blue-400',   bg: 'bg-blue-500/10 border-blue-500/30' },
-  { key: 'details_requested', label: 'Sheet Sent', color: 'text-indigo-400', bg: 'bg-indigo-500/10 border-indigo-500/30' },
-  { key: 'details_submitted', label: 'Sheet In',   color: 'text-teal-400',   bg: 'bg-teal-500/10 border-teal-500/30' },
-  { key: 'building',          label: 'Building',   color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/30' },
-  { key: 'live',              label: 'Live',        color: 'text-green-400',  bg: 'bg-green-500/10 border-green-500/30' },
-  { key: 'rejected',          label: 'Rejected',   color: 'text-red-400',    bg: 'bg-red-500/10 border-red-500/30' },
-];
-const STATUS_BADGE: Record<string, string> = {
-  pending: 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40',
-  in_review: 'bg-blue-500/20 text-blue-300 border border-blue-500/40',
-  details_requested: 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40',
-  details_submitted: 'bg-teal-500/20 text-teal-300 border border-teal-500/40',
-  building: 'bg-orange-500/20 text-orange-300 border border-orange-500/40',
-  live: 'bg-green-500/20 text-green-300 border border-green-500/40',
-  rejected: 'bg-red-500/20 text-red-300 border border-red-500/40',
-  approved: 'bg-green-500/20 text-green-300 border border-green-500/40',
+const STATUS_DOT_MAP: Record<string, string> = {
+  pending: 'warn', in_review: 'neutral', details_requested: 'neutral',
+  details_submitted: 'neutral', building: 'warn', live: 'ok', rejected: 'bad',
 };
 const STATUS_LABEL: Record<string, string> = {
-  pending: 'Pending', in_review: 'In Review',
-  details_requested: 'Sheet Sent', details_submitted: 'Sheet In',
-  building: 'Building', live: 'Live', rejected: 'Rejected', approved: 'Approved',
+  pending: 'Pending', in_review: 'In Review', details_requested: 'Sheet Sent',
+  details_submitted: 'Sheet In', building: 'Building', live: 'Live', rejected: 'Rejected', approved: 'Approved',
 };
 
-const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+const PIPELINE_STAGES = [
+  { key: 'pending',           label: 'Pending' },
+  { key: 'in_review',         label: 'In Review' },
+  { key: 'details_requested', label: 'Sheet Sent' },
+  { key: 'details_submitted', label: 'Sheet In' },
+  { key: 'building',          label: 'Building' },
+  { key: 'live',              label: 'Live' },
+  { key: 'rejected',          label: 'Rejected' },
+];
 
-function daysAgo(d: string) {
-  return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24));
-}
+const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+function daysAgo(d: string) { return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24)); }
 
 function PipelineBar({ inquiries, selectedStatuses, onToggle }: {
   inquiries: { status: string }[];
@@ -59,24 +51,23 @@ function PipelineBar({ inquiries, selectedStatuses, onToggle }: {
 }) {
   return (
     <div className="grid grid-cols-7 gap-2 mb-5">
-      {STATUS_PIPELINE.map(s => {
+      {PIPELINE_STAGES.map(s => {
         const count = inquiries.filter(i => i.status === s.key).length;
         const isSelected = selectedStatuses.has(s.key);
-        const hasItems = count > 0;
-        const borderCls = isSelected ? 'border-2' : 'border';
-        let wrapCls = `rounded-lg ${borderCls} px-2 py-2.5 text-center cursor-pointer transition-all select-none `;
-        if (isSelected || hasItems) {
-          wrapCls += s.bg;
-          if (!isSelected) wrapCls += ' hover:opacity-90';
-        } else {
-          wrapCls += 'bg-gray-900 border-gray-800 opacity-40 hover:opacity-60';
-        }
-        const numCls = 'text-xl font-black ' + (hasItems || isSelected ? s.color : 'text-gray-700');
-        const labelCls = 'text-[10px] font-semibold uppercase tracking-wide mt-0.5 ' + (hasItems || isSelected ? s.color : 'text-gray-700');
         return (
-          <button key={s.key} onClick={() => onToggle(s.key)} className={wrapCls}>
-            <div className={numCls}>{count}</div>
-            <div className={labelCls}>{s.label}</div>
+          <button
+            key={s.key}
+            onClick={() => onToggle(s.key)}
+            className={`rounded-lg border px-2 py-2.5 text-center cursor-pointer transition-all select-none ${
+              isSelected
+                ? 'bg-pine/5 border-pine/30 shadow-sm'
+                : count > 0
+                  ? 'bg-white border-line hover:border-line-strong'
+                  : 'bg-white border-line opacity-50 hover:opacity-70'
+            }`}
+          >
+            <div className={`text-[18px] font-serif font-medium ${count > 0 ? 'text-ink' : 'text-ink-muted'}`}>{count}</div>
+            <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mt-0.5 leading-tight">{s.label}</div>
           </button>
         );
       })}
@@ -87,14 +78,18 @@ function PipelineBar({ inquiries, selectedStatuses, onToggle }: {
 function InquiryToggle({ view, onSwitch, activeCount, pastCount }: {
   view: 'active' | 'past'; onSwitch: (v: 'active' | 'past') => void; activeCount: number; pastCount: number;
 }) {
-  const btnCls = (v: 'active' | 'past') => 'px-5 py-1.5 rounded-lg text-sm font-semibold transition-colors ' + (view === v ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-white');
+  const btnCls = (v: 'active' | 'past') =>
+    'px-4 py-1.5 rounded-md text-[12.5px] font-medium transition-colors ' +
+    (view === v ? 'bg-white text-ink shadow-sm border border-line' : 'text-ink-soft hover:text-ink');
   return (
-    <div className="flex gap-1 bg-gray-800/50 border border-gray-800 rounded-lg p-1 w-fit">
+    <div className="flex gap-1 bg-paper border border-line rounded-lg p-1 w-fit">
       <button onClick={() => onSwitch('active')} className={btnCls('active')}>Active ({activeCount})</button>
       <button onClick={() => onSwitch('past')} className={btnCls('past')}>Past ({pastCount})</button>
     </div>
   );
 }
+
+const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-ink text-sm placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
 export default function InquiriesPage() {
   const router = useRouter();
@@ -216,16 +211,16 @@ export default function InquiriesPage() {
     : inquiryView === 'active' ? 'No active inquiries — all caught up' : 'No past inquiries yet';
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex">
+    <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="inquiries" pendingInquiries={pendingCount} />
       <div className="ml-56 flex-1 min-h-screen">
         <div className="px-8 py-7 max-w-6xl">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h1 className="text-2xl font-black text-white">Course Inquiries</h1>
-              <div className="text-sm text-gray-500 mt-0.5">Manage the pipeline from interest to live</div>
+              <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Course Inquiries</h1>
+              <p className="text-sm text-ink-soft mt-0.5">Manage the pipeline from interest to live</p>
             </div>
-            <button onClick={loadInquiries} className="flex items-center gap-2 text-sm text-gray-500 hover:text-white px-3 py-2 rounded-lg hover:bg-gray-800 border border-transparent hover:border-gray-700 transition-colors">
+            <button onClick={loadInquiries} className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors">
               <RefreshCw className="w-4 h-4"/>Refresh
             </button>
           </div>
@@ -241,19 +236,19 @@ export default function InquiriesPage() {
             />
 
             <div className="relative flex-1 min-w-48 max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-600 pointer-events-none"/>
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-muted pointer-events-none"/>
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search name, email, city..."
-                className="w-full bg-gray-900 border border-gray-800 rounded-lg pl-8 pr-3 py-1.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-gray-700"
+                className="w-full bg-white border border-line rounded-md pl-8 pr-3 py-1.5 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40"
               />
             </div>
 
-            <div className="flex items-center gap-1 bg-gray-900 border border-gray-800 rounded-lg p-1">
+            <div className="flex items-center gap-1 bg-white border border-line rounded-lg p-1">
               {(['newest', 'oldest', 'longest'] as SortOrder[]).map(s => (
                 <button key={s} onClick={() => setSortOrder(s)}
-                  className={'px-3 py-1 rounded-md text-xs font-semibold transition-colors ' + (sortOrder === s ? 'bg-gray-700 text-white' : 'text-gray-600 hover:text-gray-300')}>
+                  className={'px-3 py-1 rounded-md text-[11px] font-medium transition-colors ' + (sortOrder === s ? 'bg-paper text-ink border border-line' : 'text-ink-muted hover:text-ink')}>
                   {s === 'longest' ? 'Longest in stage' : s.charAt(0).toUpperCase() + s.slice(1)}
                 </button>
               ))}
@@ -261,38 +256,39 @@ export default function InquiriesPage() {
 
             {hasFilters && (
               <button onClick={() => { setStatusFilters(new Set()); setSearch(''); }}
-                className="text-xs text-gray-600 hover:text-gray-300 px-2.5 py-1.5 rounded-lg border border-gray-800 hover:border-gray-700 transition-colors">
+                className="text-[11px] text-ink-muted hover:text-ink px-2.5 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
                 Clear filters
               </button>
             )}
           </div>
 
-          {loading && <div className="text-gray-600 py-20 text-center text-sm">Loading...</div>}
+          {loading && <div className="text-ink-muted py-20 text-center text-sm">Loading...</div>}
 
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {visibleInqs.map(inq => {
               const stageDays = daysAgo(inq.updatedAt || inq.createdAt);
               const staleStage = stageDays > 7;
               const showWizard = !inq.builtCourseId && !['building','live','rejected'].includes(inq.status);
               const wizardUrl = `/admin/create?${new URLSearchParams({ name: inq.courseName||'', city: inq.city||'', state: inq.state||'', zip: inq.zipCode||'', address: inq.address||'', website: inq.website||'', type: inq.courseType||'public', contactName: inq.contactName||'', contactEmail: inq.email||'', inquiryId: inq.id }).toString()}`;
+              const dotStatus = STATUS_DOT_MAP[inq.status] || 'neutral';
               return (
-                <div key={inq.id} className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden hover:border-gray-700 transition-colors">
+                <div key={inq.id} className="bg-white border border-line rounded-lg overflow-hidden hover:border-line-strong transition-colors">
                   <div className="px-5 py-4 flex items-start gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
-                        <span className="font-bold text-white">{inq.courseName}</span>
-                        <span className={'text-xs px-2.5 py-0.5 rounded-full font-semibold ' + (STATUS_BADGE[inq.status] || 'bg-gray-800 text-gray-400')}>{STATUS_LABEL[inq.status] || inq.status}</span>
-                        <span className={'text-xs px-2 py-0.5 rounded-md font-medium border ' + (staleStage ? 'bg-red-500/15 text-red-400 border-red-500/30' : 'bg-gray-800/80 text-gray-500 border-gray-700')}>
+                        <span className="font-medium text-ink text-sm">{inq.courseName}</span>
+                        <StatusDot status={dotStatus} label={STATUS_LABEL[inq.status] || inq.status} />
+                        <span className={`text-[11px] px-2 py-0.5 rounded border font-medium ${staleStage ? 'bg-bad/5 text-bad border-bad/20' : 'bg-paper text-ink-muted border-line'}`}>
                           {stageDays}d in stage
                         </span>
-                        {inq.hasMemberPricing && <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">Members</span>}
-                        {inq.hasResidentPricing && <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">Residents</span>}
-                        {inq.hasCaddies && <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Caddies</span>}
+                        {inq.hasMemberPricing && <span className="text-[11px] px-2 py-0.5 rounded bg-paper text-ink-muted border border-line">Members</span>}
+                        {inq.hasResidentPricing && <span className="text-[11px] px-2 py-0.5 rounded bg-paper text-ink-muted border border-line">Residents</span>}
+                        {inq.hasCaddies && <span className="text-[11px] px-2 py-0.5 rounded bg-paper text-ink-muted border border-line">Caddies</span>}
                       </div>
-                      <div className="text-sm text-gray-400">
-                        {inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''} · <a href={'mailto:' + inq.email} className="hover:text-blue-400 transition-colors">{inq.email}</a>
+                      <div className="text-sm text-ink-soft">
+                        {inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''} · <a href={'mailto:' + inq.email} className="hover:text-pine transition-colors">{inq.email}</a>
                       </div>
-                      <div className="text-xs text-gray-600 mt-0.5 flex items-center gap-2 flex-wrap">
+                      <div className="text-xs text-ink-muted mt-0.5 flex items-center gap-2 flex-wrap">
                         <span>{inq.city}, {inq.state}</span>
                         <span>·</span>
                         <span className="capitalize">{inq.courseType}</span>
@@ -302,14 +298,14 @@ export default function InquiriesPage() {
                         {inq.lookingFor && inq.lookingFor.length > 0 && (
                           <>
                             <span>·</span>
-                            <span className="text-gray-500">
+                            <span className="text-ink-faint">
                               {inq.lookingFor.slice(0, 3).join(', ')}{inq.lookingFor.length > 3 ? ` +${inq.lookingFor.length - 3} more` : ''}
                             </span>
                           </>
                         )}
                       </div>
                       {inq.adminNotes && (
-                        <div className="mt-2 text-xs text-gray-500 bg-gray-800/50 rounded-lg px-3 py-1.5 border border-gray-700/50">
+                        <div className="mt-2 text-xs text-ink-muted bg-paper rounded-md px-3 py-1.5 border border-line">
                           {inq.adminNotes.split('\n')[0].slice(0, 100) + (inq.adminNotes.length > 100 ? '...' : '')}
                         </div>
                       )}
@@ -317,34 +313,34 @@ export default function InquiriesPage() {
 
                     <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
                       {inq.status === 'pending' && <>
-                        <button onClick={() => inquiryAction(inq.id, 'mark_in_review')} disabled={processing === inq.id} className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50"><Clock className="w-3.5 h-3.5"/>In Review</button>
-                        <button onClick={() => { if (confirm('Reject this inquiry?')) inquiryAction(inq.id, 'reject'); }} disabled={processing === inq.id} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"><XCircle className="w-3.5 h-3.5"/>Reject</button>
+                        <button onClick={() => inquiryAction(inq.id, 'mark_in_review')} disabled={processing === inq.id} className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"><Clock className="w-3.5 h-3.5"/>In Review</button>
+                        <button onClick={() => { if (confirm('Reject this inquiry?')) inquiryAction(inq.id, 'reject'); }} disabled={processing === inq.id} className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"><XCircle className="w-3.5 h-3.5"/>Reject</button>
                       </>}
                       {inq.status === 'in_review' && <>
-                        <button onClick={() => { if (confirm('Send ' + inq.contactName + ' the setup sheet?')) inquiryAction(inq.id, 'request_details'); }} disabled={processing === inq.id} className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50"><Mail className="w-3.5 h-3.5"/>Send Setup Sheet</button>
-                        <button onClick={() => { if (confirm('Reject?')) inquiryAction(inq.id, 'reject'); }} disabled={processing === inq.id} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"><XCircle className="w-3.5 h-3.5"/>Reject</button>
-                        <button onClick={() => { if (confirm('Build ' + inq.courseName + ' now and configure yourself?')) buildAndConfigure(inq); }} disabled={processing === inq.id} className="text-gray-500 hover:text-gray-300 px-2 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 border border-gray-700 hover:border-gray-600 transition-colors"><Wrench className="w-3 h-3"/>Skip &amp; Build</button>
+                        <button onClick={() => { if (confirm('Send ' + inq.contactName + ' the setup sheet?')) inquiryAction(inq.id, 'request_details'); }} disabled={processing === inq.id} className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"><Mail className="w-3.5 h-3.5"/>Send Setup Sheet</button>
+                        <button onClick={() => { if (confirm('Reject?')) inquiryAction(inq.id, 'reject'); }} disabled={processing === inq.id} className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"><XCircle className="w-3.5 h-3.5"/>Reject</button>
+                        <button onClick={() => { if (confirm('Build ' + inq.courseName + ' now and configure yourself?')) buildAndConfigure(inq); }} disabled={processing === inq.id} className="text-ink-muted hover:text-ink px-2 py-1.5 rounded-md text-xs font-medium flex items-center gap-1 border border-line hover:border-line-strong transition-colors"><Wrench className="w-3 h-3"/>Skip &amp; Build</button>
                       </>}
                       {inq.status === 'details_requested' && <>
-                        <button onClick={() => { if (confirm('Resend setup-sheet link to ' + inq.contactName + '?')) inquiryAction(inq.id, 'resend_details'); }} disabled={processing === inq.id} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50"><Mail className="w-3.5 h-3.5"/>Resend Sheet</button>
-                        <button onClick={() => { if (confirm('Reject?')) inquiryAction(inq.id, 'reject'); }} disabled={processing === inq.id} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"><XCircle className="w-3.5 h-3.5"/>Reject</button>
+                        <button onClick={() => { if (confirm('Resend setup-sheet link to ' + inq.contactName + '?')) inquiryAction(inq.id, 'resend_details'); }} disabled={processing === inq.id} className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"><Mail className="w-3.5 h-3.5"/>Resend Sheet</button>
+                        <button onClick={() => { if (confirm('Reject?')) inquiryAction(inq.id, 'reject'); }} disabled={processing === inq.id} className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"><XCircle className="w-3.5 h-3.5"/>Reject</button>
                       </>}
                       {inq.status === 'details_submitted' && <>
-                        <button onClick={() => { if (confirm('Build ' + inq.courseName + '? Creates operator account and opens Setup.')) buildAndConfigure(inq); }} disabled={processing === inq.id} className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50"><CheckCircle className="w-3.5 h-3.5"/>Build Course</button>
-                        <button onClick={() => { if (confirm('Reject?')) inquiryAction(inq.id, 'reject'); }} disabled={processing === inq.id} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"><XCircle className="w-3.5 h-3.5"/>Reject</button>
+                        <button onClick={() => { if (confirm('Build ' + inq.courseName + '? Creates operator account and opens Setup.')) buildAndConfigure(inq); }} disabled={processing === inq.id} className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"><CheckCircle className="w-3.5 h-3.5"/>Build Course</button>
+                        <button onClick={() => { if (confirm('Reject?')) inquiryAction(inq.id, 'reject'); }} disabled={processing === inq.id} className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"><XCircle className="w-3.5 h-3.5"/>Reject</button>
                       </>}
                       {inq.status === 'building' && <>
-                        {inq.builtCourseId && <button onClick={() => router.push(`/admin/courses?courseId=${inq.builtCourseId}&tab=setup`)} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"><Wrench className="w-3.5 h-3.5"/>Manage Setup</button>}
-                        <button onClick={() => { if (confirm('Resend welcome email to ' + inq.contactName + '?')) inquiryAction(inq.id, 'resend_welcome'); }} disabled={processing === inq.id} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"><Mail className="w-3.5 h-3.5"/>Resend Email</button>
-                        <button onClick={() => { if (confirm('Set ' + inq.courseName + ' LIVE?')) inquiryAction(inq.id, 'mark_live'); }} disabled={processing === inq.id} className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50"><Power className="w-3.5 h-3.5"/>Go Live</button>
+                        {inq.builtCourseId && <button onClick={() => router.push(`/admin/courses?courseId=${inq.builtCourseId}&tab=setup`)} className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"><Wrench className="w-3.5 h-3.5"/>Manage Setup</button>}
+                        <button onClick={() => { if (confirm('Resend welcome email to ' + inq.contactName + '?')) inquiryAction(inq.id, 'resend_welcome'); }} disabled={processing === inq.id} className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"><Mail className="w-3.5 h-3.5"/>Resend Email</button>
+                        <button onClick={() => { if (confirm('Set ' + inq.courseName + ' LIVE?')) inquiryAction(inq.id, 'mark_live'); }} disabled={processing === inq.id} className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"><Power className="w-3.5 h-3.5"/>Go Live</button>
                       </>}
                       {inq.status === 'live' && inq.builtCourseId && (
-                        <button onClick={() => router.push(`/admin/courses?courseId=${inq.builtCourseId}&tab=setup`)} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"><Wrench className="w-3.5 h-3.5"/>Manage</button>
+                        <button onClick={() => router.push(`/admin/courses?courseId=${inq.builtCourseId}&tab=setup`)} className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"><Wrench className="w-3.5 h-3.5"/>Manage</button>
                       )}
                       {['building', 'live', 'rejected'].includes(inq.status) && (
-                        <button onClick={() => deleteInquiry(inq.id, inq.courseName)} className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Delete"><Trash2 className="w-3.5 h-3.5"/></button>
+                        <button onClick={() => deleteInquiry(inq.id, inq.courseName)} className="w-8 h-8 flex items-center justify-center text-ink-muted hover:text-bad hover:bg-bad/5 rounded-md transition-colors" title="Delete"><Trash2 className="w-3.5 h-3.5"/></button>
                       )}
-                      <button onClick={() => setExpanded(expanded === inq.id ? null : inq.id)} className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-gray-300 rounded-lg hover:bg-gray-800 transition-colors">
+                      <button onClick={() => setExpanded(expanded === inq.id ? null : inq.id)} className="w-8 h-8 flex items-center justify-center text-ink-muted hover:text-ink rounded-md hover:bg-paper transition-colors">
                         {expanded === inq.id ? <ChevronUp className="w-4 h-4"/> : <ChevronDown className="w-4 h-4"/>}
                       </button>
                     </div>
@@ -357,20 +353,19 @@ export default function InquiriesPage() {
                       ? [['Setup Sheet Link', res.detailsLink as string]]
                       : [['Temp Password', res.tempPassword || ''], ['Setup Link', res.setupLink || '']];
                     const failed = res.emailSent === false;
-                    const bannerCls = 'px-5 pb-4 border-t ' + (failed ? 'bg-red-500/5 border-red-500/20' : 'bg-emerald-500/5 border-emerald-500/20');
-                    const msgCls = 'text-xs font-semibold mb-2 mt-3 ' + (failed ? 'text-red-400' : 'text-emerald-400');
-                    const msg = failed
-                      ? ('Warning: ' + (isDetails ? 'Setup-sheet email failed' : 'Welcome email failed') + ' (' + (res.emailError || 'unknown') + '). Share manually:')
-                      : ('Done: ' + (isDetails ? 'Setup-sheet sent.' : 'Course built - welcome email sent.'));
                     return (
-                      <div className={bannerCls}>
-                        <div className={msgCls}>{msg}</div>
+                      <div className={`px-5 pb-4 border-t ${failed ? 'bg-bad/5 border-bad/20' : 'bg-ok/5 border-ok/20'}`}>
+                        <div className={`text-xs font-medium mb-2 mt-3 ${failed ? 'text-bad' : 'text-ok'}`}>
+                          {failed
+                            ? `Warning: ${isDetails ? 'Setup-sheet email failed' : 'Welcome email failed'} (${res.emailError || 'unknown'}). Share manually:`
+                            : `Done: ${isDetails ? 'Setup-sheet sent.' : 'Course built - welcome email sent.'}`}
+                        </div>
                         <div className="space-y-1.5">
                           {rows.map(([label, val]) => (
-                            <div key={label} className="flex items-center gap-3 bg-gray-900 rounded-lg px-3 py-2 border border-gray-800">
-                              <span className="text-xs text-gray-500 w-28 shrink-0">{label}</span>
-                              <span className="text-xs text-gray-200 font-mono flex-1 truncate">{val}</span>
-                              <button onClick={() => navigator.clipboard.writeText(val)} className="text-gray-600 hover:text-emerald-400 transition-colors" title="Copy"><Copy className="w-3.5 h-3.5"/></button>
+                            <div key={label} className="flex items-center gap-3 bg-white rounded-md px-3 py-2 border border-line">
+                              <span className="text-xs text-ink-muted w-28 shrink-0">{label}</span>
+                              <span className="text-xs text-ink font-mono flex-1 truncate">{val}</span>
+                              <button onClick={() => navigator.clipboard.writeText(val)} className="text-ink-muted hover:text-pine transition-colors" title="Copy"><Copy className="w-3.5 h-3.5"/></button>
                             </div>
                           ))}
                         </div>
@@ -379,15 +374,15 @@ export default function InquiriesPage() {
                   })()}
 
                   {expanded === inq.id && (
-                    <div className="px-5 pb-5 border-t border-gray-800 pt-4 space-y-4">
+                    <div className="px-5 pb-5 border-t border-line pt-4 space-y-4">
                       {showWizard && (
-                        <div className="flex items-center justify-between bg-blue-500/10 border border-blue-500/20 rounded-lg px-4 py-3">
+                        <div className="flex items-center justify-between bg-pine/5 border border-pine/20 rounded-md px-4 py-3">
                           <div>
-                            <div className="text-xs font-semibold text-blue-300">Build course from this inquiry</div>
-                            <div className="text-[10px] text-blue-400/60 mt-0.5">Opens the wizard pre-filled with this inquiry's data</div>
+                            <div className="text-xs font-medium text-pine">Build course from this inquiry</div>
+                            <div className="text-[10px] text-pine/60 mt-0.5">Opens the wizard pre-filled with this inquiry's data</div>
                           </div>
                           <button onClick={() => router.push(wizardUrl)}
-                            className="flex items-center gap-1.5 text-xs font-bold text-blue-300 hover:text-white bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 px-3 py-1.5 rounded-lg transition-colors shrink-0">
+                            className="flex items-center gap-1.5 text-xs font-medium text-pine hover:text-pine-hover bg-pine/10 hover:bg-pine/20 border border-pine/20 px-3 py-1.5 rounded-md transition-colors shrink-0">
                             Open Wizard <ArrowUpRight className="w-3.5 h-3.5"/>
                           </button>
                         </div>
@@ -400,27 +395,27 @@ export default function InquiriesPage() {
                           ['Tee times/day', String(inq.teeTimesPerDay || '—')],
                           ['Green fees', inq.greenFeeRange || '—'],
                         ] as [string,string][]).map(([label, val]) => (
-                          <div key={label} className="bg-gray-800/50 rounded-lg px-3 py-2">
-                            <div className="text-xs text-gray-500 mb-0.5">{label}</div>
-                            <div className="text-gray-200 font-medium text-sm">{val}</div>
+                          <div key={label} className="bg-paper rounded-md px-3 py-2 border border-line">
+                            <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">{label}</div>
+                            <div className="text-ink font-medium text-sm">{val}</div>
                           </div>
                         ))}
                         {inq.lookingFor?.length > 0 && (
-                          <div className="col-span-2 bg-gray-800/50 rounded-lg px-3 py-2">
-                            <div className="text-xs text-gray-500 mb-0.5">Looking for</div>
-                            <div className="text-gray-200 font-medium text-sm">{inq.lookingFor.join(', ')}</div>
+                          <div className="col-span-2 bg-paper rounded-md px-3 py-2 border border-line">
+                            <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Looking for</div>
+                            <div className="text-ink font-medium text-sm">{inq.lookingFor.join(', ')}</div>
                           </div>
                         )}
                         {inq.additionalNotes && (
-                          <div className="col-span-2 bg-gray-800/50 rounded-lg px-3 py-2">
-                            <div className="text-xs text-gray-500 mb-0.5">Additional notes</div>
-                            <div className="text-gray-200 text-sm">{inq.additionalNotes}</div>
+                          <div className="col-span-2 bg-paper rounded-md px-3 py-2 border border-line">
+                            <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Additional notes</div>
+                            <div className="text-ink text-sm">{inq.additionalNotes}</div>
                           </div>
                         )}
                         {inq.pricingNotes && (
-                          <div className="col-span-2 bg-gray-800/50 rounded-lg px-3 py-2">
-                            <div className="text-xs text-gray-500 mb-0.5">Pricing notes</div>
-                            <div className="text-gray-200 text-sm">{inq.pricingNotes}</div>
+                          <div className="col-span-2 bg-paper rounded-md px-3 py-2 border border-line">
+                            <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Pricing notes</div>
+                            <div className="text-ink text-sm">{inq.pricingNotes}</div>
                           </div>
                         )}
                       </div>
@@ -430,13 +425,13 @@ export default function InquiriesPage() {
                         try { n = JSON.parse(inq.needsJson || ''); } catch { /* ignore */ }
                         if (Object.keys(n).length === 0) return null;
                         return (
-                          <div className="border-t border-gray-800 pt-4">
-                            <div className="text-xs font-semibold text-amber-400 uppercase tracking-wide mb-2">What They Need</div>
+                          <div className="border-t border-line pt-4">
+                            <div className="text-[11px] uppercase tracking-[0.06em] text-warn mb-2">What They Need</div>
                             <div className="grid grid-cols-2 gap-2">
                               {Object.entries(n).map(([k, v]) => (
-                                <div key={k} className="bg-amber-500/5 border border-amber-500/20 rounded-lg px-3 py-2">
-                                  <div className="text-xs text-amber-600 mb-0.5">{k}</div>
-                                  <div className="text-amber-200 text-sm font-medium">{String(v)}</div>
+                                <div key={k} className="bg-warn/5 border border-warn/20 rounded-md px-3 py-2">
+                                  <div className="text-xs text-warn/80 mb-0.5">{k}</div>
+                                  <div className="text-warn text-sm font-medium">{String(v)}</div>
                                 </div>
                               ))}
                             </div>
@@ -451,26 +446,26 @@ export default function InquiriesPage() {
                         const sch = d.schedule as Record<string, unknown> | undefined;
                         const rest = Object.fromEntries(Object.entries(d).filter(([k]) => k !== 'schedule'));
                         return (
-                          <div className="border-t border-gray-800 pt-4 space-y-3">
-                            <div className="text-xs font-semibold text-teal-400 uppercase tracking-wide">Setup Sheet Submitted</div>
+                          <div className="border-t border-line pt-4 space-y-3">
+                            <div className="text-[11px] uppercase tracking-[0.06em] text-ok">Setup Sheet Submitted</div>
                             {sch && (sch.greenFeeWeekday || sch.greenFeeWeekend) && (
-                              <div className="bg-teal-500/10 border border-teal-500/20 rounded-lg p-4">
-                                <div className="text-teal-300 font-semibold text-sm mb-2">Proposed Tee Sheet</div>
-                                <div className="text-gray-300 text-sm">
+                              <div className="bg-ok/5 border border-ok/20 rounded-md p-4">
+                                <div className="text-ok font-medium text-sm mb-2">Proposed Tee Sheet</div>
+                                <div className="text-ink text-sm">
                                   {Array.isArray(sch.daysOfWeek) && (sch.daysOfWeek as number[]).length > 0
                                     ? (sch.daysOfWeek as number[]).map(dd => ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dd]).join(', ')
                                     : 'Every day'} {' · '} {String(sch.startTime)}{'–'}{String(sch.endTime)} every {String(sch.intervalMinutes)}min
                                 </div>
-                                <div className="text-gray-500 text-xs mt-1">
+                                <div className="text-ink-muted text-xs mt-1">
                                   {'WD $' + String(sch.greenFeeWeekday||0) + ' / WE $' + String(sch.greenFeeWeekend||0) + ' · Cart $' + String(sch.cartFee||0) + (sch.memberRateWeekday ? ' · Member $' + String(sch.memberRateWeekday) : '') + (sch.residentRateWeekday ? ' · Resident $' + String(sch.residentRateWeekday) : '') + (sch.walkingAllowed ? ' · Walking' : '')}
                                 </div>
                               </div>
                             )}
                             <div className="grid grid-cols-2 gap-2">
                               {Object.entries(rest).filter(([, v]) => v !== '' && v !== null && !(Array.isArray(v) && v.length === 0)).map(([k, v]) => (
-                                <div key={k} className="bg-gray-800/50 border border-gray-700/50 rounded-lg px-3 py-2">
-                                  <div className="text-xs text-gray-500 mb-0.5">{k}</div>
-                                  <div className="text-gray-200 text-sm">{Array.isArray(v) ? v.join(', ') : String(v)}</div>
+                                <div key={k} className="bg-paper border border-line rounded-md px-3 py-2">
+                                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">{k}</div>
+                                  <div className="text-ink text-sm">{Array.isArray(v) ? v.join(', ') : String(v)}</div>
                                 </div>
                               ))}
                             </div>
@@ -478,16 +473,16 @@ export default function InquiriesPage() {
                         );
                       })()}
 
-                      <div className="border-t border-gray-800 pt-4">
-                        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Internal Notes</div>
+                      <div className="border-t border-line pt-4">
+                        <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Internal Notes</div>
                         {inq.adminNotes && (
-                          <pre className="text-xs text-gray-400 bg-gray-800/50 border border-gray-700/50 rounded-lg px-4 py-3 mb-3 whitespace-pre-wrap font-sans">{inq.adminNotes}</pre>
+                          <pre className="text-xs text-ink-soft bg-paper border border-line rounded-md px-4 py-3 mb-3 whitespace-pre-wrap font-sans">{inq.adminNotes}</pre>
                         )}
                         <div className="flex gap-2">
                           <textarea value={noteTexts[inq.id] || ''} onChange={e => setNoteTexts(p => ({ ...p, [inq.id]: e.target.value }))} placeholder="Add a note..." rows={2}
-                            className="flex-1 bg-gray-800 border border-gray-700 text-white text-xs rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none placeholder-gray-600"/>
+                            className={iCls + ' flex-1 resize-none'}/>
                           <button onClick={() => inquiryAction(inq.id, 'add_note', { note: noteTexts[inq.id] || '' })} disabled={!noteTexts[inq.id]?.trim() || processing === inq.id}
-                            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-white text-xs font-bold rounded-lg transition-colors self-start">Save</button>
+                            className="px-4 py-2 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white text-xs font-medium rounded-md transition-colors self-start">Save</button>
                         </div>
                       </div>
                     </div>
@@ -496,7 +491,7 @@ export default function InquiriesPage() {
               );
             })}
             {!loading && visibleInqs.length === 0 && (
-              <div className="text-gray-600 text-center py-20 text-sm">{emptyMsg}</div>
+              <div className="text-ink-muted text-center py-20 text-sm">{emptyMsg}</div>
             )}
           </div>
         </div>

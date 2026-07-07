@@ -9,6 +9,9 @@ export default function Nav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
+  // Admin and dashboard pages render their own full-screen layouts with no public nav.
+  if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard')) return null;
+
   // Booking mode: golfer arrived from a course's own website — show only the
   // wordmark, no marketing links, nothing that leads to other courses.
   if (isBookingMode(pathname)) {
