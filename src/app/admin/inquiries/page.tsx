@@ -89,6 +89,7 @@ export default function InquiriesPage() {
   );
   const [sortBy, setSortBy] = useState('newest');
   const [stageOverride, setStageOverride] = useState('');
+  const [backfillRan, setBackfillRan] = useState(false);
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
@@ -109,6 +110,16 @@ export default function InquiriesPage() {
   useEffect(() => {
     if (adminReady) loadInquiries();
   }, [adminReady, loadInquiries]);
+
+  // One-time backfill: fix orphaned inquiries the first time Archived tab is opened
+  useEffect(() => {
+    if (activeTab !== 'archived' || backfillRan || !adminReady) return;
+    setBackfillRan(true);
+    fetch('/api/admin/backfill-orphaned-inquiries', { method: 'POST', headers: H() })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d && d.fixed > 0) loadInquiries(); })
+      .catch(() => {});
+  }, [activeTab, backfillRan, adminReady, H, loadInquiries]);
 
   // Auto-advance pending → in_review when detail panel opens
   useEffect(() => {
@@ -624,6 +635,18 @@ export default function InquiriesPage() {
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               )}
+            </div>
+          )}
+
+          {/* Permanently delete archived inquiry */}
+          {selectedInq.status === 'archived' && (
+            <div className="px-5 py-3 border-b border-line shrink-0 flex justify-end">
+              <button
+                onClick={() => deleteInquiry(selectedInq.id, selectedInq.courseName)}
+                className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-bad hover:bg-bad/5 px-3 py-1.5 rounded-md border border-line hover:border-bad/20 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />Delete inquiry permanently
+              </button>
             </div>
           )}
 
