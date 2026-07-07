@@ -53,6 +53,28 @@ each phase. Dark theme design system per CLAUDE.md throughout.
   the inquiry flow. Schedule setup happens in the add-course wizard or the course
   detail page. The inquiry shows submitted scheduling preferences read-only.
 
+## Phase 2b — Pipeline automation (kanban at scale)
+
+Principle: stage = fact the system knows, not a card someone dragged. At 500 courses,
+nobody files cards. Three transitions are ALREADY automatic (request-details →
+`details_requested`; operator submits form → `details_submitted`; build-from-inquiry →
+`building`). Complete the machine:
+
+1. **pending → in_review**: automatic the first time any admin opens the inquiry's
+   detail panel (record `reviewStartedAt DateTime?` + who).
+2. **building → live**: automatic when the linked course (builtCourseId) is activated —
+   hook every code path that sets `Course.active = true`. Record `wentLiveAt`.
+3. **live / rejected → Archive column**: automatic (already the Phase 2 display rule —
+   verify it needs zero manual action).
+4. **Drag stays as manual override** — but log it: add `InquiryStatusEvent` model
+   (inquiryId, fromStatus, toStatus, trigger: 'system' | 'admin', actorId?, createdAt).
+   ALL transitions (auto + manual) write an event. Card detail shows the timeline.
+5. **Needs-action ordering**: within each column, cards sort oldest-in-stage first.
+   Column headers show count + oldest age. `details_submitted` is the "your move"
+   column — give it a subtle highlighted header.
+6. Schema change (reviewStartedAt, wentLiveAt, InquiryStatusEvent) → migrate, run
+   attended.
+
 ## Phase 3 — Two-way messages (admin ↔ course)
 
 Schema:
