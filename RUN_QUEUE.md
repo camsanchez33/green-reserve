@@ -32,6 +32,7 @@ and verified on the live site. After every run: `git status` — if dirty, `git 
 - [x] ADMIN_V2 Phase 2e — backfill orphaned inquiries to Archived + permanent-delete action for archived inquiries (small run, no migration) — 695fb7a
 - [x] Small run: inline delete on archived inquiry rows — Trash2 icon button on each row in the Archived tab (reuse existing deleteInquiry fn + confirm), Archived tab only, never on Active rows — e881c43
 - [x] ADMIN_V2 Phase 4 — employee roles + temp-password provisioning (schema change, run attended) — 25a7284
+- [x] ADMIN_V2 Phase 4b — requireRole in every /api/admin route (support can currently create courses!) + /admin/profile tab + owner-only owner password + /admin/owner-login with 2FA (schema change, run attended) — 5e4771c
 - [ ] ADMIN_V2 Phase 5 — type-aware add-course wizard
 - [ ] DESIGN_SYSTEM_SPEC Phase D2 — operator dashboard sweep + per-course brandColor (schema change, run attended)
 - [ ] PUBLIC_SITE_SPEC Phases A+B — footer fix, /contact, /courses redirect, all-50-states form, screenshots section, SEO metadata (build in Clubhouse style)
