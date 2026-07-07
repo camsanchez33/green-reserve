@@ -306,6 +306,14 @@ async function handleAction(inquiryId: string, action: string, payload?: Record<
     }
   }
 
+  if (action === 'set_status') {
+    const allowed = ['pending', 'in_review', 'details_requested', 'details_submitted', 'building', 'rejected'];
+    const newStatus = String(payload?.newStatus ?? '');
+    if (!allowed.includes(newStatus)) return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+    await prisma.courseInquiry.update({ where: { id: inquiryId }, data: { status: newStatus } });
+    return NextResponse.json({ success: true });
+  }
+
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
 }
 
