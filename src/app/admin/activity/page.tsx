@@ -37,7 +37,7 @@ export default function ActivityPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [courseId, setCourseId] = useState('');
-  const [from, setFrom] = useState('');
+  const [from, setFrom] = useState(() => { const d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().split('T')[0]; });
   const [to, setTo] = useState('');
   const initRef = useRef(false);
 
