@@ -156,7 +156,7 @@ function WizardContent() {
               )}
               <div className="flex gap-3">
                 {result.courseId && (
-                  <button onClick={() => router.push(`/admin/courses?courseId=${result.courseId}`)}
+                  <button onClick={() => router.push(`/admin/courses/${result.courseId}`)}
                     className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-pine hover:bg-pine-hover text-white rounded-md text-[12.5px] font-medium transition-colors">
                     <Eye className="w-4 h-4"/>View in admin
                   </button>

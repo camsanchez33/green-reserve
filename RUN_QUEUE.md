@@ -22,8 +22,8 @@ and verified on the live site. After every run: `git status` — if dirty, `git 
 
 ## Queue (run in this order)
 
-- [ ] DESIGN_SYSTEM_SPEC Phase D1 — Clubhouse tokens, shared UI components, admin sweep, CLAUDE.md design section rewrite (FIRST — so all v2 screens build in the new style)
-- [ ] ADMIN_V2 Phase 1 — full course detail page at /admin/courses/[id] (build in Clubhouse style)
+- [x] DESIGN_SYSTEM_SPEC Phase D1 — Clubhouse tokens, shared UI components, admin sweep, CLAUDE.md design section rewrite — 99cbc9a
+- [x] ADMIN_V2 Phase 1 — full course detail page at /admin/courses/[id] (build in Clubhouse style)
 - [ ] ADMIN_V2 Phase 2 — inquiries kanban board (build in Clubhouse style)
 - [ ] ADMIN_V2 Phase 3 — two-way admin↔course messages (schema change, run attended)
 - [ ] ADMIN_V2 Phase 4 — employee roles + temp-password provisioning (schema change, run attended)
