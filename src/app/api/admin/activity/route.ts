@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
       golferName: b.golferName,
       golferEmail: b.golferEmail,
       description: `Booked ${b.teeTime.date} at ${b.teeTime.time} · ${b.players} player${b.players !== 1 ? 's' : ''}`,
-      amount: b.totalAmount,
+      amount: b.totalAmount / 100,
     })),
     ...cancellations.map(c => ({
       type: 'cancellation' as const,
@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
       golferName: c.golferName,
       golferEmail: c.golferEmail,
       description: `Cancelled ${c.teeTime.date} at ${c.teeTime.time} · ${c.players} player${c.players !== 1 ? 's' : ''}`,
-      amount: c.cancellationFeeTotal > 0 ? c.cancellationFeeTotal : undefined,
+      amount: c.cancellationFeeTotal > 0 ? c.cancellationFeeTotal / 100 : undefined,
     })),
     ...memberships.map(m => ({
       type: 'membership' as const,
