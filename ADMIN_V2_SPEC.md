@@ -75,6 +75,48 @@ nobody files cards. Three transitions are ALREADY automatic (request-details →
 6. Schema change (reviewStartedAt, wentLiveAt, InquiryStatusEvent) → migrate, run
    attended.
 
+## Phase 2c — Inquiries vertical pipeline + course archive (schema change, run attended)
+
+### A. Inquiries layout v3 — unified list (replaces kanban columns)
+ONE list of ALL inquiries in a single white card on paper. No stage sections, no columns.
+
+- **Row**: course name, contact + title, city/state, what they're looking for, stage
+  (StatusDot + plain label), days in current stage (red > 7), last-updated date.
+- **Quick-filter chips above the list** (act as stage filters, show live counts):
+  "Your move (n)" = details_submitted, "New (n)" = pending, "Waiting on them (n)" =
+  details_requested, "In review (n)", "Building (n)", "Archived (n)" = rejected + live.
+  Default view = everything except Archived.
+- **Search**: course, contact, email, city. **Sort**: newest, oldest, course name,
+  location, last updated, longest in stage. **Filters**: stage (the chips), submitted
+  date range, updated-since.
+- **Row click → detail panel**: stage shown prominently with a one-line plain-language
+  explanation of what it means and what moves it forward, the Phase 2b event timeline,
+  all submitted info + details-sheet answers, admin notes, and stage-appropriate actions
+  (Request details / Resend sheet / Review sheet → Build course / Reject). Manual stage
+  override is a dropdown here, logged as an admin InquiryStatusEvent.
+- Each row also carries its ONE stage-appropriate action button inline (Open / Resend
+  sheet / Review sheet → build) so common moves skip the panel.
+
+### B. Course archive (replaces hard delete)
+- Schema: `Course.archivedAt DateTime?`, `Course.archivedBy String?` → migrate.
+- The admin "delete course" action becomes **Archive**: sets archivedAt, course
+  disappears from the default admin list (new "Archived" filter shows them), public
+  course page 404s, operator dashboard shows a "This course has been archived" notice,
+  tee-time generation and all crons skip archived courses. Data (bookings, members,
+  payments) is fully retained. **Restore** action un-archives.
+- **Hard delete exists ONLY for already-archived courses**, behind a type-the-course-name
+  confirmation. Fix the current cascade bug: enumerate EVERY model in
+  prisma/schema.prisma that references courseId (the existing transaction misses some —
+  e.g. TeeSet, CourseStaff, Blackout) and delete in FK-safe order.
+
+### C. Cross-entity integrity
+- Archiving a course: write an InquiryStatusEvent on its linked inquiry ("course
+  archived"); inquiry stays in Archive.
+- Hard-deleting a course: clear the inquiry's builtCourseId, revert its status to
+  details_submitted with a logged event, so it re-enters the working pipeline honestly.
+- Audit every admin page for dead links to archived/deleted courses (course detail 404s
+  gracefully with a back link, not a crash).
+
 ## Phase 3 — Two-way messages (admin ↔ course)
 
 Schema:
