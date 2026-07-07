@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
   Calendar, BarChart2, Clock, Users, Settings, LogOut, XCircle,
-  Trophy, PartyPopper, DollarSign, AlertTriangle, MessageSquare,
+  Trophy, PartyPopper, DollarSign, AlertTriangle, MessageSquare, Layers,
 } from 'lucide-react';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
 
@@ -11,39 +11,33 @@ export type OperatorNavKey =
   | 'teesheet' | 'analytics' | 'cancellations' | 'tournaments' | 'outings'
   | 'schedule' | 'members' | 'payments' | 'settings' | 'messages';
 
-function NavItem({ icon, label, active, onClick, danger, badge, unreadCount }: {
-  icon: React.ReactNode; label: string; active?: boolean; onClick: () => void;
-  danger?: boolean; badge?: string; unreadCount?: number;
-}) {
-  return (
-    <button onClick={onClick} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left ${
-      danger   ? 'text-red-400 hover:bg-red-500/10 hover:text-red-300' :
-      active   ? 'bg-white/15 text-white' :
-                 'text-white/60 hover:bg-white/10 hover:text-white'
-    }`}>
-      <span className="w-4 h-4 shrink-0">{icon}</span>
-      <span className="flex-1">{label}</span>
-      {unreadCount && unreadCount > 0 ? (
-        <span className="text-[10px] font-bold bg-emerald-500 text-white px-1.5 py-0.5 rounded-full leading-none">{unreadCount > 99 ? '99+' : unreadCount}</span>
-      ) : badge ? (
-        <span className="text-[9px] font-bold uppercase tracking-wide bg-white/10 text-white/40 px-1.5 py-0.5 rounded-full">{badge}</span>
-      ) : null}
-    </button>
-  );
+interface CourseIdentity {
+  name: string; type: string; brandColor: string; establishedYear?: number | null;
 }
 
-export default function OperatorSidebar({ active, courseName, onAlertClick }: {
+function accentActive(color: string) {
+  return { borderLeft: `2px solid ${color}`, backgroundColor: color + '14', color };
+}
+
+export default function OperatorSidebar({ active, onAlertClick }: {
   active: OperatorNavKey;
-  courseName?: string;
   onAlertClick?: () => void;
 }) {
   const router = useRouter();
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [identity, setIdentity] = useState<CourseIdentity>({ name: '', type: 'public', brandColor: '#24513B', establishedYear: null });
 
   useEffect(() => {
     fetch('/api/operator/messages?unreadCount=1')
       .then(r => r.ok ? r.json() : { count: 0 })
       .then(d => setUnreadMessages(d.count ?? 0))
+      .catch(() => {});
+    fetch('/api/operator/courses')
+      .then(r => r.ok ? r.json() : null)
+      .then(c => {
+        if (!c) return;
+        setIdentity({ name: c.name || '', type: c.type || 'public', brandColor: c.brandColor || '#24513B', establishedYear: c.establishedYear ?? null });
+      })
       .catch(() => {});
   }, []);
 
@@ -52,41 +46,95 @@ export default function OperatorSidebar({ active, courseName, onAlertClick }: {
     router.push('/dashboard/login');
   }
 
+  const { brandColor, name, type, establishedYear } = identity;
+  const typeLabel = type === 'semi-private' ? 'Semi-Private' : type === 'municipal' ? 'Municipal' : type === 'resort' ? 'Resort' : 'Public Course';
+  const meta = [establishedYear ? `Est. ${establishedYear}` : null, typeLabel].filter(Boolean).join(' · ').toUpperCase();
+
+  const navItems: { key: OperatorNavKey; label: string; href: string; icon: React.ReactNode; soon?: boolean }[] = [
+    { key: 'teesheet',      label: 'Tee Sheet',    href: '/dashboard',               icon: <Calendar className="w-4 h-4"/> },
+    { key: 'analytics',     label: 'Analytics',    href: '/dashboard?tab=analytics', icon: <BarChart2 className="w-4 h-4"/> },
+    { key: 'cancellations', label: 'Cancellations',href: '/dashboard/cancellations', icon: <XCircle className="w-4 h-4"/> },
+    { key: 'tournaments',   label: 'Tournaments',  href: '/dashboard/tournaments',   icon: <Trophy className="w-4 h-4"/>,    soon: true },
+    { key: 'outings',       label: 'Outings',      href: '/dashboard/outings',       icon: <PartyPopper className="w-4 h-4"/>, soon: true },
+    { key: 'schedule',      label: 'Schedule',     href: '/dashboard/schedules',     icon: <Clock className="w-4 h-4"/> },
+    { key: 'members',       label: 'Members',      href: '/dashboard/members',       icon: <Users className="w-4 h-4"/> },
+    { key: 'payments',      label: 'Payments',     href: '/dashboard/payments',      icon: <DollarSign className="w-4 h-4"/> },
+    { key: 'messages',      label: 'Messages',     href: '/dashboard/messages',      icon: <MessageSquare className="w-4 h-4"/> },
+    { key: 'settings',      label: 'Settings',     href: '/dashboard/settings',      icon: <Settings className="w-4 h-4"/> },
+  ];
+
+  const groups = [
+    { label: 'Dashboard', keys: ['teesheet', 'analytics'] as OperatorNavKey[] },
+    { label: 'Bookings',  keys: ['cancellations', 'tournaments', 'outings'] as OperatorNavKey[] },
+    { label: 'Manage',    keys: ['schedule', 'members', 'payments', 'messages', 'settings'] as OperatorNavKey[] },
+  ];
+
   return (
     <>
     <AnnouncementBanner />
-    <aside className="w-56 shrink-0 bg-[#0f2218] flex flex-col h-full overflow-y-auto">
-      <div className="px-4 py-5 border-b border-white/10">
-        <div className="font-black text-lg text-white leading-none">
-          Green<span className="text-green-400">Reserve</span>
+    <aside className="w-56 shrink-0 bg-white border-r border-line flex flex-col h-full overflow-y-auto">
+      <div className="px-4 py-4 border-b border-line">
+        <div className="flex items-center gap-2.5 mb-3">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: brandColor + '14', color: brandColor }}>
+            <Layers className="w-4 h-4"/>
+          </div>
+          <div>
+            <div className="font-serif text-[15px] text-ink leading-tight">GreenReserve</div>
+            <div className="text-[10px] text-ink-muted font-medium uppercase tracking-wider">Operator</div>
+          </div>
         </div>
-        {courseName && <div className="text-xs text-white/40 mt-1 truncate">{courseName}</div>}
+        {name && (
+          <div className="pl-0.5">
+            <div className="font-serif text-[14.5px] text-ink leading-snug truncate">{name}</div>
+            <div className="text-[10.5px] text-ink-muted uppercase tracking-[0.05em] mt-0.5 truncate">{meta}</div>
+          </div>
+        )}
       </div>
 
-      <nav className="flex-1 p-3 space-y-0.5">
-        <div className="text-xs font-semibold text-white/25 uppercase tracking-widest px-3 py-2">Dashboard</div>
-        <NavItem icon={<Calendar className="w-4 h-4"/>} label="Tee Sheet"  active={active==='teesheet'}  onClick={() => router.push('/dashboard')} />
-        <NavItem icon={<BarChart2 className="w-4 h-4"/>} label="Analytics" active={active==='analytics'} onClick={() => router.push('/dashboard?tab=analytics')} />
-
-        <div className="text-xs font-semibold text-white/25 uppercase tracking-widest px-3 py-2 mt-3">Bookings</div>
-        <NavItem icon={<XCircle className="w-4 h-4"/>}      label="Cancellations" active={active==='cancellations'} onClick={() => router.push('/dashboard/cancellations')} />
-        <NavItem icon={<Trophy className="w-4 h-4"/>}       label="Tournaments"   active={active==='tournaments'}   onClick={() => router.push('/dashboard/tournaments')} badge="Soon" />
-        <NavItem icon={<PartyPopper className="w-4 h-4"/>}  label="Outings"       active={active==='outings'}       onClick={() => router.push('/dashboard/outings')} badge="Soon" />
-
-        <div className="text-xs font-semibold text-white/25 uppercase tracking-widest px-3 py-2 mt-3">Manage</div>
-        <NavItem icon={<Clock className="w-4 h-4"/>}         label="Schedule"  active={active==='schedule'}  onClick={() => router.push('/dashboard/schedules')} />
-        <NavItem icon={<Users className="w-4 h-4"/>}         label="Members"   active={active==='members'}   onClick={() => router.push('/dashboard/members')} />
-        <NavItem icon={<DollarSign className="w-4 h-4"/>}    label="Payments"  active={active==='payments'}  onClick={() => router.push('/dashboard/payments')} />
-        <NavItem icon={<MessageSquare className="w-4 h-4"/>} label="Messages"  active={active==='messages'}  onClick={() => router.push('/dashboard/messages')} unreadCount={unreadMessages} />
-        <NavItem icon={<Settings className="w-4 h-4"/>}      label="Settings"  active={active==='settings'}  onClick={() => router.push('/dashboard/settings')} />
-
-        <div className="pt-2">
-          <NavItem icon={<AlertTriangle className="w-4 h-4"/>} label="Course Alert" onClick={onAlertClick || (() => router.push('/dashboard'))} />
+      <nav className="flex-1 py-3 overflow-y-auto">
+        {groups.map(g => (
+          <div key={g.label} className="mb-1">
+            <div className="text-[10px] font-medium text-ink-faint uppercase tracking-[0.08em] px-4 py-1.5">{g.label}</div>
+            {navItems.filter(n => g.keys.includes(n.key)).map(item => {
+              const isActive = active === item.key;
+              const base = 'w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium transition-colors text-left border-l-2';
+              if (item.soon) return (
+                <div key={item.key} className={base + ' border-transparent text-ink-faint cursor-default'}>
+                  {item.icon}<span className="flex-1">{item.label}</span>
+                  <span className="text-[9px] font-medium uppercase tracking-wide text-ink-faint">Soon</span>
+                </div>
+              );
+              if (isActive) return (
+                <button key={item.key} onClick={() => router.push(item.href)} className={base} style={accentActive(brandColor)}>
+                  {item.icon}<span className="flex-1">{item.label}</span>
+                  {item.key === 'messages' && unreadMessages > 0 && (
+                    <span className="text-[10px] font-medium leading-none" style={{ color: brandColor }}>{unreadMessages > 99 ? '99+' : unreadMessages}</span>
+                  )}
+                </button>
+              );
+              return (
+                <button key={item.key} onClick={() => router.push(item.href)} className={base + ' border-transparent text-ink-soft hover:text-ink hover:bg-line-soft/60'}>
+                  {item.icon}<span className="flex-1">{item.label}</span>
+                  {item.key === 'messages' && unreadMessages > 0 && (
+                    <span className="text-[10px] font-medium text-ok leading-none">{unreadMessages > 99 ? '99+' : unreadMessages}</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        ))}
+        <div className="px-4 pt-1">
+          <button onClick={onAlertClick || (() => router.push('/dashboard'))}
+            className="w-full flex items-center gap-2.5 py-2 text-[12px] text-warn hover:text-ink transition-colors text-left">
+            <AlertTriangle className="w-3.5 h-3.5"/><span>Course alert</span>
+          </button>
         </div>
       </nav>
 
-      <div className="p-3 border-t border-white/10">
-        <NavItem icon={<LogOut className="w-4 h-4"/>} label="Sign Out" onClick={logout} danger />
+      <div className="p-3 border-t border-line">
+        <button onClick={logout} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-ink-soft hover:text-bad transition-colors text-left">
+          <LogOut className="w-4 h-4"/>Sign Out
+        </button>
       </div>
     </aside>
     </>

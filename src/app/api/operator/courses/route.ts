@@ -34,6 +34,8 @@ export async function PATCH(req: NextRequest) {
       yardage: body.yardage ? Number(body.yardage) : course.yardage,
       slope: body.slope ? Number(body.slope) : course.slope,
       active: body.active !== undefined ? body.active : course.active,
+      brandColor: body.brandColor ?? course.brandColor,
+      establishedYear: body.establishedYear !== undefined ? (body.establishedYear ? Number(body.establishedYear) : null) : course.establishedYear,
     },
   });
   return NextResponse.json(updated);

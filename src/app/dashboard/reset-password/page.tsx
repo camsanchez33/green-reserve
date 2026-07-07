@@ -4,6 +4,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
 
+const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+
 function ResetPasswordContent() {
   const router = useRouter();
   const params = useSearchParams();
@@ -12,7 +14,6 @@ function ResetPasswordContent() {
   const [checking, setChecking] = useState(true);
   const [validToken, setValidToken] = useState(false);
   const [email, setEmail] = useState('');
-
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,8 +26,7 @@ function ResetPasswordContent() {
       .then(async res => {
         if (!res.ok) { setValidToken(false); return; }
         const data = await res.json();
-        setValidToken(true);
-        setEmail(data.email);
+        setValidToken(true); setEmail(data.email);
       })
       .finally(() => setChecking(false));
   }, [token]);
@@ -36,47 +36,41 @@ function ResetPasswordContent() {
     const strengthError = validatePasswordStrength(password);
     if (strengthError) { setError(strengthError); return; }
     if (password !== confirm) { setError('Passwords do not match.'); return; }
-
     setLoading(true);
     const res = await fetch('/api/auth/reset-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, password }),
     });
     setLoading(false);
-    if (!res.ok) {
-      const d = await res.json();
-      setError(d.error || 'Something went wrong.');
-      return;
-    }
+    if (!res.ok) { const d = await res.json(); setError(d.error || 'Something went wrong.'); return; }
     setDone(true);
     setTimeout(() => router.push('/dashboard/login'), 1800);
   };
 
   return (
-    <div className="min-h-screen bg-[#0a1f0f] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-paper flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <span className="text-white font-black text-3xl tracking-tight">
-            Green<span className="text-green-400">Reserve</span>
-          </span>
-          <p className="text-green-200/60 text-sm mt-2">Course Operator Portal</p>
+          <span className="text-[22px] font-serif font-medium tracking-tight text-ink">Green<span className="text-pine">Reserve</span></span>
+          <p className="text-xs text-ink-muted mt-1">Course Operator Portal</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-2xl p-8">
+        <div className="bg-white border border-line rounded-lg p-8">
           {checking && (
             <div className="text-center py-6">
-              <Loader2 className="w-10 h-10 text-green-600 animate-spin mx-auto mb-4" />
-              <p className="text-gray-500 text-sm">Checking your link...</p>
+              <Loader2 className="w-10 h-10 text-pine animate-spin mx-auto mb-4"/>
+              <p className="text-ink-soft text-sm">Checking your link...</p>
             </div>
           )}
 
           {!checking && !validToken && (
             <div className="text-center py-4">
-              <XCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-              <h2 className="text-lg font-black text-gray-900 mb-2">Link invalid or expired</h2>
-              <p className="text-gray-500 text-sm mb-6">Reset links expire after 1 hour. Request a new one below.</p>
-              <a href="/dashboard/forgot-password" className="inline-block w-full bg-[#1b4332] text-white py-3 rounded-lg font-bold text-sm hover:bg-[#2d6a4f] transition-colors">
+              <div className="w-12 h-12 bg-bad/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <XCircle className="w-6 h-6 text-bad"/>
+              </div>
+              <h2 className="text-[18px] font-serif font-medium text-ink mb-2">Link invalid or expired</h2>
+              <p className="text-ink-soft text-sm mb-6">Reset links expire after 1 hour. Request a new one below.</p>
+              <a href="/dashboard/forgot-password" className="inline-block w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] transition-colors">
                 Request New Link
               </a>
             </div>
@@ -84,29 +78,25 @@ function ResetPasswordContent() {
 
           {!checking && validToken && !done && (
             <>
-              <h2 className="text-xl font-black text-gray-900 mb-1">Set a new password</h2>
-              <p className="text-gray-500 text-sm mb-6">For <span className="font-semibold text-gray-700">{email}</span></p>
+              <h2 className="text-[20px] font-serif font-medium text-ink mb-1">Set a new password</h2>
+              <p className="text-sm text-ink-soft mb-6">For <span className="font-medium text-ink">{email}</span></p>
 
-              {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-4">{error}</div>}
+              {error && <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm mb-4">{error}</div>}
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">New Password</label>
-                  <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && submit()}
-                    className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none" />
-                  <p className="text-xs text-gray-400 mt-1.5">{PASSWORD_REQUIREMENTS_HINT}</p>
+                  <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">New Password</label>
+                  <input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} className={iCls}/>
+                  <p className="text-xs text-ink-faint mt-1.5">{PASSWORD_REQUIREMENTS_HINT}</p>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Confirm Password</label>
-                  <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && submit()}
-                    className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none" />
+                  <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Confirm Password</label>
+                  <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} className={iCls}/>
                 </div>
               </div>
 
               <button onClick={submit} disabled={loading}
-                className="mt-6 w-full bg-[#1b4332] text-white py-3 rounded-lg font-bold text-sm hover:bg-[#2d6a4f] disabled:opacity-50 transition-colors">
+                className="mt-6 w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 transition-colors">
                 {loading ? 'Saving...' : 'Set New Password'}
               </button>
             </>
@@ -114,9 +104,11 @@ function ResetPasswordContent() {
 
           {done && (
             <div className="text-center py-4">
-              <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
-              <h2 className="text-lg font-black text-gray-900 mb-2">Password updated</h2>
-              <p className="text-gray-500 text-sm">Redirecting you to login...</p>
+              <div className="w-12 h-12 bg-ok/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-6 h-6 text-ok"/>
+              </div>
+              <h2 className="text-[18px] font-serif font-medium text-ink mb-2">Password updated</h2>
+              <p className="text-ink-soft text-sm">Redirecting you to login...</p>
             </div>
           )}
         </div>
@@ -126,5 +118,5 @@ function ResetPasswordContent() {
 }
 
 export default function ResetPasswordPage() {
-  return <Suspense><ResetPasswordContent /></Suspense>;
+  return <Suspense><ResetPasswordContent/></Suspense>;
 }

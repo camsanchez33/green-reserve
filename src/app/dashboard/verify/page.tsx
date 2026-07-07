@@ -9,7 +9,6 @@ function VerifyContent() {
   const urlToken = params.get('token');
   const [status, setStatus] = useState<'idle' | 'verifying' | 'done' | 'error'>('idle');
 
-  // Auto-verify if token is in URL (admin setup link flow)
   useEffect(() => {
     if (urlToken) verify(urlToken);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -20,7 +19,6 @@ function VerifyContent() {
     try {
       let tok = token;
       if (!tok) {
-        // Fallback: get token from current session
         const tokenRes = await fetch('/api/auth/get-token');
         if (!tokenRes.ok) { setStatus('error'); return; }
         const data = await tokenRes.json();
@@ -33,62 +31,52 @@ function VerifyContent() {
       });
       if (res.ok) {
         setStatus('done');
-        // If they aren't logged in yet, send to login; otherwise go to onboarding
         const me = await fetch('/api/auth/me');
-        if (me.ok) {
-          setTimeout(() => router.push('/dashboard/onboarding'), 1500);
-        } else {
-          setTimeout(() => router.push('/dashboard/login?verified=1'), 1500);
-        }
-      } else {
-        setStatus('error');
-      }
-    } catch {
-      setStatus('error');
-    }
+        if (me.ok) { setTimeout(() => router.push('/dashboard/onboarding'), 1500); }
+        else { setTimeout(() => router.push('/dashboard/login?verified=1'), 1500); }
+      } else { setStatus('error'); }
+    } catch { setStatus('error'); }
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1f0f] flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg p-10 max-w-md w-full text-center shadow-2xl">
+    <div className="min-h-screen bg-paper flex items-center justify-center p-4">
+      <div className="bg-white border border-line rounded-lg p-10 max-w-md w-full text-center">
         {status === 'idle' && !urlToken && (
           <>
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
-              <Mail className="w-8 h-8 text-green-600" />
+            <div className="w-16 h-16 bg-pine/10 rounded-full flex items-center justify-center mx-auto mb-5">
+              <Mail className="w-8 h-8 text-pine"/>
             </div>
-            <h1 className="text-2xl font-black text-gray-900 mb-2">Confirm your email</h1>
-            <p className="text-gray-500 mb-2 text-sm">
-              Your email must be verified before your course can go live on Green Reserve.
-            </p>
-            <p className="text-xs text-gray-400 mb-8 bg-gray-50 rounded-lg p-3">
-              📬 In production, a link gets sent to your inbox. Click below to verify instantly.
-            </p>
-            <button onClick={() => verify()} className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+            <h1 className="text-[22px] font-serif font-medium text-ink mb-2">Confirm your email</h1>
+            <p className="text-sm text-ink-soft mb-2">Your email must be verified before your course can go live on GreenReserve.</p>
+            <p className="text-xs text-ink-muted mb-8 bg-paper border border-line rounded-md p-3">In production, a link gets sent to your inbox. Click below to verify instantly.</p>
+            <button onClick={() => verify()} className="w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] transition-colors">
               Verify My Email
             </button>
           </>
         )}
         {status === 'verifying' && (
           <div className="py-4">
-            <Loader2 className="w-12 h-12 text-green-600 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Verifying your email...</p>
+            <Loader2 className="w-12 h-12 text-pine animate-spin mx-auto mb-4"/>
+            <p className="text-ink-soft text-sm">Verifying your email...</p>
           </div>
         )}
         {status === 'done' && (
           <div className="py-4">
-            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-900">Email verified!</h2>
-            <p className="text-gray-500 mt-2">Redirecting to setup...</p>
+            <div className="w-16 h-16 bg-ok/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-ok"/>
+            </div>
+            <h2 className="text-[18px] font-serif font-medium text-ink">Email verified</h2>
+            <p className="text-ink-muted text-sm mt-2">Redirecting to setup...</p>
           </div>
         )}
         {status === 'error' && (
           <div className="py-4">
-            <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-            <p className="text-red-600 font-medium mb-2">Verification failed.</p>
-            <p className="text-gray-500 text-sm mb-4">The link may have expired or already been used.</p>
-            <button onClick={() => router.push('/dashboard/login')} className="text-green-600 underline text-sm">
-              Go to login
-            </button>
+            <div className="w-16 h-16 bg-bad/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <XCircle className="w-8 h-8 text-bad"/>
+            </div>
+            <p className="text-bad font-medium mb-2">Verification failed.</p>
+            <p className="text-ink-muted text-sm mb-4">The link may have expired or already been used.</p>
+            <button onClick={() => router.push('/dashboard/login')} className="text-pine underline text-sm">Go to login</button>
           </div>
         )}
       </div>
@@ -97,5 +85,5 @@ function VerifyContent() {
 }
 
 export default function VerifyPage() {
-  return <Suspense><VerifyContent /></Suspense>;
+  return <Suspense><VerifyContent/></Suspense>;
 }

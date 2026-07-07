@@ -3,24 +3,20 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle } from 'lucide-react';
 
+const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+
 function LoginContent() {
   const router = useRouter();
   const params = useSearchParams();
   const justVerified = params.get('verified') === '1';
-
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
   const submit = async () => {
-    setLoading(true);
-    setError('');
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    });
+    setLoading(true); setError('');
+    const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
     const data = await res.json();
     setLoading(false);
     if (!res.ok) { setError(data.error || 'Invalid email or password'); return; }
@@ -28,52 +24,41 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a1f0f] flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-paper flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <span className="text-white font-black text-3xl tracking-tight">
-            Green<span className="text-green-400">Reserve</span>
-          </span>
-          <p className="text-green-200/60 text-sm mt-2">Course Operator Portal</p>
+          <div className="font-serif text-[28px] font-medium text-ink leading-tight">GreenReserve</div>
+          <p className="text-sm text-ink-muted mt-1">Course Operator Portal</p>
         </div>
 
         {justVerified && (
-          <div className="flex items-center gap-3 bg-green-900/50 border border-green-700 rounded-lg px-4 py-3 mb-4 text-green-300 text-sm">
-            <CheckCircle className="w-4 h-4 flex-shrink-0" />
-            Email verified! Sign in to continue setup.
+          <div className="flex items-center gap-2 bg-ok/5 border border-ok/20 rounded-md px-4 py-3 mb-4 text-ok text-sm">
+            <CheckCircle className="w-4 h-4 shrink-0"/>Email verified! Sign in to continue setup.
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-2xl p-8">
-          <h2 className="text-xl font-black text-gray-900 mb-6">Sign In</h2>
-
-          {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-4">{error}</div>}
-
-          <div className="space-y-4">
+        <div className="bg-white border border-line rounded-lg p-6 space-y-4">
+          <h2 className="text-[17px] font-serif font-medium text-ink">Sign In</h2>
+          {error && <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-3 py-2.5 text-sm">{error}</div>}
+          <div className="space-y-3">
             <div>
-              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Email</label>
-              <input type="email" value={form.email} onChange={e => set('email', e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && submit()}
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none" />
+              <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Email</label>
+              <input type="email" value={form.email} onChange={e => set('email', e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} autoFocus className={iCls}/>
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Password</label>
-                <a href="/dashboard/forgot-password" className="text-xs text-green-700 font-medium hover:underline">Forgot password?</a>
+                <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted">Password</label>
+                <a href="/dashboard/forgot-password" className="text-xs text-pine hover:underline">Forgot password?</a>
               </div>
-              <input type="password" value={form.password} onChange={e => set('password', e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && submit()}
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none" />
+              <input type="password" value={form.password} onChange={e => set('password', e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} className={iCls}/>
             </div>
           </div>
-
           <button onClick={submit} disabled={loading}
-            className="mt-6 w-full bg-[#1b4332] text-white py-3 rounded-lg font-bold text-sm hover:bg-[#2d6a4f] disabled:opacity-50 transition-colors">
+            className="w-full bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
-
-          <p className="mt-6 text-center text-xs text-gray-400">
-            Don&apos;t have an account? <a href="/for-courses" className="text-green-700 font-medium hover:underline">Submit an inquiry →</a>
+          <p className="text-center text-xs text-ink-muted">
+            Don&apos;t have an account? <a href="/for-courses" className="text-pine font-medium hover:underline">Submit an inquiry →</a>
           </p>
         </div>
       </div>
