@@ -8,13 +8,13 @@ import { StatusDot } from '@/components/ui/StatusDot';
 interface Course { id: string; name: string; }
 interface EventRow {
   id: string; type: 'booking' | 'cancellation' | 'membership' | 'membership_payment';
-  courseName: string; courseId: string;
+  courseName: string;
   golferName?: string; golferEmail?: string;
   description: string; amount?: number; timestamp: string;
 }
 
 const fmtDate = (d: string) => new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-const fmtMoney = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+const fmtMoney = (n: number) => `$${n.toFixed(2)}`;
 
 const TYPE_DOT: Record<EventRow['type'], string> = {
   booking: 'ok',
@@ -55,8 +55,8 @@ export default function ActivityPage() {
         fetch('/api/admin/courses?simple=1'),
       ]);
       const [aData, cData] = await Promise.all([aRes.json(), cRes.json()]);
-      setEvents(Array.isArray(aData.events) ? aData.events : []);
-      setHasMore(aData.hasMore ?? false);
+      setEvents(Array.isArray(aData.items) ? aData.items : []);
+      setHasMore(aData.page < aData.pages);
       setCourses(Array.isArray(cData) ? cData : (Array.isArray(cData.courses) ? cData.courses : []));
     } catch { /* stay on page */ }
     finally { setLoading(false); }
