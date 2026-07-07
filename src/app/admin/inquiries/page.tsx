@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   RefreshCw, Mail, Wrench, Power, Search, ArrowUpRight, X, Copy,
-  XCircle, CheckCircle, Clock, Trash2, ChevronDown,
+  XCircle, CheckCircle, Clock, Trash2, ChevronDown, Archive,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -28,20 +28,25 @@ interface ApproveResult { tempPassword?: string; setupLink?: string; detailsLink
 const STATUS_DOT_MAP: Record<string, string> = {
   pending: 'warn', in_review: 'neutral', details_requested: 'neutral',
   details_submitted: 'neutral', building: 'warn', live: 'ok', rejected: 'bad',
+  archived: 'neutral',
 };
 const STATUS_LABEL: Record<string, string> = {
   pending: 'Pending', in_review: 'In Review', details_requested: 'Sheet Sent',
   details_submitted: 'Sheet In', building: 'Building', live: 'Live', rejected: 'Rejected',
+  archived: 'Archived',
 };
 
-const CHIPS = [
+const ACTIVE_CHIPS = [
   { key: 'your_move', label: 'Your move', statuses: ['details_submitted'], pine: true },
   { key: 'new', label: 'New', statuses: ['pending'], pine: false },
   { key: 'in_review', label: 'In review', statuses: ['in_review'], pine: false },
   { key: 'waiting', label: 'Waiting on them', statuses: ['details_requested'], pine: false },
   { key: 'building', label: 'Building', statuses: ['building'], pine: false },
-  { key: 'closed', label: 'Closed', statuses: ['live', 'rejected'], pine: false },
 ];
+
+const ACTIVE_STATUSES = new Set(['pending', 'in_review', 'details_requested', 'details_submitted', 'building']);
+const ARCHIVED_STATUSES = new Set(['live', 'rejected', 'archived']);
+const ALL_STATUSES = ['pending', 'in_review', 'details_requested', 'details_submitted', 'building', 'live', 'rejected', 'archived'];
 
 const STAGE_EXPLAIN: Record<string, string> = {
   pending: 'New inquiry — not yet reviewed.',
@@ -51,12 +56,22 @@ const STAGE_EXPLAIN: Record<string, string> = {
   building: 'Course is built and the operator has their login. Review and go live when ready.',
   live: 'Course is live on GreenReserve.',
   rejected: 'Inquiry was rejected.',
+  archived: 'This inquiry is archived — its course was archived or permanently deleted.',
 };
 
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 function daysAgo(d: string) { return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24)); }
 
-const ALL_STATUSES = ['pending', 'in_review', 'details_requested', 'details_submitted', 'building', 'rejected'];
+function whyArchived(inq: Inquiry): { reason: string; date: string } {
+  if (inq.status === 'live') return { reason: 'Went live', date: inq.updatedAt || inq.createdAt };
+  if (inq.status === 'rejected') return { reason: 'Rejected', date: inq.updatedAt || inq.createdAt };
+  // status === 'archived' — look at last event for cause
+  const lastEvent = inq.events.length > 0 ? inq.events[inq.events.length - 1] : null;
+  const actorName = lastEvent?.actorName || '';
+  if (actorName.toLowerCase().includes('permanently deleted')) return { reason: 'Course deleted', date: lastEvent?.createdAt || inq.updatedAt || inq.createdAt };
+  if (actorName.toLowerCase().includes('archived')) return { reason: 'Course archived', date: lastEvent?.createdAt || inq.updatedAt || inq.createdAt };
+  return { reason: 'Archived', date: inq.updatedAt || inq.createdAt };
+}
 
 export default function InquiriesPage() {
   const router = useRouter();
@@ -68,6 +83,7 @@ export default function InquiriesPage() {
   const [noteTexts, setNoteTexts] = useState<Record<string, string>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
   const [activeChips, setActiveChips] = useState<Set<string>>(
     new Set(['your_move', 'new', 'in_review', 'waiting', 'building'])
   );
@@ -167,23 +183,36 @@ export default function InquiriesPage() {
     if (selectedId === id) setSelectedId(null);
   }
 
-  // Filter + sort
-  const activeStatuses = new Set(CHIPS.filter(c => activeChips.has(c.key)).flatMap(c => c.statuses));
+  // Split into active vs archived pools
+  const activePool = inquiries.filter(i => ACTIVE_STATUSES.has(i.status));
+  const archivedPool = inquiries.filter(i => ARCHIVED_STATUSES.has(i.status));
+
+  // Active tab: chip filter + search + sort
+  const activeStatuses = new Set(ACTIVE_CHIPS.filter(c => activeChips.has(c.key)).flatMap(c => c.statuses));
   const q = search.toLowerCase().trim();
-  let filtered = inquiries.filter(i => {
+  const matchesSearch = (inq: Inquiry) => !q || (
+    inq.courseName.toLowerCase().includes(q) ||
+    inq.contactName.toLowerCase().includes(q) ||
+    inq.email.toLowerCase().includes(q) ||
+    inq.city.toLowerCase().includes(q)
+  );
+
+  let filteredActive = activePool.filter(i => {
     if (activeStatuses.size > 0 && !activeStatuses.has(i.status)) return false;
-    if (!q) return true;
-    return (
-      i.courseName.toLowerCase().includes(q) ||
-      i.contactName.toLowerCase().includes(q) ||
-      i.email.toLowerCase().includes(q) ||
-      i.city.toLowerCase().includes(q)
-    );
+    return matchesSearch(i);
   });
-  if (sortBy === 'oldest') filtered = [...filtered].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-  else if (sortBy === 'name') filtered = [...filtered].sort((a, b) => a.courseName.localeCompare(b.courseName));
-  else if (sortBy === 'longest_stage') filtered = [...filtered].sort((a, b) => new Date(a.updatedAt || a.createdAt).getTime() - new Date(b.updatedAt || b.createdAt).getTime());
-  else filtered = [...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  let filteredArchived = archivedPool.filter(matchesSearch);
+
+  const sortFn = (a: Inquiry, b: Inquiry) => {
+    if (sortBy === 'oldest') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    if (sortBy === 'name') return a.courseName.localeCompare(b.courseName);
+    if (sortBy === 'longest_stage') return new Date(a.updatedAt || a.createdAt).getTime() - new Date(b.updatedAt || b.createdAt).getTime();
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  };
+  filteredActive = [...filteredActive].sort(sortFn);
+  filteredArchived = [...filteredArchived].sort(sortFn);
+
+  const displayed = activeTab === 'active' ? filteredActive : filteredArchived;
 
   if (!adminReady) return null;
 
@@ -200,7 +229,7 @@ export default function InquiriesPage() {
           <div className="flex items-center justify-between mb-5">
             <div>
               <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Inquiries</h1>
-              <p className="text-sm text-ink-soft mt-0.5">{filtered.length} shown · {inquiries.length} total</p>
+              <p className="text-sm text-ink-soft mt-0.5">{displayed.length} shown</p>
             </div>
             <div className="flex items-center gap-2">
               <div className="relative">
@@ -221,39 +250,79 @@ export default function InquiriesPage() {
             </div>
           </div>
 
-          {/* Filter chips + sort */}
-          <div className="flex items-center gap-2 flex-wrap mb-5">
-            {CHIPS.map(chip => {
-              const on = activeChips.has(chip.key);
-              const count = inquiries.filter(i => chip.statuses.includes(i.status)).length;
-              return (
-                <button
-                  key={chip.key}
-                  onClick={() => setActiveChips(prev => {
-                    const n = new Set(prev);
-                    if (n.has(chip.key)) n.delete(chip.key); else n.add(chip.key);
-                    return n;
-                  })}
-                  className={
-                    'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium border transition-colors ' + (
-                      on && chip.pine
-                        ? 'bg-pine/10 text-pine border-pine/30'
-                        : on
-                        ? 'bg-ink/5 text-ink border-ink/20'
-                        : 'text-ink-muted border-line hover:border-line-strong hover:text-ink'
-                    )
-                  }
+          {/* Active / Archived tab toggle */}
+          <div className="flex items-center gap-1 mb-5 border-b border-line">
+            {(['active', 'archived'] as const).map(tab => (
+              <button
+                key={tab}
+                onClick={() => { setActiveTab(tab); setSelectedId(null); }}
+                className={
+                  'px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ' + (
+                    activeTab === tab
+                      ? 'border-pine text-pine'
+                      : 'border-transparent text-ink-muted hover:text-ink'
+                  )
+                }
+              >
+                {tab === 'active' ? 'Active' : 'Archived'}
+                <span className={'ml-1.5 text-[10px] font-medium ' + (activeTab === tab ? 'text-pine/70' : 'text-ink-faint')}>
+                  {tab === 'active' ? activePool.length : archivedPool.length}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Active tab: filter chips + sort */}
+          {activeTab === 'active' && (
+            <div className="flex items-center gap-2 flex-wrap mb-5">
+              {ACTIVE_CHIPS.map(chip => {
+                const on = activeChips.has(chip.key);
+                const count = activePool.filter(i => chip.statuses.includes(i.status)).length;
+                return (
+                  <button
+                    key={chip.key}
+                    onClick={() => setActiveChips(prev => {
+                      const n = new Set(prev);
+                      if (n.has(chip.key)) n.delete(chip.key); else n.add(chip.key);
+                      return n;
+                    })}
+                    className={
+                      'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium border transition-colors ' + (
+                        on && chip.pine
+                          ? 'bg-pine/10 text-pine border-pine/30'
+                          : on
+                          ? 'bg-ink/5 text-ink border-ink/20'
+                          : 'text-ink-muted border-line hover:border-line-strong hover:text-ink'
+                      )
+                    }
+                  >
+                    {chip.label}
+                    {count > 0 && (
+                      <span className={'rounded-full w-4 h-4 flex items-center justify-center text-[10px] ' + (on && chip.pine ? 'bg-pine/20 text-pine' : 'bg-line-strong text-ink-muted')}>
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+              <div className="ml-auto">
+                <select
+                  value={sortBy}
+                  onChange={e => setSortBy(e.target.value)}
+                  className="bg-white border border-line text-ink-soft text-xs rounded-md px-3 py-1.5 outline-none focus:border-pine/40 cursor-pointer"
                 >
-                  {chip.label}
-                  {count > 0 && (
-                    <span className={'rounded-full w-4 h-4 flex items-center justify-center text-[10px] ' + (on && chip.pine ? 'bg-pine/20 text-pine' : 'bg-line-strong text-ink-muted')}>
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-            <div className="ml-auto">
+                  <option value="newest">Newest first</option>
+                  <option value="oldest">Oldest first</option>
+                  <option value="name">Name A–Z</option>
+                  <option value="longest_stage">Longest in stage</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Archived tab: sort only */}
+          {activeTab === 'archived' && (
+            <div className="flex items-center justify-end mb-5">
               <select
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value)}
@@ -262,55 +331,119 @@ export default function InquiriesPage() {
                 <option value="newest">Newest first</option>
                 <option value="oldest">Oldest first</option>
                 <option value="name">Name A–Z</option>
-                <option value="longest_stage">Longest in stage</option>
               </select>
             </div>
-          </div>
+          )}
 
           {/* List */}
           {loading && <div className="py-20 text-center text-ink-muted text-sm">Loading...</div>}
-          {!loading && filtered.length === 0 && (
-            <div className="py-20 text-center text-ink-muted text-sm">No inquiries match your filters</div>
+          {!loading && displayed.length === 0 && (
+            <div className="py-20 text-center text-ink-muted text-sm">
+              {activeTab === 'archived' ? 'No archived inquiries' : 'No inquiries match your filters'}
+            </div>
           )}
-          <div className="space-y-1.5">
-            {filtered.map(inq => {
-              const days = daysAgo(inq.updatedAt || inq.createdAt);
-              const stale = days > 7;
-              const isSelected = inq.id === selectedId;
-              const dot = STATUS_DOT_MAP[inq.status] || 'neutral';
-              return (
-                <div
-                  key={inq.id}
-                  onClick={() => setSelectedId(inq.id === selectedId ? null : inq.id)}
-                  className={
-                    'bg-white border rounded-lg px-5 py-3.5 flex items-center gap-4 cursor-pointer transition-colors ' +
-                    (isSelected ? 'border-pine/30 bg-pine/5' : 'border-line hover:border-line-strong')
-                  }
-                >
-                  <StatusDot status={dot as 'ok' | 'bad' | 'warn' | 'neutral'} />
-                  <div className="w-44 shrink-0">
-                    <div className="text-sm font-medium text-ink truncate">{inq.courseName}</div>
-                    <div className="text-xs text-ink-muted truncate">{inq.city}, {inq.state}</div>
-                  </div>
-                  <div className="flex-1 min-w-0 hidden md:block">
-                    <div className="text-xs text-ink-soft truncate">
-                      {inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''}
+
+          {/* Active tab rows */}
+          {activeTab === 'active' && (
+            <div className="space-y-1.5">
+              {filteredActive.map(inq => {
+                const days = daysAgo(inq.updatedAt || inq.createdAt);
+                const stale = days > 7;
+                const isSelected = inq.id === selectedId;
+                const dot = STATUS_DOT_MAP[inq.status] || 'neutral';
+                return (
+                  <div
+                    key={inq.id}
+                    onClick={() => setSelectedId(inq.id === selectedId ? null : inq.id)}
+                    className={
+                      'bg-white border rounded-lg px-5 py-3.5 flex items-center gap-4 cursor-pointer transition-colors ' +
+                      (isSelected ? 'border-pine/30 bg-pine/5' : 'border-line hover:border-line-strong')
+                    }
+                  >
+                    <StatusDot status={dot as 'ok' | 'bad' | 'warn' | 'neutral'} />
+                    <div className="w-44 shrink-0">
+                      <div className="text-sm font-medium text-ink truncate">{inq.courseName}</div>
+                      <div className="text-xs text-ink-muted truncate">{inq.city}, {inq.state}</div>
                     </div>
-                    {inq.lookingFor && inq.lookingFor.length > 0 && (
-                      <div className="text-[10px] text-ink-faint truncate">{inq.lookingFor.slice(0, 3).join(' · ')}</div>
-                    )}
+                    <div className="flex-1 min-w-0 hidden md:block">
+                      <div className="text-xs text-ink-soft truncate">
+                        {inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''}
+                      </div>
+                      {inq.lookingFor && inq.lookingFor.length > 0 && (
+                        <div className="text-[10px] text-ink-faint truncate">{inq.lookingFor.slice(0, 3).join(' · ')}</div>
+                      )}
+                    </div>
+                    <div className="shrink-0 text-right hidden lg:block min-w-[90px]">
+                      <div className="text-xs text-ink-soft">{STATUS_LABEL[inq.status] || inq.status}</div>
+                      <div className={'text-[10px] font-medium ' + (stale ? 'text-bad' : 'text-ink-faint')}>{days}d in stage</div>
+                    </div>
+                    <div className="shrink-0 text-xs text-ink-faint hidden xl:block w-24 text-right">
+                      {fmtDate(inq.createdAt)}
+                    </div>
                   </div>
-                  <div className="shrink-0 text-right hidden lg:block min-w-[90px]">
-                    <div className="text-xs text-ink-soft">{STATUS_LABEL[inq.status] || inq.status}</div>
-                    <div className={'text-[10px] font-medium ' + (stale ? 'text-bad' : 'text-ink-faint')}>{days}d in stage</div>
-                  </div>
-                  <div className="shrink-0 text-xs text-ink-faint hidden xl:block w-24 text-right">
-                    {fmtDate(inq.createdAt)}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Archived tab rows */}
+          {activeTab === 'archived' && (
+            <div className="bg-white border border-line rounded-lg overflow-hidden">
+              {filteredArchived.length > 0 && (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-line bg-paper">
+                      <th className="text-left px-5 py-2.5 text-[10px] uppercase tracking-[0.06em] text-ink-muted font-medium">Course</th>
+                      <th className="text-left px-3 py-2.5 text-[10px] uppercase tracking-[0.06em] text-ink-muted font-medium hidden md:table-cell">Contact</th>
+                      <th className="text-left px-3 py-2.5 text-[10px] uppercase tracking-[0.06em] text-ink-muted font-medium">Status</th>
+                      <th className="text-left px-3 py-2.5 text-[10px] uppercase tracking-[0.06em] text-ink-muted font-medium hidden lg:table-cell">Why archived</th>
+                      <th className="text-left px-3 py-2.5 text-[10px] uppercase tracking-[0.06em] text-ink-muted font-medium hidden xl:table-cell">Submitted</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredArchived.map((inq, i) => {
+                      const isSelected = inq.id === selectedId;
+                      const dot = STATUS_DOT_MAP[inq.status] || 'neutral';
+                      const { reason, date } = whyArchived(inq);
+                      return (
+                        <tr
+                          key={inq.id}
+                          onClick={() => setSelectedId(inq.id === selectedId ? null : inq.id)}
+                          className={
+                            'cursor-pointer transition-colors border-b border-line last:border-b-0 ' +
+                            (isSelected ? 'bg-pine/5' : (i % 2 === 0 ? 'bg-white hover:bg-paper' : 'bg-paper/50 hover:bg-paper'))
+                          }
+                        >
+                          <td className="px-5 py-3">
+                            <div className="flex items-center gap-2.5">
+                              <StatusDot status={dot as 'ok' | 'bad' | 'warn' | 'neutral'} />
+                              <div>
+                                <div className="text-sm font-medium text-ink">{inq.courseName}</div>
+                                <div className="text-xs text-ink-muted">{inq.city}, {inq.state}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 hidden md:table-cell">
+                            <div className="text-xs text-ink-soft">{inq.contactName}</div>
+                          </td>
+                          <td className="px-3 py-3">
+                            <span className="text-xs text-ink-soft">{STATUS_LABEL[inq.status] || inq.status}</span>
+                          </td>
+                          <td className="px-3 py-3 hidden lg:table-cell">
+                            <div className="text-xs font-medium text-ink-soft">{reason}</div>
+                            <div className="text-[10px] text-ink-faint">{fmtDate(date)}</div>
+                          </td>
+                          <td className="px-3 py-3 hidden xl:table-cell">
+                            <span className="text-xs text-ink-faint">{fmtDate(inq.createdAt)}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -329,7 +462,9 @@ export default function InquiriesPage() {
                     label={STATUS_LABEL[selectedInq.status] || selectedInq.status}
                   />
                   <span className="text-xs text-ink-muted">{selectedInq.city}, {selectedInq.state}</span>
-                  <span className="text-xs text-ink-faint">{daysAgo(selectedInq.updatedAt || selectedInq.createdAt)}d in stage</span>
+                  {!ARCHIVED_STATUSES.has(selectedInq.status) && (
+                    <span className="text-xs text-ink-faint">{daysAgo(selectedInq.updatedAt || selectedInq.createdAt)}d in stage</span>
+                  )}
                 </div>
               </div>
               <button
@@ -343,9 +478,19 @@ export default function InquiriesPage() {
             {STAGE_EXPLAIN[selectedInq.status] && (
               <p className="text-xs text-ink-muted mt-2">{STAGE_EXPLAIN[selectedInq.status]}</p>
             )}
+            {/* Archived-specific notice */}
+            {selectedInq.status === 'archived' && (() => {
+              const { reason, date } = whyArchived(selectedInq);
+              return (
+                <div className="flex items-center gap-2 mt-2 bg-paper border border-line rounded-md px-3 py-2">
+                  <Archive className="w-3.5 h-3.5 text-ink-muted shrink-0" />
+                  <span className="text-xs text-ink-muted">{reason} · {fmtDate(date)}</span>
+                </div>
+              );
+            })()}
           </div>
 
-          {/* Stage override */}
+          {/* Stage override (always visible) */}
           <div className="px-5 py-2.5 border-b border-line shrink-0 flex items-center gap-2">
             <ChevronDown className="w-3.5 h-3.5 text-ink-muted shrink-0" />
             <span className="text-[11px] text-ink-muted shrink-0">Move to stage:</span>
@@ -362,131 +507,125 @@ export default function InquiriesPage() {
             </select>
           </div>
 
-          {/* Action buttons */}
-          <div className="px-5 py-3.5 border-b border-line shrink-0 flex flex-wrap gap-2">
-            {selectedInq.status === 'pending' && (
-              <>
-                <button
-                  onClick={() => inquiryAction(selectedInq.id, 'mark_in_review')}
-                  disabled={processing === selectedInq.id}
-                  className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                >
-                  <Clock className="w-3.5 h-3.5" />In Review
-                </button>
-                <button
-                  onClick={() => { if (confirm('Reject this inquiry?')) inquiryAction(selectedInq.id, 'reject'); }}
-                  disabled={processing === selectedInq.id}
-                  className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-                >
-                  <XCircle className="w-3.5 h-3.5" />Reject
-                </button>
-              </>
-            )}
-            {selectedInq.status === 'in_review' && (
-              <>
-                <button
-                  onClick={() => { if (confirm('Send ' + selectedInq.contactName + ' the setup sheet?')) inquiryAction(selectedInq.id, 'request_details'); }}
-                  disabled={processing === selectedInq.id}
-                  className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                >
-                  <Mail className="w-3.5 h-3.5" />Send Sheet
-                </button>
-                <button
-                  onClick={() => { if (confirm('Build ' + selectedInq.courseName + ' now without the sheet?')) buildAndConfigure(selectedInq); }}
-                  disabled={processing === selectedInq.id}
-                  className="text-ink-muted hover:text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 border border-line hover:border-line-strong transition-colors"
-                >
-                  <Wrench className="w-3 h-3" />Skip &amp; Build
-                </button>
-                <button
-                  onClick={() => { if (confirm('Reject?')) inquiryAction(selectedInq.id, 'reject'); }}
-                  disabled={processing === selectedInq.id}
-                  className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-                >
-                  <XCircle className="w-3.5 h-3.5" />Reject
-                </button>
-              </>
-            )}
-            {selectedInq.status === 'details_requested' && (
-              <>
-                <button
-                  onClick={() => { if (confirm('Resend setup-sheet link?')) inquiryAction(selectedInq.id, 'resend_details'); }}
-                  disabled={processing === selectedInq.id}
-                  className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                >
-                  <Mail className="w-3.5 h-3.5" />Resend Sheet
-                </button>
-                <button
-                  onClick={() => { if (confirm('Reject?')) inquiryAction(selectedInq.id, 'reject'); }}
-                  disabled={processing === selectedInq.id}
-                  className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-                >
-                  <XCircle className="w-3.5 h-3.5" />Reject
-                </button>
-              </>
-            )}
-            {selectedInq.status === 'details_submitted' && (
-              <>
-                <button
-                  onClick={() => { if (confirm('Build ' + selectedInq.courseName + '? Creates operator account.')) buildAndConfigure(selectedInq); }}
-                  disabled={processing === selectedInq.id}
-                  className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                >
-                  <CheckCircle className="w-3.5 h-3.5" />Build Course
-                </button>
-                <button
-                  onClick={() => { if (confirm('Reject?')) inquiryAction(selectedInq.id, 'reject'); }}
-                  disabled={processing === selectedInq.id}
-                  className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-                >
-                  <XCircle className="w-3.5 h-3.5" />Reject
-                </button>
-              </>
-            )}
-            {selectedInq.status === 'building' && (
-              <>
-                {selectedInq.builtCourseId && (
+          {/* Action buttons — hidden for archived inquiries */}
+          {!ARCHIVED_STATUSES.has(selectedInq.status) && (
+            <div className="px-5 py-3.5 border-b border-line shrink-0 flex flex-wrap gap-2">
+              {selectedInq.status === 'pending' && (
+                <>
                   <button
-                    onClick={() => router.push('/admin/courses/' + selectedInq.builtCourseId)}
+                    onClick={() => inquiryAction(selectedInq.id, 'mark_in_review')}
+                    disabled={processing === selectedInq.id}
+                    className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                  >
+                    <Clock className="w-3.5 h-3.5" />In Review
+                  </button>
+                  <button
+                    onClick={() => { if (confirm('Reject this inquiry?')) inquiryAction(selectedInq.id, 'reject'); }}
+                    disabled={processing === selectedInq.id}
+                    className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
+                  >
+                    <XCircle className="w-3.5 h-3.5" />Reject
+                  </button>
+                </>
+              )}
+              {selectedInq.status === 'in_review' && (
+                <>
+                  <button
+                    onClick={() => { if (confirm('Send ' + selectedInq.contactName + ' the setup sheet?')) inquiryAction(selectedInq.id, 'request_details'); }}
+                    disabled={processing === selectedInq.id}
+                    className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                  >
+                    <Mail className="w-3.5 h-3.5" />Send Sheet
+                  </button>
+                  <button
+                    onClick={() => { if (confirm('Build ' + selectedInq.courseName + ' now without the sheet?')) buildAndConfigure(selectedInq); }}
+                    disabled={processing === selectedInq.id}
+                    className="text-ink-muted hover:text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 border border-line hover:border-line-strong transition-colors"
+                  >
+                    <Wrench className="w-3 h-3" />Skip &amp; Build
+                  </button>
+                  <button
+                    onClick={() => { if (confirm('Reject?')) inquiryAction(selectedInq.id, 'reject'); }}
+                    disabled={processing === selectedInq.id}
+                    className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
+                  >
+                    <XCircle className="w-3.5 h-3.5" />Reject
+                  </button>
+                </>
+              )}
+              {selectedInq.status === 'details_requested' && (
+                <>
+                  <button
+                    onClick={() => { if (confirm('Resend setup-sheet link?')) inquiryAction(selectedInq.id, 'resend_details'); }}
+                    disabled={processing === selectedInq.id}
+                    className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                  >
+                    <Mail className="w-3.5 h-3.5" />Resend Sheet
+                  </button>
+                  <button
+                    onClick={() => { if (confirm('Reject?')) inquiryAction(selectedInq.id, 'reject'); }}
+                    disabled={processing === selectedInq.id}
+                    className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
+                  >
+                    <XCircle className="w-3.5 h-3.5" />Reject
+                  </button>
+                </>
+              )}
+              {selectedInq.status === 'details_submitted' && (
+                <>
+                  <button
+                    onClick={() => { if (confirm('Build ' + selectedInq.courseName + '? Creates operator account.')) buildAndConfigure(selectedInq); }}
+                    disabled={processing === selectedInq.id}
+                    className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                  >
+                    <CheckCircle className="w-3.5 h-3.5" />Build Course
+                  </button>
+                  <button
+                    onClick={() => { if (confirm('Reject?')) inquiryAction(selectedInq.id, 'reject'); }}
+                    disabled={processing === selectedInq.id}
+                    className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
+                  >
+                    <XCircle className="w-3.5 h-3.5" />Reject
+                  </button>
+                </>
+              )}
+              {selectedInq.status === 'building' && (
+                <>
+                  {selectedInq.builtCourseId && (
+                    <button
+                      onClick={() => router.push('/admin/courses/' + selectedInq.builtCourseId)}
+                      className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
+                    >
+                      <Wrench className="w-3.5 h-3.5" />Manage Course
+                    </button>
+                  )}
+                  <button
+                    onClick={() => { if (confirm('Resend welcome email?')) inquiryAction(selectedInq.id, 'resend_welcome'); }}
+                    disabled={processing === selectedInq.id}
                     className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
                   >
-                    <Wrench className="w-3.5 h-3.5" />Manage Course
+                    <Mail className="w-3.5 h-3.5" />Resend Email
                   </button>
-                )}
+                  <button
+                    onClick={() => { if (confirm('Set ' + selectedInq.courseName + ' LIVE?')) inquiryAction(selectedInq.id, 'mark_live'); }}
+                    disabled={processing === selectedInq.id}
+                    className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                  >
+                    <Power className="w-3.5 h-3.5" />Go Live
+                  </button>
+                </>
+              )}
+              {selectedInq.status === 'building' && (
                 <button
-                  onClick={() => { if (confirm('Resend welcome email?')) inquiryAction(selectedInq.id, 'resend_welcome'); }}
-                  disabled={processing === selectedInq.id}
-                  className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
+                  onClick={() => deleteInquiry(selectedInq.id, selectedInq.courseName)}
+                  className="w-8 h-8 flex items-center justify-center text-ink-muted hover:text-bad hover:bg-bad/5 rounded-md transition-colors ml-auto"
+                  title="Delete"
                 >
-                  <Mail className="w-3.5 h-3.5" />Resend Email
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
-                <button
-                  onClick={() => { if (confirm('Set ' + selectedInq.courseName + ' LIVE?')) inquiryAction(selectedInq.id, 'mark_live'); }}
-                  disabled={processing === selectedInq.id}
-                  className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                >
-                  <Power className="w-3.5 h-3.5" />Go Live
-                </button>
-              </>
-            )}
-            {selectedInq.status === 'live' && selectedInq.builtCourseId && (
-              <button
-                onClick={() => router.push('/admin/courses/' + selectedInq.builtCourseId)}
-                className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-              >
-                <Wrench className="w-3.5 h-3.5" />Manage
-              </button>
-            )}
-            {['building', 'live', 'rejected'].includes(selectedInq.status) && (
-              <button
-                onClick={() => deleteInquiry(selectedInq.id, selectedInq.courseName)}
-                className="w-8 h-8 flex items-center justify-center text-ink-muted hover:text-bad hover:bg-bad/5 rounded-md transition-colors ml-auto"
-                title="Delete"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* Approve result */}
           {approveResults[selectedInq.id] && (() => {
@@ -521,8 +660,8 @@ export default function InquiriesPage() {
           {/* Scrollable body */}
           <div className="flex-1 overflow-y-auto">
 
-            {/* Wizard quick-launch */}
-            {!selectedInq.builtCourseId && !['building', 'live', 'rejected'].includes(selectedInq.status) && (() => {
+            {/* Wizard quick-launch (active pipeline only) */}
+            {!selectedInq.builtCourseId && !ARCHIVED_STATUSES.has(selectedInq.status) && !['building'].includes(selectedInq.status) && (() => {
               const params = new URLSearchParams({
                 name: selectedInq.courseName || '', city: selectedInq.city || '',
                 state: selectedInq.state || '', zip: selectedInq.zipCode || '',
@@ -545,6 +684,18 @@ export default function InquiriesPage() {
                 </div>
               );
             })()}
+
+            {/* Course link for live inquiries */}
+            {selectedInq.status === 'live' && selectedInq.builtCourseId && (
+              <div className="mx-5 mt-4">
+                <button
+                  onClick={() => router.push('/admin/courses/' + selectedInq.builtCourseId)}
+                  className="flex items-center gap-1.5 text-xs font-medium text-pine hover:text-pine-hover bg-pine/5 hover:bg-pine/10 border border-pine/20 px-3 py-2 rounded-md transition-colors"
+                >
+                  <Wrench className="w-3.5 h-3.5" />Manage course <ArrowUpRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
 
             {/* Contact */}
             <div className="px-5 py-4 border-b border-line">

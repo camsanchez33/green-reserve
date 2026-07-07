@@ -8,7 +8,7 @@ import {
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
 interface Stats {
-  totalCourses: number; activeCourses: number; pendingInquiries: number;
+  totalCourses: number; archivedCourses: number; activeCourses: number; pendingInquiries: number;
   totalBookings: number; recentBookings: number; recentBookingsPrev30d: number;
   totalGolfers: number; newGolfers30d: number; newGolfersPrev30d: number;
   platformRevenue30d: number; platformRevenuePrev30d: number;
@@ -117,7 +117,7 @@ export default function AdminOverviewPage() {
     {
       label: 'Live Courses',
       value: stats.activeCourses,
-      sub: `${stats.totalCourses} total`,
+      sub: stats.archivedCourses > 0 ? `${stats.totalCourses} active · ${stats.archivedCourses} archived` : `${stats.totalCourses} total`,
       icon: <Building2 className="w-4 h-4 text-ink-muted"/>,
       accent: false,
       href: '/admin/courses',

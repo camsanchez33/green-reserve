@@ -12,6 +12,7 @@ export async function GET() {
 
   const [
     totalCourses,
+    archivedCourses,
     activeCourses,
     pendingInquiries,
     totalBookings,
@@ -29,7 +30,8 @@ export async function GET() {
     stuckOperators,
     recentInquiries,
   ] = await Promise.all([
-    prisma.course.count(),
+    prisma.course.count({ where: { archivedAt: null } }),
+    prisma.course.count({ where: { archivedAt: { not: null } } }),
     prisma.course.count({ where: { active: true } }),
     prisma.courseInquiry.count({ where: { status: 'pending' } }),
     prisma.booking.count({ where: { status: 'confirmed' } }),
@@ -49,7 +51,7 @@ export async function GET() {
       orderBy: { createdAt: 'asc' },
     }),
     prisma.course.findMany({
-      where: { active: true, stripeAccountActive: false },
+      where: { active: true, stripeAccountActive: false, archivedAt: null },
       select: { id: true, name: true, slug: true },
       take: 20,
     }),
@@ -119,6 +121,7 @@ export async function GET() {
 
   return NextResponse.json({
     totalCourses,
+    archivedCourses,
     activeCourses,
     pendingInquiries,
     totalBookings,

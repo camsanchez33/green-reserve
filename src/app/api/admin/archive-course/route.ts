@@ -19,18 +19,22 @@ export async function POST(req: NextRequest) {
       where: { id: courseId },
       data: { archivedAt: now, archivedBy: session.name, active: false, liveStatus: 'draft' },
     });
-    // Write InquiryStatusEvent on linked inquiry
+    // Move linked inquiry to 'archived' if it's in the working pipeline
     const linked = await prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId } });
     if (linked) {
-      await prisma.inquiryStatusEvent.create({
-        data: {
-          inquiryId: linked.id,
-          fromStatus: linked.status,
-          toStatus: linked.status,
-          trigger: 'system',
-          actorName: 'Course archived by ' + session.name,
-        },
-      });
+      const pipelineStatuses = ['pending', 'in_review', 'details_requested', 'details_submitted', 'building', 'live'];
+      if (pipelineStatuses.includes(linked.status)) {
+        await prisma.inquiryStatusEvent.create({
+          data: {
+            inquiryId: linked.id,
+            fromStatus: linked.status,
+            toStatus: 'archived',
+            trigger: 'system',
+            actorName: 'Course archived by ' + session.name,
+          },
+        });
+        await prisma.courseInquiry.update({ where: { id: linked.id }, data: { status: 'archived' } });
+      }
     }
     return NextResponse.json({ success: true });
   }
@@ -41,6 +45,20 @@ export async function POST(req: NextRequest) {
       where: { id: courseId },
       data: { archivedAt: null, archivedBy: null },
     });
+    // Move linked inquiry back to 'live' if it was archived due to course archival
+    const linked = await prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId } });
+    if (linked && linked.status === 'archived') {
+      await prisma.inquiryStatusEvent.create({
+        data: {
+          inquiryId: linked.id,
+          fromStatus: 'archived',
+          toStatus: 'live',
+          trigger: 'system',
+          actorName: 'Course restored by ' + session.name,
+        },
+      });
+      await prisma.courseInquiry.update({ where: { id: linked.id }, data: { status: 'live' } });
+    }
     return NextResponse.json({ success: true });
   }
 
@@ -53,25 +71,37 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Course name does not match' }, { status: 400 });
     }
 
-    // Log event and revert linked inquiry before deleting
+    // Block hard delete if course has any payment history
+    const [bookingCount, paidMemberCount] = await Promise.all([
+      prisma.booking.count({ where: { courseId } }),
+      prisma.courseMembership.count({ where: { courseId, paymentStatus: { in: ['paid', 'paid_offline'] } } }),
+    ]);
+    if (bookingCount > 0 || paidMemberCount > 0) {
+      return NextResponse.json({
+        error: 'This course has payment history and can only be archived, not permanently deleted.',
+        hasHistory: true,
+      }, { status: 400 });
+    }
+
+    // Move linked inquiry to 'archived' (not back to pipeline)
     const linked = await prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId } });
     if (linked) {
       await prisma.inquiryStatusEvent.create({
         data: {
           inquiryId: linked.id,
           fromStatus: linked.status,
-          toStatus: 'details_submitted',
+          toStatus: 'archived',
           trigger: 'system',
           actorName: 'Course permanently deleted by ' + session.name,
         },
       });
       await prisma.courseInquiry.update({
         where: { id: linked.id },
-        data: { builtCourseId: null, status: 'details_submitted' },
+        data: { builtCourseId: null, status: 'archived' },
       });
     }
 
-    // Delete in FK-safe order (TeeSet was the missing model in the old cascade)
+    // Delete in FK-safe order
     await prisma.$transaction([
       prisma.booking.deleteMany({ where: { courseId } }),
       prisma.teeTime.deleteMany({ where: { courseId } }),
