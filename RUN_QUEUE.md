@@ -29,6 +29,7 @@ and verified on the live site. After every run: `git status` — if dirty, `git 
 - [x] ADMIN_V2 Phase 2c — inquiries unified list + course archive + integrity (schema change, run attended) — c759159
 - [x] ADMIN_V2 Phase 3 — two-way admin↔course messages (schema change, run attended) — 8ad5b31
 - [x] ADMIN_V2 Phase 2d — inquiry lifecycle mirrors course archive/delete + Active/Archived tab split + overview financial integrity (block hard-delete with payment history, stats include archived, needs-attention excludes archived) (no migration) — 1f68f8b
+- [x] ADMIN_V2 Phase 2e — backfill orphaned inquiries to Archived + permanent-delete action for archived inquiries (small run, no migration) — 695fb7a
 - [ ] ADMIN_V2 Phase 4 — employee roles + temp-password provisioning (schema change, run attended)
 - [ ] ADMIN_V2 Phase 5 — type-aware add-course wizard
 - [ ] DESIGN_SYSTEM_SPEC Phase D2 — operator dashboard sweep + per-course brandColor (schema change, run attended)
