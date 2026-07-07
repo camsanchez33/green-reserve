@@ -184,7 +184,8 @@ function CoursesContent() {
             {filteredCourses.map(course => (
               <div
                 key={course.id}
-                className="bg-white border border-line rounded-lg px-5 py-3.5 flex items-center gap-5 hover:border-line-strong transition-colors"
+                onClick={() => router.push('/admin/courses/' + course.id)}
+                className="bg-white border border-line rounded-lg px-5 py-3.5 flex items-center gap-5 hover:border-line-strong transition-colors cursor-pointer"
               >
                 <StatusDot status={course.active ? 'ok' : 'neutral'} />
                 <div className="flex-1 min-w-0">
@@ -222,7 +223,7 @@ function CoursesContent() {
                     <div className="text-[10px] text-pine mt-1">{course.activeMemberCount} mbr</div>
                   )}
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
                   <button
                     onClick={() => toggleFeatured(course.id, !course.featured)}
                     className={'w-8 h-8 flex items-center justify-center rounded-md transition-colors ' + (course.featured ? 'text-warn bg-warn/10' : 'text-ink-muted hover:text-warn hover:bg-warn/5')}
