@@ -13,20 +13,24 @@ and verified on the live site. After every run: `git status` — if dirty, `git 
 - [x] Admin Phase 4: courses search/filters/stats — 8982ba0
 - [x] Admin Phase 5: add-course wizard + inquiry pre-fill — f1b6daf
 - [x] Admin Phase 6: broadcasts — 88064bd
+- [x] Admin Phase 7: cross-course activity feed — 83a41c5
+- [x] ADMIN_V2 Phase 0: banner-on-login bug, golfer stat removed, clickable overview — 5c1230b
 
 ## In progress
 
-- [ ] Admin Phase 7: cross-course activity feed (running now — verify + git status)
+(nothing running)
 
 ## Queue (run in this order)
 
-- [ ] ADMIN_V2_SPEC Phase 0 — banner-on-login-page bug, remove golfer stat, clickable overview
-- [ ] ADMIN_V2_SPEC Phase 1 — full course detail page at /admin/courses/[id], kill drawer
-- [ ] ADMIN_V2_SPEC Phase 2 — inquiries kanban board
-- [ ] ADMIN_V2_SPEC Phase 3 — two-way admin↔course messages (schema change, run attended)
-- [ ] ADMIN_V2_SPEC Phase 4 — employee roles (owner/manager/support/viewer) + temp-password provisioning (schema change, run attended)
-- [ ] ADMIN_V2_SPEC Phase 5 — type-aware add-course wizard
-- [ ] PUBLIC_SITE_SPEC Phases A+B — footer fix, /contact, /courses redirect, all-50-states form, screenshots section, SEO metadata
+- [ ] DESIGN_SYSTEM_SPEC Phase D1 — Clubhouse tokens, shared UI components, admin sweep, CLAUDE.md design section rewrite (FIRST — so all v2 screens build in the new style)
+- [ ] ADMIN_V2 Phase 1 — full course detail page at /admin/courses/[id] (build in Clubhouse style)
+- [ ] ADMIN_V2 Phase 2 — inquiries kanban board (build in Clubhouse style)
+- [ ] ADMIN_V2 Phase 3 — two-way admin↔course messages (schema change, run attended)
+- [ ] ADMIN_V2 Phase 4 — employee roles + temp-password provisioning (schema change, run attended)
+- [ ] ADMIN_V2 Phase 5 — type-aware add-course wizard
+- [ ] DESIGN_SYSTEM_SPEC Phase D2 — operator dashboard sweep + per-course brandColor (schema change, run attended)
+- [ ] PUBLIC_SITE_SPEC Phases A+B — footer fix, /contact, /courses redirect, all-50-states form, screenshots section, SEO metadata (build in Clubhouse style)
+- [ ] DESIGN_SYSTEM_SPEC Phase D3 — golfer-facing + public pages sweep, course personalization, powered-by footer
 - [ ] Small run: extend gr_member session from 7 to 90 days (src/lib/member-session.ts)
 
 ## Ideas / not yet specced
@@ -36,4 +40,5 @@ and verified on the live site. After every run: `git status` — if dirty, `git 
 - Marketplace mode: golfer-facing homepage + course directory (when course volume justifies)
 - Work email provisioning for employees (Google Workspace — outside the app)
 - Product walkthrough video for homepage (SHOW_VIDEO flag ready after public site run)
-- Dashboard screenshots → public/screenshots/dashboard-1/2/3.png (Cam captures)
+- Dashboard screenshots → public/screenshots/dashboard-1/2/3.png (Cam captures — retake AFTER Clubhouse sweep)
+- Course hero photos: upload flow for course pages (D3 adds the slot)
