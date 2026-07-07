@@ -62,6 +62,7 @@ function DashboardPageInner() {
   const [teeTimes, setTeeTimes]   = useState<TeeTime[]>([]);
   const [loading, setLoading]     = useState(true);
   const [courseName, setCourseName] = useState('');
+  const [courseArchived, setCourseArchived] = useState(false);
   const [showAddModal, setShowAddModal]       = useState(false);
   const [showConditions, setShowConditions]   = useState(false);
   const [expandedId, setExpandedId]           = useState<string | null>(null);
@@ -139,6 +140,7 @@ function DashboardPageInner() {
     });
     fetch('/api/operator/courses').then(r => r.json()).then(c => {
       if (c?.name) setCourseName(c.name);
+      if (c?.archivedAt) setCourseArchived(true);
       if (c?.conditions) { setConditions(c.conditions); setConditionsInput(c.conditions); }
     });
   }, [router]);
@@ -183,6 +185,14 @@ function DashboardPageInner() {
 
       {/* ── Main content ─────────────────────────────────────── */}
       <main className="flex-1 overflow-y-auto">
+
+        {/* Archived course notice */}
+        {courseArchived && (
+          <div className="bg-red-950/60 border-b border-red-900/40 px-6 py-3 flex items-center gap-2 text-sm text-red-300">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>This course has been archived. The public booking page is offline. Contact GreenReserve support to restore it.</span>
+          </div>
+        )}
 
         {/* Conditions banner */}
         {conditions && (

@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  ArrowLeft, Star, Power, Globe, Trash2, Mail, Phone,
+  ArrowLeft, Star, Power, Globe, ArchiveX, ArchiveRestore, Mail, Phone,
   Calendar, Ban, Plus, X, RefreshCw, Search, MessageSquare, Send,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
@@ -33,6 +33,7 @@ interface CourseDetail {
     cancellationHours: number; hasMemberPricing: boolean; hasResidentPricing: boolean;
     walkingAllowed: string; cartRequired: boolean; hasCaddies: boolean;
     residentCounty: string; residentState: string;
+    archivedAt?: string | null; archivedBy?: string | null;
     operator: { id: string; name: string; email: string; phone?: string; emailVerified: boolean; onboardingStep: number } | null;
   };
   staff: { id: string; name: string; email: string; role: string; active: boolean }[];
@@ -216,12 +217,22 @@ export default function CourseDetailPage() {
     setDetail(d => d ? { ...d, course: { ...d.course, featured } } : d);
   }
 
-  async function deleteCourse() {
+  async function archiveCourse() {
     if (!detail) return;
-    if (!confirm(`Permanently delete "${detail.course.name}" and ALL its data? This cannot be undone.`)) return;
-    const r = await fetch(`/api/admin/courses?id=${courseId}`, { method: 'DELETE', headers: H() });
+    if (!confirm(`Archive "${detail.course.name}"? The course disappears from the public site but data is retained. You can restore it later.`)) return;
+    const r = await fetch('/api/admin/archive-course', {
+      method: 'POST', headers: H(), body: JSON.stringify({ courseId, action: 'archive' }),
+    });
     if (r.ok) router.push('/admin/courses');
-    else { const d = await r.json(); alert(`Delete failed: ${d.error}`); }
+    else { const d = await r.json(); alert(`Archive failed: ${d.error}`); }
+  }
+
+  async function restoreCourse() {
+    const r = await fetch('/api/admin/archive-course', {
+      method: 'POST', headers: H(), body: JSON.stringify({ courseId, action: 'restore' }),
+    });
+    if (r.ok) loadDetail();
+    else { const d = await r.json(); alert(`Restore failed: ${d.error}`); }
   }
 
   async function saveSetup() {
@@ -380,13 +391,23 @@ export default function CourseDetailPage() {
               >
                 <RefreshCw className="w-4 h-4" />
               </button>
-              <button
-                onClick={deleteCourse}
-                className="w-9 h-9 flex items-center justify-center rounded-md text-ink-muted hover:text-bad hover:bg-bad/5 transition-colors"
-                title="Delete course"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              {c.archivedAt ? (
+                <button
+                  onClick={restoreCourse}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border bg-ok/5 text-ok border-ok/20 hover:bg-ok/10 transition-colors"
+                  title="Restore course"
+                >
+                  <ArchiveRestore className="w-3.5 h-3.5" />Restore
+                </button>
+              ) : (
+                <button
+                  onClick={archiveCourse}
+                  className="w-9 h-9 flex items-center justify-center rounded-md text-ink-muted hover:text-bad hover:bg-bad/5 transition-colors"
+                  title="Archive course"
+                >
+                  <ArchiveX className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -408,6 +429,25 @@ export default function CourseDetailPage() {
             ))}
           </div>
         </div>
+
+        {/* Archived notice */}
+        {c.archivedAt && (
+          <div className="mx-8 mt-5 px-4 py-3 rounded-lg bg-bad/5 border border-bad/20 flex items-center justify-between gap-4">
+            <div>
+              <span className="text-sm font-medium text-bad">This course is archived</span>
+              <span className="text-sm text-ink-soft ml-2">
+                — archived {new Date(c.archivedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                {c.archivedBy ? ` by ${c.archivedBy}` : ''}. Public pages return 404.
+              </span>
+            </div>
+            <button
+              onClick={restoreCourse}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-ok/10 text-ok border border-ok/20 hover:bg-ok/20 transition-colors"
+            >
+              <ArchiveRestore className="w-3.5 h-3.5" />Restore
+            </button>
+          </div>
+        )}
 
         {/* Tab content */}
         <div className="px-8 py-7 flex-1">

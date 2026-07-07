@@ -2,8 +2,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Copy,
-  RefreshCw, Mail, Trash2, Wrench, Power, Search, ArrowUpRight, X,
+  RefreshCw, Mail, Wrench, Power, Search, ArrowUpRight, X, Copy,
+  XCircle, CheckCircle, Clock, Trash2, ChevronDown,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -34,72 +34,45 @@ const STATUS_LABEL: Record<string, string> = {
   details_submitted: 'Sheet In', building: 'Building', live: 'Live', rejected: 'Rejected',
 };
 
-const BOARD_COLS = [
-  { key: 'pending', label: 'Pending', statuses: ['pending'] },
-  { key: 'in_review', label: 'In Review', statuses: ['in_review'] },
-  { key: 'details_requested', label: 'Sheet Sent', statuses: ['details_requested'] },
-  { key: 'details_submitted', label: 'Sheet In', statuses: ['details_submitted'], highlight: true },
-  { key: 'building', label: 'Building', statuses: ['building'] },
+const CHIPS = [
+  { key: 'your_move', label: 'Your move', statuses: ['details_submitted'], pine: true },
+  { key: 'new', label: 'New', statuses: ['pending'], pine: false },
+  { key: 'in_review', label: 'In review', statuses: ['in_review'], pine: false },
+  { key: 'waiting', label: 'Waiting on them', statuses: ['details_requested'], pine: false },
+  { key: 'building', label: 'Building', statuses: ['building'], pine: false },
+  { key: 'closed', label: 'Closed', statuses: ['live', 'rejected'], pine: false },
 ];
+
+const STAGE_EXPLAIN: Record<string, string> = {
+  pending: 'New inquiry — not yet reviewed.',
+  in_review: 'Send the setup sheet to gather tee-sheet details, or skip ahead and build the course.',
+  details_requested: 'Setup sheet emailed. Waiting for the course to respond.',
+  details_submitted: 'Setup sheet submitted — review it and build the course.',
+  building: 'Course is built and the operator has their login. Review and go live when ready.',
+  live: 'Course is live on GreenReserve.',
+  rejected: 'Inquiry was rejected.',
+};
 
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 function daysAgo(d: string) { return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24)); }
 
-function InquiryCard({ inq, isSelected, isDragging, onSelect, onDragStart, onDragEnd }: {
-  inq: Inquiry; isSelected: boolean; isDragging: boolean;
-  onSelect: () => void; onDragStart: () => void; onDragEnd: () => void;
-}) {
-  const stageDays = daysAgo(inq.updatedAt || inq.createdAt);
-  const stale = stageDays > 7;
-  return (
-    <div
-      draggable
-      onDragStart={(e) => { e.dataTransfer.setData('text/plain', inq.id); onDragStart(); }}
-      onDragEnd={onDragEnd}
-      onClick={onSelect}
-      className={
-        'rounded-md border p-3 mb-2 cursor-pointer transition-colors select-none ' +
-        (isDragging ? 'opacity-40 ' : '') +
-        (isSelected ? 'bg-pine/5 border-pine/30' : 'bg-white border-line hover:border-line-strong')
-      }
-    >
-      <div className="font-medium text-ink text-[13px] leading-snug mb-1 truncate">{inq.courseName}</div>
-      <div className="text-xs text-ink-muted mb-1 truncate">
-        {inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''}
-      </div>
-      <div className="text-xs text-ink-faint mb-2">
-        {inq.city}, {inq.state} · <span className="capitalize">{inq.courseType}</span>
-      </div>
-      {inq.lookingFor && inq.lookingFor.length > 0 && (
-        <div className="text-[10px] text-ink-faint mb-2 truncate">
-          {inq.lookingFor.slice(0, 3).join(' · ')}
-        </div>
-      )}
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] text-ink-faint">{fmtDate(inq.createdAt)}</span>
-        <span className={
-          'text-[10px] font-medium px-1.5 py-0.5 rounded border ' +
-          (stale ? 'bg-bad/10 text-bad border-bad/20' : 'bg-paper text-ink-muted border-line')
-        }>{stageDays}d</span>
-      </div>
-    </div>
-  );
-}
+const ALL_STATUSES = ['pending', 'in_review', 'details_requested', 'details_submitted', 'building', 'rejected'];
 
 export default function InquiriesPage() {
   const router = useRouter();
   const [adminReady, setAdminReady] = useState(false);
-  const [pendingCount, setPendingCount] = useState(0);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState<string | null>(null);
   const [approveResults, setApproveResults] = useState<Record<string, ApproveResult>>({});
   const [noteTexts, setNoteTexts] = useState<Record<string, string>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [dragId, setDragId] = useState<string | null>(null);
-  const [dragOverCol, setDragOverCol] = useState<string | null>(null);
-  const [archiveExpanded, setArchiveExpanded] = useState(false);
   const [search, setSearch] = useState('');
+  const [activeChips, setActiveChips] = useState<Set<string>>(
+    new Set(['your_move', 'new', 'in_review', 'waiting', 'building'])
+  );
+  const [sortBy, setSortBy] = useState('newest');
+  const [stageOverride, setStageOverride] = useState('');
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
@@ -118,11 +91,7 @@ export default function InquiriesPage() {
   }, [router]);
 
   useEffect(() => {
-    if (!adminReady) return;
-    loadInquiries();
-    fetch('/api/admin/stats').then(r => r.json()).then(d => {
-      if (d.pendingInquiries != null) setPendingCount(d.pendingInquiries);
-    }).catch(() => {});
+    if (adminReady) loadInquiries();
   }, [adminReady, loadInquiries]);
 
   // Auto-advance pending → in_review when detail panel opens
@@ -136,6 +105,12 @@ export default function InquiriesPage() {
     }).then(r => { if (r.ok) loadInquiries(); }).catch(() => {});
   }, [selectedId, inquiries, H, loadInquiries]);
 
+  const selectedInq = selectedId ? (inquiries.find(i => i.id === selectedId) ?? null) : null;
+
+  useEffect(() => {
+    if (selectedInq) setStageOverride(selectedInq.status);
+  }, [selectedInq?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   async function inquiryAction(id: string, action: string, extraPayload: Record<string, unknown> = {}) {
     setProcessing(id);
     try {
@@ -145,7 +120,7 @@ export default function InquiriesPage() {
       });
       const text = await r.text();
       let d: Record<string, unknown> = {};
-      try { d = JSON.parse(text); } catch { /* not json */ }
+      try { d = JSON.parse(text); } catch { /* ignore */ }
       if (r.ok) {
         if (['build_course', 'resend_welcome', 'request_details', 'resend_details'].includes(action)) {
           setApproveResults(p => ({ ...p, [id]: d as unknown as ApproveResult }));
@@ -164,13 +139,6 @@ export default function InquiriesPage() {
       }
     } catch (e) { alert(`Error: ${e}`); }
     setProcessing(null);
-  }
-
-  async function deleteInquiry(id: string, name: string) {
-    if (!confirm(`Permanently delete inquiry for "${name}"? This cannot be undone.`)) return;
-    await fetch(`/api/admin/inquiries?id=${id}`, { method: 'DELETE', headers: H() });
-    setInquiries(prev => prev.filter(i => i.id !== id));
-    if (selectedId === id) setSelectedId(null);
   }
 
   async function buildAndConfigure(inq: Inquiry) {
@@ -192,175 +160,161 @@ export default function InquiriesPage() {
     setProcessing(null);
   }
 
-  async function handleDrop(targetColKey: string) {
-    if (!dragId) return;
-    const inq = inquiries.find(i => i.id === dragId);
-    if (!inq) { setDragId(null); return; }
-    const STATUS_MAP: Record<string, string> = {
-      pending: 'pending', in_review: 'in_review',
-      details_requested: 'details_requested', details_submitted: 'details_submitted',
-      building: 'building', archive: 'rejected',
-    };
-    const newStatus = STATUS_MAP[targetColKey];
-    if (!newStatus || newStatus === inq.status) { setDragId(null); return; }
-    if (newStatus === 'rejected' && !confirm(`Archive "${inq.courseName}" as rejected?`)) {
-      setDragId(null); return;
-    }
-    await inquiryAction(inq.id, 'set_status', { newStatus });
-    setDragId(null);
+  async function deleteInquiry(id: string, name: string) {
+    if (!confirm(`Permanently delete inquiry for "${name}"? This cannot be undone.`)) return;
+    await fetch(`/api/admin/inquiries?id=${id}`, { method: 'DELETE', headers: H() });
+    setInquiries(prev => prev.filter(i => i.id !== id));
+    if (selectedId === id) setSelectedId(null);
   }
 
+  // Filter + sort
+  const activeStatuses = new Set(CHIPS.filter(c => activeChips.has(c.key)).flatMap(c => c.statuses));
   const q = search.toLowerCase().trim();
-  const matchSearch = (inq: Inquiry) =>
-    !q ||
-    inq.courseName.toLowerCase().includes(q) ||
-    inq.contactName.toLowerCase().includes(q) ||
-    inq.email.toLowerCase().includes(q) ||
-    inq.city.toLowerCase().includes(q);
-
-  const selectedInq = selectedId ? (inquiries.find(i => i.id === selectedId) ?? null) : null;
-  const archiveCards = inquiries
-    .filter(i => ['live', 'rejected'].includes(i.status) && matchSearch(i))
-    .sort((a, b) => new Date(a.updatedAt || a.createdAt).getTime() - new Date(b.updatedAt || b.createdAt).getTime());
+  let filtered = inquiries.filter(i => {
+    if (activeStatuses.size > 0 && !activeStatuses.has(i.status)) return false;
+    if (!q) return true;
+    return (
+      i.courseName.toLowerCase().includes(q) ||
+      i.contactName.toLowerCase().includes(q) ||
+      i.email.toLowerCase().includes(q) ||
+      i.city.toLowerCase().includes(q)
+    );
+  });
+  if (sortBy === 'oldest') filtered = [...filtered].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  else if (sortBy === 'name') filtered = [...filtered].sort((a, b) => a.courseName.localeCompare(b.courseName));
+  else if (sortBy === 'longest_stage') filtered = [...filtered].sort((a, b) => new Date(a.updatedAt || a.createdAt).getTime() - new Date(b.updatedAt || b.createdAt).getTime());
+  else filtered = [...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   if (!adminReady) return null;
 
   return (
-    <div className="bg-paper flex" style={{ height: '100vh', overflow: 'hidden', marginRight: selectedInq ? 480 : 0 }}>
-      <AdminSidebar active="inquiries" pendingInquiries={pendingCount} />
-      <div className="ml-56 flex-1 flex flex-col" style={{ height: '100vh', overflow: 'hidden' }}>
+    <div className="min-h-screen bg-paper flex">
+      <AdminSidebar active="inquiries" />
+      <div
+        className="ml-56 flex-1 flex flex-col min-h-screen"
+        style={{ marginRight: selectedInq ? 480 : 0 }}
+      >
+        <div className="px-8 py-7 max-w-5xl">
 
-        {/* Header */}
-        <div className="px-8 py-5 border-b border-line bg-white shrink-0">
-          <div className="flex items-center justify-between mb-4">
+          {/* Page header */}
+          <div className="flex items-center justify-between mb-5">
             <div>
-              <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Course Inquiries</h1>
-              <p className="text-sm text-ink-soft mt-0.5">
-                {inquiries.filter(i => i.status === 'pending').length} pending · {inquiries.filter(i => i.status === 'live').length} live
-              </p>
+              <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Inquiries</h1>
+              <p className="text-sm text-ink-soft mt-0.5">{filtered.length} shown · {inquiries.length} total</p>
             </div>
-            <button
-              onClick={loadInquiries}
-              disabled={loading}
-              className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-paper border border-transparent hover:border-line transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={'w-4 h-4' + (loading ? ' animate-spin' : '')} />Refresh
-            </button>
-          </div>
-          <div className="relative max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-muted pointer-events-none" />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search name, email, city..."
-              className="w-full bg-paper border border-line rounded-md pl-8 pr-3 py-2 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40"
-            />
-          </div>
-        </div>
-
-        {/* Board */}
-        <div className="flex-1 flex gap-3 px-8 py-5 overflow-x-auto overflow-y-hidden items-start">
-          {BOARD_COLS.map(col => {
-            const colCards = inquiries
-              .filter(i => col.statuses.includes(i.status) && matchSearch(i))
-              .sort((a, b) => new Date(a.updatedAt || a.createdAt).getTime() - new Date(b.updatedAt || b.createdAt).getTime());
-            const isTarget = dragOverCol === col.key;
-            const oldestDays = colCards.length > 0
-              ? Math.max(...colCards.map(i => daysAgo(i.updatedAt || i.createdAt)))
-              : null;
-            const isHighlight = col.highlight === true;
-            return (
-              <div
-                key={col.key}
-                onDragOver={e => { e.preventDefault(); setDragOverCol(col.key); }}
-                onDrop={() => { handleDrop(col.key); setDragOverCol(null); }}
-                onDragLeave={() => setDragOverCol(null)}
-                className={
-                  'w-64 shrink-0 flex flex-col rounded-lg border transition-colors ' +
-                  (isTarget ? 'border-pine/50 bg-pine/5' : isHighlight ? 'border-pine/20 bg-pine/5' : 'border-line bg-paper/50')
-                }
-                style={{ maxHeight: 'calc(100vh - 190px)' }}
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-muted pointer-events-none" />
+                <input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Search..."
+                  className="bg-white border border-line text-ink text-sm rounded-md pl-8 pr-3 py-2 outline-none focus:border-pine/40 w-44 placeholder-ink-faint"
+                />
+              </div>
+              <button
+                onClick={loadInquiries}
+                className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-line transition-colors"
               >
-                <div className={'px-3 py-2.5 flex items-center justify-between border-b shrink-0 ' + (isHighlight ? 'border-pine/20' : 'border-line')}>
-                  <span className={'text-[11px] uppercase tracking-[0.06em] font-medium ' + (isHighlight ? 'text-pine' : 'text-ink-muted')}>{col.label}</span>
-                  <div className="flex items-center gap-1.5">
-                    <span className={'text-xs font-medium rounded px-1.5 py-0.5 border ' + (isHighlight ? 'bg-pine/10 text-pine border-pine/20' : 'bg-white text-ink-muted border-line')}>
-                      {colCards.length}
+                <RefreshCw className="w-4 h-4" />Refresh
+              </button>
+            </div>
+          </div>
+
+          {/* Filter chips + sort */}
+          <div className="flex items-center gap-2 flex-wrap mb-5">
+            {CHIPS.map(chip => {
+              const on = activeChips.has(chip.key);
+              const count = inquiries.filter(i => chip.statuses.includes(i.status)).length;
+              return (
+                <button
+                  key={chip.key}
+                  onClick={() => setActiveChips(prev => {
+                    const n = new Set(prev);
+                    if (n.has(chip.key)) n.delete(chip.key); else n.add(chip.key);
+                    return n;
+                  })}
+                  className={
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium border transition-colors ' + (
+                      on && chip.pine
+                        ? 'bg-pine/10 text-pine border-pine/30'
+                        : on
+                        ? 'bg-ink/5 text-ink border-ink/20'
+                        : 'text-ink-muted border-line hover:border-line-strong hover:text-ink'
+                    )
+                  }
+                >
+                  {chip.label}
+                  {count > 0 && (
+                    <span className={'rounded-full w-4 h-4 flex items-center justify-center text-[10px] ' + (on && chip.pine ? 'bg-pine/20 text-pine' : 'bg-line-strong text-ink-muted')}>
+                      {count}
                     </span>
-                    {oldestDays !== null && (
-                      <span className={'text-[10px] font-medium ' + (oldestDays > 7 ? 'text-bad' : 'text-ink-faint')}>
-                        {oldestDays}d
-                      </span>
+                  )}
+                </button>
+              );
+            })}
+            <div className="ml-auto">
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value)}
+                className="bg-white border border-line text-ink-soft text-xs rounded-md px-3 py-1.5 outline-none focus:border-pine/40 cursor-pointer"
+              >
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="name">Name A–Z</option>
+                <option value="longest_stage">Longest in stage</option>
+              </select>
+            </div>
+          </div>
+
+          {/* List */}
+          {loading && <div className="py-20 text-center text-ink-muted text-sm">Loading...</div>}
+          {!loading && filtered.length === 0 && (
+            <div className="py-20 text-center text-ink-muted text-sm">No inquiries match your filters</div>
+          )}
+          <div className="space-y-1.5">
+            {filtered.map(inq => {
+              const days = daysAgo(inq.updatedAt || inq.createdAt);
+              const stale = days > 7;
+              const isSelected = inq.id === selectedId;
+              const dot = STATUS_DOT_MAP[inq.status] || 'neutral';
+              return (
+                <div
+                  key={inq.id}
+                  onClick={() => setSelectedId(inq.id === selectedId ? null : inq.id)}
+                  className={
+                    'bg-white border rounded-lg px-5 py-3.5 flex items-center gap-4 cursor-pointer transition-colors ' +
+                    (isSelected ? 'border-pine/30 bg-pine/5' : 'border-line hover:border-line-strong')
+                  }
+                >
+                  <StatusDot status={dot as 'ok' | 'bad' | 'warn' | 'neutral'} />
+                  <div className="w-44 shrink-0">
+                    <div className="text-sm font-medium text-ink truncate">{inq.courseName}</div>
+                    <div className="text-xs text-ink-muted truncate">{inq.city}, {inq.state}</div>
+                  </div>
+                  <div className="flex-1 min-w-0 hidden md:block">
+                    <div className="text-xs text-ink-soft truncate">
+                      {inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''}
+                    </div>
+                    {inq.lookingFor && inq.lookingFor.length > 0 && (
+                      <div className="text-[10px] text-ink-faint truncate">{inq.lookingFor.slice(0, 3).join(' · ')}</div>
                     )}
                   </div>
+                  <div className="shrink-0 text-right hidden lg:block min-w-[90px]">
+                    <div className="text-xs text-ink-soft">{STATUS_LABEL[inq.status] || inq.status}</div>
+                    <div className={'text-[10px] font-medium ' + (stale ? 'text-bad' : 'text-ink-faint')}>{days}d in stage</div>
+                  </div>
+                  <div className="shrink-0 text-xs text-ink-faint hidden xl:block w-24 text-right">
+                    {fmtDate(inq.createdAt)}
+                  </div>
                 </div>
-                <div className="flex-1 overflow-y-auto p-2">
-                  {colCards.map(inq => (
-                    <InquiryCard
-                      key={inq.id}
-                      inq={inq}
-                      isSelected={selectedId === inq.id}
-                      isDragging={dragId === inq.id}
-                      onSelect={() => setSelectedId(selectedId === inq.id ? null : inq.id)}
-                      onDragStart={() => setDragId(inq.id)}
-                      onDragEnd={() => { setDragId(null); setDragOverCol(null); }}
-                    />
-                  ))}
-                  {colCards.length === 0 && (
-                    <div className="text-center py-8 text-[11px] text-ink-faint">
-                      {isTarget ? 'Drop here' : (q ? 'No matches' : 'Empty')}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Archive column */}
-          <div
-            onDragOver={e => { e.preventDefault(); setDragOverCol('archive'); }}
-            onDrop={() => { handleDrop('archive'); setDragOverCol(null); }}
-            onDragLeave={() => setDragOverCol(null)}
-            className={'w-64 shrink-0 flex flex-col rounded-lg border transition-colors ' + (dragOverCol === 'archive' ? 'border-bad/40 bg-bad/5' : 'border-line bg-paper/50')}
-            style={{ maxHeight: 'calc(100vh - 190px)' }}
-          >
-            <button
-              onClick={() => setArchiveExpanded(v => !v)}
-              className="px-3 py-2.5 flex items-center justify-between border-b border-line shrink-0 w-full text-left"
-            >
-              <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium">Archive</span>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-medium text-ink-muted bg-white rounded px-1.5 py-0.5 border border-line">{archiveCards.length}</span>
-                {archiveExpanded ? <ChevronUp className="w-3.5 h-3.5 text-ink-muted" /> : <ChevronDown className="w-3.5 h-3.5 text-ink-muted" />}
-              </div>
-            </button>
-            {archiveExpanded ? (
-              <div className="flex-1 overflow-y-auto p-2">
-                {archiveCards.map(inq => (
-                  <InquiryCard
-                    key={inq.id}
-                    inq={inq}
-                    isSelected={selectedId === inq.id}
-                    isDragging={false}
-                    onSelect={() => setSelectedId(selectedId === inq.id ? null : inq.id)}
-                    onDragStart={() => {}}
-                    onDragEnd={() => {}}
-                  />
-                ))}
-                {archiveCards.length === 0 && (
-                  <div className="text-center py-8 text-[11px] text-ink-faint">{q ? 'No matches' : 'Empty'}</div>
-                )}
-              </div>
-            ) : (
-              <div className="p-4 text-center text-[11px] text-ink-faint">
-                {dragOverCol === 'archive' ? 'Drop to archive (reject)' : 'Click to expand'}
-              </div>
-            )}
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {/* Detail panel */}
+      {/* ── Detail panel ─────────────────────────────────────── */}
       {selectedInq && (
         <div className="fixed right-0 top-0 bottom-0 w-[480px] bg-white border-l border-line z-40 flex flex-col shadow-xl">
 
@@ -370,8 +324,12 @@ export default function InquiriesPage() {
               <div className="flex-1 min-w-0">
                 <h2 className="text-[17px] font-serif font-medium text-ink leading-snug">{selectedInq.courseName}</h2>
                 <div className="flex items-center gap-2 mt-1">
-                  <StatusDot status={STATUS_DOT_MAP[selectedInq.status] || 'neutral'} label={STATUS_LABEL[selectedInq.status] || selectedInq.status} />
+                  <StatusDot
+                    status={STATUS_DOT_MAP[selectedInq.status] as 'ok' | 'bad' | 'warn' | 'neutral' || 'neutral'}
+                    label={STATUS_LABEL[selectedInq.status] || selectedInq.status}
+                  />
                   <span className="text-xs text-ink-muted">{selectedInq.city}, {selectedInq.state}</span>
+                  <span className="text-xs text-ink-faint">{daysAgo(selectedInq.updatedAt || selectedInq.createdAt)}d in stage</span>
                 </div>
               </div>
               <button
@@ -381,6 +339,27 @@ export default function InquiriesPage() {
                 <X className="w-4 h-4" />
               </button>
             </div>
+            {/* Stage explanation */}
+            {STAGE_EXPLAIN[selectedInq.status] && (
+              <p className="text-xs text-ink-muted mt-2">{STAGE_EXPLAIN[selectedInq.status]}</p>
+            )}
+          </div>
+
+          {/* Stage override */}
+          <div className="px-5 py-2.5 border-b border-line shrink-0 flex items-center gap-2">
+            <ChevronDown className="w-3.5 h-3.5 text-ink-muted shrink-0" />
+            <span className="text-[11px] text-ink-muted shrink-0">Move to stage:</span>
+            <select
+              value={stageOverride}
+              onChange={e => {
+                const ns = e.target.value;
+                setStageOverride(ns);
+                if (ns !== selectedInq.status) inquiryAction(selectedInq.id, 'set_status', { newStatus: ns });
+              }}
+              className="flex-1 bg-paper border border-line rounded-md px-2 py-1 text-xs text-ink outline-none focus:border-pine/40 cursor-pointer"
+            >
+              {ALL_STATUSES.map(s => <option key={s} value={s}>{STATUS_LABEL[s] || s}</option>)}
+            </select>
           </div>
 
           {/* Action buttons */}
@@ -391,12 +370,16 @@ export default function InquiriesPage() {
                   onClick={() => inquiryAction(selectedInq.id, 'mark_in_review')}
                   disabled={processing === selectedInq.id}
                   className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                ><Clock className="w-3.5 h-3.5" />In Review</button>
+                >
+                  <Clock className="w-3.5 h-3.5" />In Review
+                </button>
                 <button
                   onClick={() => { if (confirm('Reject this inquiry?')) inquiryAction(selectedInq.id, 'reject'); }}
                   disabled={processing === selectedInq.id}
                   className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-                ><XCircle className="w-3.5 h-3.5" />Reject</button>
+                >
+                  <XCircle className="w-3.5 h-3.5" />Reject
+                </button>
               </>
             )}
             {selectedInq.status === 'in_review' && (
@@ -405,17 +388,23 @@ export default function InquiriesPage() {
                   onClick={() => { if (confirm('Send ' + selectedInq.contactName + ' the setup sheet?')) inquiryAction(selectedInq.id, 'request_details'); }}
                   disabled={processing === selectedInq.id}
                   className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                ><Mail className="w-3.5 h-3.5" />Send Sheet</button>
+                >
+                  <Mail className="w-3.5 h-3.5" />Send Sheet
+                </button>
                 <button
                   onClick={() => { if (confirm('Build ' + selectedInq.courseName + ' now without the sheet?')) buildAndConfigure(selectedInq); }}
                   disabled={processing === selectedInq.id}
                   className="text-ink-muted hover:text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 border border-line hover:border-line-strong transition-colors"
-                ><Wrench className="w-3 h-3" />Skip &amp; Build</button>
+                >
+                  <Wrench className="w-3 h-3" />Skip &amp; Build
+                </button>
                 <button
                   onClick={() => { if (confirm('Reject?')) inquiryAction(selectedInq.id, 'reject'); }}
                   disabled={processing === selectedInq.id}
                   className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-                ><XCircle className="w-3.5 h-3.5" />Reject</button>
+                >
+                  <XCircle className="w-3.5 h-3.5" />Reject
+                </button>
               </>
             )}
             {selectedInq.status === 'details_requested' && (
@@ -424,12 +413,16 @@ export default function InquiriesPage() {
                   onClick={() => { if (confirm('Resend setup-sheet link?')) inquiryAction(selectedInq.id, 'resend_details'); }}
                   disabled={processing === selectedInq.id}
                   className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                ><Mail className="w-3.5 h-3.5" />Resend Sheet</button>
+                >
+                  <Mail className="w-3.5 h-3.5" />Resend Sheet
+                </button>
                 <button
                   onClick={() => { if (confirm('Reject?')) inquiryAction(selectedInq.id, 'reject'); }}
                   disabled={processing === selectedInq.id}
                   className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-                ><XCircle className="w-3.5 h-3.5" />Reject</button>
+                >
+                  <XCircle className="w-3.5 h-3.5" />Reject
+                </button>
               </>
             )}
             {selectedInq.status === 'details_submitted' && (
@@ -438,46 +431,60 @@ export default function InquiriesPage() {
                   onClick={() => { if (confirm('Build ' + selectedInq.courseName + '? Creates operator account.')) buildAndConfigure(selectedInq); }}
                   disabled={processing === selectedInq.id}
                   className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                ><CheckCircle className="w-3.5 h-3.5" />Build Course</button>
+                >
+                  <CheckCircle className="w-3.5 h-3.5" />Build Course
+                </button>
                 <button
                   onClick={() => { if (confirm('Reject?')) inquiryAction(selectedInq.id, 'reject'); }}
                   disabled={processing === selectedInq.id}
                   className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-                ><XCircle className="w-3.5 h-3.5" />Reject</button>
+                >
+                  <XCircle className="w-3.5 h-3.5" />Reject
+                </button>
               </>
             )}
             {selectedInq.status === 'building' && (
               <>
                 {selectedInq.builtCourseId && (
                   <button
-                    onClick={() => router.push(`/admin/courses/${selectedInq.builtCourseId}`)}
+                    onClick={() => router.push('/admin/courses/' + selectedInq.builtCourseId)}
                     className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-                  ><Wrench className="w-3.5 h-3.5" />Manage Course</button>
+                  >
+                    <Wrench className="w-3.5 h-3.5" />Manage Course
+                  </button>
                 )}
                 <button
                   onClick={() => { if (confirm('Resend welcome email?')) inquiryAction(selectedInq.id, 'resend_welcome'); }}
                   disabled={processing === selectedInq.id}
                   className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-                ><Mail className="w-3.5 h-3.5" />Resend Email</button>
+                >
+                  <Mail className="w-3.5 h-3.5" />Resend Email
+                </button>
                 <button
                   onClick={() => { if (confirm('Set ' + selectedInq.courseName + ' LIVE?')) inquiryAction(selectedInq.id, 'mark_live'); }}
                   disabled={processing === selectedInq.id}
                   className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                ><Power className="w-3.5 h-3.5" />Go Live</button>
+                >
+                  <Power className="w-3.5 h-3.5" />Go Live
+                </button>
               </>
             )}
             {selectedInq.status === 'live' && selectedInq.builtCourseId && (
               <button
-                onClick={() => router.push(`/admin/courses/${selectedInq.builtCourseId}`)}
+                onClick={() => router.push('/admin/courses/' + selectedInq.builtCourseId)}
                 className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-              ><Wrench className="w-3.5 h-3.5" />Manage</button>
+              >
+                <Wrench className="w-3.5 h-3.5" />Manage
+              </button>
             )}
             {['building', 'live', 'rejected'].includes(selectedInq.status) && (
               <button
                 onClick={() => deleteInquiry(selectedInq.id, selectedInq.courseName)}
                 className="w-8 h-8 flex items-center justify-center text-ink-muted hover:text-bad hover:bg-bad/5 rounded-md transition-colors ml-auto"
                 title="Delete"
-              ><Trash2 className="w-3.5 h-3.5" /></button>
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
             )}
           </div>
 
@@ -493,7 +500,7 @@ export default function InquiriesPage() {
               <div className={'px-5 py-3.5 border-b shrink-0 ' + (failed ? 'bg-bad/5 border-bad/20' : 'bg-ok/5 border-ok/20')}>
                 <div className={'text-xs font-medium mb-2 ' + (failed ? 'text-bad' : 'text-ok')}>
                   {failed
-                    ? `Email failed (${res.emailError || 'unknown'}). Share manually:`
+                    ? 'Email failed (' + (res.emailError || 'unknown') + '). Share manually:'
                     : (isDetails ? 'Setup sheet sent.' : 'Course built, welcome email sent.')}
                 </div>
                 <div className="space-y-1.5">
@@ -514,7 +521,7 @@ export default function InquiriesPage() {
           {/* Scrollable body */}
           <div className="flex-1 overflow-y-auto">
 
-            {/* Wizard link */}
+            {/* Wizard quick-launch */}
             {!selectedInq.builtCourseId && !['building', 'live', 'rejected'].includes(selectedInq.status) && (() => {
               const params = new URLSearchParams({
                 name: selectedInq.courseName || '', city: selectedInq.city || '',
@@ -532,7 +539,9 @@ export default function InquiriesPage() {
                   <button
                     onClick={() => router.push('/admin/create?' + params.toString())}
                     className="flex items-center gap-1.5 text-xs font-medium text-pine hover:text-pine-hover bg-pine/10 hover:bg-pine/20 border border-pine/20 px-3 py-1.5 rounded-md transition-colors shrink-0"
-                  >Open Wizard <ArrowUpRight className="w-3.5 h-3.5" /></button>
+                  >
+                    Open Wizard <ArrowUpRight className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               );
             })()}
@@ -547,7 +556,7 @@ export default function InquiriesPage() {
               {selectedInq.phone && <div className="text-sm text-ink-muted mt-0.5">{selectedInq.phone}</div>}
             </div>
 
-            {/* Fields */}
+            {/* Details */}
             <div className="px-5 py-4 border-b border-line">
               <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Details</div>
               <div className="grid grid-cols-2 gap-2">
@@ -592,7 +601,7 @@ export default function InquiriesPage() {
               </div>
             </div>
 
-            {/* needsJson */}
+            {/* What they need (needsJson) */}
             {selectedInq.needsJson && (() => {
               let n: Record<string, unknown> = {};
               try { n = JSON.parse(selectedInq.needsJson || ''); } catch { /* ignore */ }
@@ -613,7 +622,7 @@ export default function InquiriesPage() {
               );
             })()}
 
-            {/* detailsJson (setup sheet, read-only) */}
+            {/* Setup sheet (detailsJson) */}
             {selectedInq.detailsJson && (() => {
               let d: Record<string, unknown> = {};
               try { d = JSON.parse(selectedInq.detailsJson || ''); } catch { /* ignore */ }
@@ -655,7 +664,7 @@ export default function InquiriesPage() {
               );
             })()}
 
-            {/* Timeline */}
+            {/* History */}
             {selectedInq.events && selectedInq.events.length > 0 && (
               <div className="px-5 py-4 border-b border-line">
                 <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">History</div>
@@ -682,7 +691,9 @@ export default function InquiriesPage() {
             <div className="px-5 py-4">
               <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Internal Notes</div>
               {selectedInq.adminNotes && (
-                <pre className="text-xs text-ink-soft bg-paper border border-line rounded-md px-4 py-3 mb-3 whitespace-pre-wrap font-sans">{selectedInq.adminNotes}</pre>
+                <pre className="text-xs text-ink-soft bg-paper border border-line rounded-md px-4 py-3 mb-3 whitespace-pre-wrap font-sans">
+                  {selectedInq.adminNotes}
+                </pre>
               )}
               <div className="flex gap-2">
                 <textarea
@@ -696,7 +707,9 @@ export default function InquiriesPage() {
                   onClick={() => inquiryAction(selectedInq.id, 'add_note', { note: noteTexts[selectedInq.id] || '' })}
                   disabled={!noteTexts[selectedInq.id]?.trim() || processing === selectedInq.id}
                   className="px-4 py-2 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white text-xs font-medium rounded-md transition-colors self-start"
-                >Save</button>
+                >
+                  Save
+                </button>
               </div>
             </div>
           </div>

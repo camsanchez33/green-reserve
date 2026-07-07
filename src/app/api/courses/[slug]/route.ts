@@ -15,7 +15,7 @@ export async function GET(
 
   // Only live, onboarded courses are visible to golfers — a draft/building
   // course has no real tee sheet yet, so there's nothing to show or book.
-  if (!dbCourse || !dbCourse.active || dbCourse.liveStatus !== 'live') {
+  if (!dbCourse || !dbCourse.active || dbCourse.liveStatus !== 'live' || dbCourse.archivedAt) {
     return NextResponse.json({ error: 'Course not found' }, { status: 404 });
   }
 
