@@ -759,3 +759,27 @@ export async function sendMembershipReceiptEmail(data: {
     html,
   });
 }
+
+export async function sendAnnouncementEmail(data: {
+  operatorName: string;
+  operatorEmail: string;
+  title: string;
+  body: string;
+}) {
+  const bodyHtml = data.body
+    .split('\n')
+    .map(line => line.trim() ? `<p style="margin:0 0 12px;color:#374151;font-size:15px;">${line}</p>` : '')
+    .join('');
+  const html = baseTemplate(`
+    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#fef3c7;color:#92400e;font-size:13px;font-weight:600;padding:4px 14px;border-radius:4px;">Platform announcement</span></div>
+    <h1 style="margin:16px 0 16px;color:#111827;font-size:24px;font-weight:900;">${data.title}</h1>
+    <div style="margin:0 0 20px;">${bodyHtml}</div>
+    <p style="margin:0;color:#9ca3af;font-size:12px;">This message is from the GreenReserve team to all course operators on the platform.</p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.operatorEmail,
+    subject: `[GreenReserve] ${data.title}`,
+    html,
+  });
+}

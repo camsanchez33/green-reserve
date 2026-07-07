@@ -388,3 +388,23 @@ model AdminUser {
   setPasswordToken       String?   @unique
   setPasswordTokenExpiry DateTime?
 }
+
+model Announcement {
+  id         String                  @id @default(cuid())
+  title      String
+  body       String
+  emailSent  Boolean                 @default(false)
+  sentById   String
+  createdAt  DateTime                @default(now())
+  dismissals AnnouncementDismissal[]
+}
+
+model AnnouncementDismissal {
+  id             String       @id @default(cuid())
+  announcementId String
+  operatorId     String
+  createdAt      DateTime     @default(now())
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, operatorId])
+}
