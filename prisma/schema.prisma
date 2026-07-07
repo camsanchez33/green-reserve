@@ -366,7 +366,22 @@ model CourseInquiry {
   builtCourseId        String?
   detailsToken         String?  @unique
   detailsJson          String   @default("")
+  reviewStartedAt      DateTime?
+  wentLiveAt           DateTime?
   createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  events               InquiryStatusEvent[]
+}
+
+model InquiryStatusEvent {
+  id         String        @id @default(cuid())
+  inquiryId  String
+  fromStatus String
+  toStatus   String
+  trigger    String        // 'system' | 'admin'
+  actorName  String?
+  createdAt  DateTime      @default(now())
+  inquiry    CourseInquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
 }
 
 // Per-IP fixed-window rate limiting (shared across serverless instances)

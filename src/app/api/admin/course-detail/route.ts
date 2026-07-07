@@ -39,5 +39,25 @@ export async function PATCH(req: NextRequest) {
   if (active !== undefined) data.active = active;
   if (featured !== undefined) data.featured = featured;
   const updated = await prisma.course.update({ where: { id: courseId }, data });
+
+  // Auto-advance linked inquiry from building → live when course is activated
+  if (active === true) {
+    const linked = await prisma.courseInquiry.findFirst({
+      where: { builtCourseId: courseId, status: 'building' },
+    });
+    if (linked) {
+      await prisma.courseInquiry.update({
+        where: { id: linked.id },
+        data: { status: 'live', wentLiveAt: new Date() },
+      });
+      await prisma.inquiryStatusEvent.create({
+        data: {
+          inquiryId: linked.id, fromStatus: 'building', toStatus: 'live',
+          trigger: 'system', actorName: 'Course activated',
+        },
+      });
+    }
+  }
+
   return NextResponse.json(updated);
 }

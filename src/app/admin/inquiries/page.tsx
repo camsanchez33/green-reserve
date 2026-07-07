@@ -8,6 +8,10 @@ import {
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 
+interface InquiryStatusEvent {
+  id: string; fromStatus: string; toStatus: string;
+  trigger: 'system' | 'admin'; actorName: string | null; createdAt: string;
+}
 interface Inquiry {
   id: string; contactName: string; contactTitle: string; email: string; phone: string;
   courseName: string; address: string; city: string; state: string; zipCode: string;
@@ -17,6 +21,7 @@ interface Inquiry {
   status: string; adminNotes: string; builtCourseId: string | null; createdAt: string;
   updatedAt?: string;
   detailsToken?: string | null; detailsJson?: string; needsJson?: string;
+  events: InquiryStatusEvent[];
 }
 interface ApproveResult { tempPassword?: string; setupLink?: string; detailsLink?: string; emailSent?: boolean; emailError?: string; }
 
@@ -33,7 +38,7 @@ const BOARD_COLS = [
   { key: 'pending', label: 'Pending', statuses: ['pending'] },
   { key: 'in_review', label: 'In Review', statuses: ['in_review'] },
   { key: 'details_requested', label: 'Sheet Sent', statuses: ['details_requested'] },
-  { key: 'details_submitted', label: 'Sheet In', statuses: ['details_submitted'] },
+  { key: 'details_submitted', label: 'Sheet In', statuses: ['details_submitted'], highlight: true },
   { key: 'building', label: 'Building', statuses: ['building'] },
 ];
 
@@ -120,6 +125,17 @@ export default function InquiriesPage() {
     }).catch(() => {});
   }, [adminReady, loadInquiries]);
 
+  // Auto-advance pending → in_review when detail panel opens
+  useEffect(() => {
+    if (!selectedId) return;
+    const inq = inquiries.find(i => i.id === selectedId);
+    if (!inq || inq.status !== 'pending') return;
+    fetch('/api/admin/inquiries', {
+      method: 'PATCH', headers: H(),
+      body: JSON.stringify({ id: selectedId, action: 'mark_opened' }),
+    }).then(r => { if (r.ok) loadInquiries(); }).catch(() => {});
+  }, [selectedId, inquiries, H, loadInquiries]);
+
   async function inquiryAction(id: string, action: string, extraPayload: Record<string, unknown> = {}) {
     setProcessing(id);
     try {
@@ -203,7 +219,9 @@ export default function InquiriesPage() {
     inq.city.toLowerCase().includes(q);
 
   const selectedInq = selectedId ? (inquiries.find(i => i.id === selectedId) ?? null) : null;
-  const archiveCards = inquiries.filter(i => ['live', 'rejected'].includes(i.status) && matchSearch(i));
+  const archiveCards = inquiries
+    .filter(i => ['live', 'rejected'].includes(i.status) && matchSearch(i))
+    .sort((a, b) => new Date(a.updatedAt || a.createdAt).getTime() - new Date(b.updatedAt || b.createdAt).getTime());
 
   if (!adminReady) return null;
 
@@ -243,20 +261,38 @@ export default function InquiriesPage() {
         {/* Board */}
         <div className="flex-1 flex gap-3 px-8 py-5 overflow-x-auto overflow-y-hidden items-start">
           {BOARD_COLS.map(col => {
-            const colCards = inquiries.filter(i => col.statuses.includes(i.status) && matchSearch(i));
+            const colCards = inquiries
+              .filter(i => col.statuses.includes(i.status) && matchSearch(i))
+              .sort((a, b) => new Date(a.updatedAt || a.createdAt).getTime() - new Date(b.updatedAt || b.createdAt).getTime());
             const isTarget = dragOverCol === col.key;
+            const oldestDays = colCards.length > 0
+              ? Math.max(...colCards.map(i => daysAgo(i.updatedAt || i.createdAt)))
+              : null;
+            const isHighlight = col.highlight === true;
             return (
               <div
                 key={col.key}
                 onDragOver={e => { e.preventDefault(); setDragOverCol(col.key); }}
                 onDrop={() => { handleDrop(col.key); setDragOverCol(null); }}
                 onDragLeave={() => setDragOverCol(null)}
-                className={'w-64 shrink-0 flex flex-col rounded-lg border transition-colors ' + (isTarget ? 'border-pine/50 bg-pine/5' : 'border-line bg-paper/50')}
+                className={
+                  'w-64 shrink-0 flex flex-col rounded-lg border transition-colors ' +
+                  (isTarget ? 'border-pine/50 bg-pine/5' : isHighlight ? 'border-pine/20 bg-pine/5' : 'border-line bg-paper/50')
+                }
                 style={{ maxHeight: 'calc(100vh - 190px)' }}
               >
-                <div className="px-3 py-2.5 flex items-center justify-between border-b border-line shrink-0">
-                  <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium">{col.label}</span>
-                  <span className="text-xs font-medium text-ink-muted bg-white rounded px-1.5 py-0.5 border border-line">{colCards.length}</span>
+                <div className={'px-3 py-2.5 flex items-center justify-between border-b shrink-0 ' + (isHighlight ? 'border-pine/20' : 'border-line')}>
+                  <span className={'text-[11px] uppercase tracking-[0.06em] font-medium ' + (isHighlight ? 'text-pine' : 'text-ink-muted')}>{col.label}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className={'text-xs font-medium rounded px-1.5 py-0.5 border ' + (isHighlight ? 'bg-pine/10 text-pine border-pine/20' : 'bg-white text-ink-muted border-line')}>
+                      {colCards.length}
+                    </span>
+                    {oldestDays !== null && (
+                      <span className={'text-[10px] font-medium ' + (oldestDays > 7 ? 'text-bad' : 'text-ink-faint')}>
+                        {oldestDays}d
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-2">
                   {colCards.map(inq => (
@@ -618,6 +654,29 @@ export default function InquiriesPage() {
                 </div>
               );
             })()}
+
+            {/* Timeline */}
+            {selectedInq.events && selectedInq.events.length > 0 && (
+              <div className="px-5 py-4 border-b border-line">
+                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">History</div>
+                <div className="space-y-2.5">
+                  {selectedInq.events.map(ev => (
+                    <div key={ev.id} className="flex items-start gap-2.5 text-xs">
+                      <div className={'w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ' + (ev.trigger === 'system' ? 'bg-ink-faint' : 'bg-pine/60')} />
+                      <div>
+                        <span className="text-ink">{STATUS_LABEL[ev.fromStatus] || ev.fromStatus}</span>
+                        <span className="text-ink-muted mx-1">→</span>
+                        <span className="text-ink font-medium">{STATUS_LABEL[ev.toStatus] || ev.toStatus}</span>
+                        <span className="text-ink-faint ml-1.5">
+                          {ev.trigger === 'admin' && ev.actorName ? 'by ' + ev.actorName : ev.actorName || 'auto'}
+                        </span>
+                        <div className="text-ink-faint text-[10px] mt-0.5">{fmtDate(ev.createdAt)}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Admin notes */}
             <div className="px-5 py-4">
