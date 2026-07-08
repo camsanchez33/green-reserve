@@ -3,6 +3,8 @@
 // the session — a layout cannot do this because it cannot read the current path.
 // AnnouncementBanner is rendered inside OperatorSidebar so it only appears on
 // authenticated dashboard pages (login, forgot-password, etc. don't use the sidebar).
+import type { Metadata } from 'next';
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
