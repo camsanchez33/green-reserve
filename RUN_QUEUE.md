@@ -74,6 +74,10 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] MANAGE_BOOKING_SPEC Phase M1 — token-gated /manage/[bookingId] page (view + cancel, NO login), reuse checkInToken, cancel API accepts token or session, fix "Manage My Booking" email button to point here not /account (no migration) — 9119d8c
 - [x] MANAGE_BOOKING_SPEC Phase M2 — modify on manage page: change tee time (atomic claim-new + release-old) + party size (price/fee recalc), re-send confirmation (no migration) — a697d08
 - [x] RECEIPT_SPEC Phases R1+R2 — itemized on-brand receipts: service fee named everywhere ($1.50 × players, never "Fees"), token-gated printable /receipt/[bookingId] page, receipt email brought on-brand + linked from confirmation/check-in/account (no migration, unattended OK) — R1: 213851d, R2: b11edb2
+- [ ] ONBOARDING_V2_SPEC Phase V1 — admin inquiry fixes: editable contact info, hide empty detail boxes, tabbed detail panel (small, no migration)
+- [ ] ONBOARDING_V2_SPEC Phase V2 — applicant confirmation email rewrite + details-sheet follow-up email with their answers (small, no migration)
+- [ ] ONBOARDING_V2_SPEC Phase V3 — details sheet v2: branch-driven sections from inquiry answers, 9-hole/yardages/tee sets, resident + membership + private-access depth, cancellation explainer, facilities rebuild, photos via Blob (big, no migration)
+- [ ] ONBOARDING_V2_SPEC Phase V4 — wizard prefill parity: every V3 sheet field flows into build wizard, richer ready-to-build checklist (medium, no migration)
 - [ ] MANAGE_BOOKING_SPEC Phase M4 — course-configurable check-in window (Course.checkInWindowHours) driving the existing "time to check in" email; operator sets it in Settings (schema change, attended)
 
 ## Ideas / not yet specced
