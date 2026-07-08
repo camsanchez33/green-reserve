@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
 
 // GET /api/admin/tee-sheet?courseId=X&date=Y
 export async function GET(req: NextRequest) {
@@ -51,7 +52,7 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
 }
 
-// POST — manually add a booking
+// POST — manually add a booking (admin tee-sheet)
 export async function POST(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -63,36 +64,37 @@ export async function POST(req: NextRequest) {
 
   const teeTime = await prisma.teeTime.findUnique({ where: { id: teeTimeId } });
   if (!teeTime) return NextResponse.json({ error: 'Tee time not found' }, { status: 404 });
-  if (teeTime.playersAvailable < players) return NextResponse.json({ error: 'Not enough spots' }, { status: 400 });
 
   const greenFeeTotal = Math.round(teeTime.greenFee * players * 100);
   const cartFeeTotal = Math.round(teeTime.cartFee * players * 100);
   const accessFeeTotal = 150 * players;
   const totalAmount = greenFeeTotal + cartFeeTotal + accessFeeTotal;
 
-  const [booking] = await prisma.$transaction([
-    prisma.booking.create({
-      data: {
-        teeTimeId,
-        courseId: teeTime.courseId,
-        golferName,
-        golferEmail,
-        golferPhone: golferPhone || '',
-        players,
-        appliedRate: 'standard',
-        greenFeeTotal,
-        cartFeeTotal,
-        accessFeeTotal,
-        totalAmount,
-        paymentStatus: 'manual',
-        status: 'confirmed',
-      },
-    }),
-    prisma.teeTime.update({
-      where: { id: teeTimeId },
-      data: { playersBooked: { increment: players }, playersAvailable: { decrement: players } },
-    }),
-  ]);
-
-  return NextResponse.json({ success: true, bookingId: booking.id });
+  try {
+    const claimed = await claimTeeTime({
+      teeTimeId,
+      courseId: teeTime.courseId,
+      golferName,
+      golferEmail,
+      golferPhone: golferPhone || '',
+      players,
+      appliedRate: 'standard',
+      greenFeeTotal,
+      cartFeeTotal,
+      accessFeeTotal,
+      totalAmount,
+      paymentStatus: 'manual',
+      status: 'confirmed',
+    });
+    return NextResponse.json({ success: true, bookingId: claimed.id });
+  } catch (err) {
+    if (err instanceof TeeTimeClaimError) {
+      if (err.code === 'NOT_FOUND') return NextResponse.json({ error: 'Tee time not found' }, { status: 404 });
+      if (err.code === 'FULL' || err.code === 'CONFLICT') return NextResponse.json({ error: 'That time just filled up.' }, { status: 409 });
+      if (err.code === 'SPOTS') return NextResponse.json({ error: `Only ${err.spotsLeft} spot${err.spotsLeft === 1 ? '' : 's'} left.` }, { status: 409 });
+      if (err.code === 'BLOCKED') return NextResponse.json({ error: 'This tee time is blocked.' }, { status: 409 });
+    }
+    console.error('Admin manual booking error:', err);
+    return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 });
+  }
 }

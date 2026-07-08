@@ -6,6 +6,7 @@ import { getGolferSession } from '@/lib/auth';
 import { stripe, ACCESS_FEE_CENTS } from '@/lib/stripe';
 import { sendBookingConfirmation, sendOperatorBookingNotification, sendCancellationWarningEmail, sendCheckInAvailableEmail } from '@/lib/email';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
+import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
 
 /** Returns true for Sat/Sun given a date string like "2026-06-21" */
 function isWeekend(dateStr: string): boolean {
@@ -69,156 +70,122 @@ export async function POST(req: NextRequest) {
   let appliedRate = 'standard';
   let appliedTierName = 'standard';
 
-  // Look up membership tier BEFORE entering the transaction (read-only, safe)
-  let resolvedGreenFeeOverride: number | null = null;
-  let resolvedCartFeeOverride:  number | null = null;
+  // Prefetch the tee time + course data (outside the claim transaction — rates
+  // are stable; the claim transaction re-reads capacity under serializable isolation)
+  const teeTimeFull = await prisma.teeTime.findUnique({
+    where: { id: teeTimeId },
+    include: {
+      course: { include: { operator: { select: { email: true } } } },
+    },
+  });
+  if (!teeTimeFull) return NextResponse.json({ error: 'Tee time not found.' }, { status: 404 });
 
+  // Reject bookings for tee times that have already started
+  const nowUtc = new Date();
+  const todayUtc = nowUtc.toISOString().split('T')[0];
+  const currentTimeStr = `${nowUtc.getUTCHours().toString().padStart(2, '0')}:${nowUtc.getUTCMinutes().toString().padStart(2, '0')}`;
+  if (teeTimeFull.date < todayUtc || (teeTimeFull.date === todayUtc && teeTimeFull.time <= currentTimeStr)) {
+    return NextResponse.json({ error: 'This tee time has already passed.' }, { status: 409 });
+  }
+
+  // Membership tier lookup
+  let resolvedGreenFeeOverride: number | null = null;
+  let resolvedCartFeeOverride: number | null = null;
   if (golferSession) {
     const membership = await prisma.courseMembership.findFirst({
-      where: {
-        courseId: (await prisma.teeTime.findUnique({ where: { id: teeTimeId }, select: { courseId: true } }))?.courseId,
-        golferId: golferSession.golferId,
-        status: 'active',
-      },
+      where: { courseId: teeTimeFull.courseId, golferId: golferSession.golferId, status: 'active' },
       include: { tier: true },
     });
-
     if (membership?.tier) {
-      const teeTimePreview = await prisma.teeTime.findUnique({
-        where: { id: teeTimeId },
-        select: { greenFee: true, cartFee: true, memberRate: true, date: true },
-      });
-      if (teeTimePreview) {
-        const rates = applyTierRates(teeTimePreview, membership.tier);
-        resolvedGreenFeeOverride = rates.greenFee;
-        resolvedCartFeeOverride  = rates.cartFee;
-        appliedTierName = membership.tier.name;
-        appliedRate     = membership.tier.name;
-      }
+      const rates = applyTierRates(teeTimeFull, membership.tier);
+      resolvedGreenFeeOverride = rates.greenFee;
+      resolvedCartFeeOverride  = rates.cartFee;
+      appliedTierName = membership.tier.name;
+      appliedRate     = membership.tier.name;
     }
   }
 
-  // Atomic transaction
-  let result;
+  // Compute fees
+  const greenFeePerPlayer = resolvedGreenFeeOverride ?? teeTimeFull.greenFee;
+  const cartFeePerPlayer  = resolvedCartFeeOverride  ?? teeTimeFull.cartFee;
+  const wantsCart = teeTimeFull.course.cartRequired ? true : !!cartSelected;
+
+  const greenFeeTotal  = Math.round(greenFeePerPlayer * players * 100);
+  const cartFeeTotal   = wantsCart ? Math.round(cartFeePerPlayer * players * 100) : 0;
+
+  let rangeBallsTotal = 0;
+  const ballsSize = String(rangeBallsSize || '');
+  if (teeTimeFull.course.hasDrivingRange && !teeTimeFull.course.rangeBallsFree && ballsSize) {
+    const priceMap: Record<string, number> = {
+      small: teeTimeFull.course.rangeBallsSmallPrice,
+      medium: teeTimeFull.course.rangeBallsMediumPrice,
+      large: teeTimeFull.course.rangeBallsLargePrice,
+    };
+    rangeBallsTotal = Math.round((priceMap[ballsSize] || 0) * 100);
+  }
+
+  const accessFeeTotal = ACCESS_FEE_CENTS * players;
+  const totalCents     = greenFeeTotal + cartFeeTotal + rangeBallsTotal + accessFeeTotal;
+  const cancellationFeeTotal = Math.round((teeTimeFull.course.lateCancellationFee || 0) * 100);
+
+  // Stripe card attachment — happens BEFORE the claim transaction so the DB
+  // transaction stays pure (no network I/O). If the claim subsequently fails,
+  // the card is attached to the customer but no booking exists — harmless.
+  let savedCustomerId = '';
+  let savedPaymentMethodId = '';
+  if (teeTimeFull.course.stripeAccountActive && paymentMethodId && customerId) {
+    try {
+      await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
+      await stripe.customers.update(customerId, { invoice_settings: { default_payment_method: paymentMethodId } });
+      savedCustomerId = customerId;
+      savedPaymentMethodId = paymentMethodId;
+    } catch (attachErr) {
+      if (attachErr instanceof Stripe.errors.StripeError) {
+        return NextResponse.json({ error: attachErr.message || 'Your card could not be saved.' }, { status: 402 });
+      }
+      return NextResponse.json({ error: 'Your card could not be saved. Please check your details and try again.' }, { status: 402 });
+    }
+  }
+
+  // Atomically claim the tee time (Serializable isolation prevents double-booking)
+  let claimed: { id: string; checkInToken: string | null };
   try {
-  result = await prisma.$transaction(async (tx) => {
-    const teeTime = await tx.teeTime.findUnique({
-      where: { id: teeTimeId },
-      include: {
-        course: { include: { operator: { select: { email: true } } } },
-      },
+    claimed = await claimTeeTime({
+      teeTimeId,
+      courseId:         teeTimeFull.courseId,
+      golferAccountId:  golferSession?.golferId || null,
+      golferName,
+      golferEmail,
+      golferPhone:      golferPhone || '',
+      players,
+      appliedRate,
+      greenFeeTotal,
+      cartFeeTotal,
+      cartSelected:     wantsCart,
+      rangeBallsSize:   rangeBallsTotal > 0 ? ballsSize : '',
+      rangeBallsTotal,
+      accessFeeTotal,
+      totalAmount:      totalCents,
+      stripeCustomerId:      savedCustomerId,
+      stripePaymentMethodId: savedPaymentMethodId,
+      cancellationFeeTotal,
+      checkInToken:     randomUUID(),
+      paymentStatus:    savedPaymentMethodId ? 'card_on_file' : 'no_payment_method',
+      status:           'confirmed',
     });
-    if (!teeTime) throw new Error('NOT_FOUND');
-    if (teeTime.status === 'blocked') throw new Error('BLOCKED');
-    if (teeTime.status === 'full')    throw new Error('FULL');
-
-    // Reject bookings for tee times that have already started
-    const nowUtc = new Date();
-    const todayUtc = nowUtc.toISOString().split('T')[0];
-    const currentTimeStr = `${nowUtc.getUTCHours().toString().padStart(2, '0')}:${nowUtc.getUTCMinutes().toString().padStart(2, '0')}`;
-    if (teeTime.date < todayUtc || (teeTime.date === todayUtc && teeTime.time <= currentTimeStr)) {
-      throw new Error('PAST');
-    }
-
-    const spotsLeft = teeTime.playersAvailable - teeTime.playersBooked;
-    if (players > spotsLeft) throw new Error(`SPOTS:${spotsLeft}`);
-
-    // Apply resolved rates (or standard if no membership)
-    const greenFeePerPlayer = resolvedGreenFeeOverride ?? teeTime.greenFee;
-    const cartFeePerPlayer  = resolvedCartFeeOverride  ?? teeTime.cartFee;
-    const wantsCart = teeTime.course.cartRequired ? true : !!cartSelected;
-
-    const greenFeeTotal  = Math.round(greenFeePerPlayer * players * 100); // cents
-    const cartFeeTotal   = wantsCart ? Math.round(cartFeePerPlayer * players * 100) : 0;
-
-    // Range balls — flat per-booking add-on, size priced by the course. Free
-    // if the course includes them; otherwise only a size they've actually priced is purchasable.
-    let rangeBallsTotal = 0;
-    const ballsSize = String(rangeBallsSize || '');
-    if (teeTime.course.hasDrivingRange && !teeTime.course.rangeBallsFree && ballsSize) {
-      const priceMap: Record<string, number> = {
-        small: teeTime.course.rangeBallsSmallPrice,
-        medium: teeTime.course.rangeBallsMediumPrice,
-        large: teeTime.course.rangeBallsLargePrice,
-      };
-      rangeBallsTotal = Math.round((priceMap[ballsSize] || 0) * 100);
-    }
-
-    const accessFeeTotal = ACCESS_FEE_CENTS * players;
-    const totalCents     = greenFeeTotal + cartFeeTotal + rangeBallsTotal + accessFeeTotal;
-    const cancellationFeeTotal = Math.round((teeTime.course.lateCancellationFee || 0) * 100);
-
-    // Card-on-file flow — save the card, charge NOTHING right now. The
-    // cancellation-fee cron charges cancellationFeeTotal if they don't cancel
-    // by the course's cancellationHours cutoff; the actual round total gets
-    // charged later at check-in (separate flow).
-    let savedCustomerId = '';
-    let savedPaymentMethodId = '';
-    if (teeTime.course.stripeAccountActive && paymentMethodId && customerId) {
-      try {
-        await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
-        await stripe.customers.update(customerId, { invoice_settings: { default_payment_method: paymentMethodId } });
-        savedCustomerId = customerId;
-        savedPaymentMethodId = paymentMethodId;
-      } catch (attachErr) {
-        console.error('Could not attach payment method to customer:', attachErr);
-        throw new Error('CARD_SAVE_FAILED');
-      }
-    }
-
-    const booking = await tx.booking.create({
-      data: {
-        teeTimeId,
-        courseId:         teeTime.courseId,
-        golferAccountId:  golferSession?.golferId || null,
-        golferName,
-        golferEmail,
-        golferPhone:      golferPhone || '',
-        players,
-        appliedRate,
-        greenFeeTotal,
-        cartFeeTotal,
-        cartSelected:     wantsCart,
-        rangeBallsSize:   rangeBallsTotal > 0 ? ballsSize : '',
-        rangeBallsTotal,
-        accessFeeTotal,
-        totalAmount:      totalCents,
-        stripeCustomerId:      savedCustomerId,
-        stripePaymentMethodId: savedPaymentMethodId,
-        cancellationFeeTotal,
-        checkInToken:     randomUUID(),
-        paymentStatus:    savedPaymentMethodId ? 'card_on_file' : 'no_payment_method',
-        status:           'confirmed',
-      },
-    });
-
-    const newBooked = teeTime.playersBooked + players;
-    await tx.teeTime.update({
-      where: { id: teeTimeId },
-      data: {
-        playersBooked: newBooked,
-        status: newBooked >= teeTime.playersAvailable ? 'full' : 'available',
-      },
-    });
-
-    return { booking, teeTime, totalCents, greenFeeTotal, cartFeeTotal, rangeBallsTotal, accessFeeTotal, cancellationFeeTotal };
-  });
   } catch (err) {
-    if (err instanceof Stripe.errors.StripeCardError) {
-      return NextResponse.json({ error: err.message || 'Your card was declined.' }, { status: 402 });
-    }
-    if (err instanceof Error) {
-      if (err.message === 'NOT_FOUND') return NextResponse.json({ error: 'Tee time not found.' }, { status: 404 });
-      if (err.message === 'BLOCKED')   return NextResponse.json({ error: 'This tee time is no longer available.' }, { status: 409 });
-      if (err.message === 'FULL')      return NextResponse.json({ error: 'This tee time is fully booked.' }, { status: 409 });
-      if (err.message === 'PAST')      return NextResponse.json({ error: 'This tee time has already passed.' }, { status: 409 });
-      if (err.message === 'CARD_SAVE_FAILED') return NextResponse.json({ error: 'Your card could not be saved. Please check your details and try again.' }, { status: 402 });
-      if (err.message.startsWith('SPOTS:')) {
-        const left = err.message.split(':')[1];
-        return NextResponse.json({ error: `Only ${left} spot${left === '1' ? '' : 's'} left for this tee time.` }, { status: 409 });
+    if (err instanceof TeeTimeClaimError) {
+      if (err.code === 'NOT_FOUND') return NextResponse.json({ error: 'Tee time not found.' }, { status: 404 });
+      if (err.code === 'BLOCKED')   return NextResponse.json({ error: 'This tee time is no longer available.' }, { status: 409 });
+      if (err.code === 'FULL' || err.code === 'CONFLICT') {
+        return NextResponse.json({ error: 'That time just filled up. Please refresh and try again.' }, { status: 409 });
+      }
+      if (err.code === 'SPOTS') {
+        const left = err.spotsLeft ?? 0;
+        return NextResponse.json({ error: `Only ${left} spot${left === 1 ? '' : 's'} left for this tee time.` }, { status: 409 });
       }
     }
-    console.error('Booking transaction error:', err);
+    console.error('Booking claim error:', err);
     return NextResponse.json({ error: 'Something went wrong processing your booking. Please try again.' }, { status: 500 });
   }
 
@@ -227,84 +194,56 @@ export async function POST(req: NextRequest) {
     const emailData = {
       golferName,
       golferEmail,
-      courseName:    result.teeTime.course.name,
-      courseAddress: `${result.teeTime.course.address || ''}, ${result.teeTime.course.city}, ${result.teeTime.course.state}`,
-      date:          result.teeTime.date,
-      time:          result.teeTime.time,
-      holes:         result.teeTime.holes,
+      courseName:    teeTimeFull.course.name,
+      courseAddress: `${teeTimeFull.course.address || ''}, ${teeTimeFull.course.city}, ${teeTimeFull.course.state}`,
+      date:          teeTimeFull.date,
+      time:          teeTimeFull.time,
+      holes:         teeTimeFull.holes,
       players,
       appliedRate,
-      // Pass cents — email templates divide by 100 themselves
-      greenFeeTotal:  result.greenFeeTotal,
-      cartFeeTotal:   result.cartFeeTotal,
-      rangeBallsTotal: result.rangeBallsTotal,
-      accessFeeTotal: result.accessFeeTotal,
-      totalAmount:    result.totalCents,
-      cancellationFeeTotal: result.cancellationFeeTotal,
-      cancellationHours: result.teeTime.course.cancellationHours,
-      bookingId: result.booking.id,
-      checkInToken: result.booking.checkInToken || undefined,
-      noCard: !result.booking.stripePaymentMethodId,
+      greenFeeTotal,
+      cartFeeTotal,
+      rangeBallsTotal,
+      accessFeeTotal,
+      totalAmount:    totalCents,
+      cancellationFeeTotal,
+      cancellationHours: teeTimeFull.course.cancellationHours,
+      bookingId: claimed.id,
+      checkInToken: claimed.checkInToken || undefined,
+      noCard: !savedPaymentMethodId,
     };
     await sendBookingConfirmation(emailData);
-    const courseId = result.teeTime.courseId;
-    const operator = await prisma.courseOperator.findFirst({ where: { course: { id: courseId } } });
-    if (operator?.email) {
-      await sendOperatorBookingNotification({ ...emailData, operatorEmail: operator.email });
+    if (teeTimeFull.course.operator?.email) {
+      await sendOperatorBookingNotification({ ...emailData, operatorEmail: teeTimeFull.course.operator.email });
     }
 
-    // If the cancellation cutoff has already passed at booking time (golfer booked
-    // within the cancellation window), the hourly cron will never send the warning.
-    // Send it immediately instead so the golfer knows where things stand.
-    //
-    // IMPORTANT: tee times are stored in local course time (e.g. "10:56" = 10:56 AM Eastern).
-    // teeToUtcMs handles the conversion correctly including DST.
-    const tz = result.teeTime.course.timezone || 'America/New_York';
-    const teeUtcMs = teeToUtcMs(result.teeTime.date, result.teeTime.time, tz);
-    const now = new Date();
-    const cutoffMs = teeUtcMs - result.teeTime.course.cancellationHours * 3600 * 1000;
-    const minsUntilCutoff = (cutoffMs - now.getTime()) / 60000;
+    const tz = teeTimeFull.course.timezone || 'America/New_York';
+    const teeUtcMs = teeToUtcMs(teeTimeFull.date, teeTimeFull.time, tz);
+    const cutoffMs = teeUtcMs - teeTimeFull.course.cancellationHours * 3600 * 1000;
+    const minsUntilCutoff = (cutoffMs - Date.now()) / 60000;
 
-    if (result.cancellationFeeTotal > 0 && result.booking.stripePaymentMethodId) {
-      if (minsUntilCutoff < 0) {
-        // Cutoff already passed — fee will be charged by the next hourly cron run.
-        // Send the "you've been charged" email proactively (the cron will charge soon).
-        // Actually just warn them that they're past the free window.
+    if (cancellationFeeTotal > 0 && savedPaymentMethodId) {
+      if (minsUntilCutoff < 75) {
         await sendCancellationWarningEmail({
           golferName,
           golferEmail,
-          courseName: result.teeTime.course.name,
-          date: result.teeTime.date,
-          time: result.teeTime.time,
-          feeAmount: result.cancellationFeeTotal,
-          bookingId: result.booking.id,
-          cancellationHours: result.teeTime.course.cancellationHours,
-        }).catch(console.error);
-      } else if (minsUntilCutoff < 75) {
-        // Cutoff is within the next 75 min — the warning cron window may miss it.
-        // Send the warning immediately.
-        await sendCancellationWarningEmail({
-          golferName,
-          golferEmail,
-          courseName: result.teeTime.course.name,
-          date: result.teeTime.date,
-          time: result.teeTime.time,
-          feeAmount: result.cancellationFeeTotal,
-          bookingId: result.booking.id,
-          cancellationHours: result.teeTime.course.cancellationHours,
+          courseName: teeTimeFull.course.name,
+          date: teeTimeFull.date,
+          time: teeTimeFull.time,
+          feeAmount: cancellationFeeTotal,
+          bookingId: claimed.id,
+          cancellationHours: teeTimeFull.course.cancellationHours,
         }).catch(console.error);
       }
-    } else if (!result.booking.stripePaymentMethodId && minsUntilCutoff < 165) {
-      // No-fee course: tee time is less than 2h45m away — hourly cron won't catch
-      // the 3-hour check-in window. Send the check-in email immediately.
+    } else if (!savedPaymentMethodId && minsUntilCutoff < 165) {
       await sendCheckInAvailableEmail({
         golferName,
         golferEmail,
-        courseName: result.teeTime.course.name,
-        date: result.teeTime.date,
-        time: result.teeTime.time,
-        bookingId: result.booking.id,
-        checkInToken: result.booking.checkInToken || undefined,
+        courseName: teeTimeFull.course.name,
+        date: teeTimeFull.date,
+        time: teeTimeFull.time,
+        bookingId: claimed.id,
+        checkInToken: claimed.checkInToken || undefined,
       }).catch(console.error);
     }
   } catch (err) {
@@ -312,19 +251,19 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({
-    bookingId:      result.booking.id,
+    bookingId:      claimed.id,
     appliedRate,
     memberRate:     appliedTierName !== 'standard',
-    greenFeeTotal:  result.greenFeeTotal  / 100,
-    cartFeeTotal:   result.cartFeeTotal   / 100,
-    rangeBallsTotal: result.rangeBallsTotal / 100,
-    accessFeeTotal: result.accessFeeTotal / 100,
-    totalAmount:    result.totalCents     / 100,
-    cancellationFeeTotal: result.cancellationFeeTotal / 100,
-    cancellationHours: result.teeTime.course.cancellationHours,
-    courseName:     result.teeTime.course.name,
-    date:           result.teeTime.date,
-    time:           result.teeTime.time,
+    greenFeeTotal:  greenFeeTotal  / 100,
+    cartFeeTotal:   cartFeeTotal   / 100,
+    rangeBallsTotal: rangeBallsTotal / 100,
+    accessFeeTotal: accessFeeTotal / 100,
+    totalAmount:    totalCents     / 100,
+    cancellationFeeTotal: cancellationFeeTotal / 100,
+    cancellationHours: teeTimeFull.course.cancellationHours,
+    courseName:     teeTimeFull.course.name,
+    date:           teeTimeFull.date,
+    time:           teeTimeFull.time,
     players,
   });
 }
