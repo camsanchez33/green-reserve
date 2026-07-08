@@ -99,6 +99,33 @@ git add -A && git commit -m "..." && git push
 npx vercel --prod
 ```
 
+### Shipping to production
+
+**Small changes (no schema change):** push to main is fine — Vercel auto-deploys.
+
+**Schema changes or risky features (ANY live course):**
+1. Create a feature branch: `git checkout -b feat/my-change`
+2. Push branch — Vercel auto-creates a preview deployment
+3. Neon console → Branches → "Create branch" from production (e.g. `preview-my-change`)
+4. In Vercel dashboard → the preview deployment → Settings → Environment Variables:
+   override `DATABASE_URL` + `DIRECT_URL` to point to the Neon branch
+5. Run `npx prisma migrate deploy` or `npx prisma db push` against the branch DB
+6. Verify the feature on the preview URL
+7. Merge PR to main → production migration runs automatically on deploy
+
+**Never on prod:**
+- `prisma migrate reset` — destructive
+- `prisma db push --accept-data-loss` — destructive
+- Direct `psql` writes without a backup step
+
+**Rollback:**
+- Code: Vercel dashboard → Deployments → click prior deploy → "Promote to Production"
+- Data: Neon PITR (see docs/RESTORE.md) — point-in-time recovery in the console
+
+**Vercel preview env status:** Vercel auto-creates preview deployments for every branch.
+Preview deployments currently share the production DATABASE_URL unless manually
+overridden per-deployment. For schema migrations, always override before running them.
+
 ### Session policy (per surface)
 
 | Surface | Cookie | JWT TTL | Renewal |
