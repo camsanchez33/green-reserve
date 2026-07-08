@@ -67,9 +67,14 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] GOLFER_SPEC Phase G1 — course page identity: About tab (directions, gift-card link-out), operator photo uploads via Vercel Blob, hero photo (schema change via db push, run attended; manual step: BLOB_READ_WRITE_TOKEN) — 187245a
 - [x] GOLFER_SPEC Phase G2 — tee sheet corresponding filters (date/time-of-day/party size in sync), seats-remaining slot cards, itemized pricing before personal info, shareable filter URLs (no migration) — 6b0998b
 - [x] GOLFER_SPEC Phase G3 — tee time alerts: full-slot alerts + criteria alerts, one email per alert, unsubscribe tokens, absorb Waitlist model (schema change via db push, run attended) — 5873842
-- [ ] GOLFER_SPEC Phase G4 — member experience: quiet per-course sign-in link, member pricing in slot cards, member-only times, cross-course isolation test (no migration)
+- [x] GOLFER_SPEC Phase G4 — member experience: quiet per-course sign-in link, member pricing in slot cards, member-only times, cross-course isolation test (no migration) — b7ca915
 
 - [ ] PRODUCTION_READINESS_SPEC — full spec in file. Big sectioned run: (A) baseline onto real prisma migrations, REVERSING the db-push rule — ATTENDED, hands Cam prod resolve cmd + shadow/env vars; (B) serverless connection safety — cache Prisma client in ALL envs, connection_limit tuning, leak audit; (C) scripts/load-test.ts at 100-course scale, must pass; (D) schema-drift CI guardrail + /api/health endpoint so a missing migration is a red X pre-deploy not a 404 after; (E) Sentry + structured money-path logging + uptime runbook — ATTENDED, needs SENTRY_DSN. Commit per section. NOTE: this run intentionally reverses the "always db push" rule — run it BEFORE more schema-change phases (G3, O-series migrations) so those use real migrations.
+
+- [ ] MANAGE_BOOKING_SPEC Phase M1 — token-gated /manage/[bookingId] page (view + cancel, NO login), reuse checkInToken, cancel API accepts token or session, fix "Manage My Booking" email button to point here not /account (no migration)
+- [ ] MANAGE_BOOKING_SPEC Phase M2 — modify on manage page: change tee time (atomic claim-new + release-old) + party size (price/fee recalc), re-send confirmation (no migration)
+- [ ] MANAGE_BOOKING_SPEC Phase M3 — update card via token-gated Stripe SetupIntent (Elements, PCI-safe) — SCOPED, Cam decides at run time whether needed vs check-in's fresh-card path (no migration)
+- [ ] MANAGE_BOOKING_SPEC Phase M4 — course-configurable check-in window (Course.checkInWindowHours) driving the existing "time to check in" email; operator sets it in Settings (schema change, attended)
 
 ## Ideas / not yet specced
 
