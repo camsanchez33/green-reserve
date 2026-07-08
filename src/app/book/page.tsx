@@ -6,10 +6,9 @@ import {
   Elements, CardElement, useStripe, useElements,
 } from '@stripe/react-stripe-js';
 import { ChevronLeft, Lock, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { ACCESS_FEE_PER_PLAYER, serviceFeeLabel } from '@/lib/booking-fees';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
-
-const ACCESS_FEE_PER_PLAYER = 1.5;
 
 type LiveTeeTime = {
   id: string; date: string; time: string; holes: number;
@@ -120,8 +119,14 @@ function BookPageInner() {
             <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{displayDate(confirmedData.date)}</span></div>
             <div className="flex justify-between"><span className="text-ink-muted">Tee Time</span><span className="font-medium text-ink">{formatTime(confirmedData.time)}</span></div>
             <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{confirmedData.players}</span></div>
-            <div className="border-t border-line mt-2 pt-2 flex justify-between font-semibold text-ink">
-              <span>Estimated total at check-in</span><span>${confirmedData.totalAmount.toFixed(2)}</span>
+            <div className="border-t border-line mt-2 pt-2 space-y-1.5">
+              <div className="flex justify-between text-ink-soft"><span>Green Fee</span><span>${confirmedData.greenFeeTotal.toFixed(2)}</span></div>
+              {confirmedData.cartFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart Fee</span><span>${confirmedData.cartFeeTotal.toFixed(2)}</span></div>}
+              {confirmedData.rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range Balls</span><span>${confirmedData.rangeBallsTotal.toFixed(2)}</span></div>}
+              <div className="flex justify-between text-ink-soft"><span>{serviceFeeLabel(confirmedData.players)}</span><span>${confirmedData.accessFeeTotal.toFixed(2)}</span></div>
+              <div className="flex justify-between font-semibold text-ink border-t border-line pt-2">
+                <span>Estimated total at check-in</span><span>${confirmedData.totalAmount.toFixed(2)}</span>
+              </div>
             </div>
           </div>
 
@@ -260,13 +265,14 @@ function BookPageInner() {
                 {cartTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee (×{players})</span><span>${cartTotal.toFixed(2)}</span></div>}
                 {rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls ({rangeBallsSize})</span><span>${rangeBallsTotal.toFixed(2)}</span></div>}
                 <div className="flex justify-between text-ink-soft">
-                  <span>Fees</span>
+                  <span>{serviceFeeLabel(players)}</span>
                   <span>${accessTotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-semibold text-ink text-base border-t border-line pt-2">
                   <span>Estimated total at check-in</span><span>${total.toFixed(2)}</span>
                 </div>
                 <p className="text-xs text-ink-muted pt-1">Nothing is charged today. You&apos;ll pay this when you check in for your round.</p>
+                <p className="text-xs text-ink-muted pt-0.5">The service fee supports online booking. Green fees go 100% to the course.</p>
               </div>
             </div>
           </div>

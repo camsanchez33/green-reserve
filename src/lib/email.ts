@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { serviceFeeLabel } from '@/lib/booking-fees';
 
 let _resend: Resend | null = null;
 function getResend() {
@@ -62,7 +63,7 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
     <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Green Fee</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</span></td></tr>
     ${data.cartFeeTotal > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Cart Fee</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</span></td></tr>` : ''}
     ${(data.rangeBallsTotal ?? 0) > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Range Balls</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${((data.rangeBallsTotal ?? 0) / 100).toFixed(2)}</span></td></tr>` : ''}
-    <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Fees</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</span></td></tr>
+    <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">${serviceFeeLabel(data.players)}</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</span></td></tr>
   `;
 
   let intro: string;
@@ -260,7 +261,7 @@ export async function sendBookingModifiedEmail(data: {
         <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Green Fee</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</span></td></tr>
         ${data.cartFeeTotal > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Cart Fee</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</span></td></tr>` : ''}
         ${data.rangeBallsTotal > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Range Balls</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.rangeBallsTotal / 100).toFixed(2)}</span></td></tr>` : ''}
-        <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Fees</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</span></td></tr>
+        <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">${serviceFeeLabel(data.players)}</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</span></td></tr>
         <tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">New total at check-in</span><br><span style="color:#111827;font-size:20px;font-weight:900;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>
       </table>
     </div>
@@ -276,22 +277,23 @@ export async function sendBookingModifiedEmail(data: {
 // confirmation, plus the late-cancellation fee refund if one applied.
 export async function sendCheckInReceiptEmail(data: {
   golferName: string; golferEmail: string; courseName: string;
-  date: string; time: string;
+  date: string; time: string; players: number;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number; totalAmount: number;
   feeRefunded: boolean; feeRefundAmount: number;
-  bookingId: string;
+  bookingId: string; checkInToken?: string | null;
 }) {
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 12px;border-radius:3px;">&#10003; Checked in</span></div>
-    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">You're charged $${(data.totalAmount / 100).toFixed(2)} — enjoy your round!</h1>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:24px;font-weight:700;">You're checked in — enjoy your round!</h1>
+    <p style="margin:0 0 4px;color:#374151;font-size:18px;font-weight:600;">$${(data.totalAmount / 100).toFixed(2)} charged</p>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">${data.courseName} &middot; ${data.date} at ${data.time}</p>
     <div style="background:#f9fafb;border-radius:4px;padding:24px;margin-bottom:20px;">
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Green Fee</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</td></tr>
         ${data.cartFeeTotal > 0 ? `<tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Cart Fee</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</td></tr>` : ''}
         ${data.rangeBallsTotal > 0 ? `<tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Range Balls</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.rangeBallsTotal / 100).toFixed(2)}</td></tr>` : ''}
-        <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Fees</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</td></tr>
-        <tr><td style="padding:10px 0 0;color:#111827;font-size:14px;font-weight:800;border-top:1px solid #e5e7eb;">Total Charged</td><td style="padding:10px 0 0;text-align:right;color:#111827;font-size:18px;font-weight:900;border-top:1px solid #e5e7eb;">$${(data.totalAmount / 100).toFixed(2)}</td></tr>
+        <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">${serviceFeeLabel(data.players)}</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</td></tr>
+        <tr><td style="padding:10px 0 0;color:#111827;font-size:14px;font-weight:700;border-top:1px solid #e5e7eb;">Total Charged</td><td style="padding:10px 0 0;text-align:right;color:#111827;font-size:18px;font-weight:900;border-top:1px solid #e5e7eb;">$${(data.totalAmount / 100).toFixed(2)}</td></tr>
       </table>
     </div>
     ${data.feeRefunded ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#166534;font-size:14px;font-weight:600;">&#10003; The $${(data.feeRefundAmount / 100).toFixed(2)} late-cancellation fee you were charged earlier has been refunded.</p></div>` : ''}

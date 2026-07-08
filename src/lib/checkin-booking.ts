@@ -119,6 +119,7 @@ export async function performCheckIn(bookingId: string, opts?: { externalPayment
     courseName: booking.course.name,
     date: booking.teeTime.date,
     time: booking.teeTime.time,
+    players: booking.players,
     greenFeeTotal: booking.greenFeeTotal,
     cartFeeTotal: booking.cartFeeTotal,
     rangeBallsTotal: booking.rangeBallsTotal,
@@ -127,6 +128,7 @@ export async function performCheckIn(bookingId: string, opts?: { externalPayment
     feeRefunded: refundPendingFee,
     feeRefundAmount: booking.cancellationFeeTotal,
     bookingId: booking.id,
+    checkInToken: booking.checkInToken,
   }).catch(console.error);
 
   return { success: true, totalCharged: booking.totalAmount, feeRefunded: refundPendingFee, feeRefundAmount: refundPendingFee ? booking.cancellationFeeTotal : 0 } as const;

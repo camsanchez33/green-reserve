@@ -175,7 +175,7 @@ function CheckInPageInner() {
         <div className="flex justify-between text-ink-soft"><span>Green Fee</span><span>${(info.greenFeeTotal / 100).toFixed(2)}</span></div>
         {info.cartFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart Fee</span><span>${(info.cartFeeTotal / 100).toFixed(2)}</span></div>}
         {info.rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range Balls</span><span>${(info.rangeBallsTotal / 100).toFixed(2)}</span></div>}
-        <div className="flex justify-between text-ink-soft"><span>Fees</span><span>${(info.accessFeeTotal / 100).toFixed(2)}</span></div>
+        <div className="flex justify-between text-ink-soft"><span>GreenReserve service fee ($1.50 × {info.players})</span><span>${(info.accessFeeTotal / 100).toFixed(2)}</span></div>
         <div className="flex justify-between font-semibold text-ink text-base border-t border-line pt-2">
           <span>Total</span><span>${(info.totalAmount / 100).toFixed(2)}</span>
         </div>
