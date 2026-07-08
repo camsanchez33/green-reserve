@@ -32,22 +32,67 @@ they'll be populated by the details sheet instead.
   notified). Short, warm, restates the 3 steps. Reuse baseTemplate.
 - sendInquiryNotification to admin unchanged.
 
+## Phase O1b — Course type: Public/Private + branch questions (small run)
+
+TWO course types only: `public` and `private`. No semi_private, no municipal, no
+resort as types — every nuance is a flag/answer on one of the two. (Finalized with
+Cam 2026-07-07.)
+
+- Course type control: two large radio cards, **Public** / **Private** (replace the
+  4-option select). Selecting one slides in its branch questions:
+- **Public branch** (3 quick questions):
+  1. Do you offer discounted rates for town/county residents? (yes/no)
+  2. Do you offer memberships or season passes? (yes/no)
+  3. Average rounds per month: under 500 / 500–1,500 / 1,500–3,000 / 3,000+
+- **Private branch** (5 questions — private leads are high-touch, worth the depth):
+  1. Do you allow non-member tee times? — Yes, regularly / Limited windows /
+     No, members only
+  2. Roughly how many members? — under 100 / 100–300 / 300+
+  3. Do you host outside outings or tournaments? (yes/no)
+  4. How do members book today? — pro shop or phone / sign-up sheet /
+     booking software / other
+  5. Do you charge members per round? (yes/no)
+- Storage: courseType = 'public' | 'private'; branch answers go into structured
+  needsJson keys (residentRates, hasMemberships, roundsPerMonth, publicTeeTimes,
+  memberCount, outsideOutings, memberBookingToday, chargesMembersPerRound).
+- **Migration of existing values**: municipal → public + residentRates note;
+  semi_private → private + publicTeeTimes='limited'; resort → public + note. Update
+  the Phase 5 wizard's type step and the O2 details sheet sections to branch on the
+  same two types + flags (wizard: same fields, reorganized under two types).
+- Admin inquiry detail panel renders the branch answers as structured rows.
+
+## Phase O6 — Private course page mode (medium run, after O5)
+
+A `private` course with NO public tee times must not get the standard booking page:
+
+- Its page shows: course info, photos, description, and a single "Members sign in"
+  action into the existing per-course member portal. NO public tee times, no public
+  pricing, no book button.
+- A `private` course WITH public/limited tee times keeps the public booking page
+  (protected member windows apply).
+- /courses directory: private courses listed with a "Private" marker, or hidden —
+  decide at build time with Cam (default: listed, no booking).
+- Booking API: reject public bookings for `private` courses server-side (the page
+  hiding is not the enforcement).
+
 ## Phase O2 — Type-aware details sheet (big run)
 
 The token-gated details form (/for-courses/details?token=) becomes the ONE place a
 course tells us everything, structured to map 1:1 onto wizard/schema fields.
 
-- **Sections adapt to inquiry.courseType** (mirror Phase 5 wizard logic):
-  - All types: green fees weekday/weekend, twilight (optional), cart fee, walking
-    allowed, holes/par, season open/close months, desired first-tee/last-tee times,
-    interval minutes, cancellation policy (window hours + late fee or none),
+- **Sections adapt to the two types + O1b branch answers**:
+  - Both types: holes/par, season open/close months, desired first-tee/last-tee
+    times, interval minutes, cancellation policy (window hours + late fee or none),
     facilities checkboxes (range, pro shop, restaurant, lessons...), website,
     course description (2–3 sentences, shown on their public page).
-  - Municipal: + resident rates toggle (weekday/weekend), how residency is verified.
-  - Semi-private: + protect-member-times advance window, optional starter membership
-    tier (name + annual fee).
-  - Resort: + guest-of-resort rate, packages note.
-  - All: "anything else" free text → lands in admin notes, never lost.
+  - Public: green fees weekday/weekend, twilight (optional), cart fee, walking
+    allowed. If residentRates → resident weekday/weekend rates + how residency is
+    verified. If hasMemberships → starter membership tier (name + annual fee).
+  - Private: member booking rules (advance window, protected times). If
+    publicTeeTimes yes/limited → public green fees + protect-member-times window.
+    If chargesMembersPerRound → member rate. If outsideOutings → note field for
+    outings volume (feeds future outings feature).
+  - Both: "anything else" free text → lands in admin notes, never lost.
 - **Server-side draft save**: PATCH by token on every section advance — operators fill
   this on phones between nines; they must never lose progress. Progress bar, one
   section per screen, mobile-first.
@@ -102,6 +147,11 @@ specific numbers. Keep the golf photo hero background — Cam likes it.
 - **How it works**: replace the 4 numbered boxes with a vertical editorial timeline
   (numbers in the margin, generous whitespace) using the O1 funnel steps VERBATIM —
   promise and process must use the same words. 3 steps, not 4.
+- **Public / Private split section**: two side-by-side panels with distinct imagery
+  and pitch — "For public courses" (online tee times, $1.50/golfer, you keep green
+  fees) and "For private clubs" (member booking, protected times, outside-play
+  windows). Each panel's CTA lands on the /for-courses form with that type
+  pre-selected (query param → O1b radio pre-set).
 - **What you get**: DELETE the 6-icon-card grid. Replace with 3 alternating
   screenshot-left/text-right feature rows using real dashboard screenshots
   (public/screenshots/, retake in Clubhouse style if stale): the tee sheet, the
