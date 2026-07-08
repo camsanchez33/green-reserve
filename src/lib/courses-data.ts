@@ -25,6 +25,9 @@ export type Course = {
   base_green_fee: number;
   cart_fee: number;
   brand_color?: string;
+  gift_card_url?: string;
+  hero_photo_url?: string;
+  photos?: { id: string; url: string; sortOrder: number }[];
 };
 
 export type TeeTime = {

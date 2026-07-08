@@ -10,7 +10,10 @@ export async function GET(
 
   const dbCourse = await prisma.course.findUnique({
     where: { slug },
-    include: { schedules: { where: { active: true }, select: { greenFeeWeekday: true } } },
+    include: {
+      schedules: { where: { active: true }, select: { greenFeeWeekday: true } },
+      photos: { orderBy: { sortOrder: 'asc' as const } },
+    },
   });
 
   // Only live, onboarded courses are visible to golfers — a draft/building

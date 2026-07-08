@@ -115,6 +115,8 @@ model Course {
   operator              CourseOperator?    @relation(fields: [operatorId], references: [id])
   conditions            String             @default("")
   conditionsUpdatedAt   DateTime?
+  giftCardUrl           String             @default("")
+  heroPhotoUrl          String             @default("")
   teeTimes              TeeTime[]
   bookings              Booking[]
   schedules             TeeTimeSchedule[]
@@ -125,6 +127,16 @@ model Course {
   staff                 CourseStaff[]
   teeSets               TeeSet[]
   thread                MessageThread?
+  photos                CoursePhoto[]
+}
+
+model CoursePhoto {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  url       String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
 }
 
 // A single tee box (Black/Blue/White/Red/Gold...) — courses with one set of

@@ -39,7 +39,7 @@ export async function PATCH(req: NextRequest) {
     'hasPushCartRental','pushCartRate','hasBagStorage','hasLockerRoom','hasGpsCarts',
     'hasTournaments','tournamentFrequency','hasCaddies','caddieType','caddieLooperRate','caddieForeRate','caddieNote',
     'amenities',
-    'brandColor','establishedYear',
+    'brandColor','establishedYear','giftCardUrl',
   ];
   const data: Record<string, unknown> = {};
   for (const key of allowed) {

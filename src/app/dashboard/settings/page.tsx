@@ -1,13 +1,13 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff, CreditCard, CheckCircle2, AlertCircle, Loader2, KeyRound, Mail, Smartphone, Image as ImageIcon } from 'lucide-react';
+import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff, CreditCard, CheckCircle2, AlertCircle, Loader2, KeyRound, Mail, Smartphone, Image as ImageIcon, X } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
 
 type Course = Record<string, unknown>;
 interface StaffMember { id: string; name: string; email: string; role: string; active: boolean; }
-const SECTIONS = ['Course Info', 'Payments', 'Pricing Policy', 'Course Policy', 'Facilities', 'Staff', 'Account'] as const;
+const SECTIONS = ['Course Info', 'Photos', 'Payments', 'Pricing Policy', 'Course Policy', 'Facilities', 'Staff', 'Account'] as const;
 type Section = typeof SECTIONS[number];
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
@@ -119,14 +119,39 @@ function SettingsPageInner() {
   const [saving2FA, setSaving2FA] = useState(false);
   const [saved2FA, setSaved2FA] = useState(false);
   const [error2FA, setError2FA] = useState('');
+  const [photos, setPhotos] = useState<{ id: string; url: string; sortOrder: number }[]>([]);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoErr, setPhotoErr] = useState('');
 
   const refreshForm = () => fetch('/api/operator/settings').then(r=>r.json()).then(setForm);
+
+  const refreshPhotos = () => fetch('/api/operator/photos').then(r=>r.json()).then(setPhotos);
 
   useEffect(() => {
     refreshForm();
     fetch('/api/operator/staff').then(r=>r.json()).then(setStaff);
     fetch('/api/operator/profile').then(r=>r.json()).then(p=>{ if(p?.email) setOperatorEmail(p.email); });
+    refreshPhotos();
   }, []);
+
+  async function uploadGalleryPhoto(file: File | null) {
+    if (!file) return;
+    setUploadingPhoto(true); setPhotoErr('');
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const res = await fetch('/api/operator/photos', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (res.ok) setPhotos(ps => [...ps, data]);
+      else setPhotoErr(data.error || 'Upload failed');
+    } catch { setPhotoErr('Upload failed — try again.'); }
+    setUploadingPhoto(false);
+  }
+
+  async function deleteGalleryPhoto(id: string) {
+    await fetch(`/api/operator/photos/${id}`, { method: 'DELETE' });
+    setPhotos(ps => ps.filter(p => p.id !== id));
+  }
 
   async function emailResetLinkInstead() {
     if (!operatorEmail) return;
@@ -217,7 +242,7 @@ function SettingsPageInner() {
       <main className="flex-1 overflow-y-auto">
         <div className="bg-white border-b border-line px-6 py-4 flex items-center justify-between sticky top-0 z-10">
           <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Settings</h1>
-          {active !== 'Staff' && active !== 'Account' && (
+          {active !== 'Staff' && active !== 'Account' && active !== 'Photos' && (
             <button onClick={save} disabled={saving}
               className="flex items-center gap-2 bg-pine hover:bg-pine-hover text-white px-4 py-2 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
               <Save className="w-4 h-4"/> {saved ? 'Saved' : saving ? 'Saving...' : 'Save Changes'}
@@ -271,6 +296,9 @@ function SettingsPageInner() {
                 <Field label="Description">
                   <textarea value={(form.description as string)||''} onChange={e=>set('description',e.target.value)} rows={4} className={iCls + ' resize-none'} placeholder="Tell golfers what makes your course special — history, signature holes, views, etc."/>
                 </Field>
+                <Field label="Gift Card URL" hint="Paste the URL to where golfers can buy gift cards (your website, Square, etc.). An optional button will appear on your course page.">
+                  <FInput value={(form.giftCardUrl as string)||''} onChange={v=>set('giftCardUrl',v)} placeholder="https://"/>
+                </Field>
               </SectionCard>
               <SectionCard title="Branding">
                 <p className="text-sm text-ink-soft -mt-1">These appear on your public tee sheet. Uploads save immediately.</p>
@@ -285,6 +313,49 @@ function SettingsPageInner() {
                   <Field label="Slope"><FInput value={form.slope as number} onChange={v=>set('slope',Number(v))} type="number"/></Field>
                   <Field label="Course Rating"><FInput value={form.courseRating as number} onChange={v=>set('courseRating',Number(v))} type="number" step="0.1"/></Field>
                 </div>
+              </SectionCard>
+            </div>
+          )}
+
+          {/* ── Photos ── */}
+          {active==='Photos' && (
+            <div className="space-y-5">
+              <SectionCard title="Gallery Photos">
+                <p className="text-sm text-ink-soft -mt-1">Add up to 8 photos of your course. These appear in the Photos tab on your booking page. Uploads save immediately.</p>
+                {photoErr && (
+                  <div className="flex items-center gap-2 bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm">
+                    <AlertCircle className="w-4 h-4 shrink-0"/>{photoErr}
+                  </div>
+                )}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {photos.map(p => (
+                    <div key={p.id} className="relative group aspect-video rounded-md overflow-hidden border border-line">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={p.url} alt="" className="w-full h-full object-cover"/>
+                      <button
+                        onClick={() => deleteGalleryPhoto(p.id)}
+                        className="absolute top-1.5 right-1.5 p-1 rounded-md bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-bad"
+                        title="Remove photo"
+                      >
+                        <X className="w-3.5 h-3.5"/>
+                      </button>
+                    </div>
+                  ))}
+                  {photos.length < 8 && (
+                    <label className={`aspect-video rounded-md border-2 border-dashed border-line flex flex-col items-center justify-center cursor-pointer hover:border-pine/40 transition-colors ${uploadingPhoto ? 'opacity-50 pointer-events-none' : ''}`}>
+                      {uploadingPhoto ? (
+                        <Loader2 className="w-5 h-5 text-ink-faint animate-spin"/>
+                      ) : (
+                        <>
+                          <ImageIcon className="w-5 h-5 text-ink-faint mb-1"/>
+                          <span className="text-xs text-ink-faint">Add photo</span>
+                        </>
+                      )}
+                      <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={uploadingPhoto} onChange={e => uploadGalleryPhoto(e.target.files?.[0] ?? null)}/>
+                    </label>
+                  )}
+                </div>
+                <p className="text-xs text-ink-faint">{photos.length}/8 photos · JPEG, PNG, or WebP · Max 5MB each</p>
               </SectionCard>
             </div>
           )}

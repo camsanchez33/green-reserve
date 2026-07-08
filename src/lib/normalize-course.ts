@@ -43,5 +43,11 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     cancellation_hours:      c.cancellationHours ?? 24,
     late_cancellation_fee:   c.lateCancellationFee ?? 10,
     brand_color:             c.brandColor ?? '#24513B',
+    gift_card_url:           c.giftCardUrl ?? '',
+    hero_photo_url:          c.heroPhotoUrl ?? '',
+    photos: Array.isArray(c.photos)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ? c.photos.map((p: any) => ({ id: p.id, url: p.url, sortOrder: p.sortOrder }))
+      : [],
   };
 }

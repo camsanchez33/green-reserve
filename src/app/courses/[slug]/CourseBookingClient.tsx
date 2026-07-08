@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Check, Flag, SlidersHorizontal, X } from 'lucide-react';
+import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Check, Flag, SlidersHorizontal, X, ExternalLink, Navigation } from 'lucide-react';
 import type { Course, TeeTime } from '@/lib/courses-data';
 
 const TYPE_LABELS: Record<string, string> = {
@@ -93,7 +93,11 @@ function buildMonthGrid(month: Date): (Date | null)[] {
   return cells;
 }
 
-type CourseWithBrand = Course & { brand_color?: string };
+type CourseWithBrand = Course & {
+  brand_color?: string;
+  gift_card_url?: string;
+  photos?: { id: string; url: string; sortOrder: number }[];
+};
 
 export default function CourseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -116,6 +120,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [holesFilter, setHolesFilter] = useState<'all' | '9' | '18'>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [tab, setTab] = useState<'tee-times' | 'about' | 'photos'>('tee-times');
 
   useEffect(() => {
     fetch(`/api/courses/${slug}`)
@@ -315,6 +320,15 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
     router.push(`/book?${qp}`);
   }
 
+  const coursePhotos = course.photos ?? [];
+  const hasPhotos = coursePhotos.length > 0;
+  const tabList: { key: 'tee-times' | 'about' | 'photos'; label: string }[] = [
+    { key: 'tee-times', label: 'Tee Times' },
+    { key: 'about', label: 'About' },
+    ...(hasPhotos ? [{ key: 'photos' as const, label: 'Photos' }] : []),
+  ];
+  const directionsUrl = course.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(course.address)}` : '';
+
   const heroStyle = course.hero_image_url
     ? { backgroundImage: `url(${course.hero_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
     : { background: course.image_gradient };
@@ -379,11 +393,26 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
         </div>
       )}
 
+      {/* Tab bar */}
+      <div className="border-b border-line bg-white sticky top-0 z-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex">
+          {tabList.map(t => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={'px-5 py-3.5 text-sm font-medium border-b-2 transition-colors -mb-px ' + (tab === t.key ? 'border-pine text-pine' : 'border-transparent text-ink-muted hover:text-ink')}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Main content */}
       <div className="bg-paper min-h-screen">
         <div className={`max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${selectedTime ? 'pb-48' : ''}`}>
 
-          {course.type === 'member' ? (
+          {tab === 'tee-times' && (course.type === 'member' ? (
             <div className="max-w-md mx-auto bg-white rounded-lg border border-line p-8 text-center">
               <Phone size={32} className="mx-auto mb-3 text-pine" />
               <h2 className="font-semibold text-ink text-lg mb-2">Member-Only Club</h2>
@@ -686,74 +715,117 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                 )}
               </section>
             </div>
-          )}
+          ))}
 
-          {/* Course info below the tee sheet */}
-          <div className="mt-10 grid lg:grid-cols-3 gap-6 items-start">
-            <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white rounded-lg p-7 border border-line">
-                <h2 className="font-semibold text-ink text-xl mb-4">About This Course</h2>
-                <p className="text-ink-soft leading-relaxed">{course.description}</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-line">
-                  {[
-                    { label: 'Course Type', value: typeLabel },
-                    { label: 'Holes', value: String(course.holes) },
-                    { label: 'Par', value: String(course.par) },
-                    { label: 'Walking', value: course.walking_allowed ? 'Allowed' : 'Cart Only' },
-                    { label: 'Cart', value: course.cart_required ? 'Required' : 'Optional' },
-                    { label: 'State', value: course.state },
-                  ].map(f => (
-                    <div key={f.label}>
-                      <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-0.5">{f.label}</div>
-                      <div className="text-ink font-medium text-sm">{f.value}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {amenities.length > 0 && (
+          {/* About tab */}
+          {tab === 'about' && (
+            <div className="grid lg:grid-cols-3 gap-6 items-start">
+              <div className="lg:col-span-2 space-y-6">
                 <div className="bg-white rounded-lg p-7 border border-line">
-                  <h2 className="font-semibold text-ink text-xl mb-4">Amenities</h2>
-                  <div className="flex flex-wrap gap-2">
-                    {amenities.map(a => (
-                      <span
-                        key={a}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-sm font-medium"
-                        style={{ backgroundColor: `${accent}10`, color: accent }}
-                      >
-                        <Check size={13} />
-                        {a}
-                      </span>
+                  <h2 className="font-semibold text-ink text-xl mb-4">About This Course</h2>
+                  <p className="text-ink-soft leading-relaxed">{course.description}</p>
+                  {course.gift_card_url && (
+                    <a
+                      href={course.gift_card_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 mt-5 px-4 py-2.5 rounded-md text-sm font-medium border border-line text-ink hover:border-pine/40 transition-colors"
+                    >
+                      <ExternalLink size={14} />
+                      Gift Cards
+                    </a>
+                  )}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-line">
+                    {[
+                      { label: 'Course Type', value: typeLabel },
+                      { label: 'Holes', value: String(course.holes) },
+                      { label: 'Par', value: String(course.par) },
+                      { label: 'Walking', value: course.walking_allowed ? 'Allowed' : 'Cart Only' },
+                      { label: 'Cart', value: course.cart_required ? 'Required' : 'Optional' },
+                      { label: 'State', value: course.state },
+                    ].map(f => (
+                      <div key={f.label}>
+                        <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-0.5">{f.label}</div>
+                        <div className="text-ink font-medium text-sm">{f.value}</div>
+                      </div>
                     ))}
                   </div>
                 </div>
-              )}
-            </div>
 
-            <div className="bg-white rounded-lg p-7 border border-line">
-              <h2 className="font-semibold text-ink text-xl mb-4">Contact</h2>
-              <div className="space-y-3">
-                {course.address && (
-                  <div className="flex items-start gap-3 text-sm text-ink-soft">
-                    <MapPin size={16} className="text-ink-muted mt-0.5 flex-shrink-0" />
-                    {course.address}
+                {amenities.length > 0 && (
+                  <div className="bg-white rounded-lg p-7 border border-line">
+                    <h2 className="font-semibold text-ink text-xl mb-4">Amenities</h2>
+                    <div className="flex flex-wrap gap-2">
+                      {amenities.map(a => (
+                        <span
+                          key={a}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-sm font-medium"
+                          style={{ backgroundColor: `${accent}10`, color: accent }}
+                        >
+                          <Check size={13} />
+                          {a}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
-                {course.phone && (
-                  <a href={`tel:${course.phone}`} className="flex items-center gap-3 text-sm text-ink-soft hover:text-pine transition-colors">
-                    <Phone size={16} className="text-ink-muted" />
-                    {course.phone}
-                  </a>
-                )}
-                {course.website && (
-                  <a href={course.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-pine hover:underline">
-                    <Globe size={16} className="text-ink-muted" />
-                    {course.website.replace(/^https?:\/\//, '')}
-                  </a>
-                )}
+              </div>
+
+              <div className="bg-white rounded-lg p-7 border border-line">
+                <h2 className="font-semibold text-ink text-xl mb-4">Contact</h2>
+                <div className="space-y-3">
+                  {course.address && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-start gap-3 text-sm text-ink-soft">
+                        <MapPin size={16} className="text-ink-muted mt-0.5 flex-shrink-0" />
+                        {course.address}
+                      </div>
+                      {directionsUrl && (
+                        <a
+                          href={directionsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs font-medium text-pine hover:underline ml-7"
+                        >
+                          <Navigation size={12} />
+                          Get directions
+                        </a>
+                      )}
+                    </div>
+                  )}
+                  {course.phone && (
+                    <a href={`tel:${course.phone}`} className="flex items-center gap-3 text-sm text-ink-soft hover:text-pine transition-colors">
+                      <Phone size={16} className="text-ink-muted" />
+                      {course.phone}
+                    </a>
+                  )}
+                  {course.website && (
+                    <a href={course.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-pine hover:underline">
+                      <Globe size={16} className="text-ink-muted" />
+                      {course.website.replace(/^https?:\/\//, '')}
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Photos tab */}
+          {tab === 'photos' && hasPhotos && (
+            <div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {coursePhotos.map(p => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={p.id}
+                    src={p.url}
+                    alt=""
+                    className="w-full aspect-video object-cover rounded-lg border border-line"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
