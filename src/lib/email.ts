@@ -241,6 +241,36 @@ export async function sendCheckInAvailableEmail(data: {
   await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Ready to check in — ${data.courseName} ${data.date} at ${data.time}`, html });
 }
 
+export async function sendBookingModifiedEmail(data: {
+  golferName: string; golferEmail: string; courseName: string;
+  date: string; time: string; players: number; holes: number;
+  greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number;
+  accessFeeTotal: number; totalAmount: number; bookingId: string; checkInToken: string | null;
+}) {
+  const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : `${process.env.NEXT_PUBLIC_URL}/account`;
+  const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
+  const html = baseTemplate(`
+    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dbeafe;color:#1e3a8a;font-size:13px;font-weight:600;padding:4px 12px;border-radius:3px;">Booking Updated</span></div>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">Your booking has been updated.</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">Here are your updated booking details for ${data.courseName}.</p>
+    <div style="background:#f9fafb;border-radius:4px;padding:24px;margin-bottom:20px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Date &amp; Time</span><br><span style="color:#111827;font-size:15px;font-weight:600;">${data.date} at ${data.time}</span></td></tr>
+        <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Players</span><br><span style="color:#111827;font-size:15px;font-weight:600;">${data.players} player${data.players > 1 ? 's' : ''} &middot; ${data.holes} holes</span></td></tr>
+        <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Green Fee</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</span></td></tr>
+        ${data.cartFeeTotal > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Cart Fee</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</span></td></tr>` : ''}
+        ${data.rangeBallsTotal > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Range Balls</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.rangeBallsTotal / 100).toFixed(2)}</span></td></tr>` : ''}
+        <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Fees</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</span></td></tr>
+        <tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">New total at check-in</span><br><span style="color:#111827;font-size:20px;font-weight:900;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>
+      </table>
+    </div>
+    ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}
+    <a href="${manageUrl}" style="display:block;color:#1b4332;text-decoration:none;text-align:center;padding:8px;font-weight:700;font-size:13px;margin-bottom:16px;">Manage My Booking &rarr;</a>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
+  `);
+  await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Updated: ${data.courseName} — ${data.date} at ${data.time}`, html });
+}
+
 // Fired the moment performCheckIn() successfully charges a golfer for their
 // round at check-in. Itemizes the same numbers as the original booking
 // confirmation, plus the late-cancellation fee refund if one applied.
