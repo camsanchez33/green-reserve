@@ -99,6 +99,19 @@ git add -A && git commit -m "..." && git push
 npx vercel --prod
 ```
 
+### Session policy (per surface)
+
+| Surface | Cookie | JWT TTL | Renewal |
+|---------|--------|---------|---------|
+| Admin employees (viewer/support/manager) | `admin_session` | 12h absolute | None — re-authenticate after 12h |
+| Admin owner | `admin_session` | 12h absolute | None — 2FA at each login |
+| Operator/staff dashboard | `gr_operator` | 7 days sliding | Reissued when >50% elapsed |
+| Golfer | `gr_golfer` | 90 days sliding | Reissued when >50% elapsed |
+| Member (per-course) | `gr_member` | 90 days absolute | None |
+
+Sliding renewal is implemented in `src/lib/auth.ts` → `getOperatorSession()` / `getGolferSession()`.
+Re-run `scripts/route-inventory.ts` after adding routes to keep ARCHITECTURE.md current.
+
 ### Doc-file commit rule
 After every run, `git status` — if dirty:
 - **Doc files** (`RUN_QUEUE.md`, `*_SPEC.md`, `CLAUDE.md`): COMMIT with message `"queue/spec update"` — never discard; Cowork edits them between runs.
