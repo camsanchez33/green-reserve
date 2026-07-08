@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import ForCoursesContent from './ForCoursesContent';
 
 export const metadata: Metadata = {
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function ForCoursesPage() {
-  return <ForCoursesContent />;
+  return (
+    <Suspense>
+      <ForCoursesContent />
+    </Suspense>
+  );
 }

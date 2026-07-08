@@ -1,5 +1,6 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { CheckCircle, Calendar, Globe, Lock } from 'lucide-react';
 
 const STATES = [
@@ -83,11 +84,18 @@ function RadioGroup({ label, options, value, onChange }: {
 }
 
 export default function ForCoursesContent() {
+  const searchParams = useSearchParams();
   const [form, setForm] = useState<FormData>(init);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submittedName, setSubmittedName] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const t = searchParams.get('type');
+    if (t === 'public' || t === 'private') setType(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const set = (k: keyof FormData, v: string) => setForm(f => ({ ...f, [k]: v }));
   const setType = (t: 'public' | 'private') => setForm(f => ({
@@ -391,9 +399,52 @@ export default function ForCoursesContent() {
         >
           {submitting ? 'Submitting...' : 'Submit'}
         </button>
-        <p className="text-center text-ink-muted text-xs pb-4">
+        <p className="text-center text-ink-muted text-xs">
           We review every submission and reply within 1 business day.
         </p>
+      </div>
+
+      {/* Proof section */}
+      <div className="border-t border-line mt-8">
+        <div className="max-w-xl mx-auto px-4 py-10">
+          <div className="grid grid-cols-3 gap-4 mb-8 text-center">
+            {[
+              { stat: '$1.50', label: 'Per golfer, charged to them' },
+              { stat: '0%', label: 'Commission on green fees' },
+              { stat: '1–2 days', label: 'Typical setup time' },
+            ].map(({ stat, label }) => (
+              <div key={stat}>
+                <div className="text-xl font-serif font-medium text-ink mb-0.5">{stat}</div>
+                <div className="text-[10px] uppercase tracking-[0.05em] text-ink-muted">{label}</div>
+              </div>
+            ))}
+          </div>
+          <div className="bg-white border border-line rounded-md p-5">
+            <p className="text-ink-muted text-xs leading-relaxed">
+              Your course keeps 100% of green fees and cart fees. GreenReserve&apos;s only revenue is the $1.50 per-player service fee charged directly to golfers at checkout — it never touches your Stripe account.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Short FAQ */}
+      <div className="border-t border-line">
+        <div className="max-w-xl mx-auto px-4 py-10 pb-16">
+          <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-5">Quick answers</p>
+          <div className="space-y-5">
+            {[
+              { q: 'What does it cost to list my course?', a: 'Nothing. $0 to set up, $0/month, no contracts. We charge golfers $1.50 per player at checkout.' },
+              { q: 'Who pays the $1.50?', a: 'The golfer pays it, not you. It shows as a service fee on their checkout. Your green fee is never reduced.' },
+              { q: 'How long does it take to go live?', a: 'Usually 1–2 business days after you submit the details sheet. We handle setup and run a test before flipping you live.' },
+              { q: 'Can I leave anytime?', a: 'Yes. No contract, no cancellation fee. If you decide to leave, we deactivate your page and your data is yours to keep.' },
+            ].map(({ q, a }) => (
+              <div key={q}>
+                <p className="text-sm font-medium text-ink mb-1">{q}</p>
+                <p className="text-sm text-ink-soft leading-relaxed">{a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
