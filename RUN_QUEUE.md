@@ -64,6 +64,11 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] ONBOARDING_SPEC Phase O5 — homepage redesign pass: editorial layout, real screenshots replace icon cards, hero de-templated, funnel-matched copy (medium run)
 - [x] ONBOARDING_SPEC Phase O6 — private course page mode: members-only courses get info + member sign-in page (no public booking), server-side booking rejection for private type (medium run)
 
+- [ ] GOLFER_SPEC Phase G1 — course page identity: About tab (directions, gift-card link-out), operator photo uploads via Vercel Blob, hero photo (schema change via db push, run attended; manual step: BLOB_READ_WRITE_TOKEN)
+- [ ] GOLFER_SPEC Phase G2 — tee sheet corresponding filters (date/time-of-day/party size in sync), seats-remaining slot cards, itemized pricing before personal info, shareable filter URLs (no migration)
+- [ ] GOLFER_SPEC Phase G3 — tee time alerts: full-slot alerts + criteria alerts, one email per alert, unsubscribe tokens, absorb Waitlist model (schema change via db push, run attended)
+- [ ] GOLFER_SPEC Phase G4 — member experience: quiet per-course sign-in link, member pricing in slot cards, member-only times, cross-course isolation test (no migration)
+
 ## Ideas / not yet specced
 
 - Remove or keep "No account yet" badge on dashboard members list (GolferAccount linking undecided)
