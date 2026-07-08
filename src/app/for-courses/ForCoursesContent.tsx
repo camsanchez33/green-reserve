@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { CheckCircle, Calendar } from 'lucide-react';
+import { CheckCircle, Calendar, Globe, Lock } from 'lucide-react';
 
 const STATES = [
   'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
@@ -10,12 +10,6 @@ const STATES = [
   'SD','TN','TX','UT','VT','VA','WA','WV','WI','WY',
 ];
 const TITLE_OPTIONS = ['Owner / Operator', 'General Manager', 'Director of Golf', 'Head Golf Professional', 'Course Superintendent', 'Assistant Pro / Manager', 'Other'];
-const COURSE_TYPES = [
-  { value: 'public',       label: 'Public' },
-  { value: 'municipal',    label: 'Municipal' },
-  { value: 'semi-private', label: 'Semi-private' },
-  { value: 'resort',       label: 'Resort' },
-];
 
 const CALENDLY_URL = 'https://calendly.com/greenreserve';
 
@@ -23,16 +17,28 @@ type FormData = {
   firstName: string; lastName: string;
   contactTitle: string; contactTitleOther: string;
   email: string; phone: string;
-  courseName: string; city: string; state: string; courseType: string;
+  courseName: string; city: string; state: string;
+  courseType: 'public' | 'private';
   notes: string;
+  residentRates: string;
+  hasMemberships: string;
+  roundsPerMonth: string;
+  publicTeeTimes: string;
+  memberCount: string;
+  outsideOutings: string;
+  memberBookingToday: string;
+  chargesMembersPerRound: string;
 };
 
 const init: FormData = {
   firstName: '', lastName: '',
   contactTitle: '', contactTitleOther: '',
   email: '', phone: '',
-  courseName: '', city: '', state: '', courseType: 'public',
+  courseName: '', city: '', state: '',
+  courseType: 'public',
   notes: '',
+  residentRates: '', hasMemberships: '', roundsPerMonth: '',
+  publicTeeTimes: '', memberCount: '', outsideOutings: '', memberBookingToday: '', chargesMembersPerRound: '',
 };
 
 const inp = "w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors";
@@ -46,6 +52,36 @@ function Label({ text, required }: { text: string; required?: boolean }) {
   );
 }
 
+function RadioGroup({ label, options, value, onChange }: {
+  label: string;
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <Label text={label} />
+      <div className="flex flex-wrap gap-2">
+        {options.map(opt => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            className={
+              'px-3 py-2 rounded-md border text-sm transition-colors ' +
+              (value === opt.value
+                ? 'border-pine bg-pine/5 text-pine font-medium'
+                : 'border-line bg-paper text-ink hover:border-pine/40')
+            }
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function ForCoursesContent() {
   const [form, setForm] = useState<FormData>(init);
   const [submitting, setSubmitting] = useState(false);
@@ -54,6 +90,11 @@ export default function ForCoursesContent() {
   const [error, setError] = useState('');
 
   const set = (k: keyof FormData, v: string) => setForm(f => ({ ...f, [k]: v }));
+  const setType = (t: 'public' | 'private') => setForm(f => ({
+    ...f, courseType: t,
+    residentRates: '', hasMemberships: '', roundsPerMonth: '',
+    publicTeeTimes: '', memberCount: '', outsideOutings: '', memberBookingToday: '', chargesMembersPerRound: '',
+  }));
 
   const validate = () => {
     if (!form.firstName.trim() || !form.lastName.trim()) return 'Please enter your first and last name.';
@@ -71,6 +112,20 @@ export default function ForCoursesContent() {
     if (err) { setError(err); return; }
     setSubmitting(true); setError('');
     const contactTitle = form.contactTitle === 'Other' ? form.contactTitleOther.trim() : form.contactTitle;
+
+    const needs: Record<string, string> = {};
+    if (form.courseType === 'public') {
+      if (form.residentRates) needs.residentRates = form.residentRates;
+      if (form.hasMemberships) needs.hasMemberships = form.hasMemberships;
+      if (form.roundsPerMonth) needs.roundsPerMonth = form.roundsPerMonth;
+    } else {
+      if (form.publicTeeTimes) needs.publicTeeTimes = form.publicTeeTimes;
+      if (form.memberCount) needs.memberCount = form.memberCount;
+      if (form.outsideOutings) needs.outsideOutings = form.outsideOutings;
+      if (form.memberBookingToday) needs.memberBookingToday = form.memberBookingToday;
+      if (form.chargesMembersPerRound) needs.chargesMembersPerRound = form.chargesMembersPerRound;
+    }
+
     const res = await fetch('/api/inquiries', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -81,6 +136,7 @@ export default function ForCoursesContent() {
         courseName: form.courseName, city: form.city, state: form.state,
         courseType: form.courseType,
         additionalNotes: form.notes,
+        needs,
       }),
     });
     setSubmitting(false);
@@ -105,7 +161,7 @@ export default function ForCoursesContent() {
 
         <div className="space-y-0 mb-8 border border-line rounded-md overflow-hidden">
           {[
-            ['We review your submission', 'We\'ll reply within 1 business day. If it\'s a good fit, we\'ll send you a short details sheet.'],
+            ['We review your submission', "We'll reply within 1 business day. If it's a good fit, we'll send you a short details sheet."],
             ['You fill out a details sheet', 'Pricing, policies, facilities — about 5 minutes. Saves as you go.'],
             ['We build your page', 'You review, approve, and go live. Golfers can book the same day.'],
           ].map(([title, desc], i) => (
@@ -203,16 +259,118 @@ export default function ForCoursesContent() {
                 </select>
               </div>
             </div>
+
+            {/* Course type — two radio cards */}
             <div>
               <Label text="Course type" required />
-              <select className={sel} value={form.courseType} onChange={e => set('courseType', e.target.value)}>
-                {COURSE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
+              <div className="grid grid-cols-2 gap-3">
+                {([
+                  { value: 'public' as const, label: 'Public', Icon: Globe, desc: 'Open to all golfers. Standard weekday/weekend pricing.' },
+                  { value: 'private' as const, label: 'Private', Icon: Lock, desc: 'Member-controlled access. Restricted or limited public tee times.' },
+                ] as const).map(({ value, label, Icon, desc }) => {
+                  const active = form.courseType === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setType(value)}
+                      className={
+                        'text-left p-4 rounded-lg border-2 transition-colors ' +
+                        (active ? 'border-pine bg-pine/5' : 'border-line hover:border-pine/30 bg-white')
+                      }
+                    >
+                      <div className={'flex items-center gap-2 mb-1.5 ' + (active ? 'text-pine' : 'text-ink-soft')}>
+                        <Icon className="w-4 h-4" />
+                        <span className="text-[13px] font-medium text-ink">{label}</span>
+                      </div>
+                      <p className="text-xs text-ink-soft leading-relaxed">{desc}</p>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+
+            {/* Public branch */}
+            {form.courseType === 'public' && (
+              <div className="space-y-4 border-l-2 border-pine/20 pl-4">
+                <RadioGroup
+                  label="Discounted rates for town/county residents?"
+                  value={form.residentRates}
+                  onChange={v => set('residentRates', v)}
+                  options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]}
+                />
+                <RadioGroup
+                  label="Memberships or season passes?"
+                  value={form.hasMemberships}
+                  onChange={v => set('hasMemberships', v)}
+                  options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]}
+                />
+                <RadioGroup
+                  label="Average rounds per month"
+                  value={form.roundsPerMonth}
+                  onChange={v => set('roundsPerMonth', v)}
+                  options={[
+                    { value: 'under_500', label: 'Under 500' },
+                    { value: '500_1500', label: '500–1,500' },
+                    { value: '1500_3000', label: '1,500–3,000' },
+                    { value: '3000_plus', label: '3,000+' },
+                  ]}
+                />
+              </div>
+            )}
+
+            {/* Private branch */}
+            {form.courseType === 'private' && (
+              <div className="space-y-4 border-l-2 border-pine/20 pl-4">
+                <RadioGroup
+                  label="Do you allow non-member tee times?"
+                  value={form.publicTeeTimes}
+                  onChange={v => set('publicTeeTimes', v)}
+                  options={[
+                    { value: 'yes_regularly', label: 'Yes, regularly' },
+                    { value: 'limited', label: 'Limited windows' },
+                    { value: 'no', label: 'No, members only' },
+                  ]}
+                />
+                <RadioGroup
+                  label="Roughly how many members?"
+                  value={form.memberCount}
+                  onChange={v => set('memberCount', v)}
+                  options={[
+                    { value: 'under_100', label: 'Under 100' },
+                    { value: '100_300', label: '100–300' },
+                    { value: '300_plus', label: '300+' },
+                  ]}
+                />
+                <RadioGroup
+                  label="Outside outings or tournaments?"
+                  value={form.outsideOutings}
+                  onChange={v => set('outsideOutings', v)}
+                  options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]}
+                />
+                <RadioGroup
+                  label="How do members book today?"
+                  value={form.memberBookingToday}
+                  onChange={v => set('memberBookingToday', v)}
+                  options={[
+                    { value: 'pro_shop_phone', label: 'Pro shop / phone' },
+                    { value: 'signup_sheet', label: 'Sign-up sheet' },
+                    { value: 'booking_software', label: 'Booking software' },
+                    { value: 'other', label: 'Other' },
+                  ]}
+                />
+                <RadioGroup
+                  label="Do you charge members per round?"
+                  value={form.chargesMembersPerRound}
+                  onChange={v => set('chargesMembersPerRound', v)}
+                  options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]}
+                />
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Section 3: Optional */}
+        {/* Section 3: Optional notes */}
         <div>
           <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">Anything we should know? <span className="normal-case tracking-normal font-normal text-ink-faint">(optional)</span></p>
           <textarea

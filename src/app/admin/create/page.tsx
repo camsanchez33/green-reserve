@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CheckCircle, Copy, ChevronRight, ArrowLeft, Eye, Globe, Building2, Users, Star } from 'lucide-react';
+import { CheckCircle, Copy, ChevronRight, ArrowLeft, Eye, Globe, Lock } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
@@ -10,10 +10,8 @@ const H = () => ({ 'Content-Type': 'application/json' });
 const MONTHS = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 const COURSE_TYPES = [
-  { value: 'public',       label: 'Public',       Icon: Globe,      desc: 'Open to all golfers. Standard weekday/weekend rates.' },
-  { value: 'municipal',    label: 'Municipal',    Icon: Building2,  desc: 'City or county-owned. Resident pricing tier included.' },
-  { value: 'semi-private', label: 'Semi-private', Icon: Users,      desc: 'Members get advance tee times and preferred rates.' },
-  { value: 'resort',       label: 'Resort',       Icon: Star,       desc: 'Hotel-linked. Guest-of-resort rates and package notes.' },
+  { value: 'public',   label: 'Public',   Icon: Globe, desc: 'Open to all golfers. Standard weekday/weekend rates.' },
+  { value: 'private',  label: 'Private',  Icon: Lock,  desc: 'Member-controlled access. Restricted or limited public tee times.' },
 ];
 
 interface Basics {
@@ -100,7 +98,11 @@ function WizardContent() {
 
   useEffect(() => {
     const pType = params.get('type') || '';
-    if (pType) setCourseType(pType);
+    if (pType) {
+      // Map legacy inquiry values to the two canonical types
+      const mapped = (pType === 'semi-private' || pType === 'private') ? 'private' : 'public';
+      setCourseType(mapped);
+    }
     const name = params.get('name') || '';
     if (!name) return;
     setBasics(b => ({
@@ -161,21 +163,17 @@ function WizardContent() {
       if (fees.hasTwilight && fees.twilightFee) payload.seedTwilightFee = parseFloat(fees.twilightFee) || null;
       if (fees.seasonOpen) payload.seedSeasonOpen = fees.seasonOpen;
       if (fees.seasonClose) payload.seedSeasonClose = fees.seasonClose;
-      if (courseType === 'municipal' && fees.hasResidentRates) {
+      if (courseType === 'public' && fees.hasResidentRates) {
         if (fees.residentWeekday) payload.seedResidentWeekday = parseFloat(fees.residentWeekday);
         if (fees.residentWeekend) payload.seedResidentWeekend = parseFloat(fees.residentWeekend);
         if (fees.residentNote) payload.seedResidentNote = fees.residentNote;
       }
-      if (courseType === 'semi-private') {
+      if (courseType === 'private') {
         payload.seedMemberAdvanceDays = parseInt(fees.memberAdvanceDays) || 14;
         if (fees.hasStarterTier && fees.starterTierName) {
           payload.seedStarterTierName = fees.starterTierName;
           payload.seedStarterTierFee = parseFloat(fees.starterTierFee) || 0;
         }
-      }
-      if (courseType === 'resort') {
-        if (fees.hasGuestRate && fees.guestRate) payload.seedGuestRate = parseFloat(fees.guestRate);
-        if (fees.packagesNote) payload.seedPackagesNote = fees.packagesNote;
       }
       const r = await fetch('/api/admin/create-course', { method: 'POST', headers: H(), body: JSON.stringify(payload) });
       const d = await r.json();
@@ -220,18 +218,15 @@ function WizardContent() {
   if (fees.hasTwilight && fees.twilightFee) reviewFeeRows.push(['Twilight fee', `$${fees.twilightFee} (notes)`]);
   if (fees.seasonOpen) reviewFeeRows.push(['Season opens', MONTHS[parseInt(fees.seasonOpen)] || fees.seasonOpen]);
   if (fees.seasonClose) reviewFeeRows.push(['Season closes', MONTHS[parseInt(fees.seasonClose)] || fees.seasonClose]);
-  if (courseType === 'municipal' && fees.hasResidentRates) {
+  if (courseType === 'public' && fees.hasResidentRates) {
     if (fees.residentWeekday) reviewFeeRows.push(['Resident weekday', `$${fees.residentWeekday}`]);
     if (fees.residentWeekend) reviewFeeRows.push(['Resident weekend', `$${fees.residentWeekend}`]);
   }
-  if (courseType === 'semi-private') {
+  if (courseType === 'private') {
     reviewFeeRows.push(['Member advance booking', `${fees.memberAdvanceDays} days`]);
     if (fees.hasStarterTier && fees.starterTierName) {
       reviewFeeRows.push(['Starter tier', `${fees.starterTierName} · $${fees.starterTierFee}/yr`]);
     }
-  }
-  if (courseType === 'resort' && fees.hasGuestRate && fees.guestRate) {
-    reviewFeeRows.push(['Guest-of-resort rate', `$${fees.guestRate} (notes)`]);
   }
 
   const copyRows: [string, string][] = result
@@ -439,7 +434,7 @@ function WizardContent() {
             <div className="space-y-5">
               <div className="bg-white border border-line rounded-lg p-6 space-y-5">
                 <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">
-                  Pricing — {COURSE_TYPES.find(t => t.value === courseType)?.label || courseType}
+                  Pricing — {courseType === 'private' ? 'Private' : 'Public'}
                 </div>
 
                 {/* Common: weekday/weekend/cart/walking */}
@@ -492,8 +487,8 @@ function WizardContent() {
                   </div>
                 </div>
 
-                {/* Municipal: resident rates */}
-                {courseType === 'municipal' && (
+                {/* Public: optional resident rates */}
+                {courseType === 'public' && (
                   <div className="border-t border-line-soft pt-4 space-y-4">
                     <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Resident pricing</div>
                     <label className="flex items-center gap-2 text-sm text-ink cursor-pointer select-none">
@@ -521,8 +516,8 @@ function WizardContent() {
                   </div>
                 )}
 
-                {/* Semi-private: member advance + starter tier */}
-                {courseType === 'semi-private' && (
+                {/* Private: member advance + starter tier */}
+                {courseType === 'private' && (
                   <div className="border-t border-line-soft pt-4 space-y-4">
                     <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Member access</div>
                     <div>
@@ -550,32 +545,6 @@ function WizardContent() {
                           </div>
                         </div>
                       )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Resort: guest rate + packages */}
-                {courseType === 'resort' && (
-                  <div className="border-t border-line-soft pt-4 space-y-4">
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Resort specifics <span className="normal-case tracking-normal font-normal">(stored in description notes)</span></div>
-                    <div className="space-y-3">
-                      <label className="flex items-center gap-2 text-sm text-ink cursor-pointer select-none">
-                        <input type="checkbox" checked={fees.hasGuestRate} onChange={e => setFees(f => ({ ...f, hasGuestRate: e.target.checked }))} className="w-4 h-4 accent-pine rounded"/>
-                        Guest-of-resort rate
-                      </label>
-                      {fees.hasGuestRate && (
-                        <DollarInput value={fees.guestRate} onChange={v => setFees(f => ({ ...f, guestRate: v }))} placeholder="95.00"/>
-                      )}
-                    </div>
-                    <div>
-                      <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Package / resort notes</label>
-                      <textarea
-                        value={fees.packagesNote}
-                        onChange={e => setFees(f => ({ ...f, packagesNote: e.target.value }))}
-                        className={iCls + ' resize-none'}
-                        rows={3}
-                        placeholder="Golf packages, stay-and-play rates, etc."
-                      />
                     </div>
                   </div>
                 )}

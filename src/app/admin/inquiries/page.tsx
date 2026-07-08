@@ -791,14 +791,32 @@ export default function InquiriesPage() {
               try { n = JSON.parse(selectedInq.needsJson || ''); } catch { /* ignore */ }
               const entries = Object.entries(n).filter(([, v]) => v !== '' && v !== null);
               if (entries.length === 0) return null;
+              const NEEDS_LABELS: Record<string, string> = {
+                residentRates: 'Resident rates',
+                hasMemberships: 'Memberships / season passes',
+                roundsPerMonth: 'Rounds per month',
+                publicTeeTimes: 'Non-member tee times',
+                memberCount: 'Member count',
+                outsideOutings: 'Outside outings',
+                memberBookingToday: 'Current booking method',
+                chargesMembersPerRound: 'Charges per round',
+              };
+              const NEEDS_VALUES: Record<string, string> = {
+                yes: 'Yes', no: 'No',
+                yes_regularly: 'Yes, regularly', limited: 'Limited windows', no_members_only: 'No, members only',
+                under_100: 'Under 100', '100_300': '100–300', '300_plus': '300+',
+                under_500: 'Under 500', '500_1500': '500–1,500', '1500_3000': '1,500–3,000', '3000_plus': '3,000+',
+                pro_shop_phone: 'Pro shop / phone', signup_sheet: 'Sign-up sheet',
+                booking_software: 'Booking software', other: 'Other',
+              };
               return (
                 <div className="px-5 py-4 border-b border-line">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-warn mb-2">What They Need</div>
+                  <div className="text-[11px] uppercase tracking-[0.06em] text-warn mb-2">Branch Answers</div>
                   <div className="grid grid-cols-2 gap-2">
                     {entries.map(([k, v]) => (
                       <div key={k} className="bg-warn/5 border border-warn/20 rounded-md px-3 py-2">
-                        <div className="text-[10px] text-warn/80 mb-0.5">{k}</div>
-                        <div className="text-warn text-sm font-medium">{String(v)}</div>
+                        <div className="text-[10px] text-warn/80 mb-0.5">{NEEDS_LABELS[k] || k}</div>
+                        <div className="text-warn text-sm font-medium">{NEEDS_VALUES[String(v)] || String(v)}</div>
                       </div>
                     ))}
                   </div>
