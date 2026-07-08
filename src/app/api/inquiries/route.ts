@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendInquiryNotification } from '@/lib/email';
+import { sendInquiryNotification, sendInquiryConfirmation } from '@/lib/email';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const required = ['firstName', 'lastName', 'contactTitle', 'email', 'phone', 'courseName', 'address', 'city', 'state', 'zipCode', 'courseType'];
+  const required = ['firstName', 'lastName', 'contactTitle', 'email', 'phone', 'courseName', 'city', 'state', 'courseType'];
   for (const field of required) {
     if (!body[field]) return NextResponse.json({ error: `Missing: ${field}` }, { status: 400 });
   }
@@ -18,10 +18,10 @@ export async function POST(req: NextRequest) {
       email: String(body.email).trim().toLowerCase(),
       phone: body.phone,
       courseName: body.courseName,
-      address: body.address,
+      address: body.address || '',
       city: body.city,
       state: body.state,
-      zipCode: body.zipCode,
+      zipCode: body.zipCode || '',
       website: body.website || '',
       courseType: body.courseType,
       teeTimesPerDay: body.teeTimesPerDay || null,
@@ -36,7 +36,8 @@ export async function POST(req: NextRequest) {
       needsJson: body.needs ? JSON.stringify(body.needs) : '',
     },
   });
-  // Notify admin — fire-and-forget, don't block the response
+
+  const emailData = { contactName, email: body.email, courseName: body.courseName };
   sendInquiryNotification({
     contactName,
     contactTitle: body.contactTitle,
@@ -50,6 +51,9 @@ export async function POST(req: NextRequest) {
     greenFeeRange: body.greenFeeRange || '',
     additionalNotes: body.additionalNotes || '',
   }).catch(err => console.error('Inquiry notification email failed:', err));
+
+  sendInquiryConfirmation(emailData)
+    .catch(err => console.error('Inquiry confirmation email failed:', err));
 
   return NextResponse.json({ success: true, id: inquiry.id });
 }

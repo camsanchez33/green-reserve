@@ -165,10 +165,45 @@ model Message {
   system-generated temp password shown ONCE to the owner. Account is created with
   `mustChangePassword: true` — first login forces a password change before anything
   else loads.
-- Self-serve: every employee can change their OWN password (current + new) from a small
-  account menu. Owner can: reset anyone's password (new temp, forces change), change
-  roles, deactivate/reactivate. Nobody else touches other people's credentials.
 - Login records `lastLoginAt` (exists) — show it on the employees list.
+
+## Phase 4b — Role enforcement everywhere + owner security (schema change, run attended)
+
+Phase 4 shipped roles + temp passwords but only gated broadcasts. Right now a
+`support` account can create a course. Close it all:
+
+### A. requireRole in EVERY /api/admin route
+- Helper `requireRole(session, roles: Role[])` in one shared lib file. FIRST line of
+  every handler after session resolution. Enumerate every route under
+  src/app/api/admin/ and apply the matrix:
+  - GET (read) routes: all roles.
+  - Messages reply: owner, manager, support.
+  - Create/edit/delete anything (courses, inquiries actions, archive, schedule,
+    course settings, tee sheet edits, add-course, backfill): owner, manager ONLY.
+  - Employees CRUD + broadcasts: owner ONLY.
+- UI: hide buttons the role can't use (support sees no "Add course"), but the API
+  check is the enforcement — verify by hitting a create route as support in dev.
+
+### B. Personal profile tab
+- New `/admin/profile` page (sidebar item, bottom) — own name, email, role,
+  lastLoginAt, change-own-password (requires current password). Password change lives
+  HERE and only here for one's own account.
+
+### C. Owner credential rules
+- Owner password: NO reset path from any UI — owner changes it self-serve on
+  /admin/profile. Employees PATCH reset_password must 403 if the target is an owner.
+  Lockout recovery: ADMIN_TOKEN bootstrap path only (document in code comment).
+- Owner can still reset any non-owner's password (temp, forces change).
+
+### D. Owner separate login + 2FA
+- Dedicated `/admin/owner-login` page; `/admin/login` rejects owner accounts with a
+  pointer to the owner page (and vice versa for non-owners).
+- After password, owner enters a 6-digit code — mirror src/lib/two-factor.ts
+  (hashed code + 10-min expiry, SMS via Twilio, email fallback).
+- Schema: add `twoFactorCode`, `twoFactorCodeExpiry`, `phone` to AdminUser → migrate,
+  run attended.
+- Note: roles determine what renders and what APIs permit — the separate login adds
+  protection to the owner account, it does not create the role views (section A does).
 
 ## Phase 5 — Add-course wizard v2 (type-aware)
 

@@ -568,6 +568,46 @@ export async function sendInquiryNotification(data: {
   });
 }
 
+export async function sendInquiryConfirmation(data: {
+  contactName: string; email: string; courseName: string;
+}) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">Got it — we'll be in touch.</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      Thanks for reaching out about <strong>${data.courseName}</strong>, ${data.contactName}. Here's what happens next.
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td style="padding:14px 0;border-bottom:1px solid #f3f4f6;">
+          <p style="margin:0 0 2px;color:#111827;font-size:14px;font-weight:700;">1. We review your submission</p>
+          <p style="margin:0;color:#6b7280;font-size:13px;">We'll reply within 1 business day. If it's a good fit, we'll send you a short details sheet.</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:14px 0;border-bottom:1px solid #f3f4f6;">
+          <p style="margin:0 0 2px;color:#111827;font-size:14px;font-weight:700;">2. You fill out a details sheet</p>
+          <p style="margin:0;color:#6b7280;font-size:13px;">Pricing, policies, and facilities — takes about 5 minutes. Saves as you go.</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:14px 0;">
+          <p style="margin:0 0 2px;color:#111827;font-size:14px;font-weight:700;">3. We build your page</p>
+          <p style="margin:0;color:#6b7280;font-size:13px;">You review, approve, and go live. Golfers can book the same day.</p>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>.
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.email,
+    subject: `We received your GreenReserve inquiry — ${data.courseName}`,
+    html,
+  });
+}
+
 export async function sendDetailsRequestEmail(data: {
   contactName: string; email: string; courseName: string; detailsLink: string;
 }) {

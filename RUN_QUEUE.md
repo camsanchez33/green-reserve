@@ -44,6 +44,12 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] Small run: extend gr_member session from 7 to 90 days (src/lib/member-session.ts)
 - [x] BUG small run: activating a course doesn't make it public — (1) admin course-detail PATCH sets active=true but never liveStatus='live', so the public page/API (which require BOTH + not archived) still 404 — audit EVERY code path that sets Course.active=true and make each also set liveStatus='live' (deactivate → liveStatus='draft'); (2) /courses/[slug] renders a blank shell when the API 404s — add a proper "Course not found" state with a link home; (3) after deploy, re-toggle daisylinks active in admin to heal its liveStatus
 
+- [ ] ONBOARDING_SPEC Phase O1 — inquiry form → short lead capture + applicant confirmation email + what-happens-next success screen (small run)
+- [ ] ONBOARDING_SPEC Phase O2 — type-aware details sheet: structured sections per course type, server-side draft save, mobile-first (big run)
+- [ ] ONBOARDING_SPEC Phase O3 — build handoff: wizard fully pre-filled from structured sheet + ready-to-build checklist (medium run)
+- [ ] ONBOARDING_SPEC Phase O4 — go-live welcome email + walkthrough video embed + welcomeEmailSentAt guard (schema change, run attended)
+- [ ] ONBOARDING_SPEC Phase O5 — homepage redesign pass: editorial layout, real screenshots replace icon cards, hero de-templated, funnel-matched copy (medium run)
+
 ## Ideas / not yet specced
 
 - Remove or keep "No account yet" badge on dashboard members list (GolferAccount linking undecided)
