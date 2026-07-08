@@ -1,0 +1,49 @@
+name: Nightly Database Backup
+
+on:
+  schedule:
+    # 08:00 UTC = 3–4 AM ET (quiet hours, before the work day starts)
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+    # Manual trigger — use this to verify the first backup before relying on the schedule.
+    # GitHub → Actions → "Nightly Database Backup" → Run workflow
+
+jobs:
+  backup:
+    name: pg_dump → encrypt → upload artifact
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set backup date
+        id: date
+        run: echo "DATE=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Install PostgreSQL 17 client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            postgresql-client-17 \
+            openssl
+
+      - name: Dump and encrypt
+        env:
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          # pg_dump to custom (compressed) format, pipe directly into openssl AES-256 encryption.
+          # The result is a single encrypted file — unreadable without BACKUP_PASSPHRASE.
+          # IMPORTANT: never echo $DATABASE_URL or $BACKUP_PASSPHRASE anywhere in this script.
+          pg_dump "$DATABASE_URL" --format=custom --no-password \
+            | openssl enc -aes-256-cbc -pbkdf2 \
+                -pass env:BACKUP_PASSPHRASE \
+                -out "greenreserve-db-${{ steps.date.outputs.DATE }}.dump.enc"
+
+          echo "Backup size: $(du -sh greenreserve-db-${{ steps.date.outputs.DATE }}.dump.enc | cut -f1)"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ steps.date.outputs.DATE }}
+          path: greenreserve-db-${{ steps.date.outputs.DATE }}.dump.enc
+          retention-days: 90
+          if-no-files-found: error
