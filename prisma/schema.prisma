@@ -24,6 +24,7 @@ model CourseOperator {
   twoFactorMethod     String    @default("email")
   twoFactorCode       String?
   twoFactorCodeExpiry DateTime?
+  twoFactorAttempts   Int       @default(0)
   phone               String    @default("")
   createdAt           DateTime  @default(now())
   course              Course?
@@ -410,6 +411,9 @@ model AdminUser {
   setPasswordTokenExpiry DateTime?
   twoFactorCode          String?
   twoFactorCodeExpiry    DateTime?
+  twoFactorAttempts      Int       @default(0)
+  failedLoginAttempts    Int       @default(0)
+  lockoutUntil           DateTime?
 }
 
 model Announcement {

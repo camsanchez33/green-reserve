@@ -67,6 +67,7 @@ export async function GET(req: NextRequest) {
           amountCents: Math.round(booking.cancellationFeeTotal),
           applicationFeeCents: 0,
           description: `Late-cancellation fee — ${booking.course.name} — booking ${booking.id}`,
+          idempotencyKey: `cancelfee-${booking.id}-${booking.stripePaymentMethodId}`,
         });
 
         await prisma.booking.update({

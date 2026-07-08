@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { sendTwoFactorCodeEmail } from '@/lib/email';
 import { sendSmsOtp } from '@/lib/twilio';
 import bcrypt from 'bcryptjs';
+import { randomInt } from 'crypto';
 import type { CourseOperator } from '@prisma/client';
 
 // Generates a fresh 6-digit code, stores its hash on the operator, and sends it
@@ -12,7 +13,7 @@ export async function issueTwoFactorCode(operator: CourseOperator, methodOverrid
   const method = requested === 'sms' && operator.phone ? 'sms' : 'email';
   console.log('[2fa] issueTwoFactorCode — operatorId:', operator.id, '| requested:', requested, '| resolved:', method, '| hasPhone:', !!operator.phone);
 
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const code = randomInt(100000, 1000000).toString();
   const hashedCode = await bcrypt.hash(code, 10);
   await prisma.courseOperator.update({
     where: { id: operator.id },
