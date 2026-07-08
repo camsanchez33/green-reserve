@@ -1,8 +1,8 @@
 'use client';
-import { useEffect, useMemo, useState, use } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState, useRef, use } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Check, Flag, SlidersHorizontal, X, ExternalLink, Navigation } from 'lucide-react';
+import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Check, Flag, SlidersHorizontal, ExternalLink, Navigation } from 'lucide-react';
 import type { Course, TeeTime } from '@/lib/courses-data';
 
 const TYPE_LABELS: Record<string, string> = {
@@ -102,25 +102,41 @@ type CourseWithBrand = Course & {
 export default function CourseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [course, setCourse] = useState<CourseWithBrand | null>(null);
   const [notFound, setNotFound] = useState(false);
 
-  const [selectedDate, setSelectedDate] = useState(formatDate(startOfToday()));
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const d = searchParams.get('date');
+    return d && /^\d{4}-\d{2}-\d{2}$/.test(d) && d >= formatDate(startOfToday()) ? d : formatDate(startOfToday());
+  });
   const [calMonth, setCalMonth] = useState(() => {
     const t = startOfToday();
     return new Date(t.getFullYear(), t.getMonth(), 1);
   });
   const [teeTimes, setTeeTimes] = useState<TeeTime[]>([]);
   const [loadingTimes, setLoadingTimes] = useState(false);
-  const [players, setPlayers] = useState(2);
+  const [players, setPlayers] = useState(() => {
+    const p = Number(searchParams.get('players'));
+    return [1, 2, 3, 4].includes(p) ? p : 2;
+  });
   const [selectedTime, setSelectedTime] = useState<TeeTime | null>(null);
   const [withCart, setWithCart] = useState(false);
-  const [todFilter, setTodFilter] = useState<TimeOfDay>('all');
+  const [todFilter, setTodFilter] = useState<TimeOfDay>(() => {
+    const t = searchParams.get('tod');
+    return ['all', 'morning', 'afternoon', 'twilight'].includes(t ?? '') ? (t as TimeOfDay) : 'all';
+  });
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
-  const [holesFilter, setHolesFilter] = useState<'all' | '9' | '18'>('all');
+  const [holesFilter, setHolesFilter] = useState<'all' | '9' | '18'>(() => {
+    const h = searchParams.get('holes');
+    return ['all', '9', '18'].includes(h ?? '') ? (h as 'all' | '9' | '18') : 'all';
+  });
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [tab, setTab] = useState<'tee-times' | 'about' | 'photos'>('tee-times');
+  const [nextAvailable, setNextAvailable] = useState<string | null>(null);
+  const [searchingNext, setSearchingNext] = useState(false);
+  const didMount = useRef(false);
 
   useEffect(() => {
     fetch(`/api/courses/${slug}`)
@@ -134,12 +150,53 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
     setLoadingTimes(true);
     setSelectedTime(null);
     setMaxPrice(null);
+    setNextAvailable(null);
     fetch(`/api/courses/${slug}/tee-times?date=${selectedDate}`)
       .then(r => r.json())
       .then(setTeeTimes)
       .catch(() => setTeeTimes([]))
       .finally(() => setLoadingTimes(false));
   }, [slug, selectedDate, course]);
+
+  // Sync filter state to URL (skip first render to avoid replacing URL with defaults)
+  useEffect(() => {
+    if (!didMount.current) { didMount.current = true; return; }
+    const p = new URLSearchParams();
+    const todayStr2 = formatDate(startOfToday());
+    if (selectedDate !== todayStr2) p.set('date', selectedDate);
+    if (todFilter !== 'all') p.set('tod', todFilter);
+    if (players !== 2) p.set('players', String(players));
+    if (holesFilter !== 'all') p.set('holes', holesFilter);
+    const q = p.toString();
+    router.replace(`/courses/${slug}${q ? '?' + q : ''}`, { scroll: false });
+  }, [selectedDate, todFilter, players, holesFilter, slug, router]);
+
+  // Find next date with availability when current date is empty
+  useEffect(() => {
+    if (loadingTimes || teeTimes.length > 0 || !course || course.type === 'member' || course.type === 'private') return;
+    let cancelled = false;
+    setSearchingNext(true);
+    const scan = async () => {
+      for (let i = 1; i <= 7; i++) {
+        if (cancelled) return;
+        const d = new Date(selectedDate + 'T12:00:00');
+        d.setDate(d.getDate() + i);
+        const ds = formatDate(d);
+        try {
+          const res = await fetch(`/api/courses/${slug}/tee-times?date=${ds}`);
+          const times = await res.json();
+          if (!cancelled && Array.isArray(times) && times.length > 0) {
+            setNextAvailable(ds);
+            setSearchingNext(false);
+            return;
+          }
+        } catch { /* continue */ }
+      }
+      if (!cancelled) setSearchingNext(false);
+    };
+    scan();
+    return () => { cancelled = true; };
+  }, [teeTimes.length, loadingTimes, selectedDate, slug, course]);
 
   const hasHolesData = useMemo(() => {
     const vals = new Set(teeTimes.map(t => holesOf(t)).filter(h => h !== undefined));
@@ -153,7 +210,8 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
   }, [teeTimes]);
 
   const filtered = useMemo(() => teeTimes.filter(t => {
-    if (t.players_available < players) return false;
+    // Full slots (0 seats) always show greyed — player filter doesn't hide them
+    if (t.players_available > 0 && t.players_available < players) return false;
     if (todFilter !== 'all' && todOf(t) !== todFilter) return false;
     if (maxPrice !== null && t.green_fee > maxPrice) return false;
     if (holesFilter !== 'all') {
@@ -295,11 +353,6 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
     { key: 'afternoon', label: 'Afternoon', items: afternoonItems },
     { key: 'twilight',  label: 'Twilight',  items: twilightItems },
   ].filter(g => g.items.length > 0);
-
-  const cartFeeApplied = selectedTime && withCart ? selectedTime.cart_fee : 0;
-  const total = selectedTime
-    ? (selectedTime.green_fee + cartFeeApplied) * players + 1.5 * players
-    : 0;
 
   const todayMonth = (() => { const t = startOfToday(); return new Date(t.getFullYear(), t.getMonth(), 1); })();
   const maxMonth = new Date(todayMonth.getFullYear(), todayMonth.getMonth() + 2, 1);
@@ -649,7 +702,19 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                   <div className="bg-white rounded-lg border border-line text-center py-14 px-6">
                     <Clock size={28} className="mx-auto mb-3 text-ink-faint" />
                     {teeTimes.length === 0 ? (
-                      <p className="text-ink-muted text-sm">No tee times available for this date. Try another day.</p>
+                      <div>
+                        <p className="text-ink-muted text-sm mb-4">No tee times available for this date.</p>
+                        {searchingNext ? (
+                          <p className="text-xs text-ink-faint">Looking for next available date…</p>
+                        ) : nextAvailable ? (
+                          <button
+                            onClick={() => setSelectedDate(nextAvailable)}
+                            className="inline-flex items-center gap-1.5 text-sm font-medium text-pine hover:text-pine-hover transition-colors"
+                          >
+                            Next available: {displayDate(nextAvailable)} →
+                          </button>
+                        ) : null}
+                      </div>
                     ) : (
                       <div>
                         <p className="text-ink-soft text-sm mb-3">No tee times match your filters.</p>
@@ -672,40 +737,126 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                           {g.items.map(t => {
                             const isSel = selectedTime?.id === t.id;
                             const h = holesOf(t);
+                            const isFull = t.players_available === 0;
+                            const slotBorder = isSel ? { borderColor: accent, boxShadow: `0 0 0 1px ${accent}` } : { borderColor: '#E6E3D7' };
+                            const slotPlayers = Math.min(players, t.players_available || players);
+                            const cartFee = isSel && withCart && t.cart_fee > 0 ? t.cart_fee : 0;
+                            const slotTotal = (t.green_fee + cartFee) * slotPlayers + 1.5 * slotPlayers;
+
                             return (
-                              <button
-                                key={t.id}
-                                onClick={() => setSelectedTime(isSel ? null : t)}
-                                className="w-full flex items-center justify-between gap-4 rounded-lg border px-4 sm:px-5 py-3.5 text-left transition-all"
-                                style={isSel
-                                  ? { borderColor: accent, backgroundColor: `${accent}0a`, boxShadow: `0 0 0 1px ${accent}` }
-                                  : { backgroundColor: '#fff', borderColor: '#E6E3D7' }}
-                              >
-                                <div className="min-w-0">
-                                  <div className="text-lg sm:text-xl font-bold tracking-tight text-ink">
-                                    {formatTime(t.time)}
+                              <div key={t.id} className={`rounded-lg border overflow-hidden transition-all ${isFull ? 'opacity-60' : ''}`} style={slotBorder}>
+                                <div
+                                  className="w-full flex items-center justify-between gap-4 px-4 sm:px-5 py-3.5"
+                                  style={{ backgroundColor: isSel ? `${accent}0a` : '#fff', cursor: isFull ? 'default' : 'pointer' }}
+                                  onClick={isFull ? undefined : () => {
+                                    const next = isSel ? null : t;
+                                    setSelectedTime(next);
+                                    if (next && players > next.players_available) setPlayers(next.players_available);
+                                  }}
+                                >
+                                  <div className="min-w-0">
+                                    <div className="text-lg sm:text-xl font-bold tracking-tight text-ink">
+                                      {formatTime(t.time)}
+                                    </div>
+                                    <div className="text-xs mt-0.5 flex items-center gap-1.5 flex-wrap">
+                                      {isFull ? (
+                                        <span className="text-ink-faint">Full</span>
+                                      ) : (
+                                        <>
+                                          <span className={STATUS_STYLE[t.status] || 'text-ink-muted'}>{STATUS_LABEL[t.status] || 'Available'}</span>
+                                          <span className="text-ink-muted">· {t.players_available} {t.players_available === 1 ? 'spot' : 'spots'} left</span>
+                                        </>
+                                      )}
+                                      {h !== undefined && <span className="text-ink-muted">· {h} holes</span>}
+                                    </div>
                                   </div>
-                                  <div className="text-xs mt-0.5 flex items-center gap-1.5 flex-wrap">
-                                    <span className={STATUS_STYLE[t.status] || 'text-ink-muted'}>{STATUS_LABEL[t.status] || 'Available'}</span>
-                                    <span className="text-ink-muted">· {t.players_available} spots</span>
-                                    {h !== undefined && <span className="text-ink-muted">· {h} holes</span>}
+                                  <div className="flex items-center gap-3 sm:gap-5 flex-shrink-0">
+                                    <div className="text-right">
+                                      <div className="font-semibold text-ink">${t.green_fee}</div>
+                                      <div className="text-[11px] text-ink-muted">per player</div>
+                                    </div>
+                                    {isFull ? (
+                                      <span className="hidden sm:inline-flex px-4 py-2 rounded-md text-xs font-medium border border-line text-ink-faint">Full</span>
+                                    ) : (
+                                      <span
+                                        className="hidden sm:inline-flex px-4 py-2 rounded-md text-xs font-medium transition-colors"
+                                        style={isSel ? { backgroundColor: accent, color: '#fff' } : { border: `1px solid ${accent}`, color: accent }}
+                                      >
+                                        {isSel ? 'Selected' : 'Select'}
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-3 sm:gap-5 flex-shrink-0">
-                                  <div className="text-right">
-                                    <div className="font-semibold text-ink">${t.green_fee}</div>
-                                    <div className="text-[11px] text-ink-muted">per player</div>
+
+                                {isSel && (
+                                  <div className="border-t px-4 sm:px-5 py-5 space-y-4" style={{ borderColor: `${accent}25`, backgroundColor: `${accent}05` }}>
+                                    {/* Party size */}
+                                    <div>
+                                      <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2">Players</div>
+                                      <div className="flex gap-1.5">
+                                        {([1, 2, 3, 4] as const).map(n => {
+                                          const ok = n <= t.players_available;
+                                          return (
+                                            <button
+                                              key={n}
+                                              disabled={!ok}
+                                              onClick={() => setPlayers(n)}
+                                              className="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-md border text-sm font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                              style={slotPlayers === n && ok ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: '#E6E3D7', color: '#87867C' }}
+                                            >
+                                              <Users size={13} />
+                                              {n}
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+
+                                    {/* Cart toggle */}
+                                    {t.cart_fee > 0 && !course.cart_required && (
+                                      <button
+                                        onClick={() => setWithCart(!withCart)}
+                                        className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-md border text-sm font-medium transition-colors"
+                                        style={withCart ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: '#E6E3D7', color: '#6E6D64' }}
+                                      >
+                                        <span>Add cart</span>
+                                        <span>${t.cart_fee} / player</span>
+                                      </button>
+                                    )}
+
+                                    {/* Itemized pricing */}
+                                    <div className="bg-white rounded-md border border-line px-4 py-3 space-y-1.5">
+                                      <div className="flex justify-between text-sm text-ink-soft">
+                                        <span>Green fee × {slotPlayers}</span>
+                                        <span>${(t.green_fee * slotPlayers).toFixed(2)}</span>
+                                      </div>
+                                      {withCart && t.cart_fee > 0 && (
+                                        <div className="flex justify-between text-sm text-ink-soft">
+                                          <span>Cart × {slotPlayers}</span>
+                                          <span>${(t.cart_fee * slotPlayers).toFixed(2)}</span>
+                                        </div>
+                                      )}
+                                      <div className="flex justify-between text-sm text-ink-soft">
+                                        <span>GR booking fee × {slotPlayers}</span>
+                                        <span>${(1.5 * slotPlayers).toFixed(2)}</span>
+                                      </div>
+                                      <div className="flex justify-between font-semibold text-ink pt-2 border-t border-line">
+                                        <span>Total</span>
+                                        <span>${slotTotal.toFixed(2)}</span>
+                                      </div>
+                                    </div>
+
+                                    {/* Continue to Book */}
+                                    <button
+                                      onClick={handleBook}
+                                      className="w-full py-3 rounded-md font-medium text-white text-sm transition-colors"
+                                      style={{ backgroundColor: accent }}
+                                    >
+                                      Continue to Book →
+                                    </button>
                                   </div>
-                                  <span
-                                    className="hidden sm:inline-flex px-4 py-2 rounded-md text-xs font-medium transition-colors"
-                                    style={isSel
-                                      ? { backgroundColor: accent, color: '#fff' }
-                                      : { border: `1px solid ${accent}`, color: accent }}
-                                  >
-                                    {isSel ? 'Selected' : 'Select'}
-                                  </span>
-                                </div>
-                              </button>
+                                )}
+                              </div>
                             );
                           })}
                         </div>
@@ -829,55 +980,6 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
         </div>
       </div>
 
-      {/* Sticky booking bar */}
-      {selectedTime && course.type !== 'member' && (
-        <div className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-line shadow-[0_-6px_24px_rgba(0,0,0,0.06)]">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-            <div className="flex-1 min-w-0">
-              <div className="font-medium text-ink text-sm sm:text-base">
-                {formatTime(selectedTime.time)} · {displayDate(selectedDate)} · {players} {players === 1 ? 'player' : 'players'}
-              </div>
-              <div className="text-xs text-ink-muted mt-0.5">
-                Green fee ${selectedTime.green_fee} × {players}
-                {withCart && selectedTime.cart_fee > 0 ? ` · Cart $${selectedTime.cart_fee} × ${players}` : ''}
-                {` · GR access fee $${(1.5 * players).toFixed(2)}`}
-              </div>
-            </div>
-
-            {selectedTime.cart_fee > 0 && !course.cart_required && (
-              <button
-                onClick={() => setWithCart(!withCart)}
-                className="self-start sm:self-auto px-3.5 py-2 rounded-md text-xs font-medium transition-colors"
-                style={withCart
-                  ? { backgroundColor: accent, color: '#fff' }
-                  : { backgroundColor: '#F0EDE2', color: '#6E6D64' }}
-              >
-                {withCart ? `Cart added · $${selectedTime.cart_fee}/player` : `Add cart · $${selectedTime.cart_fee}/player`}
-              </button>
-            )}
-
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <div className="text-[10px] font-medium text-ink-muted uppercase tracking-[0.06em]">Total</div>
-                <div className="font-bold text-ink text-xl leading-tight">${total.toFixed(2)}</div>
-              </div>
-              <button
-                onClick={handleBook}
-                className="px-6 py-3 rounded-md font-medium text-white text-sm transition-colors"
-                style={{ backgroundColor: accent }}
-              >
-                Continue to Book →
-              </button>
-              <button
-                onClick={() => setSelectedTime(null)}
-                className="p-2 rounded-md text-ink-muted hover:text-ink hover:bg-paper transition-colors"
-              >
-                <X size={16} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

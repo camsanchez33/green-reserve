@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import CourseDetailPage from './CourseBookingClient';
@@ -24,5 +25,9 @@ export async function generateMetadata(
 }
 
 export default function CoursePage({ params }: { params: Promise<{ slug: string }> }) {
-  return <CourseDetailPage params={params} />;
+  return (
+    <Suspense>
+      <CourseDetailPage params={params} />
+    </Suspense>
+  );
 }
