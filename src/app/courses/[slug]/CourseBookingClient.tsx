@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Check, Flag, SlidersHorizontal, ExternalLink, Navigation } from 'lucide-react';
+import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Check, Flag, SlidersHorizontal, ExternalLink, Navigation, Bell } from 'lucide-react';
 import type { Course, TeeTime } from '@/lib/courses-data';
 
 const TYPE_LABELS: Record<string, string> = {
@@ -138,6 +138,12 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
   const [searchingNext, setSearchingNext] = useState(false);
   const didMount = useRef(false);
 
+  const [alertModal, setAlertModal] = useState<{ teeTimeId?: string; date: string; courseId: string } | null>(null);
+  const [alertEmail, setAlertEmail] = useState('');
+  const [alertName, setAlertName] = useState('');
+  const [alertSubmitting, setAlertSubmitting] = useState(false);
+  const [alertSent, setAlertSent] = useState(false);
+
   useEffect(() => {
     fetch(`/api/courses/${slug}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
@@ -230,6 +236,45 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
     setTodFilter('all');
     setMaxPrice(null);
     setHolesFilter('all');
+  }
+
+  function openAlert(teeTimeId?: string) {
+    if (!course) return;
+    setAlertEmail('');
+    setAlertName('');
+    setAlertSent(false);
+    setAlertModal({ teeTimeId, date: selectedDate, courseId: course.id });
+  }
+
+  async function submitAlert() {
+    if (!alertModal || !alertEmail.trim()) return;
+    setAlertSubmitting(true);
+    const todWindows: Record<TimeOfDay, { windowStart: string; windowEnd: string }> = {
+      all:       { windowStart: '', windowEnd: '' },
+      morning:   { windowStart: '06:00', windowEnd: '11:59' },
+      afternoon: { windowStart: '12:00', windowEnd: '15:59' },
+      twilight:  { windowStart: '16:00', windowEnd: '23:59' },
+    };
+    const windows = alertModal.teeTimeId ? { windowStart: '', windowEnd: '' } : todWindows[todFilter];
+    try {
+      await fetch('/api/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courseId: alertModal.courseId,
+          email: alertEmail.trim(),
+          name: alertName.trim(),
+          date: alertModal.date,
+          windowStart: windows.windowStart,
+          windowEnd: windows.windowEnd,
+          players: alertModal.teeTimeId ? 1 : players,
+          teeTimeId: alertModal.teeTimeId || null,
+        }),
+      });
+      setAlertSent(true);
+    } catch { /* ignore */ } finally {
+      setAlertSubmitting(false);
+    }
   }
 
   if (notFound) {
@@ -682,13 +727,21 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                       <span className="text-sm text-ink-muted">{filtered.length} available</span>
                     )}
                   </div>
-                  <Link
-                    href={`/courses/${slug}/member`}
-                    className="text-xs font-medium px-3 py-1.5 rounded-md transition-colors flex-shrink-0"
-                    style={{ color: accent, border: `1px solid ${accent}30`, backgroundColor: `${accent}08` }}
-                  >
-                    Member sign in
-                  </Link>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => openAlert()}
+                      className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-line bg-white text-ink-soft hover:text-ink transition-colors"
+                    >
+                      <Bell size={12} /> Set alert
+                    </button>
+                    <Link
+                      href={`/courses/${slug}/member`}
+                      className="text-xs font-medium px-3 py-1.5 rounded-md transition-colors"
+                      style={{ color: accent, border: `1px solid ${accent}30`, backgroundColor: `${accent}08` }}
+                    >
+                      Member sign in
+                    </Link>
+                  </div>
                 </div>
 
                 {/* List */}
@@ -787,6 +840,17 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                                     )}
                                   </div>
                                 </div>
+
+                                {isFull && (
+                                  <div className="border-t border-line/60 px-4 sm:px-5 py-2.5 flex justify-end">
+                                    <button
+                                      onClick={() => openAlert(t.id)}
+                                      className="inline-flex items-center gap-1 text-[11px] font-medium text-pine hover:text-pine-hover transition-colors"
+                                    >
+                                      <Bell size={10} /> Alert me if this opens
+                                    </button>
+                                  </div>
+                                )}
 
                                 {isSel && (
                                   <div className="border-t px-4 sm:px-5 py-5 space-y-4" style={{ borderColor: `${accent}25`, backgroundColor: `${accent}05` }}>
@@ -979,6 +1043,75 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
           )}
         </div>
       </div>
+
+      {/* Alert modal */}
+      {alertModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+          onClick={() => { if (!alertSubmitting) { setAlertModal(null); setAlertSent(false); } }}
+        >
+          <div className="bg-white rounded-lg max-w-sm w-full p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+            {alertSent ? (
+              <div className="text-center py-2">
+                <div className="w-10 h-10 rounded-full bg-ok/10 flex items-center justify-center mx-auto mb-3">
+                  <Check size={20} className="text-ok" />
+                </div>
+                <p className="font-semibold text-ink mb-1">Alert set!</p>
+                <p className="text-sm text-ink-muted mb-5">We&apos;ll email you when a spot opens up at {course.name}.</p>
+                <button
+                  onClick={() => { setAlertModal(null); setAlertSent(false); }}
+                  className="w-full py-2.5 rounded-md border border-line text-sm font-medium text-ink-soft hover:text-ink transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 mb-1">
+                  <Bell size={16} className="text-pine" />
+                  <h3 className="font-semibold text-ink text-base">Get an alert</h3>
+                </div>
+                <p className="text-sm text-ink-muted mb-5">
+                  {alertModal.teeTimeId
+                    ? `We'll notify you if this time opens up on ${displayDate(alertModal.date)}.`
+                    : `We'll notify you when a tee time matching your current filters is available on ${displayDate(alertModal.date)}.`}
+                </p>
+                <div className="space-y-3">
+                  <input
+                    type="email"
+                    placeholder="Your email"
+                    value={alertEmail}
+                    onChange={e => setAlertEmail(e.target.value)}
+                    className="w-full bg-paper border border-line rounded-md px-3 py-2.5 text-ink placeholder-ink-faint text-sm focus:border-pine/40 focus:ring-2 focus:ring-pine/10 outline-none"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Your name (optional)"
+                    value={alertName}
+                    onChange={e => setAlertName(e.target.value)}
+                    className="w-full bg-paper border border-line rounded-md px-3 py-2.5 text-ink placeholder-ink-faint text-sm focus:border-pine/40 focus:ring-2 focus:ring-pine/10 outline-none"
+                  />
+                </div>
+                <div className="flex gap-2 mt-5">
+                  <button
+                    onClick={() => setAlertModal(null)}
+                    className="flex-1 py-2.5 rounded-md border border-line text-sm font-medium text-ink-soft hover:text-ink transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={submitAlert}
+                    disabled={!alertEmail.trim() || alertSubmitting}
+                    className="flex-1 py-2.5 rounded-md bg-pine hover:bg-pine-hover text-white text-sm font-medium disabled:opacity-50 transition-colors"
+                  >
+                    {alertSubmitting ? 'Setting…' : 'Set Alert'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
     </>
   );

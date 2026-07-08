@@ -267,19 +267,24 @@ export async function sendCheckInReceiptEmail(data: {
   await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Receipt: ${data.courseName} — $${(data.totalAmount / 100).toFixed(2)}`, html });
 }
 
-export async function sendWaitlistNotification(data: {
-  name: string; email: string; courseName: string; date: string; time: string;
+export async function sendTeeTimeAlertEmail(data: {
+  name: string; email: string; courseName: string; courseSlug: string;
+  date: string; time?: string; players: number; unsubscribeToken: string;
 }) {
+  const base = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
+  const bookUrl = `${base}/courses/${data.courseSlug}?date=${data.date}&players=${data.players}`;
+  const unsubUrl = `${base}/api/alerts/unsubscribe/${data.unsubscribeToken}`;
   const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:900;">A spot just opened up! &#9971;</h1>
-    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">Good news &mdash; a tee time you were waitlisted for at <strong>${data.courseName}</strong> is now available.</p>
-    <div style="background:#f9fafb;border-radius:4px;padding:20px;margin-bottom:20px;">
-      <p style="margin:0 0 4px;font-weight:700;color:#111827;font-size:18px;">${data.time}</p>
+    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">A spot just opened up</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">Good news &mdash; a tee time you set an alert for at <strong>${data.courseName}</strong> is now available.</p>
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:20px;margin-bottom:24px;">
+      ${data.time ? `<p style="margin:0 0 4px;font-weight:700;color:#111827;font-size:18px;">${data.time}</p>` : ''}
       <p style="margin:0;color:#6b7280;">${data.date} &middot; ${data.courseName}</p>
     </div>
-    <a href="https://greenreserve.app/courses" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;">Book Now &rarr;</a>
+    <a href="${bookUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:600;font-size:15px;margin-bottom:24px;">Book Now &rarr;</a>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;"><a href="${unsubUrl}" style="color:#9ca3af;">Unsubscribe from tee time alerts</a></p>
   `);
-  await getResend().emails.send({ from: FROM, to: data.email, subject: `Spot available: ${data.time} at ${data.courseName}`, html });
+  await getResend().emails.send({ from: FROM, to: data.email, subject: `Alert: spot available at ${data.courseName}`, html });
 }
 
 export async function sendReminderEmail(data: {

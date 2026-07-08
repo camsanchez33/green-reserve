@@ -1,25 +1,12 @@
 import { prisma } from './prisma';
-import { sendCancellationEmail, sendWaitlistNotification } from './email';
+import { sendCancellationEmail, sendTeeTimeAlertEmail } from './email';
 
-/**
- * Shared cancellation logic used by both the golfer-initiated cancel route and
- * the operator-initiated cancel (dashboard "Cancellations" tab). Authorization
- * (does this golfer own the booking / does this operator own the course) is the
- * caller's responsibility — this just does the slot restore + waitlist
- * promotion + emails once a cancellation has been authorized.
- *
- * Under the deferred-payment flow nothing is charged at booking time, so
- * there's no refund to issue for an early cancellation — the card is simply
- * never charged. The only money question is whether the cancellation-fee cron
- * already fired (paymentStatus === 'cancellation_fee_charged'): if so, that
- * fee is non-refundable per the course's late-cancellation policy.
- */
 export async function performCancellation(bookingId: string) {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
       teeTime: true,
-      course: { select: { name: true, cancellationHours: true } },
+      course: { select: { name: true, slug: true, cancellationHours: true } },
     },
   });
 
@@ -40,19 +27,46 @@ export async function performCancellation(bookingId: string) {
     }),
   ]);
 
-  const waitlisted = await prisma.waitlist.findFirst({
-    where: { teeTimeId: booking.teeTimeId, notified: false },
-    orderBy: { createdAt: 'asc' },
+  // Find all unnotified alerts for this slot (specific-slot or criteria-based)
+  const alerts = await prisma.teeTimeAlert.findMany({
+    where: {
+      notifiedAt: null,
+      OR: [
+        { teeTimeId: booking.teeTimeId },
+        {
+          courseId: booking.courseId,
+          date: booking.teeTime.date,
+          players: { lte: booking.players },
+        },
+      ],
+    },
   });
-  if (waitlisted) {
-    await prisma.waitlist.update({ where: { id: waitlisted.id }, data: { notified: true } });
-    await sendWaitlistNotification({
-      name: waitlisted.name,
-      email: waitlisted.email,
-      courseName: booking.course.name,
-      date: booking.teeTime.date,
-      time: booking.teeTime.time,
-    }).catch(console.error);
+
+  // For criteria alerts, filter by time window in-memory
+  const matching = alerts.filter((a) => {
+    if (a.teeTimeId) return true;
+    if (a.windowStart && booking.teeTime.time < a.windowStart) return false;
+    if (a.windowEnd && booking.teeTime.time > a.windowEnd) return false;
+    return true;
+  });
+
+  if (matching.length > 0) {
+    await prisma.teeTimeAlert.updateMany({
+      where: { id: { in: matching.map((a) => a.id) } },
+      data: { notifiedAt: new Date() },
+    });
+    for (const alert of matching) {
+      await sendTeeTimeAlertEmail({
+        name: alert.name,
+        email: alert.email,
+        courseName: booking.course.name,
+        courseSlug: booking.course.slug,
+        date: booking.teeTime.date,
+        time: booking.teeTime.time,
+        players: alert.players,
+        unsubscribeToken: alert.token,
+      }).catch(console.error);
+    }
   }
 
   await sendCancellationEmail({

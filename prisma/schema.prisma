@@ -123,11 +123,11 @@ model Course {
   blackouts             Blackout[]
   memberships           CourseMembership[]
   membershipTiers       MembershipTier[]
-  waitlist              Waitlist[]
   staff                 CourseStaff[]
   teeSets               TeeSet[]
   thread                MessageThread?
   photos                CoursePhoto[]
+  teeTimeAlerts         TeeTimeAlert[]
 }
 
 model CoursePhoto {
@@ -183,7 +183,6 @@ model GolferAccount {
   createdAt           DateTime           @default(now())
   bookings            Booking[]
   memberships         CourseMembership[]
-  waitlist            Waitlist[]
 }
 
 model MembershipTier {
@@ -261,7 +260,7 @@ model TeeTime {
   status           String     @default("available")
   createdAt        DateTime   @default(now())
   bookings         Booking[]
-  waitlist         Waitlist[]
+  teeTimeAlerts    TeeTimeAlert[]
 
   @@index([courseId, date])
 }
@@ -338,20 +337,23 @@ model Blackout {
   reason   String @default("")
 }
 
-model Waitlist {
-  id        String         @id @default(cuid())
-  teeTimeId String
-  teeTime   TeeTime        @relation(fields: [teeTimeId], references: [id])
-  courseId  String
-  course    Course         @relation(fields: [courseId], references: [id])
-  golferId  String?
-  golfer    GolferAccount? @relation(fields: [golferId], references: [id])
-  name      String
-  email     String
-  phone     String         @default("")
-  players   Int            @default(1)
-  notified  Boolean        @default(false)
-  createdAt DateTime       @default(now())
+model TeeTimeAlert {
+  id          String    @id @default(cuid())
+  courseId    String
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  email       String
+  name        String    @default("")
+  date        String    // YYYY-MM-DD
+  windowStart String    @default("") // HH:MM, empty = any time
+  windowEnd   String    @default("") // HH:MM, empty = any time
+  players     Int       @default(1)
+  teeTimeId   String?   // null = criteria alert; set = full-slot alert
+  teeTime     TeeTime?  @relation(fields: [teeTimeId], references: [id], onDelete: SetNull)
+  token       String    @unique @default(cuid())
+  notifiedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([courseId, date])
 }
 
 model CourseInquiry {

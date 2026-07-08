@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
       prisma.teeSet.deleteMany({ where: { courseId } }),
       prisma.teeTimeSchedule.deleteMany({ where: { courseId } }),
       prisma.blackout.deleteMany({ where: { courseId } }),
-      prisma.waitlist.deleteMany({ where: { courseId } }),
+      prisma.teeTimeAlert.deleteMany({ where: { courseId } }),
       prisma.courseMembership.deleteMany({ where: { courseId } }),
       prisma.membershipTier.deleteMany({ where: { courseId } }),
       prisma.courseStaff.deleteMany({ where: { courseId } }),
