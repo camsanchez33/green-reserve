@@ -1,0 +1,38 @@
+name: Schema drift check
+
+on:
+  push:
+    paths:
+      - 'prisma/schema.prisma'
+      - 'prisma/migrations/**'
+  pull_request:
+    paths:
+      - 'prisma/schema.prisma'
+      - 'prisma/migrations/**'
+
+jobs:
+  schema-check:
+    name: Migration files match schema
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      # Verify the committed migration files are in sync with schema.prisma.
+      # If schema.prisma has changes not captured in a migration, this fails
+      # the build — making "forgot to run migrate dev" a red X before deploy.
+      - name: Check for uncommitted schema drift
+        run: |
+          npx prisma migrate diff \
+            --from-migrations prisma/migrations \
+            --to-schema-datamodel prisma/schema.prisma \
+            --shadow-database-url "${{ secrets.SHADOW_DATABASE_URL }}" \
+            --exit-code
+        env:
+          SHADOW_DATABASE_URL: ${{ secrets.SHADOW_DATABASE_URL }}

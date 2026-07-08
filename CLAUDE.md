@@ -146,6 +146,15 @@ in `.env.local` only.
 Preview deployments currently share the production DATABASE_URL unless manually
 overridden per-deployment. For schema migrations, always override before running them.
 
+### Schema change mini-checklist (post Section A)
+Every schema change must pass ALL of these before merging to main:
+1. `prisma migrate dev --name <x>` generated a migration file (committed)
+2. `npx prisma migrate status` shows "Database schema is up to date!" (no drift)
+3. `/api/health` returns `{"ok":true,"db":"up"}` after deploy
+4. `.github/workflows/schema-check.yml` is green on the PR
+
+GitHub secret `SHADOW_DATABASE_URL` must be set in the repo for the CI check to work.
+
 ### Session policy (per surface)
 
 | Surface | Cookie | JWT TTL | Renewal |
