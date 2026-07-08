@@ -101,26 +101,46 @@ npx vercel --prod
 
 ### Shipping to production
 
+> **MIGRATION RULE (reversal from db-push era):** The project now uses real Prisma
+> migrations. Schema changes go through `migrate dev` → commit migration file →
+> `migrate deploy` on prod. `db push` is banned except on throwaway sandbox DBs.
+
 **Small changes (no schema change):** push to main is fine — Vercel auto-deploys.
 
-**Schema changes or risky features (ANY live course):**
+**Schema changes — checklist (every time, no exceptions):**
 1. Create a feature branch: `git checkout -b feat/my-change`
-2. Push branch — Vercel auto-creates a preview deployment
-3. Neon console → Branches → "Create branch" from production (e.g. `preview-my-change`)
-4. In Vercel dashboard → the preview deployment → Settings → Environment Variables:
+2. Point your local `.env` at a Neon branch DB (not prod):
+   - Neon console → Branches → "Create branch" from production
+   - Set `DATABASE_URL` + `DIRECT_URL` in `.env` to point to the branch
+   - Set `SHADOW_DATABASE_URL` to a second Neon branch (needed by `migrate dev`)
+3. Generate the migration: `npx prisma migrate dev --name <descriptive-name>`
+   - This creates `prisma/migrations/<timestamp>_<name>/migration.sql` — commit it
+4. Push branch — Vercel auto-creates a preview deployment
+5. In Vercel dashboard → the preview deployment → Settings → Environment Variables:
    override `DATABASE_URL` + `DIRECT_URL` to point to the Neon branch
-5. Run `npx prisma migrate deploy` or `npx prisma db push` against the branch DB
-6. Verify the feature on the preview URL
-7. Merge PR to main → production migration runs automatically on deploy
+6. `npx prisma migrate deploy` applies the migration to the Neon branch
+7. Verify the feature on the preview URL
+8. Merge PR to main → Vercel build runs `prisma migrate deploy` automatically
+9. Post-deploy: confirm `/api/health` returns 200 (DB query succeeds)
+10. Run `npx prisma migrate status` — must show "Database schema is up to date"
 
 **Never on prod:**
 - `prisma migrate reset` — destructive
+- `prisma db push` — bypasses migration history, causes drift
 - `prisma db push --accept-data-loss` — destructive
 - Direct `psql` writes without a backup step
 
+**Required env vars for local migration work (add to .env, NOT committed):**
+```
+SHADOW_DATABASE_URL=postgresql://...   # a second Neon branch, prisma migrate dev needs it
+```
+Cam: create a permanent "shadow" branch in Neon named `shadow-dev` and keep its URL
+in `.env.local` only.
+
 **Rollback:**
 - Code: Vercel dashboard → Deployments → click prior deploy → "Promote to Production"
-- Data: Neon PITR (see docs/RESTORE.md) — point-in-time recovery in the console
+- Schema: Neon PITR (see docs/RESTORE.md) — point-in-time recovery in the console;
+  or write a compensating migration (`migrate dev --name revert-x`)
 
 **Vercel preview env status:** Vercel auto-creates preview deployments for every branch.
 Preview deployments currently share the production DATABASE_URL unless manually
