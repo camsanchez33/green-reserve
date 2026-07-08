@@ -73,11 +73,12 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 - [x] MANAGE_BOOKING_SPEC Phase M1 — token-gated /manage/[bookingId] page (view + cancel, NO login), reuse checkInToken, cancel API accepts token or session, fix "Manage My Booking" email button to point here not /account (no migration) — 9119d8c
 - [x] MANAGE_BOOKING_SPEC Phase M2 — modify on manage page: change tee time (atomic claim-new + release-old) + party size (price/fee recalc), re-send confirmation (no migration) — a697d08
-- [ ] MANAGE_BOOKING_SPEC Phase M3 — update card via token-gated Stripe SetupIntent (Elements, PCI-safe) — SCOPED, Cam decides at run time whether needed vs check-in's fresh-card path (no migration)
+- [ ] RECEIPT_SPEC Phases R1+R2 — itemized on-brand receipts: service fee named everywhere ($1.50 × players, never "Fees"), token-gated printable /receipt/[bookingId] page, receipt email brought on-brand + linked from confirmation/check-in/account (no migration, unattended OK)
 - [ ] MANAGE_BOOKING_SPEC Phase M4 — course-configurable check-in window (Course.checkInWindowHours) driving the existing "time to check in" email; operator sets it in Settings (schema change, attended)
 
 ## Ideas / not yet specced
 
+- MANAGE_BOOKING M3 (update card via token-gated SetupIntent) — SKIPPED 2026-07-08, Cam's call: check-in fresh-card path covers it; revisit if a golfer/course asks
 - Remove or keep "No account yet" badge on dashboard members list (GolferAccount linking undecided)
 - Outings & tournaments: real models + operator features (dashboard pages are placeholders)
 - Marketplace mode: golfer-facing homepage + course directory (when course volume justifies)
