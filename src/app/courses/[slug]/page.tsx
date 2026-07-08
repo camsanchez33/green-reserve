@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import CourseDetailPage from './CourseBookingClient';
 
 export async function generateMetadata(
