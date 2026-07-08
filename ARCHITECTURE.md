@@ -250,3 +250,24 @@ Key models:
 | `src/lib/tee-time-utils.ts` | Converts a stored tee-time (date "YYYY-MM-DD", time "HH:MM" in the cou |
 | `src/lib/twilio.ts` | — |
 | `src/lib/two-factor.ts` | Generates a fresh 6-digit code, stores its hash on the operator, and s |
+
+---
+
+## Database Connection Architecture
+
+### Neon pooling setup
+- **DATABASE_URL** → Neon pooled endpoint (pgbouncer, transaction pooling mode). Used by all runtime queries.
+- **DIRECT_URL** → Neon direct endpoint (no pooler). Used exclusively by Prisma migrations (`migrate deploy`/`migrate dev`). Never used at runtime.
+- **SHADOW_DATABASE_URL** → A second Neon branch (e.g. `shadow-dev`). Required locally by `prisma migrate dev` to compute diffs. Not set in production.
+
+### Connection limit guidance
+Neon's free tier allows ~100 total connections. Vercel Fluid Compute can have many concurrent lambda instances during a traffic spike. The Neon pooler sits in front and limits the actual Postgres connections, but each Prisma client still opens one connection to the pooler.
+
+The `prisma.ts` singleton caches the client on `globalThis` in ALL environments — a warm lambda reuses the same connection rather than opening a new one per request. This is the standard Vercel+Prisma pattern.
+
+**If connection exhaustion appears under load:** add `?connection_limit=1&pool_timeout=0` to the DATABASE_URL in Vercel env vars to cap each lambda at one pooler connection. At 100-course scale with Vercel's concurrency, the Neon free tier (100 connections) is likely sufficient. Upgrade to Neon Pro (~500 connections) before a high-traffic launch.
+
+### Migration workflow (post-baseline)
+- Schema changes → `prisma migrate dev --name <x>` (needs SHADOW_DATABASE_URL locally)
+- Deploy → `prisma migrate deploy` (runs automatically via Vercel build, uses DIRECT_URL)
+- Never `db push` in this project (bypasses migration history)
