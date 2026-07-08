@@ -612,24 +612,55 @@ export async function sendInquiryNotification(data: {
 }
 
 export async function sendInquiryConfirmation(data: {
-  contactName: string; email: string; courseName: string;
+  firstName: string; contactName: string; email: string; courseName: string;
+  needs?: Record<string, string> | null;
 }) {
+  const NEEDS_LABELS: Record<string, string> = {
+    residentRates: 'Resident rates', hasMemberships: 'Memberships / season passes',
+    roundsPerMonth: 'Rounds per month', publicTeeTimes: 'Non-member tee times',
+    memberCount: 'Member count', outsideOutings: 'Outside outings',
+    memberBookingToday: 'Current booking method', chargesMembersPerRound: 'Charges per round',
+  };
+  const NEEDS_VALUES: Record<string, string> = {
+    yes: 'Yes', no: 'No', yes_regularly: 'Yes, regularly', limited: 'Limited windows',
+    no_members_only: 'No, members only', under_100: 'Under 100', '100_300': '100–300',
+    '300_plus': '300+', under_500: 'Under 500', '500_1500': '500–1,500',
+    '1500_3000': '1,500–3,000', '3000_plus': '3,000+',
+    pro_shop_phone: 'Pro shop / phone', signup_sheet: 'Sign-up sheet',
+    booking_software: 'Booking software', other: 'Other',
+  };
+  const needsEntries = data.needs
+    ? Object.entries(data.needs).filter(([, v]) => v && v !== '')
+    : [];
+  const needsSection = needsEntries.length > 0 ? `
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:18px 20px;margin-top:24px;margin-bottom:4px;">
+      <p style="margin:0 0 12px;color:#111827;font-size:13px;font-weight:700;">What you told us</p>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        ${needsEntries.map(([k, v]) => `
+        <tr>
+          <td style="padding:5px 0;color:#6b7280;font-size:13px;width:48%;vertical-align:top;">${NEEDS_LABELS[k] || k}</td>
+          <td style="padding:5px 0;color:#111827;font-size:13px;font-weight:500;">${NEEDS_VALUES[v] || v}</td>
+        </tr>`).join('')}
+      </table>
+    </div>
+  ` : '';
   const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">Got it — we'll be in touch.</h1>
+    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">Got it, ${data.firstName}.</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
-      Thanks for reaching out about <strong>${data.courseName}</strong>, ${data.contactName}. Here's what happens next.
+      Thanks for reaching out about <strong>${data.courseName}</strong>. We'll be in touch within 1–2 business days.
+      Here's what to expect:
     </p>
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
       <tr>
         <td style="padding:14px 0;border-bottom:1px solid #f3f4f6;">
           <p style="margin:0 0 2px;color:#111827;font-size:14px;font-weight:700;">1. We review your submission</p>
-          <p style="margin:0;color:#6b7280;font-size:13px;">We'll reply within 1 business day. If it's a good fit, we'll send you a short details sheet.</p>
+          <p style="margin:0;color:#6b7280;font-size:13px;">If it's a good fit, we'll follow up within 1–2 business days and send you a details sheet.</p>
         </td>
       </tr>
       <tr>
         <td style="padding:14px 0;border-bottom:1px solid #f3f4f6;">
           <p style="margin:0 0 2px;color:#111827;font-size:14px;font-weight:700;">2. You fill out a details sheet</p>
-          <p style="margin:0;color:#6b7280;font-size:13px;">Pricing, policies, and facilities — takes about 5 minutes. Saves as you go.</p>
+          <p style="margin:0;color:#6b7280;font-size:13px;">Pricing, policies, and facilities — takes 10–15 minutes. Saves as you go, so you can come back to it.</p>
         </td>
       </tr>
       <tr>
@@ -639,7 +670,8 @@ export async function sendInquiryConfirmation(data: {
         </td>
       </tr>
     </table>
-    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+    ${needsSection}
+    <p style="margin:16px 0 0;color:#9ca3af;font-size:12px;text-align:center;">
       Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>.
     </p>
   `);
@@ -647,6 +679,81 @@ export async function sendInquiryConfirmation(data: {
     from: FROM,
     to: data.email,
     subject: `We received your GreenReserve inquiry — ${data.courseName}`,
+    html,
+  });
+}
+
+export async function sendDetailsSheetConfirmationEmail(data: {
+  firstName: string; contactName: string; email: string; courseName: string;
+  details: Record<string, unknown>;
+}) {
+  const DETAIL_LABELS: Record<string, string> = {
+    holes: 'Holes', par: 'Par', seasonOpen: 'Season opens', seasonClose: 'Season closes',
+    firstTeeTime: 'First tee', lastTeeTime: 'Last tee', intervalMinutes: 'Interval (min)',
+    greenFeeWeekday: 'Weekday green fee', greenFeeWeekend: 'Weekend green fee', cartFee: 'Cart fee',
+    twilightFee: 'Twilight fee', walkingAllowed: 'Walking allowed',
+    residentWeekday: 'Resident WD fee', residentWeekend: 'Resident WE fee', residentVerification: 'Residency verification',
+    starterTierName: 'Membership tier', starterTierFee: 'Tier fee',
+    memberAdvanceDays: 'Member advance booking', protectedTimes: 'Protected tee times',
+    publicGreenFee: 'Public green fee', publicWindow: 'Public booking window',
+    memberRate: 'Member rate', outingsVolume: 'Outings frequency',
+    cancellationHours: 'Cancellation window (hrs)', lateFee: 'Late cancel fee',
+    facilities: 'Facilities', restaurantType: 'Restaurant type',
+    website: 'Website', description: 'Description', additionalNotes: 'Notes',
+  };
+  const skipKeys = new Set(['schedule','daysOpen','daysOfWeek']);
+  const d = data.details;
+  const sch = d.schedule as Record<string, unknown> | undefined;
+  const wdFee = (d.greenFeeWeekday ?? sch?.greenFeeWeekday) as string | undefined;
+  const weFee = (d.greenFeeWeekend ?? sch?.greenFeeWeekend) as string | undefined;
+  const firstTee = (d.firstTeeTime ?? sch?.startTime) as string | undefined;
+  const lastTee = (d.lastTeeTime ?? sch?.endTime) as string | undefined;
+  const intervalMin = (d.intervalMinutes ?? sch?.intervalMinutes) as string | undefined;
+  const cartFee = (d.cartFee ?? sch?.cartFee) as string | undefined;
+
+  const teeRow = (firstTee || wdFee) ? `
+    <tr>
+      <td style="padding:5px 0;color:#6b7280;font-size:13px;width:48%;vertical-align:top;">Tee times</td>
+      <td style="padding:5px 0;color:#111827;font-size:13px;">${firstTee || ''}–${lastTee || ''} every ${intervalMin || '?'} min</td>
+    </tr>
+    <tr>
+      <td style="padding:5px 0;color:#6b7280;font-size:13px;">Green fees</td>
+      <td style="padding:5px 0;color:#111827;font-size:13px;">WD $${wdFee || '—'} / WE $${weFee || '—'}${cartFee ? ` · Cart $${cartFee}` : ''}</td>
+    </tr>
+  ` : '';
+
+  const restRows = Object.entries(d)
+    .filter(([k, v]) => !skipKeys.has(k) && !['greenFeeWeekday','greenFeeWeekend','firstTeeTime','lastTeeTime','intervalMinutes','cartFee'].includes(k)
+      && v !== '' && v !== null && !(Array.isArray(v) && v.length === 0))
+    .map(([k, v]) => `
+    <tr>
+      <td style="padding:5px 0;color:#6b7280;font-size:13px;width:48%;vertical-align:top;">${DETAIL_LABELS[k] || k}</td>
+      <td style="padding:5px 0;color:#111827;font-size:13px;">${Array.isArray(v) ? (v as string[]).join(', ') : String(v)}</td>
+    </tr>`).join('');
+
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">We got your details, ${data.firstName}.</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      Here's everything you submitted for <strong>${data.courseName}</strong>.
+      If anything looks wrong, just reply to this email and we'll fix it.
+    </p>
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:18px 20px;margin-bottom:24px;">
+      <p style="margin:0 0 12px;color:#111827;font-size:13px;font-weight:700;">What you submitted</p>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        ${teeRow}${restRows}
+      </table>
+    </div>
+    <p style="margin:0 0 16px;color:#6b7280;font-size:14px;">
+      We'll review your sheet and follow up within 1–2 business days with next steps.
+    </p>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>.
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.email,
+    subject: `We got your setup sheet — ${data.courseName}`,
     html,
   });
 }

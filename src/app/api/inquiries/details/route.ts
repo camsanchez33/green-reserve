@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendDetailsSubmittedNotification } from '@/lib/email';
+import { sendDetailsSubmittedNotification, sendDetailsSheetConfirmationEmail } from '@/lib/email';
 
 export async function PATCH(req: NextRequest) {
   const body = await req.json();
@@ -86,6 +86,14 @@ export async function POST(req: NextRequest) {
     courseName: inquiry.courseName,
     contactName: inquiry.contactName,
   }).catch(err => console.error('Details submitted notification failed:', err));
+
+  sendDetailsSheetConfirmationEmail({
+    firstName: inquiry.firstName || inquiry.contactName.split(' ')[0],
+    contactName: inquiry.contactName,
+    email: inquiry.email,
+    courseName: inquiry.courseName,
+    details,
+  }).catch(err => console.error('Details sheet confirmation email failed:', err));
 
   return NextResponse.json({ success: true });
 }

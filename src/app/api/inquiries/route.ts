@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  const emailData = { contactName, email: body.email, courseName: body.courseName };
+  const emailData = { firstName: body.firstName, contactName, email: body.email, courseName: body.courseName, needs: body.needs || null };
   sendInquiryNotification({
     contactName,
     contactTitle: body.contactTitle,
