@@ -1,7 +1,11 @@
 # Run Queue
 
 Ordered list of Claude Code runs. One item per run. Check off when committed, pushed,
-and verified on the live site. After every run: `git status` — if dirty, `git checkout -- .`
+and verified on the live site. After every run: `git status` — if dirty:
+- RUN_QUEUE.md or *_SPEC.md or CLAUDE.md dirty → COMMIT them ("queue/spec update") —
+  these are edited between runs by Cowork and must never be discarded.
+- Anything else dirty → `git checkout -- .`
+FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading the queue.
 
 ## Done
 
@@ -38,6 +42,7 @@ and verified on the live site. After every run: `git status` — if dirty, `git 
 - [x] PUBLIC_SITE_SPEC Phases A+B — footer fix, /contact, /courses redirect, all-50-states form, screenshots section, SEO metadata (build in Clubhouse style)
 - [x] DESIGN_SYSTEM_SPEC Phase D3 — golfer-facing + public pages sweep, course personalization, powered-by footer
 - [x] Small run: extend gr_member session from 7 to 90 days (src/lib/member-session.ts)
+- [x] BUG small run: activating a course doesn't make it public — (1) admin course-detail PATCH sets active=true but never liveStatus='live', so the public page/API (which require BOTH + not archived) still 404 — audit EVERY code path that sets Course.active=true and make each also set liveStatus='live' (deactivate → liveStatus='draft'); (2) /courses/[slug] renders a blank shell when the API 404s — add a proper "Course not found" state with a link home; (3) after deploy, re-toggle daisylinks active in admin to heal its liveStatus
 
 ## Ideas / not yet specced
 

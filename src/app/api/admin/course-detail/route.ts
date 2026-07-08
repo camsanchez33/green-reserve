@@ -38,7 +38,10 @@ export async function PATCH(req: NextRequest) {
   const { courseId, active, featured } = await req.json();
   if (!courseId) return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });
   const data: Record<string, unknown> = {};
-  if (active !== undefined) data.active = active;
+  if (active !== undefined) {
+    data.active = active;
+    data.liveStatus = active ? 'live' : 'draft';
+  }
   if (featured !== undefined) data.featured = featured;
   const updated = await prisma.course.update({ where: { id: courseId }, data });
 
