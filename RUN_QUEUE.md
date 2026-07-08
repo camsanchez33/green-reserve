@@ -37,7 +37,7 @@ and verified on the live site. After every run: `git status` — if dirty, `git 
 - [x] DESIGN_SYSTEM_SPEC Phase D2 — operator dashboard sweep + per-course brandColor (schema change, run attended) — e4c735c
 - [x] PUBLIC_SITE_SPEC Phases A+B — footer fix, /contact, /courses redirect, all-50-states form, screenshots section, SEO metadata (build in Clubhouse style)
 - [x] DESIGN_SYSTEM_SPEC Phase D3 — golfer-facing + public pages sweep, course personalization, powered-by footer
-- [ ] Small run: extend gr_member session from 7 to 90 days (src/lib/member-session.ts)
+- [x] Small run: extend gr_member session from 7 to 90 days (src/lib/member-session.ts)
 
 ## Ideas / not yet specced
 

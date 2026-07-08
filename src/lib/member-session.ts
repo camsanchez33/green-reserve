@@ -30,7 +30,7 @@ export async function verifyMemberMagicToken(token: string) {
   } catch { return null; }
 }
 
-// 7-day session token — stored in httpOnly cookie, scoped to courseId
+// 90-day session token — stored in httpOnly cookie, scoped to courseId
 export async function signMemberSessionToken(payload: {
   membershipId: string;
   courseId: string;
@@ -38,7 +38,7 @@ export async function signMemberSessionToken(payload: {
 }) {
   return new SignJWT({ ...payload, type: 'member_session' })
     .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('7d')
+    .setExpirationTime('90d')
     .sign(secret);
 }
 
