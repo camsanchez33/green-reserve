@@ -56,7 +56,7 @@ export default function AccountPage() {
   }
 
   const upcoming = bookings.filter(b => b.status === 'confirmed' && new Date(`${b.teeTime.date}T${b.teeTime.time}`) > new Date());
-  const past = bookings.filter(b => b.status === 'confirmed' && new Date(`${b.teeTime.date}T${b.teeTime.time}`) <= new Date());
+  const past = bookings.filter(b => (b.status === 'confirmed' || b.status === 'completed') && new Date(`${b.teeTime.date}T${b.teeTime.time}`) <= new Date());
   const cancelled = bookings.filter(b => b.status === 'cancelled');
 
   if (loading) return (
@@ -173,6 +173,14 @@ function BookingCard({ b, onCancel, cancelling, cancelResult, past }: {
         <div className="mt-3 text-xs text-ok bg-ok/5 rounded-md px-3 py-2">{cancelResult[b.id]}</div>
       )}
 
+      {isCompleted && b.checkInToken && (
+        <div className="mt-4 pt-4 border-t border-line">
+          <Link href={`/receipt/${b.id}?token=${b.checkInToken}`}
+            className="text-xs text-pine font-medium hover:underline">
+            View receipt →
+          </Link>
+        </div>
+      )}
       {!past && !isCancelled && !isCompleted && onCancel && (
         <div className="flex items-center gap-2 mt-4 pt-4 border-t border-line">
           <Link href={`/courses/${b.course.slug}`}

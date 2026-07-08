@@ -160,7 +160,13 @@ function CheckInPageInner() {
               <p className="text-ok text-xs">Your earlier ${(result.feeRefundAmount / 100).toFixed(2)} late-cancellation fee has been refunded.</p>
             </div>
           )}
-          <p className="text-xs text-ink-muted">A receipt has been emailed to you.</p>
+          <p className="text-xs text-ink-muted mb-4">A receipt has been emailed to you.</p>
+          {token && (
+            <a href={`/receipt/${bookingId}?token=${encodeURIComponent(token)}`}
+              className="text-sm text-pine font-medium hover:underline">
+              View receipt →
+            </a>
+          )}
         </div>
       </div>
     );
