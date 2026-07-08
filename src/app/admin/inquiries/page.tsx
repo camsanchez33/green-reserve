@@ -829,35 +829,59 @@ export default function InquiriesPage() {
               let d: Record<string, unknown> = {};
               try { d = JSON.parse(selectedInq.detailsJson || ''); } catch { /* ignore */ }
               if (Object.keys(d).length === 0) return null;
+              // Support both old nested schedule format and new flat format
               const sch = d.schedule as Record<string, unknown> | undefined;
+              const wdFee = (d.greenFeeWeekday ?? sch?.greenFeeWeekday) as string | undefined;
+              const weFee = (d.greenFeeWeekend ?? sch?.greenFeeWeekend) as string | undefined;
+              const firstTee = (d.firstTeeTime ?? sch?.startTime) as string | undefined;
+              const lastTee = (d.lastTeeTime ?? sch?.endTime) as string | undefined;
+              const intervalMin = (d.intervalMinutes ?? sch?.intervalMinutes) as string | undefined;
+              const cartFee = (d.cartFee ?? sch?.cartFee) as string | undefined;
+              const days = (d.daysOpen ?? sch?.daysOfWeek) as number[] | undefined;
+              const DAYS_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+              const DETAIL_LABELS: Record<string, string> = {
+                holes: 'Holes', par: 'Par', seasonOpen: 'Season opens', seasonClose: 'Season closes',
+                firstTeeTime: 'First tee', lastTeeTime: 'Last tee', intervalMinutes: 'Interval',
+                greenFeeWeekday: 'Weekday fee', greenFeeWeekend: 'Weekend fee', cartFee: 'Cart fee',
+                twilightFee: 'Twilight fee', walkingAllowed: 'Walking',
+                residentWeekday: 'Resident WD', residentWeekend: 'Resident WE', residentVerification: 'Residency check',
+                starterTierName: 'Tier name', starterTierFee: 'Tier fee',
+                memberAdvanceDays: 'Member advance', protectedTimes: 'Protected times',
+                publicGreenFee: 'Public fee', publicWindow: 'Public window',
+                memberRate: 'Member rate', outingsVolume: 'Outings frequency',
+                cancellationHours: 'Cancel window', lateFee: 'Late cancel fee',
+                facilities: 'Facilities', restaurantType: 'Restaurant',
+                website: 'Website', description: 'Description', additionalNotes: 'Notes',
+              };
+              const skipKeys = new Set(['schedule','daysOpen','daysOfWeek','greenFeeWeekday','greenFeeWeekend','firstTeeTime','lastTeeTime','intervalMinutes','cartFee']);
               const rest = Object.entries(d).filter(([k, v]) =>
-                k !== 'schedule' && v !== '' && v !== null && !(Array.isArray(v) && v.length === 0)
+                !skipKeys.has(k) && v !== '' && v !== null && !(Array.isArray(v) && v.length === 0)
               );
               return (
                 <div className="px-5 py-4 border-b border-line space-y-3">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ok">Setup Sheet Submitted</div>
-                  {sch && (sch.greenFeeWeekday || sch.greenFeeWeekend) && (
+                  <div className="text-[11px] uppercase tracking-[0.06em] text-ok">Setup Sheet</div>
+                  {(wdFee || firstTee) && (
                     <div className="bg-ok/5 border border-ok/20 rounded-md p-3">
-                      <div className="text-ok font-medium text-sm mb-1">Proposed Tee Sheet</div>
-                      <div className="text-ink text-sm">
-                        {Array.isArray(sch.daysOfWeek) && (sch.daysOfWeek as number[]).length > 0
-                          ? (sch.daysOfWeek as number[]).map(dd => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dd]).join(', ')
-                          : 'Every day'}{' · '}{String(sch.startTime)}–{String(sch.endTime)} every {String(sch.intervalMinutes)}min
-                      </div>
-                      <div className="text-ink-muted text-xs mt-1">
-                        {'WD $' + String(sch.greenFeeWeekday || 0) + ' / WE $' + String(sch.greenFeeWeekend || 0) +
-                          ' · Cart $' + String(sch.cartFee || 0) +
-                          (sch.memberRateWeekday ? ' · Member $' + String(sch.memberRateWeekday) : '') +
-                          (sch.walkingAllowed ? ' · Walking' : '')}
-                      </div>
+                      <div className="text-ok font-medium text-xs mb-1 uppercase tracking-[0.05em]">Tee Sheet</div>
+                      {firstTee && lastTee && (
+                        <div className="text-ink text-sm">
+                          {Array.isArray(days) && days.length > 0 ? days.map(dd => DAYS_SHORT[dd]).join(', ') : 'Every day'}
+                          {' · '}{firstTee}–{lastTee} every {intervalMin || '?'}min
+                        </div>
+                      )}
+                      {(wdFee || weFee) && (
+                        <div className="text-ink-muted text-xs mt-1">
+                          WD ${wdFee || '—'} / WE ${weFee || '—'}{cartFee ? ` · Cart $${cartFee}` : ''}
+                        </div>
+                      )}
                     </div>
                   )}
                   {rest.length > 0 && (
                     <div className="grid grid-cols-2 gap-2">
                       {rest.map(([k, v]) => (
                         <div key={k} className="bg-paper border border-line rounded-md px-3 py-2">
-                          <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">{k}</div>
-                          <div className="text-ink text-sm">{Array.isArray(v) ? v.join(', ') : String(v)}</div>
+                          <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">{DETAIL_LABELS[k] || k}</div>
+                          <div className="text-ink text-sm">{Array.isArray(v) ? (v as string[]).join(', ') : String(v)}</div>
                         </div>
                       ))}
                     </div>

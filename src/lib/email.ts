@@ -612,18 +612,22 @@ export async function sendDetailsRequestEmail(data: {
   contactName: string; email: string; courseName: string; detailsLink: string;
 }) {
   const html = baseTemplate(`
-    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 14px;border-radius:3px;">⛳ Next step</span></div>
-    <h1 style="margin:16px 0 4px;color:#111827;font-size:24px;font-weight:900;">Let's get ${data.courseName} set up.</h1>
-    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
-      Hi ${data.contactName} — thanks for your interest in GreenReserve. We just need a few more details
-      about your pricing, policies, and facilities so we can build your booking page correctly the first time.
-      Takes about 5 minutes.
+    <h1 style="margin:0 0 8px;color:#111827;font-size:22px;font-weight:700;">One short form to get ${data.courseName} live.</h1>
+    <p style="margin:0 0 20px;color:#6b7280;font-size:15px;line-height:1.6;">
+      Hi ${data.contactName} — great news. We reviewed your inquiry and we&apos;d love to have ${data.courseName} on GreenReserve.
+      Before we build your booking page, we need a few specifics: tee sheet schedule, green fees, policies, and facilities.
+      Takes about 5 minutes. It saves as you go, so you can close and come back anytime.
     </p>
-    <a href="${data.detailsLink}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:800;font-size:16px;margin-bottom:16px;">
-      Complete Setup Sheet &rarr;
+    <a href="${data.detailsLink}" style="display:block;background:#24513B;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:600;font-size:15px;margin-bottom:20px;">
+      Fill Out Setup Sheet &rarr;
     </a>
-    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
-      Once we receive this, we'll build your page and send your login — usually same day.
+    <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+      <tr><td style="padding:10px 0;border-bottom:1px solid #E6E3D7;color:#1C1C18;font-size:14px;font-weight:600;">1. Fill out the sheet</td><td style="padding:10px 0;border-bottom:1px solid #E6E3D7;color:#6E6D64;font-size:14px;">~5 minutes — one screen at a time</td></tr>
+      <tr><td style="padding:10px 0;border-bottom:1px solid #E6E3D7;color:#1C1C18;font-size:14px;font-weight:600;">2. We build your page</td><td style="padding:10px 0;border-bottom:1px solid #E6E3D7;color:#6E6D64;font-size:14px;">Usually the same business day</td></tr>
+      <tr><td style="padding:10px 0;color:#1C1C18;font-size:14px;font-weight:600;">3. You go live</td><td style="padding:10px 0;color:#6E6D64;font-size:14px;">Review everything before golfers can book</td></tr>
+    </table>
+    <p style="margin:0;color:#98968B;font-size:12px;">
+      Questions? Reply to this email — hello@greenreserve.app.
     </p>
   `);
   await getResend().emails.send({
