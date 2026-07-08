@@ -61,3 +61,15 @@ const TONE_CLASSES: Record<StatusTone, string> = {
 export function statusBadgeClass(tone: StatusTone) {
   return TONE_CLASSES[tone];
 }
+
+const TONE_TEXT: Record<StatusTone, string> = {
+  blue:    'text-ok',
+  amber:   'text-warn',
+  red:     'text-bad',
+  gray:    'text-ink-muted',
+  emerald: 'text-ok',
+};
+
+export function statusToneText(tone: StatusTone) {
+  return TONE_TEXT[tone];
+}

@@ -5,19 +5,19 @@ import Link from 'next/link';
 import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Check, Flag, SlidersHorizontal, X } from 'lucide-react';
 import type { Course, TeeTime } from '@/lib/courses-data';
 
-const TYPE_BADGES: Record<string, { label: string; className: string }> = {
-  public:         { label: 'Public',         className: 'bg-emerald-100 text-emerald-800' },
-  'semi-private': { label: 'Semi-Private',   className: 'bg-amber-100 text-amber-800' },
-  member:         { label: 'Member / Guest', className: 'bg-violet-100 text-violet-800' },
-  resident:       { label: 'Resident',       className: 'bg-blue-100 text-blue-800' },
-  resort:         { label: 'Resort',         className: 'bg-pink-100 text-pink-800' },
-  municipal:      { label: 'Municipal',      className: 'bg-gray-100 text-gray-700' },
+const TYPE_LABELS: Record<string, string> = {
+  public:         'Public',
+  'semi-private': 'Semi-Private',
+  member:         'Member / Guest',
+  resident:       'Resident',
+  resort:         'Resort',
+  municipal:      'Municipal',
 };
 
 const STATUS_STYLE: Record<string, string> = {
-  available:   'text-emerald-600',
-  limited:     'text-amber-600',
-  almost_full: 'text-red-500',
+  available:   'text-ok',
+  limited:     'text-warn',
+  almost_full: 'text-bad',
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -68,7 +68,6 @@ function startOfToday() {
   return d;
 }
 
-// 7-day quick strip (mobile)
 function buildDateStrip() {
   const dates = [];
   const today = startOfToday();
@@ -93,11 +92,13 @@ function buildMonthGrid(month: Date): (Date | null)[] {
   return cells;
 }
 
+type CourseWithBrand = Course & { brand_color?: string };
+
 export default function CourseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const router = useRouter();
 
-  const [course, setCourse] = useState<Course | null>(null);
+  const [course, setCourse] = useState<CourseWithBrand | null>(null);
   const [notFound, setNotFound] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState(formatDate(startOfToday()));
@@ -115,15 +116,13 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
   const [holesFilter, setHolesFilter] = useState<'all' | '9' | '18'>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  // Fetch course
   useEffect(() => {
     fetch(`/api/courses/${slug}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .then((c: Course) => { setCourse(c); if (c?.cart_required) setWithCart(true); })
+      .then((c: CourseWithBrand) => { setCourse(c); if (c?.cart_required) setWithCart(true); })
       .catch(() => setNotFound(true));
   }, [slug]);
 
-  // Fetch tee times when date changes
   useEffect(() => {
     if (!course || course.type === 'member') return;
     setLoadingTimes(true);
@@ -138,7 +137,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
 
   const hasHolesData = useMemo(() => {
     const vals = new Set(teeTimes.map(t => holesOf(t)).filter(h => h !== undefined));
-    return vals.size > 1; // only offer the filter when the course sells both 9- and 18-hole times
+    return vals.size > 1;
   }, [teeTimes]);
 
   const priceBounds = useMemo(() => {
@@ -171,12 +170,12 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
 
   if (notFound) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8faf9]">
+      <div className="min-h-screen flex items-center justify-center bg-paper">
         <div className="text-center">
-          <Flag size={40} className="mx-auto mb-4 text-emerald-600" />
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Course Not Found</h1>
-          <p className="text-gray-400">We couldn&apos;t find that course.</p>
-          <p className="text-gray-400 text-sm mt-2">Please use the booking link on your course&apos;s website, or contact <a href="mailto:hello@greenreserve.app" className="text-emerald-600 hover:text-emerald-500">hello@greenreserve.app</a>.</p>
+          <Flag size={40} className="mx-auto mb-4 text-pine" />
+          <h1 className="text-2xl font-semibold text-ink mb-2">Course Not Found</h1>
+          <p className="text-ink-muted">We couldn&apos;t find that course.</p>
+          <p className="text-ink-muted text-sm mt-2">Please use the booking link on your course&apos;s website, or contact <a href="mailto:hello@greenreserve.app" className="text-pine hover:underline">hello@greenreserve.app</a>.</p>
         </div>
       </div>
     );
@@ -184,22 +183,23 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
 
   if (!course) {
     return (
-      <div className="min-h-screen bg-[#f8faf9] animate-pulse">
-        <div className="h-40 bg-gray-300" />
+      <div className="min-h-screen bg-paper animate-pulse">
+        <div className="h-44 bg-line" />
         <div className="max-w-6xl mx-auto px-4 py-10 grid lg:grid-cols-[260px_1fr] gap-8">
-          <div className="h-96 bg-gray-200 rounded-lg" />
+          <div className="h-96 bg-line rounded-lg" />
           <div className="space-y-3">
-            <div className="h-8 bg-gray-200 rounded w-1/2" />
-            <div className="h-16 bg-gray-200 rounded" />
-            <div className="h-16 bg-gray-200 rounded" />
-            <div className="h-16 bg-gray-200 rounded" />
+            <div className="h-8 bg-line rounded w-1/2" />
+            <div className="h-16 bg-line rounded" />
+            <div className="h-16 bg-line rounded" />
+            <div className="h-16 bg-line rounded" />
           </div>
         </div>
       </div>
     );
   }
 
-  const badge = TYPE_BADGES[course.type] ?? TYPE_BADGES.public;
+  const accent = course.brand_color || '#24513B';
+  const typeLabel = TYPE_LABELS[course.type] ?? 'Public';
   const amenities = course.amenities ? course.amenities.split(',').map(s => s.trim()) : [];
   const strip = buildDateStrip();
   const todayStr = formatDate(startOfToday());
@@ -218,7 +218,6 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
     ? (selectedTime.green_fee + cartFeeApplied) * players + 1.5 * players
     : 0;
 
-  // Calendar nav bounds: current month .. +2 months
   const todayMonth = (() => { const t = startOfToday(); return new Date(t.getFullYear(), t.getMonth(), 1); })();
   const maxMonth = new Date(todayMonth.getFullYear(), todayMonth.getMonth() + 2, 1);
   const canPrevMonth = calMonth > todayMonth;
@@ -226,8 +225,6 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
 
   function handleBook() {
     if (!selectedTime) return;
-    // Price is intentionally left out of the URL — /book re-fetches live pricing
-    // from the server rather than trusting query params.
     const qp = new URLSearchParams({
       tee_time_id: String(selectedTime.id),
       course_name: course!.name,
@@ -257,13 +254,10 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
 
   return (
     <>
-      {/* Course hero header — uses the course's own photo/logo when set */}
-      <div
-        className="relative h-44 sm:h-56 flex items-end overflow-hidden"
-        style={heroStyle}
-      >
+      {/* Course hero */}
+      <div className="relative h-44 sm:h-56 flex items-end overflow-hidden" style={heroStyle}>
         {heroOverlay}
-        <div className="absolute bottom-2.5 right-4 z-10 text-[10px] font-semibold uppercase tracking-widest text-white/40">
+        <div className="absolute bottom-2.5 right-4 z-10 text-[10px] text-white/40">
           Powered by GreenReserve
         </div>
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-6">
@@ -278,20 +272,18 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                 />
               )}
               <div>
-              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${badge.className} mb-2 inline-block`}>
-                {badge.label}
-              </span>
-              <h1 className="text-2xl sm:text-3xl font-black text-white leading-tight">{course.name}</h1>
-              <p className="text-white/60 flex items-center gap-1.5 mt-1 text-sm">
-                <MapPin size={14} />
-                {course.city}, {course.state} · {course.holes} holes · Par {course.par}
-              </p>
+                <span className="text-xs font-medium text-white/70 mb-2 inline-block">{typeLabel}</span>
+                <h1 className="text-2xl sm:text-3xl font-serif font-medium text-white leading-tight">{course.name}</h1>
+                <p className="text-white/60 flex items-center gap-1.5 mt-1 text-sm">
+                  <MapPin size={14} />
+                  {course.city}, {course.state} · {course.holes} holes · Par {course.par}
+                </p>
               </div>
             </div>
             {course.review_count > 0 && (
               <div className="flex items-center gap-2 bg-white/10 backdrop-blur rounded-lg px-4 py-2">
                 <Star size={16} className="fill-[#c9a84c] text-[#c9a84c]" />
-                <span className="text-white font-bold">{course.rating.toFixed(1)}</span>
+                <span className="text-white font-semibold">{course.rating.toFixed(1)}</span>
                 <span className="text-white/50 text-sm">({course.review_count.toLocaleString()} reviews)</span>
               </div>
             )}
@@ -299,31 +291,32 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
         </div>
       </div>
 
-      {/* Course alert banner (set by the course in their dashboard) */}
+      {/* Course alert banner */}
       {course.conditions && (
-        <div className="bg-amber-50 border-b border-amber-200">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-2 text-sm text-amber-900">
-            <Flag size={14} className="flex-shrink-0 text-amber-600" />
-            <span><span className="font-semibold">Course notice:</span> {course.conditions}</span>
+        <div className="bg-warn/5 border-b border-warn/20">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-2 text-sm text-warn">
+            <Flag size={14} className="flex-shrink-0" />
+            <span><span className="font-medium">Course notice:</span> {course.conditions}</span>
           </div>
         </div>
       )}
 
       {/* Main content */}
-      <div className="bg-[#f8faf9] min-h-screen">
+      <div className="bg-paper min-h-screen">
         <div className={`max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${selectedTime ? 'pb-48' : ''}`}>
 
           {course.type === 'member' ? (
-            <div className="max-w-md mx-auto bg-white rounded-lg border border-gray-100 shadow-sm p-8 text-center">
-              <Phone size={32} className="mx-auto mb-3 text-emerald-600" />
-              <h2 className="font-bold text-gray-900 text-lg mb-2">Member-Only Club</h2>
-              <p className="text-gray-600 text-sm mb-4">
+            <div className="max-w-md mx-auto bg-white rounded-lg border border-line p-8 text-center">
+              <Phone size={32} className="mx-auto mb-3 text-pine" />
+              <h2 className="font-semibold text-ink text-lg mb-2">Member-Only Club</h2>
+              <p className="text-ink-soft text-sm mb-4">
                 This is a member-only or invitation-based club. Contact the pro shop for guest access.
               </p>
               {course.phone && (
                 <a
                   href={`tel:${course.phone}`}
-                  className="inline-block w-full py-3 rounded-md font-semibold text-sm text-white text-center bg-emerald-600 hover:bg-emerald-500 transition-colors"
+                  className="inline-block w-full py-3 rounded-md font-medium text-sm text-white text-center transition-colors"
+                  style={{ backgroundColor: accent }}
                 >
                   Call Pro Shop
                 </a>
@@ -334,14 +327,14 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
 
               {/* LEFT: Filters */}
               <aside className={`${filtersOpen ? 'block' : 'hidden'} lg:block`}>
-                <div className="lg:sticky lg:top-20 bg-white rounded-lg border border-gray-100 shadow-sm divide-y divide-gray-100">
+                <div className="lg:sticky lg:top-20 bg-white rounded-lg border border-line divide-y divide-line">
 
                   <div className="px-5 py-4 flex items-center justify-between">
-                    <span className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                    <span className="font-medium text-ink text-sm flex items-center gap-2">
                       <SlidersHorizontal size={14} /> Filters
                     </span>
                     {activeFilterCount > 0 && (
-                      <button onClick={resetFilters} className="text-xs font-semibold text-emerald-700 hover:text-emerald-600">
+                      <button onClick={resetFilters} className="text-xs font-medium text-pine hover:text-pine-hover transition-colors">
                         Reset all
                       </button>
                     )}
@@ -353,20 +346,20 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                       <button
                         onClick={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1))}
                         disabled={!canPrevMonth}
-                        className="p-1 rounded text-gray-400 hover:text-gray-700 disabled:opacity-25 transition-colors"
+                        className="p-1 rounded text-ink-muted hover:text-ink disabled:opacity-25 transition-colors"
                       >
                         <ChevronLeft size={16} />
                       </button>
-                      <span className="text-sm font-bold text-gray-900">{monthLabel(calMonth)}</span>
+                      <span className="text-sm font-medium text-ink">{monthLabel(calMonth)}</span>
                       <button
                         onClick={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1))}
                         disabled={!canNextMonth}
-                        className="p-1 rounded text-gray-400 hover:text-gray-700 disabled:opacity-25 transition-colors"
+                        className="p-1 rounded text-ink-muted hover:text-ink disabled:opacity-25 transition-colors"
                       >
                         <ChevronRight size={16} />
                       </button>
                     </div>
-                    <div className="grid grid-cols-7 text-center text-[10px] font-bold text-gray-400 uppercase mb-1">
+                    <div className="grid grid-cols-7 text-center text-[10px] font-medium text-ink-muted uppercase mb-1">
                       {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <div key={i}>{d}</div>)}
                     </div>
                     <div className="grid grid-cols-7 gap-0.5">
@@ -376,13 +369,15 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                         const isPast = d < startOfToday();
                         const isSelected = ds === selectedDate;
                         const isToday = ds === todayStr;
-                        const base = 'aspect-square flex items-center justify-center rounded-md text-xs font-semibold transition-colors';
-                        let cls = 'text-gray-700 hover:bg-emerald-50';
-                        if (isPast) cls = 'text-gray-300 cursor-default';
-                        if (isToday && !isSelected) cls = 'text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-50';
-                        if (isSelected) cls = 'bg-emerald-600 text-white';
+                        const base = 'aspect-square flex items-center justify-center rounded-md text-xs font-medium transition-colors';
+                        let cls = 'text-ink hover:bg-pine/5';
+                        if (isPast) cls = 'text-ink-faint cursor-default';
+                        if (isToday && !isSelected) cls = 'text-pine ring-1 ring-pine/30 hover:bg-pine/5';
+                        const selStyle = isSelected ? { backgroundColor: accent, color: '#fff' } : {};
+                        if (isSelected) cls = '';
                         return (
-                          <button key={ds} disabled={isPast} onClick={() => setSelectedDate(ds)} className={`${base} ${cls}`}>
+                          <button key={ds} disabled={isPast} onClick={() => setSelectedDate(ds)}
+                            className={`${base} ${cls}`} style={selStyle}>
                             {d.getDate()}
                           </button>
                         );
@@ -392,42 +387,42 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
 
                   {/* Players */}
                   <div className="px-5 py-4">
-                    <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Players</div>
+                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2">Players</div>
                     <div className="flex gap-1.5">
-                      {[1, 2, 3, 4].map(n => (
-                        <button
-                          key={n}
-                          onClick={() => { setPlayers(n); setSelectedTime(null); }}
-                          className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-md border text-sm font-semibold transition-all ${
-                            players === n
-                              ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
-                              : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                          }`}
-                        >
-                          <Users size={13} />
-                          {n}
-                        </button>
-                      ))}
+                      {[1, 2, 3, 4].map(n => {
+                        const isSel = players === n;
+                        return (
+                          <button
+                            key={n}
+                            onClick={() => { setPlayers(n); setSelectedTime(null); }}
+                            className="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-md border text-sm font-medium transition-all"
+                            style={isSel ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: '#E6E3D7', color: '#87867C' }}
+                          >
+                            <Users size={13} />
+                            {n}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
                   {/* Time of day */}
                   <div className="px-5 py-4">
-                    <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Time of Day</div>
+                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2">Time of Day</div>
                     <div className="grid grid-cols-2 gap-1.5">
-                      {TOD_OPTIONS.map(o => (
-                        <button
-                          key={o.key}
-                          onClick={() => setTodFilter(o.key)}
-                          className={`py-2 rounded-md border text-xs font-semibold transition-all ${
-                            todFilter === o.key
-                              ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
-                              : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                          }`}
-                        >
-                          {o.label}
-                        </button>
-                      ))}
+                      {TOD_OPTIONS.map(o => {
+                        const isSel = todFilter === o.key;
+                        return (
+                          <button
+                            key={o.key}
+                            onClick={() => setTodFilter(o.key)}
+                            className="py-2 rounded-md border text-xs font-medium transition-all"
+                            style={isSel ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: '#E6E3D7', color: '#87867C' }}
+                          >
+                            {o.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -435,8 +430,8 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                   {priceBounds && priceBounds.min < priceBounds.max && (
                     <div className="px-5 py-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Max Price</span>
-                        <span className="text-xs font-bold text-gray-900">${maxPrice ?? priceBounds.max}</span>
+                        <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium">Max Price</span>
+                        <span className="text-xs font-medium text-ink">${maxPrice ?? priceBounds.max}</span>
                       </div>
                       <input
                         type="range"
@@ -445,33 +440,33 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                         step={1}
                         value={maxPrice ?? priceBounds.max}
                         onChange={e => setMaxPrice(Number(e.target.value))}
-                        className="w-full accent-emerald-600"
+                        className="w-full accent-pine"
                       />
-                      <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+                      <div className="flex justify-between text-[10px] text-ink-faint mt-1">
                         <span>${priceBounds.min}</span>
                         <span>${priceBounds.max}</span>
                       </div>
                     </div>
                   )}
 
-                  {/* Holes (only when tee times carry hole data) */}
+                  {/* Holes */}
                   {hasHolesData && (
                     <div className="px-5 py-4">
-                      <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Holes</div>
+                      <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2">Holes</div>
                       <div className="grid grid-cols-3 gap-1.5">
-                        {(['all', '9', '18'] as const).map(h => (
-                          <button
-                            key={h}
-                            onClick={() => setHolesFilter(h)}
-                            className={`py-2 rounded-md border text-xs font-semibold transition-all ${
-                              holesFilter === h
-                                ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
-                                : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                            }`}
-                          >
-                            {h === 'all' ? 'Any' : h}
-                          </button>
-                        ))}
+                        {(['all', '9', '18'] as const).map(h => {
+                          const isSel = holesFilter === h;
+                          return (
+                            <button
+                              key={h}
+                              onClick={() => setHolesFilter(h)}
+                              className="py-2 rounded-md border text-xs font-medium transition-all"
+                              style={isSel ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: '#E6E3D7', color: '#87867C' }}
+                            >
+                              {h === 'all' ? 'Any' : h}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -486,12 +481,12 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                   <div className="flex items-center justify-between">
                     <button
                       onClick={() => setFiltersOpen(!filtersOpen)}
-                      className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md border border-gray-200 bg-white text-sm font-semibold text-gray-700"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md border border-line bg-white text-sm font-medium text-ink"
                     >
                       <SlidersHorizontal size={14} />
                       Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
                     </button>
-                    <span className="text-sm font-semibold text-gray-500">{displayDate(selectedDate)}</span>
+                    <span className="text-sm font-medium text-ink-soft">{displayDate(selectedDate)}</span>
                   </div>
                   <div className="flex gap-1.5 overflow-x-auto pb-1">
                     {strip.map(d => {
@@ -502,14 +497,15 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                         <button
                           key={ds}
                           onClick={() => setSelectedDate(ds)}
-                          className={`flex flex-col items-center px-3 py-2 rounded-md text-xs font-semibold min-w-[3.25rem] transition-all ${
-                            isSelected ? 'bg-emerald-600 text-white' : 'bg-white border border-gray-200 text-gray-700'
-                          }`}
+                          className="flex flex-col items-center px-3 py-2 rounded-md text-xs font-medium min-w-[3.25rem] transition-all"
+                          style={isSelected
+                            ? { backgroundColor: accent, color: '#fff' }
+                            : { backgroundColor: '#fff', border: '1px solid #E6E3D7', color: '#1C1C18' }}
                         >
                           <span className="text-[10px] font-medium opacity-70">
                             {isToday ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' })}
                           </span>
-                          <span className="text-base font-bold leading-tight">{d.getDate()}</span>
+                          <span className="text-base font-semibold leading-tight">{d.getDate()}</span>
                         </button>
                       );
                     })}
@@ -519,16 +515,17 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                   <div className="flex items-baseline gap-3 flex-wrap">
-                    <h2 className="font-bold text-gray-900 text-lg">
-                      Tee times for <span className="text-emerald-700">{displayDate(selectedDate)}</span>
+                    <h2 className="font-semibold text-ink text-lg">
+                      Tee times for <span style={{ color: accent }}>{displayDate(selectedDate)}</span>
                     </h2>
                     {!loadingTimes && teeTimes.length > 0 && (
-                      <span className="text-sm text-gray-400">{filtered.length} available</span>
+                      <span className="text-sm text-ink-muted">{filtered.length} available</span>
                     )}
                   </div>
                   <Link
                     href={`/courses/${slug}/member`}
-                    className="text-xs font-semibold text-emerald-700 hover:text-emerald-600 border border-emerald-200 hover:border-emerald-400 bg-emerald-50 px-3 py-1.5 rounded-md transition-colors flex-shrink-0"
+                    className="text-xs font-medium px-3 py-1.5 rounded-md transition-colors flex-shrink-0"
+                    style={{ color: accent, border: `1px solid ${accent}30`, backgroundColor: `${accent}08` }}
                   >
                     Member sign in
                   </Link>
@@ -538,18 +535,18 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                 {loadingTimes ? (
                   <div className="space-y-2">
                     {[...Array(6)].map((_, i) => (
-                      <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+                      <div key={i} className="h-16 bg-line rounded-lg animate-pulse" />
                     ))}
                   </div>
                 ) : filtered.length === 0 ? (
-                  <div className="bg-white rounded-lg border border-gray-100 shadow-sm text-center py-14 px-6">
-                    <Clock size={28} className="mx-auto mb-3 text-gray-300" />
+                  <div className="bg-white rounded-lg border border-line text-center py-14 px-6">
+                    <Clock size={28} className="mx-auto mb-3 text-ink-faint" />
                     {teeTimes.length === 0 ? (
-                      <p className="text-gray-400 text-sm">No tee times available for this date. Try another day.</p>
+                      <p className="text-ink-muted text-sm">No tee times available for this date. Try another day.</p>
                     ) : (
                       <div>
-                        <p className="text-gray-500 text-sm mb-3">No tee times match your filters.</p>
-                        <button onClick={resetFilters} className="text-sm font-semibold text-emerald-700 hover:text-emerald-600">
+                        <p className="text-ink-soft text-sm mb-3">No tee times match your filters.</p>
+                        <button onClick={resetFilters} className="text-sm font-medium text-pine hover:text-pine-hover transition-colors">
                           Reset filters
                         </button>
                       </div>
@@ -560,7 +557,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                     {groups.map(g => (
                       <div key={g.key}>
                         {todFilter === 'all' && (
-                          <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                          <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2 flex items-center gap-1.5">
                             <Clock size={11} /> {g.label}
                           </div>
                         )}
@@ -572,32 +569,32 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                               <button
                                 key={t.id}
                                 onClick={() => setSelectedTime(isSel ? null : t)}
-                                className={`w-full flex items-center justify-between gap-4 rounded-lg border px-4 sm:px-5 py-3.5 text-left transition-all ${
-                                  isSel
-                                    ? 'border-emerald-600 bg-emerald-50 ring-1 ring-emerald-600'
-                                    : 'bg-white border-gray-200 hover:border-emerald-500 hover:shadow-sm'
-                                }`}
+                                className="w-full flex items-center justify-between gap-4 rounded-lg border px-4 sm:px-5 py-3.5 text-left transition-all"
+                                style={isSel
+                                  ? { borderColor: accent, backgroundColor: `${accent}0a`, boxShadow: `0 0 0 1px ${accent}` }
+                                  : { backgroundColor: '#fff', borderColor: '#E6E3D7' }}
                               >
                                 <div className="min-w-0">
-                                  <div className="text-lg sm:text-xl font-black tracking-tight text-gray-900">
+                                  <div className="text-lg sm:text-xl font-bold tracking-tight text-ink">
                                     {formatTime(t.time)}
                                   </div>
                                   <div className="text-xs mt-0.5 flex items-center gap-1.5 flex-wrap">
-                                    <span className={STATUS_STYLE[t.status] || 'text-gray-400'}>{STATUS_LABEL[t.status] || 'Available'}</span>
-                                    <span className="text-gray-400">· {t.players_available} spots</span>
-                                    {h !== undefined && <span className="text-gray-400">· {h} holes</span>}
+                                    <span className={STATUS_STYLE[t.status] || 'text-ink-muted'}>{STATUS_LABEL[t.status] || 'Available'}</span>
+                                    <span className="text-ink-muted">· {t.players_available} spots</span>
+                                    {h !== undefined && <span className="text-ink-muted">· {h} holes</span>}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-3 sm:gap-5 flex-shrink-0">
                                   <div className="text-right">
-                                    <div className="font-bold text-gray-900">${t.green_fee}</div>
-                                    <div className="text-[11px] text-gray-400">per player</div>
+                                    <div className="font-semibold text-ink">${t.green_fee}</div>
+                                    <div className="text-[11px] text-ink-muted">per player</div>
                                   </div>
-                                  <span className={`hidden sm:inline-flex px-4 py-2 rounded-md text-xs font-bold transition-colors ${
-                                    isSel
-                                      ? 'bg-emerald-600 text-white'
-                                      : 'border border-emerald-600 text-emerald-700'
-                                  }`}>
+                                  <span
+                                    className="hidden sm:inline-flex px-4 py-2 rounded-md text-xs font-medium transition-colors"
+                                    style={isSel
+                                      ? { backgroundColor: accent, color: '#fff' }
+                                      : { border: `1px solid ${accent}`, color: accent }}
+                                  >
                                     {isSel ? 'Selected' : 'Select'}
                                   </span>
                                 </div>
@@ -616,12 +613,12 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
           {/* Course info below the tee sheet */}
           <div className="mt-10 grid lg:grid-cols-3 gap-6 items-start">
             <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white rounded-lg p-7 border border-gray-100 shadow-sm">
-                <h2 className="font-bold text-gray-900 text-xl mb-4">About This Course</h2>
-                <p className="text-gray-600 leading-relaxed">{course.description}</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100">
+              <div className="bg-white rounded-lg p-7 border border-line">
+                <h2 className="font-semibold text-ink text-xl mb-4">About This Course</h2>
+                <p className="text-ink-soft leading-relaxed">{course.description}</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-line">
                   {[
-                    { label: 'Course Type', value: badge.label },
+                    { label: 'Course Type', value: typeLabel },
                     { label: 'Holes', value: String(course.holes) },
                     { label: 'Par', value: String(course.par) },
                     { label: 'Walking', value: course.walking_allowed ? 'Allowed' : 'Cart Only' },
@@ -629,21 +626,22 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                     { label: 'State', value: course.state },
                   ].map(f => (
                     <div key={f.label}>
-                      <div className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-0.5">{f.label}</div>
-                      <div className="text-gray-900 font-semibold text-sm">{f.value}</div>
+                      <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-0.5">{f.label}</div>
+                      <div className="text-ink font-medium text-sm">{f.value}</div>
                     </div>
                   ))}
                 </div>
               </div>
 
               {amenities.length > 0 && (
-                <div className="bg-white rounded-lg p-7 border border-gray-100 shadow-sm">
-                  <h2 className="font-bold text-gray-900 text-xl mb-4">Amenities</h2>
+                <div className="bg-white rounded-lg p-7 border border-line">
+                  <h2 className="font-semibold text-ink text-xl mb-4">Amenities</h2>
                   <div className="flex flex-wrap gap-2">
                     {amenities.map(a => (
                       <span
                         key={a}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-800 text-sm font-medium"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-sm font-medium"
+                        style={{ backgroundColor: `${accent}10`, color: accent }}
                       >
                         <Check size={13} />
                         {a}
@@ -654,24 +652,24 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
               )}
             </div>
 
-            <div className="bg-white rounded-lg p-7 border border-gray-100 shadow-sm">
-              <h2 className="font-bold text-gray-900 text-xl mb-4">Contact</h2>
+            <div className="bg-white rounded-lg p-7 border border-line">
+              <h2 className="font-semibold text-ink text-xl mb-4">Contact</h2>
               <div className="space-y-3">
                 {course.address && (
-                  <div className="flex items-start gap-3 text-sm text-gray-600">
-                    <MapPin size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex items-start gap-3 text-sm text-ink-soft">
+                    <MapPin size={16} className="text-ink-muted mt-0.5 flex-shrink-0" />
                     {course.address}
                   </div>
                 )}
                 {course.phone && (
-                  <a href={`tel:${course.phone}`} className="flex items-center gap-3 text-sm text-gray-600 hover:text-emerald-700 transition-colors">
-                    <Phone size={16} className="text-gray-400" />
+                  <a href={`tel:${course.phone}`} className="flex items-center gap-3 text-sm text-ink-soft hover:text-pine transition-colors">
+                    <Phone size={16} className="text-ink-muted" />
                     {course.phone}
                   </a>
                 )}
                 {course.website && (
-                  <a href={course.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-emerald-700 hover:underline">
-                    <Globe size={16} className="text-gray-400" />
+                  <a href={course.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-pine hover:underline">
+                    <Globe size={16} className="text-ink-muted" />
                     {course.website.replace(/^https?:\/\//, '')}
                   </a>
                 )}
@@ -683,13 +681,13 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
 
       {/* Sticky booking bar */}
       {selectedTime && course.type !== 'member' && (
-        <div className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 shadow-[0_-6px_24px_rgba(0,0,0,0.08)]">
+        <div className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-line shadow-[0_-6px_24px_rgba(0,0,0,0.06)]">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
             <div className="flex-1 min-w-0">
-              <div className="font-bold text-gray-900 text-sm sm:text-base">
+              <div className="font-medium text-ink text-sm sm:text-base">
                 {formatTime(selectedTime.time)} · {displayDate(selectedDate)} · {players} {players === 1 ? 'player' : 'players'}
               </div>
-              <div className="text-xs text-gray-500 mt-0.5">
+              <div className="text-xs text-ink-muted mt-0.5">
                 Green fee ${selectedTime.green_fee} × {players}
                 {withCart && selectedTime.cart_fee > 0 ? ` · Cart $${selectedTime.cart_fee} × ${players}` : ''}
                 {` · GR access fee $${(1.5 * players).toFixed(2)}`}
@@ -699,9 +697,10 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
             {selectedTime.cart_fee > 0 && !course.cart_required && (
               <button
                 onClick={() => setWithCart(!withCart)}
-                className={`self-start sm:self-auto px-3.5 py-2 rounded-md text-xs font-semibold transition-colors ${
-                  withCart ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                className="self-start sm:self-auto px-3.5 py-2 rounded-md text-xs font-medium transition-colors"
+                style={withCart
+                  ? { backgroundColor: accent, color: '#fff' }
+                  : { backgroundColor: '#F0EDE2', color: '#6E6D64' }}
               >
                 {withCart ? `Cart added · $${selectedTime.cart_fee}/player` : `Add cart · $${selectedTime.cart_fee}/player`}
               </button>
@@ -709,18 +708,19 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
 
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</div>
-                <div className="font-black text-gray-900 text-xl leading-tight">${total.toFixed(2)}</div>
+                <div className="text-[10px] font-medium text-ink-muted uppercase tracking-[0.06em]">Total</div>
+                <div className="font-bold text-ink text-xl leading-tight">${total.toFixed(2)}</div>
               </div>
               <button
                 onClick={handleBook}
-                className="px-6 py-3 rounded-md font-bold text-white text-sm bg-emerald-600 hover:bg-emerald-500 transition-colors"
+                className="px-6 py-3 rounded-md font-medium text-white text-sm transition-colors"
+                style={{ backgroundColor: accent }}
               >
                 Continue to Book →
               </button>
               <button
                 onClick={() => setSelectedTime(null)}
-                className="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-md text-ink-muted hover:text-ink hover:bg-paper transition-colors"
               >
                 <X size={16} />
               </button>

@@ -42,5 +42,6 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     range_balls_large_price: c.rangeBallsLargePrice ?? 0,
     cancellation_hours:      c.cancellationHours ?? 24,
     late_cancellation_fee:   c.lateCancellationFee ?? 10,
+    brand_color:             c.brandColor ?? '#24513B',
   };
 }

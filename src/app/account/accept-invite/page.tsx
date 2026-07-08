@@ -4,6 +4,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, AlertCircle } from 'lucide-react';
 
+const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+const lCls = 'block text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-1.5';
+
 type InviteInfo = { email: string; name: string; courseName: string; tierName: string };
 
 function AcceptInviteInner() {
@@ -61,17 +64,17 @@ function AcceptInviteInner() {
   }
 
   if (loading) {
-    return <div className="min-h-screen bg-[#0a1f0f] flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-white/40" /></div>;
+    return <div className="min-h-screen bg-paper flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-ink-faint" /></div>;
   }
 
   if (loadError || !info) {
     return (
-      <div className="min-h-screen bg-[#0a1f0f] flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 text-center">
-          <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-4" />
-          <h1 className="font-bold text-gray-900 mb-2">Can&apos;t open this invite</h1>
-          <p className="text-gray-500 text-sm mb-6">{loadError}</p>
-          <Link href="/account/login" className="inline-block px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#1b4332]">
+      <div className="min-h-screen bg-paper flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white rounded-lg border border-line p-8 text-center">
+          <AlertCircle className="w-10 h-10 text-bad mx-auto mb-4" />
+          <h1 className="font-semibold text-ink mb-2">Can&apos;t open this invite</h1>
+          <p className="text-ink-soft text-sm mb-6">{loadError}</p>
+          <Link href="/account/login" className="inline-block px-5 py-2.5 rounded-md text-sm font-medium text-white bg-pine hover:bg-pine-hover transition-colors">
             Go to Login
           </Link>
         </div>
@@ -80,54 +83,54 @@ function AcceptInviteInner() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1f0f] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-paper flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="text-white font-black text-3xl tracking-tight">
-            Green<span className="text-green-400">Reserve</span>
+          <Link href="/" className="text-[17px] font-serif font-medium tracking-tight text-ink">
+            Green<span className="text-pine">Reserve</span>
           </Link>
-          <p className="text-green-200/60 text-sm mt-2">Set Up Your Member Account</p>
+          <p className="text-xs text-ink-muted mt-1">Set Up Your Member Account</p>
         </div>
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <div className="bg-[#f0fdf4] border border-emerald-100 rounded-xl px-4 py-3 mb-6">
-            <p className="text-emerald-800 text-sm font-semibold">{info.tierName} member at {info.courseName}</p>
-            <p className="text-emerald-700 text-xs mt-0.5">{info.email}</p>
+        <div className="bg-white rounded-lg border border-line p-8">
+          <div className="bg-ok/5 border border-ok/20 rounded-md px-4 py-3 mb-6">
+            <p className="text-ok text-sm font-semibold">{info.tierName} member at {info.courseName}</p>
+            <p className="text-ok/80 text-xs mt-0.5">{info.email}</p>
           </div>
-          <h2 className="text-xl font-black text-gray-900 mb-2">Create Your Password</h2>
-          <p className="text-sm text-gray-500 mb-6">Set a password to start booking your member rate online.</p>
-          {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-4">{error}</div>}
+          <h2 className="text-xl font-semibold text-ink mb-2">Create Your Password</h2>
+          <p className="text-sm text-ink-soft mb-6">Set a password to start booking your member rate online.</p>
+          {error && <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm mb-4">{error}</div>}
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">First Name</label>
+                <label className={lCls}>First Name</label>
                 <input value={firstName} onChange={e => setFirstName(e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 outline-none" />
+                  className={iCls} />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Last Name</label>
+                <label className={lCls}>Last Name</label>
                 <input value={lastName} onChange={e => setLastName(e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 outline-none" />
+                  className={iCls} />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Phone (optional)</label>
+              <label className={lCls}>Phone (optional)</label>
               <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 outline-none" />
+                className={iCls} />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Password</label>
+              <label className={lCls}>Password</label>
               <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 outline-none" />
+                className={iCls} />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Confirm Password</label>
+              <label className={lCls}>Confirm Password</label>
               <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && submit()}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 outline-none" />
+                className={iCls} />
             </div>
           </div>
           <button onClick={submit} disabled={submitting}
-            className="mt-6 w-full bg-[#1b4332] text-white py-3 rounded-xl font-bold text-sm hover:bg-[#2d6a4f] disabled:opacity-50">
+            className="mt-6 w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-sm disabled:opacity-50 transition-colors">
             {submitting ? 'Setting up...' : 'Set Up My Account'}
           </button>
         </div>
@@ -138,7 +141,7 @@ function AcceptInviteInner() {
 
 export default function AcceptInvitePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0a1f0f]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-paper" />}>
       <AcceptInviteInner />
     </Suspense>
   );

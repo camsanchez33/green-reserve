@@ -24,6 +24,7 @@ export type Course = {
   featured: boolean;
   base_green_fee: number;
   cart_fee: number;
+  brand_color?: string;
 };
 
 export type TeeTime = {

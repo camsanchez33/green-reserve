@@ -9,8 +9,8 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
 
 const cardStyle = {
   style: {
-    base: { fontSize: '15px', color: '#111827', '::placeholder': { color: '#9ca3af' } },
-    invalid: { color: '#dc2626' },
+    base: { fontSize: '15px', color: '#1C1C18', '::placeholder': { color: '#98968B' } },
+    invalid: { color: '#A3452F' },
   },
 };
 
@@ -31,7 +31,6 @@ function fmtDate(d: string) {
   return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
-/** Card entry form for walk-up check-ins (no card was saved at booking time). */
 function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, onResult, onError }: {
   bookingId: string; token: string; totalAmount: number; golferName: string;
   onResult: (r: { totalCharged: number; feeRefunded: boolean; feeRefundAmount: number }) => void;
@@ -72,20 +71,19 @@ function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, onResult
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Card Details</label>
-        <div className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus-within:border-[#1b4332] focus-within:ring-2 focus-within:ring-[#1b4332]/10 transition-all">
+        <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-1.5">Card Details</label>
+        <div className="w-full px-4 py-3.5 rounded-md border border-line bg-paper focus-within:border-pine/40 focus-within:ring-2 focus-within:ring-pine/10 transition-all">
           <CardElement options={cardStyle} />
         </div>
       </div>
       <button
         onClick={handleSubmit}
         disabled={loading || !stripe}
-        className="w-full py-4 rounded-xl font-bold text-white text-sm flex items-center justify-center gap-2 hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
-        style={{ background: '#1b4332' }}
+        className="w-full py-3.5 rounded-md font-medium text-white text-sm flex items-center justify-center gap-2 bg-pine hover:bg-pine-hover transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
       >
         {loading ? <><Loader2 size={16} className="animate-spin" /> Charging…</> : `Check In & Pay $${(totalAmount / 100).toFixed(2)}`}
       </button>
-      <div className="flex items-center justify-center gap-2 text-gray-400 text-xs">
+      <div className="flex items-center justify-center gap-2 text-ink-muted text-xs">
         <Lock size={12} /><span>Secure checkout powered by Stripe</span>
       </div>
     </div>
@@ -130,16 +128,16 @@ function CheckInPageInner() {
   }
 
   if (loading) {
-    return <div className="min-h-screen bg-[#f8faf9] flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-gray-400" /></div>;
+    return <div className="min-h-screen bg-paper flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-ink-muted" /></div>;
   }
 
   if (error && !info) {
     return (
-      <div className="min-h-screen bg-[#f8faf9] flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
-          <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-4" />
-          <h1 className="font-bold text-gray-900 mb-2">Can&apos;t check in</h1>
-          <p className="text-gray-500 text-sm">{error}</p>
+      <div className="min-h-screen bg-paper flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-lg border border-line p-8 text-center">
+          <AlertCircle className="w-10 h-10 text-bad mx-auto mb-4" />
+          <h1 className="font-semibold text-ink mb-2">Can&apos;t check in</h1>
+          <p className="text-ink-soft text-sm">{error}</p>
         </div>
       </div>
     );
@@ -150,36 +148,35 @@ function CheckInPageInner() {
   if (info.status === 'completed' || result) {
     const charged = result?.totalCharged ?? info.totalAmount;
     return (
-      <div className="min-h-screen bg-[#f8faf9] flex items-center justify-center px-4">
-        <div className="max-w-lg w-full bg-white rounded-3xl border border-gray-100 shadow-sm p-10 text-center">
-          <div className="w-16 h-16 rounded-full bg-[#f0fdf4] flex items-center justify-center mx-auto mb-6">
-            <CheckCircle size={32} className="text-emerald-500" />
+      <div className="min-h-screen bg-paper flex items-center justify-center px-4">
+        <div className="max-w-lg w-full bg-white rounded-lg border border-line p-10 text-center">
+          <div className="w-16 h-16 rounded-lg bg-ok/8 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle size={32} className="text-ok" />
           </div>
-          <h1 className="text-2xl font-black text-gray-900 mb-2">You&apos;re checked in!</h1>
-          <p className="text-gray-500 mb-6 text-sm">${(charged / 100).toFixed(2)} was charged to your card. Enjoy your round at {info.courseName}.</p>
+          <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">You&apos;re checked in!</h1>
+          <p className="text-ink-soft mb-6 text-sm">${(charged / 100).toFixed(2)} was charged to your card. Enjoy your round at {info.courseName}.</p>
           {result?.feeRefunded && (
-            <div className="bg-[#f0fdf4] border border-emerald-100 rounded-2xl p-4 mb-6 text-left">
-              <p className="text-emerald-700 text-xs">Your earlier ${(result.feeRefundAmount / 100).toFixed(2)} late-cancellation fee has been refunded.</p>
+            <div className="bg-ok/5 border border-ok/20 rounded-md p-4 mb-6 text-left">
+              <p className="text-ok text-xs">Your earlier ${(result.feeRefundAmount / 100).toFixed(2)} late-cancellation fee has been refunded.</p>
             </div>
           )}
-          <p className="text-xs text-gray-400">A receipt has been emailed to you.</p>
+          <p className="text-xs text-ink-muted">A receipt has been emailed to you.</p>
         </div>
       </div>
     );
   }
 
-  // Booking summary shared by both saved-card and walk-up flows
   const summary = (
-    <div className="bg-[#f8faf9] rounded-2xl p-5 mb-6 space-y-2 text-sm">
-      <div className="flex justify-between"><span className="text-gray-400">Date</span><span className="font-semibold text-gray-900">{fmtDate(info.date)}</span></div>
-      <div className="flex justify-between"><span className="text-gray-400">Tee Time</span><span className="font-semibold text-gray-900">{fmtTime(info.time)}</span></div>
-      <div className="flex justify-between"><span className="text-gray-400">Players</span><span className="font-semibold text-gray-900">{info.players} &middot; {info.holes} holes</span></div>
-      <div className="border-t border-gray-200 mt-2 pt-2 space-y-1.5">
-        <div className="flex justify-between text-gray-500"><span>Green Fee</span><span>${(info.greenFeeTotal / 100).toFixed(2)}</span></div>
-        {info.cartFeeTotal > 0 && <div className="flex justify-between text-gray-500"><span>Cart Fee</span><span>${(info.cartFeeTotal / 100).toFixed(2)}</span></div>}
-        {info.rangeBallsTotal > 0 && <div className="flex justify-between text-gray-500"><span>Range Balls</span><span>${(info.rangeBallsTotal / 100).toFixed(2)}</span></div>}
-        <div className="flex justify-between text-gray-500"><span>Fees</span><span>${(info.accessFeeTotal / 100).toFixed(2)}</span></div>
-        <div className="flex justify-between font-bold text-gray-900 text-base border-t border-gray-100 pt-2">
+    <div className="bg-paper rounded-md p-5 mb-6 space-y-2 text-sm border border-line">
+      <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{fmtDate(info.date)}</span></div>
+      <div className="flex justify-between"><span className="text-ink-muted">Tee Time</span><span className="font-medium text-ink">{fmtTime(info.time)}</span></div>
+      <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{info.players} &middot; {info.holes} holes</span></div>
+      <div className="border-t border-line mt-2 pt-2 space-y-1.5">
+        <div className="flex justify-between text-ink-soft"><span>Green Fee</span><span>${(info.greenFeeTotal / 100).toFixed(2)}</span></div>
+        {info.cartFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart Fee</span><span>${(info.cartFeeTotal / 100).toFixed(2)}</span></div>}
+        {info.rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range Balls</span><span>${(info.rangeBallsTotal / 100).toFixed(2)}</span></div>}
+        <div className="flex justify-between text-ink-soft"><span>Fees</span><span>${(info.accessFeeTotal / 100).toFixed(2)}</span></div>
+        <div className="flex justify-between font-semibold text-ink text-base border-t border-line pt-2">
           <span>Total</span><span>${(info.totalAmount / 100).toFixed(2)}</span>
         </div>
       </div>
@@ -187,14 +184,14 @@ function CheckInPageInner() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f8faf9] flex items-center justify-center px-4 py-10">
-      <div className="max-w-lg w-full bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="h-16 flex items-center px-8" style={{ background: 'linear-gradient(135deg,#0f2218,#1b4332)' }}>
-          <span className="text-white font-bold">{info.courseName}</span>
+    <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
+      <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
+        <div className="h-14 bg-pine flex items-center px-6">
+          <span className="text-white font-medium">{info.courseName}</span>
         </div>
         <div className="p-8">
-          <h1 className="text-xl font-black text-gray-900 mb-1">Check in, {info.golferName.split(' ')[0]}?</h1>
-          <p className="text-gray-500 text-sm mb-6">
+          <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-1">Check in, {info.golferName.split(' ')[0]}?</h1>
+          <p className="text-ink-soft text-sm mb-6">
             {info.hasCard
               ? 'Confirm your round and pay now — no need to stop at the pro shop.'
               : 'Enter your card to pay now, or head to the pro shop to pay in person.'}
@@ -202,24 +199,23 @@ function CheckInPageInner() {
 
           {summary}
 
-          <div className="flex items-start gap-2 text-xs text-gray-400 mb-6">
+          <div className="flex items-start gap-2 text-xs text-ink-muted mb-6">
             <MapPin size={14} className="shrink-0 mt-0.5" />
             <span>{info.courseAddress}</span>
           </div>
 
-          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+          {error && <p className="text-bad text-sm mb-4">{error}</p>}
 
           {info.hasCard ? (
             <>
               <button
                 onClick={handleSavedCardCheckIn}
                 disabled={checkingIn}
-                className="w-full py-4 rounded-xl font-bold text-white text-sm flex items-center justify-center gap-2 hover:shadow-lg disabled:opacity-70"
-                style={{ background: '#1b4332' }}
+                className="w-full py-3.5 rounded-md font-medium text-white text-sm flex items-center justify-center gap-2 bg-pine hover:bg-pine-hover transition-colors disabled:opacity-70"
               >
                 {checkingIn ? <><Loader2 size={16} className="animate-spin" /> Charging your card…</> : `Check In & Pay $${(info.totalAmount / 100).toFixed(2)}`}
               </button>
-              <p className="text-center text-xs text-gray-400 mt-3">Charges the card you saved when you booked.</p>
+              <p className="text-center text-xs text-ink-muted mt-3">Charges the card you saved when you booked.</p>
             </>
           ) : (
             <Elements stripe={stripePromise}>
@@ -241,7 +237,7 @@ function CheckInPageInner() {
 
 export default function CheckInPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#f8faf9]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-paper" />}>
       <CheckInPageInner />
     </Suspense>
   );

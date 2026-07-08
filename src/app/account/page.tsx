@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Calendar, Clock, MapPin, Users, ChevronRight, LogOut, Trophy } from 'lucide-react';
-import { getBookingStatus, statusBadgeClass } from '@/lib/booking-status';
+import { getBookingStatus, statusToneText } from '@/lib/booking-status';
 
 interface Booking {
   id: string; players: number; appliedRate: string; totalAmount: number;
@@ -60,47 +60,47 @@ export default function AccountPage() {
   const cancelled = bookings.filter(b => b.status === 'cancelled');
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded animate-spin" />
+    <div className="min-h-screen bg-paper flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-pine border-t-transparent rounded animate-spin" />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-paper">
       {/* Header */}
-      <div className="bg-emerald-800 px-4 py-4 flex items-center justify-between">
-        <Link href="/" className="text-white font-black text-xl tracking-tight">
-          Green<span className="text-emerald-300">Reserve</span>
+      <div className="bg-pine px-4 py-4 flex items-center justify-between">
+        <Link href="/" className="text-[17px] font-serif font-medium tracking-tight text-white">
+          Green<span className="text-paper/70">Reserve</span>
         </Link>
-        <button onClick={logout} className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm">
+        <button onClick={logout} className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm transition-colors">
           <LogOut className="w-4 h-4" /> Sign out
         </button>
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Profile card */}
-        <div className="bg-white rounded border border-gray-200 p-6 mb-6 flex items-center gap-4">
-          <div className="w-14 h-14 bg-emerald-50 rounded flex items-center justify-center text-emerald-700 font-black text-xl">
+        <div className="bg-white rounded-lg border border-line p-6 mb-6 flex items-center gap-4">
+          <div className="w-14 h-14 bg-pine/10 rounded-lg flex items-center justify-center text-pine font-semibold text-xl">
             {profile?.firstName[0]}{profile?.lastName[0]}
           </div>
           <div>
-            <div className="font-black text-gray-900 text-lg">{profile?.firstName} {profile?.lastName}</div>
-            <div className="text-sm text-gray-500">{profile?.email}</div>
+            <div className="font-semibold text-ink text-lg">{profile?.firstName} {profile?.lastName}</div>
+            <div className="text-sm text-ink-soft">{profile?.email}</div>
           </div>
           <div className="ml-auto text-right">
-            <div className="text-2xl font-black text-emerald-700">{bookings.filter(b => b.status === 'confirmed').length}</div>
-            <div className="text-xs text-gray-500">total rounds</div>
+            <div className="text-2xl font-serif font-medium text-pine">{bookings.filter(b => b.status === 'confirmed').length}</div>
+            <div className="text-xs text-ink-muted">total rounds</div>
           </div>
         </div>
 
         {/* Upcoming */}
-        <h2 className="font-black text-gray-900 text-lg mb-3 flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-emerald-600" /> Upcoming Tee Times
+        <h2 className="font-semibold text-ink text-base mb-3 flex items-center gap-2">
+          <Trophy className="w-4 h-4 text-pine" /> Upcoming Tee Times
         </h2>
         {upcoming.length === 0 && (
-          <div className="bg-white rounded border border-gray-200 p-8 text-center mb-6">
-            <p className="text-gray-400 mb-3">No upcoming tee times.</p>
-            <Link href="/courses" className="text-emerald-700 font-semibold text-sm hover:underline">Find a course →</Link>
+          <div className="bg-white rounded-lg border border-line p-8 text-center mb-6">
+            <p className="text-ink-muted mb-3 text-sm">No upcoming tee times.</p>
+            <Link href="/" className="text-pine font-medium text-sm hover:underline">Browse courses →</Link>
           </div>
         )}
         <div className="space-y-3 mb-6">
@@ -112,7 +112,7 @@ export default function AccountPage() {
         {/* Past */}
         {past.length > 0 && (
           <>
-            <h2 className="font-black text-gray-900 text-lg mb-3">Past Rounds</h2>
+            <h2 className="font-semibold text-ink text-base mb-3">Past Rounds</h2>
             <div className="space-y-3 mb-6">
               {past.map(b => <BookingCard key={b.id} b={b} past />)}
             </div>
@@ -122,7 +122,7 @@ export default function AccountPage() {
         {/* Cancelled */}
         {cancelled.length > 0 && (
           <>
-            <h2 className="font-black text-gray-900 text-lg mb-3 text-gray-500">Cancelled</h2>
+            <h2 className="font-semibold text-ink-muted text-base mb-3">Cancelled</h2>
             <div className="space-y-3">
               {cancelled.map(b => <BookingCard key={b.id} b={b} past />)}
             </div>
@@ -143,50 +143,50 @@ function BookingCard({ b, onCancel, cancelling, cancelResult, past }: {
   const isCompleted = b.status === 'completed';
   const bStatus = getBookingStatus(b.status, b.paymentStatus);
   return (
-    <div className={`bg-white rounded-lg border p-5 ${isCancelled ? 'border-gray-100 opacity-60' : 'border-gray-200'}`}>
+    <div className={`bg-white rounded-lg border p-5 ${isCancelled ? 'border-line opacity-60' : 'border-line'}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="font-black text-gray-900">{b.course.name}</span>
-            {isCancelled && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded font-medium">Cancelled</span>}
-            {isCompleted && <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-medium">Checked In &amp; Paid</span>}
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <span className="font-semibold text-ink">{b.course.name}</span>
+            {isCancelled && <span className="text-xs text-bad font-medium">Cancelled</span>}
+            {isCompleted && <span className="text-xs text-ok font-medium">Checked In &amp; Paid</span>}
             {b.appliedRate !== 'standard' && !isCancelled && (
-              <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-medium capitalize">{b.appliedRate} rate</span>
+              <span className="text-xs text-pine font-medium capitalize">{b.appliedRate} rate</span>
             )}
           </div>
-          <div className="flex items-center gap-3 text-sm text-gray-500">
+          <div className="flex items-center gap-3 text-sm text-ink-soft flex-wrap">
             <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{b.teeTime.date}</span>
             <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{b.teeTime.time}</span>
             <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" />{b.players}</span>
           </div>
-          <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
+          <div className="flex items-center gap-1 text-xs text-ink-muted mt-1">
             <MapPin className="w-3 h-3" />{b.course.city}, {b.course.state} · {b.teeTime.holes} holes
           </div>
         </div>
         <div className="text-right ml-4">
-          <div className="font-black text-gray-900">${(b.totalAmount / 100).toFixed(2)}</div>
-          <div className={`text-xs font-semibold mt-0.5 inline-block px-1.5 py-0.5 rounded ${statusBadgeClass(bStatus.tone)}`}>{bStatus.label}</div>
+          <div className="font-semibold text-ink">${(b.totalAmount / 100).toFixed(2)}</div>
+          <div className={`text-xs font-medium mt-0.5 ${statusToneText(bStatus.tone)}`}>{bStatus.label}</div>
         </div>
       </div>
 
       {cancelResult?.[b.id] && (
-        <div className="mt-3 text-xs text-emerald-700 bg-green-50 rounded-lg px-3 py-2">{cancelResult[b.id]}</div>
+        <div className="mt-3 text-xs text-ok bg-ok/5 rounded-md px-3 py-2">{cancelResult[b.id]}</div>
       )}
 
       {!past && !isCancelled && !isCompleted && onCancel && (
-        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-100">
+        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-line">
           <Link href={`/courses/${b.course.slug}`}
-            className="flex items-center gap-1 text-xs text-emerald-700 font-medium hover:underline">
+            className="flex items-center gap-1 text-xs text-pine font-medium hover:underline">
             View course <ChevronRight className="w-3 h-3" />
           </Link>
           {b.checkInToken && (
             <Link href={`/checkin/${b.id}?token=${b.checkInToken}`}
-              className="text-xs bg-emerald-800 text-white font-semibold px-3 py-1.5 rounded hover:bg-[#2d6a4f]">
+              className="text-xs bg-pine text-white font-medium px-3 py-1.5 rounded-md hover:bg-pine-hover transition-colors">
               Check In &amp; Pay
             </Link>
           )}
           <button onClick={() => onCancel(b.id)} disabled={cancelling === b.id}
-            className="ml-auto text-xs text-red-500 hover:text-red-700 font-medium disabled:opacity-50">
+            className="ml-auto text-xs text-bad hover:opacity-70 font-medium disabled:opacity-50 transition-opacity">
             {cancelling === b.id ? 'Cancelling...' : 'Cancel booking'}
           </button>
         </div>

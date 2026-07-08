@@ -3,6 +3,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+const lCls = 'block text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-1.5';
+
 export default function GolferLoginPage() {
   const router = useRouter();
   const [form, setForm] = useState({ email: '', password: '' });
@@ -22,40 +25,40 @@ export default function GolferLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a1f0f] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-paper flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="text-white font-black text-3xl tracking-tight">
-            Green<span className="text-green-400">Reserve</span>
+          <Link href="/" className="text-[17px] font-serif font-medium tracking-tight text-ink">
+            Green<span className="text-pine">Reserve</span>
           </Link>
-          <p className="text-green-200/60 text-sm mt-2">Golfer Account</p>
+          <p className="text-xs text-ink-muted mt-1">Golfer Account</p>
         </div>
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h2 className="text-xl font-black text-gray-900 mb-6">Sign In</h2>
-          {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-4">{error}</div>}
+        <div className="bg-white rounded-lg border border-line p-8">
+          <h2 className="text-xl font-semibold text-ink mb-6">Sign In</h2>
+          {error && <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm mb-4">{error}</div>}
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Email</label>
+              <label className={lCls}>Email</label>
               <input type="email" value={form.email} onChange={e => set('email', e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && submit()}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 outline-none" />
+                className={iCls} />
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Password</label>
-                <Link href="/account/forgot-password" className="text-xs text-green-700 font-medium hover:underline">Forgot password?</Link>
+                <label className={lCls.replace(' mb-1.5', '')}>Password</label>
+                <Link href="/account/forgot-password" className="text-xs text-pine font-medium hover:underline">Forgot password?</Link>
               </div>
               <input type="password" value={form.password} onChange={e => set('password', e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && submit()}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 outline-none" />
+                className={iCls} />
             </div>
           </div>
           <button onClick={submit} disabled={loading}
-            className="mt-6 w-full bg-[#1b4332] text-white py-3 rounded-xl font-bold text-sm hover:bg-[#2d6a4f] disabled:opacity-50">
+            className="mt-6 w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-sm disabled:opacity-50 transition-colors">
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
-          <p className="mt-5 text-center text-xs text-gray-400">
-            No account? <Link href="/account/register" className="text-green-700 font-medium hover:underline">Create one →</Link>
+          <p className="mt-5 text-center text-xs text-ink-faint">
+            No account? <Link href="/account/register" className="text-pine font-medium hover:underline">Create one</Link>
           </p>
         </div>
       </div>

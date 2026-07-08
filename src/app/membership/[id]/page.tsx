@@ -55,18 +55,18 @@ function PayForm({ id, token, info, onPaid }: { id: string; token: string; info:
 
   return (
     <div>
-      <div className="border border-gray-200 rounded-md px-3 py-3 bg-white mb-3">
-        <CardElement options={{ style: { base: { fontSize: '15px', color: '#111827', '::placeholder': { color: '#9ca3af' } } } }} />
+      <div className="border border-line rounded-md px-3 py-3 bg-paper mb-3 focus-within:border-pine/40 focus-within:ring-2 focus-within:ring-pine/10 transition-all">
+        <CardElement options={{ style: { base: { fontSize: '15px', color: '#1C1C18', '::placeholder': { color: '#98968B' } } } }} />
       </div>
-      {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+      {error && <p className="text-sm text-bad mb-3">{error}</p>}
       <button
         onClick={pay}
         disabled={submitting || !stripe}
-        className="w-full py-3.5 rounded-md font-bold text-white text-sm bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 transition-colors"
+        className="w-full py-3.5 rounded-md font-medium text-white text-sm bg-pine hover:bg-pine-hover disabled:opacity-50 transition-colors"
       >
         {submitting ? 'Processing…' : `Pay $${info.total.toFixed(2)}`}
       </button>
-      <p className="text-center text-xs text-gray-400 mt-3">
+      <p className="text-center text-xs text-ink-muted mt-3">
         Secure payment — goes directly to {info.courseName}.
       </p>
     </div>
@@ -92,11 +92,11 @@ function MembershipPayInner({ params }: { params: Promise<{ id: string }> }) {
 
   if (invalid) {
     return (
-      <div className="min-h-screen bg-[#f8faf9] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="text-center">
-          <Flag size={40} className="mx-auto mb-4 text-emerald-600" />
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Link Not Valid</h1>
-          <p className="text-gray-400 text-sm">This payment link is invalid or expired. Contact your course for a new one.</p>
+          <Flag size={40} className="mx-auto mb-4 text-pine" />
+          <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Link Not Valid</h1>
+          <p className="text-ink-muted text-sm">This payment link is invalid or expired. Contact your course for a new one.</p>
         </div>
       </div>
     );
@@ -104,8 +104,8 @@ function MembershipPayInner({ params }: { params: Promise<{ id: string }> }) {
 
   if (!info) {
     return (
-      <div className="min-h-screen bg-[#f8faf9] flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+      <div className="min-h-screen bg-paper flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-ink-muted" />
       </div>
     );
   }
@@ -116,56 +116,56 @@ function MembershipPayInner({ params }: { params: Promise<{ id: string }> }) {
   if (paid || info.alreadyPaid) {
     const exp = paid ? paid.expiresAt : info.expiresAt;
     return (
-      <div className="min-h-screen bg-[#f8faf9] flex items-center justify-center px-4">
-        <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-8 max-w-md w-full text-center">
-          <CheckCircle2 size={44} className="mx-auto mb-4 text-emerald-600" />
-          <h1 className="text-2xl font-black text-gray-900 mb-2">
+      <div className="min-h-screen bg-paper flex items-center justify-center px-4">
+        <div className="bg-white rounded-lg border border-line p-8 max-w-md w-full text-center">
+          <CheckCircle2 size={44} className="mx-auto mb-4 text-ok" />
+          <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">
             {paid ? 'Payment received' : 'Already paid'}
           </h1>
-          <p className="text-gray-500 text-sm">
-            Your <span className="font-semibold">{info.tierName}</span> membership at{' '}
-            <span className="font-semibold">{info.courseName}</span> is active
-            {expiryLabel(exp) ? <> through <span className="font-semibold">{expiryLabel(exp)}</span></> : null}.
+          <p className="text-ink-soft text-sm">
+            Your <span className="font-medium text-ink">{info.tierName}</span> membership at{' '}
+            <span className="font-medium text-ink">{info.courseName}</span> is active
+            {expiryLabel(exp) ? <> through <span className="font-medium text-ink">{expiryLabel(exp)}</span></> : null}.
           </p>
-          {paid && <p className="text-gray-400 text-xs mt-3">A receipt was emailed to you.</p>}
+          {paid && <p className="text-ink-muted text-xs mt-3">A receipt was emailed to you.</p>}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f8faf9] py-10 px-4">
+    <div className="min-h-screen bg-paper py-10 px-4">
       <div className="max-w-md mx-auto">
-        <div className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-gray-100 flex items-center gap-4">
+        <div className="bg-white rounded-lg border border-line overflow-hidden">
+          <div className="p-6 border-b border-line flex items-center gap-4">
             {info.courseLogo && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={info.courseLogo} alt="" className="h-12 w-12 rounded-md bg-white object-contain border border-gray-100 p-1" />
+              <img src={info.courseLogo} alt="" className="h-12 w-12 rounded-md bg-white object-contain border border-line p-1" />
             )}
             <div>
-              <h1 className="font-black text-gray-900 text-lg leading-tight">{info.courseName}</h1>
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mt-0.5">Membership dues</p>
+              <h1 className="font-semibold text-ink text-lg leading-tight">{info.courseName}</h1>
+              <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mt-0.5">Membership dues</p>
             </div>
           </div>
 
           <div className="p-6">
-            <p className="text-sm text-gray-600 mb-5">
-              Hi {info.name} — complete your <span className="font-semibold">{info.tierName}</span> membership below.
+            <p className="text-sm text-ink-soft mb-5">
+              Hi {info.name} — complete your <span className="font-medium text-ink">{info.tierName}</span> membership below.
               Your membership runs {info.termMonths} months from payment.
             </p>
 
-            <div className="bg-[#f8faf9] rounded-md p-4 space-y-1.5 text-sm mb-5">
+            <div className="bg-paper rounded-md p-4 space-y-1.5 text-sm mb-5 border border-line">
               {info.initiation > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">One-time initiation fee</span>
-                  <span className="font-semibold text-gray-900">${info.initiation.toFixed(2)}</span>
+                  <span className="text-ink-soft">One-time initiation fee</span>
+                  <span className="font-medium text-ink">${info.initiation.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-gray-500">{info.tierName} dues</span>
-                <span className="font-semibold text-gray-900">${info.annual.toFixed(2)}</span>
+                <span className="text-ink-soft">{info.tierName} dues</span>
+                <span className="font-medium text-ink">${info.annual.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between border-t border-gray-200 pt-1.5 font-bold text-gray-900 text-base">
+              <div className="flex justify-between border-t border-line pt-1.5 font-semibold text-ink text-base">
                 <span>Total</span>
                 <span>${info.total.toFixed(2)}</span>
               </div>
@@ -176,7 +176,7 @@ function MembershipPayInner({ params }: { params: Promise<{ id: string }> }) {
                 <PayForm id={id} token={token} info={info} onPaid={(expiresAt, amount) => setPaid({ expiresAt, amount })} />
               </Elements>
             ) : (
-              <p className="text-sm text-gray-500 text-center py-4">
+              <p className="text-sm text-ink-muted text-center py-4">
                 Online payment isn&apos;t available yet — please pay at the pro shop.
               </p>
             )}
@@ -189,7 +189,7 @@ function MembershipPayInner({ params }: { params: Promise<{ id: string }> }) {
 
 export default function MembershipPayPage({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#f8faf9]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-paper" />}>
       <MembershipPayInner params={params} />
     </Suspense>
   );

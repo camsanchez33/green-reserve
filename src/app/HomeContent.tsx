@@ -17,19 +17,19 @@ function ScreenshotFrame({ src, caption }: { src: string; caption: string }) {
   const [failed, setFailed] = useState(false);
   return (
     <div className="rounded-lg overflow-hidden border border-white/10">
-      <div className="bg-gray-800 px-3 py-2 flex items-center gap-1.5">
-        <span className="w-2 h-2 rounded-full bg-gray-600" />
-        <span className="w-2 h-2 rounded-full bg-gray-600" />
-        <span className="w-2 h-2 rounded-full bg-gray-600" />
+      <div className="bg-black/30 px-3 py-2 flex items-center gap-1.5">
+        <span className="w-2 h-2 rounded-full bg-white/20" />
+        <span className="w-2 h-2 rounded-full bg-white/20" />
+        <span className="w-2 h-2 rounded-full bg-white/20" />
       </div>
       {failed ? (
-        <div className="aspect-video bg-gray-900 flex items-center justify-center">
+        <div className="aspect-video bg-black/40 flex items-center justify-center">
           <p className="text-white/20 text-xs">Screenshot coming soon</p>
         </div>
       ) : (
         <img src={src} alt={caption} className="w-full block" onError={() => setFailed(true)} />
       )}
-      <div className="bg-gray-800 px-3 py-2 text-center">
+      <div className="bg-black/30 px-3 py-2 text-center">
         <span className="text-white/40 text-xs">{caption}</span>
       </div>
     </div>
@@ -54,13 +54,13 @@ export default function HomeContent() {
         <div className="relative z-10 max-w-5xl mx-auto px-6 pt-20 pb-20 text-center">
           <motion.div {...fadeUp}>
             <div className="inline-flex items-center gap-2 mb-8 border border-white/20 px-3.5 py-1 text-xs text-white/60 font-medium tracking-wide">
-              <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+              <span className="w-1.5 h-1.5 bg-paper/60 rounded-full" />
               Free for courses · No monthly fees
             </div>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.05] tracking-tight mb-6">
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.05] tracking-tight mb-6">
               The tee sheet your<br />
-              <span className="text-emerald-400">course deserves.</span>
+              <span className="text-paper/80">course deserves.</span>
             </h1>
 
             <p className="text-lg text-white/60 max-w-xl mx-auto leading-relaxed mb-10">
@@ -69,12 +69,12 @@ export default function HomeContent() {
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center mb-12">
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-                <Link href="/for-courses" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 font-semibold text-sm text-white bg-emerald-600 hover:bg-emerald-500 rounded-md transition-all">
+                <Link href="/for-courses" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 font-medium text-sm text-white bg-pine hover:bg-pine-hover rounded-md transition-all">
                   Get Listed Free <ArrowRight size={15} />
                 </Link>
               </motion.div>
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-                <Link href="/dashboard/login" className="inline-flex items-center justify-center px-7 py-3.5 font-semibold text-sm text-white/60 border border-white/20 hover:border-white/40 hover:text-white rounded-md transition-all">
+                <Link href="/dashboard/login" className="inline-flex items-center justify-center px-7 py-3.5 font-medium text-sm text-white/60 border border-white/20 hover:border-white/40 hover:text-white rounded-md transition-all">
                   Operator Login
                 </Link>
               </motion.div>
@@ -92,16 +92,16 @@ export default function HomeContent() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section id="how-it-works" className="bg-white border-t border-gray-100 py-32">
+      <section id="how-it-works" className="bg-white border-t border-line py-32">
         <div className="max-w-5xl mx-auto px-6">
           <motion.div {...fadeUp} className="mb-16">
-            <p className="text-emerald-700 text-xs font-bold uppercase tracking-widest mb-3">How It Works</p>
-            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight mb-4">We set it up. You run it.</h2>
-            <p className="text-gray-500 max-w-lg">We handle onboarding end-to-end. Once you&apos;re live, your dashboard is yours.</p>
+            <p className="text-[11px] uppercase tracking-[0.06em] text-pine font-medium mb-3">How It Works</p>
+            <h2 className="text-3xl sm:text-4xl font-serif font-medium text-ink tracking-tight mb-4">We set it up. You run it.</h2>
+            <p className="text-ink-soft max-w-lg">We handle onboarding end-to-end. Once you&apos;re live, your dashboard is yours.</p>
           </motion.div>
 
           <div className="grid sm:grid-cols-4 gap-8 relative">
-            <div className="hidden sm:block absolute top-3 left-[14%] right-[14%] h-px bg-gray-100" />
+            <div className="hidden sm:block absolute top-3 left-[14%] right-[14%] h-px bg-line" />
             {[
               { n: '01', title: 'Submit interest', body: 'Fill out a short form. No commitment, no credit card.' },
               { n: '02', title: 'We reach out', body: 'Our team contacts you within 1 business day to get everything configured.' },
@@ -113,11 +113,11 @@ export default function HomeContent() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: 'easeOut', delay: i * 0.08 }}
                 viewport={{ once: true }}>
-                <div className="w-7 h-7 border border-gray-200 flex items-center justify-center mb-5">
-                  <span className="text-gray-400 text-xs font-bold">{s.n}</span>
+                <div className="w-7 h-7 border border-line flex items-center justify-center mb-5">
+                  <span className="text-ink-muted text-xs font-medium">{s.n}</span>
                 </div>
-                <h3 className="text-gray-900 font-bold text-sm mb-2">{s.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{s.body}</p>
+                <h3 className="text-ink font-semibold text-sm mb-2">{s.title}</h3>
+                <p className="text-ink-soft text-sm leading-relaxed">{s.body}</p>
               </motion.div>
             ))}
           </div>
@@ -125,11 +125,11 @@ export default function HomeContent() {
       </section>
 
       {/* ── DASHBOARD SCREENSHOTS ── */}
-      <section className="bg-gray-900 border-t border-white/5 py-32 overflow-hidden">
+      <section className="bg-pine border-t border-white/10 py-32 overflow-hidden">
         <div className="max-w-6xl mx-auto px-6">
           <motion.div {...fadeUp} className="mb-12 text-center">
-            <p className="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-3">The dashboard</p>
-            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mb-4">
+            <p className="text-[11px] uppercase tracking-[0.06em] text-paper/60 font-medium mb-3">The dashboard</p>
+            <h2 className="text-3xl sm:text-4xl font-serif font-medium text-white tracking-tight mb-4">
               Everything you need, nothing you don&apos;t.
             </h2>
             <p className="text-white/40 text-sm max-w-md mx-auto">
@@ -137,7 +137,6 @@ export default function HomeContent() {
             </p>
           </motion.div>
 
-          {/* Video slot — flip SHOW_VIDEO to true and uncomment the iframe to enable */}
           {SHOW_VIDEO ? (
             <motion.div {...fadeUp} className="mb-12 max-w-3xl mx-auto">
               {/* <iframe
@@ -157,7 +156,6 @@ export default function HomeContent() {
             </motion.div>
           )}
 
-          {/* Screenshot frames */}
           <div className="grid sm:grid-cols-3 gap-5">
             {[
               { src: '/screenshots/dashboard-1.png', caption: 'Tee sheet' },
@@ -177,11 +175,11 @@ export default function HomeContent() {
       </section>
 
       {/* ── VALUE PROPS ── */}
-      <section className="bg-gray-50 border-t border-gray-100 py-32">
+      <section className="bg-paper border-t border-line py-32">
         <div className="max-w-6xl mx-auto px-6">
           <motion.div {...fadeUp} className="mb-16">
-            <p className="text-emerald-700 text-xs font-bold uppercase tracking-widest mb-3">What you get</p>
-            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Everything you need to take bookings online</h2>
+            <p className="text-[11px] uppercase tracking-[0.06em] text-pine font-medium mb-3">What you get</p>
+            <h2 className="text-3xl sm:text-4xl font-serif font-medium text-ink tracking-tight">Everything you need to take bookings online</h2>
           </motion.div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -194,15 +192,15 @@ export default function HomeContent() {
               { icon: Settings, title: 'You stay in control', body: 'Block dates, adjust pricing, manage staff access, and update your schedule from your dashboard.' },
             ].map((v, i) => (
               <motion.div key={v.title}
-                className="bg-white border border-gray-200 p-7 rounded-lg"
+                className="bg-white border border-line p-7 rounded-lg"
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: 'easeOut', delay: i * 0.06 }}
                 viewport={{ once: true }}
                 whileHover={{ y: -4 }}>
-                <v.icon className="w-5 h-5 text-emerald-600 mb-5" />
-                <h3 className="text-gray-900 font-bold text-sm mb-2">{v.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{v.body}</p>
+                <v.icon className="w-5 h-5 text-pine mb-5" />
+                <h3 className="text-ink font-semibold text-sm mb-2">{v.title}</h3>
+                <p className="text-ink-soft text-sm leading-relaxed">{v.body}</p>
               </motion.div>
             ))}
           </div>
@@ -210,18 +208,18 @@ export default function HomeContent() {
       </section>
 
       {/* ── COMPARISON ── */}
-      <section className="bg-white border-t border-gray-100 py-32">
+      <section className="bg-white border-t border-line py-32">
         <div className="max-w-4xl mx-auto px-6">
           <motion.div {...fadeUp} className="mb-12 text-center">
-            <p className="text-emerald-700 text-xs font-bold uppercase tracking-widest mb-3">Why GreenReserve</p>
-            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
+            <p className="text-[11px] uppercase tracking-[0.06em] text-pine font-medium mb-3">Why GreenReserve</p>
+            <h2 className="text-3xl sm:text-4xl font-serif font-medium text-ink tracking-tight">
               Built different from the start
             </h2>
           </motion.div>
 
           <motion.div {...fadeUp} className="grid sm:grid-cols-2 gap-6">
-            <div className="border border-gray-200 rounded-lg p-8">
-              <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Typical booking platforms</div>
+            <div className="border border-line rounded-lg p-8">
+              <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-6">Typical booking platforms</div>
               <div className="space-y-4 text-sm">
                 {[
                   'Commission on every green fee',
@@ -231,17 +229,17 @@ export default function HomeContent() {
                   'Your golfer data lives on their servers',
                 ].map(item => (
                   <div key={item} className="flex items-start gap-3">
-                    <span className="w-4 h-4 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
-                      <X size={9} className="text-red-500" />
+                    <span className="w-4 h-4 rounded-full bg-bad/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <X size={9} className="text-bad" />
                     </span>
-                    <span className="text-gray-500">{item}</span>
+                    <span className="text-ink-soft">{item}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="border border-emerald-200 bg-emerald-50/40 rounded-lg p-8">
-              <div className="text-xs font-bold text-emerald-700 uppercase tracking-widest mb-6">GreenReserve</div>
+            <div className="border border-pine/20 bg-pine/5 rounded-lg p-8">
+              <div className="text-[11px] uppercase tracking-[0.06em] text-pine font-medium mb-6">GreenReserve</div>
               <div className="space-y-4 text-sm">
                 {[
                   '$0 commission — ever',
@@ -251,10 +249,10 @@ export default function HomeContent() {
                   'Your golfer data stays with you',
                 ].map(item => (
                   <div key={item} className="flex items-start gap-3">
-                    <span className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
-                      <Check size={9} className="text-emerald-600" />
+                    <span className="w-4 h-4 rounded-full bg-pine/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check size={9} className="text-pine" />
                     </span>
-                    <span className="text-gray-700 font-medium">{item}</span>
+                    <span className="text-ink font-medium">{item}</span>
                   </div>
                 ))}
               </div>
@@ -264,18 +262,18 @@ export default function HomeContent() {
       </section>
 
       {/* ── PRICING ── */}
-      <section id="pricing" className="bg-black border-t border-white/10 py-32">
+      <section id="pricing" className="bg-pine border-t border-white/10 py-32">
         <div className="max-w-3xl mx-auto px-6">
           <motion.div {...fadeUp} className="mb-16">
-            <p className="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-3">Pricing</p>
-            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mb-2">Simple and honest</h2>
+            <p className="text-[11px] uppercase tracking-[0.06em] text-paper/60 font-medium mb-3">Pricing</p>
+            <h2 className="text-3xl sm:text-4xl font-serif font-medium text-white tracking-tight mb-2">Simple and honest</h2>
             <p className="text-white/40 text-sm">No setup fees. No monthly fees. No contracts.</p>
           </motion.div>
 
           <motion.div {...fadeUp} className="grid sm:grid-cols-2 gap-6">
             <div className="border border-white/15 p-8 rounded-lg">
-              <div className="text-4xl font-black text-white mb-1">$0</div>
-              <div className="text-emerald-400 font-semibold text-sm mb-6">For your course · Forever</div>
+              <div className="text-4xl font-serif font-medium text-white mb-1">$0</div>
+              <div className="text-paper/60 font-medium text-sm mb-6">For your course · Forever</div>
               <div className="space-y-3 text-sm text-white/50">
                 {[
                   'Your own booking page',
@@ -286,16 +284,16 @@ export default function HomeContent() {
                   'Automated email confirmations',
                 ].map(f => (
                   <div key={f} className="flex items-center gap-2.5">
-                    <Check size={13} className="text-emerald-400 shrink-0" />
+                    <Check size={13} className="text-paper/60 shrink-0" />
                     {f}
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="border border-white/8 bg-white/5 p-8 rounded-lg">
-              <div className="text-4xl font-black text-white mb-1">$1.50</div>
-              <div className="text-white/30 font-semibold text-sm mb-6">Per player · Paid by the golfer</div>
+            <div className="border border-white/10 bg-white/5 p-8 rounded-lg">
+              <div className="text-4xl font-serif font-medium text-white mb-1">$1.50</div>
+              <div className="text-white/30 font-medium text-sm mb-6">Per player · Paid by the golfer</div>
               <p className="text-white/40 text-sm leading-relaxed mb-4">
                 Golfers pay a small service fee at checkout. You never see this charge — it goes to GreenReserve.
               </p>
@@ -308,12 +306,12 @@ export default function HomeContent() {
       </section>
 
       {/* ── FAQ ── */}
-      <section id="faq" className="bg-white border-t border-gray-100 py-32">
+      <section id="faq" className="bg-white border-t border-line py-32">
         <div className="max-w-3xl mx-auto px-6">
           <motion.div {...fadeUp} className="mb-14">
-            <h2 className="text-3xl font-black text-gray-900 tracking-tight">Common questions</h2>
+            <h2 className="text-3xl font-serif font-medium text-ink tracking-tight">Common questions</h2>
           </motion.div>
-          <motion.div {...fadeUp} className="divide-y divide-gray-100">
+          <motion.div {...fadeUp} className="divide-y divide-line">
             {[
               { q: 'How long does onboarding take?', a: 'Typically 1–2 business days from your initial inquiry. Our team handles setup and walks you through everything.' },
               { q: 'Do we need any technical knowledge?', a: 'None. We build your booking page. You add a link on your website and log in to manage your tee sheet.' },
@@ -323,8 +321,8 @@ export default function HomeContent() {
               { q: 'Can we control who sees our tee times?', a: 'Your booking page is unlisted until you share the link. You decide when and where to promote it.' },
             ].map(({ q, a }) => (
               <div key={q} className="py-6">
-                <div className="font-semibold text-gray-900 text-sm mb-2">{q}</div>
-                <div className="text-gray-500 text-sm leading-relaxed">{a}</div>
+                <div className="font-medium text-ink text-sm mb-2">{q}</div>
+                <div className="text-ink-soft text-sm leading-relaxed">{a}</div>
               </div>
             ))}
           </motion.div>
@@ -332,16 +330,16 @@ export default function HomeContent() {
       </section>
 
       {/* ── CTA ── */}
-      <motion.section {...fadeUp} className="bg-gray-50 border-t border-gray-100 py-32 text-center">
+      <motion.section {...fadeUp} className="bg-paper border-t border-line py-32 text-center">
         <div className="max-w-2xl mx-auto px-6">
-          <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight mb-4">Ready to go live?</h2>
-          <p className="text-gray-500 mb-8 text-sm">Submit your interest and we&apos;ll be in touch within 1 business day.</p>
+          <h2 className="text-3xl sm:text-4xl font-serif font-medium text-ink tracking-tight mb-4">Ready to go live?</h2>
+          <p className="text-ink-soft mb-8 text-sm">Submit your interest and we&apos;ll be in touch within 1 business day.</p>
           <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }} className="inline-block">
-            <Link href="/for-courses" className="inline-flex items-center gap-2 px-8 py-3.5 font-semibold text-sm text-white bg-emerald-600 hover:bg-emerald-500 rounded-md transition-all">
+            <Link href="/for-courses" className="inline-flex items-center gap-2 px-8 py-3.5 font-medium text-sm text-white bg-pine hover:bg-pine-hover rounded-md transition-all">
               List Your Course for Free <ArrowRight size={15} />
             </Link>
           </motion.div>
-          <p className="text-gray-400 text-xs mt-5">Questions? <a href="mailto:hello@greenreserve.app" className="text-emerald-700 hover:underline">hello@greenreserve.app</a></p>
+          <p className="text-ink-muted text-xs mt-5">Questions? <a href="mailto:hello@greenreserve.app" className="text-pine hover:underline">hello@greenreserve.app</a></p>
         </div>
       </motion.section>
     </>

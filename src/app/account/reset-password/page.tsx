@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
 
+const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+const lCls = 'block text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-1.5';
+
 function ResetPasswordContent() {
   const router = useRouter();
   const params = useSearchParams();
@@ -55,22 +58,22 @@ function ResetPasswordContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-paper flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-8">
+        <div className="bg-white rounded-lg border border-line shadow-sm p-8">
           {checking && (
             <div className="text-center py-6">
-              <Loader2 className="w-10 h-10 text-emerald-600 animate-spin mx-auto mb-4" />
-              <p className="text-gray-500 text-sm">Checking your link...</p>
+              <Loader2 className="w-10 h-10 text-pine animate-spin mx-auto mb-4" />
+              <p className="text-ink-soft text-sm">Checking your link...</p>
             </div>
           )}
 
           {!checking && !validToken && (
             <div className="text-center py-4">
-              <XCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-              <h2 className="text-lg font-black tracking-tight text-gray-900 mb-2">Link invalid or expired</h2>
-              <p className="text-gray-500 text-sm mb-6">Reset links expire after 1 hour. Request a new one below.</p>
-              <Link href="/account/forgot-password" className="inline-block w-full bg-emerald-600 text-white py-3 rounded-md font-bold text-sm hover:bg-emerald-500 transition-colors">
+              <XCircle className="w-12 h-12 text-bad mx-auto mb-4" />
+              <h2 className="text-lg font-semibold tracking-tight text-ink mb-2">Link invalid or expired</h2>
+              <p className="text-ink-soft text-sm mb-6">Reset links expire after 1 hour. Request a new one below.</p>
+              <Link href="/account/forgot-password" className="inline-block w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-sm transition-colors text-center">
                 Request New Link
               </Link>
             </div>
@@ -78,29 +81,29 @@ function ResetPasswordContent() {
 
           {!checking && validToken && !done && (
             <>
-              <h2 className="text-xl font-black tracking-tight text-gray-900 mb-1">Set a new password</h2>
-              <p className="text-gray-500 text-sm mb-6">For <span className="font-semibold text-gray-700">{email}</span></p>
+              <h2 className="text-xl font-semibold tracking-tight text-ink mb-1">Set a new password</h2>
+              <p className="text-ink-soft text-sm mb-6">For <span className="font-semibold text-ink">{email}</span></p>
 
-              {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-md px-4 py-3 text-sm mb-4">{error}</div>}
+              {error && <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm mb-4">{error}</div>}
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5">New Password</label>
+                  <label className={lCls}>New Password</label>
                   <input type="password" value={password} onChange={e => setPassword(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && submit()}
-                    className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none" />
-                  <p className="text-xs text-gray-400 mt-1.5">{PASSWORD_REQUIREMENTS_HINT}</p>
+                    className={iCls} />
+                  <p className="text-xs text-ink-faint mt-1.5">{PASSWORD_REQUIREMENTS_HINT}</p>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5">Confirm Password</label>
+                  <label className={lCls}>Confirm Password</label>
                   <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && submit()}
-                    className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none" />
+                    className={iCls} />
                 </div>
               </div>
 
               <button onClick={submit} disabled={loading}
-                className="mt-6 w-full bg-emerald-600 text-white py-3 rounded-md font-bold text-sm hover:bg-emerald-500 disabled:opacity-50 transition-colors">
+                className="mt-6 w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-sm disabled:opacity-50 transition-colors">
                 {loading ? 'Saving...' : 'Set New Password'}
               </button>
             </>
@@ -108,9 +111,9 @@ function ResetPasswordContent() {
 
           {done && (
             <div className="text-center py-4">
-              <CheckCircle className="w-12 h-12 text-emerald-600 mx-auto mb-4" />
-              <h2 className="text-lg font-black tracking-tight text-gray-900 mb-2">Password updated</h2>
-              <p className="text-gray-500 text-sm">Redirecting you to login...</p>
+              <CheckCircle className="w-12 h-12 text-ok mx-auto mb-4" />
+              <h2 className="text-lg font-semibold tracking-tight text-ink mb-2">Password updated</h2>
+              <p className="text-ink-soft text-sm">Redirecting you to login...</p>
             </div>
           )}
         </div>
