@@ -3,6 +3,11 @@ import { stripe } from '@/lib/stripe';
 import { getOperatorSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+const CAPABILITIES = {
+  card_payments: { requested: true },
+  transfers: { requested: true },
+} as const;
+
 export async function GET(req: NextRequest) {
   try {
     const from = req.nextUrl.searchParams.get('from') === 'onboarding' ? 'onboarding' : 'settings';
@@ -13,21 +18,34 @@ export async function GET(req: NextRequest) {
     const course = await prisma.course.findFirst({ where: { operator: { id: session.operatorId } } });
     if (!course) return NextResponse.json({ error: 'No course' }, { status: 404 });
 
-    // If already connected, return status
-    if (course.stripeAccountActive) {
-      return NextResponse.json({ connected: true, accountId: course.stripeAccountId });
-    }
-
     if (!process.env.NEXT_PUBLIC_URL) {
       return NextResponse.json({ error: 'Server misconfigured: NEXT_PUBLIC_URL is not set.' }, { status: 500 });
     }
 
-    // Create a Stripe Connect account link
     let accountId = course.stripeAccountId;
+
     if (!accountId) {
-      const account = await stripe.accounts.create({ type: 'express' });
+      const account = await stripe.accounts.create({ type: 'express', capabilities: CAPABILITIES });
       accountId = account.id;
       await prisma.course.update({ where: { id: course.id }, data: { stripeAccountId: accountId } });
+    } else {
+      // Retrieve to check real capability state — also serves as repair path for
+      // accounts created before capabilities were requested.
+      const account = await stripe.accounts.retrieve(accountId);
+      const capActive = account.capabilities?.card_payments === 'active';
+      const isFullyActive = capActive && account.charges_enabled && account.payouts_enabled;
+
+      if (isFullyActive) {
+        if (!course.stripeAccountActive) {
+          await prisma.course.update({ where: { id: course.id }, data: { stripeAccountActive: true } });
+        }
+        return NextResponse.json({ connected: true, accountId });
+      }
+
+      // Request capabilities if not yet active (no-op if already requested/pending)
+      if (!capActive) {
+        await stripe.accounts.update(accountId, { capabilities: CAPABILITIES });
+      }
     }
 
     const refreshPage = from === 'onboarding' ? '/dashboard/onboarding' : '/dashboard/settings';

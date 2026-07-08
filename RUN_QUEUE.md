@@ -46,10 +46,12 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 - [ ] P0 BUG: Stripe Connect accounts can't take card payments — (1) src/app/api/operator/stripe/connect/route.ts creates Express accounts with NO capabilities — add `capabilities: { card_payments: { requested: true }, transfers: { requested: true } }` to stripe.accounts.create; (2) callback route: stripeAccountActive must ALSO require account.capabilities?.card_payments === 'active', not just charges_enabled/payouts_enabled; (3) repair path for EXISTING accounts: when connect is hit for a course whose account lacks the capability, call stripe.accounts.update to request it and send the operator back through the onboarding link; (4) handle `account.updated` in the Stripe webhook to keep stripeAccountActive in sync both directions; (5) check-in preflight: if card_payments isn't active, show "Stripe setup incomplete — finish onboarding in Settings" instead of the raw Stripe error
 - [x] ONBOARDING_SPEC Phase O1 — inquiry form → short lead capture + applicant confirmation email + what-happens-next success screen (small run) — 5c31d3a
+- [ ] ONBOARDING_SPEC Phase O1b — course type UI → Public/Private radio cards + conditional "allow non-member tee times?" question, internal mapping to public/semi_private/private; Municipal/Resort move to details sheet (small run)
 - [ ] ONBOARDING_SPEC Phase O2 — type-aware details sheet: structured sections per course type, server-side draft save, mobile-first (big run)
 - [ ] ONBOARDING_SPEC Phase O3 — build handoff: wizard fully pre-filled from structured sheet + ready-to-build checklist (medium run)
 - [ ] ONBOARDING_SPEC Phase O4 — go-live welcome email + walkthrough video embed + welcomeEmailSentAt guard (schema change, run attended)
 - [ ] ONBOARDING_SPEC Phase O5 — homepage redesign pass: editorial layout, real screenshots replace icon cards, hero de-templated, funnel-matched copy (medium run)
+- [ ] ONBOARDING_SPEC Phase O6 — private course page mode: members-only courses get info + member sign-in page (no public booking), server-side booking rejection for private type (medium run)
 
 ## Ideas / not yet specced
 

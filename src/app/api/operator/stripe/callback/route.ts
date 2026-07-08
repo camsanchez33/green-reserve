@@ -8,7 +8,10 @@ export async function GET(req: NextRequest) {
   if (!accountId) return NextResponse.redirect(`${process.env.NEXT_PUBLIC_URL}${page}?stripe=error`);
 
   const account = await stripe.accounts.retrieve(accountId);
-  const isActive = account.charges_enabled && account.payouts_enabled;
+  // card_payments capability must be active — charges_enabled/payouts_enabled alone
+  // is not sufficient; without card_payments the account cannot accept card charges.
+  const isActive = account.charges_enabled && account.payouts_enabled &&
+    account.capabilities?.card_payments === 'active';
 
   await prisma.course.updateMany({
     where: { stripeAccountId: accountId },

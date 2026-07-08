@@ -35,7 +35,7 @@ export async function performCheckIn(bookingId: string, opts?: { externalPayment
   if (booking.status === 'completed') return { error: 'Already checked in', status: 409 } as const;
 
   if (!booking.course.stripeAccountActive || !booking.course.stripeAccountId) {
-    return { error: "This course isn't connected to Stripe yet -- collect payment in person.", status: 422 } as const;
+    return { error: 'Stripe setup incomplete — the operator needs to finish Stripe onboarding in dashboard Settings before card payments can be accepted.', status: 422 } as const;
   }
 
   // Determine which customer + PM to charge.
