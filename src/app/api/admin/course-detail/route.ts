@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { sendCourseLiveOrientationEmail } from '@/lib/email';
 
 export async function GET(req: NextRequest) {
   if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -43,7 +44,7 @@ export async function PATCH(req: NextRequest) {
     data.liveStatus = active ? 'live' : 'draft';
   }
   if (featured !== undefined) data.featured = featured;
-  const updated = await prisma.course.update({ where: { id: courseId }, data });
+  const updated = await prisma.course.update({ where: { id: courseId }, data, include: { operator: { select: { name: true, email: true } } } });
 
   // Auto-advance linked inquiry from building → live when course is activated
   if (active === true) {
@@ -61,6 +62,20 @@ export async function PATCH(req: NextRequest) {
           trigger: 'system', actorName: 'Course activated',
         },
       });
+    }
+    // Send welcome email once only — guard via welcomeEmailSentAt
+    if (!updated.welcomeEmailSentAt && updated.operator) {
+      try {
+        await sendCourseLiveOrientationEmail({
+          operatorName: updated.operator.name,
+          operatorEmail: updated.operator.email,
+          courseName: updated.name,
+          courseSlug: updated.slug,
+        });
+        await prisma.course.update({ where: { id: courseId }, data: { welcomeEmailSentAt: new Date() } });
+      } catch (e) {
+        console.error('Go-live orientation email (course-detail activate) failed:', e);
+      }
     }
   }
 
