@@ -4,6 +4,7 @@ import type { Course } from '@/lib/courses-data';
 
 const TYPE_BADGES: Record<string, { label: string; className: string }> = {
   public:         { label: 'Public',         className: 'bg-emerald-100 text-emerald-800' },
+  private:        { label: 'Private',        className: 'bg-gray-100 text-gray-700' },
   'semi-private': { label: 'Semi-Private',   className: 'bg-amber-100 text-amber-800' },
   member:         { label: 'Member / Guest', className: 'bg-violet-100 text-violet-800' },
   resident:       { label: 'Resident',       className: 'bg-blue-100 text-blue-800' },
@@ -88,10 +89,10 @@ export default function CourseCard({ course }: { course: Course }) {
 
           {/* Price + CTA */}
           <div className="flex items-center justify-between pt-3 border-t border-gray-50">
-            {course.type === 'member' ? (
+            {(course.type === 'member' || course.type === 'private') ? (
               <div>
                 <span className="text-xs text-gray-400">Access</span>
-                <div className="font-bold text-gray-700 text-sm">By invitation</div>
+                <div className="font-bold text-gray-700 text-sm">Members only</div>
               </div>
             ) : course.base_green_fee > 0 ? (
               <div>
@@ -109,7 +110,7 @@ export default function CourseCard({ course }: { course: Course }) {
             )}
             <span className="text-xs font-bold text-white px-4 py-2 rounded-xl transition-all group-hover:shadow-md group-hover:-translate-y-0.5"
               style={{ background: '#1b4332' }}>
-              {course.type === 'member' ? 'View →' : 'Tee Times →'}
+              {(course.type === 'member' || course.type === 'private') ? 'Members →' : 'Tee Times →'}
             </span>
           </div>
         </div>

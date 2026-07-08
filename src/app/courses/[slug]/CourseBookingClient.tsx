@@ -7,6 +7,7 @@ import type { Course, TeeTime } from '@/lib/courses-data';
 
 const TYPE_LABELS: Record<string, string> = {
   public:         'Public',
+  private:        'Private Club',
   'semi-private': 'Semi-Private',
   member:         'Member / Guest',
   resident:       'Resident',
@@ -124,7 +125,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
   }, [slug]);
 
   useEffect(() => {
-    if (!course || course.type === 'member') return;
+    if (!course || course.type === 'member' || course.type === 'private') return;
     setLoadingTimes(true);
     setSelectedTime(null);
     setMaxPrice(null);
@@ -196,6 +197,82 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
           </div>
         </div>
       </div>
+    );
+  }
+
+  // Private course: show info + member sign-in only, no public booking
+  if (course.type === 'private') {
+    const heroStyle = course.hero_image_url
+      ? { backgroundImage: `url(${course.hero_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+      : { background: course.image_gradient };
+    const amenities = course.amenities ? course.amenities.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+    return (
+      <>
+        <div className="relative h-44 sm:h-56 flex items-end overflow-hidden" style={heroStyle}>
+          {course.hero_image_url
+            ? <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/5" />
+            : <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'repeating-linear-gradient(45deg,rgba(255,255,255,.3) 0,rgba(255,255,255,.3) 1px,transparent 0,transparent 50%)', backgroundSize: '14px 14px' }} />}
+          <div className="absolute bottom-2.5 right-4 z-10 text-[10px] text-white/40">Powered by GreenReserve</div>
+          <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 w-full pb-6">
+            {course.logo_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={course.logo_url} alt={`${course.name} logo`} className="h-12 w-12 rounded-md bg-white object-contain p-1 shadow-lg mb-3" />
+            )}
+            <span className="text-xs font-medium text-white/70 mb-1 inline-block">Private Club</span>
+            <h1 className="text-2xl sm:text-3xl font-serif font-medium text-white leading-tight">{course.name}</h1>
+            <p className="text-white/60 flex items-center gap-1.5 mt-1 text-sm">
+              <MapPin size={14} />
+              {course.city}, {course.state}
+            </p>
+          </div>
+        </div>
+
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
+          <div className="grid sm:grid-cols-[1fr_280px] gap-8 items-start">
+            <div>
+              {course.description && (
+                <div className="mb-8">
+                  <p className="text-sm text-ink-soft leading-relaxed">{course.description}</p>
+                </div>
+              )}
+              {amenities.length > 0 && (
+                <div className="mb-8">
+                  <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-3">Amenities</p>
+                  <div className="flex flex-wrap gap-2">
+                    {amenities.map((a: string) => (
+                      <span key={a} className="text-xs text-ink-soft border border-line rounded-md px-2.5 py-1">{a}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="flex flex-wrap gap-4 text-sm text-ink-muted">
+                {course.phone && <span><span className="text-ink-faint">Phone</span> · {course.phone}</span>}
+                {course.website && (
+                  <a href={course.website} target="_blank" rel="noopener noreferrer" className="text-pine hover:underline">
+                    Website
+                  </a>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white border border-line rounded-lg p-6 sticky top-20">
+              <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-1">Member access</p>
+              <p className="text-ink text-sm leading-relaxed mb-5">
+                This is a private club. Tee time booking is reserved for members. Sign in to your member account to view availability and book.
+              </p>
+              <Link
+                href={`/courses/${slug}/member`}
+                className="block w-full text-center py-3 px-5 bg-pine hover:bg-pine-hover text-white text-sm font-medium rounded-md transition-all"
+              >
+                Member sign in
+              </Link>
+              <p className="text-center text-xs text-ink-faint mt-4">
+                Not a member? Contact the club directly.
+              </p>
+            </div>
+          </div>
+        </div>
+      </>
     );
   }
 

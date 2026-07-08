@@ -80,6 +80,11 @@ export async function POST(req: NextRequest) {
   });
   if (!teeTimeFull) return NextResponse.json({ error: 'Tee time not found.' }, { status: 404 });
 
+  // Private clubs: public online booking is blocked server-side
+  if (teeTimeFull.course.type === 'private') {
+    return NextResponse.json({ error: 'Online booking is not available for this private club.' }, { status: 403 });
+  }
+
   // Reject bookings for tee times that have already started
   const nowUtc = new Date();
   const todayUtc = nowUtc.toISOString().split('T')[0];
