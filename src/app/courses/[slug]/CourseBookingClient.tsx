@@ -99,6 +99,13 @@ type CourseWithBrand = Course & {
   photos?: { id: string; url: string; sortOrder: number }[];
 };
 
+type ActiveTeeTime = TeeTime & { member_green_fee?: number; has_member_rate?: boolean };
+type ActiveMemberSession = {
+  email: string;
+  name: string;
+  tier: { name: string; color?: string } | null;
+};
+
 export default function CourseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const router = useRouter();
@@ -144,6 +151,9 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
   const [alertSubmitting, setAlertSubmitting] = useState(false);
   const [alertSent, setAlertSent] = useState(false);
 
+  const [memberSession, setMemberSession] = useState<ActiveMemberSession | null>(null);
+  const [memberTeeTimes, setMemberTeeTimes] = useState<ActiveTeeTime[]>([]);
+
   useEffect(() => {
     fetch(`/api/courses/${slug}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
@@ -163,6 +173,26 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
       .catch(() => setTeeTimes([]))
       .finally(() => setLoadingTimes(false));
   }, [slug, selectedDate, course]);
+
+  // Fetch member session — silent 401 is normal (just means not signed in)
+  useEffect(() => {
+    fetch(`/api/member/${slug}/session`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => setMemberSession(data))
+      .catch(() => {});
+  }, [slug]);
+
+  // Member tee times — fetched when member session is active, uses member API for correct pricing
+  useEffect(() => {
+    if (!memberSession || !course || course.type === 'member' || course.type === 'private') {
+      setMemberTeeTimes([]);
+      return;
+    }
+    fetch(`/api/member/${slug}/tee-times?date=${selectedDate}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(setMemberTeeTimes)
+      .catch(() => setMemberTeeTimes([]));
+  }, [memberSession, slug, selectedDate, course]);
 
   // Sync filter state to URL (skip first render to avoid replacing URL with defaults)
   useEffect(() => {
@@ -215,17 +245,20 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
     return { min: Math.min(...fees), max: Math.max(...fees) };
   }, [teeTimes]);
 
-  const filtered = useMemo(() => teeTimes.filter(t => {
-    // Full slots (0 seats) always show greyed — player filter doesn't hide them
-    if (t.players_available > 0 && t.players_available < players) return false;
-    if (todFilter !== 'all' && todOf(t) !== todFilter) return false;
-    if (maxPrice !== null && t.green_fee > maxPrice) return false;
-    if (holesFilter !== 'all') {
-      const h = holesOf(t);
-      if (h !== undefined && String(h) !== holesFilter) return false;
-    }
-    return true;
-  }), [teeTimes, players, todFilter, maxPrice, holesFilter]);
+  const filtered = useMemo(() => {
+    const source: ActiveTeeTime[] = memberSession ? memberTeeTimes : teeTimes;
+    return source.filter(t => {
+      // Full slots (0 seats) always show greyed — player filter doesn't hide them
+      if (t.players_available > 0 && t.players_available < players) return false;
+      if (todFilter !== 'all' && todOf(t) !== todFilter) return false;
+      if (maxPrice !== null && t.green_fee > maxPrice) return false;
+      if (holesFilter !== 'all') {
+        const h = holesOf(t);
+        if (h !== undefined && String(h) !== holesFilter) return false;
+      }
+      return true;
+    });
+  }, [memberSession, memberTeeTimes, teeTimes, players, todFilter, maxPrice, holesFilter]);
 
   const activeFilterCount =
     (todFilter !== 'all' ? 1 : 0) +
@@ -275,6 +308,12 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
     } catch { /* ignore */ } finally {
       setAlertSubmitting(false);
     }
+  }
+
+  async function memberSignOut() {
+    await fetch(`/api/member/${slug}/logout`, { method: 'POST' }).catch(() => {});
+    setMemberSession(null);
+    setMemberTeeTimes([]);
   }
 
   if (notFound) {
@@ -734,13 +773,13 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                     >
                       <Bell size={12} /> Set alert
                     </button>
-                    <Link
-                      href={`/courses/${slug}/member`}
-                      className="text-xs font-medium px-3 py-1.5 rounded-md transition-colors"
-                      style={{ color: accent, border: `1px solid ${accent}30`, backgroundColor: `${accent}08` }}
-                    >
-                      Member sign in
-                    </Link>
+                    {memberSession && (
+                      <div className="flex items-center gap-1.5 text-xs text-ink-muted">
+                        <span className="font-medium text-ink-soft">{memberSession.name}</span>
+                        <span>·</span>
+                        <button onClick={memberSignOut} className="hover:text-ink transition-colors">Sign out</button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -793,8 +832,10 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                             const isFull = t.players_available === 0;
                             const slotBorder = isSel ? { borderColor: accent, boxShadow: `0 0 0 1px ${accent}` } : { borderColor: '#E6E3D7' };
                             const slotPlayers = Math.min(players, t.players_available || players);
+                            const hasMemberRate = !!(t.member_green_fee != null && t.has_member_rate && t.member_green_fee < t.green_fee);
+                            const displayGreenFee = hasMemberRate ? t.member_green_fee! : t.green_fee;
                             const cartFee = isSel && withCart && t.cart_fee > 0 ? t.cart_fee : 0;
-                            const slotTotal = (t.green_fee + cartFee) * slotPlayers + 1.5 * slotPlayers;
+                            const slotTotal = (displayGreenFee + cartFee) * slotPlayers + 1.5 * slotPlayers;
 
                             return (
                               <div key={t.id} className={`rounded-lg border overflow-hidden transition-all ${isFull ? 'opacity-60' : ''}`} style={slotBorder}>
@@ -825,8 +866,11 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                                   </div>
                                   <div className="flex items-center gap-3 sm:gap-5 flex-shrink-0">
                                     <div className="text-right">
-                                      <div className="font-semibold text-ink">${t.green_fee}</div>
-                                      <div className="text-[11px] text-ink-muted">per player</div>
+                                      <div className="font-semibold text-ink">${displayGreenFee}</div>
+                                      {hasMemberRate && (
+                                        <div className="text-[10px] text-ink-faint line-through">${t.green_fee}</div>
+                                      )}
+                                      <div className="text-[11px] text-ink-muted">{hasMemberRate ? 'member rate' : 'per player'}</div>
                                     </div>
                                     {isFull ? (
                                       <span className="hidden sm:inline-flex px-4 py-2 rounded-md text-xs font-medium border border-line text-ink-faint">Full</span>
@@ -891,8 +935,8 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                                     {/* Itemized pricing */}
                                     <div className="bg-white rounded-md border border-line px-4 py-3 space-y-1.5">
                                       <div className="flex justify-between text-sm text-ink-soft">
-                                        <span>Green fee × {slotPlayers}</span>
-                                        <span>${(t.green_fee * slotPlayers).toFixed(2)}</span>
+                                        <span>Green fee{hasMemberRate ? ' (member)' : ''} × {slotPlayers}</span>
+                                        <span>${(displayGreenFee * slotPlayers).toFixed(2)}</span>
                                       </div>
                                       {withCart && t.cart_fee > 0 && (
                                         <div className="flex justify-between text-sm text-ink-soft">
@@ -926,6 +970,18 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {/* Quiet member sign-in link — unobtrusive, below the slot list */}
+                {!memberSession && (
+                  <div className="mt-6 text-center">
+                    <Link
+                      href={`/courses/${slug}/member`}
+                      className="text-xs text-ink-faint hover:text-ink-muted transition-colors"
+                    >
+                      Member? Sign in
+                    </Link>
                   </div>
                 )}
               </section>

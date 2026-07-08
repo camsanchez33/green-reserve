@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { getGolferSession } from '@/lib/auth';
+import { getMemberSession } from '@/lib/member-session';
 import { stripe, ACCESS_FEE_CENTS } from '@/lib/stripe';
 import { sendBookingConfirmation, sendOperatorBookingNotification, sendCancellationWarningEmail, sendCheckInAvailableEmail } from '@/lib/email';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
@@ -93,7 +94,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'This tee time has already passed.' }, { status: 409 });
   }
 
-  // Membership tier lookup
+  // Membership tier lookup — check golfer session first, then member session
   let resolvedGreenFeeOverride: number | null = null;
   let resolvedCartFeeOverride: number | null = null;
   if (golferSession) {
@@ -107,6 +108,22 @@ export async function POST(req: NextRequest) {
       resolvedCartFeeOverride  = rates.cartFee;
       appliedTierName = membership.tier.name;
       appliedRate     = membership.tier.name;
+    }
+  }
+  if (!resolvedGreenFeeOverride) {
+    const memberSession = await getMemberSession();
+    if (memberSession && memberSession.courseId === teeTimeFull.courseId) {
+      const membership = await prisma.courseMembership.findUnique({
+        where: { id: memberSession.membershipId },
+        include: { tier: true },
+      });
+      if (membership?.tier && membership.status === 'active') {
+        const rates = applyTierRates(teeTimeFull, membership.tier);
+        resolvedGreenFeeOverride = rates.greenFee;
+        resolvedCartFeeOverride  = rates.cartFee;
+        appliedTierName = membership.tier.name;
+        appliedRate     = membership.tier.name;
+      }
     }
   }
 

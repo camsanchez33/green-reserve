@@ -302,6 +302,26 @@ async function main() {
     checkStatus('Viewer can access admin stats (aggregated, no PII) → 200', r.status, 200);
   }
 
+  console.log('\n── Member cross-course session isolation ─────────────────────────');
+  {
+    const { signMemberSessionToken } = await import('../src/lib/member-session');
+    // Create a valid member token for course A — verify it cannot access course B routes
+    const tokenA = await signMemberSessionToken({ membershipId: 'fake-member-id', courseId: data.courseA.id, email: 'member@test.local' });
+    const memberCookieA = `gr_member=${tokenA}`;
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 60);
+    const dateStr = futureDate.toISOString().split('T')[0];
+
+    const rTimes = await api(`/api/member/${data.courseB.slug}/tee-times?date=${dateStr}`, { cookie: memberCookieA });
+    checkStatus('Member A cookie → Course B tee-times → 401', rTimes.status, 401);
+
+    const rSession = await api(`/api/member/${data.courseB.slug}/session`, { cookie: memberCookieA });
+    checkStatus('Member A cookie → Course B session → 401', rSession.status, 401);
+
+    const rPayments = await api(`/api/member/${data.courseB.slug}/payments`, { cookie: memberCookieA });
+    checkStatus('Member A cookie → Course B payments → 401', rPayments.status, 401);
+  }
+
   // ── Summary ────────────────────────────────────────────────────────────────
 
   await cleanup(data);
