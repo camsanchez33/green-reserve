@@ -59,7 +59,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] BACKUP_OPS_SPEC — full spec in BACKUP_OPS_SPEC.md: (A) nightly encrypted pg_dump via GitHub Actions + docs/RESTORE.md + quarterly restore drill; (B) "Shipping to production" discipline in CLAUDE.md — preview deploys + Neon DB branches for migrations, rollback steps; (C) docs/RUNBOOK.md secrets inventory (names/locations only, NEVER values) + laptop-loss + rotation runbooks. Ends with 2 manual steps for Cam (GitHub secrets). No migration, unattended OK.
 - [x] ONBOARDING_SPEC Phase O1b — TWO course types only (public/private) + branch questions per type (3 public, 5 private), structured needsJson answers, migrate existing type values, wizard type step reorganized (small run)
 - [x] ONBOARDING_SPEC Phase O2 — type-aware details sheet: structured sections per course type, server-side draft save, mobile-first (big run)
-- [ ] ONBOARDING_SPEC Phase O3 — build handoff: wizard fully pre-filled from structured sheet + ready-to-build checklist (medium run)
+- [x] ONBOARDING_SPEC Phase O3 — build handoff: wizard fully pre-filled from structured sheet + ready-to-build checklist (medium run)
 - [ ] ONBOARDING_SPEC Phase O4 — go-live welcome email + walkthrough video embed + welcomeEmailSentAt guard (schema change, run attended)
 - [ ] ONBOARDING_SPEC Phase O5 — homepage redesign pass: editorial layout, real screenshots replace icon cards, hero de-templated, funnel-matched copy (medium run)
 - [ ] ONBOARDING_SPEC Phase O6 — private course page mode: members-only courses get info + member sign-in page (no public booking), server-side booking rejection for private type (medium run)

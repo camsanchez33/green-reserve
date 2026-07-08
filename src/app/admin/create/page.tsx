@@ -88,6 +88,7 @@ function WizardContent() {
   const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'ok' | 'taken'>('idle');
   const [creating, setCreating] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
+  const [sheetData, setSheetData] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     fetch('/api/admin/session').then(r => {
@@ -119,7 +120,47 @@ function WizardContent() {
       contactName: params.get('contactName') || f.contactName,
       contactEmail: params.get('contactEmail') || f.contactEmail,
     }));
-    setInquiryId(params.get('inquiryId') || '');
+    const iid = params.get('inquiryId') || '';
+    setInquiryId(iid);
+    if (iid) {
+      fetch(`/api/admin/inquiries?id=${encodeURIComponent(iid)}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(inq => {
+          if (!inq?.detailsJson) return;
+          let d: Record<string, unknown> = {};
+          try { d = JSON.parse(inq.detailsJson); } catch { return; }
+          setSheetData(d);
+          // Support both old nested schedule format and new flat format
+          const sch = d.schedule as Record<string, unknown> | undefined;
+          const wdFee = String(d.greenFeeWeekday ?? sch?.greenFeeWeekday ?? '');
+          const weFee = String(d.greenFeeWeekend ?? sch?.greenFeeWeekend ?? '');
+          const cartFee = String(d.cartFee ?? sch?.cartFee ?? '');
+          const twilightFee = String(d.twilightFee ?? '');
+          const walkingAllowed = d.walkingAllowed;
+          setFees(f => ({
+            ...f,
+            weekdayFee: wdFee || f.weekdayFee,
+            weekendFee: weFee || f.weekendFee,
+            cartFee: cartFee || f.cartFee,
+            walkingAllowed: walkingAllowed === 'no' ? false : walkingAllowed === 'yes' || walkingAllowed === 'weekdays' ? true : f.walkingAllowed,
+            hasTwilight: !!twilightFee,
+            twilightFee: twilightFee || f.twilightFee,
+            seasonOpen: String(d.seasonOpen ?? ''),
+            seasonClose: String(d.seasonClose ?? ''),
+            hasResidentRates: !!(d.residentWeekday || d.residentWeekend),
+            residentWeekday: String(d.residentWeekday ?? ''),
+            residentWeekend: String(d.residentWeekend ?? ''),
+            residentNote: String(d.residentVerification ?? ''),
+            hasStarterTier: !!(d.starterTierName),
+            starterTierName: String(d.starterTierName ?? ''),
+            starterTierFee: String(d.starterTierFee ?? ''),
+            memberAdvanceDays: String(d.memberAdvanceDays ?? sch?.memberAdvanceDays ?? '14'),
+          }));
+          // Also pre-fill website from sheet if present
+          if (d.website) setBasics(b => ({ ...b, website: String(d.website) || b.website }));
+        })
+        .catch(() => {});
+    }
   }, [params]);
 
   useEffect(() => {
@@ -174,6 +215,17 @@ function WizardContent() {
           payload.seedStarterTierName = fees.starterTierName;
           payload.seedStarterTierFee = parseFloat(fees.starterTierFee) || 0;
         }
+      }
+      // Pass schedule details from detailsJson sheet if available
+      if (sheetData) {
+        const sch = sheetData.schedule as Record<string, unknown> | undefined;
+        if (sheetData.firstTeeTime || sch?.startTime) payload.seedFirstTeeTime = sheetData.firstTeeTime ?? sch?.startTime;
+        if (sheetData.lastTeeTime || sch?.endTime) payload.seedLastTeeTime = sheetData.lastTeeTime ?? sch?.endTime;
+        if (sheetData.intervalMinutes || sch?.intervalMinutes) payload.seedIntervalMinutes = sheetData.intervalMinutes ?? sch?.intervalMinutes;
+        const daysOpen = sheetData.daysOpen ?? sch?.daysOfWeek;
+        if (Array.isArray(daysOpen) && daysOpen.length > 0) payload.seedDaysOpen = daysOpen;
+        if (sheetData.holes) payload.seedHoles = sheetData.holes;
+        if (sheetData.description) payload.seedDescription = sheetData.description;
       }
       const r = await fetch('/api/admin/create-course', { method: 'POST', headers: H(), body: JSON.stringify(payload) });
       const d = await r.json();

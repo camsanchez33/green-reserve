@@ -890,6 +890,39 @@ export default function InquiriesPage() {
               );
             })()}
 
+            {/* Ready-to-build checklist */}
+            {selectedInq.detailsJson && (() => {
+              let d: Record<string, unknown> = {};
+              try { d = JSON.parse(selectedInq.detailsJson); } catch { return null; }
+              if (Object.keys(d).length === 0) return null;
+              const sch = d.schedule as Record<string, unknown> | undefined;
+              const checks: { label: string; ok: boolean }[] = [
+                { label: 'Weekday green fee', ok: !!(d.greenFeeWeekday || sch?.greenFeeWeekday) },
+                { label: 'Weekend green fee', ok: !!(d.greenFeeWeekend || sch?.greenFeeWeekend) },
+                { label: 'First tee time', ok: !!(d.firstTeeTime || sch?.startTime) },
+                { label: 'Last tee time', ok: !!(d.lastTeeTime || sch?.endTime) },
+                { label: 'Cancellation policy', ok: !!(d.cancellationHours) },
+                { label: 'Course description', ok: !!(d.description) },
+              ];
+              const allGood = checks.every(c => c.ok);
+              return (
+                <div className="px-5 py-4 border-b border-line">
+                  <div className={'text-[11px] uppercase tracking-[0.06em] mb-2 ' + (allGood ? 'text-ok' : 'text-warn')}>
+                    {allGood ? 'Ready to Build' : 'Build Checklist'}
+                  </div>
+                  <div className="space-y-1">
+                    {checks.map(c => (
+                      <div key={c.label} className="flex items-center gap-2 text-xs">
+                        <div className={'w-1.5 h-1.5 rounded-full shrink-0 ' + (c.ok ? 'bg-ok' : 'bg-warn')} />
+                        <span className={c.ok ? 'text-ink' : 'text-warn'}>{c.label}</span>
+                        {!c.ok && <span className="text-ink-faint">missing</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* History */}
             {selectedInq.events && selectedInq.events.length > 0 && (
               <div className="px-5 py-4 border-b border-line">

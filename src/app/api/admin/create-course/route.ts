@@ -33,6 +33,9 @@ export async function POST(req: NextRequest) {
       seedResidentWeekday, seedResidentWeekend, seedResidentNote,
       seedMemberAdvanceDays, seedStarterTierName, seedStarterTierFee,
       seedGuestRate, seedPackagesNote,
+      // Schedule seed (from O2 details sheet)
+      seedFirstTeeTime, seedLastTeeTime, seedIntervalMinutes, seedDaysOpen,
+      seedHoles, seedDescription,
     } = body;
 
     if (!courseName || !contactName || !rawContactEmail || !contactPhone) {
@@ -51,7 +54,7 @@ export async function POST(req: NextRequest) {
     const slugExists = await prisma.course.findUnique({ where: { slug }, select: { id: true } });
     if (slugExists) slug = `${baseSlug}-${randomBytes(3).toString('hex')}`;
 
-    // Build description from notes fields
+    // Build description: use sheet description first, then any notes overflow
     const notesLines: string[] = [];
     if (seedTwilightFee != null && seedTwilightFee > 0) notesLines.push(`Twilight rate: $${seedTwilightFee}`);
     if (seedSeasonOpen) notesLines.push(`Season opens: ${MONTHS[parseInt(seedSeasonOpen)] || seedSeasonOpen}`);
@@ -59,9 +62,11 @@ export async function POST(req: NextRequest) {
     if (seedResidentNote) notesLines.push(`Resident verification: ${seedResidentNote}`);
     if (seedGuestRate != null && seedGuestRate > 0) notesLines.push(`Guest-of-resort rate: $${seedGuestRate}`);
     if (seedPackagesNote) notesLines.push(`Resort packages: ${seedPackagesNote}`);
-    const description = notesLines.length > 0
-      ? '[Setup Notes]\n' + notesLines.map((n: string) => '• ' + n).join('\n')
-      : '';
+    const description = seedDescription
+      ? String(seedDescription) + (notesLines.length > 0 ? '\n\n[Notes]\n' + notesLines.map((n: string) => '• ' + n).join('\n') : '')
+      : notesLines.length > 0
+        ? '[Setup Notes]\n' + notesLines.map((n: string) => '• ' + n).join('\n')
+        : '';
 
     const tempPassword = randomBytes(8).toString('hex');
     const hashed = await bcrypt.hash(tempPassword, 12);
@@ -87,7 +92,7 @@ export async function POST(req: NextRequest) {
             zipCode: zipCode || '',
             phone: phone || '',
             website: website || '',
-            holes: holes ? Number(holes) : 18,
+            holes: holes ? Number(holes) : (seedHoles ? Number(seedHoles) : 18),
             par: par ? Number(par) : 72,
             description,
             hasMemberPricing: hasMemberPricing || courseType === 'semi-private',
@@ -114,15 +119,18 @@ export async function POST(req: NextRequest) {
     // Create seed TeeTimeSchedule if fee data provided
     let seedScheduleCreated = false;
     if (courseId && seedWeekdayFee != null && seedWeekendFee != null) {
+      const daysArr = Array.isArray(seedDaysOpen) && seedDaysOpen.length > 0
+        ? seedDaysOpen.map(Number)
+        : [0, 1, 2, 3, 4, 5, 6];
       await prisma.teeTimeSchedule.create({
         data: {
           courseId,
           tierName: 'standard',
-          daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
-          startTime: '07:00',
-          endTime: '17:30',
-          intervalMinutes: 10,
-          holes: 18,
+          daysOfWeek: daysArr,
+          startTime: seedFirstTeeTime || '07:00',
+          endTime: seedLastTeeTime || '17:30',
+          intervalMinutes: seedIntervalMinutes ? Number(seedIntervalMinutes) : 10,
+          holes: seedHoles ? Number(seedHoles) : 18,
           greenFeeWeekday: Number(seedWeekdayFee),
           greenFeeWeekend: Number(seedWeekendFee),
           cartFee: seedCartFee != null ? Number(seedCartFee) : 0,

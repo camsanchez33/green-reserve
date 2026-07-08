@@ -8,6 +8,12 @@ import { resolveAdminSession, requireRole, MANAGER_PLUS, OWNER_ONLY, type AdminS
 
 export async function GET(req: NextRequest) {
   if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const id = req.nextUrl.searchParams.get('id');
+  if (id) {
+    const inquiry = await prisma.courseInquiry.findUnique({ where: { id }, include: { events: { orderBy: { createdAt: 'asc' } } } });
+    if (!inquiry) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json(inquiry);
+  }
   const inquiries = await prisma.courseInquiry.findMany({
     orderBy: { createdAt: 'desc' },
     include: { events: { orderBy: { createdAt: 'asc' } } },
