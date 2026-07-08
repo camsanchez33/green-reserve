@@ -60,7 +60,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] ONBOARDING_SPEC Phase O1b — TWO course types only (public/private) + branch questions per type (3 public, 5 private), structured needsJson answers, migrate existing type values, wizard type step reorganized (small run)
 - [x] ONBOARDING_SPEC Phase O2 — type-aware details sheet: structured sections per course type, server-side draft save, mobile-first (big run)
 - [x] ONBOARDING_SPEC Phase O3 — build handoff: wizard fully pre-filled from structured sheet + ready-to-build checklist (medium run)
-- [ ] ONBOARDING_SPEC Phase O4 — go-live welcome email + walkthrough video embed + welcomeEmailSentAt guard (schema change, run attended)
+- [x] ONBOARDING_SPEC Phase O4 — go-live welcome email + walkthrough video embed + welcomeEmailSentAt guard (schema change, run attended)
 - [ ] ONBOARDING_SPEC Phase O5 — homepage redesign pass: editorial layout, real screenshots replace icon cards, hero de-templated, funnel-matched copy (medium run)
 - [ ] ONBOARDING_SPEC Phase O6 — private course page mode: members-only courses get info + member sign-in page (no public booking), server-side booking rejection for private type (medium run)
 
