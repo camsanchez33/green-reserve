@@ -50,6 +50,7 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
   const cancellationHours = data.cancellationHours ?? 24;
   const cancellationFee = data.cancellationFeeTotal ?? 0;
   const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
+  const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : `${process.env.NEXT_PUBLIC_URL}/account`;
   const noCard = data.noCard ?? false;
 
   // Breakdown rows shared by all variants
@@ -79,7 +80,7 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
     </div>`;
     ctaButtons = `
       ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:10px;">Check In &amp; Pay Online &rarr;</a>` : ''}
-      <a href="https://greenreserve.app/account" style="display:block;color:#1b4332;text-decoration:none;text-align:center;padding:8px;font-weight:700;font-size:13px;margin-bottom:16px;">Manage My Booking &rarr;</a>`;
+      <a href="${manageUrl}" style="display:block;color:#1b4332;text-decoration:none;text-align:center;padding:8px;font-weight:700;font-size:13px;margin-bottom:16px;">Manage My Booking &rarr;</a>`;
   } else if (cancellationFee > 0) {
     // Card on file, course has a cancellation fee
     intro = `<h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">You're on the tee sheet.</h1>
@@ -91,7 +92,7 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
     </div>`;
     ctaButtons = `
       ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}
-      <a href="https://greenreserve.app/account" style="display:block;${checkInUrl ? 'color:#1b4332;' : 'background:#1b4332;color:#fff;'}text-decoration:none;text-align:center;padding:${checkInUrl ? '8px' : '14px'};border-radius:4px;font-weight:700;font-size:${checkInUrl ? '13px' : '15px'};margin-bottom:16px;">Manage My Booking &rarr;</a>`;
+      <a href="${manageUrl}" style="display:block;${checkInUrl ? 'color:#1b4332;' : 'background:#1b4332;color:#fff;'}text-decoration:none;text-align:center;padding:${checkInUrl ? '8px' : '14px'};border-radius:4px;font-weight:700;font-size:${checkInUrl ? '13px' : '15px'};margin-bottom:16px;">Manage My Booking &rarr;</a>`;
   } else {
     // Card on file, no cancellation fee policy
     intro = `<h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">You're on the tee sheet.</h1>
@@ -102,7 +103,7 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
     </div>`;
     ctaButtons = `
       ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}
-      <a href="https://greenreserve.app/account" style="display:block;${checkInUrl ? 'color:#1b4332;' : 'background:#1b4332;color:#fff;'}text-decoration:none;text-align:center;padding:${checkInUrl ? '8px' : '14px'};border-radius:4px;font-weight:700;font-size:${checkInUrl ? '13px' : '15px'};margin-bottom:16px;">Manage My Booking &rarr;</a>`;
+      <a href="${manageUrl}" style="display:block;${checkInUrl ? 'color:#1b4332;' : 'background:#1b4332;color:#fff;'}text-decoration:none;text-align:center;padding:${checkInUrl ? '8px' : '14px'};border-radius:4px;font-weight:700;font-size:${checkInUrl ? '13px' : '15px'};margin-bottom:16px;">Manage My Booking &rarr;</a>`;
   }
 
   const html = baseTemplate(`
@@ -199,7 +200,9 @@ export async function sendCancellationFeeChargedEmail(data: {
 export async function sendCancellationWarningEmail(data: {
   golferName: string; golferEmail: string; courseName: string;
   date: string; time: string; feeAmount: number; bookingId: string; cancellationHours: number;
+  checkInToken?: string | null;
 }) {
+  const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : `${process.env.NEXT_PUBLIC_URL}/account`;
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#fef3c7;color:#92400e;font-size:13px;font-weight:600;padding:4px 12px;border-radius:3px;">Action required</span></div>
     <h1 style="margin:16px 0 4px;color:#111827;font-size:24px;font-weight:900;">Your cancellation window closes soon.</h1>
@@ -211,7 +214,7 @@ export async function sendCancellationWarningEmail(data: {
       <p style="margin:0 0 6px;color:#92400e;font-size:14px;font-weight:700;">If you need to cancel, do it now.</p>
       <p style="margin:0;color:#92400e;font-size:14px;">After the window closes, a $${(data.feeAmount / 100).toFixed(2)} late-cancellation fee will be charged to your card automatically.</p>
     </div>
-    <a href="${process.env.NEXT_PUBLIC_URL}/account" style="display:block;background:#111827;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:16px;">Cancel for Free &rarr;</a>
+    <a href="${manageUrl}" style="display:block;background:#111827;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:16px;">Cancel for Free &rarr;</a>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">If you're keeping your tee time, no action needed — we'll see you on the course.</p>
   `);
   await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Heads up — your free cancellation window closes soon (${data.courseName})`, html });
@@ -292,6 +295,7 @@ export async function sendReminderEmail(data: {
   date: string; time: string; players: number; holes: number; bookingId: string; checkInToken?: string | null;
 }) {
   const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
+  const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : `${process.env.NEXT_PUBLIC_URL}/account`;
   const html = baseTemplate(`
     <h1 style="margin:0 0 4px;color:#111827;font-size:26px;font-weight:900;">&#9971; Tee time tomorrow!</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">You&rsquo;re on the tee sheet at ${data.courseName}.</p>
@@ -305,7 +309,7 @@ export async function sendReminderEmail(data: {
       <p style="margin:0;color:#92400e;font-size:13px;">&#128336; ${checkInUrl ? 'Check in and pay below before you head out, or do it at the pro shop when you arrive.' : 'Arrive 15 minutes early and check in at the pro shop.'}</p>
     </div>
     ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}
-    <a href="https://greenreserve.app/account" style="display:block;${checkInUrl ? 'color:#1b4332;' : 'background:#1b4332;color:#fff;'}text-decoration:none;text-align:center;padding:${checkInUrl ? '8px' : '14px'};font-weight:600;font-size:${checkInUrl ? '13px' : '15px'};">View or Cancel Booking &rarr;</a>
+    <a href="${manageUrl}" style="display:block;${checkInUrl ? 'color:#1b4332;' : 'background:#1b4332;color:#fff;'}text-decoration:none;text-align:center;padding:${checkInUrl ? '8px' : '14px'};font-weight:600;font-size:${checkInUrl ? '13px' : '15px'};">View or Cancel Booking &rarr;</a>
   `);
   await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Tomorrow: ${data.time} at ${data.courseName}`, html });
 }

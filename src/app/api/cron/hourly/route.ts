@@ -64,6 +64,7 @@ export async function GET(req: NextRequest) {
           feeAmount: booking.cancellationFeeTotal,
           bookingId: booking.id,
           cancellationHours: booking.course.cancellationHours,
+          checkInToken: booking.checkInToken,
         });
         results.warnings++;
       } catch (err) {

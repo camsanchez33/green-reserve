@@ -257,6 +257,7 @@ export async function POST(req: NextRequest) {
           feeAmount: cancellationFeeTotal,
           bookingId: claimed.id,
           cancellationHours: teeTimeFull.course.cancellationHours,
+          checkInToken: claimed.checkInToken,
         }).catch(console.error);
       }
     } else if (!savedPaymentMethodId && minsUntilCutoff < 165) {
