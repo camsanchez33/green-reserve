@@ -26,6 +26,11 @@ This document contains NO secret values — only where to find them.
 | `CRON_SECRET` | Vercel env (prod) | Authenticates Vercel cron requests to /api/cron/* | Generate: `openssl rand -hex 32` |
 | `BACKUP_DATABASE_URL` | GitHub Actions secret | Neon direct URL for pg_dump backup | Neon console (use DIRECT_URL value) |
 | `BACKUP_PASSPHRASE` | Password manager | Encrypts pg_dump artifacts | Your choice — store in password manager |
+| `SENTRY_DSN` | Vercel env (prod) | Server-side Sentry error reporting | sentry.io → project → Client Keys (DSN) |
+| `NEXT_PUBLIC_SENTRY_DSN` | Vercel env (prod) | Client-side Sentry error reporting | Same DSN as SENTRY_DSN |
+| `SENTRY_ORG` | Vercel env (prod) | Sentry org slug for source map uploads | sentry.io → Settings → Organization |
+| `SENTRY_PROJECT` | Vercel env (prod) | Sentry project slug for source map uploads | sentry.io → Settings → Projects |
+| `SHADOW_DATABASE_URL` | .env.local only + GitHub Actions secret | Prisma migrate dev shadow DB | Neon console → shadow-dev branch |
 
 ---
 
@@ -87,3 +92,77 @@ committed after every Claude Code run. They are backed up with every `git push`.
 | Database errors | Neon console → Metrics / Query inspector |
 | Backup not running | GitHub Actions → Nightly Database Backup → check run status |
 | Cron not firing | Vercel dashboard → Logs → filter by /api/cron |
+
+---
+
+## Structured Logs — Money Paths
+
+All money-path events emit structured JSON to stdout (visible in Vercel logs):
+
+| Event key | When |
+|-----------|------|
+| `booking.created` | A booking was committed (claimTeeTime succeeded) |
+| `booking.claim.fail` | claimTeeTime threw — 409/500 returned |
+| `checkin.charge.attempt` | About to charge Stripe |
+| `checkin.charge.ok` | Stripe charge confirmed |
+| `checkin.charge.fail` | Stripe charge failed (booking stays confirmed) |
+| `checkin.fee_refund.ok` | Cancellation-fee refund succeeded at check-in |
+| `checkin.fee_refund.fail` | Refund failed — requires manual Stripe action |
+| `cron.cancelfee.attempt` | Cron about to charge a late-cancel fee |
+| `cron.cancelfee.ok` | Late-cancel fee charged |
+| `cron.cancelfee.fail` | Late-cancel fee charge failed |
+
+To search logs: Vercel dashboard → Logs → filter by the `ev` key value.
+
+---
+
+## Error Monitoring (Sentry)
+
+Sentry is wired to catch unhandled server + client errors. DSN is in Vercel env vars.
+
+- **Sentry project:** https://sentry.io → GreenReserve project
+- **Money-path tracing:** checkin, booking create, and cron routes sample at 100%
+- **Replay:** errors always recorded; sessions at 5%
+
+To set up uptime monitoring in Sentry:
+1. Sentry → Alerts → Crons (for cron health)
+2. Sentry → Alerts → Uptime → Add monitor → URL: `https://greenreserve.app/api/health`
+   - Interval: 5 minutes
+   - Alert when: consecutive failures ≥ 2
+
+---
+
+## When a Course Reports a Problem
+
+Step-by-step triage when an operator contacts you about something being wrong.
+
+### Bookings not showing up
+1. Ask for the golfer email and rough time of booking attempt
+2. Vercel logs → filter by `booking.created` OR `booking.claim.fail` → find the event
+3. If no log: the request never reached the server (client-side error — check Sentry replays)
+4. If `booking.claim.fail`: read the `error` field — likely a capacity conflict (409) or DB error
+5. Check Sentry → Issues for any unhandled exceptions around that time
+
+### Check-in charge failed
+1. Ask for the booking ID (visible in dashboard)
+2. Vercel logs → filter `checkin.charge.fail` → find `bookingId`
+3. Stripe dashboard → search the Payment Method ID or customer email → check for decline reason
+4. Common causes: card expired, insufficient funds, Stripe Connect account not fully active
+5. Stripe Connect issue → operator needs to complete onboarding at dashboard Settings → Stripe
+6. Collect payment in person; refund access fee manually if needed
+
+### Late-cancel fee not charged
+1. Vercel logs → filter `cron.cancelfee.fail` → find `bookingId` and `error`
+2. Stripe dashboard → search that booking's customer → check for decline
+3. Manual charge possible from Stripe dashboard if needed
+
+### Operator can't log in
+1. Check if operator account exists: Neon console → Query → `SELECT * FROM "CourseOperator" WHERE email='...';`
+2. 2FA issue: check Twilio console for SMS delivery
+3. Reset password: admin panel → operator detail → resend setup email
+
+### Tee times missing for a date
+1. Check if TeeTimeSchedule exists for the course: admin panel → course → tee sheet
+2. Tee times are generated on-demand by the tee-sheet-engine when a date is loaded
+3. If schedule exists but slots are empty: check generate-tee-times cron log
+

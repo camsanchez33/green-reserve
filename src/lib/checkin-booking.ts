@@ -69,6 +69,7 @@ export async function performCheckIn(bookingId: string, opts?: { externalPayment
 
   let paymentIntentId: string;
   try {
+    console.log(JSON.stringify({ ev: 'checkin.charge.attempt', bookingId, amountCents: Math.round(booking.totalAmount) }));
     const paymentIntent = await chargeOnConnectedAccount({
       customerId: chargeCustomerId,
       paymentMethodId: chargePaymentMethodId,
@@ -79,8 +80,10 @@ export async function performCheckIn(bookingId: string, opts?: { externalPayment
       idempotencyKey: `checkin-${booking.id}-${chargePaymentMethodId}`,
     });
     paymentIntentId = paymentIntent.id;
+    console.log(JSON.stringify({ ev: 'checkin.charge.ok', bookingId, paymentIntentId, amountCents: Math.round(booking.totalAmount) }));
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Card could not be charged.';
+    console.error(JSON.stringify({ ev: 'checkin.charge.fail', bookingId, error: message }));
     await prisma.booking.update({ where: { id: bookingId }, data: { checkInFailReason: message } });
     return { error: `Payment failed: ${message}. Collect payment in person and contact support.`, status: 402 } as const;
   }
@@ -91,10 +94,11 @@ export async function performCheckIn(bookingId: string, opts?: { externalPayment
         paymentIntentId: booking.cancellationFeeChargeId,
         connectedAccountId: booking.course.stripeAccountId,
       });
+      console.log(JSON.stringify({ ev: 'checkin.fee_refund.ok', bookingId, cancelFeeChargeId: booking.cancellationFeeChargeId }));
     } catch (err) {
       // The round charge already succeeded -- don't fail check-in over a refund
       // hiccup, just log it so support can issue it manually from Stripe.
-      console.error(`Could not refund cancellation fee for booking ${booking.id}:`, err);
+      console.error(JSON.stringify({ ev: 'checkin.fee_refund.fail', bookingId, error: err instanceof Error ? err.message : String(err) }));
     }
   }
 

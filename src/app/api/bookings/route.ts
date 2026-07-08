@@ -207,9 +207,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: `Only ${left} spot${left === 1 ? '' : 's'} left for this tee time.` }, { status: 409 });
       }
     }
-    console.error('Booking claim error:', err);
+    console.error(JSON.stringify({ ev: 'booking.claim.fail', teeTimeId, players, error: err instanceof Error ? err.message : String(err) }));
     return NextResponse.json({ error: 'Something went wrong processing your booking. Please try again.' }, { status: 500 });
   }
+
+  console.log(JSON.stringify({ ev: 'booking.created', bookingId: claimed.id, teeTimeId, players, totalCents, hasCard: !!savedPaymentMethodId }));
 
   // Send confirmation emails (fire-and-forget)
   try {

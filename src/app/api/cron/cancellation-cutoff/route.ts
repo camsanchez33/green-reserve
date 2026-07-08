@@ -60,6 +60,7 @@ export async function GET(req: NextRequest) {
       if (!booking.course.stripeAccountActive || !booking.course.stripeAccountId) { skippedNoConnectedAccount++; continue; }
 
       try {
+        console.log(JSON.stringify({ ev: 'cron.cancelfee.attempt', bookingId: booking.id, amountCents: Math.round(booking.cancellationFeeTotal) }));
         const paymentIntent = await chargeOnConnectedAccount({
           customerId: booking.stripeCustomerId,
           paymentMethodId: booking.stripePaymentMethodId,
@@ -69,6 +70,7 @@ export async function GET(req: NextRequest) {
           description: `Late-cancellation fee — ${booking.course.name} — booking ${booking.id}`,
           idempotencyKey: `cancelfee-${booking.id}-${booking.stripePaymentMethodId}`,
         });
+        console.log(JSON.stringify({ ev: 'cron.cancelfee.ok', bookingId: booking.id, paymentIntentId: paymentIntent.id }));
 
         await prisma.booking.update({
           where: { id: booking.id },
@@ -92,7 +94,7 @@ export async function GET(req: NextRequest) {
 
         charged++;
       } catch (err) {
-        console.error(`Cancellation-fee charge failed for booking ${booking.id}:`, err);
+        console.error(JSON.stringify({ ev: 'cron.cancelfee.fail', bookingId: booking.id, error: err instanceof Error ? err.message : String(err) }));
         failed++;
       }
     } else {
