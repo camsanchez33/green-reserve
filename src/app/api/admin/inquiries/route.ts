@@ -294,6 +294,24 @@ async function handleAction(
     }
   }
 
+  // ── Edit contact info ─────────────────────────────────────────────
+  if (action === 'update_contact') {
+    const p = payload as Record<string, string>;
+    await prisma.courseInquiry.update({
+      where: { id: inquiryId },
+      data: {
+        contactName: p.contactName?.trim() || inquiry.contactName,
+        email: p.email?.trim().toLowerCase() || inquiry.email,
+        phone: p.phone?.trim() ?? inquiry.phone,
+        courseName: p.courseName?.trim() || inquiry.courseName,
+        city: p.city?.trim() || inquiry.city,
+        state: p.state?.trim() || inquiry.state,
+      },
+    });
+    await logEvent(inquiryId, 'contact_updated', 'contact_updated', 'admin', adminName);
+    return NextResponse.json({ success: true });
+  }
+
   // ── set_status (drag-and-drop manual override) ────────────────────
   if (action === 'set_status') {
     const allowed = ['pending', 'in_review', 'details_requested', 'details_submitted', 'building', 'rejected'];

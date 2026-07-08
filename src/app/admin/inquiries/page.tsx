@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   RefreshCw, Mail, Wrench, Power, Search, ArrowUpRight, X, Copy,
-  XCircle, CheckCircle, Clock, Trash2, ChevronDown, Archive,
+  XCircle, CheckCircle, Clock, Trash2, ChevronDown, Archive, Pencil, Save,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -28,12 +28,12 @@ interface ApproveResult { tempPassword?: string; setupLink?: string; detailsLink
 const STATUS_DOT_MAP: Record<string, string> = {
   pending: 'warn', in_review: 'neutral', details_requested: 'neutral',
   details_submitted: 'neutral', building: 'warn', live: 'ok', rejected: 'bad',
-  archived: 'neutral',
+  archived: 'neutral', contact_updated: 'neutral',
 };
 const STATUS_LABEL: Record<string, string> = {
   pending: 'Pending', in_review: 'In Review', details_requested: 'Sheet Sent',
   details_submitted: 'Sheet In', building: 'Building', live: 'Live', rejected: 'Rejected',
-  archived: 'Archived',
+  archived: 'Archived', contact_updated: 'Contact updated',
 };
 
 const ACTIVE_CHIPS = [
@@ -90,6 +90,9 @@ export default function InquiriesPage() {
   const [sortBy, setSortBy] = useState('newest');
   const [stageOverride, setStageOverride] = useState('');
   const [backfillRan, setBackfillRan] = useState(false);
+  const [activeDetailTab, setActiveDetailTab] = useState<'contact'|'answers'|'sheet'|'activity'>('contact');
+  const [editContact, setEditContact] = useState(false);
+  const [contactEdits, setContactEdits] = useState<Record<string,string>>({});
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
@@ -135,7 +138,12 @@ export default function InquiriesPage() {
   const selectedInq = selectedId ? (inquiries.find(i => i.id === selectedId) ?? null) : null;
 
   useEffect(() => {
-    if (selectedInq) setStageOverride(selectedInq.status);
+    if (selectedInq) {
+      setStageOverride(selectedInq.status);
+      setActiveDetailTab('contact');
+      setEditContact(false);
+      setContactEdits({});
+    }
   }, [selectedInq?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function inquiryAction(id: string, action: string, extraPayload: Record<string, unknown> = {}) {
@@ -192,6 +200,19 @@ export default function InquiriesPage() {
     await fetch(`/api/admin/inquiries?id=${id}`, { method: 'DELETE', headers: H() });
     setInquiries(prev => prev.filter(i => i.id !== id));
     if (selectedId === id) setSelectedId(null);
+  }
+
+  async function saveContact(id: string) {
+    setProcessing(id);
+    try {
+      const r = await fetch('/api/admin/inquiries', {
+        method: 'PATCH', headers: H(),
+        body: JSON.stringify({ id, action: 'update_contact', ...contactEdits }),
+      });
+      if (r.ok) { setEditContact(false); await loadInquiries(); }
+      else { alert('Could not save — please try again'); }
+    } catch (e) { alert('Error: ' + e); }
+    setProcessing(null);
   }
 
   // Split into active vs archived pools
@@ -730,145 +751,225 @@ export default function InquiriesPage() {
               </div>
             )}
 
-            {/* Contact */}
-            <div className="px-5 py-4 border-b border-line">
-              <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Contact</div>
-              <div className="text-sm font-medium text-ink mb-0.5">
-                {selectedInq.contactName}{selectedInq.contactTitle ? ' · ' + selectedInq.contactTitle : ''}
+            {/* Tab nav */}
+            <div className="border-b border-line shrink-0 px-5 pt-3">
+              <div className="flex gap-0">
+                {(['contact','answers','sheet','activity'] as const).map(tab => (
+                  <button key={tab} onClick={() => setActiveDetailTab(tab)}
+                    className={'px-3 py-2 text-xs font-medium border-b-2 transition-colors ' + (
+                      activeDetailTab === tab ? 'border-pine text-pine' : 'border-transparent text-ink-muted hover:text-ink'
+                    )}>
+                    {tab === 'contact' ? 'Contact' : tab === 'answers' ? 'Answers' : tab === 'sheet' ? 'Sheet' : 'Activity'}
+                  </button>
+                ))}
               </div>
-              <a href={'mailto:' + selectedInq.email} className="text-sm text-pine hover:underline block">{selectedInq.email}</a>
-              {selectedInq.phone && <div className="text-sm text-ink-muted mt-0.5">{selectedInq.phone}</div>}
             </div>
 
-            {/* Details */}
-            <div className="px-5 py-4 border-b border-line">
-              <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Details</div>
-              <div className="grid grid-cols-2 gap-2">
-                {([
-                  ['Course type', selectedInq.courseType],
-                  ['Booking method', selectedInq.currentBookingMethod || '—'],
-                  ['Tee times/day', String(selectedInq.teeTimesPerDay || '—')],
-                  ['Green fees', selectedInq.greenFeeRange || '—'],
-                  ['City / State', selectedInq.city + ', ' + selectedInq.state],
-                  ['Website', selectedInq.website || '—'],
-                ] as [string, string][]).map(([label, val]) => (
-                  <div key={label} className="bg-paper rounded-md px-3 py-2 border border-line">
-                    <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">{label}</div>
-                    <div className="text-ink font-medium text-sm">{val}</div>
+            {/* ── Contact tab ─────────────────────────────────── */}
+            {activeDetailTab === 'contact' && (
+              <div className="px-5 py-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Contact Info</div>
+                  {!editContact ? (
+                    <button onClick={() => { setContactEdits({ contactName: selectedInq.contactName || '', email: selectedInq.email || '', phone: selectedInq.phone || '', courseName: selectedInq.courseName || '', city: selectedInq.city || '', state: selectedInq.state || '' }); setEditContact(true); }}
+                      className="flex items-center gap-1 text-xs text-ink-muted hover:text-pine transition-colors">
+                      <Pencil className="w-3 h-3" /> Edit
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setEditContact(false)} className="text-xs text-ink-muted hover:text-ink transition-colors">Cancel</button>
+                      <button onClick={() => saveContact(selectedInq.id)} disabled={processing === selectedInq.id}
+                        className="flex items-center gap-1 text-xs bg-pine text-white px-2.5 py-1 rounded-md hover:bg-pine-hover disabled:opacity-50 transition-colors">
+                        <Save className="w-3 h-3" /> Save
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {editContact ? (
+                  <div className="space-y-2">
+                    {([['contactName','Contact name'],['email','Email'],['phone','Phone'],['courseName','Course name'],['city','City'],['state','State']] as [string,string][]).map(([field, label]) => (
+                      <div key={field}>
+                        <label className="block text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">{label}</label>
+                        <input value={contactEdits[field] ?? ''} onChange={e => setContactEdits(prev => ({ ...prev, [field]: e.target.value }))}
+                          className="w-full bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10 focus:outline-none" />
+                      </div>
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-sm font-medium text-ink">{selectedInq.contactName}{selectedInq.contactTitle ? ' · ' + selectedInq.contactTitle : ''}</div>
+                      <a href={'mailto:' + selectedInq.email} className="text-sm text-pine hover:underline block">{selectedInq.email}</a>
+                      {selectedInq.phone && <div className="text-sm text-ink-muted">{selectedInq.phone}</div>}
+                    </div>
+                    <div className="border-t border-line pt-3 grid grid-cols-2 gap-2">
+                      <div className="bg-paper rounded-md px-3 py-2 border border-line">
+                        <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">City / State</div>
+                        <div className="text-ink font-medium text-sm">{selectedInq.city}, {selectedInq.state}</div>
+                      </div>
+                      <div className="bg-paper rounded-md px-3 py-2 border border-line">
+                        <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Course type</div>
+                        <div className="text-ink font-medium text-sm capitalize">{selectedInq.courseType}</div>
+                      </div>
+                      {selectedInq.website && (
+                        <div className="col-span-2 bg-paper rounded-md px-3 py-2 border border-line">
+                          <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Website</div>
+                          <a href={selectedInq.website} target="_blank" rel="noreferrer" className="text-pine hover:underline text-sm">{selectedInq.website}</a>
+                        </div>
+                      )}
+                      {selectedInq.address && (
+                        <div className="col-span-2 bg-paper rounded-md px-3 py-2 border border-line">
+                          <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Address</div>
+                          <div className="text-ink text-sm">{selectedInq.address}{selectedInq.zipCode ? ', ' + selectedInq.zipCode : ''}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Answers tab ──────────────────────────────────── */}
+            {activeDetailTab === 'answers' && (
+              <div className="px-5 py-4 space-y-4">
+                {(() => {
+                  const rows: [string, string][] = [];
+                  if (selectedInq.currentBookingMethod) rows.push(['Current booking', selectedInq.currentBookingMethod]);
+                  if (selectedInq.teeTimesPerDay) rows.push(['Tee times/day', String(selectedInq.teeTimesPerDay)]);
+                  if (selectedInq.greenFeeRange) rows.push(['Green fees', selectedInq.greenFeeRange]);
+                  return rows.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      {rows.map(([label, val]) => (
+                        <div key={label} className="bg-paper rounded-md px-3 py-2 border border-line">
+                          <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">{label}</div>
+                          <div className="text-ink font-medium text-sm">{val}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null;
+                })()}
                 {(selectedInq.hasMemberPricing || selectedInq.hasResidentPricing || selectedInq.hasCaddies) && (
-                  <div className="flex gap-2 col-span-2 flex-wrap">
+                  <div className="flex gap-2 flex-wrap">
                     {selectedInq.hasMemberPricing && <span className="text-[11px] px-2 py-0.5 rounded bg-paper text-ink-muted border border-line">Members</span>}
                     {selectedInq.hasResidentPricing && <span className="text-[11px] px-2 py-0.5 rounded bg-paper text-ink-muted border border-line">Residents</span>}
                     {selectedInq.hasCaddies && <span className="text-[11px] px-2 py-0.5 rounded bg-paper text-ink-muted border border-line">Caddies</span>}
                   </div>
                 )}
                 {selectedInq.lookingFor && selectedInq.lookingFor.length > 0 && (
-                  <div className="col-span-2 bg-paper rounded-md px-3 py-2 border border-line">
+                  <div className="bg-paper rounded-md px-3 py-2 border border-line">
                     <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Looking for</div>
                     <div className="text-ink font-medium text-sm">{selectedInq.lookingFor.join(', ')}</div>
                   </div>
                 )}
                 {selectedInq.additionalNotes && (
-                  <div className="col-span-2 bg-paper rounded-md px-3 py-2 border border-line">
+                  <div className="bg-paper rounded-md px-3 py-2 border border-line">
                     <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Additional notes</div>
                     <div className="text-ink text-sm">{selectedInq.additionalNotes}</div>
                   </div>
                 )}
                 {selectedInq.pricingNotes && (
-                  <div className="col-span-2 bg-paper rounded-md px-3 py-2 border border-line">
+                  <div className="bg-paper rounded-md px-3 py-2 border border-line">
                     <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Pricing notes</div>
                     <div className="text-ink text-sm">{selectedInq.pricingNotes}</div>
                   </div>
                 )}
-              </div>
-            </div>
-
-            {/* What they need (needsJson) */}
-            {selectedInq.needsJson && (() => {
-              let n: Record<string, unknown> = {};
-              try { n = JSON.parse(selectedInq.needsJson || ''); } catch { /* ignore */ }
-              const entries = Object.entries(n).filter(([, v]) => v !== '' && v !== null);
-              if (entries.length === 0) return null;
-              const NEEDS_LABELS: Record<string, string> = {
-                residentRates: 'Resident rates',
-                hasMemberships: 'Memberships / season passes',
-                roundsPerMonth: 'Rounds per month',
-                publicTeeTimes: 'Non-member tee times',
-                memberCount: 'Member count',
-                outsideOutings: 'Outside outings',
-                memberBookingToday: 'Current booking method',
-                chargesMembersPerRound: 'Charges per round',
-              };
-              const NEEDS_VALUES: Record<string, string> = {
-                yes: 'Yes', no: 'No',
-                yes_regularly: 'Yes, regularly', limited: 'Limited windows', no_members_only: 'No, members only',
-                under_100: 'Under 100', '100_300': '100–300', '300_plus': '300+',
-                under_500: 'Under 500', '500_1500': '500–1,500', '1500_3000': '1,500–3,000', '3000_plus': '3,000+',
-                pro_shop_phone: 'Pro shop / phone', signup_sheet: 'Sign-up sheet',
-                booking_software: 'Booking software', other: 'Other',
-              };
-              return (
-                <div className="px-5 py-4 border-b border-line">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-warn mb-2">Branch Answers</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {entries.map(([k, v]) => (
-                      <div key={k} className="bg-warn/5 border border-warn/20 rounded-md px-3 py-2">
-                        <div className="text-[10px] text-warn/80 mb-0.5">{NEEDS_LABELS[k] || k}</div>
-                        <div className="text-warn text-sm font-medium">{NEEDS_VALUES[String(v)] || String(v)}</div>
+                {selectedInq.needsJson && (() => {
+                  let n: Record<string, unknown> = {};
+                  try { n = JSON.parse(selectedInq.needsJson || ''); } catch { /* ignore */ }
+                  const entries = Object.entries(n).filter(([, v]) => v !== '' && v !== null);
+                  if (entries.length === 0) return null;
+                  const NEEDS_LABELS: Record<string, string> = {
+                    residentRates: 'Resident rates', hasMemberships: 'Memberships / season passes',
+                    roundsPerMonth: 'Rounds per month', publicTeeTimes: 'Non-member tee times',
+                    memberCount: 'Member count', outsideOutings: 'Outside outings',
+                    memberBookingToday: 'Current booking method', chargesMembersPerRound: 'Charges per round',
+                  };
+                  const NEEDS_VALUES: Record<string, string> = {
+                    yes: 'Yes', no: 'No', yes_regularly: 'Yes, regularly', limited: 'Limited windows',
+                    no_members_only: 'No, members only', under_100: 'Under 100', '100_300': '100–300',
+                    '300_plus': '300+', under_500: 'Under 500', '500_1500': '500–1,500',
+                    '1500_3000': '1,500–3,000', '3000_plus': '3,000+',
+                    pro_shop_phone: 'Pro shop / phone', signup_sheet: 'Sign-up sheet',
+                    booking_software: 'Booking software', other: 'Other',
+                  };
+                  return (
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.06em] text-warn mb-2">Branch Answers</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {entries.map(([k, v]) => (
+                          <div key={k} className="bg-warn/5 border border-warn/20 rounded-md px-3 py-2">
+                            <div className="text-[10px] text-warn/80 mb-0.5">{NEEDS_LABELS[k] || k}</div>
+                            <div className="text-warn text-sm font-medium">{NEEDS_VALUES[String(v)] || String(v)}</div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })()}
+                    </div>
+                  );
+                })()}
+                {!selectedInq.currentBookingMethod && !selectedInq.teeTimesPerDay && !selectedInq.greenFeeRange &&
+                 !selectedInq.hasMemberPricing && !selectedInq.hasResidentPricing && !selectedInq.hasCaddies &&
+                 (!selectedInq.lookingFor || selectedInq.lookingFor.length === 0) &&
+                 !selectedInq.additionalNotes && !selectedInq.pricingNotes &&
+                 (!selectedInq.needsJson || selectedInq.needsJson === '{}' || selectedInq.needsJson === '') && (
+                  <p className="text-sm text-ink-faint text-center py-6">No inquiry answers on record.</p>
+                )}
+              </div>
+            )}
 
-            {/* Setup sheet (detailsJson) */}
-            {selectedInq.detailsJson && (() => {
-              let d: Record<string, unknown> = {};
-              try { d = JSON.parse(selectedInq.detailsJson || ''); } catch { /* ignore */ }
-              if (Object.keys(d).length === 0) return null;
-              // Support both old nested schedule format and new flat format
-              const sch = d.schedule as Record<string, unknown> | undefined;
-              const wdFee = (d.greenFeeWeekday ?? sch?.greenFeeWeekday) as string | undefined;
-              const weFee = (d.greenFeeWeekend ?? sch?.greenFeeWeekend) as string | undefined;
-              const firstTee = (d.firstTeeTime ?? sch?.startTime) as string | undefined;
-              const lastTee = (d.lastTeeTime ?? sch?.endTime) as string | undefined;
-              const intervalMin = (d.intervalMinutes ?? sch?.intervalMinutes) as string | undefined;
-              const cartFee = (d.cartFee ?? sch?.cartFee) as string | undefined;
-              const days = (d.daysOpen ?? sch?.daysOfWeek) as number[] | undefined;
-              const DAYS_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-              const DETAIL_LABELS: Record<string, string> = {
-                holes: 'Holes', par: 'Par', seasonOpen: 'Season opens', seasonClose: 'Season closes',
-                firstTeeTime: 'First tee', lastTeeTime: 'Last tee', intervalMinutes: 'Interval',
-                greenFeeWeekday: 'Weekday fee', greenFeeWeekend: 'Weekend fee', cartFee: 'Cart fee',
-                twilightFee: 'Twilight fee', walkingAllowed: 'Walking',
-                residentWeekday: 'Resident WD', residentWeekend: 'Resident WE', residentVerification: 'Residency check',
-                starterTierName: 'Tier name', starterTierFee: 'Tier fee',
-                memberAdvanceDays: 'Member advance', protectedTimes: 'Protected times',
-                publicGreenFee: 'Public fee', publicWindow: 'Public window',
-                memberRate: 'Member rate', outingsVolume: 'Outings frequency',
-                cancellationHours: 'Cancel window', lateFee: 'Late cancel fee',
-                facilities: 'Facilities', restaurantType: 'Restaurant',
-                website: 'Website', description: 'Description', additionalNotes: 'Notes',
-              };
-              const skipKeys = new Set(['schedule','daysOpen','daysOfWeek','greenFeeWeekday','greenFeeWeekend','firstTeeTime','lastTeeTime','intervalMinutes','cartFee']);
-              const rest = Object.entries(d).filter(([k, v]) =>
-                !skipKeys.has(k) && v !== '' && v !== null && !(Array.isArray(v) && v.length === 0)
-              );
-              return (
-                <div className="px-5 py-4 border-b border-line space-y-3">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ok">Setup Sheet</div>
-                  {(wdFee || firstTee) && (
-                    <div className="bg-ok/5 border border-ok/20 rounded-md p-3">
-                      <div className="text-ok font-medium text-xs mb-1 uppercase tracking-[0.05em]">Tee Sheet</div>
-                      {firstTee && lastTee && (
-                        <div className="text-ink text-sm">
-                          {Array.isArray(days) && days.length > 0 ? days.map(dd => DAYS_SHORT[dd]).join(', ') : 'Every day'}
-                          {' · '}{firstTee}–{lastTee} every {intervalMin || '?'}min
-                        </div>
-                      )}
+            {/* ── Sheet tab ────────────────────────────────────── */}
+            {activeDetailTab === 'sheet' && (
+              <div className="px-5 py-4 space-y-4">
+                {selectedInq.detailsJson ? (() => {
+                  let d: Record<string, unknown> = {};
+                  try { d = JSON.parse(selectedInq.detailsJson || ''); } catch { /* ignore */ }
+                  if (Object.keys(d).length === 0) return <p className="text-sm text-ink-faint text-center py-6">Sheet submitted but empty.</p>;
+                  const sch = d.schedule as Record<string, unknown> | undefined;
+                  const wdFee = (d.greenFeeWeekday ?? sch?.greenFeeWeekday) as string | undefined;
+                  const weFee = (d.greenFeeWeekend ?? sch?.greenFeeWeekend) as string | undefined;
+                  const firstTee = (d.firstTeeTime ?? sch?.startTime) as string | undefined;
+                  const lastTee = (d.lastTeeTime ?? sch?.endTime) as string | undefined;
+                  const intervalMin = (d.intervalMinutes ?? sch?.intervalMinutes) as string | undefined;
+                  const cartFee = (d.cartFee ?? sch?.cartFee) as string | undefined;
+                  const days = (d.daysOpen ?? sch?.daysOfWeek) as number[] | undefined;
+                  const DAYS_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+                  const DETAIL_LABELS: Record<string, string> = {
+                    holes: 'Holes', par: 'Par', seasonOpen: 'Season opens', seasonClose: 'Season closes',
+                    firstTeeTime: 'First tee', lastTeeTime: 'Last tee', intervalMinutes: 'Interval',
+                    greenFeeWeekday: 'Weekday fee', greenFeeWeekend: 'Weekend fee', cartFee: 'Cart fee',
+                    twilightFee: 'Twilight fee', walkingAllowed: 'Walking',
+                    residentWeekday: 'Resident WD', residentWeekend: 'Resident WE', residentVerification: 'Residency check',
+                    starterTierName: 'Tier name', starterTierFee: 'Tier fee',
+                    memberAdvanceDays: 'Member advance', protectedTimes: 'Protected times',
+                    publicGreenFee: 'Public fee', publicWindow: 'Public window',
+                    memberRate: 'Member rate', outingsVolume: 'Outings frequency',
+                    cancellationHours: 'Cancel window', lateFee: 'Late cancel fee',
+                    facilities: 'Facilities', restaurantType: 'Restaurant',
+                    website: 'Website', description: 'Description', additionalNotes: 'Notes',
+                  };
+                  const skipKeys = new Set(['schedule','daysOpen','daysOfWeek','greenFeeWeekday','greenFeeWeekend','firstTeeTime','lastTeeTime','intervalMinutes','cartFee']);
+                  const rest = Object.entries(d).filter(([k, v]) =>
+                    !skipKeys.has(k) && v !== '' && v !== null && !(Array.isArray(v) && v.length === 0)
+                  );
+                  const checks: { label: string; ok: boolean }[] = [
+                    { label: 'Weekday green fee', ok: !!(d.greenFeeWeekday || sch?.greenFeeWeekday) },
+                    { label: 'Weekend green fee', ok: !!(d.greenFeeWeekend || sch?.greenFeeWeekend) },
+                    { label: 'First tee time', ok: !!(d.firstTeeTime || sch?.startTime) },
+                    { label: 'Last tee time', ok: !!(d.lastTeeTime || sch?.endTime) },
+                    { label: 'Cancellation policy', ok: !!(d.cancellationHours) },
+                    { label: 'Course description', ok: !!(d.description) },
+                  ];
+                  const allGood = checks.every(c => c.ok);
+                  return (
+                    <>
+                      {(wdFee || firstTee) && (
+                        <div className="bg-ok/5 border border-ok/20 rounded-md p-3">
+                          <div className="text-ok font-medium text-xs mb-1 uppercase tracking-[0.05em]">Tee Sheet</div>
+                          {firstTee && lastTee && (
+                            <div className="text-ink text-sm">
+                              {Array.isArray(days) && days.length > 0 ? days.map(dd => DAYS_SHORT[dd]).join(', ') : 'Every day'}
+                              {' · '}{firstTee}–{lastTee} every {intervalMin || '?'}min
+                            </div>
+                          )}
                       {(wdFee || weFee) && (
                         <div className="text-ink-muted text-xs mt-1">
                           WD ${wdFee || '—'} / WE ${weFee || '—'}{cartFee ? ` · Cart $${cartFee}` : ''}
@@ -886,91 +987,85 @@ export default function InquiriesPage() {
                       ))}
                     </div>
                   )}
-                </div>
-              );
-            })()}
-
-            {/* Ready-to-build checklist */}
-            {selectedInq.detailsJson && (() => {
-              let d: Record<string, unknown> = {};
-              try { d = JSON.parse(selectedInq.detailsJson); } catch { return null; }
-              if (Object.keys(d).length === 0) return null;
-              const sch = d.schedule as Record<string, unknown> | undefined;
-              const checks: { label: string; ok: boolean }[] = [
-                { label: 'Weekday green fee', ok: !!(d.greenFeeWeekday || sch?.greenFeeWeekday) },
-                { label: 'Weekend green fee', ok: !!(d.greenFeeWeekend || sch?.greenFeeWeekend) },
-                { label: 'First tee time', ok: !!(d.firstTeeTime || sch?.startTime) },
-                { label: 'Last tee time', ok: !!(d.lastTeeTime || sch?.endTime) },
-                { label: 'Cancellation policy', ok: !!(d.cancellationHours) },
-                { label: 'Course description', ok: !!(d.description) },
-              ];
-              const allGood = checks.every(c => c.ok);
-              return (
-                <div className="px-5 py-4 border-b border-line">
-                  <div className={'text-[11px] uppercase tracking-[0.06em] mb-2 ' + (allGood ? 'text-ok' : 'text-warn')}>
-                    {allGood ? 'Ready to Build' : 'Build Checklist'}
-                  </div>
-                  <div className="space-y-1">
-                    {checks.map(c => (
-                      <div key={c.label} className="flex items-center gap-2 text-xs">
-                        <div className={'w-1.5 h-1.5 rounded-full shrink-0 ' + (c.ok ? 'bg-ok' : 'bg-warn')} />
-                        <span className={c.ok ? 'text-ink' : 'text-warn'}>{c.label}</span>
-                        {!c.ok && <span className="text-ink-faint">missing</span>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* History */}
-            {selectedInq.events && selectedInq.events.length > 0 && (
-              <div className="px-5 py-4 border-b border-line">
-                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">History</div>
-                <div className="space-y-2.5">
-                  {selectedInq.events.map(ev => (
-                    <div key={ev.id} className="flex items-start gap-2.5 text-xs">
-                      <div className={'w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ' + (ev.trigger === 'system' ? 'bg-ink-faint' : 'bg-pine/60')} />
-                      <div>
-                        <span className="text-ink">{STATUS_LABEL[ev.fromStatus] || ev.fromStatus}</span>
-                        <span className="text-ink-muted mx-1">→</span>
-                        <span className="text-ink font-medium">{STATUS_LABEL[ev.toStatus] || ev.toStatus}</span>
-                        <span className="text-ink-faint ml-1.5">
-                          {ev.trigger === 'admin' && ev.actorName ? 'by ' + ev.actorName : ev.actorName || 'auto'}
-                        </span>
-                        <div className="text-ink-faint text-[10px] mt-0.5">{fmtDate(ev.createdAt)}</div>
-                      </div>
+                  <div>
+                    <div className={'text-[11px] uppercase tracking-[0.06em] mb-2 ' + (allGood ? 'text-ok' : 'text-warn')}>
+                      {allGood ? 'Ready to Build' : 'Build Checklist'}
                     </div>
-                  ))}
+                    <div className="space-y-1">
+                      {checks.map(c => (
+                        <div key={c.label} className="flex items-center gap-2 text-xs">
+                          <div className={'w-1.5 h-1.5 rounded-full shrink-0 ' + (c.ok ? 'bg-ok' : 'bg-warn')} />
+                          <span className={c.ok ? 'text-ink' : 'text-warn'}>{c.label}</span>
+                          {!c.ok && <span className="text-ink-faint">missing</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+                  );
+                })() : (
+                  <p className="text-sm text-ink-faint text-center py-6">No sheet submitted yet.</p>
+                )}
+              </div>
+            )}
+
+            {/* ── Activity tab ─────────────────────────────────── */}
+            {activeDetailTab === 'activity' && (
+              <div className="px-5 py-4 space-y-5">
+                {selectedInq.events && selectedInq.events.length > 0 && (
+                  <div>
+                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">History</div>
+                    <div className="space-y-2.5">
+                      {selectedInq.events.map(ev => (
+                        <div key={ev.id} className="flex items-start gap-2.5 text-xs">
+                          <div className={'w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ' + (ev.trigger === 'system' ? 'bg-ink-faint' : 'bg-pine/60')} />
+                          <div>
+                            {ev.fromStatus === 'contact_updated' ? (
+                              <span className="text-ink">Contact info updated</span>
+                            ) : (
+                              <>
+                                <span className="text-ink">{STATUS_LABEL[ev.fromStatus] || ev.fromStatus}</span>
+                                <span className="text-ink-muted mx-1">→</span>
+                                <span className="text-ink font-medium">{STATUS_LABEL[ev.toStatus] || ev.toStatus}</span>
+                              </>
+                            )}
+                            <span className="text-ink-faint ml-1.5">
+                              {ev.trigger === 'admin' && ev.actorName ? 'by ' + ev.actorName : ev.actorName || 'auto'}
+                            </span>
+                            <div className="text-ink-faint text-[10px] mt-0.5">{fmtDate(ev.createdAt)}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Internal Notes</div>
+                  {selectedInq.adminNotes && (
+                    <pre className="text-xs text-ink-soft bg-paper border border-line rounded-md px-4 py-3 mb-3 whitespace-pre-wrap font-sans">
+                      {selectedInq.adminNotes}
+                    </pre>
+                  )}
+                  <div className="flex gap-2">
+                    <textarea
+                      value={noteTexts[selectedInq.id] || ''}
+                      onChange={e => setNoteTexts(p => ({ ...p, [selectedInq.id]: e.target.value }))}
+                      placeholder="Add a note..."
+                      rows={2}
+                      className="flex-1 bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40 resize-none"
+                    />
+                    <button
+                      onClick={() => inquiryAction(selectedInq.id, 'add_note', { note: noteTexts[selectedInq.id] || '' })}
+                      disabled={!noteTexts[selectedInq.id]?.trim() || processing === selectedInq.id}
+                      className="px-4 py-2 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white text-xs font-medium rounded-md transition-colors self-start"
+                    >
+                      Save
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Admin notes */}
-            <div className="px-5 py-4">
-              <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Internal Notes</div>
-              {selectedInq.adminNotes && (
-                <pre className="text-xs text-ink-soft bg-paper border border-line rounded-md px-4 py-3 mb-3 whitespace-pre-wrap font-sans">
-                  {selectedInq.adminNotes}
-                </pre>
-              )}
-              <div className="flex gap-2">
-                <textarea
-                  value={noteTexts[selectedInq.id] || ''}
-                  onChange={e => setNoteTexts(p => ({ ...p, [selectedInq.id]: e.target.value }))}
-                  placeholder="Add a note..."
-                  rows={2}
-                  className="flex-1 bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40 resize-none"
-                />
-                <button
-                  onClick={() => inquiryAction(selectedInq.id, 'add_note', { note: noteTexts[selectedInq.id] || '' })}
-                  disabled={!noteTexts[selectedInq.id]?.trim() || processing === selectedInq.id}
-                  className="px-4 py-2 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white text-xs font-medium rounded-md transition-colors self-start"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}
