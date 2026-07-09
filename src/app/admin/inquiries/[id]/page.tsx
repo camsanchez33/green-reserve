@@ -200,6 +200,7 @@ function InquiryDetailInner() {
   const [stageOverride, setStageOverride] = useState('');
   const [noteText, setNoteText] = useState('');
   const [approveResult, setApproveResult] = useState<ApproveResult | null>(null);
+  const [actionError, setActionError] = useState('');
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
@@ -237,6 +238,7 @@ function InquiryDetailInner() {
 
   async function action(act: string, extra: Record<string, unknown> = {}) {
     setProcessing(true);
+    setActionError('');
     try {
       const r = await fetch('/api/admin/inquiries', {
         method: 'PATCH', headers: H(),
@@ -250,28 +252,29 @@ function InquiryDetailInner() {
           setApproveResult(d as ApproveResult);
         }
         if (act === 'mark_live' && d.emailSent === false) {
-          alert('Course is live, but the orientation email failed (' + (d.emailError || 'unknown error') + ').');
+          setActionError('Course is live, but the orientation email failed (' + (d.emailError || 'unknown error') + ').');
         }
         if (act === 'add_note') setNoteText('');
         await loadInquiry();
       } else {
-        alert('Failed (' + r.status + '): ' + ((d.error as string) || text.slice(0, 200)));
+        setActionError('Failed (' + r.status + '): ' + ((d.error as string) || text.slice(0, 200)));
       }
-    } catch (e) { alert('Error: ' + e); }
+    } catch (e) { setActionError('Error: ' + e); }
     setProcessing(false);
   }
 
   async function createDraftCourse() {
     setProcessing(true);
+    setActionError('');
     try {
       const r = await fetch('/api/admin/inquiries', {
         method: 'PATCH', headers: H(),
         body: JSON.stringify({ id: params.id, action: 'create_draft_course' }),
       });
       const d = await r.json();
-      if (!r.ok) { alert('Failed: ' + (d.error || 'unknown error')); setProcessing(false); return; }
+      if (!r.ok) { setActionError((d.error as string) || 'Failed to create draft'); setProcessing(false); return; }
       if (d.courseId) router.push('/admin/courses/' + d.courseId);
-    } catch (e) { alert('Error: ' + e); }
+    } catch (e) { setActionError('Error: ' + e); }
     setProcessing(false);
   }
 
@@ -284,14 +287,15 @@ function InquiryDetailInner() {
 
   async function saveContact() {
     setProcessing(true);
+    setActionError('');
     try {
       const r = await fetch('/api/admin/inquiries', {
         method: 'PATCH', headers: H(),
         body: JSON.stringify({ id: params.id, action: 'update_contact', ...contactEdits }),
       });
       if (r.ok) { setEditContact(false); await loadInquiry(); }
-      else { alert('Could not save — please try again'); }
-    } catch (e) { alert('Error: ' + e); }
+      else { setActionError('Could not save — please try again'); }
+    } catch (e) { setActionError('Error: ' + e); }
     setProcessing(false);
   }
 
@@ -493,6 +497,16 @@ function InquiryDetailInner() {
               </div>
             );
           })()}
+
+          {/* Inline action error */}
+          {actionError && (
+            <div className="mt-3 bg-bad/5 border border-bad/20 rounded-md px-4 py-2.5 flex items-center justify-between gap-3">
+              <p className="text-bad text-xs leading-relaxed">{actionError}</p>
+              <button onClick={() => setActionError('')} className="text-bad/60 hover:text-bad shrink-0 transition-colors">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 14 14"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* ── Next Steps card ──────────────────────────────────────── */}
@@ -836,7 +850,35 @@ function InquiryDetailInner() {
                                 </div>
                             }
                           </div>
-                          <SField label="18-hole combos played" value={sd.nine27Combos ? String(sd.nine27Combos) : null} />
+                          {/* V7: structured combos */}
+                          {Array.isArray(sd.nine27CombosEnabled) && (sd.nine27CombosEnabled as string[]).length > 0 ? (
+                            <div className="col-span-2 bg-white border border-line rounded-lg px-4 py-3">
+                              <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">18-hole combos offered</div>
+                              <div className="flex gap-2 flex-wrap">
+                                {(sd.nine27CombosEnabled as string[]).map(k => (
+                                  <span key={k} className="bg-paper border border-line px-2.5 py-1 rounded-md text-sm text-ink">
+                                    {k.replace('+', ' + ')}
+                                    {(sd.nine27ComboNotes as Record<string, string> | undefined)?.[k]
+                                      ? <span className="text-ink-muted text-xs ml-1">— {(sd.nine27ComboNotes as Record<string, string>)[k]}</span>
+                                      : null}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ) : sd.nine27Combos ? (
+                            <SField label="18-hole combos" value={String(sd.nine27Combos)} />
+                          ) : null}
+                          {/* V7: par per nine */}
+                          {sd.nine27ParsPerNine && Object.keys(sd.nine27ParsPerNine as object).length > 0 && (
+                            <div className="col-span-2 bg-white border border-line rounded-lg px-4 py-3">
+                              <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Par per nine</div>
+                              <div className="flex gap-3 flex-wrap">
+                                {Object.entries(sd.nine27ParsPerNine as Record<string, string>).map(([name, par]) => (
+                                  <span key={name} className="text-sm text-ink"><span className="text-ink-muted">{name}:</span> {par}</span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                           <SField label="Each nine bookable alone?" value={BOOL_LABELS[String(sd.nine27BookableAlone || '')] || null} />
                         </>
                       )}

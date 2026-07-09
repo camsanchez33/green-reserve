@@ -330,9 +330,8 @@ async function handleAction(
     try {
       const operatorEmail = inquiry.email.trim().toLowerCase();
       const existingOp = await prisma.courseOperator.findUnique({ where: { email: operatorEmail } });
-      if (existingOp) {
-        if (inquiry.builtCourseId) return NextResponse.json({ courseId: inquiry.builtCourseId, needsReview: [], alreadyBuilt: true });
-        return NextResponse.json({ error: 'An operator account already exists for this email. Update the contact email or use Manual build.' }, { status: 409 });
+      if (existingOp && inquiry.builtCourseId) {
+        return NextResponse.json({ courseId: inquiry.builtCourseId, needsReview: [], alreadyBuilt: true });
       }
 
       let d: Record<string, unknown> = {};
@@ -408,59 +407,69 @@ async function handleAction(
       if (!d.cancellationPolicy) needsReview.push('Cancellation policy not answered in sheet');
       if (holes === 27) needsReview.push('27-hole course: verify which 9-hole combos to set up as booking sheets');
       if (holes === 36) needsReview.push('36-hole course: verify two-course booking setup');
+      if (existingOp) needsReview.push('Attached to existing operator account — no new login created');
 
       const adminNotes = needsReview.length > 0
         ? `[BUILD NOTES]\n${needsReview.map(n => `• ${n}`).join('\n')}`
         : '';
 
-      const tempPassword = randomBytes(8).toString('hex');
-      const hashed = await bcrypt.hash(tempPassword, 12);
       const baseSlug = inquiry.courseName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
       let slug = baseSlug;
       const slugExists = await prisma.course.findUnique({ where: { slug } });
       if (slugExists) slug = `${baseSlug}-${randomBytes(3).toString('hex')}`;
-      const verificationToken = randomBytes(32).toString('hex');
 
-      const operator = await prisma.courseOperator.create({
-        data: {
-          email: operatorEmail,
-          password: hashed,
-          name: inquiry.contactName,
-          emailVerified: false,
-          verificationToken,
-          onboardingStep: 0,
-          course: {
-            create: {
-              slug, name: inquiry.courseName, type: inquiry.courseType,
-              address: inquiry.address, city: inquiry.city, state: inquiry.state,
-              zipCode: inquiry.zipCode, phone: inquiry.phone,
-              website: str(d.website, inquiry.website),
-              description: str(d.description, ''),
-              active: false, liveStatus: 'draft',
-              holes: num(holes, 18), par: num(par, 72),
-              walkingAllowed, walkingNote: str(d.walkingNote, ''),
-              cartRequired: bool(d.cartRequired, false), dresscode: [],
-              cancellationHours, lateCancellationFee, rainCheckPolicy: '',
-              publicAdvanceDays: num(Number(d.publicAdvanceDays), 7),
-              memberAdvanceDays: num(Number(d.memberAdvanceDays), 14),
-              hasMemberPricing, hasResidentPricing,
-              residentCounty, residentState: str(d.residentState, inquiry.state),
-              hasCaddies: bool(d.hasCaddies, inquiry.hasCaddies),
-              caddieType: '', caddieLooperRate: 0, caddieForeRate: 0, caddieNote: '',
-              hasDrivingRange, drivingRangeType, rangeBallsFree,
-              rangeBallsSmallPrice, rangeBallsMediumPrice, rangeBallsLargePrice,
-              hasPuttingGreen, hasShortGameArea, hasProShop, proShopPhone,
-              restaurantType, hasCartGirl: false, hasLessons, hasClubRental,
-              hasPushCartRental, pushCartRate, hasBagStorage, hasLockerRoom,
-              hasGpsCarts, hasTournaments, tournamentFrequency,
-              adminNotes,
-            },
+      const courseFields = {
+        slug, name: inquiry.courseName, type: inquiry.courseType,
+        address: inquiry.address, city: inquiry.city, state: inquiry.state,
+        zipCode: inquiry.zipCode, phone: inquiry.phone,
+        website: str(d.website, inquiry.website),
+        description: str(d.description, ''),
+        active: false, liveStatus: 'draft',
+        holes: num(holes, 18), par: num(par, 72),
+        walkingAllowed, walkingNote: str(d.walkingNote, ''),
+        cartRequired: bool(d.cartRequired, false), dresscode: [],
+        cancellationHours, lateCancellationFee, rainCheckPolicy: '',
+        publicAdvanceDays: num(Number(d.publicAdvanceDays), 7),
+        memberAdvanceDays: num(Number(d.memberAdvanceDays), 14),
+        hasMemberPricing, hasResidentPricing,
+        residentCounty, residentState: str(d.residentState, inquiry.state),
+        hasCaddies: bool(d.hasCaddies, inquiry.hasCaddies),
+        caddieType: '', caddieLooperRate: 0, caddieForeRate: 0, caddieNote: '',
+        hasDrivingRange, drivingRangeType, rangeBallsFree,
+        rangeBallsSmallPrice, rangeBallsMediumPrice, rangeBallsLargePrice,
+        hasPuttingGreen, hasShortGameArea, hasProShop, proShopPhone,
+        restaurantType, hasCartGirl: false, hasLessons, hasClubRental,
+        hasPushCartRental, pushCartRate, hasBagStorage, hasLockerRoom,
+        hasGpsCarts, hasTournaments, tournamentFrequency,
+        adminNotes,
+      };
+
+      let builtCourseId: string | null = null;
+      if (existingOp) {
+        const existingCourse = await prisma.course.findUnique({ where: { operatorId: existingOp.id } });
+        if (existingCourse) {
+          return NextResponse.json({ error: `Operator already has a course (${existingCourse.name}). Archive it first or use a different contact email.` }, { status: 409 });
+        }
+        const newCourse = await prisma.course.create({ data: { operatorId: existingOp.id, ...courseFields } });
+        builtCourseId = newCourse.id;
+      } else {
+        const tempPassword = randomBytes(8).toString('hex');
+        const hashed = await bcrypt.hash(tempPassword, 12);
+        const verificationToken = randomBytes(32).toString('hex');
+        const operator = await prisma.courseOperator.create({
+          data: {
+            email: operatorEmail,
+            password: hashed,
+            name: inquiry.contactName,
+            emailVerified: false,
+            verificationToken,
+            onboardingStep: 0,
+            course: { create: courseFields },
           },
-        },
-        include: { course: true },
-      });
-
-      const builtCourseId = operator.course?.id ?? null;
+          include: { course: true },
+        });
+        builtCourseId = operator.course?.id ?? null;
+      }
       const from = inquiry.status;
       await prisma.courseInquiry.update({
         where: { id: inquiryId },
