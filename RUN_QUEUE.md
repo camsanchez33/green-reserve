@@ -81,7 +81,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] ONBOARDING_V2_SPEC Phase V3c — walkthrough refinements: resident-rate validation bug, merge residents+memberships into one "Memberships & passes" step (tier types incl. resident card, verification: automatic vs purchased card), explicit "no cancellation policy" choice (small/medium, no migration) — d87f24b
 - [x] ONBOARDING_V2_SPEC Phase V5 — inquiry full page at /admin/inquiries/[id] replaces the drawer: header + action toolbar, full-width tabs, HUMAN-readable sheet tab (label/value maps, sections, coherent-answers filtering, amber "not provided"), stage-driven "Next steps" card, delete drawer (medium-big, no migration) — 9d54218
 - [x] ONBOARDING_V2_SPEC Phase V4 — one-click "Create draft course" from submitted sheet (replaces wizard in pipeline; wizard = in-person only), fix bugged build entry point on course/inquiry rows, needs-review notes for missing fields (medium, no migration) — 1eed95f
-- [ ] ONBOARDING_V2_SPEC Phase V6 — inquiries list: single tab bar (Your move/New/In review/Waiting/Building/All/Archived) with counts + per-tab description, kills the chip row, tab in URL, row cleanup (small/medium, no migration)
+- [x] ONBOARDING_V2_SPEC Phase V6 — inquiries list: single tab bar (Your move/New/In review/Waiting/Building/All/Archived) with counts + per-tab description, kills the chip row, tab in URL, row cleanup (small/medium, no migration) — e0ce53a
 - [ ] MANAGE_BOOKING_SPEC Phase M4 — course-configurable check-in window (Course.checkInWindowHours) driving the existing "time to check in" email; operator sets it in Settings (schema change, attended)
 
 ## Ideas / not yet specced
