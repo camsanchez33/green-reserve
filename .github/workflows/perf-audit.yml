@@ -1,0 +1,35 @@
+name: Performance audit
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  lighthouse:
+    name: Lighthouse budget check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Lighthouse + tsx
+        run: npm install -D lighthouse tsx
+
+      - name: Install Chromium
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q chromium-browser || sudo apt-get install -y -q chromium
+
+      - name: Run Lighthouse audit
+        run: npx tsx scripts/perf-audit.ts
+        env:
+          # Override via GitHub repo variable AUDIT_BASE_URL to test a preview URL.
+          # Default is production — acceptable since Vercel deploys every branch anyway.
+          AUDIT_BASE_URL: ${{ vars.AUDIT_BASE_URL || 'https://greenreserve.app' }}

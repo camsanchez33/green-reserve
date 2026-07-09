@@ -363,7 +363,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
           <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 w-full pb-6">
             {course.logo_url && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={course.logo_url} alt={`${course.name} logo`} className="h-12 w-12 rounded-md bg-white object-contain p-1 shadow-lg mb-3" />
+              <img src={course.logo_url} alt={`${course.name} logo`} className="h-12 w-12 rounded-md bg-white object-contain p-1 shadow-lg mb-3" loading="lazy" />
             )}
             <span className="text-xs font-medium text-white/70 mb-1 inline-block">Private Club</span>
             <h1 className="text-2xl sm:text-3xl font-serif font-medium text-white leading-tight">{course.name}</h1>
@@ -498,6 +498,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                   src={course.logo_url}
                   alt={`${course.name} logo`}
                   className="h-12 w-12 sm:h-16 sm:w-16 rounded-md bg-white object-contain p-1 shadow-lg flex-shrink-0"
+                  loading="lazy"
                 />
               )}
               <div>
@@ -1092,6 +1093,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                     src={p.url}
                     alt=""
                     className="w-full aspect-video object-cover rounded-lg border border-line"
+                    loading="lazy"
                   />
                 ))}
               </div>

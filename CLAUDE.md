@@ -146,6 +146,29 @@ in `.env.local` only.
 Preview deployments currently share the production DATABASE_URL unless manually
 overridden per-deployment. For schema migrations, always override before running them.
 
+### Performance budgets (golfer-facing pages)
+
+Enforced by `.github/workflows/perf-audit.yml` on every PR. Run locally:
+```bash
+AUDIT_BASE_URL=https://greenreserve.app npx tsx scripts/perf-audit.ts
+```
+
+| Metric | Budget |
+|--------|--------|
+| Lighthouse Performance score | ≥ 85 |
+| LCP (Largest Contentful Paint) | ≤ 2.5 s |
+| TBT (Total Blocking Time) | ≤ 300 ms |
+| CLS (Cumulative Layout Shift) | ≤ 0.10 |
+
+Pages audited: `/`, `/for-courses`, `/courses/[slug]`, `/book` (shell).
+Mobile emulation + simulated slow-4G throttling. Chromium required.
+
+Key rules to keep budgets green:
+- No heavy client-side animation libraries (framer-motion removed — use CSS transitions)
+- `<img>` tags must have `loading="lazy"` unless above the fold
+- Stripe JS deferred until a card is actually needed (`getStripePromise()` pattern in book/page.tsx)
+- New `'use client'` components on golfer pages need a bundle-size justification
+
 ### Schema change mini-checklist (post Section A)
 Every schema change must pass ALL of these before merging to main:
 1. `prisma migrate dev --name <x>` generated a migration file (committed)

@@ -2,16 +2,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Check, X, Play } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 const SHOW_VIDEO = false;
-
-const fadeUp = {
-  initial: { opacity: 0, y: 24 },
-  whileInView: { opacity: 1, y: 0 },
-  transition: { duration: 0.5, ease: 'easeOut' },
-  viewport: { once: true },
-};
 
 function Screenshot({ src, caption }: { src: string; caption: string }) {
   const [failed, setFailed] = useState(false);
@@ -26,7 +18,8 @@ function Screenshot({ src, caption }: { src: string; caption: string }) {
   }
   return (
     <div className="rounded-lg border border-line overflow-hidden">
-      <img src={src} alt={caption} className="w-full block" onError={() => setFailed(true)} />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt={caption} className="w-full block" loading="lazy" onError={() => setFailed(true)} />
     </div>
   );
 }
@@ -46,7 +39,7 @@ export default function HomeContent() {
         />
         <div className="absolute inset-0 bg-black/45" />
         <div className="relative z-10 max-w-5xl mx-auto px-6 pt-24 pb-24">
-          <motion.div {...fadeUp} className="max-w-2xl">
+          <div className="max-w-2xl">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-serif font-medium text-white leading-[1.05] tracking-tight mb-5">
               The tee sheet<br />your course deserves.
             </h1>
@@ -67,31 +60,24 @@ export default function HomeContent() {
             <p className="text-white/35 text-sm">
               Golfers pay a $1.50 booking fee. You keep 100% of your green fees. $0/month.
             </p>
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* HOW IT WORKS — 3-step editorial timeline */}
       <section id="how-it-works" className="bg-white border-t border-line py-32">
         <div className="max-w-4xl mx-auto px-6">
-          <motion.div {...fadeUp} className="mb-16">
+          <div className="mb-16">
             <p className="text-[11px] uppercase tracking-[0.06em] text-pine font-medium mb-3">How it works</p>
             <h2 className="text-3xl sm:text-4xl font-serif font-medium text-ink tracking-tight">We set it up. You run it.</h2>
-          </motion.div>
+          </div>
           <div className="space-y-10">
             {[
               { n: '01', title: 'We review your submission', body: "We'll reply within 1 business day. If it's a good fit, we'll send you a short details sheet." },
               { n: '02', title: 'You fill out a details sheet', body: 'Pricing, policies, facilities — about 5 minutes. Saves as you go.' },
               { n: '03', title: 'We build your page', body: 'You review, approve, and go live. Golfers can book the same day.' },
-            ].map((s, i) => (
-              <motion.div
-                key={s.n}
-                className="flex gap-10"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45, ease: 'easeOut', delay: i * 0.08 }}
-                viewport={{ once: true }}
-              >
+            ].map((s) => (
+              <div key={s.n} className="flex gap-10">
                 <div className="w-8 shrink-0 pt-1">
                   <span className="text-[11px] uppercase tracking-[0.06em] text-ink-faint font-medium">{s.n}</span>
                 </div>
@@ -99,7 +85,7 @@ export default function HomeContent() {
                   <h3 className="text-ink font-semibold text-base mb-1.5">{s.title}</h3>
                   <p className="text-ink-soft text-sm leading-relaxed">{s.body}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -108,12 +94,12 @@ export default function HomeContent() {
       {/* PUBLIC / PRIVATE SPLIT */}
       <section className="bg-paper border-t border-line py-24">
         <div className="max-w-5xl mx-auto px-6">
-          <motion.div {...fadeUp} className="mb-12">
+          <div className="mb-12">
             <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-3">Who it&apos;s for</p>
             <h2 className="text-3xl sm:text-4xl font-serif font-medium text-ink tracking-tight">Built for every type of course</h2>
-          </motion.div>
+          </div>
           <div className="grid sm:grid-cols-2 gap-5">
-            <motion.div {...fadeUp} className="bg-white border border-line rounded-lg p-8">
+            <div className="bg-white border border-line rounded-lg p-8">
               <p className="text-[11px] uppercase tracking-[0.06em] text-pine font-medium mb-4">Public courses</p>
               <h3 className="text-xl font-serif font-medium text-ink mb-3 tracking-tight">Online tee times, zero commission</h3>
               <p className="text-ink-soft text-sm leading-relaxed mb-6">
@@ -133,15 +119,9 @@ export default function HomeContent() {
               >
                 List as public course <ArrowRight size={14} />
               </Link>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-              viewport={{ once: true }}
-              className="bg-white border border-line rounded-lg p-8"
-            >
+            <div className="bg-white border border-line rounded-lg p-8">
               <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">Private clubs</p>
               <h3 className="text-xl font-serif font-medium text-ink mb-3 tracking-tight">Member booking, your rules</h3>
               <p className="text-ink-soft text-sm leading-relaxed mb-6">
@@ -161,7 +141,7 @@ export default function HomeContent() {
               >
                 List as private club <ArrowRight size={14} />
               </Link>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
@@ -169,22 +149,22 @@ export default function HomeContent() {
       {/* FEATURE ROWS */}
       <section className="bg-white border-t border-line py-32">
         <div className="max-w-5xl mx-auto px-6">
-          <motion.div {...fadeUp} className="mb-16">
+          <div className="mb-16">
             <p className="text-[11px] uppercase tracking-[0.06em] text-pine font-medium mb-3">What you get</p>
             <h2 className="text-3xl sm:text-4xl font-serif font-medium text-ink tracking-tight">A complete tee sheet operation</h2>
-          </motion.div>
+          </div>
 
           {SHOW_VIDEO && (
-            <motion.div {...fadeUp} className="mb-16 max-w-3xl">
+            <div className="mb-16 max-w-3xl">
               <div className="aspect-video bg-paper border border-line rounded-lg flex flex-col items-center justify-center gap-3">
                 <Play className="w-10 h-10 text-ink-faint" />
                 <p className="text-ink-muted text-sm">2-minute walkthrough</p>
               </div>
-            </motion.div>
+            </div>
           )}
 
           <div className="space-y-24">
-            <motion.div {...fadeUp} className="grid sm:grid-cols-2 gap-12 items-center">
+            <div className="grid sm:grid-cols-2 gap-12 items-center">
               <Screenshot src="/screenshots/dashboard-1.png" caption="Tee sheet" />
               <div>
                 <h3 className="text-2xl font-serif font-medium text-ink tracking-tight mb-3">Your tee sheet, live in hours</h3>
@@ -193,9 +173,9 @@ export default function HomeContent() {
                 </p>
                 <p className="text-ink-muted text-sm">10-minute default interval; adjust to 7 or 15 anytime.</p>
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div {...fadeUp} className="grid sm:grid-cols-2 gap-12 items-center">
+            <div className="grid sm:grid-cols-2 gap-12 items-center">
               <div className="order-2 sm:order-1">
                 <h3 className="text-2xl font-serif font-medium text-ink tracking-tight mb-3">Every booking, right here</h3>
                 <p className="text-ink-soft text-sm leading-relaxed mb-4">
@@ -206,9 +186,9 @@ export default function HomeContent() {
               <div className="order-1 sm:order-2">
                 <Screenshot src="/screenshots/dashboard-2.png" caption="Live bookings" />
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div {...fadeUp} className="grid sm:grid-cols-2 gap-12 items-center">
+            <div className="grid sm:grid-cols-2 gap-12 items-center">
               <Screenshot src="/screenshots/dashboard-3.png" caption="Payouts" />
               <div>
                 <h3 className="text-2xl font-serif font-medium text-ink tracking-tight mb-3">Payouts go straight to your bank</h3>
@@ -217,27 +197,27 @@ export default function HomeContent() {
                 </p>
                 <p className="text-ink-muted text-sm">Stripe payouts on your account&apos;s normal schedule.</p>
               </div>
-            </motion.div>
+            </div>
           </div>
 
-          <motion.div {...fadeUp} className="mt-16 pt-8 border-t border-line">
+          <div className="mt-16 pt-8 border-t border-line">
             <p className="text-ink-muted text-sm">
               Also includes: tee time generator, cancellation policy engine, member &amp; resident rates, staff logins, email confirmations, and a public course listing page.
             </p>
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* COMPARISON */}
       <section className="bg-paper border-t border-line py-32">
         <div className="max-w-4xl mx-auto px-6">
-          <motion.div {...fadeUp} className="mb-12 text-center">
+          <div className="mb-12 text-center">
             <p className="text-[11px] uppercase tracking-[0.06em] text-pine font-medium mb-3">Why GreenReserve</p>
             <h2 className="text-3xl sm:text-4xl font-serif font-medium text-ink tracking-tight">
               Built different from the start
             </h2>
-          </motion.div>
-          <motion.div {...fadeUp} className="grid sm:grid-cols-2 gap-6">
+          </div>
+          <div className="grid sm:grid-cols-2 gap-6">
             <div className="border border-line rounded-lg p-8 bg-white">
               <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-6">Typical booking platforms</div>
               <div className="space-y-4 text-sm">
@@ -276,19 +256,19 @@ export default function HomeContent() {
                 ))}
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* PRICING */}
       <section id="pricing" className="bg-pine border-t border-white/10 py-32">
         <div className="max-w-3xl mx-auto px-6">
-          <motion.div {...fadeUp} className="mb-16">
+          <div className="mb-16">
             <p className="text-[11px] uppercase tracking-[0.06em] text-paper/60 font-medium mb-3">Pricing</p>
             <h2 className="text-3xl sm:text-4xl font-serif font-medium text-white tracking-tight mb-2">Simple and honest</h2>
             <p className="text-white/40 text-sm">No setup fees. No monthly fees. No contracts.</p>
-          </motion.div>
-          <motion.div {...fadeUp} className="grid sm:grid-cols-2 gap-6">
+          </div>
+          <div className="grid sm:grid-cols-2 gap-6">
             <div className="border border-white/15 p-8 rounded-lg">
               <div className="text-4xl font-serif font-medium text-white mb-1">$0</div>
               <div className="text-paper/60 font-medium text-sm mb-6">For your course · Forever</div>
@@ -311,17 +291,17 @@ export default function HomeContent() {
                 Example: 4-player round = $6 total service fee charged to golfers. Your green fee revenue is untouched.
               </p>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* FAQ */}
       <section id="faq" className="bg-white border-t border-line py-32">
         <div className="max-w-3xl mx-auto px-6">
-          <motion.div {...fadeUp} className="mb-14">
+          <div className="mb-14">
             <h2 className="text-3xl font-serif font-medium text-ink tracking-tight">Common questions</h2>
-          </motion.div>
-          <motion.div {...fadeUp} className="divide-y divide-line">
+          </div>
+          <div className="divide-y divide-line">
             {[
               { q: 'How long does onboarding take?', a: 'Typically 1–2 business days from your initial inquiry. Our team handles setup and walks you through everything.' },
               { q: 'Do we need any technical knowledge?', a: 'None. We build your booking page. You add a link on your website and log in to manage your tee sheet.' },
@@ -335,25 +315,25 @@ export default function HomeContent() {
                 <div className="text-ink-soft text-sm leading-relaxed">{a}</div>
               </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* CTA */}
-      <motion.section {...fadeUp} className="bg-paper border-t border-line py-32 text-center">
+      <section className="bg-paper border-t border-line py-32 text-center">
         <div className="max-w-2xl mx-auto px-6">
           <h2 className="text-3xl sm:text-4xl font-serif font-medium text-ink tracking-tight mb-4">Ready to go live?</h2>
           <p className="text-ink-soft mb-8 text-sm">Submit your interest and we&apos;ll be in touch within 1 business day.</p>
-          <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }} className="inline-block">
-            <Link href="/for-courses" className="inline-flex items-center gap-2 px-8 py-3.5 font-medium text-sm text-white bg-pine hover:bg-pine-hover rounded-md transition-all">
+          <div className="inline-block">
+            <Link href="/for-courses" className="inline-flex items-center gap-2 px-8 py-3.5 font-medium text-sm text-white bg-pine hover:bg-pine-hover rounded-md transition-all hover:scale-[1.02]">
               List your course for free <ArrowRight size={15} />
             </Link>
-          </motion.div>
+          </div>
           <p className="text-ink-muted text-xs mt-5">
             Questions? <a href="mailto:hello@greenreserve.app" className="text-pine hover:underline">hello@greenreserve.app</a>
           </p>
         </div>
-      </motion.section>
+      </section>
     </>
   );
 }

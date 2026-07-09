@@ -2,13 +2,20 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
+import type { Stripe } from '@stripe/stripe-js';
 import {
   Elements, CardElement, useStripe, useElements,
 } from '@stripe/react-stripe-js';
 import { ChevronLeft, Lock, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { ACCESS_FEE_PER_PLAYER, serviceFeeLabel } from '@/lib/booking-fees';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
+// Deferred: only load Stripe when a card is actually needed (fee-policy courses).
+// No-fee courses never touch Stripe JS at all.
+let _stripePromise: Promise<Stripe | null> | null = null;
+function getStripePromise() {
+  if (!_stripePromise) _stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
+  return _stripePromise;
+}
 
 type LiveTeeTime = {
   id: string; date: string; time: string; holes: number;
@@ -288,7 +295,7 @@ function BookPageInner() {
               onConfirmed={setConfirmedData}
             />
           ) : (
-            <Elements stripe={stripePromise}>
+            <Elements stripe={getStripePromise()}>
               <CheckoutForm
                 teeTimeId={teeTime.id}
                 players={players}
