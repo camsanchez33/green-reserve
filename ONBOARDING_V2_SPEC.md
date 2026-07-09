@@ -85,13 +85,31 @@ depth without length. Save-as-you-go and mobile-first behavior stay.
   Blob upload built in GOLFER_SPEC G1 for operator photos) — up to ~6: hero,
   clubhouse, signature holes. Store blob URLs in the sheet JSON.
 
-### Phase V4 — Wizard prefill parity (medium, no migration)
-Every new V3 field must flow into the build wizard prefill (the O3 handoff):
-tee sets/yardages prefill the TeeSet step, 9-hole answers prefill pricing
-options, resident/membership sections prefill their steps, photos carry over,
-facilities prefill the facilities step. Rule: if the course typed it in the
-sheet, admin never retypes it in the wizard. Update the ready-to-build
-checklist to reflect the richer sheet.
+### Phase V4 — One-click draft build from the sheet (medium, no migration)
+REPLACES the old "wizard prefill parity" plan. Cam's ruling: the wizard is an
+IN-PERSON tool only (admin sitting with a course). The normal pipeline must not
+route through it.
+
+1. **New flow:** on an inquiry with a submitted details sheet, the build action
+   becomes **"Create draft course"** — one click, server-side: create the Course
+   (liveStatus='draft', active=false) fully populated from the sheet JSON +
+   inquiry data (basics, schedule, fees, resident rates, membership tier(s),
+   tee sets/yardages, facilities, about, photos, cancellation policy). Then
+   redirect admin to the existing /admin/courses/[id] detail page to review and
+   edit BEFORE anything is sent to the course. Nothing goes live and no email
+   fires on draft creation.
+2. Missing sheet fields → sensible defaults + a "Needs review" note listed on
+   the course detail page (e.g. "No twilight rate provided"). Draft creation
+   must never fail because a field is blank.
+3. The existing go-live step (welcome email, O4) stays where it is — after
+   admin review, unchanged.
+4. **Fix the broken build entry point:** the build/wizard action reachable from
+   the admin courses/inquiries UI currently errors out ("bugs out") when
+   clicked from the course row. Trace that click path, find the bug, and fix
+   it as part of rewiring these buttons: inquiry with sheet → "Create draft
+   course"; wizard remains reachable only from a separate, clearly-labeled
+   "Manual build (in person)" link.
+5. Wizard itself: leave functionally untouched.
 
 ### Ground rules
 - No migrations; JSON fields only. No new packages. Clubhouse design system.
