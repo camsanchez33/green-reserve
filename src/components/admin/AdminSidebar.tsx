@@ -4,10 +4,10 @@ import { useEffect, useState, useCallback } from 'react';
 import {
   Layers, BarChart2, AlertCircle, Building2, Hammer, Users,
   Radio, Activity, MessageSquare, UserCircle, ChevronLeft, ChevronRight,
-  DollarSign,
+  DollarSign, Search,
 } from 'lucide-react';
 
-export type AdminNavKey = 'overview' | 'inquiries' | 'courses' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages' | 'profile' | 'revenue';
+export type AdminNavKey = 'overview' | 'inquiries' | 'courses' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages' | 'profile' | 'revenue' | 'golfers';
 
 const LS_KEY = 'admin-sidebar-collapsed';
 
@@ -67,6 +67,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     { key: 'courses',    label: 'Courses',    href: '/admin/courses',    icon: <Building2 className="w-[18px] h-[18px]"/> },
     { key: 'messages',   label: 'Messages',   href: '/admin/messages',   icon: <MessageSquare className="w-[18px] h-[18px]"/> },
     { key: 'revenue',    label: 'Revenue',    href: '/admin/revenue',    icon: <DollarSign className="w-[18px] h-[18px]"/> },
+    { key: 'golfers',    label: 'Golfers',    href: '/admin/golfers',    icon: <Search className="w-[18px] h-[18px]"/> },
     { key: 'employees',  label: 'Employees',  href: '/admin/employees',  icon: <Users className="w-[18px] h-[18px]"/> },
     { key: 'broadcasts', label: 'Broadcasts', href: '/admin/broadcasts', icon: <Radio className="w-[18px] h-[18px]"/> },
     { key: 'activity',   label: 'Activity',   href: '/admin/activity',   icon: <Activity className="w-[18px] h-[18px]"/> },
