@@ -219,6 +219,28 @@ exactly where this client is and the one action to take:
 - live → "Live since {date}" (link to course + public page)
 Same buttons as the toolbar — the card just makes the current one obvious.
 
+### Phase V6 — Inquiries LIST: one clean tab system (small/medium, no migration)
+The list currently stacks two control systems: Active/Archived tabs PLUS a row
+of stage filter chips ("Your move", "New", …). Cam: mumbo-jumbo, clunky.
+Replace both with ONE tab bar.
+
+- Single underline-style tab bar (same pattern as the detail page tabs):
+  **Your move · New · In review · Waiting on them · Building · All · Archived**
+  — each with a count badge. No chip row, no second system.
+- Under the tab bar, one line of muted description text for the ACTIVE tab:
+  - Your move: "Inquiries that need your action next."
+  - New: "Just submitted — not yet reviewed."
+  - In review: "You're evaluating these."
+  - Waiting on them: "Setup sheet sent — waiting on the course."
+  - Building: "Draft created — being built/reviewed before go-live."
+  - All: "Every active inquiry, all stages."
+  - Archived: "Rejected or closed — kept for records."
+- Search and sort stay, applied within the selected tab.
+- Selected tab lives in the URL (?tab=your-move) so the detail page's back
+  link (V5) restores it, and refresh doesn't reset it.
+- Rows: keep the current data but align columns consistently (name/location,
+  contact, stage + days-in-stage, date) — no layout changes beyond cleanup.
+
 ### Phase V4 — One-click draft build from the sheet (medium, no migration)
 REPLACES the old "wizard prefill parity" plan. Cam's ruling: the wizard is an
 IN-PERSON tool only (admin sitting with a course). The normal pipeline must not
