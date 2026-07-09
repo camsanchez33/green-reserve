@@ -67,11 +67,13 @@ export async function GET(req: NextRequest) {
       type: 'booking' as const,
       golferName: b.golferName,
       golferEmail: b.golferEmail,
-      amount: b.totalAmount / 100,
+      amount: b.cancellationFeeTotal > 0 && b.status === 'cancelled' ? b.cancellationFeeTotal / 100 : b.totalAmount / 100,
       platformFee: b.accessFeeTotal / 100,
       status: bookingStatus(b),
-      date: b.createdAt.toISOString(),
-      detail: `${b.teeTime.date} at ${b.teeTime.time} · ${b.players}p`,
+      date: b.teeTime.date,
+      detail: b.cancellationFeeTotal > 0 && b.status === 'cancelled'
+        ? `Late-cancel fee · ${b.teeTime.date} at ${b.teeTime.time}`
+        : `${b.teeTime.date} at ${b.teeTime.time} · ${b.players}p`,
     })),
     ...memberPayments.map(p => {
       const name = p.golfer ? `${p.golfer.firstName} ${p.golfer.lastName}` : (p.inviteName || '—');

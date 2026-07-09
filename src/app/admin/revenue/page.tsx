@@ -20,7 +20,7 @@ interface Stats {
 }
 
 interface CourseRow {
-  courseId: string; name: string; active: boolean; stripeActive: boolean;
+  courseId: string; name: string; active: boolean; archived: boolean; stripeActive: boolean;
   bookings: number; serviceFees: number; greenFeeVolume: number; failedCharges: number;
 }
 
@@ -336,8 +336,11 @@ export default function RevenuePage() {
                       <tr key={r.courseId} className="hover:bg-paper/60 transition-colors">
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-ink">{r.name}</span>
-                            {!r.active && (
+                            <span className={'font-medium ' + (r.archived ? 'text-ink-muted' : 'text-ink')}>{r.name}</span>
+                            {r.archived && (
+                              <span className="text-[10px] text-ink-faint bg-line rounded px-1.5 py-0.5">archived</span>
+                            )}
+                            {!r.archived && !r.active && (
                               <span className="text-[10px] text-ink-faint bg-line rounded px-1.5 py-0.5">inactive</span>
                             )}
                           </div>

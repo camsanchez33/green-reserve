@@ -43,7 +43,7 @@ const ALL_STATUSES = ['pending', 'in_review', 'details_requested', 'details_subm
 const fmtDate = (d: string) =>
   new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 function daysAgo(d: string) {
-  return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24));
+  return Math.max(0, Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24)));
 }
 
 function whyArchived(inq: Inquiry): { reason: string; date: string } {
@@ -250,9 +250,6 @@ function InquiryDetailInner() {
       if (r.ok) {
         if (['build_course', 'resend_welcome', 'request_details', 'resend_details'].includes(act)) {
           setApproveResult(d as ApproveResult);
-        }
-        if (act === 'mark_live' && d.emailSent === false) {
-          setActionError('Course is live, but the orientation email failed (' + (d.emailError || 'unknown error') + ').');
         }
         if (act === 'add_note') setNoteText('');
         await loadInquiry();

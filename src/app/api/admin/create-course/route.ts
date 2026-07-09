@@ -156,19 +156,11 @@ export async function POST(req: NextRequest) {
       seedTierCreated = true;
     }
 
-    let emailSent = true;
-    let emailError = '';
-    try {
-      await sendOperatorWelcomeEmail({ operatorName: contactName, operatorEmail: contactEmail, courseName, tempPassword, setupLink });
-    } catch (e) {
-      emailSent = false;
-      emailError = e instanceof Error ? e.message : String(e);
-      console.error('Welcome email failed:', e);
-    }
+    sendOperatorWelcomeEmail({ operatorName: contactName, operatorEmail: contactEmail, courseName, tempPassword, setupLink })
+      .catch(e => console.error('Welcome email failed:', e));
 
     return NextResponse.json({
       success: true, slug, tempPassword, setupLink, courseId, operatorId: operator.id,
-      emailSent, emailError,
       seedScheduleCreated, seedTierCreated,
       notesItems: notesLines,
     });

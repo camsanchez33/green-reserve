@@ -5,7 +5,7 @@ import { RefreshCw, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 
-interface Course { id: string; name: string; }
+interface Course { id: string; name: string; archivedAt: string | null; }
 interface EventRow {
   id: string; type: 'booking' | 'cancellation' | 'membership' | 'membership_payment';
   courseName: string;
@@ -97,7 +97,7 @@ export default function ActivityPage() {
             <div className="flex flex-wrap gap-3">
               <select value={courseId} onChange={e => setCourseId(e.target.value)} className={iCls + ' flex-1 min-w-44 cursor-pointer'}>
                 <option value="">All courses</option>
-                {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {courses.map(c => <option key={c.id} value={c.id}>{c.name}{c.archivedAt ? ' (archived)' : ''}</option>)}
               </select>
               <div className="flex items-center gap-1 bg-white border border-line rounded-md p-1">
                 {([['30d', 'Last 30 days'], ['7d', 'Last 7 days'], ['custom', 'Custom']] as const).map(([key, label]) => (

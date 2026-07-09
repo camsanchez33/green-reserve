@@ -6,6 +6,15 @@ export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  // Lightweight list for dropdowns — all courses including archived
+  if (req.nextUrl.searchParams.get('simple') === '1') {
+    const all = await prisma.course.findMany({
+      select: { id: true, name: true, archivedAt: true },
+      orderBy: { name: 'asc' },
+    });
+    return NextResponse.json(all);
+  }
+
   const showArchived = req.nextUrl.searchParams.get('showArchived') === '1';
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 

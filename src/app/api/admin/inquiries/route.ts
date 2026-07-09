@@ -84,21 +84,13 @@ async function handleAction(
       if (from !== 'details_requested') {
         await logEvent(inquiryId, from, 'details_requested', 'admin', adminName);
       }
-      let emailSent = true;
-      let emailError = '';
-      try {
-        await sendDetailsRequestEmail({
-          contactName: inquiry.contactName,
-          email: inquiry.email,
-          courseName: inquiry.courseName,
-          detailsLink,
-        });
-      } catch (emailErr) {
-        emailSent = false;
-        emailError = emailErr instanceof Error ? emailErr.message : String(emailErr);
-        console.error('Details request email failed:', emailErr);
-      }
-      return NextResponse.json({ success: true, detailsLink, emailSent, emailError });
+      sendDetailsRequestEmail({
+        contactName: inquiry.contactName,
+        email: inquiry.email,
+        courseName: inquiry.courseName,
+        detailsLink,
+      }).catch(emailErr => console.error('Details request email failed:', emailErr));
+      return NextResponse.json({ success: true, detailsLink });
     } catch (e) {
       return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
     }
@@ -212,19 +204,11 @@ async function handleAction(
       }
 
       const setupLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/verify?token=${verificationToken}`;
-      let emailSent = true;
-      let emailError = '';
-      try {
-        await sendOperatorWelcomeEmail({
-          operatorName: inquiry.contactName, operatorEmail: inquiry.email,
-          courseName: inquiry.courseName, tempPassword, setupLink,
-        });
-      } catch (emailErr) {
-        emailSent = false;
-        emailError = emailErr instanceof Error ? emailErr.message : String(emailErr);
-        console.error('Welcome email failed:', emailErr);
-      }
-      return NextResponse.json({ success: true, tempPassword, setupLink, operatorId: operator.id, slug, emailSent, emailError });
+      sendOperatorWelcomeEmail({
+        operatorName: inquiry.contactName, operatorEmail: inquiry.email,
+        courseName: inquiry.courseName, tempPassword, setupLink,
+      }).catch(emailErr => console.error('Welcome email failed:', emailErr));
+      return NextResponse.json({ success: true, tempPassword, setupLink, operatorId: operator.id, slug });
     } catch (e) {
       return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
     }
@@ -241,19 +225,11 @@ async function handleAction(
       const verificationToken = randomBytes(32).toString('hex');
       await prisma.courseOperator.update({ where: { id: course.operator.id }, data: { password: hashed, verificationToken } });
       const setupLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/verify?token=${verificationToken}`;
-      let emailSent = true;
-      let emailError = '';
-      try {
-        await sendOperatorWelcomeEmail({
-          operatorName: inquiry.contactName, operatorEmail: inquiry.email,
-          courseName: inquiry.courseName, tempPassword, setupLink,
-        });
-      } catch (emailErr) {
-        emailSent = false;
-        emailError = emailErr instanceof Error ? emailErr.message : String(emailErr);
-        console.error('Resend welcome email failed:', emailErr);
-      }
-      return NextResponse.json({ success: true, tempPassword, setupLink, emailSent, emailError });
+      sendOperatorWelcomeEmail({
+        operatorName: inquiry.contactName, operatorEmail: inquiry.email,
+        courseName: inquiry.courseName, tempPassword, setupLink,
+      }).catch(emailErr => console.error('Resend welcome email failed:', emailErr));
+      return NextResponse.json({ success: true, tempPassword, setupLink });
     } catch (e) {
       return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
     }
@@ -272,23 +248,15 @@ async function handleAction(
       const from = inquiry.status;
       await prisma.courseInquiry.update({ where: { id: inquiryId }, data: { status: 'live', wentLiveAt: now } });
       await logEvent(inquiryId, from, 'live', 'admin', adminName);
-      let emailSent = false;
-      let emailError = '';
       // Only send welcome email once — guard via welcomeEmailSentAt
       if (!builtCourse.welcomeEmailSentAt) {
-        try {
-          await sendCourseLiveOrientationEmail({
-            operatorName: inquiry.contactName, operatorEmail: inquiry.email,
-            courseName: inquiry.courseName, courseSlug: builtCourse.slug,
-          });
-          await prisma.course.update({ where: { id: inquiry.builtCourseId }, data: { welcomeEmailSentAt: new Date() } });
-          emailSent = true;
-        } catch (emailErr) {
-          emailError = emailErr instanceof Error ? emailErr.message : String(emailErr);
-          console.error('Go-live orientation email failed:', emailErr);
-        }
+        sendCourseLiveOrientationEmail({
+          operatorName: inquiry.contactName, operatorEmail: inquiry.email,
+          courseName: inquiry.courseName, courseSlug: builtCourse.slug,
+        }).then(() => prisma.course.update({ where: { id: inquiry.builtCourseId! }, data: { welcomeEmailSentAt: new Date() } }))
+          .catch(emailErr => console.error('Go-live orientation email failed:', emailErr));
       }
-      return NextResponse.json({ success: true, emailSent, emailSkipped: !!builtCourse.welcomeEmailSentAt, emailError });
+      return NextResponse.json({ success: true });
     } catch (e) {
       return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
     }

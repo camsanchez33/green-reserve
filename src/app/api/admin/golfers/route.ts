@@ -156,32 +156,27 @@ export async function POST(req: NextRequest) {
   });
   if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
 
-  try {
-    await sendBookingConfirmation({
-      golferName: booking.golferName,
-      golferEmail: booking.golferEmail,
-      courseName: booking.course.name,
-      courseAddress: booking.course.address,
-      date: booking.teeTime.date,
-      time: booking.teeTime.time,
-      players: booking.players,
-      holes: booking.teeTime.holes,
-      greenFeeTotal: Math.round(booking.greenFeeTotal * 100),
-      cartFeeTotal: Math.round(booking.cartFeeTotal * 100),
-      accessFeeTotal: Math.round(booking.accessFeeTotal * 100),
-      totalAmount: Math.round(booking.totalAmount * 100),
-      bookingId: booking.id,
-      appliedRate: booking.appliedRate,
-      rangeBallsTotal: Math.round(booking.rangeBallsTotal * 100),
-      cancellationFeeTotal: Math.round(booking.cancellationFeeTotal * 100),
-      cancellationHours: booking.course.cancellationHours ?? 24,
-      checkInToken: booking.checkInToken ?? undefined,
-      noCard: !booking.stripePaymentMethodId,
-    });
-    console.log(`[support] ${session.name} (${session.email}) resent confirmation for booking ${bookingId}`);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    console.error('Resend confirmation failed:', err);
-    return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
-  }
+  sendBookingConfirmation({
+    golferName: booking.golferName,
+    golferEmail: booking.golferEmail,
+    courseName: booking.course.name,
+    courseAddress: booking.course.address,
+    date: booking.teeTime.date,
+    time: booking.teeTime.time,
+    players: booking.players,
+    holes: booking.teeTime.holes,
+    greenFeeTotal: Math.round(booking.greenFeeTotal * 100),
+    cartFeeTotal: Math.round(booking.cartFeeTotal * 100),
+    accessFeeTotal: Math.round(booking.accessFeeTotal * 100),
+    totalAmount: Math.round(booking.totalAmount * 100),
+    bookingId: booking.id,
+    appliedRate: booking.appliedRate,
+    rangeBallsTotal: Math.round(booking.rangeBallsTotal * 100),
+    cancellationFeeTotal: Math.round(booking.cancellationFeeTotal * 100),
+    cancellationHours: booking.course.cancellationHours ?? 24,
+    checkInToken: booking.checkInToken ?? undefined,
+    noCard: !booking.stripePaymentMethodId,
+  }).catch(err => console.error('Resend confirmation failed:', err));
+  console.log(`[support] ${session.name} (${session.email}) resent confirmation for booking ${bookingId}`);
+  return NextResponse.json({ ok: true });
 }

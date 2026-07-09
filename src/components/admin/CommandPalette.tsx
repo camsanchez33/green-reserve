@@ -43,34 +43,40 @@ const TYPE_LABEL: Record<SearchResult['type'], string> = {
 export default function CommandPalette() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState('');
+  // hasQuery tracks whether the uncontrolled input has text (for recents vs results display)
+  const [hasQuery, setHasQuery] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [loading, setLoading] = useState(false);
   const [recents, setRecents] = useState<SearchResult[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
-  const displayed = query.length >= 1 ? results : recents;
+  const displayed = hasQuery ? results : recents;
 
   const doSearch = useCallback(async (q: string) => {
     if (!q || q.length < 1) { setResults([]); setLoading(false); return; }
+    // Cancel any in-flight request
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setLoading(true);
     try {
-      const r = await fetch(`/api/admin/search?q=${encodeURIComponent(q)}`);
-      if (r.ok) { const d = await r.json(); setResults(d.results ?? []); }
-    } catch { /* ignore */ }
-    setLoading(false);
+      const r = await fetch(`/api/admin/search?q=${encodeURIComponent(q)}`, { signal: controller.signal });
+      if (r.ok) {
+        const d = await r.json();
+        if (!controller.signal.aborted) setResults(d.results ?? []);
+      }
+    } catch (e) {
+      if ((e as Error)?.name === 'AbortError') return;
+    }
+    if (!controller.signal.aborted) setLoading(false);
   }, []);
 
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => doSearch(query), 200);
-  }, [query, doSearch]);
-
-  useEffect(() => {
     setSelectedIdx(0);
-  }, [query, results]);
+  }, [hasQuery, results]);
 
   // Ctrl+K global shortcut + custom open event
   useEffect(() => {
@@ -92,11 +98,17 @@ export default function CommandPalette() {
 
   useEffect(() => {
     if (open) {
-      setQuery('');
+      // Clear the uncontrolled input imperatively
+      if (inputRef.current) inputRef.current.value = '';
+      setHasQuery(false);
       setResults([]);
       setRecents(loadRecents());
       setSelectedIdx(0);
       setTimeout(() => inputRef.current?.focus(), 10);
+    } else {
+      // Cancel any pending search on close
+      abortRef.current?.abort();
+      if (debounceRef.current) clearTimeout(debounceRef.current);
     }
   }, [open]);
 
@@ -104,6 +116,18 @@ export default function CommandPalette() {
     saveRecent(item);
     setOpen(false);
     router.push(item.href);
+  }
+
+  function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = e.target.value;
+    setHasQuery(v.length > 0);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (v.length === 0) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+    debounceRef.current = setTimeout(() => doSearch(v), 200);
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -133,13 +157,12 @@ export default function CommandPalette() {
 
       {/* Palette */}
       <div className="relative w-full max-w-xl mx-4 bg-card border border-line rounded-lg shadow-2xl overflow-hidden">
-        {/* Search input */}
+        {/* Search input — uncontrolled to prevent keystroke drops */}
         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-line">
           <Search className="w-4 h-4 text-ink-faint shrink-0"/>
           <input
             ref={inputRef}
-            value={query}
-            onChange={e => setQuery(e.target.value)}
+            onChange={handleInput}
             onKeyDown={handleKeyDown}
             placeholder="Search courses, inquiries, golfers, pages…"
             className="flex-1 bg-transparent text-sm text-ink placeholder-ink-faint outline-none"
@@ -152,12 +175,12 @@ export default function CommandPalette() {
         <div className="max-h-80 overflow-y-auto">
           {displayed.length === 0 && (
             <div className="py-10 text-center text-sm text-ink-muted">
-              {query.length >= 1 && !loading ? `No results for "${query}"` : 'Start typing to search…'}
+              {hasQuery && !loading ? `No results for "${inputRef.current?.value ?? ''}"` : 'Start typing to search…'}
             </div>
           )}
           {displayed.length > 0 && (
             <>
-              {query.length < 1 && recents.length > 0 && (
+              {!hasQuery && recents.length > 0 && (
                 <div className="px-4 pt-2.5 pb-1">
                   <span className="text-[10px] uppercase tracking-[0.06em] text-ink-faint">Recent</span>
                 </div>

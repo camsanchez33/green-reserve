@@ -135,6 +135,20 @@ function GolfersInner() {
 
   const iCls = 'bg-paper border border-line rounded-md px-3 py-2.5 text-ink text-sm placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
+  // Item 8: group guest bookings that share an email with a registered account
+  const golferEmailSet = new Set(golfers.map(g => g.email.toLowerCase()));
+  const matchedGuestsByEmail = new Map<string, GuestBooking[]>();
+  const unmatchedGuests: GuestBooking[] = [];
+  for (const b of guestBookings) {
+    const key = b.golferEmail.toLowerCase();
+    if (golferEmailSet.has(key)) {
+      if (!matchedGuestsByEmail.has(key)) matchedGuestsByEmail.set(key, []);
+      matchedGuestsByEmail.get(key)!.push(b);
+    } else {
+      unmatchedGuests.push(b);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="golfers"/>
@@ -184,7 +198,11 @@ function GolfersInner() {
                     <div className="flex items-center gap-4 mt-4 pt-4 border-t border-line-soft text-sm text-ink-muted">
                       <span>{detail.bookings.length} booking{detail.bookings.length !== 1 ? 's' : ''} total</span>
                       <span>·</span>
-                      <span>{fmtMoney(detail.bookings.reduce((s, b) => s + (b.status === 'completed' ? b.totalAmount : 0), 0))} charged</span>
+                      <span>{fmtMoney(detail.bookings.reduce((s, b) => {
+                        if (b.status === 'completed' || b.checkedInAt) return s + b.totalAmount;
+                        if (b.status === 'cancelled' && b.cancellationFeeTotal > 0) return s + b.cancellationFeeTotal;
+                        return s;
+                      }, 0))} charged</span>
                     </div>
                   </div>
 
@@ -294,7 +312,7 @@ function GolfersInner() {
               {/* Results */}
               {searched && !searching && (
                 <>
-                  {golfers.length === 0 && guestBookings.length === 0 ? (
+                  {golfers.length === 0 && unmatchedGuests.length === 0 ? (
                     <div className="py-16 text-center text-ink-muted text-sm bg-white border border-line rounded-lg">
                       No golfers found for &ldquo;{query}&rdquo;
                     </div>
@@ -321,7 +339,7 @@ function GolfersInner() {
                                   <div className="text-xs text-ink-muted mt-0.5">{g.email}{g.phone ? ` · ${g.phone}` : ''}</div>
                                 </div>
                                 <div className="text-right shrink-0">
-                                  <div className="text-xs text-ink-muted">{g.bookingCount} booking{g.bookingCount !== 1 ? 's' : ''}</div>
+                                  <div className="text-xs text-ink-muted">{g.bookingCount} booking{g.bookingCount !== 1 ? 's' : ''}{(() => { const mc = matchedGuestsByEmail.get(g.email.toLowerCase())?.length ?? 0; return mc > 0 ? ` +${mc} guest` : ''; })()}</div>
                                   <div className="text-xs text-ink-faint mt-0.5">Since {fmtDate(g.createdAt)}</div>
                                 </div>
                                 <ChevronRight className="w-4 h-4 text-ink-faint shrink-0"/>
@@ -331,14 +349,14 @@ function GolfersInner() {
                         </div>
                       )}
 
-                      {/* Guest bookings */}
-                      {guestBookings.length > 0 && (
+                      {/* Guest bookings (no matching account) */}
+                      {unmatchedGuests.length > 0 && (
                         <div>
                           <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">
-                            Guest bookings — no account ({guestBookings.length})
+                            Guest bookings — no account ({unmatchedGuests.length})
                           </div>
                           <div className="bg-white border border-line rounded-lg divide-y divide-line-soft overflow-hidden">
-                            {guestBookings.map(b => (
+                            {unmatchedGuests.map(b => (
                               <div key={b.id} className="px-5 py-3.5 flex items-center gap-4">
                                 <div className="flex-1 min-w-0">
                                   <div className="font-medium text-sm text-ink">{b.golferName}</div>

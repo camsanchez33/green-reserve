@@ -118,22 +118,15 @@ export async function POST(req: NextRequest) {
     (!freshThread?.operatorLastEmailAt || Date.now() - freshThread.operatorLastEmailAt.getTime() > ONE_HOUR_MS);
 
   if (shouldEmail && course.operator) {
-    try {
-      await sendMessageNotificationEmail({
-        recipientEmail: course.operator.email,
-        recipientName: course.operator.name,
-        senderName: session.name,
-        courseName: course.name,
-        messageBody: body.trim(),
-        replyUrl: `${process.env.NEXT_PUBLIC_URL}/dashboard/messages`,
-      });
-      await prisma.messageThread.update({
-        where: { id: thread.id },
-        data: { operatorLastEmailAt: new Date() },
-      });
-    } catch (e) {
-      console.error('Message notification email failed:', e);
-    }
+    sendMessageNotificationEmail({
+      recipientEmail: course.operator.email,
+      recipientName: course.operator.name,
+      senderName: session.name,
+      courseName: course.name,
+      messageBody: body.trim(),
+      replyUrl: `${process.env.NEXT_PUBLIC_URL}/dashboard/messages`,
+    }).then(() => prisma.messageThread.update({ where: { id: thread.id }, data: { operatorLastEmailAt: new Date() } }))
+      .catch(e => console.error('Message notification email failed:', e));
   }
 
   return NextResponse.json({ message, threadId: thread.id });

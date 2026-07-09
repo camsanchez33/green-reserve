@@ -117,10 +117,9 @@ async function buildResponse(
       _count: { id: true },
       _sum: { accessFeeTotal: true, greenFeeTotal: true },
     }),
-    // All active/live courses with Stripe status
+    // All courses including archived — archived show as inactive with their history
     prisma.course.findMany({
-      where: { archivedAt: null },
-      select: { id: true, name: true, stripeAccountActive: true, active: true },
+      select: { id: true, name: true, stripeAccountActive: true, active: true, archivedAt: true },
       orderBy: { name: 'asc' },
     }),
   ]);
@@ -153,6 +152,7 @@ async function buildResponse(
     courseId: c.id,
     name: c.name,
     active: c.active,
+    archived: !!c.archivedAt,
     stripeActive: c.stripeAccountActive,
     bookings: bookingsByCourse[c.id]?.bookings ?? 0,
     serviceFees: bookingsByCourse[c.id]?.serviceFees ?? 0,

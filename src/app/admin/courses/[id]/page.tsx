@@ -626,7 +626,15 @@ export default function CourseDetailPage() {
                             <div className="text-sm font-medium text-ink truncate">{tx.golferName}</div>
                             <div className="text-xs text-ink-muted truncate">{tx.golferEmail}</div>
                           </div>
-                          <div className="text-xs text-ink-soft truncate">{tx.detail}</div>
+                          <div className="text-xs text-ink-soft truncate">
+                            {tx.detail}
+                            {tx.status === 'fee_charged' && tx.type === 'booking' && (
+                              <button
+                                onClick={() => { const d = tx.date; setTab('teesheet'); setTsDate(d); loadTeeSheet(d); }}
+                                className="ml-1.5 text-pine hover:underline"
+                              >View</button>
+                            )}
+                          </div>
                           <div className="text-sm font-medium text-ink tabular-nums">{fmtMoney(tx.amount)}</div>
                           <div className="text-xs text-ok tabular-nums">{tx.platformFee > 0 ? fmtMoney(tx.platformFee) : '—'}</div>
                           <div><StatusDot status={st.dot} label={st.label} /></div>

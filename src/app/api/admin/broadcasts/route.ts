@@ -82,18 +82,16 @@ export async function POST(req: NextRequest) {
       where: { course: { active: true } },
       select: { email: true, name: true },
     });
-
-    for (const op of operators) {
-      try {
-        await sendAnnouncementEmail({ operatorName: op.name, operatorEmail: op.email, title: title.trim(), body: body.trim() });
-        emailCount++;
-      } catch (e) {
-        console.error('Announcement email failed for', op.email, e);
-      }
-    }
-
-    emailSent = true;
-    await prisma.announcement.update({ where: { id: announcement.id }, data: { emailSent: true } });
+    emailCount = operators.length;
+    emailSent = operators.length > 0;
+    // Fire all emails without blocking the response
+    Promise.allSettled(
+      operators.map(op =>
+        sendAnnouncementEmail({ operatorName: op.name, operatorEmail: op.email, title: title.trim(), body: body.trim() })
+          .catch(e => console.error('Announcement email failed for', op.email, e))
+      )
+    ).then(() => prisma.announcement.update({ where: { id: announcement.id }, data: { emailSent: true } }))
+     .catch(e => console.error('Failed to mark announcement emailSent:', e));
   }
 
   return NextResponse.json({ id: announcement.id, emailSent, emailCount, emailError });

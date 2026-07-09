@@ -42,7 +42,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-function daysAgo(d: string) { return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24)); }
+function daysAgo(d: string) { return Math.max(0, Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24))); }
 
 function whyArchived(inq: Inquiry): { reason: string; date: string } {
   if (inq.status === 'live') return { reason: 'Went live', date: inq.updatedAt || inq.createdAt };
