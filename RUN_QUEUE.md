@@ -98,13 +98,13 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] ADMIN_V3_SPEC Phase A6 — audit round 2: course-detail 500 (CRITICAL, check Sentry), pending states + async emails on action buttons, revenue table includes archived, golfer $0 aggregation, Ctrl+K keystroke drops + stale results, inquiry status mismatches, tz date mismatch, guest grouping, activity filter, cancellation labels (medium-big, no migration) — 8f34a18 (item 1) + 68caa0f (items 2-10)
 - [x] PUBLIC_SITE_SPEC Phase D — proof layer: image fallbacks (Cam captures real screenshots — manual), founding-courses section, comparison table de-FUD, private-club reassurance block, operator sections in terms/privacy with {{COMPANY_LEGAL_NAME}}, "good fit" copy fix (small/medium, no migration) — 5fb8585
   NOTE: {{COMPANY_LEGAL_NAME}} and state of formation are marked TODO in /terms and /privacy — Cam must supply LLC name + state once formed; attorney review needed before scale.
-- [ ] ADMIN_V3_SPEC Phase A7 — course health signals on Courses list: last booking, 30d trend, operator last login (amber/red thresholds), Health sort, detail-page strip (small, no migration)
+- [x] ADMIN_V3_SPEC Phase A7 — course health signals on Courses list: last booking, 30d trend, operator last login (amber/red thresholds), Health sort, detail-page strip (small, no migration) — f4dabe0
+  NOTE: CourseOperator has no lastLoginAt column — operator last login renders "—" everywhere. Add lastLoginAt to CourseOperator in a future attended schema run, then wire it in the operator login route and remove the placeholder.
 - [ ] MANAGE_BOOKING_SPEC Phase M4 — course-configurable check-in window (Course.checkInWindowHours) driving the existing "time to check in" email; operator sets it in Settings (schema change, attended)
 
 ## Ideas / not yet specced
 
 ### Future admin tabs (from brainstorm 2026-07-09 — each has a TRIGGER, don't build early)
-- Course health / at-risk signals on the courses list (bookings trend, operator last-login, days since last booking) — TRIGGER: 5+ live courses
 - Promo codes / featured placement tools — TRIGGER: marketplace mode ships
 - Admin audit log (who changed what, beyond activity feed) — TRIGGER: 2nd real employee with manager+ role
 - Disputes / refund-request queue — TRIGGER: first real golfer dispute
