@@ -411,6 +411,8 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
     }
   }
 
+  // INVIOLABLE: No GolferAccount required to book. Name/email are for the
+  // confirmation email only — never for registration or sign-up prompts.
   return (
     <div className="bg-white rounded-lg border border-line p-6 space-y-4">
       <h2 className="font-semibold text-ink">Your Details</h2>

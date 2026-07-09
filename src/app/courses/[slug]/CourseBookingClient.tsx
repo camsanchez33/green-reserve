@@ -723,15 +723,32 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
 
                 {/* Mobile controls */}
                 <div className="lg:hidden mb-4 space-y-3">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => setFiltersOpen(!filtersOpen)}
-                      className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md border border-line bg-white text-sm font-medium text-ink"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md border border-line bg-white text-sm font-medium text-ink shrink-0"
                     >
                       <SlidersHorizontal size={14} />
                       Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
                     </button>
-                    <span className="text-sm font-medium text-ink-soft">{displayDate(selectedDate)}</span>
+                    {/* Inline player count — saves opening the filter panel just to change players */}
+                    <div className="flex items-center gap-1 ml-1">
+                      <button
+                        onClick={() => { setPlayers(p => Math.max(1, p - 1)); setSelectedTime(null); }}
+                        className="w-7 h-7 flex items-center justify-center rounded-md border border-line bg-white text-ink font-medium text-sm leading-none hover:bg-paper transition-colors"
+                        aria-label="Fewer players"
+                      >−</button>
+                      <div className="flex items-center gap-1 px-1.5">
+                        <Users size={12} className="text-ink-muted" />
+                        <span className="text-sm font-medium text-ink tabular-nums">{players}</span>
+                      </div>
+                      <button
+                        onClick={() => { setPlayers(p => Math.min(4, p + 1)); setSelectedTime(null); }}
+                        className="w-7 h-7 flex items-center justify-center rounded-md border border-line bg-white text-ink font-medium text-sm leading-none hover:bg-paper transition-colors"
+                        aria-label="More players"
+                      >+</button>
+                    </div>
+                    <span className="text-sm font-medium text-ink-soft ml-auto">{displayDate(selectedDate)}</span>
                   </div>
                   <div className="flex gap-1.5 overflow-x-auto pb-1">
                     {strip.map(d => {
