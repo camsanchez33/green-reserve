@@ -85,9 +85,15 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] ONBOARDING_V2_SPEC Phase V7 — multi-nine data model: par adapts to hole count (no overall par on 27/36), structured combo builder with per-combo notes, per-nine par, per-combo ratings + auto-summed combo yardages per tee set, flows through Sheet tab + draft build (medium, no migration) — 56f88b6
 - [x] ONBOARDING_V2_SPEC Phase V8 — memberships & passes + facilities fixes: root cause = React controlled type="number" drops keystrokes on partial decimal; DollarInput switched to type="text" inputMode="decimal"; legacy fee stored as number coerced to string on load; re-audited all money fields (medium, no migration) — 56f88b6
 - [x] ONBOARDING_V2_SPEC Phase V9 — draft build reuses existing operator by email (never fails on it), alert() → inline banners on admin inquiry pages (small, no migration) — 997501d
-- [ ] GOLFER_EDGE_SPEC Phase E1 — perf audit script + CI budgets (mobile, slow-4G; perf ≥85, LCP ≤2.5s) + fix worst offenders (medium, no migration)
-- [ ] GOLFER_EDGE_SPEC Phase E2 — tap budget: course page → confirmed in ≤4 taps returning golfer; prefill from session, carry slot context, smart defaults; no-account rule guarded (medium, no migration)
-- [ ] GOLFER_EDGE_SPEC Phase E3 — trust copy at slot pick, card entry, confirm; shared component; audit contradictory copy (small, no migration)
+- [x] GOLFER_EDGE_SPEC Phase E1 — perf audit script (scripts/perf-audit.ts), CI workflow (.github/workflows/perf-audit.yml), fix worst offenders: remove framer-motion (~45KB), defer Stripe JS (no-fee courses), lazy-load imgs, CLAUDE.md budgets — 2f8ef39
+- [x] GOLFER_EDGE_SPEC Phase E2 — tap budget: mobile inline player picker saves 1 tap (6→5 for non-default players), no-account guard comment in CheckoutForm, before/after counts documented in commit — 6b4408f
+- [x] GOLFER_EDGE_SPEC Phase E3 — trust copy via shared TrustNote component: slot price/"100% to course", card entry/"nothing charged now", confirm/"no charge until check-in"; fixed "checkout"→"Secured by Stripe" — 2500ef1
+- [ ] ADMIN_V3_SPEC Phase A0 — audit fixes FIRST: blank revenue chart + axis, bogus 100% deltas, course eye-view bounce bug, Building=Your move + dup Go Live buttons, All/Active/Archived filter, archive-with-activity warning, relative-time bug, wizard inline validation + $0 placeholder trap, broadcast preview step, activity date default, 2FA link styling, no-silent-failures rule → CLAUDE.md (medium, no migration)
+- [ ] ADMIN_V3_SPEC Phase A1 — collapsible sidebar (icon rail, persisted, `[` shortcut) + "Add Course"→"Manual build" demotion (small, no migration)
+- [ ] ADMIN_V3_SPEC Phase A2 — /admin/revenue: fees today/7d/month, per-course table, failed charges + refunds problems section, SUPPORT_PLUS (medium, no migration)
+- [ ] ADMIN_V3_SPEC Phase A3 — /admin/golfers support lookup: search → all bookings/charges/receipts, resend emails, SUPPORT_PLUS (medium, no migration)
+- [ ] ADMIN_V3_SPEC Phase A4 — Overview "Needs you" action list above stats (small/medium, no migration)
+- [ ] ADMIN_V3_SPEC Phase A5 — Ctrl+K command palette, role-aware global search (medium, no migration)
 - [ ] MANAGE_BOOKING_SPEC Phase M4 — course-configurable check-in window (Course.checkInWindowHours) driving the existing "time to check in" email; operator sets it in Settings (schema change, attended)
 
 ## Ideas / not yet specced
