@@ -176,6 +176,27 @@ NOT code (Cam to-dos, listed so they're not lost):
 - Delete the two "not-an-email" test inquiries and the typo'd/vulgar test
   broadcasts from history (or wait for the prelaunch purge script).
 
+## Phase A7 — Course health signals on the Courses list (small, no migration)
+
+Purpose: churn radar. A course going quiet must be visible on the page Cam
+already opens daily — no new tab.
+
+- Three additions to each row on /admin/courses (live courses; archived show
+  "—"):
+  1. **Last booking** — relative ("3d ago"), amber if >14 days, red if >30
+     (only for courses live longer than the threshold; brand-new courses show
+     "new" neutral).
+  2. **30d trend** — bookings last 30d vs prior 30d as a small arrow + count
+     ("12 ↓ from 19"). Rules from A0 apply: prior period 0 → no arrow/percent.
+  3. **Operator last login** — relative, amber >14d, red >30d. Uses the
+     session issue timestamp if we store one; if we genuinely store nothing,
+     add lastLoginAt update in the operator login route ONLY if it exists as
+     a column already — otherwise render "—" and leave a note in RUN_QUEUE.md
+     (schema addition → future attended run). Do NOT add a migration.
+- Sort option "Health" — reds first, then ambers, then by last booking asc.
+- StatusDot colors per design system (ok/warn/bad), tooltips with exact dates.
+- Same data joins the course detail page header (small "Health" strip).
+
 ### Demotion (fold into whichever phase touches the sidebar first)
 - "Add Course" nav item renamed "Manual build" and moved to the bottom
   cluster near Profile — the pipeline path is inquiry → draft build now.
