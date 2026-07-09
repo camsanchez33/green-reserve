@@ -84,7 +84,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] ONBOARDING_V2_SPEC Phase V6 — inquiries list: single tab bar (Your move/New/In review/Waiting/Building/All/Archived) with counts + per-tab description, kills the chip row, tab in URL, row cleanup (small/medium, no migration) — e0ce53a
 - [x] ONBOARDING_V2_SPEC Phase V7 — multi-nine data model: par adapts to hole count (no overall par on 27/36), structured combo builder with per-combo notes, per-nine par, per-combo ratings + auto-summed combo yardages per tee set, flows through Sheet tab + draft build (medium, no migration) — 56f88b6
 - [x] ONBOARDING_V2_SPEC Phase V8 — memberships & passes + facilities fixes: root cause = React controlled type="number" drops keystrokes on partial decimal; DollarInput switched to type="text" inputMode="decimal"; legacy fee stored as number coerced to string on load; re-audited all money fields (medium, no migration) — 56f88b6
-- [x] ONBOARDING_V2_SPEC Phase V9 — draft build reuses existing operator by email (never fails on it), alert() → inline banners on admin inquiry pages (small, no migration) — PENDING_COMMIT
+- [x] ONBOARDING_V2_SPEC Phase V9 — draft build reuses existing operator by email (never fails on it), alert() → inline banners on admin inquiry pages (small, no migration) — 997501d
 - [ ] MANAGE_BOOKING_SPEC Phase M4 — course-configurable check-in window (Course.checkInWindowHours) driving the existing "time to check in" email; operator sets it in Settings (schema change, attended)
 
 ## Ideas / not yet specced
