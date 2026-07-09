@@ -68,21 +68,30 @@ export async function GET() {
     }),
   ]);
 
-  // Revenue + bookings by day (last 30)
+  // Revenue + bookings by day (last 30) — fill all days so chart axis is correct
   const bookings30d = await prisma.booking.findMany({
     where: { status: 'confirmed', createdAt: { gte: thirtyDaysAgo } },
     select: { createdAt: true, accessFeeTotal: true, totalAmount: true },
     orderBy: { createdAt: 'asc' },
   });
 
-  const revenueByDay: Record<string, { platform: number; gross: number; bookings: number }> = {};
-  for (const b of bookings30d) {
-    const d = b.createdAt.toISOString().split('T')[0];
-    if (!revenueByDay[d]) revenueByDay[d] = { platform: 0, gross: 0, bookings: 0 };
-    revenueByDay[d].platform += Number(b.accessFeeTotal) / 100;
-    revenueByDay[d].gross += Number(b.totalAmount) / 100;
-    revenueByDay[d].bookings += 1;
+  const revenueByDayMap: Record<string, { platform: number; gross: number; bookings: number }> = {};
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    revenueByDayMap[d.toISOString().split('T')[0]] = { platform: 0, gross: 0, bookings: 0 };
   }
+  for (const b of bookings30d) {
+    const key = b.createdAt.toISOString().split('T')[0];
+    if (revenueByDayMap[key]) {
+      revenueByDayMap[key].platform += Number(b.accessFeeTotal) / 100;
+      revenueByDayMap[key].gross += Number(b.totalAmount) / 100;
+      revenueByDayMap[key].bookings += 1;
+    }
+  }
+  const revenueByDay = Object.entries(revenueByDayMap)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, v]) => ({ date, ...v }));
 
   // Top 5 courses by bookings last 30d
   const topCoursesRaw = await prisma.booking.groupBy({
@@ -134,7 +143,7 @@ export async function GET() {
     platformRevenuePrev30d: Number(prevRevenue._sum.accessFeeTotal ?? 0) / 100,
     newCourses30d,
     newCoursesPrev30d,
-    revenueByDay: Object.entries(revenueByDay).map(([date, v]) => ({ date, ...v })),
+    revenueByDay,
     topCourses,
     attentionItems: {
       staleInquiries: staleInquiries.map(i => ({ ...i, createdAt: i.createdAt.toISOString() })),

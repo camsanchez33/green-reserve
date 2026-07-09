@@ -20,8 +20,10 @@ interface FullThread {
 const fmtTime = (d: string) => {
   const dt = new Date(d);
   const now = new Date();
-  const diffMs = now.getTime() - dt.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  // Calendar-day diff (not 24h buckets) to avoid "Yesterday" for 2-day-old messages
+  const dtDay = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+  const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.round((nowDay.getTime() - dtDay.getTime()) / 86400000);
   if (diffDays === 0) return dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return dt.toLocaleDateString('en-US', { weekday: 'short' });

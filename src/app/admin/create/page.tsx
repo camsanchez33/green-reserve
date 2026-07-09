@@ -37,7 +37,7 @@ const BLANK_BASICS: Basics = { name: '', slug: '', address: '', city: '', state:
 const BLANK_FEES: FeesData = {
   weekdayFee: '', weekendFee: '', cartFee: '', walkingAllowed: true,
   hasTwilight: false, twilightFee: '', seasonOpen: '', seasonClose: '',
-  hasResidentRates: true, residentWeekday: '', residentWeekend: '', residentNote: '',
+  hasResidentRates: false, residentWeekday: '', residentWeekend: '', residentNote: '',
   memberAdvanceDays: '14', hasStarterTier: false, starterTierName: '', starterTierFee: '',
   hasGuestRate: false, guestRate: '', packagesNote: '',
 };
@@ -58,16 +58,16 @@ function MonthSelect({ value, onChange, placeholder }: { value: string; onChange
   );
 }
 
-function DollarInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+function DollarInput({ value, onChange, placeholder, hasError }: { value: string; onChange: (v: string) => void; placeholder?: string; hasError?: boolean }) {
   return (
     <div className="relative">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm pointer-events-none">$</span>
+      <span className={'absolute left-3 top-1/2 -translate-y-1/2 text-sm pointer-events-none ' + (value ? 'text-ink-muted' : 'text-ink-faint')}>$</span>
       <input
         type="number" min="0" step="0.01"
         value={value}
         onChange={e => onChange(e.target.value)}
-        className={iCls + ' pl-7'}
-        placeholder={placeholder || '0.00'}
+        className={iCls + ' pl-7' + (hasError ? ' border-bad/40 focus:border-bad/60' : '')}
+        placeholder={placeholder || 'e.g. 45'}
       />
     </div>
   );
@@ -89,6 +89,9 @@ function WizardContent() {
   const [creating, setCreating] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [sheetData, setSheetData] = useState<Record<string, unknown> | null>(null);
+  const [step2Attempted, setStep2Attempted] = useState(false);
+  const [step3Attempted, setStep3Attempted] = useState(false);
+  const [step4Attempted, setStep4Attempted] = useState(false);
 
   useEffect(() => {
     fetch('/api/admin/session').then(r => {
@@ -469,11 +472,22 @@ function WizardContent() {
                   </div>
                 </div>
               </div>
+              {step2Attempted && !step2Valid && (
+                <div className="bg-bad/5 border border-bad/20 rounded-md px-4 py-2.5 text-bad text-xs">
+                  {!basics.name && <div>Course name is required.</div>}
+                  {!basics.city && <div>City is required.</div>}
+                  {!basics.state && <div>State is required.</div>}
+                  {!basics.slug && <div>URL slug is required.</div>}
+                  {basics.slug && slugStatus === 'taken' && <div>That slug is already taken — choose another.</div>}
+                  {basics.slug && slugStatus === 'checking' && <div>Checking slug availability…</div>}
+                </div>
+              )}
               <div className="flex gap-3">
                 <button onClick={() => setStep(1)} className="flex items-center gap-1.5 px-5 py-3 border border-line text-ink-muted hover:text-ink hover:border-line-strong rounded-md text-[12.5px] font-medium transition-colors">
                   <ArrowLeft className="w-4 h-4"/>Back
                 </button>
-                <button onClick={() => setStep(3)} disabled={!step2Valid}
+                <button
+                  onClick={() => { setStep2Attempted(true); if (step2Valid) setStep(3); }}
                   className="flex-1 py-3 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white font-medium rounded-md text-[12.5px] transition-colors flex items-center justify-center gap-2">
                   Fees <ChevronRight className="w-4 h-4"/>
                 </button>
@@ -493,11 +507,13 @@ function WizardContent() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Weekday green fee *</label>
-                    <DollarInput value={fees.weekdayFee} onChange={v => setFees(f => ({ ...f, weekdayFee: v }))} placeholder="45.00"/>
+                    <DollarInput value={fees.weekdayFee} onChange={v => setFees(f => ({ ...f, weekdayFee: v }))} hasError={step3Attempted && !fees.weekdayFee}/>
+                    {step3Attempted && !fees.weekdayFee && <p className="text-bad text-[10px] mt-1">Required</p>}
                   </div>
                   <div>
                     <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Weekend green fee *</label>
-                    <DollarInput value={fees.weekendFee} onChange={v => setFees(f => ({ ...f, weekendFee: v }))} placeholder="60.00"/>
+                    <DollarInput value={fees.weekendFee} onChange={v => setFees(f => ({ ...f, weekendFee: v }))} hasError={step3Attempted && !fees.weekendFee}/>
+                    {step3Attempted && !fees.weekendFee && <p className="text-bad text-[10px] mt-1">Required</p>}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 items-end">
@@ -517,7 +533,7 @@ function WizardContent() {
                 <div className="border-t border-line-soft pt-4 space-y-3">
                   <label className="flex items-center gap-2 text-sm text-ink cursor-pointer select-none">
                     <input type="checkbox" checked={fees.hasTwilight} onChange={e => setFees(f => ({ ...f, hasTwilight: e.target.checked }))} className="w-4 h-4 accent-pine rounded"/>
-                    <span>Twilight rate <span className="text-ink-muted">(stored in description notes)</span></span>
+                    <span>Twilight rate</span>
                   </label>
                   {fees.hasTwilight && (
                     <DollarInput value={fees.twilightFee} onChange={v => setFees(f => ({ ...f, twilightFee: v }))} placeholder="25.00"/>
@@ -526,7 +542,7 @@ function WizardContent() {
 
                 {/* Season */}
                 <div className="border-t border-line-soft pt-4 space-y-2">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Season <span className="normal-case tracking-normal font-normal">(optional — stored in description notes)</span></div>
+                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Season <span className="normal-case tracking-normal font-normal text-ink-faint">(optional)</span></div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] text-ink-muted block mb-1">Opens</label>
@@ -560,7 +576,7 @@ function WizardContent() {
                           </div>
                         </div>
                         <div>
-                          <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Resident verification note <span className="normal-case tracking-normal text-ink-faint">(stored in notes)</span></label>
+                          <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Resident verification note</label>
                           <input value={fees.residentNote} onChange={e => setFees(f => ({ ...f, residentNote: e.target.value }))} className={iCls} placeholder="County ID or utility bill required"/>
                         </div>
                       </div>
@@ -601,11 +617,17 @@ function WizardContent() {
                   </div>
                 )}
               </div>
+              {step3Attempted && !step3Valid && (
+                <div className="bg-bad/5 border border-bad/20 rounded-md px-4 py-2.5 text-bad text-xs">
+                  Weekday and weekend green fees are required.
+                </div>
+              )}
               <div className="flex gap-3">
                 <button onClick={() => setStep(2)} className="flex items-center gap-1.5 px-5 py-3 border border-line text-ink-muted hover:text-ink hover:border-line-strong rounded-md text-[12.5px] font-medium transition-colors">
                   <ArrowLeft className="w-4 h-4"/>Back
                 </button>
-                <button onClick={() => setStep(4)} disabled={!step3Valid}
+                <button
+                  onClick={() => { setStep3Attempted(true); if (step3Valid) setStep(4); }}
                   className="flex-1 py-3 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white font-medium rounded-md text-[12.5px] transition-colors flex items-center justify-center gap-2">
                   Operator <ChevronRight className="w-4 h-4"/>
                 </button>
@@ -633,11 +655,19 @@ function WizardContent() {
                   <p className="text-[10px] text-ink-muted mt-1">Used for SMS two-factor login codes.</p>
                 </div>
               </div>
+              {step4Attempted && !step4Valid && (
+                <div className="bg-bad/5 border border-bad/20 rounded-md px-4 py-2.5 text-bad text-xs">
+                  {!op.contactName && <div>Full name is required.</div>}
+                  {!op.contactEmail.includes('@') && <div>Valid email is required.</div>}
+                  {!op.contactPhone && <div>Phone number is required.</div>}
+                </div>
+              )}
               <div className="flex gap-3">
                 <button onClick={() => setStep(3)} className="flex items-center gap-1.5 px-5 py-3 border border-line text-ink-muted hover:text-ink hover:border-line-strong rounded-md text-[12.5px] font-medium transition-colors">
                   <ArrowLeft className="w-4 h-4"/>Back
                 </button>
-                <button onClick={() => setStep(5)} disabled={!step4Valid}
+                <button
+                  onClick={() => { setStep4Attempted(true); if (step4Valid) setStep(5); }}
                   className="flex-1 py-3 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white font-medium rounded-md text-[12.5px] transition-colors flex items-center justify-center gap-2">
                   Review <ChevronRight className="w-4 h-4"/>
                 </button>
@@ -684,6 +714,11 @@ function WizardContent() {
                   </div>
                 </div>
 
+                {(fees.weekdayFee === '' || parseFloat(fees.weekdayFee) === 0 || fees.weekendFee === '' || parseFloat(fees.weekendFee) === 0) && (
+                  <div className="bg-warn/5 border border-warn/20 rounded-md px-4 py-2.5 text-warn text-xs">
+                    <strong>Check fees:</strong> weekday or weekend green fee is $0 or empty. Confirm this is intentional before creating.
+                  </div>
+                )}
                 <div className="bg-pine/5 border border-pine/20 rounded-md px-4 py-3 text-xs text-pine">
                   A welcome email with a temporary password and setup link will be sent to <strong>{op.contactEmail}</strong>.
                 </div>

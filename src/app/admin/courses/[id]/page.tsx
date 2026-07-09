@@ -95,6 +95,7 @@ export default function CourseDetailPage() {
   const [adminReady, setAdminReady] = useState(false);
   const [detail, setDetail] = useState<CourseDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [tab, setTab] = useState<TabName>('overview');
 
   // Setup / policy form
@@ -197,16 +198,22 @@ export default function CourseDetailPage() {
 
   const loadDetail = useCallback(async () => {
     setLoading(true);
-    const r = await fetch(`/api/admin/course-detail?courseId=${courseId}`, { headers: H() });
-    if (r.ok) {
-      const d = await r.json();
-      setDetail(d);
-      setSetupForm(d.course);
-    } else {
-      router.push('/admin/courses');
+    setLoadError('');
+    try {
+      const r = await fetch(`/api/admin/course-detail?courseId=${courseId}`, { headers: H() });
+      if (r.ok) {
+        const d = await r.json();
+        setDetail(d);
+        setSetupForm(d.course);
+      } else {
+        const e = await r.json().catch(() => ({}));
+        setLoadError(e.error || `Failed to load course (${r.status})`);
+      }
+    } catch {
+      setLoadError('Network error — check your connection and try again.');
     }
     setLoading(false);
-  }, [courseId, H, router]);
+  }, [courseId, H]);
 
   useEffect(() => {
     fetch('/api/admin/session').then(r => {
@@ -332,6 +339,24 @@ export default function CourseDetailPage() {
         <AdminSidebar active="courses" />
         <div className="ml-56 flex-1 flex items-center justify-center">
           <div className="text-ink-muted text-sm">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-paper flex">
+        <AdminSidebar active="courses" />
+        <div className="ml-56 flex-1 flex items-center justify-center flex-col gap-4">
+          <div className="bg-bad/5 border border-bad/20 rounded-lg px-6 py-5 text-center max-w-sm">
+            <div className="text-bad text-sm font-medium mb-1">Failed to load course</div>
+            <div className="text-ink-muted text-xs mb-4">{loadError}</div>
+            <div className="flex gap-2 justify-center">
+              <button onClick={loadDetail} className="px-4 py-2 bg-pine hover:bg-pine-hover text-white text-sm font-medium rounded-md transition-colors">Retry</button>
+              <button onClick={() => router.push('/admin/courses')} className="px-4 py-2 border border-line text-ink-soft hover:text-ink rounded-md text-sm transition-colors">Back to list</button>
+            </div>
+          </div>
         </div>
       </div>
     );

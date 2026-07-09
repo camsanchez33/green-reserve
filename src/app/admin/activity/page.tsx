@@ -39,6 +39,7 @@ export default function ActivityPage() {
   const [courseId, setCourseId] = useState('');
   const [from, setFrom] = useState(() => { const d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().split('T')[0]; });
   const [to, setTo] = useState('');
+  const [datePreset, setDatePreset] = useState<'30d' | '7d' | 'custom'>('30d');
   const initRef = useRef(false);
 
   const doLoad = useCallback(async (p: number, cId: string, f: string, t: string) => {
@@ -98,8 +99,27 @@ export default function ActivityPage() {
                 <option value="">All courses</option>
                 {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
-              <input type="date" value={from} onChange={e => setFrom(e.target.value)} className={iCls + ' flex-1 min-w-36'}/>
-              <input type="date" value={to} onChange={e => setTo(e.target.value)} className={iCls + ' flex-1 min-w-36'}/>
+              <div className="flex items-center gap-1 bg-white border border-line rounded-md p-1">
+                {([['30d', 'Last 30 days'], ['7d', 'Last 7 days'], ['custom', 'Custom']] as const).map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      setDatePreset(key);
+                      if (key === '30d') { const d = new Date(); d.setDate(d.getDate() - 30); setFrom(d.toISOString().split('T')[0]); setTo(''); }
+                      else if (key === '7d') { const d = new Date(); d.setDate(d.getDate() - 7); setFrom(d.toISOString().split('T')[0]); setTo(''); }
+                    }}
+                    className={'px-3 py-1.5 rounded text-[11px] font-medium transition-colors ' + (datePreset === key ? 'bg-paper text-ink border border-line' : 'text-ink-muted hover:text-ink')}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {datePreset === 'custom' && (
+                <>
+                  <input type="date" value={from} onChange={e => setFrom(e.target.value)} className={iCls + ' flex-1 min-w-36'}/>
+                  <input type="date" value={to} onChange={e => setTo(e.target.value)} className={iCls + ' flex-1 min-w-36'}/>
+                </>
+              )}
               <button onClick={handleLoad} className="bg-pine hover:bg-pine-hover text-white text-[12.5px] font-medium px-4 py-2 rounded-md transition-colors">
                 Load
               </button>

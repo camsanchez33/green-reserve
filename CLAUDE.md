@@ -169,6 +169,9 @@ Key rules to keep budgets green:
 - Stripe JS deferred until a card is actually needed (`getStripePromise()` pattern in book/page.tsx)
 - New `'use client'` components on golfer pages need a bundle-size justification
 
+### No-silent-failures rule (admin)
+Every admin action must show: pending state → then success or an explicit error explaining what to do next. Never swallow a `catch` in an admin fetch handler — always surface the error to the user. Never silently redirect away on a fetch failure — show an inline error state with a retry option. This rule applies to all new admin routes and must be audited when touching existing admin pages.
+
 ### Schema change mini-checklist (post Section A)
 Every schema change must pass ALL of these before merging to main:
 1. `prisma migrate dev --name <x>` generated a migration file (committed)

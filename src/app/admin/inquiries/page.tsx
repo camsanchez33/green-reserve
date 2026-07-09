@@ -22,7 +22,7 @@ interface Inquiry {
 }
 
 const TABS = [
-  { key: 'your-move', label: 'Your move', statuses: ['details_submitted'], description: 'Inquiries that need your action next.' },
+  { key: 'your-move', label: 'Your move', statuses: ['details_submitted', 'building'], description: 'Inquiries waiting on your action — sheet received or currently building.' },
   { key: 'new', label: 'New', statuses: ['pending'], description: 'Just submitted — not yet reviewed.' },
   { key: 'in-review', label: 'In review', statuses: ['in_review'], description: "You're evaluating these." },
   { key: 'waiting', label: 'Waiting on them', statuses: ['details_requested'], description: 'Setup sheet sent — waiting on the course.' },

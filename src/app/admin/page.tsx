@@ -32,7 +32,8 @@ const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 
 
 function Trend({ current, prev }: { current: number; prev: number }) {
   if (prev === 0 && current === 0) return null;
-  const delta = prev === 0 ? 100 : ((current - prev) / prev) * 100;
+  if (prev === 0) return <span className="text-[11px] text-ink-muted">— vs prior 30d</span>;
+  const delta = ((current - prev) / prev) * 100;
   const up = delta >= 0;
   const cls = up ? 'text-ok' : 'text-bad';
   const Icon = up ? ArrowUpRight : ArrowDownRight;

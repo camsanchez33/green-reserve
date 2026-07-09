@@ -22,6 +22,8 @@ export default function BroadcastsPage() {
   const [body, setBody] = useState('');
   const [sendEmail, setSendEmail] = useState(false);
   const [sending, setSending] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
+  const [recipientCount, setRecipientCount] = useState<number | null>(null);
   const [sendResult, setSendResult] = useState<{ emailCount?: number; error?: string } | null>(null);
 
   const load = useCallback(async () => {
@@ -41,6 +43,13 @@ export default function BroadcastsPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  useEffect(() => {
+    fetch('/api/admin/courses', { headers: { 'Content-Type': 'application/json' } })
+      .then(r => r.ok ? r.json() : [])
+      .then((list: { active: boolean }[]) => setRecipientCount(Array.isArray(list) ? list.filter(c => c.active).length : 0))
+      .catch(() => {});
+  }, []);
+
   async function sendBroadcast() {
     if (!title.trim() || !body.trim()) return;
     setSending(true);
@@ -54,7 +63,7 @@ export default function BroadcastsPage() {
       const d = await r.json();
       if (!r.ok) { setSendResult({ error: d.error || 'Failed' }); return; }
       setSendResult({ emailCount: d.emailCount });
-      setTitle(''); setBody(''); setSendEmail(false);
+      setTitle(''); setBody(''); setSendEmail(false); setReviewing(false);
       load();
     } catch { setSendResult({ error: 'Network error' }); }
     finally { setSending(false); }
@@ -77,11 +86,14 @@ export default function BroadcastsPage() {
             </button>
           </div>
 
-          {/* Compose */}
+          {/* Compose / Review */}
           <div className="bg-white border border-line rounded-lg p-6 mb-7">
             <div className="flex items-center gap-2 mb-4">
               <Radio className="w-4 h-4 text-pine"/>
-              <span className="text-sm font-medium text-ink">New broadcast</span>
+              <span className="text-sm font-medium text-ink">{reviewing ? 'Review before sending' : 'New broadcast'}</span>
+              {reviewing && (
+                <button onClick={() => setReviewing(false)} className="ml-auto text-xs text-ink-muted hover:text-ink transition-colors">Edit</button>
+              )}
             </div>
             {sendResult && (
               <div className={`rounded-md px-3 py-2.5 text-sm mb-4 border ${sendResult.error ? 'bg-bad/5 border-bad/20 text-bad' : 'bg-ok/5 border-ok/20 text-ok'}`}>
@@ -90,40 +102,72 @@ export default function BroadcastsPage() {
                   : `Broadcast sent${sendResult.emailCount ? ` · ${sendResult.emailCount} email${sendResult.emailCount !== 1 ? 's' : ''} delivered` : ''}`}
               </div>
             )}
-            <div className="space-y-4">
-              <div>
-                <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Title</label>
-                <input value={title} onChange={e => setTitle(e.target.value)} className={iCls} placeholder="Maintenance window this weekend"/>
-              </div>
-              <div>
-                <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Message</label>
-                <textarea value={body} onChange={e => setBody(e.target.value)} rows={5} className={iCls + ' resize-none'} placeholder="Write your message here. Separate paragraphs with blank lines."/>
-              </div>
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <label className="flex items-center gap-3 cursor-pointer select-none">
-                  <div
-                    className={'relative w-9 h-5 rounded-full transition-colors cursor-pointer ' + (sendEmail ? 'bg-pine' : 'bg-line-strong')}
-                    onClick={() => setSendEmail(v => !v)}
-                  >
-                    <div className={'absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ' + (sendEmail ? 'translate-x-4' : 'translate-x-0.5')}/>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-ink flex items-center gap-1.5">
-                      <Mail className="w-3.5 h-3.5 text-ink-muted"/>Also send as email
+
+            {!reviewing ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Title</label>
+                  <input value={title} onChange={e => setTitle(e.target.value)} className={iCls} placeholder="Maintenance window this weekend"/>
+                </div>
+                <div>
+                  <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Message</label>
+                  <textarea value={body} onChange={e => setBody(e.target.value)} rows={5} className={iCls + ' resize-none'} placeholder="Write your message here. Separate paragraphs with blank lines."/>
+                </div>
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <label className="flex items-center gap-3 cursor-pointer select-none">
+                    <div
+                      className={'relative w-9 h-5 rounded-full transition-colors cursor-pointer ' + (sendEmail ? 'bg-pine' : 'bg-line-strong')}
+                      onClick={() => setSendEmail(v => !v)}
+                    >
+                      <div className={'absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ' + (sendEmail ? 'translate-x-4' : 'translate-x-0.5')}/>
                     </div>
-                    <div className="text-xs text-ink-muted mt-0.5">Sends to every operator with an active course</div>
-                  </div>
-                </label>
-                <button
-                  onClick={sendBroadcast}
-                  disabled={sending || !title.trim() || !body.trim()}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white font-medium rounded-md text-[12.5px] transition-colors"
-                >
-                  <Send className="w-4 h-4"/>
-                  {sending ? 'Sending...' : 'Send broadcast'}
-                </button>
+                    <div>
+                      <div className="text-sm font-medium text-ink flex items-center gap-1.5">
+                        <Mail className="w-3.5 h-3.5 text-ink-muted"/>Also send as email
+                      </div>
+                      <div className="text-xs text-ink-muted mt-0.5">Sends to every operator with an active course</div>
+                    </div>
+                  </label>
+                  <button
+                    onClick={() => setReviewing(true)}
+                    disabled={!title.trim() || !body.trim()}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white font-medium rounded-md text-[12.5px] transition-colors"
+                  >
+                    Preview &amp; confirm
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="bg-paper border border-line rounded-lg p-4">
+                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Preview</div>
+                  <div className="text-sm font-medium text-ink mb-2">{title}</div>
+                  <div className="text-sm text-ink-soft whitespace-pre-line leading-relaxed">{body}</div>
+                </div>
+                {sendEmail && (
+                  <div className="flex items-center gap-2 text-xs text-ink-soft bg-pine/5 border border-pine/20 rounded-md px-3 py-2">
+                    <Mail className="w-3.5 h-3.5 text-pine shrink-0"/>
+                    <span>Email will be sent to {recipientCount !== null ? `${recipientCount} active operator${recipientCount !== 1 ? 's' : ''}` : 'all active operators'}.</span>
+                  </div>
+                )}
+                <div className="flex gap-3 pt-1">
+                  <button
+                    onClick={() => setReviewing(false)}
+                    className="px-4 py-2.5 border border-line text-ink-soft hover:text-ink hover:border-line-strong rounded-md text-[12.5px] font-medium transition-colors"
+                  >
+                    Back to edit
+                  </button>
+                  <button
+                    onClick={sendBroadcast}
+                    disabled={sending}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white font-medium rounded-md text-[12.5px] transition-colors"
+                  >
+                    <Send className="w-4 h-4"/>
+                    {sending ? 'Sending...' : sendEmail && recipientCount !== null ? `Send to ${recipientCount} operator${recipientCount !== 1 ? 's' : ''}` : 'Confirm & send'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* History */}

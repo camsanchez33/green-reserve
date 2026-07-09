@@ -22,7 +22,7 @@ function CoursesContent() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
-  const [showArchived, setShowArchived] = useState(false);
+  const [archiveFilter, setArchiveFilter] = useState<'active' | 'archived' | 'all'>('active');
   const [filterStatus, setFilterStatus] = useState<'all' | 'live' | 'offline'>('all');
   const [filterStripe, setFilterStripe] = useState<'all' | 'yes' | 'no'>('all');
   const [filterFeatured, setFilterFeatured] = useState(false);
@@ -33,11 +33,27 @@ function CoursesContent() {
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
-  const loadCourses = useCallback(async (archived = false) => {
+  const loadCourses = useCallback(async (af: 'active' | 'archived' | 'all' = 'active') => {
     setLoading(true);
-    const url = '/api/admin/courses' + (archived ? '?showArchived=1' : '');
-    const r = await fetch(url, { headers: H() });
-    if (r.ok) setCourses(await r.json());
+    try {
+      if (af === 'all') {
+        const [r1, r2] = await Promise.all([
+          fetch('/api/admin/courses', { headers: H() }),
+          fetch('/api/admin/courses?showArchived=1', { headers: H() }),
+        ]);
+        if (r1.ok && r2.ok) {
+          const [active, archived] = await Promise.all([r1.json(), r2.json()]);
+          setCourses([...active, ...archived]);
+        } else {
+          setCourses([]);
+        }
+      } else {
+        const url = '/api/admin/courses' + (af === 'archived' ? '?showArchived=1' : '');
+        const r = await fetch(url, { headers: H() });
+        if (r.ok) setCourses(await r.json());
+        else setCourses([]);
+      }
+    } catch { setCourses([]); }
     setLoading(false);
   }, [H]);
 
@@ -50,13 +66,16 @@ function CoursesContent() {
 
   useEffect(() => {
     if (!adminReady) return;
-    loadCourses(showArchived);
+    loadCourses(archiveFilter);
     const courseId = params.get('courseId');
     if (courseId) router.replace('/admin/courses/' + courseId);
-  }, [adminReady, showArchived, loadCourses, params, router]);
+  }, [adminReady, archiveFilter, loadCourses, params, router]);
 
-  async function archiveCourse(id: string, name: string) {
-    if (!confirm(`Archive "${name}"? The course disappears from the public site but data is retained. You can restore it later.`)) return;
+  async function archiveCourse(id: string, name: string, bookings30d: number) {
+    const activityWarn = bookings30d > 0
+      ? `\n\nThis course has ${bookings30d} booking${bookings30d !== 1 ? 's' : ''} in the last 30 days. Existing bookings and their data are preserved.`
+      : '';
+    if (!confirm(`Archive "${name}"? The course disappears from the public site but data is retained. You can restore it later.${activityWarn}`)) return;
     const r = await fetch('/api/admin/archive-course', {
       method: 'POST', headers: H(), body: JSON.stringify({ courseId: id, action: 'archive' }),
     });
@@ -68,7 +87,7 @@ function CoursesContent() {
     const r = await fetch('/api/admin/archive-course', {
       method: 'POST', headers: H(), body: JSON.stringify({ courseId: id, action: 'restore' }),
     });
-    if (r.ok) loadCourses(true);
+    if (r.ok) loadCourses(archiveFilter);
     else { const d = await r.json(); alert(`Restore failed: ${d.error}`); }
   }
 
@@ -111,9 +130,9 @@ function CoursesContent() {
         (c.operator?.email || '').toLowerCase().includes(q)
       )
     : [...courses];
-  if (!showArchived) {
-    if (filterStatus === 'live') filteredCourses = filteredCourses.filter(c => c.active);
-    else if (filterStatus === 'offline') filteredCourses = filteredCourses.filter(c => !c.active);
+  if (archiveFilter !== 'archived') {
+    if (filterStatus === 'live') filteredCourses = filteredCourses.filter(c => c.active && !c.archivedAt);
+    else if (filterStatus === 'offline') filteredCourses = filteredCourses.filter(c => !c.active && !c.archivedAt);
     if (filterStripe === 'yes') filteredCourses = filteredCourses.filter(c => c.stripeAccountActive);
     else if (filterStripe === 'no') filteredCourses = filteredCourses.filter(c => !c.stripeAccountActive);
     if (filterFeatured) filteredCourses = filteredCourses.filter(c => c.featured);
@@ -124,7 +143,7 @@ function CoursesContent() {
   else if (sortBy === 'revenue') filteredCourses = [...filteredCourses].sort((a, b) => b.revenue30d - a.revenue30d);
 
   const totalCourses = courses.length;
-  const liveCourses = showArchived ? 0 : courses.filter(c => c.active).length;
+  const liveCourses = archiveFilter !== 'archived' ? courses.filter(c => c.active && !c.archivedAt).length : 0;
 
   if (!adminReady) return null;
 
@@ -137,9 +156,11 @@ function CoursesContent() {
             <div>
               <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">All Courses</h1>
               <p className="text-sm text-ink-soft mt-0.5">
-                {showArchived
+                {archiveFilter === 'archived'
                   ? `${totalCourses} archived`
-                  : `${liveCourses} live · ${courses.filter(c => !c.active).length} offline`}
+                  : archiveFilter === 'all'
+                    ? `${totalCourses} total · ${liveCourses} live`
+                    : `${liveCourses} live · ${courses.filter(c => !c.active && !c.archivedAt).length} offline`}
               </p>
             </div>
             <div className="flex gap-2 items-center">
@@ -153,7 +174,7 @@ function CoursesContent() {
                 />
               </div>
               <button
-                onClick={() => loadCourses(showArchived)}
+                onClick={() => loadCourses(archiveFilter)}
                 className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-line transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />Refresh
@@ -162,15 +183,20 @@ function CoursesContent() {
           </div>
 
           <div className="flex items-center gap-2 mb-5 flex-wrap">
-            {/* Archived toggle */}
-            <button
-              onClick={() => { setShowArchived(v => !v); setFilterStatus('all'); }}
-              className={'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium border transition-colors ' + (showArchived ? 'bg-bad/10 text-bad border-bad/30' : 'text-ink-muted border-line hover:border-line-strong hover:text-ink')}
-            >
-              <ArchiveX className="w-3 h-3" />{showArchived ? 'Archived courses' : 'Show archived'}
-            </button>
+            {/* All / Active / Archived segmented filter */}
+            <div className="flex items-center gap-1 bg-white border border-line rounded-lg p-1">
+              {([['active', 'Active'], ['archived', 'Archived'], ['all', 'All']] as const).map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => { setArchiveFilter(key); setFilterStatus('all'); }}
+                  className={'px-3 py-1 rounded-md text-[11px] font-medium transition-colors ' + (archiveFilter === key ? 'bg-paper text-ink border border-line' : 'text-ink-muted hover:text-ink')}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
 
-            {!showArchived && (
+            {archiveFilter !== 'archived' && (
               <>
                 <div className="flex items-center gap-1 bg-white border border-line rounded-lg p-1">
                   {(['all', 'live', 'offline'] as const).map(s => (
@@ -330,7 +356,7 @@ function CoursesContent() {
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => archiveCourse(course.id, course.name)}
+                        onClick={() => archiveCourse(course.id, course.name, course.bookings30d)}
                         className="w-8 h-8 flex items-center justify-center rounded-md text-ink-muted hover:text-bad hover:bg-bad/5 transition-colors"
                         title="Archive course"
                       >

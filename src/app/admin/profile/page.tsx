@@ -94,7 +94,7 @@ export default function ProfilePage() {
             </div>
             {session?.role === 'owner' && (
               <div className="mt-4 pt-3 border-t border-line-soft">
-                <a href="/admin/owner-login" className="text-xs text-pine hover:underline">
+                <a href="/admin/owner-login" className="text-xs text-pine underline hover:text-pine-hover transition-colors">
                   Use secure owner login (with 2FA) next time
                 </a>
               </div>
