@@ -76,7 +76,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] RECEIPT_SPEC Phases R1+R2 — itemized on-brand receipts: service fee named everywhere ($1.50 × players, never "Fees"), token-gated printable /receipt/[bookingId] page, receipt email brought on-brand + linked from confirmation/check-in/account (no migration, unattended OK) — R1: 213851d, R2: b11edb2
 - [x] ONBOARDING_V2_SPEC Phase V1 — admin inquiry fixes: editable contact info, hide empty detail boxes, tabbed detail panel (small, no migration) — a61971b
 - [x] ONBOARDING_V2_SPEC Phase V2 — applicant confirmation email rewrite + details-sheet follow-up email with their answers (small, no migration) — 6dc2c16
-- [ ] ONBOARDING_V2_SPEC Phase V3 — details sheet v2: branch-driven sections from inquiry answers, 9-hole/yardages/tee sets, resident + membership + private-access depth, cancellation explainer, facilities rebuild, photos via Blob (big, no migration)
+- [x] ONBOARDING_V2_SPEC Phase V3 — details sheet v2: branch-driven sections from inquiry answers, 9-hole/yardages/tee sets, resident + membership + private-access depth, cancellation explainer, facilities rebuild, photos via Blob (big, no migration) — 6b4daa9
 - [ ] ONBOARDING_V2_SPEC Phase V4 — one-click "Create draft course" from submitted sheet (replaces wizard in pipeline; wizard = in-person only), fix bugged build entry point on course/inquiry rows, needs-review notes for missing fields (medium, no migration)
 - [ ] MANAGE_BOOKING_SPEC Phase M4 — course-configurable check-in window (Course.checkInWindowHours) driving the existing "time to check in" email; operator sets it in Settings (schema change, attended)
 
