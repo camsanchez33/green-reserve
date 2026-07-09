@@ -306,6 +306,14 @@ From Cam's retest of the merged step:
    no other courses, surface that in admin (the operator row shows "no
    courses") rather than silently stranding records. Do NOT auto-delete
    operators (they may have Stripe accounts).
+1b. **(follow-up after V9 shipped)** The existing-course guard is too blunt:
+   it blocks whenever the operator has ANY course. Correct behavior:
+   - Operator has a course with a DIFFERENT name → no block at all; attach the
+     new course (multi-course operator).
+   - Same name (case-insensitive) but ARCHIVED → no block; create fresh.
+   - Same name and ACTIVE → banner with two inline actions: "View existing
+     course" (link) and "Create anyway" (proceeds with a -2 slug suffix).
+   Never a dead-end.
 3. **Kill the browser alert().** Admin actions (this page and the inquiries
    list) show errors/successes as inline Clubhouse-styled banners near the
    action button, not window.alert dialogs. Audit /admin/inquiries* for other

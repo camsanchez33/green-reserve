@@ -85,9 +85,14 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] ONBOARDING_V2_SPEC Phase V7 — multi-nine data model: par adapts to hole count (no overall par on 27/36), structured combo builder with per-combo notes, per-nine par, per-combo ratings + auto-summed combo yardages per tee set, flows through Sheet tab + draft build (medium, no migration) — 56f88b6
 - [x] ONBOARDING_V2_SPEC Phase V8 — memberships & passes + facilities fixes: root cause = React controlled type="number" drops keystrokes on partial decimal; DollarInput switched to type="text" inputMode="decimal"; legacy fee stored as number coerced to string on load; re-audited all money fields (medium, no migration) — 56f88b6
 - [x] ONBOARDING_V2_SPEC Phase V9 — draft build reuses existing operator by email (never fails on it), alert() → inline banners on admin inquiry pages (small, no migration) — 997501d
+- [ ] GOLFER_EDGE_SPEC Phase E1 — perf audit script + CI budgets (mobile, slow-4G; perf ≥85, LCP ≤2.5s) + fix worst offenders (medium, no migration)
+- [ ] GOLFER_EDGE_SPEC Phase E2 — tap budget: course page → confirmed in ≤4 taps returning golfer; prefill from session, carry slot context, smart defaults; no-account rule guarded (medium, no migration)
+- [ ] GOLFER_EDGE_SPEC Phase E3 — trust copy at slot pick, card entry, confirm; shared component; audit contradictory copy (small, no migration)
 - [ ] MANAGE_BOOKING_SPEC Phase M4 — course-configurable check-in window (Course.checkInWindowHours) driving the existing "time to check in" email; operator sets it in Settings (schema change, attended)
 
 ## Ideas / not yet specced
+
+- PRELAUNCH (when go-live nears): scripts/purge-test-data.ts — owner-run purge of test courses + all related records, dry-run mode first, backup before, attended; keeps the payment-history archive guard intact in the app
 
 - MANAGE_BOOKING M3 (update card via token-gated SetupIntent) — SKIPPED 2026-07-08, Cam's call: check-in fresh-card path covers it; revisit if a golfer/course asks
 - Remove or keep "No account yet" badge on dashboard members list (GolferAccount linking undecided)
