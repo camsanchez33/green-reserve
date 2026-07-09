@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Check, Flag, SlidersHorizontal, ExternalLink, Navigation, Bell } from 'lucide-react';
 import type { Course, TeeTime } from '@/lib/courses-data';
+import { TrustNote } from '@/components/TrustNote';
 
 const TYPE_LABELS: Record<string, string> = {
   public:         'Public',
@@ -970,6 +971,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                                         <span>Total</span>
                                         <span>${slotTotal.toFixed(2)}</span>
                                       </div>
+                                      <TrustNote className="pt-1.5">Green fees go 100% to the course.</TrustNote>
                                     </div>
 
                                     {/* Continue to Book */}

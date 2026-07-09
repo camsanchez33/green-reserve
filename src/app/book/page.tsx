@@ -8,6 +8,7 @@ import {
 } from '@stripe/react-stripe-js';
 import { ChevronLeft, Lock, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { ACCESS_FEE_PER_PLAYER, serviceFeeLabel } from '@/lib/booking-fees';
+import { TrustNote } from '@/components/TrustNote';
 
 // Deferred: only load Stripe when a card is actually needed (fee-policy courses).
 // No-fee courses never touch Stripe JS at all.
@@ -278,8 +279,8 @@ function BookPageInner() {
                 <div className="flex justify-between font-semibold text-ink text-base border-t border-line pt-2">
                   <span>Estimated total at check-in</span><span>${total.toFixed(2)}</span>
                 </div>
-                <p className="text-xs text-ink-muted pt-1">Nothing is charged today. You&apos;ll pay this when you check in for your round.</p>
-                <p className="text-xs text-ink-muted pt-0.5">The service fee supports online booking. Green fees go 100% to the course.</p>
+                <TrustNote className="pt-1">Nothing is charged today — you pay at the course when you check in.</TrustNote>
+                <TrustNote className="pt-0.5">Green fees go 100% to the course.</TrustNote>
               </div>
             </div>
           </div>
@@ -436,11 +437,12 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
         <div className="w-full px-4 py-3.5 rounded-md border border-line bg-paper focus-within:border-pine/40 focus-within:ring-2 focus-within:ring-pine/10 transition-all">
           <CardElement options={cardStyle} />
         </div>
-        <p className="text-xs text-ink-muted mt-1.5">Your card is saved, not charged. You&apos;ll pay when you check in for your round.</p>
+        <TrustNote className="mt-1.5">Nothing is charged now — you pay at the course when you check in.</TrustNote>
       </div>
 
       {error && <p className="text-bad text-sm">{error}</p>}
 
+      <TrustNote>No charge until check-in.</TrustNote>
       <button
         onClick={handleSubmit}
         disabled={loading || !stripe}
@@ -451,7 +453,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
       </button>
       <div className="flex items-center justify-center gap-2 text-ink-muted text-xs">
         <Lock size={12} />
-        <span>Secure checkout powered by Stripe</span>
+        <span>Secured by Stripe</span>
       </div>
     </div>
   );
