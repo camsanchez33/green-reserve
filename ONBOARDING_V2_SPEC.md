@@ -241,6 +241,77 @@ Replace both with ONE tab bar.
 - Rows: keep the current data but align columns consistently (name/location,
   contact, stage + days-in-stage, date) — no layout changes beyond cleanup.
 
+### Phase V7 — Multi-nine courses: par, combos, and ratings done right (medium, no migration)
+From Cam's retest. When a course isn't a single 18, "overall par" and single
+ratings stop making sense. Fix the data model the sheet collects:
+
+1. **Course basics par adapts to hole count.** 18 holes → overall par as today
+   (optional front/back split). 27/36 holes → REMOVE the overall-par field from
+   basics; show muted note "Par is set per nine in Playability." Never ask for
+   a single par on a multi-nine course.
+2. **Structured combo builder (replaces the free-text combos field).** For
+   three 9s: after naming the nines, show the three possible pairings
+   (North+South, South+West, North+West) as toggles — course turns ON the ones
+   actually played as 18. Optional note per combo (e.g. "mornings only").
+   For 36 (two 18s or four 9s): same pattern, pairings generated from layout.
+   Par per nine is asked here (one small field per named nine).
+3. **Per-combo ratings & yardages in the tee-set step.** For each tee set:
+   - Yardage per NINE (as V3b specced — verify it works)
+   - Combo yardages auto-computed (sum of the two nines) and shown per active
+     combo — editable override if the course says different
+   - Rating/slope (optional) entered PER ACTIVE COMBO per tee set, labeled
+     with the combo name ("Blue — North+South: 71.4 / 128")
+   Keep it collapsible so a simple 18-hole course never sees any of this.
+4. Everything flows through: sheet JSON → V5 Sheet tab renders combos
+   readably → V4 draft build stores per-nine/per-combo data in build notes +
+   TeeSet rows where the model allows (no schema change — anything that
+   doesn't fit TeeSet goes in build notes for the admin).
+
+### Phase V8 — Memberships & passes step refinements (small, no migration)
+From Cam's retest of the merged step:
+
+1. **BUG: tier FEE input rejects typing** — the small "$" fee field on a tier
+   row won't accept input at all. Same money-input disease as the V3c resident
+   bug; fix it AND write down what the root cause was in the commit message so
+   we stop reintroducing it. Re-audit every money input on the sheet.
+2. **Type dropdown gets "Other"** → reveals a free-text "what is it?" field.
+3. **Member per-round pricing built out.** "Do members pay per round → $25"
+   is too thin. When yes:
+   - Is it a DISCOUNTED GREEN FEE or a SEPARATE FEE on top? (two-option toggle)
+   - Weekday rate + Weekend rate (weekend often costs more) + optional twilight
+   - Cart included or extra?
+   All per tier, collapsed until per-round = yes.
+4. **BUG: fee displays as garbage** — a tier renders "Fee: $32110.01 / annual"
+   for a value that was never entered as that. Almost certainly a cents↔dollars
+   round-trip bug (stored in cents, rendered as cents-with-decimal, or the
+   broken input saving raw keystrokes). Fix the full round trip and add a
+   sanity test: enter $1,200 → sheet JSON → Sheet tab → draft build all show
+   $1,200.00.
+5. **Pro shop captures a phone number** (used as the default contact for
+   rental/lessons follow-ups).
+6. **Club rental "how to arrange" allows BOTH** — "come into pro shop" and
+   "call ahead" are not mutually exclusive; make it multi-select (checkboxes,
+   not a dropdown) + phone number field when "call ahead" is checked
+   (prefilled from the pro shop number if given).
+
+### Phase V9 — Draft build: operator reuse + real error UI (small, no migration)
+1. **Existing operator must never block a draft build.** create_draft_course
+   currently fails with "operator account already exists for this email."
+   Correct behavior: look up CourseOperator by email — if found, ATTACH the new
+   draft course to that operator (multi-course operators are a feature, and
+   deleted courses leave operators behind). Only create a new operator when
+   none exists. Add a line to the build result ("Attached to existing operator
+   account") so admin knows.
+2. **Course deletion hygiene:** when a course is deleted and its operator has
+   no other courses, surface that in admin (the operator row shows "no
+   courses") rather than silently stranding records. Do NOT auto-delete
+   operators (they may have Stripe accounts).
+3. **Kill the browser alert().** Admin actions (this page and the inquiries
+   list) show errors/successes as inline Clubhouse-styled banners near the
+   action button, not window.alert dialogs. Audit /admin/inquiries* for other
+   alert()/confirm() calls — confirm() for destructive actions may stay for
+   now, alert() goes.
+
 ### Phase V4 — One-click draft build from the sheet (medium, no migration)
 REPLACES the old "wizard prefill parity" plan. Cam's ruling: the wizard is an
 IN-PERSON tool only (admin sitting with a course). The normal pipeline must not
