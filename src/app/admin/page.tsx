@@ -3,9 +3,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   BarChart2, AlertCircle, DollarSign, TrendingUp, Building2, RefreshCw,
-  ArrowUpRight, ArrowDownRight, ChevronRight, Activity,
+  ArrowUpRight, ArrowDownRight, ChevronRight, Activity, CheckCircle2,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 interface Stats {
   totalCourses: number; archivedCourses: number; activeCourses: number; pendingInquiries: number;
@@ -23,6 +24,12 @@ interface Stats {
   recentActivity: {
     bookings: { id: string; courseId: string; courseName: string; golferName: string; players: number; totalAmount: number; teeDate: string; teeTime: string; createdAt: string }[];
     inquiries: { id: string; courseName: string; contactName: string; status: string; createdAt: string }[];
+  };
+  needsYou: {
+    yourMoveInquiries: { id: string; courseName: string; status: string; updatedAt: string }[];
+    draftCourses: { id: string; name: string; createdAt: string }[];
+    failedChargesCount: number | null;
+    unreadMessages: number;
   };
 }
 
@@ -84,9 +91,18 @@ function RevenueChart({ data }: { data: { date: string; platform: number; gross:
   );
 }
 
+const SUPPORT_PLUS_ROLES = ['owner', 'manager', 'support'];
+
+function daysSince(iso: string) {
+  const d = new Date(iso);
+  const now = new Date();
+  return Math.floor((now.getTime() - d.getTime()) / (86400000));
+}
+
 export default function AdminOverviewPage() {
   const router = useRouter();
   const [adminReady, setAdminReady] = useState(false);
+  const [role, setRole] = useState('');
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -100,7 +116,9 @@ export default function AdminOverviewPage() {
   useEffect(() => {
     fetch('/api/admin/session').then(r => {
       if (!r.ok) { router.push('/admin/login'); return; }
-      setAdminReady(true);
+      return r.json();
+    }).then(d => {
+      if (d) { setRole(d.role ?? ''); setAdminReady(true); }
     }).catch(() => router.push('/admin/login'));
   }, [router]);
 
@@ -171,6 +189,90 @@ export default function AdminOverviewPage() {
           {!stats && loading && <div className="text-ink-muted text-center py-20 text-sm">Loading...</div>}
 
           {stats && <>
+            {/* Needs you */}
+            {(() => {
+              const ny = stats.needsYou;
+              const isSupportPlus = SUPPORT_PLUS_ROLES.includes(role);
+              const rows: { status: 'ok' | 'bad' | 'warn' | 'neutral'; text: string; subtext?: string; href: string }[] = [];
+
+              if (ny.yourMoveInquiries.length > 0) {
+                const top = ny.yourMoveInquiries[0];
+                rows.push({
+                  status: 'warn',
+                  text: `${ny.yourMoveInquiries.length} inquir${ny.yourMoveInquiries.length === 1 ? 'y' : 'ies'} on your move`,
+                  subtext: `${top.courseName} — ${top.status === 'building' ? 'building' : 'sheet submitted'} · ${daysSince(top.updatedAt)}d in stage`,
+                  href: '/admin/inquiries?tab=your-move',
+                });
+              }
+
+              if (isSupportPlus && ny.failedChargesCount !== null && ny.failedChargesCount > 0) {
+                rows.push({
+                  status: 'bad',
+                  text: `${ny.failedChargesCount} failed charge${ny.failedChargesCount !== 1 ? 's' : ''} since yesterday`,
+                  subtext: 'Golfers can\'t be charged at check-in — action needed',
+                  href: '/admin/revenue',
+                });
+              }
+
+              if (stats.attentionItems.noStripe.length > 0) {
+                const top = stats.attentionItems.noStripe[0];
+                rows.push({
+                  status: 'bad',
+                  text: `${stats.attentionItems.noStripe.length} course${stats.attentionItems.noStripe.length !== 1 ? 's' : ''} without Stripe`,
+                  subtext: `${top.name}${stats.attentionItems.noStripe.length > 1 ? ` + ${stats.attentionItems.noStripe.length - 1} more` : ''} — can't take payments`,
+                  href: `/admin/courses?courseId=${top.id}`,
+                });
+              }
+
+              if (isSupportPlus && ny.unreadMessages > 0) {
+                rows.push({
+                  status: 'neutral',
+                  text: `${ny.unreadMessages} unread message${ny.unreadMessages !== 1 ? 's' : ''}`,
+                  subtext: 'From course operators',
+                  href: '/admin/messages',
+                });
+              }
+
+              if (ny.draftCourses.length > 0) {
+                const top = ny.draftCourses[0];
+                rows.push({
+                  status: 'neutral',
+                  text: `${ny.draftCourses.length} draft course${ny.draftCourses.length !== 1 ? 's' : ''} not yet live`,
+                  subtext: `${top.name}${ny.draftCourses.length > 1 ? ` + ${ny.draftCourses.length - 1} more` : ''}`,
+                  href: `/admin/courses?courseId=${top.id}`,
+                });
+              }
+
+              return (
+                <div className="bg-white border border-line rounded-lg p-5 mb-6">
+                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Needs you</div>
+                  {rows.length === 0 ? (
+                    <div className="flex items-center gap-2 text-sm text-ok">
+                      <CheckCircle2 className="w-4 h-4 shrink-0"/>
+                      <span>All clear — nothing needs your attention right now</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {rows.map((row, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => router.push(row.href)}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-paper transition-colors text-left border border-line-soft hover:border-line"
+                        >
+                          <StatusDot status={row.status}/>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-ink">{row.text}</div>
+                            {row.subtext && <div className="text-xs text-ink-muted mt-0.5 truncate">{row.subtext}</div>}
+                          </div>
+                          <ChevronRight className="w-3.5 h-3.5 text-ink-faint shrink-0"/>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             {/* Stat cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               {statCards.map(card => (

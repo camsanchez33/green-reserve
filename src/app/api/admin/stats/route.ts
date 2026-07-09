@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
 
 export async function GET() {
-  if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const session = await resolveAdminSession();
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const isSupportPlus = requireRole(session, SUPPORT_PLUS);
 
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -66,6 +68,31 @@ export async function GET() {
       take: 5,
       select: { id: true, courseName: true, contactName: true, status: true, createdAt: true },
     }),
+  ]);
+
+  // "Needs you" extra data — parallel
+  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const [yourMoveInquiries, draftCourses, failedChargesCount, unreadMessages] = await Promise.all([
+    // Your Move = details_submitted (awaiting build) or building (you're building it)
+    prisma.courseInquiry.findMany({
+      where: { status: { in: ['details_submitted', 'building'] } },
+      select: { id: true, courseName: true, status: true, updatedAt: true },
+      orderBy: { updatedAt: 'asc' },
+      take: 5,
+    }),
+    // Draft = not archived, not live
+    prisma.course.findMany({
+      where: { active: false, archivedAt: null },
+      select: { id: true, name: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+    }),
+    // Failed check-in charges (last 48h for "since yesterday" framing)
+    isSupportPlus
+      ? prisma.booking.count({ where: { checkInFailReason: { not: '' }, checkedInAt: null, createdAt: { gte: yesterday } } })
+      : Promise.resolve(null),
+    // Unread operator→admin messages
+    prisma.message.count({ where: { readAt: null, senderType: 'operator' } }).catch(() => 0),
   ]);
 
   // Revenue + bookings by day (last 30) — fill all days so chart axis is correct
@@ -163,6 +190,21 @@ export async function GET() {
         createdAt: b.createdAt.toISOString(),
       })),
       inquiries: recentInquiries.map(i => ({ ...i, createdAt: i.createdAt.toISOString() })),
+    },
+    needsYou: {
+      yourMoveInquiries: yourMoveInquiries.map(i => ({
+        id: i.id,
+        courseName: i.courseName,
+        status: i.status,
+        updatedAt: i.updatedAt.toISOString(),
+      })),
+      draftCourses: draftCourses.map(c => ({
+        id: c.id,
+        name: c.name,
+        createdAt: c.createdAt.toISOString(),
+      })),
+      failedChargesCount: failedChargesCount ?? null,
+      unreadMessages,
     },
   });
 }
