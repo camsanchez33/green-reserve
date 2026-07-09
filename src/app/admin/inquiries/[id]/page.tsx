@@ -341,7 +341,7 @@ function InquiryDetailInner() {
   return (
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="inquiries" />
-      <div className="ml-56 flex-1 flex flex-col min-h-screen">
+      <div className="admin-content flex-1 flex flex-col min-h-screen">
 
         {/* ── Page header ──────────────────────────────────────────── */}
         <div className="px-8 py-6 border-b border-line bg-white shrink-0">

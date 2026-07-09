@@ -296,7 +296,7 @@ function WizardContent() {
     return (
       <div className="min-h-screen bg-paper flex">
         <AdminSidebar active="create" />
-        <div className="ml-56 flex-1 min-h-screen flex items-start justify-center pt-16">
+        <div className="admin-content flex-1 min-h-screen flex items-start justify-center pt-16">
           <div className="w-full max-w-lg px-4">
             <div className="bg-white border border-line rounded-lg p-8">
               <div className="flex items-center gap-3 mb-6">
@@ -365,7 +365,7 @@ function WizardContent() {
   return (
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="create" />
-      <div className="ml-56 flex-1 min-h-screen">
+      <div className="admin-content flex-1 min-h-screen">
         <div className="px-8 py-7 max-w-2xl">
           <div className="mb-7">
             <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Add New Course</h1>

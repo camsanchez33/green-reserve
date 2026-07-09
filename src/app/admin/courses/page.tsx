@@ -150,7 +150,7 @@ function CoursesContent() {
   return (
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="courses" />
-      <div className="ml-56 flex-1 min-h-screen">
+      <div className="admin-content flex-1 min-h-screen">
         <div className="px-8 py-7 max-w-6xl">
           <div className="flex items-center justify-between mb-4">
             <div>

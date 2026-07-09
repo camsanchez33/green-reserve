@@ -76,7 +76,7 @@ export default function ActivityPage() {
   return (
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="activity" />
-      <div className="ml-56 flex-1 min-h-screen">
+      <div className="admin-content flex-1 min-h-screen">
         <div className="px-8 py-7">
           <div className="flex items-center justify-between mb-6">
             <div>

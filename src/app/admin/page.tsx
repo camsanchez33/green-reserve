@@ -156,7 +156,7 @@ export default function AdminOverviewPage() {
   return (
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="overview" pendingInquiries={stats?.pendingInquiries ?? 0} />
-      <div className="ml-56 flex-1 min-h-screen">
+      <div className="admin-content flex-1 min-h-screen">
         <div className="px-8 py-7 max-w-6xl">
           <div className="flex items-center justify-between mb-7">
             <div>

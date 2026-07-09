@@ -151,7 +151,7 @@ function InquiriesListInner() {
   return (
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="inquiries" />
-      <div className="ml-56 flex-1 flex flex-col min-h-screen">
+      <div className="admin-content flex-1 flex flex-col min-h-screen">
         <div className="px-8 py-7 max-w-5xl">
 
           {/* Page header */}

@@ -118,7 +118,7 @@ function MessagesContent() {
   return (
     <div className="h-screen bg-paper flex overflow-hidden">
       <AdminSidebar active="messages" unreadMessages={totalUnread} />
-      <div className="ml-56 flex-1 flex overflow-hidden">
+      <div className="admin-content flex-1 flex overflow-hidden">
 
         {/* Thread list */}
         <div className="w-72 shrink-0 border-r border-line flex flex-col bg-white overflow-hidden">

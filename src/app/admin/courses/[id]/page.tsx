@@ -337,7 +337,7 @@ export default function CourseDetailPage() {
     return (
       <div className="min-h-screen bg-paper flex">
         <AdminSidebar active="courses" />
-        <div className="ml-56 flex-1 flex items-center justify-center">
+        <div className="admin-content flex-1 flex items-center justify-center">
           <div className="text-ink-muted text-sm">Loading...</div>
         </div>
       </div>
@@ -348,7 +348,7 @@ export default function CourseDetailPage() {
     return (
       <div className="min-h-screen bg-paper flex">
         <AdminSidebar active="courses" />
-        <div className="ml-56 flex-1 flex items-center justify-center flex-col gap-4">
+        <div className="admin-content flex-1 flex items-center justify-center flex-col gap-4">
           <div className="bg-bad/5 border border-bad/20 rounded-lg px-6 py-5 text-center max-w-sm">
             <div className="text-bad text-sm font-medium mb-1">Failed to load course</div>
             <div className="text-ink-muted text-xs mb-4">{loadError}</div>
@@ -366,7 +366,7 @@ export default function CourseDetailPage() {
     return (
       <div className="min-h-screen bg-paper flex">
         <AdminSidebar active="courses" />
-        <div className="ml-56 flex-1 flex items-center justify-center flex-col gap-3">
+        <div className="admin-content flex-1 flex items-center justify-center flex-col gap-3">
           <div className="text-ink-muted text-sm">Course not found</div>
           <button onClick={() => router.push('/admin/courses')} className="text-pine text-sm hover:underline">Back to list</button>
         </div>
@@ -377,7 +377,7 @@ export default function CourseDetailPage() {
   return (
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="courses" />
-      <div className="ml-56 flex-1 flex flex-col min-h-screen">
+      <div className="admin-content flex-1 flex flex-col min-h-screen">
 
         {/* Sticky page header */}
         <div className="bg-white border-b border-line px-8 py-5 sticky top-0 z-10">

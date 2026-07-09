@@ -64,7 +64,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="profile" />
-      <div className="ml-56 flex-1 min-h-screen">
+      <div className="admin-content flex-1 min-h-screen">
         <div className="px-8 py-7 max-w-xl">
 
           <div className="mb-6">
