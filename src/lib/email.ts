@@ -701,7 +701,9 @@ export async function sendDetailsSheetConfirmationEmail(data: {
     facilities: 'Facilities', restaurantType: 'Restaurant type',
     website: 'Website', description: 'Description', additionalNotes: 'Notes',
   };
-  const skipKeys = new Set(['schedule','daysOpen','daysOfWeek']);
+  const skipKeys = new Set(['schedule','daysOpen','daysOfWeek','photos','facilitiesNotes','teeSets','memberships',
+    'greenFeeWeekday','greenFeeWeekend','firstTeeTime','lastTeeTime','intervalMinutes','cartFee',
+    'starterTierName','starterTierFee']);
   const d = data.details;
   const sch = d.schedule as Record<string, unknown> | undefined;
   const wdFee = (d.greenFeeWeekday ?? sch?.greenFeeWeekday) as string | undefined;
@@ -722,9 +724,31 @@ export async function sendDetailsSheetConfirmationEmail(data: {
     </tr>
   ` : '';
 
+  type TeeSetRow = { name?: string; yardage?: string; par?: string; rating?: string; slope?: string; };
+  type TierRow = { name?: string; fee?: string; includes?: string; perRound?: string; perRoundFee?: string; };
+  const teeSetsRow = Array.isArray(d.teeSets) && (d.teeSets as TeeSetRow[]).some(t => t.name) ? `
+    <tr>
+      <td style="padding:5px 0;color:#6b7280;font-size:13px;vertical-align:top;">Tee sets</td>
+      <td style="padding:5px 0;color:#111827;font-size:13px;">${(d.teeSets as TeeSetRow[]).filter(t => t.name).map(t => `${t.name}${t.yardage ? ' · ' + t.yardage + ' yds' : ''}${t.par ? ' · par ' + t.par : ''}`).join('<br>')}</td>
+    </tr>
+  ` : '';
+
+  const membershipsRow = Array.isArray(d.memberships) && (d.memberships as TierRow[]).some(m => m.name) ? `
+    <tr>
+      <td style="padding:5px 0;color:#6b7280;font-size:13px;vertical-align:top;">Memberships</td>
+      <td style="padding:5px 0;color:#111827;font-size:13px;">${(d.memberships as TierRow[]).filter(m => m.name).map(m => `${m.name}${m.fee ? ' · $' + m.fee + '/yr' : ''}`).join('<br>')}</td>
+    </tr>
+  ` : '';
+
+  const photosRow = Array.isArray(d.photos) && (d.photos as string[]).length > 0 ? `
+    <tr>
+      <td style="padding:5px 0;color:#6b7280;font-size:13px;">Photos</td>
+      <td style="padding:5px 0;color:#111827;font-size:13px;">${(d.photos as string[]).length} photo${(d.photos as string[]).length !== 1 ? 's' : ''} uploaded</td>
+    </tr>
+  ` : '';
+
   const restRows = Object.entries(d)
-    .filter(([k, v]) => !skipKeys.has(k) && !['greenFeeWeekday','greenFeeWeekend','firstTeeTime','lastTeeTime','intervalMinutes','cartFee'].includes(k)
-      && v !== '' && v !== null && !(Array.isArray(v) && v.length === 0))
+    .filter(([k, v]) => !skipKeys.has(k) && v !== '' && v !== null && !(Array.isArray(v) && v.length === 0) && typeof v !== 'object')
     .map(([k, v]) => `
     <tr>
       <td style="padding:5px 0;color:#6b7280;font-size:13px;width:48%;vertical-align:top;">${DETAIL_LABELS[k] || k}</td>
@@ -740,7 +764,7 @@ export async function sendDetailsSheetConfirmationEmail(data: {
     <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:18px 20px;margin-bottom:24px;">
       <p style="margin:0 0 12px;color:#111827;font-size:13px;font-weight:700;">What you submitted</p>
       <table width="100%" cellpadding="0" cellspacing="0">
-        ${teeRow}${restRows}
+        ${teeRow}${teeSetsRow}${membershipsRow}${restRows}${photosRow}
       </table>
     </div>
     <p style="margin:0 0 16px;color:#6b7280;font-size:14px;">
