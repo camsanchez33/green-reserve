@@ -80,7 +80,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] ONBOARDING_V2_SPEC Phase V3b — playability follows hole count: 9/18/27/36 layouts, three-9s naming + combos, 18+9, par per nine, rotating-nines flagged as build note (small, no migration) — d87f24b
 - [x] ONBOARDING_V2_SPEC Phase V3c — walkthrough refinements: resident-rate validation bug, merge residents+memberships into one "Memberships & passes" step (tier types incl. resident card, verification: automatic vs purchased card), explicit "no cancellation policy" choice (small/medium, no migration) — d87f24b
 - [ ] ONBOARDING_V2_SPEC Phase V5 — inquiry full page at /admin/inquiries/[id] replaces the drawer: header + action toolbar, full-width tabs (re-house V1 work, don't rebuild), delete drawer (medium, no migration)
-- [x] ONBOARDING_V2_SPEC Phase V4 — one-click "Create draft course" from submitted sheet (replaces wizard in pipeline; wizard = in-person only), fix bugged build entry point on course/inquiry rows, needs-review notes for missing fields (medium, no migration) — HASH_PENDING
+- [x] ONBOARDING_V2_SPEC Phase V4 — one-click "Create draft course" from submitted sheet (replaces wizard in pipeline; wizard = in-person only), fix bugged build entry point on course/inquiry rows, needs-review notes for missing fields (medium, no migration) — 1eed95f
 - [ ] MANAGE_BOOKING_SPEC Phase M4 — course-configurable check-in window (Course.checkInWindowHours) driving the existing "time to check in" email; operator sets it in Settings (schema change, attended)
 
 ## Ideas / not yet specced
