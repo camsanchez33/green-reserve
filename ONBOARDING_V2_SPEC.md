@@ -194,6 +194,31 @@ on /admin/courses/[id].
   relevant tabs/toolbar instead of stacking above everything.
 - Delete the drawer code once the page exists.
 
+**Sheet tab must be HUMAN-readable, not raw JSON keys.** Currently renders
+`NINEREPLAY: no`, `LAYOUT27: three_9s`, `NINE27NAMES: , ,` — unusable for the
+person deciding how to build a client's course. Requirements:
+- One label map + value map for every sheet field: `nineHoleWhich` → "Which
+  nines can be booked", `three_9s` → "Three 9s", etc. Never show a camelCase/
+  UPPERCASE key or a raw enum to the admin.
+- Group into the sheet's own sections with headings: Course basics,
+  Playability, Tee sheet, Green fees, Memberships & passes, Cancellation,
+  Facilities, About. Two-column grid within sections.
+- **Render only coherent answers**: filter by the final holes/layout answer —
+  an 18-hole course never shows layout27/layout36 leftovers; hide keys from
+  branches the course toggled away from. (Render-side filtering; don't mutate
+  the stored JSON.)
+- Empty-but-relevant answers (e.g. nine names left blank) render as an
+  amber "not provided" — these are exactly the gaps V4 turns into build notes.
+
+**"Next steps" card (top of page, above tabs).** Stage-driven: tells the admin
+exactly where this client is and the one action to take:
+- pending/in_review → "Review answers → send the setup sheet" (button)
+- details_requested → "Waiting on the course — sent X days ago" (resend)
+- details_submitted → "Review the Sheet tab, then create the draft course" (button)
+- building/draft exists → "Review the draft course → go live" (link to course)
+- live → "Live since {date}" (link to course + public page)
+Same buttons as the toolbar — the card just makes the current one obvious.
+
 ### Phase V4 — One-click draft build from the sheet (medium, no migration)
 REPLACES the old "wizard prefill parity" plan. Cam's ruling: the wizard is an
 IN-PERSON tool only (admin sitting with a course). The normal pipeline must not
