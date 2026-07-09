@@ -188,9 +188,21 @@ export default function InquiriesPage() {
       setApproveResults(p => ({ ...p, [inq.id]: d as unknown as ApproveResult }));
       await loadInquiries();
       if (d.emailSent === false) alert(`Course built, but welcome email failed (${d.emailError || 'unknown error'}).`);
-      const list: Inquiry[] = await fetch('/api/admin/inquiries', { headers: H() }).then(res => res.json());
-      const updated = list.find(i => i.id === inq.id);
-      if (updated?.builtCourseId) router.push(`/admin/courses/${updated.builtCourseId}`);
+    } catch (e) { alert(`Error: ${e}`); }
+    setProcessing(null);
+  }
+
+  async function createDraftCourse(inq: Inquiry) {
+    setProcessing(inq.id);
+    try {
+      const r = await fetch('/api/admin/inquiries', {
+        method: 'PATCH', headers: H(),
+        body: JSON.stringify({ id: inq.id, action: 'create_draft_course' }),
+      });
+      const d = await r.json();
+      if (!r.ok) { alert(`Failed: ${d.error || 'unknown error'}`); setProcessing(null); return; }
+      await loadInquiries();
+      if (d.courseId) router.push(`/admin/courses/${d.courseId}`);
     } catch (e) { alert(`Error: ${e}`); }
     setProcessing(null);
   }
@@ -616,11 +628,11 @@ export default function InquiriesPage() {
               {selectedInq.status === 'details_submitted' && (
                 <>
                   <button
-                    onClick={() => { if (confirm('Build ' + selectedInq.courseName + '? Creates operator account.')) buildAndConfigure(selectedInq); }}
+                    onClick={() => { if (confirm('Create draft course for ' + selectedInq.courseName + '? No email will be sent.')) createDraftCourse(selectedInq); }}
                     disabled={processing === selectedInq.id}
                     className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
                   >
-                    <CheckCircle className="w-3.5 h-3.5" />Build Course
+                    <CheckCircle className="w-3.5 h-3.5" />Create Draft Course
                   </button>
                   <button
                     onClick={() => { if (confirm('Reject?')) inquiryAction(selectedInq.id, 'reject'); }}
@@ -642,11 +654,11 @@ export default function InquiriesPage() {
                     </button>
                   )}
                   <button
-                    onClick={() => { if (confirm('Resend welcome email?')) inquiryAction(selectedInq.id, 'resend_welcome'); }}
+                    onClick={() => { if (confirm('Send login email with a new temp password to ' + selectedInq.contactName + '?')) inquiryAction(selectedInq.id, 'resend_welcome'); }}
                     disabled={processing === selectedInq.id}
                     className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
                   >
-                    <Mail className="w-3.5 h-3.5" />Resend Email
+                    <Mail className="w-3.5 h-3.5" />Send Login Email
                   </button>
                   <button
                     onClick={() => { if (confirm('Set ' + selectedInq.courseName + ' LIVE?')) inquiryAction(selectedInq.id, 'mark_live'); }}
@@ -724,14 +736,14 @@ export default function InquiriesPage() {
                 contactEmail: selectedInq.email || '', inquiryId: selectedInq.id,
               });
               return (
-                <div className="mx-5 mt-4 flex items-center justify-between bg-pine/5 border border-pine/20 rounded-md px-4 py-3">
+                <div className="mx-5 mt-4 flex items-center justify-between bg-paper border border-line rounded-md px-4 py-3">
                   <div>
-                    <div className="text-xs font-medium text-pine">Build from this inquiry</div>
-                    <div className="text-[10px] text-pine/60 mt-0.5">Opens wizard pre-filled with submitted data</div>
+                    <div className="text-xs font-medium text-ink-muted">Manual build (in person)</div>
+                    <div className="text-[10px] text-ink-faint mt-0.5">Opens pre-fill wizard for in-person setup sessions</div>
                   </div>
                   <button
                     onClick={() => router.push('/admin/create?' + params.toString())}
-                    className="flex items-center gap-1.5 text-xs font-medium text-pine hover:text-pine-hover bg-pine/10 hover:bg-pine/20 border border-pine/20 px-3 py-1.5 rounded-md transition-colors shrink-0"
+                    className="flex items-center gap-1.5 text-xs font-medium text-ink-muted hover:text-ink bg-white hover:bg-paper border border-line px-3 py-1.5 rounded-md transition-colors shrink-0"
                   >
                     Open Wizard <ArrowUpRight className="w-3.5 h-3.5" />
                   </button>

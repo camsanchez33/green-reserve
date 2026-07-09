@@ -325,6 +325,195 @@ async function handleAction(
     return NextResponse.json({ success: true });
   }
 
+  // ── Create draft course (no email) ───────────────────────────────
+  if (action === 'create_draft_course') {
+    try {
+      const operatorEmail = inquiry.email.trim().toLowerCase();
+      const existingOp = await prisma.courseOperator.findUnique({ where: { email: operatorEmail } });
+      if (existingOp) {
+        if (inquiry.builtCourseId) return NextResponse.json({ courseId: inquiry.builtCourseId, needsReview: [], alreadyBuilt: true });
+        return NextResponse.json({ error: 'An operator account already exists for this email. Update the contact email or use Manual build.' }, { status: 409 });
+      }
+
+      let d: Record<string, unknown> = {};
+      try { d = inquiry.detailsJson ? JSON.parse(inquiry.detailsJson) : {}; } catch { /* ignore */ }
+
+      const str = (v: unknown, fallback = '') => (typeof v === 'string' && v ? v : fallback);
+      const num = (v: unknown, fallback: number) => (typeof v === 'number' && !Number.isNaN(v) ? v : fallback);
+      const bool = (v: unknown, fallback = false) => (typeof v === 'boolean' ? v : fallback);
+      const flt = (v: unknown, fallback: number) => {
+        if (typeof v === 'number' && !Number.isNaN(v)) return v;
+        if (typeof v === 'string' && v !== '' && !Number.isNaN(Number(v))) return Number(v);
+        return fallback;
+      };
+
+      const sch = (d.schedule as Record<string, unknown>) || {};
+      const fv2 = (d.facilitiesV2 as Record<string, unknown>) || {};
+      const passes = Array.isArray(d.passes) ? (d.passes as Record<string, unknown>[]) : [];
+
+      const firstTeeTime = str(d.firstTeeTime || sch.startTime, '');
+      const lastTeeTime = str(d.lastTeeTime || sch.endTime, '');
+      const intervalMins = flt(d.intervalMinutes || sch.intervalMinutes, 10);
+      const daysOpen: number[] = Array.isArray(d.daysOpen) ? (d.daysOpen as number[]) : (Array.isArray(sch.daysOfWeek) ? (sch.daysOfWeek as number[]) : []);
+      const greenFeeWeekday = flt(d.greenFeeWeekday || sch.greenFeeWeekday, 0);
+      const greenFeeWeekend = flt(d.greenFeeWeekend || sch.greenFeeWeekend, 0);
+      const cartFee = flt(d.cartFee || sch.cartFee, 0);
+
+      const holes = flt(d.holes, 18) || 18;
+      const par = flt(d.par, 72) || 72;
+
+      const walkingRaw = str(d.walkingAllowed || sch.walkingAllowed, 'yes');
+      const walkingAllowed = walkingRaw === 'yes' ? 'always' : walkingRaw;
+      const walkingSchedule = walkingAllowed !== 'no';
+
+      const hasDrivingRange = !!(fv2.range ?? d.hasDrivingRange);
+      const drivingRangeType = str(fv2.rangeTeeType, '');
+      const rangeBuckets = Array.isArray(fv2.rangeBuckets) ? (fv2.rangeBuckets as Record<string, unknown>[]) : [];
+      const rangeBallsFree = rangeBuckets.length === 0;
+      const rangeBallsSmallPrice = rangeBuckets[0] ? flt(rangeBuckets[0].price, 0) : 0;
+      const rangeBallsMediumPrice = rangeBuckets[1] ? flt(rangeBuckets[1].price, 0) : 0;
+      const rangeBallsLargePrice = rangeBuckets[2] ? flt(rangeBuckets[2].price, 0) : 0;
+      const hasPuttingGreen = !!(fv2.puttingGreen ?? d.hasPuttingGreen);
+      const hasShortGameArea = !!(fv2.chippingArea ?? d.hasShortGameArea);
+      const hasProShop = !!(fv2.proShop ?? d.hasProShop);
+      const hasLessons = !!(fv2.lessons ?? d.hasLessons);
+      const proShopPhone = str(fv2.lessonsProPhone ?? d.proShopPhone, '');
+      const hasClubRental = !!(fv2.clubRental ?? d.hasClubRental);
+      const hasPushCartRental = !!(fv2.cartRental ?? d.hasPushCartRental);
+      const pushCartRate = flt(fv2.cartRentalCost ?? d.pushCartRate, 0);
+      const hasBagStorage = !!(fv2.bagStorage ?? d.hasBagStorage);
+      const hasLockerRoom = !!(fv2.lockerRooms ?? d.hasLockerRoom);
+      const hasGpsCarts = !!(fv2.gpsCarts ?? d.hasGpsCarts);
+      const hasTournaments = !!(fv2.tournaments ?? d.hasTournaments);
+      const tournamentFrequency = str(fv2.tournamentsFrequency ?? d.tournamentFrequency, '');
+      const restaurantType = str(fv2.restaurantType ?? d.restaurantType, 'none') || 'none';
+
+      const hasMemberPricing = passes.some(p => ['membership', 'season_pass', 'punch_card'].includes(str(p.type))) || bool(d.hasMemberPricing, inquiry.hasMemberPricing);
+      const hasResidentPricing = passes.some(p => ['resident_card', 'resident_rate'].includes(str(p.type))) || bool(d.hasResidentPricing, inquiry.hasResidentPricing);
+      const residentPass = passes.find(p => ['resident_card', 'resident_rate'].includes(str(p.type)));
+      const residentCounty = str(residentPass?.residentWho ?? d.residentCounty, '');
+      const memberPass = passes.find(p => ['membership', 'season_pass'].includes(str(p.type)));
+      const memberPerRoundFee = (str(memberPass?.perRound) === 'yes') ? flt(memberPass?.perRoundFee, 0) : null;
+      const residentWeekdayFee = residentPass ? flt(residentPass.residentWeekday ?? d.residentWeekday, 0) : null;
+      const residentWeekendFee = residentPass ? flt(residentPass.residentWeekend ?? d.residentWeekend, 0) : null;
+
+      const hasCancellationPolicy = d.cancellationPolicy === 'yes';
+      const cancellationHours = hasCancellationPolicy ? num(Number(d.cancellationHours), 24) : 0;
+      const lateCancellationFee = hasCancellationPolicy ? flt(d.lateFee, 0) : 0;
+
+      const needsReview: string[] = [];
+      if (!firstTeeTime || !lastTeeTime) needsReview.push('No tee time schedule — add via Schedule tab');
+      if (!greenFeeWeekday && !greenFeeWeekend) needsReview.push('No green fees in sheet — set rates in Schedule tab');
+      if (!str(d.description)) needsReview.push('No course description — add in Setup tab');
+      if (!d.cancellationPolicy) needsReview.push('Cancellation policy not answered in sheet');
+      if (holes === 27) needsReview.push('27-hole course: verify which 9-hole combos to set up as booking sheets');
+      if (holes === 36) needsReview.push('36-hole course: verify two-course booking setup');
+
+      const adminNotes = needsReview.length > 0
+        ? `[BUILD NOTES]\n${needsReview.map(n => `• ${n}`).join('\n')}`
+        : '';
+
+      const tempPassword = randomBytes(8).toString('hex');
+      const hashed = await bcrypt.hash(tempPassword, 12);
+      const baseSlug = inquiry.courseName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      let slug = baseSlug;
+      const slugExists = await prisma.course.findUnique({ where: { slug } });
+      if (slugExists) slug = `${baseSlug}-${randomBytes(3).toString('hex')}`;
+      const verificationToken = randomBytes(32).toString('hex');
+
+      const operator = await prisma.courseOperator.create({
+        data: {
+          email: operatorEmail,
+          password: hashed,
+          name: inquiry.contactName,
+          emailVerified: false,
+          verificationToken,
+          onboardingStep: 0,
+          course: {
+            create: {
+              slug, name: inquiry.courseName, type: inquiry.courseType,
+              address: inquiry.address, city: inquiry.city, state: inquiry.state,
+              zipCode: inquiry.zipCode, phone: inquiry.phone,
+              website: str(d.website, inquiry.website),
+              description: str(d.description, ''),
+              active: false, liveStatus: 'draft',
+              holes: num(holes, 18), par: num(par, 72),
+              walkingAllowed, walkingNote: str(d.walkingNote, ''),
+              cartRequired: bool(d.cartRequired, false), dresscode: [],
+              cancellationHours, lateCancellationFee, rainCheckPolicy: '',
+              publicAdvanceDays: num(Number(d.publicAdvanceDays), 7),
+              memberAdvanceDays: num(Number(d.memberAdvanceDays), 14),
+              hasMemberPricing, hasResidentPricing,
+              residentCounty, residentState: str(d.residentState, inquiry.state),
+              hasCaddies: bool(d.hasCaddies, inquiry.hasCaddies),
+              caddieType: '', caddieLooperRate: 0, caddieForeRate: 0, caddieNote: '',
+              hasDrivingRange, drivingRangeType, rangeBallsFree,
+              rangeBallsSmallPrice, rangeBallsMediumPrice, rangeBallsLargePrice,
+              hasPuttingGreen, hasShortGameArea, hasProShop, proShopPhone,
+              restaurantType, hasCartGirl: false, hasLessons, hasClubRental,
+              hasPushCartRental, pushCartRate, hasBagStorage, hasLockerRoom,
+              hasGpsCarts, hasTournaments, tournamentFrequency,
+              adminNotes,
+            },
+          },
+        },
+        include: { course: true },
+      });
+
+      const builtCourseId = operator.course?.id ?? null;
+      const from = inquiry.status;
+      await prisma.courseInquiry.update({
+        where: { id: inquiryId },
+        data: { status: 'building', builtCourseId },
+      });
+      await logEvent(inquiryId, from, 'building', 'admin', adminName);
+
+      if (builtCourseId && firstTeeTime && lastTeeTime) {
+        const effectiveDays = daysOpen.length > 0 ? daysOpen : [0, 1, 2, 3, 4, 5, 6];
+        await prisma.teeTimeSchedule.create({
+          data: {
+            courseId: builtCourseId, tierName: 'standard',
+            daysOfWeek: effectiveDays,
+            startTime: firstTeeTime, endTime: lastTeeTime,
+            intervalMinutes: num(intervalMins, 10), holes: num(holes, 18),
+            greenFeeWeekday, greenFeeWeekend,
+            memberRateWeekday: memberPerRoundFee, memberRateWeekend: memberPerRoundFee,
+            residentRateWeekday: residentWeekdayFee, residentRateWeekend: residentWeekendFee,
+            cartFee, walkingAllowed: walkingSchedule,
+          },
+        });
+        const today = new Date();
+        for (let i = 0; i < 8; i++) {
+          const dt = new Date(today);
+          dt.setDate(dt.getDate() + i);
+          await generateTeeTimes(builtCourseId, dt.toISOString().split('T')[0]);
+        }
+      }
+
+      if (builtCourseId && Array.isArray(d.teeSets)) {
+        const teeSets = d.teeSets as Record<string, unknown>[];
+        for (let i = 0; i < teeSets.length; i++) {
+          const ts = teeSets[i];
+          if (!str(ts.name)) continue;
+          await prisma.teeSet.create({
+            data: {
+              courseId: builtCourseId,
+              name: str(ts.name),
+              yardage: num(Number(ts.yardage) || 0, 0),
+              rating: flt(ts.rating, 0),
+              slope: num(Number(ts.slope) || 0, 0),
+              sortOrder: i,
+            },
+          });
+        }
+      }
+
+      return NextResponse.json({ courseId: builtCourseId, needsReview });
+    } catch (e) {
+      return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
+    }
+  }
+
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
 }
 

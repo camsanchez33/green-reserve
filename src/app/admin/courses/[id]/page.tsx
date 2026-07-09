@@ -34,6 +34,7 @@ interface CourseDetail {
     walkingAllowed: string; cartRequired: boolean; hasCaddies: boolean;
     residentCounty: string; residentState: string;
     archivedAt?: string | null; archivedBy?: string | null;
+    adminNotes?: string | null;
     operator: { id: string; name: string; email: string; phone?: string; emailVerified: boolean; onboardingStep: number } | null;
   };
   staff: { id: string; name: string; email: string; role: string; active: boolean }[];
@@ -471,6 +472,16 @@ export default function CourseDetailPage() {
           {/* OVERVIEW */}
           {tab === 'overview' && (
             <div className="space-y-6 max-w-5xl">
+              {c.adminNotes && c.adminNotes.startsWith('[BUILD NOTES]') && (
+                <div className="bg-warn/5 border border-warn/20 rounded-lg px-5 py-4">
+                  <div className="text-[11px] uppercase tracking-[0.06em] text-warn mb-2">Needs review</div>
+                  <ul className="space-y-1">
+                    {c.adminNotes.replace('[BUILD NOTES]\n', '').split('\n').filter(Boolean).map((line, i) => (
+                      <li key={i} className="text-sm text-ink-soft">{line.replace(/^• /, '')}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <div className="grid grid-cols-3 gap-4">
                 {[
                   { label: 'Gross (30d)', value: fmtMoney(detail.revenue30d.gross), color: 'text-ink' },
