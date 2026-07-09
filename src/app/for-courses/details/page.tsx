@@ -12,13 +12,17 @@ type TeeSetRow = {
   designation: string; note: string;
   frontYardage: string; backYardage: string;
   nineYardages: Record<string, string>;
+  comboRatings: Record<string, { rating: string; slope: string }>;
   womensPar: string; womensRating: string; womensSlope: string;
 };
 
 type PassTier = {
-  type: string; // 'membership' | 'season_pass' | 'resident_card' | 'resident_rate' | 'punch_card'
+  type: string; // 'membership' | 'season_pass' | 'resident_card' | 'resident_rate' | 'punch_card' | 'other'
+  otherType: string;
   name: string; fee: string; feePeriod: string; includes: string;
   perRound: string; perRoundFee: string;
+  perRoundType: string; // 'discount' | 'separate'
+  perRoundWeekday: string; perRoundWeekend: string; perRoundTwilight: string; perRoundCartIncluded: string;
   residentWho: string; residentVerifType: string;
   residentCardCost: string; residentCardWhere: string; residentCardRenewal: string;
   residentWeekday: string; residentWeekend: string; residentTwilight: string;
@@ -37,10 +41,14 @@ type Draft = {
   nineHoleSupport: string; nineHoleWhich: string; nineHoleFee: string; nineHolePar: string;
   // 27-hole layout
   layout27: string; nine27Names: string[];
-  nine27Combos: string; nine27BookableAlone: string;
+  nine27Combos: string; // legacy free-text (kept for read compat)
+  nine27CombosEnabled: string[]; nine27ComboNotes: Record<string, string>;
+  nine27ParsPerNine: Record<string, string>;
+  nine27BookableAlone: string;
   separate9Name: string; separate9Par: string; separate9Bookable: string; separate9Fee: string;
   // 36-hole layout
   layout36: string; course36Names: string[]; course36LayoutDesc: string;
+  course36ParsPerCourse: Record<string, string>;
   // tee sets
   teeSets: TeeSetRow[];
   firstTeeTime: string; lastTeeTime: string; intervalMinutes: string; daysOpen: number[];
@@ -69,9 +77,10 @@ type BucketRow = { label: string; price: string; balls: string; };
 
 type FacilitiesV2 = {
   range: boolean; rangeBuckets: BucketRow[]; rangeTeeType: string;
-  puttingGreen: boolean; chippingArea: boolean; proShop: boolean;
+  puttingGreen: boolean; chippingArea: boolean; proShop: boolean; proShopPhone: string;
   lessons: boolean; lessonsProName: string; lessonsProPhone: string;
-  clubRental: boolean; clubRentalContact: string;
+  clubRental: boolean; clubRentalMethods: string[]; clubRentalPhone: string;
+  clubRentalContact: string; // legacy
   cartRental: boolean; cartRentalCost: string;
   bagStorage: boolean;
   gpsCarts: boolean;
@@ -85,9 +94,9 @@ const blankBucket = (): BucketRow => ({ label: 'Small', price: '', balls: '' });
 
 const initFacilitiesV2 = (): FacilitiesV2 => ({
   range: false, rangeBuckets: [blankBucket()], rangeTeeType: 'grass',
-  puttingGreen: false, chippingArea: false, proShop: false,
+  puttingGreen: false, chippingArea: false, proShop: false, proShopPhone: '',
   lessons: false, lessonsProName: '', lessonsProPhone: '',
-  clubRental: false, clubRentalContact: '',
+  clubRental: false, clubRentalMethods: [], clubRentalPhone: '', clubRentalContact: '',
   cartRental: false, cartRentalCost: '',
   bagStorage: false,
   gpsCarts: false,
@@ -102,12 +111,15 @@ const blankTeeSet = (): TeeSetRow => ({
   designation: '', note: '',
   frontYardage: '', backYardage: '',
   nineYardages: {},
+  comboRatings: {},
   womensPar: '', womensRating: '', womensSlope: '',
 });
 
 const blankPass = (): PassTier => ({
-  type: 'membership', name: '', fee: '', feePeriod: 'annual', includes: '',
+  type: 'membership', otherType: '',
+  name: '', fee: '', feePeriod: 'annual', includes: '',
   perRound: 'no', perRoundFee: '',
+  perRoundType: 'discount', perRoundWeekday: '', perRoundWeekend: '', perRoundTwilight: '', perRoundCartIncluded: 'no',
   residentWho: '', residentVerifType: 'free',
   residentCardCost: '', residentCardWhere: '', residentCardRenewal: '',
   residentWeekday: '', residentWeekend: '', residentTwilight: '',
@@ -118,9 +130,10 @@ const initDraft: Draft = {
   nineReplay: 'no', nineReplayFee: '',
   nineHoleSupport: 'no', nineHoleWhich: 'both', nineHoleFee: '', nineHolePar: '36',
   layout27: 'three_9s', nine27Names: ['', '', ''],
-  nine27Combos: '', nine27BookableAlone: 'no',
+  nine27Combos: '', nine27CombosEnabled: [], nine27ComboNotes: {}, nine27ParsPerNine: {},
+  nine27BookableAlone: 'no',
   separate9Name: '', separate9Par: '36', separate9Bookable: 'no', separate9Fee: '',
-  layout36: 'two_18s', course36Names: ['', ''], course36LayoutDesc: '',
+  layout36: 'two_18s', course36Names: ['', ''], course36LayoutDesc: '', course36ParsPerCourse: {},
   teeSets: [blankTeeSet()],
   firstTeeTime: '07:00', lastTeeTime: '17:00', intervalMinutes: '10', daysOpen: [],
   greenFeeWeekday: '', greenFeeWeekend: '', cartFee: '', twilightFee: '', walkingAllowed: 'yes',
@@ -186,11 +199,25 @@ function Label({ text, sub }: { text: string; sub?: string }) {
   );
 }
 
+// type="text" inputMode="decimal" avoids React controlled type="number" bug where
+// the browser silently drops keystrokes when the partially-typed value (e.g. "1.")
+// fails internal step/min validation before onChange fires.
 function DollarInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
     <div className="relative">
       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm pointer-events-none">$</span>
-      <input type="number" min="0" step="0.01" value={value} onChange={e => onChange(e.target.value)} className={inp + ' pl-7'} placeholder={placeholder || '0.00'} />
+      <input
+        type="text" inputMode="decimal" pattern="[0-9]*[.]?[0-9]*"
+        value={value}
+        onChange={e => {
+          const raw = e.target.value.replace(/[^0-9.]/g, '');
+          // allow at most one decimal point
+          const parts = raw.split('.');
+          const sanitized = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : raw;
+          onChange(sanitized);
+        }}
+        className={inp + ' pl-7'} placeholder={placeholder || '0.00'}
+      />
     </div>
   );
 }
@@ -275,7 +302,12 @@ function DetailsForm() {
 
         // Migrate old memberships → passes
         let passesLoaded: PassTier[] = Array.isArray(saved.passes) && saved.passes.length > 0
-          ? saved.passes.map((p: Partial<PassTier>) => ({ ...blankPass(), ...p }))
+          ? saved.passes.map((p: Partial<PassTier>) => ({
+              ...blankPass(), ...p,
+              // Ensure fee is always stored as a string (guard against legacy number values)
+              fee: p.fee !== undefined && p.fee !== null ? String(p.fee) : '',
+              perRoundFee: p.perRoundFee !== undefined && p.perRoundFee !== null ? String(p.perRoundFee) : '',
+            }))
           : [];
         if (passesLoaded.length === 0) {
           // Migrate old memberships
@@ -300,9 +332,15 @@ function DetailsForm() {
           if (passesLoaded.length === 0) passesLoaded = [blankPass()];
         }
 
-        const fv2 = (saved.facilitiesV2 && typeof saved.facilitiesV2 === 'object')
+        const fv2raw = (saved.facilitiesV2 && typeof saved.facilitiesV2 === 'object')
           ? { ...initFacilitiesV2(), ...saved.facilitiesV2 }
           : initFacilitiesV2();
+        // Migrate legacy clubRentalContact string to clubRentalMethods array
+        const fv2 = fv2raw.clubRentalMethods && fv2raw.clubRentalMethods.length > 0
+          ? fv2raw
+          : fv2raw.clubRentalContact
+            ? { ...fv2raw, clubRentalMethods: [fv2raw.clubRentalContact as string] }
+            : fv2raw;
 
         const photosLoaded = Array.isArray(saved.photos) ? saved.photos : [];
         const daysOpenLoaded = Array.isArray(saved.daysOpen) ? saved.daysOpen
@@ -318,6 +356,10 @@ function DetailsForm() {
           teeSets: teeSetsLoaded, passes: passesLoaded,
           facilitiesV2: fv2, photos: photosLoaded, daysOpen: daysOpenLoaded,
           nine27Names: nine27NamesLoaded, course36Names: course36NamesLoaded,
+          nine27CombosEnabled: Array.isArray(saved.nine27CombosEnabled) ? saved.nine27CombosEnabled : [],
+          nine27ComboNotes: (saved.nine27ComboNotes && typeof saved.nine27ComboNotes === 'object') ? saved.nine27ComboNotes : {},
+          nine27ParsPerNine: (saved.nine27ParsPerNine && typeof saved.nine27ParsPerNine === 'object') ? saved.nine27ParsPerNine : {},
+          course36ParsPerCourse: (saved.course36ParsPerCourse && typeof saved.course36ParsPerCourse === 'object') ? saved.course36ParsPerCourse : {},
         }));
       })
       .catch(e => setLoadError(e.message))
@@ -443,7 +485,8 @@ function DetailsForm() {
 
   const renderSection = (id: SectionId) => {
     switch (id) {
-      case 'basics':
+      case 'basics': {
+        const parHidden = draft.holes === '27' || draft.holes === '36';
         return (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
@@ -453,10 +496,16 @@ function DetailsForm() {
                   {['9','18','27','36'].map(h => <option key={h} value={h}>{h} holes</option>)}
                 </select>
               </div>
-              <div>
-                <Label text="Overall par" />
-                <input type="number" className={inp} value={draft.par} onChange={e => set('par', e.target.value)} placeholder="72" />
-              </div>
+              {parHidden ? (
+                <div className="flex items-end pb-1.5">
+                  <p className="text-[11px] text-ink-faint leading-snug">Par is set per nine in the Playability step.</p>
+                </div>
+              ) : (
+                <div>
+                  <Label text="Overall par" />
+                  <input type="number" className={inp} value={draft.par} onChange={e => set('par', e.target.value)} placeholder="72" />
+                </div>
+              )}
             </div>
             <div>
               <Label text="Season" sub="(optional — leave blank if year-round)" />
@@ -474,6 +523,7 @@ function DetailsForm() {
             </div>
           </div>
         );
+      }
 
       case 'playability': {
         const h = draft.holes;
@@ -516,32 +566,86 @@ function DetailsForm() {
               </div>
             </div>
 
-            {draft.layout27 === 'three_9s' && (
-              <div className="space-y-4 pl-3 border-l-2 border-pine/20">
-                <div>
-                  <Label text="Name your three nines" />
-                  <div className="grid grid-cols-3 gap-2">
-                    {[0, 1, 2].map(i => (
-                      <input key={i} className={inp} value={draft.nine27Names[i] || ''} onChange={e => {
-                        const names = [...draft.nine27Names]; names[i] = e.target.value; set('nine27Names', names);
-                      }} placeholder={['North','South','West'][i]} />
-                    ))}
+            {draft.layout27 === 'three_9s' && (() => {
+              const validNines = draft.nine27Names.filter(n => n.trim());
+              const comboPairs = validNines.length >= 2
+                ? [[0, 1], [0, 2], [1, 2]]
+                    .filter(([a, b]) => a < validNines.length && b < validNines.length)
+                    .map(([a, b]) => ({ key: `${validNines[a]}+${validNines[b]}`, label: `${validNines[a]} + ${validNines[b]}` }))
+                : [];
+              return (
+                <div className="space-y-4 pl-3 border-l-2 border-pine/20">
+                  <div>
+                    <Label text="Name your three nines" />
+                    <div className="grid grid-cols-3 gap-2">
+                      {[0, 1, 2].map(ni => (
+                        <input key={ni} className={inp} value={draft.nine27Names[ni] || ''} onChange={e => {
+                          const names = [...draft.nine27Names]; names[ni] = e.target.value; set('nine27Names', names);
+                        }} placeholder={['North','South','West'][ni]} />
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-ink-faint mt-1">e.g. North / South / West, or Lakes / Pines / Meadows</p>
                   </div>
-                  <p className="text-[11px] text-ink-faint mt-1">e.g. North / South / West, or Lakes / Pines / Meadows</p>
-                </div>
-                <div>
-                  <Label text="Which combos are normally played as 18?" sub="(free text)" />
-                  <input className={inp} value={draft.nine27Combos} onChange={e => set('nine27Combos', e.target.value)} placeholder="e.g. North+South in the morning, South+West in the afternoon" />
-                </div>
-                <div>
-                  <Label text="Can each nine be booked individually?" />
-                  <YesNo value={draft.nine27BookableAlone} onChange={v => set('nine27BookableAlone', v)} />
-                  {draft.nine27BookableAlone === 'yes' && (
-                    <p className="text-[11px] text-ink-faint mt-1">We&apos;ll note that for our team. Booking-sheet support for rotating nine combos is a future feature — flagged as a build note.</p>
+                  {validNines.length >= 2 && (
+                    <>
+                      <div>
+                        <Label text="Par per nine" />
+                        <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${validNines.length}, 1fr)` }}>
+                          {validNines.map(nineName => (
+                            <div key={nineName}>
+                              <p className="text-[11px] text-ink-faint mb-1">{nineName}</p>
+                              <input type="number" className={inp} value={draft.nine27ParsPerNine[nineName] || ''}
+                                onChange={e => set('nine27ParsPerNine', { ...draft.nine27ParsPerNine, [nineName]: e.target.value })}
+                                placeholder="36" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <Label text="Which 18-hole combos do you offer?" />
+                        <p className="text-[11px] text-ink-faint mb-2">Turn on the pairings you actually play as 18.</p>
+                        <div className="space-y-2">
+                          {comboPairs.map(({ key, label }) => {
+                            const enabled = draft.nine27CombosEnabled.includes(key);
+                            return (
+                              <div key={key}>
+                                <button type="button" onClick={() => {
+                                  const next = enabled
+                                    ? draft.nine27CombosEnabled.filter(k => k !== key)
+                                    : [...draft.nine27CombosEnabled, key];
+                                  set('nine27CombosEnabled', next);
+                                }}
+                                  className={'flex items-center gap-3 px-3 py-2.5 rounded-md border text-sm text-left w-full transition-colors ' +
+                                    (enabled ? 'border-pine bg-pine/5 text-pine' : 'border-line text-ink hover:border-pine/40')}>
+                                  <div className={'w-4 h-4 rounded border flex items-center justify-center shrink-0 ' + (enabled ? 'bg-pine border-pine' : 'border-line-strong')}>
+                                    {enabled && <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10"><path d="M1.5 5l2.5 2.5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                                  </div>
+                                  <span className={enabled ? 'font-medium' : ''}>{label}</span>
+                                </button>
+                                {enabled && (
+                                  <div className="mt-1.5 pl-4 border-l-2 border-pine/20">
+                                    <input className={inp} value={draft.nine27ComboNotes[key] || ''}
+                                      onChange={e => set('nine27ComboNotes', { ...draft.nine27ComboNotes, [key]: e.target.value })}
+                                      placeholder="Optional note — e.g. Mornings only" />
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>
                   )}
+                  <div>
+                    <Label text="Can each nine be booked individually?" />
+                    <YesNo value={draft.nine27BookableAlone} onChange={v => set('nine27BookableAlone', v)} />
+                    {draft.nine27BookableAlone === 'yes' && (
+                      <p className="text-[11px] text-ink-faint mt-1">We&apos;ll note that for our team. Booking-sheet support for rotating nine combos is a future feature — flagged as a build note.</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {draft.layout27 === '18_plus_9' && (
               <div className="space-y-4 pl-3 border-l-2 border-pine/20">
@@ -607,19 +711,37 @@ function DetailsForm() {
                 ))}
               </div>
             </div>
-            {draft.layout36 === 'two_18s' && (
-              <div className="space-y-3 pl-3 border-l-2 border-pine/20">
-                <Label text="Name your two courses" />
-                <div className="grid grid-cols-2 gap-3">
-                  {[0, 1].map(i => (
-                    <input key={i} className={inp} value={draft.course36Names[i] || ''} onChange={e => {
-                      const names = [...draft.course36Names]; names[i] = e.target.value; set('course36Names', names);
-                    }} placeholder={['North Course','South Course'][i]} />
-                  ))}
+            {draft.layout36 === 'two_18s' && (() => {
+              const validCourses = draft.course36Names.filter(n => n.trim());
+              return (
+                <div className="space-y-3 pl-3 border-l-2 border-pine/20">
+                  <Label text="Name your two courses" />
+                  <div className="grid grid-cols-2 gap-3">
+                    {[0, 1].map(ni => (
+                      <input key={ni} className={inp} value={draft.course36Names[ni] || ''} onChange={e => {
+                        const names = [...draft.course36Names]; names[ni] = e.target.value; set('course36Names', names);
+                      }} placeholder={['North Course','South Course'][ni]} />
+                    ))}
+                  </div>
+                  {validCourses.length >= 2 && (
+                    <div>
+                      <Label text="Par per course" />
+                      <div className="grid grid-cols-2 gap-3">
+                        {validCourses.map(cName => (
+                          <div key={cName}>
+                            <p className="text-[11px] text-ink-faint mb-1">{cName}</p>
+                            <input type="number" className={inp} value={draft.course36ParsPerCourse[cName] || ''}
+                              onChange={e => set('course36ParsPerCourse', { ...draft.course36ParsPerCourse, [cName]: e.target.value })}
+                              placeholder="72" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <p className="text-[11px] text-ink-faint">Each 18 gets its own front/back nine tee-set yardages in the next step.</p>
                 </div>
-                <p className="text-[11px] text-ink-faint">Each 18 gets its own front/back nine tee-set yardages in the next step.</p>
-              </div>
-            )}
+              );
+            })()}
             {draft.layout36 === 'other' && (
               <div className="pl-3 border-l-2 border-pine/20">
                 <Label text="Describe your layout" />
@@ -841,6 +963,38 @@ function DetailsForm() {
                     )}
                   </div>
 
+                  {/* Per-combo ratings (27-hole three 9s only) */}
+                  {is27Three9s && draft.nine27CombosEnabled.length > 0 && (
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-2">Rating / slope per combo (optional)</p>
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-3 gap-2">
+                          <span className="text-[10px] text-ink-faint">Combo</span>
+                          <span className="text-[10px] text-ink-faint">Rating</span>
+                          <span className="text-[10px] text-ink-faint">Slope</span>
+                        </div>
+                        {draft.nine27CombosEnabled.map(comboKey => {
+                          const cr = (ts.comboRatings || {})[comboKey] || { rating: '', slope: '' };
+                          return (
+                            <div key={comboKey} className="grid grid-cols-3 gap-2 items-center">
+                              <span className="text-[11px] text-ink-muted truncate">{comboKey.replace('+', '+')}</span>
+                              <input type="number" step="0.1" className={inp} value={cr.rating}
+                                onChange={e => {
+                                  const updated = { ...(ts.comboRatings || {}), [comboKey]: { ...cr, rating: e.target.value } };
+                                  updateTeeSet(i, { comboRatings: updated });
+                                }} placeholder="71.4" />
+                              <input type="number" className={inp} value={cr.slope}
+                                onChange={e => {
+                                  const updated = { ...(ts.comboRatings || {}), [comboKey]: { ...cr, slope: e.target.value } };
+                                  updateTeeSet(i, { comboRatings: updated });
+                                }} placeholder="128" />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Note */}
                   <div>
                     <Label text="Note" sub="(opt. — one line)" />
@@ -944,6 +1098,7 @@ function DetailsForm() {
           resident_card: 'Resident card',
           resident_rate: 'Resident rates (no card)',
           punch_card: 'Punch card',
+          other: 'Other',
         };
         return (
           <div className="space-y-5">
@@ -967,13 +1122,20 @@ function DetailsForm() {
                     </select>
                   </div>
 
+                  {p.type === 'other' && (
+                    <div>
+                      <Label text="What is it?" />
+                      <input className={inp} value={p.otherType || ''} onChange={e => updatePass(i, { otherType: e.target.value })} placeholder="e.g. Twilight pass, Junior card" />
+                    </div>
+                  )}
+
                   {p.type !== 'resident_rate' && (
                     <>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label text="Name" />
                           <input className={inp} value={p.name} onChange={e => updatePass(i, { name: e.target.value })}
-                            placeholder={p.type === 'membership' ? 'Full Member' : p.type === 'season_pass' ? 'Season Pass' : p.type === 'resident_card' ? 'Resident Card' : 'Punch Card'} />
+                            placeholder={p.type === 'membership' ? 'Full Member' : p.type === 'season_pass' ? 'Season Pass' : p.type === 'resident_card' ? 'Resident Card' : p.type === 'other' ? 'e.g. Twilight Pass' : 'Punch Card'} />
                         </div>
                         <div>
                           <Label text="Fee" />
@@ -998,9 +1160,40 @@ function DetailsForm() {
                         <Label text="Do holders pay a green fee per round?" />
                         <YesNo value={p.perRound} onChange={v => updatePass(i, { perRound: v })} />
                         {p.perRound === 'yes' && (
-                          <div className="mt-2">
-                            <Label text="Per-round fee" />
-                            <DollarInput value={p.perRoundFee} onChange={v => updatePass(i, { perRoundFee: v })} placeholder="25.00" />
+                          <div className="space-y-3 mt-2 pl-3 border-l-2 border-pine/20">
+                            <div>
+                              <Label text="Is this a discounted green fee or a separate charge on top?" />
+                              <div className="flex gap-2">
+                                {[
+                                  { v: 'discount', label: 'Discounted green fee' },
+                                  { v: 'separate', label: 'Separate fee on top' },
+                                ].map(({ v, label }) => (
+                                  <button key={v} type="button" onClick={() => updatePass(i, { perRoundType: v })}
+                                    className={'flex-1 py-2 rounded-md border text-sm transition-colors ' + (p.perRoundType === v ? 'border-pine bg-pine/5 text-pine font-medium' : 'border-line text-ink hover:border-pine/40')}>
+                                    {label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label text="Weekday rate" />
+                                <DollarInput value={p.perRoundWeekday || p.perRoundFee} onChange={v => updatePass(i, { perRoundWeekday: v, perRoundFee: v })} placeholder="25.00" />
+                              </div>
+                              <div>
+                                <Label text="Weekend rate" sub="(opt.)" />
+                                <DollarInput value={p.perRoundWeekend} onChange={v => updatePass(i, { perRoundWeekend: v })} placeholder="35.00" />
+                              </div>
+                            </div>
+                            <div>
+                              <Label text="Twilight rate" sub="(opt.)" />
+                              <DollarInput value={p.perRoundTwilight} onChange={v => updatePass(i, { perRoundTwilight: v })} placeholder="20.00" />
+                            </div>
+                            <div>
+                              <Label text="Cart included?" />
+                              <YesNo value={p.perRoundCartIncluded} onChange={v => updatePass(i, { perRoundCartIncluded: v })} />
+                            </div>
+                            <p className="text-[11px] text-ink-faint">You can change member rates anytime after launch.</p>
                           </div>
                         )}
                       </div>
@@ -1270,7 +1463,15 @@ function DetailsForm() {
             {/* Simple yes/no items */}
             {togBtn(fv2.puttingGreen, () => tog('puttingGreen', fv2.puttingGreen), 'Putting green')}
             {togBtn(fv2.chippingArea, () => tog('chippingArea', fv2.chippingArea), 'Chipping / short-game area')}
-            {togBtn(fv2.proShop, () => tog('proShop', fv2.proShop), 'Pro shop')}
+            <div className="space-y-2">
+              {togBtn(fv2.proShop, () => tog('proShop', fv2.proShop), 'Pro shop')}
+              {fv2.proShop && (
+                <div className="pl-4 border-l-2 border-pine/20">
+                  <Label text="Pro shop phone" sub="(opt.)" />
+                  <input type="tel" className={inp} value={fv2.proShopPhone || ''} onChange={e => setFv2({ proShopPhone: e.target.value })} placeholder="(555) 000-0000" />
+                </div>
+              )}
+            </div>
 
             {/* Lessons */}
             <div className="space-y-2">
@@ -1293,12 +1494,36 @@ function DetailsForm() {
             <div className="space-y-2">
               {togBtn(fv2.clubRental, () => tog('clubRental', fv2.clubRental), 'Club rental')}
               {fv2.clubRental && (
-                <div className="pl-4 border-l-2 border-pine/20">
-                  <Label text="How to arrange" />
-                  <select className={sel} value={fv2.clubRentalContact} onChange={e => setFv2({ clubRentalContact: e.target.value })}>
-                    <option value="pro_shop">Come into pro shop</option>
-                    <option value="phone">Call ahead</option>
-                  </select>
+                <div className="pl-4 space-y-2 border-l-2 border-pine/20">
+                  <Label text="How to arrange (select all that apply)" />
+                  {[
+                    { v: 'pro_shop', label: 'Walk into the pro shop' },
+                    { v: 'phone', label: 'Call ahead' },
+                  ].map(({ v, label }) => {
+                    const methods = fv2.clubRentalMethods || [];
+                    const on = methods.includes(v);
+                    return (
+                      <button key={v} type="button" onClick={() => {
+                        const next = on ? methods.filter(m => m !== v) : [...methods, v];
+                        setFv2({ clubRentalMethods: next });
+                      }}
+                        className={'flex items-center gap-3 px-3 py-2 rounded-md border text-sm text-left w-full transition-colors ' +
+                          (on ? 'border-pine bg-pine/5 text-pine' : 'border-line text-ink hover:border-pine/40')}>
+                        <div className={'w-4 h-4 rounded border flex items-center justify-center shrink-0 ' + (on ? 'bg-pine border-pine' : 'border-line-strong')}>
+                          {on && <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10"><path d="M1.5 5l2.5 2.5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                        </div>
+                        <span className={on ? 'font-medium' : ''}>{label}</span>
+                      </button>
+                    );
+                  })}
+                  {(fv2.clubRentalMethods || []).includes('phone') && (
+                    <div>
+                      <Label text="Phone to call" sub="(opt.)" />
+                      <input type="tel" className={inp} value={fv2.clubRentalPhone || ''}
+                        onChange={e => setFv2({ clubRentalPhone: e.target.value })}
+                        placeholder={fv2.proShopPhone || '(555) 000-0000'} />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
