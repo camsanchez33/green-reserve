@@ -173,6 +173,27 @@ Running list from Cam testing the V3 sheet end to end:
      monthly / a few per season)
    - Food & drink items from V3 (restaurant/bar/snack bar/bev cart) stay
 
+### Phase V5 — Inquiry full page, kill the drawer (medium, no migration)
+Cam's ruling after seeing V1 deployed: the side panel is cramped — everything
+stacks on top of everything. Replace it with a real page per inquiry, modeled
+on /admin/courses/[id].
+
+- **New route: /admin/inquiries/[id]».** Clicking a list row navigates there
+  (no more drawer). Back link to the list preserving active filters.
+- **Page layout, not a stack:**
+  - Header row: course name, StatusDot + stage, city/state, days-in-stage.
+  - Right side of header: the actions as a compact toolbar (Move stage,
+    Send/Resend sheet, Reject, Build) — actions live in ONE place, never
+    interleaved with content.
+  - Below: the tabs as real page-width sections — Contact (editable, from V1),
+    Answers, Sheet, Activity. Full width means Sheet answers can render in a
+    readable two-column grid instead of a squeezed column.
+- The V1 work (tabs, editable contact, hidden empty fields) carries over —
+  this phase re-houses it, don't rebuild it.
+- The setup-sheet link box, "sheet sent" status, and build box fold into the
+  relevant tabs/toolbar instead of stacking above everything.
+- Delete the drawer code once the page exists.
+
 ### Phase V4 — One-click draft build from the sheet (medium, no migration)
 REPLACES the old "wizard prefill parity" plan. Cam's ruling: the wizard is an
 IN-PERSON tool only (admin sitting with a course). The normal pipeline must not
