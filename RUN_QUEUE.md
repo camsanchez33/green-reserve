@@ -95,6 +95,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] ADMIN_V3_SPEC Phase A4 — Overview "Needs you" action list above stats (small/medium, no migration) — 2f7e04d
 - [x] ADMIN_V3_SPEC Phase A5 — Ctrl+K command palette, role-aware global search (medium, no migration) — 2b61883
 - [x] PUBLIC_SITE_SPEC Phase C — lead form integrity: server+client email validation (CRITICAL), honeypot, inline per-field errors + autoscroll, CTA routing through type segmentation, brand line consistency, login autoComplete hygiene (small, no migration) — 4b19f8a
+- [ ] ADMIN_V3_SPEC Phase A6 — audit round 2: course-detail 500 (CRITICAL, check Sentry), pending states + async emails on action buttons, revenue table includes archived, golfer $0 aggregation, Ctrl+K keystroke drops + stale results, inquiry status mismatches, tz date mismatch, guest grouping, activity filter, cancellation labels (medium-big, no migration)
 - [ ] MANAGE_BOOKING_SPEC Phase M4 — course-configurable check-in window (Course.checkInWindowHours) driving the existing "time to check in" email; operator sets it in Settings (schema change, attended)
 
 ## Ideas / not yet specced

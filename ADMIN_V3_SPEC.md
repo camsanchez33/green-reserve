@@ -124,6 +124,58 @@ Keep the existing stats below. Role-filter rows the viewer can't act on.
 - Enter navigates. Arrow keys work. Esc closes. Recent selections cached
   client-side.
 
+## Phase A6 — Audit round 2 fixes (from browser audit of the live V3 build)
+
+In priority order:
+
+1. **CRITICAL: course detail 500** — /api/admin/course-detail returns 500 for
+   EVERY course (active and archived). Check Sentry for the stack trace first;
+   reproduce locally; fix. The inline error+retry UI worked as designed — the
+   API is what's broken.
+2. **Action buttons: pending state + fast server response.** "Send Sheet" and
+   "Reset pwd" freeze the page 30s–2min with no feedback while actually firing
+   (emails awaited synchronously in the route). Fix BOTH sides: (a) client —
+   immediate pending state on the button, disabled while in flight, success/
+   error banner after (no-silent-failures rule; A0 missed these handlers);
+   (b) server — don't await email sends in the request path (fire-and-forget
+   with .catch logging, like /api/inquiries does). Add a confirm step to
+   Reset pwd and Deactivate (destructive-adjacent). Audit ALL admin routes for
+   awaited email sends while in there.
+3. **Revenue per-course table excludes archived courses** — DaisyLinks has the
+   only real revenue and doesn't appear (its failed charges DO show above —
+   inconsistent). Stats include archived (established 2d rule); show archived
+   rows with an "(archived)" marker.
+4. **Golfer summary "$0.00 charged" while bookings below show real amounts** —
+   aggregation is summing the wrong field or wrong status filter. Charged =
+   sum of successful charges (checked-in totals + late-cancel fees kept);
+   make the number match the rows beneath it.
+5. **Ctrl+K drops keystrokes / shows stale results** — typing fast loses
+   characters ("Sanchez" → "ez") and old results flash. Likely same controlled-
+   input-rerender disease as the money fields plus an unguarded async race:
+   keep input uncontrolled or stable, and discard out-of-order search
+   responses (request id/AbortController).
+6. **Inquiry status mismatches** — list shows "Pending" while detail history
+   shows "In Review" (find source-of-truth divergence); "-1d in stage" flashes
+   before correcting (clamp at 0 / render after load); direct URL to sub-tabs
+   flashes zero-count badges + stuck loading (loading skeleton until data).
+7. **Golfer bookings: date column disagrees with amount column by one day** —
+   one renders tee-time date, other renders createdAt in UTC; both should be
+   the course-timezone tee-time date via tee-time-utils.
+8. **Support view groups guest bookings with matching accounts** — same email
+   → show under one golfer header ("includes 1 guest booking") in /admin/
+   golfers. Real account-linking stays out of scope (Ideas list).
+9. **Activity course filter includes archived courses** — DaisyLinks isn't
+   selectable though all activity is on it.
+10. **Label cancellation entries clearly** — the "-$10.00" entry needs a
+    type label ("Late-cancel fee refund" / whatever it actually is) so it maps
+    to a booking without guesswork; link it to the booking.
+
+NOT code (Cam to-dos, listed so they're not lost):
+- DaisyLinks Stripe re-onboarding (dashboard → Settings → Stripe) to enable
+  card_payments; then retry the two failed charges from Revenue.
+- Delete the two "not-an-email" test inquiries and the typo'd/vulgar test
+  broadcasts from history (or wait for the prelaunch purge script).
+
 ### Demotion (fold into whichever phase touches the sidebar first)
 - "Add Course" nav item renamed "Manual build" and moved to the bottom
   cluster near Profile — the pipeline path is inquiry → draft build now.
