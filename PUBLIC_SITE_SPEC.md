@@ -109,3 +109,50 @@ an unreachable lead is a lost course.
 NOT in scope (Cam decisions, flag don't build): public phone number on
 /contact; Sentry alert-watching is a manual setup step (Sentry → Alerts) noted
 in RUNBOOK.
+
+---
+
+## Phase D — Proof layer + operator legal (from marketing audit 2026-07-09; no migration)
+
+Decisions recorded: NO phone number for now. Social proof = founding-courses
+angle. Legal entity name: Cam supplies the exact LLC name — spec uses
+{{COMPANY_LEGAL_NAME}}; if not provided at run time, leave the placeholder
+visibly marked TODO and flag in RUN_QUEUE.md.
+
+1. **Screenshot resilience.** The three /screenshots/dashboard-*.png 404 and
+   render as broken tan boxes. (a) Component-level fallback: if an image
+   fails/missing, render a styled Clubhouse card with the caption text and a
+   subtle icon — never a broken box, on ANY marketing image. (b) Cam's manual
+   to-do (not code): capture the three real screenshots from the live admin/
+   dashboard and drop them in public/screenshots/ — the section springs to
+   life with no code change.
+2. **Founding-courses section (replaces the social-proof void).** Honest
+   scarcity block on the homepage after How It Works: "We're onboarding our
+   founding group of courses" — early courses get white-glove setup and free
+   forever; direct CTA into /for-courses. No fake counts, no fake logos, no
+   invented testimonials.
+3. **Comparison table de-FUD.** Remove unverifiable claims about unnamed
+   competitors ("resells your tee times", "revenue split with the vendor").
+   Reframe rows as OUR commitments: "Your tee times are never resold",
+   "0% commission — you keep 100% of green fees", "No contract — leave
+   anytime". Same table shape, claims we can stand behind.
+4. **Private-club variant gets tailored reassurance.** On /for-courses?type=
+   private, a short block above the form: members-only booking mode exists
+   (no public tee times unless enabled), member data stays per-club and is
+   never shared or marketed to, member sign-in is private to the club.
+5. **Operator-facing legal.** Add "For Course Operators" sections to BOTH
+   /terms and /privacy: what we collect from courses at onboarding, course
+   data ownership (their booking history is theirs; export on request),
+   what happens on termination (courses can leave anytime; page comes down,
+   data exported then deleted on request), Stripe Connect relationship
+   (funds flow course-ward, GreenReserve never holds green-fee funds),
+   liability limitation basics, and {{COMPANY_LEGAL_NAME}} + state of
+   formation in both docs. Bump "Last updated". NOTE for Cam, keep in the
+   page footer of these docs as an HTML comment only: drafted by AI, needs
+   attorney review before scale.
+6. **"Good fit" copy softening.** How It Works step 1: replace "If it's a
+   good fit" with plain criteria ("As long as you run a real golf course,
+   you're in — we review to prevent spam, not to reject courses.").
+
+Ground rules: Clubhouse system, no schema changes, validate parses, update
+RUN_QUEUE.md.
