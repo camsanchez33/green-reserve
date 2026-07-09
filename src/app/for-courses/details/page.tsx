@@ -5,25 +5,24 @@ import { CheckCircle, AlertTriangle, ChevronRight, ArrowLeft, Plus, Trash2, Uplo
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const TEE_DESIGNATIONS = ['championship','back','middle','forward','senior','junior','combo'];
 
-const FACILITIES_LIST = [
-  { id: 'range', label: 'Driving range', hint: 'e.g. grass tees, lights at night' },
-  { id: 'putting_green', label: 'Putting green', hint: '' },
-  { id: 'chipping_area', label: 'Chipping / short game area', hint: '' },
-  { id: 'pro_shop', label: 'Pro shop', hint: '' },
-  { id: 'lessons', label: 'Lessons / teaching pros', hint: 'e.g. 2 PGA pros on staff' },
-  { id: 'club_rental', label: 'Club rental', hint: '' },
-  { id: 'cart_rental', label: 'Push / pull cart rental', hint: '' },
-  { id: 'bag_storage', label: 'Bag storage', hint: '' },
-  { id: 'gps_carts', label: 'GPS carts', hint: '' },
-  { id: 'caddies', label: 'Caddies', hint: 'e.g. available weekends, forecaddie program' },
-  { id: 'event_space', label: 'Event / banquet space', hint: 'e.g. seats 150, outdoor terrace' },
-  { id: 'locker_rooms', label: 'Locker rooms', hint: '' },
-  { id: 'tournaments', label: 'Hosts tournaments / outings', hint: '' },
-];
+type TeeSetRow = {
+  name: string; color: string; yardage: string; par: string; rating: string; slope: string;
+  designation: string; note: string;
+  frontYardage: string; backYardage: string;
+  nineYardages: Record<string, string>;
+  womensPar: string; womensRating: string; womensSlope: string;
+};
 
-type TeeSetRow = { name: string; color: string; yardage: string; par: string; rating: string; slope: string; };
-type MembershipTierRow = { name: string; fee: string; includes: string; perRound: string; perRoundFee: string; };
+type PassTier = {
+  type: string; // 'membership' | 'season_pass' | 'resident_card' | 'resident_rate' | 'punch_card'
+  name: string; fee: string; feePeriod: string; includes: string;
+  perRound: string; perRoundFee: string;
+  residentWho: string; residentVerifType: string;
+  residentCardCost: string; residentCardWhere: string; residentCardRenewal: string;
+  residentWeekday: string; residentWeekend: string; residentTwilight: string;
+};
 
 type Needs = {
   residentRates?: string; hasMemberships?: string;
@@ -32,46 +31,115 @@ type Needs = {
 
 type Draft = {
   holes: string; par: string; seasonOpen: string; seasonClose: string;
+  // 9-hole-course replay
+  nineReplay: string; nineReplayFee: string;
+  // 18-hole 9-hole booking
   nineHoleSupport: string; nineHoleWhich: string; nineHoleFee: string; nineHolePar: string;
+  // 27-hole layout
+  layout27: string; nine27Names: string[];
+  nine27Combos: string; nine27BookableAlone: string;
+  separate9Name: string; separate9Par: string; separate9Bookable: string; separate9Fee: string;
+  // 36-hole layout
+  layout36: string; course36Names: string[]; course36LayoutDesc: string;
+  // tee sets
   teeSets: TeeSetRow[];
   firstTeeTime: string; lastTeeTime: string; intervalMinutes: string; daysOpen: number[];
   greenFeeWeekday: string; greenFeeWeekend: string; cartFee: string; twilightFee: string; walkingAllowed: string;
+  // unified passes (V3c)
+  passes: PassTier[];
+  // legacy resident fields (kept for backward compat reads)
   residentQualifies: string; residentWeekday: string; residentWeekend: string; residentTwilight: string; residentVerification: string;
-  memberships: MembershipTierRow[];
+  // legacy membership fields
+  memberships: { name: string; fee: string; includes: string; perRound: string; perRoundFee: string; }[];
   starterTierName: string; starterTierFee: string;
   memberAdvanceDays: string; protectedTimes: string;
   publicGreenFee: string; publicWindow: string;
   memberRate: string;
   outingsVolume: string;
+  cancellationPolicy: string; // 'yes' | 'no'
   cancellationHours: string; lateFee: string;
+  facilitiesV2: FacilitiesV2;
+  // legacy
   facilities: string[]; facilitiesNotes: Record<string, string>; restaurantType: string;
   website: string; description: string; photos: string[];
   additionalNotes: string;
 };
 
-const blankTeeSet = (): TeeSetRow => ({ name: '', color: '', yardage: '', par: '72', rating: '', slope: '' });
-const blankTier = (): MembershipTierRow => ({ name: '', fee: '', includes: '', perRound: 'no', perRoundFee: '' });
+type BucketRow = { label: string; price: string; balls: string; };
+
+type FacilitiesV2 = {
+  range: boolean; rangeBuckets: BucketRow[]; rangeTeeType: string;
+  puttingGreen: boolean; chippingArea: boolean; proShop: boolean;
+  lessons: boolean; lessonsProName: string; lessonsProPhone: string;
+  clubRental: boolean; clubRentalContact: string;
+  cartRental: boolean; cartRentalCost: string;
+  bagStorage: boolean;
+  gpsCarts: boolean;
+  eventSpace: boolean; eventSpaceContact: string;
+  lockerRooms: boolean;
+  tournaments: boolean; tournamentsFrequency: string;
+  restaurantType: string;
+};
+
+const blankBucket = (): BucketRow => ({ label: 'Small', price: '', balls: '' });
+
+const initFacilitiesV2 = (): FacilitiesV2 => ({
+  range: false, rangeBuckets: [blankBucket()], rangeTeeType: 'grass',
+  puttingGreen: false, chippingArea: false, proShop: false,
+  lessons: false, lessonsProName: '', lessonsProPhone: '',
+  clubRental: false, clubRentalContact: '',
+  cartRental: false, cartRentalCost: '',
+  bagStorage: false,
+  gpsCarts: false,
+  eventSpace: false, eventSpaceContact: '',
+  lockerRooms: false,
+  tournaments: false, tournamentsFrequency: '',
+  restaurantType: 'none',
+});
+
+const blankTeeSet = (): TeeSetRow => ({
+  name: '', color: '', yardage: '', par: '72', rating: '', slope: '',
+  designation: '', note: '',
+  frontYardage: '', backYardage: '',
+  nineYardages: {},
+  womensPar: '', womensRating: '', womensSlope: '',
+});
+
+const blankPass = (): PassTier => ({
+  type: 'membership', name: '', fee: '', feePeriod: 'annual', includes: '',
+  perRound: 'no', perRoundFee: '',
+  residentWho: '', residentVerifType: 'free',
+  residentCardCost: '', residentCardWhere: '', residentCardRenewal: '',
+  residentWeekday: '', residentWeekend: '', residentTwilight: '',
+});
 
 const initDraft: Draft = {
   holes: '18', par: '72', seasonOpen: '', seasonClose: '',
+  nineReplay: 'no', nineReplayFee: '',
   nineHoleSupport: 'no', nineHoleWhich: 'both', nineHoleFee: '', nineHolePar: '36',
+  layout27: 'three_9s', nine27Names: ['', '', ''],
+  nine27Combos: '', nine27BookableAlone: 'no',
+  separate9Name: '', separate9Par: '36', separate9Bookable: 'no', separate9Fee: '',
+  layout36: 'two_18s', course36Names: ['', ''], course36LayoutDesc: '',
   teeSets: [blankTeeSet()],
   firstTeeTime: '07:00', lastTeeTime: '17:00', intervalMinutes: '10', daysOpen: [],
   greenFeeWeekday: '', greenFeeWeekend: '', cartFee: '', twilightFee: '', walkingAllowed: 'yes',
+  passes: [blankPass()],
   residentQualifies: '', residentWeekday: '', residentWeekend: '', residentTwilight: '', residentVerification: '',
-  memberships: [blankTier()],
+  memberships: [],
   starterTierName: '', starterTierFee: '',
   memberAdvanceDays: '14', protectedTimes: '',
   publicGreenFee: '', publicWindow: '',
   memberRate: '',
   outingsVolume: '',
-  cancellationHours: '24', lateFee: '',
+  cancellationPolicy: '', cancellationHours: '24', lateFee: '',
+  facilitiesV2: initFacilitiesV2(),
   facilities: [], facilitiesNotes: {}, restaurantType: 'none',
   website: '', description: '', photos: [],
   additionalNotes: '',
 };
 
-type SectionId = 'basics' | 'playability' | 'tee_sets' | 'schedule' | 'fees' | 'resident' | 'tier' | 'member' | 'public_fees' | 'member_rate' | 'outings' | 'cancellation' | 'facilities' | 'about' | 'notes';
+type SectionId = 'basics' | 'playability' | 'tee_sets' | 'schedule' | 'fees' | 'passes' | 'member' | 'public_fees' | 'member_rate' | 'outings' | 'cancellation' | 'facilities' | 'about' | 'notes';
 
 function buildSections(courseType: string, needs: Needs): { id: SectionId; title: string }[] {
   const head: { id: SectionId; title: string }[] = [
@@ -101,8 +169,9 @@ function buildSections(courseType: string, needs: Needs): { id: SectionId; title
   }
 
   const mid: { id: SectionId; title: string }[] = [{ id: 'fees', title: 'Green fees' }];
-  if (needs.residentRates === 'yes') mid.push({ id: 'resident', title: 'Resident pricing' });
-  if (needs.hasMemberships === 'yes') mid.push({ id: 'tier', title: 'Memberships' });
+  if (needs.residentRates === 'yes' || needs.hasMemberships === 'yes') {
+    mid.push({ id: 'passes', title: 'Memberships & passes' });
+  }
   return [...head, ...mid, ...tail];
 }
 
@@ -126,6 +195,19 @@ function DollarInput({ value, onChange, placeholder }: { value: string; onChange
   );
 }
 
+function YesNo({ value, onChange, yesLabel, noLabel }: { value: string; onChange: (v: string) => void; yesLabel?: string; noLabel?: string }) {
+  return (
+    <div className="flex gap-2">
+      {(['yes','no'] as const).map(v => (
+        <button key={v} type="button" onClick={() => onChange(v)}
+          className={'flex-1 py-2.5 rounded-md border text-sm transition-colors ' + (value === v ? 'border-pine bg-pine/5 text-pine font-medium' : 'border-line text-ink hover:border-pine/40')}>
+          {v === 'yes' ? (yesLabel || 'Yes') : (noLabel || 'No')}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function DetailsForm() {
   const params = useSearchParams();
   const token = params.get('token') || '';
@@ -144,23 +226,34 @@ function DetailsForm() {
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [teeWomensOpen, setTeeWomensOpen] = useState<Record<number, boolean>>({});
 
   const set = useCallback(<K extends keyof Draft>(k: K, v: Draft[K]) => setDraft(d => ({ ...d, [k]: v })), []);
 
-  const toggleFacility = (id: string) => setDraft(d => ({
-    ...d,
-    facilities: d.facilities.includes(id) ? d.facilities.filter(f => f !== id) : [...d.facilities, id],
-  }));
-
-  const setFacilityNote = (id: string, note: string) => setDraft(d => ({
-    ...d,
-    facilitiesNotes: { ...d.facilitiesNotes, [id]: note },
-  }));
+  const setFv2 = useCallback((update: Partial<FacilitiesV2>) => {
+    setDraft(d => ({ ...d, facilitiesV2: { ...d.facilitiesV2, ...update } }));
+  }, []);
 
   const toggleDay = (day: number) => setDraft(d => ({
     ...d,
     daysOpen: d.daysOpen.includes(day) ? d.daysOpen.filter(x => x !== day) : [...d.daysOpen, day],
   }));
+
+  const updateTeeSet = (i: number, update: Partial<TeeSetRow>) => {
+    setDraft(d => {
+      const t = [...d.teeSets];
+      t[i] = { ...t[i], ...update };
+      return { ...d, teeSets: t };
+    });
+  };
+
+  const updatePass = (i: number, update: Partial<PassTier>) => {
+    setDraft(d => {
+      const p = [...d.passes];
+      p[i] = { ...p[i], ...update };
+      return { ...d, passes: p };
+    });
+  };
 
   useEffect(() => {
     if (!token) { setLoadError('Missing setup link.'); setLoading(false); return; }
@@ -174,34 +267,72 @@ function DetailsForm() {
         setNeeds(n);
         setSections(buildSections(ct, n));
         const saved = d.details || {};
-        const teeSetsLoaded = Array.isArray(saved.teeSets) && saved.teeSets.length > 0 ? saved.teeSets : [blankTeeSet()];
-        const membershipsLoaded = Array.isArray(saved.memberships) && saved.memberships.length > 0
-          ? saved.memberships
-          : (saved.starterTierName ? [{ name: saved.starterTierName, fee: saved.starterTierFee || '', includes: '', perRound: 'no', perRoundFee: '' }] : [blankTier()]);
-        const facilitiesNotesLoaded = saved.facilitiesNotes && typeof saved.facilitiesNotes === 'object' ? saved.facilitiesNotes : {};
+
+        // Migrate old teeSets
+        const teeSetsLoaded = (Array.isArray(saved.teeSets) && saved.teeSets.length > 0
+          ? saved.teeSets.map((t: Partial<TeeSetRow>) => ({ ...blankTeeSet(), ...t }))
+          : [blankTeeSet()]);
+
+        // Migrate old memberships → passes
+        let passesLoaded: PassTier[] = Array.isArray(saved.passes) && saved.passes.length > 0
+          ? saved.passes.map((p: Partial<PassTier>) => ({ ...blankPass(), ...p }))
+          : [];
+        if (passesLoaded.length === 0) {
+          // Migrate old memberships
+          if (Array.isArray(saved.memberships) && saved.memberships.length > 0) {
+            passesLoaded = saved.memberships.map((m: { name?: string; fee?: string; includes?: string; perRound?: string; perRoundFee?: string }) => ({
+              ...blankPass(), type: 'membership',
+              name: m.name || '', fee: m.fee || '', includes: m.includes || '',
+              perRound: m.perRound || 'no', perRoundFee: m.perRoundFee || '',
+            }));
+          }
+          // Migrate old resident fields
+          if (saved.residentWeekday || saved.residentWeekend) {
+            passesLoaded.push({
+              ...blankPass(), type: 'resident_rate',
+              residentWho: saved.residentQualifies || '',
+              residentWeekday: saved.residentWeekday || '',
+              residentWeekend: saved.residentWeekend || '',
+              residentTwilight: saved.residentTwilight || '',
+              residentVerification: saved.residentVerification || '',
+            } as PassTier);
+          }
+          if (passesLoaded.length === 0) passesLoaded = [blankPass()];
+        }
+
+        const fv2 = (saved.facilitiesV2 && typeof saved.facilitiesV2 === 'object')
+          ? { ...initFacilitiesV2(), ...saved.facilitiesV2 }
+          : initFacilitiesV2();
+
         const photosLoaded = Array.isArray(saved.photos) ? saved.photos : [];
-        const daysOpenLoaded = Array.isArray(saved.daysOpen) ? saved.daysOpen : (Array.isArray(saved.schedule?.daysOfWeek) ? saved.schedule.daysOfWeek : []);
-        setDraft(prev => ({ ...prev, ...saved, teeSets: teeSetsLoaded, memberships: membershipsLoaded, facilitiesNotes: facilitiesNotesLoaded, photos: photosLoaded, daysOpen: daysOpenLoaded }));
+        const daysOpenLoaded = Array.isArray(saved.daysOpen) ? saved.daysOpen
+          : (Array.isArray(saved.schedule?.daysOfWeek) ? saved.schedule.daysOfWeek : []);
+
+        const nine27NamesLoaded = Array.isArray(saved.nine27Names) && saved.nine27Names.length === 3
+          ? saved.nine27Names : ['', '', ''];
+        const course36NamesLoaded = Array.isArray(saved.course36Names) && saved.course36Names.length === 2
+          ? saved.course36Names : ['', ''];
+
+        setDraft(prev => ({
+          ...prev, ...saved,
+          teeSets: teeSetsLoaded, passes: passesLoaded,
+          facilitiesV2: fv2, photos: photosLoaded, daysOpen: daysOpenLoaded,
+          nine27Names: nine27NamesLoaded, course36Names: course36NamesLoaded,
+        }));
       })
       .catch(e => setLoadError(e.message))
       .finally(() => setLoading(false));
   }, [token]);
 
+  const filled = (v: unknown) => v !== '' && v !== null && v !== undefined;
+
   const validateSection = (id: SectionId): string => {
     if (id === 'fees') {
-      if (!draft.greenFeeWeekday) return 'Please enter weekday green fee.';
-      if (!draft.greenFeeWeekend) return 'Please enter weekend green fee.';
+      if (!filled(draft.greenFeeWeekday)) return 'Please enter weekday green fee.';
+      if (!filled(draft.greenFeeWeekend)) return 'Please enter weekend green fee.';
     }
-    if (id === 'public_fees' && !draft.publicGreenFee) return 'Please enter the public green fee.';
-    if (id === 'member_rate' && !draft.memberRate) return 'Please enter the member rate.';
-    if (id === 'resident') {
-      if (!draft.residentWeekday) return 'Please enter resident weekday rate.';
-      if (!draft.residentWeekend) return 'Please enter resident weekend rate.';
-    }
-    if (id === 'tier') {
-      const first = draft.memberships[0];
-      if (!first || !first.name) return 'Please enter a membership tier name.';
-    }
+    if (id === 'public_fees' && !filled(draft.publicGreenFee)) return 'Please enter the public green fee.';
+    if (id === 'member_rate' && !filled(draft.memberRate)) return 'Please enter the member rate.';
     if (id === 'about' && !draft.description) return 'Please enter a short course description.';
     return '';
   };
@@ -301,6 +432,15 @@ function DetailsForm() {
   const progress = sections.length > 0 ? ((activeIdx + 1) / sections.length) * 100 : 0;
   const isLast = activeIdx === sections.length - 1;
 
+  // Helper: get the names of the nine(s) based on current layout
+  const getNineNames = (): string[] => {
+    if (draft.holes === '27') {
+      if (draft.layout27 === 'three_9s') return draft.nine27Names.filter(n => n.trim());
+      return [draft.separate9Name || 'Separate 9'].filter(Boolean);
+    }
+    return ['Front', 'Back'];
+  };
+
   const renderSection = (id: SectionId) => {
     switch (id) {
       case 'basics':
@@ -314,7 +454,7 @@ function DetailsForm() {
                 </select>
               </div>
               <div>
-                <Label text="Par" />
+                <Label text="Overall par" />
                 <input type="number" className={inp} value={draft.par} onChange={e => set('par', e.target.value)} placeholder="72" />
               </div>
             </div>
@@ -335,19 +475,186 @@ function DetailsForm() {
           </div>
         );
 
-      case 'playability':
+      case 'playability': {
+        const h = draft.holes;
+
+        // 9-hole course
+        if (h === '9') return (
+          <div className="space-y-4">
+            <p className="text-sm text-ink-muted">Since you have a 9-hole course, golfers can always book that single loop. We just need to know about replaying.</p>
+            <div>
+              <Label text="Can golfers replay for a full 18?" />
+              <YesNo value={draft.nineReplay} onChange={v => set('nineReplay', v)} />
+            </div>
+            {draft.nineReplay === 'yes' && (
+              <div className="pl-3 border-l-2 border-pine/20 space-y-3">
+                <div>
+                  <Label text="18-hole (replay) rate" sub="(optional — leave blank if same as 2× the 9-hole rate)" />
+                  <DollarInput value={draft.nineReplayFee} onChange={v => set('nineReplayFee', v)} placeholder="0.00" />
+                </div>
+                <p className="text-[11px] text-ink-faint">You can change this anytime after launch.</p>
+              </div>
+            )}
+          </div>
+        );
+
+        // 27-hole course
+        if (h === '27') return (
+          <div className="space-y-4">
+            <div>
+              <Label text="Layout" />
+              <div className="flex gap-2">
+                {[
+                  { v: 'three_9s', label: 'Three separate 9s' },
+                  { v: '18_plus_9', label: 'One 18 + one 9' },
+                ].map(({ v, label }) => (
+                  <button key={v} type="button" onClick={() => set('layout27', v)}
+                    className={'flex-1 py-2.5 rounded-md border text-sm transition-colors ' + (draft.layout27 === v ? 'border-pine bg-pine/5 text-pine font-medium' : 'border-line text-ink hover:border-pine/40')}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {draft.layout27 === 'three_9s' && (
+              <div className="space-y-4 pl-3 border-l-2 border-pine/20">
+                <div>
+                  <Label text="Name your three nines" />
+                  <div className="grid grid-cols-3 gap-2">
+                    {[0, 1, 2].map(i => (
+                      <input key={i} className={inp} value={draft.nine27Names[i] || ''} onChange={e => {
+                        const names = [...draft.nine27Names]; names[i] = e.target.value; set('nine27Names', names);
+                      }} placeholder={['North','South','West'][i]} />
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-ink-faint mt-1">e.g. North / South / West, or Lakes / Pines / Meadows</p>
+                </div>
+                <div>
+                  <Label text="Which combos are normally played as 18?" sub="(free text)" />
+                  <input className={inp} value={draft.nine27Combos} onChange={e => set('nine27Combos', e.target.value)} placeholder="e.g. North+South in the morning, South+West in the afternoon" />
+                </div>
+                <div>
+                  <Label text="Can each nine be booked individually?" />
+                  <YesNo value={draft.nine27BookableAlone} onChange={v => set('nine27BookableAlone', v)} />
+                  {draft.nine27BookableAlone === 'yes' && (
+                    <p className="text-[11px] text-ink-faint mt-1">We&apos;ll note that for our team. Booking-sheet support for rotating nine combos is a future feature — flagged as a build note.</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {draft.layout27 === '18_plus_9' && (
+              <div className="space-y-4 pl-3 border-l-2 border-pine/20">
+                <p className="text-sm text-ink-muted">The main 18-hole course works like any 18-hole setup. Tell us about the separate 9 below.</p>
+                <div>
+                  <Label text="Can golfers book 9 holes on the main course?" />
+                  <YesNo value={draft.nineHoleSupport} onChange={v => set('nineHoleSupport', v)} />
+                </div>
+                {draft.nineHoleSupport === 'yes' && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label text="Which nine?" />
+                      <select className={sel} value={draft.nineHoleWhich} onChange={e => set('nineHoleWhich', e.target.value)}>
+                        <option value="front">Front only</option>
+                        <option value="back">Back only</option>
+                        <option value="both">Either nine</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label text="9-hole par" />
+                      <input type="number" className={inp} value={draft.nineHolePar} onChange={e => set('nineHolePar', e.target.value)} placeholder="36" />
+                    </div>
+                  </div>
+                )}
+                <div className="border-t border-line pt-3">
+                  <Label text="Separate 9 — name" />
+                  <input className={inp} value={draft.separate9Name} onChange={e => set('separate9Name', e.target.value)} placeholder="e.g. Executive 9, Short Course" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label text="Par" />
+                    <input type="number" className={inp} value={draft.separate9Par} onChange={e => set('separate9Par', e.target.value)} placeholder="36" />
+                  </div>
+                  <div>
+                    <Label text="Rate" sub="(opt.)" />
+                    <DollarInput value={draft.separate9Fee} onChange={v => set('separate9Fee', v)} placeholder="25.00" />
+                  </div>
+                </div>
+                <div>
+                  <Label text="Can the separate 9 be booked individually?" />
+                  <YesNo value={draft.separate9Bookable} onChange={v => set('separate9Bookable', v)} />
+                </div>
+                <p className="text-[11px] text-ink-faint">You can change rates anytime after launch.</p>
+              </div>
+            )}
+          </div>
+        );
+
+        // 36-hole course
+        if (h === '36') return (
+          <div className="space-y-4">
+            <div>
+              <Label text="Layout" />
+              <div className="flex gap-2">
+                {[
+                  { v: 'two_18s', label: 'Two full 18-hole courses' },
+                  { v: 'other', label: 'Other' },
+                ].map(({ v, label }) => (
+                  <button key={v} type="button" onClick={() => set('layout36', v)}
+                    className={'flex-1 py-2.5 rounded-md border text-sm transition-colors ' + (draft.layout36 === v ? 'border-pine bg-pine/5 text-pine font-medium' : 'border-line text-ink hover:border-pine/40')}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {draft.layout36 === 'two_18s' && (
+              <div className="space-y-3 pl-3 border-l-2 border-pine/20">
+                <Label text="Name your two courses" />
+                <div className="grid grid-cols-2 gap-3">
+                  {[0, 1].map(i => (
+                    <input key={i} className={inp} value={draft.course36Names[i] || ''} onChange={e => {
+                      const names = [...draft.course36Names]; names[i] = e.target.value; set('course36Names', names);
+                    }} placeholder={['North Course','South Course'][i]} />
+                  ))}
+                </div>
+                <p className="text-[11px] text-ink-faint">Each 18 gets its own front/back nine tee-set yardages in the next step.</p>
+              </div>
+            )}
+            {draft.layout36 === 'other' && (
+              <div className="pl-3 border-l-2 border-pine/20">
+                <Label text="Describe your layout" />
+                <textarea rows={3} className={inp} value={draft.course36LayoutDesc} onChange={e => set('course36LayoutDesc', e.target.value)} placeholder="e.g. Championship 18 + par-3 9 + additional 9" />
+              </div>
+            )}
+            <div>
+              <Label text="Can golfers book 9 holes?" />
+              <YesNo value={draft.nineHoleSupport} onChange={v => set('nineHoleSupport', v)} />
+            </div>
+            {draft.nineHoleSupport === 'yes' && (
+              <div className="pl-3 border-l-2 border-pine/20 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label text="9-hole par" />
+                    <input type="number" className={inp} value={draft.nineHolePar} onChange={e => set('nineHolePar', e.target.value)} placeholder="36" />
+                  </div>
+                  <div>
+                    <Label text="9-hole rate" sub="(opt.)" />
+                    <DollarInput value={draft.nineHoleFee} onChange={v => set('nineHoleFee', v)} placeholder="25.00" />
+                  </div>
+                </div>
+              </div>
+            )}
+            <p className="text-[11px] text-ink-faint">You can change rates anytime after launch.</p>
+          </div>
+        );
+
+        // 18-hole (default)
         return (
           <div className="space-y-4">
             <div>
               <Label text="Can golfers book 9 holes?" />
-              <div className="flex gap-2">
-                {(['no','yes'] as const).map(v => (
-                  <button key={v} type="button" onClick={() => set('nineHoleSupport', v)}
-                    className={'flex-1 py-2.5 rounded-md border text-sm transition-colors ' + (draft.nineHoleSupport === v ? 'border-pine bg-pine/5 text-pine font-medium' : 'border-line text-ink hover:border-pine/40')}>
-                    {v === 'yes' ? 'Yes' : 'No — 18 holes only'}
-                  </button>
-                ))}
-              </div>
+              <YesNo value={draft.nineHoleSupport} onChange={v => set('nineHoleSupport', v)}
+                noLabel="No — 18 holes only" />
             </div>
             {draft.nineHoleSupport === 'yes' && (
               <div className="space-y-4 pl-3 border-l-2 border-pine/20">
@@ -365,7 +672,7 @@ function DetailsForm() {
                     <input type="number" className={inp} value={draft.nineHolePar} onChange={e => set('nineHolePar', e.target.value)} placeholder="36" />
                   </div>
                   <div>
-                    <Label text="9-hole rate" sub="(set in Fees section)" />
+                    <Label text="9-hole rate" sub="(in Fees too)" />
                     <DollarInput value={draft.nineHoleFee} onChange={v => set('nineHoleFee', v)} placeholder="25.00" />
                   </div>
                 </div>
@@ -374,15 +681,29 @@ function DetailsForm() {
             )}
           </div>
         );
+      }
 
-      case 'tee_sets':
+      case 'tee_sets': {
+        const h = draft.holes;
+        const is27Three9s = h === '27' && draft.layout27 === 'three_9s';
+        const is36Two18s = h === '36' && draft.layout36 === 'two_18s';
+
+        const nineNamesFor27 = draft.nine27Names.filter(n => n.trim()) as string[];
+        const courseNamesFor36 = draft.course36Names.filter(n => n.trim()) as string[];
+
+        const descLabel = is27Three9s
+          ? 'Add one row per tee set. For each tee, enter yardage per nine.'
+          : is36Two18s
+          ? 'Add one row per tee set. Enter total yardage and, if you have it, per-course splits.'
+          : 'Add all tees you offer. You can edit these anytime after launch.';
+
         return (
           <div className="space-y-4">
-            <p className="text-sm text-ink-muted">Add all the tees you offer. This shows golfers distance info on your booking page. You can edit these anytime.</p>
-            <div className="space-y-3">
+            <p className="text-sm text-ink-muted">{descLabel}</p>
+            <div className="space-y-4">
               {draft.teeSets.map((ts, i) => (
                 <div key={i} className="bg-paper border border-line rounded-md p-4 space-y-3">
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-ink-muted">Tee {i + 1}</span>
                     {draft.teeSets.length > 1 && (
                       <button type="button" onClick={() => set('teeSets', draft.teeSets.filter((_, j) => j !== i))}
@@ -391,51 +712,155 @@ function DetailsForm() {
                       </button>
                     )}
                   </div>
+
+                  {/* Name + designation */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label text="Tee name / color" />
-                      <input className={inp} value={ts.name} onChange={e => {
-                        const t = [...draft.teeSets]; t[i] = { ...t[i], name: e.target.value }; set('teeSets', t);
-                      }} placeholder="e.g. Blue, White, Red" />
+                      <input className={inp} value={ts.name} onChange={e => updateTeeSet(i, { name: e.target.value })} placeholder="e.g. Blue, White, Red" />
                     </div>
                     <div>
-                      <Label text="Total yardage" />
-                      <input type="number" className={inp} value={ts.yardage} onChange={e => {
-                        const t = [...draft.teeSets]; t[i] = { ...t[i], yardage: e.target.value }; set('teeSets', t);
-                      }} placeholder="6,400" />
+                      <Label text="Designation" sub="(opt.)" />
+                      <select className={sel} value={ts.designation} onChange={e => updateTeeSet(i, { designation: e.target.value })}>
+                        <option value="">— select —</option>
+                        {TEE_DESIGNATIONS.map(d => <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>)}
+                      </select>
                     </div>
                   </div>
+
+                  {/* Yardage — conditional on layout */}
+                  {is27Three9s && nineNamesFor27.length > 0 ? (
+                    <div>
+                      <Label text="Yardage per nine" />
+                      <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(nineNamesFor27.length, 3)}, 1fr)` }}>
+                        {nineNamesFor27.map(name => (
+                          <div key={name}>
+                            <p className="text-[11px] text-ink-faint mb-1">{name}</p>
+                            <input type="number" className={inp} value={ts.nineYardages[name] || ''} onChange={e => {
+                              const ny = { ...ts.nineYardages, [name]: e.target.value };
+                              updateTeeSet(i, { nineYardages: ny });
+                            }} placeholder="3,200" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : is36Two18s && courseNamesFor36.length > 0 ? (
+                    <div className="space-y-3">
+                      <div>
+                        <Label text="Total yardage (all 36)" sub="(opt. if per-course below)" />
+                        <input type="number" className={inp} value={ts.yardage} onChange={e => updateTeeSet(i, { yardage: e.target.value })} placeholder="13,000" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {courseNamesFor36.map(name => (
+                          <div key={name}>
+                            <Label text={name + ' yardage'} />
+                            <input type="number" className={inp} value={ts.nineYardages[name] || ''} onChange={e => {
+                              const ny = { ...ts.nineYardages, [name]: e.target.value };
+                              updateTeeSet(i, { nineYardages: ny });
+                            }} placeholder="6,500" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div>
+                        <Label text="Total yardage" />
+                        <input type="number" className={inp} value={ts.yardage} onChange={e => updateTeeSet(i, { yardage: e.target.value })} placeholder="6,400" />
+                      </div>
+                      {h === '18' && (
+                        <div>
+                          <button type="button" className="text-xs text-ink-faint hover:text-ink transition-colors"
+                            onClick={() => updateTeeSet(i, { frontYardage: ts.frontYardage || '', backYardage: ts.backYardage || '' })}>
+                            {ts.frontYardage || ts.backYardage ? 'Front/back split' : '+ Add front/back split (optional)'}
+                          </button>
+                          {(ts.frontYardage !== undefined || ts.backYardage !== undefined) && (ts.yardage || ts.frontYardage || ts.backYardage) && (
+                            <div className="grid grid-cols-2 gap-2 mt-2">
+                              <div>
+                                <p className="text-[11px] text-ink-faint mb-1">Front 9</p>
+                                <input type="number" className={inp} value={ts.frontYardage} onChange={e => updateTeeSet(i, { frontYardage: e.target.value })} placeholder="3,200" />
+                              </div>
+                              <div>
+                                <p className="text-[11px] text-ink-faint mb-1">Back 9</p>
+                                <input type="number" className={inp} value={ts.backYardage} onChange={e => updateTeeSet(i, { backYardage: e.target.value })} placeholder="3,200" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Par / Rating / Slope */}
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <Label text="Par" />
-                      <input type="number" className={inp} value={ts.par} onChange={e => {
-                        const t = [...draft.teeSets]; t[i] = { ...t[i], par: e.target.value }; set('teeSets', t);
-                      }} placeholder="72" />
+                      <input type="number" className={inp} value={ts.par} onChange={e => updateTeeSet(i, { par: e.target.value })} placeholder="72" />
                     </div>
                     <div>
                       <Label text="Rating" sub="(opt.)" />
-                      <input type="number" step="0.1" className={inp} value={ts.rating} onChange={e => {
-                        const t = [...draft.teeSets]; t[i] = { ...t[i], rating: e.target.value }; set('teeSets', t);
-                      }} placeholder="71.4" />
+                      <input type="number" step="0.1" className={inp} value={ts.rating} onChange={e => updateTeeSet(i, { rating: e.target.value })} placeholder="71.4" />
                     </div>
                     <div>
                       <Label text="Slope" sub="(opt.)" />
-                      <input type="number" className={inp} value={ts.slope} onChange={e => {
-                        const t = [...draft.teeSets]; t[i] = { ...t[i], slope: e.target.value }; set('teeSets', t);
-                      }} placeholder="128" />
+                      <input type="number" className={inp} value={ts.slope} onChange={e => updateTeeSet(i, { slope: e.target.value })} placeholder="128" />
                     </div>
+                  </div>
+
+                  {/* Women's ratings toggle */}
+                  <div>
+                    {!teeWomensOpen[i] ? (
+                      <button type="button" className="text-xs text-ink-faint hover:text-ink transition-colors"
+                        onClick={() => setTeeWomensOpen(prev => ({ ...prev, [i]: true }))}>
+                        + Add women&apos;s par / rating / slope (optional)
+                      </button>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium">Women&apos;s ratings</span>
+                          <button type="button" className="text-[11px] text-ink-faint hover:text-bad transition-colors"
+                            onClick={() => { setTeeWomensOpen(prev => ({ ...prev, [i]: false })); updateTeeSet(i, { womensPar: '', womensRating: '', womensSlope: '' }); }}>
+                            Remove
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <Label text="Par" />
+                            <input type="number" className={inp} value={ts.womensPar} onChange={e => updateTeeSet(i, { womensPar: e.target.value })} placeholder="74" />
+                          </div>
+                          <div>
+                            <Label text="Rating" />
+                            <input type="number" step="0.1" className={inp} value={ts.womensRating} onChange={e => updateTeeSet(i, { womensRating: e.target.value })} placeholder="73.2" />
+                          </div>
+                          <div>
+                            <Label text="Slope" />
+                            <input type="number" className={inp} value={ts.womensSlope} onChange={e => updateTeeSet(i, { womensSlope: e.target.value })} placeholder="131" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Note */}
+                  <div>
+                    <Label text="Note" sub="(opt. — one line)" />
+                    <input className={inp} value={ts.note} onChange={e => updateTeeSet(i, { note: e.target.value })} placeholder="e.g. combo tees: Blue front, White back" />
                   </div>
                 </div>
               ))}
             </div>
-            {draft.teeSets.length < 6 && (
+            {draft.teeSets.length < 8 && (
               <button type="button" onClick={() => set('teeSets', [...draft.teeSets, blankTeeSet()])}
                 className="flex items-center gap-1.5 text-sm text-pine hover:text-pine-hover font-medium transition-colors">
                 <Plus className="w-4 h-4" /> Add another tee set
               </button>
             )}
+            {is27Three9s && nineNamesFor27.length === 0 && (
+              <p className="text-[11px] text-warn">Name your three nines in the Playability step to see per-nine yardage fields here.</p>
+            )}
           </div>
         );
+      }
 
       case 'schedule':
         return (
@@ -484,10 +909,10 @@ function DetailsForm() {
                 <DollarInput value={draft.greenFeeWeekend} onChange={v => set('greenFeeWeekend', v)} placeholder="65.00" />
               </div>
             </div>
-            {draft.nineHoleSupport === 'yes' && (
+            {(draft.nineHoleSupport === 'yes' || draft.nineReplay === 'yes') && (
               <div>
-                <Label text="9-hole rate" sub="(optional)" />
-                <DollarInput value={draft.nineHoleFee} onChange={v => set('nineHoleFee', v)} placeholder="25.00" />
+                <Label text={draft.holes === '9' ? '18-hole (replay) rate' : '9-hole rate'} sub="(optional)" />
+                <DollarInput value={draft.holes === '9' ? draft.nineReplayFee : draft.nineHoleFee} onChange={v => draft.holes === '9' ? set('nineReplayFee', v) : set('nineHoleFee', v)} placeholder="25.00" />
               </div>
             )}
             <div className="grid grid-cols-2 gap-3">
@@ -512,103 +937,152 @@ function DetailsForm() {
           </div>
         );
 
-      case 'resident':
+      case 'passes': {
+        const PASS_TYPE_LABELS: Record<string, string> = {
+          membership: 'Membership',
+          season_pass: 'Season pass',
+          resident_card: 'Resident card',
+          resident_rate: 'Resident rates (no card)',
+          punch_card: 'Punch card',
+        };
         return (
-          <div className="space-y-4">
-            <div>
-              <Label text="Who qualifies as a resident?" />
-              <input className={inp} value={draft.residentQualifies} onChange={e => set('residentQualifies', e.target.value)} placeholder="e.g. Town of Westport residents, Fairfield County residents" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label text="Resident weekday rate" />
-                <DollarInput value={draft.residentWeekday} onChange={v => set('residentWeekday', v)} placeholder="30.00" />
-              </div>
-              <div>
-                <Label text="Resident weekend rate" />
-                <DollarInput value={draft.residentWeekend} onChange={v => set('residentWeekend', v)} placeholder="45.00" />
-              </div>
-            </div>
-            <div>
-              <Label text="Resident twilight rate" sub="(optional)" />
-              <DollarInput value={draft.residentTwilight} onChange={v => set('residentTwilight', v)} placeholder="20.00" />
-            </div>
-            <div>
-              <Label text="How is residency verified?" sub="(e.g. county ID, utility bill)" />
-              <input className={inp} value={draft.residentVerification} onChange={e => set('residentVerification', e.target.value)} placeholder="County ID or utility bill" />
-            </div>
-            <p className="text-[11px] text-ink-faint">These rates can be changed anytime after launch.</p>
-          </div>
-        );
-
-      case 'tier':
-        return (
-          <div className="space-y-4">
-            <p className="text-sm text-ink-muted">Add your membership tiers. We&apos;ll create these on your course page so golfers can sign up. You can add, edit, or remove tiers anytime.</p>
+          <div className="space-y-5">
+            <p className="text-sm text-ink-muted">Add all your membership tiers, season passes, resident cards, and punch cards. Include resident rates if you offer them without a separate card. Add as many as you need.</p>
             <div className="space-y-4">
-              {draft.memberships.map((m, i) => (
+              {draft.passes.map((p, i) => (
                 <div key={i} className="bg-paper border border-line rounded-md p-4 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-ink-muted">Tier {i + 1}</span>
-                    {draft.memberships.length > 1 && (
-                      <button type="button" onClick={() => set('memberships', draft.memberships.filter((_, j) => j !== i))}
+                    <span className="text-xs font-medium text-ink-muted">Item {i + 1}</span>
+                    {draft.passes.length > 1 && (
+                      <button type="button" onClick={() => set('passes', draft.passes.filter((_, j) => j !== i))}
                         className="text-ink-faint hover:text-bad transition-colors">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label text="Tier name" />
-                      <input className={inp} value={m.name} onChange={e => {
-                        const t = [...draft.memberships]; t[i] = { ...t[i], name: e.target.value }; set('memberships', t);
-                      }} placeholder="Full Member" />
-                    </div>
-                    <div>
-                      <Label text="Annual fee" />
-                      <DollarInput value={m.fee} onChange={v => {
-                        const t = [...draft.memberships]; t[i] = { ...t[i], fee: v }; set('memberships', t);
-                      }} placeholder="1,200.00" />
-                    </div>
-                  </div>
                   <div>
-                    <Label text="What&apos;s included" sub="(brief description)" />
-                    <textarea rows={2} className={inp} value={m.includes} onChange={e => {
-                      const t = [...draft.memberships]; t[i] = { ...t[i], includes: e.target.value }; set('memberships', t);
-                    }} placeholder="Unlimited rounds, range balls included, guest passes" />
+                    <Label text="Type" />
+                    <select className={sel} value={p.type} onChange={e => updatePass(i, { type: e.target.value })}>
+                      {Object.entries(PASS_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                    </select>
                   </div>
-                  <div>
-                    <Label text="Do members pay a green fee per round?" />
-                    <div className="flex gap-2">
-                      {(['no','yes'] as const).map(v => (
-                        <button key={v} type="button" onClick={() => {
-                          const t = [...draft.memberships]; t[i] = { ...t[i], perRound: v }; set('memberships', t);
-                        }}
-                          className={'flex-1 py-2 rounded-md border text-sm transition-colors ' + (m.perRound === v ? 'border-pine bg-pine/5 text-pine font-medium' : 'border-line text-ink hover:border-pine/40')}>
-                          {v === 'yes' ? 'Yes' : 'No — rounds are included'}
-                        </button>
-                      ))}
-                    </div>
-                    {m.perRound === 'yes' && (
-                      <div className="mt-3">
-                        <Label text="Per-round fee" />
-                        <DollarInput value={m.perRoundFee} onChange={v => {
-                          const t = [...draft.memberships]; t[i] = { ...t[i], perRoundFee: v }; set('memberships', t);
-                        }} placeholder="25.00" />
+
+                  {p.type !== 'resident_rate' && (
+                    <>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label text="Name" />
+                          <input className={inp} value={p.name} onChange={e => updatePass(i, { name: e.target.value })}
+                            placeholder={p.type === 'membership' ? 'Full Member' : p.type === 'season_pass' ? 'Season Pass' : p.type === 'resident_card' ? 'Resident Card' : 'Punch Card'} />
+                        </div>
+                        <div>
+                          <Label text="Fee" />
+                          <div className="flex gap-2">
+                            <div className="flex-1">
+                              <DollarInput value={p.fee} onChange={v => updatePass(i, { fee: v })} placeholder="0.00" />
+                            </div>
+                            <select className={sel + ' w-auto'} value={p.feePeriod} onChange={e => updatePass(i, { feePeriod: e.target.value })}>
+                              <option value="annual">/ yr</option>
+                              <option value="season">/ season</option>
+                              <option value="monthly">/ mo</option>
+                              <option value="per_punch">/ punch</option>
+                            </select>
+                          </div>
+                        </div>
                       </div>
-                    )}
-                  </div>
+                      <div>
+                        <Label text="What&apos;s included" sub="(brief)" />
+                        <textarea rows={2} className={inp} value={p.includes} onChange={e => updatePass(i, { includes: e.target.value })} placeholder="Unlimited rounds, range balls, guest passes…" />
+                      </div>
+                      <div>
+                        <Label text="Do holders pay a green fee per round?" />
+                        <YesNo value={p.perRound} onChange={v => updatePass(i, { perRound: v })} />
+                        {p.perRound === 'yes' && (
+                          <div className="mt-2">
+                            <Label text="Per-round fee" />
+                            <DollarInput value={p.perRoundFee} onChange={v => updatePass(i, { perRoundFee: v })} placeholder="25.00" />
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {(p.type === 'resident_card' || p.type === 'resident_rate') && (
+                    <div className="space-y-3 border-t border-line pt-3">
+                      <div>
+                        <Label text="Who qualifies as a resident?" />
+                        <input className={inp} value={p.residentWho} onChange={e => updatePass(i, { residentWho: e.target.value })}
+                          placeholder="e.g. Town of Westport residents, Fairfield County" />
+                      </div>
+                      {p.type === 'resident_card' && (
+                        <div>
+                          <Label text="How does the resident card work?" />
+                          <div className="flex gap-2">
+                            {[
+                              { v: 'free', label: 'Free — just show ID' },
+                              { v: 'purchased', label: 'They buy a card' },
+                            ].map(({ v, label }) => (
+                              <button key={v} type="button" onClick={() => updatePass(i, { residentVerifType: v })}
+                                className={'flex-1 py-2 rounded-md border text-sm transition-colors ' + (p.residentVerifType === v ? 'border-pine bg-pine/5 text-pine font-medium' : 'border-line text-ink hover:border-pine/40')}>
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                          {p.residentVerifType === 'purchased' && (
+                            <div className="space-y-3 mt-3 pl-3 border-l-2 border-pine/20">
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <Label text="Card cost" />
+                                  <DollarInput value={p.residentCardCost} onChange={v => updatePass(i, { residentCardCost: v })} placeholder="10.00" />
+                                </div>
+                                <div>
+                                  <Label text="Renews" sub="(how often)" />
+                                  <input className={inp} value={p.residentCardRenewal} onChange={e => updatePass(i, { residentCardRenewal: e.target.value })} placeholder="Annually, each spring" />
+                                </div>
+                              </div>
+                              <div>
+                                <Label text="Where / how do residents buy it?" />
+                                <input className={inp} value={p.residentCardWhere} onChange={e => updatePass(i, { residentCardWhere: e.target.value })} placeholder="e.g. Town Hall, online at town website" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {p.type === 'resident_rate' && (
+                        <div>
+                          <Label text="Verification" sub="(what they show)" />
+                          <input className={inp} value={p.residentVerification || ''} onChange={e => updatePass(i, { residentVerification: e.target.value } as Partial<PassTier>)} placeholder="County ID, utility bill" />
+                        </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label text="Resident weekday rate" />
+                          <DollarInput value={p.residentWeekday} onChange={v => updatePass(i, { residentWeekday: v })} placeholder="30.00" />
+                        </div>
+                        <div>
+                          <Label text="Resident weekend rate" />
+                          <DollarInput value={p.residentWeekend} onChange={v => updatePass(i, { residentWeekend: v })} placeholder="45.00" />
+                        </div>
+                      </div>
+                      <div>
+                        <Label text="Resident twilight rate" sub="(optional)" />
+                        <DollarInput value={p.residentTwilight} onChange={v => updatePass(i, { residentTwilight: v })} placeholder="20.00" />
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-            {draft.memberships.length < 5 && (
-              <button type="button" onClick={() => set('memberships', [...draft.memberships, blankTier()])}
+            {draft.passes.length < 8 && (
+              <button type="button" onClick={() => set('passes', [...draft.passes, blankPass()])}
                 className="flex items-center gap-1.5 text-sm text-pine hover:text-pine-hover font-medium transition-colors">
-                <Plus className="w-4 h-4" /> Add another tier
+                <Plus className="w-4 h-4" /> Add another
               </button>
             )}
+            <p className="text-[11px] text-ink-faint">You can add, edit, or remove tiers anytime after launch.</p>
           </div>
         );
+      }
 
       case 'member':
         return (
@@ -674,65 +1148,211 @@ function DetailsForm() {
           </div>
         );
 
-      case 'cancellation':
+      case 'cancellation': {
+        const hasPolicy = draft.cancellationPolicy === 'yes';
+        const noPolicy = draft.cancellationPolicy === 'no';
         return (
           <div className="space-y-5">
-            <div className="bg-pine/5 border border-pine/20 rounded-md p-4 space-y-2 text-sm text-ink-soft leading-relaxed">
-              <p className="font-medium text-ink text-[13px]">How cancellations work on GreenReserve</p>
-              <p>When a golfer books, we save their card but don&apos;t charge it. Nothing is due at booking.</p>
-              <p>If they cancel <em>before</em> your window — the cancellation is free, no fee is charged.</p>
-              <p>If they cancel <em>after</em> your window — your late fee is automatically charged to their saved card. No chasing needed.</p>
-              <p>If the late-cancelled golfer still shows up and checks in — the fee is refunded at that point.</p>
-            </div>
             <div>
-              <Label text="Free cancellation window" />
-              <div className="flex items-center gap-2">
-                <input type="number" min="0" max="168" className={inp + ' w-24'} value={draft.cancellationHours} onChange={e => set('cancellationHours', e.target.value)} />
-                <span className="text-sm text-ink-soft">hours before tee time</span>
+              <Label text="Do you charge for late cancellations or no-shows?" />
+              <div className="flex gap-2">
+                {[
+                  { v: 'yes', label: 'Yes — we charge a fee' },
+                  { v: 'no', label: 'No — cancel anytime free' },
+                ].map(({ v, label }) => (
+                  <button key={v} type="button" onClick={() => set('cancellationPolicy', v)}
+                    className={'flex-1 py-2.5 rounded-md border text-sm transition-colors ' + (draft.cancellationPolicy === v ? 'border-pine bg-pine/5 text-pine font-medium' : 'border-line text-ink hover:border-pine/40')}>
+                    {label}
+                  </button>
+                ))}
               </div>
-              <p className="text-[11px] text-ink-faint mt-1">e.g. 24 means golfers can cancel up to 24 hours before their tee time for free.</p>
             </div>
-            <div>
-              <Label text="Late cancellation fee" sub="(leave blank for no fee)" />
-              <DollarInput value={draft.lateFee} onChange={v => set('lateFee', v)} placeholder="0.00" />
-              {draft.lateFee && <p className="text-[11px] text-ink-faint mt-1">Golfers who cancel after the window will be charged ${draft.lateFee} automatically.</p>}
-            </div>
-            <p className="text-[11px] text-ink-faint">The cancellation window and fee can be changed anytime after launch.</p>
+
+            {noPolicy && (
+              <div className="bg-paper border border-line rounded-md p-4 text-sm text-ink-soft leading-relaxed">
+                <p>Golfers will book without saving a card and can cancel anytime at no cost. They pay their green fee at the course on the day of play.</p>
+              </div>
+            )}
+
+            {hasPolicy && (
+              <>
+                <div className="bg-pine/5 border border-pine/20 rounded-md p-4 space-y-2 text-sm text-ink-soft leading-relaxed">
+                  <p className="font-medium text-ink text-[13px]">How this works on GreenReserve</p>
+                  <p>Golfers save their card at booking — nothing is charged until tee time. If they cancel <em>before</em> your window, it&apos;s free. If they cancel <em>after</em>, the late fee is automatically charged to their saved card. If they show up and check in, the fee is refunded.</p>
+                </div>
+                <div>
+                  <Label text="Free cancellation window" />
+                  <div className="flex items-center gap-2">
+                    <input type="number" min="0" max="168" className={inp + ' w-24'} value={draft.cancellationHours} onChange={e => set('cancellationHours', e.target.value)} />
+                    <span className="text-sm text-ink-soft">hours before tee time</span>
+                  </div>
+                  <p className="text-[11px] text-ink-faint mt-1">e.g. 24 means golfers can cancel up to 24 hours before their tee time for free.</p>
+                </div>
+                <div>
+                  <Label text="Late cancellation fee" />
+                  <DollarInput value={draft.lateFee} onChange={v => set('lateFee', v)} placeholder="25.00" />
+                </div>
+                <p className="text-[11px] text-ink-faint">The window and fee can be changed anytime after launch.</p>
+              </>
+            )}
+
+            {!hasPolicy && !noPolicy && (
+              <p className="text-[11px] text-ink-faint">Select an option above to continue.</p>
+            )}
           </div>
         );
+      }
 
       case 'facilities': {
-        const checkedFacilities = draft.facilities || [];
+        const fv2 = draft.facilitiesV2;
+        const tog = (field: keyof FacilitiesV2, cur: boolean) => setFv2({ [field]: !cur } as Partial<FacilitiesV2>);
+        const togBtn = (on: boolean, onToggle: () => void, label: string) => (
+          <button type="button" onClick={onToggle}
+            className={'flex items-center gap-3 px-3 py-2.5 rounded-md border text-sm text-left w-full transition-colors ' + (on ? 'border-pine bg-pine/5 text-pine' : 'border-line text-ink hover:border-pine/40')}>
+            <div className={'w-4 h-4 rounded border flex items-center justify-center shrink-0 ' + (on ? 'bg-pine border-pine' : 'border-line-strong')}>
+              {on && <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10"><path d="M1.5 5l2.5 2.5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+            </div>
+            <span className={on ? 'font-medium' : ''}>{label}</span>
+          </button>
+        );
+
         return (
           <div className="space-y-5">
+            {/* Driving range */}
             <div className="space-y-2">
-              <Label text="What do you have?" sub="(check all that apply)" />
-              {FACILITIES_LIST.map(f => {
-                const checked = checkedFacilities.includes(f.id);
-                return (
-                  <div key={f.id} className="space-y-1">
-                    <button type="button" onClick={() => toggleFacility(f.id)}
-                      className={'w-full flex items-center gap-3 px-3 py-2.5 rounded-md border text-sm text-left transition-colors ' + (checked ? 'border-pine bg-pine/5 text-pine' : 'border-line text-ink hover:border-pine/40')}>
-                      <div className={'w-4 h-4 rounded border flex items-center justify-center shrink-0 ' + (checked ? 'bg-pine border-pine' : 'border-line-strong')}>
-                        {checked && <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10"><path d="M1.5 5l2.5 2.5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                      </div>
-                      <span className={checked ? 'font-medium' : ''}>{f.label}</span>
-                    </button>
-                    {checked && (
-                      <input
-                        className={inp + ' text-xs mt-0.5'}
-                        value={draft.facilitiesNotes[f.id] || ''}
-                        onChange={e => setFacilityNote(f.id, e.target.value)}
-                        placeholder={f.hint || 'Add a note (optional)'}
-                      />
+              {togBtn(fv2.range, () => tog('range', fv2.range), 'Driving range')}
+              {fv2.range && (
+                <div className="pl-4 space-y-3 border-l-2 border-pine/20">
+                  <div>
+                    <Label text="Tee surface" />
+                    <select className={sel} value={fv2.rangeTeeType} onChange={e => setFv2({ rangeTeeType: e.target.value })}>
+                      <option value="grass">Grass tees</option>
+                      <option value="mats">Mats only</option>
+                      <option value="both">Both grass and mats</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label text="Bucket sizes & prices" />
+                    <div className="space-y-2">
+                      {fv2.rangeBuckets.map((b, bi) => (
+                        <div key={bi} className="grid grid-cols-3 gap-2 items-center">
+                          <input className={inp} value={b.label} onChange={e => {
+                            const bkts = [...fv2.rangeBuckets]; bkts[bi] = { ...bkts[bi], label: e.target.value }; setFv2({ rangeBuckets: bkts });
+                          }} placeholder="Small" />
+                          <DollarInput value={b.price} onChange={v => {
+                            const bkts = [...fv2.rangeBuckets]; bkts[bi] = { ...bkts[bi], price: v }; setFv2({ rangeBuckets: bkts });
+                          }} placeholder="6.00" />
+                          <div className="flex items-center gap-1">
+                            <input type="number" className={inp} value={b.balls} onChange={e => {
+                              const bkts = [...fv2.rangeBuckets]; bkts[bi] = { ...bkts[bi], balls: e.target.value }; setFv2({ rangeBuckets: bkts });
+                            }} placeholder="35" />
+                            <span className="text-xs text-ink-faint shrink-0">balls</span>
+                            {fv2.rangeBuckets.length > 1 && (
+                              <button type="button" onClick={() => setFv2({ rangeBuckets: fv2.rangeBuckets.filter((_, j) => j !== bi) })} className="text-ink-faint hover:text-bad shrink-0">
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {fv2.rangeBuckets.length < 5 && (
+                      <button type="button" onClick={() => setFv2({ rangeBuckets: [...fv2.rangeBuckets, blankBucket()] })}
+                        className="flex items-center gap-1 text-xs text-pine hover:text-pine-hover mt-2 transition-colors">
+                        <Plus className="w-3.5 h-3.5" /> Add size
+                      </button>
                     )}
                   </div>
-                );
-              })}
+                </div>
+              )}
             </div>
+
+            {/* Simple yes/no items */}
+            {togBtn(fv2.puttingGreen, () => tog('puttingGreen', fv2.puttingGreen), 'Putting green')}
+            {togBtn(fv2.chippingArea, () => tog('chippingArea', fv2.chippingArea), 'Chipping / short-game area')}
+            {togBtn(fv2.proShop, () => tog('proShop', fv2.proShop), 'Pro shop')}
+
+            {/* Lessons */}
+            <div className="space-y-2">
+              {togBtn(fv2.lessons, () => tog('lessons', fv2.lessons), 'Lessons / teaching pros')}
+              {fv2.lessons && (
+                <div className="pl-4 grid grid-cols-2 gap-3 border-l-2 border-pine/20">
+                  <div>
+                    <Label text="Pro name(s)" sub="(opt.)" />
+                    <input className={inp} value={fv2.lessonsProName} onChange={e => setFv2({ lessonsProName: e.target.value })} placeholder="e.g. John Smith, PGA" />
+                  </div>
+                  <div>
+                    <Label text="Contact number" sub="(opt.)" />
+                    <input type="tel" className={inp} value={fv2.lessonsProPhone} onChange={e => setFv2({ lessonsProPhone: e.target.value })} placeholder="(555) 000-0000" />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Club rental */}
+            <div className="space-y-2">
+              {togBtn(fv2.clubRental, () => tog('clubRental', fv2.clubRental), 'Club rental')}
+              {fv2.clubRental && (
+                <div className="pl-4 border-l-2 border-pine/20">
+                  <Label text="How to arrange" />
+                  <select className={sel} value={fv2.clubRentalContact} onChange={e => setFv2({ clubRentalContact: e.target.value })}>
+                    <option value="pro_shop">Come into pro shop</option>
+                    <option value="phone">Call ahead</option>
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {/* Push/pull cart rental */}
+            <div className="space-y-2">
+              {togBtn(fv2.cartRental, () => tog('cartRental', fv2.cartRental), 'Push / pull cart rental')}
+              {fv2.cartRental && (
+                <div className="pl-4 border-l-2 border-pine/20">
+                  <Label text="Cost" sub="(opt.)" />
+                  <DollarInput value={fv2.cartRentalCost} onChange={v => setFv2({ cartRentalCost: v })} placeholder="5.00" />
+                </div>
+              )}
+            </div>
+
+            {/* Bag storage — private only */}
+            {courseType === 'private' && togBtn(fv2.bagStorage, () => tog('bagStorage', fv2.bagStorage), 'Bag storage')}
+
+            {togBtn(fv2.gpsCarts, () => tog('gpsCarts', fv2.gpsCarts), 'GPS on carts')}
+
+            {/* Event space */}
+            <div className="space-y-2">
+              {togBtn(fv2.eventSpace, () => tog('eventSpace', fv2.eventSpace), 'Event / banquet space')}
+              {fv2.eventSpace && (
+                <div className="pl-4 border-l-2 border-pine/20">
+                  <Label text="Contact number for inquiries" sub="(opt.)" />
+                  <input type="tel" className={inp} value={fv2.eventSpaceContact} onChange={e => setFv2({ eventSpaceContact: e.target.value })} placeholder="(555) 000-0000" />
+                </div>
+              )}
+            </div>
+
+            {togBtn(fv2.lockerRooms, () => tog('lockerRooms', fv2.lockerRooms), 'Locker rooms')}
+
+            {/* Tournaments */}
+            <div className="space-y-2">
+              {togBtn(fv2.tournaments, () => tog('tournaments', fv2.tournaments), 'Hosts tournaments & outings')}
+              {fv2.tournaments && (
+                <div className="pl-4 border-l-2 border-pine/20">
+                  <Label text="How often?" />
+                  <select className={sel} value={fv2.tournamentsFrequency} onChange={e => setFv2({ tournamentsFrequency: e.target.value })}>
+                    <option value="">Select...</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="seasonal">A few per season</option>
+                    <option value="rarely">Rarely</option>
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {/* Food & drink */}
             <div>
-              <Label text="Restaurant / food service" />
-              <select className={sel} value={draft.restaurantType} onChange={e => set('restaurantType', e.target.value)}>
+              <Label text="Food & drink" />
+              <select className={sel} value={fv2.restaurantType} onChange={e => setFv2({ restaurantType: e.target.value })}>
                 <option value="none">None</option>
                 <option value="beverage_cart">Beverage cart only</option>
                 <option value="snack_bar">Snack bar</option>
@@ -840,7 +1460,7 @@ function DetailsForm() {
           )}
           <button
             onClick={goNext}
-            disabled={saving}
+            disabled={saving || (!draft.cancellationPolicy && section?.id === 'cancellation')}
             className="flex-1 flex items-center justify-center gap-2 py-3 bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm disabled:opacity-50 transition-colors"
           >
             {saving ? 'Saving...' : isLast ? 'Submit setup sheet' : (
@@ -848,6 +1468,9 @@ function DetailsForm() {
             )}
           </button>
         </div>
+        {section?.id === 'cancellation' && !draft.cancellationPolicy && (
+          <p className="text-[11px] text-ink-faint text-center mt-2">Select Yes or No above to continue.</p>
+        )}
       </div>
     </div>
   );
