@@ -1,10 +1,7 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  RefreshCw, Mail, Wrench, Power, Search, ArrowUpRight, X, Copy,
-  XCircle, CheckCircle, Clock, Trash2, ChevronDown, Archive, Pencil, Save,
-} from 'lucide-react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { RefreshCw, Search, Trash2 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 
@@ -23,17 +20,15 @@ interface Inquiry {
   detailsToken?: string | null; detailsJson?: string; needsJson?: string;
   events: InquiryStatusEvent[];
 }
-interface ApproveResult { tempPassword?: string; setupLink?: string; detailsLink?: string; emailSent?: boolean; emailError?: string; }
 
 const STATUS_DOT_MAP: Record<string, string> = {
   pending: 'warn', in_review: 'neutral', details_requested: 'neutral',
-  details_submitted: 'neutral', building: 'warn', live: 'ok', rejected: 'bad',
-  archived: 'neutral', contact_updated: 'neutral',
+  details_submitted: 'neutral', building: 'warn', live: 'ok', rejected: 'bad', archived: 'neutral',
 };
 const STATUS_LABEL: Record<string, string> = {
   pending: 'Pending', in_review: 'In Review', details_requested: 'Sheet Sent',
   details_submitted: 'Sheet In', building: 'Building', live: 'Live', rejected: 'Rejected',
-  archived: 'Archived', contact_updated: 'Contact updated',
+  archived: 'Archived',
 };
 
 const ACTIVE_CHIPS = [
@@ -46,18 +41,6 @@ const ACTIVE_CHIPS = [
 
 const ACTIVE_STATUSES = new Set(['pending', 'in_review', 'details_requested', 'details_submitted', 'building']);
 const ARCHIVED_STATUSES = new Set(['live', 'rejected', 'archived']);
-const ALL_STATUSES = ['pending', 'in_review', 'details_requested', 'details_submitted', 'building', 'live', 'rejected', 'archived'];
-
-const STAGE_EXPLAIN: Record<string, string> = {
-  pending: 'New inquiry — not yet reviewed.',
-  in_review: 'Send the setup sheet to gather tee-sheet details, or skip ahead and build the course.',
-  details_requested: 'Setup sheet emailed. Waiting for the course to respond.',
-  details_submitted: 'Setup sheet submitted — review it and build the course.',
-  building: 'Course is built and the operator has their login. Review and go live when ready.',
-  live: 'Course is live on GreenReserve.',
-  rejected: 'Inquiry was rejected.',
-  archived: 'This inquiry is archived — its course was archived or permanently deleted.',
-};
 
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 function daysAgo(d: string) { return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24)); }
@@ -65,7 +48,6 @@ function daysAgo(d: string) { return Math.floor((Date.now() - new Date(d).getTim
 function whyArchived(inq: Inquiry): { reason: string; date: string } {
   if (inq.status === 'live') return { reason: 'Went live', date: inq.updatedAt || inq.createdAt };
   if (inq.status === 'rejected') return { reason: 'Rejected', date: inq.updatedAt || inq.createdAt };
-  // status === 'archived' — look at last event for cause
   const lastEvent = inq.events.length > 0 ? inq.events[inq.events.length - 1] : null;
   const actorName = lastEvent?.actorName || '';
   if (actorName.toLowerCase().includes('permanently deleted')) return { reason: 'Course deleted', date: lastEvent?.createdAt || inq.updatedAt || inq.createdAt };
@@ -73,26 +55,22 @@ function whyArchived(inq: Inquiry): { reason: string; date: string } {
   return { reason: 'Archived', date: inq.updatedAt || inq.createdAt };
 }
 
-export default function InquiriesPage() {
+function InquiriesListInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [adminReady, setAdminReady] = useState(false);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [loading, setLoading] = useState(false);
-  const [processing, setProcessing] = useState<string | null>(null);
-  const [approveResults, setApproveResults] = useState<Record<string, ApproveResult>>({});
-  const [noteTexts, setNoteTexts] = useState<Record<string, string>>({});
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
+  const [search, setSearch] = useState(searchParams.get('q') || '');
+  const [activeTab, setActiveTab] = useState<'active' | 'archived'>(
+    (searchParams.get('tab') as 'active' | 'archived') || 'active'
+  );
   const [activeChips, setActiveChips] = useState<Set<string>>(
     new Set(['your_move', 'new', 'in_review', 'waiting', 'building'])
   );
-  const [sortBy, setSortBy] = useState('newest');
-  const [stageOverride, setStageOverride] = useState('');
+  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
   const [backfillRan, setBackfillRan] = useState(false);
-  const [activeDetailTab, setActiveDetailTab] = useState<'contact'|'answers'|'sheet'|'activity'>('contact');
-  const [editContact, setEditContact] = useState(false);
-  const [contactEdits, setContactEdits] = useState<Record<string,string>>({});
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
@@ -124,114 +102,23 @@ export default function InquiriesPage() {
       .catch(() => {});
   }, [activeTab, backfillRan, adminReady, H, loadInquiries]);
 
-  // Auto-advance pending → in_review when detail panel opens
-  useEffect(() => {
-    if (!selectedId) return;
-    const inq = inquiries.find(i => i.id === selectedId);
-    if (!inq || inq.status !== 'pending') return;
-    fetch('/api/admin/inquiries', {
-      method: 'PATCH', headers: H(),
-      body: JSON.stringify({ id: selectedId, action: 'mark_opened' }),
-    }).then(r => { if (r.ok) loadInquiries(); }).catch(() => {});
-  }, [selectedId, inquiries, H, loadInquiries]);
-
-  const selectedInq = selectedId ? (inquiries.find(i => i.id === selectedId) ?? null) : null;
-
-  useEffect(() => {
-    if (selectedInq) {
-      setStageOverride(selectedInq.status);
-      setActiveDetailTab('contact');
-      setEditContact(false);
-      setContactEdits({});
-    }
-  }, [selectedInq?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function inquiryAction(id: string, action: string, extraPayload: Record<string, unknown> = {}) {
-    setProcessing(id);
-    try {
-      const r = await fetch('/api/admin/inquiries', {
-        method: 'PATCH', headers: H(),
-        body: JSON.stringify({ id, action, ...extraPayload }),
-      });
-      const text = await r.text();
-      let d: Record<string, unknown> = {};
-      try { d = JSON.parse(text); } catch { /* ignore */ }
-      if (r.ok) {
-        if (['build_course', 'resend_welcome', 'request_details', 'resend_details'].includes(action)) {
-          setApproveResults(p => ({ ...p, [id]: d as unknown as ApproveResult }));
-        }
-        if (action === 'mark_live' && d.emailSent === false) {
-          alert(`Course is live, but the orientation email failed (${d.emailError || 'unknown error'}).`);
-        }
-        if (action === 'add_note') {
-          setInquiries(prev => prev.map(inq => inq.id === id ? { ...inq, adminNotes: d.adminNotes as string } : inq));
-          setNoteTexts(p => ({ ...p, [id]: '' }));
-        } else {
-          await loadInquiries();
-        }
-      } else {
-        alert(`Failed (${r.status}): ${(d.error as string) || text.slice(0, 200)}`);
-      }
-    } catch (e) { alert(`Error: ${e}`); }
-    setProcessing(null);
-  }
-
-  async function buildAndConfigure(inq: Inquiry) {
-    setProcessing(inq.id);
-    try {
-      const r = await fetch('/api/admin/inquiries', {
-        method: 'PATCH', headers: H(),
-        body: JSON.stringify({ id: inq.id, action: 'build_course' }),
-      });
-      const d = await r.json();
-      if (!r.ok) { alert(`Failed: ${d.error || 'unknown error'}`); setProcessing(null); return; }
-      setApproveResults(p => ({ ...p, [inq.id]: d as unknown as ApproveResult }));
-      await loadInquiries();
-      if (d.emailSent === false) alert(`Course built, but welcome email failed (${d.emailError || 'unknown error'}).`);
-    } catch (e) { alert(`Error: ${e}`); }
-    setProcessing(null);
-  }
-
-  async function createDraftCourse(inq: Inquiry) {
-    setProcessing(inq.id);
-    try {
-      const r = await fetch('/api/admin/inquiries', {
-        method: 'PATCH', headers: H(),
-        body: JSON.stringify({ id: inq.id, action: 'create_draft_course' }),
-      });
-      const d = await r.json();
-      if (!r.ok) { alert(`Failed: ${d.error || 'unknown error'}`); setProcessing(null); return; }
-      await loadInquiries();
-      if (d.courseId) router.push(`/admin/courses/${d.courseId}`);
-    } catch (e) { alert(`Error: ${e}`); }
-    setProcessing(null);
-  }
-
   async function deleteInquiry(id: string, name: string) {
     if (!confirm(`Permanently delete inquiry for "${name}"? This cannot be undone.`)) return;
     await fetch(`/api/admin/inquiries?id=${id}`, { method: 'DELETE', headers: H() });
     setInquiries(prev => prev.filter(i => i.id !== id));
-    if (selectedId === id) setSelectedId(null);
   }
 
-  async function saveContact(id: string) {
-    setProcessing(id);
-    try {
-      const r = await fetch('/api/admin/inquiries', {
-        method: 'PATCH', headers: H(),
-        body: JSON.stringify({ id, action: 'update_contact', ...contactEdits }),
-      });
-      if (r.ok) { setEditContact(false); await loadInquiries(); }
-      else { alert('Could not save — please try again'); }
-    } catch (e) { alert('Error: ' + e); }
-    setProcessing(null);
+  function navToDetail(inq: Inquiry) {
+    const p = new URLSearchParams();
+    p.set('tab', activeTab);
+    if (search) p.set('q', search);
+    if (sortBy !== 'newest') p.set('sort', sortBy);
+    router.push(`/admin/inquiries/${inq.id}?${p.toString()}`);
   }
 
-  // Split into active vs archived pools
+  // Filter + sort
   const activePool = inquiries.filter(i => ACTIVE_STATUSES.has(i.status));
   const archivedPool = inquiries.filter(i => ARCHIVED_STATUSES.has(i.status));
-
-  // Active tab: chip filter + search + sort
   const activeStatuses = new Set(ACTIVE_CHIPS.filter(c => activeChips.has(c.key)).flatMap(c => c.statuses));
   const q = search.toLowerCase().trim();
   const matchesSearch = (inq: Inquiry) => !q || (
@@ -240,22 +127,17 @@ export default function InquiriesPage() {
     inq.email.toLowerCase().includes(q) ||
     inq.city.toLowerCase().includes(q)
   );
-
-  let filteredActive = activePool.filter(i => {
-    if (activeStatuses.size > 0 && !activeStatuses.has(i.status)) return false;
-    return matchesSearch(i);
-  });
-  let filteredArchived = archivedPool.filter(matchesSearch);
-
   const sortFn = (a: Inquiry, b: Inquiry) => {
     if (sortBy === 'oldest') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
     if (sortBy === 'name') return a.courseName.localeCompare(b.courseName);
     if (sortBy === 'longest_stage') return new Date(a.updatedAt || a.createdAt).getTime() - new Date(b.updatedAt || b.createdAt).getTime();
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   };
-  filteredActive = [...filteredActive].sort(sortFn);
-  filteredArchived = [...filteredArchived].sort(sortFn);
-
+  let filteredActive = [...activePool.filter(i => {
+    if (activeStatuses.size > 0 && !activeStatuses.has(i.status)) return false;
+    return matchesSearch(i);
+  })].sort(sortFn);
+  let filteredArchived = [...archivedPool.filter(matchesSearch)].sort(sortFn);
   const displayed = activeTab === 'active' ? filteredActive : filteredArchived;
 
   if (!adminReady) return null;
@@ -263,10 +145,7 @@ export default function InquiriesPage() {
   return (
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="inquiries" />
-      <div
-        className="ml-56 flex-1 flex flex-col min-h-screen"
-        style={{ marginRight: selectedInq ? 480 : 0 }}
-      >
+      <div className="ml-56 flex-1 flex flex-col min-h-screen">
         <div className="px-8 py-7 max-w-5xl">
 
           {/* Page header */}
@@ -299,7 +178,7 @@ export default function InquiriesPage() {
             {(['active', 'archived'] as const).map(tab => (
               <button
                 key={tab}
-                onClick={() => { setActiveTab(tab); setSelectedId(null); }}
+                onClick={() => setActiveTab(tab)}
                 className={
                   'px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ' + (
                     activeTab === tab
@@ -393,16 +272,12 @@ export default function InquiriesPage() {
               {filteredActive.map(inq => {
                 const days = daysAgo(inq.updatedAt || inq.createdAt);
                 const stale = days > 7;
-                const isSelected = inq.id === selectedId;
                 const dot = STATUS_DOT_MAP[inq.status] || 'neutral';
                 return (
                   <div
                     key={inq.id}
-                    onClick={() => setSelectedId(inq.id === selectedId ? null : inq.id)}
-                    className={
-                      'bg-white border rounded-lg px-5 py-3.5 flex items-center gap-4 cursor-pointer transition-colors ' +
-                      (isSelected ? 'border-pine/30 bg-pine/5' : 'border-line hover:border-line-strong')
-                    }
+                    onClick={() => navToDetail(inq)}
+                    className="bg-white border border-line rounded-lg px-5 py-3.5 flex items-center gap-4 cursor-pointer hover:border-pine/30 hover:bg-pine/[0.02] transition-colors"
                   >
                     <StatusDot status={dot as 'ok' | 'bad' | 'warn' | 'neutral'} />
                     <div className="w-44 shrink-0">
@@ -447,16 +322,15 @@ export default function InquiriesPage() {
                   </thead>
                   <tbody>
                     {filteredArchived.map((inq, i) => {
-                      const isSelected = inq.id === selectedId;
                       const dot = STATUS_DOT_MAP[inq.status] || 'neutral';
                       const { reason, date } = whyArchived(inq);
                       return (
                         <tr
                           key={inq.id}
-                          onClick={() => setSelectedId(inq.id === selectedId ? null : inq.id)}
+                          onClick={() => navToDetail(inq)}
                           className={
-                            'cursor-pointer transition-colors border-b border-line last:border-b-0 ' +
-                            (isSelected ? 'bg-pine/5' : (i % 2 === 0 ? 'bg-white hover:bg-paper' : 'bg-paper/50 hover:bg-paper'))
+                            'cursor-pointer transition-colors border-b border-line last:border-b-0 hover:bg-pine/[0.02] ' +
+                            (i % 2 === 0 ? 'bg-white' : 'bg-paper/50')
                           }
                         >
                           <td className="px-5 py-3">
@@ -500,587 +374,14 @@ export default function InquiriesPage() {
           )}
         </div>
       </div>
-
-      {/* ── Detail panel ─────────────────────────────────────── */}
-      {selectedInq && (
-        <div className="fixed right-0 top-0 bottom-0 w-[480px] bg-white border-l border-line z-40 flex flex-col shadow-xl">
-
-          {/* Panel header */}
-          <div className="px-5 py-4 border-b border-line shrink-0">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <h2 className="text-[17px] font-serif font-medium text-ink leading-snug">{selectedInq.courseName}</h2>
-                <div className="flex items-center gap-2 mt-1">
-                  <StatusDot
-                    status={STATUS_DOT_MAP[selectedInq.status] as 'ok' | 'bad' | 'warn' | 'neutral' || 'neutral'}
-                    label={STATUS_LABEL[selectedInq.status] || selectedInq.status}
-                  />
-                  <span className="text-xs text-ink-muted">{selectedInq.city}, {selectedInq.state}</span>
-                  {!ARCHIVED_STATUSES.has(selectedInq.status) && (
-                    <span className="text-xs text-ink-faint">{daysAgo(selectedInq.updatedAt || selectedInq.createdAt)}d in stage</span>
-                  )}
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedId(null)}
-                className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-paper text-ink-muted hover:text-ink transition-colors shrink-0"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            {/* Stage explanation */}
-            {STAGE_EXPLAIN[selectedInq.status] && (
-              <p className="text-xs text-ink-muted mt-2">{STAGE_EXPLAIN[selectedInq.status]}</p>
-            )}
-            {/* Archived-specific notice */}
-            {selectedInq.status === 'archived' && (() => {
-              const { reason, date } = whyArchived(selectedInq);
-              return (
-                <div className="flex items-center gap-2 mt-2 bg-paper border border-line rounded-md px-3 py-2">
-                  <Archive className="w-3.5 h-3.5 text-ink-muted shrink-0" />
-                  <span className="text-xs text-ink-muted">{reason} · {fmtDate(date)}</span>
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* Stage override (always visible) */}
-          <div className="px-5 py-2.5 border-b border-line shrink-0 flex items-center gap-2">
-            <ChevronDown className="w-3.5 h-3.5 text-ink-muted shrink-0" />
-            <span className="text-[11px] text-ink-muted shrink-0">Move to stage:</span>
-            <select
-              value={stageOverride}
-              onChange={e => {
-                const ns = e.target.value;
-                setStageOverride(ns);
-                if (ns !== selectedInq.status) inquiryAction(selectedInq.id, 'set_status', { newStatus: ns });
-              }}
-              className="flex-1 bg-paper border border-line rounded-md px-2 py-1 text-xs text-ink outline-none focus:border-pine/40 cursor-pointer"
-            >
-              {ALL_STATUSES.map(s => <option key={s} value={s}>{STATUS_LABEL[s] || s}</option>)}
-            </select>
-          </div>
-
-          {/* Action buttons — hidden for archived inquiries */}
-          {!ARCHIVED_STATUSES.has(selectedInq.status) && (
-            <div className="px-5 py-3.5 border-b border-line shrink-0 flex flex-wrap gap-2">
-              {selectedInq.status === 'pending' && (
-                <>
-                  <button
-                    onClick={() => inquiryAction(selectedInq.id, 'mark_in_review')}
-                    disabled={processing === selectedInq.id}
-                    className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                  >
-                    <Clock className="w-3.5 h-3.5" />In Review
-                  </button>
-                  <button
-                    onClick={() => { if (confirm('Reject this inquiry?')) inquiryAction(selectedInq.id, 'reject'); }}
-                    disabled={processing === selectedInq.id}
-                    className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-                  >
-                    <XCircle className="w-3.5 h-3.5" />Reject
-                  </button>
-                </>
-              )}
-              {selectedInq.status === 'in_review' && (
-                <>
-                  <button
-                    onClick={() => { if (confirm('Send ' + selectedInq.contactName + ' the setup sheet?')) inquiryAction(selectedInq.id, 'request_details'); }}
-                    disabled={processing === selectedInq.id}
-                    className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                  >
-                    <Mail className="w-3.5 h-3.5" />Send Sheet
-                  </button>
-                  <button
-                    onClick={() => { if (confirm('Build ' + selectedInq.courseName + ' now without the sheet?')) buildAndConfigure(selectedInq); }}
-                    disabled={processing === selectedInq.id}
-                    className="text-ink-muted hover:text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 border border-line hover:border-line-strong transition-colors"
-                  >
-                    <Wrench className="w-3 h-3" />Skip &amp; Build
-                  </button>
-                  <button
-                    onClick={() => { if (confirm('Reject?')) inquiryAction(selectedInq.id, 'reject'); }}
-                    disabled={processing === selectedInq.id}
-                    className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-                  >
-                    <XCircle className="w-3.5 h-3.5" />Reject
-                  </button>
-                </>
-              )}
-              {selectedInq.status === 'details_requested' && (
-                <>
-                  <button
-                    onClick={() => { if (confirm('Resend setup-sheet link?')) inquiryAction(selectedInq.id, 'resend_details'); }}
-                    disabled={processing === selectedInq.id}
-                    className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                  >
-                    <Mail className="w-3.5 h-3.5" />Resend Sheet
-                  </button>
-                  <button
-                    onClick={() => { if (confirm('Reject?')) inquiryAction(selectedInq.id, 'reject'); }}
-                    disabled={processing === selectedInq.id}
-                    className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-                  >
-                    <XCircle className="w-3.5 h-3.5" />Reject
-                  </button>
-                </>
-              )}
-              {selectedInq.status === 'details_submitted' && (
-                <>
-                  <button
-                    onClick={() => { if (confirm('Create draft course for ' + selectedInq.courseName + '? No email will be sent.')) createDraftCourse(selectedInq); }}
-                    disabled={processing === selectedInq.id}
-                    className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                  >
-                    <CheckCircle className="w-3.5 h-3.5" />Create Draft Course
-                  </button>
-                  <button
-                    onClick={() => { if (confirm('Reject?')) inquiryAction(selectedInq.id, 'reject'); }}
-                    disabled={processing === selectedInq.id}
-                    className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-                  >
-                    <XCircle className="w-3.5 h-3.5" />Reject
-                  </button>
-                </>
-              )}
-              {selectedInq.status === 'building' && (
-                <>
-                  {selectedInq.builtCourseId && (
-                    <button
-                      onClick={() => router.push('/admin/courses/' + selectedInq.builtCourseId)}
-                      className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-                    >
-                      <Wrench className="w-3.5 h-3.5" />Manage Course
-                    </button>
-                  )}
-                  <button
-                    onClick={() => { if (confirm('Send login email with a new temp password to ' + selectedInq.contactName + '?')) inquiryAction(selectedInq.id, 'resend_welcome'); }}
-                    disabled={processing === selectedInq.id}
-                    className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-                  >
-                    <Mail className="w-3.5 h-3.5" />Send Login Email
-                  </button>
-                  <button
-                    onClick={() => { if (confirm('Set ' + selectedInq.courseName + ' LIVE?')) inquiryAction(selectedInq.id, 'mark_live'); }}
-                    disabled={processing === selectedInq.id}
-                    className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                  >
-                    <Power className="w-3.5 h-3.5" />Go Live
-                  </button>
-                </>
-              )}
-              {selectedInq.status === 'building' && (
-                <button
-                  onClick={() => deleteInquiry(selectedInq.id, selectedInq.courseName)}
-                  className="w-8 h-8 flex items-center justify-center text-ink-muted hover:text-bad hover:bg-bad/5 rounded-md transition-colors ml-auto"
-                  title="Delete"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Permanently delete archived inquiry */}
-          {selectedInq.status === 'archived' && (
-            <div className="px-5 py-3 border-b border-line shrink-0 flex justify-end">
-              <button
-                onClick={() => deleteInquiry(selectedInq.id, selectedInq.courseName)}
-                className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-bad hover:bg-bad/5 px-3 py-1.5 rounded-md border border-line hover:border-bad/20 transition-colors"
-              >
-                <Trash2 className="w-3.5 h-3.5" />Delete inquiry permanently
-              </button>
-            </div>
-          )}
-
-          {/* Approve result */}
-          {approveResults[selectedInq.id] && (() => {
-            const res = approveResults[selectedInq.id];
-            const isDetails = !!res.detailsLink;
-            const rows: [string, string][] = isDetails
-              ? [['Setup Sheet Link', res.detailsLink as string]]
-              : [['Temp Password', res.tempPassword || ''], ['Setup Link', res.setupLink || '']];
-            const failed = res.emailSent === false;
-            return (
-              <div className={'px-5 py-3.5 border-b shrink-0 ' + (failed ? 'bg-bad/5 border-bad/20' : 'bg-ok/5 border-ok/20')}>
-                <div className={'text-xs font-medium mb-2 ' + (failed ? 'text-bad' : 'text-ok')}>
-                  {failed
-                    ? 'Email failed (' + (res.emailError || 'unknown') + '). Share manually:'
-                    : (isDetails ? 'Setup sheet sent.' : 'Course built, welcome email sent.')}
-                </div>
-                <div className="space-y-1.5">
-                  {rows.map(([label, val]) => (
-                    <div key={label} className="flex items-center gap-3 bg-white rounded-md px-3 py-2 border border-line">
-                      <span className="text-xs text-ink-muted w-28 shrink-0">{label}</span>
-                      <span className="text-xs text-ink font-mono flex-1 truncate">{val}</span>
-                      <button onClick={() => navigator.clipboard.writeText(val)} className="text-ink-muted hover:text-pine transition-colors">
-                        <Copy className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Scrollable body */}
-          <div className="flex-1 overflow-y-auto">
-
-            {/* Wizard quick-launch (active pipeline only) */}
-            {!selectedInq.builtCourseId && !ARCHIVED_STATUSES.has(selectedInq.status) && !['building'].includes(selectedInq.status) && (() => {
-              const params = new URLSearchParams({
-                name: selectedInq.courseName || '', city: selectedInq.city || '',
-                state: selectedInq.state || '', zip: selectedInq.zipCode || '',
-                address: selectedInq.address || '', website: selectedInq.website || '',
-                type: selectedInq.courseType || 'public', contactName: selectedInq.contactName || '',
-                contactEmail: selectedInq.email || '', inquiryId: selectedInq.id,
-              });
-              return (
-                <div className="mx-5 mt-4 flex items-center justify-between bg-paper border border-line rounded-md px-4 py-3">
-                  <div>
-                    <div className="text-xs font-medium text-ink-muted">Manual build (in person)</div>
-                    <div className="text-[10px] text-ink-faint mt-0.5">Opens pre-fill wizard for in-person setup sessions</div>
-                  </div>
-                  <button
-                    onClick={() => router.push('/admin/create?' + params.toString())}
-                    className="flex items-center gap-1.5 text-xs font-medium text-ink-muted hover:text-ink bg-white hover:bg-paper border border-line px-3 py-1.5 rounded-md transition-colors shrink-0"
-                  >
-                    Open Wizard <ArrowUpRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              );
-            })()}
-
-            {/* Course link for live inquiries */}
-            {selectedInq.status === 'live' && selectedInq.builtCourseId && (
-              <div className="mx-5 mt-4">
-                <button
-                  onClick={() => router.push('/admin/courses/' + selectedInq.builtCourseId)}
-                  className="flex items-center gap-1.5 text-xs font-medium text-pine hover:text-pine-hover bg-pine/5 hover:bg-pine/10 border border-pine/20 px-3 py-2 rounded-md transition-colors"
-                >
-                  <Wrench className="w-3.5 h-3.5" />Manage course <ArrowUpRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
-
-            {/* Tab nav */}
-            <div className="border-b border-line shrink-0 px-5 pt-3">
-              <div className="flex gap-0">
-                {(['contact','answers','sheet','activity'] as const).map(tab => (
-                  <button key={tab} onClick={() => setActiveDetailTab(tab)}
-                    className={'px-3 py-2 text-xs font-medium border-b-2 transition-colors ' + (
-                      activeDetailTab === tab ? 'border-pine text-pine' : 'border-transparent text-ink-muted hover:text-ink'
-                    )}>
-                    {tab === 'contact' ? 'Contact' : tab === 'answers' ? 'Answers' : tab === 'sheet' ? 'Sheet' : 'Activity'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* ── Contact tab ─────────────────────────────────── */}
-            {activeDetailTab === 'contact' && (
-              <div className="px-5 py-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Contact Info</div>
-                  {!editContact ? (
-                    <button onClick={() => { setContactEdits({ contactName: selectedInq.contactName || '', email: selectedInq.email || '', phone: selectedInq.phone || '', courseName: selectedInq.courseName || '', city: selectedInq.city || '', state: selectedInq.state || '' }); setEditContact(true); }}
-                      className="flex items-center gap-1 text-xs text-ink-muted hover:text-pine transition-colors">
-                      <Pencil className="w-3 h-3" /> Edit
-                    </button>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => setEditContact(false)} className="text-xs text-ink-muted hover:text-ink transition-colors">Cancel</button>
-                      <button onClick={() => saveContact(selectedInq.id)} disabled={processing === selectedInq.id}
-                        className="flex items-center gap-1 text-xs bg-pine text-white px-2.5 py-1 rounded-md hover:bg-pine-hover disabled:opacity-50 transition-colors">
-                        <Save className="w-3 h-3" /> Save
-                      </button>
-                    </div>
-                  )}
-                </div>
-                {editContact ? (
-                  <div className="space-y-2">
-                    {([['contactName','Contact name'],['email','Email'],['phone','Phone'],['courseName','Course name'],['city','City'],['state','State']] as [string,string][]).map(([field, label]) => (
-                      <div key={field}>
-                        <label className="block text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">{label}</label>
-                        <input value={contactEdits[field] ?? ''} onChange={e => setContactEdits(prev => ({ ...prev, [field]: e.target.value }))}
-                          className="w-full bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10 focus:outline-none" />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div>
-                      <div className="text-sm font-medium text-ink">{selectedInq.contactName}{selectedInq.contactTitle ? ' · ' + selectedInq.contactTitle : ''}</div>
-                      <a href={'mailto:' + selectedInq.email} className="text-sm text-pine hover:underline block">{selectedInq.email}</a>
-                      {selectedInq.phone && <div className="text-sm text-ink-muted">{selectedInq.phone}</div>}
-                    </div>
-                    <div className="border-t border-line pt-3 grid grid-cols-2 gap-2">
-                      <div className="bg-paper rounded-md px-3 py-2 border border-line">
-                        <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">City / State</div>
-                        <div className="text-ink font-medium text-sm">{selectedInq.city}, {selectedInq.state}</div>
-                      </div>
-                      <div className="bg-paper rounded-md px-3 py-2 border border-line">
-                        <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Course type</div>
-                        <div className="text-ink font-medium text-sm capitalize">{selectedInq.courseType}</div>
-                      </div>
-                      {selectedInq.website && (
-                        <div className="col-span-2 bg-paper rounded-md px-3 py-2 border border-line">
-                          <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Website</div>
-                          <a href={selectedInq.website} target="_blank" rel="noreferrer" className="text-pine hover:underline text-sm">{selectedInq.website}</a>
-                        </div>
-                      )}
-                      {selectedInq.address && (
-                        <div className="col-span-2 bg-paper rounded-md px-3 py-2 border border-line">
-                          <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Address</div>
-                          <div className="text-ink text-sm">{selectedInq.address}{selectedInq.zipCode ? ', ' + selectedInq.zipCode : ''}</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── Answers tab ──────────────────────────────────── */}
-            {activeDetailTab === 'answers' && (
-              <div className="px-5 py-4 space-y-4">
-                {(() => {
-                  const rows: [string, string][] = [];
-                  if (selectedInq.currentBookingMethod) rows.push(['Current booking', selectedInq.currentBookingMethod]);
-                  if (selectedInq.teeTimesPerDay) rows.push(['Tee times/day', String(selectedInq.teeTimesPerDay)]);
-                  if (selectedInq.greenFeeRange) rows.push(['Green fees', selectedInq.greenFeeRange]);
-                  return rows.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-2">
-                      {rows.map(([label, val]) => (
-                        <div key={label} className="bg-paper rounded-md px-3 py-2 border border-line">
-                          <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">{label}</div>
-                          <div className="text-ink font-medium text-sm">{val}</div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null;
-                })()}
-                {(selectedInq.hasMemberPricing || selectedInq.hasResidentPricing || selectedInq.hasCaddies) && (
-                  <div className="flex gap-2 flex-wrap">
-                    {selectedInq.hasMemberPricing && <span className="text-[11px] px-2 py-0.5 rounded bg-paper text-ink-muted border border-line">Members</span>}
-                    {selectedInq.hasResidentPricing && <span className="text-[11px] px-2 py-0.5 rounded bg-paper text-ink-muted border border-line">Residents</span>}
-                    {selectedInq.hasCaddies && <span className="text-[11px] px-2 py-0.5 rounded bg-paper text-ink-muted border border-line">Caddies</span>}
-                  </div>
-                )}
-                {selectedInq.lookingFor && selectedInq.lookingFor.length > 0 && (
-                  <div className="bg-paper rounded-md px-3 py-2 border border-line">
-                    <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Looking for</div>
-                    <div className="text-ink font-medium text-sm">{selectedInq.lookingFor.join(', ')}</div>
-                  </div>
-                )}
-                {selectedInq.additionalNotes && (
-                  <div className="bg-paper rounded-md px-3 py-2 border border-line">
-                    <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Additional notes</div>
-                    <div className="text-ink text-sm">{selectedInq.additionalNotes}</div>
-                  </div>
-                )}
-                {selectedInq.pricingNotes && (
-                  <div className="bg-paper rounded-md px-3 py-2 border border-line">
-                    <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Pricing notes</div>
-                    <div className="text-ink text-sm">{selectedInq.pricingNotes}</div>
-                  </div>
-                )}
-                {selectedInq.needsJson && (() => {
-                  let n: Record<string, unknown> = {};
-                  try { n = JSON.parse(selectedInq.needsJson || ''); } catch { /* ignore */ }
-                  const entries = Object.entries(n).filter(([, v]) => v !== '' && v !== null);
-                  if (entries.length === 0) return null;
-                  const NEEDS_LABELS: Record<string, string> = {
-                    residentRates: 'Resident rates', hasMemberships: 'Memberships / season passes',
-                    roundsPerMonth: 'Rounds per month', publicTeeTimes: 'Non-member tee times',
-                    memberCount: 'Member count', outsideOutings: 'Outside outings',
-                    memberBookingToday: 'Current booking method', chargesMembersPerRound: 'Charges per round',
-                  };
-                  const NEEDS_VALUES: Record<string, string> = {
-                    yes: 'Yes', no: 'No', yes_regularly: 'Yes, regularly', limited: 'Limited windows',
-                    no_members_only: 'No, members only', under_100: 'Under 100', '100_300': '100–300',
-                    '300_plus': '300+', under_500: 'Under 500', '500_1500': '500–1,500',
-                    '1500_3000': '1,500–3,000', '3000_plus': '3,000+',
-                    pro_shop_phone: 'Pro shop / phone', signup_sheet: 'Sign-up sheet',
-                    booking_software: 'Booking software', other: 'Other',
-                  };
-                  return (
-                    <div>
-                      <div className="text-[11px] uppercase tracking-[0.06em] text-warn mb-2">Branch Answers</div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {entries.map(([k, v]) => (
-                          <div key={k} className="bg-warn/5 border border-warn/20 rounded-md px-3 py-2">
-                            <div className="text-[10px] text-warn/80 mb-0.5">{NEEDS_LABELS[k] || k}</div>
-                            <div className="text-warn text-sm font-medium">{NEEDS_VALUES[String(v)] || String(v)}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
-                {!selectedInq.currentBookingMethod && !selectedInq.teeTimesPerDay && !selectedInq.greenFeeRange &&
-                 !selectedInq.hasMemberPricing && !selectedInq.hasResidentPricing && !selectedInq.hasCaddies &&
-                 (!selectedInq.lookingFor || selectedInq.lookingFor.length === 0) &&
-                 !selectedInq.additionalNotes && !selectedInq.pricingNotes &&
-                 (!selectedInq.needsJson || selectedInq.needsJson === '{}' || selectedInq.needsJson === '') && (
-                  <p className="text-sm text-ink-faint text-center py-6">No inquiry answers on record.</p>
-                )}
-              </div>
-            )}
-
-            {/* ── Sheet tab ────────────────────────────────────── */}
-            {activeDetailTab === 'sheet' && (
-              <div className="px-5 py-4 space-y-4">
-                {selectedInq.detailsJson ? (() => {
-                  let d: Record<string, unknown> = {};
-                  try { d = JSON.parse(selectedInq.detailsJson || ''); } catch { /* ignore */ }
-                  if (Object.keys(d).length === 0) return <p className="text-sm text-ink-faint text-center py-6">Sheet submitted but empty.</p>;
-                  const sch = d.schedule as Record<string, unknown> | undefined;
-                  const wdFee = (d.greenFeeWeekday ?? sch?.greenFeeWeekday) as string | undefined;
-                  const weFee = (d.greenFeeWeekend ?? sch?.greenFeeWeekend) as string | undefined;
-                  const firstTee = (d.firstTeeTime ?? sch?.startTime) as string | undefined;
-                  const lastTee = (d.lastTeeTime ?? sch?.endTime) as string | undefined;
-                  const intervalMin = (d.intervalMinutes ?? sch?.intervalMinutes) as string | undefined;
-                  const cartFee = (d.cartFee ?? sch?.cartFee) as string | undefined;
-                  const days = (d.daysOpen ?? sch?.daysOfWeek) as number[] | undefined;
-                  const DAYS_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-                  const DETAIL_LABELS: Record<string, string> = {
-                    holes: 'Holes', par: 'Par', seasonOpen: 'Season opens', seasonClose: 'Season closes',
-                    firstTeeTime: 'First tee', lastTeeTime: 'Last tee', intervalMinutes: 'Interval',
-                    greenFeeWeekday: 'Weekday fee', greenFeeWeekend: 'Weekend fee', cartFee: 'Cart fee',
-                    twilightFee: 'Twilight fee', walkingAllowed: 'Walking',
-                    residentWeekday: 'Resident WD', residentWeekend: 'Resident WE', residentVerification: 'Residency check',
-                    starterTierName: 'Tier name', starterTierFee: 'Tier fee',
-                    memberAdvanceDays: 'Member advance', protectedTimes: 'Protected times',
-                    publicGreenFee: 'Public fee', publicWindow: 'Public window',
-                    memberRate: 'Member rate', outingsVolume: 'Outings frequency',
-                    cancellationHours: 'Cancel window', lateFee: 'Late cancel fee',
-                    facilities: 'Facilities', restaurantType: 'Restaurant',
-                    website: 'Website', description: 'Description', additionalNotes: 'Notes',
-                  };
-                  const skipKeys = new Set(['schedule','daysOpen','daysOfWeek','greenFeeWeekday','greenFeeWeekend','firstTeeTime','lastTeeTime','intervalMinutes','cartFee']);
-                  const rest = Object.entries(d).filter(([k, v]) =>
-                    !skipKeys.has(k) && v !== '' && v !== null && !(Array.isArray(v) && v.length === 0)
-                  );
-                  const checks: { label: string; ok: boolean }[] = [
-                    { label: 'Weekday green fee', ok: !!(d.greenFeeWeekday || sch?.greenFeeWeekday) },
-                    { label: 'Weekend green fee', ok: !!(d.greenFeeWeekend || sch?.greenFeeWeekend) },
-                    { label: 'First tee time', ok: !!(d.firstTeeTime || sch?.startTime) },
-                    { label: 'Last tee time', ok: !!(d.lastTeeTime || sch?.endTime) },
-                    { label: 'Cancellation policy', ok: !!(d.cancellationHours) },
-                    { label: 'Course description', ok: !!(d.description) },
-                  ];
-                  const allGood = checks.every(c => c.ok);
-                  return (
-                    <>
-                      {(wdFee || firstTee) && (
-                        <div className="bg-ok/5 border border-ok/20 rounded-md p-3">
-                          <div className="text-ok font-medium text-xs mb-1 uppercase tracking-[0.05em]">Tee Sheet</div>
-                          {firstTee && lastTee && (
-                            <div className="text-ink text-sm">
-                              {Array.isArray(days) && days.length > 0 ? days.map(dd => DAYS_SHORT[dd]).join(', ') : 'Every day'}
-                              {' · '}{firstTee}–{lastTee} every {intervalMin || '?'}min
-                            </div>
-                          )}
-                      {(wdFee || weFee) && (
-                        <div className="text-ink-muted text-xs mt-1">
-                          WD ${wdFee || '—'} / WE ${weFee || '—'}{cartFee ? ` · Cart $${cartFee}` : ''}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {rest.length > 0 && (
-                    <div className="grid grid-cols-2 gap-2">
-                      {rest.map(([k, v]) => (
-                        <div key={k} className="bg-paper border border-line rounded-md px-3 py-2">
-                          <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">{DETAIL_LABELS[k] || k}</div>
-                          <div className="text-ink text-sm">{Array.isArray(v) ? (v as string[]).join(', ') : String(v)}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <div>
-                    <div className={'text-[11px] uppercase tracking-[0.06em] mb-2 ' + (allGood ? 'text-ok' : 'text-warn')}>
-                      {allGood ? 'Ready to Build' : 'Build Checklist'}
-                    </div>
-                    <div className="space-y-1">
-                      {checks.map(c => (
-                        <div key={c.label} className="flex items-center gap-2 text-xs">
-                          <div className={'w-1.5 h-1.5 rounded-full shrink-0 ' + (c.ok ? 'bg-ok' : 'bg-warn')} />
-                          <span className={c.ok ? 'text-ink' : 'text-warn'}>{c.label}</span>
-                          {!c.ok && <span className="text-ink-faint">missing</span>}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </>
-                  );
-                })() : (
-                  <p className="text-sm text-ink-faint text-center py-6">No sheet submitted yet.</p>
-                )}
-              </div>
-            )}
-
-            {/* ── Activity tab ─────────────────────────────────── */}
-            {activeDetailTab === 'activity' && (
-              <div className="px-5 py-4 space-y-5">
-                {selectedInq.events && selectedInq.events.length > 0 && (
-                  <div>
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">History</div>
-                    <div className="space-y-2.5">
-                      {selectedInq.events.map(ev => (
-                        <div key={ev.id} className="flex items-start gap-2.5 text-xs">
-                          <div className={'w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ' + (ev.trigger === 'system' ? 'bg-ink-faint' : 'bg-pine/60')} />
-                          <div>
-                            {ev.fromStatus === 'contact_updated' ? (
-                              <span className="text-ink">Contact info updated</span>
-                            ) : (
-                              <>
-                                <span className="text-ink">{STATUS_LABEL[ev.fromStatus] || ev.fromStatus}</span>
-                                <span className="text-ink-muted mx-1">→</span>
-                                <span className="text-ink font-medium">{STATUS_LABEL[ev.toStatus] || ev.toStatus}</span>
-                              </>
-                            )}
-                            <span className="text-ink-faint ml-1.5">
-                              {ev.trigger === 'admin' && ev.actorName ? 'by ' + ev.actorName : ev.actorName || 'auto'}
-                            </span>
-                            <div className="text-ink-faint text-[10px] mt-0.5">{fmtDate(ev.createdAt)}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <div>
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Internal Notes</div>
-                  {selectedInq.adminNotes && (
-                    <pre className="text-xs text-ink-soft bg-paper border border-line rounded-md px-4 py-3 mb-3 whitespace-pre-wrap font-sans">
-                      {selectedInq.adminNotes}
-                    </pre>
-                  )}
-                  <div className="flex gap-2">
-                    <textarea
-                      value={noteTexts[selectedInq.id] || ''}
-                      onChange={e => setNoteTexts(p => ({ ...p, [selectedInq.id]: e.target.value }))}
-                      placeholder="Add a note..."
-                      rows={2}
-                      className="flex-1 bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40 resize-none"
-                    />
-                    <button
-                      onClick={() => inquiryAction(selectedInq.id, 'add_note', { note: noteTexts[selectedInq.id] || '' })}
-                      disabled={!noteTexts[selectedInq.id]?.trim() || processing === selectedInq.id}
-                      className="px-4 py-2 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white text-xs font-medium rounded-md transition-colors self-start"
-                    >
-                      Save
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-          </div>
-        </div>
-      )}
     </div>
+  );
+}
+
+export default function InquiriesPage() {
+  return (
+    <Suspense fallback={null}>
+      <InquiriesListInner />
+    </Suspense>
   );
 }
