@@ -177,7 +177,7 @@ function InquiryDetailInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const backTab = searchParams.get('tab') || 'active';
+  const backTab = searchParams.get('tab') || '';
   const backSearch = searchParams.get('q') || '';
   const backSort = searchParams.get('sort') || '';
   const backUrl = '/admin/inquiries' + (backTab || backSearch || backSort
