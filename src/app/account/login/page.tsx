@@ -41,6 +41,7 @@ export default function GolferLoginPage() {
               <label className={lCls}>Email</label>
               <input type="email" value={form.email} onChange={e => set('email', e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && submit()}
+                autoComplete="email"
                 className={iCls} />
             </div>
             <div>
@@ -50,6 +51,7 @@ export default function GolferLoginPage() {
               </div>
               <input type="password" value={form.password} onChange={e => set('password', e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && submit()}
+                autoComplete="current-password"
                 className={iCls} />
             </div>
           </div>

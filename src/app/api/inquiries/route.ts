@@ -2,12 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendInquiryNotification, sendInquiryConfirmation } from '@/lib/email';
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 export async function POST(req: NextRequest) {
   const body = await req.json();
+
+  // Honeypot: bots fill hidden fields, humans leave them blank. Silently accept but discard.
+  if (body._website) return NextResponse.json({ success: true });
+
   const required = ['firstName', 'lastName', 'contactTitle', 'email', 'phone', 'courseName', 'city', 'state', 'courseType'];
   for (const field of required) {
     if (!body[field]) return NextResponse.json({ error: `Missing: ${field}` }, { status: 400 });
   }
+
+  const email = String(body.email).trim().toLowerCase();
+  if (!EMAIL_RE.test(email)) {
+    return NextResponse.json({ error: 'invalid_email' }, { status: 400 });
+  }
+
   const contactName = `${body.firstName} ${body.lastName}`.trim();
   const inquiry = await prisma.courseInquiry.create({
     data: {
@@ -15,7 +27,7 @@ export async function POST(req: NextRequest) {
       lastName: body.lastName,
       contactName,
       contactTitle: body.contactTitle,
-      email: String(body.email).trim().toLowerCase(),
+      email,
       phone: body.phone,
       courseName: body.courseName,
       address: body.address || '',
@@ -37,11 +49,11 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  const emailData = { firstName: body.firstName, contactName, email: body.email, courseName: body.courseName, needs: body.needs || null };
+  const emailData = { firstName: body.firstName, contactName, email, courseName: body.courseName, needs: body.needs || null };
   sendInquiryNotification({
     contactName,
     contactTitle: body.contactTitle,
-    email: body.email,
+    email,
     phone: body.phone,
     courseName: body.courseName,
     city: body.city,

@@ -43,14 +43,14 @@ function LoginContent() {
           <div className="space-y-3">
             <div>
               <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Email</label>
-              <input type="email" value={form.email} onChange={e => set('email', e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} autoFocus className={iCls}/>
+              <input type="email" value={form.email} onChange={e => set('email', e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} autoFocus autoComplete="email" className={iCls}/>
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted">Password</label>
                 <a href="/dashboard/forgot-password" className="text-xs text-pine hover:underline">Forgot password?</a>
               </div>
-              <input type="password" value={form.password} onChange={e => set('password', e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} className={iCls}/>
+              <input type="password" value={form.password} onChange={e => set('password', e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} autoComplete="current-password" className={iCls}/>
             </div>
           </div>
           <button onClick={submit} disabled={loading}

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle, Calendar, Globe, Lock } from 'lucide-react';
 
@@ -13,6 +13,7 @@ const STATES = [
 const TITLE_OPTIONS = ['Owner / Operator', 'General Manager', 'Director of Golf', 'Head Golf Professional', 'Course Superintendent', 'Assistant Pro / Manager', 'Other'];
 
 const CALENDLY_URL = 'https://calendly.com/greenreserve';
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 type FormData = {
   firstName: string; lastName: string;
@@ -42,8 +43,11 @@ const init: FormData = {
   publicTeeTimes: '', memberCount: '', outsideOutings: '', memberBookingToday: '', chargesMembersPerRound: '',
 };
 
+// Base input/select classes (no error state)
 const inp = "w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors";
+const inpErr = "w-full bg-paper border border-bad rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-bad/60 focus:ring-2 focus:ring-bad/10 transition-colors";
 const sel = "w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors";
+const selErr = "w-full bg-paper border border-bad rounded-md px-3 py-2.5 text-sm text-ink outline-none focus:border-bad/60 focus:ring-2 focus:ring-bad/10 transition-colors";
 
 function Label({ text, required }: { text: string; required?: boolean }) {
   return (
@@ -51,6 +55,11 @@ function Label({ text, required }: { text: string; required?: boolean }) {
       {text}{required && <span className="text-bad ml-0.5">*</span>}
     </label>
   );
+}
+
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return <p className="mt-1 text-xs text-bad">{msg}</p>;
 }
 
 function RadioGroup({ label, options, value, onChange }: {
@@ -89,7 +98,9 @@ export default function ForCoursesContent() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submittedName, setSubmittedName] = useState('');
-  const [error, setError] = useState('');
+  const [serverError, setServerError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const t = searchParams.get('type');
@@ -104,21 +115,41 @@ export default function ForCoursesContent() {
     publicTeeTimes: '', memberCount: '', outsideOutings: '', memberBookingToday: '', chargesMembersPerRound: '',
   }));
 
-  const validate = () => {
-    if (!form.firstName.trim() || !form.lastName.trim()) return 'Please enter your first and last name.';
-    if (!form.contactTitle) return 'Please select your title or role.';
-    if (form.contactTitle === 'Other' && !form.contactTitleOther.trim()) return 'Please tell us your title or role.';
-    if (!form.email.trim()) return 'Please enter your email.';
-    if (!form.phone.trim()) return 'Please enter your phone number.';
-    if (!form.courseName.trim()) return 'Please enter your course name.';
-    if (!form.city.trim() || !form.state) return 'Please enter your course city and state.';
-    return '';
+  const validateAll = (): Record<string, string> => {
+    const errs: Record<string, string> = {};
+    if (!form.firstName.trim()) errs.firstName = 'First name is required';
+    if (!form.lastName.trim()) errs.lastName = 'Last name is required';
+    if (!form.contactTitle) errs.contactTitle = 'Please select your title or role';
+    if (form.contactTitle === 'Other' && !form.contactTitleOther.trim()) errs.contactTitleOther = 'Please enter your title';
+    if (!form.email.trim()) errs.email = 'Email is required';
+    else if (!EMAIL_RE.test(form.email.trim())) errs.email = 'Enter a valid email address (e.g. you@course.com)';
+    if (!form.phone.trim()) errs.phone = 'Phone number is required';
+    if (!form.courseName.trim()) errs.courseName = 'Course name is required';
+    if (!form.city.trim()) errs.city = 'City is required';
+    if (!form.state) errs.state = 'State is required';
+    return errs;
+  };
+
+  const blurField = (k: string) => {
+    const errs = validateAll();
+    setFieldErrors(prev => {
+      const next = { ...prev };
+      if (errs[k]) next[k] = errs[k];
+      else delete next[k];
+      return next;
+    });
   };
 
   const submit = async () => {
-    const err = validate();
-    if (err) { setError(err); return; }
-    setSubmitting(true); setError('');
+    const errs = validateAll();
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      const firstKey = Object.keys(errs)[0];
+      document.getElementById(`fld-${firstKey}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    setFieldErrors({});
+    setSubmitting(true); setServerError('');
     const contactTitle = form.contactTitle === 'Other' ? form.contactTitleOther.trim() : form.contactTitle;
 
     const needs: Record<string, string> = {};
@@ -145,6 +176,8 @@ export default function ForCoursesContent() {
         courseType: form.courseType,
         additionalNotes: form.notes,
         needs,
+        // honeypot (always empty for real users)
+        _website: '',
       }),
     });
     setSubmitting(false);
@@ -153,7 +186,12 @@ export default function ForCoursesContent() {
       setSubmitted(true);
     } else {
       const d = await res.json();
-      setError(d.error || 'Something went wrong. Please try again.');
+      if (d.error === 'invalid_email') {
+        setFieldErrors(prev => ({ ...prev, email: 'Enter a valid email address (e.g. you@course.com)' }));
+        document.getElementById('fld-email')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        setServerError(d.error || 'Something went wrong. Please try again.');
+      }
     }
   };
 
@@ -207,40 +245,95 @@ export default function ForCoursesContent() {
         <p className="text-white/50 text-sm">Free to list. $0 / month. We charge golfers $1.50 — not you.</p>
       </div>
 
-      <div className="max-w-xl mx-auto px-4 py-8 space-y-8">
+      <div ref={formRef} className="max-w-xl mx-auto px-4 py-8 space-y-8">
+
+        {/* Honeypot — hidden from humans, read by bots */}
+        <div style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }} aria-hidden="true">
+          <label htmlFor="hp-website">Website</label>
+          <input id="hp-website" name="_website" type="text" tabIndex={-1} autoComplete="off"/>
+        </div>
 
         {/* Section 1: You */}
         <div>
           <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">About you</p>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div>
+              <div id="fld-firstName">
                 <Label text="First name" required />
-                <input className={inp} value={form.firstName} onChange={e => set('firstName', e.target.value)} placeholder="John" />
+                <input
+                  className={fieldErrors.firstName ? inpErr : inp}
+                  value={form.firstName}
+                  onChange={e => set('firstName', e.target.value)}
+                  onBlur={() => blurField('firstName')}
+                  placeholder="John"
+                  autoComplete="given-name"
+                />
+                <FieldError msg={fieldErrors.firstName}/>
               </div>
-              <div>
+              <div id="fld-lastName">
                 <Label text="Last name" required />
-                <input className={inp} value={form.lastName} onChange={e => set('lastName', e.target.value)} placeholder="Smith" />
+                <input
+                  className={fieldErrors.lastName ? inpErr : inp}
+                  value={form.lastName}
+                  onChange={e => set('lastName', e.target.value)}
+                  onBlur={() => blurField('lastName')}
+                  placeholder="Smith"
+                  autoComplete="family-name"
+                />
+                <FieldError msg={fieldErrors.lastName}/>
               </div>
             </div>
-            <div>
+            <div id="fld-contactTitle">
               <Label text="Title / role" required />
-              <select className={sel} value={form.contactTitle} onChange={e => set('contactTitle', e.target.value)}>
+              <select
+                className={fieldErrors.contactTitle ? selErr : sel}
+                value={form.contactTitle}
+                onChange={e => set('contactTitle', e.target.value)}
+                onBlur={() => blurField('contactTitle')}
+              >
                 <option value="">Select...</option>
                 {TITLE_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
+              <FieldError msg={fieldErrors.contactTitle}/>
               {form.contactTitle === 'Other' && (
-                <input className={`${inp} mt-2`} value={form.contactTitleOther} onChange={e => set('contactTitleOther', e.target.value)} placeholder="Your title or role" />
+                <div id="fld-contactTitleOther" className="mt-2">
+                  <input
+                    className={fieldErrors.contactTitleOther ? inpErr : inp}
+                    value={form.contactTitleOther}
+                    onChange={e => set('contactTitleOther', e.target.value)}
+                    onBlur={() => blurField('contactTitleOther')}
+                    placeholder="Your title or role"
+                  />
+                  <FieldError msg={fieldErrors.contactTitleOther}/>
+                </div>
               )}
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div>
+              <div id="fld-email">
                 <Label text="Email" required />
-                <input type="email" className={inp} value={form.email} onChange={e => set('email', e.target.value)} placeholder="you@course.com" />
+                <input
+                  type="email"
+                  className={fieldErrors.email ? inpErr : inp}
+                  value={form.email}
+                  onChange={e => set('email', e.target.value)}
+                  onBlur={() => blurField('email')}
+                  placeholder="you@course.com"
+                  autoComplete="email"
+                />
+                <FieldError msg={fieldErrors.email}/>
               </div>
-              <div>
+              <div id="fld-phone">
                 <Label text="Phone" required />
-                <input className={inp} value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="(201) 555-0100" />
+                <input
+                  type="tel"
+                  className={fieldErrors.phone ? inpErr : inp}
+                  value={form.phone}
+                  onChange={e => set('phone', e.target.value)}
+                  onBlur={() => blurField('phone')}
+                  placeholder="(201) 555-0100"
+                  autoComplete="tel"
+                />
+                <FieldError msg={fieldErrors.phone}/>
               </div>
             </div>
           </div>
@@ -250,21 +343,44 @@ export default function ForCoursesContent() {
         <div>
           <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">Your course</p>
           <div className="space-y-4">
-            <div>
+            <div id="fld-courseName">
               <Label text="Course name" required />
-              <input className={inp} value={form.courseName} onChange={e => set('courseName', e.target.value)} placeholder="Pebble Beach Golf Links" />
+              <input
+                className={fieldErrors.courseName ? inpErr : inp}
+                value={form.courseName}
+                onChange={e => set('courseName', e.target.value)}
+                onBlur={() => blurField('courseName')}
+                placeholder="Pebble Beach Golf Links"
+                autoComplete="organization"
+              />
+              <FieldError msg={fieldErrors.courseName}/>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div>
+              <div id="fld-city">
                 <Label text="City" required />
-                <input className={inp} value={form.city} onChange={e => set('city', e.target.value)} placeholder="Pebble Beach" />
+                <input
+                  className={fieldErrors.city ? inpErr : inp}
+                  value={form.city}
+                  onChange={e => set('city', e.target.value)}
+                  onBlur={() => blurField('city')}
+                  placeholder="Pebble Beach"
+                  autoComplete="address-level2"
+                />
+                <FieldError msg={fieldErrors.city}/>
               </div>
-              <div>
+              <div id="fld-state">
                 <Label text="State" required />
-                <select className={sel} value={form.state} onChange={e => set('state', e.target.value)}>
+                <select
+                  className={fieldErrors.state ? selErr : sel}
+                  value={form.state}
+                  onChange={e => set('state', e.target.value)}
+                  onBlur={() => blurField('state')}
+                  autoComplete="address-level1"
+                >
                   <option value="">Select...</option>
                   {STATES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
+                <FieldError msg={fieldErrors.state}/>
               </div>
             </div>
 
@@ -390,7 +506,7 @@ export default function ForCoursesContent() {
           />
         </div>
 
-        {error && <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm">{error}</div>}
+        {serverError && <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm">{serverError}</div>}
 
         <button
           onClick={submit}

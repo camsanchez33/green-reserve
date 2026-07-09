@@ -45,34 +45,34 @@ export default function GolferRegisterPage() {
               <div>
                 <label className={lCls}>First Name</label>
                 <input value={form.firstName} onChange={e => set('firstName', e.target.value)}
-                  className={iCls} />
+                  autoComplete="given-name" className={iCls} />
               </div>
               <div>
                 <label className={lCls}>Last Name</label>
                 <input value={form.lastName} onChange={e => set('lastName', e.target.value)}
-                  className={iCls} />
+                  autoComplete="family-name" className={iCls} />
               </div>
             </div>
             <div>
               <label className={lCls}>Email</label>
               <input type="email" value={form.email} onChange={e => set('email', e.target.value)}
-                className={iCls} />
+                autoComplete="email" className={iCls} />
             </div>
             <div>
               <label className={lCls}>Phone</label>
               <input type="tel" value={form.phone} onChange={e => set('phone', e.target.value)}
-                className={iCls} />
+                autoComplete="tel" className={iCls} />
             </div>
             <div>
               <label className={lCls}>Password</label>
               <input type="password" value={form.password} onChange={e => set('password', e.target.value)}
-                className={iCls} />
+                autoComplete="new-password" className={iCls} />
             </div>
             <div>
               <label className={lCls}>Confirm Password</label>
               <input type="password" value={form.confirmPassword} onChange={e => set('confirmPassword', e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && submit()}
-                className={iCls} />
+                autoComplete="new-password" className={iCls} />
             </div>
           </div>
           <button onClick={submit} disabled={loading}

@@ -65,6 +65,7 @@ export default function AdminLoginPage() {
                 onChange={e => setEmail(e.target.value)}
                 required
                 autoFocus
+                autoComplete="email"
                 className={iCls}
               />
             </div>
@@ -77,6 +78,7 @@ export default function AdminLoginPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
+                autoComplete="current-password"
                 className={iCls}
               />
             </div>
