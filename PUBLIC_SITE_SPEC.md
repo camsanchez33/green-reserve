@@ -75,3 +75,37 @@ agent/session is working in this repo.
 - Do not touch: booking flow, member portal, dashboard, admin, any API routes except none
   are needed.
 - Light theme for all public pages per design system; max rounded-lg; no emojis.
+
+---
+
+## Phase C — Lead form integrity (from Cam's audit, 2026-07-09; no migration)
+
+Verified findings only. The lead form is the top of the entire business funnel —
+an unreachable lead is a lost course.
+
+1. **Email validation, server AND client (CRITICAL).**
+   - /api/inquiries: validate email format server-side (sane regex: something@
+     something.tld, trim/lowercase already happens). Invalid → 400 with
+     `{ error: 'invalid_email' }`. Apply the same to /api/inquiries/details
+     if it accepts an email.
+   - Client: validate on blur + on submit; inline error under the field.
+   - Add a hidden honeypot field ignored by humans; if filled, return 200 but
+     drop the submission (bot trap — do NOT reveal rejection).
+2. **Inline validation errors on the lead form.** Errors currently appear only
+   as a banner above Submit at the bottom of a long form. Per-field red border
+   + message at the field, auto-scroll to the first invalid field on submit.
+   (Same pattern A0 adds to the admin wizard — reuse the approach.)
+3. **Entry points route through segmentation.** The top-nav "List Your Course"
+   should land users in the same type-aware experience as the homepage cards
+   (course type question first or preselected via ?type=). Audit every CTA
+   linking to /for-courses.
+4. **Brand line consistency.** Page titles/taglines differ between homepage and
+   login pages (login drops "Free"). One canonical brand line in a shared
+   constant; apply to all page metadata.
+5. **Login form autofill hygiene.** Add proper autoComplete attributes
+   (email / current-password) to golfer, operator, and admin login forms so
+   browser autofill behaves predictably.
+
+NOT in scope (Cam decisions, flag don't build): public phone number on
+/contact; Sentry alert-watching is a manual setup step (Sentry → Alerts) noted
+in RUNBOOK.
