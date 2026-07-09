@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
       <div className="max-w-3xl mx-auto px-6 py-16">
         <div className="text-[11px] uppercase tracking-[0.06em] text-pine font-medium mb-3">Legal</div>
         <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-3">Privacy Policy</h1>
-        <p className="text-ink-muted text-sm mb-12">Last updated June 2026</p>
+        <p className="text-ink-muted text-sm mb-12">Last updated July 2026</p>
 
         <div className="space-y-10 text-ink-soft leading-relaxed">
           <section>
@@ -63,6 +63,75 @@ export default function PrivacyPolicyPage() {
               retain booking and payment records for accounting or legal purposes.
             </p>
           </section>
+
+          {/* ── FOR COURSE OPERATORS ── */}
+          <section className="pt-6 border-t border-line">
+            <h2 className="font-semibold text-base text-ink mb-4">For Course Operators</h2>
+
+            <div className="space-y-6">
+              <div>
+                <h3 className="font-semibold text-sm text-ink mb-1">What we collect at onboarding</h3>
+                <p>
+                  When a course is onboarded, we collect the primary contact&apos;s name, email, and phone
+                  number; the course name, address, and type; and the Stripe Connect identifiers required
+                  to route green-fee payments. We do not store raw banking credentials — those are handled
+                  directly by Stripe during their onboarding flow.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-sm text-ink mb-1">Course data ownership</h3>
+                <p>
+                  Booking history, golfer contact details collected during booking, and revenue data are
+                  held on behalf of your course and belong to you. GreenReserve does not use your
+                  golfer data for its own marketing, aggregate it across courses, or sell it to any third
+                  party. You may request a full data export at any time by emailing{' '}
+                  <a href="mailto:hello@greenreserve.app" className="text-pine font-medium hover:underline">hello@greenreserve.app</a>.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-sm text-ink mb-1">Member data</h3>
+                <p>
+                  For courses using the member portal, member records (names, emails, membership tier,
+                  and booking history) are scoped to your course only. Member data is never shared with
+                  other courses, used for cross-course targeting, or disclosed to third parties outside
+                  of payment processing (Stripe) and email delivery (Resend).
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-sm text-ink mb-1">What happens on termination</h3>
+                <p>
+                  If you close your account, your course page comes down within 24 hours. On request,
+                  we will provide a complete export of your booking and golfer data. Your data will be
+                  deleted from our active systems within 30 days of your deletion request, except where
+                  retention is required for accounting, tax, or legal compliance.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-sm text-ink mb-1">Stripe Connect and payment data</h3>
+                <p>
+                  Green fees are routed directly to your Stripe Connect account. GreenReserve never holds
+                  green-fee funds. All payment method data is stored by Stripe under PCI DSS — GreenReserve
+                  only holds a Stripe-issued token and your Stripe account identifier. Golfer card numbers
+                  are never stored on GreenReserve servers.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-sm text-ink mb-1">Legal entity</h3>
+                <p>
+                  GreenReserve is operated by{' '}
+                  <span className="font-medium text-ink">{'{{COMPANY_LEGAL_NAME}}'} {/* TODO: replace with LLC name once formed */}</span>,
+                  a limited liability company formed in the state of{' '}
+                  <span className="font-medium text-ink">[STATE — TODO]</span>.
+                </p>
+              </div>
+            </div>
+          </section>
+          {/* <!-- NOTE: The operator section above was drafted with AI assistance and requires attorney review before GreenReserve reaches material scale. --> */}
 
           <section>
             <h2 className="font-semibold text-base text-ink mb-2">Contact</h2>

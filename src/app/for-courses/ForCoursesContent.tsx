@@ -207,7 +207,7 @@ export default function ForCoursesContent() {
 
         <div className="space-y-0 mb-8 border border-line rounded-md overflow-hidden">
           {[
-            ['We review your submission', "We'll reply within 1 business day. If it's a good fit, we'll send you a short details sheet."],
+            ['We review your submission', "We'll reply within 1 business day. As long as you run a real golf course, you're in — we review to prevent spam, not to reject courses."],
             ['You fill out a details sheet', 'Pricing, policies, facilities — about 5 minutes. Saves as you go.'],
             ['We build your page', 'You review, approve, and go live. Golfers can book the same day.'],
           ].map(([title, desc], i) => (
@@ -246,6 +246,18 @@ export default function ForCoursesContent() {
       </div>
 
       <div ref={formRef} className="max-w-xl mx-auto px-4 py-8 space-y-8">
+
+        {/* Private-club reassurance */}
+        {form.courseType === 'private' && (
+          <div className="bg-white border border-line rounded-lg px-5 py-4 flex gap-3">
+            <Lock className="w-4 h-4 text-pine shrink-0 mt-0.5" />
+            <div className="text-sm text-ink-soft space-y-1.5">
+              <p><span className="font-medium text-ink">Member-only booking.</span> Your tee sheet can be fully private — no public tee times unless you choose to enable outside play.</p>
+              <p><span className="font-medium text-ink">Your member data stays yours.</span> Member information is scoped to your club and is never shared, aggregated, or marketed to by GreenReserve.</p>
+              <p><span className="font-medium text-ink">Private sign-in portal.</span> Member login is specific to your club — members can&apos;t browse or access any other course.</p>
+            </div>
+          </div>
+        )}
 
         {/* Honeypot — hidden from humans, read by bots */}
         <div style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }} aria-hidden="true">

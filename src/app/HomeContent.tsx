@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Check, X, Play } from 'lucide-react';
+import { ArrowRight, Check, X, Play, Monitor } from 'lucide-react';
 
 const SHOW_VIDEO = false;
 
@@ -10,7 +10,8 @@ function Screenshot({ src, caption }: { src: string; caption: string }) {
   if (failed) {
     return (
       <div className="rounded-lg border border-line overflow-hidden">
-        <div className="aspect-video bg-paper flex items-center justify-center">
+        <div className="aspect-video bg-paper flex flex-col items-center justify-center gap-3">
+          <Monitor className="w-8 h-8 text-ink-faint" />
           <p className="text-ink-faint text-xs">{caption}</p>
         </div>
       </div>
@@ -73,7 +74,7 @@ export default function HomeContent() {
           </div>
           <div className="space-y-10">
             {[
-              { n: '01', title: 'We review your submission', body: "We'll reply within 1 business day. If it's a good fit, we'll send you a short details sheet." },
+              { n: '01', title: 'We review your submission', body: "We'll reply within 1 business day. As long as you run a real golf course, you're in — we review to prevent spam, not to reject courses." },
               { n: '02', title: 'You fill out a details sheet', body: 'Pricing, policies, facilities — about 5 minutes. Saves as you go.' },
               { n: '03', title: 'We build your page', body: 'You review, approve, and go live. Golfers can book the same day.' },
             ].map((s) => (
@@ -88,6 +89,25 @@ export default function HomeContent() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* FOUNDING COURSES */}
+      <section className="bg-pine border-t border-white/10 py-24">
+        <div className="max-w-4xl mx-auto px-6">
+          <p className="text-[11px] uppercase tracking-[0.06em] text-paper/50 font-medium mb-3">Early access</p>
+          <h2 className="text-2xl sm:text-3xl font-serif font-medium text-white tracking-tight mb-4">
+            We&apos;re onboarding our founding group of courses.
+          </h2>
+          <p className="text-white/60 text-sm leading-relaxed max-w-xl mb-8">
+            Early courses get white-glove setup — we handle everything and stay hands-on until you&apos;re live and comfortable. Founding courses also lock in free forever, no matter what we charge in the future.
+          </p>
+          <Link
+            href="/for-courses"
+            className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-pine bg-white hover:bg-paper rounded-md transition-all"
+          >
+            Apply for a founding spot <ArrowRight size={14} />
+          </Link>
         </div>
       </section>
 
@@ -219,14 +239,14 @@ export default function HomeContent() {
           </div>
           <div className="grid sm:grid-cols-2 gap-6">
             <div className="border border-line rounded-lg p-8 bg-white">
-              <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-6">Typical booking platforms</div>
+              <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-6">What we never do</div>
               <div className="space-y-4 text-sm">
                 {[
-                  'Commission on every green fee',
-                  'Monthly software subscription',
-                  'Platform resells your tee times',
-                  'Revenue split with the vendor',
-                  'Your golfer data lives on their servers',
+                  'Charge commission on your green fees',
+                  'Charge a monthly subscription fee',
+                  'Resell your tee times to third parties',
+                  'Lock you in with a contract',
+                  'Keep your golfer data for our own use',
                 ].map(item => (
                   <div key={item} className="flex items-start gap-3">
                     <span className="w-4 h-4 rounded-full bg-bad/10 flex items-center justify-center shrink-0 mt-0.5">
@@ -238,14 +258,14 @@ export default function HomeContent() {
               </div>
             </div>
             <div className="border border-pine/20 bg-pine/5 rounded-lg p-8">
-              <div className="text-[11px] uppercase tracking-[0.06em] text-pine font-medium mb-6">GreenReserve</div>
+              <div className="text-[11px] uppercase tracking-[0.06em] text-pine font-medium mb-6">Our commitments</div>
               <div className="space-y-4 text-sm">
                 {[
-                  '$0 commission — ever',
-                  'No monthly fee — ever',
-                  'Your booking page, your golfers',
-                  'You keep 100% of green fees',
-                  'Your golfer data stays with you',
+                  'Your tee times are never resold',
+                  '0% commission — you keep 100% of green fees',
+                  'No contract — leave anytime',
+                  'Your golfer data is yours, always',
+                  '$0/month, no setup fee, forever',
                 ].map(item => (
                   <div key={item} className="flex items-start gap-3">
                     <span className="w-4 h-4 rounded-full bg-pine/10 flex items-center justify-center shrink-0 mt-0.5">
