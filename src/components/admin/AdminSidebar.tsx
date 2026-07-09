@@ -6,6 +6,7 @@ import {
   Radio, Activity, MessageSquare, UserCircle, ChevronLeft, ChevronRight,
   DollarSign, Search,
 } from 'lucide-react';
+import CommandPalette from '@/components/admin/CommandPalette';
 
 export type AdminNavKey = 'overview' | 'inquiries' | 'courses' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages' | 'profile' | 'revenue' | 'golfers';
 
@@ -55,6 +56,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   }, []);
 
   const toggle = useCallback(() => setCollapsed(v => !v), []);
+  const openPalette = useCallback(() => window.dispatchEvent(new CustomEvent('open-cmd-palette')), []);
 
   async function signOut() {
     await fetch('/api/admin/logout', { method: 'POST' });
@@ -115,22 +117,27 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   ) : undefined;
 
   return (
+    <>
+    <CommandPalette/>
     <div className={`fixed left-0 top-0 h-full ${w} bg-pine flex flex-col z-10 transition-[width] duration-200 ease-in-out`}>
       {/* Wordmark / logo mark */}
       <div className={`${collapsed ? 'px-0 justify-center' : 'px-5'} py-5 border-b border-white/10 flex items-center`}>
         {collapsed ? (
-          <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center">
-            <Layers className="w-4 h-4 text-paper"/>
-          </div>
+          <button onClick={openPalette} title="Search (Ctrl+K)" className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+            <Search className="w-4 h-4 text-paper"/>
+          </button>
         ) : (
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 w-full">
             <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
               <Layers className="w-4 h-4 text-paper"/>
             </div>
-            <div>
+            <div className="flex-1">
               <div className="font-serif text-[15.5px] text-paper leading-tight">GreenReserve</div>
               <div className="text-[10px] text-[#A9BFAF] font-medium uppercase tracking-wider">Admin</div>
             </div>
+            <button onClick={openPalette} title="Search (Ctrl+K)" className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors shrink-0">
+              <Search className="w-3.5 h-3.5 text-[#A9BFAF]"/>
+            </button>
           </div>
         )}
       </div>
@@ -170,5 +177,6 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
         {collapsed ? <ChevronRight className="w-3 h-3"/> : <ChevronLeft className="w-3 h-3"/>}
       </button>
     </div>
+    </>
   );
 }
