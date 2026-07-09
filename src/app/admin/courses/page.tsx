@@ -11,6 +11,25 @@ interface Course {
   operator: { email: string; name: string; onboardingStep: number; emailVerified: boolean } | null;
   createdAt: string; archivedAt?: string | null; archivedBy?: string | null;
   bookings30d: number; revenue30d: number; activeMemberCount: number;
+  lastBookingAt?: string | null; bookingsPrior30d?: number;
+}
+
+function relTime(d: string | null): string {
+  if (!d) return 'never';
+  const days = Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
+  if (days === 0) return 'today';
+  if (days === 1) return '1d ago';
+  if (days < 14) return `${days}d ago`;
+  if (days < 60) return `${Math.floor(days / 7)}w ago`;
+  return `${Math.floor(days / 30)}mo ago`;
+}
+
+function healthSortScore(c: Course): number {
+  if (c.archivedAt || !c.active) return -1;
+  const courseAgeDays = (Date.now() - new Date(c.createdAt).getTime()) / 86400000;
+  if (courseAgeDays < 14 && !c.lastBookingAt) return 0;
+  if (!c.lastBookingAt) return 9999;
+  return (Date.now() - new Date(c.lastBookingAt).getTime()) / 86400000;
 }
 
 const fmtMoney = (n: number) => '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -27,7 +46,7 @@ function CoursesContent() {
   const [filterStripe, setFilterStripe] = useState<'all' | 'yes' | 'no'>('all');
   const [filterFeatured, setFilterFeatured] = useState(false);
   const [filterType, setFilterType] = useState('');
-  const [sortBy, setSortBy] = useState<'newest' | 'name' | 'bookings' | 'revenue'>('newest');
+  const [sortBy, setSortBy] = useState<'newest' | 'name' | 'bookings' | 'revenue' | 'health'>('newest');
   const [hardDeleteId, setHardDeleteId] = useState<string | null>(null);
   const [hardDeleteInput, setHardDeleteInput] = useState('');
 
@@ -141,6 +160,7 @@ function CoursesContent() {
   if (sortBy === 'name') filteredCourses = [...filteredCourses].sort((a, b) => a.name.localeCompare(b.name));
   else if (sortBy === 'bookings') filteredCourses = [...filteredCourses].sort((a, b) => b.bookings30d - a.bookings30d);
   else if (sortBy === 'revenue') filteredCourses = [...filteredCourses].sort((a, b) => b.revenue30d - a.revenue30d);
+  else if (sortBy === 'health') filteredCourses = [...filteredCourses].sort((a, b) => healthSortScore(b) - healthSortScore(a));
 
   const totalCourses = courses.length;
   const liveCourses = archiveFilter !== 'archived' ? courses.filter(c => c.active && !c.archivedAt).length : 0;
@@ -241,13 +261,13 @@ function CoursesContent() {
             )}
 
             <div className="flex items-center gap-1 bg-white border border-line rounded-lg p-1 ml-auto">
-              {(['newest', 'name', 'bookings', 'revenue'] as const).map(s => (
+              {(['newest', 'name', 'bookings', 'revenue', 'health'] as const).map(s => (
                 <button
                   key={s}
                   onClick={() => setSortBy(s)}
                   className={'px-3 py-1 rounded-md text-[11px] font-medium transition-colors ' + (sortBy === s ? 'bg-paper text-ink border border-line' : 'text-ink-muted hover:text-ink')}
                 >
-                  {s === 'newest' ? 'Newest' : s === 'name' ? 'Name A–Z' : s === 'bookings' ? 'Bookings' : 'Revenue'}
+                  {s === 'newest' ? 'Newest' : s === 'name' ? 'Name A–Z' : s === 'bookings' ? 'Bookings' : s === 'revenue' ? 'Revenue' : 'Health'}
                 </button>
               ))}
             </div>
@@ -306,6 +326,32 @@ function CoursesContent() {
                     )}
                   </div>
                 )}
+                {(() => {
+                  if (course.archivedAt) return <div className="w-32 shrink-0 hidden xl:block text-right text-xs text-ink-faint">—</div>;
+                  const courseAgeDays = (Date.now() - new Date(course.createdAt).getTime()) / 86400000;
+                  const lastDays = course.lastBookingAt ? Math.floor((Date.now() - new Date(course.lastBookingAt).getTime()) / 86400000) : null;
+                  const isNew = courseAgeDays < 14 && lastDays === null;
+                  const lastColor = isNew ? 'text-ink-muted' : lastDays === null ? 'text-bad' : lastDays > 30 ? 'text-bad' : lastDays > 14 ? 'text-warn' : 'text-ok';
+                  const lastLabel = isNew ? 'new' : course.lastBookingAt ? relTime(course.lastBookingAt) : 'never';
+                  const prior = course.bookingsPrior30d ?? 0;
+                  const curr = course.bookings30d;
+                  const trendArrow = prior === 0 ? '' : curr > prior ? '↑' : curr < prior ? '↓' : '→';
+                  const trendColor = prior === 0 ? '' : curr > prior ? 'text-ok' : curr < prior ? 'text-bad' : 'text-ink-muted';
+                  return (
+                    <div className="w-32 shrink-0 hidden xl:block text-right" title={course.lastBookingAt ? `Last booking: ${new Date(course.lastBookingAt).toLocaleDateString()}` : 'No bookings yet'}>
+                      <div className={`text-xs font-medium ${lastColor}`}>{lastLabel}</div>
+                      <div className="text-[10px] text-ink-muted mb-1">last bk</div>
+                      {prior > 0 ? (
+                        <div className={`text-xs font-medium ${trendColor}`}>{curr} {trendArrow} {prior}</div>
+                      ) : (
+                        <div className="text-xs text-ink-faint">{curr} / —</div>
+                      )}
+                      <div className="text-[10px] text-ink-muted">trend</div>
+                      <div className="text-xs text-ink-faint mt-1">—</div>
+                      <div className="text-[10px] text-ink-muted">op login</div>
+                    </div>
+                  );
+                })()}
                 <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
                   {course.archivedAt ? (
                     <>

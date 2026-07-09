@@ -34,7 +34,7 @@ interface CourseDetail {
     walkingAllowed: string; cartRequired: boolean; hasCaddies: boolean;
     residentCounty: string; residentState: string;
     archivedAt?: string | null; archivedBy?: string | null;
-    adminNotes?: string | null;
+    adminNotes?: string | null; createdAt?: string;
     operator: { id: string; name: string; email: string; phone?: string; emailVerified: boolean; onboardingStep: number } | null;
   };
   staff: { id: string; name: string; email: string; role: string; active: boolean }[];
@@ -45,6 +45,9 @@ interface CourseDetail {
   }[];
   totalBookings: number;
   revenue30d: { gross: number; platform: number; greenFees: number };
+  bookings30d: number;
+  lastBookingAt: string | null;
+  bookingsPrior30d: number;
 }
 
 interface TeeSlot {
@@ -451,6 +454,44 @@ export default function CourseDetailPage() {
               )}
             </div>
           </div>
+
+          {/* Health strip */}
+          {!c.archivedAt && (() => {
+            const courseAgeDays = c.createdAt ? (Date.now() - new Date(c.createdAt).getTime()) / 86400000 : 999;
+            const lastDays = detail?.lastBookingAt ? Math.floor((Date.now() - new Date(detail.lastBookingAt).getTime()) / 86400000) : null;
+            const isNew = courseAgeDays < 14 && lastDays === null;
+            const lastColor = isNew ? 'text-ink-muted' : lastDays === null ? 'text-bad' : lastDays > 30 ? 'text-bad' : lastDays > 14 ? 'text-warn' : 'text-ok';
+            const lastLabel = isNew ? 'New' : detail?.lastBookingAt ? (() => {
+              const d = lastDays!;
+              if (d === 0) return 'Today'; if (d === 1) return '1d ago';
+              if (d < 14) return `${d}d ago`; if (d < 60) return `${Math.floor(d/7)}w ago`;
+              return `${Math.floor(d/30)}mo ago`;
+            })() : 'Never';
+            const prior = detail?.bookingsPrior30d ?? 0;
+            const curr = detail?.bookings30d ?? 0;
+            const trendArrow = prior === 0 ? null : curr > prior ? '↑' : curr < prior ? '↓' : '→';
+            const trendColor = prior === 0 ? '' : curr > prior ? 'text-ok' : curr < prior ? 'text-bad' : 'text-ink-muted';
+            return (
+              <div className="mt-3 flex items-center gap-5 px-1">
+                <div>
+                  <span className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mr-1.5">Last booking</span>
+                  <span className={`text-xs font-medium ${lastColor}`} title={detail?.lastBookingAt ? new Date(detail.lastBookingAt).toLocaleDateString() : undefined}>{lastLabel}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mr-1.5">30d trend</span>
+                  {trendArrow ? (
+                    <span className={`text-xs font-medium ${trendColor}`}>{curr} {trendArrow} {prior}</span>
+                  ) : (
+                    <span className="text-xs text-ink-soft">{curr} bk · no prior data</span>
+                  )}
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mr-1.5">Op login</span>
+                  <span className="text-xs text-ink-faint">—</span>
+                </div>
+              </div>
+            );
+          })()}
 
           <div className="flex gap-0.5 mt-4 bg-paper border border-line rounded-lg p-1 w-fit max-w-full overflow-x-auto">
             {ALL_TABS.map(t => (
