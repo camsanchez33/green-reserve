@@ -39,19 +39,12 @@ const STATUS_LABEL: Record<string, string> = {
 };
 const ARCHIVED_STATUSES = new Set(['live', 'rejected', 'archived']);
 const ALL_STATUSES = ['pending', 'in_review', 'details_requested', 'details_submitted', 'building', 'live', 'rejected', 'archived'];
-const STAGE_EXPLAIN: Record<string, string> = {
-  pending: 'New inquiry — not yet reviewed.',
-  in_review: 'Send the setup sheet to gather tee-sheet details, or skip ahead and build the course.',
-  details_requested: 'Setup sheet emailed. Waiting for the course to respond.',
-  details_submitted: 'Setup sheet submitted — review it and build the course.',
-  building: 'Course is built and the operator has their login. Review and go live when ready.',
-  live: 'Course is live on GreenReserve.',
-  rejected: 'Inquiry was rejected.',
-  archived: 'This inquiry is archived — its course was archived or permanently deleted.',
-};
 
-const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-function daysAgo(d: string) { return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24)); }
+const fmtDate = (d: string) =>
+  new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+function daysAgo(d: string) {
+  return Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24));
+}
 
 function whyArchived(inq: Inquiry): { reason: string; date: string } {
   if (inq.status === 'live') return { reason: 'Went live', date: inq.updatedAt || inq.createdAt };
@@ -61,6 +54,105 @@ function whyArchived(inq: Inquiry): { reason: string; date: string } {
   if (actorName.toLowerCase().includes('permanently deleted')) return { reason: 'Course deleted', date: lastEvent?.createdAt || inq.updatedAt || inq.createdAt };
   if (actorName.toLowerCase().includes('archived')) return { reason: 'Course archived', date: lastEvent?.createdAt || inq.updatedAt || inq.createdAt };
   return { reason: 'Archived', date: inq.updatedAt || inq.createdAt };
+}
+
+function fmtMoney(v: unknown): string {
+  if (v === null || v === undefined || v === '') return '';
+  const s = String(v).trim();
+  if (s.startsWith('$')) return s;
+  const n = parseFloat(s);
+  if (isNaN(n) || n === 0) return '';
+  return '$' + (n % 1 === 0 ? n.toFixed(0) : n.toFixed(2));
+}
+
+const WALKING_LABELS: Record<string, string> = {
+  yes: 'Always allowed', weekdays: 'Weekdays only', no: 'Cart required',
+};
+const NINE_WHICH_LABELS: Record<string, string> = {
+  front: 'Front nine only', back: 'Back nine only', both: 'Either nine',
+};
+const LAYOUT27_LABELS: Record<string, string> = {
+  three_9s: 'Three separate 9s', '18_plus_9': 'One 18 + one separate 9',
+};
+const LAYOUT36_LABELS: Record<string, string> = {
+  two_18s: 'Two 18-hole courses', other: 'Other / non-standard',
+};
+const PASS_TYPE_LABEL: Record<string, string> = {
+  membership: 'Membership', season_pass: 'Season Pass', resident_card: 'Resident Card',
+  resident_rate: 'Resident Rate (no card)', punch_card: 'Punch Card',
+};
+const BOOL_LABELS: Record<string, string> = { yes: 'Yes', no: 'No', true: 'Yes', false: 'No' };
+const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function SField({ label, value, amber, span2 }: {
+  label: string; value: string | null | undefined; amber?: boolean; span2?: boolean;
+}) {
+  const empty = !value || value.trim() === '';
+  if (empty && !amber) return null;
+  return (
+    <div className={'bg-white border border-line rounded-lg px-4 py-3' + (span2 ? ' col-span-2' : '')}>
+      <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">{label}</div>
+      {empty
+        ? <div className="text-[13px] text-warn font-medium">Not provided</div>
+        : <div className="text-ink text-sm whitespace-pre-wrap">{value}</div>
+      }
+    </div>
+  );
+}
+
+function SSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">{title}</div>
+      <div className="grid grid-cols-2 gap-3">{children}</div>
+    </div>
+  );
+}
+
+function renderFacilities(fv2: Record<string, unknown>): { label: string; detail?: string }[] {
+  const items: { label: string; detail?: string }[] = [];
+  if (fv2.range) {
+    let detail = fv2.rangeTeeType === 'grass' ? 'Grass tees' : 'Mats';
+    if (Array.isArray(fv2.rangeBuckets)) {
+      const buckets = (fv2.rangeBuckets as Array<{ label: string; price: string; balls: string }>)
+        .filter(b => b.price || b.balls)
+        .map(b => (b.label || '?') + ': $' + b.price + '/' + b.balls + ' balls')
+        .join(', ');
+      if (buckets) detail += ' · ' + buckets;
+    }
+    items.push({ label: 'Driving range', detail });
+  }
+  if (fv2.puttingGreen) items.push({ label: 'Putting green' });
+  if (fv2.chippingArea) items.push({ label: 'Chipping / short-game area' });
+  if (fv2.proShop) items.push({ label: 'Pro shop' });
+  if (fv2.lessons) {
+    const d = [fv2.lessonsProName, fv2.lessonsProPhone].filter(Boolean).join(' · ');
+    items.push({ label: 'Lessons', detail: d || undefined });
+  }
+  if (fv2.clubRental) {
+    const d = String(fv2.clubRentalContact || '');
+    items.push({ label: 'Club rental', detail: d || undefined });
+  }
+  if (fv2.cartRental) {
+    items.push({ label: 'Cart rental', detail: fv2.cartRentalCost ? '$' + String(fv2.cartRentalCost) : undefined });
+  }
+  if (fv2.bagStorage) items.push({ label: 'Bag storage' });
+  if (fv2.gpsCarts) items.push({ label: 'GPS carts' });
+  if (fv2.eventSpace) {
+    const d = String(fv2.eventSpaceContact || '');
+    items.push({ label: 'Event / banquet space', detail: d || undefined });
+  }
+  if (fv2.lockerRooms) items.push({ label: 'Locker rooms' });
+  if (fv2.tournaments) {
+    items.push({ label: 'Hosts tournaments & outings', detail: String(fv2.tournamentsFrequency || '') || undefined });
+  }
+  const rtMap: Record<string, string> = {
+    restaurant: 'Restaurant', bar: 'Bar', snack_bar: 'Snack bar',
+    bev_cart: 'Beverage cart', multiple: 'Multiple food & drink options',
+  };
+  const rt = String(fv2.restaurantType || '');
+  if (rt && rt !== 'none') items.push({ label: rtMap[rt] || rt });
+  return items;
 }
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10 focus:outline-none transition-colors';
@@ -78,20 +170,6 @@ const NEEDS_VALUES: Record<string, string> = {
   '1500_3000': '1,500–3,000', '3000_plus': '3,000+',
   pro_shop_phone: 'Pro shop / phone', signup_sheet: 'Sign-up sheet',
   booking_software: 'Booking software', other: 'Other',
-};
-const DETAIL_LABELS: Record<string, string> = {
-  holes: 'Holes', par: 'Par', seasonOpen: 'Season opens', seasonClose: 'Season closes',
-  firstTeeTime: 'First tee', lastTeeTime: 'Last tee', intervalMinutes: 'Interval',
-  greenFeeWeekday: 'Weekday fee', greenFeeWeekend: 'Weekend fee', cartFee: 'Cart fee',
-  twilightFee: 'Twilight fee', walkingAllowed: 'Walking',
-  residentWeekday: 'Resident WD', residentWeekend: 'Resident WE', residentVerification: 'Residency check',
-  starterTierName: 'Tier name', starterTierFee: 'Tier fee',
-  memberAdvanceDays: 'Member advance', protectedTimes: 'Protected times',
-  publicGreenFee: 'Public fee', publicWindow: 'Public window',
-  memberRate: 'Member rate', outingsVolume: 'Outings frequency',
-  cancellationHours: 'Cancel window', lateFee: 'Late cancel fee',
-  facilities: 'Facilities', restaurantType: 'Restaurant',
-  website: 'Website', description: 'Description', additionalNotes: 'Notes',
 };
 
 function InquiryDetailInner() {
@@ -127,7 +205,7 @@ function InquiryDetailInner() {
 
   const loadInquiry = useCallback(async () => {
     setLoading(true);
-    const r = await fetch(`/api/admin/inquiries?id=${params.id}`, { headers: H() });
+    const r = await fetch('/api/admin/inquiries?id=' + params.id, { headers: H() });
     if (r.ok) {
       const data = await r.json();
       setInq(data);
@@ -149,7 +227,6 @@ function InquiryDetailInner() {
     if (adminReady) loadInquiry();
   }, [adminReady, loadInquiry]);
 
-  // Auto-advance pending → in_review when page loads
   useEffect(() => {
     if (!inq || inq.status !== 'pending') return;
     fetch('/api/admin/inquiries', {
@@ -173,16 +250,14 @@ function InquiryDetailInner() {
           setApproveResult(d as ApproveResult);
         }
         if (act === 'mark_live' && d.emailSent === false) {
-          alert(`Course is live, but the orientation email failed (${d.emailError || 'unknown error'}).`);
+          alert('Course is live, but the orientation email failed (' + (d.emailError || 'unknown error') + ').');
         }
-        if (act === 'add_note') {
-          setNoteText('');
-        }
+        if (act === 'add_note') setNoteText('');
         await loadInquiry();
       } else {
-        alert(`Failed (${r.status}): ${(d.error as string) || text.slice(0, 200)}`);
+        alert('Failed (' + r.status + '): ' + ((d.error as string) || text.slice(0, 200)));
       }
-    } catch (e) { alert(`Error: ${e}`); }
+    } catch (e) { alert('Error: ' + e); }
     setProcessing(false);
   }
 
@@ -194,16 +269,16 @@ function InquiryDetailInner() {
         body: JSON.stringify({ id: params.id, action: 'create_draft_course' }),
       });
       const d = await r.json();
-      if (!r.ok) { alert(`Failed: ${d.error || 'unknown error'}`); setProcessing(false); return; }
-      if (d.courseId) router.push(`/admin/courses/${d.courseId}`);
-    } catch (e) { alert(`Error: ${e}`); }
+      if (!r.ok) { alert('Failed: ' + (d.error || 'unknown error')); setProcessing(false); return; }
+      if (d.courseId) router.push('/admin/courses/' + d.courseId);
+    } catch (e) { alert('Error: ' + e); }
     setProcessing(false);
   }
 
   async function deleteInquiry() {
     if (!inq) return;
-    if (!confirm(`Permanently delete inquiry for "${inq.courseName}"? This cannot be undone.`)) return;
-    await fetch(`/api/admin/inquiries?id=${inq.id}`, { method: 'DELETE', headers: H() });
+    if (!confirm('Permanently delete inquiry for "' + inq.courseName + '"? This cannot be undone.')) return;
+    await fetch('/api/admin/inquiries?id=' + inq.id, { method: 'DELETE', headers: H() });
     router.push(backUrl);
   }
 
@@ -227,6 +302,27 @@ function InquiryDetailInner() {
   const dot = (STATUS_DOT_MAP[inq.status] || 'neutral') as 'ok' | 'bad' | 'warn' | 'neutral';
   const days = daysAgo(inq.updatedAt || inq.createdAt);
 
+  const sheetSentEvent = [...inq.events].reverse().find(e => e.toStatus === 'details_requested');
+  const liveEvent = [...inq.events].reverse().find(e => e.toStatus === 'live');
+
+  let sd: Record<string, unknown> = {};
+  if (inq.detailsJson) { try { sd = JSON.parse(inq.detailsJson); } catch { /* ignore */ } }
+  const shHoles = parseInt(String(sd.holes || '18'), 10);
+  const shLayout27 = String(sd.layout27 || '');
+  const shLayout36 = String(sd.layout36 || '');
+  const shPasses = Array.isArray(sd.passes) ? sd.passes as Record<string, unknown>[] : [];
+  const shTeeSets = Array.isArray(sd.teeSets) ? sd.teeSets as Record<string, unknown>[] : [];
+  const shFv2 = (sd.facilitiesV2 || {}) as Record<string, unknown>;
+  const shPhotos = Array.isArray(sd.photos) ? sd.photos as string[] : [];
+  const shDaysOpen = Array.isArray(sd.daysOpen) ? sd.daysOpen as number[] : [];
+  const shDaysStr = shDaysOpen.length > 0 ? shDaysOpen.map(n => DAYS_SHORT[n]).join(', ') : 'Every day';
+  const shNine27Names = Array.isArray(sd.nine27Names) ? sd.nine27Names as string[] : [];
+  const shCourse36Names = Array.isArray(sd.course36Names) ? sd.course36Names as string[] : [];
+  const facilityItems = Object.keys(shFv2).length > 0 ? renderFacilities(shFv2) : [];
+  const hasCancelPolicy = String(sd.cancellationPolicy || '') === 'yes';
+  const noCancel = String(sd.cancellationPolicy || '') === 'no';
+  const hasSheet = !!inq.detailsJson && Object.keys(sd).length > 0;
+
   const wizardParams = new URLSearchParams({
     name: inq.courseName || '', city: inq.city || '', state: inq.state || '',
     zip: inq.zipCode || '', address: inq.address || '', website: inq.website || '',
@@ -234,14 +330,17 @@ function InquiryDetailInner() {
     contactEmail: inq.email || '', inquiryId: inq.id,
   });
 
+  const btnP = 'bg-pine hover:bg-pine-hover disabled:opacity-50 text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
+  const btnO = 'bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
+  const btnD = 'bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
+
   return (
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="inquiries" />
       <div className="ml-56 flex-1 flex flex-col min-h-screen">
 
-        {/* Page header */}
+        {/* ── Page header ──────────────────────────────────────────── */}
         <div className="px-8 py-6 border-b border-line bg-white shrink-0">
-          {/* Back link */}
           <button
             onClick={() => router.push(backUrl)}
             className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-ink mb-4 transition-colors"
@@ -250,15 +349,12 @@ function InquiryDetailInner() {
           </button>
 
           <div className="flex items-start gap-4">
-            {/* Title area */}
             <div className="flex-1 min-w-0">
               <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink leading-snug">{inq.courseName}</h1>
               <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                 <StatusDot status={dot} label={STATUS_LABEL[inq.status] || inq.status} />
                 <span className="text-sm text-ink-muted">{inq.city}, {inq.state}</span>
-                {!isArchived && (
-                  <span className="text-sm text-ink-faint">{days}d in stage</span>
-                )}
+                {!isArchived && <span className="text-sm text-ink-faint">{days}d in stage</span>}
                 {isArchived && inq.status !== 'live' && inq.status !== 'rejected' && (() => {
                   const { reason, date } = whyArchived(inq);
                   return (
@@ -268,14 +364,10 @@ function InquiryDetailInner() {
                   );
                 })()}
               </div>
-              {STAGE_EXPLAIN[inq.status] && (
-                <p className="text-xs text-ink-muted mt-2 max-w-xl">{STAGE_EXPLAIN[inq.status]}</p>
-              )}
             </div>
 
             {/* Toolbar */}
             <div className="flex items-center gap-2 flex-wrap justify-end shrink-0">
-              {/* Stage move */}
               {!isArchived && (
                 <div className="flex items-center gap-1.5 border border-line rounded-md px-2.5 py-1.5 bg-paper">
                   <ChevronDown className="w-3.5 h-3.5 text-ink-muted shrink-0" />
@@ -292,65 +384,49 @@ function InquiryDetailInner() {
                   </select>
                 </div>
               )}
-
-              {/* Refresh */}
-              <button
-                onClick={loadInquiry}
-                disabled={loading}
-                className="w-8 h-8 flex items-center justify-center rounded-md text-ink-muted hover:text-ink hover:bg-paper border border-line transition-colors"
-              >
+              <button onClick={loadInquiry} disabled={loading}
+                className="w-8 h-8 flex items-center justify-center rounded-md text-ink-muted hover:text-ink hover:bg-paper border border-line transition-colors">
                 <RefreshCw className="w-3.5 h-3.5" />
               </button>
-
-              {/* Status-specific primary actions */}
               {inq.status === 'pending' && (
                 <>
-                  <button onClick={() => action('mark_in_review')} disabled={processing}
-                    className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50">
+                  <button onClick={() => action('mark_in_review')} disabled={processing} className={btnP}>
                     <Clock className="w-3.5 h-3.5" />In Review
                   </button>
-                  <button onClick={() => { if (confirm('Reject this inquiry?')) action('reject'); }} disabled={processing}
-                    className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors">
+                  <button onClick={() => { if (confirm('Reject this inquiry?')) action('reject'); }} disabled={processing} className={btnD}>
                     <XCircle className="w-3.5 h-3.5" />Reject
                   </button>
                 </>
               )}
               {inq.status === 'in_review' && (
                 <>
-                  <button onClick={() => { if (confirm('Send ' + inq.contactName + ' the setup sheet?')) action('request_details'); }} disabled={processing}
-                    className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50">
+                  <button onClick={() => { if (confirm('Send ' + inq.contactName + ' the setup sheet?')) action('request_details'); }} disabled={processing} className={btnP}>
                     <Mail className="w-3.5 h-3.5" />Send Sheet
                   </button>
-                  <button onClick={() => { if (confirm('Build ' + inq.courseName + ' now without the sheet?')) action('build_course'); }} disabled={processing}
-                    className="text-ink-muted hover:text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 border border-line hover:border-line-strong transition-colors">
+                  <button onClick={() => { if (confirm('Build ' + inq.courseName + ' now without the sheet?')) action('build_course'); }} disabled={processing} className={btnO}>
                     <Wrench className="w-3 h-3" />Skip &amp; Build
                   </button>
-                  <button onClick={() => { if (confirm('Reject?')) action('reject'); }} disabled={processing}
-                    className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors">
+                  <button onClick={() => { if (confirm('Reject?')) action('reject'); }} disabled={processing} className={btnD}>
                     <XCircle className="w-3.5 h-3.5" />Reject
                   </button>
                 </>
               )}
               {inq.status === 'details_requested' && (
                 <>
-                  <button onClick={() => { if (confirm('Resend setup-sheet link?')) action('resend_details'); }} disabled={processing}
-                    className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50">
+                  <button onClick={() => { if (confirm('Resend setup-sheet link?')) action('resend_details'); }} disabled={processing} className={btnO}>
                     <Mail className="w-3.5 h-3.5" />Resend Sheet
                   </button>
-                  <button onClick={() => { if (confirm('Reject?')) action('reject'); }} disabled={processing}
-                    className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors">
+                  <button onClick={() => { if (confirm('Reject?')) action('reject'); }} disabled={processing} className={btnD}>
                     <XCircle className="w-3.5 h-3.5" />Reject
                   </button>
                 </>
               )}
               {inq.status === 'details_submitted' && (
                 <>
-                  <button onClick={() => { if (confirm('Create draft course for ' + inq.courseName + '? No email will be sent.')) createDraftCourse(); }} disabled={processing}
-                    className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50">
+                  <button onClick={() => { if (confirm('Create draft course for ' + inq.courseName + '? No email will be sent.')) createDraftCourse(); }} disabled={processing} className={btnP}>
                     <CheckCircle className="w-3.5 h-3.5" />Create Draft Course
                   </button>
-                  <button onClick={() => { if (confirm('Reject?')) action('reject'); }} disabled={processing}
-                    className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors">
+                  <button onClick={() => { if (confirm('Reject?')) action('reject'); }} disabled={processing} className={btnD}>
                     <XCircle className="w-3.5 h-3.5" />Reject
                   </button>
                 </>
@@ -358,20 +434,17 @@ function InquiryDetailInner() {
               {inq.status === 'building' && (
                 <>
                   {inq.builtCourseId && (
-                    <button onClick={() => router.push('/admin/courses/' + inq.builtCourseId)}
-                      className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors">
+                    <button onClick={() => router.push('/admin/courses/' + inq.builtCourseId)} className={btnO}>
                       <Wrench className="w-3.5 h-3.5" />Manage Course
                     </button>
                   )}
-                  <button onClick={() => { if (confirm('Send login email with a new temp password to ' + inq.contactName + '?')) action('resend_welcome'); }} disabled={processing}
-                    className="bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors">
+                  <button onClick={() => { if (confirm('Send login email to ' + inq.contactName + '?')) action('resend_welcome'); }} disabled={processing} className={btnO}>
                     <Mail className="w-3.5 h-3.5" />Send Login Email
                   </button>
-                  <button onClick={() => { if (confirm('Set ' + inq.courseName + ' LIVE?')) action('mark_live'); }} disabled={processing}
-                    className="bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50">
+                  <button onClick={() => { if (confirm('Set ' + inq.courseName + ' LIVE?')) action('mark_live'); }} disabled={processing} className={btnP}>
                     <Power className="w-3.5 h-3.5" />Go Live
                   </button>
-                  <button onClick={deleteInquiry} title="Delete inquiry"
+                  <button onClick={deleteInquiry} title="Delete"
                     className="w-8 h-8 flex items-center justify-center text-ink-muted hover:text-bad hover:bg-bad/5 rounded-md border border-line transition-colors">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -422,7 +495,110 @@ function InquiryDetailInner() {
           })()}
         </div>
 
-        {/* Tab nav */}
+        {/* ── Next Steps card ──────────────────────────────────────── */}
+        {!isArchived && inq.status !== 'rejected' && (
+          <div className="px-8 py-4 border-b border-line bg-paper/60 shrink-0">
+            <div className="max-w-3xl">
+              {(inq.status === 'pending' || inq.status === 'in_review') && (
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Next step</div>
+                    <div className="text-sm text-ink">
+                      Review the{' '}
+                      <button onClick={() => setActiveTab('answers')} className="font-medium text-pine hover:underline">Answers tab</button>
+                      , then send the course their setup sheet.
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { if (confirm('Send ' + inq.contactName + ' the setup sheet?')) action('request_details'); }}
+                    disabled={processing}
+                    className={btnP + ' shrink-0'}
+                  >
+                    <Mail className="w-3.5 h-3.5" />Send Sheet
+                  </button>
+                </div>
+              )}
+              {inq.status === 'details_requested' && (
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Waiting</div>
+                    <div className="text-sm text-ink">
+                      Waiting on {inq.courseName}
+                      {sheetSentEvent
+                        ? ' — sheet sent ' + daysAgo(sheetSentEvent.createdAt) + ' day' + (daysAgo(sheetSentEvent.createdAt) !== 1 ? 's' : '') + ' ago.'
+                        : ' — sheet sent recently.'}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { if (confirm('Resend setup-sheet link?')) action('resend_details'); }}
+                    disabled={processing}
+                    className={btnO + ' shrink-0'}
+                  >
+                    <Mail className="w-3.5 h-3.5" />Resend Sheet
+                  </button>
+                </div>
+              )}
+              {inq.status === 'details_submitted' && (
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Next step</div>
+                    <div className="text-sm text-ink">
+                      Sheet received. Review the{' '}
+                      <button onClick={() => setActiveTab('sheet')} className="font-medium text-pine hover:underline">Sheet tab</button>
+                      , then create the draft course.
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { if (confirm('Create draft course for ' + inq.courseName + '? No email will be sent.')) createDraftCourse(); }}
+                    disabled={processing}
+                    className={btnP + ' shrink-0'}
+                  >
+                    <CheckCircle className="w-3.5 h-3.5" />Create Draft Course
+                  </button>
+                </div>
+              )}
+              {inq.status === 'building' && (
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Next step</div>
+                    <div className="text-sm text-ink">Course is built. Review it, then set it live when ready.</div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {inq.builtCourseId && (
+                      <button onClick={() => router.push('/admin/courses/' + inq.builtCourseId)} className={btnO}>
+                        <Wrench className="w-3.5 h-3.5" />Review Course
+                      </button>
+                    )}
+                    <button
+                      onClick={() => { if (confirm('Set ' + inq.courseName + ' LIVE?')) action('mark_live'); }}
+                      disabled={processing}
+                      className={btnP}
+                    >
+                      <Power className="w-3.5 h-3.5" />Go Live
+                    </button>
+                  </div>
+                </div>
+              )}
+              {inq.status === 'live' && (
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-[10px] uppercase tracking-[0.06em] text-ok mb-0.5">Live</div>
+                    <div className="text-sm text-ink">
+                      Live since {liveEvent ? fmtDate(liveEvent.createdAt) : fmtDate(inq.updatedAt || inq.createdAt)}.
+                    </div>
+                  </div>
+                  {inq.builtCourseId && (
+                    <button onClick={() => router.push('/admin/courses/' + inq.builtCourseId)} className={btnO + ' shrink-0'}>
+                      <Wrench className="w-3.5 h-3.5" />Manage Course
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Tab nav ──────────────────────────────────────────────── */}
         <div className="border-b border-line bg-white shrink-0 px-8">
           <div className="flex gap-0">
             {(['contact', 'answers', 'sheet', 'activity'] as const).map(t => (
@@ -436,10 +612,10 @@ function InquiryDetailInner() {
           </div>
         </div>
 
-        {/* Tab content */}
+        {/* ── Tab content ──────────────────────────────────────────── */}
         <div className="flex-1 px-8 py-7">
 
-          {/* ── Contact tab ─────────────────────────────────────────────── */}
+          {/* Contact tab */}
           {activeTab === 'contact' && (
             <div className="max-w-3xl">
               <div className="flex items-center justify-between mb-4">
@@ -465,7 +641,6 @@ function InquiryDetailInner() {
                   </div>
                 )}
               </div>
-
               {editContact ? (
                 <div className="grid grid-cols-2 gap-3">
                   {([
@@ -474,8 +649,7 @@ function InquiryDetailInner() {
                   ] as [string, string][]).map(([field, label]) => (
                     <div key={field}>
                       <label className="block text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1">{label}</label>
-                      <input value={contactEdits[field] ?? ''} onChange={e => setContactEdits(p => ({ ...p, [field]: e.target.value }))}
-                        className={iCls} />
+                      <input value={contactEdits[field] ?? ''} onChange={e => setContactEdits(p => ({ ...p, [field]: e.target.value }))} className={iCls} />
                     </div>
                   ))}
                 </div>
@@ -517,7 +691,7 @@ function InquiryDetailInner() {
             </div>
           )}
 
-          {/* ── Answers tab ─────────────────────────────────────────────── */}
+          {/* Answers tab */}
           {activeTab === 'answers' && (
             <div className="max-w-3xl space-y-5">
               {(() => {
@@ -590,10 +764,9 @@ function InquiryDetailInner() {
             </div>
           )}
 
-          {/* ── Sheet tab ───────────────────────────────────────────────── */}
+          {/* Sheet tab */}
           {activeTab === 'sheet' && (
-            <div className="max-w-3xl space-y-5">
-              {/* Manual build (in person) link — subtle, in sheet tab */}
+            <div className="max-w-3xl space-y-7">
               {!inq.builtCourseId && !isArchived && inq.status !== 'building' && (
                 <div className="flex items-center justify-between bg-paper border border-line rounded-lg px-4 py-3">
                   <div>
@@ -607,84 +780,296 @@ function InquiryDetailInner() {
                 </div>
               )}
 
-              {inq.detailsJson ? (() => {
-                let d: Record<string, unknown> = {};
-                try { d = JSON.parse(inq.detailsJson || ''); } catch { /* ignore */ }
-                if (Object.keys(d).length === 0) return <p className="text-sm text-ink-faint text-center py-10">Sheet submitted but empty.</p>;
+              {!inq.detailsJson && (
+                <p className="text-sm text-ink-faint text-center py-10">No sheet submitted yet.</p>
+              )}
+              {inq.detailsJson && !hasSheet && (
+                <p className="text-sm text-ink-faint text-center py-10">Sheet submitted but appears empty.</p>
+              )}
 
-                const sch = d.schedule as Record<string, unknown> | undefined;
-                const wdFee = (d.greenFeeWeekday ?? sch?.greenFeeWeekday) as string | undefined;
-                const weFee = (d.greenFeeWeekend ?? sch?.greenFeeWeekend) as string | undefined;
-                const firstTee = (d.firstTeeTime ?? sch?.startTime) as string | undefined;
-                const lastTee = (d.lastTeeTime ?? sch?.endTime) as string | undefined;
-                const intervalMin = (d.intervalMinutes ?? sch?.intervalMinutes) as string | undefined;
-                const cartFee = (d.cartFee ?? sch?.cartFee) as string | undefined;
-                const dayNums = (d.daysOpen ?? sch?.daysOfWeek) as number[] | undefined;
-                const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-                const skipKeys = new Set(['schedule', 'daysOpen', 'daysOfWeek', 'greenFeeWeekday', 'greenFeeWeekend', 'firstTeeTime', 'lastTeeTime', 'intervalMinutes', 'cartFee']);
-                const rest = Object.entries(d).filter(([k, v]) =>
-                  !skipKeys.has(k) && v !== '' && v !== null && !(Array.isArray(v) && v.length === 0)
-                );
-                const checks = [
-                  { label: 'Weekday green fee', ok: !!(d.greenFeeWeekday || sch?.greenFeeWeekday) },
-                  { label: 'Weekend green fee', ok: !!(d.greenFeeWeekend || sch?.greenFeeWeekend) },
-                  { label: 'First tee time', ok: !!(d.firstTeeTime || sch?.startTime) },
-                  { label: 'Last tee time', ok: !!(d.lastTeeTime || sch?.endTime) },
-                  { label: 'Cancellation policy', ok: !!(d.cancellationHours || d.cancellationPolicy) },
-                  { label: 'Course description', ok: !!(d.description) },
-                ];
-                const allGood = checks.every(c => c.ok);
-                return (
-                  <>
-                    {(wdFee || firstTee) && (
-                      <div className="bg-ok/5 border border-ok/20 rounded-lg p-4">
-                        <div className="text-ok font-medium text-xs mb-1.5 uppercase tracking-[0.05em]">Tee Sheet</div>
-                        {firstTee && lastTee && (
-                          <div className="text-ink text-sm">
-                            {Array.isArray(dayNums) && dayNums.length > 0 ? dayNums.map(dd => DAYS_SHORT[dd]).join(', ') : 'Every day'}
-                            {' · '}{firstTee}–{lastTee} every {intervalMin || '?'}min
+              {hasSheet && (
+                <>
+                  {/* Course Basics */}
+                  <SSection title="Course Basics">
+                    <SField label="Holes" value={sd.holes ? String(sd.holes) + '-hole course' : null} amber />
+                    <SField label="Par" value={sd.par ? 'Par ' + String(sd.par) : null} />
+                    <SField label="Season opens" value={sd.seasonOpen ? String(sd.seasonOpen) : null} />
+                    <SField label="Season closes" value={sd.seasonClose ? String(sd.seasonClose) : null} />
+                  </SSection>
+
+                  {/* Playability — 9 holes */}
+                  {shHoles === 9 && (
+                    <SSection title="Playability">
+                      <SField label="Replay for 18?" value={BOOL_LABELS[String(sd.nineReplay || '')] || null} amber />
+                      <SField label="18-hole replay rate" value={fmtMoney(sd.nineReplayFee) || null} />
+                    </SSection>
+                  )}
+
+                  {/* Playability — 18 holes */}
+                  {shHoles === 18 && (
+                    <SSection title="Playability">
+                      <SField label="Can golfers book 9 holes?" value={BOOL_LABELS[String(sd.nineHoleSupport || '')] || null} amber />
+                      {String(sd.nineHoleSupport) === 'yes' && (
+                        <>
+                          <SField label="Which nines can be booked" value={NINE_WHICH_LABELS[String(sd.nineHoleWhich || '')] || null} amber />
+                          <SField label="9-hole green fee" value={fmtMoney(sd.nineHoleFee) || null} />
+                          <SField label="9-hole par" value={sd.nineHolePar ? String(sd.nineHolePar) : null} />
+                        </>
+                      )}
+                    </SSection>
+                  )}
+
+                  {/* Playability — 27 holes */}
+                  {shHoles === 27 && (
+                    <SSection title="Playability">
+                      <SField label="27-hole layout" value={LAYOUT27_LABELS[shLayout27] || null} amber />
+                      {shLayout27 === 'three_9s' && (
+                        <>
+                          <div className="col-span-2 bg-white border border-line rounded-lg px-4 py-3">
+                            <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1">Nine names</div>
+                            {shNine27Names.every(n => !n.trim())
+                              ? <div className="text-[13px] text-warn font-medium">Not provided</div>
+                              : <div className="flex gap-2 flex-wrap">
+                                  {shNine27Names.map((n, i) => (
+                                    <span key={i} className="bg-paper border border-line px-2.5 py-1 rounded-md text-sm text-ink">{n || 'Nine ' + (i + 1)}</span>
+                                  ))}
+                                </div>
+                            }
                           </div>
-                        )}
-                        {(wdFee || weFee) && (
-                          <div className="text-ink-muted text-xs mt-1">
-                            WD ${wdFee || '—'} / WE ${weFee || '—'}{cartFee ? ` · Cart $${cartFee}` : ''}
-                          </div>
-                        )}
+                          <SField label="18-hole combos played" value={sd.nine27Combos ? String(sd.nine27Combos) : null} />
+                          <SField label="Each nine bookable alone?" value={BOOL_LABELS[String(sd.nine27BookableAlone || '')] || null} />
+                        </>
+                      )}
+                      {shLayout27 === '18_plus_9' && (
+                        <>
+                          <SField label="Can golfers book 9 on the 18?" value={BOOL_LABELS[String(sd.nineHoleSupport || '')] || null} />
+                          {String(sd.nineHoleSupport) === 'yes' && (
+                            <SField label="Which nines" value={NINE_WHICH_LABELS[String(sd.nineHoleWhich || '')] || null} />
+                          )}
+                          <SField label="Separate 9 — name" value={sd.separate9Name ? String(sd.separate9Name) : null} amber />
+                          <SField label="Separate 9 — par" value={sd.separate9Par ? String(sd.separate9Par) : null} />
+                          <SField label="Separate 9 bookable alone?" value={BOOL_LABELS[String(sd.separate9Bookable || '')] || null} />
+                          <SField label="Separate 9 green fee" value={fmtMoney(sd.separate9Fee) || null} />
+                        </>
+                      )}
+                    </SSection>
+                  )}
+
+                  {/* Playability — 36 holes */}
+                  {shHoles === 36 && (
+                    <SSection title="Playability">
+                      <SField label="36-hole layout" value={LAYOUT36_LABELS[shLayout36] || null} amber />
+                      {shCourse36Names.length > 0 && (
+                        <div className="col-span-2 bg-white border border-line rounded-lg px-4 py-3">
+                          <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1">Course names</div>
+                          {shCourse36Names.every(n => !n.trim())
+                            ? <div className="text-[13px] text-warn font-medium">Not provided</div>
+                            : <div className="flex gap-2 flex-wrap">
+                                {shCourse36Names.map((n, i) => (
+                                  <span key={i} className="bg-paper border border-line px-2.5 py-1 rounded-md text-sm text-ink">{n || 'Course ' + (i + 1)}</span>
+                                ))}
+                              </div>
+                          }
+                        </div>
+                      )}
+                      <SField label="Layout notes" value={sd.course36LayoutDesc ? String(sd.course36LayoutDesc) : null} />
+                    </SSection>
+                  )}
+
+                  {/* Tee Sets */}
+                  {shTeeSets.length > 0 && shTeeSets.some(ts => ts.name) && (
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Tee Sets</div>
+                      <div className="bg-white border border-line rounded-lg overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-line bg-paper">
+                              {['Name', 'Color', 'Designation', 'Yardage', 'Par', 'Rating / Slope'].map(h => (
+                                <th key={h} className="px-4 py-2.5 text-left text-[10px] uppercase tracking-[0.06em] text-ink-muted font-medium">{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {shTeeSets.filter(ts => ts.name).map((ts, i) => (
+                              <tr key={i} className={'border-b border-line last:border-b-0 ' + (i % 2 === 0 ? '' : 'bg-paper/40')}>
+                                <td className="px-4 py-2.5 font-medium text-ink">{String(ts.name || '—')}</td>
+                                <td className="px-4 py-2.5 text-ink-muted">{String(ts.color || '—')}</td>
+                                <td className="px-4 py-2.5 text-ink-muted capitalize">{String(ts.designation || '—')}</td>
+                                <td className="px-4 py-2.5 text-ink-muted">{String(ts.yardage || '—')}</td>
+                                <td className="px-4 py-2.5 text-ink-muted">{String(ts.par || '—')}</td>
+                                <td className="px-4 py-2.5 text-ink-muted">
+                                  {ts.rating && ts.slope
+                                    ? String(ts.rating) + ' / ' + String(ts.slope)
+                                    : ts.rating ? String(ts.rating) : ts.slope ? String(ts.slope) : '—'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tee Sheet Schedule */}
+                  <SSection title="Tee Sheet Schedule">
+                    <SField label="First tee time" value={sd.firstTeeTime ? String(sd.firstTeeTime) : null} amber />
+                    <SField label="Last tee time" value={sd.lastTeeTime ? String(sd.lastTeeTime) : null} amber />
+                    <SField label="Interval" value={sd.intervalMinutes ? String(sd.intervalMinutes) + ' min' : null} />
+                    <SField label="Days open" value={shDaysStr} />
+                    <SField label="Walking policy" value={WALKING_LABELS[String(sd.walkingAllowed || '')] || null} amber />
+                  </SSection>
+
+                  {/* Green Fees */}
+                  <SSection title="Green Fees">
+                    <SField label="Weekday green fee" value={fmtMoney(sd.greenFeeWeekday) || null} amber />
+                    <SField label="Weekend green fee" value={fmtMoney(sd.greenFeeWeekend) || null} amber />
+                    <SField label="Twilight rate" value={fmtMoney(sd.twilightFee) || null} />
+                    <SField label="Cart fee" value={fmtMoney(sd.cartFee) || null} />
+                    {shHoles === 9 && String(sd.nineReplay) === 'yes' && (
+                      <SField label="18-hole replay rate" value={fmtMoney(sd.nineReplayFee) || null} />
+                    )}
+                    {shHoles === 18 && String(sd.nineHoleSupport) === 'yes' && (
+                      <SField label="9-hole green fee" value={fmtMoney(sd.nineHoleFee) || null} />
+                    )}
+                  </SSection>
+
+                  {/* Private: member / public access */}
+                  {inq.courseType === 'private' && (sd.memberAdvanceDays || sd.publicGreenFee || sd.memberRate || sd.outingsVolume) && (
+                    <SSection title="Member &amp; Public Access">
+                      <SField label="Member advance booking" value={sd.memberAdvanceDays ? String(sd.memberAdvanceDays) + ' days' : null} />
+                      <SField label="Protected tee times" value={sd.protectedTimes ? String(sd.protectedTimes) : null} />
+                      <SField label="Non-member green fee" value={fmtMoney(sd.publicGreenFee) || null} />
+                      <SField label="Public booking window" value={sd.publicWindow ? String(sd.publicWindow) : null} />
+                      <SField label="Member rate" value={fmtMoney(sd.memberRate) || null} />
+                      <SField label="Outings frequency" value={sd.outingsVolume ? String(sd.outingsVolume) : null} />
+                    </SSection>
+                  )}
+
+                  {/* Memberships & Passes */}
+                  {shPasses.length > 0 && shPasses.some(p => p.name || p.type) && (
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Memberships &amp; Passes</div>
+                      <div className="space-y-3">
+                        {shPasses.filter(p => p.name || p.type).map((p, i) => {
+                          const isResident = p.type === 'resident_card' || p.type === 'resident_rate';
+                          return (
+                            <div key={i} className="bg-white border border-line rounded-lg px-4 py-3">
+                              <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1">
+                                {PASS_TYPE_LABEL[String(p.type || '')] || String(p.type || 'Pass')}
+                              </div>
+                              <div className="text-sm font-medium text-ink mb-2">{String(p.name || 'Unnamed')}</div>
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-ink-soft">
+                                {p.fee && <span>Fee: {fmtMoney(p.fee)}{p.feePeriod ? ' / ' + String(p.feePeriod) : ''}</span>}
+                                {p.includes && <span>Includes: {String(p.includes)}</span>}
+                                {p.perRound === 'yes' && p.perRoundFee && <span>Per-round: {fmtMoney(p.perRoundFee)}</span>}
+                                {isResident && p.residentWho && <span>Who qualifies: {String(p.residentWho)}</span>}
+                                {isResident && p.residentVerifType && <span>Verification: {String(p.residentVerifType)}</span>}
+                                {isResident && p.residentCardCost && <span>Card cost: {fmtMoney(p.residentCardCost)}</span>}
+                                {p.type === 'resident_rate' && p.residentWeekday && <span>WD rate: {fmtMoney(p.residentWeekday)}</span>}
+                                {p.type === 'resident_rate' && p.residentWeekend && <span>WE rate: {fmtMoney(p.residentWeekend)}</span>}
+                                {p.type === 'resident_rate' && p.residentTwilight && <span>Twilight: {fmtMoney(p.residentTwilight)}</span>}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Cancellation */}
+                  <SSection title="Cancellation Policy">
+                    <SField label="Charges for late cancel / no-show?" value={BOOL_LABELS[String(sd.cancellationPolicy || '')] || null} amber />
+                    {hasCancelPolicy && (
+                      <>
+                        <SField label="Cancellation window" value={sd.cancellationHours ? String(sd.cancellationHours) + ' hours' : null} amber />
+                        <SField label="Late cancel fee" value={fmtMoney(sd.lateFee) || null} amber />
+                      </>
+                    )}
+                    {noCancel && (
+                      <div className="col-span-2 bg-white border border-line rounded-lg px-4 py-3">
+                        <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Note</div>
+                        <div className="text-sm text-ink-soft">No cancellation policy — golfers pay at the course (no card required at booking).</div>
                       </div>
                     )}
-                    {rest.length > 0 && (
-                      <div className="grid grid-cols-2 gap-3">
-                        {rest.map(([k, v]) => (
-                          <div key={k} className="bg-white border border-line rounded-lg px-4 py-3">
-                            <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">{DETAIL_LABELS[k] || k}</div>
-                            <div className="text-ink text-sm">{Array.isArray(v) ? (v as string[]).join(', ') : String(v)}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <div className="bg-white border border-line rounded-lg p-4">
-                      <div className={'text-[11px] uppercase tracking-[0.06em] mb-3 ' + (allGood ? 'text-ok' : 'text-warn')}>
-                        {allGood ? 'Ready to Build' : 'Build Checklist'}
-                      </div>
-                      <div className="space-y-2">
-                        {checks.map(c => (
-                          <div key={c.label} className="flex items-center gap-2 text-sm">
-                            <div className={'w-1.5 h-1.5 rounded-full shrink-0 ' + (c.ok ? 'bg-ok' : 'bg-warn')} />
-                            <span className={c.ok ? 'text-ink' : 'text-warn'}>{c.label}</span>
-                            {!c.ok && <span className="text-ink-faint text-xs">missing</span>}
+                  </SSection>
+
+                  {/* Facilities */}
+                  {facilityItems.length > 0 && (
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Facilities</div>
+                      <div className="bg-white border border-line rounded-lg divide-y divide-line">
+                        {facilityItems.map((item, i) => (
+                          <div key={i} className="px-4 py-2.5 flex items-start gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-ok/60 mt-1.5 shrink-0" />
+                            <div>
+                              <span className="text-sm font-medium text-ink">{item.label}</span>
+                              {item.detail && <span className="text-sm text-ink-muted ml-2">{item.detail}</span>}
+                            </div>
                           </div>
                         ))}
                       </div>
                     </div>
-                  </>
-                );
-              })() : (
-                <p className="text-sm text-ink-faint text-center py-10">No sheet submitted yet.</p>
+                  )}
+                  {Object.keys(shFv2).length > 0 && facilityItems.length === 0 && (
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Facilities</div>
+                      <div className="bg-white border border-line rounded-lg px-4 py-3 text-sm text-ink-soft">None selected.</div>
+                    </div>
+                  )}
+
+                  {/* About */}
+                  <SSection title="About">
+                    <SField label="Course description" value={sd.description ? String(sd.description) : null} amber span2 />
+                    <SField label="Website" value={sd.website ? String(sd.website) : null} />
+                    <SField label="Additional notes" value={sd.additionalNotes ? String(sd.additionalNotes) : null} />
+                    {shPhotos.length > 0 && (
+                      <div className="col-span-2">
+                        <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Photos ({shPhotos.length})</div>
+                        <div className="flex gap-2 flex-wrap">
+                          {shPhotos.map((url, i) => (
+                            <a key={i} href={url} target="_blank" rel="noreferrer">
+                              <img src={url} alt={'Photo ' + (i + 1)} className="w-28 h-20 object-cover rounded-md border border-line hover:border-pine/40 transition-colors" />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </SSection>
+
+                  {/* Build Checklist */}
+                  {(() => {
+                    const checks = [
+                      { label: 'Weekday green fee', ok: !!(fmtMoney(sd.greenFeeWeekday)) },
+                      { label: 'Weekend green fee', ok: !!(fmtMoney(sd.greenFeeWeekend)) },
+                      { label: 'First tee time', ok: !!(sd.firstTeeTime) },
+                      { label: 'Last tee time', ok: !!(sd.lastTeeTime) },
+                      { label: 'Cancellation policy', ok: !!(sd.cancellationPolicy) },
+                      { label: 'Course description', ok: !!(sd.description) },
+                    ];
+                    const allGood = checks.every(c => c.ok);
+                    return (
+                      <div className="bg-white border border-line rounded-lg p-4">
+                        <div className={'text-[11px] uppercase tracking-[0.06em] mb-3 ' + (allGood ? 'text-ok' : 'text-warn')}>
+                          {allGood ? 'Ready to Build' : 'Build Checklist'}
+                        </div>
+                        <div className="space-y-2">
+                          {checks.map(c => (
+                            <div key={c.label} className="flex items-center gap-2 text-sm">
+                              <div className={'w-1.5 h-1.5 rounded-full shrink-0 ' + (c.ok ? 'bg-ok' : 'bg-warn')} />
+                              <span className={c.ok ? 'text-ink' : 'text-warn'}>{c.label}</span>
+                              {!c.ok && <span className="text-ink-faint text-xs">missing</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </>
               )}
             </div>
           )}
 
-          {/* ── Activity tab ────────────────────────────────────────────── */}
+          {/* Activity tab */}
           {activeTab === 'activity' && (
             <div className="max-w-3xl space-y-6">
               {inq.events && inq.events.length > 0 && (
