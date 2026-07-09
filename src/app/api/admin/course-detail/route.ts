@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
   const [course, recentBookings, totalBookings, revenue, staff] = await Promise.all([
-    prisma.course.findUnique({ where: { id: courseId }, include: { operator: { select: { id: true, name: true, email: true, emailVerified: true, stripeAccountId: true } }, schedules: true } }),
+    prisma.course.findUnique({ where: { id: courseId }, include: { operator: { select: { id: true, name: true, email: true, emailVerified: true, onboardingStep: true, phone: true } }, schedules: true } }),
     prisma.booking.findMany({ where: { courseId, status: 'confirmed', createdAt: { gte: thirtyDaysAgo } }, select: { id: true, golferName: true, golferEmail: true, players: true, totalAmount: true, createdAt: true, teeTime: { select: { date: true, time: true } } }, orderBy: { createdAt: 'desc' }, take: 20 }),
     prisma.booking.count({ where: { courseId, status: 'confirmed' } }),
     prisma.booking.aggregate({ where: { courseId, status: 'confirmed', createdAt: { gte: thirtyDaysAgo } }, _sum: { greenFeeTotal: true, accessFeeTotal: true, totalAmount: true } }),
