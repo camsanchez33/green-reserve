@@ -88,12 +88,13 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] GOLFER_EDGE_SPEC Phase E1 — perf audit script (scripts/perf-audit.ts), CI workflow (.github/workflows/perf-audit.yml), fix worst offenders: remove framer-motion (~45KB), defer Stripe JS (no-fee courses), lazy-load imgs, CLAUDE.md budgets — 2f8ef39
 - [x] GOLFER_EDGE_SPEC Phase E2 — tap budget: mobile inline player picker saves 1 tap (6→5 for non-default players), no-account guard comment in CheckoutForm, before/after counts documented in commit — 6b4408f
 - [x] GOLFER_EDGE_SPEC Phase E3 — trust copy via shared TrustNote component: slot price/"100% to course", card entry/"nothing charged now", confirm/"no charge until check-in"; fixed "checkout"→"Secured by Stripe" — 2500ef1
-- [ ] ADMIN_V3_SPEC Phase A0 — audit fixes FIRST: blank revenue chart + axis, bogus 100% deltas, course eye-view bounce bug, Building=Your move + dup Go Live buttons, All/Active/Archived filter, archive-with-activity warning, relative-time bug, wizard inline validation + $0 placeholder trap, broadcast preview step, activity date default, 2FA link styling, no-silent-failures rule → CLAUDE.md (medium, no migration)
-- [ ] ADMIN_V3_SPEC Phase A1 — collapsible sidebar (icon rail, persisted, `[` shortcut) + "Add Course"→"Manual build" demotion (small, no migration)
-- [ ] ADMIN_V3_SPEC Phase A2 — /admin/revenue: fees today/7d/month, per-course table, failed charges + refunds problems section, SUPPORT_PLUS (medium, no migration)
+- [x] ADMIN_V3_SPEC Phase A0 — audit fixes FIRST: blank revenue chart + axis, bogus 100% deltas, course eye-view bounce bug, Building=Your move + dup Go Live buttons, All/Active/Archived filter, archive-with-activity warning, relative-time bug, wizard inline validation + $0 placeholder trap, broadcast preview step, activity date default, 2FA link styling, no-silent-failures rule → CLAUDE.md (medium, no migration) — 8460668
+- [x] ADMIN_V3_SPEC Phase A1 — collapsible sidebar (icon rail, persisted, `[` shortcut) + "Add Course"→"Manual build" demotion (small, no migration) — d429ce5
+- [x] ADMIN_V3_SPEC Phase A2 — /admin/revenue: fees today/7d/month, per-course table, failed charges + refunds problems section, SUPPORT_PLUS (medium, no migration) — 4f8f40b
 - [ ] ADMIN_V3_SPEC Phase A3 — /admin/golfers support lookup: search → all bookings/charges/receipts, resend emails, SUPPORT_PLUS (medium, no migration)
 - [ ] ADMIN_V3_SPEC Phase A4 — Overview "Needs you" action list above stats (small/medium, no migration)
 - [ ] ADMIN_V3_SPEC Phase A5 — Ctrl+K command palette, role-aware global search (medium, no migration)
+- [ ] PUBLIC_SITE_SPEC Phase C — lead form integrity: server+client email validation (CRITICAL), honeypot, inline per-field errors + autoscroll, CTA routing through type segmentation, brand line consistency, login autoComplete hygiene (small, no migration)
 - [ ] MANAGE_BOOKING_SPEC Phase M4 — course-configurable check-in window (Course.checkInWindowHours) driving the existing "time to check in" email; operator sets it in Settings (schema change, attended)
 
 ## Ideas / not yet specced
