@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft, Mail, Wrench, Power, CheckCircle, Clock, Trash2, ChevronDown,
-  XCircle, ArrowUpRight, Copy, Archive, Pencil, Save, RefreshCw,
+  XCircle, ArrowUpRight, Copy, Archive, Pencil, Save, RefreshCw, Eye,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -201,6 +201,8 @@ function InquiryDetailInner() {
   const [noteText, setNoteText] = useState('');
   const [approveResult, setApproveResult] = useState<ApproveResult | null>(null);
   const [actionError, setActionError] = useState('');
+  const [sendingPreview, setSendingPreview] = useState(false);
+  const [previewMsg, setPreviewMsg] = useState('');
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
@@ -273,6 +275,25 @@ function InquiryDetailInner() {
       if (d.courseId) router.push('/admin/courses/' + d.courseId);
     } catch (e) { setActionError('Error: ' + e); }
     setProcessing(false);
+  }
+
+  async function sendPreview() {
+    if (!inq?.builtCourseId) return;
+    setSendingPreview(true);
+    setPreviewMsg('');
+    try {
+      const r = await fetch('/api/preview/send', {
+        method: 'POST', headers: H(), body: JSON.stringify({ inquiryId: inq.id }),
+      });
+      const d = await r.json();
+      if (r.ok) {
+        setPreviewMsg('Preview email sent to ' + inq.email);
+        await loadInquiry();
+      } else {
+        setPreviewMsg('Error: ' + (d.error || 'Failed to send'));
+      }
+    } catch { setPreviewMsg('Error: network failure'); }
+    setSendingPreview(false);
   }
 
   async function deleteInquiry() {
@@ -442,6 +463,11 @@ function InquiryDetailInner() {
                   <button onClick={() => { if (confirm('Send login email to ' + inq.contactName + '?')) action('resend_welcome'); }} disabled={processing} className={btnO}>
                     <Mail className="w-3.5 h-3.5" />Send Login Email
                   </button>
+                  {inq.builtCourseId && (
+                    <button onClick={sendPreview} disabled={sendingPreview} className={btnO}>
+                      <Eye className="w-3.5 h-3.5" />{sendingPreview ? 'Sending…' : 'Send Preview'}
+                    </button>
+                  )}
                   <button onClick={() => { if (confirm('Set ' + inq.courseName + ' LIVE?')) action('mark_live'); }} disabled={processing} className={btnP}>
                     <Power className="w-3.5 h-3.5" />Go Live
                   </button>
@@ -500,6 +526,15 @@ function InquiryDetailInner() {
             <div className="mt-3 bg-bad/5 border border-bad/20 rounded-md px-4 py-2.5 flex items-center justify-between gap-3">
               <p className="text-bad text-xs leading-relaxed">{actionError}</p>
               <button onClick={() => setActionError('')} className="text-bad/60 hover:text-bad shrink-0 transition-colors">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 14 14"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </button>
+            </div>
+          )}
+          {/* Preview send feedback */}
+          {previewMsg && (
+            <div className={'mt-3 rounded-md px-4 py-2.5 flex items-center justify-between gap-3 ' + (previewMsg.startsWith('Error') ? 'bg-bad/5 border border-bad/20' : 'bg-ok/5 border border-ok/20')}>
+              <p className={'text-xs leading-relaxed ' + (previewMsg.startsWith('Error') ? 'text-bad' : 'text-ok')}>{previewMsg}</p>
+              <button onClick={() => setPreviewMsg('')} className="text-ink-muted hover:text-ink shrink-0 transition-colors">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 14 14"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               </button>
             </div>

@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Check, Flag, SlidersHorizontal, ExternalLink, Navigation, Bell, ArrowRight } from 'lucide-react';
+import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Check, Flag, SlidersHorizontal, ExternalLink, Navigation, Bell, ArrowRight, Eye } from 'lucide-react';
 import type { Course, TeeTime } from '@/lib/courses-data';
 import { TrustNote } from '@/components/TrustNote';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
@@ -108,12 +108,21 @@ type ActiveMemberSession = {
   tier: { name: string; color?: string } | null;
 };
 
-export default function CourseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+type PreviewMode = { courseId: string; token: string } | null;
+
+export default function CourseDetailPage({
+  params,
+  previewMode = null,
+}: {
+  params: Promise<{ slug: string }>;
+  previewMode?: PreviewMode;
+}) {
   const { slug } = use(params);
-  const isDemo = DEMO_COURSE_SLUGS.includes(slug);
+  const isDemo = DEMO_COURSE_SLUGS.includes(slug) && !previewMode;
   const router = useRouter();
   const searchParams = useSearchParams();
   const [demoModal, setDemoModal] = useState(false);
+  const [previewModal, setPreviewModal] = useState(false);
 
   const [course, setCourse] = useState<CourseWithBrand | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -159,11 +168,14 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
   const [memberTeeTimes, setMemberTeeTimes] = useState<ActiveTeeTime[]>([]);
 
   useEffect(() => {
-    fetch(`/api/courses/${slug}`)
+    const url = previewMode
+      ? `/api/preview/${previewMode.courseId}?token=${previewMode.token}`
+      : `/api/courses/${slug}`;
+    fetch(url)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then((c: CourseWithBrand) => { setCourse(c); if (c?.cart_required) setWithCart(true); })
       .catch(() => setNotFound(true));
-  }, [slug]);
+  }, [slug, previewMode]);
 
   useEffect(() => {
     if (!course || course.type === 'member' || course.type === 'private') return;
@@ -171,20 +183,24 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
     setSelectedTime(null);
     setMaxPrice(null);
     setNextAvailable(null);
-    fetch(`/api/courses/${slug}/tee-times?date=${selectedDate}`)
+    const url = previewMode
+      ? `/api/preview/${previewMode.courseId}/tee-times?token=${previewMode.token}&date=${selectedDate}`
+      : `/api/courses/${slug}/tee-times?date=${selectedDate}`;
+    fetch(url)
       .then(r => r.json())
       .then(setTeeTimes)
       .catch(() => setTeeTimes([]))
       .finally(() => setLoadingTimes(false));
-  }, [slug, selectedDate, course]);
+  }, [slug, selectedDate, course, previewMode]);
 
   // Fetch member session — silent 401 is normal (just means not signed in)
   useEffect(() => {
+    if (previewMode) return;
     fetch(`/api/member/${slug}/session`)
       .then(r => r.ok ? r.json() : null)
       .then(data => setMemberSession(data))
       .catch(() => {});
-  }, [slug]);
+  }, [slug, previewMode]);
 
   // Member tee times — fetched when member session is active, uses member API for correct pricing
   useEffect(() => {
@@ -198,8 +214,9 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
       .catch(() => setMemberTeeTimes([]));
   }, [memberSession, slug, selectedDate, course]);
 
-  // Sync filter state to URL (skip first render to avoid replacing URL with defaults)
+  // Sync filter state to URL (skip first render and preview pages)
   useEffect(() => {
+    if (previewMode) return;
     if (!didMount.current) { didMount.current = true; return; }
     const p = new URLSearchParams();
     const todayStr2 = formatDate(startOfToday());
@@ -209,7 +226,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
     if (holesFilter !== 'all') p.set('holes', holesFilter);
     const q = p.toString();
     router.replace(`/courses/${slug}${q ? '?' + q : ''}`, { scroll: false });
-  }, [selectedDate, todFilter, players, holesFilter, slug, router]);
+  }, [selectedDate, todFilter, players, holesFilter, slug, router, previewMode]);
 
   // Find next date with availability when current date is empty
   useEffect(() => {
@@ -223,7 +240,10 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
         d.setDate(d.getDate() + i);
         const ds = formatDate(d);
         try {
-          const res = await fetch(`/api/courses/${slug}/tee-times?date=${ds}`);
+          const url = previewMode
+            ? `/api/preview/${previewMode.courseId}/tee-times?token=${previewMode.token}&date=${ds}`
+            : `/api/courses/${slug}/tee-times?date=${ds}`;
+          const res = await fetch(url);
           const times = await res.json();
           if (!cancelled && Array.isArray(times) && times.length > 0) {
             setNextAvailable(ds);
@@ -236,7 +256,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
     };
     scan();
     return () => { cancelled = true; };
-  }, [teeTimes.length, loadingTimes, selectedDate, slug, course]);
+  }, [teeTimes.length, loadingTimes, selectedDate, slug, course, previewMode]);
 
   const hasHolesData = useMemo(() => {
     const vals = new Set(teeTimes.map(t => holesOf(t)).filter(h => h !== undefined));
@@ -449,6 +469,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
 
   function handleBook() {
     if (!selectedTime) return;
+    if (previewMode) { setPreviewModal(true); return; }
     if (isDemo) { setDemoModal(true); return; }
     const qp = new URLSearchParams({
       tee_time_id: String(selectedTime.id),
@@ -488,6 +509,34 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
 
   return (
     <>
+      {/* Preview banner */}
+      {previewMode && (
+        <div className="bg-pine/10 border-b border-pine/20">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3 text-sm">
+            <Eye size={14} className="text-pine shrink-0" />
+            <span className="text-ink-soft">
+              Preview of your GreenReserve page &mdash; not live yet. Booking is disabled. Reply to our email with any changes.
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Preview modal */}
+      {previewModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full shadow-xl">
+            <div className="text-ink font-medium mb-2">Booking disabled in preview</div>
+            <p className="text-ink-soft text-sm mb-5">This is a preview page &mdash; bookings are not active yet. Reply to the preview email with any changes you&apos;d like before going live.</p>
+            <button
+              onClick={() => setPreviewModal(false)}
+              className="w-full bg-pine hover:bg-pine-hover text-white rounded-md py-2.5 text-sm font-medium transition-colors"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Demo banner */}
       {isDemo && (
         <div className="bg-pine/10 border-b border-pine/20">

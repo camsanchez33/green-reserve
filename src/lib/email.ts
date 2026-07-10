@@ -452,6 +452,37 @@ export async function sendGolferPasswordResetEmail(data: {
 
 // Fired right after a correct password when the operator has 2FA enabled —
 // gates issuing the real session cookie until this code is verified.
+export async function sendPreviewEmail(data: {
+  contactName: string;
+  contactEmail: string;
+  courseName: string;
+  previewUrl: string;
+}) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">Your page is ready for a look</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      Hi ${data.contactName} &mdash; we've finished building your GreenReserve page for <strong>${data.courseName}</strong>.
+      Take a look and let us know if anything needs adjusting before we go live.
+    </p>
+    <a href="${data.previewUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:700;font-size:16px;margin-bottom:20px;">
+      Preview Your Page &rarr;
+    </a>
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:16px;margin-bottom:20px;">
+      <p style="margin:0;color:#374151;font-size:13px;">Booking is disabled on this preview link &mdash; it's only for you to review the layout and information. Reply to this email with any changes and we'll get them in quickly.</p>
+    </div>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.contactEmail,
+    replyTo: 'hello@greenreserve.app',
+    subject: `Preview: Your GreenReserve page for ${data.courseName}`,
+    html,
+  });
+}
+
 export async function sendTwoFactorCodeEmail(data: {
   operatorName: string;
   operatorEmail: string;

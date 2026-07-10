@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, Star, Power, Globe, ArchiveX, ArchiveRestore, Mail, Phone,
-  Calendar, Ban, Plus, X, RefreshCw, Search, MessageSquare, Send, Trash2,
+  Calendar, Ban, Plus, X, RefreshCw, Search, MessageSquare, Send, Trash2, Eye,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -145,6 +145,10 @@ export default function CourseDetailPage() {
   // Staff tab
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [resendMsg, setResendMsg] = useState('');
+
+  // Preview email
+  const [sendingPreview, setSendingPreview] = useState(false);
+  const [previewMsg, setPreviewMsg] = useState('');
 
   // Messages tab
   const [msgThread, setMsgThread] = useState<{ id: string; messages: { id: string; senderType: string; senderName: string; body: string; readAt: string | null; isBroadcast: boolean; createdAt: string }[] } | null>(null);
@@ -334,6 +338,17 @@ export default function CourseDetailPage() {
     setResendMsg(r.ok ? `Login email sent to ${staffName}` : 'Error sending email');
   }
 
+  async function sendCoursePreview() {
+    if (!detail?.course.operator?.email) return;
+    setSendingPreview(true); setPreviewMsg('');
+    const r = await fetch('/api/preview/send', {
+      method: 'POST', headers: H(), body: JSON.stringify({ courseId }),
+    });
+    const d = await r.json();
+    setSendingPreview(false);
+    setPreviewMsg(r.ok ? `Preview email sent to ${detail.course.operator.email}` : ('Error: ' + (d.error || 'Failed')));
+  }
+
   const c = detail?.course;
 
   if (!adminReady || loading) {
@@ -413,6 +428,17 @@ export default function CourseDetailPage() {
               >
                 <Star className="w-4 h-4" />
               </button>
+              {!c.active && c.operator && (
+                <button
+                  onClick={sendCoursePreview}
+                  disabled={sendingPreview}
+                  className="px-3 py-1.5 rounded-md text-xs font-medium border transition-colors flex items-center gap-1.5 bg-paper text-ink-soft border-line hover:text-pine hover:border-pine/30 hover:bg-pine/5 disabled:opacity-50"
+                  title="Send preview email to operator"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  {sendingPreview ? 'Sending…' : 'Send Preview'}
+                </button>
+              )}
               <button
                 onClick={() => toggleActive(!c.active)}
                 className={'px-3 py-1.5 rounded-md text-xs font-medium border transition-colors flex items-center gap-1.5 ' + (c.active ? 'bg-bad/5 text-bad border-bad/20 hover:bg-bad/10' : 'bg-ok/5 text-ok border-ok/20 hover:bg-ok/10')}
@@ -492,6 +518,15 @@ export default function CourseDetailPage() {
               </div>
             );
           })()}
+
+          {previewMsg && (
+            <div className={'mt-3 rounded-md px-4 py-2 flex items-center justify-between gap-3 ' + (previewMsg.startsWith('Error') ? 'bg-bad/5 border border-bad/20' : 'bg-ok/5 border border-ok/20')}>
+              <p className={'text-xs ' + (previewMsg.startsWith('Error') ? 'text-bad' : 'text-ok')}>{previewMsg}</p>
+              <button onClick={() => setPreviewMsg('')} className="text-ink-muted hover:text-ink transition-colors shrink-0">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
 
           <div className="flex gap-0.5 mt-4 bg-paper border border-line rounded-lg p-1 w-fit max-w-full overflow-x-auto">
             {ALL_TABS.map(t => (
