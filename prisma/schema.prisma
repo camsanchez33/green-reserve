@@ -56,6 +56,7 @@ model Course {
   minPlayers            Int                @default(1)
   maxPlayers            Int                @default(4)
   cancellationHours     Int                @default(24)
+  checkInWindowHours    Int                @default(3)
   lateCancellationFee   Float              @default(10)
   timezone              String             @default("America/New_York")
   rainCheckPolicy       String             @default("")

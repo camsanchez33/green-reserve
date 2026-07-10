@@ -120,13 +120,14 @@ export async function GET(req: NextRequest) {
     where: { status: 'confirmed', paymentStatus: 'no_payment_method' },
     include: {
       teeTime: { select: { date: true, time: true } },
-      course: { select: { name: true, timezone: true } },
+      course: { select: { name: true, timezone: true, checkInWindowHours: true } },
     },
   });
 
   for (const booking of noCardBookings) {
     const minsToTee = (teeToUtcMs(booking.teeTime.date, booking.teeTime.time, booking.course.timezone) - now.getTime()) / 60000;
-    if (minsToTee < 165 || minsToTee >= 195) continue; // 2h45m–3h15m window
+    const windowMins = booking.course.checkInWindowHours * 60;
+    if (minsToTee < windowMins - 15 || minsToTee >= windowMins + 15) continue; // ±15 min around the window
 
     try {
       await prisma.booking.update({

@@ -232,12 +232,12 @@ export async function sendCheckInAvailableEmail(data: {
   const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 12px;border-radius:3px;">&#9971; Ready to check in</span></div>
-    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">You're locked in — check in any time.</h1>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">You're all set — time to check in.</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
-      The free-cancellation window for your ${data.date} at ${data.time} tee time at ${data.courseName} has closed.
-      You can check in and pay online now, or just show up and check in at the pro shop.
+      Your tee time at ${data.courseName} on ${data.date} at ${data.time} is coming up.
+      Check in online now, or do it at the clubhouse when you arrive.
     </p>
-    ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:16px;">Check In &amp; Pay Online &rarr;</a>` : ''}
+    ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:16px;">Check In Online Now &rarr;</a>` : ''}
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
   `);
   await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Ready to check in — ${data.courseName} ${data.date} at ${data.time}`, html });

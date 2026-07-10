@@ -467,6 +467,9 @@ function SettingsPageInner() {
                 {!form.lateCancellationFee && (
                   <p className="text-xs text-ink-muted">No fee — golfers get a same-day check-in reminder and pay at the course. No card is collected at booking.</p>
                 )}
+                <Field label="Check-in reminder window (hours)" hint="Golfers receive a check-in email this many hours before their tee time. They can check in online or at the clubhouse when they arrive.">
+                  <FInput value={form.checkInWindowHours as number} onChange={v=>set('checkInWindowHours',Number(v))} type="number"/>
+                </Field>
                 <Field label="Rain check policy"><FInput value={form.rainCheckPolicy as string} onChange={v=>set('rainCheckPolicy',v)} placeholder="e.g. Rain checks issued for 9+ holes of rain"/></Field>
               </SectionCard>
               <SectionCard title="Player Limits">
