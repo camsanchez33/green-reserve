@@ -2,6 +2,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Check, X, Play, Monitor } from 'lucide-react';
+import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
+
+const DEMO_SLUG = DEMO_COURSE_SLUGS[0] ?? null;
 
 const SHOW_VIDEO = false;
 
@@ -225,6 +228,33 @@ export default function HomeContent() {
               Also includes: tee time generator, cancellation policy engine, member &amp; resident rates, staff logins, email confirmations, and a public course listing page.
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* SEE IT FOR YOURSELF */}
+      <section className="bg-paper border-t border-line py-24">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="mb-8">
+            <p className="text-[11px] uppercase tracking-[0.06em] text-pine font-medium mb-3">Live demo</p>
+            <h2 className="text-3xl sm:text-4xl font-serif font-medium text-ink tracking-tight mb-3">
+              See it for yourself
+            </h2>
+            <p className="text-ink-soft text-sm leading-relaxed max-w-xl">
+              Click through a real course page — date picker, pricing, cart options. Takes 30 seconds, no signup required.
+            </p>
+          </div>
+          {DEMO_SLUG ? (
+            <Link
+              href={`/courses/${DEMO_SLUG}`}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-pine hover:bg-pine-hover text-white text-sm font-medium rounded-md transition-all"
+            >
+              Explore a live course page <ArrowRight size={14} />
+            </Link>
+          ) : (
+            <div className="inline-block border border-line rounded-lg px-6 py-4 text-sm text-ink-faint">
+              Demo course coming soon
+            </div>
+          )}
         </div>
       </section>
 

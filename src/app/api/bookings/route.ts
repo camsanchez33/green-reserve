@@ -8,6 +8,7 @@ import { stripe, ACCESS_FEE_CENTS } from '@/lib/stripe';
 import { sendBookingConfirmation, sendOperatorBookingNotification, sendCancellationWarningEmail, sendCheckInAvailableEmail } from '@/lib/email';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
+import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
 
 /** Returns true for Sat/Sun given a date string like "2026-06-21" */
 function isWeekend(dateStr: string): boolean {
@@ -84,6 +85,11 @@ export async function POST(req: NextRequest) {
   // Private clubs: public online booking is blocked server-side
   if (teeTimeFull.course.type === 'private') {
     return NextResponse.json({ error: 'Online booking is not available for this private club.' }, { status: 403 });
+  }
+
+  // Demo courses: bookings are disabled
+  if (DEMO_COURSE_SLUGS.includes(teeTimeFull.course.slug)) {
+    return NextResponse.json({ error: 'Bookings are disabled on demo courses.' }, { status: 403 });
   }
 
   // Reject bookings for tee times that have already started

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Check, Flag, SlidersHorizontal, ExternalLink, Navigation, Bell } from 'lucide-react';
 import type { Course, TeeTime } from '@/lib/courses-data';
 import { TrustNote } from '@/components/TrustNote';
+import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
 
 const TYPE_LABELS: Record<string, string> = {
   public:         'Public',
@@ -109,8 +110,10 @@ type ActiveMemberSession = {
 
 export default function CourseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
+  const isDemo = DEMO_COURSE_SLUGS.includes(slug);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [demoModal, setDemoModal] = useState(false);
 
   const [course, setCourse] = useState<CourseWithBrand | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -446,6 +449,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
 
   function handleBook() {
     if (!selectedTime) return;
+    if (isDemo) { setDemoModal(true); return; }
     const qp = new URLSearchParams({
       tee_time_id: String(selectedTime.id),
       course_name: course!.name,
@@ -484,6 +488,20 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
 
   return (
     <>
+      {/* Demo banner */}
+      {isDemo && (
+        <div className="bg-pine/10 border-b border-pine/20">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 flex-wrap text-sm">
+            <span className="text-ink-soft">
+              This is a live demo of a GreenReserve course page — your course gets one just like it, free.
+            </span>
+            <Link href="/for-courses" className="text-pine font-medium hover:underline whitespace-nowrap">
+              List your course <ArrowRight size={12} className="inline -mt-0.5" />
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Course hero */}
       <div className="relative h-44 sm:h-56 flex items-end overflow-hidden" style={heroStyle}>
         {heroOverlay}
@@ -1186,6 +1204,36 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Demo booking intercept modal */}
+      {demoModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+          onClick={() => setDemoModal(false)}
+        >
+          <div className="bg-white rounded-lg max-w-sm w-full p-7 shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="w-10 h-10 rounded-full bg-pine/10 flex items-center justify-center mx-auto mb-4">
+              <Flag size={20} className="text-pine" />
+            </div>
+            <h3 className="font-serif font-medium text-ink text-xl text-center mb-2">Demo course</h3>
+            <p className="text-sm text-ink-soft text-center leading-relaxed mb-6">
+              Bookings are disabled on this demo page. This is where your golfers would receive their confirmation — with your course name, their tee time, and a check-in link.
+            </p>
+            <Link
+              href="/for-courses"
+              className="block w-full text-center py-3 bg-pine hover:bg-pine-hover text-white text-sm font-medium rounded-md transition-colors mb-3"
+            >
+              List your course for free
+            </Link>
+            <button
+              onClick={() => setDemoModal(false)}
+              className="block w-full text-center py-3 text-sm text-ink-muted hover:text-ink transition-colors"
+            >
+              Keep exploring
+            </button>
           </div>
         </div>
       )}
