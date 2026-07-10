@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Calendar, Users, DollarSign, Ban,
   Plus, ChevronLeft, ChevronRight, RefreshCw,
-  AlertTriangle, X, Loader2, Lock,
+  AlertTriangle, X, Loader2, Lock, Eye,
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -71,6 +71,7 @@ function DashboardPageInner() {
   const [loading, setLoading]     = useState(true);
   const [courseName, setCourseName] = useState('');
   const [courseArchived, setCourseArchived] = useState(false);
+  const [courseDraft, setCourseDraft] = useState(false);
   const [showAddModal, setShowAddModal]       = useState(false);
   const [showConditions, setShowConditions]   = useState(false);
   const [expandedId, setExpandedId]           = useState<string | null>(null);
@@ -137,6 +138,7 @@ function DashboardPageInner() {
     fetch('/api/operator/courses').then(r => r.json()).then(c => {
       if (c?.name) setCourseName(c.name);
       if (c?.archivedAt) setCourseArchived(true);
+      if (!c?.active || c?.liveStatus !== 'live') setCourseDraft(true);
       if (c?.conditions) { setConditions(c.conditions); setConditionsInput(c.conditions); }
     });
   }, [router]);
@@ -172,6 +174,12 @@ function DashboardPageInner() {
       <OperatorSidebar active={tab} onAlertClick={() => setShowConditions(true)}/>
 
       <main className="flex-1 overflow-y-auto">
+        {courseDraft && !courseArchived && (
+          <div className="bg-pine/5 border-b border-pine/20 px-6 py-3 flex items-center gap-2 text-sm text-ink-soft">
+            <Eye className="w-4 h-4 shrink-0 text-pine"/>
+            <span>Your course isn&apos;t live yet &mdash; golfers can&apos;t book until you approve the page.</span>
+          </div>
+        )}
         {courseArchived && (
           <div className="bg-bad/5 border-b border-bad/20 px-6 py-3 flex items-center gap-2 text-sm text-bad">
             <AlertTriangle className="w-4 h-4 shrink-0"/>

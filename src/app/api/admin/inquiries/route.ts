@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
-import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail } from '@/lib/email';
+import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail, sendDashboardAccessEmail, sendGoLiveSimpleEmail } from '@/lib/email';
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, OWNER_ONLY, type AdminSession } from '@/lib/admin-session';
 
@@ -235,6 +235,28 @@ async function handleAction(
     }
   }
 
+  // ── Send dashboard access (Building-stage early access) ───────────
+  if (action === 'send_dashboard_access') {
+    try {
+      if (!inquiry.builtCourseId) return NextResponse.json({ error: 'No course built yet' }, { status: 400 });
+      const course = await prisma.course.findUnique({ where: { id: inquiry.builtCourseId }, include: { operator: true } });
+      if (!course?.operator) return NextResponse.json({ error: 'No operator account found' }, { status: 404 });
+      const tempPassword = randomBytes(8).toString('hex');
+      const hashed = await bcrypt.hash(tempPassword, 12);
+      const verificationToken = randomBytes(32).toString('hex');
+      await prisma.courseOperator.update({ where: { id: course.operator.id }, data: { password: hashed, verificationToken } });
+      const setupLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/verify?token=${verificationToken}`;
+      sendDashboardAccessEmail({
+        operatorName: inquiry.contactName, operatorEmail: inquiry.email,
+        courseName: inquiry.courseName, tempPassword, setupLink,
+      }).catch(emailErr => console.error('Dashboard access email failed:', emailErr));
+      await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `Dashboard access sent by ${adminName}`);
+      return NextResponse.json({ success: true, tempPassword, setupLink });
+    } catch (e) {
+      return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
+    }
+  }
+
   // ── Mark live ─────────────────────────────────────────────────────
   if (action === 'mark_live') {
     try {
@@ -250,11 +272,18 @@ async function handleAction(
       await logEvent(inquiryId, from, 'live', 'admin', adminName);
       // Only send welcome email once — guard via welcomeEmailSentAt
       if (!builtCourse.welcomeEmailSentAt) {
-        sendCourseLiveOrientationEmail({
+        // If dashboard access was already sent, use shorter "you're live" email
+        const events = await prisma.inquiryStatusEvent.findMany({
+          where: { inquiryId },
+          select: { actorName: true },
+        });
+        const hasDashboardAccess = events.some(e => e.actorName?.startsWith('Dashboard access sent'));
+        const goLiveFn = hasDashboardAccess ? sendGoLiveSimpleEmail : sendCourseLiveOrientationEmail;
+        goLiveFn({
           operatorName: inquiry.contactName, operatorEmail: inquiry.email,
           courseName: inquiry.courseName, courseSlug: builtCourse.slug,
         }).then(() => prisma.course.update({ where: { id: inquiry.builtCourseId! }, data: { welcomeEmailSentAt: new Date() } }))
-          .catch(emailErr => console.error('Go-live orientation email failed:', emailErr));
+          .catch(emailErr => console.error('Go-live email failed:', emailErr));
       }
       return NextResponse.json({ success: true });
     } catch (e) {

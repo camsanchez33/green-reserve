@@ -470,6 +470,7 @@ export async function sendPreviewEmail(data: {
     <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:16px;margin-bottom:20px;">
       <p style="margin:0;color:#374151;font-size:13px;">Booking is disabled on this preview link &mdash; it's only for you to review the layout and information. Reply to this email with any changes and we'll get them in quickly.</p>
     </div>
+    <p style="margin:0 0 20px;color:#9ca3af;font-size:13px;">Want to see your dashboard too? We can send you access &mdash; just reply.</p>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
       Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
     </p>
@@ -479,6 +480,76 @@ export async function sendPreviewEmail(data: {
     to: data.contactEmail,
     replyTo: 'hello@greenreserve.app',
     subject: `Preview: Your GreenReserve page for ${data.courseName}`,
+    html,
+  });
+}
+
+// Sent during Building stage when admin clicks "Send dashboard access" —
+// gives early dashboard access before the course goes live.
+export async function sendDashboardAccessEmail(data: {
+  operatorName: string;
+  operatorEmail: string;
+  courseName: string;
+  tempPassword: string;
+  setupLink: string;
+}) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">Your dashboard is ready to explore</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      Hi ${data.operatorName} &mdash; while we put the finishing touches on your GreenReserve page for <strong>${data.courseName}</strong>,
+      here&rsquo;s early access to your dashboard. Take a look around &mdash; this is where you&rsquo;ll manage tee times,
+      bookings, and check-ins. <strong>Nothing is live yet.</strong>
+    </p>
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:24px;margin-bottom:24px;">
+      <p style="margin:0 0 4px;color:#6b7280;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Login Email</p>
+      <p style="margin:0 0 16px;color:#111827;font-size:15px;font-weight:600;">${data.operatorEmail}</p>
+      <p style="margin:0 0 4px;color:#6b7280;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Temporary Password</p>
+      <p style="margin:0;color:#111827;font-size:18px;font-weight:900;font-family:monospace;letter-spacing:0.1em;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;display:inline-block;">${data.tempPassword}</p>
+    </div>
+    <a href="${data.setupLink}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:700;font-size:16px;margin-bottom:16px;">
+      Set Up My Dashboard &rarr;
+    </a>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.operatorEmail,
+    subject: `Early dashboard access — ${data.courseName} on GreenReserve`,
+    html,
+  });
+}
+
+// Sent when going live and the operator already has dashboard access —
+// shorter "you're live" framing instead of the full orientation email.
+export async function sendGoLiveSimpleEmail(data: {
+  operatorName: string;
+  operatorEmail: string;
+  courseName: string;
+  courseSlug: string;
+}) {
+  const bookingUrl = `${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}`;
+  const dashboardUrl = `${process.env.NEXT_PUBLIC_URL}/dashboard`;
+  const html = baseTemplate(`
+    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 14px;border-radius:3px;">&#10003; You&rsquo;re live</span></div>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">${data.courseName} is live on GreenReserve.</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      Golfers can find and book your tee sheet at
+      <a href="${bookingUrl}" style="color:#1b4332;font-weight:600;">${bookingUrl.replace('https://', '')}</a>.
+      New bookings will appear in your dashboard as they come in.
+    </p>
+    <a href="${dashboardUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:700;font-size:16px;margin-bottom:16px;">
+      View My Dashboard &rarr;
+    </a>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.operatorEmail,
+    subject: `You're live! ${data.courseName} is now bookable on GreenReserve`,
     html,
   });
 }

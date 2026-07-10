@@ -250,7 +250,7 @@ function InquiryDetailInner() {
       let d: Record<string, unknown> = {};
       try { d = JSON.parse(text); } catch { /* ignore */ }
       if (r.ok) {
-        if (['build_course', 'resend_welcome', 'request_details', 'resend_details'].includes(act)) {
+        if (['build_course', 'resend_welcome', 'send_dashboard_access', 'request_details', 'resend_details'].includes(act)) {
           setApproveResult(d as ApproveResult);
         }
         if (act === 'add_note') setNoteText('');
@@ -460,8 +460,8 @@ function InquiryDetailInner() {
                       <Wrench className="w-3.5 h-3.5" />Manage Course
                     </button>
                   )}
-                  <button onClick={() => { if (confirm('Send login email to ' + inq.contactName + '?')) action('resend_welcome'); }} disabled={processing} className={btnO}>
-                    <Mail className="w-3.5 h-3.5" />Send Login Email
+                  <button onClick={() => { if (confirm('Send dashboard access email to ' + inq.contactName + '?')) action('send_dashboard_access'); }} disabled={processing} className={btnO}>
+                    <Mail className="w-3.5 h-3.5" />Send dashboard access
                   </button>
                   {inq.builtCourseId && (
                     <button onClick={sendPreview} disabled={sendingPreview} className={btnO}>
