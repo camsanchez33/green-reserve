@@ -17,8 +17,9 @@ export async function GET(req: NextRequest) {
 
   const showArchived = req.nextUrl.searchParams.get('showArchived') === '1';
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
 
-  const [courses, bookingAggs, memberAggs] = await Promise.all([
+  const [courses, bookingAggs, memberAggs, lastBookingAggs, priorBookingAggs] = await Promise.all([
     prisma.course.findMany({
       where: showArchived ? { archivedAt: { not: null } } : { archivedAt: null },
       include: { operator: { select: { email: true, name: true, onboardingStep: true, emailVerified: true } } },
@@ -35,16 +36,29 @@ export async function GET(req: NextRequest) {
       where: { status: 'active' },
       _count: { id: true },
     }),
+    prisma.booking.groupBy({
+      by: ['courseId'],
+      _max: { createdAt: true },
+    }),
+    prisma.booking.groupBy({
+      by: ['courseId'],
+      where: { status: 'confirmed', createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } },
+      _count: { id: true },
+    }),
   ]);
 
   const bookingMap = new Map(bookingAggs.map(b => [b.courseId, { count: b._count.id, revenue: (b._sum.accessFeeTotal ?? 0) / 100 }]));
   const memberMap = new Map(memberAggs.map(m => [m.courseId, m._count.id]));
+  const lastBookingMap = new Map(lastBookingAggs.map(b => [b.courseId, b._max.createdAt?.toISOString() ?? null]));
+  const priorBookingMap = new Map(priorBookingAggs.map(b => [b.courseId, b._count.id]));
 
   const result = courses.map(c => ({
     ...c,
     bookings30d: bookingMap.get(c.id)?.count ?? 0,
     revenue30d: bookingMap.get(c.id)?.revenue ?? 0,
     activeMemberCount: memberMap.get(c.id) ?? 0,
+    lastBookingAt: lastBookingMap.get(c.id) ?? null,
+    bookingsPrior30d: priorBookingMap.get(c.id) ?? 0,
   }));
 
   return NextResponse.json(result);

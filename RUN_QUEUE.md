@@ -100,6 +100,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   NOTE: {{COMPANY_LEGAL_NAME}} and state of formation are marked TODO in /terms and /privacy — Cam must supply LLC name + state once formed; attorney review needed before scale.
 - [x] ADMIN_V3_SPEC Phase A7 — course health signals on Courses list: last booking, 30d trend, operator last login (amber/red thresholds), Health sort, detail-page strip (small, no migration) — f4dabe0
   NOTE: CourseOperator has no lastLoginAt column — operator last login renders "—" everywhere. Add lastLoginAt to CourseOperator in a future attended schema run, then wire it in the operator login route and remove the placeholder.
+- [ ] PUBLIC_SITE_SPEC Phase E — live demo course page: DEMO_COURSE_SLUGS banner, full flow walkable with confirm intercepted (client+server), homepage "See it for yourself" section, noindex (small, no migration)
 - [ ] MANAGE_BOOKING_SPEC Phase M4 — course-configurable check-in window (Course.checkInWindowHours) driving the existing "time to check in" email; operator sets it in Settings (schema change, attended)
 
 ## Ideas / not yet specced

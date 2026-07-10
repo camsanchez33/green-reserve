@@ -156,3 +156,28 @@ visibly marked TODO and flag in RUN_QUEUE.md.
 
 Ground rules: Clubhouse system, no schema changes, validate parses, update
 RUN_QUEUE.md.
+
+---
+
+## Phase E — Live demo course page (small, no migration)
+
+The strongest proof for a skeptical operator: click through an actual course
+page. We have a test course — make it the official demo.
+
+1. **Demo banner**: a DEMO_COURSE_SLUGS constant (src/lib, no schema). Course
+   pages whose slug is listed render a slim top banner: "This is a live demo
+   of a GreenReserve course page — your course gets one just like it, free."
+   with a "List your course" link.
+2. **Booking on demo courses**: golfers can walk the entire flow (slots,
+   pricing, filters) but the final confirm is intercepted with a friendly
+   note ("Demo course — bookings are disabled. This is where your golfers
+   would get their confirmation.") — server-side rejection too (same slug
+   list), so nobody creates real bookings/emails on it.
+3. **Homepage section** ("See it for yourself"), after the screenshots
+   section: one card linking to the demo course page. CTA: "Explore a live
+   course page →". Note under it: takes 30 seconds, no signup.
+4. Demo course content: Cam polishes the test course (real-looking name,
+   photos, sensible rates) — manual to-do; the section ships regardless and
+   improves when he does.
+5. noindex on the demo course page (it shouldn't compete with real courses
+   in search).

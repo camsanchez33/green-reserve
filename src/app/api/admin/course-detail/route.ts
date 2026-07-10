@@ -10,13 +10,17 @@ export async function GET(req: NextRequest) {
 
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const sixtyDaysAgo = new Date();
+  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
 
-  const [course, recentBookings, totalBookings, revenue, staff] = await Promise.all([
+  const [course, recentBookings, totalBookings, revenue, staff, lastBookingAgg, priorBookingsCount] = await Promise.all([
     prisma.course.findUnique({ where: { id: courseId }, include: { operator: { select: { id: true, name: true, email: true, emailVerified: true, onboardingStep: true, phone: true } }, schedules: true } }),
     prisma.booking.findMany({ where: { courseId, status: 'confirmed', createdAt: { gte: thirtyDaysAgo } }, select: { id: true, golferName: true, golferEmail: true, players: true, totalAmount: true, createdAt: true, teeTime: { select: { date: true, time: true } } }, orderBy: { createdAt: 'desc' }, take: 20 }),
     prisma.booking.count({ where: { courseId, status: 'confirmed' } }),
-    prisma.booking.aggregate({ where: { courseId, status: 'confirmed', createdAt: { gte: thirtyDaysAgo } }, _sum: { greenFeeTotal: true, accessFeeTotal: true, totalAmount: true } }),
+    prisma.booking.aggregate({ where: { courseId, status: 'confirmed', createdAt: { gte: thirtyDaysAgo } }, _sum: { greenFeeTotal: true, accessFeeTotal: true, totalAmount: true }, _count: { id: true } }),
     prisma.courseStaff.findMany({ where: { courseId }, select: { id: true, name: true, email: true, role: true, active: true } }),
+    prisma.booking.aggregate({ where: { courseId }, _max: { createdAt: true } }),
+    prisma.booking.count({ where: { courseId, status: 'confirmed', createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } } }),
   ]);
 
   return NextResponse.json({
@@ -29,6 +33,9 @@ export async function GET(req: NextRequest) {
       platform: (revenue._sum.accessFeeTotal ?? 0) / 100,
       greenFees: (revenue._sum.greenFeeTotal ?? 0) / 100,
     },
+    bookings30d: revenue._count.id,
+    lastBookingAt: lastBookingAgg._max.createdAt?.toISOString() ?? null,
+    bookingsPrior30d: priorBookingsCount,
   });
 }
 
