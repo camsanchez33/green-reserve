@@ -102,7 +102,8 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   NOTE: CourseOperator has no lastLoginAt column — operator last login renders "—" everywhere. Add lastLoginAt to CourseOperator in a future attended schema run, then wire it in the operator login route and remove the placeholder.
 - [x] PUBLIC_SITE_SPEC Phase E — live demo course page: DEMO_COURSE_SLUGS banner, full flow walkable with confirm intercepted (client+server), homepage "See it for yourself" section, noindex (small, no migration) — 29659a6
   NOTE: DEMO_COURSE_SLUGS is empty in src/lib/demo-courses.ts — Cam adds the real demo slug there. Homepage shows "Demo course coming soon" card until then. Server-side rejection in /api/bookings is already live.
-- [ ] MANAGE_BOOKING_SPEC Phase M4 — course-configurable check-in window (Course.checkInWindowHours) driving the existing "time to check in" email; operator sets it in Settings (schema change, attended)
+- [x] MANAGE_BOOKING_SPEC Phase M4 — course-configurable check-in window (Course.checkInWindowHours) driving the existing "time to check in" email; operator sets it in Settings (schema change, attended) — d3ce2c7 (feat/checkin-window, merged to main)
+  BUG FIX (same run): package.json build was "next build" — prisma migrate deploy never ran on deploy. Fixed: build is now "prisma generate && node scripts/migrate-prod.js && next build"; script guards on VERCEL_ENV === 'production' so previews never migrate prod. CLAUDE.md updated to match actual mechanism.
 
 ## Ideas / not yet specced
 

@@ -120,7 +120,12 @@ npx vercel --prod
    override `DATABASE_URL` + `DIRECT_URL` to point to the Neon branch
 6. `npx prisma migrate deploy` applies the migration to the Neon branch
 7. Verify the feature on the preview URL
-8. Merge PR to main → Vercel build runs `prisma migrate deploy` automatically
+8. Merge PR to main → Vercel build command is:
+   `prisma generate && node scripts/migrate-prod.js && next build`
+   `scripts/migrate-prod.js` runs `prisma migrate deploy` **only when
+   `VERCEL_ENV === 'production'`** and exits non-zero (fails the build) if
+   it errors. Preview builds skip it entirely — safe even if they share
+   `DATABASE_URL` with prod.
 9. Post-deploy: confirm `/api/health` returns 200 (DB query succeeds)
 10. Run `npx prisma migrate status` — must show "Database schema is up to date"
 
@@ -143,8 +148,10 @@ in `.env.local` only.
   or write a compensating migration (`migrate dev --name revert-x`)
 
 **Vercel preview env status:** Vercel auto-creates preview deployments for every branch.
-Preview deployments currently share the production DATABASE_URL unless manually
-overridden per-deployment. For schema migrations, always override before running them.
+Preview deployments share the production `DATABASE_URL` by default. This is safe
+because `scripts/migrate-prod.js` only runs migrations when `VERCEL_ENV === 'production'`
+— previews skip it automatically. No manual override needed just to prevent accidental
+migration; still override if you need the preview to point at a branch DB for testing.
 
 ### Performance budgets (golfer-facing pages)
 
