@@ -346,6 +346,21 @@ sight of their page must not be the live launch.
    check), primary becomes "Go Live", with "Re-send preview" secondary.
 4. Email follows baseTemplate conventions; no email fires automatically —
    only on the button.
+5. **Dashboard early access (reframe what exists).** The Building-stage
+   "Send Login Email" already gives pre-live dashboard access — make it part
+   of the review loop instead of a launch-sounding email:
+   - Rename the action "Send dashboard access" during Building stage.
+   - Email copy: "Take a look around your dashboard while we finish your
+     page — this is where you'll manage tee times, bookings, and check-ins.
+     Nothing is live yet." + login button + their temp password flow.
+   - The preview email (item 2) gets a secondary line: "Want to see your
+     dashboard too? We can send you access — just reply."
+   - Dashboard on a draft course: verify it renders sanely (tee sheet with
+     generated times, settings editable, no crash on zero bookings) and add
+     a slim draft banner: "Your course isn't live yet — golfers can't book
+     until you approve the page."
+   - Go-live email (O4) must not resend credentials if dashboard access was
+     already sent — adjust copy to "you're live" framing in that case.
 
 ### Phase V4 — One-click draft build from the sheet (medium, no migration)
 REPLACES the old "wizard prefill parity" plan. Cam's ruling: the wizard is an
