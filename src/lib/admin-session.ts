@@ -37,7 +37,7 @@ export async function resolveAdminSession(): Promise<AdminSession | null> {
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, secret);
-    const p = payload as AdminSession & { type: string };
+    const p = payload as unknown as AdminSession & { type: string };
     if (p.type !== 'admin_session') return null;
     return { adminId: p.adminId, email: p.email, name: p.name, role: p.role };
   } catch { return null; }

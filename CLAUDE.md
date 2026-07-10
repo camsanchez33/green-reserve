@@ -81,7 +81,10 @@ prisma/schema.prisma     Database schema
 
 To validate before pushing:
 ```bash
-# Check for parse errors (mirrors what SWC does)
+# Type-check (runs in CI via .github/workflows/typecheck.yml)
+npx tsc --noEmit
+
+# Check for SWC parse errors (mirrors what the build does)
 npm install @babel/parser   # one-time
 node -e "
 const {parse}=require('@babel/parser');

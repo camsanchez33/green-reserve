@@ -84,26 +84,26 @@ async function seed() {
   const [opA, opB] = await Promise.all([
     prisma.courseOperator.upsert({
       where: { email: `${TS}-opA@test.local` },
-      create: { name: 'Isol Op A', email: `${TS}-opA@test.local`, passwordHash: hash },
-      update: { passwordHash: hash },
+      create: { name: 'Isol Op A', email: `${TS}-opA@test.local`, password: hash },
+      update: { password: hash },
     }),
     prisma.courseOperator.upsert({
       where: { email: `${TS}-opB@test.local` },
-      create: { name: 'Isol Op B', email: `${TS}-opB@test.local`, passwordHash: hash },
-      update: { passwordHash: hash },
+      create: { name: 'Isol Op B', email: `${TS}-opB@test.local`, password: hash },
+      update: { password: hash },
     }),
   ]);
 
-  const courseBase = { holes: 18, greenFee: 50, cartFee: 20, liveStatus: 'live', active: true, timezone: 'America/Los_Angeles', cancellationHours: 24 };
+  const courseBase = { holes: 18, liveStatus: 'live', active: true, timezone: 'America/Los_Angeles', cancellationHours: 24 };
   const [courseA, courseB] = await Promise.all([
     prisma.course.upsert({
       where: { slug: `${TS}-course-a` },
-      create: { name: 'Isol Course A', slug: `${TS}-course-a`, operatorId: opA.id, address: '1 A', city: 'A City', state: 'CA', zip: '90001', ...courseBase },
+      create: { name: 'Isol Course A', slug: `${TS}-course-a`, operatorId: opA.id, address: '1 A', city: 'A City', state: 'CA', zipCode: '90001', ...courseBase },
       update: { operatorId: opA.id },
     }),
     prisma.course.upsert({
       where: { slug: `${TS}-course-b` },
-      create: { name: 'Isol Course B', slug: `${TS}-course-b`, operatorId: opB.id, address: '2 B', city: 'B City', state: 'CA', zip: '90002', ...courseBase },
+      create: { name: 'Isol Course B', slug: `${TS}-course-b`, operatorId: opB.id, address: '2 B', city: 'B City', state: 'CA', zipCode: '90002', ...courseBase },
       update: { operatorId: opB.id },
     }),
   ]);

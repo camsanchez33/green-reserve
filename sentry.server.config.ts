@@ -6,7 +6,7 @@ if (dsn) {
     dsn,
     tracesSampleRate: 0.2,
     // Money-path transactions always captured
-    tracesSampler: (ctx) => {
+    tracesSampler: (ctx: { name?: string }) => {
       const op = ctx.name ?? '';
       if (op.includes('/api/bookings') || op.includes('/api/checkin') || op.includes('/api/cron')) {
         return 1.0;

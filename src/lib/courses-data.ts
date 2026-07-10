@@ -2,7 +2,7 @@ export type Course = {
   id: number;
   slug: string;
   name: string;
-  type: 'public' | 'semi-private' | 'member' | 'resident' | 'resort' | 'municipal';
+  type: 'public' | 'semi-private' | 'member' | 'resident' | 'resort' | 'municipal' | 'private';
   city: string;
   state: string;
   address: string;

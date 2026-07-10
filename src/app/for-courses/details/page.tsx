@@ -23,7 +23,7 @@ type PassTier = {
   perRound: string; perRoundFee: string;
   perRoundType: string; // 'discount' | 'separate'
   perRoundWeekday: string; perRoundWeekend: string; perRoundTwilight: string; perRoundCartIncluded: string;
-  residentWho: string; residentVerifType: string;
+  residentWho: string; residentVerifType: string; residentVerification?: string;
   residentCardCost: string; residentCardWhere: string; residentCardRenewal: string;
   residentWeekday: string; residentWeekend: string; residentTwilight: string;
 };

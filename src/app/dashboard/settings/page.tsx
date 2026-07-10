@@ -414,12 +414,12 @@ function SettingsPageInner() {
             <div className="space-y-5">
               <SectionCard title="Member Pricing">
                 <Toggle label="Enable member pricing" checked={!!form.hasMemberPricing} onChange={()=>tog('hasMemberPricing')}/>
-                {form.hasMemberPricing && <Field label="Member advance booking (days)"><FInput value={form.memberAdvanceDays as number} onChange={v=>set('memberAdvanceDays',Number(v))} type="number"/></Field>}
+                {!!form.hasMemberPricing && <Field label="Member advance booking (days)"><FInput value={form.memberAdvanceDays as number} onChange={v=>set('memberAdvanceDays',Number(v))} type="number"/></Field>}
                 <div className="text-xs text-pine bg-pine/5 border border-pine/20 rounded-md px-3 py-2">Member rates are set per-schedule in your Schedule setup page.</div>
               </SectionCard>
               <SectionCard title="Resident Pricing">
                 <Toggle label="Enable resident pricing" checked={!!form.hasResidentPricing} onChange={()=>tog('hasResidentPricing')}/>
-                {form.hasResidentPricing && (
+                {!!form.hasResidentPricing && (
                   <>
                     <div className="grid grid-cols-2 gap-3">
                       <Field label="Resident County"><FInput value={form.residentCounty as string} onChange={v=>set('residentCounty',v)} placeholder="e.g. Bergen"/></Field>
@@ -499,7 +499,7 @@ function SettingsPageInner() {
             <div className="space-y-5">
               <SectionCard title="Practice">
                 <Toggle label="Driving Range" checked={!!form.hasDrivingRange} onChange={()=>tog('hasDrivingRange')}/>
-                {form.hasDrivingRange && (
+                {!!form.hasDrivingRange && (
                   <>
                     <Field label="Range type">
                       <select value={form.drivingRangeType as string} onChange={e=>set('drivingRangeType',e.target.value)} className={iCls}>
@@ -518,17 +518,17 @@ function SettingsPageInner() {
               </SectionCard>
               <SectionCard title="Amenities">
                 <Toggle label="Pro Shop" checked={!!form.hasProShop} onChange={()=>tog('hasProShop')}/>
-                {form.hasProShop && <Field label="Pro shop phone number"><FInput value={form.proShopPhone as string} onChange={v=>set('proShopPhone',v)} placeholder="(201) 555-0100"/></Field>}
+                {!!form.hasProShop && <Field label="Pro shop phone number"><FInput value={form.proShopPhone as string} onChange={v=>set('proShopPhone',v)} placeholder="(201) 555-0100"/></Field>}
                 <Toggle label="Lessons Available" checked={!!form.hasLessons} onChange={()=>tog('hasLessons')}/>
                 <Toggle label="Club Rental" checked={!!form.hasClubRental} onChange={()=>tog('hasClubRental')}/>
-                {form.hasClubRental && <Field label="Club rental rate ($)"><FInput value={form.clubRentalRate as number} onChange={v=>set('clubRentalRate',Number(v))} type="number"/></Field>}
+                {!!form.hasClubRental && <Field label="Club rental rate ($)"><FInput value={form.clubRentalRate as number} onChange={v=>set('clubRentalRate',Number(v))} type="number"/></Field>}
                 <Toggle label="Push Cart Rental" checked={!!form.hasPushCartRental} onChange={()=>tog('hasPushCartRental')}/>
-                {form.hasPushCartRental && <Field label="Push cart rate ($)"><FInput value={form.pushCartRate as number} onChange={v=>set('pushCartRate',Number(v))} type="number"/></Field>}
+                {!!form.hasPushCartRental && <Field label="Push cart rate ($)"><FInput value={form.pushCartRate as number} onChange={v=>set('pushCartRate',Number(v))} type="number"/></Field>}
                 <Toggle label="Bag Storage" checked={!!form.hasBagStorage} onChange={()=>tog('hasBagStorage')}/>
                 <Toggle label="Locker Room" checked={!!form.hasLockerRoom} onChange={()=>tog('hasLockerRoom')}/>
                 <Toggle label="GPS Carts" checked={!!form.hasGpsCarts} onChange={()=>tog('hasGpsCarts')}/>
                 <Toggle label="Tournaments Hosted" checked={!!form.hasTournaments} onChange={()=>tog('hasTournaments')}/>
-                {form.hasTournaments && (
+                {!!form.hasTournaments && (
                   <Field label="How often?">
                     <select value={form.tournamentFrequency as string} onChange={e=>set('tournamentFrequency',e.target.value)} className={iCls}>
                       <option value="">Select...</option>
@@ -556,7 +556,7 @@ function SettingsPageInner() {
               </SectionCard>
               <SectionCard title="Caddies">
                 <Toggle label="Caddies Available" checked={!!form.hasCaddies} onChange={()=>tog('hasCaddies')}/>
-                {form.hasCaddies && (
+                {!!form.hasCaddies && (
                   <>
                     <Field label="Caddie type">
                       <select value={form.caddieType as string} onChange={e=>set('caddieType',e.target.value)} className={iCls}>

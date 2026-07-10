@@ -998,15 +998,15 @@ function InquiryDetailInner() {
                               </div>
                               <div className="text-sm font-medium text-ink mb-2">{String(p.name || 'Unnamed')}</div>
                               <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-ink-soft">
-                                {p.fee && <span>Fee: {fmtMoney(p.fee)}{p.feePeriod ? ' / ' + String(p.feePeriod) : ''}</span>}
-                                {p.includes && <span>Includes: {String(p.includes)}</span>}
-                                {p.perRound === 'yes' && p.perRoundFee && <span>Per-round: {fmtMoney(p.perRoundFee)}</span>}
-                                {isResident && p.residentWho && <span>Who qualifies: {String(p.residentWho)}</span>}
-                                {isResident && p.residentVerifType && <span>Verification: {String(p.residentVerifType)}</span>}
-                                {isResident && p.residentCardCost && <span>Card cost: {fmtMoney(p.residentCardCost)}</span>}
-                                {p.type === 'resident_rate' && p.residentWeekday && <span>WD rate: {fmtMoney(p.residentWeekday)}</span>}
-                                {p.type === 'resident_rate' && p.residentWeekend && <span>WE rate: {fmtMoney(p.residentWeekend)}</span>}
-                                {p.type === 'resident_rate' && p.residentTwilight && <span>Twilight: {fmtMoney(p.residentTwilight)}</span>}
+                                {!!p.fee && <span>Fee: {fmtMoney(p.fee)}{p.feePeriod ? ' / ' + String(p.feePeriod) : ''}</span>}
+                                {!!p.includes && <span>Includes: {String(p.includes)}</span>}
+                                {p.perRound === 'yes' && !!p.perRoundFee && <span>Per-round: {fmtMoney(p.perRoundFee)}</span>}
+                                {isResident && !!p.residentWho && <span>Who qualifies: {String(p.residentWho)}</span>}
+                                {isResident && !!p.residentVerifType && <span>Verification: {String(p.residentVerifType)}</span>}
+                                {isResident && !!p.residentCardCost && <span>Card cost: {fmtMoney(p.residentCardCost)}</span>}
+                                {p.type === 'resident_rate' && !!p.residentWeekday && <span>WD rate: {fmtMoney(p.residentWeekday)}</span>}
+                                {p.type === 'resident_rate' && !!p.residentWeekend && <span>WE rate: {fmtMoney(p.residentWeekend)}</span>}
+                                {p.type === 'resident_rate' && !!p.residentTwilight && <span>Twilight: {fmtMoney(p.residentTwilight)}</span>}
                               </div>
                             </div>
                           );

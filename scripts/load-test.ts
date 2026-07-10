@@ -61,8 +61,6 @@ async function seed() {
           zipCode: '90001',
           address: `${i} Test Dr`,
           holes: 18,
-          greenFee: 50,
-          cartFee: 20,
           timezone: 'America/Los_Angeles',
           cancellationHours: 24,
           liveStatus: 'live',

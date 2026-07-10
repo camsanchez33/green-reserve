@@ -34,7 +34,7 @@ async function main() {
     create: {
       name: 'Concurrency Test Operator',
       email: 'conctest-op@test.greenreserve.local',
-      passwordHash: 'not-a-real-hash',
+      password: 'not-a-real-hash',
     },
     update: {},
   });
@@ -49,10 +49,8 @@ async function main() {
       address: '1 Test Dr',
       city: 'Testville',
       state: 'CA',
-      zip: '90210',
+      zipCode: '90210',
       holes: 18,
-      greenFee: 50,
-      cartFee: 20,
       liveStatus: 'live',
       active: true,
       timezone: 'America/Los_Angeles',

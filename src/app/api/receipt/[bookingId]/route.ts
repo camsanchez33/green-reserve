@@ -40,7 +40,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     totalAmount: booking.totalAmount,
     status: booking.status,
     cancellationFeeTotal: booking.cancellationFeeTotal,
-    cancellationFeeCharged: booking.cancellationFeeCharged,
+    cancellationFeeCharged: !!booking.cancellationFeeChargeId,
     createdAt: booking.createdAt,
   });
 }

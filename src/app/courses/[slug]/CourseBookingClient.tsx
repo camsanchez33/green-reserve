@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Check, Flag, SlidersHorizontal, ExternalLink, Navigation, Bell } from 'lucide-react';
+import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Check, Flag, SlidersHorizontal, ExternalLink, Navigation, Bell, ArrowRight } from 'lucide-react';
 import type { Course, TeeTime } from '@/lib/courses-data';
 import { TrustNote } from '@/components/TrustNote';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
@@ -280,7 +280,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
     setAlertEmail('');
     setAlertName('');
     setAlertSent(false);
-    setAlertModal({ teeTimeId, date: selectedDate, courseId: course.id });
+    setAlertModal({ teeTimeId, date: selectedDate, courseId: String(course.id) });
   }
 
   async function submitAlert() {
@@ -356,7 +356,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
     const heroStyle = course.hero_image_url
       ? { backgroundImage: `url(${course.hero_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
       : { background: course.image_gradient };
-    const amenities = course.amenities ? course.amenities.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+    const amenities = course.amenities ? course.amenities.filter(Boolean) : [];
     return (
       <>
         <div className="relative h-44 sm:h-56 flex items-end overflow-hidden" style={heroStyle}>
@@ -429,7 +429,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ slug: s
 
   const accent = course.brand_color || '#24513B';
   const typeLabel = TYPE_LABELS[course.type] ?? 'Public';
-  const amenities = course.amenities ? course.amenities.split(',').map(s => s.trim()) : [];
+  const amenities = course.amenities ? course.amenities.filter((s: string) => s.trim()) : [];
   const strip = buildDateStrip();
   const todayStr = formatDate(startOfToday());
 
