@@ -320,6 +320,33 @@ From Cam's retest of the merged step:
    alert()/confirm() calls — confirm() for destructive actions may stay for
    now, alert() goes.
 
+### Phase V10 — Draft preview: send the page to the course BEFORE go-live (medium, no migration)
+Cam's ruling: there must be a review loop — admin sends the draft page to the
+course, they talk it over, changes get made, THEN go-live. The course's first
+sight of their page must not be the live launch.
+
+1. **Token-gated preview URL** — /preview/[courseId]?token=... renders the
+   course's PUBLIC page exactly as it will look (photos, rates, tee sheet with
+   generated times) with a slim banner: "Preview of your GreenReserve page —
+   not live yet. Booking is disabled. Reply to our email with any changes."
+   - Token: STATELESS — sign { courseId, purpose: 'preview' } with the
+     existing JWT secret (jose, already a dependency), 30-day expiry. No
+     schema change, no new column.
+   - Works for draft/inactive courses (bypasses the live-only check WHEN the
+     token is valid). Booking flow visible but confirm blocked client+server
+     (reuse the Phase E demo-intercept pattern). noindex.
+2. **"Send preview" action** — on the inquiry page (Building stage) and the
+   draft course detail header. Sends an email to the inquiry contact:
+   "Your page is ready for a look" + preview button + "reply to this email
+   with anything you want changed" (reply-to: hello@greenreserve.app). Can be
+   re-sent after edits ("Send updated preview") — each send logged to the
+   inquiry status timeline ("Preview sent by Cam").
+3. **Next-step card update** for Building stage: primary action becomes
+   "Send preview to course"; once at least one preview was sent (timeline
+   check), primary becomes "Go Live", with "Re-send preview" secondary.
+4. Email follows baseTemplate conventions; no email fires automatically —
+   only on the button.
+
 ### Phase V4 — One-click draft build from the sheet (medium, no migration)
 REPLACES the old "wizard prefill parity" plan. Cam's ruling: the wizard is an
 IN-PERSON tool only (admin sitting with a course). The normal pipeline must not
