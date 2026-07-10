@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, Star, Power, Globe, ArchiveX, ArchiveRestore, Mail, Phone,
-  Calendar, Ban, Plus, X, RefreshCw, Search, MessageSquare, Send,
+  Calendar, Ban, Plus, X, RefreshCw, Search, MessageSquare, Send, Trash2,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
