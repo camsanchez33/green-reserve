@@ -389,6 +389,29 @@ nothing. Fix the whole first-login sequence:
    production...", instant links, bypasses) — remove or gate behind
    NODE_ENV !== 'production'.
 
+### Phase V12 — Course approval loop: a real "yes" button (small/medium, no migration)
+After the course reviews their preview page / draft dashboard, they need an
+explicit way to approve or request changes — not just "reply to our email."
+
+1. **On the token-gated preview page** (V10) and on the dashboard draft
+   banner: two actions —
+   - **"Looks good — approve my page"** → records approval (inquiry timeline
+     event "Course approved their page", no schema change) + emails admin
+     (hello@) "GRTC approved their page — ready to go live."
+   - **"Request changes"** → small textarea → submits into the EXISTING
+     admin↔course messages thread (creates one if none) + admin notification.
+     Confirmation: "Got it — we'll make the changes and send you an updated
+     preview."
+2. **Admin side:** inquiry Next-step card becomes approval-aware:
+   - preview sent, no approval yet → "Waiting on course review — sent X days
+     ago" (+ re-send)
+   - approved → "Course approved ✓ — Go Live" (primary button)
+   - changes requested → "Changes requested — see Messages" (link)
+3. Approval is advisory, not automatic — going live stays an admin action
+   (Stripe/verification may still be pending).
+4. Tokened actions rate-limited; approval from the dashboard requires the
+   operator session (both paths valid).
+
 ### Phase V4 — One-click draft build from the sheet (medium, no migration)
 REPLACES the old "wizard prefill parity" plan. Cam's ruling: the wizard is an
 IN-PERSON tool only (admin sitting with a course). The normal pipeline must not
