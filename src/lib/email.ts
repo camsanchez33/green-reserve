@@ -960,6 +960,24 @@ export async function sendDetailsSubmittedNotification(data: { courseName: strin
   });
 }
 
+export async function sendCourseApprovedNotification(data: { courseName: string; contactName: string }) {
+  const html = baseTemplate(`
+    <h2 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:900;">Course approved their page ✅</h2>
+    <p style="margin:0 0 20px;color:#6b7280;font-size:14px;">
+      <strong>${data.contactName}</strong> from <strong>${data.courseName}</strong> reviewed their preview page and approved it — ready to go live.
+    </p>
+    <a href="${process.env.NEXT_PUBLIC_URL}/admin" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;">
+      Review in Admin &rarr;
+    </a>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: 'hello@greenreserve.app',
+    subject: `Approved: ${data.courseName}`,
+    html,
+  });
+}
+
 // Sent the moment a course actually goes live (mark_live), not at account
 // creation — this is the "now that golfers can book, here's how to run the
 // place" orientation, distinct from sendOperatorWelcomeEmail's initial login.

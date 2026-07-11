@@ -10,7 +10,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
-  trigger: 'system' | 'admin'; actorName: string | null; createdAt: string;
+  trigger: 'system' | 'admin' | 'course'; actorName: string | null; createdAt: string;
 }
 interface Inquiry {
   id: string; contactName: string; contactTitle: string; email: string; phone: string;
@@ -326,6 +326,12 @@ function InquiryDetailInner() {
 
   const sheetSentEvent = [...inq.events].reverse().find(e => e.toStatus === 'details_requested');
   const liveEvent = [...inq.events].reverse().find(e => e.toStatus === 'live');
+  const previewSentEvent = [...inq.events].reverse().find(e => e.actorName?.startsWith('Preview sent'));
+  const latestApprovalEvent = [...inq.events].reverse().find(
+    e => e.actorName === 'Course approved their page' || e.actorName === 'Course requested changes to their page'
+  );
+  const pageApproved = latestApprovalEvent?.actorName === 'Course approved their page';
+  const pageChangesRequested = latestApprovalEvent?.actorName === 'Course requested changes to their page';
 
   let sd: Record<string, unknown> = {};
   if (inq.detailsJson) { try { sd = JSON.parse(inq.detailsJson); } catch { /* ignore */ } }
@@ -606,14 +612,34 @@ function InquiryDetailInner() {
               {inq.status === 'building' && (
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Next step</div>
-                    <div className="text-sm text-ink">Course is built. Review it, then set it live when ready.</div>
+                    <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">
+                      {pageApproved ? 'Approved' : pageChangesRequested ? 'Changes requested' : previewSentEvent ? 'Waiting' : 'Next step'}
+                    </div>
+                    <div className="text-sm text-ink">
+                      {pageApproved
+                        ? `${inq.courseName} approved their page — ready to go live.`
+                        : pageChangesRequested
+                        ? `${inq.courseName} requested changes — see the Messages tab.`
+                        : previewSentEvent
+                        ? `Waiting on course review — sent ${daysAgo(previewSentEvent.createdAt)} day${daysAgo(previewSentEvent.createdAt) !== 1 ? 's' : ''} ago.`
+                        : 'Course is built. Review it, then set it live when ready.'}
+                    </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    {inq.builtCourseId && (
-                      <button onClick={() => router.push('/admin/courses/' + inq.builtCourseId)} className={btnO}>
-                        <Wrench className="w-3.5 h-3.5" />Review Course
+                    {pageChangesRequested ? (
+                      <button onClick={() => router.push('/admin/messages?courseId=' + inq.builtCourseId)} className={btnO}>
+                        <Mail className="w-3.5 h-3.5" />See Messages
                       </button>
+                    ) : previewSentEvent && !pageApproved && inq.builtCourseId ? (
+                      <button onClick={sendPreview} disabled={sendingPreview} className={btnO}>
+                        <Eye className="w-3.5 h-3.5" />{sendingPreview ? 'Sending…' : 'Resend Preview'}
+                      </button>
+                    ) : (
+                      inq.builtCourseId && (
+                        <button onClick={() => router.push('/admin/courses/' + inq.builtCourseId)} className={btnO}>
+                          <Wrench className="w-3.5 h-3.5" />Review Course
+                        </button>
+                      )
                     )}
                     <button
                       onClick={() => { if (confirm('Set ' + inq.courseName + ' LIVE?')) action('mark_live'); }}

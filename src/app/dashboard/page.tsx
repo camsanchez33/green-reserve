@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Calendar, Users, DollarSign, Ban,
   Plus, ChevronLeft, ChevronRight, RefreshCw,
-  AlertTriangle, X, Loader2, Lock, Eye,
+  AlertTriangle, X, Loader2, Lock, Eye, CheckCircle,
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -72,6 +72,14 @@ function DashboardPageInner() {
   const [courseName, setCourseName] = useState('');
   const [courseArchived, setCourseArchived] = useState(false);
   const [courseDraft, setCourseDraft] = useState(false);
+  const [pageApprovalStatus, setPageApprovalStatus] = useState<'none' | 'approved' | 'changes_requested'>('none');
+  const [approvingPage, setApprovingPage] = useState(false);
+  const [approveError, setApproveError] = useState('');
+  const [showChangesModal, setShowChangesModal] = useState(false);
+  const [changesText, setChangesText] = useState('');
+  const [sendingChanges, setSendingChanges] = useState(false);
+  const [changesError, setChangesError] = useState('');
+  const [changesConfirmMsg, setChangesConfirmMsg] = useState('');
   const [showAddModal, setShowAddModal]       = useState(false);
   const [showConditions, setShowConditions]   = useState(false);
   const [expandedId, setExpandedId]           = useState<string | null>(null);
@@ -135,9 +143,36 @@ function DashboardPageInner() {
       if (c?.name) setCourseName(c.name);
       setCourseArchived(!!c?.archivedAt);
       setCourseDraft(!c?.active || c?.liveStatus !== 'live');
+      setPageApprovalStatus(c?.pageApprovalStatus === 'approved' || c?.pageApprovalStatus === 'changes_requested' ? c.pageApprovalStatus : 'none');
       if (c?.conditions) { setConditions(c.conditions); setConditionsInput(c.conditions); }
     });
   }, []);
+
+  async function approvePage() {
+    setApprovingPage(true); setApproveError('');
+    try {
+      const res = await fetch('/api/operator/approve-page', { method: 'POST' });
+      if (res.ok) { setPageApprovalStatus('approved'); }
+      else { const d = await res.json().catch(() => ({})); setApproveError(d.error || 'Could not submit approval.'); }
+    } catch { setApproveError('Could not submit approval — try again.'); }
+    setApprovingPage(false);
+  }
+
+  async function submitChanges() {
+    if (!changesText.trim()) return;
+    setSendingChanges(true); setChangesError('');
+    try {
+      const res = await fetch('/api/operator/messages', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body: changesText.trim() }),
+      });
+      if (res.ok) {
+        setPageApprovalStatus('changes_requested'); setShowChangesModal(false); setChangesText('');
+        setChangesConfirmMsg("Got it — we'll make the changes and send you an updated preview.");
+      }
+      else { const d = await res.json().catch(() => ({})); setChangesError(d.error || 'Could not send.'); }
+    } catch { setChangesError('Could not send — try again.'); }
+    setSendingChanges(false);
+  }
 
   useEffect(() => {
     fetch('/api/operator/profile').then(r => r.json()).then(p => {
@@ -185,9 +220,61 @@ function DashboardPageInner() {
 
       <main className="flex-1 overflow-y-auto">
         {courseDraft && !courseArchived && (
-          <div className="bg-pine/5 border-b border-pine/20 px-6 py-3 flex items-center gap-2 text-sm text-ink-soft">
-            <Eye className="w-4 h-4 shrink-0 text-pine"/>
-            <span>Your course isn&apos;t live yet &mdash; golfers can&apos;t book until you approve the page.</span>
+          <div className="bg-pine/5 border-b border-pine/20 px-6 py-3">
+            <div className="flex items-center gap-2 text-sm text-ink-soft flex-wrap">
+              <Eye className="w-4 h-4 shrink-0 text-pine"/>
+              <span>Your course isn&apos;t live yet &mdash; golfers can&apos;t book until you approve the page.</span>
+              <div className="flex items-center gap-2 ml-auto">
+                {pageApprovalStatus === 'approved' ? (
+                  <span className="text-xs text-ok font-medium flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5"/>You approved this page</span>
+                ) : (
+                  <button onClick={approvePage} disabled={approvingPage}
+                    className="text-xs font-medium text-white bg-pine hover:bg-pine-hover px-3 py-1.5 rounded-md disabled:opacity-50 transition-colors">
+                    {approvingPage ? 'Submitting...' : 'Looks good — approve my page'}
+                  </button>
+                )}
+                {pageApprovalStatus === 'changes_requested' ? (
+                  <span className="text-xs text-warn font-medium">Changes requested</span>
+                ) : (
+                  <button onClick={() => setShowChangesModal(true)}
+                    className="text-xs font-medium text-ink-soft bg-white border border-line hover:border-line-strong px-3 py-1.5 rounded-md transition-colors">
+                    Request changes
+                  </button>
+                )}
+              </div>
+            </div>
+            {approveError && <p className="text-xs text-bad mt-1.5">{approveError}</p>}
+            {changesConfirmMsg && <p className="text-xs text-ok mt-1.5">{changesConfirmMsg}</p>}
+          </div>
+        )}
+        {showChangesModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
+              <div className="text-ink font-medium mb-2">What would you like changed?</div>
+              <textarea
+                value={changesText}
+                onChange={e => setChangesText(e.target.value)}
+                rows={4}
+                placeholder="e.g. Can we update the green fee for weekends?"
+                className="w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 resize-none mb-3"
+              />
+              {changesError && <p className="text-xs text-bad mb-2">{changesError}</p>}
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => { setShowChangesModal(false); setChangesText(''); setChangesError(''); }}
+                  className="text-xs text-ink-muted hover:text-ink px-3 py-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={submitChanges}
+                  disabled={sendingChanges || !changesText.trim()}
+                  className="text-xs font-medium text-white bg-pine hover:bg-pine-hover px-4 py-2 rounded-md disabled:opacity-50 transition-colors"
+                >
+                  {sendingChanges ? 'Sending...' : 'Send'}
+                </button>
+              </div>
+            </div>
           </div>
         )}
         {courseArchived && (

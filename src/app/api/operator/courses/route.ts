@@ -6,11 +6,29 @@ import { resolveDashboardSession } from '@/lib/session';
 // reflect the DB the moment admin flips it, not a stale open-tab response.
 export const dynamic = 'force-dynamic';
 
+const APPROVAL_MARKERS = ['Course approved their page', 'Course requested changes to their page'];
+
 export async function GET() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const course = await prisma.course.findUnique({ where: { id: session.courseId } });
-  return NextResponse.json(course);
+  if (!course) return NextResponse.json(course);
+
+  let pageApprovalStatus: 'none' | 'approved' | 'changes_requested' = 'none';
+  if (!course.active || course.liveStatus !== 'live') {
+    const inquiry = await prisma.courseInquiry.findFirst({ where: { builtCourseId: course.id }, select: { id: true } });
+    if (inquiry) {
+      const [latest] = await prisma.inquiryStatusEvent.findMany({
+        where: { inquiryId: inquiry.id, actorName: { in: APPROVAL_MARKERS } },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+      });
+      if (latest?.actorName === 'Course approved their page') pageApprovalStatus = 'approved';
+      else if (latest?.actorName === 'Course requested changes to their page') pageApprovalStatus = 'changes_requested';
+    }
+  }
+
+  return NextResponse.json({ ...course, pageApprovalStatus });
 }
 
 export async function PATCH(req: NextRequest) {

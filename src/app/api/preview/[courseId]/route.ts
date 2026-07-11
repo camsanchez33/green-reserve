@@ -27,5 +27,20 @@ export async function GET(
     select: { greenFee: true },
   });
 
-  return NextResponse.json(normalizeDbCourse(dbCourse, cheapest?.greenFee ?? 0));
+  let pageApprovalStatus: 'none' | 'approved' | 'changes_requested' = 'none';
+  const inquiry = await prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId }, select: { id: true } });
+  if (inquiry) {
+    const [latest] = await prisma.inquiryStatusEvent.findMany({
+      where: { inquiryId: inquiry.id, actorName: { in: ['Course approved their page', 'Course requested changes to their page'] } },
+      orderBy: { createdAt: 'desc' },
+      take: 1,
+    });
+    if (latest?.actorName === 'Course approved their page') pageApprovalStatus = 'approved';
+    else if (latest?.actorName === 'Course requested changes to their page') pageApprovalStatus = 'changes_requested';
+  }
+
+  return NextResponse.json({
+    ...normalizeDbCourse(dbCourse, cheapest?.greenFee ?? 0),
+    page_approval_status: pageApprovalStatus,
+  });
 }

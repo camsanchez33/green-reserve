@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Check, Flag, SlidersHorizontal, ExternalLink, Navigation, Bell, ArrowRight, Eye } from 'lucide-react';
+import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Check, Flag, SlidersHorizontal, ExternalLink, Navigation, Bell, ArrowRight, Eye, CheckCircle } from 'lucide-react';
 import type { Course, TeeTime } from '@/lib/courses-data';
 import { TrustNote } from '@/components/TrustNote';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
@@ -99,6 +99,7 @@ type CourseWithBrand = Course & {
   brand_color?: string;
   gift_card_url?: string;
   photos?: { id: string; url: string; sortOrder: number }[];
+  page_approval_status?: 'none' | 'approved' | 'changes_requested';
 };
 
 type ActiveTeeTime = TeeTime & { member_green_fee?: number; has_member_rate?: boolean };
@@ -123,6 +124,14 @@ export default function CourseDetailPage({
   const searchParams = useSearchParams();
   const [demoModal, setDemoModal] = useState(false);
   const [previewModal, setPreviewModal] = useState(false);
+  const [previewApprovalStatus, setPreviewApprovalStatus] = useState<'none' | 'approved' | 'changes_requested'>('none');
+  const [approvingPreview, setApprovingPreview] = useState(false);
+  const [previewApproveError, setPreviewApproveError] = useState('');
+  const [showPreviewChangesModal, setShowPreviewChangesModal] = useState(false);
+  const [previewChangesText, setPreviewChangesText] = useState('');
+  const [sendingPreviewChanges, setSendingPreviewChanges] = useState(false);
+  const [previewChangesError, setPreviewChangesError] = useState('');
+  const [previewChangesConfirmMsg, setPreviewChangesConfirmMsg] = useState('');
 
   const [course, setCourse] = useState<CourseWithBrand | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -173,9 +182,43 @@ export default function CourseDetailPage({
       : `/api/courses/${slug}`;
     fetch(url)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .then((c: CourseWithBrand) => { setCourse(c); if (c?.cart_required) setWithCart(true); })
+      .then((c: CourseWithBrand) => {
+        setCourse(c);
+        if (c?.cart_required) setWithCart(true);
+        if (previewMode && (c.page_approval_status === 'approved' || c.page_approval_status === 'changes_requested')) {
+          setPreviewApprovalStatus(c.page_approval_status);
+        }
+      })
       .catch(() => setNotFound(true));
   }, [slug, previewMode]);
+
+  async function approvePreview() {
+    if (!previewMode) return;
+    setApprovingPreview(true); setPreviewApproveError('');
+    try {
+      const res = await fetch(`/api/preview/${previewMode.courseId}/approve?token=${previewMode.token}`, { method: 'POST' });
+      if (res.ok) setPreviewApprovalStatus('approved');
+      else { const d = await res.json().catch(() => ({})); setPreviewApproveError(d.error || 'Could not submit approval.'); }
+    } catch { setPreviewApproveError('Could not submit approval — try again.'); }
+    setApprovingPreview(false);
+  }
+
+  async function submitPreviewChanges() {
+    if (!previewMode || !previewChangesText.trim()) return;
+    setSendingPreviewChanges(true); setPreviewChangesError('');
+    try {
+      const res = await fetch(`/api/preview/${previewMode.courseId}/request-changes?token=${previewMode.token}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: previewChangesText.trim() }),
+      });
+      if (res.ok) {
+        setPreviewApprovalStatus('changes_requested'); setShowPreviewChangesModal(false); setPreviewChangesText('');
+        setPreviewChangesConfirmMsg("Got it — we'll make the changes and send you an updated preview.");
+      } else {
+        const d = await res.json().catch(() => ({})); setPreviewChangesError(d.error || 'Could not send.');
+      }
+    } catch { setPreviewChangesError('Could not send — try again.'); }
+    setSendingPreviewChanges(false);
+  }
 
   useEffect(() => {
     if (!course || course.type === 'member' || course.type === 'private') return;
@@ -512,11 +555,67 @@ export default function CourseDetailPage({
       {/* Preview banner */}
       {previewMode && (
         <div className="bg-pine/10 border-b border-pine/20">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3 text-sm">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3 text-sm flex-wrap">
             <Eye size={14} className="text-pine shrink-0" />
             <span className="text-ink-soft">
-              Preview of your GreenReserve page &mdash; not live yet. Booking is disabled. Reply to our email with any changes.
+              Preview of your GreenReserve page &mdash; not live yet. Booking is disabled.
             </span>
+            <div className="flex items-center gap-2 ml-auto">
+              {previewApprovalStatus === 'approved' ? (
+                <span className="text-xs text-ok font-medium flex items-center gap-1"><CheckCircle size={14}/>Approved</span>
+              ) : (
+                <button onClick={approvePreview} disabled={approvingPreview}
+                  className="text-xs font-medium text-white bg-pine hover:bg-pine-hover px-3 py-1.5 rounded-md disabled:opacity-50 transition-colors">
+                  {approvingPreview ? 'Submitting...' : 'Looks good — approve my page'}
+                </button>
+              )}
+              {previewApprovalStatus === 'changes_requested' ? (
+                <span className="text-xs text-warn font-medium">Changes requested</span>
+              ) : (
+                <button onClick={() => setShowPreviewChangesModal(true)}
+                  className="text-xs font-medium text-ink-soft bg-white border border-line hover:border-line-strong px-3 py-1.5 rounded-md transition-colors">
+                  Request changes
+                </button>
+              )}
+            </div>
+          </div>
+          {(previewApproveError || previewChangesConfirmMsg) && (
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-2 text-xs">
+              {previewApproveError && <p className="text-bad">{previewApproveError}</p>}
+              {previewChangesConfirmMsg && <p className="text-ok">{previewChangesConfirmMsg}</p>}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Request changes modal (preview) */}
+      {showPreviewChangesModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
+            <div className="text-ink font-medium mb-2">What would you like changed?</div>
+            <textarea
+              value={previewChangesText}
+              onChange={e => setPreviewChangesText(e.target.value)}
+              rows={4}
+              placeholder="e.g. Can we update the green fee for weekends?"
+              className="w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 resize-none mb-3"
+            />
+            {previewChangesError && <p className="text-xs text-bad mb-2">{previewChangesError}</p>}
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => { setShowPreviewChangesModal(false); setPreviewChangesText(''); setPreviewChangesError(''); }}
+                className="text-xs text-ink-muted hover:text-ink px-3 py-2"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitPreviewChanges}
+                disabled={sendingPreviewChanges || !previewChangesText.trim()}
+                className="text-xs font-medium text-white bg-pine hover:bg-pine-hover px-4 py-2 rounded-md disabled:opacity-50 transition-colors"
+              >
+                {sendingPreviewChanges ? 'Sending...' : 'Send'}
+              </button>
+            </div>
           </div>
         </div>
       )}
