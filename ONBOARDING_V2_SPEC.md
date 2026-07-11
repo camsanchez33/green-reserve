@@ -362,6 +362,33 @@ sight of their page must not be the live launch.
    - Go-live email (O4) must not resend credentials if dashboard access was
      already sent — adjust copy to "you're live" framing in that case.
 
+### Phase V11 — Operator first-login flow: kill the fake verify, one smooth path (medium, no migration)
+Cam hit the operator "Confirm your email" screen: it literally says "In
+production, a link gets sent to your inbox. Click below to verify instantly"
+— dev scaffolding shipped to prod. A self-serve verify button that verifies
+nothing. Fix the whole first-login sequence:
+
+1. **Remove the instant-verify bypass entirely.** No button that marks
+   emailVerified without proof.
+2. **Verification by possession, not ceremony:** the welcome/login email links
+   contain a token — arriving via a valid emailed token IS proof of inbox
+   ownership. Auto-set emailVerified when an operator lands from a tokened
+   email link (welcome email, password reset, dashboard-access email). Most
+   operators should never see a verify screen at all.
+3. **Fallback verify screen** (only for operators who somehow have a session
+   but no verification — e.g. in-person wizard setups): "We sent a link to
+   {email}" + real emailed link + Resend button with cooldown. Copy must not
+   mention "before your course can go live" if the course is ALREADY live —
+   status-aware copy.
+4. **First-login sequence becomes one guided path** (matches the Step 0/3 the
+   admin sees): arrive via email link → (verified automatically) → set your
+   password → connect Stripe (skippable with "do this later" if course has
+   no-fee policy) → dashboard. One step per screen, progress indicator,
+   Clubhouse styling.
+5. Audit: any OTHER dev-mode shortcuts in operator/golfer auth flows ("in
+   production...", instant links, bypasses) — remove or gate behind
+   NODE_ENV !== 'production'.
+
 ### Phase V4 — One-click draft build from the sheet (medium, no migration)
 REPLACES the old "wizard prefill parity" plan. Cam's ruling: the wizard is an
 IN-PERSON tool only (admin sitting with a course). The normal pipeline must not
