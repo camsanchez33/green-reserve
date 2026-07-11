@@ -397,6 +397,14 @@ async function handleAction(
       const cancellationHours = hasCancellationPolicy ? num(Number(d.cancellationHours), 24) : 0;
       const lateCancellationFee = hasCancellationPolicy ? flt(d.lateFee, 0) : 0;
 
+      const PASS_TYPE_LABELS: Record<string, string> = {
+        membership: 'Membership', season_pass: 'Season Pass', resident_card: 'Resident Card',
+        punch_card: 'Punch Card', other: 'Other',
+      };
+      // resident_rate = flat resident green fees with no card/tier — handled via
+      // residentWeekday/residentWeekend on the TeeTimeSchedule above, not a tier.
+      const tierPasses = passes.filter(p => str(p.type) !== 'resident_rate');
+
       const needsReview: string[] = [];
       if (!firstTeeTime || !lastTeeTime) needsReview.push('No tee time schedule — add via Schedule tab');
       if (!greenFeeWeekday && !greenFeeWeekend) needsReview.push('No green fees in sheet — set rates in Schedule tab');
@@ -405,6 +413,15 @@ async function handleAction(
       if (holes === 27) needsReview.push('27-hole course: verify which 9-hole combos to set up as booking sheets');
       if (holes === 36) needsReview.push('36-hole course: verify two-course booking setup');
       if (existingOp) needsReview.push('Attached to existing operator account — no new login created');
+      for (const p of tierPasses) {
+        const tierName = str(p.name) || (str(p.type) === 'other' ? str(p.otherType, 'Other') : PASS_TYPE_LABELS[str(p.type)] || 'Membership');
+        if (str(p.perRound) === 'yes' && str(p.perRoundType) === 'separate') {
+          needsReview.push(`Tier "${tierName}": per-round fee is a surcharge on top of the green fee — Member Management only supports a flat override rate, set it manually`);
+        }
+        if (['season', 'per_punch'].includes(str(p.feePeriod))) {
+          needsReview.push(`Tier "${tierName}": priced ${str(p.feePeriod) === 'per_punch' ? 'per punch' : 'per season'} — verify the billing period in Member Management`);
+        }
+      }
 
       const adminNotes = needsReview.length > 0
         ? `[BUILD NOTES]\n${needsReview.map(n => `• ${n}`).join('\n')}`
@@ -509,6 +526,51 @@ async function handleAction(
               rating: flt(ts.rating, 0),
               slope: num(Number(ts.slope) || 0, 0),
               sortOrder: i,
+            },
+          });
+        }
+      }
+
+      if (builtCourseId && tierPasses.length > 0) {
+        for (const p of tierPasses) {
+          const type = str(p.type, 'membership');
+          const name = str(p.name) || (type === 'other' ? str(p.otherType, 'Other') : PASS_TYPE_LABELS[type] || 'Membership');
+          const perRound = str(p.perRound) === 'yes';
+          const isFlatOverride = perRound && str(p.perRoundType) !== 'separate';
+          const perRoundWeekday = isFlatOverride ? flt(p.perRoundWeekday || p.perRoundFee, 0) : null;
+          const perRoundWeekend = isFlatOverride ? flt(p.perRoundWeekend, perRoundWeekday ?? 0) : null;
+
+          const notesParts: string[] = [];
+          if (str(p.includes)) notesParts.push(str(p.includes));
+          if (perRound) {
+            notesParts.push(
+              str(p.perRoundType) === 'separate'
+                ? `Per-round: separate fee on top of green fee (weekday $${flt(p.perRoundWeekday || p.perRoundFee, 0).toFixed(2)}${p.perRoundWeekend ? `, weekend $${flt(p.perRoundWeekend, 0).toFixed(2)}` : ''})`
+                : 'Per-round: discounted green fee (set as tier rate above)'
+            );
+            if (str(p.perRoundCartIncluded) === 'yes') notesParts.push('Cart included');
+          }
+          if (type === 'resident_card') {
+            if (str(p.residentWho)) notesParts.push(`Qualifies: ${str(p.residentWho)}`);
+            notesParts.push(
+              str(p.residentVerifType) === 'purchased'
+                ? `Verification: purchased card${p.residentCardCost ? ` ($${flt(p.residentCardCost, 0).toFixed(2)})` : ''}${p.residentCardWhere ? `, ${str(p.residentCardWhere)}` : ''}${p.residentCardRenewal ? `, renews ${str(p.residentCardRenewal)}` : ''}`
+                : 'Verification: free (ID at counter)'
+            );
+          }
+          if (['season', 'per_punch'].includes(str(p.feePeriod))) {
+            notesParts.push(`Billed ${str(p.feePeriod) === 'per_punch' ? 'per punch' : 'per season'}`);
+          }
+
+          await prisma.membershipTier.create({
+            data: {
+              courseId: builtCourseId,
+              name,
+              annualFee: flt(p.fee, 0),
+              termMonths: str(p.feePeriod) === 'monthly' ? 1 : 12,
+              greenFeeWeekday: perRoundWeekday,
+              greenFeeWeekend: perRoundWeekend,
+              notes: notesParts.join(' · '),
             },
           });
         }
