@@ -113,6 +113,7 @@ function SettingsPageInner() {
   const [showPass, setShowPass] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [stripeError, setStripeError] = useState('');
+  const [openingStripeDashboard, setOpeningStripeDashboard] = useState(false);
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState('');
@@ -136,6 +137,12 @@ function SettingsPageInner() {
     fetch('/api/operator/staff').then(r=>r.json()).then(setStaff);
     fetch('/api/operator/profile').then(r=>r.json()).then(p=>{ if(p?.email) setOperatorEmail(p.email); });
     refreshPhotos();
+    // Admin can flip live/draft status or Stripe connection state while this
+    // tab sits open in the background — refresh on refocus instead of
+    // showing whatever was true when the page first loaded.
+    window.addEventListener('focus', refreshForm);
+    return () => window.removeEventListener('focus', refreshForm);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function uploadGalleryPhoto(file: File | null) {
@@ -179,6 +186,17 @@ function SettingsPageInner() {
       if (data.connected) { await refreshForm(); }
     } catch { setStripeError('Could not reach Stripe. Try again.'); }
     setConnecting(false);
+  }
+
+  async function openStripeDashboard() {
+    setOpeningStripeDashboard(true); setStripeError('');
+    try {
+      const res = await fetch('/api/operator/stripe/dashboard-link', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok && data.url) { window.open(data.url, '_blank', 'noopener'); }
+      else { setStripeError(data.error || 'Could not open the Stripe dashboard.'); }
+    } catch { setStripeError('Could not reach Stripe. Try again.'); }
+    setOpeningStripeDashboard(false);
   }
 
   const set = (k:string, v:unknown) => setForm(f=>({...f,[k]:v}));
@@ -392,12 +410,18 @@ function SettingsPageInner() {
                 )}
 
                 {form.stripeAccountActive ? (
-                  <div className="flex items-center gap-3 bg-ok/5 border border-ok/20 rounded-md p-4">
-                    <CheckCircle2 className="w-6 h-6 text-ok shrink-0"/>
-                    <div>
-                      <div className="font-medium text-ok text-sm">Stripe connected</div>
-                      <div className="text-xs text-ink-soft mt-0.5">Charges and payouts are enabled. Green fees go straight to your bank account.</div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 bg-ok/5 border border-ok/20 rounded-md p-4">
+                      <CheckCircle2 className="w-6 h-6 text-ok shrink-0"/>
+                      <div>
+                        <div className="font-medium text-ok text-sm">Stripe connected</div>
+                        <div className="text-xs text-ink-soft mt-0.5">Charges and payouts are enabled. Green fees go straight to your bank account.</div>
+                      </div>
                     </div>
+                    <button onClick={openStripeDashboard} disabled={openingStripeDashboard}
+                      className="flex items-center justify-center gap-2 w-full bg-paper border border-line hover:border-line-strong text-ink-soft py-2.5 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
+                      {openingStripeDashboard ? <><Loader2 className="w-4 h-4 animate-spin"/>Opening...</> : 'View payouts & balance →'}
+                    </button>
                   </div>
                 ) : (
                   <div className="space-y-3">

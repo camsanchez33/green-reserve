@@ -130,18 +130,28 @@ function DashboardPageInner() {
     setLoading(false);
   }, [router]);
 
+  const loadCourseStatus = useCallback(() => {
+    fetch('/api/operator/courses').then(r => r.json()).then(c => {
+      if (c?.name) setCourseName(c.name);
+      setCourseArchived(!!c?.archivedAt);
+      setCourseDraft(!c?.active || c?.liveStatus !== 'live');
+      if (c?.conditions) { setConditions(c.conditions); setConditionsInput(c.conditions); }
+    });
+  }, []);
+
   useEffect(() => {
     fetch('/api/operator/profile').then(r => r.json()).then(p => {
       if (!p || !p.emailVerified) { router.push('/dashboard/verify'); return; }
       if (p.onboardingStep < 3)   { router.push('/dashboard/onboarding'); return; }
     });
-    fetch('/api/operator/courses').then(r => r.json()).then(c => {
-      if (c?.name) setCourseName(c.name);
-      if (c?.archivedAt) setCourseArchived(true);
-      if (!c?.active || c?.liveStatus !== 'live') setCourseDraft(true);
-      if (c?.conditions) { setConditions(c.conditions); setConditionsInput(c.conditions); }
-    });
-  }, [router]);
+    loadCourseStatus();
+    // Admin can flip a course live while this tab sits open in the
+    // background — refresh live/draft status when the operator tabs back in
+    // instead of showing whatever was true at page load.
+    const onFocus = () => loadCourseStatus();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [router, loadCourseStatus]);
 
   useEffect(() => {
     if (tab === 'analytics' && !analytics) {

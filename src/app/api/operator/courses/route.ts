@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession } from '@/lib/session';
 
+// Never cache — the dashboard's live/draft banner reads this and must
+// reflect the DB the moment admin flips it, not a stale open-tab response.
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
