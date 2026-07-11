@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   DollarSign, RefreshCw, AlertTriangle, ChevronUp, ChevronDown,
-  ExternalLink, Search,
+  ExternalLink, Search, CheckCircle2, Landmark,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -37,6 +37,14 @@ interface RevenueData {
   period: { from: string; to: string; label: string };
 }
 
+interface PlatformStripeData {
+  balance: { available: number; pending: number; currency: string };
+  nextPayout: { amount: number; arrivalDate: string; status: string } | null;
+  applicationFees: { amount: number; count: number };
+  reconciliation: { expected: number; actual: number; delta: number; matches: boolean; bookingCount: number; message: string };
+  period: string;
+}
+
 type SortKey = 'name' | 'bookings' | 'serviceFees' | 'greenFeeVolume' | 'failedCharges';
 type Period = '7d' | '30d' | '90d' | 'custom';
 
@@ -52,6 +60,21 @@ export default function RevenuePage() {
   const [sortKey, setSortKey] = useState<SortKey>('serviceFees');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const initRef = useRef(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const [platform, setPlatform] = useState<PlatformStripeData | null>(null);
+  const [platformLoading, setPlatformLoading] = useState(false);
+  const [platformError, setPlatformError] = useState('');
+
+  const loadPlatformStripe = useCallback(async (p: '7d' | '30d') => {
+    setPlatformLoading(true);
+    setPlatformError('');
+    try {
+      const res = await fetch(`/api/admin/platform-stripe?period=${p}`);
+      if (!res.ok) { const e = await res.json().catch(() => ({})); setPlatformError(e.error || 'Could not load Stripe platform data.'); setPlatformLoading(false); return; }
+      setPlatform(await res.json());
+    } catch { setPlatformError('Network error — check your connection and try again.'); }
+    setPlatformLoading(false);
+  }, []);
 
   const load = useCallback(async (p: Period, cFrom: string, cTo: string) => {
     setLoading(true);
@@ -59,6 +82,8 @@ export default function RevenuePage() {
     try {
       const sRes = await fetch('/api/admin/session');
       if (!sRes.ok) { router.push('/admin/login'); return; }
+      const sData = await sRes.json().catch(() => ({}));
+      if (sData?.role === 'owner') { setIsOwner(true); loadPlatformStripe('30d'); }
       const params = new URLSearchParams();
       if (p === 'custom' && cFrom && cTo) {
         params.set('from', cFrom);
@@ -73,7 +98,7 @@ export default function RevenuePage() {
       setData(d);
     } catch { setError('Network error — check your connection and try again.'); }
     setLoading(false);
-  }, [router]);
+  }, [router, loadPlatformStripe]);
 
   useEffect(() => {
     if (!initRef.current) { initRef.current = true; load('30d', '', ''); }
@@ -150,6 +175,83 @@ export default function RevenuePage() {
           {error && (
             <div className="bg-bad/5 border border-bad/20 rounded-lg px-4 py-3 text-sm text-bad mb-5 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 shrink-0"/>{error}
+            </div>
+          )}
+
+          {/* Platform Stripe — owner only */}
+          {isOwner && (
+            <div className="bg-white border border-line rounded-lg p-5 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Landmark className="w-4 h-4 text-pine"/>
+                  <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Platform Stripe account</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 bg-paper border border-line rounded-md p-1">
+                    {(['7d', '30d'] as const).map(p => (
+                      <button
+                        key={p}
+                        onClick={() => loadPlatformStripe(p)}
+                        className={'px-2.5 py-1 rounded text-[11px] font-medium transition-colors ' + (platform?.period === p ? 'bg-white text-ink border border-line shadow-sm' : 'text-ink-muted hover:text-ink')}
+                      >
+                        {p === '7d' ? '7 days' : '30 days'}
+                      </button>
+                    ))}
+                  </div>
+                  <a href="https://dashboard.stripe.com/balance" target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-[11px] text-pine hover:text-pine-hover underline">
+                    Open Stripe dashboard<ExternalLink className="w-3 h-3"/>
+                  </a>
+                </div>
+              </div>
+
+              {platformError && (
+                <div className="bg-bad/5 border border-bad/20 rounded-md px-4 py-3 text-sm text-bad mb-4 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0"/>{platformError}
+                </div>
+              )}
+
+              {platformLoading && !platform ? (
+                <div className="py-8 text-center text-ink-muted text-sm">Loading Stripe balance…</div>
+              ) : platform ? (
+                <>
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    <div>
+                      <div className="text-[11px] text-ink-muted mb-0.5">Available balance</div>
+                      <div className="text-xl font-serif font-medium text-ink tabular-nums">{fmtMoney(platform.balance.available)}</div>
+                      <div className="text-[11px] text-ink-faint mt-0.5">{fmtMoney(platform.balance.pending)} pending</div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] text-ink-muted mb-0.5">Next payout</div>
+                      {platform.nextPayout ? (
+                        <>
+                          <div className="text-xl font-serif font-medium text-ink tabular-nums">{fmtMoney(platform.nextPayout.amount)}</div>
+                          <div className="text-[11px] text-ink-faint mt-0.5">{platform.nextPayout.arrivalDate} · {platform.nextPayout.status}</div>
+                        </>
+                      ) : (
+                        <div className="text-sm text-ink-faint mt-1">None scheduled</div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-[11px] text-ink-muted mb-0.5">App fees ({platform.period})</div>
+                      <div className="text-xl font-serif font-medium text-ink tabular-nums">{fmtMoney(platform.applicationFees.amount)}</div>
+                      <div className="text-[11px] text-ink-faint mt-0.5">{fmtCount(platform.applicationFees.count)} charges</div>
+                    </div>
+                  </div>
+
+                  <div className={'rounded-md px-4 py-3 text-sm flex items-start gap-2 ' + (platform.reconciliation.matches ? 'bg-ok/5 border border-ok/20' : 'bg-bad/5 border border-bad/20')}>
+                    {platform.reconciliation.matches
+                      ? <CheckCircle2 className="w-4 h-4 text-ok shrink-0 mt-0.5"/>
+                      : <AlertTriangle className="w-4 h-4 text-bad shrink-0 mt-0.5"/>}
+                    <div>
+                      <div className={platform.reconciliation.matches ? 'text-ok font-medium' : 'text-bad font-medium'}>
+                        {platform.reconciliation.matches ? 'Fees reconcile' : 'Fees do not reconcile'}
+                      </div>
+                      <div className="text-ink-soft text-xs mt-0.5">{platform.reconciliation.message}</div>
+                    </div>
+                  </div>
+                </>
+              ) : null}
             </div>
           )}
 
