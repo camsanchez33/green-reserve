@@ -21,6 +21,7 @@ function OnboardingInner() {
   const [stripeActive, setStripeActive] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [stripeBanner, setStripeBanner] = useState('');
+  const [noFeePolicy, setNoFeePolicy] = useState(false);
 
   useEffect(() => {
     const stripeParam = params.get('stripe');
@@ -44,6 +45,7 @@ function OnboardingInner() {
       if (!c) return;
       setDetails(d => ({ ...d, description: c.description ?? '', holes: c.holes ?? 18, par: c.par ?? 72 }));
       setStripeActive(!!c.stripeAccountActive);
+      setNoFeePolicy(!c.lateCancellationFee);
     });
     fetch('/api/operator/tee-sets').then(r => r.json()).then(rows => {
       if (Array.isArray(rows) && rows.length > 0) {
@@ -180,7 +182,11 @@ function OnboardingInner() {
             <h2 className="text-[20px] font-serif font-medium text-ink mb-1 flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-pine"/>Connect your payments
             </h2>
-            <p className="text-sm text-ink-soft mb-6">Golfers pay through Stripe at checkout — green fees go straight to your bank account. Required before you can go live.</p>
+            <p className="text-sm text-ink-soft mb-6">
+              {noFeePolicy
+                ? "Golfers pay through Stripe at checkout — green fees go straight to your bank account. Since you don't charge cancellation fees, this is optional and you can set it up anytime from Settings → Payments."
+                : 'Golfers pay through Stripe at checkout — green fees go straight to your bank account. Required before you can go live.'}
+            </p>
 
             {isConnected ? (
               <div className="bg-ok/5 border border-ok/20 rounded-md p-4 flex items-start gap-3">
@@ -210,9 +216,9 @@ function OnboardingInner() {
               </>
             )}
 
-            <button onClick={finishOnboarding} disabled={saving || !isConnected}
+            <button onClick={finishOnboarding} disabled={saving || (!isConnected && !noFeePolicy)}
               className="w-full mt-4 bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 disabled:bg-line-strong transition-colors flex items-center justify-center gap-2">
-              {saving ? <><Loader2 className="w-4 h-4 animate-spin"/>Finishing...</> : 'Continue'}
+              {saving ? <><Loader2 className="w-4 h-4 animate-spin"/>Finishing...</> : (!isConnected && noFeePolicy) ? "Skip for now — I'll do this later" : 'Continue'}
             </button>
           </div>
         )}

@@ -4,6 +4,7 @@ import { signToken } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import { validatePasswordStrength } from '@/lib/password';
+import { sendOperatorVerifyEmail } from '@/lib/email';
 
 export async function POST(req: NextRequest) {
   const { email: rawEmail, password, name, courseName } = await req.json();
@@ -39,8 +40,15 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  const setupLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/verify?token=${verificationToken}`;
+  try {
+    await sendOperatorVerifyEmail({ operatorName: name, operatorEmail: email, verifyLink: setupLink });
+  } catch (err) {
+    console.error('Failed to send operator verify email:', err);
+  }
+
   const token = await signToken({ operatorId: operator.id, email: operator.email });
-  const res = NextResponse.json({ success: true, verificationToken });
+  const res = NextResponse.json({ success: true });
   res.cookies.set('gr_operator', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
