@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle, AlertTriangle, ChevronRight, ArrowLeft, Plus, Trash2, Upload, X } from 'lucide-react';
+import { downscaleImage } from '@/lib/image-resize';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -426,7 +427,7 @@ function DetailsForm() {
     setUploadError('');
     try {
       const form = new FormData();
-      form.append('file', file);
+      form.append('file', await downscaleImage(file));
       const r = await fetch(`/api/inquiries/upload?token=${encodeURIComponent(token)}`, {
         method: 'POST', body: form,
       });
@@ -1627,7 +1628,7 @@ function DetailsForm() {
                     <Upload className="w-4 h-4" />
                     {uploading ? 'Uploading...' : 'Upload a photo'}
                   </button>
-                  <p className="text-[11px] text-ink-faint mt-1">JPEG, PNG, or WebP · max 5MB each · up to 6 photos</p>
+                  <p className="text-[11px] text-ink-faint mt-1">JPEG, PNG, or WebP · max 8MB each (large photos are auto-resized) · up to 6 photos</p>
                   {uploadError && <p className="text-[11px] text-bad mt-1">{uploadError}</p>}
                 </>
               )}

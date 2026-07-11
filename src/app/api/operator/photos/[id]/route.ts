@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { del } from '@vercel/blob';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession } from '@/lib/session';
 
@@ -11,11 +12,12 @@ export async function DELETE(
 
   const { id } = await params;
 
-  const photo = await prisma.coursePhoto.findUnique({ where: { id }, select: { courseId: true } });
+  const photo = await prisma.coursePhoto.findUnique({ where: { id }, select: { courseId: true, url: true } });
   if (!photo || photo.courseId !== session.courseId) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
   await prisma.coursePhoto.delete({ where: { id } });
+  try { await del(photo.url); } catch { /* best-effort cleanup, never blocks the delete */ }
   return NextResponse.json({ ok: true });
 }

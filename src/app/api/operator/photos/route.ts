@@ -3,7 +3,7 @@ import { put } from '@vercel/blob';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession } from '@/lib/session';
 
-const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_BYTES = 8 * 1024 * 1024; // 8MB — the client downscales large images before upload
 const ALLOWED_TYPES: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
   const ext = ALLOWED_TYPES[file.type];
   if (!ext) return NextResponse.json({ error: 'Only JPEG, PNG, or WebP images are allowed' }, { status: 400 });
-  if (file.size > MAX_BYTES) return NextResponse.json({ error: 'Image must be under 5MB' }, { status: 400 });
+  if (file.size > MAX_BYTES) return NextResponse.json({ error: 'Image must be under 8MB' }, { status: 400 });
 
   const blob = await put(`courses/${session.courseId}/gallery-${Date.now()}.${ext}`, file, { access: 'public' });
 

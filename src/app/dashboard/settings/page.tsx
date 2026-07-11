@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff, CreditCard, CheckCircle2, AlertCircle, Loader2, KeyRound, Mail, Smartphone, Image as ImageIcon, X } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
+import { downscaleImage } from '@/lib/image-resize';
 
 type Course = Record<string, unknown>;
 interface StaffMember { id: string; name: string; email: string; role: string; active: boolean; }
@@ -50,7 +51,7 @@ function ImageUpload({ label, kind, value, onUploaded, hint }: { label: string; 
     if (!file) return;
     setBusy(true); setErr('');
     const fd = new FormData();
-    fd.append('file', file);
+    fd.append('file', await downscaleImage(file));
     fd.append('kind', kind);
     try {
       const res = await fetch('/api/operator/upload', { method: 'POST', body: fd });
@@ -63,9 +64,12 @@ function ImageUpload({ label, kind, value, onUploaded, hint }: { label: string; 
 
   async function remove() {
     setBusy(true); setErr('');
-    await fetch(`/api/operator/upload?kind=${kind}`, { method: 'DELETE' });
+    try {
+      const res = await fetch(`/api/operator/upload?kind=${kind}`, { method: 'DELETE' });
+      if (res.ok) onUploaded('');
+      else setErr('Could not remove the image — try again.');
+    } catch { setErr('Could not remove the image — try again.'); }
     setBusy(false);
-    onUploaded('');
   }
 
   return (
@@ -138,7 +142,7 @@ function SettingsPageInner() {
     if (!file) return;
     setUploadingPhoto(true); setPhotoErr('');
     const fd = new FormData();
-    fd.append('file', file);
+    fd.append('file', await downscaleImage(file));
     try {
       const res = await fetch('/api/operator/photos', { method: 'POST', body: fd });
       const data = await res.json();
@@ -149,8 +153,12 @@ function SettingsPageInner() {
   }
 
   async function deleteGalleryPhoto(id: string) {
-    await fetch(`/api/operator/photos/${id}`, { method: 'DELETE' });
-    setPhotos(ps => ps.filter(p => p.id !== id));
+    setPhotoErr('');
+    try {
+      const res = await fetch(`/api/operator/photos/${id}`, { method: 'DELETE' });
+      if (res.ok) setPhotos(ps => ps.filter(p => p.id !== id));
+      else setPhotoErr('Could not remove that photo — try again.');
+    } catch { setPhotoErr('Could not remove that photo — try again.'); }
   }
 
   async function emailResetLinkInstead() {
@@ -302,8 +310,8 @@ function SettingsPageInner() {
               </SectionCard>
               <SectionCard title="Branding">
                 <p className="text-sm text-ink-soft -mt-1">These appear on your public tee sheet. Uploads save immediately.</p>
-                <ImageUpload label="Course Logo" kind="logo" value={(form.logoUrl as string)||''} onUploaded={url=>set('logoUrl',url)} hint="Square works best (PNG with transparent background ideal). Max 5MB."/>
-                <ImageUpload label="Course Photo" kind="hero" value={(form.heroImageUrl as string)||''} onUploaded={url=>set('heroImageUrl',url)} hint="Wide landscape shot of your course — shown as the banner behind your course name. Max 5MB."/>
+                <ImageUpload label="Course Logo" kind="logo" value={(form.logoUrl as string)||''} onUploaded={url=>set('logoUrl',url)} hint="Square works best (PNG with transparent background ideal). Max 8MB (large photos are auto-resized)."/>
+                <ImageUpload label="Course Photo" kind="hero" value={(form.heroImageUrl as string)||''} onUploaded={url=>set('heroImageUrl',url)} hint="Wide landscape shot of your course — shown as the banner behind your course name. Max 8MB (large photos are auto-resized)."/>
               </SectionCard>
               <SectionCard title="Course Details">
                 <div className="grid grid-cols-3 gap-3">
@@ -355,7 +363,7 @@ function SettingsPageInner() {
                     </label>
                   )}
                 </div>
-                <p className="text-xs text-ink-faint">{photos.length}/8 photos · JPEG, PNG, or WebP · Max 5MB each</p>
+                <p className="text-xs text-ink-faint">{photos.length}/8 photos · JPEG, PNG, or WebP · Max 8MB each (large photos are auto-resized)</p>
               </SectionCard>
             </div>
           )}
