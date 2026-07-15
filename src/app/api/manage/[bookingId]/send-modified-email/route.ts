@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendBookingModifiedEmail } from '@/lib/email';
+import { getGolferSession } from '@/lib/auth';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
   const { token } = await req.json() as { token?: string };
-  if (!token) return NextResponse.json({ error: 'Missing token' }, { status: 400 });
+  const golferSession = await getGolferSession();
+  if (!golferSession && !token) return NextResponse.json({ error: 'Missing token' }, { status: 400 });
 
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
@@ -15,7 +17,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
     },
   });
 
-  if (!booking || booking.checkInToken !== token) {
+  if (!booking) return NextResponse.json({ error: 'Invalid' }, { status: 404 });
+  const authorized = golferSession ? booking.golferAccountId === golferSession.golferId : booking.checkInToken === token;
+  if (!authorized) {
     return NextResponse.json({ error: 'Invalid' }, { status: 404 });
   }
 

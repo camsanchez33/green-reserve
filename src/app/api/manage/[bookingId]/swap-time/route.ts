@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { CURRENT_TERMS_VERSION } from '@/lib/terms';
+import { getGolferSession } from '@/lib/auth';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
+  const golferSession = await getGolferSession();
   const ip = clientIp(req);
   const ok = await rateLimit('manage:swap:' + ip, 10, 300);
   if (!ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
@@ -12,7 +14,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   const body = await req.json() as { token?: string; newTeeTimeId?: string; termsAccepted?: boolean };
   const { token, newTeeTimeId, termsAccepted } = body;
 
-  if (!token || !newTeeTimeId) {
+  if (!newTeeTimeId || (!golferSession && !token)) {
     return NextResponse.json({ error: 'Missing token or newTeeTimeId' }, { status: 400 });
   }
   if (termsAccepted !== true) {
@@ -26,13 +28,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
       const booking = await tx.booking.findUnique({
         where: { id: bookingId },
         select: {
-          id: true, checkInToken: true, teeTimeId: true, players: true,
+          id: true, checkInToken: true, golferAccountId: true, teeTimeId: true, players: true,
           cartSelected: true, rangeBallsTotal: true, accessFeeTotal: true,
           status: true,
         },
       });
 
-      if (!booking || booking.checkInToken !== token) throw Object.assign(new Error('invalid'), { code: 'INVALID' });
+      if (!booking) throw Object.assign(new Error('invalid'), { code: 'INVALID' });
+      const authorized = golferSession ? booking.golferAccountId === golferSession.golferId : booking.checkInToken === token;
+      if (!authorized) throw Object.assign(new Error('invalid'), { code: 'INVALID' });
       if (booking.status !== 'confirmed') throw Object.assign(new Error('not_confirmed'), { code: 'NOT_CONFIRMED' });
       if (booking.teeTimeId === newTeeTimeId) throw Object.assign(new Error('same_slot'), { code: 'SAME' });
 

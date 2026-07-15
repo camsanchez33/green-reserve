@@ -1,22 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
+import { getGolferSession } from '@/lib/auth';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
   const token = req.nextUrl.searchParams.get('token') || '';
+  const golferSession = await getGolferSession();
 
   const ip = clientIp(req);
   const ok = await rateLimit('manage:times:' + ip, 30, 300);
   if (!ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
 
-  if (!token) return NextResponse.json({ error: 'Missing token' }, { status: 400 });
+  if (!golferSession && !token) return NextResponse.json({ error: 'Missing token' }, { status: 400 });
 
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    select: { checkInToken: true, courseId: true, teeTimeId: true, players: true, teeTime: { select: { date: true } } },
+    select: { checkInToken: true, golferAccountId: true, courseId: true, teeTimeId: true, players: true, teeTime: { select: { date: true } } },
   });
-  if (!booking || booking.checkInToken !== token) {
+  if (!booking) return NextResponse.json({ error: 'Invalid link' }, { status: 404 });
+  const authorized = golferSession ? booking.golferAccountId === golferSession.golferId : booking.checkInToken === token;
+  if (!authorized) {
     return NextResponse.json({ error: 'Invalid link' }, { status: 404 });
   }
 

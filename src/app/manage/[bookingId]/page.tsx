@@ -104,8 +104,11 @@ function ManagePageInner() {
   const [modifyResult, setModifyResult] = useState<ModifyResult | null>(null);
 
   useEffect(() => {
-    if (!bookingId || !token) { setErrorMsg('This link is missing required details.'); setLoading(false); return; }
-    fetch(`/api/manage/${bookingId}?token=${encodeURIComponent(token)}`)
+    if (!bookingId) { setErrorMsg('This link is missing required details.'); setLoading(false); return; }
+    // No token in the URL just means "arrived signed in from the portal" —
+    // the API falls back to the gr_golfer session cookie.
+    const url = token ? `/api/manage/${bookingId}?token=${encodeURIComponent(token)}` : `/api/manage/${bookingId}`;
+    fetch(url)
       .then(async r => {
         if (r.status === 410) { setExpired(true); return null; }
         if (!r.ok) throw new Error();
