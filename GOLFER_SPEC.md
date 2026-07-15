@@ -94,3 +94,56 @@ Course B, and that's correct at 100s of courses. The gap is the experience:
   booking included) — use claimTeeTime(), never a parallel implementation.
 - Emails: baseTemplate, unsubscribe links on all alert mail. No emoji.
 - CLAUDE.md gotchas: parse-check big files, no sed, no `? [` JSX openers.
+
+---
+
+## Phase G5 — Per-course golfer portal (BIG, likely schema change → attended)
+
+Every course gets its own golfer sign-in and portal — white-label: golfers
+experience THE COURSE's portal, not a GreenReserve account. Requested by Cam
+2026-07-14.
+
+### Architecture rule (non-negotiable)
+REUSE the existing GolferAccount + gr_golfer session underneath. This is a
+per-course VIEW + branded sign-in over the existing identity system — NOT a
+new auth system. Member sign-in stays separate (per-course OTP vs
+CourseMembership — established rule, do not merge).
+
+### URL + entry points
+- /courses/[slug]/account — distinct per course, course-branded (brandColor,
+  name/logo) like the member portal.
+- "Sign in" link on the course page header (quiet but findable).
+- Booking confirmation + receipt emails: "View your tee times at {course} →".
+
+### Sign-in: passwordless, email OR phone
+- Enter email or phone → 6-digit code (email via Resend, SMS via existing
+  Twilio) → verified → gr_golfer session issued (existing 90d sliding policy).
+- Existing GolferAccount matched by verified email/phone; created on first
+  sign-in if none. If phone lookup needs a GolferAccount.phone column (check
+  schema) → that's the migration; follow CLAUDE.md shipping checklist.
+- OTP hygiene: crypto.randomInt, hashed at rest, 10min expiry, 5-attempt
+  invalidation, rateLimit() per identifier AND per IP, generic responses (no
+  account enumeration).
+
+### Portal contents (scoped to THIS course only)
+- Upcoming tee times here: check-in button (when window open — reuses
+  checkin flow), cancel + modify (reuse manage-booking logic, session accepted
+  where token is today), party size/time shown with itemized pricing.
+- Past rounds here: date, players, total paid, receipt link (existing
+  receipt pages).
+- Guest-booking linkage: bookings made WITHOUT an account under the same
+  (now-verified) email appear automatically — verification is what makes the
+  linkage safe. Same for verified phone.
+- Member strip: if a CourseMembership exists for this email at this course,
+  show "Member — {tier}" + link to the member portal (do NOT merge sessions).
+
+### Isolation + tests
+- Course A's portal never shows course B data — extend the G4 cross-course
+  isolation test matrix to portal routes. Failures = vulnerabilities, fix
+  in-run.
+- noindex on portal routes.
+
+### Explicitly out of scope
+- Payments/stored-card management (check-in handles cards)
+- Cross-course "all my bookings" view (that's /account, which keeps working)
+- Merging member + golfer sessions
