@@ -25,9 +25,17 @@ export async function POST(req: NextRequest) {
   }
 
   const hashed = await bcrypt.hash(password, 12);
-  const golfer = await prisma.golferAccount.create({
-    data: { email, password: hashed, firstName, lastName, phone: phone || '' },
-  });
+  let golfer;
+  try {
+    golfer = await prisma.golferAccount.create({
+      data: { email, password: hashed, firstName, lastName, phone: phone ? String(phone).trim() : null },
+    });
+  } catch (err) {
+    if (err && typeof err === 'object' && 'code' in err && err.code === 'P2002') {
+      return NextResponse.json({ error: 'That phone number is already on another account.' }, { status: 409 });
+    }
+    throw err;
+  }
 
   const token = await signGolferToken({ golferId: golfer.id, email: golfer.email });
   const res = NextResponse.json({ success: true });

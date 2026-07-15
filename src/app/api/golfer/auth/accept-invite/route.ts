@@ -43,9 +43,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'First and last name are required.' }, { status: 400 });
     }
     const hashed = await bcrypt.hash(password, 12);
-    golfer = await prisma.golferAccount.create({
-      data: { email: payload.email, password: hashed, firstName: firstName.trim(), lastName: lastName.trim(), phone: phone || '' },
-    });
+    try {
+      golfer = await prisma.golferAccount.create({
+        data: { email: payload.email, password: hashed, firstName: firstName.trim(), lastName: lastName.trim(), phone: phone ? String(phone).trim() : null },
+      });
+    } catch (err) {
+      if (err && typeof err === 'object' && 'code' in err && err.code === 'P2002') {
+        return NextResponse.json({ error: 'That phone number is already on another account.' }, { status: 409 });
+      }
+      throw err;
+    }
   }
 
   await prisma.courseMembership.update({

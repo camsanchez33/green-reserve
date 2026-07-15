@@ -27,7 +27,7 @@ model CourseOperator {
   twoFactorAttempts   Int       @default(0)
   phone               String    @default("")
   createdAt           DateTime  @default(now())
-  course              Course?
+  course              Course[]
 }
 
 model Course {
@@ -112,7 +112,7 @@ model Course {
   archivedBy            String?
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
-  operatorId            String?            @unique
+  operatorId            String?
   operator              CourseOperator?    @relation(fields: [operatorId], references: [id])
   conditions            String             @default("")
   conditionsUpdatedAt   DateTime?
@@ -175,7 +175,7 @@ model GolferAccount {
   password            String
   firstName           String
   lastName            String
-  phone               String             @default("")
+  phone               String?            @unique // nullable + unique: Postgres treats each NULL as distinct, so this is "unique where set" without a partial index. Prep for GOLFER_SPEC G5 phone/OTP login — not wired up yet.
   stripeCustomerId    String             @default("")
   resetToken          String?            @unique
   resetTokenExpiry    DateTime?
@@ -305,6 +305,9 @@ model Booking {
   checkInFailReason        String         @default("")
   paymentStatus            String         @default("card_on_file")
   status                   String         @default("confirmed")
+  // Booking terms consent — recorded at the moment of booking, never backfilled.
+  termsAcceptedAt          DateTime?
+  termsVersion             String?
   createdAt                DateTime       @default(now())
 }
 

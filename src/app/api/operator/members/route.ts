@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
         expiresAt:      expiresAt ? new Date(expiresAt) : null,
         inviteEmail:    lowerEmail,
         inviteName:     name || `${golfer.firstName} ${golfer.lastName}`,
-        invitePhone:    phone || golfer.phone,
+        invitePhone:    phone || golfer.phone || '',
         inviteAccepted: true,
         payToken:       randomUUID(),
       },
