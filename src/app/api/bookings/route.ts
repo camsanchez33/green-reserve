@@ -9,6 +9,7 @@ import { sendBookingConfirmation, sendOperatorBookingNotification, sendCancellat
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
+import { CURRENT_TERMS_VERSION } from '@/lib/terms';
 
 /** Returns true for Sat/Sun given a date string like "2026-06-21" */
 function isWeekend(dateStr: string): boolean {
@@ -63,10 +64,14 @@ function applyTierRates(
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { teeTimeId, players, golferName, golferEmail, golferPhone, paymentMethodId, customerId, cartSelected, rangeBallsSize } = body;
+  const { teeTimeId, players, golferName, golferEmail, golferPhone, paymentMethodId, customerId, cartSelected, rangeBallsSize, termsAccepted } = body;
 
   if (!teeTimeId || !players || !golferName || !golferEmail)
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+
+  if (termsAccepted !== true) {
+    return NextResponse.json({ error: 'You must agree to the Terms of Service to book.' }, { status: 400 });
+  }
 
   const golferSession = await getGolferSession();
   let appliedRate = 'standard';
@@ -200,6 +205,8 @@ export async function POST(req: NextRequest) {
       checkInToken:     randomUUID(),
       paymentStatus:    savedPaymentMethodId ? 'card_on_file' : 'no_payment_method',
       status:           'confirmed',
+      termsAcceptedAt:  new Date(),
+      termsVersion:     CURRENT_TERMS_VERSION,
     });
   } catch (err) {
     if (err instanceof TeeTimeClaimError) {

@@ -395,6 +395,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
           customerId: siData.customerId,
           cartSelected,
           rangeBallsSize,
+          termsAccepted: true,
         }),
       });
       const data = await res.json();
@@ -443,6 +444,9 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
       {error && <p className="text-bad text-sm">{error}</p>}
 
       <TrustNote>No charge until check-in.</TrustNote>
+      <p className="text-[11px] text-ink-muted text-center leading-snug">
+        By confirming, you agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink">Terms of Service</a> and this course&apos;s cancellation policy.
+      </p>
       <button
         onClick={handleSubmit}
         disabled={loading || !stripe}
@@ -488,7 +492,7 @@ function SimpleConfirmForm({ teeTimeId, players, golfer, cartSelected, rangeBall
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teeTimeId, players, golferName: name, golferEmail: email, golferPhone: phone, cartSelected, rangeBallsSize }),
+        body: JSON.stringify({ teeTimeId, players, golferName: name, golferEmail: email, golferPhone: phone, cartSelected, rangeBallsSize, termsAccepted: true }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Something went wrong. Please try again.'); setLoading(false); return; }
@@ -524,6 +528,9 @@ function SimpleConfirmForm({ teeTimeId, players, golfer, cartSelected, rangeBall
       </div>
       <p className="text-xs text-ink-muted">No card needed — you&apos;ll pay at the course or via the check-in link in your confirmation email.</p>
       {error && <p className="text-bad text-sm">{error}</p>}
+      <p className="text-[11px] text-ink-muted text-center leading-snug">
+        By confirming, you agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink">Terms of Service</a> and this course&apos;s cancellation policy.
+      </p>
       <button
         onClick={handleSubmit}
         disabled={loading}
