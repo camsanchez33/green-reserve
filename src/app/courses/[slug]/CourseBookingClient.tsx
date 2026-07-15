@@ -656,6 +656,12 @@ export default function CourseDetailPage({
         <div className="absolute bottom-2.5 right-4 z-10 text-[10px] text-white/40">
           Powered by GreenReserve
         </div>
+        <Link
+          href={`/courses/${slug}/account`}
+          className="absolute top-3 right-4 z-10 text-xs text-white/60 hover:text-white transition-colors"
+        >
+          Sign in
+        </Link>
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-6">
           <div className="flex items-end justify-between gap-4 flex-wrap">
             <div className="flex items-end gap-4">

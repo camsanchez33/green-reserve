@@ -232,6 +232,7 @@ export async function POST(req: NextRequest) {
       golferName,
       golferEmail,
       courseName:    teeTimeFull.course.name,
+      courseSlug:    teeTimeFull.course.slug,
       courseAddress: `${teeTimeFull.course.address || ''}, ${teeTimeFull.course.city}, ${teeTimeFull.course.state}`,
       date:          teeTimeFull.date,
       time:          teeTimeFull.time,

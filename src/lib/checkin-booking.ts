@@ -26,7 +26,7 @@ export async function performCheckIn(bookingId: string, opts?: { externalPayment
     where: { id: bookingId },
     include: {
       teeTime: { select: { date: true, time: true } },
-      course: { select: { name: true, address: true, city: true, state: true, stripeAccountId: true, stripeAccountActive: true } },
+      course: { select: { name: true, slug: true, address: true, city: true, state: true, stripeAccountId: true, stripeAccountActive: true } },
     },
   });
 
@@ -117,6 +117,7 @@ export async function performCheckIn(bookingId: string, opts?: { externalPayment
     golferName: booking.golferName,
     golferEmail: booking.golferEmail,
     courseName: booking.course.name,
+    courseSlug: booking.course.slug,
     date: booking.teeTime.date,
     time: booking.teeTime.time,
     players: booking.players,

@@ -40,6 +40,7 @@ type ConfirmedData = {
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number; totalAmount: number;
   cancellationFeeTotal: number; cancellationHours: number;
   noCard?: boolean;
+  golferEmail: string;
 };
 
 function formatTime(t: string) {
@@ -147,7 +148,7 @@ function BookPageInner() {
           )}
 
           <button
-            onClick={() => router.push('/account')}
+            onClick={() => router.push(`/courses/${courseSlug}/account?email=${encodeURIComponent(confirmedData.golferEmail)}`)}
             className="inline-flex items-center justify-center w-full py-3.5 rounded-md font-medium text-white text-sm mb-3 transition-colors"
             style={{ backgroundColor: accent }}
           >
@@ -406,6 +407,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
         greenFeeTotal: data.greenFeeTotal, cartFeeTotal: data.cartFeeTotal, rangeBallsTotal: data.rangeBallsTotal,
         accessFeeTotal: data.accessFeeTotal, totalAmount: data.totalAmount,
         cancellationFeeTotal: data.cancellationFeeTotal, cancellationHours: data.cancellationHours ?? 24,
+        golferEmail: email,
       });
     } catch {
       setError('Something went wrong. Please try again.');
@@ -502,6 +504,7 @@ function SimpleConfirmForm({ teeTimeId, players, golfer, cartSelected, rangeBall
         accessFeeTotal: data.accessFeeTotal, totalAmount: data.totalAmount,
         cancellationFeeTotal: data.cancellationFeeTotal, cancellationHours: data.cancellationHours ?? 24,
         noCard: true,
+        golferEmail: email,
       });
     } catch {
       setError('Something went wrong. Please try again.');

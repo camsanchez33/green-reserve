@@ -38,7 +38,7 @@ function baseTemplate(content: string) {
 }
 
 export interface BookingEmailData {
-  golferName: string; golferEmail: string; courseName: string; courseAddress: string;
+  golferName: string; golferEmail: string; courseName: string; courseAddress: string; courseSlug?: string;
   date: string; time: string; players: number; holes: number;
   greenFeeTotal: number; cartFeeTotal: number; accessFeeTotal: number; totalAmount: number;
   bookingId: string; appliedRate: string;
@@ -51,7 +51,11 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
   const cancellationHours = data.cancellationHours ?? 24;
   const cancellationFee = data.cancellationFeeTotal ?? 0;
   const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
-  const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : `${process.env.NEXT_PUBLIC_URL}/account`;
+  // Portal (GOLFER_SPEC G5) — course-scoped, never a generic cross-course page.
+  const portalUrl = data.courseSlug
+    ? `${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}/account?email=${encodeURIComponent(data.golferEmail)}`
+    : `${process.env.NEXT_PUBLIC_URL}/account`;
+  const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : portalUrl;
   const noCard = data.noCard ?? false;
 
   // Breakdown rows shared by all variants
@@ -81,7 +85,8 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
     </div>`;
     ctaButtons = `
       ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:10px;">Check In &amp; Pay Online &rarr;</a>` : ''}
-      <a href="${manageUrl}" style="display:block;color:#1b4332;text-decoration:none;text-align:center;padding:8px;font-weight:700;font-size:13px;margin-bottom:16px;">Manage My Booking &rarr;</a>`;
+      <a href="${manageUrl}" style="display:block;color:#1b4332;text-decoration:none;text-align:center;padding:8px;font-weight:700;font-size:13px;margin-bottom:16px;">Manage My Booking &rarr;</a>
+      ${data.checkInToken ? `<a href="${portalUrl}" style="display:block;color:#6b7280;text-decoration:none;text-align:center;padding:4px;font-weight:600;font-size:12px;">View your tee times at ${data.courseName} &rarr;</a>` : ''}`;
   } else if (cancellationFee > 0) {
     // Card on file, course has a cancellation fee
     intro = `<h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">You're on the tee sheet.</h1>
@@ -93,7 +98,8 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
     </div>`;
     ctaButtons = `
       ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}
-      <a href="${manageUrl}" style="display:block;${checkInUrl ? 'color:#1b4332;' : 'background:#1b4332;color:#fff;'}text-decoration:none;text-align:center;padding:${checkInUrl ? '8px' : '14px'};border-radius:4px;font-weight:700;font-size:${checkInUrl ? '13px' : '15px'};margin-bottom:16px;">Manage My Booking &rarr;</a>`;
+      <a href="${manageUrl}" style="display:block;${checkInUrl ? 'color:#1b4332;' : 'background:#1b4332;color:#fff;'}text-decoration:none;text-align:center;padding:${checkInUrl ? '8px' : '14px'};border-radius:4px;font-weight:700;font-size:${checkInUrl ? '13px' : '15px'};margin-bottom:16px;">Manage My Booking &rarr;</a>
+      ${data.checkInToken ? `<a href="${portalUrl}" style="display:block;color:#6b7280;text-decoration:none;text-align:center;padding:4px;font-weight:600;font-size:12px;">View your tee times at ${data.courseName} &rarr;</a>` : ''}`;
   } else {
     // Card on file, no cancellation fee policy
     intro = `<h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">You're on the tee sheet.</h1>
@@ -104,7 +110,8 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
     </div>`;
     ctaButtons = `
       ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}
-      <a href="${manageUrl}" style="display:block;${checkInUrl ? 'color:#1b4332;' : 'background:#1b4332;color:#fff;'}text-decoration:none;text-align:center;padding:${checkInUrl ? '8px' : '14px'};border-radius:4px;font-weight:700;font-size:${checkInUrl ? '13px' : '15px'};margin-bottom:16px;">Manage My Booking &rarr;</a>`;
+      <a href="${manageUrl}" style="display:block;${checkInUrl ? 'color:#1b4332;' : 'background:#1b4332;color:#fff;'}text-decoration:none;text-align:center;padding:${checkInUrl ? '8px' : '14px'};border-radius:4px;font-weight:700;font-size:${checkInUrl ? '13px' : '15px'};margin-bottom:16px;">Manage My Booking &rarr;</a>
+      ${data.checkInToken ? `<a href="${portalUrl}" style="display:block;color:#6b7280;text-decoration:none;text-align:center;padding:4px;font-weight:600;font-size:12px;">View your tee times at ${data.courseName} &rarr;</a>` : ''}`;
   }
 
   const html = baseTemplate(`
@@ -277,7 +284,7 @@ export async function sendBookingModifiedEmail(data: {
 // round at check-in. Itemizes the same numbers as the original booking
 // confirmation, plus the late-cancellation fee refund if one applied.
 export async function sendCheckInReceiptEmail(data: {
-  golferName: string; golferEmail: string; courseName: string;
+  golferName: string; golferEmail: string; courseName: string; courseSlug?: string;
   date: string; time: string; players: number;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number; totalAmount: number;
   feeRefunded: boolean; feeRefundAmount: number;
@@ -299,6 +306,7 @@ export async function sendCheckInReceiptEmail(data: {
     </div>
     ${data.feeRefunded ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#166534;font-size:14px;font-weight:600;">&#10003; The $${(data.feeRefundAmount / 100).toFixed(2)} late-cancellation fee you were charged earlier has been refunded.</p></div>` : ''}
     ${data.checkInToken ? `<a href="${process.env.NEXT_PUBLIC_URL}/receipt/${data.bookingId}?token=${data.checkInToken}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:600;font-size:15px;margin-bottom:16px;">View Receipt &rarr;</a>` : ''}
+    ${data.courseSlug ? `<a href="${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}/account?email=${encodeURIComponent(data.golferEmail)}" style="display:block;color:#6b7280;text-decoration:none;text-align:center;padding:4px;font-weight:600;font-size:12px;margin-bottom:16px;">View your tee times at ${data.courseName} &rarr;</a>` : ''}
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
   `);
   await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Receipt: ${data.courseName} — $${(data.totalAmount / 100).toFixed(2)}`, html });
