@@ -45,7 +45,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
-  const { token, paymentMethodId } = await req.json();
+  const { token, paymentMethodId } = await req.json().catch(() => ({ token: null, paymentMethodId: undefined }));
   const booking = await authorize(bookingId, token);
   if (!booking) return NextResponse.json({ error: 'Invalid or expired check-in link.' }, { status: 404 });
 

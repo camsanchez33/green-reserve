@@ -38,7 +38,8 @@ async function api(
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
   const text = await res.text();
-  const body = JSON.parse(text).catch?.(() => text) ?? text;
+  let body: unknown = text;
+  try { body = JSON.parse(text); } catch { /* non-JSON body (e.g. empty 401) — keep raw text */ }
   return { status: res.status, body, text };
 }
 
@@ -46,13 +47,35 @@ async function getCookie(res: Response): Promise<string> {
   return (res.headers.get('set-cookie') || '').split(';')[0];
 }
 
+// Operator login now always requires 2FA (SECURITY hardening) — the code is
+// only ever delivered by email/SMS, which this script doesn't intercept. It
+// completes the flow instead by overwriting the hashed code the login step
+// just stored with one it knows, then verifying with that.
+const OP_2FA_TEST_CODE = '424242';
+
 async function loginOp(email: string, password: string): Promise<string> {
   const res = await fetch(`${BASE_URL}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
-  return getCookie(res);
+  const pendingCookie = await getCookie(res);
+  if (!pendingCookie.startsWith('gr_2fa_pending=')) return pendingCookie; // login itself failed
+
+  const operator = await prisma.courseOperator.findUnique({ where: { email } });
+  if (!operator) return '';
+  const codeHash = await bcrypt.hash(OP_2FA_TEST_CODE, 10);
+  await prisma.courseOperator.update({
+    where: { id: operator.id },
+    data: { twoFactorCode: codeHash, twoFactorCodeExpiry: new Date(Date.now() + 10 * 60 * 1000), twoFactorAttempts: 0 },
+  });
+
+  const verifyRes = await fetch(`${BASE_URL}/api/auth/2fa/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: pendingCookie },
+    body: JSON.stringify({ code: OP_2FA_TEST_CODE }),
+  });
+  return getCookie(verifyRes);
 }
 
 async function loginGolfer(email: string, password: string): Promise<string> {
@@ -83,13 +106,13 @@ async function seed() {
 
   const [opA, opB] = await Promise.all([
     prisma.courseOperator.upsert({
-      where: { email: `${TS}-opA@test.local` },
-      create: { name: 'Isol Op A', email: `${TS}-opA@test.local`, password: hash },
+      where: { email: `${TS}-opa@test.local` },
+      create: { name: 'Isol Op A', email: `${TS}-opa@test.local`, password: hash },
       update: { password: hash },
     }),
     prisma.courseOperator.upsert({
-      where: { email: `${TS}-opB@test.local` },
-      create: { name: 'Isol Op B', email: `${TS}-opB@test.local`, password: hash },
+      where: { email: `${TS}-opb@test.local` },
+      create: { name: 'Isol Op B', email: `${TS}-opb@test.local`, password: hash },
       update: { password: hash },
     }),
   ]);
@@ -108,15 +131,17 @@ async function seed() {
     }),
   ]);
 
+  // phone is unique-when-set (schema-batch2) — leave it unset (null) here rather
+  // than '' for both, which would collide on the second upsert.
   const [golferA, golferB] = await Promise.all([
     prisma.golferAccount.upsert({
-      where: { email: `${TS}-golferA@test.local` },
-      create: { email: `${TS}-golferA@test.local`, password: hash, firstName: 'GolferA', lastName: 'Test', phone: '' },
+      where: { email: `${TS}-golfera@test.local` },
+      create: { email: `${TS}-golfera@test.local`, password: hash, firstName: 'GolferA', lastName: 'Test' },
       update: { password: hash },
     }),
     prisma.golferAccount.upsert({
-      where: { email: `${TS}-golferB@test.local` },
-      create: { email: `${TS}-golferB@test.local`, password: hash, firstName: 'GolferB', lastName: 'Test', phone: '' },
+      where: { email: `${TS}-golferb@test.local` },
+      create: { email: `${TS}-golferb@test.local`, password: hash, firstName: 'GolferB', lastName: 'Test' },
       update: { password: hash },
     }),
   ]);
@@ -130,7 +155,7 @@ async function seed() {
   const bookingA = await prisma.booking.create({
     data: {
       teeTimeId: teeTimeA.id, courseId: courseA.id, golferAccountId: golferA.id,
-      golferName: 'GolferA Test', golferEmail: `${TS}-golferA@test.local`,
+      golferName: 'GolferA Test', golferEmail: `${TS}-golfera@test.local`,
       players: 1, greenFeeTotal: 5000, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 5150,
       status: 'confirmed', paymentStatus: 'no_payment_method', checkInToken: randomUUID(),
     },
@@ -144,7 +169,7 @@ async function seed() {
   const bookingB = await prisma.booking.create({
     data: {
       teeTimeId: teeTimeB.id, courseId: courseB.id, golferAccountId: golferB.id,
-      golferName: 'GolferB Test', golferEmail: `${TS}-golferB@test.local`,
+      golferName: 'GolferB Test', golferEmail: `${TS}-golferb@test.local`,
       players: 1, greenFeeTotal: 6000, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 6150,
       status: 'confirmed', paymentStatus: 'no_payment_method', checkInToken: randomUUID(),
     },
@@ -195,12 +220,12 @@ async function main() {
   console.log('   Seeding fixtures...');
 
   const data = await seed();
-  const { courseB, bookingA, bookingB } = data;
+  const { courseA, courseB, bookingA, bookingB } = data;
 
-  const cookieA = await loginOp(`${TS}-opA@test.local`, PASS);
-  const cookieB = await loginOp(`${TS}-opB@test.local`, PASS);
-  const golferCookieA = await loginGolfer(`${TS}-golferA@test.local`, PASS);
-  const golferCookieB = await loginGolfer(`${TS}-golferB@test.local`, PASS);
+  const cookieA = await loginOp(`${TS}-opa@test.local`, PASS);
+  const cookieB = await loginOp(`${TS}-opb@test.local`, PASS);
+  const golferCookieA = await loginGolfer(`${TS}-golfera@test.local`, PASS);
+  const golferCookieB = await loginGolfer(`${TS}-golferb@test.local`, PASS);
   const viewerCookie = await loginAdmin(`${TS}-viewer@test.local`, PASS);
 
   console.log('\n── Auth guard: no credentials ────────────────────────────────────');
@@ -281,6 +306,48 @@ async function main() {
     const hasBBooking = bodyStr.includes(bookingB.id);
     checkStatus('Golfer A bookings returns 200', r.status, 200);
     check('Golfer A booking list has no Golfer B booking', !hasBBooking, hasBBooking ? `LEAK: ${bookingB.id}` : undefined);
+  }
+
+  console.log('\n── Golfer portal cross-course isolation (G5) ──────────────────────');
+  {
+    // Golfer A's portal on THEIR OWN course (A) must show their booking
+    const r = await api(`/api/courses/${courseA.slug}/account`, { cookie: golferCookieA });
+    const bodyStr = JSON.stringify(r.body);
+    checkStatus('Golfer A portal on Course A returns 200', r.status, 200);
+    check('Golfer A portal on Course A includes their booking', bodyStr.includes(bookingA.id));
+  }
+  {
+    // Golfer A has no booking at Course B — portal must show it as empty,
+    // and must never leak Course B's other bookings (Golfer B's) into it.
+    const r = await api(`/api/courses/${courseB.slug}/account`, { cookie: golferCookieA });
+    const bodyStr = JSON.stringify(r.body);
+    checkStatus('Golfer A portal on Course B returns 200', r.status, 200);
+    check('Golfer A portal on Course B has no Course A booking', !bodyStr.includes(bookingA.id));
+    check('Golfer A portal on Course B has no Golfer B booking', !bodyStr.includes(bookingB.id));
+  }
+  {
+    const r = await api(`/api/courses/${courseA.slug}/account`);
+    checkStatus('Portal without a golfer session → 401', r.status, 401);
+  }
+
+  console.log('\n── Manage-booking session auth (G5 extends token-only routes) ─────');
+  {
+    // Golfer B's session cannot read Golfer A's booking via the manage GET
+    const r = await api(`/api/manage/${bookingA.id}`, { cookie: golferCookieB });
+    checkStatus('Golfer B session on Golfer A manage GET → 404', r.status, 404);
+  }
+  {
+    // Golfer A's OWN session (no token) can read their own booking
+    const r = await api(`/api/manage/${bookingA.id}`, { cookie: golferCookieA });
+    checkStatus('Golfer A session on own manage GET → 200', r.status, 200);
+  }
+  {
+    // Golfer B's session cannot change party size on Golfer A's booking
+    const r = await api(`/api/manage/${bookingA.id}/change-players`, {
+      method: 'POST', cookie: golferCookieB,
+      body: { newPlayers: 3, termsAccepted: true },
+    });
+    checkStatus('Golfer B session cannot change-players on Golfer A booking → 404', r.status, 404);
   }
 
   console.log('\n── Admin viewer role gate ────────────────────────────────────────');
