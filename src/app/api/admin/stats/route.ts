@@ -175,7 +175,7 @@ export async function GET() {
     attentionItems: {
       staleInquiries: staleInquiries.map(i => ({ ...i, createdAt: i.createdAt.toISOString() })),
       noStripe,
-      stuckOperators: stuckOperators.map(({ course, createdAt, ...rest }) => ({ ...rest, courseId: course?.id ?? null, createdAt: createdAt.toISOString() })),
+      stuckOperators: stuckOperators.map(({ course, createdAt, ...rest }) => ({ ...rest, courseId: course?.[0]?.id ?? null, createdAt: createdAt.toISOString() })),
     },
     recentActivity: {
       bookings: recentBookingsActivity.map(b => ({

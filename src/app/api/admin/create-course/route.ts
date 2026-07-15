@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
       include: { course: { select: { id: true } } },
     });
 
-    const courseId = operator.course?.id ?? null;
+    const courseId = operator.course?.[0]?.id ?? null;
     const setupLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/verify?token=${verificationToken}`;
 
     // If this was created from an inquiry, mark it

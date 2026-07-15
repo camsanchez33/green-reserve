@@ -1,5 +1,8 @@
+import { cookies } from 'next/headers';
 import { getOperatorSession } from './auth';
 import { prisma } from './prisma';
+
+export const ACTIVE_COURSE_COOKIE = 'gr_active_course';
 
 export interface ResolvedSession {
   courseId: string;
@@ -12,6 +15,12 @@ export interface ResolvedSession {
 /**
  * Resolves the courseId for both operator and staff sessions.
  * Use this in all dashboard API routes instead of getOperatorSession() directly.
+ *
+ * Operators can now have more than one course (Course.operatorId is no longer
+ * unique). Single-course operators behave exactly as before. Multi-course
+ * operators pick the active one via the gr_active_course cookie (set by the
+ * dashboard's course switcher) — falls back to the oldest course if the
+ * cookie is missing, stale, or points at a course this operator doesn't own.
  */
 export async function resolveDashboardSession(): Promise<ResolvedSession | null> {
   const session = await getOperatorSession();
@@ -27,15 +36,22 @@ export async function resolveDashboardSession(): Promise<ResolvedSession | null>
     };
   }
 
-  // Operator — look up their course
-  const operator = await prisma.courseOperator.findUnique({
-    where: { id: session.operatorId },
-    select: { course: { select: { id: true } } },
+  const courses = await prisma.course.findMany({
+    where: { operatorId: session.operatorId },
+    select: { id: true },
+    orderBy: { createdAt: 'asc' },
   });
-  if (!operator?.course?.id) return null;
+  if (courses.length === 0) return null;
+
+  let courseId = courses[0].id;
+  if (courses.length > 1) {
+    const cookieStore = await cookies();
+    const active = cookieStore.get(ACTIVE_COURSE_COOKIE)?.value;
+    if (active && courses.some(c => c.id === active)) courseId = active;
+  }
 
   return {
-    courseId: operator.course.id,
+    courseId,
     email: session.email,
     operatorId: session.operatorId,
     staffId: null,

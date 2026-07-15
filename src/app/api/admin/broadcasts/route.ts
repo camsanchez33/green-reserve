@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
 
   if (sendEmail) {
     const operators = await prisma.courseOperator.findMany({
-      where: { course: { active: true } },
+      where: { course: { some: { active: true } } },
       select: { email: true, name: true },
     });
     emailCount = operators.length;

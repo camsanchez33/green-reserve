@@ -170,7 +170,7 @@ async function handleAction(
         include: { course: true },
       });
 
-      const builtCourseId = operator.course?.id ?? null;
+      const builtCourseId = operator.course?.[0]?.id ?? null;
       const from = inquiry.status;
       await prisma.courseInquiry.update({
         where: { id: inquiryId },
@@ -460,11 +460,33 @@ async function handleAction(
 
       let builtCourseId: string | null = null;
       if (existingOp) {
-        const existingCourse = await prisma.course.findUnique({ where: { operatorId: existingOp.id } });
-        if (existingCourse) {
-          return NextResponse.json({ error: `Operator already has a course (${existingCourse.name}). Archive it first or use a different contact email.` }, { status: 409 });
+        // V9-1b: operator having a course is no longer a dead-end.
+        // - different name (or no courses at all) -> attach, no block
+        // - same name but archived -> attach, no block (the old one is gone)
+        // - same name and NOT archived -> banner (View existing / Create anyway)
+        const existingCourses = await prisma.course.findMany({ where: { operatorId: existingOp.id } });
+        const nameMatch = existingCourses.find(
+          c => !c.archivedAt && c.name.trim().toLowerCase() === inquiry.courseName.trim().toLowerCase()
+        );
+        const force = payload?.force === true;
+        if (nameMatch && !force) {
+          return NextResponse.json({
+            error: 'name_conflict',
+            message: `${existingOp.name} already has an active course named "${nameMatch.name}".`,
+            existingCourseId: nameMatch.id,
+            existingCourseName: nameMatch.name,
+          }, { status: 409 });
         }
-        const newCourse = await prisma.course.create({ data: { operatorId: existingOp.id, ...courseFields } });
+
+        let attachData = courseFields;
+        if (nameMatch && force) {
+          let forcedSlug = `${slug}-2`;
+          if (await prisma.course.findUnique({ where: { slug: forcedSlug } })) {
+            forcedSlug = `${slug}-2-${randomBytes(3).toString('hex')}`;
+          }
+          attachData = { ...courseFields, slug: forcedSlug };
+        }
+        const newCourse = await prisma.course.create({ data: { operatorId: existingOp.id, ...attachData } });
         builtCourseId = newCourse.id;
       } else {
         const tempPassword = randomBytes(8).toString('hex');
@@ -482,7 +504,7 @@ async function handleAction(
           },
           include: { course: true },
         });
-        builtCourseId = operator.course?.id ?? null;
+        builtCourseId = operator.course?.[0]?.id ?? null;
       }
       const from = inquiry.status;
       await prisma.courseInquiry.update({

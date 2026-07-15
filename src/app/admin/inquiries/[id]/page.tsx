@@ -203,6 +203,7 @@ function InquiryDetailInner() {
   const [actionError, setActionError] = useState('');
   const [sendingPreview, setSendingPreview] = useState(false);
   const [previewMsg, setPreviewMsg] = useState('');
+  const [nameConflict, setNameConflict] = useState<{ existingCourseId: string; existingCourseName: string; message: string } | null>(null);
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
@@ -262,16 +263,24 @@ function InquiryDetailInner() {
     setProcessing(false);
   }
 
-  async function createDraftCourse() {
+  async function createDraftCourse(force = false) {
     setProcessing(true);
     setActionError('');
+    if (!force) setNameConflict(null);
     try {
       const r = await fetch('/api/admin/inquiries', {
         method: 'PATCH', headers: H(),
-        body: JSON.stringify({ id: params.id, action: 'create_draft_course' }),
+        body: JSON.stringify({ id: params.id, action: 'create_draft_course', force }),
       });
       const d = await r.json();
-      if (!r.ok) { setActionError((d.error as string) || 'Failed to create draft'); setProcessing(false); return; }
+      if (!r.ok) {
+        if (d.error === 'name_conflict') {
+          setNameConflict({ existingCourseId: d.existingCourseId, existingCourseName: d.existingCourseName, message: d.message });
+          setProcessing(false);
+          return;
+        }
+        setActionError((d.error as string) || 'Failed to create draft'); setProcessing(false); return;
+      }
       if (d.courseId) router.push('/admin/courses/' + d.courseId);
     } catch (e) { setActionError('Error: ' + e); }
     setProcessing(false);
@@ -534,6 +543,21 @@ function InquiryDetailInner() {
               <button onClick={() => setActionError('')} className="text-bad/60 hover:text-bad shrink-0 transition-colors">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 14 14"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               </button>
+            </div>
+          )}
+          {/* Draft-build name conflict — never a dead-end */}
+          {nameConflict && (
+            <div className="mt-3 bg-warn/5 border border-warn/20 rounded-md px-4 py-3">
+              <p className="text-warn text-xs leading-relaxed mb-2.5">{nameConflict.message}</p>
+              <div className="flex items-center gap-2">
+                <button onClick={() => router.push('/admin/courses/' + nameConflict.existingCourseId)} className={btnO}>
+                  <Wrench className="w-3.5 h-3.5" />View existing course
+                </button>
+                <button onClick={() => createDraftCourse(true)} disabled={processing} className={btnO}>
+                  <CheckCircle className="w-3.5 h-3.5" />Create anyway
+                </button>
+                <button onClick={() => setNameConflict(null)} className="text-xs text-ink-faint hover:text-ink transition-colors ml-1">Dismiss</button>
+              </div>
             </div>
           )}
           {/* Preview send feedback */}

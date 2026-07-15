@@ -12,8 +12,9 @@ export type OperatorNavKey =
   | 'schedule' | 'members' | 'payments' | 'settings' | 'messages';
 
 interface CourseIdentity {
-  name: string; type: string; brandColor: string; establishedYear?: number | null;
+  id?: string; name: string; type: string; brandColor: string; establishedYear?: number | null;
 }
+interface MyCourse { id: string; name: string; slug: string; active: boolean; liveStatus: string; }
 
 function accentActive(color: string) {
   return { borderLeft: `2px solid ${color}`, backgroundColor: color + '14', color };
@@ -26,6 +27,8 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   const router = useRouter();
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [identity, setIdentity] = useState<CourseIdentity>({ name: '', type: 'public', brandColor: '#24513B', establishedYear: null });
+  const [myCourses, setMyCourses] = useState<MyCourse[]>([]);
+  const [switchingCourse, setSwitchingCourse] = useState(false);
 
   useEffect(() => {
     fetch('/api/operator/messages?unreadCount=1')
@@ -36,10 +39,29 @@ export default function OperatorSidebar({ active, onAlertClick }: {
       .then(r => r.ok ? r.json() : null)
       .then(c => {
         if (!c) return;
-        setIdentity({ name: c.name || '', type: c.type || 'public', brandColor: c.brandColor || '#24513B', establishedYear: c.establishedYear ?? null });
+        setIdentity({ id: c.id, name: c.name || '', type: c.type || 'public', brandColor: c.brandColor || '#24513B', establishedYear: c.establishedYear ?? null });
       })
       .catch(() => {});
+    // Only ever returns >1 row for multi-course operators — staff and
+    // single-course operators get back a one-item (or empty) list and the
+    // switcher stays hidden, same as today.
+    fetch('/api/operator/my-courses')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.courses) setMyCourses(d.courses); })
+      .catch(() => {});
   }, []);
+
+  async function switchCourse(courseId: string) {
+    if (switchingCourse || courseId === identity.id) return;
+    setSwitchingCourse(true);
+    try {
+      await fetch('/api/operator/active-course', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ courseId }),
+      });
+    } finally {
+      window.location.href = '/dashboard';
+    }
+  }
 
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -88,6 +110,18 @@ export default function OperatorSidebar({ active, onAlertClick }: {
             <div className="font-serif text-[14.5px] text-ink leading-snug truncate">{name}</div>
             <div className="text-[10.5px] text-ink-muted uppercase tracking-[0.05em] mt-0.5 truncate">{meta}</div>
           </div>
+        )}
+        {myCourses.length > 1 && (
+          <select
+            value={identity.id || ''}
+            onChange={e => switchCourse(e.target.value)}
+            disabled={switchingCourse}
+            className="mt-2 w-full bg-paper border border-line rounded-md px-2 py-1.5 text-[11.5px] text-ink-soft disabled:opacity-50"
+          >
+            {myCourses.map(c => (
+              <option key={c.id} value={c.id}>{c.name}{c.active && c.liveStatus === 'live' ? '' : ' (draft)'}</option>
+            ))}
+          </select>
         )}
       </div>
 
