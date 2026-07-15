@@ -606,6 +606,30 @@ export async function sendTwoFactorCodeEmail(data: {
   });
 }
 
+// Passwordless sign-in for the per-course golfer portal (GOLFER_SPEC G5) —
+// generic copy since one code works to sign into any course's portal (same
+// underlying GolferAccount).
+export async function sendGolferOtpEmail(data: { email: string; code: string; courseName: string }) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:900;">Your sign-in code</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      Enter this code to sign in to your ${data.courseName} tee times.
+    </p>
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:24px;margin-bottom:20px;text-align:center;">
+      <p style="margin:0;color:#111827;font-size:32px;font-weight:900;font-family:monospace;letter-spacing:0.2em;">${data.code}</p>
+    </div>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      This code expires in 10 minutes. Didn't request this? You can safely ignore this email.
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.email,
+    subject: `Your sign-in code: ${data.code}`,
+    html,
+  });
+}
+
 export async function sendAdminTwoFactorCode(data: { email: string; name: string; code: string }) {
   const html = baseTemplate(`
     <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:900;">Admin verification code</h1>
