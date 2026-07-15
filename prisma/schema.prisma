@@ -129,6 +129,8 @@ model Course {
   thread                MessageThread?
   photos                CoursePhoto[]
   teeTimeAlerts         TeeTimeAlert[]
+
+  @@index([operatorId])
 }
 
 model CoursePhoto {
