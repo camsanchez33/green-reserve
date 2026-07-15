@@ -147,3 +147,14 @@ CourseMembership — established rule, do not merge).
 - Payments/stored-card management (check-in handles cards)
 - Cross-course "all my bookings" view (that's /account, which keeps working)
 - Merging member + golfer sessions
+
+### G5 addendum (Cam, 2026-07-14) — booking flow IS the portal's front door
+- Confirmation page: "View My Bookings" → /courses/[slug]/account (the
+  per-course portal), NOT a generic page. Golfer just booked with this email —
+  the portal sign-in should arrive pre-filled with it (still requires the OTP
+  to actually authenticate; possession of the confirmation link may count as
+  the email-verification factor, same logic as manage-booking tokens).
+- Confirmation page: "Back to home" → "Back to {Course Name}" linking to
+  /courses/[slug]. Golfers should stay inside the course's world (white-label
+  rule) — never dumped to the GreenReserve homepage.
+- Same treatment in the confirmation EMAIL buttons once the portal exists.
