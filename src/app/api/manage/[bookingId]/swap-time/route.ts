@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
+import { CURRENT_TERMS_VERSION } from '@/lib/terms';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -8,11 +9,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   const ok = await rateLimit('manage:swap:' + ip, 10, 300);
   if (!ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
 
-  const body = await req.json() as { token?: string; newTeeTimeId?: string };
-  const { token, newTeeTimeId } = body;
+  const body = await req.json() as { token?: string; newTeeTimeId?: string; termsAccepted?: boolean };
+  const { token, newTeeTimeId, termsAccepted } = body;
 
   if (!token || !newTeeTimeId) {
     return NextResponse.json({ error: 'Missing token or newTeeTimeId' }, { status: 400 });
+  }
+  if (termsAccepted !== true) {
+    return NextResponse.json({ error: 'You must agree to the Terms of Service to change this booking.' }, { status: 400 });
   }
 
   // Atomic: claim new slot + release old slot + update booking, all in one transaction.
@@ -56,7 +60,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
       const accessFeeTotal = 150 * players;
       const totalAmount = greenFeeTotal + cartFeeTotal + Math.round(booking.rangeBallsTotal) + accessFeeTotal;
 
-      // Update booking with new tee time + recomputed fees
+      // Update booking with new tee time + recomputed fees. Re-stamp terms
+      // consent — the price just changed, so it's a fresh agreement.
       await tx.booking.update({
         where: { id: bookingId },
         data: {
@@ -65,6 +70,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
           cartFeeTotal,
           accessFeeTotal,
           totalAmount,
+          termsAcceptedAt: new Date(),
+          termsVersion: CURRENT_TERMS_VERSION,
         },
       });
 

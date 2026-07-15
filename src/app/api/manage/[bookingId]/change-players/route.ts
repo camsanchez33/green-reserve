@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
+import { CURRENT_TERMS_VERSION } from '@/lib/terms';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -8,11 +9,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   const ok = await rateLimit('manage:players:' + ip, 10, 300);
   if (!ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
 
-  const body = await req.json() as { token?: string; newPlayers?: number };
-  const { token, newPlayers } = body;
+  const body = await req.json() as { token?: string; newPlayers?: number; termsAccepted?: boolean };
+  const { token, newPlayers, termsAccepted } = body;
 
   if (!token || !newPlayers || !Number.isInteger(newPlayers) || newPlayers < 1 || newPlayers > 4) {
     return NextResponse.json({ error: 'Missing or invalid parameters' }, { status: 400 });
+  }
+  if (termsAccepted !== true) {
+    return NextResponse.json({ error: 'You must agree to the Terms of Service to change this booking.' }, { status: 400 });
   }
 
   try {
@@ -53,9 +57,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
       const accessFeeTotal = perPlayerAccess * newPlayers;
       const totalAmount = greenFeeTotal + cartFeeTotal + Math.round(booking.rangeBallsTotal) + accessFeeTotal;
 
+      // Re-stamp terms consent — the price just changed, so it's a fresh agreement.
       await tx.booking.update({
         where: { id: bookingId },
-        data: { players: newPlayers, greenFeeTotal, cartFeeTotal, accessFeeTotal, totalAmount },
+        data: {
+          players: newPlayers, greenFeeTotal, cartFeeTotal, accessFeeTotal, totalAmount,
+          termsAcceptedAt: new Date(), termsVersion: CURRENT_TERMS_VERSION,
+        },
       });
 
       const playersDelta = newPlayers - booking.players;

@@ -148,7 +148,7 @@ function ManagePageInner() {
     try {
       const res = await fetch(`/api/manage/${bookingId}/swap-time`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, newTeeTimeId: selectedSlot.id }),
+        body: JSON.stringify({ token, newTeeTimeId: selectedSlot.id, termsAccepted: true }),
       });
       const data = await res.json();
       if (!res.ok) { setSwapError(data.error || 'Could not change tee time.'); setSwapping(false); return; }
@@ -170,7 +170,7 @@ function ManagePageInner() {
     try {
       const res = await fetch(`/api/manage/${bookingId}/change-players`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, newPlayers: selectedPlayers }),
+        body: JSON.stringify({ token, newPlayers: selectedPlayers, termsAccepted: true }),
       });
       const data = await res.json();
       if (!res.ok) { setPlayersError(data.error || 'Could not update party size.'); setChangingPlayers(false); return; }
@@ -334,6 +334,9 @@ function ManagePageInner() {
                   </div>
                 </div>
                 {swapError && <p className="text-bad text-xs">{swapError}</p>}
+                <p className="text-[11px] text-ink-muted text-center leading-snug">
+                  By confirming, you agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink">Terms of Service</a> and this course&apos;s cancellation policy.
+                </p>
                 <button
                   onClick={handleSwapTime}
                   disabled={swapping}
@@ -398,6 +401,9 @@ function ManagePageInner() {
 
             {playersError && <p className="text-bad text-sm mb-3">{playersError}</p>}
 
+            <p className="text-[11px] text-ink-muted text-center leading-snug mb-3">
+              By confirming, you agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink">Terms of Service</a> and this course&apos;s cancellation policy.
+            </p>
             <button
               onClick={handleChangePlayers}
               disabled={changingPlayers || selectedPlayers === info.players}
