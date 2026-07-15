@@ -7,7 +7,7 @@ import {
   Elements, CardElement, useStripe, useElements,
 } from '@stripe/react-stripe-js';
 import { ChevronLeft, Lock, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
-import { ACCESS_FEE_PER_PLAYER, serviceFeeLabel } from '@/lib/booking-fees';
+import { ACCESS_FEE_PER_PLAYER, serviceFeeLabel, hoursLabel } from '@/lib/booking-fees';
 import { TrustNote } from '@/components/TrustNote';
 
 // Deferred: only load Stripe when a card is actually needed (fee-policy courses).
@@ -141,7 +141,7 @@ function BookPageInner() {
           {confirmedData.cancellationFeeTotal > 0 && (
             <div className="bg-warn/5 border border-warn/20 rounded-lg p-4 mb-8 text-left">
               <p className="text-warn text-xs leading-relaxed">
-                Cancel at least {confirmedData.cancellationHours} hours before your tee time to avoid a ${confirmedData.cancellationFeeTotal.toFixed(2)} late-cancellation fee charged to your card on file.
+                Cancel at least {hoursLabel(confirmedData.cancellationHours)} before your tee time to avoid a ${confirmedData.cancellationFeeTotal.toFixed(2)} late-cancellation fee charged to your card on file.
               </p>
             </div>
           )}
@@ -153,8 +153,8 @@ function BookPageInner() {
           >
             View My Bookings
           </button>
-          <button onClick={() => router.push('/')} className="text-sm text-ink-muted hover:text-ink-soft transition-colors">
-            Back to home
+          <button onClick={() => router.push(`/courses/${courseSlug}`)} className="text-sm text-ink-muted hover:text-ink-soft transition-colors">
+            Back to {confirmedData.courseName}
           </button>
         </div>
       </div>
@@ -317,7 +317,7 @@ function BookPageInner() {
               </p>
             ) : (
               <p className="text-pine/80 text-xs leading-relaxed">
-                We save your card to hold your tee time — you&apos;re not charged now. Cancel at least {course.cancellation_hours} hours ahead and it&apos;s free; cancelling later (or no-showing) triggers a ${course.late_cancellation_fee.toFixed(2)} late-cancellation fee. Otherwise, you pay for your round when you check in at the course.
+                We save your card to hold your tee time — you&apos;re not charged now. Cancel at least {hoursLabel(course.cancellation_hours)} ahead and it&apos;s free; cancelling later (or no-showing) triggers a ${course.late_cancellation_fee.toFixed(2)} late-cancellation fee. Otherwise, you pay for your round when you check in at the course.
               </p>
             )}
           </div>

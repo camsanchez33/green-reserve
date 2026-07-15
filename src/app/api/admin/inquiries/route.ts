@@ -357,6 +357,10 @@ async function handleAction(
 
       const holes = flt(d.holes, 18) || 18;
       const par = flt(d.par, 72) || 72;
+      // The generated tee sheet plays a standard round, not the course's total
+      // hole count — a 27/36-hole course still tees off 18 at a time (the
+      // per-nine combo model is a manual Schedule-tab setup, flagged above).
+      const scheduleHoles = holes === 9 ? 9 : 18;
 
       const walkingRaw = str(d.walkingAllowed || sch.walkingAllowed, 'yes');
       const walkingAllowed = walkingRaw === 'yes' ? 'always' : walkingRaw;
@@ -520,7 +524,7 @@ async function handleAction(
             courseId: builtCourseId, tierName: 'standard',
             daysOfWeek: effectiveDays,
             startTime: firstTeeTime, endTime: lastTeeTime,
-            intervalMinutes: num(intervalMins, 10), holes: num(holes, 18),
+            intervalMinutes: num(intervalMins, 10), holes: scheduleHoles,
             greenFeeWeekday, greenFeeWeekend,
             memberRateWeekday: memberPerRoundFee, memberRateWeekend: memberPerRoundFee,
             residentRateWeekday: residentWeekdayFee, residentRateWeekend: residentWeekendFee,

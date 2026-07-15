@@ -122,6 +122,10 @@ export async function POST(req: NextRequest) {
       const daysArr = Array.isArray(seedDaysOpen) && seedDaysOpen.length > 0
         ? seedDaysOpen.map(Number)
         : [0, 1, 2, 3, 4, 5, 6];
+      // The generated tee sheet plays a standard round, not the course's total
+      // hole count — a 27/36-hole course still tees off 18 at a time.
+      const courseTotalHoles = holes ? Number(holes) : (seedHoles ? Number(seedHoles) : 18);
+      const scheduleHoles = courseTotalHoles === 9 ? 9 : 18;
       await prisma.teeTimeSchedule.create({
         data: {
           courseId,
@@ -130,7 +134,7 @@ export async function POST(req: NextRequest) {
           startTime: seedFirstTeeTime || '07:00',
           endTime: seedLastTeeTime || '17:30',
           intervalMinutes: seedIntervalMinutes ? Number(seedIntervalMinutes) : 10,
-          holes: seedHoles ? Number(seedHoles) : 18,
+          holes: scheduleHoles,
           greenFeeWeekday: Number(seedWeekdayFee),
           greenFeeWeekend: Number(seedWeekendFee),
           cartFee: seedCartFee != null ? Number(seedCartFee) : 0,
