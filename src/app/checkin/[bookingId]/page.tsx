@@ -5,6 +5,7 @@ import { CheckCircle, Loader2, AlertCircle, MapPin, Lock } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
+import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
@@ -16,7 +17,7 @@ const cardStyle = {
 };
 
 type CheckInInfo = {
-  golferName: string; courseName: string; courseSlug: string; courseAddress: string;
+  golferName: string; courseName: string; courseSlug: string; courseAddress: string; brandColor: string;
   date: string; time: string; players: number; holes: number; status: string;
   totalAmount: number; greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number;
   hasCard: boolean;
@@ -150,26 +151,29 @@ function CheckInPageInner() {
     const charged = result?.totalCharged ?? info.totalAmount;
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className="max-w-lg w-full bg-white rounded-lg border border-line p-10 text-center">
-          <div className="w-16 h-16 rounded-lg bg-ok/8 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle size={32} className="text-ok" />
-          </div>
-          <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">You&apos;re checked in!</h1>
-          <p className="text-ink-soft mb-6 text-sm">${(charged / 100).toFixed(2)} was charged to your card. Enjoy your round at {info.courseName}.</p>
-          {result?.feeRefunded && (
-            <div className="bg-ok/5 border border-ok/20 rounded-md p-4 mb-6 text-left">
-              <p className="text-ok text-xs">Your earlier ${(result.feeRefundAmount / 100).toFixed(2)} late-cancellation fee has been refunded.</p>
+        <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
+          <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
+          <div className="p-8 text-center">
+            <div className="w-14 h-14 rounded-lg bg-ok/8 flex items-center justify-center mx-auto mb-5">
+              <CheckCircle size={28} className="text-ok" />
             </div>
-          )}
-          <p className="text-xs text-ink-muted mb-4">A receipt has been emailed to you.</p>
-          {token && (
-            <a href={`/receipt/${bookingId}?token=${encodeURIComponent(token)}`}
-              className="text-sm text-pine font-medium hover:underline mb-6 block">
-              View receipt →
-            </a>
-          )}
-          <div className="mt-6">
-            <GolferExitLinks courseSlug={info.courseSlug} courseName={info.courseName} />
+            <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">You&apos;re checked in!</h1>
+            <p className="text-ink-soft mb-6 text-sm">${(charged / 100).toFixed(2)} was charged to your card. Enjoy your round.</p>
+            {result?.feeRefunded && (
+              <div className="bg-ok/5 border border-ok/20 rounded-md p-4 mb-6 text-left">
+                <p className="text-ok text-xs">Your earlier ${(result.feeRefundAmount / 100).toFixed(2)} late-cancellation fee has been refunded.</p>
+              </div>
+            )}
+            <p className="text-xs text-ink-muted mb-4">A receipt has been emailed to you.</p>
+            {token && (
+              <a href={`/receipt/${bookingId}?token=${encodeURIComponent(token)}`}
+                className="text-sm text-pine font-medium hover:underline mb-6 block">
+                View receipt →
+              </a>
+            )}
+            <div className="mt-6">
+              <GolferExitLinks courseSlug={info.courseSlug} courseName={info.courseName} accent={info.brandColor} />
+            </div>
           </div>
         </div>
       </div>
@@ -196,9 +200,7 @@ function CheckInPageInner() {
   return (
     <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
       <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
-        <div className="h-14 bg-pine flex items-center px-6">
-          <span className="text-white font-medium">{info.courseName}</span>
-        </div>
+        <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
         <div className="p-8">
           <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-1">Check in, {info.golferName.split(' ')[0]}?</h1>
           <p className="text-ink-soft text-sm mb-6">

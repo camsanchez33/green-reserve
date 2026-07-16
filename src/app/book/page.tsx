@@ -9,6 +9,7 @@ import {
 import { ChevronLeft, Lock, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { ACCESS_FEE_PER_PLAYER, serviceFeeLabel, hoursLabel } from '@/lib/booking-fees';
 import { TrustNote } from '@/components/TrustNote';
+import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 
 // Deferred: only load Stripe when a card is actually needed (fee-policy courses).
 // No-fee courses never touch Stripe JS at all.
@@ -112,51 +113,53 @@ function BookPageInner() {
   if (confirmedData) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className="max-w-lg w-full bg-white rounded-lg border border-line p-10 text-center">
-          <div className="w-16 h-16 rounded-lg bg-ok/8 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle size={32} className="text-ok" />
-          </div>
-          <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">You&apos;re all set!</h1>
-          <p className="text-ink-soft mb-8 text-sm">
-            {confirmedData.noCard
-              ? <>Your spot is reserved — <strong className="text-ink">no card required</strong>. Pay at the course or use the check-in link in your confirmation email.</>
-              : <>Your card is on file but <strong className="text-ink">nothing has been charged</strong>. We&apos;ll email you a reminder to check in and pay before your round.</>}
-          </p>
+        <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
+          <CourseHeaderBar courseName={confirmedData.courseName} accent={accent} />
+          <div className="p-8 text-center">
+            <div className="w-14 h-14 rounded-lg bg-ok/8 flex items-center justify-center mx-auto mb-5">
+              <CheckCircle size={28} className="text-ok" />
+            </div>
+            <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">You&apos;re all set!</h1>
+            <p className="text-ink-soft mb-6 text-sm">
+              {confirmedData.noCard
+                ? <>Your spot is reserved — <strong className="text-ink">no card required</strong>. Pay at the course or use the check-in link in your confirmation email.</>
+                : <>Your card is on file but <strong className="text-ink">nothing has been charged</strong>. We&apos;ll email you a reminder to check in and pay before your round.</>}
+            </p>
 
-          <div className="bg-paper rounded-lg p-5 mb-8 text-left space-y-2 text-sm border border-line">
-            <div className="flex justify-between"><span className="text-ink-muted">Course</span><span className="font-medium text-ink">{confirmedData.courseName}</span></div>
-            <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{displayDate(confirmedData.date)}</span></div>
-            <div className="flex justify-between"><span className="text-ink-muted">Tee Time</span><span className="font-medium text-ink">{formatTime(confirmedData.time)}</span></div>
-            <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{confirmedData.players}</span></div>
-            <div className="border-t border-line mt-2 pt-2 space-y-1.5">
-              <div className="flex justify-between text-ink-soft"><span>Green Fee</span><span>${confirmedData.greenFeeTotal.toFixed(2)}</span></div>
-              {confirmedData.cartFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart Fee</span><span>${confirmedData.cartFeeTotal.toFixed(2)}</span></div>}
-              {confirmedData.rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range Balls</span><span>${confirmedData.rangeBallsTotal.toFixed(2)}</span></div>}
-              <div className="flex justify-between text-ink-soft"><span>{serviceFeeLabel(confirmedData.players)}</span><span>${confirmedData.accessFeeTotal.toFixed(2)}</span></div>
-              <div className="flex justify-between font-semibold text-ink border-t border-line pt-2">
-                <span>Estimated total at check-in</span><span>${confirmedData.totalAmount.toFixed(2)}</span>
+            <div className="bg-paper rounded-lg p-5 mb-6 text-left space-y-2 text-sm border border-line">
+              <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{displayDate(confirmedData.date)}</span></div>
+              <div className="flex justify-between"><span className="text-ink-muted">Tee Time</span><span className="font-medium text-ink">{formatTime(confirmedData.time)}</span></div>
+              <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{confirmedData.players}</span></div>
+              <div className="border-t border-line mt-2 pt-2 space-y-1.5">
+                <div className="flex justify-between text-ink-soft"><span>Green Fee</span><span>${confirmedData.greenFeeTotal.toFixed(2)}</span></div>
+                {confirmedData.cartFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart Fee</span><span>${confirmedData.cartFeeTotal.toFixed(2)}</span></div>}
+                {confirmedData.rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range Balls</span><span>${confirmedData.rangeBallsTotal.toFixed(2)}</span></div>}
+                <div className="flex justify-between text-ink-soft"><span>{serviceFeeLabel(confirmedData.players)}</span><span>${confirmedData.accessFeeTotal.toFixed(2)}</span></div>
+                <div className="flex justify-between font-semibold text-ink border-t border-line pt-2">
+                  <span>Estimated total at check-in</span><span>${confirmedData.totalAmount.toFixed(2)}</span>
+                </div>
               </div>
             </div>
+
+            {confirmedData.cancellationFeeTotal > 0 && (
+              <div className="bg-warn/5 border border-warn/20 rounded-lg p-4 mb-6 text-left">
+                <p className="text-warn text-xs leading-relaxed">
+                  Cancel at least {hoursLabel(confirmedData.cancellationHours)} before your tee time to avoid a ${confirmedData.cancellationFeeTotal.toFixed(2)} late-cancellation fee charged to your card on file.
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={() => router.push(`/courses/${courseSlug}/account?email=${encodeURIComponent(confirmedData.golferEmail)}`)}
+              className="inline-flex items-center justify-center w-full py-3.5 rounded-md font-medium text-white text-sm mb-3 transition-colors"
+              style={{ backgroundColor: accent }}
+            >
+              View My Bookings
+            </button>
+            <button onClick={() => router.push(`/courses/${courseSlug}`)} className="text-sm text-ink-muted hover:text-ink-soft transition-colors">
+              Back to {confirmedData.courseName}
+            </button>
           </div>
-
-          {confirmedData.cancellationFeeTotal > 0 && (
-            <div className="bg-warn/5 border border-warn/20 rounded-lg p-4 mb-8 text-left">
-              <p className="text-warn text-xs leading-relaxed">
-                Cancel at least {hoursLabel(confirmedData.cancellationHours)} before your tee time to avoid a ${confirmedData.cancellationFeeTotal.toFixed(2)} late-cancellation fee charged to your card on file.
-              </p>
-            </div>
-          )}
-
-          <button
-            onClick={() => router.push(`/courses/${courseSlug}/account?email=${encodeURIComponent(confirmedData.golferEmail)}`)}
-            className="inline-flex items-center justify-center w-full py-3.5 rounded-md font-medium text-white text-sm mb-3 transition-colors"
-            style={{ backgroundColor: accent }}
-          >
-            View My Bookings
-          </button>
-          <button onClick={() => router.push(`/courses/${courseSlug}`)} className="text-sm text-ink-muted hover:text-ink-soft transition-colors">
-            Back to {confirmedData.courseName}
-          </button>
         </div>
       </div>
     );
@@ -213,9 +216,7 @@ function BookPageInner() {
 
         <div className="grid gap-6">
           <div className="bg-white rounded-lg border border-line overflow-hidden">
-            <div className="h-14 flex items-center px-6" style={{ backgroundColor: accent }}>
-              <span className="text-white font-medium">{course.name}</span>
-            </div>
+            <CourseHeaderBar courseName={course.name} accent={accent} />
             <div className="p-6 space-y-3 text-sm">
               <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{displayDate(date)}</span></div>
               <div className="flex justify-between"><span className="text-ink-muted">Tee Time</span><span className="font-medium text-ink">{formatTime(teeTime.time)}</span></div>

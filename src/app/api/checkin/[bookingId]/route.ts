@@ -12,7 +12,7 @@ async function authorize(bookingId: string, token: string | null) {
     where: { id: bookingId },
     include: {
       teeTime: { select: { date: true, time: true, holes: true } },
-      course: { select: { name: true, slug: true, address: true, city: true, state: true } },
+      course: { select: { name: true, slug: true, address: true, city: true, state: true, brandColor: true } },
     },
   });
   if (!booking || booking.checkInToken !== token) return null;
@@ -30,6 +30,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     courseName: booking.course.name,
     courseSlug: booking.course.slug,
     courseAddress: `${booking.course.address}, ${booking.course.city}, ${booking.course.state}`,
+    brandColor: booking.course.brandColor,
     date: booking.teeTime.date,
     time: booking.teeTime.time,
     players: booking.players,

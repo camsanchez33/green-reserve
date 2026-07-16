@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, XCircle, AlertCircle, Loader2, MapPin, Calendar, Clock, Users, ChevronRight, ArrowLeft } from 'lucide-react';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
+import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 
 type BookingInfo = {
   bookingId: string;
@@ -226,7 +227,7 @@ function ManagePageInner() {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
-          <div className="h-14 flex items-center px-6" style={headerStyle}><span className="text-white font-medium">{info.courseName}</span></div>
+          <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
           <div className="p-8 text-center">
             <div className="w-14 h-14 rounded-lg bg-ok/8 flex items-center justify-center mx-auto mb-5"><CheckCircle size={28} className="text-ok" /></div>
             <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Booking cancelled</h1>
@@ -248,7 +249,7 @@ function ManagePageInner() {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
-          <div className="h-14 flex items-center px-6" style={headerStyle}><span className="text-white font-medium">{info.courseName}</span></div>
+          <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
           <div className="p-8 text-center">
             <div className="w-14 h-14 rounded-lg bg-ok/8 flex items-center justify-center mx-auto mb-5"><CheckCircle size={28} className="text-ok" /></div>
             <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Booking updated</h1>
@@ -428,9 +429,7 @@ function ManagePageInner() {
   return (
     <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
       <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
-        <div className="h-14 flex items-center px-6" style={headerStyle}>
-          <span className="text-white font-medium">{info.courseName}</span>
-        </div>
+        <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
         <div className="p-8">
           <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-1">
             {alreadyCancelled ? 'Booking cancelled' : alreadyCompleted ? 'Round complete' : `Hi, ${info.golferName.split(' ')[0]}`}
