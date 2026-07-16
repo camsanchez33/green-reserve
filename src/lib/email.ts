@@ -16,16 +16,11 @@ function baseTemplate(content: string) {
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 20px;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+        <tr><td style="background:#ffffff;padding:36px;border-top:1px solid #e4e4e7;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;border-radius:4px 4px 0 0;">${content}</td></tr>
         <tr>
-          <td style="background:#ffffff;padding:20px 36px;text-align:left;border-bottom:1px solid #e4e4e7;">
-            <img src="${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/brand/logo-lockup-900.png" width="220" height="42" alt="GreenReserve" style="display:block;" />
-          </td>
-        </tr>
-        <tr><td style="background:#ffffff;padding:36px;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;">${content}</td></tr>
-        <tr>
-          <td style="background:#ffffff;padding:0 36px 20px;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;border-bottom:1px solid #e4e4e7;">
+          <td style="background:#ffffff;padding:0 36px 20px;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;border-bottom:1px solid #e4e4e7;border-radius:0 0 4px 4px;">
             <div style="border-top:1px solid #f4f4f5;padding-top:20px;text-align:center;color:#a1a1aa;font-size:11px;">
-              <img src="${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/brand/birdie-badge-88.png" width="44" height="44" alt="" style="display:block;margin:0 auto 8px;" />
+              <img src="${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/brand/golfer.png" width="46" height="56" alt="" style="display:block;margin:0 auto 8px;" />
               Green Reserve &middot; <a href="https://greenreserve.app" style="color:#71717a;text-decoration:none;">greenreserve.app</a>
             </div>
           </td>
@@ -78,9 +73,9 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
 
   if (noCard) {
     // No-fee-policy course — no card collected, golfer pays at check-in
-    intro = `<h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">You're on the tee sheet.</h1>
+    intro = `<h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">You're on the tee sheet.</h1>
       <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">Your spot at ${data.courseName} is confirmed. <strong>No card required</strong> — pay at the course when you check in, or use the link below to pay online.</p>`;
-    totalRow = `<tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">Total due at the course</span><br><span style="color:#111827;font-size:20px;font-weight:900;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>`;
+    totalRow = `<tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">Total due at the course</span><br><span style="color:#111827;font-size:20px;font-weight:700;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>`;
     policyBox = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:16px;margin-bottom:24px;">
       <p style="margin:0;color:#166534;font-size:13px;font-weight:600;">&#10003; Free cancellation any time — no fees, no card on file.</p>
     </div>`;
@@ -90,9 +85,9 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
       ${data.checkInToken ? `<a href="${portalUrl}" style="display:block;color:#6b7280;text-decoration:none;text-align:center;padding:4px;font-weight:600;font-size:12px;">View your tee times at ${data.courseName} &rarr;</a>` : ''}`;
   } else if (cancellationFee > 0) {
     // Card on file, course has a cancellation fee
-    intro = `<h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">You're on the tee sheet.</h1>
+    intro = `<h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">You're on the tee sheet.</h1>
       <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">Here are your booking details for ${data.courseName}. <strong>Nothing has been charged yet</strong> — your card is saved to hold your spot.</p>`;
-    totalRow = `<tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">Estimated total at check-in</span><br><span style="color:#111827;font-size:20px;font-weight:900;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>`;
+    totalRow = `<tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">Estimated total at check-in</span><br><span style="color:#111827;font-size:20px;font-weight:700;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>`;
     policyBox = `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;padding:16px;margin-bottom:24px;">
       <p style="margin:0 0 4px;color:#1e3a8a;font-size:13px;font-weight:700;">Cancellation policy</p>
       <p style="margin:0;color:#1e40af;font-size:13px;">Cancel any time up to ${hoursLabel(cancellationHours)} before your tee time at no charge. After that, a $${(cancellationFee / 100).toFixed(2)} late-cancellation fee will be charged to your card — it&rsquo;s refunded in full when you check in and pay for your round.</p>
@@ -103,9 +98,9 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
       ${data.checkInToken ? `<a href="${portalUrl}" style="display:block;color:#6b7280;text-decoration:none;text-align:center;padding:4px;font-weight:600;font-size:12px;">View your tee times at ${data.courseName} &rarr;</a>` : ''}`;
   } else {
     // Card on file, no cancellation fee policy
-    intro = `<h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">You're on the tee sheet.</h1>
+    intro = `<h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">You're on the tee sheet.</h1>
       <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">Here are your booking details for ${data.courseName}. <strong>Nothing has been charged yet</strong> — your card is saved to hold your spot.</p>`;
-    totalRow = `<tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">Estimated total at check-in</span><br><span style="color:#111827;font-size:20px;font-weight:900;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>`;
+    totalRow = `<tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">Estimated total at check-in</span><br><span style="color:#111827;font-size:20px;font-weight:700;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>`;
     policyBox = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:16px;margin-bottom:24px;">
       <p style="margin:0;color:#166534;font-size:13px;font-weight:600;">&#10003; Free cancellation any time — this course has no late-cancellation fee.</p>
     </div>`;
@@ -143,8 +138,8 @@ export async function sendOperatorBookingNotification(data: BookingEmailData & {
   const yourRevenue = (data.greenFeeTotal + data.cartFeeTotal) / 100;
   const noCard = data.noCard ?? false;
   const html = baseTemplate(`
-    <h2 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:900;">New Booking</h2>
-    <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">A tee time has been booked at ${data.courseName}. ${noCard ? 'No card was collected — golfer pays at the course or via check-in link.' : "Their card is on file — nothing's charged until they check in (or the cancellation window closes)."}</p>
+    <h2 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:700;">New Booking</h2>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">A tee time has been booked at ${data.courseName.trim()}. ${noCard ? 'No card was collected — golfer pays at the course or via check-in link.' : "Their card is on file — nothing's charged until they check in (or the cancellation window closes)."}</p>
     <div style="background:#f9fafb;border-radius:4px;padding:20px;">
       <p style="margin:0 0 8px;"><strong>Golfer:</strong> ${data.golferName} (${data.golferEmail})</p>
       <p style="margin:0 0 8px;"><strong>Date:</strong> ${data.date} at ${data.time}</p>
@@ -153,7 +148,7 @@ export async function sendOperatorBookingNotification(data: BookingEmailData & {
         <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Green Fee</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</td></tr>
         ${data.cartFeeTotal > 0 ? `<tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Cart Fee</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</td></tr>` : ''}
         ${(data.rangeBallsTotal ?? 0) > 0 ? `<tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Range Balls</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.rangeBallsTotal! / 100).toFixed(2)}</td></tr>` : ''}
-        <tr><td style="padding:8px 0 4px;color:#166534;font-size:14px;font-weight:800;">Expected Revenue</td><td style="padding:8px 0 4px;text-align:right;color:#166534;font-size:16px;font-weight:900;">$${yourRevenue.toFixed(2)}</td></tr>
+        <tr><td style="padding:8px 0 4px;color:#166534;font-size:14px;font-weight:800;">Expected Revenue</td><td style="padding:8px 0 4px;text-align:right;color:#166534;font-size:16px;font-weight:700;">$${yourRevenue.toFixed(2)}</td></tr>
         <tr><td colspan="2" style="padding:6px 0 0;color:#9ca3af;font-size:11px;">Once they check in and pay. + $${(data.accessFeeTotal / 100).toFixed(2)} GreenReserve fee, charged to the golfer — not deducted from you.</td></tr>
       </table>
     </div>
@@ -170,7 +165,7 @@ export async function sendCancellationEmail(data: {
 }) {
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#fee2e2;color:#991b1b;font-size:13px;font-weight:600;padding:4px 12px;border-radius:3px;">Booking Cancelled</span></div>
-    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">Your booking has been cancelled.</h1>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">Your booking has been cancelled.</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">${data.courseName} &middot; ${data.date} at ${data.time} &middot; ${data.players} player${data.players > 1 ? 's' : ''}</p>
     ${!data.feeCharged
       ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#166534;font-size:15px;font-weight:600;">&#10003; You weren't charged anything &mdash; your card has been released.</p></div>`
@@ -191,7 +186,7 @@ export async function sendCancellationFeeChargedEmail(data: {
   const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#fef3c7;color:#92400e;font-size:13px;font-weight:600;padding:4px 12px;border-radius:3px;">Cancellation window closed</span></div>
-    <h1 style="margin:16px 0 4px;color:#111827;font-size:24px;font-weight:900;">You've been charged $${(data.feeAmount / 100).toFixed(2)}.</h1>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:24px;font-weight:700;">You've been charged $${(data.feeAmount / 100).toFixed(2)}.</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
       You didn't cancel your ${data.date} at ${data.time} tee time at ${data.courseName} before the free-cancellation window closed, so we charged your card $${(data.feeAmount / 100).toFixed(2)} to hold your spot.
     </p>
@@ -215,7 +210,7 @@ export async function sendCancellationWarningEmail(data: {
   const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : `${process.env.NEXT_PUBLIC_URL}/account`;
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#fef3c7;color:#92400e;font-size:13px;font-weight:600;padding:4px 12px;border-radius:3px;">Action required</span></div>
-    <h1 style="margin:16px 0 4px;color:#111827;font-size:24px;font-weight:900;">Your cancellation window closes soon.</h1>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:24px;font-weight:700;">Your cancellation window closes soon.</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
       Hi ${data.golferName} — your tee time at <strong style="color:#111827;">${data.courseName}</strong> on ${data.date} at ${data.time} is coming up.
       The free-cancellation window (${hoursLabel(data.cancellationHours)} before your tee time) closes within the next hour.
@@ -224,7 +219,7 @@ export async function sendCancellationWarningEmail(data: {
       <p style="margin:0 0 6px;color:#92400e;font-size:14px;font-weight:700;">If you need to cancel, do it now.</p>
       <p style="margin:0;color:#92400e;font-size:14px;">After the window closes, a $${(data.feeAmount / 100).toFixed(2)} late-cancellation fee will be charged to your card automatically.</p>
     </div>
-    <a href="${manageUrl}" style="display:block;background:#111827;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:16px;">Cancel for Free &rarr;</a>
+    <a href="${manageUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:16px;">Cancel for Free &rarr;</a>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">If you're keeping your tee time, no action needed — we'll see you on the course.</p>
   `);
   await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Heads up — your free cancellation window closes soon (${data.courseName})`, html });
@@ -240,7 +235,7 @@ export async function sendCheckInAvailableEmail(data: {
   const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 12px;border-radius:3px;">&#9971; Ready to check in</span></div>
-    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">You're all set — time to check in.</h1>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">You're all set — time to check in.</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
       Your tee time at ${data.courseName} on ${data.date} at ${data.time} is coming up.
       Check in online now, or do it at the clubhouse when you arrive.
@@ -261,7 +256,7 @@ export async function sendBookingModifiedEmail(data: {
   const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dbeafe;color:#1e3a8a;font-size:13px;font-weight:600;padding:4px 12px;border-radius:3px;">Booking Updated</span></div>
-    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">Your booking has been updated.</h1>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">Your booking has been updated.</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">Here are your updated booking details for ${data.courseName}.</p>
     <div style="background:#f9fafb;border-radius:4px;padding:24px;margin-bottom:20px;">
       <table width="100%" cellpadding="0" cellspacing="0">
@@ -271,7 +266,7 @@ export async function sendBookingModifiedEmail(data: {
         ${data.cartFeeTotal > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Cart Fee</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</span></td></tr>` : ''}
         ${data.rangeBallsTotal > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Range Balls</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.rangeBallsTotal / 100).toFixed(2)}</span></td></tr>` : ''}
         <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">${serviceFeeLabel(data.players)}</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</span></td></tr>
-        <tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">New total at check-in</span><br><span style="color:#111827;font-size:20px;font-weight:900;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>
+        <tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">New total at check-in</span><br><span style="color:#111827;font-size:20px;font-weight:700;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>
       </table>
     </div>
     ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}
@@ -340,10 +335,10 @@ export async function sendReminderEmail(data: {
   const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
   const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : `${process.env.NEXT_PUBLIC_URL}/account`;
   const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;color:#111827;font-size:26px;font-weight:900;">&#9971; Tee time tomorrow!</h1>
+    <h1 style="margin:0 0 4px;color:#111827;font-size:26px;font-weight:700;">&#9971; Tee time tomorrow!</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">You&rsquo;re on the tee sheet at ${data.courseName}.</p>
     <div style="background:#f9fafb;border-radius:4px;padding:24px;margin-bottom:20px;">
-      <p style="margin:0 0 8px;color:#111827;font-size:22px;font-weight:900;">${data.time}</p>
+      <p style="margin:0 0 8px;color:#111827;font-size:22px;font-weight:700;">${data.time}</p>
       <p style="margin:0 0 4px;color:#374151;font-weight:600;">${data.courseName}</p>
       <p style="margin:0 0 12px;color:#6b7280;font-size:14px;">&#128205; ${data.courseAddress}</p>
       <p style="margin:0;color:#6b7280;font-size:14px;">${data.players} player${data.players > 1 ? 's' : ''} &middot; ${data.holes} holes</p>
@@ -366,7 +361,7 @@ export async function sendOperatorWelcomeEmail(data: {
 }) {
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 14px;border-radius:3px;">✓ You're approved</span></div>
-    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">Welcome to GreenReserve, ${data.operatorName}.</h1>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">Welcome to GreenReserve, ${data.operatorName}.</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
       <strong>${data.courseName}</strong> has been approved and your dashboard is ready to set up.
       It takes about 5 minutes to go live.
@@ -376,7 +371,7 @@ export async function sendOperatorWelcomeEmail(data: {
       <p style="margin:0 0 4px;color:#6b7280;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Login Email</p>
       <p style="margin:0 0 16px;color:#111827;font-size:15px;font-weight:600;">${data.operatorEmail}</p>
       <p style="margin:0 0 4px;color:#6b7280;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Temporary Password</p>
-      <p style="margin:0;color:#111827;font-size:18px;font-weight:900;font-family:monospace;letter-spacing:0.1em;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;display:inline-block;">${data.tempPassword}</p>
+      <p style="margin:0;color:#111827;font-size:18px;font-weight:700;font-family:monospace;letter-spacing:0.1em;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;display:inline-block;">${data.tempPassword}</p>
     </div>
 
     <p style="margin:0 0 16px;color:#374151;font-size:14px;">When you log in for the first time you'll be walked through:</p>
@@ -413,7 +408,7 @@ export async function sendOperatorPasswordResetEmail(data: {
   resetLink: string;
 }) {
   const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:900;">Reset your password</h1>
+    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:700;">Reset your password</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
       Hi ${data.operatorName} — we got a request to reset the password on your GreenReserve dashboard (${data.operatorEmail}).
       If this wasn't you, you can safely ignore this email.
@@ -439,7 +434,7 @@ export async function sendAdminPasswordResetEmail(data: {
   resetLink: string;
 }) {
   const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:900;">Reset your password</h1>
+    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:700;">Reset your password</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
       Hi ${data.adminName} — we got a request to reset the password on your GreenReserve admin account (${data.adminEmail}).
       If this wasn't you, you can safely ignore this email.
@@ -464,7 +459,7 @@ export async function sendAdminPasswordChangedNotification(data: {
   adminEmail: string;
 }) {
   const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:900;">Your password was changed</h1>
+    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:700;">Your password was changed</h1>
     <p style="margin:0 0 20px;color:#6b7280;font-size:15px;">
       Hi ${data.adminName} — this confirms the password on your GreenReserve admin account (${data.adminEmail}) was just changed.
     </p>
@@ -491,7 +486,7 @@ export async function sendOperatorVerifyEmail(data: {
   verifyLink: string;
 }) {
   const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:900;">Confirm it's you</h1>
+    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:700;">Confirm it's you</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
       Hi ${data.operatorName} — click below to confirm ${data.operatorEmail} and finish setting up your GreenReserve dashboard.
     </p>
@@ -516,7 +511,7 @@ export async function sendGolferPasswordResetEmail(data: {
   resetLink: string;
 }) {
   const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:900;">Reset your password</h1>
+    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:700;">Reset your password</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
       Hi ${data.golferName} — we got a request to reset the password on your GreenReserve account (${data.golferEmail}).
       If this wasn't you, you can safely ignore this email.
@@ -590,7 +585,7 @@ export async function sendDashboardAccessEmail(data: {
       <p style="margin:0 0 4px;color:#6b7280;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Login Email</p>
       <p style="margin:0 0 16px;color:#111827;font-size:15px;font-weight:600;">${data.operatorEmail}</p>
       <p style="margin:0 0 4px;color:#6b7280;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Temporary Password</p>
-      <p style="margin:0;color:#111827;font-size:18px;font-weight:900;font-family:monospace;letter-spacing:0.1em;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;display:inline-block;">${data.tempPassword}</p>
+      <p style="margin:0;color:#111827;font-size:18px;font-weight:700;font-family:monospace;letter-spacing:0.1em;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;display:inline-block;">${data.tempPassword}</p>
     </div>
     <a href="${data.setupLink}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:700;font-size:16px;margin-bottom:16px;">
       Set Up My Dashboard &rarr;
@@ -619,7 +614,7 @@ export async function sendGoLiveSimpleEmail(data: {
   const dashboardUrl = `${process.env.NEXT_PUBLIC_URL}/dashboard`;
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 14px;border-radius:3px;">&#10003; You&rsquo;re live</span></div>
-    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">${data.courseName} is live on GreenReserve.</h1>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">${data.courseName} is live on GreenReserve.</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
       Golfers can find and book your tee sheet at
       <a href="${bookingUrl}" style="color:#1b4332;font-weight:600;">${bookingUrl.replace('https://', '')}</a>.
@@ -646,12 +641,12 @@ export async function sendTwoFactorCodeEmail(data: {
   code: string;
 }) {
   const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:900;">Your verification code</h1>
+    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:700;">Your verification code</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
       Hi ${data.operatorName} — enter this code to finish signing in to your GreenReserve dashboard.
     </p>
     <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:24px;margin-bottom:20px;text-align:center;">
-      <p style="margin:0;color:#111827;font-size:32px;font-weight:900;font-family:monospace;letter-spacing:0.2em;">${data.code}</p>
+      <p style="margin:0;color:#111827;font-size:32px;font-weight:700;font-family:monospace;letter-spacing:0.2em;">${data.code}</p>
     </div>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
       This code expires in 10 minutes. Didn't try to sign in? Reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
@@ -670,12 +665,12 @@ export async function sendTwoFactorCodeEmail(data: {
 // underlying GolferAccount).
 export async function sendGolferOtpEmail(data: { email: string; code: string; courseName: string }) {
   const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:900;">Your sign-in code</h1>
+    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:700;">Your sign-in code</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
       Enter this code to sign in to your ${data.courseName} tee times.
     </p>
     <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:24px;margin-bottom:20px;text-align:center;">
-      <p style="margin:0;color:#111827;font-size:32px;font-weight:900;font-family:monospace;letter-spacing:0.2em;">${data.code}</p>
+      <p style="margin:0;color:#111827;font-size:32px;font-weight:700;font-family:monospace;letter-spacing:0.2em;">${data.code}</p>
     </div>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
       This code expires in 10 minutes. Didn't request this? You can safely ignore this email.
@@ -691,12 +686,12 @@ export async function sendGolferOtpEmail(data: { email: string; code: string; co
 
 export async function sendAdminTwoFactorCode(data: { email: string; name: string; code: string }) {
   const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:900;">Admin verification code</h1>
+    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:700;">Admin verification code</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
       Hi ${data.name} — enter this code to complete your secure admin login.
     </p>
     <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:24px;margin-bottom:20px;text-align:center;">
-      <p style="margin:0;color:#111827;font-size:36px;font-weight:900;font-family:monospace;letter-spacing:0.25em;">${data.code}</p>
+      <p style="margin:0;color:#111827;font-size:36px;font-weight:700;font-family:monospace;letter-spacing:0.25em;">${data.code}</p>
     </div>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
       Expires in 10 minutes. Not you? Reply to this email immediately — <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
@@ -718,7 +713,7 @@ export async function sendPasswordChangedNotification(data: {
   operatorEmail: string;
 }) {
   const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:900;">Your password was changed</h1>
+    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:700;">Your password was changed</h1>
     <p style="margin:0 0 20px;color:#6b7280;font-size:15px;">
       Hi ${data.operatorName} — this confirms the password on your GreenReserve dashboard (${data.operatorEmail}) was just changed.
     </p>
@@ -742,7 +737,7 @@ export async function sendMemberInviteEmail(data: {
 }) {
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 14px;border-radius:3px;">⛳ You've been added as a member</span></div>
-    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">Welcome, ${data.name}.</h1>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">Welcome, ${data.name}.</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
       <strong>${data.courseName}</strong> has added you as a <strong>${data.tierName}</strong> member on GreenReserve.
       Set up your account to start booking your member rate online.
@@ -767,7 +762,7 @@ export async function sendMemberLinkedNotification(data: {
 }) {
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 14px;border-radius:3px;">⛳ Membership added</span></div>
-    <h1 style="margin:16px 0 4px;color:#111827;font-size:24px;font-weight:900;">You're now a member at ${data.courseName}.</h1>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:24px;font-weight:700;">You're now a member at ${data.courseName}.</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
       You've been added as a <strong>${data.tierName}</strong> member. Your member rate will automatically apply
       next time you book a tee time there — just log in with this email.
@@ -798,7 +793,7 @@ export async function sendInquiryNotification(data: {
   additionalNotes: string;
 }) {
   const html = baseTemplate(`
-    <h2 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:900;">New Course Inquiry ⛳</h2>
+    <h2 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:700;">New Course Inquiry ⛳</h2>
     <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">A new course has submitted interest on GreenReserve.</p>
     <div style="background:#f9fafb;border-radius:4px;padding:20px;margin-bottom:20px;">
       <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#111827;">${data.courseName}</p>
@@ -1004,7 +999,7 @@ export async function sendDetailsRequestEmail(data: {
       Before we build your booking page, we need a few specifics: tee sheet schedule, green fees, policies, and facilities.
       Takes about 5 minutes. It saves as you go, so you can close and come back anytime.
     </p>
-    <a href="${data.detailsLink}" style="display:block;background:#24513B;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:600;font-size:15px;margin-bottom:20px;">
+    <a href="${data.detailsLink}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:600;font-size:15px;margin-bottom:20px;">
       Fill Out Setup Sheet &rarr;
     </a>
     <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
@@ -1026,7 +1021,7 @@ export async function sendDetailsRequestEmail(data: {
 
 export async function sendDetailsSubmittedNotification(data: { courseName: string; contactName: string }) {
   const html = baseTemplate(`
-    <h2 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:900;">Setup sheet submitted ✅</h2>
+    <h2 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:700;">Setup sheet submitted ✅</h2>
     <p style="margin:0 0 20px;color:#6b7280;font-size:14px;">
       <strong>${data.contactName}</strong> from <strong>${data.courseName}</strong> just submitted their detail sheet.
       It's ready to build.
@@ -1045,7 +1040,7 @@ export async function sendDetailsSubmittedNotification(data: { courseName: strin
 
 export async function sendCourseApprovedNotification(data: { courseName: string; contactName: string }) {
   const html = baseTemplate(`
-    <h2 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:900;">Course approved their page ✅</h2>
+    <h2 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:700;">Course approved their page ✅</h2>
     <p style="margin:0 0 20px;color:#6b7280;font-size:14px;">
       <strong>${data.contactName}</strong> from <strong>${data.courseName}</strong> reviewed their preview page and approved it — ready to go live.
     </p>
@@ -1084,7 +1079,7 @@ export async function sendCourseLiveOrientationEmail(data: {
 
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 14px;border-radius:3px;">✓ You're live</span></div>
-    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">${data.courseName} is bookable right now.</h1>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">${data.courseName} is bookable right now.</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
       Golfers can find and book your tee sheet at <a href="${bookingUrl}" style="color:#1b4332;font-weight:600;">${bookingUrl.replace('https://', '')}</a>.
       Here's a quick map of your dashboard so you know where everything lives.
@@ -1131,7 +1126,7 @@ export async function sendMembershipPaymentLinkEmail(data: {
   const total = data.annualFee + data.initiationFee;
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 14px;border-radius:3px;">${data.isRenewal ? 'Membership renewal' : 'Membership dues'}</span></div>
-    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">${data.isRenewal ? `Time to renew, ${data.name}.` : `Complete your membership, ${data.name}.`}</h1>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">${data.isRenewal ? `Time to renew, ${data.name}.` : `Complete your membership, ${data.name}.`}</h1>
     <p style="margin:0 0 20px;color:#6b7280;font-size:15px;">
       ${data.isRenewal
         ? `Your <strong>${data.tierName}</strong> membership at <strong>${data.courseName}</strong> is coming up for renewal. Pay your dues online to keep your member rates and booking privileges.`
@@ -1140,7 +1135,7 @@ export async function sendMembershipPaymentLinkEmail(data: {
     <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:14px;color:#374151;">
       ${data.initiationFee > 0 ? `<tr><td style="padding:6px 0;">One-time initiation fee</td><td style="text-align:right;font-weight:700;">$${data.initiationFee.toFixed(2)}</td></tr>` : ''}
       <tr><td style="padding:6px 0;">${data.tierName} dues</td><td style="text-align:right;font-weight:700;">$${data.annualFee.toFixed(2)}</td></tr>
-      <tr><td style="padding:10px 0;border-top:1px solid #e5e7eb;font-weight:800;color:#111827;">Total due</td><td style="text-align:right;border-top:1px solid #e5e7eb;font-weight:900;color:#111827;">$${total.toFixed(2)}</td></tr>
+      <tr><td style="padding:10px 0;border-top:1px solid #e5e7eb;font-weight:800;color:#111827;">Total due</td><td style="text-align:right;border-top:1px solid #e5e7eb;font-weight:700;color:#111827;">$${total.toFixed(2)}</td></tr>
     </table>
     <a href="${data.payLink}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:800;font-size:16px;margin-bottom:16px;">
       Pay Membership Dues &rarr;
@@ -1163,7 +1158,7 @@ export async function sendAdminSetPasswordEmail(data: {
   name: string; email: string; setPasswordLink: string;
 }) {
   const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:900;">Set your admin password</h1>
+    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">Set your admin password</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
       Hi ${data.name} — you've been added as a GreenReserve admin. Click the button below to set your password and activate your account. This link expires in 24 hours.
     </p>
@@ -1186,7 +1181,7 @@ export async function sendMemberMagicLink(data: {
   name: string; email: string; courseName: string; magicLink: string;
 }) {
   const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:900;">Sign in to your member account</h1>
+    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">Sign in to your member account</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
       Click the button below to sign in to your <strong>${data.courseName}</strong> member portal. This link expires in 15 minutes.
     </p>
@@ -1214,7 +1209,7 @@ export async function sendMembershipReceiptEmail(data: {
     : null;
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 14px;border-radius:3px;">Payment received</span></div>
-    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:900;">You're all set, ${data.name}.</h1>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">You're all set, ${data.name}.</h1>
     <p style="margin:0 0 20px;color:#6b7280;font-size:15px;">
       Your payment of <strong>$${data.amountPaid.toFixed(2)}</strong> to <strong>${data.courseName}</strong> went through.
       Your <strong>${data.tierName}</strong> membership is active${until ? ` through <strong>${until}</strong>` : ''}.
@@ -1242,8 +1237,8 @@ export async function sendMessageNotificationEmail(data: {
   const html = baseTemplate(`
     <p style="color:#374151;font-size:15px;margin:0 0 16px;">Hi ${data.recipientName},</p>
     <p style="color:#374151;font-size:15px;margin:0 0 20px;"><strong>${data.senderName}</strong> sent a message about <strong>${data.courseName}</strong>:</p>
-    <div style="background:#f9fafb;border-left:3px solid #24513b;padding:14px 18px;margin:0 0 24px;border-radius:0 4px 4px 0;">${bodyLines}</div>
-    <a href="${data.replyUrl}" style="display:inline-block;background:#24513b;color:#ffffff;font-size:14px;font-weight:600;padding:10px 22px;border-radius:4px;text-decoration:none;">View &amp; Reply</a>
+    <div style="background:#f9fafb;border-left:3px solid #1b4332;padding:14px 18px;margin:0 0 24px;border-radius:0 4px 4px 0;">${bodyLines}</div>
+    <a href="${data.replyUrl}" style="display:inline-block;background:#1b4332;color:#ffffff;font-size:14px;font-weight:600;padding:10px 22px;border-radius:4px;text-decoration:none;">View &amp; Reply</a>
     <p style="color:#9ca3af;font-size:12px;margin:20px 0 0;">Reply directly at greenreserve.app — no need to respond to this email.</p>
   `);
   await getResend().emails.send({
@@ -1266,7 +1261,7 @@ export async function sendAnnouncementEmail(data: {
     .join('');
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#fef3c7;color:#92400e;font-size:13px;font-weight:600;padding:4px 14px;border-radius:4px;">Platform announcement</span></div>
-    <h1 style="margin:16px 0 16px;color:#111827;font-size:24px;font-weight:900;">${data.title}</h1>
+    <h1 style="margin:16px 0 16px;color:#111827;font-size:24px;font-weight:700;">${data.title}</h1>
     <div style="margin:0 0 20px;">${bodyHtml}</div>
     <p style="margin:0;color:#9ca3af;font-size:12px;">This message is from the GreenReserve team to all course operators on the platform.</p>
   `);

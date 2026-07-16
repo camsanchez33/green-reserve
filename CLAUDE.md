@@ -261,7 +261,7 @@ TWILIO_FROM_NUMBER
 - Status indicators: `<StatusDot status="ok|bad|warn|neutral" label="..."/>` — 5px dot, no pill badges
 - Input class: `bg-paper border border-line rounded-md px-3 py-2.5 text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10`
 - Primary button: `bg-pine hover:bg-pine-hover text-white font-medium rounded-md`
-- Email template: sharp corners (`border-radius:4px`), black header bar, zinc border
+- Email template: ONE light template for all emails (operator + golfer) — white body, ink text, pine accents (`#1b4332`), sharp corners (`border-radius:4px`), zinc border. No logo in the header — content starts straight at the top of the card. Footer: the standalone golfer mark (`public/brand/golfer.png`, ~56px tall) centered above "Green Reserve · greenreserve.app" — no lockup, no Birdie (Birdie is web-only: 404, coming-soon, empty states).
 
 ### BANNED
 - `font-black`, `tracking-widest` — use `font-medium`/`font-semibold` and `tracking-[0.06em]`
