@@ -2,7 +2,8 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle, XCircle, AlertCircle, Loader2, MapPin, Calendar, Clock, Users, ChevronRight, ArrowLeft } from 'lucide-react';
+import Image from 'next/image';
+import { XCircle, AlertCircle, Loader2, MapPin, Calendar, Clock, Users, ChevronRight, ArrowLeft } from 'lucide-react';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 
@@ -229,7 +230,7 @@ function ManagePageInner() {
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
           <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
           <div className="p-8 text-center">
-            <div className="w-14 h-14 rounded-lg bg-ok/8 flex items-center justify-center mx-auto mb-5"><CheckCircle size={28} className="text-ok" /></div>
+            <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={140} height={26} className="mx-auto mb-5 w-[140px] h-auto" />
             <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Booking cancelled</h1>
             <p className="text-ink-soft text-sm mb-6">Your spot at {info.courseName} on {fmtDate(info.date)} has been cancelled.</p>
             {cancelResult?.feeCharged
@@ -251,7 +252,7 @@ function ManagePageInner() {
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
           <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
           <div className="p-8 text-center">
-            <div className="w-14 h-14 rounded-lg bg-ok/8 flex items-center justify-center mx-auto mb-5"><CheckCircle size={28} className="text-ok" /></div>
+            <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={140} height={26} className="mx-auto mb-5 w-[140px] h-auto" />
             <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Booking updated</h1>
             <p className="text-ink-soft text-sm mb-6">A confirmation email has been sent with your updated details.</p>
             <div className="bg-paper rounded-md border border-line p-4 mb-6 text-left space-y-2 text-sm">

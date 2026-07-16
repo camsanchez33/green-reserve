@@ -13,17 +13,10 @@ export default function Nav() {
   if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard')) return null;
   // Course-world pages (course page, member portal, golfer portal) already
   // have their own fully-branded header — no GreenReserve bar at all here.
-  if (isCourseWorld(pathname)) return null;
-
-  if (isBookingMode(pathname)) {
-    return (
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-line">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center">
-          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={112} height={56} priority className="h-14 w-auto" />
-        </div>
-      </nav>
-    );
-  }
+  // Booking-mode pages (book/checkin/manage/receipt/membership) now use the
+  // course's own CourseHeaderBar as their header instead — no white GR bar
+  // on top of it. GreenReserve presence there shrinks to the footer.
+  if (isCourseWorld(pathname) || isBookingMode(pathname)) return null;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-line">

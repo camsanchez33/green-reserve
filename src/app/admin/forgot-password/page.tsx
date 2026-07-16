@@ -24,7 +24,7 @@ export default function AdminForgotPasswordPage() {
     <div className="min-h-screen bg-paper flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={300} height={57} priority className="w-[300px] max-w-full h-auto mx-auto" />
+          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={190} height={36} priority className="w-[190px] max-w-full h-auto mx-auto" />
         </div>
 
         <div className="bg-white border border-line rounded-lg p-6">

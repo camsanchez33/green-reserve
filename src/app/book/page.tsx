@@ -6,7 +6,8 @@ import type { Stripe } from '@stripe/stripe-js';
 import {
   Elements, CardElement, useStripe, useElements,
 } from '@stripe/react-stripe-js';
-import { ChevronLeft, Lock, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Lock, Loader2, AlertCircle } from 'lucide-react';
+import Image from 'next/image';
 import { ACCESS_FEE_PER_PLAYER, serviceFeeLabel, hoursLabel } from '@/lib/booking-fees';
 import { TrustNote } from '@/components/TrustNote';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
@@ -116,9 +117,7 @@ function BookPageInner() {
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
           <CourseHeaderBar courseName={confirmedData.courseName} accent={accent} />
           <div className="p-8 text-center">
-            <div className="w-14 h-14 rounded-lg bg-ok/8 flex items-center justify-center mx-auto mb-5">
-              <CheckCircle size={28} className="text-ok" />
-            </div>
+            <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={140} height={26} className="mx-auto mb-5 w-[140px] h-auto" />
             <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">You&apos;re all set!</h1>
             <p className="text-ink-soft mb-6 text-sm">
               {confirmedData.noCard
