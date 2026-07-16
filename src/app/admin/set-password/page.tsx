@@ -112,8 +112,7 @@ export default function SetPasswordPage() {
     <div className="min-h-screen bg-paper flex items-center justify-center">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={300} height={150} priority className="w-[300px] max-w-full h-auto mx-auto" />
-          <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mt-2">Admin</p>
+          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={300} height={57} priority className="w-[300px] max-w-full h-auto mx-auto" />
         </div>
         <div className="bg-white border border-line rounded-lg p-8">
           <Suspense fallback={<div className="text-ink-soft text-sm">Loading…</div>}>

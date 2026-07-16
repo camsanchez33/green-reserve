@@ -18,7 +18,7 @@ function baseTemplate(content: string) {
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
         <tr>
           <td style="background:#ffffff;padding:20px 36px;text-align:left;border-bottom:1px solid #e4e4e7;">
-            <img src="${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/brand/logo-lockup-900.png" width="220" height="110" alt="GreenReserve" style="display:block;" />
+            <img src="${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/brand/logo-lockup-900.png" width="220" height="42" alt="GreenReserve" style="display:block;" />
           </td>
         </tr>
         <tr><td style="background:#ffffff;padding:36px;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;">${content}</td></tr>

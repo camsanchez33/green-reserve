@@ -27,9 +27,9 @@ export default function Nav() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-line">
-      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-        <Link href="/" className="flex items-center">
-          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={112} height={56} priority className="h-14 w-auto" />
+      <div className="px-6 h-16 flex items-center justify-between">
+        <Link href="/" className="flex items-center shrink-0">
+          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={200} height={38} priority className="w-[200px] h-auto" />
         </Link>
 
         <div className="hidden md:flex items-center gap-1">

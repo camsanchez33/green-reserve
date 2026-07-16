@@ -122,21 +122,23 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     <CommandPalette/>
     <div className={`fixed left-0 top-0 h-full ${w} bg-pine flex flex-col z-10 transition-[width] duration-200 ease-in-out`}>
       {/* Wordmark / logo mark */}
-      <div className={`${collapsed ? 'px-0 justify-center' : 'px-5'} py-5 border-b border-white/10 flex items-center`}>
+      <div className={`${collapsed ? 'px-0 flex items-center justify-center' : 'px-5'} py-5 border-b border-white/10`}>
         {collapsed ? (
           <button onClick={openPalette} title="Search (Ctrl+K)" className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
             <Search className="w-4 h-4 text-paper"/>
           </button>
         ) : (
-          <div className="flex items-center gap-2.5 w-full">
-            <div className="flex-1 min-w-0">
-              <Image src="/brand/logo-lockup-cream-900.png" alt="GreenReserve" width={112} height={56} priority className="h-9 w-auto" />
-              <div className="text-[10px] text-[#A9BFAF] font-medium uppercase tracking-wider mt-1">Admin</div>
+          <>
+            <div className="flex justify-end mb-2">
+              <button onClick={openPalette} title="Search (Ctrl+K)" className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+                <Search className="w-3.5 h-3.5 text-[#A9BFAF]"/>
+              </button>
             </div>
-            <button onClick={openPalette} title="Search (Ctrl+K)" className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors shrink-0">
-              <Search className="w-3.5 h-3.5 text-[#A9BFAF]"/>
-            </button>
-          </div>
+            <div className="text-center">
+              <Image src="/brand/logo-lockup-cream-900.png" alt="GreenReserve" width={190} height={36} priority className="w-full h-auto" />
+              <div className="text-[10px] text-[#A9BFAF] font-medium uppercase tracking-wider mt-1.5">Admin</div>
+            </div>
+          </>
         )}
       </div>
 

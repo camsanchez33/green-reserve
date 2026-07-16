@@ -88,7 +88,7 @@ function AcceptInviteInner() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
-            <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={300} height={150} priority className="w-[300px] max-w-full h-auto" />
+            <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={300} height={57} priority className="w-[300px] max-w-full h-auto" />
           </Link>
           <p className="text-xs text-ink-muted mt-1">Set Up Your Member Account</p>
         </div>

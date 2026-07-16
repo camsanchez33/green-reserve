@@ -97,9 +97,9 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     <AnnouncementBanner />
     <aside className="w-56 shrink-0 bg-white border-r border-line flex flex-col h-full overflow-y-auto">
       <div className="px-4 py-4 border-b border-line">
-        <div className="mb-3">
-          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={112} height={56} priority className="h-9 w-auto" />
-          <div className="text-[10px] text-ink-muted font-medium uppercase tracking-wider mt-1">Operator</div>
+        <div className="text-center mb-3">
+          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={190} height={36} priority className="w-full h-auto" />
+          <div className="text-[10px] text-ink-muted font-medium uppercase tracking-wider mt-1.5">Operator</div>
         </div>
         {name && (
           <div className="pl-0.5">

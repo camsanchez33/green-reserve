@@ -100,7 +100,7 @@ function OnboardingInner() {
 
         {/* Wordmark */}
         <div className="text-center mb-8">
-          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={300} height={150} priority className="w-[300px] max-w-full h-auto mx-auto" />
+          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={300} height={57} priority className="w-[300px] max-w-full h-auto mx-auto" />
         </div>
 
         {/* Step indicator */}
