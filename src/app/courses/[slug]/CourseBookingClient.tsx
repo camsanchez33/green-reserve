@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Check, Flag, SlidersHorizontal, ExternalLink, Navigation, Bell, ArrowRight, Eye, CheckCircle } from 'lucide-react';
 import type { Course, TeeTime } from '@/lib/courses-data';
 import { TrustNote } from '@/components/TrustNote';
@@ -404,12 +405,15 @@ export default function CourseDetailPage({
   }
 
   if (notFound) {
+    // AMENDED BIRDIE RULE: no course resolved here, so there's nothing to
+    // white-label — this state is a GreenReserve page even though it lives
+    // under /courses/*. The ban on Birdie/GreenReserve branding still holds
+    // on every other course-world page, where a real course renders.
     return (
       <div className="min-h-screen flex items-center justify-center bg-paper">
         <div className="text-center">
-          <Flag size={40} className="mx-auto mb-4 text-pine" />
-          <h1 className="text-2xl font-semibold text-ink mb-2">Course Not Found</h1>
-          <p className="text-ink-muted">We couldn&apos;t find that course.</p>
+          <Image src="/brand/birdie-sitting.png" alt="" width={72} height={101} className="mx-auto mb-4" />
+          <h1 className="text-2xl font-semibold text-ink mb-2">Birdie couldn&apos;t find that course.</h1>
           <p className="text-ink-muted text-sm mt-2">Please use the booking link on your course&apos;s website, or contact <a href="mailto:hello@greenreserve.app" className="text-pine hover:underline">hello@greenreserve.app</a>.</p>
           <Link href="/" className="mt-6 inline-block text-sm text-pine hover:underline">← Back to home</Link>
         </div>
