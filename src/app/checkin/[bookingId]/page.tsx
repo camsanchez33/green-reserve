@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { CheckCircle, Loader2, AlertCircle, MapPin, Lock } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { GolferExitLinks } from '@/components/GolferExitLinks';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
@@ -15,7 +16,7 @@ const cardStyle = {
 };
 
 type CheckInInfo = {
-  golferName: string; courseName: string; courseAddress: string;
+  golferName: string; courseName: string; courseSlug: string; courseAddress: string;
   date: string; time: string; players: number; holes: number; status: string;
   totalAmount: number; greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number;
   hasCard: boolean;
@@ -163,10 +164,13 @@ function CheckInPageInner() {
           <p className="text-xs text-ink-muted mb-4">A receipt has been emailed to you.</p>
           {token && (
             <a href={`/receipt/${bookingId}?token=${encodeURIComponent(token)}`}
-              className="text-sm text-pine font-medium hover:underline">
+              className="text-sm text-pine font-medium hover:underline mb-6 block">
               View receipt →
             </a>
           )}
+          <div className="mt-6">
+            <GolferExitLinks courseSlug={info.courseSlug} courseName={info.courseName} />
+          </div>
         </div>
       </div>
     );

@@ -1,7 +1,9 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { CheckCircle, XCircle, AlertCircle, Loader2, MapPin, Calendar, Clock, Users, ChevronRight, ArrowLeft } from 'lucide-react';
+import { GolferExitLinks } from '@/components/GolferExitLinks';
 
 type BookingInfo = {
   bookingId: string;
@@ -233,7 +235,8 @@ function ManagePageInner() {
               ? <div className="bg-warn/5 border border-warn/20 rounded-md p-4 mb-4 text-left"><p className="text-warn text-sm font-medium">Late-cancellation fee applied</p><p className="text-ink-soft text-xs mt-1">A {dollars(info.cancellationFeeTotal)} fee was charged — this cancellation came after the free-cancel window closed. Non-refundable.</p></div>
               : <div className="bg-ok/5 border border-ok/20 rounded-md p-4 mb-4 text-left"><p className="text-ok text-sm font-medium">No charge — your card has been released</p></div>
             }
-            <p className="text-xs text-ink-muted">A confirmation email has been sent to you.</p>
+            <p className="text-xs text-ink-muted mb-6">A confirmation email has been sent to you.</p>
+            <GolferExitLinks courseSlug={info.courseSlug} courseName={info.courseName} accent={info.brandColor} />
           </div>
         </div>
       </div>
@@ -258,7 +261,8 @@ function ManagePageInner() {
                 <PriceBreakdown greenFeeTotal={modifyResult.greenFeeTotal} cartFeeTotal={modifyResult.cartFeeTotal} rangeBallsTotal={modifyResult.rangeBallsTotal} accessFeeTotal={modifyResult.accessFeeTotal} totalAmount={modifyResult.totalAmount} players={modifyResult.players} />
               </div>
             </div>
-            <button onClick={() => setView('main')} className="text-sm text-ink-muted underline underline-offset-2">Back to booking</button>
+            <button onClick={() => setView('main')} className="text-sm text-ink-muted underline underline-offset-2 mb-5 block">Back to booking</button>
+            <GolferExitLinks courseSlug={info.courseSlug} courseName={info.courseName} accent={info.brandColor} />
           </div>
         </div>
       </div>

@@ -3,9 +3,10 @@ import { useEffect, useState, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Loader2, AlertCircle, Printer } from 'lucide-react';
 import { serviceFeeLabel } from '@/lib/booking-fees';
+import { GolferExitLinks } from '@/components/GolferExitLinks';
 
 type ReceiptData = {
-  bookingId: string; golferName: string; courseName: string; courseLocation: string;
+  bookingId: string; golferName: string; courseName: string; courseSlug: string; courseLocation: string;
   date: string; time: string; holes: number; players: number; cartSelected: boolean;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number;
   accessFeeTotal: number; totalAmount: number; status: string;
@@ -183,6 +184,12 @@ function ReceiptPageInner() {
               hello@greenreserve.app · greenreserve.app
             </div>
           </div>
+
+          {data.courseSlug && (
+            <div className="no-print max-w-lg mx-auto mt-6">
+              <GolferExitLinks courseSlug={data.courseSlug} courseName={data.courseName} />
+            </div>
+          )}
         </div>
       </div>
     </>
