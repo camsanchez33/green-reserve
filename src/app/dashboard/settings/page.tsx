@@ -446,8 +446,7 @@ function SettingsPageInner() {
             <div className="space-y-5">
               <SectionCard title="Member Pricing">
                 <Toggle label="Enable member pricing" checked={!!form.hasMemberPricing} onChange={()=>tog('hasMemberPricing')}/>
-                {!!form.hasMemberPricing && <Field label="Member advance booking (days)"><FInput value={form.memberAdvanceDays as number} onChange={v=>set('memberAdvanceDays',Number(v))} type="number"/></Field>}
-                <div className="text-xs text-pine bg-pine/5 border border-pine/20 rounded-md px-3 py-2">Member rates are set per-schedule in your Schedule setup page.</div>
+                <div className="text-xs text-pine bg-pine/5 border border-pine/20 rounded-md px-3 py-2">Member rates are set per-schedule in your Schedule setup page. Member advance booking is set below, in Booking Windows.</div>
               </SectionCard>
               <SectionCard title="Resident Pricing">
                 <Toggle label="Enable resident pricing" checked={!!form.hasResidentPricing} onChange={()=>tog('hasResidentPricing')}/>
@@ -464,7 +463,7 @@ function SettingsPageInner() {
               <SectionCard title="Booking Windows">
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Public advance (days)"><FInput value={form.publicAdvanceDays as number} onChange={v=>set('publicAdvanceDays',Number(v))} type="number"/></Field>
-                  <Field label="Member advance (days)"><FInput value={form.memberAdvanceDays as number} onChange={v=>set('memberAdvanceDays',Number(v))} type="number"/></Field>
+                  {!!form.hasMemberPricing && <Field label="Member advance (days)"><FInput value={form.memberAdvanceDays as number} onChange={v=>set('memberAdvanceDays',Number(v))} type="number"/></Field>}
                 </div>
               </SectionCard>
             </div>
