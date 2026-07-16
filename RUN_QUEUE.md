@@ -147,6 +147,8 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   - Details sheet + draft build: ask public window + member window in the sheet's tee-sheet section, map into the draft (small V-series follow-through)
   - Migration via CLAUDE.md checklist — Neon branch, attended
 
+- [ ] BIRDIE brand integration (small/medium, no migration) — BLOCKED until Cam adds public/brand/birdie.svg (engraved) + birdie-mark.svg (simple silhouette). Then: (1) favicon + app icons from the silhouette; (2) homepage: engraved Birdie in the hero or footer area, tastefully small; (3) email baseTemplate: small Birdie mark in the footer of GR-branded emails; (4) 404 page: Birdie + "Birdie couldn't find that one" + link home; (5) empty states on MARKETING/ADMIN surfaces only ("Birdie's still fetching…"); (6) receipt header mark. HARD RULE: Birdie never appears on course-world pages (/courses/*, portal, booking, member pages) except at most the existing powered-by footer — white-label rule. Images via next/image or explicit dimensions (perf budgets).
+
 ## Ideas / not yet specced
 
 - OPERATOR STAFF ACCOUNTS rework (Cam, 2026-07-10: "whole thing is going to be reworked and better") — current section contradicts itself: copy says "full dashboard access", role dropdown says "tee sheet access". Rework needs: clear role tiers (e.g. owner / manager / tee-sheet-only), what each can see (money? settings? members?), invite email flow, deactivate/reset from the card, and the same no-silent-failure patterns as admin. Spec when Cam's ready to define the role tiers.
