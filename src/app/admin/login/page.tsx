@@ -70,9 +70,14 @@ export default function AdminLoginPage() {
               />
             </div>
             <div>
-              <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted">
+                  Password
+                </label>
+                <a href="/admin/forgot-password" className="text-[11px] text-pine font-medium hover:underline">
+                  Forgot password?
+                </a>
+              </div>
               <input
                 type="password"
                 value={password}
@@ -91,6 +96,10 @@ export default function AdminLoginPage() {
             </button>
           </form>
         </div>
+
+        <p className="mt-5 text-center text-xs text-ink-muted">
+          Course operator? <a href="/dashboard/login" className="text-pine font-medium hover:underline">Sign in at your dashboard →</a>
+        </p>
       </div>
     </div>
   );

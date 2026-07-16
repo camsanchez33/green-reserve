@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { CheckCircle } from 'lucide-react';
+import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
@@ -22,7 +23,8 @@ function SetPasswordForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
+    const strengthError = validatePasswordStrength(password);
+    if (strengthError) { setError(strengthError); return; }
     if (password !== confirm) { setError('Passwords do not match.'); return; }
     setLoading(true);
     try {
@@ -77,10 +79,11 @@ function SetPasswordForm() {
             onChange={e => setPassword(e.target.value)}
             required
             autoFocus
-            minLength={8}
+            minLength={10}
             className={iCls}
-            placeholder="Min. 8 characters"
+            placeholder="Min. 10 characters"
           />
+          <p className="text-xs text-ink-faint mt-1.5">{PASSWORD_REQUIREMENTS_HINT}</p>
         </div>
         <div>
           <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Confirm password</label>

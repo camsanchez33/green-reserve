@@ -433,6 +433,56 @@ export async function sendOperatorPasswordResetEmail(data: {
   });
 }
 
+export async function sendAdminPasswordResetEmail(data: {
+  adminName: string;
+  adminEmail: string;
+  resetLink: string;
+}) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:900;">Reset your password</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      Hi ${data.adminName} — we got a request to reset the password on your GreenReserve admin account (${data.adminEmail}).
+      If this wasn't you, you can safely ignore this email.
+    </p>
+    <a href="${data.resetLink}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:800;font-size:16px;margin-bottom:16px;">
+      Set a New Password &rarr;
+    </a>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      This link expires in 24 hours. Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.adminEmail,
+    subject: `Reset your GreenReserve admin password`,
+    html,
+  });
+}
+
+export async function sendAdminPasswordChangedNotification(data: {
+  adminName: string;
+  adminEmail: string;
+}) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:900;">Your password was changed</h1>
+    <p style="margin:0 0 20px;color:#6b7280;font-size:15px;">
+      Hi ${data.adminName} — this confirms the password on your GreenReserve admin account (${data.adminEmail}) was just changed.
+    </p>
+    <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:4px;padding:16px 20px;margin-bottom:20px;">
+      <p style="margin:0;color:#92400e;font-size:13px;"><strong>Wasn't you?</strong> Reply to this email or reach <a href="mailto:hello@greenreserve.app" style="color:#92400e;text-decoration:underline;">hello@greenreserve.app</a> right away.</p>
+    </div>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      Green Reserve &middot; <a href="https://greenreserve.app" style="color:#6b7280;">greenreserve.app</a>
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.adminEmail,
+    subject: `Your GreenReserve admin password was changed`,
+    html,
+  });
+}
+
 // Verification-by-possession: arriving at the link in this email IS the proof
 // of inbox ownership — there is no in-app "verify instantly" button.
 export async function sendOperatorVerifyEmail(data: {
