@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
@@ -29,8 +30,8 @@ export default function Nav() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-line">
       <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-        <Link href="/" className="text-[17px] font-serif font-medium tracking-tight text-ink">
-          Green<span className="text-pine">Reserve</span>
+        <Link href="/" className="flex items-center">
+          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={80} height={40} priority className="h-10 w-auto" />
         </Link>
 
         <div className="hidden md:flex items-center gap-1">

@@ -17,15 +17,15 @@ function baseTemplate(content: string) {
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
         <tr>
-          <td style="background:#0a0a0a;padding:20px 36px;text-align:left;">
-            <span style="color:#fff;font-size:16px;font-weight:700;letter-spacing:-0.3px;">Green<span style="color:#34d399;">Reserve</span></span>
+          <td style="background:#ffffff;padding:20px 36px;text-align:left;border-bottom:1px solid #e4e4e7;">
+            <img src="${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/brand/logo-lockup-900.png" width="220" height="110" alt="GreenReserve" style="display:block;" />
           </td>
         </tr>
         <tr><td style="background:#ffffff;padding:36px;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;">${content}</td></tr>
         <tr>
           <td style="background:#ffffff;padding:0 36px 20px;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;border-bottom:1px solid #e4e4e7;">
             <div style="border-top:1px solid #f4f4f5;padding-top:20px;text-align:center;color:#a1a1aa;font-size:11px;">
-              <img src="${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/brand/birdie-head.png" width="28" height="24" alt="" style="display:block;margin:0 auto 8px;" />
+              <img src="${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/brand/birdie-badge-88.png" width="44" height="44" alt="" style="display:block;margin:0 auto 8px;" />
               Green Reserve &middot; <a href="https://greenreserve.app" style="color:#71717a;text-decoration:none;">greenreserve.app</a>
             </div>
           </td>
