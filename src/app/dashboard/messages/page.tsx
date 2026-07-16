@@ -1,6 +1,6 @@
 'use client';
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Send, MessageSquare, Radio } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 
@@ -12,11 +12,15 @@ interface Thread { id: string; messages: MessageItem[]; }
 
 const fmtFull = (d: string) => new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
 
-export default function OperatorMessagesPage() {
+function MessagesContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [thread, setThread] = useState<Thread | null>(null);
   const [loading, setLoading] = useState(true);
-  const [compose, setCompose] = useState('');
+  // Feature-request links (e.g. the coming-soon Outings/Tournaments pages)
+  // land here with a starter message pre-filled — a real feedback channel,
+  // not a dead mailto.
+  const [compose, setCompose] = useState(() => searchParams.get('prefill') || '');
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -114,5 +118,13 @@ export default function OperatorMessagesPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function OperatorMessagesPage() {
+  return (
+    <Suspense fallback={null}>
+      <MessagesContent />
+    </Suspense>
   );
 }
