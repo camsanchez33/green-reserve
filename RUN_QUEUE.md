@@ -156,6 +156,10 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [ ] COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)
 - [ ] COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small)
 
+- [ ] Small run: email Birdie mark crispness (no migration) — footer mark in baseTemplate renders tiny + pixelated: serve a 2x-resolution asset displayed at fixed size (e.g. width:44px from an 88px image — retina crispness), bump display size to ~44px, center it in a subtle pine (#24513B) circle badge so it reads deliberately on the dark template. Generate the 2x PNG from public/brand/birdie-head.png at build/commit time (one-off asset, e.g. public/brand/birdie-head-88.png). Apply to every email using the mark.
+
+- [ ] Small run: Birdie on coming-soon pages (no migration) — dashboard placeholder pages (Outings, Tournaments, and any other stub) get the sitting Birdie (public/brand/birdie-sitting.png) with "Birdie's working on this one" + one line on what's coming + a "tell us what your course needs" link that opens the operator Messages thread (real feedback channel, not a dead mailto). Operator dashboard only — golfer-facing course pages stay Birdie-free (white-label rule). Explicit image dimensions.
+
 ## Ideas / not yet specced
 
 - OPERATOR STAFF ACCOUNTS rework (Cam, 2026-07-10: "whole thing is going to be reworked and better") — current section contradicts itself: copy says "full dashboard access", role dropdown says "tee sheet access". Rework needs: clear role tiers (e.g. owner / manager / tee-sheet-only), what each can see (money? settings? members?), invite email flow, deactivate/reset from the card, and the same no-silent-failure patterns as admin. Spec when Cam's ready to define the role tiers.
