@@ -52,7 +52,7 @@ function ResetPasswordContent() {
     <div className="min-h-screen bg-paper flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={88} height={44} priority className="h-11 w-auto mx-auto" />
+          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={300} height={150} priority className="w-[300px] max-w-full h-auto mx-auto" />
           <p className="text-xs text-ink-muted mt-1">Course Operator Portal</p>
         </div>
 

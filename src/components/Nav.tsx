@@ -19,7 +19,7 @@ export default function Nav() {
     return (
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-line">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center">
-          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={72} height={36} priority className="h-9 w-auto" />
+          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={112} height={56} priority className="h-14 w-auto" />
         </div>
       </nav>
     );

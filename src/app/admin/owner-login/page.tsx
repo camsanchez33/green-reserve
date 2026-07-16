@@ -67,9 +67,9 @@ export default function OwnerLoginPage() {
   return (
     <div className="min-h-screen bg-paper flex items-center justify-center">
       <div className="w-full max-w-sm">
-        <div className="flex items-center justify-center gap-2.5 mb-8">
-          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={100} height={50} priority className="h-[50px] w-auto" />
-          <span className="font-serif text-[17px] font-medium text-ink-soft">Admin</span>
+        <div className="text-center mb-8">
+          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={300} height={150} priority className="w-[300px] max-w-full h-auto mx-auto" />
+          <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mt-2">Admin</p>
         </div>
 
         <div className="bg-white border border-line rounded-lg p-8">

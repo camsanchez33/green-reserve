@@ -46,7 +46,7 @@ export default function TwoFactorVerifyPage() {
     <div className="min-h-screen bg-paper flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={112} height={56} priority className="h-14 w-auto mx-auto" />
+          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={300} height={150} priority className="w-[300px] max-w-full h-auto mx-auto" />
           <p className="text-sm text-ink-muted mt-1">Course Operator Portal</p>
         </div>
 
