@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
       teeTime: { select: { date: true, time: true } },
       course: {
         select: {
-          name: true, cancellationHours: true, timezone: true,
+          name: true, slug: true, cancellationHours: true, timezone: true,
           stripeAccountId: true, stripeAccountActive: true,
         },
       },
@@ -59,6 +59,7 @@ export async function GET(req: NextRequest) {
           golferName: booking.golferName,
           golferEmail: booking.golferEmail,
           courseName: booking.course.name,
+          courseSlug: booking.course.slug,
           date: booking.teeTime.date,
           time: booking.teeTime.time,
           feeAmount: booking.cancellationFeeTotal,

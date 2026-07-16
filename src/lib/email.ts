@@ -50,7 +50,7 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
   // Portal (GOLFER_SPEC G5) — course-scoped, never a generic cross-course page.
   const portalUrl = data.courseSlug
     ? `${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}/account?email=${encodeURIComponent(data.golferEmail)}`
-    : `${process.env.NEXT_PUBLIC_URL}/account`;
+    : process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
   const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : portalUrl;
   const noCard = data.noCard ?? false;
 
@@ -203,11 +203,14 @@ export async function sendCancellationFeeChargedEmail(data: {
 // have a card on file and a cancellation fee. Gives the golfer a heads-up so
 // they can cancel for free before the cutoff charges their card automatically.
 export async function sendCancellationWarningEmail(data: {
-  golferName: string; golferEmail: string; courseName: string;
+  golferName: string; golferEmail: string; courseName: string; courseSlug?: string;
   date: string; time: string; feeAmount: number; bookingId: string; cancellationHours: number;
   checkInToken?: string | null;
 }) {
-  const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : `${process.env.NEXT_PUBLIC_URL}/account`;
+  const portalUrl = data.courseSlug
+    ? `${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}/account?email=${encodeURIComponent(data.golferEmail)}`
+    : process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
+  const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : portalUrl;
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#fef3c7;color:#92400e;font-size:13px;font-weight:600;padding:4px 12px;border-radius:3px;">Action required</span></div>
     <h1 style="margin:16px 0 4px;color:#111827;font-size:24px;font-weight:700;">Your cancellation window closes soon.</h1>
@@ -247,12 +250,15 @@ export async function sendCheckInAvailableEmail(data: {
 }
 
 export async function sendBookingModifiedEmail(data: {
-  golferName: string; golferEmail: string; courseName: string;
+  golferName: string; golferEmail: string; courseName: string; courseSlug?: string;
   date: string; time: string; players: number; holes: number;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number;
   accessFeeTotal: number; totalAmount: number; bookingId: string; checkInToken: string | null;
 }) {
-  const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : `${process.env.NEXT_PUBLIC_URL}/account`;
+  const portalUrl = data.courseSlug
+    ? `${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}/account?email=${encodeURIComponent(data.golferEmail)}`
+    : process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
+  const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : portalUrl;
   const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dbeafe;color:#1e3a8a;font-size:13px;font-weight:600;padding:4px 12px;border-radius:3px;">Booking Updated</span></div>
@@ -329,11 +335,14 @@ export async function sendTeeTimeAlertEmail(data: {
 }
 
 export async function sendReminderEmail(data: {
-  golferName: string; golferEmail: string; courseName: string; courseAddress: string;
+  golferName: string; golferEmail: string; courseName: string; courseAddress: string; courseSlug?: string;
   date: string; time: string; players: number; holes: number; bookingId: string; checkInToken?: string | null;
 }) {
   const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
-  const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : `${process.env.NEXT_PUBLIC_URL}/account`;
+  const portalUrl = data.courseSlug
+    ? `${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}/account?email=${encodeURIComponent(data.golferEmail)}`
+    : process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
+  const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : portalUrl;
   const html = baseTemplate(`
     <h1 style="margin:0 0 4px;color:#111827;font-size:26px;font-weight:700;">&#9971; Tee time tomorrow!</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">You&rsquo;re on the tee sheet at ${data.courseName}.</p>
@@ -758,16 +767,19 @@ export async function sendMemberInviteEmail(data: {
 }
 
 export async function sendMemberLinkedNotification(data: {
-  name: string; email: string; courseName: string; tierName: string;
+  name: string; email: string; courseName: string; courseSlug?: string; tierName: string;
 }) {
+  const portalUrl = data.courseSlug
+    ? `${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}/account?email=${encodeURIComponent(data.email)}`
+    : process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 14px;border-radius:3px;">⛳ Membership added</span></div>
     <h1 style="margin:16px 0 4px;color:#111827;font-size:24px;font-weight:700;">You're now a member at ${data.courseName}.</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
       You've been added as a <strong>${data.tierName}</strong> member. Your member rate will automatically apply
-      next time you book a tee time there — just log in with this email.
+      next time you book a tee time there — just sign in with this email.
     </p>
-    <a href="${process.env.NEXT_PUBLIC_URL}/account" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;">
+    <a href="${portalUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;">
       View My Account &rarr;
     </a>
   `);

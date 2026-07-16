@@ -36,15 +36,6 @@ const DASHBOARD_PUBLIC = [
   '/dashboard/onboarding',
 ];
 
-// Public paths under /account that do NOT require a session
-const ACCOUNT_PUBLIC = [
-  '/account/login',
-  '/account/register',
-  '/account/forgot-password',
-  '/account/reset-password',
-  '/account/accept-invite',
-];
-
 function isPublic(pathname: string, publicPaths: string[]): boolean {
   return publicPaths.some(p => pathname === p || pathname.startsWith(p + '/'));
 }
@@ -59,16 +50,9 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  if (pathname.startsWith('/account') && !isPublic(pathname, ACCOUNT_PUBLIC)) {
-    const valid = await hasValidToken(req, 'gr_golfer', ['golfer']);
-    if (!valid) {
-      return NextResponse.redirect(new URL('/account/login', req.url));
-    }
-  }
-
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/account/:path*'],
+  matcher: ['/dashboard/:path*'],
 };

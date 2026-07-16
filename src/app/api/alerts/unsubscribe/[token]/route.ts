@@ -23,7 +23,7 @@ export async function GET(
   const courseSlug = alert?.course.slug;
   const courseName = alert?.course.name || 'GreenReserve';
   const courseLink = courseSlug ? `${base}/courses/${courseSlug}` : `${base}/courses`;
-  const portalLink = courseSlug ? `${base}/courses/${courseSlug}/account` : `${base}/account`;
+  const portalLink = courseSlug ? `${base}/courses/${courseSlug}/account` : base;
 
   const html = `<!DOCTYPE html>
 <html>

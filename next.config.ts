@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: '/courses', destination: '/', permanent: true },
+      // /account retired (2026-07) — the platform is white-label, per-course
+      // portals only (GOLFER_SPEC G5, /courses/[slug]/account). The underlying
+      // GolferAccount system stays; it powers those portals. Revisit if
+      // marketplace mode ships — this becomes the cross-course home then.
+      { source: '/account/:path*', destination: '/', permanent: true },
     ];
   },
 };

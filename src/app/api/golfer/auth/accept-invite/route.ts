@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 
   const membership = await prisma.courseMembership.findUnique({
     where: { id: payload.membershipId },
-    include: { course: { select: { name: true } }, tier: { select: { name: true } } },
+    include: { course: { select: { name: true, slug: true, brandColor: true } }, tier: { select: { name: true } } },
   });
   if (!membership) return NextResponse.json({ error: 'This membership no longer exists.' }, { status: 404 });
   if (membership.inviteAccepted) return NextResponse.json({ error: 'This invite has already been used. Just log in.' }, { status: 409 });
@@ -21,6 +21,8 @@ export async function GET(req: NextRequest) {
     email: payload.email,
     name: membership.inviteName,
     courseName: membership.course.name,
+    courseSlug: membership.course.slug,
+    brandColor: membership.course.brandColor,
     tierName: membership.tier?.name || membership.membershipType,
   });
 }

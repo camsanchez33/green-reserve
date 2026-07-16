@@ -13,7 +13,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
     where: { id: bookingId },
     include: {
       teeTime: { select: { date: true, time: true, holes: true } },
-      course: { select: { name: true } },
+      course: { select: { name: true, slug: true } },
     },
   });
 
@@ -27,6 +27,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
     golferName: booking.golferName,
     golferEmail: booking.golferEmail,
     courseName: booking.course.name,
+    courseSlug: booking.course.slug,
     date: booking.teeTime.date,
     time: booking.teeTime.time,
     holes: booking.teeTime.holes,

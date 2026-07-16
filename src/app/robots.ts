@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/admin', '/dashboard', '/checkin', '/account', '/api'],
+      disallow: ['/admin', '/dashboard', '/checkin', '/api'],
     },
     sitemap: 'https://greenreserve.app/sitemap.xml',
   };
