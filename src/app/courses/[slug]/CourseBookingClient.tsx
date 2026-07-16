@@ -107,7 +107,9 @@ type ActiveMemberSession = {
   email: string;
   name: string;
   tier: { name: string; color?: string } | null;
+  source?: 'member' | 'golfer';
 };
+type GolferProfile = { firstName: string; lastName: string; email: string };
 
 type PreviewMode = { courseId: string; token: string } | null;
 
@@ -174,6 +176,7 @@ export default function CourseDetailPage({
   const [alertSent, setAlertSent] = useState(false);
 
   const [memberSession, setMemberSession] = useState<ActiveMemberSession | null>(null);
+  const [golferProfile, setGolferProfile] = useState<GolferProfile | null>(null);
   const [memberTeeTimes, setMemberTeeTimes] = useState<ActiveTeeTime[]>([]);
 
   useEffect(() => {
@@ -236,7 +239,9 @@ export default function CourseDetailPage({
       .finally(() => setLoadingTimes(false));
   }, [slug, selectedDate, course, previewMode]);
 
-  // Fetch member session — silent 401 is normal (just means not signed in)
+  // Fetch member session — silent 401 is normal (just means not signed in).
+  // Recognizes EITHER a gr_member session OR a gr_golfer session matched to
+  // an active membership at this course (G5b).
   useEffect(() => {
     if (previewMode) return;
     fetch(`/api/member/${slug}/session`)
@@ -244,6 +249,16 @@ export default function CourseDetailPage({
       .then(data => setMemberSession(data))
       .catch(() => {});
   }, [slug, previewMode]);
+
+  // Golfer header recognition (G5b) — independent of membership: a signed-in
+  // golfer who isn't a member here still gets their name instead of "Sign in".
+  useEffect(() => {
+    if (previewMode) return;
+    fetch('/api/golfer/auth/me')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => setGolferProfile(data))
+      .catch(() => {});
+  }, [previewMode]);
 
   // Member tee times — fetched when member session is active, uses member API for correct pricing
   useEffect(() => {
@@ -378,9 +393,14 @@ export default function CourseDetailPage({
   }
 
   async function memberSignOut() {
-    await fetch(`/api/member/${slug}/logout`, { method: 'POST' }).catch(() => {});
+    // Golfer-recognized membership (G5b) rides the gr_golfer session, not
+    // gr_member — clearing the member cookie alone would do nothing and
+    // they'd be "signed back in" as a member on the very next page load.
+    const endpoint = memberSession?.source === 'golfer' ? '/api/golfer/auth/logout' : `/api/member/${slug}/logout`;
+    await fetch(endpoint, { method: 'POST' }).catch(() => {});
     setMemberSession(null);
     setMemberTeeTimes([]);
+    setGolferProfile(null);
   }
 
   if (notFound) {
@@ -656,12 +676,29 @@ export default function CourseDetailPage({
         <div className="absolute bottom-2.5 right-4 z-10 text-[10px] text-white/40">
           Powered by GreenReserve
         </div>
-        <Link
-          href={`/courses/${slug}/account`}
-          className="absolute top-3 right-4 z-10 text-xs text-white/60 hover:text-white transition-colors"
-        >
-          Sign in
-        </Link>
+        {memberSession ? (
+          <Link
+            href={`/courses/${slug}/account`}
+            className="absolute top-3 right-4 z-10 flex items-center gap-1.5 text-xs text-white/80 hover:text-white transition-colors"
+          >
+            <span>{memberSession.name}</span>
+            <span className="bg-white/15 rounded px-1.5 py-0.5 text-[10px] font-medium">Member{memberSession.tier?.name ? ` — ${memberSession.tier.name}` : ''}</span>
+          </Link>
+        ) : golferProfile ? (
+          <Link
+            href={`/courses/${slug}/account`}
+            className="absolute top-3 right-4 z-10 text-xs text-white/70 hover:text-white transition-colors"
+          >
+            Hi, {golferProfile.firstName}
+          </Link>
+        ) : (
+          <Link
+            href={`/courses/${slug}/account`}
+            className="absolute top-3 right-4 z-10 text-xs text-white/60 hover:text-white transition-colors"
+          >
+            Sign in
+          </Link>
+        )}
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-6">
           <div className="flex items-end justify-between gap-4 flex-wrap">
             <div className="flex items-end gap-4">

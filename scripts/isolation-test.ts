@@ -182,11 +182,19 @@ async function seed() {
     update: { passwordHash: hash, role: 'viewer', active: true },
   });
 
-  return { opA, opB, courseA, courseB, golferA, golferB, teeTimeA, teeTimeB, bookingA, bookingB, adminViewer };
+  // GOLFER_SPEC G5b — Golfer A is a member at Course A ONLY. Recognition via
+  // the gr_golfer session must never bleed into Course B.
+  await prisma.courseMembership.deleteMany({ where: { golferId: golferA.id, courseId: courseA.id } });
+  const membershipA = await prisma.courseMembership.create({
+    data: { golferId: golferA.id, courseId: courseA.id, status: 'active', membershipType: 'Full Member' },
+  });
+
+  return { opA, opB, courseA, courseB, golferA, golferB, teeTimeA, teeTimeB, bookingA, bookingB, adminViewer, membershipA };
 }
 
 async function cleanup(data: Awaited<ReturnType<typeof seed>>) {
-  const { courseA, courseB, golferA, golferB, teeTimeA, teeTimeB, bookingA, bookingB, opA, opB, adminViewer } = data;
+  const { courseA, courseB, golferA, golferB, teeTimeA, teeTimeB, bookingA, bookingB, opA, opB, adminViewer, membershipA } = data;
+  await prisma.courseMembership.deleteMany({ where: { id: membershipA.id } });
   await prisma.booking.deleteMany({ where: { id: { in: [bookingA.id, bookingB.id] } } });
   await prisma.teeTime.deleteMany({ where: { id: { in: [teeTimeA.id, teeTimeB.id] } } });
   await prisma.course.deleteMany({ where: { id: { in: [courseA.id, courseB.id] } } });
@@ -328,6 +336,49 @@ async function main() {
   {
     const r = await api(`/api/courses/${courseA.slug}/account`);
     checkStatus('Portal without a golfer session → 401', r.status, 401);
+  }
+  {
+    // Golfer A's portal on Course A (where they ARE a member) surfaces it.
+    const r = await api(`/api/courses/${courseA.slug}/account`, { cookie: golferCookieA });
+    const body = r.body as { membership?: { tierName: string } | null };
+    check('Golfer A portal on Course A shows their membership', !!body.membership, JSON.stringify(body.membership));
+  }
+  {
+    // Same golfer, Course B — they are NOT a member there. Membership
+    // recognition must never bleed across courses via the golfer session.
+    const r = await api(`/api/courses/${courseB.slug}/account`, { cookie: golferCookieA });
+    const body = r.body as { membership?: { tierName: string } | null };
+    check('Golfer A portal on Course B shows NO membership', !body.membership, JSON.stringify(body.membership));
+  }
+
+  console.log('\n── Golfer-session member pricing recognition (G5b) ────────────────');
+  {
+    // Golfer A's session recognized as a member at Course A — same shape as
+    // the existing gr_member session endpoint, so the course page's existing
+    // member-pricing UI just works without a separate code path.
+    const r = await api(`/api/member/${courseA.slug}/session`, { cookie: golferCookieA });
+    const body = r.body as { source?: string };
+    checkStatus('Golfer A member-session on Course A → 200', r.status, 200);
+    check('Golfer A member-session on Course A reports source=golfer', body.source === 'golfer', body.source);
+  }
+  {
+    // Golfer A is NOT a member at Course B — must fall through to 401, not
+    // accidentally recognize them via a stale/cross-course match.
+    const r = await api(`/api/member/${courseB.slug}/session`, { cookie: golferCookieA });
+    checkStatus('Golfer A member-session on Course B → 401', r.status, 401);
+  }
+  {
+    // Golfer B is not a member anywhere — must also 401 on Course A.
+    const r = await api(`/api/member/${courseA.slug}/session`, { cookie: golferCookieB });
+    checkStatus('Golfer B (non-member) member-session on Course A → 401', r.status, 401);
+  }
+  {
+    // Member tee-times endpoint mirrors the same cross-course guarantee.
+    const dateStr = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const rA = await api(`/api/member/${courseA.slug}/tee-times?date=${dateStr}`, { cookie: golferCookieA });
+    checkStatus('Golfer A member tee-times on Course A → 200', rA.status, 200);
+    const rB = await api(`/api/member/${courseB.slug}/tee-times?date=${dateStr}`, { cookie: golferCookieA });
+    checkStatus('Golfer A member tee-times on Course B → 401', rB.status, 401);
   }
 
   console.log('\n── Manage-booking session auth (G5 extends token-only routes) ─────');

@@ -1,28 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getMemberSession } from '@/lib/member-session';
+import { getMemberSession, getGolferMembership } from '@/lib/member-session';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ courseSlug: string }> }
 ) {
   const { courseSlug } = await params;
-  const session = await getMemberSession();
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const date = req.nextUrl.searchParams.get('date');
   if (!date) return NextResponse.json({ error: 'date param required' }, { status: 400 });
 
   const course = await prisma.course.findUnique({ where: { slug: courseSlug } });
-  if (!course || course.id !== session.courseId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!course) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const session = await getMemberSession();
+  let membershipId: string;
+  if (session) {
+    if (course.id !== session.courseId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    membershipId = session.membershipId;
+  } else {
+    const golferMembership = await getGolferMembership(course.id);
+    if (!golferMembership) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    membershipId = golferMembership.membershipId;
   }
 
   const membership = await prisma.courseMembership.findUnique({
-    where: { id: session.membershipId },
+    where: { id: membershipId },
     include: { tier: true },
   });
-  const tier = membership?.tier ?? null;
+  const tier = membership && membership.courseId === course.id ? membership.tier : null;
 
   const teeTimes = await prisma.teeTime.findMany({
     where: { courseId: course.id, date, status: { not: 'blocked' } },

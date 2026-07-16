@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getGolferSession } from '@/lib/auth';
+import { getGolferMembership } from '@/lib/member-session';
 
 // Course-scoped golfer portal data (GOLFER_SPEC G5). Isolation guarantee
 // comes from filtering every query by THIS course's id — the gr_golfer
@@ -27,7 +28,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
 
   const today = new Date().toISOString().split('T')[0];
 
-  const [upcoming, past, membership] = await Promise.all([
+  const [upcoming, past, golferMembership] = await Promise.all([
     prisma.booking.findMany({
       where: {
         courseId: course.id,
@@ -51,10 +52,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
       orderBy: { createdAt: 'desc' },
       take: 20,
     }),
-    prisma.courseMembership.findFirst({
-      where: { courseId: course.id, golferId: golfer.id, status: 'active' },
-      include: { tier: { select: { name: true } } },
-    }),
+    // G5b: matches by direct golferId link OR the golfer's OTP-verified email
+    // against an invite-only membership, same recognition as the course page.
+    getGolferMembership(course.id),
   ]);
 
   return NextResponse.json({
@@ -80,6 +80,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
       status: b.status,
       checkInToken: b.checkInToken,
     })),
-    membership: membership ? { tierName: membership.tier?.name ?? membership.membershipType } : null,
+    membership: golferMembership ? { tierName: golferMembership.tierName } : null,
   });
 }

@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { getGolferSession } from '@/lib/auth';
-import { getMemberSession } from '@/lib/member-session';
+import { getMemberSession, getGolferMembership } from '@/lib/member-session';
 import { stripe, ACCESS_FEE_CENTS } from '@/lib/stripe';
 import { sendBookingConfirmation, sendOperatorBookingNotification, sendCancellationWarningEmail, sendCheckInAvailableEmail } from '@/lib/email';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
@@ -109,10 +109,12 @@ export async function POST(req: NextRequest) {
   let resolvedGreenFeeOverride: number | null = null;
   let resolvedCartFeeOverride: number | null = null;
   if (golferSession) {
-    const membership = await prisma.courseMembership.findFirst({
-      where: { courseId: teeTimeFull.courseId, golferId: golferSession.golferId, status: 'active' },
-      include: { tier: true },
-    });
+    // G5b: matches by direct golferId link OR the golfer's OTP-verified email
+    // against an invite-only membership — same recognition as the course page.
+    const golferMembership = await getGolferMembership(teeTimeFull.courseId);
+    const membership = golferMembership
+      ? await prisma.courseMembership.findUnique({ where: { id: golferMembership.membershipId }, include: { tier: true } })
+      : null;
     if (membership?.tier) {
       const rates = applyTierRates(teeTimeFull, membership.tier);
       resolvedGreenFeeOverride = rates.greenFee;

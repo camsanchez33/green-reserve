@@ -1,5 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+import { prisma } from './prisma';
+import { getGolferSession } from './auth';
 
 const rawSecret =
   process.env.JWT_SECRET ||
@@ -52,4 +54,35 @@ export async function getMemberSession() {
     if (p.type !== 'member_session') return null;
     return p;
   } catch { return null; }
+}
+
+// GOLFER_SPEC G5b — member pricing recognition via the golfer session, no
+// separate member sign-in required. Safe because gr_golfer only exists after
+// OTP possession-proof (email or phone) — the exact same proof the member
+// magic link already relies on. Strictly courseId-scoped: only ever resolves
+// a membership at the ONE course being asked about, never leaks across courses.
+export async function getGolferMembership(courseId: string): Promise<{ membershipId: string; tierName: string } | null> {
+  const golferSession = await getGolferSession();
+  if (!golferSession) return null;
+
+  const golfer = await prisma.golferAccount.findUnique({
+    where: { id: golferSession.golferId },
+    select: { email: true },
+  });
+  if (!golfer) return null;
+
+  const membership = await prisma.courseMembership.findFirst({
+    where: {
+      courseId,
+      status: 'active',
+      OR: [
+        { golferId: golferSession.golferId },
+        { inviteEmail: { equals: golfer.email, mode: 'insensitive' } },
+      ],
+    },
+    include: { tier: { select: { name: true } } },
+  });
+  if (!membership) return null;
+
+  return { membershipId: membership.id, tierName: membership.tier?.name ?? membership.membershipType };
 }
