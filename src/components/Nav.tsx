@@ -3,13 +3,16 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
-import { isBookingMode } from '@/lib/booking-mode';
+import { isBookingMode, isCourseWorld } from '@/lib/booking-mode';
 
 export default function Nav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
   if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard')) return null;
+  // Course-world pages (course page, member portal, golfer portal) already
+  // have their own fully-branded header — no GreenReserve bar at all here.
+  if (isCourseWorld(pathname)) return null;
 
   if (isBookingMode(pathname)) {
     return (

@@ -3,6 +3,7 @@ import { Inter, Fraunces } from 'next/font/google';
 import './globals.css';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
+import MainOffset from '@/components/MainOffset';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -28,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${inter.variable} ${fraunces.variable}`}>
       <body className="font-sans bg-paper text-ink antialiased">
         <Nav />
-        <main className="pt-16">{children}</main>
+        <MainOffset>{children}</MainOffset>
         <Footer />
       </body>
     </html>

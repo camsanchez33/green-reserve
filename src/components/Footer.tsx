@@ -1,14 +1,21 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { isBookingMode } from '@/lib/booking-mode';
+import { isBookingMode, isCourseWorld } from '@/lib/booking-mode';
 
 export default function Footer() {
   const pathname = usePathname();
 
   if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard')) return null;
 
-  if (isBookingMode(pathname)) {
+  // Course-world pages (course page, member portal, golfer portal) and
+  // other booking-journey pages all get the same minimal "Powered by
+  // GreenReserve" footer — no marketing links. The course page itself
+  // already mentions it once in the hero too; a second small mention at
+  // the very bottom of a long page (or on portal pages that have none)
+  // isn't harmful, and it keeps every course-world page from going
+  // branding-less if it doesn't have its own footer.
+  if (isBookingMode(pathname) || isCourseWorld(pathname)) {
     return (
       <footer className="bg-paper border-t border-line">
         <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-ink-faint">
