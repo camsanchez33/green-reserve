@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { RefreshCw, Search, Trash2 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { EmptyState } from '@/components/EmptyState';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -228,9 +229,7 @@ function InquiriesListInner() {
           {/* List */}
           {loading && <div className="py-20 text-center text-ink-muted text-sm">Loading...</div>}
           {!loading && filtered.length === 0 && (
-            <div className="py-20 text-center text-ink-muted text-sm">
-              {q ? 'No results — clear your search' : 'No inquiries here yet'}
-            </div>
+            <EmptyState message={q ? 'No results — clear your search' : 'No inquiries here yet'} />
           )}
 
           {!loading && filtered.length > 0 && (

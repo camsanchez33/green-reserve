@@ -25,6 +25,7 @@ function baseTemplate(content: string) {
         <tr>
           <td style="background:#ffffff;padding:0 36px 20px;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;border-bottom:1px solid #e4e4e7;">
             <div style="border-top:1px solid #f4f4f5;padding-top:20px;text-align:center;color:#a1a1aa;font-size:11px;">
+              <img src="${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/brand/birdie-head.png" width="28" height="24" alt="" style="display:block;margin:0 auto 8px;" />
               Green Reserve &middot; <a href="https://greenreserve.app" style="color:#71717a;text-decoration:none;">greenreserve.app</a>
             </div>
           </td>

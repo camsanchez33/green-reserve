@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, User, ArrowLeft, ExternalLink, Send, AlertTriangle, ChevronRight } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { EmptyState } from '@/components/EmptyState';
 
 const BASE_URL = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_URL ?? '');
 
@@ -313,8 +314,8 @@ function GolfersInner() {
               {searched && !searching && (
                 <>
                   {golfers.length === 0 && unmatchedGuests.length === 0 ? (
-                    <div className="py-16 text-center text-ink-muted text-sm bg-white border border-line rounded-lg">
-                      No golfers found for &ldquo;{query}&rdquo;
+                    <div className="bg-white border border-line rounded-lg">
+                      <EmptyState message={`No golfers found for "${query}"`} />
                     </div>
                   ) : (
                     <div className="space-y-5">

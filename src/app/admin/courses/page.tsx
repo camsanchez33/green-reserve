@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Star, Power, Globe, Eye, ArchiveRestore, RefreshCw, Search, ArchiveX } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { EmptyState } from '@/components/EmptyState';
 
 interface Course {
   id: string; name: string; city: string; state: string; active: boolean; featured: boolean;
@@ -414,7 +415,7 @@ function CoursesContent() {
               </div>
             ))}
             {!loading && filteredCourses.length === 0 && (
-              <div className="text-ink-muted text-center py-20 text-sm">No courses found</div>
+              <EmptyState message="No courses found" />
             )}
           </div>
         </div>

@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { Loader2, AlertCircle, Printer } from 'lucide-react';
 import { serviceFeeLabel } from '@/lib/booking-fees';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
@@ -101,9 +102,12 @@ function ReceiptPageInner() {
             {/* Header */}
             <div className="bg-[#0a0a0a] px-6 py-5">
               <div className="flex items-center justify-between">
-                <span className="text-white font-semibold text-base">
-                  Green<span className="text-[#34d399]">Reserve</span>
-                </span>
+                <div className="flex items-center gap-2">
+                  <Image src="/brand/birdie-head.png" alt="" width={22} height={19} loading="lazy" />
+                  <span className="text-white font-semibold text-base">
+                    Green<span className="text-[#34d399]">Reserve</span>
+                  </span>
+                </div>
                 <span className="text-zinc-400 text-sm font-medium">{isCompleted ? 'Receipt' : isCancelled ? 'Cancellation' : 'Booking Confirmation'}</span>
               </div>
             </div>
