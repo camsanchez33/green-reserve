@@ -2,6 +2,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
@@ -86,8 +87,8 @@ function AcceptInviteInner() {
     <div className="min-h-screen bg-paper flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="text-[17px] font-serif font-medium tracking-tight text-ink">
-            Green<span className="text-pine">Reserve</span>
+          <Link href="/" className="inline-block">
+            <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={72} height={36} priority className="h-9 w-auto" />
           </Link>
           <p className="text-xs text-ink-muted mt-1">Set Up Your Member Account</p>
         </div>

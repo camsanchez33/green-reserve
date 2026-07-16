@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { CheckCircle, ChevronRight, Loader2, CreditCard, Plus, Trash2, AlertCircle } from 'lucide-react';
 
 const STEPS = ['Course Details', 'Connect Payments', 'Go Live'];
@@ -99,7 +100,7 @@ function OnboardingInner() {
 
         {/* Wordmark */}
         <div className="text-center mb-8">
-          <span className="text-[22px] font-serif font-medium tracking-tight text-ink">Green<span className="text-pine">Reserve</span></span>
+          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={88} height={44} priority className="h-11 w-auto mx-auto" />
         </div>
 
         {/* Step indicator */}

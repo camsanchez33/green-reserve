@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Leaf, CheckCircle } from 'lucide-react';
+import Image from 'next/image';
+import { CheckCircle } from 'lucide-react';
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
@@ -108,8 +109,8 @@ export default function SetPasswordPage() {
     <div className="min-h-screen bg-paper flex items-center justify-center">
       <div className="w-full max-w-sm">
         <div className="flex items-center justify-center gap-2.5 mb-8">
-          <Leaf className="w-5 h-5 text-pine" />
-          <span className="font-serif text-[17px] font-medium text-ink">GreenReserve Admin</span>
+          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={100} height={50} priority className="h-[50px] w-auto" />
+          <span className="font-serif text-[17px] font-medium text-ink-soft">Admin</span>
         </div>
         <div className="bg-white border border-line rounded-lg p-8">
           <Suspense fallback={<div className="text-ink-soft text-sm">Loading…</div>}>

@@ -1,6 +1,7 @@
 'use client';
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { CheckCircle } from 'lucide-react';
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
@@ -27,7 +28,7 @@ function LoginContent() {
     <div className="min-h-screen bg-paper flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="font-serif text-[28px] font-medium text-ink leading-tight">GreenReserve</div>
+          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={112} height={56} priority className="h-14 w-auto mx-auto" />
           <p className="text-sm text-ink-muted mt-1">Course Operator Portal</p>
         </div>
 

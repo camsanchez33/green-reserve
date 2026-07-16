@@ -40,7 +40,7 @@ export default function AdminLoginPage() {
     <div className="min-h-screen bg-paper flex items-center justify-center">
       <div className="w-full max-w-sm">
         <div className="flex items-center justify-center gap-2.5 mb-8">
-          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={72} height={36} priority className="h-9 w-auto" />
+          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={100} height={50} priority className="h-[50px] w-auto" />
           <span className="font-serif text-[17px] font-medium text-ink-soft">Admin</span>
         </div>
 

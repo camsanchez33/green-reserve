@@ -1,8 +1,9 @@
 'use client';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useEffect, useState, useCallback } from 'react';
 import {
-  Layers, BarChart2, AlertCircle, Building2, Hammer, Users,
+  BarChart2, AlertCircle, Building2, Hammer, Users,
   Radio, Activity, MessageSquare, UserCircle, ChevronLeft, ChevronRight,
   DollarSign, Search,
 } from 'lucide-react';
@@ -128,12 +129,9 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
           </button>
         ) : (
           <div className="flex items-center gap-2.5 w-full">
-            <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-              <Layers className="w-4 h-4 text-paper"/>
-            </div>
-            <div className="flex-1">
-              <div className="font-serif text-[15.5px] text-paper leading-tight">GreenReserve</div>
-              <div className="text-[10px] text-[#A9BFAF] font-medium uppercase tracking-wider">Admin</div>
+            <div className="flex-1 min-w-0">
+              <Image src="/brand/logo-lockup-cream-900.png" alt="GreenReserve" width={112} height={56} priority className="h-9 w-auto" />
+              <div className="text-[10px] text-[#A9BFAF] font-medium uppercase tracking-wider mt-1">Admin</div>
             </div>
             <button onClick={openPalette} title="Search (Ctrl+K)" className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors shrink-0">
               <Search className="w-3.5 h-3.5 text-[#A9BFAF]"/>

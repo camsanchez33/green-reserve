@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { CheckCircle, Calendar, Globe, Lock } from 'lucide-react';
 
 const STATES = [
@@ -240,7 +241,7 @@ export default function ForCoursesContent() {
   return (
     <div className="min-h-screen bg-paper">
       <div className="bg-pine px-6 py-10 text-center">
-        <span className="text-[17px] font-serif font-medium tracking-tight text-white">Green<span className="text-paper/70">Reserve</span></span>
+        <Image src="/brand/logo-lockup-cream-900.png" alt="GreenReserve" width={88} height={44} priority className="h-11 w-auto mx-auto" />
         <h1 className="text-white text-[22px] font-serif font-medium mt-4 mb-1 tracking-tight">Get your course listed</h1>
         <p className="text-white/50 text-sm">Free to list. $0 / month. We charge golfers $1.50 — not you.</p>
       </div>

@@ -1,9 +1,10 @@
 'use client';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import {
   Calendar, BarChart2, Clock, Users, Settings, LogOut, XCircle,
-  Trophy, PartyPopper, DollarSign, AlertTriangle, MessageSquare, Layers,
+  Trophy, PartyPopper, DollarSign, AlertTriangle, MessageSquare,
 } from 'lucide-react';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
 
@@ -96,14 +97,9 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     <AnnouncementBanner />
     <aside className="w-56 shrink-0 bg-white border-r border-line flex flex-col h-full overflow-y-auto">
       <div className="px-4 py-4 border-b border-line">
-        <div className="flex items-center gap-2.5 mb-3">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: brandColor + '14', color: brandColor }}>
-            <Layers className="w-4 h-4"/>
-          </div>
-          <div>
-            <div className="font-serif text-[15px] text-ink leading-tight">GreenReserve</div>
-            <div className="text-[10px] text-ink-muted font-medium uppercase tracking-wider">Operator</div>
-          </div>
+        <div className="mb-3">
+          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={112} height={56} priority className="h-9 w-auto" />
+          <div className="text-[10px] text-ink-muted font-medium uppercase tracking-wider mt-1">Operator</div>
         </div>
         {name && (
           <div className="pl-0.5">

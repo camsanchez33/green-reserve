@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
 
@@ -51,7 +52,7 @@ function ResetPasswordContent() {
     <div className="min-h-screen bg-paper flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <span className="text-[22px] font-serif font-medium tracking-tight text-ink">Green<span className="text-pine">Reserve</span></span>
+          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={88} height={44} priority className="h-11 w-auto mx-auto" />
           <p className="text-xs text-ink-muted mt-1">Course Operator Portal</p>
         </div>
 

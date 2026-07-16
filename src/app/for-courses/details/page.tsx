@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { CheckCircle, AlertTriangle, ChevronRight, ArrowLeft, Plus, Trash2, Upload, X } from 'lucide-react';
 import { downscaleImage } from '@/lib/image-resize';
 
@@ -1652,7 +1653,7 @@ function DetailsForm() {
   return (
     <div className="min-h-screen bg-paper">
       <div className="bg-pine px-6 py-8 text-center">
-        <span className="text-[17px] font-serif font-medium tracking-tight text-white">Green<span className="text-paper/70">Reserve</span></span>
+        <Image src="/brand/logo-lockup-cream-900.png" alt="GreenReserve" width={80} height={40} priority className="h-10 w-auto mx-auto" />
         <h1 className="text-white text-[20px] font-serif font-medium mt-3 mb-0.5 tracking-tight">Setup sheet — {courseName}</h1>
         <p className="text-white/50 text-sm">Takes 10–15 minutes. Saves as you go.</p>
       </div>

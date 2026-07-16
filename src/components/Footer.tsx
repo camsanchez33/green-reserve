@@ -35,7 +35,7 @@ export default function Footer() {
     <footer className="bg-paper border-t border-line">
       <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
         <div className="col-span-2 md:col-span-2">
-          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={88} height={44} loading="lazy" className="h-11 w-auto mb-3" />
+          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={124} height={62} loading="lazy" className="h-[62px] w-auto mb-3" />
           <p className="text-ink-soft text-sm leading-relaxed max-w-xs">
             Online tee sheets for golf courses. Free to list — no monthly fees, no commission on green fees.
           </p>
