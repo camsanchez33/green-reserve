@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { CheckCircle, AlertTriangle, ChevronRight, ArrowLeft, Plus, Trash2, Upload, X } from 'lucide-react';
 import { downscaleImage } from '@/lib/image-resize';
 
@@ -1652,8 +1653,13 @@ function DetailsForm() {
 
   return (
     <div className="min-h-screen bg-paper">
-      <div className="bg-pine px-6 py-8 text-center">
-        <Image src="/brand/logo-lockup-cream-900.png" alt="GreenReserve" width={80} height={40} priority className="h-10 w-auto mx-auto" />
+      <div className="relative bg-pine px-6 py-8 text-center">
+        <Link href="/" className="absolute left-6 top-6 inline-flex items-center gap-1.5 text-white/60 hover:text-white transition-colors text-sm">
+          <ArrowLeft size={14} /> Back
+        </Link>
+        <Link href="/" className="inline-block">
+          <Image src="/brand/logo-lockup-cream-900.png" alt="GreenReserve" width={80} height={40} priority className="h-10 w-auto mx-auto" />
+        </Link>
         <h1 className="text-white text-[20px] font-serif font-medium mt-3 mb-0.5 tracking-tight">Setup sheet — {courseName}</h1>
         <p className="text-white/50 text-sm">Takes 10–15 minutes. Saves as you go.</p>
       </div>

@@ -11,6 +11,10 @@ export default function Nav() {
   const pathname = usePathname();
 
   if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard')) return null;
+  // /for-courses + /for-courses/details have their own pine hero (with a
+  // link home + back link baked in) — stacking the white marketing Nav on
+  // top of it was a double logo, not clean.
+  if (pathname.startsWith('/for-courses')) return null;
   // Course-world pages (course page, member portal, golfer portal) already
   // have their own fully-branded header — no GreenReserve bar at all here.
   // Booking-mode pages (book/checkin/manage/receipt/membership) now use the

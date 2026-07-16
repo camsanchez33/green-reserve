@@ -2,7 +2,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { CheckCircle, Calendar, Globe, Lock } from 'lucide-react';
+import Link from 'next/link';
+import { CheckCircle, Calendar, Globe, Lock, ArrowLeft } from 'lucide-react';
 
 const STATES = [
   'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
@@ -240,8 +241,13 @@ export default function ForCoursesContent() {
 
   return (
     <div className="min-h-screen bg-paper">
-      <div className="bg-pine px-6 py-10 text-center">
-        <Image src="/brand/logo-lockup-cream-900.png" alt="GreenReserve" width={88} height={44} priority className="h-11 w-auto mx-auto" />
+      <div className="relative bg-pine px-6 py-10 text-center">
+        <Link href="/" className="absolute left-6 top-6 inline-flex items-center gap-1.5 text-white/60 hover:text-white transition-colors text-sm">
+          <ArrowLeft size={14} /> Back
+        </Link>
+        <Link href="/" className="inline-block">
+          <Image src="/brand/logo-lockup-cream-900.png" alt="GreenReserve" width={88} height={44} priority className="h-11 w-auto mx-auto" />
+        </Link>
         <h1 className="text-white text-[22px] font-serif font-medium mt-4 mb-1 tracking-tight">Get your course listed</h1>
         <p className="text-white/50 text-sm">Free to list. $0 / month. We charge golfers $1.50 — not you.</p>
       </div>
