@@ -19,7 +19,13 @@ in flight at a time.
 
 ## SURFACE 1: ADMIN (in progress)
 
-- [ ] A-01 /admin — Overview — SPEC v2 (designed with Cam, 2026-07-16):
+- [x] A-01 /admin — Overview — SPEC v2 (designed with Cam, 2026-07-16):
+  BUILT: 9b5558c. Sections 1-7 built to spec. Section 8 (Systems Line) shipped
+  as honest external links (GitHub Actions / Vercel / Stripe dashboard) with
+  neutral StatusDots, not live status — none of backup/cron/webhook/CI status
+  is tracked anywhere in the app, and wiring real checks needs new persistence
+  (a schema change, out of scope for a revise run). Live-status version is a
+  candidate RUN_QUEUE.md item if wanted.
   PRINCIPLES: organization, order, reason. Page reads top-to-bottom as:
   today's pulse → what's stuck → how's the trend → who's producing → is the
   machine healthy. Full-width responsive layout (kill the half-screen container).
