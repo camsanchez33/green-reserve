@@ -129,6 +129,8 @@ model Course {
   thread                MessageThread?
   photos                CoursePhoto[]
   teeTimeAlerts         TeeTimeAlert[]
+  nines                 Nine[]
+  courseProducts        CourseProduct[]
 
   @@index([operatorId])
 }
@@ -155,6 +157,70 @@ model TeeSet {
   slope     Int      @default(0)
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
+  nineYardages    TeeSetNine[]
+  productRatings  CourseProductTeeSet[]
+}
+
+// A named nine (North/South/West...) on a multi-nine course. Simple 18-hole
+// courses never create these — Course's flat holes/par/yardage stay their
+// display fallback (COURSE_LAYOUT_SPEC L1, no forced backfill).
+model Nine {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  name      String
+  par       Int      @default(36)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  teeSetYardages TeeSetNine[]
+
+  @@index([courseId])
+}
+
+// What a golfer actually books: an 18-hole course offers "18 holes" (+
+// optionally "9 holes"); a 27-hole course offers each active combo of two
+// nines as its own 18-hole product, plus optionally single nines. Slots
+// (TeeTimeSchedule/TeeTime) get product scoping in COURSE_LAYOUT_SPEC L2 —
+// this phase is the model + dashboard tab only.
+model CourseProduct {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  label     String
+  holes     Int      @default(18)
+  nineIds   String[]
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  teeSetRatings CourseProductTeeSet[]
+
+  @@index([courseId])
+}
+
+// Per-nine yardage for a given tee set (e.g. Blue tees, North nine = 3200y).
+model TeeSetNine {
+  id       String @id @default(cuid())
+  teeSetId String
+  teeSet   TeeSet @relation(fields: [teeSetId], references: [id], onDelete: Cascade)
+  nineId   String
+  nine     Nine   @relation(fields: [nineId], references: [id], onDelete: Cascade)
+  yardage  Int    @default(0)
+
+  @@unique([teeSetId, nineId])
+}
+
+// Rating/slope for a given tee set on a given product (a combo's rating for
+// Blue tees differs from another combo's rating for the same Blue tees).
+model CourseProductTeeSet {
+  id              String        @id @default(cuid())
+  courseProductId String
+  courseProduct   CourseProduct @relation(fields: [courseProductId], references: [id], onDelete: Cascade)
+  teeSetId        String
+  teeSet          TeeSet        @relation(fields: [teeSetId], references: [id], onDelete: Cascade)
+  rating          Float         @default(0)
+  slope           Int           @default(0)
+
+  @@unique([courseProductId, teeSetId])
 }
 
 model CourseStaff {
