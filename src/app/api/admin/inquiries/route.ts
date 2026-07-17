@@ -416,6 +416,49 @@ async function handleAction(
       if (!d.cancellationPolicy) needsReview.push('Cancellation policy not answered in sheet');
       if (holes === 27) needsReview.push('27-hole course: verify which 9-hole combos to set up as booking sheets');
       if (holes === 36) needsReview.push('36-hole course: verify two-course booking setup');
+
+      // COURSE_LAYOUT_SPEC L1: map the sheet's multi-nine/combo answers into
+      // real Nine + CourseProduct rows instead of just a build-notes flag.
+      // Simple 9/18-hole courses create nothing here — flat Course fields
+      // stay their display fallback (no forced backfill).
+      type NineSpec = { name: string; par: number };
+      type ProductSpec = { label: string; holes: number; nineNames: string[]; comboKey?: string };
+      const nineSpecs: NineSpec[] = [];
+      const productSpecs: ProductSpec[] = [];
+
+      if (holes === 27 && str(d.layout27) === 'three_9s') {
+        const nine27Names = (Array.isArray(d.nine27Names) ? d.nine27Names as string[] : []).filter(n => n && n.trim());
+        const parsPerNine = (d.nine27ParsPerNine as Record<string, string>) || {};
+        for (const name of nine27Names) nineSpecs.push({ name, par: num(Number(parsPerNine[name]), 36) });
+
+        const combosEnabled = Array.isArray(d.nine27CombosEnabled) ? d.nine27CombosEnabled as string[] : [];
+        for (const comboKey of combosEnabled) {
+          const [a, b] = comboKey.split('+');
+          if (!nine27Names.includes(a) || !nine27Names.includes(b)) continue;
+          productSpecs.push({ label: `${a} + ${b}`, holes: 18, nineNames: [a, b], comboKey });
+        }
+        if (str(d.nine27BookableAlone) === 'yes') {
+          for (const name of nine27Names) productSpecs.push({ label: name, holes: 9, nineNames: [name] });
+        }
+      } else if (holes === 27 && str(d.layout27) === '18_plus_9') {
+        // The base 18 isn't itself split into named nines in the sheet —
+        // only the separate 9 is. The base 18 stays the flat-field fallback.
+        const separate9Name = str(d.separate9Name);
+        if (separate9Name) {
+          nineSpecs.push({ name: separate9Name, par: num(Number(d.separate9Par), 36) });
+          if (str(d.separate9Bookable) === 'yes') {
+            productSpecs.push({ label: separate9Name, holes: 9, nineNames: [separate9Name] });
+          }
+        }
+      } else if (holes === 36 && str(d.layout36) === 'two_18s') {
+        // Each named "course" here is a full 18 a golfer books whole — not
+        // composed of named nines in the sheet, so no Nine rows, just two
+        // 18-hole products.
+        const course36Names = (Array.isArray(d.course36Names) ? d.course36Names as string[] : []).filter(n => n && n.trim());
+        for (const name of course36Names) productSpecs.push({ label: name, holes: 18, nineNames: [] });
+      }
+      // holes===36 && layout36==='other' is free text only (course36LayoutDesc)
+      // — nothing structured to map; the needsReview flag above covers it.
       if (existingOp) needsReview.push('Attached to existing operator account — no new login created');
       for (const p of tierPasses) {
         const tierName = str(p.name) || (str(p.type) === 'other' ? str(p.otherType, 'Other') : PASS_TYPE_LABELS[str(p.type)] || 'Membership');
@@ -539,12 +582,32 @@ async function handleAction(
         }
       }
 
+      const nineNameToId = new Map<string, string>();
+      const comboKeyToProductId = new Map<string, string>();
+      if (builtCourseId && (nineSpecs.length > 0 || productSpecs.length > 0)) {
+        for (let i = 0; i < nineSpecs.length; i++) {
+          const spec = nineSpecs[i];
+          const nine = await prisma.nine.create({
+            data: { courseId: builtCourseId, name: spec.name, par: spec.par, sortOrder: i },
+          });
+          nineNameToId.set(spec.name, nine.id);
+        }
+        for (let i = 0; i < productSpecs.length; i++) {
+          const spec = productSpecs[i];
+          const nineIds = spec.nineNames.map(n => nineNameToId.get(n)).filter((id): id is string => !!id);
+          const product = await prisma.courseProduct.create({
+            data: { courseId: builtCourseId, label: spec.label, holes: spec.holes, nineIds, active: true, sortOrder: i },
+          });
+          if (spec.comboKey) comboKeyToProductId.set(spec.comboKey, product.id);
+        }
+      }
+
       if (builtCourseId && Array.isArray(d.teeSets)) {
         const teeSets = d.teeSets as Record<string, unknown>[];
         for (let i = 0; i < teeSets.length; i++) {
           const ts = teeSets[i];
           if (!str(ts.name)) continue;
-          await prisma.teeSet.create({
+          const teeSet = await prisma.teeSet.create({
             data: {
               courseId: builtCourseId,
               name: str(ts.name),
@@ -554,6 +617,25 @@ async function handleAction(
               sortOrder: i,
             },
           });
+
+          // Per-nine yardage — keyed by nine name in the sheet, generic
+          // across every layout (three_9s, the 18_plus_9 separate nine, etc).
+          const nineYardages = (ts.nineYardages as Record<string, unknown>) || {};
+          for (const [nineName, yardage] of Object.entries(nineYardages)) {
+            const nineId = nineNameToId.get(nineName);
+            if (!nineId || !yardage) continue;
+            await prisma.teeSetNine.create({ data: { teeSetId: teeSet.id, nineId, yardage: num(Number(yardage), 0) } });
+          }
+
+          // Per-combo rating/slope — only meaningful for three_9s combos.
+          const comboRatings = (ts.comboRatings as Record<string, { rating?: unknown; slope?: unknown }>) || {};
+          for (const [comboKey, cr] of Object.entries(comboRatings)) {
+            const productId = comboKeyToProductId.get(comboKey);
+            if (!productId || !cr) continue;
+            await prisma.courseProductTeeSet.create({
+              data: { courseProductId: productId, teeSetId: teeSet.id, rating: flt(cr.rating, 0), slope: num(Number(cr.slope), 0) },
+            });
+          }
         }
       }
 
