@@ -3,12 +3,13 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff, CreditCard, CheckCircle2, AlertCircle, Loader2, KeyRound, Mail, Smartphone, Image as ImageIcon, X } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import CourseLayoutTab from '@/components/dashboard/CourseLayoutTab';
 import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
 import { downscaleImage } from '@/lib/image-resize';
 
 type Course = Record<string, unknown>;
 interface StaffMember { id: string; name: string; email: string; role: string; active: boolean; }
-const SECTIONS = ['Course Info', 'Photos', 'Payments', 'Pricing Policy', 'Course Policy', 'Facilities', 'Staff', 'Account'] as const;
+const SECTIONS = ['Course Info', 'Course & Layout', 'Photos', 'Payments', 'Pricing Policy', 'Course Policy', 'Facilities', 'Staff', 'Account'] as const;
 type Section = typeof SECTIONS[number];
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
@@ -331,6 +332,12 @@ function SettingsPageInner() {
                 <ImageUpload label="Course Logo" kind="logo" value={(form.logoUrl as string)||''} onUploaded={url=>set('logoUrl',url)} hint="Square works best (PNG with transparent background ideal). Max 8MB (large photos are auto-resized)."/>
                 <ImageUpload label="Course Photo" kind="hero" value={(form.heroImageUrl as string)||''} onUploaded={url=>set('heroImageUrl',url)} hint="Wide landscape shot of your course — shown as the banner behind your course name. Max 8MB (large photos are auto-resized)."/>
               </SectionCard>
+            </div>
+          )}
+
+          {/* ── Course & Layout ── */}
+          {active==='Course & Layout' && (
+            <div className="space-y-5">
               <SectionCard title="Course Details">
                 <div className="grid grid-cols-3 gap-3">
                   <Field label="Holes"><FInput value={form.holes as number} onChange={v=>set('holes',Number(v))} type="number"/></Field>
@@ -339,7 +346,9 @@ function SettingsPageInner() {
                   <Field label="Slope"><FInput value={form.slope as number} onChange={v=>set('slope',Number(v))} type="number"/></Field>
                   <Field label="Course Rating"><FInput value={form.courseRating as number} onChange={v=>set('courseRating',Number(v))} type="number" step="0.1"/></Field>
                 </div>
+                <p className="text-xs text-ink-faint">Standard fallback fields for a simple 18-hole (or 9-hole) course. For 27+ hole layouts with combos, set up Nines and Products below.</p>
               </SectionCard>
+              <CourseLayoutTab />
             </div>
           )}
 
