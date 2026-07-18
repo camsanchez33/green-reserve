@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  BarChart2, AlertCircle, DollarSign, RefreshCw, MessageSquare, Clock3,
+  LineChart, AlertCircle, DollarSign, RefreshCw, MessageSquare, Clock3,
   ArrowUpRight, ArrowDownRight, Minus, ChevronRight, CheckCircle2,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
@@ -25,9 +25,9 @@ interface Stats {
   };
   actionQueue: { red: ActionRow[]; redCount: number; amber: ActionRow[]; amberCount: number };
   revenue: {
-    day: { key: string; gross: number; fees: number; bookings: number; ghostGross: number; ghostFees: number; soFar: boolean }[];
-    week: { key: string; gross: number; fees: number; bookings: number; ghostGross: number; ghostFees: number; soFar: boolean }[];
-    month: { key: string; gross: number; fees: number; bookings: number; ghostGross: number; ghostFees: number; soFar: boolean }[];
+    day: { t: number; gross: number; fees: number; ghostGross: number; ghostFees: number }[];
+    week: { t: number; gross: number; fees: number; ghostGross: number; ghostFees: number }[];
+    month: { t: number; gross: number; fees: number; ghostGross: number; ghostFees: number }[];
   };
   thirtyDay: {
     activeCourses: number; totalCourses: number; archivedCourses: number;
@@ -57,21 +57,6 @@ function fmtAgo(ts: number, nowMs: number) {
   return `${Math.floor(m / 60)}h ago`;
 }
 
-function fmtDayLabel(key: string) {
-  return new Date(key + 'T00:00:00.000Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
-}
-function fmtWeekLabel(key: string) {
-  return 'Wk of ' + fmtDayLabel(key);
-}
-function fmtMonthLabel(key: string) {
-  const [y, m] = key.split('-');
-  return new Date(Date.UTC(Number(y), Number(m) - 1, 1)).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
-}
-function fmtMonthAxisLabel(key: string) {
-  const [y, m] = key.split('-');
-  return new Date(Date.UTC(Number(y), Number(m) - 1, 1)).toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
-}
-
 function Trend({ current, prev, suffix = 'vs prior 30d' }: { current: number; prev: number; suffix?: string }) {
   if (prev === 0 && current === 0) return null;
   if (prev === 0) return <span className="text-[11px] text-ink-muted">— {suffix}</span>;
@@ -87,79 +72,84 @@ function Trend({ current, prev, suffix = 'vs prior 30d' }: { current: number; pr
 }
 
 type Gran = 'day' | 'week' | 'month';
+type TickerPoint = { t: number; gross: number; fees: number; ghostGross: number; ghostFees: number };
 
-function RevenueChart({ data, gran }: { data: Stats['revenue']['day']; gran: Gran }) {
+const GRAN_COPY: Record<Gran, { period: string; periodLower: string; suffix: string; start: string; now: string }> = {
+  day:   { period: 'Today',     periodLower: 'today',      suffix: 'vs yesterday, same time', start: '12am',  now: 'Now' },
+  week:  { period: 'This Week', periodLower: 'this week',  suffix: 'vs last week, same day',  start: 'Mon',   now: 'Today' },
+  month: { period: 'This Month', periodLower: 'this month', suffix: 'vs last month, same day', start: '1st',  now: 'Today' },
+};
+
+function RevenueChart({ data, gran }: { data: TickerPoint[]; gran: Gran }) {
+  const [showGross, setShowGross] = useState(false);
   if (!data.length) return <div className="text-center text-ink-muted py-12 text-sm">No bookings yet</div>;
-  const grossMax = Math.max(...data.map(d => Math.max(d.gross, d.ghostGross)), 0.01);
-  const feesMax = Math.max(...data.map(d => Math.max(d.fees, d.ghostFees)), 0.01);
-  const label = gran === 'day' ? fmtDayLabel : gran === 'week' ? fmtWeekLabel : fmtMonthLabel;
-  const axisLabel = gran === 'month' ? fmtMonthAxisLabel : label;
+  const copy = GRAN_COPY[gran];
   const latest = data[data.length - 1];
-  const periodLabel = gran === 'day' ? 'Today' : gran === 'week' ? 'This Week' : 'This Month';
-  const periodLabelLower = gran === 'day' ? 'today' : gran === 'week' ? 'this week' : 'this month';
-  let deltaSuffix = gran === 'day'
-    ? `vs last ${new Date(latest.key + 'T00:00:00.000Z').toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' })}`
-    : gran === 'week' ? 'vs prior week' : 'vs last year';
-  if (latest.soFar) deltaSuffix += ' so far';
-  const noDataYet = latest.bookings === 0;
+  const noDataYet = latest.fees === 0 && latest.gross === 0;
+
+  const tMin = data[0].t, tMax = data[data.length - 1].t;
+  const vMax = Math.max(
+    ...data.map(d => d.fees), ...data.map(d => d.ghostFees),
+    showGross ? Math.max(...data.map(d => d.gross), ...data.map(d => d.ghostGross)) : 0,
+    0.01,
+  );
+  const xFor = (t: number) => (tMax > tMin ? ((t - tMin) / (tMax - tMin)) * 100 : 100);
+  const yFor = (v: number) => 38 - (v / vMax) * 36;
+  const pointsFor = (key: 'fees' | 'ghostFees' | 'gross' | 'ghostGross') => data.map(d => `${xFor(d.t)},${yFor(d[key])}`).join(' ');
+  const tipX = xFor(latest.t);
+  const tipY = (yFor(latest.fees) / 40) * 100;
 
   return (
     <div>
       <div className="flex items-center gap-6 mb-4">
         {noDataYet ? (
-          <div className="text-sm text-ink-muted">No bookings yet {periodLabelLower}</div>
+          <div className="text-sm text-ink-muted">No bookings yet {copy.periodLower}</div>
         ) : (
           <>
             <div>
-              <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{periodLabel} — Gross</div>
-              <div className="flex items-baseline gap-2">
-                <div className="text-xl font-serif font-medium text-ink">{fmtMoney(latest.gross)}</div>
-                <Trend current={latest.gross} prev={latest.ghostGross} suffix={deltaSuffix}/>
-              </div>
-            </div>
-            <div>
-              <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{periodLabel} — GR Fees</div>
+              <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{copy.period} — GR Fees</div>
               <div className="flex items-baseline gap-2">
                 <div className="text-xl font-serif font-medium text-ok">{fmtMoney(latest.fees)}</div>
-                <Trend current={latest.fees} prev={latest.ghostFees} suffix={deltaSuffix}/>
+                <Trend current={latest.fees} prev={latest.ghostFees} suffix={copy.suffix}/>
               </div>
             </div>
+            {showGross && (
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{copy.period} — Gross</div>
+                <div className="flex items-baseline gap-2">
+                  <div className="text-xl font-serif font-medium text-ink">{fmtMoney(latest.gross)}</div>
+                  <Trend current={latest.gross} prev={latest.ghostGross} suffix={copy.suffix}/>
+                </div>
+              </div>
+            )}
           </>
         )}
         <div className="ml-auto flex items-center gap-4 text-[11px] text-ink-muted">
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-line-strong inline-block"/>Gross</span>
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-ok inline-block"/>GR Fees</span>
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-line-strong/25 inline-block"/>Prior period</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-ok/25 inline-block"/>Ghost (prior period)</span>
+          <button
+            onClick={() => setShowGross(v => !v)}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-md border transition-colors ${showGross ? 'border-line-strong text-ink' : 'border-line-soft text-ink-faint hover:text-ink-soft'}`}
+          >
+            <span className="w-2.5 h-2.5 rounded-sm bg-line-strong inline-block"/>Gross
+          </button>
         </div>
       </div>
-      <div className="flex items-end gap-1.5 h-32">
-        {data.map(d => {
-          const grossPct = Math.max(2, (d.gross / grossMax) * 100);
-          const ghostGrossPct = Math.max(d.ghostGross > 0 ? 2 : 0, (d.ghostGross / grossMax) * 100);
-          const feesPct = Math.max(2, (d.fees / feesMax) * 100);
-          const ghostFeesPct = Math.max(d.ghostFees > 0 ? 2 : 0, (d.ghostFees / feesMax) * 100);
-          return (
-            <div
-              key={d.key}
-              className="flex-1 flex items-end gap-0.5 h-full group"
-              title={`${label(d.key)}\nGross: ${fmtMoney(d.gross)} (prior: ${fmtMoney(d.ghostGross)})\nFees: ${fmtMoney(d.fees)} (prior: ${fmtMoney(d.ghostFees)})\nBookings: ${d.bookings}`}
-            >
-              <div className="flex-1 relative h-full">
-                <div className="absolute inset-x-0 bottom-0 bg-line-strong/25 rounded-t-sm" style={{ height: `${ghostGrossPct}%` }}/>
-                <div className="absolute inset-x-[20%] bottom-0 bg-line-strong rounded-t-sm transition-colors group-hover:bg-ink-muted" style={{ height: `${grossPct}%` }}/>
-              </div>
-              <div className="flex-1 relative h-full">
-                <div className="absolute inset-x-0 bottom-0 bg-ok/15 rounded-t-sm" style={{ height: `${ghostFeesPct}%` }}/>
-                <div className="absolute inset-x-[20%] bottom-0 bg-ok rounded-t-sm transition-colors group-hover:bg-ok/80" style={{ height: `${feesPct}%` }}/>
-              </div>
-            </div>
-          );
-        })}
+      <div className="relative w-full h-40">
+        <svg viewBox="0 0 100 40" preserveAspectRatio="none" className="w-full h-full overflow-visible">
+          {showGross && <polyline points={pointsFor('ghostGross')} fill="none" vectorEffect="non-scaling-stroke" className="stroke-line-strong/20" strokeWidth="1"/>}
+          {showGross && <polyline points={pointsFor('gross')} fill="none" vectorEffect="non-scaling-stroke" className="stroke-line-strong/70" strokeWidth="1.2"/>}
+          <polyline points={pointsFor('ghostFees')} fill="none" vectorEffect="non-scaling-stroke" className="stroke-ok/25" strokeWidth="1.2"/>
+          <polyline points={pointsFor('fees')} fill="none" vectorEffect="non-scaling-stroke" className="stroke-ok" strokeWidth="1.8"/>
+        </svg>
+        <div className="absolute w-2 h-2 rounded-full bg-ok ring-2 ring-white shadow-sm" style={{ left: `${tipX}%`, top: `${tipY}%`, transform: 'translate(-50%, -50%)' }}/>
+        <div className="absolute text-xs font-medium text-ok whitespace-nowrap" style={{ left: `${tipX}%`, top: `${tipY}%`, transform: tipX > 85 ? 'translate(-100%, -140%)' : 'translate(8px, -50%)' }}>
+          {fmtMoney(latest.fees)}
+        </div>
       </div>
-      <div className="flex justify-between mt-2 text-[10px] text-ink-muted">
-        <span>{axisLabel(data[0].key)}</span>
-        <span>{axisLabel(data[Math.floor(data.length / 2)].key)}</span>
-        <span>{axisLabel(data[data.length - 1].key)}</span>
+      <div className="flex justify-between mt-1 text-[10px] text-ink-faint">
+        <span>{copy.start}</span>
+        <span>{copy.now}</span>
       </div>
     </div>
   );
@@ -418,7 +408,7 @@ export default function AdminOverviewPage() {
             <div className="bg-white border border-line rounded-lg p-6 mb-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <BarChart2 className="w-4 h-4 text-ink-muted"/>
+                  <LineChart className="w-4 h-4 text-ink-muted"/>
                   <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Revenue</div>
                 </div>
                 <div className="flex gap-1 bg-paper border border-line rounded-md p-0.5">

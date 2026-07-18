@@ -11,28 +11,11 @@ function weekStartKey(d: Date) {
   x.setUTCDate(x.getUTCDate() + diff);
   return x.toISOString().split('T')[0];
 }
-function monthKeyOf(d: Date) {
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
-}
 function dayKeyOf(d: Date) {
   return d.toISOString().split('T')[0];
 }
 
-type Bucket = { gross: number; fees: number; bookings: number };
-
-function seriesFromMap(map: Record<string, Bucket>, show: number, ghostKey?: (key: string) => string) {
-  const entries = Object.entries(map).sort(([a], [b]) => a.localeCompare(b));
-  return entries.slice(-show).map(([key, v]) => {
-    let ghost: Bucket = { gross: 0, fees: 0, bookings: 0 };
-    if (ghostKey) {
-      ghost = map[ghostKey(key)] ?? ghost;
-    } else {
-      const idx = entries.findIndex(([k]) => k === key);
-      ghost = idx > 0 ? entries[idx - 1][1] : ghost;
-    }
-    return { key, gross: v.gross, fees: v.fees, bookings: v.bookings, ghostGross: ghost.gross, ghostFees: ghost.fees, soFar: false };
-  });
-}
+type Bucket = { gross: number; fees: number };
 
 export async function GET() {
   const session = await resolveAdminSession();
@@ -47,18 +30,17 @@ export async function GET() {
   const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
   const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const chartStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 25, 1));
-
-  // "So far" comparators for the currently-in-progress bucket in each
-  // granularity — an unfinished period must never be compared against a
-  // FINISHED prior period, so these cut the ghost off at the same elapsed
-  // point (same time-of-day / day-of-month) instead of the full period.
-  const weekAgoSameDayStart = new Date(startOfToday.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const weekAgoSameDayCutoff = new Date(weekAgoSameDayStart.getTime() + (now.getTime() - startOfToday.getTime()));
-  const lastYearMonthStart = new Date(Date.UTC(now.getUTCFullYear() - 1, now.getUTCMonth(), 1));
-  const lastYearMonthCutoff = new Date(Date.UTC(now.getUTCFullYear() - 1, now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()));
   const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   const todayDateStr = dayKeyOf(now);
+
+  // Money-ticker source ranges (A-01e — cumulative line, not bars):
+  // 37 days back covers the day-ticker's "yesterday" and the week-ticker's
+  // "this week so far" / "prior week to the same day" (both reuse dayMap).
+  // The month-ticker's ghost (last calendar month) needs its own range since
+  // it can reach ~60 days back.
+  const dayMapStart = new Date(now.getTime() - 36 * 24 * 60 * 60 * 1000);
+  const yesterdayStart = new Date(startOfToday.getTime() - 24 * 60 * 60 * 1000);
+  const prevMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
 
   const [
     totalCourses,
@@ -84,9 +66,8 @@ export async function GET() {
     newCourses30d,
     newCoursesPrev30d,
 
-    bookingsForChart,
-    todaySoFarGhostAgg,
-    monthSoFarGhostAgg,
+    bookingsFor37d,
+    prevMonthTickerBookings,
 
     failedCharges,
     failedChargesCount,
@@ -133,9 +114,8 @@ export async function GET() {
     prisma.course.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
     prisma.course.count({ where: { createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } } }),
 
-    prisma.booking.findMany({ where: { status: { in: COMPLETED }, createdAt: { gte: chartStart } }, select: { createdAt: true, accessFeeTotal: true, totalAmount: true } }),
-    prisma.booking.aggregate({ where: { status: { in: COMPLETED }, createdAt: { gte: weekAgoSameDayStart, lt: weekAgoSameDayCutoff } }, _sum: { accessFeeTotal: true, totalAmount: true } }),
-    prisma.booking.aggregate({ where: { status: { in: COMPLETED }, createdAt: { gte: lastYearMonthStart, lt: lastYearMonthCutoff } }, _sum: { accessFeeTotal: true, totalAmount: true } }),
+    prisma.booking.findMany({ where: { status: { in: COMPLETED }, createdAt: { gte: dayMapStart } }, select: { createdAt: true, accessFeeTotal: true, totalAmount: true } }),
+    prisma.booking.findMany({ where: { status: { in: COMPLETED }, createdAt: { gte: prevMonthStart, lt: startOfMonth } }, select: { createdAt: true, accessFeeTotal: true, totalAmount: true } }),
 
     isSupportPlus
       ? prisma.booking.findMany({
@@ -326,79 +306,84 @@ export async function GET() {
 
   const amberCount = waitingOnUsCount + draftsAmberCount + previewSentAmber.length + sheetNoResponseCount + threadAmber.length;
 
-  // ---- revenue chart (day/week/month, gross+fees, ghost prior period) ----
+  // ---- revenue: cumulative money ticker (A-01e — supersedes the A-01c bars) ----
+  // Every point is inherently an honest "so far" comparison: both the current
+  // line and its ghost are only ever drawn up to the SAME elapsed x-position,
+  // so there's no separate in-progress special-case to apply — the design
+  // itself can't produce a finished-vs-unfinished mismatch.
   const dayMap: Record<string, Bucket> = {};
   for (let i = 36; i >= 0; i--) {
     const d = new Date(now);
     d.setDate(d.getDate() - i);
-    dayMap[dayKeyOf(d)] = { gross: 0, fees: 0, bookings: 0 };
+    dayMap[dayKeyOf(d)] = { gross: 0, fees: 0 };
   }
-  const weekMap: Record<string, Bucket> = {};
-  const curWeekMonday = new Date(weekStartKey(now) + 'T00:00:00.000Z');
-  for (let i = 12; i >= 0; i--) {
-    const d = new Date(curWeekMonday);
-    d.setUTCDate(d.getUTCDate() - i * 7);
-    weekMap[dayKeyOf(d)] = { gross: 0, fees: 0, bookings: 0 };
-  }
-  const monthMap: Record<string, Bucket> = {};
-  for (let i = 24; i >= 0; i--) {
-    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
-    monthMap[monthKeyOf(d)] = { gross: 0, fees: 0, bookings: 0 };
-  }
-  for (const b of bookingsForChart) {
+  const todayHourly: Bucket[] = Array.from({ length: 24 }, () => ({ gross: 0, fees: 0 }));
+  const yesterdayHourly: Bucket[] = Array.from({ length: 24 }, () => ({ gross: 0, fees: 0 }));
+  for (const b of bookingsFor37d) {
     const gross = b.totalAmount / 100;
     const fees = b.accessFeeTotal / 100;
     const dk = dayKeyOf(b.createdAt);
-    if (dayMap[dk]) { dayMap[dk].gross += gross; dayMap[dk].fees += fees; dayMap[dk].bookings += 1; }
-    const wk = weekStartKey(b.createdAt);
-    if (weekMap[wk]) { weekMap[wk].gross += gross; weekMap[wk].fees += fees; weekMap[wk].bookings += 1; }
-    const mk = monthKeyOf(b.createdAt);
-    if (monthMap[mk]) { monthMap[mk].gross += gross; monthMap[mk].fees += fees; monthMap[mk].bookings += 1; }
+    if (dayMap[dk]) { dayMap[dk].gross += gross; dayMap[dk].fees += fees; }
+    if (b.createdAt >= startOfToday) {
+      const bucket = todayHourly[b.createdAt.getUTCHours()];
+      bucket.gross += gross; bucket.fees += fees;
+    } else if (b.createdAt >= yesterdayStart) {
+      const bucket = yesterdayHourly[b.createdAt.getUTCHours()];
+      bucket.gross += gross; bucket.fees += fees;
+    }
   }
 
-  const revenue = {
-    day: seriesFromMap(dayMap, 30, key => {
-      const d = new Date(key + 'T00:00:00.000Z');
-      d.setUTCDate(d.getUTCDate() - 7);
-      return dayKeyOf(d);
-    }),
-    week: seriesFromMap(weekMap, 12),
-    // Month's "corresponding prior period" is the same month last year, not
-    // last month — month-over-month is noise for a seasonal golf business.
-    month: seriesFromMap(monthMap, 12, key => {
-      const [y, m] = key.split('-');
-      return `${Number(y) - 1}-${m}`;
-    }),
-  };
+  // Day view: cumulative fees since midnight vs yesterday's cumulative at the
+  // same time-of-day — "am I ahead of yesterday" in one glance.
+  const currentHour = now.getUTCHours();
+  const dayTicker: { t: number; gross: number; fees: number; ghostGross: number; ghostFees: number }[] = [];
+  {
+    let curGross = 0, curFees = 0, ghostGross = 0, ghostFees = 0;
+    for (let h = 0; h <= currentHour; h++) {
+      curGross += todayHourly[h].gross; curFees += todayHourly[h].fees;
+      ghostGross += yesterdayHourly[h].gross; ghostFees += yesterdayHourly[h].fees;
+      dayTicker.push({ t: h, gross: curGross, fees: curFees, ghostGross, ghostFees });
+    }
+  }
 
-  // Honest in-progress deltas: the LATEST bucket in each granularity is still
-  // accumulating (today isn't over, this week/month isn't over), so its ghost
-  // must be the prior period up to the same elapsed point, not the prior
-  // period's full total.
-  const dayLatest = revenue.day[revenue.day.length - 1];
-  dayLatest.ghostGross = Number(todaySoFarGhostAgg._sum.totalAmount ?? 0) / 100;
-  dayLatest.ghostFees = Number(todaySoFarGhostAgg._sum.accessFeeTotal ?? 0) / 100;
-  dayLatest.soFar = true;
-
+  // Week view: cumulative since Monday vs last week's line to the same day.
   const thisWeekMonday = new Date(weekStartKey(now) + 'T00:00:00.000Z');
   const elapsedDaysThisWeek = Math.floor((startOfToday.getTime() - thisWeekMonday.getTime()) / 86400000) + 1;
   const priorWeekMonday = new Date(thisWeekMonday.getTime() - 7 * 24 * 60 * 60 * 1000);
-  let priorWeekSoFarGross = 0;
-  let priorWeekSoFarFees = 0;
-  for (let i = 0; i < elapsedDaysThisWeek; i++) {
-    const d = new Date(priorWeekMonday.getTime() + i * 24 * 60 * 60 * 1000);
-    const bucket = dayMap[dayKeyOf(d)];
-    if (bucket) { priorWeekSoFarGross += bucket.gross; priorWeekSoFarFees += bucket.fees; }
+  const weekTicker: { t: number; gross: number; fees: number; ghostGross: number; ghostFees: number }[] = [];
+  {
+    let curGross = 0, curFees = 0, ghostGross = 0, ghostFees = 0;
+    for (let i = 0; i < elapsedDaysThisWeek; i++) {
+      const curBucket = dayMap[dayKeyOf(new Date(thisWeekMonday.getTime() + i * 86400000))] ?? { gross: 0, fees: 0 };
+      const ghostBucket = dayMap[dayKeyOf(new Date(priorWeekMonday.getTime() + i * 86400000))] ?? { gross: 0, fees: 0 };
+      curGross += curBucket.gross; curFees += curBucket.fees;
+      ghostGross += ghostBucket.gross; ghostFees += ghostBucket.fees;
+      weekTicker.push({ t: i, gross: curGross, fees: curFees, ghostGross, ghostFees });
+    }
   }
-  const weekLatest = revenue.week[revenue.week.length - 1];
-  weekLatest.ghostGross = priorWeekSoFarGross;
-  weekLatest.ghostFees = priorWeekSoFarFees;
-  weekLatest.soFar = true;
 
-  const monthLatest = revenue.month[revenue.month.length - 1];
-  monthLatest.ghostGross = Number(monthSoFarGhostAgg._sum.totalAmount ?? 0) / 100;
-  monthLatest.ghostFees = Number(monthSoFarGhostAgg._sum.accessFeeTotal ?? 0) / 100;
-  monthLatest.soFar = true;
+  // Month view: cumulative since the 1st vs last month's line to the same day.
+  const prevMonthDaily: Record<number, Bucket> = {};
+  for (const b of prevMonthTickerBookings) {
+    const dom = b.createdAt.getUTCDate();
+    if (!prevMonthDaily[dom]) prevMonthDaily[dom] = { gross: 0, fees: 0 };
+    prevMonthDaily[dom].gross += b.totalAmount / 100;
+    prevMonthDaily[dom].fees += b.accessFeeTotal / 100;
+  }
+  const daysElapsedThisMonth = now.getUTCDate();
+  const monthTicker: { t: number; gross: number; fees: number; ghostGross: number; ghostFees: number }[] = [];
+  {
+    let curGross = 0, curFees = 0, ghostGross = 0, ghostFees = 0;
+    for (let d = 1; d <= daysElapsedThisMonth; d++) {
+      const curBucket = dayMap[dayKeyOf(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), d)))] ?? { gross: 0, fees: 0 };
+      const ghostBucket = prevMonthDaily[d] ?? { gross: 0, fees: 0 };
+      curGross += curBucket.gross; curFees += curBucket.fees;
+      ghostGross += ghostBucket.gross; ghostFees += ghostBucket.fees;
+      monthTicker.push({ t: d, gross: curGross, fees: curFees, ghostGross, ghostFees });
+    }
+  }
+
+  const revenue = { day: dayTicker, week: weekTicker, month: monthTicker };
 
   // ---- bottom trio (replaces Top Courses — rankings without purpose) ----
   const pipeline = {
