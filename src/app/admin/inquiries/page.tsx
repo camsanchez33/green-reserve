@@ -42,6 +42,7 @@ const DEFAULT_SORT_BY_TAB: Record<string, string> = {
   'live': 'newest', 'all': 'newest', 'archived': 'newest',
 };
 const SORT_LS_KEY = 'admin-inquiries-sort-by-tab';
+const PAGE_SIZE = 50;
 
 const STATUS_DOT_MAP: Record<string, string> = {
   pending: 'warn', in_review: 'neutral', details_requested: 'neutral',
@@ -77,6 +78,17 @@ function InquiriesListInner() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState(searchParams.get('q') || '');
   const [backfillRan, setBackfillRan] = useState(false);
+  const [page, setPage] = useState(0);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filterCourseType, setFilterCourseType] = useState('');
+  const [filterState, setFilterState] = useState('');
+  const [filterAgeBucket, setFilterAgeBucket] = useState('');
+  const [filterBadDataOnly, setFilterBadDataOnly] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkPreview, setBulkPreview] = useState<{ kind: 'send_sheet' | 'archive'; ids: string[] } | null>(null);
+  const [bulkConfirmText, setBulkConfirmText] = useState('');
+  const [bulkRunning, setBulkRunning] = useState(false);
+  const [bulkResult, setBulkResult] = useState('');
 
   const rawTabParam = searchParams.get('tab') || '';
   const [activeTabKey, setActiveTabKey] = useState(
@@ -176,9 +188,72 @@ function InquiriesListInner() {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   };
 
+  const matchesFilters = (inq: Inquiry) => {
+    if (filterCourseType && inq.courseType !== filterCourseType) return false;
+    if (filterState && inq.state.toUpperCase() !== filterState.toUpperCase()) return false;
+    if (filterAgeBucket) {
+      const days = daysAgo(inq.updatedAt || inq.createdAt);
+      if (days <= Number(filterAgeBucket)) return false;
+    }
+    if (filterBadDataOnly && !hasBadEmail(inq)) return false;
+    return true;
+  };
+
   const filtered = inquiries
-    .filter(i => currentTab.statuses.includes(i.status) && matchesSearch(i))
+    .filter(i => currentTab.statuses.includes(i.status) && matchesSearch(i) && matchesFilters(i))
     .sort(sortFn);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pagedInquiries = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  const courseTypeOptions = Array.from(new Set(inquiries.map(i => i.courseType).filter(Boolean))).sort();
+
+  useEffect(() => { setPage(0); }, [activeTabKey, q, filterCourseType, filterState, filterAgeBucket, filterBadDataOnly]);
+  useEffect(() => { setSelected(new Set()); }, [activeTabKey]);
+
+  const canBulkSelect = !['archived', 'live'].includes(activeTabKey);
+
+  function toggleSelected(id: string) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+  function toggleSelectAllOnPage() {
+    setSelected(prev => {
+      const pageIds = pagedInquiries.map(i => i.id);
+      const allSelected = pageIds.every(id => prev.has(id));
+      const next = new Set(prev);
+      if (allSelected) pageIds.forEach(id => next.delete(id));
+      else pageIds.forEach(id => next.add(id));
+      return next;
+    });
+  }
+
+  async function runBulkAction() {
+    if (!bulkPreview) return;
+    setBulkRunning(true);
+    setBulkResult('');
+    let ok = 0, failed = 0;
+    for (const id of bulkPreview.ids) {
+      try {
+        const r = await fetch('/api/admin/inquiries', {
+          method: 'POST', headers: H(),
+          body: JSON.stringify(
+            bulkPreview.kind === 'send_sheet'
+              ? { id, action: 'request_details' }
+              : { id, action: 'set_status', newStatus: 'rejected' }
+          ),
+        });
+        if (r.ok) ok++; else failed++;
+      } catch { failed++; }
+    }
+    setBulkRunning(false);
+    setBulkResult(`${ok} succeeded${failed > 0 ? `, ${failed} failed` : ''}.`);
+    setSelected(new Set());
+    await loadInquiries();
+  }
 
   const countFor = (tab: typeof TABS[number]) => inquiries.filter(i => tab.statuses.includes(i.status)).length;
 
@@ -256,17 +331,70 @@ function InquiriesListInner() {
                 );
               })}
             </div>
-            <select
-              value={sortBy}
-              onChange={e => setSortForActiveTab(e.target.value)}
-              className="bg-white border border-line text-ink-soft text-xs rounded-md px-3 py-1.5 mb-2 outline-none focus:border-pine/40 cursor-pointer shrink-0"
-            >
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-              <option value="name">Name A–Z</option>
-              <option value="longest_stage">Longest in stage</option>
-            </select>
+            <div className="flex items-center gap-2 mb-2 shrink-0">
+              <button
+                onClick={() => setFiltersOpen(v => !v)}
+                className={'text-xs font-medium rounded-md px-3 py-1.5 border transition-colors ' + (
+                  filtersOpen || filterCourseType || filterState || filterAgeBucket || filterBadDataOnly
+                    ? 'border-pine/40 text-pine bg-pine/5'
+                    : 'border-line text-ink-soft hover:text-ink bg-white'
+                )}
+              >
+                Filters
+              </button>
+              <select
+                value={sortBy}
+                onChange={e => setSortForActiveTab(e.target.value)}
+                className="bg-white border border-line text-ink-soft text-xs rounded-md px-3 py-1.5 outline-none focus:border-pine/40 cursor-pointer"
+              >
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="name">Name A–Z</option>
+                <option value="longest_stage">Longest in stage</option>
+              </select>
+            </div>
           </div>
+
+          {/* Collapsible filters row */}
+          {filtersOpen && (
+            <div className="flex items-center gap-3 flex-wrap bg-white border border-line rounded-lg px-4 py-3 mb-4 text-xs">
+              <div className="flex items-center gap-1.5">
+                <span className="text-ink-muted">Course type</span>
+                <select value={filterCourseType} onChange={e => setFilterCourseType(e.target.value)}
+                  className="bg-paper border border-line rounded-md px-2 py-1 outline-none focus:border-pine/40 cursor-pointer">
+                  <option value="">Any</option>
+                  {courseTypeOptions.map(ct => <option key={ct} value={ct}>{ct}</option>)}
+                </select>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-ink-muted">State</span>
+                <input value={filterState} onChange={e => setFilterState(e.target.value.slice(0, 2))}
+                  placeholder="Any" className="bg-paper border border-line rounded-md px-2 py-1 w-14 outline-none focus:border-pine/40 uppercase placeholder-ink-faint" />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-ink-muted">Age</span>
+                <select value={filterAgeBucket} onChange={e => setFilterAgeBucket(e.target.value)}
+                  className="bg-paper border border-line rounded-md px-2 py-1 outline-none focus:border-pine/40 cursor-pointer">
+                  <option value="">Any</option>
+                  <option value="3">&gt;3 days</option>
+                  <option value="7">&gt;7 days</option>
+                  <option value="14">&gt;14 days</option>
+                </select>
+              </div>
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input type="checkbox" checked={filterBadDataOnly} onChange={e => setFilterBadDataOnly(e.target.checked)} />
+                <span className="text-ink-muted">Bad email only</span>
+              </label>
+              {(filterCourseType || filterState || filterAgeBucket || filterBadDataOnly) && (
+                <button
+                  onClick={() => { setFilterCourseType(''); setFilterState(''); setFilterAgeBucket(''); setFilterBadDataOnly(false); }}
+                  className="text-ink-faint hover:text-ink transition-colors ml-1"
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Status legend — dots are never the only signal */}
           {!loading && filtered.length > 0 && (
@@ -278,6 +406,36 @@ function InquiriesListInner() {
             </div>
           )}
 
+          {/* Bulk action bar */}
+          {canBulkSelect && selected.size > 0 && (
+            <div className="flex items-center gap-3 bg-pine/5 border border-pine/20 rounded-lg px-4 py-2.5 mb-3 text-sm">
+              <span className="font-medium text-ink">{selected.size} selected</span>
+              {activeTabKey === 'new' && (
+                <button
+                  onClick={() => setBulkPreview({ kind: 'send_sheet', ids: Array.from(selected) })}
+                  className="text-xs font-medium text-pine hover:text-pine-hover px-2.5 py-1 rounded-md border border-pine/30 hover:bg-pine/10 transition-colors"
+                >
+                  Send Sheet
+                </button>
+              )}
+              <button
+                onClick={() => setBulkPreview({ kind: 'archive', ids: Array.from(selected) })}
+                className="text-xs font-medium text-bad hover:text-bad px-2.5 py-1 rounded-md border border-bad/30 hover:bg-bad/5 transition-colors"
+              >
+                Archive
+              </button>
+              <button onClick={() => setSelected(new Set())} className="text-xs text-ink-faint hover:text-ink ml-auto transition-colors">
+                Clear selection
+              </button>
+            </div>
+          )}
+          {bulkResult && (
+            <div className="bg-ok/5 border border-ok/20 rounded-lg px-4 py-2.5 mb-3 text-sm text-ok flex items-center justify-between">
+              {bulkResult}
+              <button onClick={() => setBulkResult('')} className="text-ok/60 hover:text-ok">Dismiss</button>
+            </div>
+          )}
+
           {/* List */}
           {loading && <div className="py-20 text-center text-ink-muted text-sm">Loading...</div>}
           {!loading && filtered.length === 0 && (
@@ -286,7 +444,17 @@ function InquiriesListInner() {
 
           {!loading && filtered.length > 0 && (
             <div className="space-y-1.5">
-              {filtered.map(inq => {
+              {canBulkSelect && (
+                <label className="flex items-center gap-2 px-5 py-1 text-xs text-ink-muted cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={pagedInquiries.length > 0 && pagedInquiries.every(i => selected.has(i.id))}
+                    onChange={toggleSelectAllOnPage}
+                  />
+                  Select all on this page
+                </label>
+              )}
+              {pagedInquiries.map(inq => {
                 const isArchived = currentTab.key === 'archived';
                 const dot = (STATUS_DOT_MAP[inq.status] || 'neutral') as 'ok' | 'bad' | 'warn' | 'neutral';
                 const days = daysAgo(inq.updatedAt || inq.createdAt);
@@ -299,6 +467,15 @@ function InquiriesListInner() {
                     href={detailHref(inq)}
                     className="bg-white border border-line rounded-lg px-5 py-3.5 flex items-center gap-4 hover:border-pine/30 hover:bg-pine/[0.02] transition-colors"
                   >
+                    {canBulkSelect && (
+                      <input
+                        type="checkbox"
+                        checked={selected.has(inq.id)}
+                        onClick={e => e.stopPropagation()}
+                        onChange={() => toggleSelected(inq.id)}
+                        className="shrink-0"
+                      />
+                    )}
                     <span title={STATUS_LABEL[inq.status] || inq.status}><StatusDot status={dot} /></span>
 
                     {/* Course name + location */}
@@ -355,8 +532,87 @@ function InquiriesListInner() {
               })}
             </div>
           )}
+
+          {/* Pagination */}
+          {!loading && filtered.length > PAGE_SIZE && (
+            <div className="flex items-center justify-between mt-4 text-xs text-ink-muted">
+              <span>Page {page + 1} of {totalPages} · {filtered.length} total</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(0, p - 1))}
+                  disabled={page === 0}
+                  className="px-3 py-1.5 rounded-md border border-line bg-white hover:bg-paper disabled:opacity-40 transition-colors"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                  disabled={page >= totalPages - 1}
+                  className="px-3 py-1.5 rounded-md border border-line bg-white hover:bg-paper disabled:opacity-40 transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Bulk action preview + confirm modal */}
+      {bulkPreview && (() => {
+        const targets = inquiries.filter(i => bulkPreview.ids.includes(i.id));
+        const isArchive = bulkPreview.kind === 'archive';
+        const canConfirm = !isArchive || bulkConfirmText.trim().toUpperCase() === 'ARCHIVE';
+        return (
+          <div className="fixed inset-0 bg-ink/30 flex items-center justify-center z-50 px-4">
+            <div className="bg-white rounded-lg border border-line max-w-md w-full p-5">
+              <div className="text-sm font-medium text-ink mb-1">
+                {isArchive ? `Archive ${targets.length} inquir${targets.length === 1 ? 'y' : 'ies'}?` : `Send setup sheet to ${targets.length} contact${targets.length === 1 ? '' : 's'}?`}
+              </div>
+              <p className="text-xs text-ink-muted mb-3">
+                {isArchive ? 'Marks each as rejected/closed. This does not delete anything.' : 'Sends the setup-sheet email to each recipient below.'}
+              </p>
+              <div className="max-h-48 overflow-y-auto space-y-1 mb-4 bg-paper border border-line rounded-md p-2">
+                {targets.map(t => (
+                  <div key={t.id} className="text-xs text-ink-soft flex justify-between gap-2">
+                    <span className="truncate">{t.courseName}</span>
+                    {!isArchive && <span className="text-ink-faint shrink-0">{t.email}</span>}
+                  </div>
+                ))}
+              </div>
+              {isArchive && (
+                <div className="mb-4">
+                  <label className="block text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1">Type ARCHIVE to confirm</label>
+                  <input
+                    value={bulkConfirmText}
+                    onChange={e => setBulkConfirmText(e.target.value)}
+                    className="w-full bg-paper border border-line rounded-md px-3 py-2 text-sm outline-none focus:border-bad/40"
+                    placeholder="ARCHIVE"
+                  />
+                </div>
+              )}
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  onClick={() => { setBulkPreview(null); setBulkConfirmText(''); }}
+                  className="text-xs text-ink-muted hover:text-ink px-3 py-1.5 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => { await runBulkAction(); setBulkPreview(null); setBulkConfirmText(''); }}
+                  disabled={!canConfirm || bulkRunning}
+                  className={
+                    'text-xs font-medium px-3 py-1.5 rounded-md text-white transition-colors disabled:opacity-40 ' +
+                    (isArchive ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')
+                  }
+                >
+                  {bulkRunning ? 'Working…' : isArchive ? 'Archive' : 'Send Sheet'}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
