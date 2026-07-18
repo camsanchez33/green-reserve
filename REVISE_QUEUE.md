@@ -80,6 +80,53 @@ in flight at a time.
   shows this month, each with "vs prior period" delta next to it (ghost-bar
   logic, now in the numbers). Default view = Day. The static 30d totals move
   down into the 30-DAY ROW where they already have a home.
+- [x] A-01c Overview chart follow-up — BUILT: 485eab0. (1) the CHART re-buckets with the
+  toggle, not just the header: Day = last 30 daily bar-pairs (current
+  behavior), Week = last 12 weekly bars (Mon-Sun totals), Month = last 12
+  monthly bars — ghost bar behind each = the corresponding prior period
+  (last year's month for months). X-axis labels match the bucket (Jul 4 /
+  "Wk of Jul 14" / "Jul"). (2) Honest in-progress deltas: an unfinished
+  period never shows a scary drop against a FINISHED prior — "$0.00 ↘100%
+  vs last Sat" at breakfast is noise, not signal. Rule: while the current
+  period is incomplete, compare against the prior period UP TO THE SAME
+  POINT (same time-of-day / same day-of-week/month) and label it "so far";
+  if there's simply no data yet, show "no bookings yet today" with no arrow
+  at all.
+- [ ] A-01d Overview round-3 refinements (Cam's verify pass, 2026-07-18):
+  1. HEADER earns its place: drop the "Everything happening across
+     GreenReserve" slogan; show today's date + a quiet "updated Xs ago"
+     (auto-refresh or refresh button integrated). Title stays.
+  2. WAITING card speaks in sentences: labeled clickable lines, never a bare
+     number — "2 inquiries waiting · oldest 9d" → inquiries tab; "1 draft to
+     review" → its course. Same self-explanation audit on the other two strip
+     cards (UNREAD shows newest sender; FEES TODAY substats already do this).
+  3. ACTION QUEUE upgrades: (a) GROUP by course/inquiry — N identical issues
+     collapse to one row ("DaisyLinks — 2 failed charges · $242.50 · oldest
+     10d"), expandable; at 1000 courses ungrouped rows are unusable.
+     (b) every row gets a "Do this:" line stating the literal next step
+     ("Operator must finish Stripe onboarding — resend link, then retry both
+     charges"), not just a verb button. (c) rows whose fix is an email/nudge
+     fire it from the row (reuse existing send actions) with pending/success
+     states.
+  4. BOTTOM TRIO replaces Top Courses (deleted — rankings without purpose):
+     a. PIPELINE FUNNEL (month-to-date): new inquiries → sheets out →
+        building → went live, counts + conversion between stages, each stage
+        deep-links to the filtered inquiries tab.
+     b. TODAY'S TEE SHEET RADAR (all courses): rounds playing today,
+        check-ins done vs expected, revenue expected at check-in today,
+        deep-links to activity/revenue.
+     c. COURSE HEALTH WATCHLIST: courses trending DOWN vs their own prior
+        30d (bookings drop >40%, operator not logged in >14d, zero bookings
+        while live) — reuses A7 health signals, worst first, cap 5, links to
+        course pages. Empty state: "No courses trending down."
+  5. SYSTEMS LINE → /admin/system page (sidebar: "System", wrench icon, small,
+     near Profile): sections for Backups (last artifact date via GitHub API if
+     GITHUB_TOKEN available, else deep-link), Crons (each cron's last-run —
+     NEEDS heartbeat markers: micro-table, fold into the EXPENSE TRACKER
+     migration batch; until then show links + docs), Stripe webhook (last
+     event received — derivable from DB timestamps), CI (link + last status
+     via GitHub API if token), Sentry (link). Overview keeps ONE dot:
+     "Systems ✓" → /admin/system. No-silent-failure states throughout.
 - [ ] A-02 /admin/inquiries — list (tabs, search, sort)
 - [ ] A-03 /admin/inquiries/[id] — detail (Contact/Answers/Sheet/Activity, next-step card, toolbar)
 - [ ] A-04 /admin/courses — list (filters, health signals, search)
