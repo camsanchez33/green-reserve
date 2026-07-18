@@ -33,6 +33,15 @@ const TABS = [
   { key: 'archived', label: 'Archived', statuses: ['rejected', 'archived'], description: 'Rejected or closed — kept for records.' },
 ];
 
+// Work tabs default to longest-in-stage first — it's a queue, oldest overdue
+// should scream first. Informational tabs (Live/All/Archived) default newest.
+const DEFAULT_SORT_BY_TAB: Record<string, string> = {
+  'your-move': 'longest_stage', 'new': 'longest_stage', 'in-review': 'longest_stage',
+  'waiting': 'longest_stage', 'building': 'longest_stage',
+  'live': 'newest', 'all': 'newest', 'archived': 'newest',
+};
+const SORT_LS_KEY = 'admin-inquiries-sort-by-tab';
+
 const STATUS_DOT_MAP: Record<string, string> = {
   pending: 'warn', in_review: 'neutral', details_requested: 'neutral',
   details_submitted: 'neutral', building: 'warn', live: 'ok', rejected: 'bad', archived: 'neutral',
@@ -64,13 +73,34 @@ function InquiriesListInner() {
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState(searchParams.get('q') || '');
-  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
   const [backfillRan, setBackfillRan] = useState(false);
 
   const rawTabParam = searchParams.get('tab') || '';
   const [activeTabKey, setActiveTabKey] = useState(
     TABS.find(t => t.key === rawTabParam) ? rawTabParam : 'your-move'
   );
+
+  const [sortByTab, setSortByTab] = useState<Record<string, string>>(() => {
+    let stored: Record<string, string> = {};
+    if (typeof window !== 'undefined') {
+      try { stored = JSON.parse(localStorage.getItem(SORT_LS_KEY) || '{}'); } catch { /* ignore */ }
+    }
+    const merged = { ...DEFAULT_SORT_BY_TAB, ...stored };
+    const urlSort = searchParams.get('sort');
+    if (urlSort) merged[activeTabKey] = urlSort;
+    return merged;
+  });
+  const sortBy = sortByTab[activeTabKey] ?? DEFAULT_SORT_BY_TAB[activeTabKey] ?? 'newest';
+  function setSortForActiveTab(val: string) {
+    setSortByTab(prev => {
+      const next = { ...prev, [activeTabKey]: val };
+      try { localStorage.setItem(SORT_LS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+    const p = new URLSearchParams(window.location.search);
+    if (val === DEFAULT_SORT_BY_TAB[activeTabKey]) p.delete('sort'); else p.set('sort', val);
+    window.history.replaceState(null, '', '/admin/inquiries?' + p.toString());
+  }
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
@@ -112,7 +142,7 @@ function InquiriesListInner() {
     const p = new URLSearchParams();
     p.set('tab', activeTabKey);
     if (search) p.set('q', search);
-    if (sortBy !== 'newest') p.set('sort', sortBy);
+    if (sortBy !== (DEFAULT_SORT_BY_TAB[activeTabKey] ?? 'newest')) p.set('sort', sortBy);
     router.push('/admin/inquiries/' + inq.id + '?' + p.toString());
   }
 
@@ -122,7 +152,8 @@ function InquiriesListInner() {
     const p = new URLSearchParams(window.location.search);
     p.set('tab', key);
     if (!search) p.delete('q'); else p.set('q', search);
-    if (sortBy === 'newest') p.delete('sort'); else p.set('sort', sortBy);
+    const tabSort = sortByTab[key] ?? DEFAULT_SORT_BY_TAB[key] ?? 'newest';
+    if (tabSort === DEFAULT_SORT_BY_TAB[key]) p.delete('sort'); else p.set('sort', tabSort);
     window.history.replaceState(null, '', '/admin/inquiries?' + p.toString());
   }
 
@@ -224,7 +255,7 @@ function InquiriesListInner() {
             </div>
             <select
               value={sortBy}
-              onChange={e => setSortBy(e.target.value)}
+              onChange={e => setSortForActiveTab(e.target.value)}
               className="bg-white border border-line text-ink-soft text-xs rounded-md px-3 py-1.5 mb-2 outline-none focus:border-pine/40 cursor-pointer shrink-0"
             >
               <option value="newest">Newest first</option>
