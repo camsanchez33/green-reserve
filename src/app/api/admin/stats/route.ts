@@ -259,7 +259,11 @@ export async function GET() {
   for (const ev of previewSentEventsRaw) {
     if (previewSeen.has(ev.inquiryId)) continue;
     previewSeen.add(ev.inquiryId);
-    if (!ev.inquiry || ev.inquiry.status === 'live' || ev.inquiry.status === 'rejected') continue;
+    // Allow-list, not deny-list: only inquiries still actually in the active
+    // pipeline can be "stalled." An inquiry whose course later got archived
+    // keeps its old InquiryStatusEvent history, so denying just 'live'/
+    // 'rejected' let stale 'archived' inquiries surface here forever.
+    if (!ev.inquiry || !['pending', 'in_review', 'details_requested', 'details_submitted', 'building'].includes(ev.inquiry.status)) continue;
     previewSentAmber.push({
       id: `ps-${ev.inquiryId}`,
       who: ev.inquiry.courseName,
