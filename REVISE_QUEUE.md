@@ -74,7 +74,7 @@ in flight at a time.
   8. SYSTEMS LINE — quiet bottom row: last backup ✓/date · crons ✓ · Stripe
      webhook last event · CI status. StatusDots + links. 30-second health check.
 
-- [ ] A-01b Overview follow-up (from Cam's verify pass) — P&L-style header: the
+- [x] A-01b Overview follow-up (from Cam's verify pass) — BUILT: 84c9387. P&L-style header: the
   chart's headline numbers FOLLOW the Day/Week/Month toggle like a stock P&L —
   Day shows fees earned TODAY (+ gross today), Week shows this week, Month
   shows this month, each with "vs prior period" delta next to it (ghost-bar
