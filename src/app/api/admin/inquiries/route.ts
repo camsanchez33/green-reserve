@@ -44,18 +44,6 @@ async function handleAction(
 
   const adminName = session?.name || 'Admin';
 
-  // ── pending → in_review: triggered automatically when detail panel opens ──
-  if (action === 'mark_opened') {
-    if (inquiry.status !== 'pending') return NextResponse.json({ success: true, noOp: true });
-    const now = new Date();
-    await prisma.courseInquiry.update({
-      where: { id: inquiryId },
-      data: { status: 'in_review', reviewStartedAt: now },
-    });
-    await logEvent(inquiryId, 'pending', 'in_review', 'system', adminName);
-    return NextResponse.json({ success: true });
-  }
-
   // ── Simple status transitions ──────────────────────────────────────
   if (action === 'mark_in_review') {
     const from = inquiry.status;

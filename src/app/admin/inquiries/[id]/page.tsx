@@ -231,14 +231,6 @@ function InquiryDetailInner() {
     if (adminReady) loadInquiry();
   }, [adminReady, loadInquiry]);
 
-  useEffect(() => {
-    if (!inq || inq.status !== 'pending') return;
-    fetch('/api/admin/inquiries', {
-      method: 'PATCH', headers: H(),
-      body: JSON.stringify({ id: inq.id, action: 'mark_opened' }),
-    }).then(r => { if (r.ok) loadInquiry(); }).catch(() => {});
-  }, [inq?.id, inq?.status]); // eslint-disable-line react-hooks/exhaustive-deps
-
   async function action(act: string, extra: Record<string, unknown> = {}) {
     setProcessing(true);
     setActionError('');
