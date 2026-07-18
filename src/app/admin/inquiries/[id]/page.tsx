@@ -151,6 +151,37 @@ function MoreMenu({ open, onToggle, onClose, children }: { open: boolean; onTogg
   );
 }
 
+function ModalShell({ title, danger, onClose, children }: { title: string; danger?: boolean; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 bg-ink/30 flex items-center justify-center z-50 px-4">
+      <div className="bg-white rounded-lg border border-line max-w-md w-full p-5">
+        <div className={'text-sm font-medium mb-3 ' + (danger ? 'text-bad' : 'text-ink')}>{title}</div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ModalActions({ onCancel, onConfirm, confirmLabel, disabled, danger, working }: {
+  onCancel: () => void; onConfirm: () => void; confirmLabel: string; disabled?: boolean; danger?: boolean; working?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-end gap-2 mt-4">
+      <button onClick={onCancel} className="text-xs text-ink-muted hover:text-ink px-3 py-1.5 transition-colors">Cancel</button>
+      <button
+        onClick={onConfirm}
+        disabled={disabled || working}
+        className={
+          'text-xs font-medium px-3 py-1.5 rounded-md text-white transition-colors disabled:opacity-40 ' +
+          (danger ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')
+        }
+      >
+        {working ? 'Working…' : confirmLabel}
+      </button>
+    </div>
+  );
+}
+
 function fmtMoney(v: unknown): string {
   if (v === null || v === undefined || v === '') return '';
   const s = String(v).trim();
@@ -303,6 +334,12 @@ function InquiryDetailInner() {
   const [previewMsg, setPreviewMsg] = useState('');
   const [nameConflict, setNameConflict] = useState<{ existingCourseId: string; existingCourseName: string; message: string } | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<
+    'delete' | 'send_sheet' | 'resend_sheet' | 'create_draft' | 'reject' | 'build_without_sheet' | 'dashboard_access' | 'send_preview' | 'go_live' | null
+  >(null);
+  const [goLiveChecks, setGoLiveChecks] = useState<{ label: string; ok: boolean }[] | null>(null);
+  const [goLiveOverride, setGoLiveOverride] = useState('');
+  const [buildConfirmText, setBuildConfirmText] = useState('');
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
@@ -329,6 +366,31 @@ function InquiryDetailInner() {
   useEffect(() => {
     if (adminReady) loadInquiry();
   }, [adminReady, loadInquiry]);
+
+  useEffect(() => {
+    if (pendingAction !== 'go_live' || !inq?.builtCourseId) return;
+    setGoLiveChecks(null);
+    const hasSheetForCheck = !!inq.detailsJson && inq.detailsJson !== '{}';
+    const approved = [...inq.events].reverse().find(
+      e => e.actorName === 'Course approved their page' || e.actorName === 'Course requested changes to their page'
+    )?.actorName === 'Course approved their page';
+    fetch('/api/admin/courses?statusOf=' + inq.builtCourseId, { headers: H() })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        setGoLiveChecks([
+          { label: 'Setup sheet submitted', ok: hasSheetForCheck },
+          { label: 'Course approved their preview', ok: approved },
+          { label: 'Stripe connected', ok: !!d?.stripeAccountActive },
+          { label: 'Operator email verified', ok: !!d?.operatorEmailVerified },
+        ]);
+      })
+      .catch(() => setGoLiveChecks([
+        { label: 'Setup sheet submitted', ok: hasSheetForCheck },
+        { label: 'Course approved their preview', ok: approved },
+        { label: 'Stripe connected', ok: false },
+        { label: 'Operator email verified', ok: false },
+      ]));
+  }, [pendingAction, inq?.builtCourseId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function action(act: string, extra: Record<string, unknown> = {}) {
     setProcessing(true);
@@ -398,7 +460,6 @@ function InquiryDetailInner() {
 
   async function deleteInquiry() {
     if (!inq) return;
-    if (!confirm('Permanently delete inquiry for "' + inq.courseName + '"? This cannot be undone.')) return;
     await fetch('/api/admin/inquiries?id=' + inq.id, { method: 'DELETE', headers: H() });
     router.push(backUrl);
   }
@@ -507,17 +568,17 @@ function InquiryDetailInner() {
                 </button>
               )}
               {inq.status === 'in_review' && (
-                <button onClick={() => { if (confirm('Send ' + inq.contactName + ' the setup sheet?')) action('request_details'); }} disabled={processing} className={btnP}>
+                <button onClick={() => setPendingAction('send_sheet')} disabled={processing} className={btnP}>
                   <Mail className="w-3.5 h-3.5" />Send Sheet
                 </button>
               )}
               {inq.status === 'details_requested' && (
-                <button onClick={() => { if (confirm('Resend setup-sheet link?')) action('resend_details'); }} disabled={processing} className={btnO}>
+                <button onClick={() => setPendingAction('resend_sheet')} disabled={processing} className={btnO}>
                   <Mail className="w-3.5 h-3.5" />Resend Sheet
                 </button>
               )}
               {inq.status === 'details_submitted' && (
-                <button onClick={() => { if (confirm('Create draft course for ' + inq.courseName + '? No email will be sent.')) createDraftCourse(); }} disabled={processing} className={btnP}>
+                <button onClick={() => setPendingAction('create_draft')} disabled={processing} className={btnP}>
                   <CheckCircle className="w-3.5 h-3.5" />Create Draft Course
                 </button>
               )}
@@ -527,7 +588,7 @@ function InquiryDetailInner() {
                 </button>
               )}
               {inq.status === 'building' && !pageChangesRequested && (
-                <button onClick={() => { if (confirm('Set ' + inq.courseName + ' LIVE?')) action('mark_live'); }} disabled={processing} className={btnP}>
+                <button onClick={() => setPendingAction('go_live')} disabled={processing} className={btnP}>
                   <Power className="w-3.5 h-3.5" />Go Live
                 </button>
               )}
@@ -538,7 +599,7 @@ function InquiryDetailInner() {
                 </button>
               )}
               {(inq.status === 'archived' || inq.status === 'rejected') && (
-                <button onClick={deleteInquiry}
+                <button onClick={() => setPendingAction('delete')}
                   className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-bad hover:bg-bad/5 px-3 py-1.5 rounded-md border border-line hover:border-bad/20 transition-colors">
                   <Trash2 className="w-3.5 h-3.5" />Delete permanently
                 </button>
@@ -563,13 +624,13 @@ function InquiryDetailInner() {
                   </div>
                 )}
                 {(inq.status === 'pending' || inq.status === 'in_review' || inq.status === 'details_requested' || inq.status === 'details_submitted') && (
-                  <button onClick={() => { setMoreOpen(false); if (confirm('Reject this inquiry?')) action('reject'); }} disabled={processing}
+                  <button onClick={() => { setMoreOpen(false); setPendingAction('reject'); }} disabled={processing}
                     className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">
                     <XCircle className="w-3.5 h-3.5" />Reject
                   </button>
                 )}
                 {inq.status === 'in_review' && (
-                  <button onClick={() => { setMoreOpen(false); if (confirm('Build ' + inq.courseName + ' now without the sheet?')) action('build_course'); }} disabled={processing}
+                  <button onClick={() => { setMoreOpen(false); setPendingAction('build_without_sheet'); }} disabled={processing}
                     className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
                     <Wrench className="w-3.5 h-3.5" />Build without sheet
                   </button>
@@ -582,23 +643,23 @@ function InquiryDetailInner() {
                         <Wrench className="w-3.5 h-3.5" />Manage Course
                       </button>
                     )}
-                    <button onClick={() => { setMoreOpen(false); if (confirm('Send dashboard access email to ' + inq.contactName + '?')) action('send_dashboard_access'); }} disabled={processing}
+                    <button onClick={() => { setMoreOpen(false); setPendingAction('dashboard_access'); }} disabled={processing}
                       className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
                       <Mail className="w-3.5 h-3.5" />Send dashboard access
                     </button>
                     {inq.builtCourseId && (
-                      <button onClick={() => { setMoreOpen(false); sendPreview(); }} disabled={sendingPreview}
+                      <button onClick={() => { setMoreOpen(false); setPendingAction('send_preview'); }} disabled={sendingPreview}
                         className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
                         <Eye className="w-3.5 h-3.5" />{sendingPreview ? 'Sending…' : 'Send Preview'}
                       </button>
                     )}
                     {pageChangesRequested && (
-                      <button onClick={() => { setMoreOpen(false); if (confirm('Set ' + inq.courseName + ' LIVE?')) action('mark_live'); }} disabled={processing}
+                      <button onClick={() => { setMoreOpen(false); setPendingAction('go_live'); }} disabled={processing}
                         className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
                         <Power className="w-3.5 h-3.5" />Go Live anyway
                       </button>
                     )}
-                    <button onClick={() => { setMoreOpen(false); deleteInquiry(); }}
+                    <button onClick={() => { setMoreOpen(false); setPendingAction('delete'); }}
                       className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />Delete
                     </button>
@@ -1266,6 +1327,126 @@ function InquiryDetailInner() {
 
         </div>
       </div>
+
+      {/* Every risky/email-sending action goes through one of these instead of
+          a bare browser confirm() — each states exactly what happens and who
+          gets emailed before firing. */}
+      {pendingAction && (() => {
+        const close = () => { setPendingAction(null); setGoLiveOverride(''); setBuildConfirmText(''); setGoLiveChecks(null); };
+        const fire = (fn: () => void) => { fn(); close(); };
+
+        if (pendingAction === 'delete') {
+          return (
+            <ModalShell title={`Permanently delete "${inq.courseName}"?`} danger onClose={close}>
+              <p className="text-sm text-ink-soft">This cannot be undone — the inquiry and its history are gone for good.</p>
+              <ModalActions onCancel={close} onConfirm={() => fire(deleteInquiry)} confirmLabel="Delete permanently" danger/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'reject') {
+          return (
+            <ModalShell title="Reject this inquiry?" danger onClose={close}>
+              <p className="text-sm text-ink-soft">Moves it to Archived. No email is sent to {inq.contactName}.</p>
+              <ModalActions onCancel={close} onConfirm={() => fire(() => action('reject'))} confirmLabel="Reject" danger disabled={processing}/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'create_draft') {
+          return (
+            <ModalShell title="Create draft course?" onClose={close}>
+              <p className="text-sm text-ink-soft">Builds a draft course for <strong>{inq.courseName}</strong> from their submitted sheet. No email is sent — you'll review it before anything goes live.</p>
+              <ModalActions onCancel={close} onConfirm={() => fire(() => createDraftCourse())} confirmLabel="Create Draft Course" disabled={processing}/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'send_sheet' || pendingAction === 'resend_sheet') {
+          const isResend = pendingAction === 'resend_sheet';
+          return (
+            <ModalShell title={isResend ? 'Resend the setup sheet?' : 'Send the setup sheet?'} onClose={close}>
+              <p className="text-sm text-ink-soft">
+                Sends the setup-sheet link to <strong>{inq.contactName}</strong> at <strong>{inq.email}</strong>. They'll fill in course details, pricing, and policies for us to build from.
+              </p>
+              <ModalActions onCancel={close} onConfirm={() => fire(() => action(isResend ? 'resend_details' : 'request_details'))} confirmLabel={isResend ? 'Resend Sheet' : 'Send Sheet'} disabled={processing}/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'dashboard_access') {
+          return (
+            <ModalShell title="Send dashboard access?" onClose={close}>
+              <p className="text-sm text-ink-soft">
+                Emails <strong>{inq.contactName}</strong> at <strong>{inq.email}</strong> a temporary password and login link to their operator dashboard, so they can start reviewing/editing their course before it's live.
+              </p>
+              <ModalActions onCancel={close} onConfirm={() => fire(() => action('send_dashboard_access'))} confirmLabel="Send Access" disabled={processing}/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'send_preview') {
+          return (
+            <ModalShell title="Send preview link?" onClose={close}>
+              <p className="text-sm text-ink-soft">
+                Emails <strong>{inq.contactName}</strong> at <strong>{inq.email}</strong> a link to preview their built course page, so they can approve it or request changes before going live.
+              </p>
+              <ModalActions onCancel={close} onConfirm={() => fire(sendPreview)} confirmLabel="Send Preview" disabled={sendingPreview}/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'build_without_sheet') {
+          const canConfirm = buildConfirmText.trim().toUpperCase() === 'BUILD';
+          return (
+            <ModalShell title="Build without sheet?" danger onClose={close}>
+              <p className="text-sm text-ink-soft mb-3">
+                No setup sheet was submitted — this builds a draft course for <strong>{inq.courseName}</strong> from the inquiry answers alone. It immediately:
+              </p>
+              <ul className="text-sm text-ink-soft list-disc pl-5 mb-3 space-y-1">
+                <li>Emails a welcome message + temporary password to <strong>{inq.email}</strong></li>
+                <li>Attempts to create a Stripe Connect account for the course</li>
+              </ul>
+              <label className="block text-[10px] uppercase tracking-[0.06em] text-bad mb-1">Type BUILD to confirm</label>
+              <input value={buildConfirmText} onChange={e => setBuildConfirmText(e.target.value)}
+                className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50" placeholder="BUILD"/>
+              <ModalActions onCancel={close} onConfirm={() => fire(() => action('build_course'))} confirmLabel="Build & Email" danger disabled={!canConfirm || processing}/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'go_live') {
+          const allOk = goLiveChecks?.every(c => c.ok) ?? false;
+          const canConfirm = allOk || (goLiveChecks && goLiveOverride.trim() === inq.courseName);
+          return (
+            <ModalShell title={`Go live: ${inq.courseName}?`} danger={!!goLiveChecks && !allOk} onClose={close}>
+              <p className="text-xs text-ink-muted mb-3">Makes the course bookable by golfers immediately.</p>
+              {!goLiveChecks ? (
+                <p className="text-xs text-ink-faint">Checking readiness…</p>
+              ) : (
+                <div className="space-y-1.5 mb-1">
+                  {goLiveChecks.map(c => (
+                    <div key={c.label} className="flex items-center gap-2 text-sm">
+                      <StatusDot status={c.ok ? 'ok' : 'bad'}/>
+                      <span className={c.ok ? 'text-ink' : 'text-bad'}>{c.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {goLiveChecks && !allOk && (
+                <div className="mt-3">
+                  <label className="block text-[10px] uppercase tracking-[0.06em] text-bad mb-1">
+                    Type &quot;{inq.courseName}&quot; to override and go live anyway
+                  </label>
+                  <input value={goLiveOverride} onChange={e => setGoLiveOverride(e.target.value)}
+                    className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50"/>
+                </div>
+              )}
+              <ModalActions
+                onCancel={close}
+                onConfirm={() => fire(() => action('mark_live'))}
+                confirmLabel={allOk ? 'Go Live' : 'Override & Go Live'}
+                danger={!allOk}
+                disabled={!goLiveChecks || !canConfirm || processing}
+              />
+            </ModalShell>
+          );
+        }
+        return null;
+      })()}
     </div>
   );
 }

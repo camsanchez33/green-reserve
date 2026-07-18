@@ -15,6 +15,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(all);
   }
 
+  // Lightweight single-course status — for preflight checks (e.g. Go Live)
+  const statusId = req.nextUrl.searchParams.get('statusOf');
+  if (statusId) {
+    const course = await prisma.course.findUnique({
+      where: { id: statusId },
+      select: { id: true, stripeAccountActive: true, operator: { select: { emailVerified: true } } },
+    });
+    if (!course) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json({
+      stripeAccountActive: course.stripeAccountActive,
+      operatorEmailVerified: course.operator?.emailVerified ?? false,
+    });
+  }
+
   const showArchived = req.nextUrl.searchParams.get('showArchived') === '1';
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
