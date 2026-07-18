@@ -146,9 +146,12 @@ function renderFacilities(fv2: Record<string, unknown>): { label: string; detail
   if (fv2.tournaments) {
     items.push({ label: 'Hosts tournaments & outings', detail: String(fv2.tournamentsFrequency || '') || undefined });
   }
+  // Must match the <option value=...> set in for-courses/details exactly —
+  // this map previously used different keys (restaurant/bev_cart/multiple)
+  // than the real form values, so raw enum strings like "beverage_cart"
+  // leaked straight into the admin UI instead of a readable label.
   const rtMap: Record<string, string> = {
-    restaurant: 'Restaurant', bar: 'Bar', snack_bar: 'Snack bar',
-    bev_cart: 'Beverage cart', multiple: 'Multiple food & drink options',
+    full: 'Full restaurant', bar: 'Bar only', snack_bar: 'Snack bar', beverage_cart: 'Beverage cart only',
   };
   const rt = String(fv2.restaurantType || '');
   if (rt && rt !== 'none') items.push({ label: rtMap[rt] || rt });
