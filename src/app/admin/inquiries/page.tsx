@@ -28,8 +28,9 @@ const TABS = [
   { key: 'in-review', label: 'In review', statuses: ['in_review'], description: "You're evaluating these." },
   { key: 'waiting', label: 'Waiting on them', statuses: ['details_requested'], description: 'Setup sheet sent — waiting on the course.' },
   { key: 'building', label: 'Building', statuses: ['building'], description: 'Draft created — being built/reviewed before go-live.' },
-  { key: 'all', label: 'All', statuses: ['pending', 'in_review', 'details_requested', 'details_submitted', 'building'], description: 'Every active inquiry, all stages.' },
-  { key: 'archived', label: 'Archived', statuses: ['live', 'rejected', 'archived'], description: 'Rejected or closed — kept for records.' },
+  { key: 'live', label: 'Live', statuses: ['live'], description: 'Converted wins — successfully launched.' },
+  { key: 'all', label: 'All', statuses: ['pending', 'in_review', 'details_requested', 'details_submitted', 'building', 'live', 'rejected', 'archived'], description: 'Every inquiry, every stage — including live and archived.' },
+  { key: 'archived', label: 'Archived', statuses: ['rejected', 'archived'], description: 'Rejected or closed — kept for records.' },
 ];
 
 const STATUS_DOT_MAP: Record<string, string> = {
@@ -147,17 +148,28 @@ function InquiriesListInner() {
 
   const countFor = (tab: typeof TABS[number]) => inquiries.filter(i => tab.statuses.includes(i.status)).length;
 
+  const yourMoveTab = TABS.find(t => t.key === 'your-move')!;
+  const activeStatuses = ['pending', 'in_review', 'details_requested', 'details_submitted', 'building'];
+  const activeCount = inquiries.filter(i => activeStatuses.includes(i.status)).length;
+  const needsYouCount = countFor(yourMoveTab);
+  const liveAllTimeCount = inquiries.filter(i => i.status === 'live').length;
+
   if (!adminReady) return null;
 
   return (
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="inquiries" />
       <div className="admin-content flex-1 flex flex-col min-h-screen">
-        <div className="px-8 py-7 max-w-5xl">
+        <div className="px-8 py-7">
 
-          {/* Page header */}
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Inquiries</h1>
+          {/* Row 1: title + pipeline summary, search + refresh */}
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Inquiries</h1>
+              <p className="text-sm text-ink-soft mt-0.5">
+                {activeCount} active · {needsYouCount} needs you · {liveAllTimeCount} live all-time
+              </p>
+            </div>
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-muted pointer-events-none" />
@@ -177,8 +189,8 @@ function InquiriesListInner() {
             </div>
           </div>
 
-          {/* Tab bar */}
-          <div className="border-b border-line mb-4">
+          {/* Row 2: tabs (with counts) + sort, same row */}
+          <div className="flex items-center justify-between gap-4 border-b border-line mb-5">
             <div className="flex gap-0 -mb-px overflow-x-auto">
               {TABS.map(tab => {
                 const count = countFor(tab);
@@ -187,6 +199,7 @@ function InquiriesListInner() {
                   <button
                     key={tab.key}
                     onClick={() => switchTab(tab.key)}
+                    title={tab.description}
                     className={
                       'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ' + (
                         active
@@ -209,15 +222,10 @@ function InquiriesListInner() {
                 );
               })}
             </div>
-          </div>
-
-          {/* Description + sort row */}
-          <div className="flex items-center justify-between mb-5">
-            <p className="text-sm text-ink-muted">{currentTab.description}</p>
             <select
               value={sortBy}
               onChange={e => setSortBy(e.target.value)}
-              className="bg-white border border-line text-ink-soft text-xs rounded-md px-3 py-1.5 outline-none focus:border-pine/40 cursor-pointer shrink-0"
+              className="bg-white border border-line text-ink-soft text-xs rounded-md px-3 py-1.5 mb-2 outline-none focus:border-pine/40 cursor-pointer shrink-0"
             >
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
@@ -229,7 +237,7 @@ function InquiriesListInner() {
           {/* List */}
           {loading && <div className="py-20 text-center text-ink-muted text-sm">Loading...</div>}
           {!loading && filtered.length === 0 && (
-            <EmptyState message={q ? 'No results — clear your search' : 'No inquiries here yet'} />
+            <EmptyState message={q ? 'No results — clear your search' : currentTab.description} />
           )}
 
           {!loading && filtered.length > 0 && (
