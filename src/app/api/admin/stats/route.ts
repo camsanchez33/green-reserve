@@ -57,6 +57,8 @@ export async function GET() {
   const weekAgoSameDayCutoff = new Date(weekAgoSameDayStart.getTime() + (now.getTime() - startOfToday.getTime()));
   const lastYearMonthStart = new Date(Date.UTC(now.getUTCFullYear() - 1, now.getUTCMonth(), 1));
   const lastYearMonthCutoff = new Date(Date.UTC(now.getUTCFullYear() - 1, now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()));
+  const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const todayDateStr = dayKeyOf(now);
 
   const [
     totalCourses,
@@ -98,6 +100,15 @@ export async function GET() {
     sheetNoResponse,
     sheetNoResponseCount,
     threadsForUnanswered,
+
+    newInquiriesMTD,
+    sheetsOutMTDRaw,
+    buildingMTDRaw,
+    wentLiveMTD,
+    teeSheetBookingsToday,
+    activeCoursesList,
+    bookingsByCourse30dRaw,
+    bookingsByCoursePrev30dRaw,
   ] = await Promise.all([
     prisma.course.count({ where: { archivedAt: null } }),
     prisma.course.count({ where: { archivedAt: { not: null } } }),
@@ -131,7 +142,7 @@ export async function GET() {
           where: { checkInFailReason: { not: '' }, checkedInAt: null },
           select: { id: true, courseId: true, golferName: true, totalAmount: true, checkInFailReason: true, createdAt: true, course: { select: { name: true } } },
           orderBy: { createdAt: 'desc' },
-          take: 5,
+          take: 100,
         })
       : Promise.resolve([]),
     isSupportPlus ? prisma.booking.count({ where: { checkInFailReason: { not: '' }, checkedInAt: null } }) : Promise.resolve(0),
@@ -159,6 +170,15 @@ export async function GET() {
       take: 200,
       orderBy: { updatedAt: 'desc' },
     }),
+
+    prisma.courseInquiry.count({ where: { createdAt: { gte: startOfMonth } } }),
+    prisma.inquiryStatusEvent.groupBy({ by: ['inquiryId'], where: { toStatus: 'details_requested', createdAt: { gte: startOfMonth } } }),
+    prisma.inquiryStatusEvent.groupBy({ by: ['inquiryId'], where: { toStatus: 'building', createdAt: { gte: startOfMonth } } }),
+    prisma.courseInquiry.count({ where: { wentLiveAt: { gte: startOfMonth } } }),
+    prisma.booking.findMany({ where: { status: { in: COMPLETED }, teeTime: { date: todayDateStr } }, select: { checkedInAt: true, totalAmount: true } }),
+    prisma.course.findMany({ where: { active: true, archivedAt: null }, select: { id: true, name: true, createdAt: true } }),
+    prisma.booking.groupBy({ by: ['courseId'], where: { status: { in: COMPLETED }, createdAt: { gte: thirtyDaysAgo } }, _count: { id: true } }),
+    prisma.booking.groupBy({ by: ['courseId'], where: { status: { in: COMPLETED }, createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } }, _count: { id: true } }),
   ]);
 
   // ---- top strip ----
@@ -172,31 +192,87 @@ export async function GET() {
     waitingNewInquiries: pendingInquiries,
     waitingOldestAgeDays: oldestPending ? Math.floor((now.getTime() - oldestPending.createdAt.getTime()) / 86400000) : null,
     waitingDrafts: draftCoursesCount,
+    waitingDraftsList: draftCourses.slice(0, 3).map(c => ({ id: c.id, name: c.name })),
   };
 
   // ---- action queue ----
-  type Row = { id: string; who: string; why: string; ageDays: number; actionLabel: string; href: string; amount?: string };
+  // Rows are GROUPED by course/inquiry where the same issue can genuinely
+  // recur for one entity (failed charges) — at 1000 courses an ungrouped list
+  // of individual charges is unusable. Every row carries a "doThis" line (the
+  // literal next step) and rows whose fix is an email/nudge carry a `fire`
+  // descriptor so the client can send it inline instead of just linking out.
+  type QueueItem = { id: string; label: string; ageDays: number };
+  type Row = {
+    id: string; who: string; why: string; doThis: string; ageDays: number;
+    actionLabel: string; href: string; amount?: string; count?: number; items?: QueueItem[];
+    fire?: { kind: 'resend_preview' | 'resend_sheet' | 'send_nudge'; inquiryId?: string; courseId?: string };
+  };
 
-  const red: Row[] = [
-    ...failedCharges.map(b => ({
-      id: `fc-${b.id}`,
-      who: `${b.golferName} · ${b.course.name}`,
-      why: `Charge failed — ${b.checkInFailReason || 'decline'}`,
+  const failedByCourse = new Map<string, { courseName: string; items: { id: string; golferName: string; amount: number; ageDays: number }[] }>();
+  for (const b of failedCharges) {
+    if (!failedByCourse.has(b.courseId)) failedByCourse.set(b.courseId, { courseName: b.course.name, items: [] });
+    failedByCourse.get(b.courseId)!.items.push({
+      id: b.id,
+      golferName: b.golferName,
+      amount: b.totalAmount / 100,
       ageDays: Math.floor((now.getTime() - b.createdAt.getTime()) / 86400000),
+    });
+  }
+  const failedRows: Row[] = Array.from(failedByCourse.entries()).map(([courseId, g]) => {
+    const total = g.items.reduce((s, i) => s + i.amount, 0);
+    const oldest = Math.max(...g.items.map(i => i.ageDays));
+    return {
+      id: `fc-${courseId}`,
+      who: g.courseName,
+      why: `${g.items.length} failed charge${g.items.length === 1 ? '' : 's'} · $${total.toFixed(2)} · oldest ${oldest}d`,
+      doThis: 'Card on file is failing at check-in — contact the golfer(s) to update payment, then retry from Revenue.',
+      ageDays: oldest,
       actionLabel: 'Review',
       href: '/admin/revenue',
-      amount: `$${(b.totalAmount / 100).toFixed(2)}`,
-    })),
+      count: g.items.length,
+      items: g.items.length > 1 ? g.items.map(i => ({ id: i.id, label: `${i.golferName} — $${i.amount.toFixed(2)}`, ageDays: i.ageDays })) : undefined,
+    };
+  });
+
+  const red: Row[] = [
+    ...failedRows,
     ...noStripe.map(c => ({
       id: `ns-${c.id}`,
       who: c.name,
       why: 'Live but can’t take payments — Stripe incomplete',
+      doThis: 'Operator hasn’t finished connecting their bank account — check their Setup tab and follow up if they’re stuck.',
       ageDays: 0,
       actionLabel: 'Fix Stripe',
       href: `/admin/courses?courseId=${c.id}&tab=overview`,
     })),
   ];
   const redCount = failedChargesCount + noStripe.length;
+
+  const waitingOnUsDoThis: Record<string, string> = {
+    pending: 'Review the inquiry and either request their details sheet or reject it.',
+    in_review: 'Finish reviewing — request their details sheet or reject it.',
+    details_submitted: 'Sheet’s back — review their answers and build the course.',
+    building: 'Course is mid-build — finish it, then send dashboard access or go live.',
+  };
+  const waitingOnUsRows: Row[] = waitingOnUs.map(i => ({
+    id: `wu-${i.id}`,
+    who: i.courseName,
+    why: `Waiting on us — ${i.status.replace('_', ' ')}`,
+    doThis: waitingOnUsDoThis[i.status] ?? 'Needs our next action.',
+    ageDays: Math.floor((now.getTime() - i.updatedAt.getTime()) / 86400000),
+    actionLabel: 'Open',
+    href: `/admin/inquiries/${i.id}`,
+  }));
+
+  const draftsAmberRows: Row[] = draftsAmber.map(c => ({
+    id: `dr-${c.id}`,
+    who: c.name,
+    why: 'Draft not yet live',
+    doThis: 'Course was built but setup was never finished — complete it and go live from its Overview tab.',
+    ageDays: Math.floor((now.getTime() - c.createdAt.getTime()) / 86400000),
+    actionLabel: 'Review',
+    href: `/admin/courses?courseId=${c.id}&tab=overview`,
+  }));
 
   const previewSeen = new Set<string>();
   const previewSentAmber: Row[] = [];
@@ -208,11 +284,24 @@ export async function GET() {
       id: `ps-${ev.inquiryId}`,
       who: ev.inquiry.courseName,
       why: 'Preview sent, no reply',
+      doThis: 'They haven’t responded to the preview — resend it or call to confirm they saw it.',
       ageDays: Math.floor((now.getTime() - ev.createdAt.getTime()) / 86400000),
       actionLabel: 'Open',
       href: `/admin/inquiries/${ev.inquiryId}`,
+      fire: { kind: 'resend_preview', inquiryId: ev.inquiryId },
     });
   }
+
+  const sheetNoResponseRows: Row[] = sheetNoResponse.map(i => ({
+    id: `sh-${i.id}`,
+    who: i.courseName,
+    why: 'Sheet sent, no response',
+    doThis: 'They haven’t submitted their details sheet — resend the link or follow up by phone.',
+    ageDays: Math.floor((now.getTime() - i.updatedAt.getTime()) / 86400000),
+    actionLabel: 'Open',
+    href: `/admin/inquiries/${i.id}`,
+    fire: { kind: 'resend_sheet', inquiryId: i.id },
+  }));
 
   const threadAmber: Row[] = threadsForUnanswered
     .filter(t => t.messages[0]?.senderType === 'operator' && t.messages[0].createdAt < twoDaysAgo)
@@ -220,37 +309,18 @@ export async function GET() {
       id: `msg-${t.id}`,
       who: t.course.name,
       why: `Message from ${t.messages[0].senderName}, unanswered`,
+      doThis: 'They’re waiting on a reply — send a quick nudge or a full response.',
       ageDays: Math.floor((now.getTime() - t.messages[0].createdAt.getTime()) / 86400000),
       actionLabel: 'Reply',
       href: '/admin/messages',
+      fire: { kind: 'send_nudge', courseId: t.courseId },
     }));
 
   const amber: Row[] = [
-    ...waitingOnUs.map(i => ({
-      id: `wu-${i.id}`,
-      who: i.courseName,
-      why: `Waiting on us — ${i.status.replace('_', ' ')}`,
-      ageDays: Math.floor((now.getTime() - i.updatedAt.getTime()) / 86400000),
-      actionLabel: 'Open',
-      href: `/admin/inquiries/${i.id}`,
-    })),
-    ...draftsAmber.map(c => ({
-      id: `dr-${c.id}`,
-      who: c.name,
-      why: 'Draft not yet live',
-      ageDays: Math.floor((now.getTime() - c.createdAt.getTime()) / 86400000),
-      actionLabel: 'Review',
-      href: `/admin/courses?courseId=${c.id}&tab=overview`,
-    })),
+    ...waitingOnUsRows,
+    ...draftsAmberRows,
     ...previewSentAmber,
-    ...sheetNoResponse.map(i => ({
-      id: `sh-${i.id}`,
-      who: i.courseName,
-      why: 'Sheet sent, no response',
-      ageDays: Math.floor((now.getTime() - i.updatedAt.getTime()) / 86400000),
-      actionLabel: 'Nudge',
-      href: `/admin/inquiries/${i.id}`,
-    })),
+    ...sheetNoResponseRows,
     ...threadAmber,
   ].sort((a, b) => b.ageDays - a.ageDays).slice(0, 5);
 
@@ -330,31 +400,42 @@ export async function GET() {
   monthLatest.ghostFees = Number(monthSoFarGhostAgg._sum.accessFeeTotal ?? 0) / 100;
   monthLatest.soFar = true;
 
-  // ---- top courses (30d), with trend arrow ----
-  const topCoursesRaw = await prisma.booking.groupBy({
-    by: ['courseId'],
-    where: { status: { in: COMPLETED }, createdAt: { gte: thirtyDaysAgo } },
-    _count: { id: true },
-    _sum: { accessFeeTotal: true },
-    orderBy: { _count: { id: 'desc' } },
-    take: 5,
-  });
-  const topCourseIds = topCoursesRaw.map(r => r.courseId);
-  const [topCourseDetails, prevTopCoursesRaw] = await Promise.all([
-    topCourseIds.length ? prisma.course.findMany({ where: { id: { in: topCourseIds } }, select: { id: true, name: true, slug: true } }) : Promise.resolve([]),
-    topCourseIds.length
-      ? prisma.booking.groupBy({ by: ['courseId'], where: { status: { in: COMPLETED }, createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo }, courseId: { in: topCourseIds } }, _count: { id: true } })
-      : Promise.resolve([]),
-  ]);
-  const courseMap = Object.fromEntries(topCourseDetails.map(c => [c.id, c]));
-  const prevCountMap = Object.fromEntries(prevTopCoursesRaw.map(r => [r.courseId, r._count.id]));
-  const topCourses = topCoursesRaw.map(r => ({
-    id: r.courseId,
-    name: courseMap[r.courseId]?.name ?? 'Unknown',
-    bookings: r._count.id,
-    revenue: Number(r._sum.accessFeeTotal ?? 0) / 100,
-    prevBookings: prevCountMap[r.courseId] ?? 0,
-  }));
+  // ---- bottom trio (replaces Top Courses — rankings without purpose) ----
+  const pipeline = {
+    newInquiries: newInquiriesMTD,
+    sheetsOut: sheetsOutMTDRaw.length,
+    building: buildingMTDRaw.length,
+    wentLive: wentLiveMTD,
+  };
+
+  const teeSheetToday = {
+    roundsToday: teeSheetBookingsToday.length,
+    checkInsDone: teeSheetBookingsToday.filter(b => b.checkedInAt !== null).length,
+    revenueExpected: teeSheetBookingsToday.filter(b => b.checkedInAt === null).reduce((s, b) => s + b.totalAmount, 0) / 100,
+  };
+
+  // Course health watchlist: courses trending DOWN vs their own prior 30d.
+  // Only judged once a course has >=60d of history — otherwise "0 bookings"
+  // just means it's new, not declining. Operator-inactivity is a real signal
+  // Cam asked for too, but there's no login-timestamp field on CourseOperator
+  // today — adding one is a schema change, out of scope for a revise run, so
+  // this watchlist covers booking-volume decline only for now.
+  const curBookingsMap = new Map(bookingsByCourse30dRaw.map(r => [r.courseId, r._count.id]));
+  const prevBookingsMap = new Map(bookingsByCoursePrev30dRaw.map(r => [r.courseId, r._count.id]));
+  const watchlistRaw: { id: string; name: string; reason: string; severity: number }[] = [];
+  for (const c of activeCoursesList) {
+    if (c.createdAt > sixtyDaysAgo) continue;
+    const cur = curBookingsMap.get(c.id) ?? 0;
+    const prev = prevBookingsMap.get(c.id) ?? 0;
+    if (prev === 0 && cur === 0) continue;
+    if (cur === 0 && prev > 0) {
+      watchlistRaw.push({ id: c.id, name: c.name, reason: `Zero bookings in 30d (had ${prev} prior)`, severity: 1000 + prev });
+    } else if (prev > 0) {
+      const dropPct = ((prev - cur) / prev) * 100;
+      if (dropPct > 40) watchlistRaw.push({ id: c.id, name: c.name, reason: `Bookings down ${dropPct.toFixed(0)}% vs prior 30d (${cur} vs ${prev})`, severity: dropPct });
+    }
+  }
+  const courseHealthWatchlist = watchlistRaw.sort((a, b) => b.severity - a.severity).slice(0, 5).map(({ severity: _severity, ...rest }) => rest);
 
   return NextResponse.json({
     pendingInquiries,
@@ -372,6 +453,6 @@ export async function GET() {
       fees30d: Number(recentRevenue._sum.accessFeeTotal ?? 0) / 100,
       feesPrev30d: Number(prevRevenue._sum.accessFeeTotal ?? 0) / 100,
     },
-    topCourses,
+    bottomTrio: { pipeline, teeSheetToday, courseHealthWatchlist },
   });
 }

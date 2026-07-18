@@ -5,11 +5,11 @@ import { useEffect, useState, useCallback } from 'react';
 import {
   BarChart2, AlertCircle, Building2, Hammer, Users,
   Radio, Activity, MessageSquare, UserCircle, ChevronLeft, ChevronRight,
-  DollarSign, Search,
+  DollarSign, Search, Wrench,
 } from 'lucide-react';
 import CommandPalette from '@/components/admin/CommandPalette';
 
-export type AdminNavKey = 'overview' | 'inquiries' | 'courses' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages' | 'profile' | 'revenue' | 'golfers';
+export type AdminNavKey = 'overview' | 'inquiries' | 'courses' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system';
 
 const LS_KEY = 'admin-sidebar-collapsed';
 
@@ -78,6 +78,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
 
   const bottomNav: { key: AdminNavKey; label: string; href: string; icon: React.ReactNode }[] = [
     { key: 'create',  label: 'Manual build', href: '/admin/create',   icon: <Hammer className="w-[18px] h-[18px]"/> },
+    { key: 'system',  label: 'System',       href: '/admin/system',  icon: <Wrench className="w-[18px] h-[18px]"/> },
     { key: 'profile', label: 'My profile',   href: '/admin/profile',  icon: <UserCircle className="w-[18px] h-[18px]"/> },
   ];
 
