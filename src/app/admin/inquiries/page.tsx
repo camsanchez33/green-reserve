@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { RefreshCw, Search, Trash2 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -140,12 +141,12 @@ function InquiriesListInner() {
     setInquiries(prev => prev.filter(i => i.id !== id));
   }
 
-  function navToDetail(inq: Inquiry) {
+  function detailHref(inq: Inquiry) {
     const p = new URLSearchParams();
     p.set('tab', activeTabKey);
     if (search) p.set('q', search);
     if (sortBy !== (DEFAULT_SORT_BY_TAB[activeTabKey] ?? 'newest')) p.set('sort', sortBy);
-    router.push('/admin/inquiries/' + inq.id + '?' + p.toString());
+    return '/admin/inquiries/' + inq.id + '?' + p.toString();
   }
 
   function switchTab(key: string) {
@@ -267,6 +268,16 @@ function InquiriesListInner() {
             </select>
           </div>
 
+          {/* Status legend — dots are never the only signal */}
+          {!loading && filtered.length > 0 && (
+            <div className="flex items-center gap-4 mb-3 text-[11px] text-ink-muted">
+              <span className="flex items-center gap-1.5"><StatusDot status="ok"/>Live</span>
+              <span className="flex items-center gap-1.5"><StatusDot status="warn"/>New / building</span>
+              <span className="flex items-center gap-1.5"><StatusDot status="neutral"/>In progress</span>
+              <span className="flex items-center gap-1.5"><StatusDot status="bad"/>Rejected</span>
+            </div>
+          )}
+
           {/* List */}
           {loading && <div className="py-20 text-center text-ink-muted text-sm">Loading...</div>}
           {!loading && filtered.length === 0 && (
@@ -283,12 +294,12 @@ function InquiriesListInner() {
                 const archived = isArchived ? whyArchived(inq) : null;
 
                 return (
-                  <div
+                  <Link
                     key={inq.id}
-                    onClick={() => navToDetail(inq)}
-                    className="bg-white border border-line rounded-lg px-5 py-3.5 flex items-center gap-4 cursor-pointer hover:border-pine/30 hover:bg-pine/[0.02] transition-colors"
+                    href={detailHref(inq)}
+                    className="bg-white border border-line rounded-lg px-5 py-3.5 flex items-center gap-4 hover:border-pine/30 hover:bg-pine/[0.02] transition-colors"
                   >
-                    <StatusDot status={dot} />
+                    <span title={STATUS_LABEL[inq.status] || inq.status}><StatusDot status={dot} /></span>
 
                     {/* Course name + location */}
                     <div className="w-44 shrink-0 min-w-0">
@@ -332,14 +343,14 @@ function InquiriesListInner() {
                     {/* Archived: delete button */}
                     {isArchived && (
                       <button
-                        onClick={e => { e.stopPropagation(); deleteInquiry(inq.id, inq.courseName); }}
+                        onClick={e => { e.preventDefault(); e.stopPropagation(); deleteInquiry(inq.id, inq.courseName); }}
                         className="w-7 h-7 flex items-center justify-center rounded text-ink-faint hover:text-bad hover:bg-bad/5 transition-colors shrink-0"
                         title="Delete permanently"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     )}
-                  </div>
+                  </Link>
                 );
               })}
             </div>
