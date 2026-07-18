@@ -82,6 +82,16 @@ export async function POST(req: NextRequest) {
     data: { detailsJson: JSON.stringify(details), status: 'details_submitted' },
   });
 
+  await prisma.inquiryStatusEvent.create({
+    data: {
+      inquiryId: inquiry.id,
+      fromStatus: inquiry.status,
+      toStatus: 'details_submitted',
+      trigger: 'course',
+      actorName: 'Course submitted their setup sheet',
+    },
+  });
+
   sendDetailsSubmittedNotification({
     courseName: inquiry.courseName,
     contactName: inquiry.contactName,

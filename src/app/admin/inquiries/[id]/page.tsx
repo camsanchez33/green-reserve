@@ -488,11 +488,17 @@ function InquiryDetailInner() {
   const sheetSentEvent = [...inq.events].reverse().find(e => e.toStatus === 'details_requested');
   const liveEvent = [...inq.events].reverse().find(e => e.toStatus === 'live');
   const previewSentEvent = [...inq.events].reverse().find(e => e.actorName?.startsWith('Preview sent'));
-  const latestApprovalEvent = [...inq.events].reverse().find(
-    e => e.actorName === 'Course approved their page' || e.actorName === 'Course requested changes to their page'
-  );
-  const pageApproved = latestApprovalEvent?.actorName === 'Course approved their page';
-  const pageChangesRequested = latestApprovalEvent?.actorName === 'Course requested changes to their page';
+  // Ordering fix: approval/changes-requested events only count for the
+  // CURRENT build cycle — anchor to the most recent "-> building" event so a
+  // stale approval from before a rebuild (or after going live and someone
+  // still clicking an old preview link) can't be read as the current state.
+  const buildingStartEvent = [...inq.events].reverse().find(e => e.toStatus === 'building');
+  const latestApprovalEvent = [...inq.events]
+    .filter(e => !buildingStartEvent || new Date(e.createdAt) >= new Date(buildingStartEvent.createdAt))
+    .reverse()
+    .find(e => e.actorName === 'Course approved their page' || e.actorName === 'Course requested changes to their page');
+  const pageApproved = inq.status === 'building' && latestApprovalEvent?.actorName === 'Course approved their page';
+  const pageChangesRequested = inq.status === 'building' && latestApprovalEvent?.actorName === 'Course requested changes to their page';
 
   let sd: Record<string, unknown> = {};
   if (inq.detailsJson) { try { sd = JSON.parse(inq.detailsJson); } catch { /* ignore */ } }
@@ -1296,26 +1302,40 @@ function InquiryDetailInner() {
                 <div>
                   <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">History</div>
                   <div className="bg-white border border-line rounded-lg divide-y divide-line">
-                    {inq.events.map(ev => (
-                      <div key={ev.id} className="px-4 py-3 flex items-start gap-3">
-                        <div className={'w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ' + (ev.trigger === 'system' ? 'bg-ink-faint' : 'bg-pine/60')} />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm text-ink">
-                            {ev.fromStatus === 'contact_updated' ? 'Contact info updated' : (
-                              <>
-                                <span>{STATUS_LABEL[ev.fromStatus] || ev.fromStatus}</span>
-                                <span className="text-ink-muted mx-1.5">→</span>
-                                <span className="font-medium">{STATUS_LABEL[ev.toStatus] || ev.toStatus}</span>
-                              </>
-                            )}
-                          </div>
-                          <div className="text-xs text-ink-faint mt-0.5">
-                            {ev.trigger === 'admin' && ev.actorName ? 'by ' + ev.actorName : ev.actorName || 'auto'}
-                            {' · '}{fmtDate(ev.createdAt)}
+                    {inq.events.map(ev => {
+                      // Honest attribution: "by Cam" only for admin clicks,
+                      // "Course" for course-originated actions (sheet
+                      // submitted, page approved/changes requested), "System"
+                      // for automatic transitions — never a vague "auto".
+                      const isTransition = ev.fromStatus !== ev.toStatus;
+                      const contactUpdate = ev.fromStatus === 'contact_updated';
+                      const attribution = ev.trigger === 'admin' ? (ev.actorName ? `by ${ev.actorName}` : 'by admin')
+                        : ev.trigger === 'course' ? 'Course'
+                        : 'System';
+                      return (
+                        <div key={ev.id} className="px-4 py-3 flex items-start gap-3">
+                          <div className={'w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ' + (
+                            ev.trigger === 'system' ? 'bg-ink-faint' : ev.trigger === 'course' ? 'bg-ok/60' : 'bg-pine/60'
+                          )} />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm text-ink">
+                              {contactUpdate
+                                ? 'Contact info updated'
+                                : isTransition ? (
+                                  <>
+                                    <span>{STATUS_LABEL[ev.fromStatus] || ev.fromStatus}</span>
+                                    <span className="text-ink-muted mx-1.5">→</span>
+                                    <span className="font-medium">{STATUS_LABEL[ev.toStatus] || ev.toStatus}</span>
+                                  </>
+                                ) : (ev.actorName || 'Update')}
+                            </div>
+                            <div className="text-xs text-ink-faint mt-0.5">
+                              {(contactUpdate || isTransition) ? attribution + ' · ' : ''}{fmtDate(ev.createdAt)}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}

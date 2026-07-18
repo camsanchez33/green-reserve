@@ -71,6 +71,10 @@ async function handleAction(
       });
       if (from !== 'details_requested') {
         await logEvent(inquiryId, from, 'details_requested', 'admin', adminName);
+      } else {
+        // Same-status resend — still worth a ledger entry so "I nudged them
+        // again on day 9" isn't invisible in Activity.
+        await logEvent(inquiryId, from, from, 'admin', `Setup sheet resent by ${adminName}`);
       }
       sendDetailsRequestEmail({
         contactName: inquiry.contactName,
@@ -92,6 +96,7 @@ async function handleAction(
     const existing = inquiry.adminNotes ? inquiry.adminNotes.trim() : '';
     const updated = existing ? `${existing}\n\n[${timestamp}]\n${note}` : `[${timestamp}]\n${note}`;
     await prisma.courseInquiry.update({ where: { id: inquiryId }, data: { adminNotes: updated } });
+    await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `Note added by ${adminName}`);
     return NextResponse.json({ success: true, adminNotes: updated });
   }
 
@@ -217,6 +222,7 @@ async function handleAction(
         operatorName: inquiry.contactName, operatorEmail: inquiry.email,
         courseName: inquiry.courseName, tempPassword, setupLink,
       }).catch(emailErr => console.error('Resend welcome email failed:', emailErr));
+      await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `Welcome email resent by ${adminName}`);
       return NextResponse.json({ success: true, tempPassword, setupLink });
     } catch (e) {
       return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });

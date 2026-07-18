@@ -9,7 +9,7 @@ import { EmptyState } from '@/components/EmptyState';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
-  trigger: 'system' | 'admin'; actorName: string | null; createdAt: string;
+  trigger: 'system' | 'admin' | 'course'; actorName: string | null; createdAt: string;
 }
 interface Inquiry {
   id: string; contactName: string; contactTitle: string; email: string; phone: string;
