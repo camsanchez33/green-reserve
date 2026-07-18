@@ -77,20 +77,29 @@ function RevenueChart({ data, gran }: { data: Stats['revenue']['day']; gran: Gra
   if (!data.length) return <div className="text-center text-ink-muted py-12 text-sm">No bookings yet</div>;
   const grossMax = Math.max(...data.map(d => Math.max(d.gross, d.ghostGross)), 0.01);
   const feesMax = Math.max(...data.map(d => Math.max(d.fees, d.ghostFees)), 0.01);
-  const totalGross = data.reduce((s, d) => s + d.gross, 0);
-  const totalFees = data.reduce((s, d) => s + d.fees, 0);
   const label = gran === 'day' ? fmtDayLabel : gran === 'week' ? fmtWeekLabel : fmtMonthLabel;
+  const latest = data[data.length - 1];
+  const periodLabel = gran === 'day' ? 'Today' : gran === 'week' ? 'This Week' : 'This Month';
+  const deltaSuffix = gran === 'day'
+    ? `vs last ${new Date(latest.key + 'T00:00:00.000Z').toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' })}`
+    : gran === 'week' ? 'vs prior week' : 'vs prior month';
 
   return (
     <div>
       <div className="flex items-center gap-6 mb-4">
         <div>
-          <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Total Gross</div>
-          <div className="text-xl font-serif font-medium text-ink">{fmtMoney(totalGross)}</div>
+          <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{periodLabel} — Gross</div>
+          <div className="flex items-baseline gap-2">
+            <div className="text-xl font-serif font-medium text-ink">{fmtMoney(latest.gross)}</div>
+            <Trend current={latest.gross} prev={latest.ghostGross} suffix={deltaSuffix}/>
+          </div>
         </div>
         <div>
-          <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">GR Fees Earned</div>
-          <div className="text-xl font-serif font-medium text-ok">{fmtMoney(totalFees)}</div>
+          <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{periodLabel} — GR Fees</div>
+          <div className="flex items-baseline gap-2">
+            <div className="text-xl font-serif font-medium text-ok">{fmtMoney(latest.fees)}</div>
+            <Trend current={latest.fees} prev={latest.ghostFees} suffix={deltaSuffix}/>
+          </div>
         </div>
         <div className="ml-auto flex items-center gap-4 text-[11px] text-ink-muted">
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-line-strong inline-block"/>Gross</span>
