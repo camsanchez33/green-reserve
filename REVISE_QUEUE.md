@@ -127,6 +127,23 @@ in flight at a time.
      event received — derivable from DB timestamps), CI (link + last status
      via GitHub API if token), Sentry (link). Overview keeps ONE dot:
      "Systems ✓" → /admin/system. No-silent-failure states throughout.
+- [ ] A-01e Overview chart FINAL FORM — SUPERSEDES A-01c's bar re-bucketing
+  (if bars per bucket were already built, replace them): the chart is a
+  CUMULATIVE MONEY TICKER, stock-P&L style:
+  - Day view: a line of cumulative GR fees earned since midnight, climbing
+    through the day; behind it a faint ghost line = YESTERDAY's cumulative
+    at the same time-of-day. One glance answers "am I ahead of yesterday?"
+  - Week view: cumulative fees since Monday vs last week's line to the same
+    point. Month view: since the 1st vs last month's line to the same point.
+  - No x-axis labels needed (maybe faint start/now marks); y-axis minimal;
+    current value dot at the line's tip with the $ amount.
+  - Header numbers (A-01b) stay and agree with the line's endpoint; the
+    "so far vs prior" delta IS the gap between the two lines.
+  - AUTO-REFRESH every 5 minutes (silent poll; ties into the header's
+    "updated Xs ago"). Gross can remain as a secondary lighter line via the
+    legend toggle; fees are the star.
+  - Zero-data state stays honest: flat line at $0 with "no bookings yet
+    today", ghost line still visible (yesterday's pace is useful even at $0).
 - [ ] A-02 /admin/inquiries — list (tabs, search, sort)
 - [ ] A-03 /admin/inquiries/[id] — detail (Contact/Answers/Sheet/Activity, next-step card, toolbar)
 - [ ] A-04 /admin/courses — list (filters, health signals, search)
