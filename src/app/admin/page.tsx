@@ -21,9 +21,9 @@ interface Stats {
   };
   actionQueue: { red: ActionRow[]; redCount: number; amber: ActionRow[]; amberCount: number };
   revenue: {
-    day: { key: string; gross: number; fees: number; bookings: number; ghostGross: number; ghostFees: number }[];
-    week: { key: string; gross: number; fees: number; bookings: number; ghostGross: number; ghostFees: number }[];
-    month: { key: string; gross: number; fees: number; bookings: number; ghostGross: number; ghostFees: number }[];
+    day: { key: string; gross: number; fees: number; bookings: number; ghostGross: number; ghostFees: number; soFar: boolean }[];
+    week: { key: string; gross: number; fees: number; bookings: number; ghostGross: number; ghostFees: number; soFar: boolean }[];
+    month: { key: string; gross: number; fees: number; bookings: number; ghostGross: number; ghostFees: number; soFar: boolean }[];
   };
   thirtyDay: {
     activeCourses: number; totalCourses: number; archivedCourses: number;
@@ -47,6 +47,10 @@ function fmtWeekLabel(key: string) {
 function fmtMonthLabel(key: string) {
   const [y, m] = key.split('-');
   return new Date(Date.UTC(Number(y), Number(m) - 1, 1)).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+}
+function fmtMonthAxisLabel(key: string) {
+  const [y, m] = key.split('-');
+  return new Date(Date.UTC(Number(y), Number(m) - 1, 1)).toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
 }
 
 function Trend({ current, prev, suffix = 'vs prior 30d' }: { current: number; prev: number; suffix?: string }) {
@@ -78,29 +82,39 @@ function RevenueChart({ data, gran }: { data: Stats['revenue']['day']; gran: Gra
   const grossMax = Math.max(...data.map(d => Math.max(d.gross, d.ghostGross)), 0.01);
   const feesMax = Math.max(...data.map(d => Math.max(d.fees, d.ghostFees)), 0.01);
   const label = gran === 'day' ? fmtDayLabel : gran === 'week' ? fmtWeekLabel : fmtMonthLabel;
+  const axisLabel = gran === 'month' ? fmtMonthAxisLabel : label;
   const latest = data[data.length - 1];
   const periodLabel = gran === 'day' ? 'Today' : gran === 'week' ? 'This Week' : 'This Month';
-  const deltaSuffix = gran === 'day'
+  const periodLabelLower = gran === 'day' ? 'today' : gran === 'week' ? 'this week' : 'this month';
+  let deltaSuffix = gran === 'day'
     ? `vs last ${new Date(latest.key + 'T00:00:00.000Z').toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' })}`
-    : gran === 'week' ? 'vs prior week' : 'vs prior month';
+    : gran === 'week' ? 'vs prior week' : 'vs last year';
+  if (latest.soFar) deltaSuffix += ' so far';
+  const noDataYet = latest.bookings === 0;
 
   return (
     <div>
       <div className="flex items-center gap-6 mb-4">
-        <div>
-          <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{periodLabel} — Gross</div>
-          <div className="flex items-baseline gap-2">
-            <div className="text-xl font-serif font-medium text-ink">{fmtMoney(latest.gross)}</div>
-            <Trend current={latest.gross} prev={latest.ghostGross} suffix={deltaSuffix}/>
-          </div>
-        </div>
-        <div>
-          <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{periodLabel} — GR Fees</div>
-          <div className="flex items-baseline gap-2">
-            <div className="text-xl font-serif font-medium text-ok">{fmtMoney(latest.fees)}</div>
-            <Trend current={latest.fees} prev={latest.ghostFees} suffix={deltaSuffix}/>
-          </div>
-        </div>
+        {noDataYet ? (
+          <div className="text-sm text-ink-muted">No bookings yet {periodLabelLower}</div>
+        ) : (
+          <>
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{periodLabel} — Gross</div>
+              <div className="flex items-baseline gap-2">
+                <div className="text-xl font-serif font-medium text-ink">{fmtMoney(latest.gross)}</div>
+                <Trend current={latest.gross} prev={latest.ghostGross} suffix={deltaSuffix}/>
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{periodLabel} — GR Fees</div>
+              <div className="flex items-baseline gap-2">
+                <div className="text-xl font-serif font-medium text-ok">{fmtMoney(latest.fees)}</div>
+                <Trend current={latest.fees} prev={latest.ghostFees} suffix={deltaSuffix}/>
+              </div>
+            </div>
+          </>
+        )}
         <div className="ml-auto flex items-center gap-4 text-[11px] text-ink-muted">
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-line-strong inline-block"/>Gross</span>
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-ok inline-block"/>GR Fees</span>
@@ -132,9 +146,9 @@ function RevenueChart({ data, gran }: { data: Stats['revenue']['day']; gran: Gra
         })}
       </div>
       <div className="flex justify-between mt-2 text-[10px] text-ink-muted">
-        <span>{label(data[0].key)}</span>
-        <span>{label(data[Math.floor(data.length / 2)].key)}</span>
-        <span>{label(data[data.length - 1].key)}</span>
+        <span>{axisLabel(data[0].key)}</span>
+        <span>{axisLabel(data[Math.floor(data.length / 2)].key)}</span>
+        <span>{axisLabel(data[data.length - 1].key)}</span>
       </div>
     </div>
   );

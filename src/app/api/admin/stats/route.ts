@@ -30,7 +30,7 @@ function seriesFromMap(map: Record<string, Bucket>, show: number, ghostKey?: (ke
       const idx = entries.findIndex(([k]) => k === key);
       ghost = idx > 0 ? entries[idx - 1][1] : ghost;
     }
-    return { key, gross: v.gross, fees: v.fees, bookings: v.bookings, ghostGross: ghost.gross, ghostFees: ghost.fees };
+    return { key, gross: v.gross, fees: v.fees, bookings: v.bookings, ghostGross: ghost.gross, ghostFees: ghost.fees, soFar: false };
   });
 }
 
@@ -47,7 +47,16 @@ export async function GET() {
   const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
   const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const chartStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 13, 1));
+  const chartStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 25, 1));
+
+  // "So far" comparators for the currently-in-progress bucket in each
+  // granularity — an unfinished period must never be compared against a
+  // FINISHED prior period, so these cut the ghost off at the same elapsed
+  // point (same time-of-day / day-of-month) instead of the full period.
+  const weekAgoSameDayStart = new Date(startOfToday.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const weekAgoSameDayCutoff = new Date(weekAgoSameDayStart.getTime() + (now.getTime() - startOfToday.getTime()));
+  const lastYearMonthStart = new Date(Date.UTC(now.getUTCFullYear() - 1, now.getUTCMonth(), 1));
+  const lastYearMonthCutoff = new Date(Date.UTC(now.getUTCFullYear() - 1, now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()));
 
   const [
     totalCourses,
@@ -74,6 +83,8 @@ export async function GET() {
     newCoursesPrev30d,
 
     bookingsForChart,
+    todaySoFarGhostAgg,
+    monthSoFarGhostAgg,
 
     failedCharges,
     failedChargesCount,
@@ -112,6 +123,8 @@ export async function GET() {
     prisma.course.count({ where: { createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } } }),
 
     prisma.booking.findMany({ where: { status: { in: COMPLETED }, createdAt: { gte: chartStart } }, select: { createdAt: true, accessFeeTotal: true, totalAmount: true } }),
+    prisma.booking.aggregate({ where: { status: { in: COMPLETED }, createdAt: { gte: weekAgoSameDayStart, lt: weekAgoSameDayCutoff } }, _sum: { accessFeeTotal: true, totalAmount: true } }),
+    prisma.booking.aggregate({ where: { status: { in: COMPLETED }, createdAt: { gte: lastYearMonthStart, lt: lastYearMonthCutoff } }, _sum: { accessFeeTotal: true, totalAmount: true } }),
 
     isSupportPlus
       ? prisma.booking.findMany({
@@ -258,7 +271,7 @@ export async function GET() {
     weekMap[dayKeyOf(d)] = { gross: 0, fees: 0, bookings: 0 };
   }
   const monthMap: Record<string, Bucket> = {};
-  for (let i = 12; i >= 0; i--) {
+  for (let i = 24; i >= 0; i--) {
     const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
     monthMap[monthKeyOf(d)] = { gross: 0, fees: 0, bookings: 0 };
   }
@@ -280,8 +293,42 @@ export async function GET() {
       return dayKeyOf(d);
     }),
     week: seriesFromMap(weekMap, 12),
-    month: seriesFromMap(monthMap, 12),
+    // Month's "corresponding prior period" is the same month last year, not
+    // last month — month-over-month is noise for a seasonal golf business.
+    month: seriesFromMap(monthMap, 12, key => {
+      const [y, m] = key.split('-');
+      return `${Number(y) - 1}-${m}`;
+    }),
   };
+
+  // Honest in-progress deltas: the LATEST bucket in each granularity is still
+  // accumulating (today isn't over, this week/month isn't over), so its ghost
+  // must be the prior period up to the same elapsed point, not the prior
+  // period's full total.
+  const dayLatest = revenue.day[revenue.day.length - 1];
+  dayLatest.ghostGross = Number(todaySoFarGhostAgg._sum.totalAmount ?? 0) / 100;
+  dayLatest.ghostFees = Number(todaySoFarGhostAgg._sum.accessFeeTotal ?? 0) / 100;
+  dayLatest.soFar = true;
+
+  const thisWeekMonday = new Date(weekStartKey(now) + 'T00:00:00.000Z');
+  const elapsedDaysThisWeek = Math.floor((startOfToday.getTime() - thisWeekMonday.getTime()) / 86400000) + 1;
+  const priorWeekMonday = new Date(thisWeekMonday.getTime() - 7 * 24 * 60 * 60 * 1000);
+  let priorWeekSoFarGross = 0;
+  let priorWeekSoFarFees = 0;
+  for (let i = 0; i < elapsedDaysThisWeek; i++) {
+    const d = new Date(priorWeekMonday.getTime() + i * 24 * 60 * 60 * 1000);
+    const bucket = dayMap[dayKeyOf(d)];
+    if (bucket) { priorWeekSoFarGross += bucket.gross; priorWeekSoFarFees += bucket.fees; }
+  }
+  const weekLatest = revenue.week[revenue.week.length - 1];
+  weekLatest.ghostGross = priorWeekSoFarGross;
+  weekLatest.ghostFees = priorWeekSoFarFees;
+  weekLatest.soFar = true;
+
+  const monthLatest = revenue.month[revenue.month.length - 1];
+  monthLatest.ghostGross = Number(monthSoFarGhostAgg._sum.totalAmount ?? 0) / 100;
+  monthLatest.ghostFees = Number(monthSoFarGhostAgg._sum.accessFeeTotal ?? 0) / 100;
+  monthLatest.soFar = true;
 
   // ---- top courses (30d), with trend arrow ----
   const topCoursesRaw = await prisma.booking.groupBy({
