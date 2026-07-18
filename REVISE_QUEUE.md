@@ -92,7 +92,14 @@ in flight at a time.
   POINT (same time-of-day / same day-of-week/month) and label it "so far";
   if there's simply no data yet, show "no bookings yet today" with no arrow
   at all.
-- [ ] A-01d Overview round-3 refinements (Cam's verify pass, 2026-07-18):
+- [x] A-01d Overview round-3 refinements (Cam's verify pass, 2026-07-18) — BUILT: b3ff0d7.
+  Item 3(c) group-then-fire only implemented for failed charges (the one
+  place duplicates actually recur per course today); other AMBER categories
+  are naturally ~1-per-course already. Item 5's Crons/CI live-status via
+  GitHub API skipped — no GITHUB_TOKEN configured, so it's an honest
+  link-out instead; heartbeat table is flagged as a future schema item.
+  Operator-inactivity signal in the Course Health Watchlist skipped for the
+  same reason (no login-timestamp field). Everything else built as spec'd:
   1. HEADER earns its place: drop the "Everything happening across
      GreenReserve" slogan; show today's date + a quiet "updated Xs ago"
      (auto-refresh or refresh button integrated). Title stays.
