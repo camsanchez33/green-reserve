@@ -511,6 +511,12 @@ function InquiryDetailInner() {
   const hasCancelPolicy = String(sd.cancellationPolicy || '') === 'yes';
   const noCancel = String(sd.cancellationPolicy || '') === 'no';
   const hasSheet = !!inq.detailsJson && Object.keys(sd).length > 0;
+  const hasAnswers = !!(
+    inq.currentBookingMethod || inq.teeTimesPerDay || inq.greenFeeRange ||
+    inq.hasMemberPricing || inq.hasResidentPricing || inq.hasCaddies ||
+    (inq.lookingFor && inq.lookingFor.length > 0) || inq.additionalNotes || inq.pricingNotes ||
+    (inq.needsJson && inq.needsJson !== '{}' && inq.needsJson !== '')
+  );
 
   const wizardParams = new URLSearchParams({
     name: inq.courseName || '', city: inq.city || '', state: inq.state || '',
@@ -678,7 +684,9 @@ function InquiryDetailInner() {
           {!isArchived && inq.status !== 'rejected' && (
             <div className="mt-3 text-sm text-ink max-w-3xl">
               {(inq.status === 'pending' || inq.status === 'in_review') && (
-                <>Review the <button onClick={() => setActiveTab('answers')} className="font-medium text-pine hover:underline">Answers tab</button>, then send the course their setup sheet.</>
+                hasAnswers
+                  ? <>Review the <button onClick={() => setActiveTab('answers')} className="font-medium text-pine hover:underline">Answers tab</button>, then send the course their setup sheet.</>
+                  : <>No extra answers were submitted with this inquiry — send the course their setup sheet when ready.</>
               )}
               {inq.status === 'details_requested' && (
                 <>Waiting on {inq.courseName}
@@ -1235,30 +1243,43 @@ function InquiryDetailInner() {
                     )}
                   </SSection>
 
-                  {/* Build Checklist */}
+                  {/* Ready-to-build checklist — three states, not just present/missing:
+                      "thin" flags suspicious-but-technically-present content (a
+                      1-character description passes a truthy check but isn't
+                      actually usable) so it doesn't get silently waved through. */}
                   {(() => {
-                    const checks = [
-                      { label: 'Weekday green fee', ok: !!(fmtMoney(sd.greenFeeWeekday)) },
-                      { label: 'Weekend green fee', ok: !!(fmtMoney(sd.greenFeeWeekend)) },
-                      { label: 'First tee time', ok: !!(sd.firstTeeTime) },
-                      { label: 'Last tee time', ok: !!(sd.lastTeeTime) },
-                      { label: 'Cancellation policy', ok: !!(sd.cancellationPolicy) },
-                      { label: 'Course description', ok: !!(sd.description) },
+                    type CheckState = 'present' | 'thin' | 'missing';
+                    const descLen = String(sd.description || '').trim().length;
+                    const checks: { label: string; state: CheckState }[] = [
+                      { label: 'Weekday green fee', state: fmtMoney(sd.greenFeeWeekday) ? 'present' : 'missing' },
+                      { label: 'Weekend green fee', state: fmtMoney(sd.greenFeeWeekend) ? 'present' : 'missing' },
+                      { label: 'First tee time', state: sd.firstTeeTime ? 'present' : 'missing' },
+                      { label: 'Last tee time', state: sd.lastTeeTime ? 'present' : 'missing' },
+                      { label: 'Cancellation policy', state: sd.cancellationPolicy ? 'present' : 'missing' },
+                      { label: 'Course description', state: descLen === 0 ? 'missing' : descLen < 20 ? 'thin' : 'present' },
                     ];
-                    const allGood = checks.every(c => c.ok);
+                    const allGood = checks.every(c => c.state === 'present');
+                    const STATE_META: Record<CheckState, { dot: 'ok' | 'warn' | 'bad'; label: string; text: string }> = {
+                      present: { dot: 'ok', label: '', text: 'text-ink' },
+                      thin: { dot: 'warn', label: 'thin — verify before building', text: 'text-warn' },
+                      missing: { dot: 'bad', label: 'missing', text: 'text-bad' },
+                    };
                     return (
                       <div className="bg-white border border-line rounded-lg p-4">
                         <div className={'text-[11px] uppercase tracking-[0.06em] mb-3 ' + (allGood ? 'text-ok' : 'text-warn')}>
                           {allGood ? 'Ready to Build' : 'Build Checklist'}
                         </div>
                         <div className="space-y-2">
-                          {checks.map(c => (
-                            <div key={c.label} className="flex items-center gap-2 text-sm">
-                              <div className={'w-1.5 h-1.5 rounded-full shrink-0 ' + (c.ok ? 'bg-ok' : 'bg-warn')} />
-                              <span className={c.ok ? 'text-ink' : 'text-warn'}>{c.label}</span>
-                              {!c.ok && <span className="text-ink-faint text-xs">missing</span>}
-                            </div>
-                          ))}
+                          {checks.map(c => {
+                            const meta = STATE_META[c.state];
+                            return (
+                              <div key={c.label} className="flex items-center gap-2 text-sm">
+                                <StatusDot status={meta.dot}/>
+                                <span className={meta.text}>{c.label}</span>
+                                {meta.label && <span className="text-ink-faint text-xs">{meta.label}</span>}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     );
