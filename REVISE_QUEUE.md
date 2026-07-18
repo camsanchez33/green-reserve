@@ -151,6 +151,14 @@ in flight at a time.
     legend toggle; fees are the star.
   - Zero-data state stays honest: flat line at $0 with "no bookings yet
     today", ghost line still visible (yesterday's pace is useful even at $0).
+- [ ] A-01f Radar card money fix (Cam) — "Expected at check-in $133" shows
+  the COURSE'S gross, not ours. Replace with "GR fees expected today" (the
+  $1.50 x players across today's uncompleted rounds, + any pending
+  late-cancel fees) as the headline number; keep the gross as a small muted
+  secondary line ("courses will collect ~$130") since it's context, not the
+  point. Principle: every money number on OUR overview defaults to OUR take.
+  Audit the rest of the Overview for the same confusion (the ticker already
+  leads with fees — verify nothing else leads with gross).
 - [ ] A-02 /admin/inquiries — list (tabs, search, sort)
 - [ ] A-03 /admin/inquiries/[id] — detail (Contact/Answers/Sheet/Activity, next-step card, toolbar)
 - [ ] A-04 /admin/courses — list (filters, health signals, search)
