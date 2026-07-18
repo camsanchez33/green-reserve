@@ -166,7 +166,9 @@ in flight at a time.
   point. Principle: every money number on OUR overview defaults to OUR take.
   Audit the rest of the Overview for the same confusion (the ticker already
   leads with fees — verify nothing else leads with gross).
-- [ ] A-02 /admin/inquiries — LIST — SPEC (Cam teardown + browser audit, 2026-07-18):
+- [x] A-02 /admin/inquiries — LIST — BUILT: items 1-3 f29e1c8, item 4
+  f242ac0, item 6 4a9848b, item 7 dd0134f, item 8 53714c8, item 5 a698e15.
+  All 8 items built as spec'd. SPEC (Cam teardown + browser audit, 2026-07-18):
   1. FULL-WIDTH layout (kill half-screen container), same as Overview.
   2. HEADER REBUILT (Cam: "genuinely changed"): two clean rows, nothing stacked
      awkwardly — Row 1: "Inquiries" title + one-line pipeline summary
