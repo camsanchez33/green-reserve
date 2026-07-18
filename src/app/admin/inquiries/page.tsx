@@ -54,6 +54,8 @@ const STATUS_LABEL: Record<string, string> = {
 
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 function daysAgo(d: string) { return Math.max(0, Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24))); }
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const hasBadEmail = (inq: Inquiry) => !!inq.email && !EMAIL_RE.test(inq.email.trim());
 
 function whyArchived(inq: Inquiry): { reason: string; date: string } {
   if (inq.status === 'live') return { reason: 'Went live', date: inq.updatedAt || inq.createdAt };
@@ -299,7 +301,12 @@ function InquiriesListInner() {
                       <div className="text-xs text-ink-soft truncate">
                         {inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''}
                       </div>
-                      <div className="text-[10px] text-ink-faint truncate">{inq.email}</div>
+                      <div className="text-[10px] text-ink-faint truncate flex items-center gap-1.5">
+                        {inq.email}
+                        {hasBadEmail(inq) && (
+                          <span className="shrink-0 text-[9px] font-medium uppercase tracking-wide bg-warn/10 text-warn px-1.5 py-0.5 rounded-full">Bad email</span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Stage + days-in-stage */}
