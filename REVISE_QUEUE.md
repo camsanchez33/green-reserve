@@ -198,7 +198,17 @@ in flight at a time.
      it to In Review or writes fake "Cam moved this" history. Stage moves
      happen only on explicit actions. (The New count only drops when Cam
      DOES something.)
-- [ ] A-03 /admin/inquiries/[id] — DETAIL — SPEC (Cam teardown + browser audit, 2026-07-18):
+- [ ] A-03 /admin/inquiries/[id] — DETAIL — items 1-7 BUILT (item 1 cbbf1e0,
+  items 2+3 dfec543, item 5 26a09ac, item 4 11e0975; item 7 fixed alongside
+  item 6, commit 639a748/cd9a2a0 — see A-02/A-03 log above). Item 8 NOT
+  done: cleaning up "Fake Fairways Golf Club" means deleting a real
+  course/operator record (or reverting an inquiry's stage) in what's the
+  production database — Claude Code can't safely locate or delete this
+  without either a live admin session or Cam naming the exact
+  inquiry/course/operator ID and confirming the delete. Box stays
+  unchecked until item 8 is resolved — Cam, please either do this cleanup
+  yourself or hand back the exact record ID(s) to delete.
+  SPEC (Cam teardown + browser audit, 2026-07-18):
   1. HEADER REBUILT as a flight plan, not a button strip:
      - STAGE CHECKPOINTS across the top: Inquiry → Review → Sheet → Build →
        Live, each with done/current/pending state and its DATE when done —
