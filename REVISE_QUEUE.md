@@ -151,7 +151,14 @@ in flight at a time.
     legend toggle; fees are the star.
   - Zero-data state stays honest: flat line at $0 with "no bookings yet
     today", ghost line still visible (yesterday's pace is useful even at $0).
-- [ ] A-01f Radar card money fix (Cam) — "Expected at check-in $133" shows
+- [x] A-01f Radar card money fix (Cam) — BUILT: d6ce00a. NOTE: spec asked to
+  fold "pending late-cancel fees" into the GR-fees headline, but
+  chargeOnConnectedAccount is called with applicationFeeCents: 0 for those
+  charges in both cron/cancellation-cutoff and cron/hourly — today that fee
+  is 100% course revenue, GR takes no cut. Left out of the headline rather
+  than misstate "our take"; flag if the fee-split was supposed to change
+  (that'd be its own item, not a revise-run fix). Otherwise built as spec'd:
+  "Expected at check-in $133" shows
   the COURSE'S gross, not ours. Replace with "GR fees expected today" (the
   $1.50 x players across today's uncompleted rounds, + any pending
   late-cancel fees) as the headline number; keep the gross as a small muted
