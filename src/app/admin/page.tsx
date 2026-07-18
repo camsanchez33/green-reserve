@@ -37,7 +37,7 @@ interface Stats {
   };
   bottomTrio: {
     pipeline: { newInquiries: number; sheetsOut: number; building: number; wentLive: number };
-    teeSheetToday: { roundsToday: number; checkInsDone: number; revenueExpected: number };
+    teeSheetToday: { roundsToday: number; checkInsDone: number; grFeesExpected: number; grossExpected: number };
     courseHealthWatchlist: { id: string; name: string; reason: string }[];
   };
 }
@@ -488,9 +488,10 @@ export default function AdminOverviewPage() {
                     <span className="text-sm font-medium text-ink">{stats.bottomTrio.teeSheetToday.checkInsDone} / {stats.bottomTrio.teeSheetToday.roundsToday}</span>
                   </button>
                   <button onClick={() => router.push('/admin/revenue')} className="w-full flex items-center justify-between text-left px-2 py-1.5 -mx-2 rounded-md hover:bg-paper transition-colors">
-                    <span className="text-sm text-ink">Expected at check-in</span>
-                    <span className="text-sm font-medium text-ok">{fmtMoney(stats.bottomTrio.teeSheetToday.revenueExpected)}</span>
+                    <span className="text-sm text-ink">GR fees expected</span>
+                    <span className="text-sm font-medium text-ok">{fmtMoney(stats.bottomTrio.teeSheetToday.grFeesExpected)}</span>
                   </button>
+                  <div className="px-2 text-xs text-ink-faint">courses will collect ~{fmtMoney(stats.bottomTrio.teeSheetToday.grossExpected)}</div>
                 </div>
               </div>
 

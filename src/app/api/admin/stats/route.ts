@@ -155,7 +155,7 @@ export async function GET() {
     prisma.inquiryStatusEvent.groupBy({ by: ['inquiryId'], where: { toStatus: 'details_requested', createdAt: { gte: startOfMonth } } }),
     prisma.inquiryStatusEvent.groupBy({ by: ['inquiryId'], where: { toStatus: 'building', createdAt: { gte: startOfMonth } } }),
     prisma.courseInquiry.count({ where: { wentLiveAt: { gte: startOfMonth } } }),
-    prisma.booking.findMany({ where: { status: { in: COMPLETED }, teeTime: { date: todayDateStr } }, select: { checkedInAt: true, totalAmount: true } }),
+    prisma.booking.findMany({ where: { status: { in: COMPLETED }, teeTime: { date: todayDateStr } }, select: { checkedInAt: true, totalAmount: true, accessFeeTotal: true } }),
     prisma.course.findMany({ where: { active: true, archivedAt: null }, select: { id: true, name: true, createdAt: true } }),
     prisma.booking.groupBy({ by: ['courseId'], where: { status: { in: COMPLETED }, createdAt: { gte: thirtyDaysAgo } }, _count: { id: true } }),
     prisma.booking.groupBy({ by: ['courseId'], where: { status: { in: COMPLETED }, createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } }, _count: { id: true } }),
@@ -393,10 +393,20 @@ export async function GET() {
     wentLive: wentLiveMTD,
   };
 
+  // A-01f: lead with OUR take (GR fees), not the course's gross — the
+  // headline is $1.50/player across today's uncompleted rounds. Spec text
+  // also asked to fold in "pending late-cancel fees," but those charges are
+  // 100% course revenue today (chargeOnConnectedAccount is called with
+  // applicationFeeCents: 0 for late-cancel charges in both
+  // cron/cancellation-cutoff and cron/hourly) — GR takes no cut, so
+  // including them would misstate "our take" in the exact way this fix is
+  // meant to prevent. Left out; flagged in REVISE_QUEUE.md for Cam.
+  const uncheckedInToday = teeSheetBookingsToday.filter(b => b.checkedInAt === null);
   const teeSheetToday = {
     roundsToday: teeSheetBookingsToday.length,
     checkInsDone: teeSheetBookingsToday.filter(b => b.checkedInAt !== null).length,
-    revenueExpected: teeSheetBookingsToday.filter(b => b.checkedInAt === null).reduce((s, b) => s + b.totalAmount, 0) / 100,
+    grFeesExpected: uncheckedInToday.reduce((s, b) => s + b.accessFeeTotal, 0) / 100,
+    grossExpected: uncheckedInToday.reduce((s, b) => s + b.totalAmount, 0) / 100,
   };
 
   // Course health watchlist: courses trending DOWN vs their own prior 30d.
