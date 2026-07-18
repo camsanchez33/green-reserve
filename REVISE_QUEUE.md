@@ -166,8 +166,76 @@ in flight at a time.
   point. Principle: every money number on OUR overview defaults to OUR take.
   Audit the rest of the Overview for the same confusion (the ticker already
   leads with fees — verify nothing else leads with gross).
-- [ ] A-02 /admin/inquiries — list (tabs, search, sort)
-- [ ] A-03 /admin/inquiries/[id] — detail (Contact/Answers/Sheet/Activity, next-step card, toolbar)
+- [ ] A-02 /admin/inquiries — LIST — SPEC (Cam teardown + browser audit, 2026-07-18):
+  1. FULL-WIDTH layout (kill half-screen container), same as Overview.
+  2. HEADER REBUILT (Cam: "genuinely changed"): two clean rows, nothing stacked
+     awkwardly — Row 1: "Inquiries" title + one-line pipeline summary
+     ("4 active · 1 needs you · 3 live all-time") left; search + Refresh right.
+     Row 2: tabs with counts left; sort dropdown right, SAME row. The gray
+     per-tab description bar DIES — its text moves to each tab's empty state
+     and a hover tooltip. No third row.
+  3. TABS RECONCILED: Your move · New · In review · Waiting on them ·
+     Building · LIVE (new — converted wins get their own tab; successes are
+     not "archived") · All · Archived. "All" = every stage INCLUDING live +
+     archived (make the name true). Archived = rejected/closed only.
+     Every count comes from the same API definitions the Overview strip uses
+     — one source of truth, numbers can never disagree (fix the Waiting
+     card mismatch + its unstable format while in there).
+  4. ORDER: default sort on work tabs (Your move, New, In review) = LONGEST
+     IN STAGE first (it's a queue — oldest overdue screams first); All/
+     Archived default Newest. Sort choice persists per tab.
+  5. SCALE: pagination (50/row pages); filters row (collapsible): course
+     type, state, age bucket (>3d / >7d / >14d), has-bad-data. Bulk select
+     checkboxes → bulk Send Sheet (New tab), bulk Archive (with typed
+     confirm) — each bulk action previews recipient list before firing.
+  6. DATA QUALITY: rows with invalid email get an amber "bad email" chip
+     (no more invisible not-an-email records).
+  7. ROWS ARE REAL LINKS: <a> semantics — keyboard nav, middle-click new
+     tab. Status dots get text labels or a legend (no color-only signals).
+  8. VIEWING IS NOT ACTING: opening a Pending inquiry NO LONGER auto-flips
+     it to In Review or writes fake "Cam moved this" history. Stage moves
+     happen only on explicit actions. (The New count only drops when Cam
+     DOES something.)
+- [ ] A-03 /admin/inquiries/[id] — DETAIL — SPEC (Cam teardown + browser audit, 2026-07-18):
+  1. HEADER REBUILT as a flight plan, not a button strip:
+     - STAGE CHECKPOINTS across the top: Inquiry → Review → Sheet → Build →
+       Live, each with done/current/pending state and its DATE when done —
+       "what has been done and what needs to be done" visible in one glance.
+     - ONE primary action button = the current stage's next step (same logic
+       as the Next Step card, which merges INTO the header — one brain, not
+       two). Everything else (Manage course, dashboard access, preview,
+       stage override, delete) moves into a "⋯ More" menu.
+  2. NO PUBLISHING ON A WHIM: Go Live opens a preflight modal — checklist of
+     preconditions with real checks (sheet submitted? page approved by
+     course? Stripe connected? operator email verified?) — green checks
+     proceed; missing items require an explicit "override and go live
+     anyway" with the course name typed. Same pattern for Skip & Build
+     (rename: "Build without sheet"), which currently fires a welcome email
+     + Stripe attempt with NO confirm — audit's #1 finding, this is the gun:
+     modal must state exactly what will happen and WHO gets emailed, typed
+     confirm required.
+  3. EVERY EMAIL-SENDING ACTION discloses recipient + content summary in its
+     modal before firing ("Sends setup sheet link to jamie@example.com").
+     No generic browser confirm() anywhere on the page.
+  4. ACTIVITY BECOMES A REAL LEDGER (Cam: "specific what was actually
+     done"): log the missing events — sheet SUBMITTED by course (the
+     when-did-they-respond moment), preview sent (to whom), dashboard access
+     sent, welcome email sent, course built (via sheet draft-build or manual),
+     approval received, contact edited, note added. Attribution honest: "by
+     Cam" only for Cam's clicks, "system" for automatic transitions, course
+     actions attributed to the course. Fix the approval-after-live ordering
+     bug. Views are never logged.
+  5. READY-TO-BUILD CHECKLIST: three states — present (green) / thin (amber:
+     suspicious content like a 1-char description) / missing (red) — with
+     labels, not identical dots. Checks usefulness, not just presence.
+  6. Fix raw enum leak (beverage_cart → "Beverage cart") via the existing
+     label maps. Next Step guidance is content-aware (never "review the
+     Answers tab" when answers are empty).
+  7. Overview action queue: archived or live inquiries can NEVER appear as
+     stalled (fix the query).
+  8. CLEANUP: revert Fake Fairways Golf Club to its pre-audit stage (the
+     browser audit's Skip & Build fired for real) — delete the orphan
+     course/operator it created if any.
 - [ ] A-04 /admin/courses — list (filters, health signals, search)
 - [ ] A-05 /admin/courses/[id] — course detail (all tabs: overview, transactions, tee sheet, schedule, members, staff, messages, contact, setup)
 - [ ] A-06 /admin/revenue — fees, per-course table, problems, Stripe reconciliation
