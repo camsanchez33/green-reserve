@@ -74,6 +74,12 @@ in flight at a time.
   8. SYSTEMS LINE — quiet bottom row: last backup ✓/date · crons ✓ · Stripe
      webhook last event · CI status. StatusDots + links. 30-second health check.
 
+- [ ] A-01b Overview follow-up (from Cam's verify pass) — P&L-style header: the
+  chart's headline numbers FOLLOW the Day/Week/Month toggle like a stock P&L —
+  Day shows fees earned TODAY (+ gross today), Week shows this week, Month
+  shows this month, each with "vs prior period" delta next to it (ghost-bar
+  logic, now in the numbers). Default view = Day. The static 30d totals move
+  down into the 30-DAY ROW where they already have a home.
 - [ ] A-02 /admin/inquiries — list (tabs, search, sort)
 - [ ] A-03 /admin/inquiries/[id] — detail (Contact/Answers/Sheet/Activity, next-step card, toolbar)
 - [ ] A-04 /admin/courses — list (filters, health signals, search)
@@ -85,13 +91,4 @@ in flight at a time.
 - [ ] A-10 /admin/employees — roles, provisioning
 - [ ] A-11 /admin/broadcasts — compose, preview, history
 - [ ] A-12 /admin/create — manual build wizard (in-person tool)
-- [ ] A-13 /admin/profile — password, 2FA path
-- [ ] A-14 Admin auth pages — login, owner-login, set-password, forgot-password
-- [ ] A-15 Admin shell — sidebar, collapse, Ctrl+K palette, unread badges
-
-(Teardown notes → spec block gets written under each entry when Cam tears it down.)
-
-## SURFACE 2: OPERATOR DASHBOARD (queued)
-## SURFACE 3: GOLFER FLOW + PORTALS (queued)
-## SURFACE 4: MARKETING SITE (queued)
-## SURFACE 5: EMAILS (queued)
+- [ ] A-13 /admin

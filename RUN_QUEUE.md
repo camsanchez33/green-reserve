@@ -185,6 +185,11 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 - [ ] Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm the state before this runs — e.g. "TheGreenReserve LLC, a New York limited liability company"). Bump "Last updated" dates. Attorney-review HTML comment stays.
 
+- [ ] EXPENSE TRACKER / real P&L (schema change, attended) — Cam wants the revenue view to read like a stock P&L: fees earned MINUS costs = net. Two expense sources:
+  (1) AUTOMATIC: Stripe's own processing costs on GR's application fees — pull from Stripe balance transactions (fee field) alongside the A2b reconciliation, no manual entry;
+  (2) MANUAL: new `Expense` table (name, category [infra/tools/legal/other], amountCents, cadence [monthly/annual/one-time], startedAt, endedAt?) — admin CRUD on /admin/revenue for the fixed costs (Vercel, Neon, Resend, Twilio, domain, etc.), monthly costs prorated into period views.
+  Display on /admin/revenue (and the Overview P&L header once A-01b lands): Fees earned − Stripe processing − expenses = NET, per Day/Week/Month period, with vs-prior delta. Migration via checklist (additive table — create-only → review → deploy pattern OK).
+
 ## Ideas / not yet specced
 
 - OPERATOR STAFF ACCOUNTS rework (Cam, 2026-07-10: "whole thing is going to be reworked and better") — current section contradicts itself: copy says "full dashboard access", role dropdown says "tee sheet access". Rework needs: clear role tiers (e.g. owner / manager / tee-sheet-only), what each can see (money? settings? members?), invite email flow, deactivate/reset from the card, and the same no-silent-failure patterns as admin. Spec when Cam's ready to define the role tiers.
