@@ -134,7 +134,7 @@ in flight at a time.
      event received — derivable from DB timestamps), CI (link + last status
      via GitHub API if token), Sentry (link). Overview keeps ONE dot:
      "Systems ✓" → /admin/system. No-silent-failure states throughout.
-- [ ] A-01e Overview chart FINAL FORM — SUPERSEDES A-01c's bar re-bucketing
+- [x] A-01e Overview chart FINAL FORM — BUILT: c20701e. SUPERSEDES A-01c's bar re-bucketing
   (if bars per bucket were already built, replace them): the chart is a
   CUMULATIVE MONEY TICKER, stock-P&L style:
   - Day view: a line of cumulative GR fees earned since midnight, climbing
