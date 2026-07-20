@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { RefreshCw, Search, Trash2 } from 'lucide-react';
+import { RefreshCw, Search, Trash2, ChevronRight } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
@@ -33,6 +33,12 @@ const TABS = [
   { key: 'all', label: 'All', statuses: ['pending', 'in_review', 'details_requested', 'details_submitted', 'building', 'live', 'rejected', 'archived'], description: 'Every inquiry, every stage — including live and archived.' },
   { key: 'archived', label: 'Archived', statuses: ['rejected', 'archived'], description: 'Rejected or closed — kept for records.' },
 ];
+
+// A-02b: the tab row splits into a connected pipeline funnel (how an inquiry
+// actually flows left to right) and a separate "lenses" group (cross-cutting
+// views that aren't a pipeline stage).
+const PIPELINE_KEYS = ['new', 'in-review', 'waiting', 'building', 'live'];
+const LENS_KEYS = ['your-move', 'all', 'archived'];
 
 // Work tabs default to longest-in-stage first — it's a queue, oldest overdue
 // should scream first. Informational tabs (Live/All/Archived) default newest.
@@ -298,31 +304,67 @@ function InquiriesListInner() {
             </div>
           </div>
 
-          {/* Row 2: tabs (with counts) + sort, same row */}
-          <div className="flex items-center justify-between gap-4 border-b border-line mb-5">
-            <div className="flex gap-0 -mb-px overflow-x-auto">
-              {TABS.map(tab => {
+          {/* Row 2: pipeline funnel + lenses, then filters/sort below */}
+          <div className="flex items-center justify-between gap-x-6 gap-y-2 flex-wrap border-b border-line pb-3 mb-3">
+            {/* Pipeline — connected funnel, teaches how an inquiry flows */}
+            <div className="flex items-center gap-0.5 flex-wrap">
+              {PIPELINE_KEYS.map((key, i) => {
+                const tab = TABS.find(t => t.key === key)!;
                 const count = countFor(tab);
-                const active = tab.key === activeTabKey;
+                const active = key === activeTabKey;
+                return (
+                  <div key={key} className="flex items-center">
+                    <button
+                      onClick={() => switchTab(key)}
+                      title={tab.description}
+                      className={
+                        'flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ' + (
+                          active ? 'border-pine text-pine'
+                          : count === 0 ? 'border-transparent text-ink-faint/60 hover:text-ink-muted'
+                          : 'border-transparent text-ink-muted hover:text-ink'
+                        )
+                      }
+                    >
+                      {tab.label}
+                      <span className={
+                        'text-[10px] font-medium rounded-full px-1.5 py-0.5 min-w-[18px] text-center ' + (
+                          active ? 'bg-pine/15 text-pine'
+                          : count > 0 ? 'bg-line-strong text-ink-muted' : 'text-ink-faint'
+                        )
+                      }>
+                        {count}
+                      </span>
+                    </button>
+                    {i < PIPELINE_KEYS.length - 1 && <ChevronRight className="w-3.5 h-3.5 text-ink-faint shrink-0"/>}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Lenses — cross-cutting views, visually separated */}
+            <div className="flex items-center gap-1 pl-4 border-l border-line-soft">
+              {LENS_KEYS.map(key => {
+                const tab = TABS.find(t => t.key === key)!;
+                const count = countFor(tab);
+                const active = key === activeTabKey;
+                const yourMoveAlert = key === 'your-move' && count > 0;
                 return (
                   <button
-                    key={tab.key}
-                    onClick={() => switchTab(tab.key)}
+                    key={key}
+                    onClick={() => switchTab(key)}
                     title={tab.description}
                     className={
-                      'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ' + (
-                        active
-                          ? 'border-pine text-pine'
-                          : 'border-transparent text-ink-muted hover:text-ink'
+                      'flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ' + (
+                        active ? 'border-pine text-pine' : 'border-transparent text-ink-muted hover:text-ink'
                       )
                     }
                   >
                     {tab.label}
                     <span className={
                       'text-[10px] font-medium rounded-full px-1.5 py-0.5 min-w-[18px] text-center ' + (
-                        active
-                          ? 'bg-pine/15 text-pine'
-                          : count > 0 ? 'bg-line-strong text-ink-muted' : 'text-ink-faint'
+                        active ? 'bg-pine/15 text-pine'
+                        : yourMoveAlert ? 'bg-warn/15 text-warn'
+                        : count > 0 ? 'bg-line-strong text-ink-muted' : 'text-ink-faint'
                       )
                     }>
                       {count}
@@ -331,28 +373,29 @@ function InquiriesListInner() {
                 );
               })}
             </div>
-            <div className="flex items-center gap-2 mb-2 shrink-0">
-              <button
-                onClick={() => setFiltersOpen(v => !v)}
-                className={'text-xs font-medium rounded-md px-3 py-1.5 border transition-colors ' + (
-                  filtersOpen || filterCourseType || filterState || filterAgeBucket || filterBadDataOnly
-                    ? 'border-pine/40 text-pine bg-pine/5'
-                    : 'border-line text-ink-soft hover:text-ink bg-white'
-                )}
-              >
-                Filters
-              </button>
-              <select
-                value={sortBy}
-                onChange={e => setSortForActiveTab(e.target.value)}
-                className="bg-white border border-line text-ink-soft text-xs rounded-md px-3 py-1.5 outline-none focus:border-pine/40 cursor-pointer"
-              >
-                <option value="newest">Newest first</option>
-                <option value="oldest">Oldest first</option>
-                <option value="name">Name A–Z</option>
-                <option value="longest_stage">Longest in stage</option>
-              </select>
-            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 mb-4">
+            <button
+              onClick={() => setFiltersOpen(v => !v)}
+              className={'text-xs font-medium rounded-md px-3 py-1.5 border transition-colors ' + (
+                filtersOpen || filterCourseType || filterState || filterAgeBucket || filterBadDataOnly
+                  ? 'border-pine/40 text-pine bg-pine/5'
+                  : 'border-line text-ink-soft hover:text-ink bg-white'
+              )}
+            >
+              Filters
+            </button>
+            <select
+              value={sortBy}
+              onChange={e => setSortForActiveTab(e.target.value)}
+              className="bg-white border border-line text-ink-soft text-xs rounded-md px-3 py-1.5 outline-none focus:border-pine/40 cursor-pointer"
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="name">Name A–Z</option>
+              <option value="longest_stage">Longest in stage</option>
+            </select>
           </div>
 
           {/* Collapsible filters row */}
