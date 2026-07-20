@@ -69,7 +69,7 @@ export function describeChangeEvent(actorName: string | null | undefined): strin
 // The OPEN (unaddressed) items for the CURRENT round — anchored to the most
 // recent "Preview sent" event, since sending an updated preview starts a
 // fresh round and old resolved items must never bleed through as still-open.
-export function computeOpenChanges(events: { actorName: string | null; createdAt: string }[]): ChangeItem[] {
+export function computeOpenChanges(events: { actorName: string | null; createdAt: string | Date }[]): ChangeItem[] {
   const sorted = [...events].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   let lastPreviewIdx = -1;
   for (let i = sorted.length - 1; i >= 0; i--) {
@@ -93,7 +93,7 @@ export function computeOpenChanges(events: { actorName: string | null; createdAt
 // Anchor the input events to the current build cycle before calling this
 // (e.g. events since the last "-> building" transition) so a stale decision
 // from a prior rebuild can't be read as current.
-export function latestPageDecision(events: { actorName: string | null; createdAt: string }[]): 'approved' | 'changes_requested' | null {
+export function latestPageDecision(events: { actorName: string | null; createdAt: string | Date }[]): 'approved' | 'changes_requested' | null {
   const sorted = [...events].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   for (let i = sorted.length - 1; i >= 0; i--) {
     const an = sorted[i].actorName;
@@ -103,10 +103,23 @@ export function latestPageDecision(events: { actorName: string | null; createdAt
   return null;
 }
 
+// Timestamp of the OLDEST changes-requested event in the current round —
+// used to age a still-open change request (e.g. for the action queue).
+export function oldestOpenChangeRequestDate(events: { actorName: string | null; createdAt: string | Date }[]): Date | null {
+  const sorted = [...events].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  let lastPreviewIdx = -1;
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    if (sorted[i].actorName?.startsWith('Preview sent')) { lastPreviewIdx = i; break; }
+  }
+  const scoped = sorted.slice(lastPreviewIdx + 1);
+  const firstRequest = scoped.find(ev => isChangesRequestedEvent(ev.actorName));
+  return firstRequest ? new Date(firstRequest.createdAt) : null;
+}
+
 // Has this round had ANY changes requested at all (open or already fully
 // addressed)? Used to decide whether "Send updated preview" should be the
 // next action, vs. the normal "waiting on review" / "approved" messaging.
-export function hasRequestedChangesThisRound(events: { actorName: string | null; createdAt: string }[]): boolean {
+export function hasRequestedChangesThisRound(events: { actorName: string | null; createdAt: string | Date }[]): boolean {
   const sorted = [...events].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   let lastPreviewIdx = -1;
   for (let i = sorted.length - 1; i >= 0; i--) {

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
 import { ACTIVE_STATUSES } from '@/lib/inquiry-status';
+import { computeOpenChanges, oldestOpenChangeRequestDate, CATEGORY_LABEL } from '@/lib/change-requests';
 
 const COMPLETED = ['confirmed', 'completed'];
 
@@ -82,6 +83,7 @@ export async function GET() {
     sheetNoResponse,
     sheetNoResponseCount,
     threadsForUnanswered,
+    buildingInquiriesForChanges,
 
     newInquiriesMTD,
     sheetsOutMTDRaw,
@@ -150,6 +152,10 @@ export async function GET() {
       select: { id: true, courseId: true, course: { select: { name: true } }, messages: { orderBy: { createdAt: 'desc' }, take: 1, select: { senderType: true, senderName: true, createdAt: true } } },
       take: 200,
       orderBy: { updatedAt: 'desc' },
+    }),
+    prisma.courseInquiry.findMany({
+      where: { status: 'building' },
+      select: { id: true, courseName: true, events: { select: { actorName: true, createdAt: true }, orderBy: { createdAt: 'asc' } } },
     }),
 
     prisma.courseInquiry.count({ where: { createdAt: { gte: startOfMonth } } }),
@@ -301,15 +307,37 @@ export async function GET() {
       fire: { kind: 'send_nudge', courseId: t.courseId },
     }));
 
+  // V13b item 3: a building-stage inquiry with unaddressed change requests is
+  // always OUR move, regardless of age — the course already told us what to
+  // fix. Anchored the same way the inquiry detail page anchors it (per-round,
+  // via computeOpenChanges), so this can never disagree with that page.
+  const changesRequestedAmber: Row[] = buildingInquiriesForChanges
+    .map(inq => ({ inq, open: computeOpenChanges(inq.events) }))
+    .filter(({ open }) => open.length > 0)
+    .map(({ inq, open }) => {
+      const categories = open.map(it => CATEGORY_LABEL[it.category] || it.category).join(', ');
+      const oldestRequest = oldestOpenChangeRequestDate(inq.events);
+      return {
+        id: `cr-${inq.id}`,
+        who: inq.courseName,
+        why: `Changes requested — ${categories}`,
+        doThis: `Address each item on the inquiry (${categories}), then send an updated preview.`,
+        ageDays: oldestRequest ? Math.floor((now.getTime() - oldestRequest.getTime()) / 86400000) : 0,
+        actionLabel: 'Open',
+        href: `/admin/inquiries/${inq.id}`,
+      };
+    });
+
   const amber: Row[] = [
     ...waitingOnUsRows,
     ...draftsAmberRows,
     ...previewSentAmber,
     ...sheetNoResponseRows,
     ...threadAmber,
+    ...changesRequestedAmber,
   ].sort((a, b) => b.ageDays - a.ageDays).slice(0, 5);
 
-  const amberCount = waitingOnUsCount + draftsAmberCount + previewSentAmber.length + sheetNoResponseCount + threadAmber.length;
+  const amberCount = waitingOnUsCount + draftsAmberCount + previewSentAmber.length + sheetNoResponseCount + threadAmber.length + changesRequestedAmber.length;
 
   // ---- revenue: cumulative money ticker (A-01e — supersedes the A-01c bars) ----
   // Every point is inherently an honest "so far" comparison: both the current
