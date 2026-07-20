@@ -446,7 +446,12 @@ route through it.
 
 ---
 
-## Phase V13 — Guided operator onboarding: the dashboard explains itself (BIG, no migration)
+## Phase V13 — Guided operator onboarding: the dashboard explains itself (BIG, no migration) — BUILT
+Item 1: d2b7475 (Getting Started checklist). Item 2: 6a3250c (tab intro cards).
+Item 3: ec016a5 (emails point at checklist). Item 4 (no new schema) — honored:
+checklist derives from emailVerified/onboardingStep/pageApprovalStatus/
+stripeAccountActive plus localStorage visit-tracking (src/lib/dashboard-visits.ts),
+nothing persisted server-side.
 
 Cam (2026-07-20): when a course gets preview/dashboard access, they must be
 walked through everything — what each tab does, and what THEY must do
