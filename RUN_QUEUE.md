@@ -251,7 +251,43 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 - [ ] BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as law, scope guardrails + rate caps + BIRDIE_ENABLED kill switch, floating Birdie chat UI, operator how-to knowledge pack + read-only course awareness + deep links, NO writes (BIG, no migration; PREREQ: Cam adds ANTHROPIC_API_KEY to Vercel — full spec in BIRDIE_AI_SPEC.md; B2 golfer / B3 admin / B4 confirm-actions follow)
 
-- [ ] BUG: review loop doesn't understand "already live" (no migration) — DB
+- [x] BUG: review loop doesn't understand "already live" — FIXED, verified
+  against the real test-course data that reproduced it (CAM SANCHEZ COURSE:
+  read-only, non-PII query of its inquiry events — went live at 17:08:27,
+  then SIX stacked "Course approved their page" events between 17:09 and
+  17:42, plus a CHANGES_REQUESTED submission at 17:13 while already live —
+  confirms every part of Cam's repro):
+  1. GettingStartedChecklist: `pageReviewed = pageApprovalStatus === 'approved'
+     || !courseDraft` — going live now supersedes approval, and the
+     approve/request-changes mini-controls are explicitly re-gated on
+     `courseDraft` too (belt-and-suspenders — never show pre-live controls on
+     a live course). Collapse logic reworked: was `if (!courseDraft && allDone)
+     return null` (vanished forever once live, could never re-derive since
+     pageReviewed was unreachable for live courses) — now collapses to the
+     slim bar whenever all steps are done, live or not, via a proper
+     expand/collapse override state (previously "done" would have gotten
+     permanently stuck collapsed with no way to reopen — fixed that too).
+  2. /api/operator/approve-page AND /api/preview/[courseId]/approve: both now
+     check `course.active && course.liveStatus === 'live'` first and return
+     `{ ok: true, alreadyLive: true, message: "You're already live — nothing
+     to approve." }` with no event write. Both also check
+     `latestPageDecision(events) === 'approved'` before writing — a repeat
+     click while already approved (pre-live) is now a no-op instead of a
+     stacked duplicate event + duplicate admin email.
+  3. Admin inquiry detail (live stage): now shows "Live since {date} · Page
+     approved by course · {date}" using the most recent "Course approved
+     their page" event, so the approval survives as visible history instead
+     of vanishing once the inquiry leaves 'building' status.
+  4. Preview page (CourseBookingClient): added `is_live` to the preview API
+     response; the banner now shows a "this course is live" message with no
+     approve/request-changes controls when `is_live`, instead of the stale
+     pre-live banner an old bookmarked/emailed preview link would otherwise
+     still show forever. The changes_requested marker written while live
+     (confirmed in the repro data) is already correctly ignored by the admin
+     UI (gated on `status === 'building'`) — it just sits in Activity history,
+     never mistaken for a pending pre-live request.
+  Original spec:
+  BUG: review loop doesn't understand "already live" (no migration) — DB
   truth (verified): approval events write fine + email fires; the course was
   set LIVE first, and /api/operator/courses only derives pageApprovalStatus
   for NON-live courses, so the checklist showed an unchecked approve step on
