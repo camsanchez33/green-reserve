@@ -194,6 +194,25 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 - [ ] ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → "Send updated preview"), Messages gets a mirror link only, stall logic counts unaddressed requests as Your Move (medium, no migration)
 
+- [ ] BUG: checklist approve button is a dead wire (no migration) — on the V13
+  Getting Started checklist, "Looks good — approve" gives NO feedback, the
+  step is unchecked again after reload, and the V12 admin notification email
+  never arrives. Reproduce first, then fix the whole chain:
+  (1) button gets pending → success/error states (no-silent-failures rule —
+  this exact pattern was mandated in A6 item 2, apply it);
+  (2) confirm the click actually hits /api/operator/approve-page and the
+  approval timeline event is WRITTEN (check server logs/response);
+  (3) the checklist's "Review your booking page" step must DERIVE from
+  pageApprovalStatus (the V12 computed value) so it survives reload;
+  (4) the admin notification email ("{course} approved their page — ready to
+  go live") must fire — verify delivery to hello@greenreserve.app, not just
+  code that looks right;
+  (5) test the Request-changes path from the checklist the same way (it
+  should open the V13b structured form once that ships);
+  (6) after fix: approve on the test course → step shows ✓ immediately AND
+  after reload → email lands → inquiry Next-step flips to "Course approved
+  — Go Live".
+
 ## Ideas / not yet specced
 
 - OPERATOR STAFF ACCOUNTS rework (Cam, 2026-07-10: "whole thing is going to be reworked and better") — current section contradicts itself: copy says "full dashboard access", role dropdown says "tee sheet access". Rework needs: clear role tiers (e.g. owner / manager / tee-sheet-only), what each can see (money? settings? members?), invite email flow, deactivate/reset from the card, and the same no-silent-failure patterns as admin. Spec when Cam's ready to define the role tiers.
