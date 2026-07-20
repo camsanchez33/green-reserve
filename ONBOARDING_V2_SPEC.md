@@ -487,7 +487,13 @@ owner who has never used software like this.
    via localStorage). If anything truly needs persistence, note it for the
    next migration batch instead of adding one here.
 
-## Phase V13b — Request-changes v2: structured, and it lives on the inquiry (medium, no migration)
+## Phase V13b — Request-changes v2: structured, and it lives on the inquiry (medium, no migration) — BUILT
+Items 1-2: 6deac02 (structured categories on the preview page + addressable
+list on the inquiry, single "Send Updated Preview" primary action once all
+addressed). Item 3: 02b167e (Overview action queue treats unaddressed
+changes as Your Move regardless of age). Storage: src/lib/change-requests.ts
+encodes structured JSON inside the existing InquiryStatusEvent.actorName
+string — no migration, per item 4.
 
 Cam tested the preview review loop: free-text change requests land in the
 Messages tab where they're easy to miss. Rework:
