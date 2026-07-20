@@ -251,6 +251,26 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 - [ ] BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as law, scope guardrails + rate caps + BIRDIE_ENABLED kill switch, floating Birdie chat UI, operator how-to knowledge pack + read-only course awareness + deep links, NO writes (BIG, no migration; PREREQ: Cam adds ANTHROPIC_API_KEY to Vercel — full spec in BIRDIE_AI_SPEC.md; B2 golfer / B3 admin / B4 confirm-actions follow)
 
+- [ ] BUG: review loop doesn't understand "already live" (no migration) — DB
+  truth (verified): approval events write fine + email fires; the course was
+  set LIVE first, and /api/operator/courses only derives pageApprovalStatus
+  for NON-live courses, so the checklist showed an unchecked approve step on
+  a live course forever. Fix the state machine, not the wire:
+  (1) course live ⇒ "Review your booking page" step derives as DONE (going
+  live supersedes approval) and the whole Getting Started checklist collapses
+  to its slim completed bar when the course is live and steps are done —
+  a live course must never show pre-live review controls;
+  (2) /api/operator/approve-page: if course is already live, return a
+  friendly "You're already live — nothing to approve" (200, no event)
+  instead of recording; also make approval idempotent pre-live (consecutive
+  duplicate approve events don't stack — Cam's test wrote SIX);
+  (3) admin inquiry (live stage): header shows a quiet "Page approved by
+  course · {date}" note when approval events exist, so the approval isn't
+  invisible history;
+  (4) sanity-check the V13b changes_requested path for the same live-state
+  hole (a live course requesting changes should route to Messages/support,
+  not the pre-live loop).
+
 ## Ideas / not yet specced
 
 - OPERATOR STAFF ACCOUNTS rework (Cam, 2026-07-10: "whole thing is going to be reworked and better") — current section contradicts itself: copy says "full dashboard access", role dropdown says "tee sheet access". Rework needs: clear role tiers (e.g. owner / manager / tee-sheet-only), what each can see (money? settings? members?), invite email flow, deactivate/reset from the card, and the same no-silent-failure patterns as admin. Spec when Cam's ready to define the role tiers.
