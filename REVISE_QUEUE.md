@@ -211,7 +211,24 @@ in flight at a time.
   - Counts stay live from the shared definitions (A-02 item 3). Sort +
     per-tab empty states unchanged. Keyboard navigable. On narrow widths the
     funnel wraps above the lenses rather than truncating.
-- [ ] A-02c URGENT — funnel has a hole: "Sheet In" (details_submitted) has NO
+- [x] A-02c URGENT — BUILT: 2abb5f2. Added src/lib/inquiry-status.ts as the single
+  exported status→segment source of truth (list, funnel, detail page, Overview
+  action queue all import it). Sheet In (details_submitted) segment added,
+  Waiting on them renamed to Sheet sent. Completeness invariant renders a red
+  "N inquiries unmapped" chip if any status ever falls outside the known set —
+  verified live: this immediately surfaced ONE pre-existing prod inquiry
+  ("cam course", id cmqkb84he00007itp9jmas88d) sitting at status="approved",
+  which isn't a real pipeline stage (that string is used elsewhere for
+  pageApprovalStatus, unrelated) — likely stale test data, left untouched
+  pending Cam's call (same as the Fake Fairways cleanup in A-03 item 8 — not
+  deleting production records without an explicit go-ahead). CAM SANCHEZ
+  COURSE (Cam's original repro) has since progressed from Sheet In to
+  Building in prod, so it renders correctly under its own segment now; the
+  fix itself was verified against the details_submitted case directly.
+  Your Move lens now derives from age (pending/in_review stalled >3d,
+  sheet-sent stalled >7d) in addition to details_submitted/building, per
+  item 3.
+  ORIGINAL SPEC: funnel has a hole: "Sheet In" (details_submitted) has NO
   segment, so an inquiry whose course just submitted their sheet DISAPPEARS
   from the pipeline row (Cam's live repro: CAM SANCHEZ COURSE, Sheet In,
   every funnel count 0). Fix with a COMPLETENESS RULE, not a patch:
