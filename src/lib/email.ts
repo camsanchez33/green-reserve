@@ -560,7 +560,8 @@ export async function sendPreviewEmail(data: {
     <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:16px;margin-bottom:20px;">
       <p style="margin:0;color:#374151;font-size:13px;">Booking is disabled on this preview link &mdash; it's only for you to review the layout and information. Reply to this email with any changes and we'll get them in quickly.</p>
     </div>
-    <p style="margin:0 0 20px;color:#9ca3af;font-size:13px;">Want to see your dashboard too? We can send you access &mdash; just reply.</p>
+    <p style="margin:0 0 12px;color:#9ca3af;font-size:13px;">Want to see your dashboard too? We can send you access &mdash; just reply.</p>
+    <p style="margin:0 0 20px;color:#9ca3af;font-size:13px;">When you log in, your Getting Started checklist will walk you through everything, including payments setup.</p>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
       Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
     </p>
@@ -599,6 +600,7 @@ export async function sendDashboardAccessEmail(data: {
     <a href="${data.setupLink}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:700;font-size:16px;margin-bottom:16px;">
       Set Up My Dashboard &rarr;
     </a>
+    <p style="margin:0 0 20px;color:#9ca3af;font-size:13px;">When you log in, your Getting Started checklist will walk you through everything, including payments setup.</p>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
       Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
     </p>
