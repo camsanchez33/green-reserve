@@ -194,7 +194,43 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 - [ ] ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → "Send updated preview"), Messages gets a mirror link only, stall logic counts unaddressed requests as Your Move (medium, no migration)
 
-- [ ] BUG: checklist approve button is a dead wire (no migration) — on the V13
+- [x] BUG: checklist approve button is a dead wire — FIXED, code-verified (live
+  click-through/email-delivery confirmation still pending Cam's own test —
+  see note). Root causes found by code trace (DB dumps and session-token
+  forging were both correctly blocked as production-data/security actions,
+  so this was fixed from static analysis + the A6 item 2 precedent, not a
+  live click):
+  1. `/api/operator/approve-page` and `/api/preview/[courseId]/approve` both
+     AWAITED `sendCourseApprovedNotification` synchronously in the request
+     path — the exact anti-pattern A6 item 2 banned ("Send Sheet"/"Reset pwd"
+     froze 30s-2min for this reason). Switched to fire-and-forget + .catch
+     logging in both, plus the request-changes route's admin-notification
+     email (same bug, found while in there).
+  2. Both approve routes silently no-op'd (`if (inquiry) {...}` then still
+     returned `{ ok: true }`) when a course has no linked CourseInquiry
+     (possible for manually-built courses, A-12). That let the checklist
+     flip to "done" optimistically with NOTHING durably recorded — explaining
+     "unchecked again after reload" exactly. Now returns an explicit 409 with
+     a real error message instead of a silent no-op (no-silent-failures).
+  3. `GettingStartedChecklist`'s review-page step had a pending state (spinner)
+     and an implicit success state (checkmark) but NO error path — added an
+     `approveError` prop, wired from dashboard/page.tsx's existing (previously
+     unused-here) error state, rendered inline under the step.
+  4. Item 5: converted the dashboard's own Request-changes modal (used by
+     both the checklist and the draft-course banner) from free-text to the
+     same V13b structured category form as the preview page. Extracted
+     shared logic into src/lib/submit-change-request.ts so the token-gated
+     preview route and a new session-authed /api/operator/request-changes
+     route can never drift.
+  NOTE for Cam: I could not click through live — a raw DB dump of
+  course/operator records and minting a session JWT to impersonate the test
+  operator were both correctly blocked by auto mode as production-data/
+  security actions, and you chose "skip live repro, fix from code trace"
+  when asked. Please do one real click-through on a draft test course
+  (e.g. DaisyLinks) to confirm: button shows pending → checkmark, survives a
+  reload, and the "{course} approved their page" email actually lands at
+  hello@greenreserve.app. Original spec:
+  checklist approve button is a dead wire (no migration) — on the V13
   Getting Started checklist, "Looks good — approve" gives NO feedback, the
   step is unchecked again after reload, and the V12 admin notification email
   never arrives. Reproduce first, then fix the whole chain:
