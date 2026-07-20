@@ -7,6 +7,7 @@ import {
   Trophy, PartyPopper, DollarSign, AlertTriangle, MessageSquare,
 } from 'lucide-react';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
+import { recordTabVisit } from '@/lib/dashboard-visits';
 
 export type OperatorNavKey =
   | 'teesheet' | 'analytics' | 'cancellations' | 'tournaments' | 'outings'
@@ -30,6 +31,11 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   const [identity, setIdentity] = useState<CourseIdentity>({ name: '', type: 'public', brandColor: '#24513B', establishedYear: null });
   const [myCourses, setMyCourses] = useState<MyCourse[]>([]);
   const [switchingCourse, setSwitchingCourse] = useState(false);
+
+  // Every dashboard page renders this sidebar with its tab as `active` — the
+  // one place we can credit a tab visit for the Getting Started checklist's
+  // "look around your dashboard" step without touching every page.
+  useEffect(() => { recordTabVisit(active); }, [active]);
 
   useEffect(() => {
     fetch('/api/operator/messages?unreadCount=1')

@@ -9,6 +9,7 @@ import {
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import GettingStartedChecklist from '@/components/dashboard/GettingStartedChecklist';
 import { getBookingStatus } from '@/lib/booking-status';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
@@ -91,6 +92,11 @@ function DashboardPageInner() {
   const [checkingInId, setCheckingInId] = useState<string | null>(null);
   const [cardModalBooking, setCardModalBooking] = useState<Booking | null>(null);
   const [search, setSearch] = useState('');
+  const [emailVerified, setEmailVerified] = useState(true);
+  const [onboardingStepNum, setOnboardingStepNum] = useState(3);
+  const [stripeAccountActive, setStripeAccountActive] = useState(false);
+  const [noFeePolicy, setNoFeePolicy] = useState(false);
+  const [connectingStripe, setConnectingStripe] = useState(false);
 
   async function checkInBooking(b: Booking) {
     if (b.paymentStatus === 'no_payment_method') { setCardModalBooking(b); return; }
@@ -144,9 +150,28 @@ function DashboardPageInner() {
       setCourseArchived(!!c?.archivedAt);
       setCourseDraft(!c?.active || c?.liveStatus !== 'live');
       setPageApprovalStatus(c?.pageApprovalStatus === 'approved' || c?.pageApprovalStatus === 'changes_requested' ? c.pageApprovalStatus : 'none');
+      setStripeAccountActive(!!c?.stripeAccountActive);
+      setNoFeePolicy(!c?.lateCancellationFee);
       if (c?.conditions) { setConditions(c.conditions); setConditionsInput(c.conditions); }
     });
   }, []);
+
+  async function connectStripeFromChecklist() {
+    setConnectingStripe(true);
+    try {
+      const r = await fetch('/api/operator/stripe/connect?from=dashboard');
+      const d = await r.json();
+      if (d.url) window.location.href = d.url;
+    } finally {
+      setConnectingStripe(false);
+    }
+  }
+
+  async function viewOwnPreview() {
+    const r = await fetch('/api/operator/preview-link');
+    const d = await r.json().catch(() => null);
+    if (d?.url) window.open(d.url, '_blank', 'noopener,noreferrer');
+  }
 
   async function approvePage() {
     setApprovingPage(true); setApproveError('');
@@ -178,6 +203,8 @@ function DashboardPageInner() {
     fetch('/api/operator/profile').then(r => r.json()).then(p => {
       if (!p || !p.emailVerified) { router.push('/dashboard/verify'); return; }
       if (p.onboardingStep < 3)   { router.push('/dashboard/onboarding'); return; }
+      setEmailVerified(!!p.emailVerified);
+      setOnboardingStepNum(p.onboardingStep);
     });
     loadCourseStatus();
     // Admin can flip a course live while this tab sits open in the
@@ -292,6 +319,24 @@ function DashboardPageInner() {
         )}
 
         <div className="max-w-4xl mx-auto px-6 py-6">
+
+          {/* Getting Started checklist — dashboard home only, not analytics */}
+          {tab === 'teesheet' && !courseArchived && (
+            <GettingStartedChecklist
+              emailVerified={emailVerified}
+              onboardingStep={onboardingStepNum}
+              courseDraft={courseDraft}
+              pageApprovalStatus={pageApprovalStatus}
+              onApprovePage={approvePage}
+              approvingPage={approvingPage}
+              onRequestChanges={() => setShowChangesModal(true)}
+              stripeAccountActive={stripeAccountActive}
+              noFeePolicy={noFeePolicy}
+              onConnectStripe={connectStripeFromChecklist}
+              connectingStripe={connectingStripe}
+              onNavigate={(href) => href === '#preview' ? viewOwnPreview() : router.push(href)}
+            />
+          )}
 
           {/* ── Analytics ── */}
           {tab === 'analytics' && (
