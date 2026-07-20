@@ -213,6 +213,8 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   after reload → email lands → inquiry Next-step flips to "Course approved
   — Go Live".
 
+- [ ] BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as law, scope guardrails + rate caps + BIRDIE_ENABLED kill switch, floating Birdie chat UI, operator how-to knowledge pack + read-only course awareness + deep links, NO writes (BIG, no migration; PREREQ: Cam adds ANTHROPIC_API_KEY to Vercel — full spec in BIRDIE_AI_SPEC.md; B2 golfer / B3 admin / B4 confirm-actions follow)
+
 ## Ideas / not yet specced
 
 - OPERATOR STAFF ACCOUNTS rework (Cam, 2026-07-10: "whole thing is going to be reworked and better") — current section contradicts itself: copy says "full dashboard access", role dropdown says "tee sheet access". Rework needs: clear role tiers (e.g. owner / manager / tee-sheet-only), what each can see (money? settings? members?), invite email flow, deactivate/reset from the card, and the same no-silent-failure patterns as admin. Spec when Cam's ready to define the role tiers.
