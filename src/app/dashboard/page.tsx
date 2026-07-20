@@ -10,6 +10,8 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import GettingStartedChecklist from '@/components/dashboard/GettingStartedChecklist';
+import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
+import { useTabIntro } from '@/lib/use-tab-intro';
 import { getBookingStatus } from '@/lib/booking-status';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
@@ -97,6 +99,8 @@ function DashboardPageInner() {
   const [stripeAccountActive, setStripeAccountActive] = useState(false);
   const [noFeePolicy, setNoFeePolicy] = useState(false);
   const [connectingStripe, setConnectingStripe] = useState(false);
+  const teesheetIntro = useTabIntro('teesheet');
+  const analyticsIntro = useTabIntro('analytics');
 
   async function checkInBooking(b: Booking) {
     if (b.paymentStatus === 'no_payment_method') { setCardModalBooking(b); return; }
@@ -341,7 +345,20 @@ function DashboardPageInner() {
           {/* ── Analytics ── */}
           {tab === 'analytics' && (
             <div>
-              <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-5">Analytics — Last 30 Days</h1>
+              <div className="flex items-center gap-2 mb-3">
+                <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Analytics — Last 30 Days</h1>
+                <TabIntroButton onClick={analyticsIntro.show}/>
+              </div>
+              <TabIntroCard
+                open={analyticsIntro.open}
+                onDismiss={analyticsIntro.dismiss}
+                title="This is your Analytics."
+                bullets={[
+                  'Revenue, bookings, and players over the last 30 days.',
+                  'The daily revenue chart shows your busiest days at a glance.',
+                  'Utilization by day of week — see which days still have open tee times to fill.',
+                ]}
+              />
               {analyticsLoading && <div className="text-center py-20 text-ink-muted"><Loader2 className="w-6 h-6 animate-spin mx-auto"/></div>}
               {analytics && (
                 <div className="space-y-5">
@@ -444,10 +461,24 @@ function DashboardPageInner() {
               </div>
 
               {/* Header */}
+              <TabIntroCard
+                open={teesheetIntro.open}
+                onDismiss={teesheetIntro.dismiss}
+                title="This is your Tee Sheet."
+                bullets={[
+                  'See every tee time for the day, and how many spots are still open.',
+                  'Click a tee time to see who’s booked and check them in.',
+                  'Add a walk-in tee time anytime with “Add Time.”',
+                  'Block a time if you don’t want golfers booking it — maintenance, an outing, etc.',
+                ]}
+              />
               <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h2 className="text-[17px] font-medium text-ink">{fmtDate(selectedDate)}</h2>
-                  <p className="text-xs text-ink-muted">{teeTimes.filter(t=>t.status!=='blocked').length} tee times · {teeTimes.filter(t=>(t.playersBooked??0)>0).length} booked</p>
+                <div className="flex items-center gap-2">
+                  <div>
+                    <h2 className="text-[17px] font-medium text-ink">{fmtDate(selectedDate)}</h2>
+                    <p className="text-xs text-ink-muted">{teeTimes.filter(t=>t.status!=='blocked').length} tee times · {teeTimes.filter(t=>(t.playersBooked??0)>0).length} booked</p>
+                  </div>
+                  <TabIntroButton onClick={teesheetIntro.show}/>
                 </div>
                 <div className="flex gap-2 items-center">
                   <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Find golfer..."

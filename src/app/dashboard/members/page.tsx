@@ -5,6 +5,8 @@ import {
   RefreshCw, UserCheck, UserX, ChevronDown, AlertCircle, CheckCircle2, UserPlus,
 } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
+import { useTabIntro } from '@/lib/use-tab-intro';
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 interface Tier {
@@ -53,6 +55,7 @@ export default function MembersPage() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<View>('list');
   const [panel, setPanel] = useState<'tiers' | 'members'>('tiers');
+  const intro = useTabIntro('members');
 
   const [wizStep, setWizStep] = useState(1);
   const [tierForm, setTierForm] = useState<Partial<Tier>>(emptyTier());
@@ -422,6 +425,7 @@ export default function MembersPage() {
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-pine"/>
               <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Member Management</h1>
+              <TabIntroButton onClick={intro.show}/>
             </div>
             <div className="ml-auto flex gap-1 bg-paper border border-line rounded-md p-1">
               {(['tiers', 'members'] as const).map(p => (
@@ -435,6 +439,18 @@ export default function MembersPage() {
         </div>
 
         <div className="max-w-6xl mx-auto px-6 py-8">
+
+          <TabIntroCard
+            open={intro.open}
+            onDismiss={intro.dismiss}
+            title="This is your Members page."
+            bullets={[
+              'Tiers are your membership or season-pass types — set pricing and perks per tier.',
+              'See who’s signed up and whether their dues are paid.',
+              'Add a member manually if they signed up in person, not through the site.',
+              'Members get their tier’s pricing automatically when they book.',
+            ]}
+          />
 
           {/* ── Tiers panel ── */}
           {panel === 'tiers' && (

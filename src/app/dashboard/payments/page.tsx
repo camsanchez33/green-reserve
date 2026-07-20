@@ -4,6 +4,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, RefreshCw, DollarSign, CreditCard, Clock3, X, AlertCircle, CheckCircle2 } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { getBookingStatus } from '@/lib/booking-status';
+import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
+import { useTabIntro } from '@/lib/use-tab-intro';
 
 type Booking = {
   id: string; golferName: string; golferEmail: string; players: number;
@@ -45,6 +47,7 @@ function PaymentsPageInner() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const intro = useTabIntro('payments');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -89,14 +92,28 @@ function PaymentsPageInner() {
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-5xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Payments</h1>
-              <p className="text-xs text-ink-muted mt-0.5">Full booking ledger — actual charges, pending amounts, and held fees.</p>
+            <div className="flex items-center gap-2">
+              <div>
+                <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Payments</h1>
+                <p className="text-xs text-ink-muted mt-0.5">Full booking ledger — actual charges, pending amounts, and held fees.</p>
+              </div>
+              <TabIntroButton onClick={intro.show}/>
             </div>
             <button onClick={load} className="flex items-center gap-1.5 text-xs text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
               <RefreshCw className="w-3.5 h-3.5"/>Refresh
             </button>
           </div>
+
+          <TabIntroCard
+            open={intro.open}
+            onDismiss={intro.dismiss}
+            title="This is your Payments."
+            bullets={[
+              'See green fees, cart fees, and GreenReserve’s service fee, per booking.',
+              'Payments go straight to your bank account through Stripe — GreenReserve never touches your green fees.',
+              'Search by golfer name to find a specific transaction.',
+            ]}
+          />
 
           {dateFilter && (
             <div className="flex items-center justify-between bg-pine/5 border border-pine/20 rounded-md px-4 py-2.5 mb-4 text-sm">

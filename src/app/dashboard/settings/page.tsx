@@ -4,6 +4,8 @@ import { useSearchParams } from 'next/navigation';
 import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff, CreditCard, CheckCircle2, AlertCircle, Loader2, KeyRound, Mail, Smartphone, Image as ImageIcon, X } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import CourseLayoutTab from '@/components/dashboard/CourseLayoutTab';
+import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
+import { useTabIntro } from '@/lib/use-tab-intro';
 import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
 import { downscaleImage } from '@/lib/image-resize';
 
@@ -104,6 +106,7 @@ function SettingsPageInner() {
   const stripeParam = searchParams.get('stripe');
 
   const [active, setActive] = useState<Section>(stripeParam ? 'Payments' : 'Course Info');
+  const intro = useTabIntro('settings');
   const [form, setForm] = useState<Record<string,unknown>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -268,7 +271,10 @@ function SettingsPageInner() {
       <OperatorSidebar active="settings"/>
       <main className="flex-1 overflow-y-auto">
         <div className="bg-white border-b border-line px-6 py-4 flex items-center justify-between sticky top-0 z-10">
-          <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Settings</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Settings</h1>
+            <TabIntroButton onClick={intro.show}/>
+          </div>
           {active !== 'Staff' && active !== 'Account' && active !== 'Photos' && (
             <button onClick={save} disabled={saving}
               className="flex items-center gap-2 bg-pine hover:bg-pine-hover text-white px-4 py-2 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
@@ -278,6 +284,17 @@ function SettingsPageInner() {
         </div>
 
         <div className="max-w-3xl mx-auto px-6 py-6">
+          <TabIntroCard
+            open={intro.open}
+            onDismiss={intro.dismiss}
+            title="This is your Settings."
+            bullets={[
+              'Update your course info, photos, and green fees anytime.',
+              'Connect or manage your Stripe account under Payments.',
+              'Set your cancellation policy here — or turn it off if you don’t charge fees.',
+              'Add staff accounts so your team can check golfers in without sharing your login.',
+            ]}
+          />
           <div className="flex gap-1 bg-white rounded-lg border border-line p-1 mb-6 overflow-x-auto">
             {SECTIONS.map(s => (
               <button key={s} onClick={() => setActive(s)}

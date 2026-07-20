@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Send, MessageSquare, Radio } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
+import { useTabIntro } from '@/lib/use-tab-intro';
 
 interface MessageItem {
   id: string; senderType: 'admin' | 'operator'; senderName: string;
@@ -23,6 +25,7 @@ function MessagesContent() {
   const [compose, setCompose] = useState(() => searchParams.get('prefill') || '');
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const intro = useTabIntro('messages');
 
   const loadThread = useCallback(async () => {
     const r = await fetch('/api/operator/messages');
@@ -59,11 +62,23 @@ function MessagesContent() {
 
       <main className="flex-1 flex flex-col overflow-hidden">
         <div className="px-6 py-4 border-b border-line shrink-0 bg-white">
-          <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink leading-none">Messages</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink leading-none">Messages</h1>
+            <TabIntroButton onClick={intro.show}/>
+          </div>
           <div className="text-xs text-ink-muted mt-0.5">Your conversation with the GreenReserve team</div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+          <TabIntroCard
+            open={intro.open}
+            onDismiss={intro.dismiss}
+            title="This is your Messages."
+            bullets={[
+              'This is where golfer change requests and support replies from GreenReserve show up.',
+              'Reply here anytime you have a question — a real person reads every message.',
+            ]}
+          />
           {loading && <div className="text-center py-10 text-ink-muted text-sm">Loading...</div>}
           {!loading && messages.length === 0 && (
             <div className="flex-1 flex flex-col items-center justify-center text-center py-20">

@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Pencil, Check, X, Power, RefreshCw } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
+import { useTabIntro } from '@/lib/use-tab-intro';
 
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-full';
@@ -27,6 +29,7 @@ export default function SchedulesPage() {
   const [regenerating, setRegenerating] = useState(false);
   const [hasMember, setHasMember] = useState(false);
   const [hasResident, setHasResident] = useState(false);
+  const intro = useTabIntro('schedule');
 
   useEffect(() => {
     fetch('/api/operator/schedule').then(r=>r.json()).then(d=>{ setSchedules(Array.isArray(d)?d:[]); setLoading(false); });
@@ -98,7 +101,10 @@ export default function SchedulesPage() {
       <OperatorSidebar active="schedule"/>
       <main className="flex-1 overflow-y-auto">
         <div className="bg-white border-b border-line px-6 py-4 flex items-center justify-between sticky top-0 z-10">
-          <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Tee Sheet Schedules</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Tee Sheet Schedules</h1>
+            <TabIntroButton onClick={intro.show}/>
+          </div>
           <div className="flex items-center gap-2">
             <button onClick={regenerate} disabled={regenerating} className="flex items-center gap-2 border border-line text-ink-soft px-3 py-2 rounded-md text-[12.5px] font-medium hover:border-line-strong hover:text-ink disabled:opacity-50 transition-colors">
               <RefreshCw className={'w-3.5 h-3.5 ' + (regenerating ? 'animate-spin' : '')}/>{regenerating ? 'Regenerating…' : 'Apply to Tee Sheet'}
@@ -110,6 +116,17 @@ export default function SchedulesPage() {
         </div>
 
         <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
+          <TabIntroCard
+            open={intro.open}
+            onDismiss={intro.dismiss}
+            title="This is your Schedule."
+            bullets={[
+              'This is the template that creates your bookable tee times automatically.',
+              'Set your tee time interval, hours, and which days of the week it runs.',
+              'GreenReserve generates real tee times from this every night for the days ahead.',
+              'Change it anytime — it only affects future tee times, never past bookings.',
+            ]}
+          />
           <div className="bg-pine/5 border border-pine/20 rounded-lg p-4 text-sm text-ink-soft leading-relaxed">
             <span className="font-medium text-ink">How this works:</span> each schedule is a recipe — days, hours, interval, and pricing — and GreenReserve automatically generates your bookable tee times from it every night for the next 8 days. Editing a schedule changes <span className="font-medium text-ink">future</span> generation only; to update the tee sheet right now, hit <span className="font-medium text-ink">Apply to Tee Sheet</span> above. Times that already have bookings are never touched.
           </div>

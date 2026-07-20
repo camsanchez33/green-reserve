@@ -3,6 +3,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, XCircle, RefreshCw, Undo2 } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
+import { useTabIntro } from '@/lib/use-tab-intro';
 
 type Booking = {
   id: string; golferName: string; golferEmail: string; players: number;
@@ -29,6 +31,7 @@ export default function CancellationsPage() {
   const [policy, setPolicy] = useState({ cancellationHours: 24, lateCancellationFee: 10 });
   const [policySaving, setPolicySaving] = useState(false);
   const [policySaved, setPolicySaved] = useState(false);
+  const intro = useTabIntro('cancellations');
 
   async function savePolicy() {
     setPolicySaving(true);
@@ -79,14 +82,28 @@ export default function CancellationsPage() {
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Cancellations</h1>
-              <p className="text-xs text-ink-muted mt-0.5">Cancel a booking on a golfer&apos;s behalf, or review cancellation history.</p>
+            <div className="flex items-center gap-2">
+              <div>
+                <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Cancellations</h1>
+                <p className="text-xs text-ink-muted mt-0.5">Cancel a booking on a golfer&apos;s behalf, or review cancellation history.</p>
+              </div>
+              <TabIntroButton onClick={intro.show}/>
             </div>
             <button onClick={load} className="flex items-center gap-1.5 text-xs text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
               <RefreshCw className="w-3.5 h-3.5"/>Refresh
             </button>
           </div>
+
+          <TabIntroCard
+            open={intro.open}
+            onDismiss={intro.dismiss}
+            title="This is your Cancellations."
+            bullets={[
+              'See who cancelled, when, and whether a late fee applied.',
+              'No-shows are charged automatically per your cancellation policy.',
+              'If the golfer still shows up and checks in, any fee already charged is refunded automatically.',
+            ]}
+          />
 
           {loading ? (
             <div className="flex items-center justify-center py-16 text-ink-muted gap-2"><Loader2 className="w-5 h-5 animate-spin"/>Loading...</div>
