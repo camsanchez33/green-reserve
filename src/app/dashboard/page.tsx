@@ -13,6 +13,7 @@ import GettingStartedChecklist from '@/components/dashboard/GettingStartedCheckl
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
 import { getBookingStatus } from '@/lib/booking-status';
+import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
@@ -79,7 +80,8 @@ function DashboardPageInner() {
   const [approvingPage, setApprovingPage] = useState(false);
   const [approveError, setApproveError] = useState('');
   const [showChangesModal, setShowChangesModal] = useState(false);
-  const [changesText, setChangesText] = useState('');
+  const [changesChecked, setChangesChecked] = useState<Set<string>>(new Set());
+  const [changesDetails, setChangesDetails] = useState<Record<string, string>>({});
   const [sendingChanges, setSendingChanges] = useState(false);
   const [changesError, setChangesError] = useState('');
   const [changesConfirmMsg, setChangesConfirmMsg] = useState('');
@@ -187,15 +189,27 @@ function DashboardPageInner() {
     setApprovingPage(false);
   }
 
+  function toggleChangeCategory(key: string) {
+    setChangesChecked(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  }
+
   async function submitChanges() {
-    if (!changesText.trim()) return;
+    if (changesChecked.size === 0) return;
+    const items = Array.from(changesChecked).map(category => ({
+      category, detail: (changesDetails[category] || '').trim(),
+    }));
     setSendingChanges(true); setChangesError('');
     try {
-      const res = await fetch('/api/operator/messages', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body: changesText.trim() }),
+      const res = await fetch('/api/operator/request-changes', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items }),
       });
       if (res.ok) {
-        setPageApprovalStatus('changes_requested'); setShowChangesModal(false); setChangesText('');
+        setPageApprovalStatus('changes_requested'); setShowChangesModal(false);
+        setChangesChecked(new Set()); setChangesDetails({});
         setChangesConfirmMsg("Got it — we'll make the changes and send you an updated preview.");
       }
       else { const d = await res.json().catch(() => ({})); setChangesError(d.error || 'Could not send.'); }
@@ -280,26 +294,42 @@ function DashboardPageInner() {
         )}
         {showChangesModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
-              <div className="text-ink font-medium mb-2">What would you like changed?</div>
-              <textarea
-                value={changesText}
-                onChange={e => setChangesText(e.target.value)}
-                rows={4}
-                placeholder="e.g. Can we update the green fee for weekends?"
-                className="w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 resize-none mb-3"
-              />
+            <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl max-h-[85vh] overflow-y-auto">
+              <div className="text-ink font-medium mb-1">What would you like changed?</div>
+              <div className="text-xs text-ink-muted mb-3">Check everything that applies — you can add a note for each.</div>
+              <div className="space-y-2 mb-3">
+                {CHANGE_CATEGORIES.map(cat => {
+                  const checked = changesChecked.has(cat.key);
+                  return (
+                    <div key={cat.key} className="border border-line rounded-md p-3">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={checked} onChange={() => toggleChangeCategory(cat.key)} />
+                        <span className="text-sm font-medium text-ink">{cat.label}</span>
+                      </label>
+                      {checked && (
+                        <textarea
+                          value={changesDetails[cat.key] || ''}
+                          onChange={e => setChangesDetails(prev => ({ ...prev, [cat.key]: e.target.value }))}
+                          rows={2}
+                          placeholder="What should change?"
+                          className="w-full mt-2 bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 resize-none"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
               {changesError && <p className="text-xs text-bad mb-2">{changesError}</p>}
               <div className="flex justify-end gap-2">
                 <button
-                  onClick={() => { setShowChangesModal(false); setChangesText(''); setChangesError(''); }}
+                  onClick={() => { setShowChangesModal(false); setChangesChecked(new Set()); setChangesDetails({}); setChangesError(''); }}
                   className="text-xs text-ink-muted hover:text-ink px-3 py-2"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={submitChanges}
-                  disabled={sendingChanges || !changesText.trim()}
+                  disabled={sendingChanges || changesChecked.size === 0}
                   className="text-xs font-medium text-white bg-pine hover:bg-pine-hover px-4 py-2 rounded-md disabled:opacity-50 transition-colors"
                 >
                   {sendingChanges ? 'Sending...' : 'Send'}
@@ -333,6 +363,7 @@ function DashboardPageInner() {
               pageApprovalStatus={pageApprovalStatus}
               onApprovePage={approvePage}
               approvingPage={approvingPage}
+              approveError={approveError}
               onRequestChanges={() => setShowChangesModal(true)}
               stripeAccountActive={stripeAccountActive}
               noFeePolicy={noFeePolicy}

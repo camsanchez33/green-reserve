@@ -27,23 +27,26 @@ export async function POST(
   if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
 
   const inquiry = await prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId } });
-  if (inquiry) {
-    await prisma.inquiryStatusEvent.create({
-      data: {
-        inquiryId: inquiry.id,
-        fromStatus: inquiry.status,
-        toStatus: inquiry.status,
-        trigger: 'course',
-        actorName: 'Course approved their page',
-      },
-    });
+  // Same no-silent-failure fix as /api/operator/approve-page: don't report
+  // success while quietly recording nothing.
+  if (!inquiry) {
+    return NextResponse.json({ error: 'This course has no linked inquiry — approval can’t be recorded. Contact GreenReserve support.' }, { status: 409 });
   }
 
-  try {
-    await sendCourseApprovedNotification({ courseName: course.name, contactName: inquiry?.contactName || course.name });
-  } catch (err) {
-    console.error('Course-approved notification email failed:', err);
-  }
+  await prisma.inquiryStatusEvent.create({
+    data: {
+      inquiryId: inquiry.id,
+      fromStatus: inquiry.status,
+      toStatus: inquiry.status,
+      trigger: 'course',
+      actorName: 'Course approved their page',
+    },
+  });
+
+  // Fire-and-forget (A6 item 2 pattern) — never await an email send in the
+  // request path.
+  sendCourseApprovedNotification({ courseName: course.name, contactName: inquiry.contactName || course.name })
+    .catch(err => console.error('Course-approved notification email failed:', err));
 
   return NextResponse.json({ ok: true });
 }

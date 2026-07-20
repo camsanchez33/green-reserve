@@ -18,6 +18,7 @@ interface Props {
   pageApprovalStatus: 'none' | 'approved' | 'changes_requested';
   onApprovePage: () => void;
   approvingPage: boolean;
+  approveError: string;
   onRequestChanges: () => void;
   stripeAccountActive: boolean;
   noFeePolicy: boolean;
@@ -30,7 +31,7 @@ interface Props {
 // "done" state is derived from real data — nothing here is a checkbox anyone
 // can just click to dismiss (V13 item 1).
 export default function GettingStartedChecklist({
-  emailVerified, onboardingStep, courseDraft, pageApprovalStatus, onApprovePage, approvingPage,
+  emailVerified, onboardingStep, courseDraft, pageApprovalStatus, onApprovePage, approvingPage, approveError,
   onRequestChanges, stripeAccountActive, noFeePolicy, onConnectStripe, connectingStripe, onNavigate,
 }: Props) {
   const [visited, setVisited] = useState<Set<string>>(new Set());
@@ -130,6 +131,9 @@ export default function GettingStartedChecklist({
                     <button onClick={onRequestChanges} className="text-xs text-ink-muted hover:text-ink transition-colors">Request changes</button>
                   )}
                 </div>
+              )}
+              {s.key === 'review-page' && !!approveError && (
+                <p className="text-xs text-bad mt-1.5">{approveError}</p>
               )}
             </div>
             {s.action && (
