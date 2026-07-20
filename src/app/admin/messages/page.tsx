@@ -15,6 +15,7 @@ interface ThreadSummary {
 interface FullThread {
   id: string; courseId: string; messages: MessageItem[];
   course: { name: string; slug: string };
+  inquiryId: string | null;
 }
 
 const fmtTime = (d: string) => {
@@ -241,6 +242,14 @@ function MessagesContent() {
                         }>
                           {msg.body}
                         </div>
+                        {!isAdmin && msg.body.startsWith('Requested changes:') && thread?.inquiryId && (
+                          <button
+                            onClick={() => router.push(`/admin/inquiries/${thread.inquiryId}`)}
+                            className="mt-1 text-[11px] font-medium text-pine hover:underline flex items-center gap-1"
+                          >
+                            View on inquiry <ArrowUpRight className="w-3 h-3"/>
+                          </button>
+                        )}
                         <div className={'text-[10px] mt-1 ' + (isAdmin ? 'text-right text-ink-faint' : 'text-ink-faint')}>
                           {msg.senderName} · {fmtFull(msg.createdAt)}
                           {isAdmin && msg.readAt && <span className="ml-1 text-pine/70">· Read</span>}

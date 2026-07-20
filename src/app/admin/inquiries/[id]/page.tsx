@@ -8,6 +8,10 @@ import {
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { STATUS_DOT_MAP, STATUS_LABEL, KNOWN_STATUSES } from '@/lib/inquiry-status';
+import {
+  CATEGORY_LABEL, latestPageDecision, computeOpenChanges,
+  hasRequestedChangesThisRound, describeChangeEvent, decodeChangeAddressed,
+} from '@/lib/change-requests';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -327,6 +331,8 @@ function InquiryDetailInner() {
   const [previewMsg, setPreviewMsg] = useState('');
   const [nameConflict, setNameConflict] = useState<{ existingCourseId: string; existingCourseName: string; message: string } | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [changesExpanded, setChangesExpanded] = useState(false);
+  const [addressingCategory, setAddressingCategory] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<
     'delete' | 'send_sheet' | 'resend_sheet' | 'create_draft' | 'reject' | 'build_without_sheet' | 'dashboard_access' | 'send_preview' | 'go_live' | null
   >(null);
@@ -364,9 +370,7 @@ function InquiryDetailInner() {
     if (pendingAction !== 'go_live' || !inq?.builtCourseId) return;
     setGoLiveChecks(null);
     const hasSheetForCheck = !!inq.detailsJson && inq.detailsJson !== '{}';
-    const approved = [...inq.events].reverse().find(
-      e => e.actorName === 'Course approved their page' || e.actorName === 'Course requested changes to their page'
-    )?.actorName === 'Course approved their page';
+    const approved = latestPageDecision(inq.events) === 'approved';
     fetch('/api/admin/courses?statusOf=' + inq.builtCourseId, { headers: H() })
       .then(r => r.ok ? r.json() : null)
       .then(d => {
@@ -407,6 +411,12 @@ function InquiryDetailInner() {
       }
     } catch (e) { setActionError('Error: ' + e); }
     setProcessing(false);
+  }
+
+  async function addressChange(category: string) {
+    setAddressingCategory(category);
+    await action('address_change', { category });
+    setAddressingCategory(null);
   }
 
   async function createDraftCourse(force = false) {
@@ -486,12 +496,15 @@ function InquiryDetailInner() {
   // stale approval from before a rebuild (or after going live and someone
   // still clicking an old preview link) can't be read as the current state.
   const buildingStartEvent = [...inq.events].reverse().find(e => e.toStatus === 'building');
-  const latestApprovalEvent = [...inq.events]
-    .filter(e => !buildingStartEvent || new Date(e.createdAt) >= new Date(buildingStartEvent.createdAt))
-    .reverse()
-    .find(e => e.actorName === 'Course approved their page' || e.actorName === 'Course requested changes to their page');
-  const pageApproved = inq.status === 'building' && latestApprovalEvent?.actorName === 'Course approved their page';
-  const pageChangesRequested = inq.status === 'building' && latestApprovalEvent?.actorName === 'Course requested changes to their page';
+  const buildCycleEvents = inq.events.filter(e => !buildingStartEvent || new Date(e.createdAt) >= new Date(buildingStartEvent.createdAt));
+  const latestDecision = latestPageDecision(buildCycleEvents);
+  const pageApproved = inq.status === 'building' && latestDecision === 'approved';
+  const pageChangesRequested = inq.status === 'building' && latestDecision === 'changes_requested';
+  // V13b: structured, addressable change requests for the CURRENT round
+  // (anchored to the last "Preview sent" within this build cycle).
+  const openChanges = computeOpenChanges(buildCycleEvents);
+  const hadChangesThisRound = hasRequestedChangesThisRound(buildCycleEvents);
+  const allChangesAddressed = inq.status === 'building' && hadChangesThisRound && openChanges.length === 0;
 
   let sd: Record<string, unknown> = {};
   if (inq.detailsJson) { try { sd = JSON.parse(inq.detailsJson); } catch { /* ignore */ } }
@@ -587,12 +600,12 @@ function InquiryDetailInner() {
                   <CheckCircle className="w-3.5 h-3.5" />Create Draft Course
                 </button>
               )}
-              {inq.status === 'building' && pageChangesRequested && (
-                <button onClick={() => router.push('/admin/messages?courseId=' + inq.builtCourseId)} className={btnP}>
-                  <Mail className="w-3.5 h-3.5" />See Messages
+              {inq.status === 'building' && allChangesAddressed && (
+                <button onClick={() => setPendingAction('send_preview')} disabled={sendingPreview} className={btnP}>
+                  <Eye className="w-3.5 h-3.5" />{sendingPreview ? 'Sending…' : 'Send Updated Preview'}
                 </button>
               )}
-              {inq.status === 'building' && !pageChangesRequested && (
+              {inq.status === 'building' && !pageChangesRequested && !allChangesAddressed && (
                 <button onClick={() => setPendingAction('go_live')} disabled={processing} className={btnP}>
                   <Power className="w-3.5 h-3.5" />Go Live
                 </button>
@@ -698,10 +711,39 @@ function InquiryDetailInner() {
                 <>Sheet received. Review the <button onClick={() => setActiveTab('sheet')} className="font-medium text-pine hover:underline">Sheet tab</button>, then create the draft course.</>
               )}
               {inq.status === 'building' && (
-                pageApproved
+                allChangesAddressed
+                  ? <>All requested changes are marked addressed — send {inq.courseName} an updated preview.</>
+                  : pageApproved
                   ? <>{inq.courseName} approved their page — ready to go live.</>
                   : pageChangesRequested
-                  ? <>{inq.courseName} requested changes — see the Messages tab.</>
+                  ? (
+                    <div>
+                      <button onClick={() => setChangesExpanded(v => !v)} className="font-medium text-warn hover:underline">
+                        Changes requested: {openChanges.map(it => CATEGORY_LABEL[it.category] || it.category).join(', ')}
+                        {changesExpanded ? ' (hide)' : ' (view)'}
+                      </button>
+                      {changesExpanded && (
+                        <div className="mt-2 space-y-2 max-w-2xl">
+                          {openChanges.map(it => (
+                            <div key={it.category} className="flex items-start gap-3 bg-white border border-line rounded-md px-3 py-2.5">
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium text-ink">{CATEGORY_LABEL[it.category] || it.category}</div>
+                                {it.detail && <div className="text-xs text-ink-soft mt-0.5">{it.detail}</div>}
+                              </div>
+                              <button
+                                onClick={() => addressChange(it.category)}
+                                disabled={addressingCategory === it.category}
+                                className="shrink-0 flex items-center gap-1.5 text-xs font-medium text-ink-soft bg-paper border border-line hover:border-line-strong hover:text-ink px-2.5 py-1.5 rounded-md disabled:opacity-50 transition-colors"
+                              >
+                                <Check className="w-3.5 h-3.5" />{addressingCategory === it.category ? 'Saving…' : 'Addressed'}
+                              </button>
+                            </div>
+                          ))}
+                          <p className="text-xs text-ink-faint">Once every item is addressed, the primary action becomes &ldquo;Send Updated Preview.&rdquo;</p>
+                        </div>
+                      )}
+                    </div>
+                  )
                   : previewSentEvent
                   ? <>Waiting on course review — sent {daysAgo(previewSentEvent.createdAt)} day{daysAgo(previewSentEvent.createdAt) !== 1 ? 's' : ''} ago.</>
                   : <>Course is built. Review it, then set it live when ready.</>
@@ -1302,7 +1344,10 @@ function InquiryDetailInner() {
                       // for automatic transitions — never a vague "auto".
                       const isTransition = ev.fromStatus !== ev.toStatus;
                       const contactUpdate = ev.fromStatus === 'contact_updated';
-                      const attribution = ev.trigger === 'admin' ? (ev.actorName ? `by ${ev.actorName}` : 'by admin')
+                      const changeDesc = describeChangeEvent(ev.actorName);
+                      const changeAddr = decodeChangeAddressed(ev.actorName);
+                      const attribution = ev.trigger === 'admin'
+                        ? (changeAddr ? `by ${changeAddr.by}` : ev.actorName ? `by ${ev.actorName}` : 'by admin')
                         : ev.trigger === 'course' ? 'Course'
                         : 'System';
                       return (
@@ -1320,7 +1365,7 @@ function InquiryDetailInner() {
                                     <span className="text-ink-muted mx-1.5">→</span>
                                     <span className="font-medium">{STATUS_LABEL[ev.toStatus] || ev.toStatus}</span>
                                   </>
-                                ) : (ev.actorName || 'Update')}
+                                ) : (changeDesc || ev.actorName || 'Update')}
                             </div>
                             <div className="text-xs text-ink-faint mt-0.5">
                               {(contactUpdate || isTransition) ? attribution + ' · ' : ''}{fmtDate(ev.createdAt)}

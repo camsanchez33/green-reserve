@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession } from '@/lib/session';
+import { CHANGES_REQUESTED_PREFIX, LEGACY_CHANGES_REQUESTED_MARKER, isChangesRequestedEvent } from '@/lib/change-requests';
 
 // Never cache — the dashboard's live/draft banner reads this and must
 // reflect the DB the moment admin flips it, not a stale open-tab response.
 export const dynamic = 'force-dynamic';
-
-const APPROVAL_MARKERS = ['Course approved their page', 'Course requested changes to their page'];
 
 export async function GET() {
   const session = await resolveDashboardSession();
@@ -19,12 +18,19 @@ export async function GET() {
     const inquiry = await prisma.courseInquiry.findFirst({ where: { builtCourseId: course.id }, select: { id: true } });
     if (inquiry) {
       const [latest] = await prisma.inquiryStatusEvent.findMany({
-        where: { inquiryId: inquiry.id, actorName: { in: APPROVAL_MARKERS } },
+        where: {
+          inquiryId: inquiry.id,
+          OR: [
+            { actorName: 'Course approved their page' },
+            { actorName: LEGACY_CHANGES_REQUESTED_MARKER },
+            { actorName: { startsWith: CHANGES_REQUESTED_PREFIX } },
+          ],
+        },
         orderBy: { createdAt: 'desc' },
         take: 1,
       });
       if (latest?.actorName === 'Course approved their page') pageApprovalStatus = 'approved';
-      else if (latest?.actorName === 'Course requested changes to their page') pageApprovalStatus = 'changes_requested';
+      else if (isChangesRequestedEvent(latest?.actorName)) pageApprovalStatus = 'changes_requested';
     }
   }
 

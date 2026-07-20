@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { normalizeDbCourse } from '@/lib/normalize-course';
 import { verifyPreviewToken } from '@/lib/preview-token';
+import { CHANGES_REQUESTED_PREFIX, LEGACY_CHANGES_REQUESTED_MARKER, isChangesRequestedEvent } from '@/lib/change-requests';
 
 export async function GET(
   req: NextRequest,
@@ -31,12 +32,19 @@ export async function GET(
   const inquiry = await prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId }, select: { id: true } });
   if (inquiry) {
     const [latest] = await prisma.inquiryStatusEvent.findMany({
-      where: { inquiryId: inquiry.id, actorName: { in: ['Course approved their page', 'Course requested changes to their page'] } },
+      where: {
+        inquiryId: inquiry.id,
+        OR: [
+          { actorName: 'Course approved their page' },
+          { actorName: LEGACY_CHANGES_REQUESTED_MARKER },
+          { actorName: { startsWith: CHANGES_REQUESTED_PREFIX } },
+        ],
+      },
       orderBy: { createdAt: 'desc' },
       take: 1,
     });
     if (latest?.actorName === 'Course approved their page') pageApprovalStatus = 'approved';
-    else if (latest?.actorName === 'Course requested changes to their page') pageApprovalStatus = 'changes_requested';
+    else if (isChangesRequestedEvent(latest?.actorName)) pageApprovalStatus = 'changes_requested';
   }
 
   return NextResponse.json({

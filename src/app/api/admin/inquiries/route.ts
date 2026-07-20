@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail, sendDashboardAccessEmail, sendGoLiveSimpleEmail } from '@/lib/email';
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, OWNER_ONLY, type AdminSession } from '@/lib/admin-session';
+import { encodeChangeAddressed } from '@/lib/change-requests';
 
 export async function GET(req: NextRequest) {
   if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -98,6 +99,14 @@ async function handleAction(
     await prisma.courseInquiry.update({ where: { id: inquiryId }, data: { adminNotes: updated } });
     await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `Note added by ${adminName}`);
     return NextResponse.json({ success: true, adminNotes: updated });
+  }
+
+  // ── Mark one requested-change category addressed (V13b) ───────────
+  if (action === 'address_change') {
+    const category = String(payload?.category ?? '').trim();
+    if (!category) return NextResponse.json({ error: 'Category is required' }, { status: 400 });
+    await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', encodeChangeAddressed(category, adminName));
+    return NextResponse.json({ success: true });
   }
 
   // ── Build course draft ────────────────────────────────────────────

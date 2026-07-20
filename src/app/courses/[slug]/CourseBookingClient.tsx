@@ -7,6 +7,7 @@ import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Ch
 import type { Course, TeeTime } from '@/lib/courses-data';
 import { TrustNote } from '@/components/TrustNote';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
+import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 
 const TYPE_LABELS: Record<string, string> = {
   public:         'Public',
@@ -131,7 +132,8 @@ export default function CourseDetailPage({
   const [approvingPreview, setApprovingPreview] = useState(false);
   const [previewApproveError, setPreviewApproveError] = useState('');
   const [showPreviewChangesModal, setShowPreviewChangesModal] = useState(false);
-  const [previewChangesText, setPreviewChangesText] = useState('');
+  const [previewChangesChecked, setPreviewChangesChecked] = useState<Set<string>>(new Set());
+  const [previewChangesDetails, setPreviewChangesDetails] = useState<Record<string, string>>({});
   const [sendingPreviewChanges, setSendingPreviewChanges] = useState(false);
   const [previewChangesError, setPreviewChangesError] = useState('');
   const [previewChangesConfirmMsg, setPreviewChangesConfirmMsg] = useState('');
@@ -207,15 +209,27 @@ export default function CourseDetailPage({
     setApprovingPreview(false);
   }
 
+  function togglePreviewChangeCategory(key: string) {
+    setPreviewChangesChecked(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  }
+
   async function submitPreviewChanges() {
-    if (!previewMode || !previewChangesText.trim()) return;
+    if (!previewMode || previewChangesChecked.size === 0) return;
+    const items = Array.from(previewChangesChecked).map(category => ({
+      category, detail: (previewChangesDetails[category] || '').trim(),
+    }));
     setSendingPreviewChanges(true); setPreviewChangesError('');
     try {
       const res = await fetch(`/api/preview/${previewMode.courseId}/request-changes?token=${previewMode.token}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: previewChangesText.trim() }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items }),
       });
       if (res.ok) {
-        setPreviewApprovalStatus('changes_requested'); setShowPreviewChangesModal(false); setPreviewChangesText('');
+        setPreviewApprovalStatus('changes_requested'); setShowPreviewChangesModal(false);
+        setPreviewChangesChecked(new Set()); setPreviewChangesDetails({});
         setPreviewChangesConfirmMsg("Got it — we'll make the changes and send you an updated preview.");
       } else {
         const d = await res.json().catch(() => ({})); setPreviewChangesError(d.error || 'Could not send.');
@@ -612,29 +626,45 @@ export default function CourseDetailPage({
         </div>
       )}
 
-      {/* Request changes modal (preview) */}
+      {/* Request changes modal (preview) — structured categories, V13b */}
       {showPreviewChangesModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
-            <div className="text-ink font-medium mb-2">What would you like changed?</div>
-            <textarea
-              value={previewChangesText}
-              onChange={e => setPreviewChangesText(e.target.value)}
-              rows={4}
-              placeholder="e.g. Can we update the green fee for weekends?"
-              className="w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 resize-none mb-3"
-            />
+          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl max-h-[85vh] overflow-y-auto">
+            <div className="text-ink font-medium mb-1">What would you like changed?</div>
+            <div className="text-xs text-ink-muted mb-3">Check everything that applies — you can add a note for each.</div>
+            <div className="space-y-2 mb-3">
+              {CHANGE_CATEGORIES.map(cat => {
+                const checked = previewChangesChecked.has(cat.key);
+                return (
+                  <div key={cat.key} className="border border-line rounded-md p-3">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={checked} onChange={() => togglePreviewChangeCategory(cat.key)} />
+                      <span className="text-sm font-medium text-ink">{cat.label}</span>
+                    </label>
+                    {checked && (
+                      <textarea
+                        value={previewChangesDetails[cat.key] || ''}
+                        onChange={e => setPreviewChangesDetails(prev => ({ ...prev, [cat.key]: e.target.value }))}
+                        rows={2}
+                        placeholder="What should change?"
+                        className="w-full mt-2 bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 resize-none"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
             {previewChangesError && <p className="text-xs text-bad mb-2">{previewChangesError}</p>}
             <div className="flex justify-end gap-2">
               <button
-                onClick={() => { setShowPreviewChangesModal(false); setPreviewChangesText(''); setPreviewChangesError(''); }}
+                onClick={() => { setShowPreviewChangesModal(false); setPreviewChangesChecked(new Set()); setPreviewChangesDetails({}); setPreviewChangesError(''); }}
                 className="text-xs text-ink-muted hover:text-ink px-3 py-2"
               >
                 Cancel
               </button>
               <button
                 onClick={submitPreviewChanges}
-                disabled={sendingPreviewChanges || !previewChangesText.trim()}
+                disabled={sendingPreviewChanges || previewChangesChecked.size === 0}
                 className="text-xs font-medium text-white bg-pine hover:bg-pine-hover px-4 py-2 rounded-md disabled:opacity-50 transition-colors"
               >
                 {sendingPreviewChanges ? 'Sending...' : 'Send'}

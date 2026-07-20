@@ -33,7 +33,10 @@ export async function GET(req: NextRequest) {
       },
     });
     if (!thread) return NextResponse.json(null);
-    return NextResponse.json(thread);
+    // Lets the message list link change-request mirrors back to the inquiry
+    // where the structured, addressable version of the ask actually lives.
+    const inquiry = await prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId }, select: { id: true } });
+    return NextResponse.json({ ...thread, inquiryId: inquiry?.id ?? null });
   }
 
   // Thread list
