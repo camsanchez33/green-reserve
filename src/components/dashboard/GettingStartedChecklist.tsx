@@ -35,13 +35,20 @@ export default function GettingStartedChecklist({
   onRequestChanges, stripeAccountActive, noFeePolicy, onConnectStripe, connectingStripe, onNavigate,
 }: Props) {
   const [visited, setVisited] = useState<Set<string>>(new Set());
-  const [collapsed, setCollapsed] = useState(false);
+  // null = no manual override yet (defaults to collapsed once everything's
+  // done); true/false once the operator has clicked to expand/collapse it
+  // themselves, so a completed checklist can still be reopened, not just
+  // permanently stuck collapsed.
+  const [expandedOverride, setExpandedOverride] = useState<boolean | null>(null);
 
   useEffect(() => { setVisited(getVisitedTabs()); }, []);
 
   const lookedAround = CORE_TABS.filter(t => visited.has(t)).length >= LOOK_AROUND_THRESHOLD;
   const checkedSchedule = visited.has('schedule');
-  const pageReviewed = pageApprovalStatus === 'approved';
+  // Going live SUPERSEDES approval — a live course must never show pre-live
+  // review controls, and this step must read as done even if it was never
+  // explicitly approved before go-live (e.g. built manually by admin).
+  const pageReviewed = pageApprovalStatus === 'approved' || !courseDraft;
 
   const steps: Step[] = [
     { key: 'email', title: 'Verify your email', blurb: 'Confirms it’s really you before anything goes live.', done: emailVerified },
@@ -78,14 +85,17 @@ export default function GettingStartedChecklist({
 
   const doneCount = steps.filter(s => s.done).length;
   const allDone = doneCount === steps.length;
+  // Collapses to the slim completed bar once every step is done — whether
+  // that happens pre-live or because going live superseded the rest. It
+  // stays around (collapsed) as a quiet confirmation rather than vanishing,
+  // so there's still a place to see "yes, this all got done." Still
+  // reopenable — allDone alone can't permanently lock it collapsed.
+  const showCollapsed = expandedOverride === null ? allDone : !expandedOverride;
 
-  // Disappears entirely once live AND every step is done — it's done its job.
-  if (!courseDraft && allDone) return null;
-
-  if (collapsed || (allDone && courseDraft)) {
+  if (showCollapsed) {
     return (
       <button
-        onClick={() => setCollapsed(false)}
+        onClick={() => setExpandedOverride(true)}
         className="w-full flex items-center justify-between bg-white border border-line rounded-lg px-4 py-2.5 mb-4 text-left hover:border-line-strong transition-colors"
       >
         <span className="flex items-center gap-2 text-sm text-ink">
@@ -99,7 +109,7 @@ export default function GettingStartedChecklist({
 
   return (
     <div className="bg-white border border-line rounded-lg mb-5 overflow-hidden">
-      <button onClick={() => setCollapsed(true)} className="w-full flex items-center justify-between px-5 py-4 text-left">
+      <button onClick={() => setExpandedOverride(false)} className="w-full flex items-center justify-between px-5 py-4 text-left">
         <div>
           <div className="text-[15px] font-serif font-medium text-ink">Getting Started</div>
           <div className="text-xs text-ink-muted mt-0.5">{doneCount} of {steps.length} done</div>
@@ -120,7 +130,7 @@ export default function GettingStartedChecklist({
             <div className="flex-1 min-w-0">
               <div className={'text-sm font-medium ' + (s.done ? 'text-ink-soft' : 'text-ink')}>{s.title}</div>
               <div className="text-xs text-ink-muted mt-0.5">{s.blurb}</div>
-              {s.key === 'review-page' && !pageReviewed && (
+              {s.key === 'review-page' && !pageReviewed && courseDraft && (
                 <div className="mt-2 flex items-center gap-2">
                   <button onClick={() => onNavigate('#preview')} className="text-xs font-medium text-ink-soft bg-paper border border-line hover:border-line-strong px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5">
                     <Eye className="w-3.5 h-3.5"/>View your page

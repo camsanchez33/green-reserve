@@ -491,6 +491,9 @@ function InquiryDetailInner() {
   const sheetSentEvent = [...inq.events].reverse().find(e => e.toStatus === 'details_requested');
   const liveEvent = [...inq.events].reverse().find(e => e.toStatus === 'live');
   const previewSentEvent = [...inq.events].reverse().find(e => e.actorName?.startsWith('Preview sent'));
+  // Once live, approval is history, not a pending state — but it shouldn't
+  // be INVISIBLE history. Quiet note only, no "current status" implication.
+  const approvedEvent = [...inq.events].reverse().find(e => e.actorName === 'Course approved their page');
   // Ordering fix: approval/changes-requested events only count for the
   // CURRENT build cycle — anchor to the most recent "-> building" event so a
   // stale approval from before a rebuild (or after going live and someone
@@ -749,7 +752,12 @@ function InquiryDetailInner() {
                   : <>Course is built. Review it, then set it live when ready.</>
               )}
               {inq.status === 'live' && (
-                <>Live since {liveEvent ? fmtDate(liveEvent.createdAt) : fmtDate(inq.updatedAt || inq.createdAt)}.</>
+                <>
+                  Live since {liveEvent ? fmtDate(liveEvent.createdAt) : fmtDate(inq.updatedAt || inq.createdAt)}.
+                  {approvedEvent && (
+                    <span className="text-ink-faint"> · Page approved by course · {fmtDate(approvedEvent.createdAt)}</span>
+                  )}
+                </>
               )}
             </div>
           )}

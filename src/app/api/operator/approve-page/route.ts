@@ -2,14 +2,25 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession } from '@/lib/session';
 import { sendCourseApprovedNotification } from '@/lib/email';
+import { latestPageDecision } from '@/lib/change-requests';
 
 // Approval is advisory, not automatic — going live stays an admin action.
 export async function POST() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { id: true, name: true } });
+  const course = await prisma.course.findUnique({
+    where: { id: session.courseId },
+    select: { id: true, name: true, active: true, liveStatus: true },
+  });
   if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+
+  // Going live SUPERSEDES the pre-live review loop entirely — there's
+  // nothing to approve anymore. Friendly no-op, not an error, and never
+  // writes an event (an already-live course has nothing to record here).
+  if (course.active && course.liveStatus === 'live') {
+    return NextResponse.json({ ok: true, alreadyLive: true, message: 'You’re already live — nothing to approve.' });
+  }
 
   const inquiry = await prisma.courseInquiry.findFirst({ where: { builtCourseId: course.id } });
   // No-silent-failures: approval status is DERIVED entirely from this event
@@ -20,6 +31,16 @@ export async function POST() {
   // the checklist step flip to done and then silently revert on reload.
   if (!inquiry) {
     return NextResponse.json({ error: 'This course has no linked inquiry — approval can’t be recorded. Contact GreenReserve support.' }, { status: 409 });
+  }
+
+  // Idempotent: a second (or sixth) click while already approved must not
+  // stack duplicate events or re-send the admin email — just confirm.
+  const existingEvents = await prisma.inquiryStatusEvent.findMany({
+    where: { inquiryId: inquiry.id },
+    select: { actorName: true, createdAt: true },
+  });
+  if (latestPageDecision(existingEvents) === 'approved') {
+    return NextResponse.json({ ok: true });
   }
 
   await prisma.inquiryStatusEvent.create({

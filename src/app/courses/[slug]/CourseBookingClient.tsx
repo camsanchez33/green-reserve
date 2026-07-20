@@ -102,6 +102,7 @@ type CourseWithBrand = Course & {
   gift_card_url?: string;
   photos?: { id: string; url: string; sortOrder: number }[];
   page_approval_status?: 'none' | 'approved' | 'changes_requested';
+  is_live?: boolean;
 };
 
 type ActiveTeeTime = TeeTime & { member_green_fee?: number; has_member_rate?: boolean };
@@ -591,7 +592,21 @@ export default function CourseDetailPage({
   return (
     <>
       {/* Preview banner */}
-      {previewMode && (
+      {previewMode && course.is_live && (
+        // Going live SUPERSEDES the pre-live review loop — an old preview
+        // link visited after go-live must never show approve/request-changes
+        // controls again. Route to Messages/support instead (V13b sanity
+        // check, RUN_QUEUE "review loop doesn't understand already-live").
+        <div className="bg-pine/10 border-b border-pine/20">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-2 text-sm flex-wrap">
+            <Eye size={14} className="text-pine shrink-0" />
+            <span className="text-ink-soft">
+              This course is already live — you&apos;re viewing it as golfers see it. Questions or changes? Message the GreenReserve team from your dashboard, or reply to any of our emails.
+            </span>
+          </div>
+        </div>
+      )}
+      {previewMode && !course.is_live && (
         <div className="bg-pine/10 border-b border-pine/20">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3 text-sm flex-wrap">
             <Eye size={14} className="text-pine shrink-0" />

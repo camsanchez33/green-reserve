@@ -50,5 +50,9 @@ export async function GET(
   return NextResponse.json({
     ...normalizeDbCourse(dbCourse, cheapest?.greenFee ?? 0),
     page_approval_status: pageApprovalStatus,
+    // Lets the preview banner tell "still pre-live" apart from "already
+    // live, stop showing the review-loop controls" (RUN_QUEUE "review loop
+    // doesn't understand already-live").
+    is_live: dbCourse.active && dbCourse.liveStatus === 'live',
   });
 }
