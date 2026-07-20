@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
+import { ACTIVE_STATUSES } from '@/lib/inquiry-status';
 
 const COMPLETED = ['confirmed', 'completed'];
 
@@ -129,12 +130,12 @@ export async function GET() {
     prisma.course.findMany({ where: { active: true, stripeAccountActive: false, archivedAt: null }, select: { id: true, name: true, slug: true }, take: 5 }),
 
     prisma.courseInquiry.findMany({
-      where: { status: { in: ['pending', 'in_review', 'details_submitted', 'building'] }, updatedAt: { lt: threeDaysAgo } },
+      where: { status: { in: ACTIVE_STATUSES.filter(s => s !== 'details_requested') }, updatedAt: { lt: threeDaysAgo } },
       select: { id: true, courseName: true, status: true, updatedAt: true },
       orderBy: { updatedAt: 'asc' },
       take: 5,
     }),
-    prisma.courseInquiry.count({ where: { status: { in: ['pending', 'in_review', 'details_submitted', 'building'] }, updatedAt: { lt: threeDaysAgo } } }),
+    prisma.courseInquiry.count({ where: { status: { in: ACTIVE_STATUSES.filter(s => s !== 'details_requested') }, updatedAt: { lt: threeDaysAgo } } }),
     prisma.course.findMany({ where: { active: false, archivedAt: null, createdAt: { lt: twoDaysAgo } }, select: { id: true, name: true, createdAt: true }, orderBy: { createdAt: 'asc' }, take: 5 }),
     prisma.course.count({ where: { active: false, archivedAt: null, createdAt: { lt: twoDaysAgo } } }),
     prisma.inquiryStatusEvent.findMany({
@@ -263,7 +264,7 @@ export async function GET() {
     // pipeline can be "stalled." An inquiry whose course later got archived
     // keeps its old InquiryStatusEvent history, so denying just 'live'/
     // 'rejected' let stale 'archived' inquiries surface here forever.
-    if (!ev.inquiry || !['pending', 'in_review', 'details_requested', 'details_submitted', 'building'].includes(ev.inquiry.status)) continue;
+    if (!ev.inquiry || !(ACTIVE_STATUSES as readonly string[]).includes(ev.inquiry.status)) continue;
     previewSentAmber.push({
       id: `ps-${ev.inquiryId}`,
       who: ev.inquiry.courseName,

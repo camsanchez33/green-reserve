@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { STATUS_DOT_MAP, STATUS_LABEL, KNOWN_STATUSES } from '@/lib/inquiry-status';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -28,17 +29,9 @@ interface ApproveResult {
   emailSent?: boolean; emailError?: string;
 }
 
-const STATUS_DOT_MAP: Record<string, string> = {
-  pending: 'warn', in_review: 'neutral', details_requested: 'neutral',
-  details_submitted: 'neutral', building: 'warn', live: 'ok', rejected: 'bad', archived: 'neutral',
-};
-const STATUS_LABEL: Record<string, string> = {
-  pending: 'Pending', in_review: 'In Review', details_requested: 'Sheet Sent',
-  details_submitted: 'Sheet In', building: 'Building', live: 'Live', rejected: 'Rejected',
-  archived: 'Archived',
-};
-const ARCHIVED_STATUSES = new Set(['live', 'rejected', 'archived']);
-const ALL_STATUSES = ['pending', 'in_review', 'details_requested', 'details_submitted', 'building', 'live', 'rejected', 'archived'];
+// STATUS_DOT_MAP / STATUS_LABEL come from @/lib/inquiry-status (A-02c single
+// source of truth — never redefine these locally).
+const TERMINAL_STATUSES = new Set(['live', 'rejected', 'archived']);
 
 const fmtDate = (d: string) =>
   new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -481,7 +474,7 @@ function InquiryDetailInner() {
   if (!adminReady || loading) return null;
   if (!inq) return null;
 
-  const isArchived = ARCHIVED_STATUSES.has(inq.status);
+  const isArchived = TERMINAL_STATUSES.has(inq.status);
   const dot = (STATUS_DOT_MAP[inq.status] || 'neutral') as 'ok' | 'bad' | 'warn' | 'neutral';
   const days = daysAgo(inq.updatedAt || inq.createdAt);
 
@@ -631,7 +624,7 @@ function InquiryDetailInner() {
                       }}
                       className="w-full bg-paper border border-line rounded-md px-2 py-1.5 text-xs text-ink outline-none cursor-pointer"
                     >
-                      {ALL_STATUSES.map(s => <option key={s} value={s}>{STATUS_LABEL[s] || s}</option>)}
+                      {KNOWN_STATUSES.map(s => <option key={s} value={s}>{STATUS_LABEL[s] || s}</option>)}
                     </select>
                   </div>
                 )}

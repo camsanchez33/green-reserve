@@ -6,6 +6,7 @@ import { RefreshCw, Search, Trash2, ChevronRight } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
+import { FUNNEL_SEGMENTS, ARCHIVED_STATUSES, ACTIVE_STATUSES, KNOWN_STATUSES, STATUS_DOT_MAP, STATUS_LABEL, isYourMove } from '@/lib/inquiry-status';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -23,42 +24,54 @@ interface Inquiry {
   events: InquiryStatusEvent[];
 }
 
+// A-02c: TABS is built from the shared FUNNEL_SEGMENTS constant so the list,
+// the funnel row, the Overview strip, and the action queue can never disagree
+// about what each stage means. "Your move" is no longer a fixed status set —
+// it's derived (isYourMove) so an aged sheet-sent/pending inquiry surfaces
+// here too, not just details_submitted/building.
 const TABS = [
-  { key: 'your-move', label: 'Your move', statuses: ['details_submitted', 'building'], description: 'Inquiries waiting on your action — sheet received or currently building.' },
-  { key: 'new', label: 'New', statuses: ['pending'], description: 'Just submitted — not yet reviewed.' },
-  { key: 'in-review', label: 'In review', statuses: ['in_review'], description: "You're evaluating these." },
-  { key: 'waiting', label: 'Waiting on them', statuses: ['details_requested'], description: 'Setup sheet sent — waiting on the course.' },
-  { key: 'building', label: 'Building', statuses: ['building'], description: 'Draft created — being built/reviewed before go-live.' },
-  { key: 'live', label: 'Live', statuses: ['live'], description: 'Converted wins — successfully launched.' },
-  { key: 'all', label: 'All', statuses: ['pending', 'in_review', 'details_requested', 'details_submitted', 'building', 'live', 'rejected', 'archived'], description: 'Every inquiry, every stage — including live and archived.' },
-  { key: 'archived', label: 'Archived', statuses: ['rejected', 'archived'], description: 'Rejected or closed — kept for records.' },
+  { key: 'your-move', label: 'Your move', description: 'Needs your action now — sheet in, building, or stalled past its threshold.' },
+  ...FUNNEL_SEGMENTS.map(seg => ({
+    key: seg.key, label: seg.label,
+    description:
+      seg.key === 'new' ? 'Just submitted — not yet reviewed.'
+      : seg.key === 'in-review' ? "You're evaluating these."
+      : seg.key === 'sheet-sent' ? 'Setup sheet sent — waiting on the course.'
+      : seg.key === 'sheet-in' ? 'Sheet is back — review and build.'
+      : seg.key === 'building' ? 'Draft created — being built/reviewed before go-live.'
+      : 'Converted wins — successfully launched.',
+  })),
+  { key: 'all', label: 'All', description: 'Every inquiry, every stage — including live and archived.' },
+  { key: 'archived', label: 'Archived', description: 'Rejected or closed — kept for records.' },
 ];
+
+// A tab's membership is a predicate, not a static status list — "Your move"
+// depends on age, not just status. This is the ONLY place tab membership is
+// decided; funnel counts, list filtering, and bulk-select eligibility all
+// route through it.
+function tabMatches(key: string, inq: Inquiry): boolean {
+  if (key === 'your-move') return isYourMove(inq.status, inq.updatedAt || inq.createdAt);
+  if (key === 'all') return true;
+  if (key === 'archived') return (ARCHIVED_STATUSES as readonly string[]).includes(inq.status);
+  const seg = FUNNEL_SEGMENTS.find(s => s.key === key);
+  return seg ? (seg.statuses as readonly string[]).includes(inq.status) : false;
+}
 
 // A-02b: the tab row splits into a connected pipeline funnel (how an inquiry
 // actually flows left to right) and a separate "lenses" group (cross-cutting
 // views that aren't a pipeline stage).
-const PIPELINE_KEYS = ['new', 'in-review', 'waiting', 'building', 'live'];
+const PIPELINE_KEYS = FUNNEL_SEGMENTS.map(s => s.key) as string[];
 const LENS_KEYS = ['your-move', 'all', 'archived'];
 
 // Work tabs default to longest-in-stage first — it's a queue, oldest overdue
 // should scream first. Informational tabs (Live/All/Archived) default newest.
 const DEFAULT_SORT_BY_TAB: Record<string, string> = {
   'your-move': 'longest_stage', 'new': 'longest_stage', 'in-review': 'longest_stage',
-  'waiting': 'longest_stage', 'building': 'longest_stage',
+  'sheet-sent': 'longest_stage', 'sheet-in': 'longest_stage', 'building': 'longest_stage',
   'live': 'newest', 'all': 'newest', 'archived': 'newest',
 };
 const SORT_LS_KEY = 'admin-inquiries-sort-by-tab';
 const PAGE_SIZE = 50;
-
-const STATUS_DOT_MAP: Record<string, string> = {
-  pending: 'warn', in_review: 'neutral', details_requested: 'neutral',
-  details_submitted: 'neutral', building: 'warn', live: 'ok', rejected: 'bad', archived: 'neutral',
-};
-const STATUS_LABEL: Record<string, string> = {
-  pending: 'Pending', in_review: 'In Review', details_requested: 'Sheet Sent',
-  details_submitted: 'Sheet In', building: 'Building', live: 'Live', rejected: 'Rejected',
-  archived: 'Archived',
-};
 
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 function daysAgo(d: string) { return Math.max(0, Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24))); }
@@ -206,7 +219,7 @@ function InquiriesListInner() {
   };
 
   const filtered = inquiries
-    .filter(i => currentTab.statuses.includes(i.status) && matchesSearch(i) && matchesFilters(i))
+    .filter(i => tabMatches(currentTab.key, i) && matchesSearch(i) && matchesFilters(i))
     .sort(sortFn);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -261,13 +274,20 @@ function InquiriesListInner() {
     await loadInquiries();
   }
 
-  const countFor = (tab: typeof TABS[number]) => inquiries.filter(i => tab.statuses.includes(i.status)).length;
+  const countFor = (tab: { key: string }) => inquiries.filter(i => tabMatches(tab.key, i)).length;
 
   const yourMoveTab = TABS.find(t => t.key === 'your-move')!;
-  const activeStatuses = ['pending', 'in_review', 'details_requested', 'details_submitted', 'building'];
-  const activeCount = inquiries.filter(i => activeStatuses.includes(i.status)).length;
+  const activeCount = inquiries.filter(i => (ACTIVE_STATUSES as readonly string[]).includes(i.status)).length;
   const needsYouCount = countFor(yourMoveTab);
   const liveAllTimeCount = inquiries.filter(i => i.status === 'live').length;
+
+  // A-02c INVARIANT: every inquiry must map to exactly one funnel segment
+  // (or live/archived). If a future status is ever added and forgotten here,
+  // this catches it loudly instead of inquiries silently vanishing from the
+  // pipeline, the way "Sheet In" (details_submitted) once did.
+  const unmappedCount = inquiries.filter(i => !(KNOWN_STATUSES as readonly string[]).includes(i.status)).length;
+  const funnelSum = PIPELINE_KEYS.reduce((sum, key) => sum + countFor({ key }), 0);
+  const invariantBroken = unmappedCount > 0 || funnelSum !== activeCount + liveAllTimeCount;
 
   if (!adminReady) return null;
 
@@ -284,6 +304,13 @@ function InquiriesListInner() {
               <p className="text-sm text-ink-soft mt-0.5">
                 {activeCount} active · {needsYouCount} needs you · {liveAllTimeCount} live all-time
               </p>
+              {invariantBroken && (
+                <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-white bg-bad rounded-md px-2 py-1">
+                  {unmappedCount > 0
+                    ? `${unmappedCount} inquir${unmappedCount === 1 ? 'y' : 'ies'} unmapped — status not recognized by the funnel`
+                    : 'Funnel counts don’t add up — a status is falling through the cracks'}
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <div className="relative">

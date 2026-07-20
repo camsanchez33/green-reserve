@@ -459,9 +459,9 @@ export default function AdminOverviewPage() {
                 <div className="space-y-1">
                   {([
                     { label: 'New inquiries', value: stats.bottomTrio.pipeline.newInquiries, href: '/admin/inquiries?tab=new' },
-                    { label: 'Sheets out', value: stats.bottomTrio.pipeline.sheetsOut, href: '/admin/inquiries?tab=waiting' },
+                    { label: 'Sheets out', value: stats.bottomTrio.pipeline.sheetsOut, href: '/admin/inquiries?tab=sheet-sent' },
                     { label: 'Building', value: stats.bottomTrio.pipeline.building, href: '/admin/inquiries?tab=building' },
-                    { label: 'Went live', value: stats.bottomTrio.pipeline.wentLive, href: '/admin/inquiries?tab=archived' },
+                    { label: 'Went live', value: stats.bottomTrio.pipeline.wentLive, href: '/admin/inquiries?tab=live' },
                   ] as const).map((stage, idx, arr) => (
                     <button key={stage.label} onClick={() => router.push(stage.href)} className="w-full flex items-center justify-between text-left px-2 py-1.5 -mx-2 rounded-md hover:bg-paper transition-colors">
                       <span className="text-sm text-ink">{stage.label}</span>
