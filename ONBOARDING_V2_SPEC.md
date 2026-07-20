@@ -443,3 +443,65 @@ route through it.
 - The sheet's est. completion time will grow — update the confirmation email's
   "takes about 5 minutes" copy to match reality (say 10–15 minutes, savable).
 - Validate changed .tsx with @babel/parser; update RUN_QUEUE.md per phase.
+
+---
+
+## Phase V13 — Guided operator onboarding: the dashboard explains itself (BIG, no migration)
+
+Cam (2026-07-20): when a course gets preview/dashboard access, they must be
+walked through everything — what each tab does, and what THEY must do
+(especially Stripe) before going live. Audience: a 60-year-old pro-shop
+owner who has never used software like this.
+
+1. GETTING STARTED checklist — persistent card at the top of the dashboard
+   home for any course not yet live (and until all steps complete):
+   - Steps DERIVED FROM REAL STATE, never manually checked: ✓ email verified
+     (V11) · ✓ password set · ○ Look around your dashboard (completes when
+     they've visited the core tabs) · ○ Review your booking page (preview
+     link + the V12 approve/request-changes actions inline) · ○ Connect
+     Stripe so you can get paid (launches the existing connect flow; shows
+     incomplete/active state honestly; explains WHY in one sentence and
+     WHAT they'll need — bank account details, ~5 minutes) · ○ Check your
+     tee sheet schedule (link + one-liner).
+   - Each step: plain-English title, one-sentence explanation, one action
+     button. Progress bar ("4 of 6"). Collapses to a slim bar when complete;
+     disappears once live + all done.
+2. EVERY TAB introduces itself: first visit to each dashboard tab shows an
+   intro card — "This is your Tee Sheet. Here you can block times, add
+   walk-ins, check golfers in..." — 3-5 bullet plain sentences per tab
+   (tee sheet, bookings, schedules, members, staff, payments, cancellations,
+   settings, messages). Dismissible; a small "?" in each tab's header
+   reopens it anytime. Dismissal state in localStorage (per device is fine).
+   Copy written for the non-technical operator — no jargon, no feature names
+   without saying what they do.
+3. EMAILS point at the path: the dashboard-access email (V10 item 5) and
+   preview email gain one line — "When you log in, your Getting Started
+   checklist will walk you through everything, including payments setup."
+4. NO new schema: checklist state derives from existing data (emailVerified,
+   password set, stripeAccountActive, V12 approval events, visit tracking
+   via localStorage). If anything truly needs persistence, note it for the
+   next migration batch instead of adding one here.
+
+## Phase V13b — Request-changes v2: structured, and it lives on the inquiry (medium, no migration)
+
+Cam tested the preview review loop: free-text change requests land in the
+Messages tab where they're easy to miss. Rework:
+
+1. The preview page's "Request changes" becomes a SHORT STRUCTURED FORM:
+   category checkboxes — Pricing / Photos & description / Tee times &
+   schedule / Policies (cancellation, windows) / Course details / Something
+   else — each checked category reveals a small "what should change?" text
+   field. Multiple categories per submission. Still zero-login (token).
+2. THE INQUIRY IS THE HOME: submission writes a structured activity event
+   AND surfaces on the inquiry detail header — the checkpoint strip /
+   next-step area shows "Changes requested: Pricing, Photos" with the
+   full items listed on click. Admin works the list: each item gets a
+   "Addressed" check; when all are checked the primary action becomes
+   "Send updated preview". Messages gets a one-line mirror linking to the
+   inquiry (so nothing is lost for people who live in Messages), but the
+   inquiry page is where the work happens.
+3. The action queue's stalled logic treats "changes requested, not all
+   addressed" as YOUR MOVE (amber) with the categories in the row's
+   "Do this:" line.
+4. Storage: structured JSON inside the existing activity-event payload —
+   no migration.

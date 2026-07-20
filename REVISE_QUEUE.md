@@ -211,6 +211,26 @@ in flight at a time.
   - Counts stay live from the shared definitions (A-02 item 3). Sort +
     per-tab empty states unchanged. Keyboard navigable. On narrow widths the
     funnel wraps above the lenses rather than truncating.
+- [ ] A-02c URGENT — funnel has a hole: "Sheet In" (details_submitted) has NO
+  segment, so an inquiry whose course just submitted their sheet DISAPPEARS
+  from the pipeline row (Cam's live repro: CAM SANCHEZ COURSE, Sheet In,
+  every funnel count 0). Fix with a COMPLETENESS RULE, not a patch:
+  1. The funnel maps EVERY inquiry status to exactly one segment:
+     New (pending) → In review → Sheet sent (details_requested) →
+     SHEET IN (details_submitted — new segment, amber count chip since it's
+     always your move) → Building → Live. Rename "Waiting on them" to
+     "Sheet sent" (says what happened, not who's waiting).
+  2. INVARIANT enforced in code: sum of funnel segment counts must equal the
+     active+live total shown in the header summary. Add an assertion — if
+     any status ever maps nowhere (a future stage gets added, say), the
+     header renders a loud red "N inquiries unmapped" chip instead of
+     silently hiding them. Never again.
+  3. Same completeness audit on the LENSES: Your move = exactly
+     (details_submitted + building + anything aged past thresholds), All =
+     truly all, Archived = rejected/closed. Write the status→segment map as
+     ONE exported constant used by the list, the funnel, the Overview strip,
+     and the action queue — a single source of truth for what each stage
+     means everywhere.
 - [ ] A-03 /admin/inquiries/[id] — DETAIL — items 1-7 BUILT (item 1 cbbf1e0,
   items 2+3 dfec543, item 5 26a09ac, item 4 11e0975; item 7 fixed alongside
   item 6, commit 639a748/cd9a2a0 — see A-02/A-03 log above). Item 8 NOT

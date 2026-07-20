@@ -190,6 +190,10 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   (2) MANUAL: new `Expense` table (name, category [infra/tools/legal/other], amountCents, cadence [monthly/annual/one-time], startedAt, endedAt?) — admin CRUD on /admin/revenue for the fixed costs (Vercel, Neon, Resend, Twilio, domain, etc.), monthly costs prorated into period views.
   Display on /admin/revenue (and the Overview P&L header once A-01b lands): Fees earned − Stripe processing − expenses = NET, per Day/Week/Month period, with vs-prior delta. Migration via checklist (additive table — create-only → review → deploy pattern OK).
 
+- [ ] ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule), every dashboard tab introduces itself with plain-English intro cards + reopenable "?", emails point to the checklist (BIG, no migration — full spec in ONBOARDING_V2_SPEC.md)
+
+- [ ] ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → "Send updated preview"), Messages gets a mirror link only, stall logic counts unaddressed requests as Your Move (medium, no migration)
+
 ## Ideas / not yet specced
 
 - OPERATOR STAFF ACCOUNTS rework (Cam, 2026-07-10: "whole thing is going to be reworked and better") — current section contradicts itself: copy says "full dashboard access", role dropdown says "tee sheet access". Rework needs: clear role tiers (e.g. owner / manager / tee-sheet-only), what each can see (money? settings? members?), invite email flow, deactivate/reset from the card, and the same no-silent-failure patterns as admin. Spec when Cam's ready to define the role tiers.
