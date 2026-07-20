@@ -198,7 +198,7 @@ in flight at a time.
      it to In Review or writes fake "Cam moved this" history. Stage moves
      happen only on explicit actions. (The New count only drops when Cam
      DOES something.)
-- [ ] A-02b Inquiries tab row v2 — PIPELINE + LENSES (Cam's pick):
+- [x] A-02b Inquiries tab row v2 — BUILT: b6ec669. PIPELINE + LENSES (Cam's pick):
   Replace the flat 8-tab row with two visual groups on one row:
   - LEFT — the pipeline as a connected mini-funnel, clickable stages with
     counts and small chevron/arrow connectors showing flow:
