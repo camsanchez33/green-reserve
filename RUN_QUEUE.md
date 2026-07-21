@@ -307,8 +307,16 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   hole (a live course requesting changes should route to Messages/support,
   not the pre-live loop).
 
-- [ ] BUG: inquiry ⋯ menu renders EMPTY for live/archived inquiries (no
-  migration) — verified in code: every MoreMenu item is gated to
+- [x] BUG: inquiry ⋯ menu renders EMPTY for live/archived inquiries — FIXED
+  (6d93f6d). LIVE and ARCHIVED/REJECTED each get their own contextual
+  MoreMenu block reusing the existing guarded archive-course flows (archive,
+  hard-delete-after-archive with the payment-history guard shown, restore).
+  Verified against the real CAM SANCHEZ COURSE inquiry (status='live',
+  builtCourseId set, slug 'cam-sanchez-course' confirmed via course-detail
+  fetch): Manage Course/View public page/Copy booking link/Archive/Delete
+  all render for this exact record — the menu is no longer empty. Original
+  spec below.
+  ORIGINAL: verified in code: every MoreMenu item is gated to
   pending/in_review/details_*/building, and live inquiries also read as
   archived, so status='live' matches nothing → clicking ⋯ opens a blank
   popover. Fix:
@@ -325,7 +333,14 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   (5) quick audit: any other stage that produces a sparse/empty menu gets
   at least Manage/Copy-link items.
 
-- [ ] Small run: Send Preview = one combined send (no migration) — merge the
+- [x] Small run: Send Preview = one combined send — BUILT (6d93f6d).
+  sendPreviewWithDashboardAccessEmail (src/lib/email.ts) sends the preview
+  link + a fresh temp password/setup link in one email, from both call
+  sites (/api/preview/send handles inquiryId and courseId). Confirm modals
+  on both the inquiry page and course-detail page list both items +
+  recipient. Timeline logs one "Preview sent by {admin}" event (unchanged
+  marker, now covers the combined action). "Send dashboard access" stays in
+  the ⋯ menu, relabeled "(resend)". Original spec below — merge the
   separate "Send Preview" and "Send dashboard access" actions: pressing Send
   Preview sends ONE email containing the page preview link AND their
   dashboard login access, with copy pointing at the Getting Started
@@ -335,8 +350,18 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   separately in the ⋯ menu for resends. The confirm modal lists both things
   being sent + the recipient. Timeline logs it as one combined event.
 
-- [ ] Small run: approval propagates + gates previews (no migration) — once
-  the course approves their page:
+- [x] Small run: approval propagates + gates previews — BUILT (bdd7234 shared
+  brain + 6d93f6d wiring). Verified against CAM SANCHEZ COURSE: its event
+  log has no "Preview sent" anchor at all (approved directly without ever
+  going through the official Send Preview flow during testing), so
+  scopeToCurrentRound correctly falls back to full history — latestPageDecision
+  walks it and correctly resolves 'approved' from the most recent of the six
+  "Course approved their page" events. Courses tab (header note + list
+  badge for drafts) and Send Preview gating (→ "Approved ✓ {date}" +
+  "Request re-review", new /api/admin/request-re-review) both read this
+  same source — go-live preflight was not re-derived separately (item 3
+  below shares computeStripeGoLiveCheck / getApprovalState). Original spec
+  below — once the course approves their page:
   (1) COURSES TAB sees it: /admin/courses/[id] header (and the draft banner
   area) shows "Page approved by course · {date}"; the courses LIST row for a
   draft course gets a small approved check indicator — approval is
@@ -351,8 +376,21 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   (3) go-live preflight reads the same single approval source (no parallel
   derivations — extend the existing pageApprovalStatus helper, one brain).
 
-- [ ] BUG: go-live override promised by UI, hard-rejected by server (no
-  migration) — preflight modal offers "override and go live anyway", server
+- [x] BUG: go-live override promised by UI, hard-rejected by server — FIXED
+  (bdd7234 shared computeStripeGoLiveCheck + 6d93f6d wiring into mark_live
+  and the modal). CAM SANCHEZ COURSE has lateCancellationFee=20 and
+  stripeAccountActive=true, so its own Stripe check already passes — the
+  override path itself couldn't be exercised against this specific record
+  (no draft course with a fee configured AND Stripe missing existed to
+  test against), verified via code trace + tsc instead: mark_live now reads
+  the same shared check the modal's GET reads, honors `override:true` sent
+  once the typed confirm matches, and logs the paused-fee override to the
+  timeline. Cancellations page shows the fee as "Paused — connect Stripe"
+  when fee>0 and Stripe isn't connected (derived from existing fields, no
+  new column). Confirmed the cancellation crons already skip fee-charging
+  when stripeAccountActive is false — nothing was silently broken, it just
+  wasn't visible before. Original spec below — preflight modal offers
+  "override and go live anyway", server
   returns 400 "Course has not finished connecting Stripe yet." Fix by making
   Stripe's requirement CONDITIONAL, evaluated by ONE shared preflight
   function used by both the modal and the API (no split brains):
