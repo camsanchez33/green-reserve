@@ -5,7 +5,8 @@ import bcrypt from 'bcryptjs';
 import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail, sendDashboardAccessEmail, sendGoLiveSimpleEmail } from '@/lib/email';
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, OWNER_ONLY, type AdminSession } from '@/lib/admin-session';
-import { encodeChangeAddressed } from '@/lib/change-requests';
+import { encodeChangeAddressed, encodeRequestReReview } from '@/lib/change-requests';
+import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 
 export async function GET(req: NextRequest) {
   if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -265,9 +266,28 @@ async function handleAction(
     try {
       if (!inquiry.builtCourseId) return NextResponse.json({ error: 'No course built yet' }, { status: 400 });
       const builtCourse = await prisma.course.findUnique({ where: { id: inquiry.builtCourseId } });
-      if (!builtCourse?.stripeAccountActive) {
-        return NextResponse.json({ error: 'Course has not finished connecting Stripe yet.' }, { status: 400 });
+      if (!builtCourse) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+
+      // Same shared check the preflight modal reads (GET /api/admin/courses
+      // ?statusOf=) — if the modal offered an override, this MUST honor it;
+      // if the modal wouldn't have offered it, this still refuses.
+      const stripeCheck = await computeStripeGoLiveCheck(inquiry.builtCourseId);
+      const override = payload?.override === true;
+      if (stripeCheck && !stripeCheck.ok && !override) {
+        return NextResponse.json({
+          error: `Course has not finished connecting Stripe yet — a $${stripeCheck.lateCancellationFee.toFixed(2)} late-cancellation fee is configured and can't be enforced without it.`,
+        }, { status: 400 });
       }
+      // Override with Stripe still missing: go live anyway. The fee simply
+      // can't be charged — the cancellation crons already skip fee-charging
+      // when stripeAccountActive is false (no code change needed there),
+      // and the dashboard shows the fee as "paused" for the same reason.
+      // Never silently pretend the fee works.
+      if (override && stripeCheck && !stripeCheck.ok) {
+        await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin',
+          `${adminName} went live with Stripe not connected — $${stripeCheck.lateCancellationFee.toFixed(2)} late-cancel fee paused until connected`);
+      }
+
       await prisma.course.update({ where: { id: inquiry.builtCourseId }, data: { active: true, liveStatus: 'live' } });
       const now = new Date();
       const from = inquiry.status;

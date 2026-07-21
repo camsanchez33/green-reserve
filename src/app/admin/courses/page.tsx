@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Star, Power, Globe, Eye, ArchiveRestore, RefreshCw, Search, ArchiveX } from 'lucide-react';
+import { Star, Power, Globe, Eye, ArchiveRestore, RefreshCw, Search, ArchiveX, CheckCircle } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
@@ -13,6 +13,7 @@ interface Course {
   createdAt: string; archivedAt?: string | null; archivedBy?: string | null;
   bookings30d: number; revenue30d: number; activeMemberCount: number;
   lastBookingAt?: string | null; bookingsPrior30d?: number;
+  approvalStatus?: 'none' | 'approved' | 'changes_requested';
 }
 
 function relTime(d: string | null): string {
@@ -293,6 +294,11 @@ function CoursesContent() {
                     )}
                     {!course.archivedAt && course.stripeAccountActive && (
                       <span className="text-[11px] px-1.5 py-0.5 rounded bg-pine/5 text-pine border border-pine/20 shrink-0">Stripe</span>
+                    )}
+                    {!course.archivedAt && !course.active && course.approvalStatus === 'approved' && (
+                      <span className="text-[11px] px-1.5 py-0.5 rounded bg-ok/5 text-ok border border-ok/20 shrink-0 flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" />Approved
+                      </span>
                     )}
                   </div>
                   <div className="text-xs text-ink-muted">

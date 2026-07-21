@@ -4,6 +4,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft, Mail, Wrench, Power, CheckCircle, Clock, Trash2,
   XCircle, ArrowUpRight, Copy, Archive, Pencil, Save, RefreshCw, Eye, MoreHorizontal, Check,
+  Globe, ArchiveRestore,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -333,10 +334,17 @@ function InquiryDetailInner() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [changesExpanded, setChangesExpanded] = useState(false);
   const [addressingCategory, setAddressingCategory] = useState<string | null>(null);
+  const [requestingReReview, setRequestingReReview] = useState(false);
   const [pendingAction, setPendingAction] = useState<
-    'delete' | 'send_sheet' | 'resend_sheet' | 'create_draft' | 'reject' | 'build_without_sheet' | 'dashboard_access' | 'send_preview' | 'go_live' | null
+    'delete' | 'send_sheet' | 'resend_sheet' | 'create_draft' | 'reject' | 'build_without_sheet' | 'dashboard_access' | 'send_preview' | 'go_live'
+    | 'archive_course' | 'delete_course' | 'restore_archived' | null
   >(null);
-  const [goLiveChecks, setGoLiveChecks] = useState<{ label: string; ok: boolean }[] | null>(null);
+  const [courseSlug, setCourseSlug] = useState('');
+  const [courseBookings30d, setCourseBookings30d] = useState(0);
+  const [deleteCourseConfirm, setDeleteCourseConfirm] = useState('');
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [goLiveChecks, setGoLiveChecks] = useState<{ key: string; label: string; ok: boolean }[] | null>(null);
+  const [goLiveStripe, setGoLiveStripe] = useState<{ required: boolean; fee: number } | null>(null);
   const [goLiveOverride, setGoLiveOverride] = useState('');
   const [buildConfirmText, setBuildConfirmText] = useState('');
 
@@ -366,26 +374,49 @@ function InquiryDetailInner() {
     if (adminReady) loadInquiry();
   }, [adminReady, loadInquiry]);
 
+  // Course slug + recent-activity count for the live/archived ⋯ menu
+  // (Copy booking link, View public page, the archive recent-activity
+  // warning) — same course-detail endpoint the courses tab already uses.
+  useEffect(() => {
+    if (!inq?.builtCourseId) return;
+    fetch('/api/admin/course-detail?courseId=' + inq.builtCourseId, { headers: H() })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.course?.slug) setCourseSlug(d.course.slug);
+        setCourseBookings30d(d?.bookings30d ?? 0);
+      })
+      .catch(() => {});
+  }, [inq?.builtCourseId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (pendingAction !== 'go_live' || !inq?.builtCourseId) return;
-    setGoLiveChecks(null);
+    setGoLiveChecks(null); setGoLiveStripe(null);
     const hasSheetForCheck = !!inq.detailsJson && inq.detailsJson !== '{}';
     const approved = latestPageDecision(inq.events) === 'approved';
+    // Same shared brains the server enforces with (go-live-preflight.ts,
+    // approval-state.ts) — the modal can never promise an override the
+    // server then refuses.
     fetch('/api/admin/courses?statusOf=' + inq.builtCourseId, { headers: H() })
       .then(r => r.ok ? r.json() : null)
       .then(d => {
+        const stripeRequired = d?.stripeRequired ?? true;
+        setGoLiveStripe({ required: stripeRequired, fee: d?.lateCancellationFee ?? 0 });
         setGoLiveChecks([
-          { label: 'Setup sheet submitted', ok: hasSheetForCheck },
-          { label: 'Course approved their preview', ok: approved },
-          { label: 'Stripe connected', ok: !!d?.stripeAccountActive },
-          { label: 'Operator email verified', ok: !!d?.operatorEmailVerified },
+          { key: 'sheet', label: 'Setup sheet submitted', ok: hasSheetForCheck },
+          { key: 'approved', label: 'Course approved their preview', ok: approved },
+          {
+            key: 'stripe',
+            label: stripeRequired ? 'Stripe connected' : 'Stripe connected (optional — no late-cancel fee configured)',
+            ok: d?.stripeOk ?? !!d?.stripeAccountActive,
+          },
+          { key: 'email', label: 'Operator email verified', ok: !!d?.operatorEmailVerified },
         ]);
       })
       .catch(() => setGoLiveChecks([
-        { label: 'Setup sheet submitted', ok: hasSheetForCheck },
-        { label: 'Course approved their preview', ok: approved },
-        { label: 'Stripe connected', ok: false },
-        { label: 'Operator email verified', ok: false },
+        { key: 'sheet', label: 'Setup sheet submitted', ok: hasSheetForCheck },
+        { key: 'approved', label: 'Course approved their preview', ok: approved },
+        { key: 'stripe', label: 'Stripe connected', ok: false },
+        { key: 'email', label: 'Operator email verified', ok: false },
       ]));
   }, [pendingAction, inq?.builtCourseId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -461,6 +492,87 @@ function InquiryDetailInner() {
     setSendingPreview(false);
   }
 
+  async function requestReReview() {
+    if (!inq?.builtCourseId) return;
+    setRequestingReReview(true); setPreviewMsg('');
+    try {
+      const r = await fetch('/api/admin/request-re-review', {
+        method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId }),
+      });
+      const d = await r.json();
+      setPreviewMsg(r.ok ? 'Re-review requested — Send Preview is available again.' : 'Error: ' + (d.error || 'Failed'));
+      if (r.ok) await loadInquiry();
+    } catch { setPreviewMsg('Error: network failure'); }
+    setRequestingReReview(false);
+  }
+
+  // ── Live/archived ⋯ menu actions (RUN_QUEUE "inquiry ⋯ menu renders
+  // EMPTY for live/archived") — reuse the SAME guarded course flows the
+  // courses tab uses (src/app/api/admin/archive-course), not new ones.
+  async function archiveLiveCourse() {
+    if (!inq?.builtCourseId) return;
+    setProcessing(true); setActionError('');
+    const r = await fetch('/api/admin/archive-course', {
+      method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, action: 'archive' }),
+    });
+    setProcessing(false);
+    if (r.ok) await loadInquiry();
+    else { const d = await r.json().catch(() => ({})); setActionError('Archive failed: ' + (d.error || 'unknown')); }
+  }
+
+  async function deleteLiveOrArchivedCourse() {
+    if (!inq?.builtCourseId) return;
+    setProcessing(true); setActionError('');
+    // Hard delete requires the course be archived first — archive silently
+    // if it isn't yet (a no-op if it already is), then attempt the guarded
+    // hard delete. A course with payment history simply ends up archived,
+    // never deleted — the guard's reason is shown, not a dead end.
+    await fetch('/api/admin/archive-course', {
+      method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, action: 'archive' }),
+    });
+    const r = await fetch('/api/admin/archive-course', {
+      method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, action: 'hard_delete', confirmName: deleteCourseConfirm }),
+    });
+    const d = await r.json().catch(() => ({}));
+    setProcessing(false);
+    if (r.ok) { router.push(backUrl); return; }
+    setActionError(d.hasHistory
+      ? 'This course has payment history, so it was archived instead of permanently deleted.'
+      : 'Delete failed: ' + (d.error || 'unknown'));
+    await loadInquiry();
+  }
+
+  async function restoreArchivedInquiry() {
+    setProcessing(true); setActionError('');
+    if (inq?.builtCourseId) {
+      const r = await fetch('/api/admin/archive-course', {
+        method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, action: 'restore' }),
+      });
+      setProcessing(false);
+      if (r.ok) { await loadInquiry(); return; }
+      const d = await r.json().catch(() => ({}));
+      setActionError('Restore failed: ' + (d.error || 'unknown'));
+      return;
+    }
+    // No linked course (e.g. rejected before ever building, or a manual
+    // stage override) — just revert the inquiry's own status to whatever
+    // it was immediately before archiving/rejecting.
+    const priorEvent = inq ? [...inq.events].reverse().find(e => e.toStatus === 'archived' || e.toStatus === 'rejected') : undefined;
+    const prevStatus = priorEvent?.fromStatus || 'in_review';
+    setProcessing(false);
+    await action('set_status', { newStatus: prevStatus });
+  }
+
+  async function copyBookingLink() {
+    if (!courseSlug) return;
+    const url = `${window.location.origin}/courses/${courseSlug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch { setActionError('Could not copy — clipboard access was blocked.'); }
+  }
+
   async function deleteInquiry() {
     if (!inq) return;
     await fetch('/api/admin/inquiries?id=' + inq.id, { method: 'DELETE', headers: H() });
@@ -494,19 +606,16 @@ function InquiryDetailInner() {
   // Once live, approval is history, not a pending state — but it shouldn't
   // be INVISIBLE history. Quiet note only, no "current status" implication.
   const approvedEvent = [...inq.events].reverse().find(e => e.actorName === 'Course approved their page');
-  // Ordering fix: approval/changes-requested events only count for the
-  // CURRENT build cycle — anchor to the most recent "-> building" event so a
-  // stale approval from before a rebuild (or after going live and someone
-  // still clicking an old preview link) can't be read as the current state.
-  const buildingStartEvent = [...inq.events].reverse().find(e => e.toStatus === 'building');
-  const buildCycleEvents = inq.events.filter(e => !buildingStartEvent || new Date(e.createdAt) >= new Date(buildingStartEvent.createdAt));
-  const latestDecision = latestPageDecision(buildCycleEvents);
+  // Single brain: latestPageDecision/computeOpenChanges/etc. all scope to
+  // "since the last Preview sent" internally (scopeToCurrentRound) — pass
+  // full history, never pre-filter here, so every reader of this state
+  // (this page, the courses tab, the Send Preview gate, go-live preflight)
+  // can only ever agree.
+  const latestDecision = latestPageDecision(inq.events);
   const pageApproved = inq.status === 'building' && latestDecision === 'approved';
   const pageChangesRequested = inq.status === 'building' && latestDecision === 'changes_requested';
-  // V13b: structured, addressable change requests for the CURRENT round
-  // (anchored to the last "Preview sent" within this build cycle).
-  const openChanges = computeOpenChanges(buildCycleEvents);
-  const hadChangesThisRound = hasRequestedChangesThisRound(buildCycleEvents);
+  const openChanges = computeOpenChanges(inq.events);
+  const hadChangesThisRound = hasRequestedChangesThisRound(inq.events);
   const allChangesAddressed = inq.status === 'building' && hadChangesThisRound && openChanges.length === 0;
 
   let sd: Record<string, unknown> = {};
@@ -666,13 +775,24 @@ function InquiryDetailInner() {
                     )}
                     <button onClick={() => { setMoreOpen(false); setPendingAction('dashboard_access'); }} disabled={processing}
                       className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                      <Mail className="w-3.5 h-3.5" />Send dashboard access
+                      <Mail className="w-3.5 h-3.5" />Send dashboard access (resend)
                     </button>
-                    {inq.builtCourseId && (
+                    {inq.builtCourseId && !pageApproved && (
                       <button onClick={() => { setMoreOpen(false); setPendingAction('send_preview'); }} disabled={sendingPreview}
                         className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                        <Eye className="w-3.5 h-3.5" />{sendingPreview ? 'Sending…' : 'Send Preview'}
+                        <Eye className="w-3.5 h-3.5" />{sendingPreview ? 'Sending…' : (previewSentEvent ? 'Send Updated Preview' : 'Send Preview')}
                       </button>
+                    )}
+                    {inq.builtCourseId && pageApproved && (
+                      <div className="px-2 py-1.5">
+                        <div className="flex items-center gap-1.5 text-xs text-ok font-medium px-0 py-1">
+                          <CheckCircle className="w-3.5 h-3.5" />Approved{approvedEvent ? ' · ' + fmtDate(approvedEvent.createdAt) : ''}
+                        </div>
+                        <button onClick={() => { setMoreOpen(false); requestReReview(); }} disabled={requestingReReview}
+                          className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                          <RefreshCw className="w-3.5 h-3.5" />{requestingReReview ? 'Requesting…' : 'Request re-review'}
+                        </button>
+                      </div>
                     )}
                     {pageChangesRequested && (
                       <button onClick={() => { setMoreOpen(false); setPendingAction('go_live'); }} disabled={processing}
@@ -683,6 +803,61 @@ function InquiryDetailInner() {
                     <button onClick={() => { setMoreOpen(false); setPendingAction('delete'); }}
                       className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />Delete
+                    </button>
+                  </>
+                )}
+                {/* LIVE — menu must never render empty (RUN_QUEUE "inquiry
+                    ⋯ menu renders EMPTY for live/archived") */}
+                {inq.status === 'live' && (
+                  <>
+                    {inq.builtCourseId && (
+                      <button onClick={() => { setMoreOpen(false); router.push('/admin/courses/' + inq.builtCourseId); }}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                        <Wrench className="w-3.5 h-3.5" />Manage Course
+                      </button>
+                    )}
+                    {courseSlug && (
+                      <a href={'/courses/' + courseSlug} target="_blank" rel="noopener noreferrer" onClick={() => setMoreOpen(false)}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                        <Globe className="w-3.5 h-3.5" />View public page
+                      </a>
+                    )}
+                    {courseSlug && (
+                      <button onClick={() => { copyBookingLink(); }}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                        <Copy className="w-3.5 h-3.5" />{linkCopied ? 'Copied!' : 'Copy booking link'}
+                      </button>
+                    )}
+                    {inq.builtCourseId && (
+                      <button onClick={() => { setMoreOpen(false); setPendingAction('archive_course'); }} disabled={processing}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                        <Archive className="w-3.5 h-3.5" />Archive
+                      </button>
+                    )}
+                    {inq.builtCourseId && (
+                      <button onClick={() => { setMoreOpen(false); setPendingAction('delete_course'); setDeleteCourseConfirm(''); }}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">
+                        <Trash2 className="w-3.5 h-3.5" />Delete
+                      </button>
+                    )}
+                  </>
+                )}
+                {/* ARCHIVED / REJECTED — same never-empty rule */}
+                {(inq.status === 'archived' || inq.status === 'rejected') && (
+                  <>
+                    {inq.builtCourseId && (
+                      <button onClick={() => { setMoreOpen(false); router.push('/admin/courses/' + inq.builtCourseId); }}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                        <Wrench className="w-3.5 h-3.5" />View course
+                      </button>
+                    )}
+                    <button onClick={() => { setMoreOpen(false); setPendingAction('restore_archived'); }} disabled={processing}
+                      className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                      <ArchiveRestore className="w-3.5 h-3.5" />Restore to previous stage
+                    </button>
+                    <button onClick={() => { setMoreOpen(false); setPendingAction('delete'); }}
+                      className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">
+                      <Trash2 className="w-3.5 h-3.5" />Permanently delete
                     </button>
                   </>
                 )}
@@ -1419,7 +1594,7 @@ function InquiryDetailInner() {
           a bare browser confirm() — each states exactly what happens and who
           gets emailed before firing. */}
       {pendingAction && (() => {
-        const close = () => { setPendingAction(null); setGoLiveOverride(''); setBuildConfirmText(''); setGoLiveChecks(null); };
+        const close = () => { setPendingAction(null); setGoLiveOverride(''); setBuildConfirmText(''); setGoLiveChecks(null); setDeleteCourseConfirm(''); };
         const fire = (fn: () => void) => { fn(); close(); };
 
         if (pendingAction === 'delete') {
@@ -1427,6 +1602,41 @@ function InquiryDetailInner() {
             <ModalShell title={`Permanently delete "${inq.courseName}"?`} danger onClose={close}>
               <p className="text-sm text-ink-soft">This cannot be undone — the inquiry and its history are gone for good.</p>
               <ModalActions onCancel={close} onConfirm={() => fire(deleteInquiry)} confirmLabel="Delete permanently" danger/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'archive_course') {
+          const activityWarn = courseBookings30d > 0
+            ? ` This course has ${courseBookings30d} booking${courseBookings30d !== 1 ? 's' : ''} in the last 30 days — existing bookings and their data are preserved.`
+            : '';
+          return (
+            <ModalShell title={`Archive "${inq.courseName}"?`} onClose={close}>
+              <p className="text-sm text-ink-soft">The course disappears from the public site but data is retained. You can restore it later.{activityWarn}</p>
+              <ModalActions onCancel={close} onConfirm={() => fire(archiveLiveCourse)} confirmLabel="Archive" disabled={processing}/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'delete_course') {
+          return (
+            <ModalShell title={`Permanently delete "${inq.courseName}"?`} danger onClose={close}>
+              <p className="text-sm text-ink-soft mb-3">This cannot be undone. If this course has any payment history, it will be archived instead — deletion only proceeds for courses with no bookings or paid memberships ever recorded.</p>
+              <label className="block text-[10px] uppercase tracking-[0.06em] text-bad mb-1">Type &quot;{inq.courseName}&quot; to confirm</label>
+              <input value={deleteCourseConfirm} onChange={e => setDeleteCourseConfirm(e.target.value)}
+                className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-1"/>
+              <ModalActions onCancel={close} onConfirm={() => fire(deleteLiveOrArchivedCourse)} confirmLabel="Delete permanently" danger
+                disabled={deleteCourseConfirm.trim() !== inq.courseName.trim() || processing}/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'restore_archived') {
+          return (
+            <ModalShell title={`Restore "${inq.courseName}"?`} onClose={close}>
+              <p className="text-sm text-ink-soft">
+                {inq.builtCourseId
+                  ? 'Un-archives the course and returns this inquiry to live.'
+                  : 'Returns this inquiry to its stage before it was archived/rejected.'}
+              </p>
+              <ModalActions onCancel={close} onConfirm={() => fire(restoreArchivedInquiry)} confirmLabel="Restore" disabled={processing}/>
             </ModalShell>
           );
         }
@@ -1469,10 +1679,14 @@ function InquiryDetailInner() {
         }
         if (pendingAction === 'send_preview') {
           return (
-            <ModalShell title="Send preview link?" onClose={close}>
-              <p className="text-sm text-ink-soft">
-                Emails <strong>{inq.contactName}</strong> at <strong>{inq.email}</strong> a link to preview their built course page, so they can approve it or request changes before going live.
+            <ModalShell title={previewSentEvent ? 'Send updated preview?' : 'Send preview + dashboard access?'} onClose={close}>
+              <p className="text-sm text-ink-soft mb-2">
+                Sends ONE email to <strong>{inq.contactName}</strong> at <strong>{inq.email}</strong> containing:
               </p>
+              <ul className="text-sm text-ink-soft list-disc pl-5 mb-3 space-y-1">
+                <li>A link to preview their built course page, so they can approve it or request changes before going live</li>
+                <li>Dashboard login access (a fresh temporary password) so they can explore their Getting Started checklist</li>
+              </ul>
               <ModalActions onCancel={close} onConfirm={() => fire(sendPreview)} confirmLabel="Send Preview" disabled={sendingPreview}/>
             </ModalShell>
           );
@@ -1498,6 +1712,8 @@ function InquiryDetailInner() {
         if (pendingAction === 'go_live') {
           const allOk = goLiveChecks?.every(c => c.ok) ?? false;
           const canConfirm = allOk || (goLiveChecks && goLiveOverride.trim() === inq.courseName);
+          const stripeCheck = goLiveChecks?.find(c => c.key === 'stripe');
+          const onlyStripeFailing = !!goLiveChecks && !allOk && goLiveChecks.filter(c => !c.ok).every(c => c.key === 'stripe');
           return (
             <ModalShell title={`Go live: ${inq.courseName}?`} danger={!!goLiveChecks && !allOk} onClose={close}>
               <p className="text-xs text-ink-muted mb-3">Makes the course bookable by golfers immediately.</p>
@@ -1506,12 +1722,18 @@ function InquiryDetailInner() {
               ) : (
                 <div className="space-y-1.5 mb-1">
                   {goLiveChecks.map(c => (
-                    <div key={c.label} className="flex items-center gap-2 text-sm">
+                    <div key={c.key} className="flex items-center gap-2 text-sm">
                       <StatusDot status={c.ok ? 'ok' : 'bad'}/>
                       <span className={c.ok ? 'text-ink' : 'text-bad'}>{c.label}</span>
                     </div>
                   ))}
                 </div>
+              )}
+              {stripeCheck && !stripeCheck.ok && goLiveStripe?.required && (
+                <p className="text-xs text-bad mt-2">
+                  Your ${goLiveStripe.fee.toFixed(2)} late-cancel fee can&apos;t be charged without Stripe.
+                  {onlyStripeFailing && ' Going live anyway is safe — golfers can still book; the fee just won’t be enforced until Stripe is connected.'}
+                </p>
               )}
               {goLiveChecks && !allOk && (
                 <div className="mt-3">
@@ -1524,7 +1746,7 @@ function InquiryDetailInner() {
               )}
               <ModalActions
                 onCancel={close}
-                onConfirm={() => fire(() => action('mark_live'))}
+                onConfirm={() => fire(() => action('mark_live', { override: !allOk }))}
                 confirmLabel={allOk ? 'Go Live' : 'Override & Go Live'}
                 danger={!allOk}
                 disabled={!goLiveChecks || !canConfirm || processing}

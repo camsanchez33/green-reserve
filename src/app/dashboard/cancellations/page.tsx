@@ -31,6 +31,7 @@ export default function CancellationsPage() {
   const [policy, setPolicy] = useState({ cancellationHours: 24, lateCancellationFee: 10 });
   const [policySaving, setPolicySaving] = useState(false);
   const [policySaved, setPolicySaved] = useState(false);
+  const [stripeAccountActive, setStripeAccountActive] = useState(true);
   const intro = useTabIntro('cancellations');
 
   async function savePolicy() {
@@ -51,6 +52,7 @@ export default function CancellationsPage() {
   useEffect(() => {
     fetch('/api/operator/courses').then(r => r.json()).then(c => {
       if (c) setPolicy({ cancellationHours: c.cancellationHours ?? 24, lateCancellationFee: c.lateCancellationFee ?? 10 });
+      setStripeAccountActive(!!c?.stripeAccountActive);
     });
     load();
   }, [load]);
@@ -112,6 +114,12 @@ export default function CancellationsPage() {
               <div className="bg-white border border-line rounded-lg p-5">
                 <h2 className="text-sm font-medium text-ink mb-1">Cancellation Policy</h2>
                 <p className="text-xs text-ink-muted mb-4">Golfers can cancel free until this many hours before their tee time. After that, the fee below is automatically charged — and refunded if they still show up and check in.</p>
+                {policy.lateCancellationFee > 0 && !stripeAccountActive && (
+                  <div className="flex items-start gap-2 bg-warn/10 border border-warn/20 rounded-md px-3 py-2.5 mb-4 text-xs text-warn">
+                    <span className="font-medium shrink-0">Paused —</span>
+                    <span>your ${policy.lateCancellationFee.toFixed(2)} late-cancel fee can&apos;t be charged until you connect Stripe. Golfers can still book and cancel; no fee is being collected in the meantime.</span>
+                  </div>
+                )}
                 <div className="flex flex-wrap items-end gap-3">
                   <div>
                     <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Free Cancel Window (hours)</label>

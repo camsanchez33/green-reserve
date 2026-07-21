@@ -575,6 +575,55 @@ export async function sendPreviewEmail(data: {
   });
 }
 
+// Combined send (RUN_QUEUE "Send Preview = one combined send") — pressing
+// Send Preview now delivers the page preview AND dashboard login access in
+// one email, so a course never has to wait on a second message to start
+// exploring their dashboard. Admin-initiated only, never automatic.
+export async function sendPreviewWithDashboardAccessEmail(data: {
+  contactName: string;
+  contactEmail: string;
+  courseName: string;
+  previewUrl: string;
+  tempPassword: string;
+  setupLink: string;
+}) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">Your page is ready for a look</h1>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
+      Hi ${data.contactName} &mdash; we've finished building your GreenReserve page for <strong>${data.courseName}</strong>.
+      Take a look and let us know if anything needs adjusting before we go live. We've also set you up with early
+      access to your dashboard below.
+    </p>
+    <a href="${data.previewUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:700;font-size:16px;margin-bottom:20px;">
+      Preview Your Page &rarr;
+    </a>
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:16px;margin-bottom:24px;">
+      <p style="margin:0;color:#374151;font-size:13px;">Booking is disabled on this preview link &mdash; it's only for you to review the layout and information. Reply to this email with any changes and we'll get them in quickly.</p>
+    </div>
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:24px;margin-bottom:24px;">
+      <p style="margin:0 0 12px;color:#111827;font-size:15px;font-weight:600;">Your dashboard is ready too</p>
+      <p style="margin:0 0 4px;color:#6b7280;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Login Email</p>
+      <p style="margin:0 0 16px;color:#111827;font-size:15px;font-weight:600;">${data.contactEmail}</p>
+      <p style="margin:0 0 4px;color:#6b7280;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Temporary Password</p>
+      <p style="margin:0;color:#111827;font-size:18px;font-weight:700;font-family:monospace;letter-spacing:0.1em;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;display:inline-block;">${data.tempPassword}</p>
+    </div>
+    <a href="${data.setupLink}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:700;font-size:16px;margin-bottom:16px;">
+      Log In To My Dashboard &rarr;
+    </a>
+    <p style="margin:0 0 20px;color:#9ca3af;font-size:13px;">Log in and your Getting Started checklist will walk you through everything, including payments setup. Nothing is live yet — golfers can't book until you approve the page.</p>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
+      Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.contactEmail,
+    replyTo: 'hello@greenreserve.app',
+    subject: `Preview + dashboard access: Your GreenReserve page for ${data.courseName}`,
+    html,
+  });
+}
+
 // Sent during Building stage when admin clicks "Send dashboard access" —
 // gives early dashboard access before the course goes live.
 export async function sendDashboardAccessEmail(data: {

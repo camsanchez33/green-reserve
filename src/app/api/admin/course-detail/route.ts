@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
 import { sendCourseLiveOrientationEmail } from '@/lib/email';
+import { getApprovalState } from '@/lib/approval-state';
 
 export async function GET(req: NextRequest) {
   if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -13,7 +14,7 @@ export async function GET(req: NextRequest) {
   const sixtyDaysAgo = new Date();
   sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
 
-  const [course, recentBookings, totalBookings, revenue, staff, lastBookingAgg, priorBookingsCount] = await Promise.all([
+  const [course, recentBookings, totalBookings, revenue, staff, lastBookingAgg, priorBookingsCount, approval] = await Promise.all([
     prisma.course.findUnique({ where: { id: courseId }, include: { operator: { select: { id: true, name: true, email: true, emailVerified: true, onboardingStep: true, phone: true } }, schedules: true } }),
     prisma.booking.findMany({ where: { courseId, status: 'confirmed', createdAt: { gte: thirtyDaysAgo } }, select: { id: true, golferName: true, golferEmail: true, players: true, totalAmount: true, createdAt: true, teeTime: { select: { date: true, time: true } } }, orderBy: { createdAt: 'desc' }, take: 20 }),
     prisma.booking.count({ where: { courseId, status: 'confirmed' } }),
@@ -21,6 +22,7 @@ export async function GET(req: NextRequest) {
     prisma.courseStaff.findMany({ where: { courseId }, select: { id: true, name: true, email: true, role: true, active: true } }),
     prisma.booking.aggregate({ where: { courseId }, _max: { createdAt: true } }),
     prisma.booking.count({ where: { courseId, status: 'confirmed', createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } } }),
+    getApprovalState(courseId),
   ]);
 
   return NextResponse.json({
@@ -36,6 +38,9 @@ export async function GET(req: NextRequest) {
     bookings30d: revenue._count.id,
     lastBookingAt: lastBookingAgg._max.createdAt?.toISOString() ?? null,
     bookingsPrior30d: priorBookingsCount,
+    // Approval is course-level truth, not inquiry trivia (RUN_QUEUE
+    // "approval propagates + gates previews", item 1).
+    approval: { status: approval.status, approvedAt: approval.approvedAt?.toISOString() ?? null },
   });
 }
 

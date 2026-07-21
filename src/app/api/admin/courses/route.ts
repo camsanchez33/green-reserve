@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
+import { getApprovalState } from '@/lib/approval-state';
+import { latestPageDecision } from '@/lib/change-requests';
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -15,17 +18,29 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(all);
   }
 
-  // Lightweight single-course status — for preflight checks (e.g. Go Live)
+  // Lightweight single-course status — for preflight checks (e.g. Go Live).
+  // Stripe check + approval state both come from the single shared brains
+  // (go-live-preflight.ts / approval-state.ts) also used by mark_live's
+  // server-side enforcement — the modal can never promise what the server
+  // will then refuse.
   const statusId = req.nextUrl.searchParams.get('statusOf');
   if (statusId) {
     const course = await prisma.course.findUnique({
       where: { id: statusId },
-      select: { id: true, stripeAccountActive: true, operator: { select: { emailVerified: true } } },
+      select: { id: true, operator: { select: { emailVerified: true } } },
     });
     if (!course) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const [stripeCheck, approval] = await Promise.all([
+      computeStripeGoLiveCheck(statusId),
+      getApprovalState(statusId),
+    ]);
     return NextResponse.json({
-      stripeAccountActive: course.stripeAccountActive,
+      stripeAccountActive: stripeCheck?.stripeAccountActive ?? false,
+      stripeRequired: stripeCheck?.required ?? true,
+      stripeOk: stripeCheck?.ok ?? false,
+      lateCancellationFee: stripeCheck?.lateCancellationFee ?? 0,
       operatorEmailVerified: course.operator?.emailVerified ?? false,
+      approvalStatus: approval.status,
     });
   }
 
@@ -66,6 +81,35 @@ export async function GET(req: NextRequest) {
   const lastBookingMap = new Map(lastBookingAggs.map(b => [b.courseId, b._max.createdAt?.toISOString() ?? null]));
   const priorBookingMap = new Map(priorBookingAggs.map(b => [b.courseId, b._count.id]));
 
+  // Approval is course-level truth (item 1) — batched rather than N+1'd:
+  // one inquiry lookup + one events lookup for every draft course at once,
+  // then the SAME shared latestPageDecision brain everything else uses.
+  const draftCourseIds = courses.filter(c => !c.active).map(c => c.id);
+  const approvalByCourseId = new Map<string, 'none' | 'approved' | 'changes_requested'>();
+  if (draftCourseIds.length > 0) {
+    const inquiries = await prisma.courseInquiry.findMany({
+      where: { builtCourseId: { in: draftCourseIds } },
+      select: { id: true, builtCourseId: true },
+    });
+    const inquiryIds = inquiries.map(i => i.id);
+    const events = inquiryIds.length > 0
+      ? await prisma.inquiryStatusEvent.findMany({
+          where: { inquiryId: { in: inquiryIds } },
+          select: { inquiryId: true, actorName: true, createdAt: true },
+          orderBy: { createdAt: 'asc' },
+        })
+      : [];
+    const eventsByInquiryId = new Map<string, typeof events>();
+    for (const ev of events) {
+      if (!eventsByInquiryId.has(ev.inquiryId)) eventsByInquiryId.set(ev.inquiryId, []);
+      eventsByInquiryId.get(ev.inquiryId)!.push(ev);
+    }
+    for (const inq of inquiries) {
+      if (!inq.builtCourseId) continue;
+      approvalByCourseId.set(inq.builtCourseId, latestPageDecision(eventsByInquiryId.get(inq.id) ?? []) ?? 'none');
+    }
+  }
+
   const result = courses.map(c => ({
     ...c,
     bookings30d: bookingMap.get(c.id)?.count ?? 0,
@@ -73,6 +117,7 @@ export async function GET(req: NextRequest) {
     activeMemberCount: memberMap.get(c.id) ?? 0,
     lastBookingAt: lastBookingMap.get(c.id) ?? null,
     bookingsPrior30d: priorBookingMap.get(c.id) ?? 0,
+    approvalStatus: approvalByCourseId.get(c.id) ?? 'none',
   }));
 
   return NextResponse.json(result);

@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, Star, Power, Globe, ArchiveX, ArchiveRestore, Mail, Phone,
-  Calendar, Ban, Plus, X, RefreshCw, Search, MessageSquare, Send, Trash2, Eye,
+  Calendar, Ban, Plus, X, RefreshCw, Search, MessageSquare, Send, Trash2, Eye, CheckCircle,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -48,6 +48,7 @@ interface CourseDetail {
   bookings30d: number;
   lastBookingAt: string | null;
   bookingsPrior30d: number;
+  approval: { status: 'none' | 'approved' | 'changes_requested'; approvedAt: string | null };
 }
 
 interface TeeSlot {
@@ -149,6 +150,8 @@ export default function CourseDetailPage() {
   // Preview email
   const [sendingPreview, setSendingPreview] = useState(false);
   const [previewMsg, setPreviewMsg] = useState('');
+  const [showPreviewConfirm, setShowPreviewConfirm] = useState(false);
+  const [requestingReReview, setRequestingReReview] = useState(false);
 
   // Messages tab
   const [msgThread, setMsgThread] = useState<{ id: string; messages: { id: string; senderType: string; senderName: string; body: string; readAt: string | null; isBroadcast: boolean; createdAt: string }[] } | null>(null);
@@ -346,7 +349,19 @@ export default function CourseDetailPage() {
     });
     const d = await r.json();
     setSendingPreview(false);
-    setPreviewMsg(r.ok ? `Preview email sent to ${detail.course.operator.email}` : ('Error: ' + (d.error || 'Failed')));
+    setPreviewMsg(r.ok ? `Preview + dashboard access sent to ${detail.course.operator.email}` : ('Error: ' + (d.error || 'Failed')));
+    if (r.ok) loadDetail();
+  }
+
+  async function requestReReview() {
+    setRequestingReReview(true); setPreviewMsg('');
+    const r = await fetch('/api/admin/request-re-review', {
+      method: 'POST', headers: H(), body: JSON.stringify({ courseId }),
+    });
+    const d = await r.json();
+    setRequestingReReview(false);
+    setPreviewMsg(r.ok ? 'Re-review requested — Send Preview is available again.' : ('Error: ' + (d.error || 'Failed')));
+    if (r.ok) loadDetail();
   }
 
   const c = detail?.course;
@@ -418,6 +433,11 @@ export default function CourseDetailPage() {
                 {c.stripeAccountActive && (
                   <span className="text-[11px] px-1.5 py-0.5 rounded bg-pine/5 text-pine border border-pine/20">Stripe</span>
                 )}
+                {detail?.approval.approvedAt && (
+                  <span className="text-xs text-ink-faint">
+                    Page approved by course · {new Date(detail.approval.approvedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </span>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-1 shrink-0">
@@ -428,12 +448,28 @@ export default function CourseDetailPage() {
               >
                 <Star className="w-4 h-4" />
               </button>
-              {!c.active && c.operator && (
+              {!c.active && c.operator && detail?.approval.status === 'approved' && (
+                <>
+                  <span className="px-3 py-1.5 rounded-md text-xs font-medium border bg-ok/5 text-ok border-ok/20 flex items-center gap-1.5">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    Approved{detail.approval.approvedAt ? ' · ' + new Date(detail.approval.approvedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                  </span>
+                  <button
+                    onClick={requestReReview}
+                    disabled={requestingReReview}
+                    className="px-3 py-1.5 rounded-md text-xs font-medium border transition-colors bg-paper text-ink-soft border-line hover:text-ink hover:border-line-strong disabled:opacity-50"
+                    title="Reopen the review loop without waiting on the course"
+                  >
+                    {requestingReReview ? 'Requesting…' : 'Request re-review'}
+                  </button>
+                </>
+              )}
+              {!c.active && c.operator && detail?.approval.status !== 'approved' && (
                 <button
-                  onClick={sendCoursePreview}
+                  onClick={() => setShowPreviewConfirm(true)}
                   disabled={sendingPreview}
                   className="px-3 py-1.5 rounded-md text-xs font-medium border transition-colors flex items-center gap-1.5 bg-paper text-ink-soft border-line hover:text-pine hover:border-pine/30 hover:bg-pine/5 disabled:opacity-50"
-                  title="Send preview email to operator"
+                  title="Send preview + dashboard access to operator"
                 >
                   <Eye className="w-3.5 h-3.5" />
                   {sendingPreview ? 'Sending…' : 'Send Preview'}
@@ -1332,6 +1368,32 @@ export default function CourseDetailPage() {
 
         </div>
       </div>
+
+      {/* Send Preview confirm — lists both things being sent + recipient (RUN_QUEUE "Send Preview = one combined send") */}
+      {showPreviewConfirm && detail?.course.operator && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-line rounded-lg p-6 w-full max-w-sm shadow-2xl">
+            <h3 className="font-serif font-medium text-ink mb-2">Send preview + dashboard access?</h3>
+            <p className="text-sm text-ink-soft mb-2">
+              Sends ONE email to <strong>{detail.course.operator.name}</strong> at <strong>{detail.course.operator.email}</strong> containing:
+            </p>
+            <ul className="text-sm text-ink-soft list-disc pl-5 mb-4 space-y-1">
+              <li>A link to preview their built course page</li>
+              <li>Dashboard login access (a fresh temporary password)</li>
+            </ul>
+            <div className="flex gap-3">
+              <button onClick={() => setShowPreviewConfirm(false)} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors">Cancel</button>
+              <button
+                onClick={() => { setShowPreviewConfirm(false); sendCoursePreview(); }}
+                disabled={sendingPreview}
+                className="flex-1 bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors"
+              >
+                {sendingPreview ? 'Sending…' : 'Send Preview'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Manual booking modal */}
       {manualSlot && (
