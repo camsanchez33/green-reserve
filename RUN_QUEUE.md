@@ -307,6 +307,67 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   hole (a live course requesting changes should route to Messages/support,
   not the pre-live loop).
 
+- [ ] BUG: inquiry ⋯ menu renders EMPTY for live/archived inquiries (no
+  migration) — verified in code: every MoreMenu item is gated to
+  pending/in_review/details_*/building, and live inquiries also read as
+  archived, so status='live' matches nothing → clicking ⋯ opens a blank
+  popover. Fix:
+  (1) RULE: the menu must NEVER render empty — every stage gets its
+  contextual set;
+  (2) LIVE: Manage Course, View public page, Copy booking link, Archive
+  (with the existing recent-activity warning), Delete (existing
+  payment-history guard applies — archive-only when guarded, with the
+  guard's reason shown);
+  (3) ARCHIVED: View course (if built), Restore to previous stage,
+  Permanently delete (existing guarded flow from the list's archived tab —
+  same code path, not a new one);
+  (4) all destructive items keep typed-confirm modals per A-03 conventions;
+  (5) quick audit: any other stage that produces a sparse/empty menu gets
+  at least Manage/Copy-link items.
+
+- [ ] Small run: Send Preview = one combined send (no migration) — merge the
+  separate "Send Preview" and "Send dashboard access" actions: pressing Send
+  Preview sends ONE email containing the page preview link AND their
+  dashboard login access, with copy pointing at the Getting Started
+  checklist ("log in and it walks you through everything, including
+  payments"). Still admin-initiated, never automatic at draft creation
+  (first-impression rule stands). "Send dashboard access" remains available
+  separately in the ⋯ menu for resends. The confirm modal lists both things
+  being sent + the recipient. Timeline logs it as one combined event.
+
+- [ ] Small run: approval propagates + gates previews (no migration) — once
+  the course approves their page:
+  (1) COURSES TAB sees it: /admin/courses/[id] header (and the draft banner
+  area) shows "Page approved by course · {date}"; the courses LIST row for a
+  draft course gets a small approved check indicator — approval is
+  course-level truth, not inquiry trivia;
+  (2) SEND PREVIEW GATES: after approval, the Send Preview action (button,
+  combined send, and ⋯ entry) is replaced by "Approved ✓ {date}" — you
+  cannot send another preview at an approved course. It re-opens ONLY if
+  (a) the course later submits a change request (unaddressed changes revoke
+  approved state — V13b logic already treats this as Your Move), or
+  (b) admin explicitly clicks "Request re-review" (typed intent, logged),
+  e.g. after making significant edits to the page;
+  (3) go-live preflight reads the same single approval source (no parallel
+  derivations — extend the existing pageApprovalStatus helper, one brain).
+
+- [ ] BUG: go-live override promised by UI, hard-rejected by server (no
+  migration) — preflight modal offers "override and go live anyway", server
+  returns 400 "Course has not finished connecting Stripe yet." Fix by making
+  Stripe's requirement CONDITIONAL, evaluated by ONE shared preflight
+  function used by both the modal and the API (no split brains):
+  (1) no late-cancellation fee configured → Stripe is NOT required: go-live
+  proceeds normally (no-card flow; note in preflight: "golfers book without
+  cards; connect Stripe later to enable card features");
+  (2) late-cancel fee configured + Stripe missing → preflight explains the
+  real consequence: "your $X late-cancel fee can't be charged without
+  Stripe" and the typed override goes live with fee enforcement DISABLED
+  (visibly: dashboard settings show the fee as 'paused — connect Stripe',
+  timeline logs the override), never silently pretending the fee works;
+  (3) server accepts the override flag under exactly the same rules the
+  modal shows — if the modal offered it, the server honors it; if the server
+  would refuse, the modal never offers it.
+
 ## Ideas / not yet specced
 
 - OPERATOR STAFF ACCOUNTS rework (Cam, 2026-07-10: "whole thing is going to be reworked and better") — current section contradicts itself: copy says "full dashboard access", role dropdown says "tee sheet access". Rework needs: clear role tiers (e.g. owner / manager / tee-sheet-only), what each can see (money? settings? members?), invite email flow, deactivate/reset from the card, and the same no-silent-failure patterns as admin. Spec when Cam's ready to define the role tiers.
