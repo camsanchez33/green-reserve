@@ -406,7 +406,28 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   modal shows — if the modal offered it, the server honors it; if the server
   would refuse, the modal never offers it.
 
-- [ ] LIFECYCLE PARITY LAW — course ⇄ inquiry move as ONE (Cam: "I can't
+- [x] LIFECYCLE PARITY LAW — BUILT (5d90c25). archivePair/restorePair/
+  deletePair in src/lib/lifecycle.ts, each in one $transaction. Found and
+  fixed a real pre-existing bug while building this: deletePair used to
+  ALWAYS delete the operator login if one existed — for a multi-course
+  operator, hard-deleting any ONE of their courses would have deleted their
+  login and stranded their access to every OTHER course, directly
+  contradicting the V9 "never strand a multi-course operator" rule. Now
+  checks `course.count({operatorId, id: {not: courseId}})` first. Verified
+  against real data (read-only): all 3 currently-linked live courses
+  (CAM SANCHEZ COURSE, TEST COURSE 2, Green Reserve Test Course) each have
+  a distinct operatorId with no other courses, so deletePair on any of them
+  would correctly delete that operator too — confirmed the logic reads
+  right against real operatorId shapes without performing a live mutation
+  on production data. /admin/courses' dead DELETE handler (no callers,
+  already-drifted duplicate archive logic) removed rather than fixed.
+  Reconciliation sweep (item 6) — /api/admin/reconcile-lifecycle-pairs,
+  wired to fire once on first visit to the inquiries Closed tab (see A-02d
+  below) — ran against real data: 0 pairs currently out of parity (all 3
+  linked courses' archivedAt state already matches their inquiry status),
+  confirming no false positives rather than "nothing to reconcile because
+  it doesn't work." Original spec below.
+  ORIGINAL: course ⇄ inquiry move as ONE (Cam: "I can't
   explain how vital this is") (no migration expected; if cascade config
   needs schema, STOP and note):
   A linked pair (CourseInquiry.builtCourseId ↔ Course) shares one fate:
@@ -431,8 +452,25 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   inquiry, etc.) get reconciled one-time by the run, with a printed list of
   what it changed.
 
-- [ ] BUG + design: stage override is doing lifecycle's job, and deletes
-  don't stick (no migration) — two fixes, same discipline as the parity law:
+- [x] BUG + design: stage override is doing lifecycle's job, and deletes
+  don't stick — FIXED (5d90c25 server + 5d48331 client). Override dropdown
+  now offers ACTIVE_STATUSES only (pipeline stages), set_status rejects
+  rejected/archived/live server-side too (not just hidden client-side),
+  overrides log as a distinct "Stage overridden by {name}" line (Activity
+  tab renders a "Manual override" tag next to the transition arrow instead
+  of a redundant "by Stage overridden by..." string). ROOT CAUSE of the
+  "deleted inquiry still in All" bug, found by code trace: both delete call
+  sites (list row, detail modal) awaited the DELETE fetch but never checked
+  res.ok — a failed delete (any non-2xx) looked identical to success, so
+  the row reappeared on the next load because nothing was ever actually
+  deleted. Fixed both to check r.ok and show an inline error banner.
+  CAUGHT A REGRESSION while fixing this: bulk "Archive" on the list page
+  was calling set_status with newStatus:'rejected' — which the new
+  pipeline-only allowlist now correctly rejects. Repointed it at the
+  existing dedicated `reject` action instead. Deletes now route through
+  deleteInquiryOrPair (lifecycle.ts) so a linked course is never
+  orphaned. Original spec below.
+  ORIGINAL: two fixes, same discipline as the parity law:
   (1) OVERRIDE STAGE dropdown is for PIPELINE stages only (pending /
   in_review / sheet sent / sheet in / building) — statuses that are really
   LIFECYCLE EVENTS (rejected, archived, live) are REMOVED from the dropdown;

@@ -248,8 +248,23 @@ in flight at a time.
      ONE exported constant used by the list, the funnel, the Overview strip,
      and the action queue — a single source of truth for what each stage
      means everywhere.
-- [ ] A-02d Lenses + closed-state model (Cam, 2026-07-20 — supersedes A-02
-  item 3's "All includes archived"):
+- [x] A-02d Lenses + closed-state model — BUILT (5d48331). ALIVE_STATUSES
+  added to src/lib/inquiry-status.ts; "All" now matches alive only (funnel
+  total). "Archived" lens relabeled "Closed", rows grouped into Rejected/
+  Archived sections with why+when (reusing the existing whyArchived
+  helper) and only Restore/Permanently-delete actions — both routed through
+  the LIFECYCLE PARITY LAW service (RUN_QUEUE item 6). Count invariant
+  extended: allTabCount === funnelSum, and unmapped+all+closed === total,
+  checked live. Verified against real data (read-only, no mutation
+  performed): 3 live linked inquiries (alive) + 1 unlinked rejected inquiry
+  ("cam course") = 4 total, invariant holds exactly (0 unmapped, 3 alive,
+  1 closed). That same unlinked record's restore path surfaced a real bug —
+  see RUN_QUEUE item 6/7's notes — its prior status was a stale 'approved'
+  value from before A-02c existed, which the new pipeline-only restore
+  logic now correctly falls back past instead of erroring. Reconciliation
+  sweep (RUN_QUEUE item 6.6) fires on first visit to this tab. Original
+  spec below (Cam, 2026-07-20 — supersedes A-02 item 3's "All includes
+  archived"):
   THE MODEL: every inquiry is either ALIVE (somewhere on the funnel: New →
   In review → Sheet sent → Sheet in → Building → Live) or CLOSED (out of
   the pipeline: rejected, or archived via the parity law). Alive and closed
