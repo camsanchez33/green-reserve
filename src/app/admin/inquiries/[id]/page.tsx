@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
-import { STATUS_DOT_MAP, STATUS_LABEL, KNOWN_STATUSES } from '@/lib/inquiry-status';
+import { STATUS_DOT_MAP, STATUS_LABEL, ACTIVE_STATUSES } from '@/lib/inquiry-status';
 import {
   CATEGORY_LABEL, latestPageDecision, computeOpenChanges,
   hasRequestedChangesThisRound, describeChangeEvent, decodeChangeAddressed,
@@ -556,9 +556,12 @@ function InquiryDetailInner() {
     }
     // No linked course (e.g. rejected before ever building, or a manual
     // stage override) — just revert the inquiry's own status to whatever
-    // it was immediately before archiving/rejecting.
+    // it was immediately before archiving/rejecting. Guard against stale/
+    // invalid history (e.g. a status from before A-02c's completeness fix)
+    // — only ever land on a real pipeline stage.
     const priorEvent = inq ? [...inq.events].reverse().find(e => e.toStatus === 'archived' || e.toStatus === 'rejected') : undefined;
-    const prevStatus = priorEvent?.fromStatus || 'in_review';
+    const priorStatus = priorEvent?.fromStatus;
+    const prevStatus = priorStatus && (ACTIVE_STATUSES as readonly string[]).includes(priorStatus) ? priorStatus : 'in_review';
     setProcessing(false);
     await action('set_status', { newStatus: prevStatus });
   }
@@ -575,8 +578,18 @@ function InquiryDetailInner() {
 
   async function deleteInquiry() {
     if (!inq) return;
-    await fetch('/api/admin/inquiries?id=' + inq.id, { method: 'DELETE', headers: H() });
-    router.push(backUrl);
+    setActionError('');
+    const confirmParam = inq.builtCourseId ? '&confirmName=' + encodeURIComponent(deleteCourseConfirm) : '';
+    const r = await fetch('/api/admin/inquiries?id=' + inq.id + confirmParam, { method: 'DELETE', headers: H() });
+    if (r.ok) { router.push(backUrl); return; }
+    // No-silent-failures: a failed delete (name mismatch, payment-history
+    // guard on the linked course) must show why, not just look like nothing
+    // happened while the record is still fully there.
+    const d = await r.json().catch(() => ({}));
+    setActionError(d.hasHistory
+      ? 'This course has payment history, so it was archived instead of permanently deleted.'
+      : 'Delete failed: ' + (d.error || 'unknown'));
+    await loadInquiry();
   }
 
   async function saveContact() {
@@ -749,7 +762,7 @@ function InquiryDetailInner() {
                       }}
                       className="w-full bg-paper border border-line rounded-md px-2 py-1.5 text-xs text-ink outline-none cursor-pointer"
                     >
-                      {KNOWN_STATUSES.map(s => <option key={s} value={s}>{STATUS_LABEL[s] || s}</option>)}
+                      {ACTIVE_STATUSES.map(s => <option key={s} value={s}>{STATUS_LABEL[s] || s}</option>)}
                     </select>
                   </div>
                 )}
@@ -1529,8 +1542,11 @@ function InquiryDetailInner() {
                       const contactUpdate = ev.fromStatus === 'contact_updated';
                       const changeDesc = describeChangeEvent(ev.actorName);
                       const changeAddr = decodeChangeAddressed(ev.actorName);
+                      const OVERRIDE_PREFIX = 'Stage overridden by ';
+                      const isOverride = !!ev.actorName?.startsWith(OVERRIDE_PREFIX);
+                      const overrideBy = isOverride ? ev.actorName!.slice(OVERRIDE_PREFIX.length) : null;
                       const attribution = ev.trigger === 'admin'
-                        ? (changeAddr ? `by ${changeAddr.by}` : ev.actorName ? `by ${ev.actorName}` : 'by admin')
+                        ? (changeAddr ? `by ${changeAddr.by}` : overrideBy ? `by ${overrideBy}` : ev.actorName ? `by ${ev.actorName}` : 'by admin')
                         : ev.trigger === 'course' ? 'Course'
                         : 'System';
                       return (
@@ -1547,6 +1563,7 @@ function InquiryDetailInner() {
                                     <span>{STATUS_LABEL[ev.fromStatus] || ev.fromStatus}</span>
                                     <span className="text-ink-muted mx-1.5">→</span>
                                     <span className="font-medium">{STATUS_LABEL[ev.toStatus] || ev.toStatus}</span>
+                                    {isOverride && <span className="ml-2 text-[10px] uppercase tracking-wide text-warn">Manual override</span>}
                                   </>
                                 ) : (changeDesc || ev.actorName || 'Update')}
                             </div>
@@ -1598,10 +1615,27 @@ function InquiryDetailInner() {
         const fire = (fn: () => void) => { fn(); close(); };
 
         if (pendingAction === 'delete') {
+          // LIFECYCLE PARITY LAW: deleting an inquiry with a built course
+          // deletes BOTH (archiving first if needed) — full blast radius
+          // stated up front, typed confirm required just like the courses
+          // tab's hard-delete. An unlinked inquiry stays a simple click.
+          const hasCourse = !!inq.builtCourseId;
           return (
             <ModalShell title={`Permanently delete "${inq.courseName}"?`} danger onClose={close}>
-              <p className="text-sm text-ink-soft">This cannot be undone — the inquiry and its history are gone for good.</p>
-              <ModalActions onCancel={close} onConfirm={() => fire(deleteInquiry)} confirmLabel="Delete permanently" danger/>
+              <p className="text-sm text-ink-soft mb-3">
+                {hasCourse
+                  ? 'This cannot be undone. Deletes the inquiry AND its built course (archiving it first if it isn’t already). If the course has any payment history, it’s archived instead of deleted, and you’ll see why.'
+                  : 'This cannot be undone — the inquiry and its history are gone for good.'}
+              </p>
+              {hasCourse && (
+                <>
+                  <label className="block text-[10px] uppercase tracking-[0.06em] text-bad mb-1">Type &quot;{inq.courseName}&quot; to confirm</label>
+                  <input value={deleteCourseConfirm} onChange={e => setDeleteCourseConfirm(e.target.value)}
+                    className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-1"/>
+                </>
+              )}
+              <ModalActions onCancel={close} onConfirm={() => fire(deleteInquiry)} confirmLabel="Delete permanently" danger
+                disabled={hasCourse && deleteCourseConfirm.trim() !== inq.courseName.trim()}/>
             </ModalShell>
           );
         }
@@ -1619,7 +1653,9 @@ function InquiryDetailInner() {
         if (pendingAction === 'delete_course') {
           return (
             <ModalShell title={`Permanently delete "${inq.courseName}"?`} danger onClose={close}>
-              <p className="text-sm text-ink-soft mb-3">This cannot be undone. If this course has any payment history, it will be archived instead — deletion only proceeds for courses with no bookings or paid memberships ever recorded.</p>
+              <p className="text-sm text-ink-soft mb-3">
+                This cannot be undone. Deletes the course, its inquiry, and the operator&apos;s login (only if this was their sole course — a multi-course operator&apos;s login is kept). If this course has any payment history, it&apos;s archived instead — deletion only proceeds for courses with no bookings or paid memberships ever recorded.
+              </p>
               <label className="block text-[10px] uppercase tracking-[0.06em] text-bad mb-1">Type &quot;{inq.courseName}&quot; to confirm</label>
               <input value={deleteCourseConfirm} onChange={e => setDeleteCourseConfirm(e.target.value)}
                 className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-1"/>

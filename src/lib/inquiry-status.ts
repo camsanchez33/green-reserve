@@ -14,6 +14,12 @@ export const ACTIVE_STATUSES: InquiryStatus[] = [
 
 export const ARCHIVED_STATUSES: InquiryStatus[] = ['rejected', 'archived'];
 
+// A-02d "alive vs closed never mix": every inquiry is either somewhere on
+// the funnel (ALIVE) or out of the pipeline for good (CLOSED — rejected or
+// archived-via-the-lifecycle-parity-law). "All" means every ALIVE inquiry
+// (the funnel total) — closed records live only in the Closed tab.
+export const ALIVE_STATUSES: InquiryStatus[] = [...ACTIVE_STATUSES, 'live'];
+
 // Every status the app knows about. Anything outside this set is "unmapped" —
 // a bug, not a silent omission.
 export const KNOWN_STATUSES: InquiryStatus[] = [...ACTIVE_STATUSES, 'live', ...ARCHIVED_STATUSES];

@@ -436,7 +436,7 @@ function CoursesContent() {
             <div className="bg-white rounded-lg border border-line shadow-xl w-full max-w-md mx-4 p-6">
               <h3 className="text-[15px] font-serif font-medium text-ink mb-1">Permanently delete this course?</h3>
               <p className="text-sm text-ink-soft mb-4">
-                This deletes all bookings, tee times, members, and all other data for <strong>{course.name}</strong>. This cannot be undone.
+                This deletes all bookings, tee times, members, and all other data for <strong>{course.name}</strong> — plus its linked inquiry and the operator&apos;s login (only if this was their sole course). This cannot be undone. If the course has any payment history, this fails and it stays archived instead.
               </p>
               <label className="text-xs text-ink-muted block mb-1.5">Type the course name to confirm</label>
               <input

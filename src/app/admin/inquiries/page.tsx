@@ -2,11 +2,11 @@
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { RefreshCw, Search, Trash2, ChevronRight } from 'lucide-react';
+import { RefreshCw, Search, Trash2, ChevronRight, ArchiveRestore } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
-import { FUNNEL_SEGMENTS, ARCHIVED_STATUSES, ACTIVE_STATUSES, KNOWN_STATUSES, STATUS_DOT_MAP, STATUS_LABEL, isYourMove } from '@/lib/inquiry-status';
+import { FUNNEL_SEGMENTS, ARCHIVED_STATUSES, ACTIVE_STATUSES, ALIVE_STATUSES, KNOWN_STATUSES, STATUS_DOT_MAP, STATUS_LABEL, isYourMove } from '@/lib/inquiry-status';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -41,8 +41,12 @@ const TABS = [
       : seg.key === 'building' ? 'Draft created — being built/reviewed before go-live.'
       : 'Converted wins — successfully launched.',
   })),
-  { key: 'all', label: 'All', description: 'Every inquiry, every stage — including live and archived.' },
-  { key: 'archived', label: 'Archived', description: 'Rejected or closed — kept for records.' },
+  // A-02d: alive vs closed never mix. "All" = every ALIVE inquiry (the
+  // funnel total) — the name finally means what it says. Closed records
+  // (rejected, or archived via the lifecycle parity law) live ONLY in the
+  // Closed tab, never here.
+  { key: 'all', label: 'All', description: 'Every active inquiry — the whole funnel, New through Live.' },
+  { key: 'archived', label: 'Closed', description: 'Rejected or archived — restore or permanently delete here.' },
 ];
 
 // A tab's membership is a predicate, not a static status list — "Your move"
@@ -51,7 +55,7 @@ const TABS = [
 // route through it.
 function tabMatches(key: string, inq: Inquiry): boolean {
   if (key === 'your-move') return isYourMove(inq.status, inq.updatedAt || inq.createdAt);
-  if (key === 'all') return true;
+  if (key === 'all') return (ALIVE_STATUSES as readonly string[]).includes(inq.status);
   if (key === 'archived') return (ARCHIVED_STATUSES as readonly string[]).includes(inq.status);
   const seg = FUNNEL_SEGMENTS.find(s => s.key === key);
   return seg ? (seg.statuses as readonly string[]).includes(inq.status) : false;
@@ -108,6 +112,9 @@ function InquiriesListInner() {
   const [bulkConfirmText, setBulkConfirmText] = useState('');
   const [bulkRunning, setBulkRunning] = useState(false);
   const [bulkResult, setBulkResult] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [reconcileRan, setReconcileRan] = useState(false);
+  const [reconcileResult, setReconcileResult] = useState('');
 
   const rawTabParam = searchParams.get('tab') || '';
   const [activeTabKey, setActiveTabKey] = useState(
@@ -156,7 +163,7 @@ function InquiriesListInner() {
     if (adminReady) loadInquiries();
   }, [adminReady, loadInquiries]);
 
-  // One-time backfill on first visit to Archived tab
+  // One-time backfill on first visit to the Closed tab
   useEffect(() => {
     if (activeTabKey !== 'archived' || backfillRan || !adminReady) return;
     setBackfillRan(true);
@@ -166,10 +173,71 @@ function InquiriesListInner() {
       .catch(() => {});
   }, [activeTabKey, backfillRan, adminReady, H, loadInquiries]);
 
+  // One-time LIFECYCLE PARITY LAW reconciliation sweep (RUN_QUEUE item 6.6)
+  // — also triggered by the first visit to Closed, prints exactly what it
+  // changed (never a silent rewrite of history).
+  useEffect(() => {
+    if (activeTabKey !== 'archived' || reconcileRan || !adminReady) return;
+    setReconcileRan(true);
+    fetch('/api/admin/reconcile-lifecycle-pairs', { method: 'POST', headers: H() })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d && d.fixed > 0) {
+          setReconcileResult(`Reconciled ${d.fixed} out-of-parity pair${d.fixed === 1 ? '' : 's'}: ${d.changes.map((c: { action: string }) => c.action).join('; ')}`);
+          loadInquiries();
+        }
+      })
+      .catch(() => {});
+  }, [activeTabKey, reconcileRan, adminReady, H, loadInquiries]);
+
   async function deleteInquiry(id: string, name: string) {
     if (!confirm('Permanently delete inquiry for "' + name + '"? This cannot be undone.')) return;
-    await fetch('/api/admin/inquiries?id=' + id, { method: 'DELETE', headers: H() });
-    setInquiries(prev => prev.filter(i => i.id !== id));
+    setDeleteError('');
+    try {
+      const r = await fetch('/api/admin/inquiries?id=' + id, { method: 'DELETE', headers: H() });
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        setDeleteError(`Delete failed for "${name}": ${d.error || 'unknown error'}`);
+        return;
+      }
+      // Optimistic removal ONLY after a confirmed success — no-silent-failures:
+      // a failed delete (e.g. payment-history guard on a linked course) must
+      // never make the row silently vanish from this view while it's still
+      // in the DB (that's exactly what made a "deleted" inquiry keep
+      // reappearing in All).
+      setInquiries(prev => prev.filter(i => i.id !== id));
+    } catch {
+      setDeleteError(`Delete failed for "${name}": network error`);
+    }
+  }
+
+  // A-02d: Closed tab's only actions are Restore and Permanently delete —
+  // both route through the same lifecycle service the courses tab uses
+  // (LIFECYCLE PARITY LAW), never a one-sided status flip.
+  async function restoreInquiry(inq: Inquiry) {
+    setDeleteError('');
+    if (inq.builtCourseId) {
+      const r = await fetch('/api/admin/archive-course', {
+        method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, action: 'restore' }),
+      });
+      if (r.ok) { await loadInquiries(); return; }
+      const d = await r.json().catch(() => ({}));
+      setDeleteError(`Restore failed for "${inq.courseName}": ${d.error || 'unknown error'}`);
+      return;
+    }
+    // No linked course (rejected before ever building) — revert the
+    // inquiry's own status to whatever it was right before closing. Guard
+    // against stale/invalid history (e.g. a status from before A-02c's
+    // completeness fix) — only ever land on a real pipeline stage.
+    const priorEvent = [...inq.events].reverse().find(e => e.toStatus === 'archived' || e.toStatus === 'rejected');
+    const priorStatus = priorEvent?.fromStatus;
+    const prevStatus = priorStatus && (ACTIVE_STATUSES as readonly string[]).includes(priorStatus) ? priorStatus : 'in_review';
+    const r = await fetch('/api/admin/inquiries', {
+      method: 'POST', headers: H(), body: JSON.stringify({ id: inq.id, action: 'set_status', newStatus: prevStatus }),
+    });
+    if (r.ok) { await loadInquiries(); return; }
+    const d = await r.json().catch(() => ({}));
+    setDeleteError(`Restore failed for "${inq.courseName}": ${d.error || 'unknown error'}`);
   }
 
   function detailHref(inq: Inquiry) {
@@ -262,7 +330,10 @@ function InquiriesListInner() {
           body: JSON.stringify(
             bulkPreview.kind === 'send_sheet'
               ? { id, action: 'request_details' }
-              : { id, action: 'set_status', newStatus: 'rejected' }
+              // "Archive" here really means reject (RUN_QUEUE "stage override
+              // is doing lifecycle's job" — set_status is pipeline-stages-only
+              // now, rejected/archived/live go through their guarded actions).
+              : { id, action: 'reject' }
           ),
         });
         if (r.ok) ok++; else failed++;
@@ -281,13 +352,21 @@ function InquiriesListInner() {
   const needsYouCount = countFor(yourMoveTab);
   const liveAllTimeCount = inquiries.filter(i => i.status === 'live').length;
 
-  // A-02c INVARIANT: every inquiry must map to exactly one funnel segment
-  // (or live/archived). If a future status is ever added and forgotten here,
-  // this catches it loudly instead of inquiries silently vanishing from the
-  // pipeline, the way "Sheet In" (details_submitted) once did.
+  // A-02c/A-02d INVARIANT: every inquiry must map to exactly one funnel
+  // segment (or be closed). If a future status is ever added and forgotten
+  // here, this catches it loudly instead of inquiries silently vanishing
+  // from the pipeline, the way "Sheet In" (details_submitted) once did.
+  // A-02d extends it: alive total = funnel sum = the "All" tab's own count
+  // (two independent derivations of the same thing must agree), and closed
+  // is counted separately so nothing is double-counted or dropped.
   const unmappedCount = inquiries.filter(i => !(KNOWN_STATUSES as readonly string[]).includes(i.status)).length;
   const funnelSum = PIPELINE_KEYS.reduce((sum, key) => sum + countFor({ key }), 0);
-  const invariantBroken = unmappedCount > 0 || funnelSum !== activeCount + liveAllTimeCount;
+  const allTabCount = countFor(TABS.find(t => t.key === 'all')!);
+  const closedCount = inquiries.filter(i => (ARCHIVED_STATUSES as readonly string[]).includes(i.status)).length;
+  const invariantBroken = unmappedCount > 0
+    || funnelSum !== activeCount + liveAllTimeCount
+    || allTabCount !== funnelSum
+    || unmappedCount + allTabCount + closedCount !== inquiries.length;
 
   if (!adminReady) return null;
 
@@ -302,13 +381,13 @@ function InquiriesListInner() {
             <div>
               <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Inquiries</h1>
               <p className="text-sm text-ink-soft mt-0.5">
-                {activeCount} active · {needsYouCount} needs you · {liveAllTimeCount} live all-time
+                {activeCount} active · {needsYouCount} needs you · {liveAllTimeCount} live all-time · {closedCount} closed
               </p>
               {invariantBroken && (
                 <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-white bg-bad rounded-md px-2 py-1">
                   {unmappedCount > 0
                     ? `${unmappedCount} inquir${unmappedCount === 1 ? 'y' : 'ies'} unmapped — status not recognized by the funnel`
-                    : 'Funnel counts don’t add up — a status is falling through the cracks'}
+                    : 'Counts don’t add up — alive + closed should equal the total, but doesn’t'}
                 </p>
               )}
             </div>
@@ -505,6 +584,18 @@ function InquiriesListInner() {
               <button onClick={() => setBulkResult('')} className="text-ok/60 hover:text-ok">Dismiss</button>
             </div>
           )}
+          {deleteError && (
+            <div className="bg-bad/5 border border-bad/20 rounded-lg px-4 py-2.5 mb-3 text-sm text-bad flex items-center justify-between">
+              {deleteError}
+              <button onClick={() => setDeleteError('')} className="text-bad/60 hover:text-bad">Dismiss</button>
+            </div>
+          )}
+          {reconcileResult && (
+            <div className="bg-warn/5 border border-warn/20 rounded-lg px-4 py-2.5 mb-3 text-sm text-warn flex items-center justify-between gap-3">
+              <span>{reconcileResult}</span>
+              <button onClick={() => setReconcileResult('')} className="text-warn/60 hover:text-warn shrink-0">Dismiss</button>
+            </div>
+          )}
 
           {/* List */}
           {loading && <div className="py-20 text-center text-ink-muted text-sm">Loading...</div>}
@@ -512,96 +603,134 @@ function InquiriesListInner() {
             <EmptyState message={q ? 'No results — clear your search' : currentTab.description} />
           )}
 
-          {!loading && filtered.length > 0 && (
-            <div className="space-y-1.5">
-              {canBulkSelect && (
-                <label className="flex items-center gap-2 px-5 py-1 text-xs text-ink-muted cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={pagedInquiries.length > 0 && pagedInquiries.every(i => selected.has(i.id))}
-                    onChange={toggleSelectAllOnPage}
-                  />
-                  Select all on this page
-                </label>
-              )}
-              {pagedInquiries.map(inq => {
-                const isArchived = currentTab.key === 'archived';
-                const dot = (STATUS_DOT_MAP[inq.status] || 'neutral') as 'ok' | 'bad' | 'warn' | 'neutral';
-                const days = daysAgo(inq.updatedAt || inq.createdAt);
-                const stale = !isArchived && days > 7;
-                const archived = isArchived ? whyArchived(inq) : null;
+          {!loading && filtered.length > 0 && (() => {
+            const isClosedTab = currentTab.key === 'archived';
 
-                return (
-                  <Link
-                    key={inq.id}
-                    href={detailHref(inq)}
-                    className="bg-white border border-line rounded-lg px-5 py-3.5 flex items-center gap-4 hover:border-pine/30 hover:bg-pine/[0.02] transition-colors"
-                  >
-                    {canBulkSelect && (
-                      <input
-                        type="checkbox"
-                        checked={selected.has(inq.id)}
-                        onClick={e => e.stopPropagation()}
-                        onChange={() => toggleSelected(inq.id)}
-                        className="shrink-0"
-                      />
-                    )}
-                    <span title={STATUS_LABEL[inq.status] || inq.status}><StatusDot status={dot} /></span>
+            const renderRow = (inq: Inquiry) => {
+              const dot = (STATUS_DOT_MAP[inq.status] || 'neutral') as 'ok' | 'bad' | 'warn' | 'neutral';
+              const days = daysAgo(inq.updatedAt || inq.createdAt);
+              const stale = !isClosedTab && days > 7;
+              const closed = isClosedTab ? whyArchived(inq) : null;
 
-                    {/* Course name + location */}
-                    <div className="w-44 shrink-0 min-w-0">
-                      <div className="text-sm font-medium text-ink truncate">{inq.courseName}</div>
-                      <div className="text-xs text-ink-muted truncate">{inq.city}, {inq.state}</div>
+              return (
+                <Link
+                  key={inq.id}
+                  href={detailHref(inq)}
+                  className="bg-white border border-line rounded-lg px-5 py-3.5 flex items-center gap-4 hover:border-pine/30 hover:bg-pine/[0.02] transition-colors"
+                >
+                  {canBulkSelect && (
+                    <input
+                      type="checkbox"
+                      checked={selected.has(inq.id)}
+                      onClick={e => e.stopPropagation()}
+                      onChange={() => toggleSelected(inq.id)}
+                      className="shrink-0"
+                    />
+                  )}
+                  <span title={STATUS_LABEL[inq.status] || inq.status}><StatusDot status={dot} /></span>
+
+                  {/* Course name + location */}
+                  <div className="w-44 shrink-0 min-w-0">
+                    <div className="text-sm font-medium text-ink truncate">{inq.courseName}</div>
+                    <div className="text-xs text-ink-muted truncate">{inq.city}, {inq.state}</div>
+                  </div>
+
+                  {/* Contact */}
+                  <div className="flex-1 min-w-0 hidden md:block">
+                    <div className="text-xs text-ink-soft truncate">
+                      {inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''}
                     </div>
-
-                    {/* Contact */}
-                    <div className="flex-1 min-w-0 hidden md:block">
-                      <div className="text-xs text-ink-soft truncate">
-                        {inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''}
-                      </div>
-                      <div className="text-[10px] text-ink-faint truncate flex items-center gap-1.5">
-                        {inq.email}
-                        {hasBadEmail(inq) && (
-                          <span className="shrink-0 text-[9px] font-medium uppercase tracking-wide bg-warn/10 text-warn px-1.5 py-0.5 rounded-full">Bad email</span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Stage + days-in-stage */}
-                    <div className="shrink-0 text-right hidden lg:block min-w-[110px]">
-                      {isArchived && archived ? (
-                        <>
-                          <div className="text-xs text-ink-soft">{archived.reason}</div>
-                          <div className="text-[10px] text-ink-faint">{fmtDate(archived.date)}</div>
-                        </>
-                      ) : (
-                        <>
-                          <div className="text-xs text-ink-soft">{STATUS_LABEL[inq.status] || inq.status}</div>
-                          <div className={'text-[10px] font-medium ' + (stale ? 'text-bad' : 'text-ink-faint')}>{days}d in stage</div>
-                        </>
+                    <div className="text-[10px] text-ink-faint truncate flex items-center gap-1.5">
+                      {inq.email}
+                      {hasBadEmail(inq) && (
+                        <span className="shrink-0 text-[9px] font-medium uppercase tracking-wide bg-warn/10 text-warn px-1.5 py-0.5 rounded-full">Bad email</span>
                       )}
                     </div>
+                  </div>
 
-                    {/* Submitted date */}
-                    <div className="shrink-0 text-xs text-ink-faint hidden xl:block w-24 text-right">
-                      {fmtDate(inq.createdAt)}
-                    </div>
+                  {/* Stage + days-in-stage, or why/how it closed */}
+                  <div className="shrink-0 text-right hidden lg:block min-w-[110px]">
+                    {isClosedTab && closed ? (
+                      <>
+                        <div className="text-xs text-ink-soft">{closed.reason}</div>
+                        <div className="text-[10px] text-ink-faint">{fmtDate(closed.date)}</div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-xs text-ink-soft">{STATUS_LABEL[inq.status] || inq.status}</div>
+                        <div className={'text-[10px] font-medium ' + (stale ? 'text-bad' : 'text-ink-faint')}>{days}d in stage</div>
+                      </>
+                    )}
+                  </div>
 
-                    {/* Archived: delete button */}
-                    {isArchived && (
+                  {/* Submitted date */}
+                  <div className="shrink-0 text-xs text-ink-faint hidden xl:block w-24 text-right">
+                    {fmtDate(inq.createdAt)}
+                  </div>
+
+                  {/* Closed tab: Restore + Permanently delete — nothing else lives here */}
+                  {isClosedTab && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={e => { e.preventDefault(); e.stopPropagation(); restoreInquiry(inq); }}
+                        className="w-7 h-7 flex items-center justify-center rounded text-ink-faint hover:text-ok hover:bg-ok/5 transition-colors"
+                        title="Restore"
+                      >
+                        <ArchiveRestore className="w-3.5 h-3.5" />
+                      </button>
                       <button
                         onClick={e => { e.preventDefault(); e.stopPropagation(); deleteInquiry(inq.id, inq.courseName); }}
-                        className="w-7 h-7 flex items-center justify-center rounded text-ink-faint hover:text-bad hover:bg-bad/5 transition-colors shrink-0"
+                        className="w-7 h-7 flex items-center justify-center rounded text-ink-faint hover:text-bad hover:bg-bad/5 transition-colors"
                         title="Delete permanently"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          )}
+                    </div>
+                  )}
+                </Link>
+              );
+            };
+
+            if (!isClosedTab) {
+              return (
+                <div className="space-y-1.5">
+                  {canBulkSelect && (
+                    <label className="flex items-center gap-2 px-5 py-1 text-xs text-ink-muted cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={pagedInquiries.length > 0 && pagedInquiries.every(i => selected.has(i.id))}
+                        onChange={toggleSelectAllOnPage}
+                      />
+                      Select all on this page
+                    </label>
+                  )}
+                  {pagedInquiries.map(renderRow)}
+                </div>
+              );
+            }
+
+            // A-02d: Closed is a managed graveyard, not a dump — grouped
+            // Rejected vs Archived so the two very different "how it ended"
+            // stories never blur together.
+            const rejectedRows = pagedInquiries.filter(i => i.status === 'rejected');
+            const archivedRows = pagedInquiries.filter(i => i.status === 'archived');
+            return (
+              <div className="space-y-5">
+                {rejectedRows.length > 0 && (
+                  <div>
+                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Rejected ({rejectedRows.length})</div>
+                    <div className="space-y-1.5">{rejectedRows.map(renderRow)}</div>
+                  </div>
+                )}
+                {archivedRows.length > 0 && (
+                  <div>
+                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Archived ({archivedRows.length})</div>
+                    <div className="space-y-1.5">{archivedRows.map(renderRow)}</div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Pagination */}
           {!loading && filtered.length > PAGE_SIZE && (
