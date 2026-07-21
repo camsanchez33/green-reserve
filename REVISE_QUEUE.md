@@ -248,6 +248,27 @@ in flight at a time.
      ONE exported constant used by the list, the funnel, the Overview strip,
      and the action queue — a single source of truth for what each stage
      means everywhere.
+- [ ] A-02d Lenses + closed-state model (Cam, 2026-07-20 — supersedes A-02
+  item 3's "All includes archived"):
+  THE MODEL: every inquiry is either ALIVE (somewhere on the funnel: New →
+  In review → Sheet sent → Sheet in → Building → Live) or CLOSED (out of
+  the pipeline: rejected, or archived via the parity law). Alive and closed
+  never mix in a view.
+  - LENSES (right side) become: **Your move** (work queue) · **All**
+    (= every ALIVE inquiry, funnel total, NO closed records — the name
+    finally matches by definition) · **Closed** (replaces "Archived").
+  - CLOSED tab is a managed graveyard, not a dump: each row shows WHY and
+    HOW it got there ("Rejected · Jul 12 · by Cam" / "Archived · course
+    paused · Jul 18"), grouped Rejected vs Archived, searchable. Actions
+    per row: Restore (routes through the parity law — restoring an
+    archived pair revives both) and Permanently delete (guarded by the
+    pair's payment history, guard reason shown inline). Nothing else lives
+    here — no stage overrides, no sends.
+  - COUNT INVARIANT extends: Alive total = funnel sum = All count;
+    Closed counted separately; the unmapped-chip failsafe covers both.
+  - Delete/archive AVAILABILITY recap on the alive side: archive available
+    from any alive stage (pair-aware warning); delete only via the ⋯ menu
+    with blast-radius modal; both route through the lifecycle service.
 - [ ] A-03 /admin/inquiries/[id] — DETAIL — items 1-7 BUILT (item 1 cbbf1e0,
   items 2+3 dfec543, item 5 26a09ac, item 4 11e0975; item 7 fixed alongside
   item 6, commit 639a748/cd9a2a0 — see A-02/A-03 log above). Item 8 NOT

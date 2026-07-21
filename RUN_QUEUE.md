@@ -406,6 +406,49 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   modal shows — if the modal offered it, the server honors it; if the server
   would refuse, the modal never offers it.
 
+- [ ] LIFECYCLE PARITY LAW — course ⇄ inquiry move as ONE (Cam: "I can't
+  explain how vital this is") (no migration expected; if cascade config
+  needs schema, STOP and note):
+  A linked pair (CourseInquiry.builtCourseId ↔ Course) shares one fate:
+  (1) ARCHIVE either → BOTH archive, one transaction; RESTORE either → both
+  restore. Same states shown on both pages, always.
+  (2) DELETE either → BOTH delete (plus the operator login when this was
+  their only course and it has no payment history — otherwise operator is
+  flagged stranded, existing rule). The payment-history guard applies to
+  the PAIR: if the course can only be archived, the inquiry can only be
+  archived too, with the SAME explanation shown on whichever page you
+  tried from.
+  (3) Implemented as ONE shared lifecycle service (archivePair / restorePair
+  / deletePair in src/lib) — both /admin/inquiries* and /admin/courses*
+  call it; neither page ever mutates lifecycle state directly. No more
+  one-sided deletes, ever.
+  (4) Confirm modals state the FULL blast radius before typing the name:
+  "Deletes the course, its inquiry, and the operator login" — never
+  discover consequences afterward.
+  (5) Unlinked entities (inquiry never built; wizard course with no
+  inquiry) act alone, explicitly noted in their modals.
+  (6) Backfill sweep: existing mismatched pairs (archived course + active
+  inquiry, etc.) get reconciled one-time by the run, with a printed list of
+  what it changed.
+
+- [ ] BUG + design: stage override is doing lifecycle's job, and deletes
+  don't stick (no migration) — two fixes, same discipline as the parity law:
+  (1) OVERRIDE STAGE dropdown is for PIPELINE stages only (pending /
+  in_review / sheet sent / sheet in / building) — statuses that are really
+  LIFECYCLE EVENTS (rejected, archived, live) are REMOVED from the dropdown;
+  they only happen through their proper guarded flows (Reject modal, Archive
+  with warning, Go Live preflight). Overriding a stage never silently
+  archives/rejects/launches anything. Each override is logged as
+  "Stage overridden by Cam: X → Y".
+  (2) VERIFIED-BY-CAM BUG: a deleted inquiry still appears in the All tab.
+  Reproduce, then find which link lied: the delete API (failed silently? →
+  no-silent-failures pattern: error banner), a soft-delete leaving the row
+  matched by All's query, or the client not refetching after delete
+  (optimistic removal + refetch on success). Confirm the DB row is actually
+  gone post-delete; All/Archived/funnel counts update immediately. Route the
+  delete through the new lifecycle service (deletePair) so course-side
+  cleanup happens too.
+
 ## Ideas / not yet specced
 
 - OPERATOR STAFF ACCOUNTS rework (Cam, 2026-07-10: "whole thing is going to be reworked and better") — current section contradicts itself: copy says "full dashboard access", role dropdown says "tee sheet access". Rework needs: clear role tiers (e.g. owner / manager / tee-sheet-only), what each can see (money? settings? members?), invite email flow, deactivate/reset from the card, and the same no-silent-failure patterns as admin. Spec when Cam's ready to define the role tiers.
