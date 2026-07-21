@@ -123,35 +123,9 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(result);
 }
 
-// DELETE now archives (soft-delete). Hard delete lives at /api/admin/archive-course.
-export async function DELETE(req: NextRequest) {
-  const session = await resolveAdminSession();
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  const { searchParams } = new URL(req.url);
-  const id = searchParams.get('id');
-  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
-
-  const course = await prisma.course.findUnique({ where: { id }, select: { id: true, name: true } });
-  if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
-
-  await prisma.course.update({
-    where: { id },
-    data: { archivedAt: new Date(), archivedBy: session.name, active: false, liveStatus: 'draft' },
-  });
-
-  const linked = await prisma.courseInquiry.findFirst({ where: { builtCourseId: id } });
-  if (linked) {
-    await prisma.inquiryStatusEvent.create({
-      data: {
-        inquiryId: linked.id,
-        fromStatus: linked.status,
-        toStatus: linked.status,
-        trigger: 'system',
-        actorName: 'Course archived by ' + session.name,
-      },
-    });
-  }
-
-  return NextResponse.json({ success: true });
-}
+// Archive/restore/delete all route through src/lib/lifecycle.ts via
+// POST /api/admin/archive-course (LIFECYCLE PARITY LAW — one shared service,
+// no second implementation here). This DELETE handler had drifted from that
+// (it archived the course but never actually flipped the linked inquiry's
+// status, only logged a mislabeled event) and had no callers left — removed
+// rather than fixed, since archivePair is the one place this logic belongs.

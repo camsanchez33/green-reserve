@@ -7,6 +7,7 @@ import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, OWNER_ONLY, type AdminSession } from '@/lib/admin-session';
 import { encodeChangeAddressed, encodeRequestReReview } from '@/lib/change-requests';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
+import { deleteInquiryOrPair } from '@/lib/lifecycle';
 
 export async function GET(req: NextRequest) {
   if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -332,16 +333,24 @@ async function handleAction(
     return NextResponse.json({ success: true });
   }
 
-  // ── set_status (drag-and-drop manual override) ────────────────────
+  // ── set_status (manual stage override) ─────────────────────────────
+  // PIPELINE STAGES ONLY (RUN_QUEUE "stage override is doing lifecycle's
+  // job") — rejected/archived/live are LIFECYCLE EVENTS that only happen
+  // through their own guarded flows (Reject, Archive, Go Live preflight).
+  // Overriding a stage must never silently reject/archive/launch anything.
   if (action === 'set_status') {
-    const allowed = ['pending', 'in_review', 'details_requested', 'details_submitted', 'building', 'rejected'];
+    const allowed = ['pending', 'in_review', 'details_requested', 'details_submitted', 'building'];
     const newStatus = String(payload?.newStatus ?? '');
-    if (!allowed.includes(newStatus)) return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+    if (!allowed.includes(newStatus)) return NextResponse.json({ error: 'Invalid status — pipeline stages only' }, { status: 400 });
+    if (!allowed.includes(inquiry.status)) return NextResponse.json({ error: 'This inquiry is not in an overridable pipeline stage' }, { status: 400 });
     const from = inquiry.status;
+    if (from === newStatus) return NextResponse.json({ success: true });
     await prisma.courseInquiry.update({ where: { id: inquiryId }, data: { status: newStatus } });
-    if (from !== newStatus) {
-      await logEvent(inquiryId, from, newStatus, 'admin', adminName);
-    }
+    // Distinct from a normal flow-button transition (e.g. "In Review") so
+    // the ledger can tell a manual override apart from the guided path —
+    // the transition arrow already renders From → To, so this just marks
+    // WHO did it and how (attribution line: "Stage overridden by {name}").
+    await logEvent(inquiryId, from, newStatus, 'admin', `Stage overridden by ${adminName}`);
     return NextResponse.json({ success: true });
   }
 
@@ -740,7 +749,13 @@ export async function DELETE(req: NextRequest) {
   if (!requireRole(session, OWNER_ONLY)) return NextResponse.json({ error: 'Forbidden — owner only' }, { status: 403 });
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
+  const confirmName = searchParams.get('confirmName');
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
-  await prisma.courseInquiry.delete({ where: { id } });
-  return NextResponse.json({ success: true });
+  // LIFECYCLE PARITY LAW: a linked inquiry routes through the same
+  // deletePair the courses tab uses (payment-history guard, operator-
+  // stranding check) instead of deleting the inquiry row and leaving its
+  // course dangling. Unlinked inquiries still just delete the row.
+  const result = await deleteInquiryOrPair(id, confirmName, session.name);
+  if (!result.ok) return NextResponse.json({ error: result.error, hasHistory: result.hasHistory }, { status: result.error === 'Inquiry not found' ? 404 : 400 });
+  return NextResponse.json({ success: true, changed: result.changed });
 }
