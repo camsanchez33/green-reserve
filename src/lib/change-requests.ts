@@ -25,6 +25,11 @@ const ADDRESSED_PREFIX = CHANGE_ADDRESSED_PREFIX;
 export const LEGACY_CHANGES_REQUESTED_MARKER = 'Course requested changes to their page';
 const LEGACY_MARKER = LEGACY_CHANGES_REQUESTED_MARKER;
 
+export const APPROVED_MARKER = 'Course approved their page';
+// Admin-initiated reset — reopens the review loop without the course having
+// asked for anything (e.g. after admin made edits post-approval).
+export const RE_REVIEW_REQUESTED_MARKER = 'Admin requested re-review';
+
 export function isChangesRequestedEvent(actorName: string | null | undefined): boolean {
   return !!actorName && (actorName === LEGACY_MARKER || actorName.startsWith(REQUESTED_PREFIX));
 }
@@ -66,17 +71,26 @@ export function describeChangeEvent(actorName: string | null | undefined): strin
   return null;
 }
 
-// The OPEN (unaddressed) items for the CURRENT round — anchored to the most
-// recent "Preview sent" event, since sending an updated preview starts a
-// fresh round and old resolved items must never bleed through as still-open.
-export function computeOpenChanges(events: { actorName: string | null; createdAt: string | Date }[]): ChangeItem[] {
+type Ev = { actorName: string | null; createdAt: string | Date };
+
+// THE single anchor for "current round" — since the most recent "Preview
+// sent" event. Sending a (new or updated) preview starts a fresh round;
+// nothing before that point counts as current. Every function below scopes
+// through this one helper so there is exactly one definition of "current
+// round" in the codebase (RUN_QUEUE "approval propagates + gates previews",
+// item 4.3 — "one brain, no parallel derivations").
+export function scopeToCurrentRound<T extends Ev>(events: T[]): T[] {
   const sorted = [...events].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   let lastPreviewIdx = -1;
   for (let i = sorted.length - 1; i >= 0; i--) {
     if (sorted[i].actorName?.startsWith('Preview sent')) { lastPreviewIdx = i; break; }
   }
-  const scoped = sorted.slice(lastPreviewIdx + 1);
+  return sorted.slice(lastPreviewIdx + 1);
+}
 
+// The OPEN (unaddressed) items for the CURRENT round.
+export function computeOpenChanges(events: Ev[]): ChangeItem[] {
+  const scoped = scopeToCurrentRound(events);
   const requestedByCategory = new Map<string, ChangeItem>();
   const addressed = new Set<string>();
   for (const ev of scoped) {
@@ -88,16 +102,19 @@ export function computeOpenChanges(events: { actorName: string | null; createdAt
   return Array.from(requestedByCategory.values()).filter(it => !addressed.has(it.category));
 }
 
-// Most recent course decision on their preview page — approved, or asked
-// for changes (any encoding, including the pre-V13b free-text marker).
-// Anchor the input events to the current build cycle before calling this
-// (e.g. events since the last "-> building" transition) so a stale decision
-// from a prior rebuild can't be read as current.
-export function latestPageDecision(events: { actorName: string | null; createdAt: string | Date }[]): 'approved' | 'changes_requested' | null {
-  const sorted = [...events].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-  for (let i = sorted.length - 1; i >= 0; i--) {
-    const an = sorted[i].actorName;
-    if (an === 'Course approved their page') return 'approved';
+// Most recent course/admin decision for the CURRENT round — approved, asked
+// for changes (any encoding, including the pre-V13b free-text marker), or
+// null (no decision yet, OR the loop was explicitly reopened via "Request
+// re-review" since the last approval/changes-request). Always scopes to
+// scopeToCurrentRound itself — callers must NOT pre-filter by build cycle
+// or anything else; passing full event history is correct and required for
+// every caller to agree.
+export function latestPageDecision(events: Ev[]): 'approved' | 'changes_requested' | null {
+  const scoped = scopeToCurrentRound(events);
+  for (let i = scoped.length - 1; i >= 0; i--) {
+    const an = scoped[i].actorName;
+    if (an === APPROVED_MARKER) return 'approved';
+    if (an === RE_REVIEW_REQUESTED_MARKER) return null;
     if (isChangesRequestedEvent(an)) return 'changes_requested';
   }
   return null;
@@ -105,13 +122,8 @@ export function latestPageDecision(events: { actorName: string | null; createdAt
 
 // Timestamp of the OLDEST changes-requested event in the current round —
 // used to age a still-open change request (e.g. for the action queue).
-export function oldestOpenChangeRequestDate(events: { actorName: string | null; createdAt: string | Date }[]): Date | null {
-  const sorted = [...events].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-  let lastPreviewIdx = -1;
-  for (let i = sorted.length - 1; i >= 0; i--) {
-    if (sorted[i].actorName?.startsWith('Preview sent')) { lastPreviewIdx = i; break; }
-  }
-  const scoped = sorted.slice(lastPreviewIdx + 1);
+export function oldestOpenChangeRequestDate(events: Ev[]): Date | null {
+  const scoped = scopeToCurrentRound(events);
   const firstRequest = scoped.find(ev => isChangesRequestedEvent(ev.actorName));
   return firstRequest ? new Date(firstRequest.createdAt) : null;
 }
@@ -119,11 +131,18 @@ export function oldestOpenChangeRequestDate(events: { actorName: string | null; 
 // Has this round had ANY changes requested at all (open or already fully
 // addressed)? Used to decide whether "Send updated preview" should be the
 // next action, vs. the normal "waiting on review" / "approved" messaging.
-export function hasRequestedChangesThisRound(events: { actorName: string | null; createdAt: string | Date }[]): boolean {
-  const sorted = [...events].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-  let lastPreviewIdx = -1;
-  for (let i = sorted.length - 1; i >= 0; i--) {
-    if (sorted[i].actorName?.startsWith('Preview sent')) { lastPreviewIdx = i; break; }
-  }
-  return sorted.slice(lastPreviewIdx + 1).some(ev => isChangesRequestedEvent(ev.actorName));
+export function hasRequestedChangesThisRound(events: Ev[]): boolean {
+  return scopeToCurrentRound(events).some(ev => isChangesRequestedEvent(ev.actorName));
+}
+
+// Is the "Send Preview" action currently locked behind an existing approval?
+// Locked only while the CURRENT round's decision is 'approved' — a change
+// request or an explicit re-review request already re-opens it (both are
+// handled by latestPageDecision itself).
+export function isSendPreviewGated(events: Ev[]): boolean {
+  return latestPageDecision(events) === 'approved';
+}
+
+export function encodeRequestReReview(): string {
+  return RE_REVIEW_REQUESTED_MARKER;
 }
