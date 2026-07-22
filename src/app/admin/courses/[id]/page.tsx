@@ -4,18 +4,25 @@ import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, Star, Power, Globe, ArchiveX, ArchiveRestore, Mail, Phone,
   Calendar, Ban, Plus, X, RefreshCw, Search, MessageSquare, Send, Trash2, Eye, CheckCircle,
+  FileText, Upload, StickyNote, AlertTriangle, MoreVertical, Pause, Play,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { periodDelta, type CourseHealthStatus } from '@/lib/course-metrics';
 
-type TabName = 'overview' | 'transactions' | 'teesheet' | 'schedule' | 'members' | 'staff' | 'messages' | 'contact' | 'setup';
+type TabName = 'overview' | 'transactions' | 'documents' | 'messages' | 'teesheet' | 'schedule' | 'members' | 'staff' | 'setup';
 
 const TAB_LABELS: Record<TabName, string> = {
-  overview: 'Overview', transactions: 'Transactions', teesheet: 'Tee Sheet',
-  schedule: 'Schedule', members: 'Members', staff: 'Staff',
-  messages: 'Messages', contact: 'Contact', setup: 'Setup',
+  overview: 'Overview', transactions: 'Transactions', documents: 'Documents', messages: 'Messages',
+  teesheet: 'Tee Sheet', schedule: 'Schedule', members: 'Members', staff: 'Staff', setup: 'Setup',
 };
-const ALL_TABS: TabName[] = ['overview', 'transactions', 'teesheet', 'schedule', 'members', 'staff', 'messages', 'contact', 'setup'];
+// A-05 item 1: tabs reorganized into two labeled groups — Contact folds into
+// Overview's client card instead of staying its own tab.
+const TAB_GROUPS: { label: string; tabs: TabName[] }[] = [
+  { label: 'Business', tabs: ['overview', 'transactions', 'documents', 'messages'] },
+  { label: 'Operations', tabs: ['teesheet', 'schedule', 'members', 'staff', 'setup'] },
+];
+const ALL_TABS: TabName[] = TAB_GROUPS.flatMap(g => g.tabs);
 
 const TX_STATUS: Record<string, { dot: string; label: string }> = {
   card_saved: { dot: 'neutral', label: 'Card saved' },
@@ -26,15 +33,23 @@ const TX_STATUS: Record<string, { dot: string; label: string }> = {
   paid: { dot: 'ok', label: 'Paid' },
 };
 
+interface TimelineEventDTO {
+  type: string;
+  at: string;
+  data: Record<string, unknown>;
+}
+
 interface CourseDetail {
   course: {
-    id: string; name: string; slug: string; city: string; state: string; type: string;
-    active: boolean; featured: boolean; stripeAccountActive: boolean;
+    id: string; name: string; slug: string; city: string; state: string; type: string; phone?: string;
+    active: boolean; featured: boolean; stripeAccountActive: boolean; stripeAccountId?: string;
     cancellationHours: number; hasMemberPricing: boolean; hasResidentPricing: boolean;
     walkingAllowed: string; cartRequired: boolean; hasCaddies: boolean;
     residentCounty: string; residentState: string;
     archivedAt?: string | null; archivedBy?: string | null;
     adminNotes?: string | null; createdAt?: string;
+    welcomeEmailSentAt?: string | null;
+    schedules?: { id: string; createdAt: string }[];
     operator: { id: string; name: string; email: string; phone?: string; emailVerified: boolean; onboardingStep: number } | null;
   };
   staff: { id: string; name: string; email: string; role: string; active: boolean }[];
@@ -49,6 +64,10 @@ interface CourseDetail {
   lastBookingAt: string | null;
   bookingsPrior30d: number;
   approval: { status: 'none' | 'approved' | 'changes_requested'; approvedAt: string | null };
+  health: { status: CourseHealthStatus; label: string; dot: 'ok' | 'bad' | 'warn' | 'neutral'; reason: string };
+  openItems: { unreadMessages: number; openChanges: string[]; hasSchedule: boolean };
+  timeline: TimelineEventDTO[] | null;
+  remindersPaused: boolean;
 }
 
 interface TeeSlot {
@@ -91,6 +110,24 @@ const fmtTime = (t: string) => {
   const hr = Number(h);
   return `${hr > 12 ? hr - 12 : hr || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`;
 };
+
+// A-05 item 4a — the onboarding checklist as named steps with date/state,
+// replacing "Verified 3/3" everywhere. Dates are shown only where a real
+// timestamp exists (no fabricated dates) — several steps don't have a
+// dedicated timestamp field today (kept out of scope for a no-migration
+// pass), so those render state-only.
+interface OnboardingStep { key: string; label: string; done: boolean; at: string | null }
+function onboardingSteps(d: CourseDetail): OnboardingStep[] {
+  const c = d.course;
+  return [
+    { key: 'email_verified', label: 'Email verified', done: !!c.operator?.emailVerified, at: null },
+    { key: 'password_set', label: 'Password set', done: !!c.operator, at: c.createdAt ?? null },
+    { key: 'page_approved', label: 'Page approved', done: d.approval.status === 'approved', at: d.approval.approvedAt },
+    { key: 'stripe_connected', label: 'Stripe connected', done: c.stripeAccountActive, at: null },
+    { key: 'schedule_confirmed', label: 'Schedule confirmed', done: d.openItems.hasSchedule, at: (c.schedules && c.schedules[0]) ? c.schedules[0].createdAt : null },
+    { key: 'live', label: 'Live', done: c.active, at: c.welcomeEmailSentAt ?? null },
+  ];
+}
 
 export default function CourseDetailPage() {
   const { id: courseId } = useParams() as { id: string };
@@ -159,6 +196,35 @@ export default function CourseDetailPage() {
   const [msgCompose, setMsgCompose] = useState('');
   const [msgSending, setMsgSending] = useState(false);
 
+  // A-05 item 2: header danger menu + preflight-aware live toggle
+  const [dangerOpen, setDangerOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmName, setDeleteConfirmName] = useState('');
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [archiveBusy, setArchiveBusy] = useState(false);
+  const [liveToggleBusy, setLiveToggleBusy] = useState(false);
+  const [liveBlockReason, setLiveBlockReason] = useState('');
+
+  // A-05 item 5: Documents tab
+  const [docsData, setDocsData] = useState<{
+    approval: { status: string; approvedAt: string | null };
+    stripeAgreementDate: string | null;
+    bookingTermsVersion: string;
+    agreementVersion: string;
+    agreement: { version: string; acceptedBy: string; at: string } | null;
+    documents: { name: string; url: string; by: string; at: string }[];
+    notes: { text: string; by: string; at: string }[];
+  } | null>(null);
+  const [docsLoading, setDocsLoading] = useState(false);
+  const [noteDraft, setNoteDraft] = useState('');
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [docUploading, setDocUploading] = useState(false);
+  const [docsError, setDocsError] = useState('');
+
+  // A-05 item 4b: auto-chase reminders kill switch
+  const [remindersBusy, setRemindersBusy] = useState(false);
+
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
   const loadSchedules = useCallback(async () => {
@@ -195,6 +261,14 @@ export default function CourseDetailPage() {
     const r = await fetch(`/api/admin/course-members?courseId=${courseId}`, { headers: H() });
     if (r.ok) setMembersData(await r.json());
     setMembersLoading(false);
+  }, [courseId, H]);
+
+  const loadDocuments = useCallback(async () => {
+    setDocsLoading(true); setDocsError('');
+    const r = await fetch(`/api/admin/course-documents?courseId=${courseId}`, { headers: H() });
+    if (r.ok) setDocsData(await r.json());
+    else { const e = await r.json().catch(() => ({})); setDocsError(e.error || 'Failed to load documents'); }
+    setDocsLoading(false);
   }, [courseId, H]);
 
   const loadCourseThread = useCallback(async () => {
@@ -236,11 +310,22 @@ export default function CourseDetailPage() {
     if (adminReady) loadDetail();
   }, [adminReady, loadDetail]);
 
-  async function toggleActive(active: boolean) {
-    await fetch('/api/admin/course-detail', {
-      method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, active }),
+  // A-05 item 2 — preflight-aware: server enforces the same Stripe check
+  // (go-live-preflight.ts) the inquiries mark_live action does. A blocked
+  // "Set live" surfaces the exact reason rather than silently no-op'ing.
+  async function toggleActive(active: boolean, override = false) {
+    setLiveToggleBusy(true); setLiveBlockReason('');
+    const r = await fetch('/api/admin/course-detail', {
+      method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, active, override }),
     });
-    setDetail(d => d ? { ...d, course: { ...d.course, active } } : d);
+    setLiveToggleBusy(false);
+    if (r.ok) {
+      setDetail(d => d ? { ...d, course: { ...d.course, active } } : d);
+      loadDetail();
+    } else {
+      const d = await r.json().catch(() => ({}));
+      setLiveBlockReason(d.error || 'Failed to update — try again.');
+    }
   }
 
   async function toggleFeatured(featured: boolean) {
@@ -253,19 +338,71 @@ export default function CourseDetailPage() {
   async function archiveCourse() {
     if (!detail) return;
     if (!confirm(`Archive "${detail.course.name}"? The course disappears from the public site but data is retained. You can restore it later.`)) return;
+    setArchiveBusy(true);
     const r = await fetch('/api/admin/archive-course', {
       method: 'POST', headers: H(), body: JSON.stringify({ courseId, action: 'archive' }),
     });
+    setArchiveBusy(false);
     if (r.ok) router.push('/admin/courses');
     else { const d = await r.json(); alert(`Archive failed: ${d.error}`); }
   }
 
   async function restoreCourse() {
+    setArchiveBusy(true);
     const r = await fetch('/api/admin/archive-course', {
       method: 'POST', headers: H(), body: JSON.stringify({ courseId, action: 'restore' }),
     });
+    setArchiveBusy(false);
     if (r.ok) loadDetail();
     else { const d = await r.json(); alert(`Restore failed: ${d.error}`); }
+  }
+
+  // A-05 item 2 — danger menu: hard delete routes through the SAME
+  // lifecycle.ts deletePair the archive/restore actions use (LIFECYCLE
+  // PARITY LAW), owner-only, typed-name confirm, blocked if payment history.
+  async function hardDeleteCourse() {
+    if (!detail) return;
+    setDeleteBusy(true); setDeleteError('');
+    const r = await fetch('/api/admin/archive-course', {
+      method: 'POST', headers: H(), body: JSON.stringify({ courseId, action: 'hard_delete', confirmName: deleteConfirmName }),
+    });
+    setDeleteBusy(false);
+    if (r.ok) { router.push('/admin/courses'); return; }
+    const d = await r.json().catch(() => ({}));
+    setDeleteError(d.error || 'Delete failed — try again.');
+  }
+
+  // A-05 item 4b — kill switch, logged to the course timeline.
+  async function toggleRemindersPaused(paused: boolean) {
+    setRemindersBusy(true);
+    const r = await fetch('/api/admin/course-reminders', {
+      method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, paused }),
+    });
+    setRemindersBusy(false);
+    if (r.ok) loadDetail();
+    else { const d = await r.json().catch(() => ({})); alert(d.error || 'Failed to update'); }
+  }
+
+  async function addClientNote() {
+    if (!noteDraft.trim()) return;
+    setNoteSaving(true);
+    const r = await fetch('/api/admin/course-documents', {
+      method: 'POST', headers: H(), body: JSON.stringify({ courseId, kind: 'note', text: noteDraft.trim() }),
+    });
+    setNoteSaving(false);
+    if (r.ok) { setNoteDraft(''); loadDocuments(); }
+    else { const d = await r.json().catch(() => ({})); alert(d.error || 'Failed to save note'); }
+  }
+
+  async function uploadDocument(file: File) {
+    setDocUploading(true); setDocsError('');
+    const form = new FormData();
+    form.append('file', file);
+    form.append('courseId', courseId);
+    const r = await fetch('/api/admin/course-documents/upload', { method: 'POST', body: form });
+    setDocUploading(false);
+    if (r.ok) loadDocuments();
+    else { const d = await r.json().catch(() => ({})); setDocsError(d.error || 'Upload failed'); }
   }
 
   async function saveSetup() {
@@ -275,6 +412,14 @@ export default function CourseDetailPage() {
     });
     setSetupSaving(false);
     setSetupMsg(r.ok ? 'saved' : 'error');
+    if (r.ok) loadDetail();
+  }
+
+  async function savePhone(phone: string) {
+    const r = await fetch('/api/admin/course-settings', {
+      method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, phone }),
+    });
+    if (r.ok) loadDetail();
   }
 
   function toggleDay(d: number) {
@@ -427,12 +572,9 @@ export default function CourseDetailPage() {
                 {c.featured && <Star className="w-4 h-4 text-warn fill-warn shrink-0" />}
               </div>
               <div className="flex items-center gap-3 flex-wrap">
-                <StatusDot status={c.active ? 'ok' : 'neutral'} label={c.active ? 'Live' : 'Offline'} />
+                <span title={detail.health.reason}><StatusDot status={detail.health.dot} label={detail.health.label} /></span>
                 <span className="text-xs text-ink-muted">{c.city}, {c.state}</span>
                 <span className="text-xs text-ink-muted capitalize">{c.type}</span>
-                {c.stripeAccountActive && (
-                  <span className="text-[11px] px-1.5 py-0.5 rounded bg-pine/5 text-pine border border-pine/20">Stripe</span>
-                )}
                 {detail?.approval.approvedAt && (
                   <span className="text-xs text-ink-faint">
                     Page approved by course · {new Date(detail.approval.approvedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -440,13 +582,12 @@ export default function CourseDetailPage() {
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-1.5 shrink-0">
               <button
                 onClick={() => toggleFeatured(!c.featured)}
-                className={'w-9 h-9 flex items-center justify-center rounded-md transition-colors ' + (c.featured ? 'text-warn bg-warn/10' : 'text-ink-muted hover:text-warn hover:bg-warn/5')}
-                title={c.featured ? 'Unfeature' : 'Feature'}
+                className={'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ' + (c.featured ? 'text-warn bg-warn/10 border-warn/20' : 'text-ink-soft border-line hover:text-warn hover:bg-warn/5')}
               >
-                <Star className="w-4 h-4" />
+                <Star className="w-3.5 h-3.5" />{c.featured ? 'Featured' : 'Feature'}
               </button>
               {!c.active && c.operator && detail?.approval.status === 'approved' && (
                 <>
@@ -476,84 +617,83 @@ export default function CourseDetailPage() {
                 </button>
               )}
               <button
-                onClick={() => toggleActive(!c.active)}
-                className={'px-3 py-1.5 rounded-md text-xs font-medium border transition-colors flex items-center gap-1.5 ' + (c.active ? 'bg-bad/5 text-bad border-bad/20 hover:bg-bad/10' : 'bg-ok/5 text-ok border-ok/20 hover:bg-ok/10')}
+                onClick={() => confirm(c.active ? `Take "${c.name}" offline? Golfers will no longer be able to book.` : `Set "${c.name}" live? Golfers will be able to book immediately.`) && toggleActive(!c.active)}
+                disabled={liveToggleBusy}
+                className={'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors disabled:opacity-50 ' + (c.active ? 'bg-bad/5 text-bad border-bad/20 hover:bg-bad/10' : 'bg-ok/5 text-ok border-ok/20 hover:bg-ok/10')}
               >
                 <Power className="w-3.5 h-3.5" />
-                {c.active ? 'Take offline' : 'Set live'}
+                {liveToggleBusy ? 'Working…' : c.active ? 'Take offline' : 'Set live'}
               </button>
               <a
                 href={'/courses/' + c.slug}
                 target="_blank"
-                className="w-9 h-9 flex items-center justify-center rounded-md text-ink-muted hover:text-pine hover:bg-pine/5 transition-colors"
-                title="View public page"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-line text-ink-soft hover:text-pine hover:border-pine/30 hover:bg-pine/5 transition-colors"
               >
-                <Globe className="w-4 h-4" />
+                <Globe className="w-3.5 h-3.5" />View page
               </a>
               <button
                 onClick={loadDetail}
-                className="w-9 h-9 flex items-center justify-center rounded-md text-ink-muted hover:text-ink hover:bg-paper transition-colors"
-                title="Refresh"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-line text-ink-soft hover:text-ink hover:bg-paper transition-colors"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className="w-3.5 h-3.5" />Refresh
               </button>
-              {c.archivedAt ? (
+              <div className="relative">
                 <button
-                  onClick={restoreCourse}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border bg-ok/5 text-ok border-ok/20 hover:bg-ok/10 transition-colors"
-                  title="Restore course"
+                  onClick={() => setDangerOpen(o => !o)}
+                  className="w-9 h-9 flex items-center justify-center rounded-md text-ink-muted hover:text-ink hover:bg-paper transition-colors border border-line"
+                  title="More actions"
                 >
-                  <ArchiveRestore className="w-3.5 h-3.5" />Restore
+                  <MoreVertical className="w-4 h-4" />
                 </button>
-              ) : (
-                <button
-                  onClick={archiveCourse}
-                  className="w-9 h-9 flex items-center justify-center rounded-md text-ink-muted hover:text-bad hover:bg-bad/5 transition-colors"
-                  title="Archive course"
-                >
-                  <ArchiveX className="w-4 h-4" />
-                </button>
-              )}
+                {dangerOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setDangerOpen(false)} />
+                    <div className="absolute right-0 top-10 z-20 bg-white border border-line rounded-lg shadow-lg w-52 py-1.5">
+                      {c.archivedAt ? (
+                        <button
+                          onClick={() => { setDangerOpen(false); restoreCourse(); }}
+                          disabled={archiveBusy}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-ok hover:bg-ok/5 transition-colors disabled:opacity-50"
+                        >
+                          <ArchiveRestore className="w-3.5 h-3.5" />Restore course
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => { setDangerOpen(false); archiveCourse(); }}
+                          disabled={archiveBusy}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-ink-soft hover:bg-paper transition-colors disabled:opacity-50"
+                        >
+                          <ArchiveX className="w-3.5 h-3.5" />Archive course
+                        </button>
+                      )}
+                      <div className="border-t border-line-soft my-1.5" />
+                      <button
+                        onClick={() => { setDangerOpen(false); setShowDeleteConfirm(true); setDeleteConfirmName(''); setDeleteError(''); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-bad hover:bg-bad/5 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />Delete permanently
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Health strip */}
-          {!c.archivedAt && (() => {
-            const courseAgeDays = c.createdAt ? (Date.now() - new Date(c.createdAt).getTime()) / 86400000 : 999;
-            const lastDays = detail?.lastBookingAt ? Math.floor((Date.now() - new Date(detail.lastBookingAt).getTime()) / 86400000) : null;
-            const isNew = courseAgeDays < 14 && lastDays === null;
-            const lastColor = isNew ? 'text-ink-muted' : lastDays === null ? 'text-bad' : lastDays > 30 ? 'text-bad' : lastDays > 14 ? 'text-warn' : 'text-ok';
-            const lastLabel = isNew ? 'New' : detail?.lastBookingAt ? (() => {
-              const d = lastDays!;
-              if (d === 0) return 'Today'; if (d === 1) return '1d ago';
-              if (d < 14) return `${d}d ago`; if (d < 60) return `${Math.floor(d/7)}w ago`;
-              return `${Math.floor(d/30)}mo ago`;
-            })() : 'Never';
-            const prior = detail?.bookingsPrior30d ?? 0;
-            const curr = detail?.bookings30d ?? 0;
-            const trendArrow = prior === 0 ? null : curr > prior ? '↑' : curr < prior ? '↓' : '→';
-            const trendColor = prior === 0 ? '' : curr > prior ? 'text-ok' : curr < prior ? 'text-bad' : 'text-ink-muted';
-            return (
-              <div className="mt-3 flex items-center gap-5 px-1">
-                <div>
-                  <span className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mr-1.5">Last booking</span>
-                  <span className={`text-xs font-medium ${lastColor}`} title={detail?.lastBookingAt ? new Date(detail.lastBookingAt).toLocaleDateString() : undefined}>{lastLabel}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mr-1.5">30d trend</span>
-                  {trendArrow ? (
-                    <span className={`text-xs font-medium ${trendColor}`}>{curr} {trendArrow} {prior}</span>
-                  ) : (
-                    <span className="text-xs text-ink-soft">{curr} bk · no prior data</span>
-                  )}
-                </div>
-                <div>
-                  <span className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mr-1.5">Op login</span>
-                  <span className="text-xs text-ink-faint">—</span>
-                </div>
+          {liveBlockReason && (
+            <div className="mt-3 rounded-md px-4 py-2.5 bg-warn/5 border border-warn/20 flex items-center justify-between gap-3">
+              <p className="text-xs text-warn">{liveBlockReason}</p>
+              <div className="flex items-center gap-2 shrink-0">
+                <button onClick={() => setLiveBlockReason('')} className="text-xs text-ink-muted hover:text-ink transition-colors">Dismiss</button>
+                <button
+                  onClick={() => toggleActive(true, true)}
+                  className="text-xs font-medium px-3 py-1 rounded-md bg-warn text-white hover:bg-warn/90 transition-colors"
+                >
+                  Go live anyway
+                </button>
               </div>
-            );
-          })()}
+            </div>
+          )}
 
           {previewMsg && (
             <div className={'mt-3 rounded-md px-4 py-2 flex items-center justify-between gap-3 ' + (previewMsg.startsWith('Error') ? 'bg-bad/5 border border-bad/20' : 'bg-ok/5 border border-ok/20')}>
@@ -564,22 +704,33 @@ export default function CourseDetailPage() {
             </div>
           )}
 
-          <div className="flex gap-0.5 mt-4 bg-paper border border-line rounded-lg p-1 w-fit max-w-full overflow-x-auto">
-            {ALL_TABS.map(t => (
-              <button
-                key={t}
-                onClick={() => {
-                  setTab(t);
-                  if (t === 'teesheet') loadTeeSheet(tsDate);
-                  if (t === 'schedule') loadSchedules();
-                  if (t === 'transactions') loadTransactions(1, '', '', '');
-                  if (t === 'members') loadMembers();
-                  if (t === 'messages') loadCourseThread();
-                }}
-                className={'px-4 py-1.5 rounded-md text-[12px] font-medium transition-colors whitespace-nowrap ' + (tab === t ? 'bg-white text-ink border border-line shadow-sm' : 'text-ink-muted hover:text-ink')}
-              >
-                {TAB_LABELS[t]}
-              </button>
+          <div className="flex items-center gap-4 mt-4 overflow-x-auto">
+            {TAB_GROUPS.map(group => (
+              <div key={group.label} className="flex items-center gap-1.5 shrink-0">
+                <span className="text-[10px] uppercase tracking-[0.06em] text-ink-faint pl-0.5">{group.label}</span>
+                <div className="flex gap-0.5 bg-paper border border-line rounded-lg p-1">
+                  {group.tabs.map(t => (
+                    <button
+                      key={t}
+                      onClick={() => {
+                        setTab(t);
+                        if (t === 'teesheet') loadTeeSheet(tsDate);
+                        if (t === 'schedule') loadSchedules();
+                        if (t === 'transactions') loadTransactions(1, '', '', '');
+                        if (t === 'members') loadMembers();
+                        if (t === 'messages') loadCourseThread();
+                        if (t === 'documents') loadDocuments();
+                      }}
+                      className={'px-4 py-1.5 rounded-md text-[12px] font-medium transition-colors whitespace-nowrap ' + (tab === t ? 'bg-white text-ink border border-line shadow-sm' : 'text-ink-muted hover:text-ink')}
+                    >
+                      {TAB_LABELS[t]}
+                      {t === 'messages' && detail.openItems.unreadMessages > 0 && (
+                        <span className="ml-1.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-bad text-white text-[10px] font-medium">{detail.openItems.unreadMessages}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -607,83 +758,181 @@ export default function CourseDetailPage() {
         <div className="px-8 py-7 flex-1">
 
           {/* OVERVIEW */}
-          {tab === 'overview' && (
-            <div className="space-y-6 max-w-5xl">
-              {c.adminNotes && c.adminNotes.startsWith('[BUILD NOTES]') && (
-                <div className="bg-warn/5 border border-warn/20 rounded-lg px-5 py-4">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-warn mb-2">Needs review</div>
-                  <ul className="space-y-1">
-                    {c.adminNotes.replace('[BUILD NOTES]\n', '').split('\n').filter(Boolean).map((line, i) => (
-                      <li key={i} className="text-sm text-ink-soft">{line.replace(/^• /, '')}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              <div className="grid grid-cols-3 gap-4">
-                {[
-                  { label: 'Gross (30d)', value: fmtMoney(detail.revenue30d.gross), color: 'text-ink' },
-                  { label: 'GR Fees (30d)', value: fmtMoney(detail.revenue30d.platform), color: 'text-ok' },
-                  { label: 'All-time Bookings', value: String(detail.totalBookings), color: 'text-ink' },
-                ].map(({ label, value, color }) => (
-                  <div key={label} className="bg-white border border-line rounded-lg p-5">
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">{label}</div>
-                    <div className={'text-[28px] font-serif font-medium leading-none ' + color}>{value}</div>
+          {tab === 'overview' && (() => {
+            const steps = onboardingSteps(detail);
+            const doneSteps = steps.filter(s => s.done).length;
+            const lastDays = detail.lastBookingAt ? Math.floor((Date.now() - new Date(detail.lastBookingAt).getTime()) / 86400000) : null;
+            const lastLabel = detail.lastBookingAt ? (lastDays === 0 ? 'Today' : lastDays === 1 ? '1d ago' : lastDays! < 14 ? `${lastDays}d ago` : lastDays! < 60 ? `${Math.floor(lastDays!/7)}w ago` : `${Math.floor(lastDays!/30)}mo ago`) : 'Never';
+            const trend = periodDelta(detail.bookings30d, detail.bookingsPrior30d);
+            const openItemsList = [
+              ...(detail.openItems.unreadMessages > 0 ? [`${detail.openItems.unreadMessages} unread message${detail.openItems.unreadMessages !== 1 ? 's' : ''}`] : []),
+              ...(doneSteps < steps.length ? [`${steps.length - doneSteps} setup step${steps.length - doneSteps !== 1 ? 's' : ''} incomplete`] : []),
+              ...detail.openItems.openChanges.map(c2 => `Change requested: ${c2}`),
+            ];
+            return (
+            <div className="grid grid-cols-[1fr_320px] gap-6 max-w-6xl">
+              <div className="space-y-6 min-w-0">
+                {c.adminNotes && c.adminNotes.startsWith('[BUILD NOTES]') && (
+                  <div className="bg-warn/5 border border-warn/20 rounded-lg px-5 py-4">
+                    <div className="text-[11px] uppercase tracking-[0.06em] text-warn mb-2">Needs review</div>
+                    <ul className="space-y-1">
+                      {c.adminNotes.replace('[BUILD NOTES]\n', '').split('\n').filter(Boolean).map((line, i) => (
+                        <li key={i} className="text-sm text-ink-soft">{line.replace(/^• /, '')}</li>
+                      ))}
+                    </ul>
                   </div>
-                ))}
+                )}
+
+                {/* Client health block (item 3, top) */}
+                <div className="bg-white border border-line rounded-lg p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Client Health</div>
+                    <span title={detail.health.reason}><StatusDot status={detail.health.dot} label={detail.health.label} /></span>
+                  </div>
+                  <p className="text-sm text-ink-soft mb-4">{detail.health.reason}</p>
+                  <div className="flex items-center gap-6 flex-wrap text-xs mb-4">
+                    <div><span className="text-ink-muted mr-1.5">Last activity</span><span className="font-medium text-ink">{lastLabel}</span></div>
+                    <div><span className="text-ink-muted mr-1.5">Setup</span><span className="font-medium text-ink">{doneSteps}/{steps.length} steps</span>
+                      <button onClick={() => setTab('setup')} className="ml-1.5 text-pine hover:underline">View</button>
+                    </div>
+                  </div>
+                  {openItemsList.length > 0 ? (
+                    <div className="border-t border-line-soft pt-3">
+                      <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Open items</div>
+                      <ul className="space-y-1">
+                        {openItemsList.map((item, i) => (
+                          <li key={i} className="text-sm text-ink-soft flex items-center gap-2">
+                            <span className="w-1 h-1 rounded-full bg-warn shrink-0" />{item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <div className="border-t border-line-soft pt-3 text-sm text-ink-muted">No open items.</div>
+                  )}
+                </div>
+
+                {/* Money block (item 3, bottom) — shared metrics brain */}
+                <div className="grid grid-cols-4 gap-4">
+                  {[
+                    { label: 'Bookings (30d)', value: String(detail.bookings30d), color: 'text-ink' },
+                    { label: 'Gross (30d)', value: fmtMoney(detail.revenue30d.gross), color: 'text-ink' },
+                    { label: 'GR Fees (30d)', value: fmtMoney(detail.revenue30d.platform), color: 'text-ok' },
+                    { label: 'All-time Bookings', value: String(detail.totalBookings), color: 'text-ink' },
+                  ].map(({ label, value, color }) => (
+                    <div key={label} className="bg-white border border-line rounded-lg p-5">
+                      <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">{label}</div>
+                      <div className={'text-[28px] font-serif font-medium leading-none ' + color}>{value}</div>
+                      {label === 'Bookings (30d)' && (
+                        <div className={'text-xs font-medium mt-1.5 ' + (trend.direction === 'up' ? 'text-ok' : trend.direction === 'down' ? 'text-bad' : 'text-ink-muted')}>
+                          {trend.pct === null ? 'no prior period' : `${trend.pct > 0 ? '+' : ''}${trend.pct.toFixed(0)}% vs prior 30d`}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {detail.recentBookings.length > 0 && (
+                  <div>
+                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Recent Bookings</div>
+                    <div className="bg-white border border-line rounded-lg divide-y divide-line-soft">
+                      {detail.recentBookings.map(b => (
+                        <div key={b.id} className="flex items-center gap-4 px-5 py-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-ink text-sm">{b.golferName}</div>
+                            <div className="text-xs text-ink-muted">
+                              {fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)} · {b.players} player{b.players !== 1 ? 's' : ''}
+                            </div>
+                          </div>
+                          <div className="text-sm font-medium text-ok">{fmtMoney(b.totalAmount / 100)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {detail.recentBookings.length === 0 && detail.totalBookings === 0 && (
+                  <div className="text-center py-12 text-ink-muted text-sm bg-white border border-line rounded-lg">
+                    No bookings yet for this course
+                  </div>
+                )}
               </div>
 
-              {c.operator && (
-                <div className="bg-white border border-line rounded-lg p-5">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Operator</div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-md bg-pine/10 flex items-center justify-center text-pine font-medium text-base shrink-0">
-                      {c.operator.name[0]}
+              {/* Client card (contact info) — folded in from the old Contact tab (item 1) */}
+              <div className="space-y-5">
+                {c.operator && (
+                  <div className="bg-white border border-line rounded-lg p-5">
+                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Operator / Owner</div>
+                    <div className="font-medium text-ink mb-2">{c.operator.name}</div>
+                    <div className="space-y-1.5 mb-3">
+                      <a href={'mailto:' + c.operator.email} className="flex items-center gap-2 text-sm text-ink-soft hover:text-pine transition-colors">
+                        <Mail className="w-3.5 h-3.5 text-ink-muted shrink-0" />{c.operator.email}
+                      </a>
+                      {c.operator.phone && (
+                        <a href={'tel:' + c.operator.phone} className="flex items-center gap-2 text-sm text-ink-soft hover:text-pine transition-colors">
+                          <Phone className="w-3.5 h-3.5 text-ink-muted shrink-0" />{c.operator.phone}
+                        </a>
+                      )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-ink">{c.operator.name}</div>
-                      <div className="text-sm text-ink-muted">{c.operator.email}</div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                    <div className="flex gap-2 flex-wrap">
                       {c.operator.emailVerified
-                        ? <StatusDot status="ok" label="Verified" />
-                        : <StatusDot status="bad" label="Unverified" />}
-                      {c.stripeAccountActive
-                        ? <span className="text-[11px] px-2 py-0.5 rounded bg-pine/5 text-pine border border-pine/20">Stripe</span>
-                        : <span className="text-[11px] px-2 py-0.5 rounded bg-warn/5 text-warn border border-warn/20">No Stripe</span>}
-                      <span className="text-[11px] px-2 py-0.5 rounded bg-paper text-ink-muted border border-line">
-                        Step {c.operator.onboardingStep}/3
-                      </span>
+                        ? <StatusDot status="ok" label="Email verified" />
+                        : <StatusDot status="bad" label="Email not verified" />}
+                    </div>
+                  </div>
+                )}
+
+                <div className="bg-white border border-line rounded-lg p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Course Contact</div>
+                  </div>
+                  <div className="space-y-2.5">
+                    <div className="flex gap-3 text-sm">
+                      <span className="text-ink-muted w-16 shrink-0">Phone</span>
+                      <input
+                        defaultValue={c.phone || ''}
+                        onBlur={e => { if (e.target.value !== (c.phone || '')) savePhone(e.target.value); }}
+                        placeholder="Not set"
+                        className="flex-1 min-w-0 bg-transparent text-ink font-medium outline-none border-b border-transparent focus:border-pine/40 transition-colors"
+                      />
+                    </div>
+                    <div className="flex gap-3 text-sm">
+                      <span className="text-ink-muted w-16 shrink-0">Type</span>
+                      <span className="text-ink font-medium capitalize">{c.type}</span>
+                    </div>
+                    <div className="flex gap-3 text-sm">
+                      <span className="text-ink-muted w-16 shrink-0">Slug</span>
+                      <span className="text-ink font-medium">{c.slug}</span>
+                    </div>
+                    <div className="flex gap-3 text-sm">
+                      <span className="text-ink-muted w-16 shrink-0">Where</span>
+                      <span className="text-ink font-medium">{c.city}, {c.state}</span>
                     </div>
                   </div>
                 </div>
-              )}
 
-              {detail.recentBookings.length > 0 && (
-                <div>
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Recent Bookings</div>
-                  <div className="bg-white border border-line rounded-lg divide-y divide-line-soft">
-                    {detail.recentBookings.map(b => (
-                      <div key={b.id} className="flex items-center gap-4 px-5 py-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-ink text-sm">{b.golferName}</div>
-                          <div className="text-xs text-ink-muted">
-                            {fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)} · {b.players} player{b.players !== 1 ? 's' : ''}
+                {detail.staff.length > 0 && (
+                  <div className="bg-white border border-line rounded-lg p-5">
+                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Staff Contacts</div>
+                    <div className="space-y-3">
+                      {detail.staff.map(s => (
+                        <div key={s.id} className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded bg-pine/10 flex items-center justify-center text-pine font-medium text-sm shrink-0">{s.name[0]}</div>
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium text-ink truncate">
+                              {s.name} <span className="text-xs text-ink-muted font-normal">· {s.role}</span>
+                            </div>
+                            <a href={'mailto:' + s.email} className="text-xs text-pine hover:underline truncate block">{s.email}</a>
                           </div>
                         </div>
-                        <div className="text-sm font-medium text-ok">{fmtMoney(b.totalAmount / 100)}</div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-
-              {detail.recentBookings.length === 0 && detail.totalBookings === 0 && (
-                <div className="text-center py-12 text-ink-muted text-sm bg-white border border-line rounded-lg">
-                  No bookings yet for this course
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          )}
+            );
+          })()}
 
           {/* TRANSACTIONS */}
           {tab === 'transactions' && (
@@ -1209,72 +1458,6 @@ export default function CourseDetailPage() {
                   <div className="text-[10px] text-ink-faint mt-1.5">⌘/Ctrl + Enter to send · <button onClick={() => window.open('/admin/messages?courseId=' + courseId, '_blank')} className="text-pine hover:underline">Open full view</button></div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* CONTACT */}
-          {tab === 'contact' && (
-            <div className="space-y-5 max-w-2xl">
-              {c.operator && (
-                <div className="bg-white border border-line rounded-lg p-6">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Operator / Owner</div>
-                  <div className="text-lg font-serif font-medium text-ink mb-3">{c.operator.name}</div>
-                  <div className="space-y-2">
-                    <a href={'mailto:' + c.operator.email} className="flex items-center gap-3 text-sm text-ink-soft hover:text-pine transition-colors">
-                      <Mail className="w-4 h-4 text-ink-muted" />{c.operator.email}
-                    </a>
-                    {c.operator.phone && (
-                      <a href={'tel:' + c.operator.phone} className="flex items-center gap-3 text-sm text-ink-soft hover:text-pine transition-colors">
-                        <Phone className="w-4 h-4 text-ink-muted" />{c.operator.phone}
-                      </a>
-                    )}
-                  </div>
-                  <div className="flex gap-2 mt-4 flex-wrap">
-                    {c.operator.emailVerified
-                      ? <StatusDot status="ok" label="Email verified" />
-                      : <StatusDot status="bad" label="Not verified" />}
-                    <span className="text-[11px] px-2 py-0.5 rounded bg-paper text-ink-muted border border-line">
-                      Onboarding {c.operator.onboardingStep}/3
-                    </span>
-                    {c.stripeAccountActive && (
-                      <span className="text-[11px] px-2 py-0.5 rounded bg-pine/5 text-pine border border-pine/20">Stripe connected</span>
-                    )}
-                  </div>
-                </div>
-              )}
-              <div className="bg-white border border-line rounded-lg p-6">
-                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Course Info</div>
-                <div className="space-y-2.5">
-                  {([
-                    ['Type', c.type],
-                    ['Slug', c.slug],
-                    ['City / State', c.city + ', ' + c.state],
-                  ] as [string, string][]).map(([label, val]) => (
-                    <div key={label} className="flex gap-3 text-sm">
-                      <span className="text-ink-muted w-24 shrink-0">{label}</span>
-                      <span className="text-ink font-medium">{val}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {detail.staff.length > 0 && (
-                <div className="bg-white border border-line rounded-lg p-6">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Staff Contacts</div>
-                  <div className="space-y-3">
-                    {detail.staff.map(s => (
-                      <div key={s.id} className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded bg-pine/10 flex items-center justify-center text-pine font-medium text-sm shrink-0">{s.name[0]}</div>
-                        <div>
-                          <div className="text-sm font-medium text-ink">
-                            {s.name} <span className="text-xs text-ink-muted font-normal">· {s.role}</span>
-                          </div>
-                          <a href={'mailto:' + s.email} className="text-xs text-pine hover:underline">{s.email}</a>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
