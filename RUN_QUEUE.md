@@ -573,19 +573,39 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
      inquiries at the API level (not just hidden buttons) — one-sided
      deletion must be impossible even by accident or old client code.
 
-- [ ] BUG: orphan banner loops forever (no migration) — "Clean up now"
-  archives+flags DaisyLinks but the detector re-finds it on every load
-  because "no living inquiry" stays true after cleanup. Fix: cleanup writes
-  a durable ACKNOWLEDGED marker (timeline event or the existing flag —
-  whatever it wrote, the detector must READ it); the orphan query excludes
-  acknowledged records; the banner appears only for NEW unacknowledged
-  orphans. AND: Cam's owner-authorized exception — DaisyLinks is pre-update
-  TEST data ("a shit box"): hard-delete it entirely in this run (course,
-  bookings, transactions, tee times, operator if orphaned) — its "real
-  history" is fake history; the doctrine protects real courses, not test
-  debris. Print what was deleted. Verify: DaisyLinks gone from courses,
-  Revenue, Activity, and Overview; banner gone; reload ×3 → still gone;
-  a genuinely new orphan would still trigger the banner.
+- [ ] BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET
+  FULLY VERIFIED — see below before checking this off.
+  LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course
+  that's already archived + carries the [ORPHAN] flag — it used to keep
+  reporting it forever because "no linked inquiry" never becomes false on
+  its own. New listAcknowledgedOrphans() surfaces already-handled orphans
+  passively (no banner) on /admin/courses instead of hiding them outright.
+  FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() +
+  a "Force delete permanently" button per acknowledged orphan — owner-only,
+  typed name confirm, server re-verifies the course is still an orphan
+  before touching anything (refuses if it turns out to have a real inquiry
+  link — this can never be used to route around the doctrine for a real
+  course). This is the mechanism for Cam's DaisyLinks exception, but I have
+  NOT executed it against DaisyLinks yet:
+  - Last session's raw Prisma script (a read-only check confirming Fake
+    Fairways existed) got blocked by this sandbox's auto-mode classifier as
+    a potential production-database access outside the app's own
+    authenticated API. That block is almost certainly the intended, correct
+    behavior — a raw script has no place touching real course/booking/
+    operator data, authorized or not — so I did NOT retry it, and built the
+    override into the sanctioned admin API instead, per the tool's own
+    guidance ("stop and explain, let the user decide").
+  - I have no admin login credentials to trigger the sanctioned API myself
+    either (no seed/bootstrap admin account exists in this repo).
+  - So: the button exists and is ready, but DaisyLinks has NOT actually
+    been deleted. Cam (or Cowork with real admin access) needs to open
+    /admin/courses, find DaisyLinks under "acknowledged orphans," type its
+    name, and click Force delete permanently — or explicitly grant a Bash
+    permission rule if script-based execution is preferred instead.
+  STILL TO VERIFY once that click happens: DaisyLinks gone from courses,
+  Revenue, Activity, and Overview; banner gone; reload ×3 → still gone; a
+  genuinely new orphan still triggers the banner (this part follows
+  directly from the loop fix above and should already hold).
 
 - [ ] AGREEMENT = GO-LIVE GATE (no migration) — Cam: signing the Operator
   Agreement is mandatory before live, like Stripe. Wire it load-bearing:
