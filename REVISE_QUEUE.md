@@ -334,8 +334,87 @@ in flight at a time.
   8. CLEANUP: revert Fake Fairways Golf Club to its pre-audit stage (the
      browser audit's Skip & Build fired for real) — delete the orphan
      course/operator it created if any.
-- [ ] A-04 /admin/courses — list (filters, health signals, search)
-- [ ] A-05 /admin/courses/[id] — course detail (all tabs: overview, transactions, tee sheet, schedule, members, staff, messages, contact, setup)
+- [ ] A-04 /admin/courses — LIST — SPEC (designed with Cam, 2026-07-21):
+  0. PREREQ, THE METRICS BRAIN: one shared metrics module (src/lib) defining
+     bookings/gross/GR-fees/period math ONCE — list, course detail, Revenue,
+     Overview all import it. The audit found 4 surfaces with 4 different
+     numbers for the same course; after this, a disagreement is a failing
+     test, not a discovery. Include the definitions in code comments (what
+     counts: which statuses, dues or not, which window).
+  1. FULL-WIDTH; page fills the monitor (Cam #12).
+  2. ROWS = CLEAN DIRECTORY ENTRIES: name, location·type, operator name, and
+     ONE worded status chip ("Healthy" / "Setup incomplete" / "Payments
+     broken" / "Going quiet" / "Offline" — worst truth wins, dot + words,
+     tooltip with the reason). NO number columns, NO icon actions — the row
+     is a doorway; everything else lives inside. Rows are real links.
+  3. ICON ACTION BAR DIES (star/power/globe/eye/archive) — all actions move
+     into the course page with labeled buttons + confirms.
+  4. FILTERS REORGANIZED to match the new row: segmented Active/Archived/All,
+     status-chip filter (the worded statuses), type dropdown, search.
+     Live/Offline + Stripe filters fold INTO the status chips (that's what
+     the statuses mean). One row, no reflow at any width.
+  5. SORT: Name · Newest · Status severity (default: severity — worst first,
+     it's a triage list even when clean). Pagination at 50. Count line
+     reflects the ACTIVE filter, always.
+  6. "Verified 3/3" dies on the list — replaced by the worded status; the
+     checklist itself lives on the course page (A-05 item 4).
+  7. "30d rev" label + all row numbers: gone with the numbers (item 2); the
+     Revenue tab is where money ranking lives (it already sorts).
+- [ ] A-05 /admin/courses/[id] — DETAIL — SPEC (designed with Cam, 2026-07-21):
+  1. FULL-WIDTH. Tabs reorganized into TWO LABELED GROUPS:
+     BUSINESS: Overview · Transactions · Documents · Messages
+     OPERATIONS: Tee Sheet · Schedule · Members · Staff · Setup
+     (Contact folds into Overview's client card — not its own tab.)
+  2. HEADER: name, worded status chip (same brain as the list), location,
+     type; labeled action buttons with confirms replace icon-emojis: Feature,
+     Take offline/Set live (preflight-aware), View public page, Archive
+     (pair-aware), Delete in a danger menu. No bare icons anywhere (Cam #5/#7).
+  3. OVERVIEW TAB = "both, stacked": TOP: client health block — setup
+     checklist state, worded status + why, last activity, open items
+     (unanswered messages, incomplete steps, unaddressed change requests).
+     BOTTOM: money block from the shared metrics brain — bookings, gross,
+     GR fees, trend, all agreeing with every other page by construction.
+     Client card (contact info, editable) on the side.
+  4. SETUP TAB REBUILT = three sections, one source of truth:
+     a. ONBOARDING CHECKLIST: the verification process as named steps
+        (email verified · password set · page approved · Stripe connected ·
+        schedule confirmed · live) each with date/state — replaces
+        "Verified 3/3" everywhere.
+     b. AUTO-CHASE: incomplete steps trigger automatic reminder emails at
+        3d, 7d, 14d, then weekly — every send logged to the course timeline
+        + visible here ("Reminder sent Jul 24 · Stripe"), stops instantly on
+        completion. Kill switch per course ("pause reminders").
+     c. FULL MIRROR (Cam's call): every operator setting (policy, fees,
+        booking windows, layout, branding) is EDITABLE from this tab too —
+        admin can fix anything for a client on the phone. NO drift rule:
+        both surfaces call the SAME APIs and render from the SAME source —
+        the admin tab REUSES the operator settings components/endpoints
+        (shared components, admin session authorized), never a parallel
+        form. Every admin-side edit is logged to the course timeline
+        ("Weekend fee changed $65→$70 by Cam") and the operator can see the
+        change history in their dashboard — no silent edits to a client's
+        course. Admin-only levers (featured, live/offline, danger zone)
+        remain separate in the header.
+  5. DOCUMENTS TAB (new, Business group) — the protection paper trail:
+     a. AUTO records: Operator Agreement acceptance (version + who + when —
+        NEW clickwrap checkbox added to the operator first-login flow, V11
+        extension), Stripe connected-account agreement date, go-live
+        approval record, booking-terms version in force.
+     b. Uploads: PDFs per course (existing blob storage), listed with date +
+        uploader. c. Client notes (freeform institutional memory).
+     d. E-sign: explicitly future, placeholder note only.
+  6. TRANSACTIONS: keep (Cam likes it) — switch its numbers to the metrics
+     brain, reconcile with Overview by construction.
+  7. TEE SHEET: renders the course's actual layout — 27-hole courses show
+     their products/nines (verify what L1 actually shipped; the "configure
+     combos" banner must link somewhere real or not exist).
+  8. MESSAGES: stays as a tab (Cam confirmed). Unanswered messages surface
+     in Overview's open items.
+  9. Sweep: one status vocabulary everywhere (Live/Offline/Archived — kill
+     "inactive"), no raw Stripe/enum strings surfaced (use the friendly-
+     message map), casing consistency, dead "OP LOGIN —" hidden until its
+     column exists, watchlist counts payments-broken as unhealthy, action
+     queue headers always match their row counts.
 - [ ] A-06 /admin/revenue — fees, per-course table, problems, Stripe reconciliation
 - [ ] A-07 /admin/golfers — support lookup
 - [ ] A-08 /admin/messages — threads
