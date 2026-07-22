@@ -607,7 +607,32 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   genuinely new orphan still triggers the banner (this part follows
   directly from the loop fix above and should already hold).
 
-- [ ] AGREEMENT = GO-LIVE GATE (no migration) — Cam: signing the Operator
+- [x] AGREEMENT = GO-LIVE GATE — BUILT (9109e50):
+  hasAcceptedAgreement() (course-timeline.ts) is the one brain both the
+  checklist and preflight read. Checklist gained "Accept the Operator
+  Agreement" (auto-satisfied via the existing onboarding clickwrap for new
+  operators). GO-LIVE PREFLIGHT requires it with NO override (mark_live,
+  course-detail PATCH both refuse unconditionally now) — paired with
+  STRIPE RULE FINAL below since both absolutes share the same enforcement
+  code once "exactly two absolutes" landed; couldn't cleanly split the
+  backend/modal commit further. New /api/admin/send-golive-reminder is the
+  one-click nudge for either absolute. LEGACY operators (predate the
+  clickwrap) get a prominent accept prompt on next dashboard login for an
+  already-live course — never yanked offline; Documents tab + Setup
+  checklist show "Not accepted — legacy" in amber; the onboarding
+  auto-chase cron now also covers already-live legacy courses missing only
+  this. VERSIONING (item 4): any acceptance counts regardless of version —
+  re-prompting on a future version bump is noted as future work, not built.
+  NOT YET RUNTIME-VERIFIED: "verify with a fresh test operator" (can
+  explore everything without either absolute; cannot go live missing
+  either; one-click reminder nudges work for both) requires actually
+  registering a test operator and clicking through the live app/database —
+  same category of action as the ORPHAN SWEEP entry above (raw script
+  execution against the configured DB was blocked by this sandbox as a
+  potential prod-data action). I've reasoned through the logic carefully
+  and it type-checks/parses clean, but Cam (or Cowork with a real session)
+  needs to click through it once to confirm end-to-end.
+  SPEC (no migration) — Cam: signing the Operator
   Agreement is mandatory before live, like Stripe. Wire it load-bearing:
   1. Getting Started checklist gains the step "Accept the Operator
      Agreement" (derived from the acceptance record; the V11 clickwrap
@@ -626,7 +651,21 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
      version and a "new version needs acceptance" flow is flagged as a
      future item — note it, don't build it.
 
-- [ ] STRIPE RULE FINAL (no migration, supersedes the fee-conditional
+- [x] STRIPE RULE FINAL — BUILT (1bea49c core simplification, 9109e50
+  finishes wiring the override removal everywhere it's enforced — the two
+  absolutes share enforcement code, see the AGREEMENT entry above for why
+  that landed together): computeStripeGoLiveCheck's `required` is
+  unconditional now regardless of cancellation-fee policy; `ok` is just
+  stripeAccountActive (already exactly charges_enabled + payouts_enabled +
+  card_payments active, per the Stripe webhook). Onboarding step 2's
+  Continue/Skip is unconditionally enabled — fully skippable pre-live
+  regardless of fee policy, required only at actual go-live (server-
+  enforced, no override path exists anymore). Preflight modal shows
+  exactly two absolutes (Agreement, Stripe) + advisory checks, each
+  absolute with its own one-click reminder nudge. Same NOT-YET-RUNTIME-
+  VERIFIED caveat as the AGREEMENT entry above applies here too — one
+  fresh-operator click-through covers both items at once.
+  SPEC (no migration, supersedes the fee-conditional
   override from the earlier preflight item) — Cam's ruling:
   1. EXPLORING: Stripe is fully skippable pre-live — operators can skip the
      checklist step and wander their whole dashboard and preview their site
