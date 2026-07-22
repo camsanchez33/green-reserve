@@ -405,7 +405,7 @@ function DashboardPageInner() {
                   We&apos;ve updated our terms since {courseName || 'your course'} went live. Please review and accept the Operator Agreement to keep your account in good standing — this doesn&apos;t affect your live status.
                 </p>
                 <div className="flex items-center gap-3">
-                  <a href="/terms" target="_blank" className="text-sm text-pine hover:underline">Read the agreement</a>
+                  <a href="/operator-agreement" target="_blank" className="text-sm text-pine hover:underline">Read the agreement</a>
                   <button
                     onClick={acceptAgreement}
                     disabled={acceptingAgreement}

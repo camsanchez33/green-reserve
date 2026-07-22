@@ -20,8 +20,15 @@ export const AGREEMENT_ACCEPTED_PREFIX = 'OPERATOR_AGREEMENT_ACCEPTED::';
 export const DOCUMENT_UPLOADED_PREFIX = 'DOCUMENT_UPLOADED::';
 export const NOTE_ADDED_PREFIX = 'NOTE_ADDED::';
 
-export const CURRENT_AGREEMENT_VERSION = '2026-07';
-export const CURRENT_BOOKING_TERMS_VERSION = '2026-01';
+// LEGAL PAGES V2 (RUN_QUEUE) — bumped alongside the operator-agreement and
+// terms page rewrites. Existing acceptances are NOT invalidated by this —
+// hasAcceptedAgreement() below counts any past acceptance regardless of
+// version (item 4/9's "don't force re-acceptance"); a future "new version
+// needs acceptance" flow is noted as future work, not built.
+// (Booking-terms version lives in src/lib/terms.ts — CURRENT_TERMS_VERSION
+// is the real one, stamped on every booking record; it belongs there, not
+// duplicated here.)
+export const CURRENT_AGREEMENT_VERSION = '2026-08';
 
 export interface SettingsChangedPayload { changes: { field: string; from: unknown; to: unknown }[]; by: string }
 export interface ReminderSentPayload { step: string }

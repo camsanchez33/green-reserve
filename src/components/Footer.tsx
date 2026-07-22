@@ -66,6 +66,7 @@ export default function Footer() {
           <ul className="space-y-2.5 text-sm text-ink-soft">
             <li><Link href="/for-courses" className="hover:text-ink transition-colors">List Your Course</Link></li>
             <li><Link href="/dashboard/login" className="hover:text-ink transition-colors">Operator Login</Link></li>
+            <li><Link href="/operator-agreement" className="hover:text-ink transition-colors">Operator Agreement</Link></li>
           </ul>
         </div>
 

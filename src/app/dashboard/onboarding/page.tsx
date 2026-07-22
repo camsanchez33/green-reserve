@@ -180,7 +180,7 @@ function OnboardingInner() {
                 onChange={e => setAgreementAccepted(e.target.checked)}
                 className="w-4 h-4 mt-0.5 accent-pine rounded shrink-0"
               />
-              <span>I have read and agree to the <a href="/terms" target="_blank" className="text-pine hover:underline">GreenReserve Operator Agreement</a>.</span>
+              <span>I have read and agree to the <a href="/operator-agreement" target="_blank" className="text-pine hover:underline">GreenReserve Operator Agreement</a>.</span>
             </label>
 
             <button onClick={saveDetails} disabled={saving || !agreementAccepted}

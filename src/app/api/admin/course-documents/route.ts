@@ -3,7 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
 import { stripe } from '@/lib/stripe';
 import { getApprovalState } from '@/lib/approval-state';
-import { getCourseTimeline, latestAgreementAcceptance, logNoteAdded, CURRENT_AGREEMENT_VERSION, CURRENT_BOOKING_TERMS_VERSION } from '@/lib/course-timeline';
+import { getCourseTimeline, latestAgreementAcceptance, logNoteAdded, CURRENT_AGREEMENT_VERSION } from '@/lib/course-timeline';
+import { CURRENT_TERMS_VERSION } from '@/lib/terms';
 
 // A-05 item 5 — Documents tab: auto records (operator agreement acceptance,
 // Stripe connected-account agreement date fetched live from Stripe — no
@@ -37,7 +38,10 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     approval: { status: approval.status, approvedAt: approval.approvedAt?.toISOString() ?? null },
     stripeAgreementDate,
-    bookingTermsVersion: CURRENT_BOOKING_TERMS_VERSION,
+    // Real version stamped on golfer bookings (src/lib/terms.ts), not a
+    // second parallel constant — no drift between what this shows and what
+    // golfers actually agreed to.
+    bookingTermsVersion: CURRENT_TERMS_VERSION,
     agreementVersion: CURRENT_AGREEMENT_VERSION,
     agreement: latestAgreementAcceptance(events),
     documents: events.filter(e => e.type === 'document_uploaded').map(e => ({ ...(e.data as { name: string; url: string; by: string }), at: e.at })),
