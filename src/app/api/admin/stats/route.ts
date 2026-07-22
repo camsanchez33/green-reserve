@@ -3,8 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
 import { ACTIVE_STATUSES } from '@/lib/inquiry-status';
 import { computeOpenChanges, oldestOpenChangeRequestDate, CATEGORY_LABEL } from '@/lib/change-requests';
+import { COMPLETED_BOOKING_STATUSES, TREND_MIN_AGE_DAYS, TREND_DROP_PCT_THRESHOLD } from '@/lib/course-metrics';
 
-const COMPLETED = ['confirmed', 'completed'];
+const COMPLETED = COMPLETED_BOOKING_STATUSES;
 
 function weekStartKey(d: Date) {
   const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
@@ -27,7 +28,7 @@ export async function GET() {
   const now = new Date();
   const startOfToday = new Date(dayKeyOf(now) + 'T00:00:00.000Z');
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+  const sixtyDaysAgo = new Date(now.getTime() - TREND_MIN_AGE_DAYS * 24 * 60 * 60 * 1000);
   const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
   const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
   const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
@@ -460,7 +461,7 @@ export async function GET() {
       watchlistRaw.push({ id: c.id, name: c.name, reason: `Zero bookings in 30d (had ${prev} prior)`, severity: 1000 + prev });
     } else if (prev > 0) {
       const dropPct = ((prev - cur) / prev) * 100;
-      if (dropPct > 40) watchlistRaw.push({ id: c.id, name: c.name, reason: `Bookings down ${dropPct.toFixed(0)}% vs prior 30d (${cur} vs ${prev})`, severity: dropPct });
+      if (dropPct > TREND_DROP_PCT_THRESHOLD) watchlistRaw.push({ id: c.id, name: c.name, reason: `Bookings down ${dropPct.toFixed(0)}% vs prior 30d (${cur} vs ${prev})`, severity: dropPct });
     }
   }
   const courseHealthWatchlist = watchlistRaw.sort((a, b) => b.severity - a.severity).slice(0, 5).map(({ severity: _severity, ...rest }) => rest);

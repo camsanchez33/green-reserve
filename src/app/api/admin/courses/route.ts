@@ -4,6 +4,7 @@ import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-sess
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 import { getApprovalState } from '@/lib/approval-state';
 import { latestPageDecision } from '@/lib/change-requests';
+import { COMPLETED_BOOKING_STATUSES, computeCourseHealth } from '@/lib/course-metrics';
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -56,7 +57,7 @@ export async function GET(req: NextRequest) {
     }),
     prisma.booking.groupBy({
       by: ['courseId'],
-      where: { status: 'confirmed', createdAt: { gte: thirtyDaysAgo } },
+      where: { status: { in: COMPLETED_BOOKING_STATUSES }, createdAt: { gte: thirtyDaysAgo } },
       _count: { id: true },
       _sum: { accessFeeTotal: true },
     }),
@@ -71,7 +72,7 @@ export async function GET(req: NextRequest) {
     }),
     prisma.booking.groupBy({
       by: ['courseId'],
-      where: { status: 'confirmed', createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } },
+      where: { status: { in: COMPLETED_BOOKING_STATUSES }, createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } },
       _count: { id: true },
     }),
   ]);
@@ -110,15 +111,31 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const result = courses.map(c => ({
-    ...c,
-    bookings30d: bookingMap.get(c.id)?.count ?? 0,
-    revenue30d: bookingMap.get(c.id)?.revenue ?? 0,
-    activeMemberCount: memberMap.get(c.id) ?? 0,
-    lastBookingAt: lastBookingMap.get(c.id) ?? null,
-    bookingsPrior30d: priorBookingMap.get(c.id) ?? 0,
-    approvalStatus: approvalByCourseId.get(c.id) ?? 'none',
-  }));
+  const result = courses.map(c => {
+    const bookings30d = bookingMap.get(c.id)?.count ?? 0;
+    const bookingsPrior30d = priorBookingMap.get(c.id) ?? 0;
+    return {
+      ...c,
+      bookings30d,
+      revenue30d: bookingMap.get(c.id)?.revenue ?? 0,
+      activeMemberCount: memberMap.get(c.id) ?? 0,
+      lastBookingAt: lastBookingMap.get(c.id) ?? null,
+      bookingsPrior30d,
+      approvalStatus: approvalByCourseId.get(c.id) ?? 'none',
+      // A-04 item 2: ONE worded status chip, worst truth wins — same brain
+      // the course detail header uses (course-metrics.ts).
+      health: computeCourseHealth({
+        archivedAt: c.archivedAt,
+        active: c.active,
+        liveStatus: c.liveStatus,
+        stripeAccountActive: c.stripeAccountActive,
+        welcomeEmailSentAt: c.welcomeEmailSentAt,
+        createdAt: c.createdAt,
+        bookings30d,
+        bookingsPrev30d: bookingsPrior30d,
+      }),
+    };
+  });
 
   return NextResponse.json(result);
 }

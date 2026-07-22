@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
+import { COMPLETED_BOOKING_STATUSES } from '@/lib/course-metrics';
 
 function startOfDay(d: Date) {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
@@ -57,7 +58,7 @@ async function buildResponse(
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const monthStart = startOfMonth(now);
 
-  const completedStatuses = ['confirmed', 'completed'];
+  const completedStatuses = COMPLETED_BOOKING_STATUSES;
 
   const [
     feesToday,
