@@ -22,7 +22,6 @@ function OnboardingInner() {
   const [stripeActive, setStripeActive] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [stripeBanner, setStripeBanner] = useState('');
-  const [noFeePolicy, setNoFeePolicy] = useState(false);
   const [agreementAccepted, setAgreementAccepted] = useState(false);
 
   useEffect(() => {
@@ -47,7 +46,6 @@ function OnboardingInner() {
       if (!c) return;
       setDetails(d => ({ ...d, description: c.description ?? '', holes: c.holes ?? 18, par: c.par ?? 72 }));
       setStripeActive(!!c.stripeAccountActive);
-      setNoFeePolicy(!c.lateCancellationFee);
     });
     fetch('/api/operator/agreement').then(r => r.json()).then(d => {
       if (d?.agreement) setAgreementAccepted(true);
@@ -199,9 +197,7 @@ function OnboardingInner() {
               <CreditCard className="w-5 h-5 text-pine"/>Connect your payments
             </h2>
             <p className="text-sm text-ink-soft mb-6">
-              {noFeePolicy
-                ? "Golfers pay through Stripe at checkout — green fees go straight to your bank account. Since you don't charge cancellation fees, this is optional and you can set it up anytime from Settings → Payments."
-                : 'Golfers pay through Stripe at checkout — green fees go straight to your bank account. Required before you can go live.'}
+              Golfers pay through Stripe at checkout — green fees go straight to your bank account. You can explore the rest of your dashboard without connecting, but it&apos;s required before your course can go live.
             </p>
 
             {isConnected ? (
@@ -232,9 +228,12 @@ function OnboardingInner() {
               </>
             )}
 
-            <button onClick={finishOnboarding} disabled={saving || (!isConnected && !noFeePolicy)}
+            {/* STRIPE RULE FINAL (RUN_QUEUE) — fully skippable pre-live,
+                regardless of fee policy. Required only at actual go-live
+                time (enforced server-side in go-live-preflight.ts). */}
+            <button onClick={finishOnboarding} disabled={saving}
               className="w-full mt-4 bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 disabled:bg-line-strong transition-colors flex items-center justify-center gap-2">
-              {saving ? <><Loader2 className="w-4 h-4 animate-spin"/>Finishing...</> : (!isConnected && noFeePolicy) ? "Skip for now — I'll do this later" : 'Continue'}
+              {saving ? <><Loader2 className="w-4 h-4 animate-spin"/>Finishing...</> : !isConnected ? "Skip for now — I'll do this later" : 'Continue'}
             </button>
           </div>
         )}
