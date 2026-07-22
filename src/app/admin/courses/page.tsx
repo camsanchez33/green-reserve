@@ -6,7 +6,9 @@ import { Star, RefreshCw, Search } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
-import { HEALTH_STATUS_LABEL, HEALTH_STATUS_DOT, HEALTH_STATUS_SEVERITY, type CourseHealthStatus } from '@/lib/course-metrics';
+import { HEALTH_STATUS_LABEL, HEALTH_STATUS_SEVERITY, type CourseHealthStatus } from '@/lib/course-metrics';
+
+const PAGE_SIZE = 50;
 
 interface Course {
   id: string; name: string; city: string; state: string; active: boolean; featured: boolean;
@@ -33,6 +35,7 @@ function CoursesContent() {
   const [filterFeatured, setFilterFeatured] = useState(false);
   const [filterType, setFilterType] = useState('');
   const [sortBy, setSortBy] = useState<'severity' | 'newest' | 'name'>('severity');
+  const [page, setPage] = useState(0);
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
@@ -95,6 +98,11 @@ function CoursesContent() {
   if (sortBy === 'name') filteredCourses = [...filteredCourses].sort((a, b) => a.name.localeCompare(b.name));
   else if (sortBy === 'newest') filteredCourses = [...filteredCourses].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   else filteredCourses = [...filteredCourses].sort((a, b) => HEALTH_STATUS_SEVERITY[a.health.status] - HEALTH_STATUS_SEVERITY[b.health.status]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredCourses.length / PAGE_SIZE));
+  const pagedCourses = filteredCourses.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  useEffect(() => { setPage(0); }, [archiveFilter, filterHealth, filterFeatured, filterType, q]);
 
   if (!adminReady) return null;
 
@@ -197,7 +205,7 @@ function CoursesContent() {
               actions — everything else lives on the course page. Rows are
               real links (keyboard nav, middle-click new tab). */}
           <div className="space-y-2">
-            {!loading && filteredCourses.map(course => (
+            {!loading && pagedCourses.map(course => (
               <Link
                 key={course.id}
                 href={'/admin/courses/' + course.id}
@@ -237,6 +245,28 @@ function CoursesContent() {
               <EmptyState message="No courses found" />
             )}
           </div>
+
+          {!loading && filteredCourses.length > PAGE_SIZE && (
+            <div className="flex items-center justify-between mt-4 text-xs text-ink-muted">
+              <span>Page {page + 1} of {totalPages} · {filteredCourses.length} total</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(0, p - 1))}
+                  disabled={page === 0}
+                  className="px-3 py-1.5 rounded-md border border-line bg-white hover:bg-paper disabled:opacity-40 transition-colors"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                  disabled={page >= totalPages - 1}
+                  className="px-3 py-1.5 rounded-md border border-line bg-white hover:bg-paper disabled:opacity-40 transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
