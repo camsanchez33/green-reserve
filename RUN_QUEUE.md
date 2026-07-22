@@ -679,6 +679,40 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   3. Result: preflight has exactly two absolutes (Agreement, Stripe) +
      the advisory checks; the modal reflects the new hierarchy plainly.
 
+- [ ] LEGAL PAGES V2 — strongest non-attorney draft (no migration) — Cam's
+  call: no lawyer for now; make the Operator Agreement + Terms + Privacy as
+  strong as a careful draft can be, keeping the attorney-review HTML
+  comment. Rewrite to include, in plain-but-precise language:
+  1. LIABILITY CAP: platform liability limited to fees paid to GreenReserve
+     in the prior 12 months; no indirect/consequential damages; service
+     provided "as is" with uptime best-efforts, no guarantee.
+  2. INDEMNIFICATION both ways: course indemnifies GR for claims arising
+     from their course/premises/conduct; GR indemnifies course for claims
+     arising from the platform itself.
+  3. PAYMENTS: Stripe Connect relationship spelled out (GR never holds
+     green-fee funds), chargeback responsibility (course handles disputes
+     on green fees; GR handles disputes on its own fee), refund mechanics
+     as implemented.
+  4. TERMINATION: either party, 30 days notice; immediate for breach; what
+     happens at exit (page comes down, data export on request, then
+     deletion; records retained as legally required).
+  5. DATA: course owns their booking data; golfer data handled per Privacy
+     Policy; no sale of data; the white-label promise in writing.
+  6. DISPUTES: governing law + venue = TheGreenReserve LLC's home state
+     (CONFIRM STATE WITH CAM — NJ assumed from Mahwah if unanswered),
+     binding arbitration clause with small-claims carve-out.
+  7. COMMUNICATIONS CONSENT: operators + golfers consent to transactional
+     email/SMS (2FA, booking notices) as part of using the service; no
+     marketing SMS without separate opt-in (TCPA hygiene).
+  8. Booking Terms (golfer-facing) aligned: card-on-file authorization
+     language for late-cancel fees matches the consent checkbox flow.
+  9. Version bump (v2026-08), changelog note at bottom, acceptance
+     machinery re-serves to operators per the existing versioning flag —
+     but do NOT force re-acceptance in this run (note it as ready).
+  Keep readable structure (the current plain-English tone), no legalese
+  walls. The attorney-review comment stays: "drafted without counsel;
+  review before scale."
+
 ## Ideas / not yet specced
 
 - OPERATOR STAFF ACCOUNTS rework (Cam, 2026-07-10: "whole thing is going to be reworked and better") — current section contradicts itself: copy says "full dashboard access", role dropdown says "tee sheet access". Rework needs: clear role tiers (e.g. owner / manager / tee-sheet-only), what each can see (money? settings? members?), invite email flow, deactivate/reset from the card, and the same no-silent-failure patterns as admin. Spec when Cam's ready to define the role tiers.
