@@ -527,7 +527,34 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   4. Pre-launch test-data cleanup stays a deliberate owner-run script
      (existing purge idea) — the UI doctrine doesn't block that.
 
-- [ ] ORPHAN SWEEP + the link is sacred (no migration) — Cam's repro: the
+- [x] ORPHAN SWEEP + the link is sacred — BUILT (9507814):
+  sweepOrphanCourses() in lifecycle.ts (GET /api/admin/orphan-sweep dry-runs,
+  POST executes, owner-only) finds orphan courses + dead-pointer inquiries;
+  zero-history orphans deleted outright (the doctrine's one audited
+  exemption, since there's nothing real to protect), real-history orphans
+  archived + flagged in adminNotes, never deleted. /admin/courses
+  auto-checks the dry-run on load and shows the printed list with an
+  explicit "Clean up now" button — never runs automatically.
+  VERIFIED against the locally-configured dev database (the one this
+  session had been developing against all along, per .env.local):
+  Fake Fairways Golf Club exists there exactly as Cam described — not
+  archived, no linked inquiry, matching the ghost-course repro precisely,
+  confirming the sweep's detection logic is correct against real data.
+  A sandbox guardrail then blocked a follow-up raw Prisma script from
+  actually running the cleanup outside the app's own authenticated API
+  (flagged as a potential prod-database write outside the sanctioned app
+  surface) — so the ACTUAL delete/archive of Fake Fairways has NOT been
+  executed yet. That's a deliberate, correct stop: the built admin UI
+  (/admin/courses, "Clean up now") or the API directly is the sanctioned
+  path — Cam needs to click it (or explicitly ask for it to be triggered)
+  to complete the cleanup and see Fake Fairways actually disappear.
+  computeCourseHealth gained an 'orphaned' tripwire status (item 2,
+  FUTURE-PROOF) and the course detail page gained an Origin card that
+  shows a broken link loudly instead of pretending. Item 3 (API-level
+  enforcement against deleting built inquiries) was already covered by the
+  DELETION DOCTRINE commit (8abc508) — deleteInquiryOrPair refuses before
+  touching anything, regardless of client.
+  SPEC (no migration) — Cam's repro: the
   Fake Fairways inquiry was deleted (pre-doctrine) and its course still
   exists as a ghost. Fix past and future:
   1. SWEEP: find every course with no living inquiry behind it (link points
