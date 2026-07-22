@@ -487,7 +487,24 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   delete through the new lifecycle service (deletePair) so course-side
   cleanup happens too.
 
-- [ ] DELETION DOCTRINE + name-match bug (no migration) — Cam's ruling:
+- [x] DELETION DOCTRINE + name-match bug — BUILT (8abc508). Enforced at the
+  API level (lifecycle.ts's deleteInquiryOrPair now refuses outright
+  whenever builtCourseId is set, even for a stale/orphaned pointer — that's
+  the ORPHAN SWEEP's job, not this path's), not just hidden buttons:
+  archive-course's hard_delete action is gone entirely (deletePair() stays
+  in lifecycle.ts only for a future deliberate owner-run script to call
+  directly). Course detail's danger menu lost Delete (which, it turned out,
+  never actually had a working confirm modal wired up this session —
+  quietly broken, now moot). Built inquiries lose every Permanently-delete
+  entry point in both inquiries pages; unbuilt closed inquiries keep it,
+  upgraded from a bare confirm() with no name check to a required typed
+  confirm. Bug root cause confirmed exactly as suspected: modals prompted
+  against CourseInquiry.courseName while the server validated against
+  Course.name — divergent the moment a course is renamed post-build (which
+  admin's Setup tab now permits). Fixed everywhere: trimmed +
+  case-insensitive, one consistent field per flow, client and server in
+  agreement (unbuilt inquiry delete ×2 surfaces, go-live override).
+  SPEC (no migration) — Cam's ruling:
   1. THE RULE: anything that ever became a COURSE is never permanently
      deleted from the UI — archive only (the pair archives together per the
      parity law; all data/bookings/financial history preserved forever).
