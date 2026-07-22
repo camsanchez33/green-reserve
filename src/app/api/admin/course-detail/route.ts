@@ -4,6 +4,8 @@ import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-sess
 import { sendCourseLiveOrientationEmail } from '@/lib/email';
 import { getApprovalState } from '@/lib/approval-state';
 import { COMPLETED_BOOKING_STATUSES, computeCourseHealth } from '@/lib/course-metrics';
+import { computeOpenChanges, CATEGORY_LABEL } from '@/lib/change-requests';
+import { getCourseTimeline, isRemindersPaused } from '@/lib/course-timeline';
 
 export async function GET(req: NextRequest) {
   if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -15,7 +17,7 @@ export async function GET(req: NextRequest) {
   const sixtyDaysAgo = new Date();
   sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
 
-  const [course, recentBookings, totalBookings, revenue, staff, lastBookingAgg, priorBookingsCount, approval] = await Promise.all([
+  const [course, recentBookings, totalBookings, revenue, staff, lastBookingAgg, priorBookingsCount, approval, unreadMessages, linkedInquiry, timeline] = await Promise.all([
     prisma.course.findUnique({ where: { id: courseId }, include: { operator: { select: { id: true, name: true, email: true, emailVerified: true, onboardingStep: true, phone: true } }, schedules: true } }),
     prisma.booking.findMany({ where: { courseId, status: { in: COMPLETED_BOOKING_STATUSES }, createdAt: { gte: thirtyDaysAgo } }, select: { id: true, golferName: true, golferEmail: true, players: true, totalAmount: true, createdAt: true, teeTime: { select: { date: true, time: true } } }, orderBy: { createdAt: 'desc' }, take: 20 }),
     prisma.booking.count({ where: { courseId, status: { in: COMPLETED_BOOKING_STATUSES } } }),
@@ -24,6 +26,9 @@ export async function GET(req: NextRequest) {
     prisma.booking.aggregate({ where: { courseId }, _max: { createdAt: true } }),
     prisma.booking.count({ where: { courseId, status: { in: COMPLETED_BOOKING_STATUSES }, createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } } }),
     getApprovalState(courseId),
+    prisma.message.count({ where: { thread: { courseId }, senderType: 'operator', readAt: null, isBroadcast: false } }),
+    prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId }, select: { id: true, events: { select: { actorName: true, createdAt: true } } } }),
+    getCourseTimeline(courseId),
   ]);
 
   if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
@@ -39,6 +44,8 @@ export async function GET(req: NextRequest) {
     bookings30d,
     bookingsPrev30d: priorBookingsCount,
   });
+
+  const openChanges = linkedInquiry ? computeOpenChanges(linkedInquiry.events) : [];
 
   return NextResponse.json({
     course,
@@ -58,6 +65,18 @@ export async function GET(req: NextRequest) {
     approval: { status: approval.status, approvedAt: approval.approvedAt?.toISOString() ?? null },
     // A-04/A-05 shared brain: same worded-status logic the courses list uses.
     health,
+    // A-05 item 3: Overview's "open items" — same computeOpenChanges brain
+    // the inquiry detail page and the dashboard action queue use.
+    openItems: {
+      unreadMessages,
+      openChanges: openChanges.map(c => CATEGORY_LABEL[c.category] || c.category),
+      hasSchedule: (course.schedules ?? []).length > 0,
+    },
+    // A-05 items 4/5: course-timeline events (settings edits, reminders,
+    // agreement acceptance, uploaded docs, notes) — null if there's no
+    // linked inquiry to log against.
+    timeline,
+    remindersPaused: timeline ? isRemindersPaused(timeline) : false,
   });
 }
 

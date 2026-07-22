@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { logSettingsChanged } from '@/lib/course-timeline';
 
 // GET /api/admin/course-settings?courseId=X — full course record for the admin editor
 export async function GET(req: NextRequest) {
@@ -39,6 +40,22 @@ export async function PATCH(req: NextRequest) {
   for (const key of allowed) {
     if (key in rest) data[key] = rest[key];
   }
+
+  // A-05 item 4c (full mirror, no drift) — every admin-side edit here is
+  // logged to the course timeline so the operator's change history stays
+  // honest even when Cam makes the fix on the phone with them.
+  const keys = Object.keys(data);
+  const before = keys.length > 0
+    ? await prisma.course.findUnique({ where: { id: courseId }, select: Object.fromEntries(keys.map(k => [k, true])) })
+    : null;
   const updated = await prisma.course.update({ where: { id: courseId }, data });
+
+  if (before) {
+    const changes = keys
+      .filter(k => JSON.stringify((before as Record<string, unknown>)[k]) !== JSON.stringify(data[k]))
+      .map(k => ({ field: k, from: (before as Record<string, unknown>)[k], to: data[k] }));
+    if (changes.length > 0) await logSettingsChanged(courseId, changes, session.name);
+  }
+
   return NextResponse.json(updated);
 }

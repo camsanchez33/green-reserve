@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { logSettingsChanged } from '@/lib/course-timeline';
 
 // GET /api/admin/schedule?courseId=X
 export async function GET(req: NextRequest) {
@@ -48,6 +49,8 @@ export async function POST(req: NextRequest) {
     await generateTeeTimes(courseId, d.toISOString().split('T')[0]);
   }
 
+  await logSettingsChanged(courseId, [{ field: 'schedule', from: null, to: `${schedule.greenFeeWeekday}/${schedule.greenFeeWeekend} added` }], session.name);
+
   return NextResponse.json(schedule);
 }
 
@@ -82,6 +85,12 @@ export async function PATCH(req: NextRequest) {
     },
   });
 
+  const feeChanges: { field: string; from: unknown; to: unknown }[] = [];
+  if (data.greenFeeWeekday !== undefined && Number(data.greenFeeWeekday) !== existing.greenFeeWeekday) feeChanges.push({ field: 'greenFeeWeekday', from: existing.greenFeeWeekday, to: updated.greenFeeWeekday });
+  if (data.greenFeeWeekend !== undefined && Number(data.greenFeeWeekend) !== existing.greenFeeWeekend) feeChanges.push({ field: 'greenFeeWeekend', from: existing.greenFeeWeekend, to: updated.greenFeeWeekend });
+  if (data.cartFee !== undefined && Number(data.cartFee) !== existing.cartFee) feeChanges.push({ field: 'cartFee', from: existing.cartFee, to: updated.cartFee });
+  if (feeChanges.length > 0) await logSettingsChanged(existing.courseId, feeChanges, session.name);
+
   return NextResponse.json(updated);
 }
 
@@ -91,6 +100,8 @@ export async function DELETE(req: NextRequest) {
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const { id } = await req.json();
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+  const existing = await prisma.teeTimeSchedule.findUnique({ where: { id }, select: { courseId: true } });
   await prisma.teeTimeSchedule.deleteMany({ where: { id } });
+  if (existing) await logSettingsChanged(existing.courseId, [{ field: 'schedule', from: 'removed', to: null }], session.name);
   return NextResponse.json({ success: true });
 }
