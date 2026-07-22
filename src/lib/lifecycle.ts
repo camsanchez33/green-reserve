@@ -66,16 +66,26 @@ export async function restorePair(courseId: string, adminName: string): Promise<
   return { ok: true, changed };
 }
 
-// Permanent delete — course side. Requires the course already archived (an
-// explicit, reversible step first) and a typed name match. The payment-
-// history guard applies to the PAIR: if the course has payment history,
-// nothing is deleted (archive is as far as it goes), same reason returned
-// regardless of which page the attempt came from.
+// Permanent delete — course side. NO LONGER reachable from the admin UI or
+// any API route (DELETION DOCTRINE — courses are archive-only from there);
+// kept here only for a deliberate owner-run pre-launch test-data cleanup
+// script to import directly. Requires the course already archived (an
+// explicit, reversible step first) and a typed name match — trimmed +
+// case-insensitive (item 3's fix; this previously compared the raw typed
+// string against course.name with no normalization, and callers were
+// prompting against a DIFFERENT field — CourseInquiry.courseName — which
+// diverges the moment a course is renamed post-build. That's what made
+// "name does not match" fire even when the admin typed it correctly).
+// The payment-history guard applies to the PAIR: if the course has payment
+// history, nothing is deleted (archive is as far as it goes), same reason
+// returned regardless of which caller attempted it.
 export async function deletePair(courseId: string, confirmName: string, adminName: string): Promise<LifecycleResult> {
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { id: true, name: true, operatorId: true, archivedAt: true } });
   if (!course) return { ok: false, error: 'Course not found', changed: [] };
   if (!course.archivedAt) return { ok: false, error: 'Course must be archived before permanent deletion', changed: [] };
-  if (!confirmName || confirmName.trim() !== course.name.trim()) return { ok: false, error: 'Course name does not match', changed: [] };
+  if (!confirmName || confirmName.trim().toLowerCase() !== course.name.trim().toLowerCase()) {
+    return { ok: false, error: `Name does not match — expected "${course.name}"`, changed: [] };
+  }
 
   const [bookingCount, paidMemberCount] = await Promise.all([
     prisma.booking.count({ where: { courseId } }),
@@ -140,19 +150,28 @@ export async function deleteInquiryOrPair(inquiryId: string, confirmName: string
   const inquiry = await prisma.courseInquiry.findUnique({ where: { id: inquiryId } });
   if (!inquiry) return { ok: false, error: 'Inquiry not found', changed: [] };
 
-  if (!inquiry.builtCourseId) {
-    await prisma.courseInquiry.delete({ where: { id: inquiryId } });
-    return { ok: true, changed: ['inquiry'] };
+  // DELETION DOCTRINE (RUN_QUEUE) — anything that ever became a course is
+  // never permanently deleted, from the courses surface OR from here. A
+  // built inquiry (builtCourseId ever set, even if the course row is now
+  // stale/orphaned — that's the ORPHAN SWEEP's job, not a casual delete
+  // click's) can only be archived. Enforced here at the API/lib level, not
+  // just by hiding the button — the same guarantee the courses tab's
+  // archive-course route now provides for course-side deletion.
+  if (inquiry.builtCourseId) {
+    return { ok: false, error: 'This inquiry became a course — courses are archived, never deleted. Archive it instead.', changed: [] };
   }
 
-  const course = await prisma.course.findUnique({ where: { id: inquiry.builtCourseId }, select: { archivedAt: true } });
-  if (!course) {
-    // Course already gone (stale builtCourseId) — just clean up the inquiry.
-    await prisma.courseInquiry.delete({ where: { id: inquiryId } });
-    return { ok: true, changed: ['inquiry'] };
+  // Typed-confirm, same as every other permanent delete (item 3's fix):
+  // trimmed + case-insensitive, compared against THIS row's own courseName
+  // (no cross-entity divergence risk since there's no linked Course here).
+  const typed = (confirmName ?? '').trim().toLowerCase();
+  const expected = inquiry.courseName.trim().toLowerCase();
+  if (typed !== expected) {
+    return { ok: false, error: `Name does not match — expected "${inquiry.courseName}"`, changed: [] };
   }
-  if (!course.archivedAt) await archivePair(inquiry.builtCourseId, adminName);
-  return deletePair(inquiry.builtCourseId, confirmName ?? '', adminName);
+
+  await prisma.courseInquiry.delete({ where: { id: inquiryId } });
+  return { ok: true, changed: ['inquiry'] };
 }
 
 // One-time reconciliation sweep (RUN_QUEUE item 6.6) — finds existing

@@ -520,28 +520,6 @@ function InquiryDetailInner() {
     else { const d = await r.json().catch(() => ({})); setActionError('Archive failed: ' + (d.error || 'unknown')); }
   }
 
-  async function deleteLiveOrArchivedCourse() {
-    if (!inq?.builtCourseId) return;
-    setProcessing(true); setActionError('');
-    // Hard delete requires the course be archived first — archive silently
-    // if it isn't yet (a no-op if it already is), then attempt the guarded
-    // hard delete. A course with payment history simply ends up archived,
-    // never deleted — the guard's reason is shown, not a dead end.
-    await fetch('/api/admin/archive-course', {
-      method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, action: 'archive' }),
-    });
-    const r = await fetch('/api/admin/archive-course', {
-      method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, action: 'hard_delete', confirmName: deleteCourseConfirm }),
-    });
-    const d = await r.json().catch(() => ({}));
-    setProcessing(false);
-    if (r.ok) { router.push(backUrl); return; }
-    setActionError(d.hasHistory
-      ? 'This course has payment history, so it was archived instead of permanently deleted.'
-      : 'Delete failed: ' + (d.error || 'unknown'));
-    await loadInquiry();
-  }
-
   async function restoreArchivedInquiry() {
     setProcessing(true); setActionError('');
     if (inq?.builtCourseId) {
@@ -576,19 +554,21 @@ function InquiryDetailInner() {
     } catch { setActionError('Could not copy — clipboard access was blocked.'); }
   }
 
+  // DELETION DOCTRINE (RUN_QUEUE): only reachable for UNBUILT inquiries —
+  // anything with a builtCourseId is archive-only, enforced server-side in
+  // lifecycle.ts regardless of what this client sends. Typed confirm now
+  // required here too (item 3's fix applies to every remaining permanent
+  // delete), case-insensitive/trimmed, validated again server-side.
   async function deleteInquiry() {
     if (!inq) return;
     setActionError('');
-    const confirmParam = inq.builtCourseId ? '&confirmName=' + encodeURIComponent(deleteCourseConfirm) : '';
-    const r = await fetch('/api/admin/inquiries?id=' + inq.id + confirmParam, { method: 'DELETE', headers: H() });
+    const r = await fetch('/api/admin/inquiries?id=' + inq.id + '&confirmName=' + encodeURIComponent(deleteCourseConfirm), { method: 'DELETE', headers: H() });
     if (r.ok) { router.push(backUrl); return; }
-    // No-silent-failures: a failed delete (name mismatch, payment-history
-    // guard on the linked course) must show why, not just look like nothing
-    // happened while the record is still fully there.
+    // No-silent-failures: a failed delete (name mismatch, or this inquiry
+    // turned out to have a built course after all) must show why, not just
+    // look like nothing happened while the record is still fully there.
     const d = await r.json().catch(() => ({}));
-    setActionError(d.hasHistory
-      ? 'This course has payment history, so it was archived instead of permanently deleted.'
-      : 'Delete failed: ' + (d.error || 'unknown'));
+    setActionError('Delete failed: ' + (d.error || 'unknown'));
     await loadInquiry();
   }
 
@@ -741,8 +721,10 @@ function InquiryDetailInner() {
                   <Wrench className="w-3.5 h-3.5" />Manage course <ArrowUpRight className="w-3.5 h-3.5" />
                 </button>
               )}
-              {(inq.status === 'archived' || inq.status === 'rejected') && (
-                <button onClick={() => setPendingAction('delete')}
+              {/* DELETION DOCTRINE — permanent delete only for inquiries that
+                  never became a course. Built ones are archive-only. */}
+              {(inq.status === 'archived' || inq.status === 'rejected') && !inq.builtCourseId && (
+                <button onClick={() => { setPendingAction('delete'); setDeleteCourseConfirm(''); }}
                   className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-bad hover:bg-bad/5 px-3 py-1.5 rounded-md border border-line hover:border-bad/20 transition-colors">
                   <Trash2 className="w-3.5 h-3.5" />Delete permanently
                 </button>
@@ -822,14 +804,22 @@ function InquiryDetailInner() {
                         <Archive className="w-3.5 h-3.5" />Archive
                       </button>
                     )}
-                    <button onClick={() => { setMoreOpen(false); setPendingAction('delete'); }}
-                      className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">
-                      <Trash2 className="w-3.5 h-3.5" />Delete
-                    </button>
+                    {/* DELETION DOCTRINE — only unbuilt inquiries can be
+                        permanently deleted; 'building' stage practically
+                        always has a course by now, but the gate is explicit
+                        rather than assumed. */}
+                    {!inq.builtCourseId && (
+                      <button onClick={() => { setMoreOpen(false); setPendingAction('delete'); setDeleteCourseConfirm(''); }}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">
+                        <Trash2 className="w-3.5 h-3.5" />Delete
+                      </button>
+                    )}
                   </>
                 )}
                 {/* LIVE — menu must never render empty (RUN_QUEUE "inquiry
-                    ⋯ menu renders EMPTY for live/archived") */}
+                    ⋯ menu renders EMPTY for live/archived"). No delete here —
+                    a live inquiry always has a course, and courses are
+                    archive-only (DELETION DOCTRINE). */}
                 {inq.status === 'live' && (
                   <>
                     {inq.builtCourseId && (
@@ -856,15 +846,10 @@ function InquiryDetailInner() {
                         <Archive className="w-3.5 h-3.5" />Archive
                       </button>
                     )}
-                    {inq.builtCourseId && (
-                      <button onClick={() => { setMoreOpen(false); setPendingAction('delete_course'); setDeleteCourseConfirm(''); }}
-                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">
-                        <Trash2 className="w-3.5 h-3.5" />Delete
-                      </button>
-                    )}
                   </>
                 )}
-                {/* ARCHIVED / REJECTED — same never-empty rule */}
+                {/* ARCHIVED / REJECTED — same never-empty rule. Delete only
+                    for inquiries that never became a course. */}
                 {(inq.status === 'archived' || inq.status === 'rejected') && (
                   <>
                     {inq.builtCourseId && (
@@ -877,10 +862,16 @@ function InquiryDetailInner() {
                       className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
                       <ArchiveRestore className="w-3.5 h-3.5" />Restore to previous stage
                     </button>
-                    <button onClick={() => { setMoreOpen(false); setPendingAction('delete'); }}
-                      className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">
-                      <Trash2 className="w-3.5 h-3.5" />Permanently delete
-                    </button>
+                    {inq.builtCourseId ? (
+                      <p className="px-2 py-2 text-[11px] text-ink-faint leading-relaxed">
+                        Courses are archived, never deleted — booking and payment history is retained.
+                      </p>
+                    ) : (
+                      <button onClick={() => { setMoreOpen(false); setPendingAction('delete'); setDeleteCourseConfirm(''); }}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">
+                        <Trash2 className="w-3.5 h-3.5" />Permanently delete
+                      </button>
+                    )}
                   </>
                 )}
               </MoreMenu>
@@ -1624,27 +1615,25 @@ function InquiryDetailInner() {
         const fire = (fn: () => void) => { fn(); close(); };
 
         if (pendingAction === 'delete') {
-          // LIFECYCLE PARITY LAW: deleting an inquiry with a built course
-          // deletes BOTH (archiving first if needed) — full blast radius
-          // stated up front, typed confirm required just like the courses
-          // tab's hard-delete. An unlinked inquiry stays a simple click.
-          const hasCourse = !!inq.builtCourseId;
+          // DELETION DOCTRINE (RUN_QUEUE): only reachable for UNBUILT
+          // inquiries now — the trigger buttons are gated on !builtCourseId,
+          // and the server refuses regardless (lifecycle.ts). Typed confirm
+          // is required here too (item 3's fix applies everywhere), shown as
+          // the EXACT copyable string, compared trimmed + case-insensitive —
+          // both here and server-side, so this can never disagree with the
+          // API about what "matches."
+          const expected = inq.courseName;
+          const matches = deleteCourseConfirm.trim().toLowerCase() === expected.trim().toLowerCase();
           return (
-            <ModalShell title={`Permanently delete "${inq.courseName}"?`} danger onClose={close}>
+            <ModalShell title={`Permanently delete "${expected}"?`} danger onClose={close}>
               <p className="text-sm text-ink-soft mb-3">
-                {hasCourse
-                  ? 'This cannot be undone. Deletes the inquiry AND its built course (archiving it first if it isn’t already). If the course has any payment history, it’s archived instead of deleted, and you’ll see why.'
-                  : 'This cannot be undone — the inquiry and its history are gone for good.'}
+                This cannot be undone — the inquiry and its history are gone for good.
               </p>
-              {hasCourse && (
-                <>
-                  <label className="block text-[10px] uppercase tracking-[0.06em] text-bad mb-1">Type &quot;{inq.courseName}&quot; to confirm</label>
-                  <input value={deleteCourseConfirm} onChange={e => setDeleteCourseConfirm(e.target.value)}
-                    className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-1"/>
-                </>
-              )}
+              <label className="block text-[10px] uppercase tracking-[0.06em] text-bad mb-1">Type &quot;{expected}&quot; to confirm</label>
+              <input value={deleteCourseConfirm} onChange={e => setDeleteCourseConfirm(e.target.value)}
+                className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-1"/>
               <ModalActions onCancel={close} onConfirm={() => fire(deleteInquiry)} confirmLabel="Delete permanently" danger
-                disabled={hasCourse && deleteCourseConfirm.trim() !== inq.courseName.trim()}/>
+                disabled={!matches}/>
             </ModalShell>
           );
         }
@@ -1656,20 +1645,6 @@ function InquiryDetailInner() {
             <ModalShell title={`Archive "${inq.courseName}"?`} onClose={close}>
               <p className="text-sm text-ink-soft">The course disappears from the public site but data is retained. You can restore it later.{activityWarn}</p>
               <ModalActions onCancel={close} onConfirm={() => fire(archiveLiveCourse)} confirmLabel="Archive" disabled={processing}/>
-            </ModalShell>
-          );
-        }
-        if (pendingAction === 'delete_course') {
-          return (
-            <ModalShell title={`Permanently delete "${inq.courseName}"?`} danger onClose={close}>
-              <p className="text-sm text-ink-soft mb-3">
-                This cannot be undone. Deletes the course, its inquiry, and the operator&apos;s login (only if this was their sole course — a multi-course operator&apos;s login is kept). If this course has any payment history, it&apos;s archived instead — deletion only proceeds for courses with no bookings or paid memberships ever recorded.
-              </p>
-              <label className="block text-[10px] uppercase tracking-[0.06em] text-bad mb-1">Type &quot;{inq.courseName}&quot; to confirm</label>
-              <input value={deleteCourseConfirm} onChange={e => setDeleteCourseConfirm(e.target.value)}
-                className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-1"/>
-              <ModalActions onCancel={close} onConfirm={() => fire(deleteLiveOrArchivedCourse)} confirmLabel="Delete permanently" danger
-                disabled={deleteCourseConfirm.trim() !== inq.courseName.trim() || processing}/>
             </ModalShell>
           );
         }
@@ -1756,7 +1731,9 @@ function InquiryDetailInner() {
         }
         if (pendingAction === 'go_live') {
           const allOk = goLiveChecks?.every(c => c.ok) ?? false;
-          const canConfirm = allOk || (goLiveChecks && goLiveOverride.trim() === inq.courseName);
+          // item 3's fix — trimmed + case-insensitive, same as every other
+          // typed-confirm in the app.
+          const canConfirm = allOk || (goLiveChecks && goLiveOverride.trim().toLowerCase() === inq.courseName.trim().toLowerCase());
           const stripeCheck = goLiveChecks?.find(c => c.key === 'stripe');
           const onlyStripeFailing = !!goLiveChecks && !allOk && goLiveChecks.filter(c => !c.ok).every(c => c.key === 'stripe');
           return (

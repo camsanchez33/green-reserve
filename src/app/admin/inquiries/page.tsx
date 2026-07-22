@@ -113,6 +113,9 @@ function InquiriesListInner() {
   const [bulkRunning, setBulkRunning] = useState(false);
   const [bulkResult, setBulkResult] = useState('');
   const [deleteError, setDeleteError] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const [reconcileRan, setReconcileRan] = useState(false);
   const [reconcileResult, setReconcileResult] = useState('');
 
@@ -190,25 +193,34 @@ function InquiriesListInner() {
       .catch(() => {});
   }, [activeTabKey, reconcileRan, adminReady, H, loadInquiries]);
 
-  async function deleteInquiry(id: string, name: string) {
-    if (!confirm('Permanently delete inquiry for "' + name + '"? This cannot be undone.')) return;
+  // DELETION DOCTRINE (RUN_QUEUE): only reachable for UNBUILT inquiries
+  // (gated at the call site below) — the server refuses regardless if this
+  // is ever somehow called on a built one (lifecycle.ts). Typed confirm
+  // required (item 3's fix): trimmed + case-insensitive, matching what the
+  // server itself compares against, so this can never disagree with the API
+  // about what "matches."
+  async function deleteInquiry(id: string, name: string, confirmText: string) {
     setDeleteError('');
+    setDeleteBusy(true);
     try {
-      const r = await fetch('/api/admin/inquiries?id=' + id, { method: 'DELETE', headers: H() });
+      const r = await fetch('/api/admin/inquiries?id=' + id + '&confirmName=' + encodeURIComponent(confirmText), { method: 'DELETE', headers: H() });
       if (!r.ok) {
         const d = await r.json().catch(() => ({}));
         setDeleteError(`Delete failed for "${name}": ${d.error || 'unknown error'}`);
+        setDeleteBusy(false);
         return;
       }
       // Optimistic removal ONLY after a confirmed success — no-silent-failures:
-      // a failed delete (e.g. payment-history guard on a linked course) must
-      // never make the row silently vanish from this view while it's still
-      // in the DB (that's exactly what made a "deleted" inquiry keep
-      // reappearing in All).
+      // a failed delete (e.g. name mismatch) must never make the row silently
+      // vanish from this view while it's still in the DB (that's exactly what
+      // made a "deleted" inquiry keep reappearing in All).
       setInquiries(prev => prev.filter(i => i.id !== id));
+      setDeleteTarget(null);
+      setDeleteConfirmText('');
     } catch {
       setDeleteError(`Delete failed for "${name}": network error`);
     }
+    setDeleteBusy(false);
   }
 
   // A-02d: Closed tab's only actions are Restore and Permanently delete —
@@ -669,7 +681,9 @@ function InquiriesListInner() {
                     {fmtDate(inq.createdAt)}
                   </div>
 
-                  {/* Closed tab: Restore + Permanently delete — nothing else lives here */}
+                  {/* Closed tab: Restore, and Permanently delete ONLY for
+                      inquiries that never became a course (DELETION
+                      DOCTRINE) — built ones are archive-only. */}
                   {isClosedTab && (
                     <div className="flex items-center gap-1 shrink-0">
                       <button
@@ -679,13 +693,15 @@ function InquiriesListInner() {
                       >
                         <ArchiveRestore className="w-3.5 h-3.5" />
                       </button>
-                      <button
-                        onClick={e => { e.preventDefault(); e.stopPropagation(); deleteInquiry(inq.id, inq.courseName); }}
-                        className="w-7 h-7 flex items-center justify-center rounded text-ink-faint hover:text-bad hover:bg-bad/5 transition-colors"
-                        title="Delete permanently"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      {!inq.builtCourseId && (
+                        <button
+                          onClick={e => { e.preventDefault(); e.stopPropagation(); setDeleteTarget({ id: inq.id, name: inq.courseName }); setDeleteConfirmText(''); }}
+                          className="w-7 h-7 flex items-center justify-center rounded text-ink-faint hover:text-bad hover:bg-bad/5 transition-colors"
+                          title="Delete permanently"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                   )}
                 </Link>
@@ -813,6 +829,41 @@ function InquiriesListInner() {
                   }
                 >
                   {bulkRunning ? 'Working…' : isArchive ? 'Archive' : 'Send Sheet'}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Permanently delete — unbuilt inquiries only (DELETION DOCTRINE).
+          Typed confirm, trimmed + case-insensitive, matching the server. */}
+      {deleteTarget && (() => {
+        const matches = deleteConfirmText.trim().toLowerCase() === deleteTarget.name.trim().toLowerCase();
+        return (
+          <div className="fixed inset-0 bg-ink/30 flex items-center justify-center z-50 px-4">
+            <div className="bg-white rounded-lg border border-line max-w-md w-full p-5">
+              <div className="text-sm font-medium text-ink mb-1">Permanently delete &quot;{deleteTarget.name}&quot;?</div>
+              <p className="text-xs text-ink-muted mb-3">This cannot be undone — the inquiry and its history are gone for good.</p>
+              <label className="block text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1">Type &quot;{deleteTarget.name}&quot; to confirm</label>
+              <input
+                value={deleteConfirmText}
+                onChange={e => setDeleteConfirmText(e.target.value)}
+                className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-4"
+              />
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  onClick={() => { setDeleteTarget(null); setDeleteConfirmText(''); }}
+                  className="text-xs text-ink-muted hover:text-ink px-3 py-1.5 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => deleteInquiry(deleteTarget.id, deleteTarget.name, deleteConfirmText)}
+                  disabled={!matches || deleteBusy}
+                  className="text-xs font-medium px-3 py-1.5 rounded-md text-white bg-bad hover:bg-bad/90 transition-colors disabled:opacity-40"
+                >
+                  {deleteBusy ? 'Deleting…' : 'Delete permanently'}
                 </button>
               </div>
             </div>

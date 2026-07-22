@@ -196,12 +196,8 @@ export default function CourseDetailPage() {
   const [msgCompose, setMsgCompose] = useState('');
   const [msgSending, setMsgSending] = useState(false);
 
-  // A-05 item 2: header danger menu + preflight-aware live toggle
+  // A-05 item 2: header menu + preflight-aware live toggle
   const [dangerOpen, setDangerOpen] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteConfirmName, setDeleteConfirmName] = useState('');
-  const [deleteBusy, setDeleteBusy] = useState(false);
-  const [deleteError, setDeleteError] = useState('');
   const [archiveBusy, setArchiveBusy] = useState(false);
   const [liveToggleBusy, setLiveToggleBusy] = useState(false);
   const [liveBlockReason, setLiveBlockReason] = useState('');
@@ -355,21 +351,6 @@ export default function CourseDetailPage() {
     setArchiveBusy(false);
     if (r.ok) loadDetail();
     else { const d = await r.json(); alert(`Restore failed: ${d.error}`); }
-  }
-
-  // A-05 item 2 — danger menu: hard delete routes through the SAME
-  // lifecycle.ts deletePair the archive/restore actions use (LIFECYCLE
-  // PARITY LAW), owner-only, typed-name confirm, blocked if payment history.
-  async function hardDeleteCourse() {
-    if (!detail) return;
-    setDeleteBusy(true); setDeleteError('');
-    const r = await fetch('/api/admin/archive-course', {
-      method: 'POST', headers: H(), body: JSON.stringify({ courseId, action: 'hard_delete', confirmName: deleteConfirmName }),
-    });
-    setDeleteBusy(false);
-    if (r.ok) { router.push('/admin/courses'); return; }
-    const d = await r.json().catch(() => ({}));
-    setDeleteError(d.error || 'Delete failed — try again.');
   }
 
   // A-05 item 4b — kill switch, logged to the course timeline.
@@ -648,7 +629,7 @@ export default function CourseDetailPage() {
                 {dangerOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setDangerOpen(false)} />
-                    <div className="absolute right-0 top-10 z-20 bg-white border border-line rounded-lg shadow-lg w-52 py-1.5">
+                    <div className="absolute right-0 top-10 z-20 bg-white border border-line rounded-lg shadow-lg w-64 py-1.5">
                       {c.archivedAt ? (
                         <button
                           onClick={() => { setDangerOpen(false); restoreCourse(); }}
@@ -666,13 +647,13 @@ export default function CourseDetailPage() {
                           <ArchiveX className="w-3.5 h-3.5" />Archive course
                         </button>
                       )}
+                      {/* DELETION DOCTRINE (RUN_QUEUE) — anything that ever
+                          became a course is archive-only, never permanently
+                          deleted, from here or the API. No delete button. */}
                       <div className="border-t border-line-soft my-1.5" />
-                      <button
-                        onClick={() => { setDangerOpen(false); setShowDeleteConfirm(true); setDeleteConfirmName(''); setDeleteError(''); }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-bad hover:bg-bad/5 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />Delete permanently
-                      </button>
+                      <p className="px-3 py-2 text-[11px] text-ink-faint leading-relaxed">
+                        Courses are archived, never deleted — booking and payment history is retained.
+                      </p>
                     </div>
                   </>
                 )}
