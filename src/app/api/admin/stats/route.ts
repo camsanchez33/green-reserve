@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
 import { ACTIVE_STATUSES } from '@/lib/inquiry-status';
 import { computeOpenChanges, oldestOpenChangeRequestDate, CATEGORY_LABEL } from '@/lib/change-requests';
-import { COMPLETED_BOOKING_STATUSES, TREND_MIN_AGE_DAYS, TREND_DROP_PCT_THRESHOLD } from '@/lib/course-metrics';
+import { COMPLETED_BOOKING_STATUSES, TREND_MIN_AGE_DAYS, TREND_DROP_PCT_THRESHOLD, computeCourseHealth } from '@/lib/course-metrics';
 
 const COMPLETED = COMPLETED_BOOKING_STATUSES;
 
@@ -164,7 +164,7 @@ export async function GET() {
     prisma.inquiryStatusEvent.groupBy({ by: ['inquiryId'], where: { toStatus: 'building', createdAt: { gte: startOfMonth } } }),
     prisma.courseInquiry.count({ where: { wentLiveAt: { gte: startOfMonth } } }),
     prisma.booking.findMany({ where: { status: { in: COMPLETED }, teeTime: { date: todayDateStr } }, select: { checkedInAt: true, totalAmount: true, accessFeeTotal: true } }),
-    prisma.course.findMany({ where: { active: true, archivedAt: null }, select: { id: true, name: true, createdAt: true } }),
+    prisma.course.findMany({ where: { active: true, archivedAt: null }, select: { id: true, name: true, createdAt: true, stripeAccountActive: true, liveStatus: true, welcomeEmailSentAt: true, archivedAt: true } }),
     prisma.booking.groupBy({ by: ['courseId'], where: { status: { in: COMPLETED }, createdAt: { gte: thirtyDaysAgo } }, _count: { id: true } }),
     prisma.booking.groupBy({ by: ['courseId'], where: { status: { in: COMPLETED }, createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } }, _count: { id: true } }),
   ]);
@@ -453,9 +453,23 @@ export async function GET() {
   const prevBookingsMap = new Map(bookingsByCoursePrev30dRaw.map(r => [r.courseId, r._count.id]));
   const watchlistRaw: { id: string; name: string; reason: string; severity: number }[] = [];
   for (const c of activeCoursesList) {
-    if (c.createdAt > sixtyDaysAgo) continue;
     const cur = curBookingsMap.get(c.id) ?? 0;
     const prev = prevBookingsMap.get(c.id) ?? 0;
+
+    // A-05 item 9 — payments-broken counts as unhealthy on the watchlist too
+    // (same computeCourseHealth brain the courses list/detail use), not just
+    // in the Action Queue's red section. Always worst-severity.
+    const health = computeCourseHealth({
+      archivedAt: c.archivedAt, active: true, liveStatus: c.liveStatus,
+      stripeAccountActive: c.stripeAccountActive, welcomeEmailSentAt: c.welcomeEmailSentAt,
+      createdAt: c.createdAt, bookings30d: cur, bookingsPrev30d: prev,
+    });
+    if (health.status === 'payments_broken') {
+      watchlistRaw.push({ id: c.id, name: c.name, reason: health.reason, severity: 10000 });
+      continue;
+    }
+
+    if (c.createdAt > sixtyDaysAgo) continue;
     if (prev === 0 && cur === 0) continue;
     if (cur === 0 && prev > 0) {
       watchlistRaw.push({ id: c.id, name: c.name, reason: `Zero bookings in 30d (had ${prev} prior)`, severity: 1000 + prev });
