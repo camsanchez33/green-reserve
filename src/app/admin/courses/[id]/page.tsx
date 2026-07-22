@@ -1462,17 +1462,68 @@ export default function CourseDetailPage() {
           )}
 
           {/* SETUP */}
-          {tab === 'setup' && (
-            <div className="space-y-5 max-w-2xl">
+          {tab === 'setup' && (() => {
+            const steps = onboardingSteps(detail);
+            const events = detail.timeline ?? [];
+            const reminderEvents = events.filter(e => e.type === 'reminder_sent');
+            return (
+            <div className="space-y-5 max-w-3xl">
               <div className="bg-warn/5 border border-warn/20 rounded-md px-4 py-3 text-xs text-warn">
-                You&apos;re editing live settings directly. The operator can still adjust their own dashboard.
+                You&apos;re editing live settings directly. The operator can still adjust their own dashboard, and every change here is logged to their timeline.
               </div>
+
+              {/* 4a — onboarding checklist as named steps */}
+              <div className="bg-white border border-line rounded-lg p-6">
+                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-4">Onboarding Checklist</div>
+                <div className="space-y-3">
+                  {steps.map(s => (
+                    <div key={s.key} className="flex items-center gap-3">
+                      {s.done
+                        ? <CheckCircle className="w-4 h-4 text-ok shrink-0" />
+                        : <span className="w-4 h-4 rounded-full border border-line-strong shrink-0" />}
+                      <span className={'text-sm flex-1 ' + (s.done ? 'text-ink' : 'text-ink-muted')}>{s.label}</span>
+                      {s.at && <span className="text-xs text-ink-faint">{fmtDate(s.at)}</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 4b — auto-chase reminders */}
+              <div className="bg-white border border-line rounded-lg p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Auto-Chase Reminders</div>
+                  <button
+                    onClick={() => toggleRemindersPaused(!detail.remindersPaused)}
+                    disabled={remindersBusy || detail.timeline === null}
+                    className={'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors disabled:opacity-50 ' + (detail.remindersPaused ? 'bg-ok/5 text-ok border-ok/20 hover:bg-ok/10' : 'bg-paper text-ink-soft border-line hover:text-warn hover:border-warn/30')}
+                  >
+                    {detail.remindersPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
+                    {detail.remindersPaused ? 'Resume reminders' : 'Pause reminders'}
+                  </button>
+                </div>
+                <p className="text-sm text-ink-soft mb-3">
+                  Emails at 3, 7, and 14 days after the course record is created, then weekly, until the course goes live. Stops instantly once live.
+                </p>
+                {detail.timeline === null ? (
+                  <p className="text-xs text-ink-faint">No linked inquiry — reminders can&apos;t be tracked for this course.</p>
+                ) : reminderEvents.length === 0 ? (
+                  <p className="text-xs text-ink-faint">No reminders sent yet.</p>
+                ) : (
+                  <ul className="space-y-1.5">
+                    {reminderEvents.slice(0, 5).map((e, i) => (
+                      <li key={i} className="text-xs text-ink-soft">Reminder sent {fmtDate(e.at)} · {String((e.data as { step?: string }).step ?? '')}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
               {setupMsg && (
                 <div className={'text-sm font-medium px-4 py-2.5 rounded-md border ' + (setupMsg === 'error' ? 'bg-bad/5 text-bad border-bad/20' : 'bg-ok/5 text-ok border-ok/20')}>
                   {setupMsg === 'error' ? 'Error saving' : 'Settings saved'}
                 </div>
               )}
 
+              {/* 4c — full mirror of operator settings, same endpoint/whitelist the operator's own Settings page uses */}
               <div className="bg-white border border-line rounded-lg p-6 space-y-4">
                 <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Course Policy</div>
                 <div className="grid grid-cols-2 gap-4">
@@ -1498,6 +1549,50 @@ export default function CourseDetailPage() {
                       className={iCls}
                     />
                   </div>
+                  <div>
+                    <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Min players</label>
+                    <input
+                      type="number"
+                      value={Number(setupForm.minPlayers ?? 1)}
+                      onChange={e => setSetupForm(f => ({ ...f, minPlayers: Number(e.target.value) }))}
+                      className={iCls}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Max players</label>
+                    <input
+                      type="number"
+                      value={Number(setupForm.maxPlayers ?? 4)}
+                      onChange={e => setSetupForm(f => ({ ...f, maxPlayers: Number(e.target.value) }))}
+                      className={iCls}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Public booking window (days)</label>
+                    <input
+                      type="number"
+                      value={Number(setupForm.publicAdvanceDays ?? 7)}
+                      onChange={e => setSetupForm(f => ({ ...f, publicAdvanceDays: Number(e.target.value) }))}
+                      className={iCls}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Member booking window (days)</label>
+                    <input
+                      type="number"
+                      value={Number(setupForm.memberAdvanceDays ?? 14)}
+                      onChange={e => setSetupForm(f => ({ ...f, memberAdvanceDays: Number(e.target.value) }))}
+                      className={iCls}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Rain check policy</label>
+                  <input
+                    value={String(setupForm.rainCheckPolicy ?? '')}
+                    onChange={e => setSetupForm(f => ({ ...f, rainCheckPolicy: e.target.value }))}
+                    className={iCls}
+                  />
                 </div>
                 <div className="flex flex-wrap gap-4">
                   {([
@@ -1538,16 +1633,48 @@ export default function CourseDetailPage() {
                     </div>
                   </div>
                 )}
-                <button
-                  onClick={saveSetup}
-                  disabled={setupSaving}
-                  className="bg-pine hover:bg-pine-hover disabled:opacity-50 text-white px-5 py-2.5 rounded-md text-[12.5px] font-medium transition-colors"
-                >
-                  {setupSaving ? 'Saving...' : 'Save Policy Settings'}
-                </button>
               </div>
+
+              <div className="bg-white border border-line rounded-lg p-6 space-y-4">
+                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Facilities & Amenities</div>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
+                  {([
+                    ['hasDrivingRange', 'Driving range'],
+                    ['hasPuttingGreen', 'Putting green'],
+                    ['hasShortGameArea', 'Short game area'],
+                    ['hasProShop', 'Pro shop'],
+                    ['hasCartGirl', 'Beverage cart'],
+                    ['hasLessons', 'Lessons'],
+                    ['hasClubRental', 'Club rental'],
+                    ['hasPushCartRental', 'Push cart rental'],
+                    ['hasBagStorage', 'Bag storage'],
+                    ['hasLockerRoom', 'Locker room'],
+                    ['hasGpsCarts', 'GPS carts'],
+                    ['hasTournaments', 'Hosts tournaments'],
+                  ] as [string, string][]).map(([k, label]) => (
+                    <label key={k} className="flex items-center gap-2 text-sm text-ink cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={!!setupForm[k]}
+                        onChange={e => setSetupForm(f => ({ ...f, [k]: e.target.checked }))}
+                        className="w-4 h-4 accent-pine rounded"
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                onClick={saveSetup}
+                disabled={setupSaving}
+                className="bg-pine hover:bg-pine-hover disabled:opacity-50 text-white px-5 py-2.5 rounded-md text-[12.5px] font-medium transition-colors"
+              >
+                {setupSaving ? 'Saving...' : 'Save Settings'}
+              </button>
             </div>
-          )}
+            );
+          })()}
 
         </div>
       </div>
