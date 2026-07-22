@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
 
-  const [courses, bookingAggs, memberAggs, lastBookingAggs, priorBookingAggs] = await Promise.all([
+  const [courses, bookingAggs, memberAggs, lastBookingAggs, priorBookingAggs, linkedInquiries] = await Promise.all([
     prisma.course.findMany({
       where: showArchived ? { archivedAt: { not: null } } : { archivedAt: null },
       include: { operator: { select: { email: true, name: true, onboardingStep: true, emailVerified: true } } },
@@ -75,12 +75,17 @@ export async function GET(req: NextRequest) {
       where: { status: { in: COMPLETED_BOOKING_STATUSES }, createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } },
       _count: { id: true },
     }),
+    // ORPHAN SWEEP tripwire (RUN_QUEUE) — every course should have a linked
+    // inquiry; this is the cheap batched check the health brain needs to
+    // flag one that doesn't, instead of pretending it's just another draft.
+    prisma.courseInquiry.findMany({ where: { builtCourseId: { not: null } }, select: { builtCourseId: true } }),
   ]);
 
   const bookingMap = new Map(bookingAggs.map(b => [b.courseId, { count: b._count.id, revenue: (b._sum.accessFeeTotal ?? 0) / 100 }]));
   const memberMap = new Map(memberAggs.map(m => [m.courseId, m._count.id]));
   const lastBookingMap = new Map(lastBookingAggs.map(b => [b.courseId, b._max.createdAt?.toISOString() ?? null]));
   const priorBookingMap = new Map(priorBookingAggs.map(b => [b.courseId, b._count.id]));
+  const linkedCourseIds = new Set(linkedInquiries.map(i => i.builtCourseId));
 
   // Approval is course-level truth (item 1) — batched rather than N+1'd:
   // one inquiry lookup + one events lookup for every draft course at once,
@@ -133,6 +138,7 @@ export async function GET(req: NextRequest) {
         createdAt: c.createdAt,
         bookings30d,
         bookingsPrev30d: bookingsPrior30d,
+        hasLinkedInquiry: linkedCourseIds.has(c.id),
       }),
     };
   });

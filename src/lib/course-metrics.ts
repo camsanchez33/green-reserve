@@ -50,9 +50,15 @@ export function periodDelta(current: number, prior: number): PeriodDelta {
 // Used by BOTH the courses list (batch) and the course detail header (single)
 // so the two can never disagree about what a course's status word means.
 
-export type CourseHealthStatus = 'archived' | 'payments_broken' | 'setup_incomplete' | 'offline' | 'going_quiet' | 'healthy';
+// 'orphaned' (ORPHAN SWEEP, RUN_QUEUE) should never actually appear — the
+// DELETION DOCTRINE's API-level enforcement means a course can no longer
+// lose its linked inquiry going forward. It exists purely as a tripwire:
+// like the funnel's unmapped chip, if this is ever visible, an invariant
+// broke somewhere and needs investigating, not a real day-to-day status.
+export type CourseHealthStatus = 'orphaned' | 'archived' | 'payments_broken' | 'setup_incomplete' | 'offline' | 'going_quiet' | 'healthy';
 
 export const HEALTH_STATUS_LABEL: Record<CourseHealthStatus, string> = {
+  orphaned: 'Orphaned',
   archived: 'Archived',
   payments_broken: 'Payments broken',
   setup_incomplete: 'Setup incomplete',
@@ -63,6 +69,7 @@ export const HEALTH_STATUS_LABEL: Record<CourseHealthStatus, string> = {
 
 // StatusDot tone per status — reused by both surfaces' chip rendering.
 export const HEALTH_STATUS_DOT: Record<CourseHealthStatus, 'ok' | 'bad' | 'warn' | 'neutral'> = {
+  orphaned: 'bad',
   archived: 'neutral',
   payments_broken: 'bad',
   setup_incomplete: 'warn',
@@ -89,6 +96,10 @@ export interface CourseHealthInput {
   createdAt: Date | string;
   bookings30d: number;
   bookingsPrev30d: number;
+  /** ORPHAN SWEEP tripwire — omit (or pass true) for existing call sites that
+   *  haven't done the extra lookup; only pass explicit `false` where a
+   *  linked-inquiry check was actually performed. */
+  hasLinkedInquiry?: boolean;
 }
 
 export interface CourseHealth {
@@ -104,6 +115,14 @@ export function computeCourseHealth(c: CourseHealthInput, now: Date = new Date()
     ({ status, label: HEALTH_STATUS_LABEL[status], dot: HEALTH_STATUS_DOT[status], reason });
 
   if (c.archivedAt) return mk('archived', 'Archived — off the public site, data retained.');
+
+  // ORPHAN SWEEP tripwire — checked before anything else once a caller has
+  // actually done the lookup. Should never fire (DELETION DOCTRINE's API-
+  // level enforcement prevents a course from losing its inquiry link going
+  // forward) — this is a data-integrity alarm, not a normal status.
+  if (c.hasLinkedInquiry === false) {
+    return mk('orphaned', 'No linked inquiry — this course\'s origin record is missing.');
+  }
 
   const isLive = c.active && c.liveStatus === 'live';
 
@@ -138,10 +157,11 @@ export function computeCourseHealth(c: CourseHealthInput, now: Date = new Date()
 // Severity ranking for the list's default sort ("worst first, it's a triage
 // list even when clean") — lower number = worse = sorts first.
 export const HEALTH_STATUS_SEVERITY: Record<CourseHealthStatus, number> = {
-  payments_broken: 0,
-  going_quiet: 1,
-  setup_incomplete: 2,
-  offline: 3,
-  healthy: 4,
-  archived: 5,
+  orphaned: 0,
+  payments_broken: 1,
+  going_quiet: 2,
+  setup_incomplete: 3,
+  offline: 4,
+  healthy: 5,
+  archived: 6,
 };

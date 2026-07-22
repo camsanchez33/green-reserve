@@ -34,7 +34,9 @@ const HEALTH_FILTER_OPTIONS: { value: HealthFilter; label: string }[] = [
   { value: 'payments_broken', label: 'Payments broken' },
   { value: 'going_quiet', label: 'Going quiet' },
 ];
-const NEEDS_ATTENTION_STATUSES: CourseHealthStatus[] = ['setup_incomplete', 'payments_broken', 'going_quiet', 'offline'];
+const NEEDS_ATTENTION_STATUSES: CourseHealthStatus[] = ['setup_incomplete', 'payments_broken', 'going_quiet', 'offline', 'orphaned'];
+
+interface OrphanSweepItem { kind: 'course' | 'inquiry'; id: string; name: string; action: string; reason: string }
 
 function CoursesContent() {
   const router = useRouter();
@@ -49,6 +51,14 @@ function CoursesContent() {
   const [filterType, setFilterType] = useState('');
   const [sortBy, setSortBy] = useState<'severity' | 'newest' | 'name'>('severity');
   const [page, setPage] = useState(0);
+
+  // ORPHAN SWEEP (RUN_QUEUE) — dry-run check on first load. Read-only
+  // ("print the list"); actually cleaning up is an explicit owner click.
+  const [orphanItems, setOrphanItems] = useState<OrphanSweepItem[]>([]);
+  const [orphanChecked, setOrphanChecked] = useState(false);
+  const [orphanRunning, setOrphanRunning] = useState(false);
+  const [orphanResult, setOrphanResult] = useState('');
+  const [orphanDismissed, setOrphanDismissed] = useState(false);
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
@@ -76,6 +86,29 @@ function CoursesContent() {
     const courseId = params.get('courseId');
     if (courseId) router.replace('/admin/courses/' + courseId);
   }, [adminReady, stateFilter, loadCourses, params, router]);
+
+  useEffect(() => {
+    if (!adminReady || orphanChecked) return;
+    setOrphanChecked(true);
+    fetch('/api/admin/orphan-sweep', { headers: H() }).then(r => r.ok ? r.json() : null).then(d => {
+      if (d?.items?.length > 0) setOrphanItems(d.items);
+    }).catch(() => {});
+  }, [adminReady, orphanChecked, H]);
+
+  async function runOrphanSweep() {
+    setOrphanRunning(true); setOrphanResult('');
+    const r = await fetch('/api/admin/orphan-sweep', { method: 'POST', headers: H() });
+    setOrphanRunning(false);
+    if (r.ok) {
+      const d = await r.json();
+      setOrphanResult(`Cleaned up ${d.items.length} item${d.items.length === 1 ? '' : 's'}: ` + d.items.map((i: OrphanSweepItem) => `"${i.name}" ${i.action}`).join('; '));
+      setOrphanItems([]);
+      loadCourses(stateFilter);
+    } else {
+      const d = await r.json().catch(() => ({}));
+      setOrphanResult('Sweep failed: ' + (d.error || 'unknown error'));
+    }
+  }
 
   const q = search.toLowerCase().trim();
   let filteredCourses = q
@@ -138,6 +171,41 @@ function CoursesContent() {
               </button>
             </div>
           </div>
+
+          {/* ORPHAN SWEEP (RUN_QUEUE) — dry-run result. Printed, not acted on
+              automatically; the link is sacred, so cleanup is an explicit click. */}
+          {!orphanDismissed && orphanItems.length > 0 && (
+            <div className="mb-5 px-4 py-3 rounded-lg bg-warn/5 border border-warn/20">
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <span className="text-sm font-medium text-warn">
+                  {orphanItems.length} orphaned record{orphanItems.length === 1 ? '' : 's'} found — no linked inquiry, or an inquiry pointing at a deleted course.
+                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button onClick={() => setOrphanDismissed(true)} className="text-xs text-ink-muted hover:text-ink transition-colors">Dismiss</button>
+                  <button
+                    onClick={runOrphanSweep}
+                    disabled={orphanRunning}
+                    className="text-xs font-medium px-3 py-1.5 rounded-md bg-warn text-white hover:bg-warn/90 transition-colors disabled:opacity-50"
+                  >
+                    {orphanRunning ? 'Cleaning up…' : 'Clean up now'}
+                  </button>
+                </div>
+              </div>
+              <ul className="space-y-0.5">
+                {orphanItems.map(i => (
+                  <li key={i.kind + i.id} className="text-xs text-ink-soft">
+                    <span className="font-medium">{i.name}</span> — {i.reason} <span className="text-ink-faint">(will be {i.action.replace('would_', '')})</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {orphanResult && (
+            <div className="mb-5 px-4 py-3 rounded-lg bg-ok/5 border border-ok/20 flex items-center justify-between gap-3">
+              <span className="text-sm text-ok">{orphanResult}</span>
+              <button onClick={() => setOrphanResult('')} className="text-xs text-ink-muted hover:text-ink transition-colors">Dismiss</button>
+            </div>
+          )}
 
           <div className="flex items-center gap-2 mb-5 flex-wrap">
             {/* A-04b: segmented control owns STATE only — Live / Offline / Archived */}

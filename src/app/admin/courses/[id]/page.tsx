@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   ArrowLeft, Star, Power, Globe, ArchiveX, ArchiveRestore, Mail, Phone,
   Calendar, Ban, Plus, X, RefreshCw, Search, MessageSquare, Send, Trash2, Eye, CheckCircle,
@@ -68,6 +69,9 @@ interface CourseDetail {
   openItems: { unreadMessages: number; openChanges: string[]; hasSchedule: boolean };
   timeline: TimelineEventDTO[] | null;
   remindersPaused: boolean;
+  // ORPHAN SWEEP item 2 (FUTURE-PROOF) — null means no linked inquiry; the
+  // origin card shows that loudly instead of pretending it doesn't matter.
+  origin: { inquiryId: string; acceptedAt: string } | null;
 }
 
 interface TeeSlot {
@@ -841,6 +845,20 @@ export default function CourseDetailPage() {
 
               {/* Client card (contact info) — folded in from the old Contact tab (item 1) */}
               <div className="space-y-5">
+                {/* ORPHAN SWEEP item 2 (FUTURE-PROOF) — origin card. A broken
+                    link says so loudly instead of pretending it's fine. */}
+                <div className={'bg-white border rounded-lg p-5 ' + (detail.origin ? 'border-line' : 'border-bad/30 bg-bad/5')}>
+                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Origin</div>
+                  {detail.origin ? (
+                    <Link href={'/admin/inquiries/' + detail.origin.inquiryId} className="text-sm text-pine hover:underline">
+                      From inquiry · accepted {fmtDate(detail.origin.acceptedAt)}
+                    </Link>
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm text-bad font-medium">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />No linked inquiry — origin record missing
+                    </div>
+                  )}
+                </div>
                 {c.operator && (
                   <div className="bg-white border border-line rounded-lg p-5">
                     <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Operator / Owner</div>

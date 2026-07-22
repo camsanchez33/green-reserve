@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     prisma.booking.count({ where: { courseId, status: { in: COMPLETED_BOOKING_STATUSES }, createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } } }),
     getApprovalState(courseId),
     prisma.message.count({ where: { thread: { courseId }, senderType: 'operator', readAt: null, isBroadcast: false } }),
-    prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId }, select: { id: true, events: { select: { actorName: true, createdAt: true } } } }),
+    prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId }, select: { id: true, createdAt: true, events: { select: { actorName: true, toStatus: true, createdAt: true } } } }),
     getCourseTimeline(courseId),
   ]);
 
@@ -44,9 +44,19 @@ export async function GET(req: NextRequest) {
     createdAt: course.createdAt,
     bookings30d,
     bookingsPrev30d: priorBookingsCount,
+    hasLinkedInquiry: !!linkedInquiry,
   });
 
   const openChanges = linkedInquiry ? computeOpenChanges(linkedInquiry.events) : [];
+
+  // A-05/ORPHAN SWEEP item 2 (FUTURE-PROOF) — the origin card: when did this
+  // inquiry get picked up? First transition out of 'pending', falling back
+  // to the inquiry's own createdAt if it was never explicitly moved (e.g.
+  // built straight from the manual wizard).
+  const acceptedEvent = linkedInquiry?.events.find(e => e.toStatus === 'in_review');
+  const origin = linkedInquiry
+    ? { inquiryId: linkedInquiry.id, acceptedAt: (acceptedEvent?.createdAt ?? linkedInquiry.createdAt).toISOString() }
+    : null;
 
   return NextResponse.json({
     course,
@@ -66,6 +76,9 @@ export async function GET(req: NextRequest) {
     approval: { status: approval.status, approvedAt: approval.approvedAt?.toISOString() ?? null },
     // A-04/A-05 shared brain: same worded-status logic the courses list uses.
     health,
+    // ORPHAN SWEEP item 2 (FUTURE-PROOF) — the origin card. null means no
+    // linked inquiry; the client shows that loudly, never pretends.
+    origin,
     // A-05 item 3: Overview's "open items" — same computeOpenChanges brain
     // the inquiry detail page and the dashboard action queue use.
     openItems: {

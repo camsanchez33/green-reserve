@@ -140,12 +140,10 @@ export async function deletePair(courseId: string, confirmName: string, adminNam
   return { ok: true, changed };
 }
 
-// Inquiry-initiated delete. Unlinked inquiries (never built, or the course
-// side was already deleted) just delete the row — small blast radius, no
-// typed confirm required by this function (the caller's modal matches the
-// UI to the blast radius). A LINKED inquiry routes through the exact same
-// deletePair the courses tab uses — archiving first if needed — so a
-// "delete inquiry" click can never leave an orphaned live course behind.
+// Inquiry-initiated delete. UNBUILT inquiries only — DELETION DOCTRINE
+// (RUN_QUEUE) means a linked inquiry is archive-only from here on, refused
+// outright below rather than cascading into a course delete the way this
+// used to.
 export async function deleteInquiryOrPair(inquiryId: string, confirmName: string | null, adminName: string): Promise<LifecycleResult> {
   const inquiry = await prisma.courseInquiry.findUnique({ where: { id: inquiryId } });
   if (!inquiry) return { ok: false, error: 'Inquiry not found', changed: [] };
@@ -212,4 +210,103 @@ export async function reconcileLifecyclePairs(adminName: string): Promise<{ id: 
     }
   }
   return report;
+}
+
+export interface OrphanSweepItem {
+  kind: 'course' | 'inquiry';
+  id: string;
+  name: string;
+  action: 'deleted' | 'archived' | 'link_cleared' | 'would_delete' | 'would_archive' | 'would_clear_link';
+  reason: string;
+}
+
+// ORPHAN SWEEP (RUN_QUEUE) — one-time cleanup for ghosts that predate the
+// DELETION DOCTRINE (e.g. the Fake Fairways course, whose inquiry was
+// deleted before this doctrine existed). Finds every course with no living
+// inquiry behind it, and every inquiry pointing at a course that's gone.
+// dryRun=true (the default call site is a GET) never mutates anything —
+// "print the list" — the caller decides whether to actually run it.
+//
+// The doctrine's zero-real-history exemption is deliberately narrow: only
+// orphan TEST courses with NO bookings and NO paid memberships ever are
+// deleted outright, and only because they're orphans in THIS sweep (the
+// doctrine still refuses casual deletes everywhere else). Anything with
+// real history is archived + flagged, never deleted, no exceptions.
+export async function sweepOrphanCourses(adminName: string, dryRun: boolean): Promise<OrphanSweepItem[]> {
+  const [allCourses, linkedInquiries] = await Promise.all([
+    prisma.course.findMany({ select: { id: true, name: true, archivedAt: true, adminNotes: true, operatorId: true } }),
+    prisma.courseInquiry.findMany({ where: { builtCourseId: { not: null } }, select: { id: true, courseName: true, status: true, builtCourseId: true } }),
+  ]);
+
+  const linkedCourseIds = new Set(linkedInquiries.map(i => i.builtCourseId as string));
+  const courseIds = new Set(allCourses.map(c => c.id));
+
+  const orphanCourses = allCourses.filter(c => !linkedCourseIds.has(c.id));
+  const deadPointerInquiries = linkedInquiries.filter(i => i.builtCourseId && !courseIds.has(i.builtCourseId));
+
+  const results: OrphanSweepItem[] = [];
+
+  for (const c of orphanCourses) {
+    const [bookingCount, paidMemberCount] = await Promise.all([
+      prisma.booking.count({ where: { courseId: c.id } }),
+      prisma.courseMembership.count({ where: { courseId: c.id, paymentStatus: { in: ['paid', 'paid_offline'] } } }),
+    ]);
+    const hasHistory = bookingCount > 0 || paidMemberCount > 0;
+
+    if (!hasHistory) {
+      if (!dryRun) {
+        const ops: TxOp[] = [
+          prisma.booking.deleteMany({ where: { courseId: c.id } }),
+          prisma.teeTime.deleteMany({ where: { courseId: c.id } }),
+          prisma.teeSet.deleteMany({ where: { courseId: c.id } }),
+          prisma.teeTimeSchedule.deleteMany({ where: { courseId: c.id } }),
+          prisma.blackout.deleteMany({ where: { courseId: c.id } }),
+          prisma.teeTimeAlert.deleteMany({ where: { courseId: c.id } }),
+          prisma.courseMembership.deleteMany({ where: { courseId: c.id } }),
+          prisma.membershipTier.deleteMany({ where: { courseId: c.id } }),
+          prisma.courseStaff.deleteMany({ where: { courseId: c.id } }),
+          prisma.course.delete({ where: { id: c.id } }),
+        ];
+        // Same V9 rule deletePair uses: only drop the operator login if this
+        // was their sole course — never strand a multi-course operator.
+        if (c.operatorId) {
+          const otherCourses = await prisma.course.count({ where: { operatorId: c.operatorId, id: { not: c.id } } });
+          if (otherCourses === 0) ops.push(prisma.courseOperator.delete({ where: { id: c.operatorId } }));
+        }
+        await prisma.$transaction(ops);
+      }
+      results.push({ kind: 'course', id: c.id, name: c.name, action: dryRun ? 'would_delete' : 'deleted', reason: 'orphan course, no linked inquiry, zero payment/booking history — one-time sweep cleanup' });
+      continue;
+    }
+
+    const flag = '[ORPHAN] No linked inquiry — predates the deletion doctrine, orphaned by a pre-doctrine hard delete.';
+    const alreadyFlagged = c.adminNotes.includes('[ORPHAN]');
+    if (!dryRun && !alreadyFlagged) {
+      await prisma.course.update({
+        where: { id: c.id },
+        data: {
+          archivedAt: c.archivedAt ?? new Date(),
+          archivedBy: c.archivedAt ? undefined : `${adminName} (orphan sweep)`,
+          active: false,
+          liveStatus: 'draft',
+          adminNotes: c.adminNotes ? `${c.adminNotes}\n${flag}` : flag,
+        },
+      });
+    }
+    results.push({ kind: 'course', id: c.id, name: c.name, action: dryRun ? 'would_archive' : 'archived', reason: 'orphan course with real history — archived + flagged, never deleted' });
+  }
+
+  for (const i of deadPointerInquiries) {
+    if (!dryRun) {
+      await prisma.$transaction([
+        prisma.inquiryStatusEvent.create({
+          data: { inquiryId: i.id, fromStatus: i.status, toStatus: 'archived', trigger: 'system', actorName: `${adminName} (orphan sweep — linked course no longer exists)` },
+        }),
+        prisma.courseInquiry.update({ where: { id: i.id }, data: { builtCourseId: null, status: 'archived' } }),
+      ]);
+    }
+    results.push({ kind: 'inquiry', id: i.id, name: i.courseName, action: dryRun ? 'would_clear_link' : 'link_cleared', reason: 'pointed at a course that no longer exists — link cleared, inquiry archived' });
+  }
+
+  return results;
 }
