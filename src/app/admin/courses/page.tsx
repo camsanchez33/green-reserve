@@ -37,6 +37,7 @@ const HEALTH_FILTER_OPTIONS: { value: HealthFilter; label: string }[] = [
 const NEEDS_ATTENTION_STATUSES: CourseHealthStatus[] = ['setup_incomplete', 'payments_broken', 'going_quiet', 'offline', 'orphaned'];
 
 interface OrphanSweepItem { kind: 'course' | 'inquiry'; id: string; name: string; action: string; reason: string }
+interface AcknowledgedOrphan { id: string; name: string; archivedAt: string }
 
 function CoursesContent() {
   const router = useRouter();
@@ -55,10 +56,15 @@ function CoursesContent() {
   // ORPHAN SWEEP (RUN_QUEUE) — dry-run check on first load. Read-only
   // ("print the list"); actually cleaning up is an explicit owner click.
   const [orphanItems, setOrphanItems] = useState<OrphanSweepItem[]>([]);
+  const [orphanAcknowledged, setOrphanAcknowledged] = useState<AcknowledgedOrphan[]>([]);
   const [orphanChecked, setOrphanChecked] = useState(false);
   const [orphanRunning, setOrphanRunning] = useState(false);
   const [orphanResult, setOrphanResult] = useState('');
   const [orphanDismissed, setOrphanDismissed] = useState(false);
+  const [forceDeleteTarget, setForceDeleteTarget] = useState<AcknowledgedOrphan | null>(null);
+  const [forceDeleteConfirm, setForceDeleteConfirm] = useState('');
+  const [forceDeleteBusy, setForceDeleteBusy] = useState(false);
+  const [forceDeleteError, setForceDeleteError] = useState('');
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
@@ -87,13 +93,19 @@ function CoursesContent() {
     if (courseId) router.replace('/admin/courses/' + courseId);
   }, [adminReady, stateFilter, loadCourses, params, router]);
 
+  const checkOrphans = useCallback(() => {
+    fetch('/api/admin/orphan-sweep', { headers: H() }).then(r => r.ok ? r.json() : null).then(d => {
+      if (!d) return;
+      setOrphanItems(d.items ?? []);
+      setOrphanAcknowledged(d.acknowledged ?? []);
+    }).catch(() => {});
+  }, [H]);
+
   useEffect(() => {
     if (!adminReady || orphanChecked) return;
     setOrphanChecked(true);
-    fetch('/api/admin/orphan-sweep', { headers: H() }).then(r => r.ok ? r.json() : null).then(d => {
-      if (d?.items?.length > 0) setOrphanItems(d.items);
-    }).catch(() => {});
-  }, [adminReady, orphanChecked, H]);
+    checkOrphans();
+  }, [adminReady, orphanChecked, checkOrphans]);
 
   async function runOrphanSweep() {
     setOrphanRunning(true); setOrphanResult('');
@@ -103,10 +115,36 @@ function CoursesContent() {
       const d = await r.json();
       setOrphanResult(`Cleaned up ${d.items.length} item${d.items.length === 1 ? '' : 's'}: ` + d.items.map((i: OrphanSweepItem) => `"${i.name}" ${i.action}`).join('; '));
       setOrphanItems([]);
+      checkOrphans();
       loadCourses(stateFilter);
     } else {
       const d = await r.json().catch(() => ({}));
       setOrphanResult('Sweep failed: ' + (d.error || 'unknown error'));
+    }
+  }
+
+  // Owner-authorized override — hard-deletes ONE specific acknowledged
+  // orphan regardless of its (fake/test) history. The server independently
+  // re-verifies it's still an orphan and the typed name matches before
+  // touching anything.
+  async function runForceDelete() {
+    if (!forceDeleteTarget) return;
+    setForceDeleteBusy(true); setForceDeleteError('');
+    const r = await fetch('/api/admin/orphan-sweep', {
+      method: 'POST', headers: H(),
+      body: JSON.stringify({ forceDeleteId: forceDeleteTarget.id, confirmName: forceDeleteConfirm }),
+    });
+    setForceDeleteBusy(false);
+    if (r.ok) {
+      const d = await r.json();
+      setOrphanResult(`Permanently deleted "${d.deleted.name}": ${d.deleted.bookings} booking(s), ${d.deleted.paidMemberships} paid membership(s), ${d.deleted.staff} staff row(s)${d.deleted.operatorDeleted ? ', operator login' : ''}.`);
+      setForceDeleteTarget(null);
+      setForceDeleteConfirm('');
+      checkOrphans();
+      loadCourses(stateFilter);
+    } else {
+      const d = await r.json().catch(() => ({}));
+      setForceDeleteError(d.error || 'Delete failed — try again.');
     }
   }
 
@@ -204,6 +242,30 @@ function CoursesContent() {
             <div className="mb-5 px-4 py-3 rounded-lg bg-ok/5 border border-ok/20 flex items-center justify-between gap-3">
               <span className="text-sm text-ok">{orphanResult}</span>
               <button onClick={() => setOrphanResult('')} className="text-xs text-ink-muted hover:text-ink transition-colors">Dismiss</button>
+            </div>
+          )}
+
+          {/* Acknowledged orphans (already archived + flagged by a prior
+              sweep) — informational only, never nags, but an owner can still
+              force-delete one individually (Cam's DaisyLinks exception). */}
+          {orphanAcknowledged.length > 0 && (
+            <div className="mb-5 px-4 py-3 rounded-lg bg-paper border border-line">
+              <div className="text-xs font-medium text-ink-muted mb-2">
+                {orphanAcknowledged.length} acknowledged orphan{orphanAcknowledged.length === 1 ? '' : 's'} — archived, flagged, no linked inquiry
+              </div>
+              <ul className="space-y-1">
+                {orphanAcknowledged.map(a => (
+                  <li key={a.id} className="text-xs text-ink-soft flex items-center justify-between gap-3">
+                    <span>{a.name} <span className="text-ink-faint">— archived {new Date(a.archivedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span></span>
+                    <button
+                      onClick={() => { setForceDeleteTarget(a); setForceDeleteConfirm(''); setForceDeleteError(''); }}
+                      className="text-bad hover:underline shrink-0"
+                    >
+                      Force delete permanently
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
@@ -335,6 +397,43 @@ function CoursesContent() {
           )}
         </div>
       </div>
+
+      {/* Force-delete confirm — owner-authorized override, typed name confirm,
+          server re-verifies it's still an orphan before touching anything. */}
+      {forceDeleteTarget && (
+        <div className="fixed inset-0 bg-ink/30 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-lg border border-line max-w-md w-full p-5">
+            <div className="text-sm font-medium text-ink mb-1">Permanently delete &quot;{forceDeleteTarget.name}&quot;?</div>
+            <p className="text-xs text-ink-muted mb-3">
+              This cannot be undone — deletes the course, its bookings, tee times, and staff, and the operator&apos;s login if this was their only course. Owner-authorized override: this bypasses the usual archive-only rule because this course is an acknowledged orphan with no real history behind the doctrine&apos;s protection.
+            </p>
+            {forceDeleteError && (
+              <div className="text-xs text-bad mb-2">{forceDeleteError}</div>
+            )}
+            <label className="block text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1">Type &quot;{forceDeleteTarget.name}&quot; to confirm</label>
+            <input
+              value={forceDeleteConfirm}
+              onChange={e => setForceDeleteConfirm(e.target.value)}
+              className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-4"
+            />
+            <div className="flex items-center justify-end gap-2">
+              <button
+                onClick={() => { setForceDeleteTarget(null); setForceDeleteConfirm(''); setForceDeleteError(''); }}
+                className="text-xs text-ink-muted hover:text-ink px-3 py-1.5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={runForceDelete}
+                disabled={forceDeleteBusy || forceDeleteConfirm.trim().toLowerCase() !== forceDeleteTarget.name.trim().toLowerCase()}
+                className="text-xs font-medium px-3 py-1.5 rounded-md text-white bg-bad hover:bg-bad/90 transition-colors disabled:opacity-40"
+              >
+                {forceDeleteBusy ? 'Deleting…' : 'Delete permanently'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

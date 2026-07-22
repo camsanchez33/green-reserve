@@ -212,6 +212,8 @@ export async function reconcileLifecyclePairs(adminName: string): Promise<{ id: 
   return report;
 }
 
+export const ORPHAN_FLAG = '[ORPHAN] No linked inquiry — predates the deletion doctrine, orphaned by a pre-doctrine hard delete.';
+
 export interface OrphanSweepItem {
   kind: 'course' | 'inquiry';
   id: string;
@@ -232,6 +234,14 @@ export interface OrphanSweepItem {
 // deleted outright, and only because they're orphans in THIS sweep (the
 // doctrine still refuses casual deletes everywhere else). Anything with
 // real history is archived + flagged, never deleted, no exceptions.
+//
+// BUG FIX (RUN_QUEUE "orphan banner loops forever"): a course that's already
+// been archived + flagged is ACKNOWLEDGED — "no linked inquiry" stays true
+// forever (archiving doesn't create one), so without this check the same
+// course kept reappearing in `results` on every single run even though
+// there was nothing left to do. Acknowledged courses are now excluded from
+// the returned (actionable/nagging) list entirely; they're still reachable
+// individually via forceDeleteOrphan below for an explicit owner override.
 export async function sweepOrphanCourses(adminName: string, dryRun: boolean): Promise<OrphanSweepItem[]> {
   const [allCourses, linkedInquiries] = await Promise.all([
     prisma.course.findMany({ select: { id: true, name: true, archivedAt: true, adminNotes: true, operatorId: true } }),
@@ -247,6 +257,11 @@ export async function sweepOrphanCourses(adminName: string, dryRun: boolean): Pr
   const results: OrphanSweepItem[] = [];
 
   for (const c of orphanCourses) {
+    // Already acknowledged (archived + flagged by a prior run) — nothing
+    // left to do passively. Stop reporting it; forceDeleteOrphan is the
+    // only way to go further from here, and that's an explicit owner click.
+    if (c.archivedAt && c.adminNotes.includes('[ORPHAN]')) continue;
+
     const [bookingCount, paidMemberCount] = await Promise.all([
       prisma.booking.count({ where: { courseId: c.id } }),
       prisma.courseMembership.count({ where: { courseId: c.id, paymentStatus: { in: ['paid', 'paid_offline'] } } }),
@@ -254,34 +269,12 @@ export async function sweepOrphanCourses(adminName: string, dryRun: boolean): Pr
     const hasHistory = bookingCount > 0 || paidMemberCount > 0;
 
     if (!hasHistory) {
-      if (!dryRun) {
-        const ops: TxOp[] = [
-          prisma.booking.deleteMany({ where: { courseId: c.id } }),
-          prisma.teeTime.deleteMany({ where: { courseId: c.id } }),
-          prisma.teeSet.deleteMany({ where: { courseId: c.id } }),
-          prisma.teeTimeSchedule.deleteMany({ where: { courseId: c.id } }),
-          prisma.blackout.deleteMany({ where: { courseId: c.id } }),
-          prisma.teeTimeAlert.deleteMany({ where: { courseId: c.id } }),
-          prisma.courseMembership.deleteMany({ where: { courseId: c.id } }),
-          prisma.membershipTier.deleteMany({ where: { courseId: c.id } }),
-          prisma.courseStaff.deleteMany({ where: { courseId: c.id } }),
-          prisma.course.delete({ where: { id: c.id } }),
-        ];
-        // Same V9 rule deletePair uses: only drop the operator login if this
-        // was their sole course — never strand a multi-course operator.
-        if (c.operatorId) {
-          const otherCourses = await prisma.course.count({ where: { operatorId: c.operatorId, id: { not: c.id } } });
-          if (otherCourses === 0) ops.push(prisma.courseOperator.delete({ where: { id: c.operatorId } }));
-        }
-        await prisma.$transaction(ops);
-      }
+      if (!dryRun) await hardDeleteCourseRows(c.id, c.operatorId);
       results.push({ kind: 'course', id: c.id, name: c.name, action: dryRun ? 'would_delete' : 'deleted', reason: 'orphan course, no linked inquiry, zero payment/booking history — one-time sweep cleanup' });
       continue;
     }
 
-    const flag = '[ORPHAN] No linked inquiry — predates the deletion doctrine, orphaned by a pre-doctrine hard delete.';
-    const alreadyFlagged = c.adminNotes.includes('[ORPHAN]');
-    if (!dryRun && !alreadyFlagged) {
+    if (!dryRun) {
       await prisma.course.update({
         where: { id: c.id },
         data: {
@@ -289,7 +282,7 @@ export async function sweepOrphanCourses(adminName: string, dryRun: boolean): Pr
           archivedBy: c.archivedAt ? undefined : `${adminName} (orphan sweep)`,
           active: false,
           liveStatus: 'draft',
-          adminNotes: c.adminNotes ? `${c.adminNotes}\n${flag}` : flag,
+          adminNotes: c.adminNotes ? `${c.adminNotes}\n${ORPHAN_FLAG}` : ORPHAN_FLAG,
         },
       });
     }
@@ -309,4 +302,84 @@ export async function sweepOrphanCourses(adminName: string, dryRun: boolean): Pr
   }
 
   return results;
+}
+
+// Every acknowledged orphan course (already archived + flagged by a prior
+// sweep) — informational only, never auto-surfaced as a "problem," but
+// still individually reachable for forceDeleteOrphan below.
+export async function listAcknowledgedOrphans(): Promise<{ id: string; name: string; archivedAt: string }[]> {
+  const [allCourses, linkedInquiries] = await Promise.all([
+    prisma.course.findMany({ where: { archivedAt: { not: null } }, select: { id: true, name: true, archivedAt: true, adminNotes: true } }),
+    prisma.courseInquiry.findMany({ where: { builtCourseId: { not: null } }, select: { builtCourseId: true } }),
+  ]);
+  const linkedCourseIds = new Set(linkedInquiries.map(i => i.builtCourseId as string));
+  return allCourses
+    .filter(c => !linkedCourseIds.has(c.id) && c.adminNotes.includes('[ORPHAN]'))
+    .map(c => ({ id: c.id, name: c.name, archivedAt: (c.archivedAt as Date).toISOString() }));
+}
+
+async function hardDeleteCourseRows(courseId: string, operatorId: string | null): Promise<void> {
+  const ops: TxOp[] = [
+    prisma.booking.deleteMany({ where: { courseId } }),
+    prisma.teeTime.deleteMany({ where: { courseId } }),
+    prisma.teeSet.deleteMany({ where: { courseId } }),
+    prisma.teeTimeSchedule.deleteMany({ where: { courseId } }),
+    prisma.blackout.deleteMany({ where: { courseId } }),
+    prisma.teeTimeAlert.deleteMany({ where: { courseId } }),
+    prisma.courseMembership.deleteMany({ where: { courseId } }),
+    prisma.membershipTier.deleteMany({ where: { courseId } }),
+    prisma.courseStaff.deleteMany({ where: { courseId } }),
+    prisma.course.delete({ where: { id: courseId } }),
+  ];
+  // Same V9 rule deletePair uses: only drop the operator login if this was
+  // their sole course — never strand a multi-course operator.
+  if (operatorId) {
+    const otherCourses = await prisma.course.count({ where: { operatorId, id: { not: courseId } } });
+    if (otherCourses === 0) ops.push(prisma.courseOperator.delete({ where: { id: operatorId } }));
+  }
+  await prisma.$transaction(ops);
+}
+
+export interface ForceDeleteResult {
+  ok: boolean;
+  error?: string;
+  deleted?: { courseId: string; name: string; bookings: number; paidMemberships: number; staff: number; operatorDeleted: boolean };
+}
+
+// Owner-authorized override (RUN_QUEUE "orphan banner loops forever" —
+// Cam's DaisyLinks exception): hard-deletes ONE SPECIFIC orphan course
+// regardless of real history. Deliberately narrow — this is NOT a general
+// "delete any course" escape hatch: it only ever operates on a course that
+// is CURRENTLY an orphan (no linked inquiry, verified fresh here, not
+// trusted from the caller), gated by a typed name confirm. A course with a
+// real inquiry link is refused unconditionally — the doctrine's protection
+// for real courses is untouched by this.
+export async function forceDeleteOrphan(courseId: string, confirmName: string, adminName: string): Promise<ForceDeleteResult> {
+  const course = await prisma.course.findUnique({ where: { id: courseId }, select: { id: true, name: true, operatorId: true } });
+  if (!course) return { ok: false, error: 'Course not found' };
+
+  const linked = await prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId }, select: { id: true } });
+  if (linked) return { ok: false, error: 'This course has a linked inquiry — it is not an orphan, the doctrine protects it. Archive instead.' };
+
+  if (!confirmName || confirmName.trim().toLowerCase() !== course.name.trim().toLowerCase()) {
+    return { ok: false, error: `Name does not match — expected "${course.name}"` };
+  }
+
+  const [bookings, paidMemberships, staff] = await Promise.all([
+    prisma.booking.count({ where: { courseId } }),
+    prisma.courseMembership.count({ where: { courseId, paymentStatus: { in: ['paid', 'paid_offline'] } } }),
+    prisma.courseStaff.count({ where: { courseId } }),
+  ]);
+
+  let operatorDeleted = false;
+  if (course.operatorId) {
+    const otherCourses = await prisma.course.count({ where: { operatorId: course.operatorId, id: { not: courseId } } });
+    operatorDeleted = otherCourses === 0;
+  }
+
+  await hardDeleteCourseRows(courseId, course.operatorId);
+
+  console.log(`[force-delete-orphan] ${adminName} permanently deleted "${course.name}" (${courseId}): ${bookings} booking(s), ${paidMemberships} paid membership(s), ${staff} staff row(s)${operatorDeleted ? ', operator login' : ''}.`);
+
+  return { ok: true, deleted: { courseId, name: course.name, bookings, paidMemberships, staff, operatorDeleted } };
 }
