@@ -377,7 +377,47 @@ in flight at a time.
      checklist itself lives on the course page (A-05 item 4).
   7. "30d rev" label + all row numbers: gone with the numbers (item 2); the
      Revenue tab is where money ranking lives (it already sorts).
-- [ ] A-05 /admin/courses/[id] — DETAIL — SPEC (designed with Cam, 2026-07-21):
+- [x] A-05 /admin/courses/[id] — DETAIL — BUILT: item 0 (course-timeline
+  prereq) fd5a50f, items 1-3 (tabs/header/Overview) 938bcea, items 4b/5a
+  backend (cron + Documents API + agreement clickwrap) c6557ab, item 4
+  (Setup tab) 65b67ab, item 5 (Documents tab) fb44424, item 9 (watchlist +
+  sweep review) 385f3bd.
+  New src/lib/course-timeline.ts is the item-4/5 prereq: logs settings
+  edits, reminder sends/pauses, agreement acceptance, document uploads,
+  and client notes with NO schema change — same prefix+JSON-in-actorName
+  pattern change-requests.ts established, riding the existing
+  InquiryStatusEvent table via the linked CourseInquiry. Courses with no
+  linked inquiry (rare) just can't log — same degrade-quietly rule
+  lifecycle.ts already uses for a missing inquiry.
+  Header's Set Live is now genuinely preflight-aware: course-detail PATCH
+  enforces the same computeStripeGoLiveCheck + override contract the
+  inquiries mark_live action already used, so the two code paths that can
+  flip a course live can no longer disagree. Danger menu adds the page's
+  first hard-delete UI (owner-only, typed-name confirm, routes through
+  lifecycle.ts's deletePair — LIFECYCLE PARITY LAW, no second
+  implementation). Overview's open items and Setup's checklist/reminders
+  all read from course-detail's new openItems/timeline/remindersPaused
+  fields. Setup's "full mirror" expanded the policy card and added a
+  Facilities & Amenities card — same /api/admin/course-settings endpoint
+  and whitelist the operator's own Settings page uses (no parallel form),
+  every edit now diffed and logged. Documents tab's Stripe agreement date
+  is fetched LIVE from Stripe's tos_acceptance — no schema field needed.
+  Operator Agreement clickwrap (item 5a) is a required checkbox in the
+  existing onboarding flow (dashboard/onboarding step 1); already-onboarded
+  operators correctly show "not recorded" rather than a fabricated
+  acceptance. New cron /api/cron/chase-onboarding (registered in
+  vercel.json) sends the 3d/7d/14d-then-weekly reminders and stops on
+  go-live or the per-course pause switch.
+  Item 6 (Transactions) and item 7 (Tee Sheet 27-hole) were reviewed with
+  no code change: Transactions is a deliberate raw ledger (shows
+  cancelled/manual too), not a period aggregate, so there's nothing to
+  reconcile against COMPLETED_BOOKING_STATUSES; CourseProduct/Nine slot
+  scoping is schema-only today per its own comment ("L2" not shipped), so
+  there's no combo data to render and no misleading banner exists to fix.
+  Item 9's Action Queue header/row-count concern was checked and is by
+  design (a "View all N" reconciles the grouped rows vs. underlying-item
+  counts whenever they diverge) — not a bug, left alone.
+  Original SPEC (designed with Cam, 2026-07-21):
   1. FULL-WIDTH. Tabs reorganized into TWO LABELED GROUPS:
      BUSINESS: Overview · Transactions · Documents · Messages
      OPERATIONS: Tee Sheet · Schedule · Members · Staff · Setup
