@@ -573,6 +573,20 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
      inquiries at the API level (not just hidden buttons) — one-sided
      deletion must be impossible even by accident or old client code.
 
+- [ ] BUG: orphan banner loops forever (no migration) — "Clean up now"
+  archives+flags DaisyLinks but the detector re-finds it on every load
+  because "no living inquiry" stays true after cleanup. Fix: cleanup writes
+  a durable ACKNOWLEDGED marker (timeline event or the existing flag —
+  whatever it wrote, the detector must READ it); the orphan query excludes
+  acknowledged records; the banner appears only for NEW unacknowledged
+  orphans. AND: Cam's owner-authorized exception — DaisyLinks is pre-update
+  TEST data ("a shit box"): hard-delete it entirely in this run (course,
+  bookings, transactions, tee times, operator if orphaned) — its "real
+  history" is fake history; the doctrine protects real courses, not test
+  debris. Print what was deleted. Verify: DaisyLinks gone from courses,
+  Revenue, Activity, and Overview; banner gone; reload ×3 → still gone;
+  a genuinely new orphan would still trigger the banner.
+
 ## Ideas / not yet specced
 
 - OPERATOR STAFF ACCOUNTS rework (Cam, 2026-07-10: "whole thing is going to be reworked and better") — current section contradicts itself: copy says "full dashboard access", role dropdown says "tee sheet access". Rework needs: clear role tiers (e.g. owner / manager / tee-sheet-only), what each can see (money? settings? members?), invite email flow, deactivate/reset from the card, and the same no-silent-failure patterns as admin. Spec when Cam's ready to define the role tiers.
