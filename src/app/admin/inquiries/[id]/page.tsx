@@ -813,6 +813,15 @@ function InquiryDetailInner() {
                         <Power className="w-3.5 h-3.5" />Go Live anyway
                       </button>
                     )}
+                    {/* A-02d availability recap: Archive is available from
+                        any alive stage that has a linked course — a lighter,
+                        reversible alternative to Delete. */}
+                    {inq.builtCourseId && (
+                      <button onClick={() => { setMoreOpen(false); setPendingAction('archive_course'); }} disabled={processing}
+                        className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                        <Archive className="w-3.5 h-3.5" />Archive
+                      </button>
+                    )}
                     <button onClick={() => { setMoreOpen(false); setPendingAction('delete'); }}
                       className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />Delete

@@ -325,17 +325,18 @@ function InquiriesListInner() {
     let ok = 0, failed = 0;
     for (const id of bulkPreview.ids) {
       try {
-        const r = await fetch('/api/admin/inquiries', {
-          method: 'POST', headers: H(),
-          body: JSON.stringify(
-            bulkPreview.kind === 'send_sheet'
-              ? { id, action: 'request_details' }
-              // "Archive" here really means reject (RUN_QUEUE "stage override
-              // is doing lifecycle's job" — set_status is pipeline-stages-only
-              // now, rejected/archived/live go through their guarded actions).
-              : { id, action: 'reject' }
-          ),
-        });
+        // A-02d availability recap: "archive" is pair-aware — an inquiry
+        // with a built course goes through the LIFECYCLE PARITY LAW
+        // (archivePair, via /api/admin/archive-course) so the course comes
+        // offline too, not just the inquiry status; a course-less inquiry
+        // has nothing to archive, so it's rejected instead (the same
+        // "close it out" outcome the confirm copy has always promised).
+        const target = inquiries.find(i => i.id === id);
+        const r = bulkPreview.kind === 'send_sheet'
+          ? await fetch('/api/admin/inquiries', { method: 'POST', headers: H(), body: JSON.stringify({ id, action: 'request_details' }) })
+          : target?.builtCourseId
+            ? await fetch('/api/admin/archive-course', { method: 'POST', headers: H(), body: JSON.stringify({ courseId: target.builtCourseId, action: 'archive' }) })
+            : await fetch('/api/admin/inquiries', { method: 'POST', headers: H(), body: JSON.stringify({ id, action: 'reject' }) });
         if (r.ok) ok++; else failed++;
       } catch { failed++; }
     }
@@ -761,6 +762,7 @@ function InquiriesListInner() {
       {bulkPreview && (() => {
         const targets = inquiries.filter(i => bulkPreview.ids.includes(i.id));
         const isArchive = bulkPreview.kind === 'archive';
+        const withCourse = targets.filter(t => !!t.builtCourseId).length;
         const canConfirm = !isArchive || bulkConfirmText.trim().toUpperCase() === 'ARCHIVE';
         return (
           <div className="fixed inset-0 bg-ink/30 flex items-center justify-center z-50 px-4">
@@ -769,12 +771,17 @@ function InquiriesListInner() {
                 {isArchive ? `Archive ${targets.length} inquir${targets.length === 1 ? 'y' : 'ies'}?` : `Send setup sheet to ${targets.length} contact${targets.length === 1 ? '' : 's'}?`}
               </div>
               <p className="text-xs text-ink-muted mb-3">
-                {isArchive ? 'Marks each as rejected/closed. This does not delete anything.' : 'Sends the setup-sheet email to each recipient below.'}
+                {isArchive
+                  ? (withCourse > 0
+                    ? `Closes each out. ${withCourse} of these have a built course — archiving takes that course offline too (restorable). The rest have no course yet, so they're marked rejected. Nothing is deleted.`
+                    : 'Marks each as rejected/closed. This does not delete anything.')
+                  : 'Sends the setup-sheet email to each recipient below.'}
               </p>
               <div className="max-h-48 overflow-y-auto space-y-1 mb-4 bg-paper border border-line rounded-md p-2">
                 {targets.map(t => (
                   <div key={t.id} className="text-xs text-ink-soft flex justify-between gap-2">
                     <span className="truncate">{t.courseName}</span>
+                    {isArchive && t.builtCourseId && <span className="text-warn shrink-0">+ course</span>}
                     {!isArchive && <span className="text-ink-faint shrink-0">{t.email}</span>}
                   </div>
                 ))}
