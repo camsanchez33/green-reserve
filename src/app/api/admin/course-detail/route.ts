@@ -5,7 +5,7 @@ import { sendCourseLiveOrientationEmail } from '@/lib/email';
 import { getApprovalState } from '@/lib/approval-state';
 import { COMPLETED_BOOKING_STATUSES, computeCourseHealth } from '@/lib/course-metrics';
 import { computeOpenChanges, CATEGORY_LABEL } from '@/lib/change-requests';
-import { getCourseTimeline, isRemindersPaused } from '@/lib/course-timeline';
+import { getCourseTimeline, isRemindersPaused, hasAcceptedAgreement, latestAgreementAcceptance } from '@/lib/course-timeline';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 
 export async function GET(req: NextRequest) {
@@ -91,6 +91,9 @@ export async function GET(req: NextRequest) {
     // linked inquiry to log against.
     timeline,
     remindersPaused: timeline ? isRemindersPaused(timeline) : false,
+    // AGREEMENT = GO-LIVE GATE (RUN_QUEUE) — feeds the Setup checklist step
+    // and the Overview health block the same way Stripe/approval already do.
+    agreementAccepted: timeline ? !!latestAgreementAcceptance(timeline) : false,
   });
 }
 
@@ -98,23 +101,25 @@ export async function PATCH(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  const { courseId, active, featured, override } = await req.json();
+  const { courseId, active, featured } = await req.json();
   if (!courseId) return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });
 
-  // A-05 item 2 — "Set live" is preflight-aware: the SAME check (and the
-  // SAME override contract) the inquiries mark_live action already enforces
-  // (go-live-preflight.ts's one shared brain), so this page can never
-  // promise a go-live the server then refuses.
-  let stripeOverrideNote: string | null = null;
+  // STRIPE RULE FINAL + AGREEMENT = GO-LIVE GATE (RUN_QUEUE) — "Set live" is
+  // preflight-aware: the SAME two checks (go-live-preflight.ts /
+  // course-timeline.ts) the inquiries mark_live action enforces, so this
+  // page can never promise a go-live the server then refuses. Exactly two
+  // absolutes, no override, ever — the old fee-conditional override path is
+  // gone entirely.
   if (active === true) {
-    const stripeCheck = await computeStripeGoLiveCheck(courseId);
-    if (stripeCheck && !stripeCheck.ok && !override) {
-      return NextResponse.json({
-        error: `Course has not finished connecting Stripe yet — a $${stripeCheck.lateCancellationFee.toFixed(2)} late-cancellation fee is configured and can't be enforced without it.`,
-      }, { status: 400 });
+    const [stripeCheck, agreementOk] = await Promise.all([
+      computeStripeGoLiveCheck(courseId),
+      hasAcceptedAgreement(courseId),
+    ]);
+    if (stripeCheck && !stripeCheck.ok) {
+      return NextResponse.json({ error: 'Stripe must be connected before this course can go live — no exceptions.', missing: 'stripe' }, { status: 400 });
     }
-    if (override && stripeCheck && !stripeCheck.ok) {
-      stripeOverrideNote = `${session.name} went live with Stripe not connected — $${stripeCheck.lateCancellationFee.toFixed(2)} late-cancel fee paused until connected`;
+    if (!agreementOk) {
+      return NextResponse.json({ error: 'The operator must accept the Operator Agreement before this course can go live — no exceptions.', missing: 'agreement' }, { status: 400 });
     }
   }
 
@@ -142,14 +147,6 @@ export async function PATCH(req: NextRequest) {
           trigger: 'system', actorName: 'Course activated',
         },
       });
-    }
-    if (stripeOverrideNote) {
-      const inquiryForNote = linked ?? await prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId } });
-      if (inquiryForNote) {
-        await prisma.inquiryStatusEvent.create({
-          data: { inquiryId: inquiryForNote.id, fromStatus: inquiryForNote.status, toStatus: inquiryForNote.status, trigger: 'admin', actorName: stripeOverrideNote },
-        });
-      }
     }
     // Send welcome email once only — guard via welcomeEmailSentAt
     if (!updated.welcomeEmailSentAt && updated.operator) {

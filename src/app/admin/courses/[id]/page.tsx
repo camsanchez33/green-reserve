@@ -72,6 +72,8 @@ interface CourseDetail {
   // ORPHAN SWEEP item 2 (FUTURE-PROOF) — null means no linked inquiry; the
   // origin card shows that loudly instead of pretending it doesn't matter.
   origin: { inquiryId: string; acceptedAt: string } | null;
+  // AGREEMENT = GO-LIVE GATE (RUN_QUEUE)
+  agreementAccepted: boolean;
 }
 
 interface TeeSlot {
@@ -129,6 +131,10 @@ function onboardingSteps(d: CourseDetail): OnboardingStep[] {
     { key: 'page_approved', label: 'Page approved', done: d.approval.status === 'approved', at: d.approval.approvedAt },
     { key: 'stripe_connected', label: 'Stripe connected', done: c.stripeAccountActive, at: null },
     { key: 'schedule_confirmed', label: 'Schedule confirmed', done: d.openItems.hasSchedule, at: (c.schedules && c.schedules[0]) ? c.schedules[0].createdAt : null },
+    {
+      key: 'agreement_accepted', label: 'Operator Agreement accepted', done: d.agreementAccepted,
+      at: d.timeline?.find(e => e.type === 'agreement_accepted')?.at ?? null,
+    },
     { key: 'live', label: 'Live', done: c.active, at: c.welcomeEmailSentAt ?? null },
   ];
 }
@@ -205,6 +211,9 @@ export default function CourseDetailPage() {
   const [archiveBusy, setArchiveBusy] = useState(false);
   const [liveToggleBusy, setLiveToggleBusy] = useState(false);
   const [liveBlockReason, setLiveBlockReason] = useState('');
+  const [liveBlockMissing, setLiveBlockMissing] = useState<'agreement' | 'stripe' | null>(null);
+  const [reminderNudgeBusy, setReminderNudgeBusy] = useState(false);
+  const [reminderNudgeSent, setReminderNudgeSent] = useState(false);
 
   // A-05 item 5: Documents tab
   const [docsData, setDocsData] = useState<{
@@ -310,13 +319,16 @@ export default function CourseDetailPage() {
     if (adminReady) loadDetail();
   }, [adminReady, loadDetail]);
 
-  // A-05 item 2 — preflight-aware: server enforces the same Stripe check
-  // (go-live-preflight.ts) the inquiries mark_live action does. A blocked
-  // "Set live" surfaces the exact reason rather than silently no-op'ing.
-  async function toggleActive(active: boolean, override = false) {
-    setLiveToggleBusy(true); setLiveBlockReason('');
+  // A-05 item 2 — preflight-aware: server enforces the SAME two absolute
+  // checks (go-live-preflight.ts / course-timeline.ts) the inquiries
+  // mark_live action does — Stripe + Operator Agreement, no override,
+  // ever (STRIPE RULE FINAL / AGREEMENT = GO-LIVE GATE). A blocked "Set
+  // live" surfaces the exact reason and a one-click reminder instead of
+  // silently no-op'ing or offering a way around it.
+  async function toggleActive(active: boolean) {
+    setLiveToggleBusy(true); setLiveBlockReason(''); setLiveBlockMissing(null);
     const r = await fetch('/api/admin/course-detail', {
-      method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, active, override }),
+      method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, active }),
     });
     setLiveToggleBusy(false);
     if (r.ok) {
@@ -325,7 +337,17 @@ export default function CourseDetailPage() {
     } else {
       const d = await r.json().catch(() => ({}));
       setLiveBlockReason(d.error || 'Failed to update — try again.');
+      setLiveBlockMissing(d.missing === 'agreement' || d.missing === 'stripe' ? d.missing : null);
     }
+  }
+
+  async function sendGoLiveReminder(missing: 'agreement' | 'stripe') {
+    setReminderNudgeBusy(true);
+    const r = await fetch('/api/admin/send-golive-reminder', {
+      method: 'POST', headers: H(), body: JSON.stringify({ courseId, missing }),
+    });
+    setReminderNudgeBusy(false);
+    if (r.ok) setReminderNudgeSent(true);
   }
 
   async function toggleFeatured(featured: boolean) {
@@ -665,17 +687,23 @@ export default function CourseDetailPage() {
             </div>
           </div>
 
+          {/* AGREEMENT = GO-LIVE GATE / STRIPE RULE FINAL (RUN_QUEUE) — two
+              absolutes, no override, ever. A blocked go-live gets a one-click
+              reminder nudge instead of a way around it. */}
           {liveBlockReason && (
-            <div className="mt-3 rounded-md px-4 py-2.5 bg-warn/5 border border-warn/20 flex items-center justify-between gap-3">
-              <p className="text-xs text-warn">{liveBlockReason}</p>
+            <div className="mt-3 rounded-md px-4 py-2.5 bg-bad/5 border border-bad/20 flex items-center justify-between gap-3">
+              <p className="text-xs text-bad">{liveBlockReason}</p>
               <div className="flex items-center gap-2 shrink-0">
-                <button onClick={() => setLiveBlockReason('')} className="text-xs text-ink-muted hover:text-ink transition-colors">Dismiss</button>
-                <button
-                  onClick={() => toggleActive(true, true)}
-                  className="text-xs font-medium px-3 py-1 rounded-md bg-warn text-white hover:bg-warn/90 transition-colors"
-                >
-                  Go live anyway
-                </button>
+                <button onClick={() => { setLiveBlockReason(''); setLiveBlockMissing(null); setReminderNudgeSent(false); }} className="text-xs text-ink-muted hover:text-ink transition-colors">Dismiss</button>
+                {liveBlockMissing && (
+                  <button
+                    onClick={() => sendGoLiveReminder(liveBlockMissing)}
+                    disabled={reminderNudgeBusy || reminderNudgeSent}
+                    className="text-xs font-medium px-3 py-1 rounded-md bg-bad text-white hover:bg-bad/90 transition-colors disabled:opacity-50"
+                  >
+                    {reminderNudgeBusy ? 'Sending…' : reminderNudgeSent ? 'Sent' : 'Send reminder'}
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -1042,8 +1070,13 @@ export default function CourseDetailPage() {
                         <span className="text-ink-soft">Operator Agreement (v{docsData.agreementVersion})</span>
                         {docsData.agreement ? (
                           <span className="text-ink font-medium">Accepted {fmtDate(docsData.agreement.at)} · {docsData.agreement.acceptedBy}</span>
+                        ) : c.active ? (
+                          // AGREEMENT = GO-LIVE GATE item 3 — a LIVE course with
+                          // no acceptance predates the clickwrap. Flagged amber
+                          // until the operator accepts, never yanked offline.
+                          <span className="text-warn font-medium">Not accepted — legacy</span>
                         ) : (
-                          <span className="text-ink-faint">Not recorded — predates this feature or not yet reached</span>
+                          <span className="text-ink-faint">Not yet accepted</span>
                         )}
                       </div>
                       <div className="flex items-center justify-between text-sm">
@@ -1577,15 +1610,22 @@ export default function CourseDetailPage() {
               <div className="bg-white border border-line rounded-lg p-6">
                 <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-4">Onboarding Checklist</div>
                 <div className="space-y-3">
-                  {steps.map(s => (
-                    <div key={s.key} className="flex items-center gap-3">
-                      {s.done
-                        ? <CheckCircle className="w-4 h-4 text-ok shrink-0" />
-                        : <span className="w-4 h-4 rounded-full border border-line-strong shrink-0" />}
-                      <span className={'text-sm flex-1 ' + (s.done ? 'text-ink' : 'text-ink-muted')}>{s.label}</span>
-                      {s.at && <span className="text-xs text-ink-faint">{fmtDate(s.at)}</span>}
-                    </div>
-                  ))}
+                  {steps.map(s => {
+                    // AGREEMENT = GO-LIVE GATE item 3 — a live course missing
+                    // acceptance is a legacy gap, not normal in-progress work.
+                    const legacyGap = s.key === 'agreement_accepted' && !s.done && c.active;
+                    return (
+                      <div key={s.key} className="flex items-center gap-3">
+                        {s.done
+                          ? <CheckCircle className="w-4 h-4 text-ok shrink-0" />
+                          : <span className={'w-4 h-4 rounded-full border shrink-0 ' + (legacyGap ? 'border-warn bg-warn/10' : 'border-line-strong')} />}
+                        <span className={'text-sm flex-1 ' + (s.done ? 'text-ink' : legacyGap ? 'text-warn font-medium' : 'text-ink-muted')}>
+                          {s.label}{legacyGap ? ' — legacy' : ''}
+                        </span>
+                        {s.at && <span className="text-xs text-ink-faint">{fmtDate(s.at)}</span>}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 

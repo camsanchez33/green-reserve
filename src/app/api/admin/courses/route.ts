@@ -5,6 +5,7 @@ import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 import { getApprovalState } from '@/lib/approval-state';
 import { latestPageDecision } from '@/lib/change-requests';
 import { COMPLETED_BOOKING_STATUSES, computeCourseHealth } from '@/lib/course-metrics';
+import { hasAcceptedAgreement } from '@/lib/course-timeline';
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -31,9 +32,10 @@ export async function GET(req: NextRequest) {
       select: { id: true, operator: { select: { emailVerified: true } } },
     });
     if (!course) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    const [stripeCheck, approval] = await Promise.all([
+    const [stripeCheck, approval, agreementAccepted] = await Promise.all([
       computeStripeGoLiveCheck(statusId),
       getApprovalState(statusId),
+      hasAcceptedAgreement(statusId),
     ]);
     return NextResponse.json({
       stripeAccountActive: stripeCheck?.stripeAccountActive ?? false,
@@ -42,6 +44,9 @@ export async function GET(req: NextRequest) {
       lateCancellationFee: stripeCheck?.lateCancellationFee ?? 0,
       operatorEmailVerified: course.operator?.emailVerified ?? false,
       approvalStatus: approval.status,
+      // AGREEMENT = GO-LIVE GATE (RUN_QUEUE) — the second absolute, no
+      // override, same tier as Stripe.
+      agreementAccepted,
     });
   }
 

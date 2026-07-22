@@ -99,8 +99,11 @@ function DashboardPageInner() {
   const [emailVerified, setEmailVerified] = useState(true);
   const [onboardingStepNum, setOnboardingStepNum] = useState(3);
   const [stripeAccountActive, setStripeAccountActive] = useState(false);
-  const [noFeePolicy, setNoFeePolicy] = useState(false);
   const [connectingStripe, setConnectingStripe] = useState(false);
+  // AGREEMENT = GO-LIVE GATE (RUN_QUEUE)
+  const [agreementAccepted, setAgreementAccepted] = useState(true); // assume yes until loaded — never flash a false "not accepted" prompt
+  const [acceptingAgreement, setAcceptingAgreement] = useState(false);
+  const [agreementChecked, setAgreementChecked] = useState(false);
   const teesheetIntro = useTabIntro('teesheet');
   const analyticsIntro = useTabIntro('analytics');
 
@@ -157,7 +160,6 @@ function DashboardPageInner() {
       setCourseDraft(!c?.active || c?.liveStatus !== 'live');
       setPageApprovalStatus(c?.pageApprovalStatus === 'approved' || c?.pageApprovalStatus === 'changes_requested' ? c.pageApprovalStatus : 'none');
       setStripeAccountActive(!!c?.stripeAccountActive);
-      setNoFeePolicy(!c?.lateCancellationFee);
       if (c?.conditions) { setConditions(c.conditions); setConditionsInput(c.conditions); }
     });
   }, []);
@@ -170,6 +172,16 @@ function DashboardPageInner() {
       if (d.url) window.location.href = d.url;
     } finally {
       setConnectingStripe(false);
+    }
+  }
+
+  async function acceptAgreement() {
+    setAcceptingAgreement(true);
+    try {
+      const r = await fetch('/api/operator/agreement', { method: 'POST' });
+      if (r.ok) setAgreementAccepted(true);
+    } finally {
+      setAcceptingAgreement(false);
     }
   }
 
@@ -225,6 +237,10 @@ function DashboardPageInner() {
       setOnboardingStepNum(p.onboardingStep);
     });
     loadCourseStatus();
+    fetch('/api/operator/agreement').then(r => r.ok ? r.json() : null).then(d => {
+      setAgreementAccepted(!!d?.agreement);
+      setAgreementChecked(true);
+    }).catch(() => setAgreementChecked(true));
     // Admin can flip a course live while this tab sits open in the
     // background — refresh live/draft status when the operator tabs back in
     // instead of showing whatever was true at page load.
@@ -366,11 +382,40 @@ function DashboardPageInner() {
               approveError={approveError}
               onRequestChanges={() => setShowChangesModal(true)}
               stripeAccountActive={stripeAccountActive}
-              noFeePolicy={noFeePolicy}
               onConnectStripe={connectStripeFromChecklist}
               connectingStripe={connectingStripe}
               onNavigate={(href) => href === '#preview' ? viewOwnPreview() : router.push(href)}
+              agreementAccepted={agreementAccepted}
+              onAcceptAgreement={acceptAgreement}
+              acceptingAgreement={acceptingAgreement}
             />
+          )}
+
+          {/* AGREEMENT = GO-LIVE GATE (RUN_QUEUE) item 3 — legacy operators
+              (predate the clickwrap) with an ALREADY-LIVE course get a
+              prominent accept prompt at next login. The course stays live —
+              this never blocks anything, it's a nudge, not a gate (going
+              live retroactively isn't a thing; the gate only applies to the
+              NEXT time a course goes live). Dismissed only by accepting. */}
+          {agreementChecked && !agreementAccepted && !courseDraft && !courseArchived && (
+            <div className="fixed inset-0 bg-ink/40 flex items-center justify-center z-50 px-4">
+              <div className="bg-white rounded-lg border border-line max-w-md w-full p-6">
+                <h2 className="text-[18px] font-serif font-medium text-ink mb-2">Please accept the Operator Agreement</h2>
+                <p className="text-sm text-ink-soft mb-5">
+                  We&apos;ve updated our terms since {courseName || 'your course'} went live. Please review and accept the Operator Agreement to keep your account in good standing — this doesn&apos;t affect your live status.
+                </p>
+                <div className="flex items-center gap-3">
+                  <a href="/terms" target="_blank" className="text-sm text-pine hover:underline">Read the agreement</a>
+                  <button
+                    onClick={acceptAgreement}
+                    disabled={acceptingAgreement}
+                    className="ml-auto bg-pine hover:bg-pine-hover disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    {acceptingAgreement ? 'Accepting…' : 'I accept'}
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* ── Analytics ── */}

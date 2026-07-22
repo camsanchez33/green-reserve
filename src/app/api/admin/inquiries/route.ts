@@ -7,6 +7,7 @@ import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, OWNER_ONLY, type AdminSession } from '@/lib/admin-session';
 import { encodeChangeAddressed, encodeRequestReReview } from '@/lib/change-requests';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
+import { hasAcceptedAgreement } from '@/lib/course-timeline';
 import { deleteInquiryOrPair } from '@/lib/lifecycle';
 
 export async function GET(req: NextRequest) {
@@ -269,24 +270,20 @@ async function handleAction(
       const builtCourse = await prisma.course.findUnique({ where: { id: inquiry.builtCourseId } });
       if (!builtCourse) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
 
-      // Same shared check the preflight modal reads (GET /api/admin/courses
-      // ?statusOf=) — if the modal offered an override, this MUST honor it;
-      // if the modal wouldn't have offered it, this still refuses.
-      const stripeCheck = await computeStripeGoLiveCheck(inquiry.builtCourseId);
-      const override = payload?.override === true;
-      if (stripeCheck && !stripeCheck.ok && !override) {
-        return NextResponse.json({
-          error: `Course has not finished connecting Stripe yet — a $${stripeCheck.lateCancellationFee.toFixed(2)} late-cancellation fee is configured and can't be enforced without it.`,
-        }, { status: 400 });
+      // STRIPE RULE FINAL + AGREEMENT = GO-LIVE GATE (RUN_QUEUE) — exactly
+      // two absolutes, NO override, ever. This is the same shared check the
+      // preflight modal reads (GET /api/admin/courses?statusOf=) — if the
+      // modal shows either missing, the "Go Live" button is disabled there
+      // too; this refusal is the backstop, not the only guard.
+      const [stripeCheck, agreementOk] = await Promise.all([
+        computeStripeGoLiveCheck(inquiry.builtCourseId),
+        hasAcceptedAgreement(inquiry.builtCourseId),
+      ]);
+      if (stripeCheck && !stripeCheck.ok) {
+        return NextResponse.json({ error: 'Stripe must be connected before this course can go live — no exceptions.', missing: 'stripe' }, { status: 400 });
       }
-      // Override with Stripe still missing: go live anyway. The fee simply
-      // can't be charged — the cancellation crons already skip fee-charging
-      // when stripeAccountActive is false (no code change needed there),
-      // and the dashboard shows the fee as "paused" for the same reason.
-      // Never silently pretend the fee works.
-      if (override && stripeCheck && !stripeCheck.ok) {
-        await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin',
-          `${adminName} went live with Stripe not connected — $${stripeCheck.lateCancellationFee.toFixed(2)} late-cancel fee paused until connected`);
+      if (!agreementOk) {
+        return NextResponse.json({ error: 'The operator must accept the Operator Agreement before this course can go live — no exceptions.', missing: 'agreement' }, { status: 400 });
       }
 
       await prisma.course.update({ where: { id: inquiry.builtCourseId }, data: { active: true, liveStatus: 'live' } });

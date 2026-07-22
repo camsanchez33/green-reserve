@@ -138,3 +138,15 @@ export function latestAgreementAcceptance(events: TimelineEvent[]): AgreementAcc
   const ev = events.find(e => e.type === 'agreement_accepted');
   return ev && ev.type === 'agreement_accepted' ? { ...ev.data, at: ev.at } : null;
 }
+
+// AGREEMENT = GO-LIVE GATE (RUN_QUEUE) — any acceptance record counts,
+// regardless of which version it was accepted at (item 4, VERSIONING:
+// "prior acceptances stay valid-as-of-version" — re-prompting on a version
+// bump is a future item, not built here). A course with no linked inquiry
+// can't be verified either way, so this returns false rather than assuming
+// yes — same "don't fabricate a pass" rule the rest of the doctrine uses.
+export async function hasAcceptedAgreement(courseId: string): Promise<boolean> {
+  const events = await getCourseTimeline(courseId);
+  if (!events) return false;
+  return !!latestAgreementAcceptance(events);
+}

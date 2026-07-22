@@ -343,9 +343,10 @@ function InquiryDetailInner() {
   const [courseBookings30d, setCourseBookings30d] = useState(0);
   const [deleteCourseConfirm, setDeleteCourseConfirm] = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
-  const [goLiveChecks, setGoLiveChecks] = useState<{ key: string; label: string; ok: boolean }[] | null>(null);
-  const [goLiveStripe, setGoLiveStripe] = useState<{ required: boolean; fee: number } | null>(null);
+  const [goLiveChecks, setGoLiveChecks] = useState<{ key: string; label: string; ok: boolean; absolute: boolean }[] | null>(null);
   const [goLiveOverride, setGoLiveOverride] = useState('');
+  const [reminderSending, setReminderSending] = useState<string | null>(null);
+  const [reminderSent, setReminderSent] = useState<Set<string>>(new Set());
   const [buildConfirmText, setBuildConfirmText] = useState('');
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
@@ -390,33 +391,32 @@ function InquiryDetailInner() {
 
   useEffect(() => {
     if (pendingAction !== 'go_live' || !inq?.builtCourseId) return;
-    setGoLiveChecks(null); setGoLiveStripe(null);
+    setGoLiveChecks(null);
     const hasSheetForCheck = !!inq.detailsJson && inq.detailsJson !== '{}';
     const approved = latestPageDecision(inq.events) === 'approved';
     // Same shared brains the server enforces with (go-live-preflight.ts,
-    // approval-state.ts) — the modal can never promise an override the
-    // server then refuses.
+    // course-timeline.ts, approval-state.ts) — the modal can never promise
+    // something the server then refuses.
+    // STRIPE RULE FINAL + AGREEMENT = GO-LIVE GATE (RUN_QUEUE) — exactly two
+    // ABSOLUTE checks (no override, ever); everything else stays advisory
+    // (typed-confirm override still applies to those).
     fetch('/api/admin/courses?statusOf=' + inq.builtCourseId, { headers: H() })
       .then(r => r.ok ? r.json() : null)
       .then(d => {
-        const stripeRequired = d?.stripeRequired ?? true;
-        setGoLiveStripe({ required: stripeRequired, fee: d?.lateCancellationFee ?? 0 });
         setGoLiveChecks([
-          { key: 'sheet', label: 'Setup sheet submitted', ok: hasSheetForCheck },
-          { key: 'approved', label: 'Course approved their preview', ok: approved },
-          {
-            key: 'stripe',
-            label: stripeRequired ? 'Stripe connected' : 'Stripe connected (optional — no late-cancel fee configured)',
-            ok: d?.stripeOk ?? !!d?.stripeAccountActive,
-          },
-          { key: 'email', label: 'Operator email verified', ok: !!d?.operatorEmailVerified },
+          { key: 'agreement', label: 'Operator accepted the Operator Agreement', ok: !!d?.agreementAccepted, absolute: true },
+          { key: 'stripe', label: 'Stripe connected', ok: d?.stripeOk ?? !!d?.stripeAccountActive, absolute: true },
+          { key: 'sheet', label: 'Setup sheet submitted', ok: hasSheetForCheck, absolute: false },
+          { key: 'approved', label: 'Course approved their preview', ok: approved, absolute: false },
+          { key: 'email', label: 'Operator email verified', ok: !!d?.operatorEmailVerified, absolute: false },
         ]);
       })
       .catch(() => setGoLiveChecks([
-        { key: 'sheet', label: 'Setup sheet submitted', ok: hasSheetForCheck },
-        { key: 'approved', label: 'Course approved their preview', ok: approved },
-        { key: 'stripe', label: 'Stripe connected', ok: false },
-        { key: 'email', label: 'Operator email verified', ok: false },
+        { key: 'agreement', label: 'Operator accepted the Operator Agreement', ok: false, absolute: true },
+        { key: 'stripe', label: 'Stripe connected', ok: false, absolute: true },
+        { key: 'sheet', label: 'Setup sheet submitted', ok: hasSheetForCheck, absolute: false },
+        { key: 'approved', label: 'Course approved their preview', ok: approved, absolute: false },
+        { key: 'email', label: 'Operator email verified', ok: false, absolute: false },
       ]));
   }, [pendingAction, inq?.builtCourseId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -490,6 +490,20 @@ function InquiryDetailInner() {
       }
     } catch { setPreviewMsg('Error: network failure'); }
     setSendingPreview(false);
+  }
+
+  // AGREEMENT = GO-LIVE GATE / STRIPE RULE FINAL — one-click reminder nudge
+  // for whichever absolute is missing. No override exists for these, so a
+  // nudge is the only lever the admin has besides waiting.
+  async function sendGoLiveReminder(missing: 'agreement' | 'stripe') {
+    if (!inq?.builtCourseId) return;
+    setReminderSending(missing);
+    const r = await fetch('/api/admin/send-golive-reminder', {
+      method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, missing }),
+    });
+    setReminderSending(null);
+    if (r.ok) setReminderSent(prev => new Set(prev).add(missing));
+    else { const d = await r.json().catch(() => ({})); setActionError('Reminder failed: ' + (d.error || 'unknown')); }
   }
 
   async function requestReReview() {
@@ -1611,7 +1625,7 @@ function InquiryDetailInner() {
           a bare browser confirm() — each states exactly what happens and who
           gets emailed before firing. */}
       {pendingAction && (() => {
-        const close = () => { setPendingAction(null); setGoLiveOverride(''); setBuildConfirmText(''); setGoLiveChecks(null); setDeleteCourseConfirm(''); };
+        const close = () => { setPendingAction(null); setGoLiveOverride(''); setBuildConfirmText(''); setGoLiveChecks(null); setDeleteCourseConfirm(''); setReminderSent(new Set()); };
         const fire = (fn: () => void) => { fn(); close(); };
 
         if (pendingAction === 'delete') {
@@ -1730,12 +1744,16 @@ function InquiryDetailInner() {
           );
         }
         if (pendingAction === 'go_live') {
-          const allOk = goLiveChecks?.every(c => c.ok) ?? false;
+          // STRIPE RULE FINAL + AGREEMENT = GO-LIVE GATE (RUN_QUEUE) — exactly
+          // two absolutes, no override, ever. Everything else stays advisory
+          // (typed-confirm override still applies to those, unchanged).
+          const absoluteFailing = goLiveChecks?.filter(c => c.absolute && !c.ok) ?? [];
+          const advisoryFailing = goLiveChecks?.filter(c => !c.absolute && !c.ok) ?? [];
+          const blocked = !!goLiveChecks && absoluteFailing.length > 0;
+          const allOk = !!goLiveChecks && absoluteFailing.length === 0 && advisoryFailing.length === 0;
           // item 3's fix — trimmed + case-insensitive, same as every other
-          // typed-confirm in the app.
-          const canConfirm = allOk || (goLiveChecks && goLiveOverride.trim().toLowerCase() === inq.courseName.trim().toLowerCase());
-          const stripeCheck = goLiveChecks?.find(c => c.key === 'stripe');
-          const onlyStripeFailing = !!goLiveChecks && !allOk && goLiveChecks.filter(c => !c.ok).every(c => c.key === 'stripe');
+          // typed-confirm in the app. Only ever reachable for advisory checks.
+          const canConfirm = !!goLiveChecks && !blocked && (allOk || goLiveOverride.trim().toLowerCase() === inq.courseName.trim().toLowerCase());
           return (
             <ModalShell title={`Go live: ${inq.courseName}?`} danger={!!goLiveChecks && !allOk} onClose={close}>
               <p className="text-xs text-ink-muted mb-3">Makes the course bookable by golfers immediately.</p>
@@ -1746,18 +1764,30 @@ function InquiryDetailInner() {
                   {goLiveChecks.map(c => (
                     <div key={c.key} className="flex items-center gap-2 text-sm">
                       <StatusDot status={c.ok ? 'ok' : 'bad'}/>
-                      <span className={c.ok ? 'text-ink' : 'text-bad'}>{c.label}</span>
+                      <span className={c.ok ? 'text-ink' : 'text-bad'}>{c.label}{c.absolute && !c.ok ? ' — required, no exceptions' : ''}</span>
                     </div>
                   ))}
                 </div>
               )}
-              {stripeCheck && !stripeCheck.ok && goLiveStripe?.required && (
-                <p className="text-xs text-bad mt-2">
-                  Your ${goLiveStripe.fee.toFixed(2)} late-cancel fee can&apos;t be charged without Stripe.
-                  {onlyStripeFailing && ' Going live anyway is safe — golfers can still book; the fee just won’t be enforced until Stripe is connected.'}
-                </p>
+              {blocked && (
+                <div className="mt-3 space-y-2">
+                  {absoluteFailing.map(c => (
+                    <div key={c.key} className="flex items-center justify-between gap-2 bg-bad/5 border border-bad/20 rounded-md px-3 py-2">
+                      <span className="text-xs text-bad">
+                        {c.key === 'agreement' ? 'Operator must accept the agreement — send them a reminder' : 'Connect Stripe to go live — send them a reminder'}
+                      </span>
+                      <button
+                        onClick={() => sendGoLiveReminder(c.key as 'agreement' | 'stripe')}
+                        disabled={reminderSending === c.key || reminderSent.has(c.key)}
+                        className="shrink-0 text-xs font-medium px-2.5 py-1 rounded-md bg-white border border-bad/30 text-bad hover:bg-bad/5 transition-colors disabled:opacity-50"
+                      >
+                        {reminderSending === c.key ? 'Sending…' : reminderSent.has(c.key) ? 'Sent' : 'Send reminder'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
               )}
-              {goLiveChecks && !allOk && (
+              {!blocked && goLiveChecks && advisoryFailing.length > 0 && (
                 <div className="mt-3">
                   <label className="block text-[10px] uppercase tracking-[0.06em] text-bad mb-1">
                     Type &quot;{inq.courseName}&quot; to override and go live anyway
@@ -1768,10 +1798,10 @@ function InquiryDetailInner() {
               )}
               <ModalActions
                 onCancel={close}
-                onConfirm={() => fire(() => action('mark_live', { override: !allOk }))}
-                confirmLabel={allOk ? 'Go Live' : 'Override & Go Live'}
+                onConfirm={() => fire(() => action('mark_live'))}
+                confirmLabel={blocked ? 'Blocked' : allOk ? 'Go Live' : 'Override & Go Live'}
                 danger={!allOk}
-                disabled={!goLiveChecks || !canConfirm || processing}
+                disabled={!goLiveChecks || blocked || !canConfirm || processing}
               />
             </ModalShell>
           );

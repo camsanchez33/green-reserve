@@ -21,10 +21,12 @@ interface Props {
   approveError: string;
   onRequestChanges: () => void;
   stripeAccountActive: boolean;
-  noFeePolicy: boolean;
   onConnectStripe: () => void;
   connectingStripe: boolean;
   onNavigate: (href: string) => void;
+  agreementAccepted: boolean;
+  onAcceptAgreement: () => void;
+  acceptingAgreement: boolean;
 }
 
 // Plain-English steps for a first-time, non-technical operator. Every step's
@@ -32,7 +34,8 @@ interface Props {
 // can just click to dismiss (V13 item 1).
 export default function GettingStartedChecklist({
   emailVerified, onboardingStep, courseDraft, pageApprovalStatus, onApprovePage, approvingPage, approveError,
-  onRequestChanges, stripeAccountActive, noFeePolicy, onConnectStripe, connectingStripe, onNavigate,
+  onRequestChanges, stripeAccountActive, onConnectStripe, connectingStripe, onNavigate,
+  agreementAccepted, onAcceptAgreement, acceptingAgreement,
 }: Props) {
   const [visited, setVisited] = useState<Set<string>>(new Set());
   // null = no manual override yet (defaults to collapsed once everything's
@@ -69,9 +72,10 @@ export default function GettingStartedChecklist({
     },
     {
       key: 'stripe', title: 'Connect Stripe so you can get paid',
-      blurb: noFeePolicy
-        ? 'Optional since you don’t charge cancellation fees — but you’ll need it to collect green fees online. Takes about 5 minutes; you’ll need your bank account details.'
-        : 'Required before you can go live. Takes about 5 minutes; you’ll need your bank account details.',
+      // STRIPE RULE FINAL (RUN_QUEUE) — required before going live, no
+      // exceptions, regardless of cancellation fee policy. Fully skippable
+      // while exploring, though (the onboarding "do this later" path stays).
+      blurb: 'Required before you can go live. Takes about 5 minutes; you’ll need your bank account details.',
       done: stripeAccountActive,
       action: stripeAccountActive ? undefined : { label: 'Connect with Stripe', onClick: onConnectStripe, loading: connectingStripe },
     },
@@ -80,6 +84,16 @@ export default function GettingStartedChecklist({
       blurb: 'This is what generates your bookable tee times automatically — make sure it matches your hours.',
       done: checkedSchedule,
       action: checkedSchedule ? undefined : { label: 'Review schedule', onClick: () => onNavigate('/dashboard/schedules') },
+    },
+    {
+      key: 'agreement', title: 'Accept the Operator Agreement',
+      // AGREEMENT = GO-LIVE GATE (RUN_QUEUE) — legal ground, required before
+      // going live, no exceptions. New operators satisfy this automatically
+      // at first login (the onboarding clickwrap); this step only ever needs
+      // an action here for legacy operators who predate it.
+      blurb: 'Required before you can go live — the terms every course on GreenReserve operates under.',
+      done: agreementAccepted,
+      action: agreementAccepted ? undefined : { label: 'Review & accept', onClick: onAcceptAgreement, loading: acceptingAgreement },
     },
   ];
 
