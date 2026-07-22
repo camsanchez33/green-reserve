@@ -319,7 +319,10 @@ function SettingsPageInner() {
                 </div>
                 <Field label="Course Type">
                   <select value={form.type as string} onChange={e=>set('type',e.target.value)} className={iCls}>
-                    {['public','semi-private','private','resort','municipal'].map(t=><option key={t} value={t}>{t.charAt(0).toUpperCase()+t.slice(1)}</option>)}
+                    {/* A-04b: new selections are Public/Private only — a legacy
+                        value (semi-private/resort/municipal) stays visible/
+                        selected here rather than silently blanking out. */}
+                    {(['public','private'].includes(form.type as string) ? ['public','private'] : ['public','private', form.type as string]).map(t=><option key={t} value={t}>{t.charAt(0).toUpperCase()+t.slice(1)}</option>)}
                   </select>
                 </Field>
                 <div className="grid grid-cols-2 gap-3">

@@ -6,7 +6,7 @@ import { Star, RefreshCw, Search } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
-import { HEALTH_STATUS_LABEL, HEALTH_STATUS_SEVERITY, type CourseHealthStatus } from '@/lib/course-metrics';
+import { HEALTH_STATUS_SEVERITY, type CourseHealthStatus } from '@/lib/course-metrics';
 
 const PAGE_SIZE = 50;
 
@@ -21,7 +21,20 @@ interface Course {
   health: { status: CourseHealthStatus; label: string; dot: 'ok' | 'bad' | 'warn' | 'neutral'; reason: string };
 }
 
-const STATUS_FILTER_OPTIONS: CourseHealthStatus[] = ['healthy', 'setup_incomplete', 'payments_broken', 'going_quiet', 'offline'];
+// A-04b: state (Live/Offline/Archived) and health (the "concerns" within a
+// state) are two different questions — the segmented control owns state,
+// the dropdown owns health only. "Needs attention" is a synthetic umbrella
+// (anything not healthy), not a real CourseHealthStatus value.
+type StateFilter = 'live' | 'offline' | 'archived';
+type HealthFilter = 'all' | 'needs_attention' | 'setup_incomplete' | 'payments_broken' | 'going_quiet';
+const HEALTH_FILTER_OPTIONS: { value: HealthFilter; label: string }[] = [
+  { value: 'all', label: 'All statuses' },
+  { value: 'needs_attention', label: 'Needs attention' },
+  { value: 'setup_incomplete', label: 'Setup incomplete' },
+  { value: 'payments_broken', label: 'Payments broken' },
+  { value: 'going_quiet', label: 'Going quiet' },
+];
+const NEEDS_ATTENTION_STATUSES: CourseHealthStatus[] = ['setup_incomplete', 'payments_broken', 'going_quiet', 'offline'];
 
 function CoursesContent() {
   const router = useRouter();
@@ -30,8 +43,8 @@ function CoursesContent() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
-  const [archiveFilter, setArchiveFilter] = useState<'active' | 'archived' | 'all'>('active');
-  const [filterHealth, setFilterHealth] = useState<'all' | CourseHealthStatus>('all');
+  const [stateFilter, setStateFilter] = useState<StateFilter>('live');
+  const [filterHealth, setFilterHealth] = useState<HealthFilter>('all');
   const [filterFeatured, setFilterFeatured] = useState(false);
   const [filterType, setFilterType] = useState('');
   const [sortBy, setSortBy] = useState<'severity' | 'newest' | 'name'>('severity');
@@ -39,26 +52,13 @@ function CoursesContent() {
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
-  const loadCourses = useCallback(async (af: 'active' | 'archived' | 'all' = 'active') => {
+  const loadCourses = useCallback(async (sf: StateFilter) => {
     setLoading(true);
     try {
-      if (af === 'all') {
-        const [r1, r2] = await Promise.all([
-          fetch('/api/admin/courses', { headers: H() }),
-          fetch('/api/admin/courses?showArchived=1', { headers: H() }),
-        ]);
-        if (r1.ok && r2.ok) {
-          const [active, archived] = await Promise.all([r1.json(), r2.json()]);
-          setCourses([...active, ...archived]);
-        } else {
-          setCourses([]);
-        }
-      } else {
-        const url = '/api/admin/courses' + (af === 'archived' ? '?showArchived=1' : '');
-        const r = await fetch(url, { headers: H() });
-        if (r.ok) setCourses(await r.json());
-        else setCourses([]);
-      }
+      const url = '/api/admin/courses' + (sf === 'archived' ? '?showArchived=1' : '');
+      const r = await fetch(url, { headers: H() });
+      if (r.ok) setCourses(await r.json());
+      else setCourses([]);
     } catch { setCourses([]); }
     setLoading(false);
   }, [H]);
@@ -72,10 +72,10 @@ function CoursesContent() {
 
   useEffect(() => {
     if (!adminReady) return;
-    loadCourses(archiveFilter);
+    loadCourses(stateFilter);
     const courseId = params.get('courseId');
     if (courseId) router.replace('/admin/courses/' + courseId);
-  }, [adminReady, archiveFilter, loadCourses, params, router]);
+  }, [adminReady, stateFilter, loadCourses, params, router]);
 
   const q = search.toLowerCase().trim();
   let filteredCourses = q
@@ -88,10 +88,10 @@ function CoursesContent() {
         (c.operator?.name || '').toLowerCase().includes(q)
       )
     : [...courses];
-  if (archiveFilter !== 'archived') {
-    // A-04 item 4: Live/Offline + Stripe filters fold into the status chips
-    // — a worded status IS what those used to mean.
-    if (filterHealth !== 'all') filteredCourses = filteredCourses.filter(c => c.health.status === filterHealth);
+  if (stateFilter !== 'archived') {
+    filteredCourses = filteredCourses.filter(c => (stateFilter === 'live') === c.active);
+    if (filterHealth === 'needs_attention') filteredCourses = filteredCourses.filter(c => NEEDS_ATTENTION_STATUSES.includes(c.health.status));
+    else if (filterHealth !== 'all') filteredCourses = filteredCourses.filter(c => c.health.status === filterHealth);
     if (filterFeatured) filteredCourses = filteredCourses.filter(c => c.featured);
     if (filterType) filteredCourses = filteredCourses.filter(c => (c.type || 'public') === filterType);
   }
@@ -102,7 +102,7 @@ function CoursesContent() {
   const totalPages = Math.max(1, Math.ceil(filteredCourses.length / PAGE_SIZE));
   const pagedCourses = filteredCourses.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  useEffect(() => { setPage(0); }, [archiveFilter, filterHealth, filterFeatured, filterType, q]);
+  useEffect(() => { setPage(0); }, [stateFilter, filterHealth, filterFeatured, filterType, q]);
 
   if (!adminReady) return null;
 
@@ -131,7 +131,7 @@ function CoursesContent() {
                 />
               </div>
               <button
-                onClick={() => loadCourses(archiveFilter)}
+                onClick={() => loadCourses(stateFilter)}
                 className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-line transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />Refresh
@@ -140,29 +140,29 @@ function CoursesContent() {
           </div>
 
           <div className="flex items-center gap-2 mb-5 flex-wrap">
-            {/* All / Active / Archived segmented filter */}
+            {/* A-04b: segmented control owns STATE only — Live / Offline / Archived */}
             <div className="flex items-center gap-1 bg-white border border-line rounded-lg p-1">
-              {([['active', 'Active'], ['archived', 'Archived'], ['all', 'All']] as const).map(([key, label]) => (
+              {([['live', 'Live'], ['offline', 'Offline'], ['archived', 'Archived']] as const).map(([key, label]) => (
                 <button
                   key={key}
-                  onClick={() => { setArchiveFilter(key); setFilterHealth('all'); }}
-                  className={'px-3 py-1 rounded-md text-[11px] font-medium transition-colors ' + (archiveFilter === key ? 'bg-paper text-ink border border-line' : 'text-ink-muted hover:text-ink')}
+                  onClick={() => { setStateFilter(key); setFilterHealth('all'); }}
+                  className={'px-3 py-1 rounded-md text-[11px] font-medium transition-colors ' + (stateFilter === key ? 'bg-paper text-ink border border-line' : 'text-ink-muted hover:text-ink')}
                 >
                   {label}
                 </button>
               ))}
             </div>
 
-            {archiveFilter !== 'archived' && (
+            {stateFilter !== 'archived' && (
               <>
+                {/* Dropdown owns HEALTH only — concerns within the selected state */}
                 <select
                   value={filterHealth}
-                  onChange={e => setFilterHealth(e.target.value as 'all' | CourseHealthStatus)}
+                  onChange={e => setFilterHealth(e.target.value as HealthFilter)}
                   className="bg-white border border-line text-ink-soft text-[11px] rounded-md px-3 py-1.5 outline-none focus:border-pine/40 cursor-pointer"
                 >
-                  <option value="all">All statuses</option>
-                  {STATUS_FILTER_OPTIONS.map(s => (
-                    <option key={s} value={s}>{HEALTH_STATUS_LABEL[s]}</option>
+                  {HEALTH_FILTER_OPTIONS.map(o => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
                 </select>
                 <button
@@ -179,8 +179,6 @@ function CoursesContent() {
                   <option value="">All types</option>
                   <option value="public">Public</option>
                   <option value="private">Private</option>
-                  <option value="semi-private">Semi-private</option>
-                  <option value="resort">Resort</option>
                 </select>
               </>
             )}
