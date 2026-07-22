@@ -339,7 +339,19 @@ in flight at a time.
   8. CLEANUP: revert Fake Fairways Golf Club to its pre-audit stage (the
      browser audit's Skip & Build fired for real) — delete the orphan
      course/operator it created if any.
-- [ ] A-04 /admin/courses — LIST — SPEC (designed with Cam, 2026-07-21):
+- [x] A-04 /admin/courses — LIST — BUILT: item 0 (metrics brain) 294a2a0,
+  items 1-7 5675e3f, item 5 pagination follow-up 05a2021. Metrics brain
+  (src/lib/course-metrics.ts) fixed a real bug while migrating: the list
+  and detail routes only counted status:'confirmed' bookings, silently
+  missing 'completed' (checked-in) ones that Revenue/Overview already
+  counted — any course with checked-in bookings showed different numbers
+  depending which admin page you were on. computeCourseHealth() is the new
+  worst-truth-wins worded-status brain (extracted from Overview's existing
+  Course Health Watchlist trend thresholds), used by both this list and the
+  course-detail response. List rebuilt full-width, rows are real Links with
+  no icon actions (moved to the course page, A-05 next) and no row numbers,
+  status-chip filter replaces Live/Offline/Stripe filters, sort defaults to
+  severity, pagination at 50. SPEC (designed with Cam, 2026-07-21):
   0. PREREQ, THE METRICS BRAIN: one shared metrics module (src/lib) defining
      bookings/gross/GR-fees/period math ONCE — list, course detail, Revenue,
      Overview all import it. The audit found 4 surfaces with 4 different
