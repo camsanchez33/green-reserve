@@ -679,7 +679,28 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   3. Result: preflight has exactly two absolutes (Agreement, Stripe) +
      the advisory checks; the modal reflects the new hierarchy plainly.
 
-- [ ] LEGAL PAGES V2 — strongest non-attorney draft (no migration) — Cam's
+- [x] LEGAL PAGES V2 — BUILT (0e4670d): new dedicated /operator-agreement
+  page carries all nine provisions (liability cap, two-way
+  indemnification, Stripe/payments detail, 30-day termination + exit data
+  handling, data ownership + white-label promise, governing
+  law/arbitration, communications consent, versioning) — split out of
+  /terms, which previously crammed the whole business relationship into a
+  "For Course Operators" section. /terms and /privacy both rewritten to
+  v2026-08 with their own communications-consent sections, and now
+  cross-reference the dedicated agreement instead of duplicating it.
+  Attorney-review comment retained on all three pages, plus a note
+  flagging the New Jersey governing-state assumption (from Cam's Mahwah
+  address) for confirmation. Both operator-facing "Operator Agreement"
+  links (onboarding clickwrap, dashboard legacy prompt) repointed from
+  /terms to the new page; added to the footer. Did NOT force
+  re-acceptance — bumped CURRENT_AGREEMENT_VERSION, and separately found +
+  fixed a real version-drift bug while at it: course-timeline.ts had grown
+  its own parallel "booking terms version" constant (display-only, added
+  this session) shadowing the REAL one in src/lib/terms.ts that's actually
+  stamped on booking records — removed the duplicate, admin's Documents
+  tab now shows the true stamped version. Existing agreement acceptances
+  remain valid per the already-built "any version counts" design (item 4).
+  SPEC — strongest non-attorney draft (no migration) — Cam's
   call: no lawyer for now; make the Operator Agreement + Terms + Privacy as
   strong as a careful draft can be, keeping the attorney-review HTML
   comment. Rewrite to include, in plain-but-precise language:
