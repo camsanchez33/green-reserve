@@ -284,6 +284,11 @@ in flight at a time.
   - Delete/archive AVAILABILITY recap on the alive side: archive available
     from any alive stage (pair-aware warning); delete only via the ⋯ menu
     with blast-radius modal; both route through the lifecycle service.
+    FINISHED (35672c4): bulk archive on the list page is now pair-aware
+    (courses go through archivePair, course-less inquiries reject instead,
+    confirm modal flags which rows carry a course); detail page's Building
+    stage ⋯ menu gained Archive (was Live-only) as the reversible
+    alternative to Delete.
 - [ ] A-03 /admin/inquiries/[id] — DETAIL — items 1-7 BUILT (item 1 cbbf1e0,
   items 2+3 dfec543, item 5 26a09ac, item 4 11e0975; item 7 fixed alongside
   item 6, commit 639a748/cd9a2a0 — see A-02/A-03 log above). Item 8 NOT
