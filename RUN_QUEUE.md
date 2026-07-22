@@ -587,6 +587,39 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   Revenue, Activity, and Overview; banner gone; reload ×3 → still gone;
   a genuinely new orphan would still trigger the banner.
 
+- [ ] AGREEMENT = GO-LIVE GATE (no migration) — Cam: signing the Operator
+  Agreement is mandatory before live, like Stripe. Wire it load-bearing:
+  1. Getting Started checklist gains the step "Accept the Operator
+     Agreement" (derived from the acceptance record; the V11 clickwrap
+     satisfies it at first login for new operators).
+  2. GO-LIVE PREFLIGHT requires it with NO override — unlike Stripe
+     (conditional on fees), the agreement is legal ground: no acceptance,
+     no live, ever. Preflight line: "Operator must accept the agreement —
+     send them a reminder" (one-click nudge).
+  3. LEGACY operators (predate the clickwrap, incl. already-live courses):
+     dashboard shows a prominent accept prompt at next login; already-live
+     courses stay live (don't yank clients offline) but the admin Documents
+     tab + checklist show "Not accepted — legacy" amber until done, and the
+     auto-chase emails include it.
+  4. VERSIONING: acceptance records the version (already does); when the
+     agreement version ever bumps, prior acceptances stay valid-as-of-
+     version and a "new version needs acceptance" flow is flagged as a
+     future item — note it, don't build it.
+
+- [ ] STRIPE RULE FINAL (no migration, supersedes the fee-conditional
+  override from the earlier preflight item) — Cam's ruling:
+  1. EXPLORING: Stripe is fully skippable pre-live — operators can skip the
+     checklist step and wander their whole dashboard and preview their site
+     without connecting (the V11 "do this later" stays; checklist shows the
+     step open, auto-chase reminds).
+  2. GOING LIVE: Stripe connected + card_payments active is REQUIRED for
+     every course, no override, same absolute tier as the Operator
+     Agreement. The "go live with fee paused" override path is REMOVED.
+     Preflight line when missing: "Connect Stripe to go live — send them a
+     reminder" (one-click nudge).
+  3. Result: preflight has exactly two absolutes (Agreement, Stripe) +
+     the advisory checks; the modal reflects the new hierarchy plainly.
+
 ## Ideas / not yet specced
 
 - OPERATOR STAFF ACCOUNTS rework (Cam, 2026-07-10: "whole thing is going to be reworked and better") — current section contradicts itself: copy says "full dashboard access", role dropdown says "tee sheet access". Rework needs: clear role tiers (e.g. owner / manager / tee-sheet-only), what each can see (money? settings? members?), invite email flow, deactivate/reset from the card, and the same no-silent-failure patterns as admin. Spec when Cam's ready to define the role tiers.
