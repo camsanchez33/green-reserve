@@ -472,6 +472,32 @@ in flight at a time.
      message map), casing consistency, dead "OP LOGIN —" hidden until its
      column exists, watchlist counts payments-broken as unhealthy, action
      queue headers always match their row counts.
+- [x] A-04b /admin/courses — LIST filter refinements — BUILT (5b2aad5):
+  SPEC (Cam): type dropdown offers Public and Private ONLY (sweep other UI
+  spots still offering semi-private/resort); state/health split — the
+  segmented control owns state (Live · Offline · Archived), the dropdown
+  owns health only (All · Needs attention · Setup incomplete · Payments
+  broken · Going quiet); row chips updated to match.
+  Segmented control renamed Active/Archived/All → Live/Offline/Archived
+  (state, not archive-bucket) — Live/Offline now filter on course.active
+  directly instead of being conflated into one "Active" bucket alongside
+  every non-archived health status. Health dropdown narrowed to the 4 real
+  "concerns" (setup_incomplete/payments_broken/going_quiet as literal
+  values, plus a new synthetic "Needs attention" umbrella = anything not
+  healthy) — Healthy and Offline dropped from the dropdown since Offline
+  is now the segmented control's job and Healthy isn't a concern to filter
+  for. Row chips already read the shared computeCourseHealth brain
+  (course-metrics.ts) so no separate update was needed there — Offline and
+  Setup incomplete were already distinct labels, which is exactly what
+  lets the Offline state-bucket show which kind of not-live each row is.
+  Type dropdown narrowed to Public/Private. Swept dashboard/settings
+  page's course-type editor (the only OTHER real selector offering
+  semi-private/resort/municipal) the same way — new choices are
+  Public/Private only, but a course with a legacy type value keeps it
+  selectable instead of silently blanking the field. Display-only type
+  labels (CourseBookingClient, CourseCard, OperatorSidebar) were left
+  alone — those render EXISTING data and must keep working for legacy
+  values, not offer a choice.
 - [ ] A-06 /admin/revenue — fees, per-course table, problems, Stripe reconciliation
 - [ ] A-07 /admin/golfers — support lookup
 - [ ] A-08 /admin/messages — threads
