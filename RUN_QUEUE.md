@@ -487,6 +487,48 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   delete through the new lifecycle service (deletePair) so course-side
   cleanup happens too.
 
+- [ ] DELETION DOCTRINE + name-match bug (no migration) — Cam's ruling:
+  1. THE RULE: anything that ever became a COURSE is never permanently
+     deleted from the UI — archive only (the pair archives together per the
+     parity law; all data/bookings/financial history preserved forever).
+     Permanent delete DISAPPEARS from the courses surface and from built
+     inquiries. UNBUILT inquiries (never linked to a course — spam, tests,
+     dead leads) remain permanently deletable from the inquiries Closed tab.
+  2. UI follows: course danger menus offer Archive (+Restore) only; built
+     inquiry ⋯ menus lose Permanently-delete; unbuilt closed inquiries keep
+     it with the typed confirm. Explanatory line where delete used to be:
+     "Courses are archived, never deleted — booking and payment history is
+     retained." The old payment-history guard becomes moot (superseded by
+     the doctrine).
+  3. BUG (Cam repro'd): typed-confirm delete fails with "Course name does
+     not match" even when correct — find it: likely comparing against the
+     wrong entity's name (inquiry courseName vs Course.name) or missing
+     trim/case-normalization. Fix: modal displays the EXACT string to type
+     (copyable), comparison is trimmed + case-insensitive, error says what
+     it expected. Applies to every remaining typed-confirm (unbuilt inquiry
+     delete, overrides).
+  4. Pre-launch test-data cleanup stays a deliberate owner-run script
+     (existing purge idea) — the UI doctrine doesn't block that.
+
+- [ ] ORPHAN SWEEP + the link is sacred (no migration) — Cam's repro: the
+  Fake Fairways inquiry was deleted (pre-doctrine) and its course still
+  exists as a ghost. Fix past and future:
+  1. SWEEP: find every course with no living inquiry behind it (link points
+     nowhere or builtCourseId orphaned) and every inquiry pointing at a
+     dead course. Print the list. For orphan TEST courses with zero real
+     payment history: delete them outright in the sweep (one-time cleanup,
+     doctrine exempts the sweep). Anything with real history: archive +
+     flag "no linked inquiry (pre-doctrine deletion)".
+  2. FUTURE-PROOF: a built course's detail page always shows its origin —
+     the Business/Overview client card links to the accepted inquiry
+     ("From inquiry · accepted Jul 9"); if the link is ever broken the card
+     says so loudly instead of pretending. Courses list gains a hidden
+     "orphaned" health flag that can only appear if an invariant breaks —
+     like the funnel's unmapped chip, it should never be seen.
+  3. Confirm the doctrine's enforcement actually blocks deleting built
+     inquiries at the API level (not just hidden buttons) — one-sided
+     deletion must be impossible even by accident or old client code.
+
 ## Ideas / not yet specced
 
 - OPERATOR STAFF ACCOUNTS rework (Cam, 2026-07-10: "whole thing is going to be reworked and better") — current section contradicts itself: copy says "full dashboard access", role dropdown says "tee sheet access". Rework needs: clear role tiers (e.g. owner / manager / tee-sheet-only), what each can see (money? settings? members?), invite email flow, deactivate/reset from the card, and the same no-silent-failure patterns as admin. Spec when Cam's ready to define the role tiers.
