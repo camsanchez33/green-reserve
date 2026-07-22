@@ -1182,6 +1182,35 @@ export async function sendCourseLiveOrientationEmail(data: {
   });
 }
 
+// A-05 item 4b — auto-chase reminder for a course that hasn't finished
+// onboarding (3d/7d/14d, then weekly). One shared template, per-step copy.
+export async function sendOnboardingChaseEmail(data: {
+  operatorName: string; operatorEmail: string; courseName: string; remainingSteps: string[];
+}) {
+  const dashboardUrl = `${process.env.NEXT_PUBLIC_URL}/dashboard`;
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:22px;font-weight:700;">Finish setting up ${data.courseName}</h1>
+    <p style="margin:0 0 16px;color:#6b7280;font-size:15px;line-height:1.6;">
+      Hi ${data.operatorName} — ${data.courseName} isn&apos;t bookable yet. Here&apos;s what's left:
+    </p>
+    <ul style="margin:0 0 20px;padding-left:20px;color:#374151;font-size:14px;line-height:1.8;">
+      ${data.remainingSteps.map(s => `<li>${s}</li>`).join('')}
+    </ul>
+    <a href="${dashboardUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;">
+      Finish Setup &rarr;
+    </a>
+    <p style="margin:16px 0 0;color:#9ca3af;font-size:12px;">
+      Stuck on something? Reply to this email — hello@greenreserve.app.
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.operatorEmail,
+    subject: `${data.courseName} is still waiting to go live`,
+    html,
+  });
+}
+
 export async function sendMembershipPaymentLinkEmail(data: {
   name: string; email: string; courseName: string; tierName: string;
   annualFee: number; initiationFee: number; payLink: string; isRenewal?: boolean;

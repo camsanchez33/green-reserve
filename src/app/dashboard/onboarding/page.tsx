@@ -23,6 +23,7 @@ function OnboardingInner() {
   const [connecting, setConnecting] = useState(false);
   const [stripeBanner, setStripeBanner] = useState('');
   const [noFeePolicy, setNoFeePolicy] = useState(false);
+  const [agreementAccepted, setAgreementAccepted] = useState(false);
 
   useEffect(() => {
     const stripeParam = params.get('stripe');
@@ -48,6 +49,9 @@ function OnboardingInner() {
       setStripeActive(!!c.stripeAccountActive);
       setNoFeePolicy(!c.lateCancellationFee);
     });
+    fetch('/api/operator/agreement').then(r => r.json()).then(d => {
+      if (d?.agreement) setAgreementAccepted(true);
+    }).catch(() => {});
     fetch('/api/operator/tee-sets').then(r => r.json()).then(rows => {
       if (Array.isArray(rows) && rows.length > 0) {
         setTeeSets(rows.map((r: { id: string; name: string; yardage: number; rating: number; slope: number }) => ({
@@ -66,6 +70,7 @@ function OnboardingInner() {
     setSaving(true);
     await fetch('/api/operator/courses', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(details) });
     await fetch('/api/operator/tee-sets', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ teeSets: teeSets.filter(t => t.name.trim()) }) });
+    await fetch('/api/operator/agreement', { method: 'POST' });
     setSaving(false);
     setStep(2);
   };
@@ -170,8 +175,18 @@ function OnboardingInner() {
               </div>
             </div>
 
-            <button onClick={saveDetails} disabled={saving}
-              className="w-full mt-6 bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+            <label className="flex items-start gap-2.5 mt-6 text-sm text-ink-soft cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={agreementAccepted}
+                onChange={e => setAgreementAccepted(e.target.checked)}
+                className="w-4 h-4 mt-0.5 accent-pine rounded shrink-0"
+              />
+              <span>I have read and agree to the <a href="/terms" target="_blank" className="text-pine hover:underline">GreenReserve Operator Agreement</a>.</span>
+            </label>
+
+            <button onClick={saveDetails} disabled={saving || !agreementAccepted}
+              className="w-full mt-3 bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 disabled:bg-line-strong transition-colors flex items-center justify-center gap-2">
               {saving ? <><Loader2 className="w-4 h-4 animate-spin"/>Saving...</> : <>Continue<ChevronRight className="w-4 h-4"/></>}
             </button>
           </div>
