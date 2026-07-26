@@ -498,9 +498,36 @@ in flight at a time.
   labels (CourseBookingClient, CourseCard, OperatorSidebar) were left
   alone — those render EXISTING data and must keep working for legacy
   values, not offer a choice.
-- [ ] A-06 /admin/revenue — fees, per-course table, problems, Stripe reconciliation
+- [ ] A-06 /admin/revenue — SPEC (designed with Cam, 2026-07-23):
+  SEQUENCE: the EXPENSE TRACKER migration (RUN_QUEUE, attended) runs FIRST;
+  this rebuild lands once, complete. Page tells the P&L story in order:
+  what I made → what it cost → what's coming → what's stuck → who produced it.
+  1. HEADLINE: "Fees earned" (gross GR revenue) leads — the growth number —
+     with the full statement directly beneath: − Stripe processing −
+     expenses = NET, each line with vs-prior delta. One period picker
+     (Day / Week / Month-to-date / custom) rules the ENTIRE page.
+  2. EXPENSES: manual fixed-cost CRUD (name, category, amount, cadence,
+     prorated into the period) + automatic Stripe processing costs pulled
+     with the existing A2b balance-transaction fetch. Small "Manage
+     expenses" drawer, not a separate page.
+  3. MONEY IN MOTION — full section: upcoming check-ins with OUR take per
+     booking (today/tomorrow toggle), pending late-cancel fee charges with
+     status; each row links to the booking. Forward ledger, clearly marked
+     "expected, not booked revenue".
+  4. PROBLEMS made actionable: failed charges with retry buttons (existing),
+     and the reconciliation banner LISTS the specific bookings composing
+     any gap, each clickable — no more unassigned homework. Friendly-message
+     map for every Stripe error string (kill raw API text).
+  5. PER-COURSE TABLE: metrics brain, follows the page picker (default
+     month-to-date), archived courses excluded by default with a toggle,
+     sortable as today, EXPORT CSV button (period-stamped filename) — the
+     accounting escape hatch.
+  6. STRIPE PLATFORM CARD moves to the bottom: balance, next payout, open
+     dashboard — reference, not headline.
+  7. Vocabulary + count hygiene per the audit (one status language,
+     headers match rows).
 - [ ] A-07 /admin/golfers — support lookup
-- [ ] A-08 /admin/messages — threads
+- [ ] A-08 /admin/messages — threads (Cam 2026-07-23: functionally fine, "just needs to look a little better" — visual notes go to the AESTHETIC PASS; only structural findings would reopen this)
 - [ ] A-09 /admin/activity — ledger + filters
 - [ ] A-10 /admin/employees — roles, provisioning
 - [ ] A-11 /admin/broadcasts — compose, preview, history
