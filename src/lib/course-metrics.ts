@@ -165,3 +165,34 @@ export const HEALTH_STATUS_SEVERITY: Record<CourseHealthStatus, number> = {
   healthy: 5,
   archived: 6,
 };
+
+// ---- Real-P&L net math (RUN_QUEUE "EXPENSE TRACKER / real P&L") -------------
+// The one place the P&L statement is composed: fees earned − Stripe processing
+// − expenses = net. Takes cents in, returns dollars out (same cents→dollars
+// boundary the rest of this module owns). Expense proration lives in
+// expenses.ts; the raw Stripe processing number comes from platform-stripe.ts —
+// this just states the subtraction, so every surface that shows a "net" agrees.
+export interface PnL {
+  /** Gross GreenReserve service-fee revenue for the period (dollars). */
+  feesEarned: number;
+  /** What Stripe charged GR to collect those fees (dollars). */
+  stripeProcessing: number;
+  /** GR's own fixed operating costs prorated into the period (dollars). */
+  expenses: number;
+  /** feesEarned − stripeProcessing − expenses (dollars). */
+  net: number;
+}
+
+export function computeNetPnL(input: {
+  feesEarnedCents: number;
+  stripeProcessingCents: number;
+  expensesCents: number;
+}): PnL {
+  const netCents = input.feesEarnedCents - input.stripeProcessingCents - input.expensesCents;
+  return {
+    feesEarned: input.feesEarnedCents / 100,
+    stripeProcessing: input.stripeProcessingCents / 100,
+    expenses: input.expensesCents / 100,
+    net: netCents / 100,
+  };
+}
