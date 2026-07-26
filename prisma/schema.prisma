@@ -546,3 +546,24 @@ model Message {
   createdAt   DateTime      @default(now())
   thread      MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
 }
+
+// GreenReserve's own fixed operating costs (Vercel, Neon, Resend, Twilio,
+// domain, legal, etc.), entered by an owner on /admin/revenue to turn the
+// fees-earned view into a real P&L (RUN_QUEUE "EXPENSE TRACKER / real P&L").
+// Automatic Stripe processing costs are NOT stored here — those are pulled
+// live from Stripe balance transactions. Monthly/annual costs are prorated
+// into whatever period the revenue page is showing; endedAt lets a cost
+// stop counting without deleting its history.
+model Expense {
+  id         String    @id @default(cuid())
+  name       String
+  category   String    @default("other") // "infra" | "tools" | "legal" | "other"
+  amountCents Int
+  cadence    String    @default("monthly") // "monthly" | "annual" | "one-time"
+  startedAt  DateTime  @default(now())
+  endedAt    DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([startedAt])
+}
