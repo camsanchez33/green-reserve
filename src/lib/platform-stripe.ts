@@ -11,11 +11,27 @@ import { stripe } from '@/lib/stripe';
 //
 // Shared so the A2b platform card and the P&L statement can never disagree
 // about the same number.
-export async function fetchStripeProcessingCostCents(startUnix: number, endUnix: number): Promise<number> {
-  let total = 0;
+export interface StripeFeeWindow {
+  /** Gross application fees GR received in the window (cents). */
+  grossCents: number;
+  /** What Stripe charged GR to collect them (cents). */
+  processingCostCents: number;
+  /** grossCents − processingCostCents (cents). */
+  netCents: number;
+  /** Number of application_fee balance transactions counted. */
+  count: number;
+}
+
+// One bounded pass over the platform's `application_fee` balance transactions
+// in a window — returns the gross fees GR collected, Stripe's processing cut
+// (the `fee` field), and the net. Both the A2b reconciliation and the P&L
+// read from this so they can't disagree about the same number.
+export async function fetchStripeFeeWindow(startUnix: number, endUnix: number): Promise<StripeFeeWindow> {
+  let grossCents = 0;
+  let processingCostCents = 0;
+  let count = 0;
   let startingAfter: string | undefined;
   let guard = 0;
-  // Bounded pagination — the same safety net the A2b application-fee fetch uses.
   while (guard < 20) {
     const page = await stripe.balanceTransactions.list({
       type: 'application_fee',
@@ -23,10 +39,19 @@ export async function fetchStripeProcessingCostCents(startUnix: number, endUnix:
       limit: 100,
       ...(startingAfter ? { starting_after: startingAfter } : {}),
     });
-    for (const txn of page.data) total += txn.fee ?? 0;
+    for (const txn of page.data) {
+      grossCents += txn.amount ?? 0;
+      processingCostCents += txn.fee ?? 0;
+      count++;
+    }
     if (!page.has_more || page.data.length === 0) break;
     startingAfter = page.data[page.data.length - 1].id;
     guard++;
   }
-  return total;
+  return { grossCents, processingCostCents, netCents: grossCents - processingCostCents, count };
+}
+
+// Thin wrapper for callers that only need the processing cost (P&L expense line).
+export async function fetchStripeProcessingCostCents(startUnix: number, endUnix: number): Promise<number> {
+  return (await fetchStripeFeeWindow(startUnix, endUnix)).processingCostCents;
 }
