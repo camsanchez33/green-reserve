@@ -185,7 +185,20 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 - [ ] Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm the state before this runs — e.g. "TheGreenReserve LLC, a New York limited liability company"). Bump "Last updated" dates. Attorney-review HTML comment stays.
 
-- [ ] EXPENSE TRACKER / real P&L (schema change, attended) — Cam wants the revenue view to read like a stock P&L: fees earned MINUS costs = net. Two expense sources:
+- [x] EXPENSE TRACKER / real P&L — BUILT (migration 4911cb1, backend 5f2b954,
+  wired into /admin/revenue by A-06 below). Additive Expense table migrated
+  to prod via create-only → SQL-verified (CREATE TABLE + CREATE INDEX only)
+  → migrate deploy, attended; migrate status clean, /api/health ok. Both
+  expense sources live: AUTOMATIC Stripe processing pulled from
+  application_fee balance transactions (the `fee` field, shared
+  fetchStripeFeeWindow so it can't disagree with the A2b card); MANUAL
+  Expense CRUD (owner-only) in a "Manage expenses" drawer on /admin/revenue,
+  recurring costs prorated (mean-year daily rate, respects startedAt/endedAt)
+  into whatever period the page shows. Net = fees − Stripe processing −
+  expenses composed once in the metrics brain (computeNetPnL). Overview P&L
+  header is deferred to whenever that surface wants it — the shared math is
+  ready to import.
+  ORIGINAL SPEC — (schema change, attended) — Cam wants the revenue view to read like a stock P&L: fees earned MINUS costs = net. Two expense sources:
   (1) AUTOMATIC: Stripe's own processing costs on GR's application fees — pull from Stripe balance transactions (fee field) alongside the A2b reconciliation, no manual entry;
   (2) MANUAL: new `Expense` table (name, category [infra/tools/legal/other], amountCents, cadence [monthly/annual/one-time], startedAt, endedAt?) — admin CRUD on /admin/revenue for the fixed costs (Vercel, Neon, Resend, Twilio, domain, etc.), monthly costs prorated into period views.
   Display on /admin/revenue (and the Overview P&L header once A-01b lands): Fees earned − Stripe processing − expenses = NET, per Day/Week/Month period, with vs-prior delta. Migration via checklist (additive table — create-only → review → deploy pattern OK).

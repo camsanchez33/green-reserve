@@ -498,7 +498,23 @@ in flight at a time.
   labels (CourseBookingClient, CourseCard, OperatorSidebar) were left
   alone — those render EXISTING data and must keep working for legacy
   values, not offer a choice.
-- [ ] A-06 /admin/revenue — SPEC (designed with Cam, 2026-07-23):
+- [x] A-06 /admin/revenue — BUILT: data layer cedfa8d, sections 1-2 34b8430,
+  sections 3-4 2185fa0, sections 5-7 4f3a1ff (EXPENSE TRACKER migration
+  4911cb1 + backend 5f2b954 landed first per the sequence note). One period
+  picker (Day / Week / Month-to-date / custom, default MTD) rules the whole
+  page. Fees-earned headline leads; owner sees the full statement (− Stripe
+  processing − expenses = Net) with per-line vs-prior deltas. Expenses in a
+  "Manage expenses" drawer (owner CRUD). Money-in-motion forward ledger
+  (upcoming check-ins with our take, today/tomorrow toggle; late-cancel fees
+  with status). Problems actionable: failed charges retry via the shared
+  performCheckIn path + friendly Stripe-error map; owner reconciliation
+  banner lists the composing bookings. Per-course table follows the picker,
+  archived-hidden-by-default toggle, CSV export (period-stamped). Stripe
+  platform card demoted to a bottom reference. Vocabulary unified
+  (Live/Offline/Archived; Connected/Not connected) and footer counts match
+  rows. VERIFY pending Cam's live re-walk (esp. the owner-only P&L/Stripe
+  numbers, which need a real owner session + live Stripe data to confirm).
+  ORIGINAL SPEC (designed with Cam, 2026-07-23):
   SEQUENCE: the EXPENSE TRACKER migration (RUN_QUEUE, attended) runs FIRST;
   this rebuild lands once, complete. Page tells the P&L story in order:
   what I made → what it cost → what's coming → what's stuck → who produced it.
