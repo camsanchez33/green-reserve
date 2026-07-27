@@ -3,7 +3,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   RefreshCw, AlertTriangle, X, Plus, Pencil, Trash2, TrendingUp, TrendingDown, Minus,
+  RotateCw, Clock, CheckCircle2,
 } from 'lucide-react';
+import Link from 'next/link';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { EXPENSE_CATEGORIES, EXPENSE_CADENCES, EXPENSE_CATEGORY_LABEL, EXPENSE_CADENCE_LABEL } from '@/lib/expenses';
 
@@ -84,6 +86,11 @@ export default function RevenuePage() {
   const [draft, setDraft] = useState({ name: '', category: 'infra', amount: '', cadence: 'monthly' });
   const [savingExpense, setSavingExpense] = useState(false);
 
+  // Money in motion + problems
+  const [motionDay, setMotionDay] = useState<'today' | 'tomorrow'>('today');
+  const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [retryMsg, setRetryMsg] = useState<{ id: string; ok: boolean; text: string } | null>(null);
+
   const load = useCallback(async (p: PeriodKind, cFrom: string, cTo: string) => {
     setLoading(true);
     setError('');
@@ -148,8 +155,26 @@ export default function RevenuePage() {
     else { const err = await res.json().catch(() => ({})); setExpenseError(err.error || 'Could not delete.'); }
   }
 
+  async function retryCharge(bookingId: string) {
+    setRetryingId(bookingId); setRetryMsg(null);
+    const res = await fetch(`/api/admin/retry-charge/${bookingId}`, { method: 'POST' });
+    setRetryingId(null);
+    if (res.ok) {
+      setRetryMsg({ id: bookingId, ok: true, text: 'Charged — the golfer is now checked in.' });
+      load(period, customFrom, customTo);
+    } else {
+      const e = await res.json().catch(() => ({}));
+      setRetryMsg({ id: bookingId, ok: false, text: e.error || 'Retry failed.' });
+    }
+  }
+
   const pnl = data?.pnl;
   const isOwner = data?.isOwner;
+  const motion = data?.moneyInMotion;
+  const upcoming = (motion?.upcomingCheckIns ?? []).filter(u => u.teeDate === (motionDay === 'today' ? motion?.todayStr : motion?.tomorrowStr));
+  const upcomingTake = upcoming.reduce((s, u) => s + u.ourTake, 0);
+  const failed = data?.problems.failedCheckIn ?? [];
+  const composingIds = new Set(data?.reconciliation?.composingBookingIds ?? []);
 
   return (
     <div className="min-h-screen bg-paper flex">
@@ -228,6 +253,126 @@ export default function RevenuePage() {
                   {pnl.stripeUnavailable && (
                     <p className="text-[11px] text-warn">Stripe processing costs couldn&apos;t be fetched — net excludes them for now.</p>
                   )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* SECTION 4 — Problems made actionable */}
+          {data && (failed.length > 0 || (data.reconciliation && !data.reconciliation.reconciles)) && (
+            <div className="bg-bad/5 border border-bad/20 rounded-lg p-5 mb-6">
+              {/* Reconciliation gap (owner) — lists the bookings composing it */}
+              {isOwner && data.reconciliation && !data.reconciliation.reconciles && !data.reconciliation.unavailable && (
+                <div className="mb-4 pb-4 border-b border-bad/15">
+                  <div className="flex items-center gap-2 mb-1">
+                    <AlertTriangle className="w-4 h-4 text-bad"/>
+                    <span className="text-sm font-medium text-bad">Fees don&apos;t reconcile with Stripe</span>
+                  </div>
+                  <p className="text-xs text-ink-soft">
+                    Expected {fmtMoney(data.reconciliation.expected)} in fees, Stripe shows {fmtMoney(data.reconciliation.actual)} — a {fmtMoney(Math.abs(data.reconciliation.gap))} gap.
+                    {composingIds.size > 0 ? ' The failed charges below are the likely cause — clear them to close the gap.' : ' No failed charges this period, so the difference is likely refund/payout timing at the period edge.'}
+                  </p>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 mb-4">
+                <AlertTriangle className="w-4 h-4 text-bad"/>
+                <span className="text-sm font-medium text-bad">Failed charges ({failed.length})</span>
+              </div>
+              {failed.length === 0 ? (
+                <p className="text-xs text-ink-muted">None — nothing to collect.</p>
+              ) : (
+                <div className="space-y-3">
+                  {failed.map(p => (
+                    <div key={p.bookingId} className={'bg-white border rounded-md px-4 py-3 ' + (composingIds.has(p.bookingId) ? 'border-bad/30' : 'border-bad/15')}>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-medium text-ink">{p.golferName}</span>
+                            <span className="text-[11px] text-ink-faint">·</span>
+                            <Link href={`/admin/courses/${p.courseId}`} className="text-xs text-pine hover:underline">{p.courseName}</Link>
+                            <span className="text-[11px] text-ink-faint">·</span>
+                            <span className="text-xs text-ink-muted">{p.teeDate} {p.teeTime}</span>
+                          </div>
+                          <div className="text-xs text-bad mt-1">{p.reason}</div>
+                          <div className="text-xs text-ink-muted mt-0.5">{p.golferEmail}</div>
+                          {retryMsg?.id === p.bookingId && (
+                            <div className={'text-xs mt-1 font-medium ' + (retryMsg.ok ? 'text-ok' : 'text-bad')}>{retryMsg.text}</div>
+                          )}
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="text-sm font-medium text-ink tabular-nums mb-1.5">{fmtMoney(p.amount)}</div>
+                          <button onClick={() => retryCharge(p.bookingId)} disabled={retryingId === p.bookingId}
+                            className="inline-flex items-center gap-1 text-[11px] font-medium text-white bg-pine hover:bg-pine-hover disabled:opacity-50 px-2.5 py-1 rounded-md transition-colors">
+                            <RotateCw className={'w-3 h-3 ' + (retryingId === p.bookingId ? 'animate-spin' : '')}/>{retryingId === p.bookingId ? 'Retrying…' : 'Retry charge'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="text-xs text-ink-muted mt-3">Retry reruns the check-in charge on the saved card. A hard decline needs a new card or in-person payment.</p>
+            </div>
+          )}
+
+          {/* SECTION 3 — Money in motion (forward ledger) */}
+          {data && (
+            <div className="bg-white border border-line rounded-lg p-5 mb-6">
+              <div className="flex items-center justify-between gap-3 mb-1">
+                <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Money in motion</span>
+                <span className="text-[10px] uppercase tracking-[0.06em] text-ink-faint">Expected · not booked revenue</span>
+              </div>
+
+              {/* Upcoming check-ins with today/tomorrow toggle */}
+              <div className="flex items-center justify-between gap-3 mt-4 mb-3">
+                <span className="text-sm font-medium text-ink">Upcoming check-ins</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-ink-muted">Our take: <span className="font-medium text-ink tabular-nums">{fmtMoney(upcomingTake)}</span></span>
+                  <div className="flex items-center gap-1 bg-paper border border-line rounded-md p-0.5">
+                    {(['today', 'tomorrow'] as const).map(d => (
+                      <button key={d} onClick={() => setMotionDay(d)}
+                        className={'px-2.5 py-1 rounded text-[11px] font-medium capitalize transition-colors ' + (motionDay === d ? 'bg-white text-ink border border-line' : 'text-ink-muted hover:text-ink')}>{d}</button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {upcoming.length === 0 ? (
+                <p className="text-xs text-ink-muted py-2">No check-ins scheduled for {motionDay}.</p>
+              ) : (
+                <div className="divide-y divide-line-soft">
+                  {upcoming.map(u => (
+                    <Link key={u.bookingId} href={`/admin/courses/${u.courseId}`} className="flex items-center justify-between gap-4 py-2 hover:bg-paper/60 -mx-2 px-2 rounded transition-colors">
+                      <div className="min-w-0">
+                        <span className="text-sm text-ink">{u.golferName}</span>
+                        <span className="text-xs text-ink-muted"> · {u.courseName} · {u.teeTime} · {u.players}p</span>
+                      </div>
+                      <span className="text-sm font-medium text-ok tabular-nums shrink-0">{fmtMoney(u.ourTake)}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              {/* Pending late-cancel fees */}
+              {(motion?.pendingLateCancelFees.length ?? 0) > 0 && (
+                <div className="mt-5 pt-4 border-t border-line-soft">
+                  <div className="text-sm font-medium text-ink mb-2">Late-cancellation fees</div>
+                  <div className="divide-y divide-line-soft">
+                    {motion!.pendingLateCancelFees.map(f => (
+                      <Link key={f.bookingId} href={`/admin/courses/${f.courseId}`} className="flex items-center justify-between gap-4 py-2 hover:bg-paper/60 -mx-2 px-2 rounded transition-colors">
+                        <div className="min-w-0 flex items-center gap-2">
+                          <span className="text-sm text-ink">{f.golferName}</span>
+                          <span className="text-xs text-ink-muted truncate">· {f.courseName} · {f.teeDate}</span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className={'inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded ' + (f.status === 'charged' ? 'bg-ok/10 text-ok' : 'bg-warn/10 text-warn')}>
+                            {f.status === 'charged' ? <CheckCircle2 className="w-3 h-3"/> : <Clock className="w-3 h-3"/>}{f.status}
+                          </span>
+                          <span className="text-sm font-medium text-ink tabular-nums">{fmtMoney(f.fee)}</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
