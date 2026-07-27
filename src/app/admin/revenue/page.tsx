@@ -3,10 +3,11 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   RefreshCw, AlertTriangle, X, Plus, Pencil, Trash2, TrendingUp, TrendingDown, Minus,
-  RotateCw, Clock, CheckCircle2,
+  RotateCw, Clock, CheckCircle2, Search, ChevronUp, ChevronDown, Download, Landmark, ExternalLink,
 } from 'lucide-react';
 import Link from 'next/link';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import { StatusDot } from '@/components/ui/StatusDot';
 import { EXPENSE_CATEGORIES, EXPENSE_CADENCES, EXPENSE_CATEGORY_LABEL, EXPENSE_CADENCE_LABEL } from '@/lib/expenses';
 
 const fmtMoney = (n: number) =>
@@ -36,6 +37,13 @@ interface Expense {
   id: string; name: string; category: string; amountCents: number; cadence: string;
   startedAt: string; endedAt: string | null;
 }
+interface PlatformStripeData {
+  balance: { available: number; pending: number; currency: string };
+  nextPayout: { amount: number; arrivalDate: string; status: string } | null;
+  period: string;
+}
+type SortKey = 'name' | 'bookings' | 'serviceFees' | 'greenFeeVolume' | 'failedCharges';
+
 interface RevenueData {
   period: { kind: PeriodKind; label: string; from: string; to: string };
   isOwner: boolean;
@@ -91,6 +99,17 @@ export default function RevenuePage() {
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [retryMsg, setRetryMsg] = useState<{ id: string; ok: boolean; text: string } | null>(null);
 
+  // Per-course table
+  const [search, setSearch] = useState('');
+  const [sortKey, setSortKey] = useState<SortKey>('serviceFees');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [showArchived, setShowArchived] = useState(false);
+
+  // Platform Stripe reference card (owner)
+  const [platform, setPlatform] = useState<PlatformStripeData | null>(null);
+  const [platformLoading, setPlatformLoading] = useState(false);
+  const [platformError, setPlatformError] = useState('');
+
   const load = useCallback(async (p: PeriodKind, cFrom: string, cTo: string) => {
     setLoading(true);
     setError('');
@@ -108,7 +127,18 @@ export default function RevenuePage() {
     setLoading(false);
   }, [router]);
 
+  const loadPlatform = useCallback(async () => {
+    setPlatformLoading(true); setPlatformError('');
+    try {
+      const res = await fetch('/api/admin/platform-stripe?period=30d');
+      if (!res.ok) { const e = await res.json().catch(() => ({})); setPlatformError(e.error || 'Could not load Stripe balance.'); setPlatformLoading(false); return; }
+      setPlatform(await res.json());
+    } catch { setPlatformError('Network error loading Stripe balance.'); }
+    setPlatformLoading(false);
+  }, []);
+
   useEffect(() => { if (!initRef.current) { initRef.current = true; load('mtd', '', ''); } }, [load]);
+  useEffect(() => { if (data?.isOwner && !platform && !platformLoading && !platformError) loadPlatform(); }, [data?.isOwner, platform, platformLoading, platformError, loadPlatform]);
 
   function changePeriod(p: PeriodKind) {
     setPeriod(p);
@@ -166,6 +196,45 @@ export default function RevenuePage() {
       const e = await res.json().catch(() => ({}));
       setRetryMsg({ id: bookingId, ok: false, text: e.error || 'Retry failed.' });
     }
+  }
+
+  function toggleSort(k: SortKey) {
+    if (sortKey === k) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(k); setSortDir('desc'); }
+  }
+
+  const rows = (data?.byCourse ?? [])
+    .filter(r => showArchived ? true : !r.archived)
+    .filter(r => !search || r.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      const mul = sortDir === 'asc' ? 1 : -1;
+      if (sortKey === 'name') return mul * a.name.localeCompare(b.name);
+      return mul * (a[sortKey] - b[sortKey]);
+    });
+
+  function exportCsv() {
+    if (!data) return;
+    const header = ['Course', 'Status', 'Bookings', 'Service fees', 'Green fee volume', 'Failed charges', 'Stripe'];
+    const esc = (v: string) => /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+    const statusOf = (r: CourseRow) => r.archived ? 'Archived' : r.active ? 'Live' : 'Offline';
+    const lines = rows.map(r => [r.name, statusOf(r), String(r.bookings), r.serviceFees.toFixed(2), r.greenFeeVolume.toFixed(2), String(r.failedCharges), r.stripeActive ? 'Connected' : 'Not connected'].map(esc).join(','));
+    const csv = [header.join(','), ...lines].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `greenreserve-revenue_${data.period.from}_to_${data.period.to}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function SortHead({ col, label, right }: { col: SortKey; label: string; right?: boolean }) {
+    const Icon = sortKey !== col ? ChevronUp : sortDir === 'asc' ? ChevronUp : ChevronDown;
+    return (
+      <button onClick={() => toggleSort(col)} className={`flex items-center gap-1 text-[11px] uppercase tracking-[0.06em] text-ink-muted hover:text-ink transition-colors ${right ? 'ml-auto' : ''}`}>
+        {label}<Icon className={'w-3 h-3 ' + (sortKey === col ? 'text-pine' : 'opacity-20')}/>
+      </button>
+    );
   }
 
   const pnl = data?.pnl;
@@ -375,6 +444,107 @@ export default function RevenuePage() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* SECTION 5 — Per-course table (follows the page period) */}
+          {data && (
+            <div className="bg-white border border-line rounded-lg overflow-hidden mb-6">
+              <div className="px-5 py-4 border-b border-line-soft flex items-center justify-between gap-3 flex-wrap">
+                <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">By course · {data.period.label}</span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <label className="flex items-center gap-1.5 text-[12px] text-ink-soft cursor-pointer select-none">
+                    <input type="checkbox" checked={showArchived} onChange={e => setShowArchived(e.target.checked)} className="accent-pine"/>
+                    Show archived
+                  </label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-faint pointer-events-none"/>
+                    <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search courses…" className={iCls + ' pl-8 w-48'}/>
+                  </div>
+                  <button onClick={exportCsv} disabled={rows.length === 0}
+                    className="flex items-center gap-1.5 text-[12px] font-medium text-ink-soft hover:text-ink px-3 py-2 rounded-md border border-line hover:border-line-strong disabled:opacity-40 transition-colors">
+                    <Download className="w-3.5 h-3.5"/>Export CSV
+                  </button>
+                </div>
+              </div>
+              {rows.length === 0 ? (
+                <div className="py-16 text-center text-ink-muted text-sm">{search ? 'No courses match your search' : `No revenue for ${data.period.label}`}</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-line-soft">
+                        <th className="text-left px-5 py-3 font-normal"><SortHead col="name" label="Course"/></th>
+                        <th className="px-4 py-3 font-normal"><div className="flex justify-end"><SortHead col="bookings" label="Bookings" right/></div></th>
+                        <th className="px-4 py-3 font-normal"><div className="flex justify-end"><SortHead col="serviceFees" label="Service fees" right/></div></th>
+                        <th className="px-4 py-3 font-normal"><div className="flex justify-end"><SortHead col="greenFeeVolume" label="Green fee vol." right/></div></th>
+                        <th className="px-4 py-3 font-normal"><div className="flex justify-end"><SortHead col="failedCharges" label="Failed" right/></div></th>
+                        <th className="text-center px-4 py-3 font-normal"><span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Stripe</span></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-line-soft">
+                      {rows.map(r => (
+                        <tr key={r.courseId} className="hover:bg-paper/60 transition-colors">
+                          <td className="px-5 py-3">
+                            <div className="flex items-center gap-2">
+                              <Link href={`/admin/courses/${r.courseId}`} className={'font-medium hover:underline ' + (r.archived ? 'text-ink-muted' : 'text-ink')}>{r.name}</Link>
+                              {r.archived
+                                ? <span className="text-[10px] text-ink-faint bg-line rounded px-1.5 py-0.5">Archived</span>
+                                : !r.active && <span className="text-[10px] text-ink-faint bg-line rounded px-1.5 py-0.5">Offline</span>}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-right tabular-nums text-ink-soft">{fmtCount(r.bookings)}</td>
+                          <td className="px-4 py-3 text-right tabular-nums font-medium text-ink">{fmtMoney(r.serviceFees)}</td>
+                          <td className="px-4 py-3 text-right tabular-nums text-ink-soft">{fmtMoney(r.greenFeeVolume)}</td>
+                          <td className="px-4 py-3 text-right tabular-nums">{r.failedCharges > 0 ? <span className="text-bad font-medium">{r.failedCharges}</span> : <span className="text-ink-faint">—</span>}</td>
+                          <td className="px-4 py-3"><div className="flex justify-center"><StatusDot status={r.stripeActive ? 'ok' : 'warn'} label={r.stripeActive ? 'Connected' : 'Not connected'}/></div></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {rows.length > 0 && (
+                <div className="px-5 py-3 border-t border-line-soft flex items-center justify-between">
+                  <span className="text-xs text-ink-muted">{rows.length} course{rows.length !== 1 ? 's' : ''}{search ? ` matching "${search}"` : ''}{!showArchived ? ' · archived hidden' : ''}</span>
+                  <span className="text-xs text-ink-muted">{data.period.label}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* SECTION 6 — Platform Stripe reference card (owner, bottom) */}
+          {isOwner && (
+            <div className="bg-white border border-line rounded-lg p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Landmark className="w-4 h-4 text-pine"/>
+                  <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Platform Stripe account</span>
+                </div>
+                <a href="https://dashboard.stripe.com/balance" target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-[11px] text-pine hover:text-pine-hover underline">Open Stripe dashboard<ExternalLink className="w-3 h-3"/></a>
+              </div>
+              {platformError && <div className="text-sm text-bad">{platformError}</div>}
+              {platformLoading && !platform ? (
+                <div className="py-4 text-center text-ink-muted text-sm">Loading Stripe balance…</div>
+              ) : platform ? (
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <div className="text-[11px] text-ink-muted mb-0.5">Available balance</div>
+                    <div className="text-xl font-serif font-medium text-ink tabular-nums">{fmtMoney(platform.balance.available)}</div>
+                    <div className="text-[11px] text-ink-faint mt-0.5">{fmtMoney(platform.balance.pending)} pending</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-ink-muted mb-0.5">Next payout</div>
+                    {platform.nextPayout ? (
+                      <>
+                        <div className="text-xl font-serif font-medium text-ink tabular-nums">{fmtMoney(platform.nextPayout.amount)}</div>
+                        <div className="text-[11px] text-ink-faint mt-0.5">{platform.nextPayout.arrivalDate} · {platform.nextPayout.status}</div>
+                      </>
+                    ) : <div className="text-sm text-ink-faint mt-1">None scheduled</div>}
+                  </div>
+                </div>
+              ) : null}
             </div>
           )}
 
