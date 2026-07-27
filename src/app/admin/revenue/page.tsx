@@ -2,175 +2,191 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  DollarSign, RefreshCw, AlertTriangle, ChevronUp, ChevronDown,
-  ExternalLink, Search, CheckCircle2, Landmark,
+  RefreshCw, AlertTriangle, X, Plus, Pencil, Trash2, TrendingUp, TrendingDown, Minus,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
-import { StatusDot } from '@/components/ui/StatusDot';
+import { EXPENSE_CATEGORIES, EXPENSE_CADENCES, EXPENSE_CATEGORY_LABEL, EXPENSE_CADENCE_LABEL } from '@/lib/expenses';
 
 const fmtMoney = (n: number) =>
-  n === 0 ? '$0' : `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
+  (n < 0 ? '-$' : '$') + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtCount = (n: number) => n.toLocaleString('en-US');
 
-interface Stats {
-  feesToday: number; fees7d: number; feesMonth: number;
-  bookingsToday: number; bookings7d: number; bookingsMonth: number;
-  failedChargesCount: number;
-}
+type PeriodKind = 'day' | 'week' | 'mtd' | 'custom';
+interface Delta { pct: number | null; direction: 'up' | 'down' | 'flat' | null }
 
 interface CourseRow {
   courseId: string; name: string; active: boolean; archived: boolean; stripeActive: boolean;
   bookings: number; serviceFees: number; greenFeeVolume: number; failedCharges: number;
 }
-
-interface FailedCheckIn {
-  bookingId: string; courseId: string; courseName: string;
-  golferName: string; golferEmail: string; failReason: string;
-  teeDate: string; teeTime: string; amount: number;
+interface FailedCharge {
+  bookingId: string; courseId: string; courseName: string; golferName: string; golferEmail: string;
+  reason: string; teeDate: string; teeTime: string; amount: number; ourTake: number;
 }
-
+interface UpcomingCheckIn {
+  bookingId: string; courseId: string; courseName: string; golferName: string; players: number;
+  teeDate: string; teeTime: string; ourTake: number; total: number;
+}
+interface PendingFee {
+  bookingId: string; courseId: string; courseName: string; golferName: string;
+  fee: number; status: 'charged' | 'pending'; teeDate: string; teeTime: string;
+}
+interface Expense {
+  id: string; name: string; category: string; amountCents: number; cadence: string;
+  startedAt: string; endedAt: string | null;
+}
 interface RevenueData {
-  stats: Stats;
+  period: { kind: PeriodKind; label: string; from: string; to: string };
+  isOwner: boolean;
+  pnl: {
+    feesEarned: number; feesEarnedDelta: Delta;
+    stripeProcessing?: number; stripeUnavailable?: boolean;
+    expenses?: number; expensesDelta?: Delta;
+    net?: number; netDelta?: Delta;
+  };
   byCourse: CourseRow[];
-  problems: { failedCheckIn: FailedCheckIn[] };
-  period: { from: string; to: string; label: string };
+  moneyInMotion: { upcomingCheckIns: UpcomingCheckIn[]; pendingLateCancelFees: PendingFee[]; todayStr: string; tomorrowStr: string };
+  problems: { failedCheckIn: FailedCharge[] };
+  reconciliation?: { expected: number; actual: number; gap: number; reconciles: boolean; unavailable: boolean; composingBookingIds: string[] };
 }
 
-interface PlatformStripeData {
-  balance: { available: number; pending: number; currency: string };
-  nextPayout: { amount: number; arrivalDate: string; status: string } | null;
-  applicationFees: { amount: number; count: number };
-  reconciliation: { expected: number; actual: number; delta: number; matches: boolean; bookingCount: number; message: string };
-  period: string;
-}
+const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-ink text-sm placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
-type SortKey = 'name' | 'bookings' | 'serviceFees' | 'greenFeeVolume' | 'failedCharges';
-type Period = '7d' | '30d' | '90d' | 'custom';
+function DeltaBadge({ delta, goodWhenUp = true }: { delta?: Delta; goodWhenUp?: boolean }) {
+  if (!delta || delta.pct === null || delta.direction === null) {
+    return <span className="text-[11px] text-ink-faint">— no prior</span>;
+  }
+  const good = delta.direction === 'flat' ? null : (delta.direction === 'up') === goodWhenUp;
+  const color = good === null ? 'text-ink-muted' : good ? 'text-ok' : 'text-bad';
+  const Icon = delta.direction === 'up' ? TrendingUp : delta.direction === 'down' ? TrendingDown : Minus;
+  return (
+    <span className={`inline-flex items-center gap-1 text-[11px] font-medium ${color}`}>
+      <Icon className="w-3 h-3" />{delta.pct >= 0 ? '+' : ''}{delta.pct.toFixed(0)}% vs prior
+    </span>
+  );
+}
 
 export default function RevenuePage() {
   const router = useRouter();
   const [data, setData] = useState<RevenueData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [period, setPeriod] = useState<Period>('30d');
+  const [period, setPeriod] = useState<PeriodKind>('mtd');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
-  const [search, setSearch] = useState('');
-  const [sortKey, setSortKey] = useState<SortKey>('serviceFees');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const initRef = useRef(false);
-  const [isOwner, setIsOwner] = useState(false);
-  const [platform, setPlatform] = useState<PlatformStripeData | null>(null);
-  const [platformLoading, setPlatformLoading] = useState(false);
-  const [platformError, setPlatformError] = useState('');
 
-  const loadPlatformStripe = useCallback(async (p: '7d' | '30d') => {
-    setPlatformLoading(true);
-    setPlatformError('');
-    try {
-      const res = await fetch(`/api/admin/platform-stripe?period=${p}`);
-      if (!res.ok) { const e = await res.json().catch(() => ({})); setPlatformError(e.error || 'Could not load Stripe platform data.'); setPlatformLoading(false); return; }
-      setPlatform(await res.json());
-    } catch { setPlatformError('Network error — check your connection and try again.'); }
-    setPlatformLoading(false);
-  }, []);
+  // Expenses drawer
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [expensesLoading, setExpensesLoading] = useState(false);
+  const [expenseError, setExpenseError] = useState('');
+  const [editing, setEditing] = useState<Expense | null>(null);
+  const [draft, setDraft] = useState({ name: '', category: 'infra', amount: '', cadence: 'monthly' });
+  const [savingExpense, setSavingExpense] = useState(false);
 
-  const load = useCallback(async (p: Period, cFrom: string, cTo: string) => {
+  const load = useCallback(async (p: PeriodKind, cFrom: string, cTo: string) => {
     setLoading(true);
     setError('');
     try {
       const sRes = await fetch('/api/admin/session');
       if (!sRes.ok) { router.push('/admin/login'); return; }
-      const sData = await sRes.json().catch(() => ({}));
-      if (sData?.role === 'owner') { setIsOwner(true); loadPlatformStripe('30d'); }
       const params = new URLSearchParams();
-      if (p === 'custom' && cFrom && cTo) {
-        params.set('from', cFrom);
-        params.set('to', cTo);
-      } else if (p !== 'custom') {
-        params.set('period', p);
-      }
+      if (p === 'custom' && cFrom && cTo) { params.set('period', 'custom'); params.set('from', cFrom); params.set('to', cTo); }
+      else params.set('period', p);
       const res = await fetch(`/api/admin/revenue?${params}`);
       if (res.status === 403) { setError('This page requires elevated permissions.'); setLoading(false); return; }
-      if (!res.ok) { const e = await res.json().catch(() => ({})); setError(e.error || `Failed to load revenue data (${res.status})`); setLoading(false); return; }
-      const d: RevenueData = await res.json();
-      setData(d);
+      if (!res.ok) { const e = await res.json().catch(() => ({})); setError(e.error || `Failed to load revenue (${res.status})`); setLoading(false); return; }
+      setData(await res.json());
     } catch { setError('Network error — check your connection and try again.'); }
     setLoading(false);
-  }, [router, loadPlatformStripe]);
+  }, [router]);
 
-  useEffect(() => {
-    if (!initRef.current) { initRef.current = true; load('30d', '', ''); }
-  }, [load]);
+  useEffect(() => { if (!initRef.current) { initRef.current = true; load('mtd', '', ''); } }, [load]);
 
-  function handlePeriodChange(p: Period) {
+  function changePeriod(p: PeriodKind) {
     setPeriod(p);
     if (p !== 'custom') load(p, '', '');
   }
 
-  function handleCustomLoad() {
-    if (customFrom && customTo) load('custom', customFrom, customTo);
+  const loadExpenses = useCallback(async () => {
+    setExpensesLoading(true); setExpenseError('');
+    const res = await fetch('/api/admin/expenses');
+    if (res.ok) setExpenses((await res.json()).expenses);
+    else { const e = await res.json().catch(() => ({})); setExpenseError(e.error || 'Could not load expenses.'); }
+    setExpensesLoading(false);
+  }, []);
+
+  function openDrawer() { setDrawerOpen(true); loadExpenses(); resetDraft(); }
+  function resetDraft() { setEditing(null); setDraft({ name: '', category: 'infra', amount: '', cadence: 'monthly' }); setExpenseError(''); }
+  function startEdit(e: Expense) {
+    setEditing(e);
+    setDraft({ name: e.name, category: e.category, amount: (e.amountCents / 100).toString(), cadence: e.cadence });
   }
 
-  function handleSort(key: SortKey) {
-    if (sortKey === key) {
-      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortKey(key);
-      setSortDir('desc');
-    }
+  async function saveExpense() {
+    const amountCents = Math.round(parseFloat(draft.amount) * 100);
+    if (!draft.name.trim()) { setExpenseError('Name is required.'); return; }
+    if (!Number.isFinite(amountCents) || amountCents <= 0) { setExpenseError('Amount must be a positive number.'); return; }
+    setSavingExpense(true); setExpenseError('');
+    const body = JSON.stringify({ name: draft.name.trim(), category: draft.category, amountCents, cadence: draft.cadence });
+    const res = editing
+      ? await fetch(`/api/admin/expenses/${editing.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body })
+      : await fetch('/api/admin/expenses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+    setSavingExpense(false);
+    if (res.ok) { resetDraft(); await loadExpenses(); load(period, customFrom, customTo); }
+    else { const e = await res.json().catch(() => ({})); setExpenseError(e.error || 'Could not save.'); }
   }
 
-  const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-ink text-sm placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
-
-  const rows = data?.byCourse
-    .filter(r => !search || r.name.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => {
-      const mul = sortDir === 'asc' ? 1 : -1;
-      if (sortKey === 'name') return mul * a.name.localeCompare(b.name);
-      return mul * (a[sortKey] - b[sortKey]);
-    }) ?? [];
-
-  function SortIcon({ col }: { col: SortKey }) {
-    if (sortKey !== col) return <ChevronUp className="w-3 h-3 opacity-20"/>;
-    return sortDir === 'asc'
-      ? <ChevronUp className="w-3 h-3 text-pine"/>
-      : <ChevronDown className="w-3 h-3 text-pine"/>;
+  async function endExpense(e: Expense) {
+    const res = await fetch(`/api/admin/expenses/${e.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endedAt: new Date().toISOString() }) });
+    if (res.ok) { await loadExpenses(); load(period, customFrom, customTo); }
+    else { const err = await res.json().catch(() => ({})); setExpenseError(err.error || 'Could not update.'); }
+  }
+  async function deleteExpense(e: Expense) {
+    const res = await fetch(`/api/admin/expenses/${e.id}`, { method: 'DELETE' });
+    if (res.ok) { await loadExpenses(); load(period, customFrom, customTo); }
+    else { const err = await res.json().catch(() => ({})); setExpenseError(err.error || 'Could not delete.'); }
   }
 
-  function ColHeader({ col, label, right }: { col: SortKey; label: string; right?: boolean }) {
-    return (
-      <button
-        onClick={() => handleSort(col)}
-        className={`flex items-center gap-1 text-[11px] uppercase tracking-[0.06em] text-ink-muted hover:text-ink transition-colors ${right ? 'ml-auto' : ''}`}
-      >
-        {label}<SortIcon col={col}/>
-      </button>
-    );
-  }
-
-  const stats = data?.stats;
-  const problems = data?.problems.failedCheckIn ?? [];
+  const pnl = data?.pnl;
+  const isOwner = data?.isOwner;
 
   return (
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="revenue"/>
       <div className="admin-content flex-1 min-h-screen">
-        <div className="px-8 py-7">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
+        <div className="px-8 py-7 max-w-6xl">
+          {/* Header + one period picker that rules the whole page */}
+          <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
             <div>
               <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1">Admin</p>
               <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Revenue</h1>
             </div>
-            <button
-              onClick={() => load(period, customFrom, customTo)}
-              className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors"
-            >
-              <RefreshCw className="w-4 h-4"/>Refresh
-            </button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1 bg-white border border-line rounded-md p-1">
+                {([['day', 'Day'], ['week', 'Week'], ['mtd', 'Month to date'], ['custom', 'Custom']] as [PeriodKind, string][]).map(([p, lbl]) => (
+                  <button key={p} onClick={() => changePeriod(p)}
+                    className={'px-3 py-1.5 rounded text-[11px] font-medium transition-colors ' + (period === p ? 'bg-paper text-ink border border-line' : 'text-ink-muted hover:text-ink')}>
+                    {lbl}
+                  </button>
+                ))}
+              </div>
+              <button onClick={() => load(period, customFrom, customTo)}
+                className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors">
+                <RefreshCw className="w-4 h-4"/>Refresh
+              </button>
+            </div>
           </div>
+
+          {period === 'custom' && (
+            <div className="flex items-center gap-2 mb-6">
+              <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)} className={iCls}/>
+              <span className="text-ink-muted text-sm">–</span>
+              <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)} className={iCls}/>
+              <button onClick={() => customFrom && customTo && load('custom', customFrom, customTo)} disabled={!customFrom || !customTo}
+                className="bg-pine hover:bg-pine-hover disabled:opacity-40 text-white text-[12.5px] font-medium px-4 py-2 rounded-md transition-colors">Load</button>
+            </div>
+          )}
 
           {error && (
             <div className="bg-bad/5 border border-bad/20 rounded-lg px-4 py-3 text-sm text-bad mb-5 flex items-center gap-2">
@@ -178,306 +194,132 @@ export default function RevenuePage() {
             </div>
           )}
 
-          {/* Platform Stripe — owner only */}
-          {isOwner && (
-            <div className="bg-white border border-line rounded-lg p-5 mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Landmark className="w-4 h-4 text-pine"/>
-                  <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Platform Stripe account</span>
+          {/* SECTION 1 — Headline: fees earned leads, full P&L statement beneath (owner) */}
+          {pnl && (
+            <div className="bg-white border border-line rounded-lg p-6 mb-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1">Fees earned · {data?.period.label}</div>
+                  <div className="text-[34px] font-serif font-medium text-ink tabular-nums leading-none">{fmtMoney(pnl.feesEarned)}</div>
+                  <div className="mt-2"><DeltaBadge delta={pnl.feesEarnedDelta}/></div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1 bg-paper border border-line rounded-md p-1">
-                    {(['7d', '30d'] as const).map(p => (
-                      <button
-                        key={p}
-                        onClick={() => loadPlatformStripe(p)}
-                        className={'px-2.5 py-1 rounded text-[11px] font-medium transition-colors ' + (platform?.period === p ? 'bg-white text-ink border border-line shadow-sm' : 'text-ink-muted hover:text-ink')}
-                      >
-                        {p === '7d' ? '7 days' : '30 days'}
-                      </button>
-                    ))}
-                  </div>
-                  <a href="https://dashboard.stripe.com/balance" target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-[11px] text-pine hover:text-pine-hover underline">
-                    Open Stripe dashboard<ExternalLink className="w-3 h-3"/>
-                  </a>
-                </div>
+                {isOwner && (
+                  <button onClick={openDrawer}
+                    className="flex items-center gap-1.5 text-[12px] font-medium text-ink-soft hover:text-ink px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
+                    <Pencil className="w-3.5 h-3.5"/>Manage expenses
+                  </button>
+                )}
               </div>
 
-              {platformError && (
-                <div className="bg-bad/5 border border-bad/20 rounded-md px-4 py-3 text-sm text-bad mb-4 flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0"/>{platformError}
+              {/* Owner-only: the statement — fees − stripe − expenses = net */}
+              {isOwner && pnl.net !== undefined && (
+                <div className="mt-5 pt-5 border-t border-line-soft max-w-md space-y-2.5">
+                  <StatementLine label="Fees earned" value={pnl.feesEarned}/>
+                  <StatementLine label="Stripe processing" value={-(pnl.stripeProcessing ?? 0)} muted
+                    note={pnl.stripeUnavailable ? 'Stripe unavailable' : undefined}/>
+                  <StatementLine label="Operating expenses" value={-(pnl.expenses ?? 0)} muted delta={pnl.expensesDelta} deltaGoodWhenUp={false}/>
+                  <div className="flex items-center justify-between pt-2.5 border-t border-line">
+                    <span className="text-sm font-medium text-ink">Net</span>
+                    <div className="flex items-center gap-3">
+                      <DeltaBadge delta={pnl.netDelta}/>
+                      <span className={'text-lg font-serif font-medium tabular-nums ' + ((pnl.net ?? 0) >= 0 ? 'text-ink' : 'text-bad')}>{fmtMoney(pnl.net ?? 0)}</span>
+                    </div>
+                  </div>
+                  {pnl.stripeUnavailable && (
+                    <p className="text-[11px] text-warn">Stripe processing costs couldn&apos;t be fetched — net excludes them for now.</p>
+                  )}
                 </div>
               )}
-
-              {platformLoading && !platform ? (
-                <div className="py-8 text-center text-ink-muted text-sm">Loading Stripe balance…</div>
-              ) : platform ? (
-                <>
-                  <div className="grid grid-cols-3 gap-4 mb-4">
-                    <div>
-                      <div className="text-[11px] text-ink-muted mb-0.5">Available balance</div>
-                      <div className="text-xl font-serif font-medium text-ink tabular-nums">{fmtMoney(platform.balance.available)}</div>
-                      <div className="text-[11px] text-ink-faint mt-0.5">{fmtMoney(platform.balance.pending)} pending</div>
-                    </div>
-                    <div>
-                      <div className="text-[11px] text-ink-muted mb-0.5">Next payout</div>
-                      {platform.nextPayout ? (
-                        <>
-                          <div className="text-xl font-serif font-medium text-ink tabular-nums">{fmtMoney(platform.nextPayout.amount)}</div>
-                          <div className="text-[11px] text-ink-faint mt-0.5">{platform.nextPayout.arrivalDate} · {platform.nextPayout.status}</div>
-                        </>
-                      ) : (
-                        <div className="text-sm text-ink-faint mt-1">None scheduled</div>
-                      )}
-                    </div>
-                    <div>
-                      <div className="text-[11px] text-ink-muted mb-0.5">App fees ({platform.period})</div>
-                      <div className="text-xl font-serif font-medium text-ink tabular-nums">{fmtMoney(platform.applicationFees.amount)}</div>
-                      <div className="text-[11px] text-ink-faint mt-0.5">{fmtCount(platform.applicationFees.count)} charges</div>
-                    </div>
-                  </div>
-
-                  <div className={'rounded-md px-4 py-3 text-sm flex items-start gap-2 ' + (platform.reconciliation.matches ? 'bg-ok/5 border border-ok/20' : 'bg-bad/5 border border-bad/20')}>
-                    {platform.reconciliation.matches
-                      ? <CheckCircle2 className="w-4 h-4 text-ok shrink-0 mt-0.5"/>
-                      : <AlertTriangle className="w-4 h-4 text-bad shrink-0 mt-0.5"/>}
-                    <div>
-                      <div className={platform.reconciliation.matches ? 'text-ok font-medium' : 'text-bad font-medium'}>
-                        {platform.reconciliation.matches ? 'Fees reconcile' : 'Fees do not reconcile'}
-                      </div>
-                      <div className="text-ink-soft text-xs mt-0.5">{platform.reconciliation.message}</div>
-                    </div>
-                  </div>
-                </>
-              ) : null}
             </div>
           )}
 
-          {/* Header stats */}
-          {stats && (
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {/* Fees */}
-              <div className="bg-white border border-line rounded-lg p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <DollarSign className="w-4 h-4 text-pine"/>
-                  <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Service fees</span>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <div className="text-[11px] text-ink-muted mb-0.5">Today</div>
-                    <div className="text-2xl font-serif font-medium text-ink tabular-nums">{fmtMoney(stats.feesToday)}</div>
-                  </div>
-                  <div className="flex items-center justify-between pt-2 border-t border-line-soft">
-                    <div>
-                      <div className="text-[11px] text-ink-muted">Last 7 days</div>
-                      <div className="text-base font-serif font-medium text-ink tabular-nums">{fmtMoney(stats.fees7d)}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[11px] text-ink-muted">This month</div>
-                      <div className="text-base font-serif font-medium text-ink tabular-nums">{fmtMoney(stats.feesMonth)}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {loading && !data && <div className="py-16 text-center text-ink-muted text-sm">Loading…</div>}
+        </div>
+      </div>
 
-              {/* Bookings */}
-              <div className="bg-white border border-line rounded-lg p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Bookings</span>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <div className="text-[11px] text-ink-muted mb-0.5">Today</div>
-                    <div className="text-2xl font-serif font-medium text-ink tabular-nums">{fmtCount(stats.bookingsToday)}</div>
-                  </div>
-                  <div className="flex items-center justify-between pt-2 border-t border-line-soft">
-                    <div>
-                      <div className="text-[11px] text-ink-muted">Last 7 days</div>
-                      <div className="text-base font-serif font-medium text-ink tabular-nums">{fmtCount(stats.bookings7d)}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[11px] text-ink-muted">This month</div>
-                      <div className="text-base font-serif font-medium text-ink tabular-nums">{fmtCount(stats.bookingsMonth)}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Failed charges alert */}
-              <div className={`border rounded-lg p-5 ${stats.failedChargesCount > 0 ? 'bg-bad/5 border-bad/25' : 'bg-white border-line'}`}>
-                <div className="flex items-center gap-2 mb-4">
-                  <AlertTriangle className={`w-4 h-4 ${stats.failedChargesCount > 0 ? 'text-bad' : 'text-ink-muted'}`}/>
-                  <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Failed charges</span>
-                </div>
-                <div className="text-2xl font-serif font-medium tabular-nums" style={{ color: stats.failedChargesCount > 0 ? 'var(--color-bad)' : 'var(--color-ink)' }}>
-                  {fmtCount(stats.failedChargesCount)}
-                </div>
-                <div className="text-[12px] text-ink-muted mt-2">
-                  {stats.failedChargesCount === 0
-                    ? 'No pending failed charges'
-                    : `${stats.failedChargesCount} booking${stats.failedChargesCount !== 1 ? 's' : ''} need${stats.failedChargesCount === 1 ? 's' : ''} attention`}
-                </div>
-              </div>
+      {/* SECTION 2 — Manage expenses drawer (owner) */}
+      {drawerOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div className="absolute inset-0 bg-ink/30" onClick={() => setDrawerOpen(false)}/>
+          <div className="relative w-full max-w-md bg-paper h-full shadow-xl border-l border-line overflow-y-auto">
+            <div className="sticky top-0 bg-paper border-b border-line px-5 py-4 flex items-center justify-between">
+              <h2 className="text-[15px] font-serif font-medium text-ink">Operating expenses</h2>
+              <button onClick={() => setDrawerOpen(false)} className="text-ink-muted hover:text-ink"><X className="w-4 h-4"/></button>
             </div>
-          )}
-
-          {/* Problems section */}
-          {problems.length > 0 && (
-            <div className="bg-bad/5 border border-bad/20 rounded-lg p-5 mb-6">
-              <div className="flex items-center gap-2 mb-4">
-                <AlertTriangle className="w-4 h-4 text-bad"/>
-                <span className="text-sm font-medium text-bad">Failed check-in charges ({problems.length})</span>
+            <div className="p-5 space-y-5">
+              {/* Add / edit form */}
+              <div className="bg-white border border-line rounded-lg p-4 space-y-3">
+                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{editing ? 'Edit expense' : 'Add expense'}</div>
+                <input placeholder="Name (e.g. Vercel Pro)" value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} className={iCls + ' w-full'}/>
+                <div className="grid grid-cols-2 gap-2">
+                  <select value={draft.category} onChange={e => setDraft({ ...draft, category: e.target.value })} className={iCls}>
+                    {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{EXPENSE_CATEGORY_LABEL[c]}</option>)}
+                  </select>
+                  <select value={draft.cadence} onChange={e => setDraft({ ...draft, cadence: e.target.value })} className={iCls}>
+                    {EXPENSE_CADENCES.map(c => <option key={c} value={c}>{EXPENSE_CADENCE_LABEL[c]}</option>)}
+                  </select>
+                </div>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
+                  <input type="number" step="0.01" placeholder="0.00" value={draft.amount} onChange={e => setDraft({ ...draft, amount: e.target.value })} className={iCls + ' w-full pl-7'}/>
+                </div>
+                {expenseError && <p className="text-xs text-bad">{expenseError}</p>}
+                <div className="flex items-center gap-2">
+                  <button onClick={saveExpense} disabled={savingExpense}
+                    className="flex items-center gap-1.5 bg-pine hover:bg-pine-hover disabled:opacity-50 text-white text-[12.5px] font-medium px-3 py-1.5 rounded-md transition-colors">
+                    <Plus className="w-3.5 h-3.5"/>{savingExpense ? 'Saving…' : editing ? 'Save changes' : 'Add'}
+                  </button>
+                  {editing && <button onClick={resetDraft} className="text-[12px] text-ink-muted hover:text-ink">Cancel</button>}
+                </div>
               </div>
-              <div className="space-y-3">
-                {problems.map(p => (
-                  <div key={p.bookingId} className="bg-white border border-bad/15 rounded-md px-4 py-3">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-medium text-ink">{p.golferName}</span>
-                          <span className="text-[11px] text-ink-faint">·</span>
-                          <span className="text-xs text-ink-muted">{p.courseName}</span>
-                          <span className="text-[11px] text-ink-faint">·</span>
-                          <span className="text-xs text-ink-muted">{p.teeDate} {p.teeTime}</span>
+
+              {/* List */}
+              {expensesLoading ? (
+                <div className="py-8 text-center text-ink-muted text-sm">Loading…</div>
+              ) : expenses.length === 0 ? (
+                <div className="py-8 text-center text-ink-muted text-sm">No expenses yet. Add your fixed costs above.</div>
+              ) : (
+                <div className="space-y-2">
+                  {expenses.map(e => (
+                    <div key={e.id} className={'bg-white border rounded-lg px-4 py-3 ' + (e.endedAt ? 'border-line opacity-60' : 'border-line')}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium text-ink">{e.name}</div>
+                          <div className="text-[11px] text-ink-muted mt-0.5">
+                            {EXPENSE_CATEGORY_LABEL[e.category as keyof typeof EXPENSE_CATEGORY_LABEL] ?? e.category} · {EXPENSE_CADENCE_LABEL[e.cadence as keyof typeof EXPENSE_CADENCE_LABEL] ?? e.cadence}
+                            {e.endedAt && <span className="text-ink-faint"> · ended {e.endedAt.split('T')[0]}</span>}
+                          </div>
                         </div>
-                        <div className="text-xs text-bad mt-1">{p.failReason}</div>
-                        <div className="text-xs text-ink-muted mt-0.5">{p.golferEmail}</div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <div className="text-sm font-medium text-ink tabular-nums mb-1.5">{fmtMoney(p.amount)}</div>
-                        <a
-                          href={`/admin/courses/${p.courseId}`}
-                          className="inline-flex items-center gap-1 text-[11px] text-pine hover:text-pine-hover underline"
-                        >
-                          View course<ExternalLink className="w-3 h-3"/>
-                        </a>
+                        <div className="text-right shrink-0">
+                          <div className="text-sm font-medium text-ink tabular-nums">{fmtMoney(e.amountCents / 100)}</div>
+                          <div className="flex items-center gap-2 mt-1 justify-end">
+                            <button onClick={() => startEdit(e)} className="text-ink-muted hover:text-ink" title="Edit"><Pencil className="w-3.5 h-3.5"/></button>
+                            {!e.endedAt && <button onClick={() => endExpense(e)} className="text-[11px] text-ink-muted hover:text-warn" title="Stop counting this cost">End</button>}
+                            <button onClick={() => deleteExpense(e)} className="text-ink-muted hover:text-bad" title="Delete"><Trash2 className="w-3.5 h-3.5"/></button>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-ink-muted mt-3">Collect payment in person or retry via the course dashboard. Contact support if the issue persists.</p>
-            </div>
-          )}
-
-          {/* Period selector + course table */}
-          <div className="bg-white border border-line rounded-lg overflow-hidden">
-            {/* Table toolbar */}
-            <div className="px-5 py-4 border-b border-line-soft flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-1 bg-paper border border-line rounded-md p-1">
-                {(['7d', '30d', '90d', 'custom'] as Period[]).map(p => (
-                  <button
-                    key={p}
-                    onClick={() => handlePeriodChange(p)}
-                    className={'px-3 py-1.5 rounded text-[11px] font-medium transition-colors ' + (period === p ? 'bg-white text-ink border border-line shadow-sm' : 'text-ink-muted hover:text-ink')}
-                  >
-                    {p === '7d' ? '7 days' : p === '30d' ? '30 days' : p === '90d' ? '90 days' : 'Custom'}
-                  </button>
-                ))}
-              </div>
-              {period === 'custom' && (
-                <div className="flex items-center gap-2">
-                  <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)} className={iCls}/>
-                  <span className="text-ink-muted text-sm">–</span>
-                  <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)} className={iCls}/>
-                  <button
-                    onClick={handleCustomLoad}
-                    disabled={!customFrom || !customTo}
-                    className="bg-pine hover:bg-pine-hover disabled:opacity-40 text-white text-[12.5px] font-medium px-4 py-2 rounded-md transition-colors"
-                  >
-                    Load
-                  </button>
+                  ))}
                 </div>
               )}
-              <div className="relative ml-auto">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-faint pointer-events-none"/>
-                <input
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Search courses…"
-                  className={iCls + ' pl-8 w-52'}
-                />
-              </div>
             </div>
-
-            {loading ? (
-              <div className="py-16 text-center text-ink-muted text-sm">Loading…</div>
-            ) : rows.length === 0 ? (
-              <div className="py-16 text-center text-ink-muted text-sm">
-                {search ? 'No courses match your search' : `No revenue data for ${data?.period.label ?? 'this period'}`}
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-line-soft">
-                      <th className="text-left px-5 py-3 font-normal">
-                        <ColHeader col="name" label="Course"/>
-                      </th>
-                      <th className="text-right px-4 py-3 font-normal">
-                        <div className="flex justify-end"><ColHeader col="bookings" label="Bookings"/></div>
-                      </th>
-                      <th className="text-right px-4 py-3 font-normal">
-                        <div className="flex justify-end"><ColHeader col="serviceFees" label="Service fees"/></div>
-                      </th>
-                      <th className="text-right px-4 py-3 font-normal">
-                        <div className="flex justify-end"><ColHeader col="greenFeeVolume" label="Green fee vol."/></div>
-                      </th>
-                      <th className="text-right px-4 py-3 font-normal">
-                        <div className="flex justify-end"><ColHeader col="failedCharges" label="Failed"/></div>
-                      </th>
-                      <th className="text-center px-4 py-3 font-normal">
-                        <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Stripe</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-line-soft">
-                    {rows.map(r => (
-                      <tr key={r.courseId} className="hover:bg-paper/60 transition-colors">
-                        <td className="px-5 py-3">
-                          <div className="flex items-center gap-2">
-                            <span className={'font-medium ' + (r.archived ? 'text-ink-muted' : 'text-ink')}>{r.name}</span>
-                            {r.archived && (
-                              <span className="text-[10px] text-ink-faint bg-line rounded px-1.5 py-0.5">archived</span>
-                            )}
-                            {!r.archived && !r.active && (
-                              <span className="text-[10px] text-ink-faint bg-line rounded px-1.5 py-0.5">inactive</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-right tabular-nums text-ink-soft">{fmtCount(r.bookings)}</td>
-                        <td className="px-4 py-3 text-right tabular-nums font-medium text-ink">{fmtMoney(r.serviceFees)}</td>
-                        <td className="px-4 py-3 text-right tabular-nums text-ink-soft">{fmtMoney(r.greenFeeVolume)}</td>
-                        <td className="px-4 py-3 text-right tabular-nums">
-                          {r.failedCharges > 0 ? (
-                            <span className="text-bad font-medium">{r.failedCharges}</span>
-                          ) : (
-                            <span className="text-ink-faint">—</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <div className="flex justify-center">
-                            <StatusDot status={r.stripeActive ? 'ok' : 'warn'} label={r.stripeActive ? 'Connected' : 'Not connected'}/>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Table footer */}
-            {!loading && rows.length > 0 && (
-              <div className="px-5 py-3 border-t border-line-soft flex items-center justify-between">
-                <span className="text-xs text-ink-muted">{rows.length} course{rows.length !== 1 ? 's' : ''}{search ? ` matching "${search}"` : ''}</span>
-                <span className="text-xs text-ink-muted">{data?.period.label}</span>
-              </div>
-            )}
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+function StatementLine({ label, value, muted, note, delta, deltaGoodWhenUp }: { label: string; value: number; muted?: boolean; note?: string; delta?: Delta; deltaGoodWhenUp?: boolean }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className={'text-sm ' + (muted ? 'text-ink-soft' : 'text-ink')}>
+        {label}{note && <span className="text-[11px] text-warn ml-1.5">({note})</span>}
+      </span>
+      <div className="flex items-center gap-3">
+        {delta && <DeltaBadge delta={delta} goodWhenUp={deltaGoodWhenUp ?? true}/>}
+        <span className={'text-sm tabular-nums ' + (muted ? 'text-ink-soft' : 'text-ink font-medium')}>{fmtMoney(value)}</span>
       </div>
     </div>
   );
