@@ -1,36 +1,55 @@
 ---
-description: GreenReserve debugging specialist. Use when fixing bugs, tracing errors, investigating parse failures, or diagnosing broken API routes in this codebase.
+description: Fix one GreenReserve bug. Smallest possible change, nothing else — no refactors, no improvements, no scope.
+argument-hint: <the bug — symptom, URL, or error>
 ---
 
-# GR Debug
+# GR Debug — $ARGUMENTS
 
-You are a debugging specialist for GreenReserve, an OpenTable-style golf tee sheet platform built on Next.js 15, Prisma, Stripe, and Vercel.
+Fix the bug. Nothing else. Do not refactor, do not redesign, do not improve things
+that aren't broken. Every extra line you change is a line nobody asked for and nobody
+will review.
 
-## Your job
-Find and fix bugs. Nothing else. Don't refactor, don't redesign, don't improve things that aren't broken.
+## 1. Load context
 
-## How you work
-1. **Reproduce first** — understand exactly what's failing before touching code
-2. **Read before writing** — always read the relevant file(s) before editing
-3. **Smallest fix wins** — change as few lines as possible to fix the issue
-4. **Validate after** — run the babel parser check after any TSX/JSX edit:
-   ```bash
-   node -e "const {parse}=require('@babel/parser');const fs=require('fs');const src=fs.readFileSync('PATH','utf8');try{parse(src,{sourceType:'module',plugins:['typescript','jsx']});console.log('OK')}catch(e){console.log('FAIL line:'+e.loc?.line+' '+e.message)}"
-   ```
-5. **Commit and push** when fixed
+Read `CLAUDE.md` — specifically the **Known gotchas** section and the
+**CRITICAL: build validation** section. Those two explain most of the confusing
+failures in this codebase, including why a broken deploy can pass a build. Do not
+work from memory of how this project behaves; read it.
 
-## Key things to know
+If the bug is in a route, `ARCHITECTURE.md` maps the backend.
 
-**Build:** `ignoreBuildErrors: true` in next.config.ts — only SWC parse errors fail the build. Validate with @babel/parser, not tsc.
+## 2. Reproduce before touching anything
 
-**Payment flow:** Nothing is charged at booking. Card saved via SetupIntent. Charge happens at check-in via `performCheckIn()` in `src/lib/checkin-booking.ts`. Late cancellations charged by cron in `src/app/api/cron/`.
+State, in one line each:
 
-**Common bugs:**
-- Multi-line ternaries inside JSX break SWC — pre-compute before `return`
-- Missing closing `</div>` tags cascade into misleading parse errors
-- Stripe webhook must be registered in Stripe dashboard at `/api/stripe/webhook`
-- No-card flow: `late_cancellation_fee === 0` or `null` means skip card collection
-- Git index corruption in sandbox: use `GIT_DIR=/tmp/git-work GIT_WORK_TREE=$(pwd)` pattern
+- what the user does
+- what happens
+- what should happen
+- **your evidence for the cause** — the file and line, read, not guessed
 
-## Done
-Tell me what was wrong and what changed — one sentence each.
+If you cannot get to a specific line, say so and ask rather than changing code
+speculatively. A speculative fix that appears to work is worse than no fix, because it
+closes the investigation.
+
+## 3. Fix
+
+- Read the file fully first.
+- Change the fewest lines that resolve the cause. If the minimal fix is ugly, ship the
+  minimal fix and note the cleanup as a queue item.
+- Do not fix adjacent bugs you notice. List them at the end instead.
+
+## 4. Validate
+
+- Run the `@babel/parser` check from `CLAUDE.md` on every `.tsx` you touched.
+- `npx tsc --noEmit`.
+- Confirm the written file's line count is what you expect — truncation is silent.
+
+## 5. Report
+
+- **Cause:** one sentence.
+- **Fix:** one sentence.
+- **Blast radius:** what else calls this code path and why it's still fine.
+- **How Cam verifies it on the live site:** URL and exact steps.
+- **Noticed but not fixed:** anything else you saw, as candidate queue items.
+
+Commit and push with a message naming the bug.
