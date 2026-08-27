@@ -139,6 +139,140 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] Small run: dead-end pages get exits (no migration) — new shared <GolferExitLinks> ("View My Bookings" → portal, "Back to {Course Name}" → course page) wired into /manage/[bookingId]'s cancelled + modified confirmations, /checkin/[bookingId]'s check-in-complete screen, and /receipt/[bookingId] (not named in the item but the same dead end, reachable from check-in success + the portal's past-rounds list). /api/alerts/unsubscribe/[token] was a raw-HTML page hardcoded to the generic marketplace /courses — now looks up the alert's own course first and links back to it + its portal. Audited the preview-intercept + demo-intercept modals: both dismiss onto the same live page underneath rather than stranding anyone, so neither needed the fix — left as-is — 64d3288
 - [x] Small run: suppress marketing nav on course-world pages (no migration) — split isBookingMode() into isCourseWorld() (/courses/[slug]* — course page, member portal, golfer portal: Nav + Footer return null entirely, own branded header/footer) and isBookingMode() (/book, /checkin, /manage, /receipt, /membership: minimal wordmark-only nav + powered-by footer, no marketing links). Audit found /manage and /receipt were missing from the old list entirely — they were rendering the FULL marketing nav (How It Works/Pricing/FAQ/Operator Login/List Your Course). New MainOffset wrapper replaces the hardcoded main pt-16 (Nav is fixed and reserves that space; removing it on course-world pages without this leaves a blank gap above the hero) — scoped to isCourseWorld only, admin/dashboard untouched. Verified live against a real course page + /book + /manage + /receipt + both portals via curl against a dev server — d4b219d
 
+- [ ] ADMIN AUTH BOUNDARY (no migration, small/medium) — the two admin login
+  doors exist but do not form a boundary. Audited 2026-08-26: /api/admin/login
+  has NO role check anywhere, so an owner signs in there with no 2FA and
+  receives a byte-identical admin_session to one minted at /admin/owner-login
+  (same cookie, same 12h, no claim recording how it was obtained). The secure
+  door is therefore optional, and an optional secure door is decoration.
+  ADMIN_V2_SPEC.md:199 specified the rejection; it was never built.
+  1. CLOSE THE DOOR. /api/admin/login rejects owner accounts. Order matters
+     for enumeration: verify the password FIRST, then if admin.role === 'owner'
+     return 403 { ownerRedirect: true }. A wrong password must still return the
+     existing generic 401, so the endpoint never reveals which emails are owner
+     accounts. /admin/login catches ownerRedirect and renders an inline pointer
+     to /admin/owner-login. (/api/admin/owner-login already rejects non-owners —
+     leave that side alone.)
+  2. LINK IT PLAINLY. /admin/login gets an "Owner sign-in →" footer line beside
+     the existing "Course operator? Sign in at your dashboard →" line. Decision
+     with Cam 2026-08-26: the protection is the 2FA, not the URL — today the
+     only link to /admin/owner-login in the whole tree is on /admin/profile,
+     visible only AFTER signing in through the insecure door.
+  3. RECORD THE SECOND FACTOR IN THE SESSION. signAdminToken takes an
+     mfa: boolean claim — true only from the owner-login verify step, absent or
+     false on every other path. requireRole(session, OWNER_ONLY) additionally
+     asserts mfa === true (or add requireOwner() and sweep the OWNER_ONLY call
+     sites). This turns "owner sessions are 2FA-backed" from an inference into
+     an enforced invariant and is the foundation for step-up auth later.
+     Sessions minted before this ship carry no claim and will 403 on owner-only
+     endpoints — Cam signs in once more. Say so in the run summary; do NOT add
+     a grace period or a backfill.
+  4. LEAVE FORGOT-PASSWORD OPEN TO OWNERS — REVERSED 2026-08-26. An earlier
+     draft of this item blocked owners from /api/admin/forgot-password, per
+     ADMIN_V2_SPEC.md:193. Cam requires self-service recovery and he is right
+     to: he is the only admin account, and "SQL against Neon" is bad friction
+     at the exact moment you are locked out. DO NOT touch that route in this
+     run. The bypass it creates is real but is closed by the OWNER TOTP item
+     below, not here — blocking the reset was only ever a workaround for the
+     second factor being email.
+     Why the reset is unsafe TODAY, for whoever runs this: attacker holds the
+     owner inbox and nothing else → reset → new password → forced (by items 1
+     and 6) to /admin/owner-login → challenged for a code → the code arrives
+     in the inbox they already hold. Email-only 2FA means the reset link and
+     the second factor share one channel. TOTP gives it a real second channel
+     and makes the reset safe to keep.
+     SEQUENCING: this run is still worth shipping first — it closes the
+     no-second-factor-at-all door, which is a strictly worse hole. It does not
+     regress anything; the inbox exposure is the status quo either way.
+  5. FIX THE CRASH. /api/admin/owner-login calls
+     bcrypt.compare(String(password), admin.passwordHash) with no
+     !admin.passwordHash guard — /api/admin/login:31-32 has one. An owner row
+     created but never activated 500s instead of returning the "Account not
+     activated" 401. Add the same guard.
+  6. FIX THE POST-SET-PASSWORD REDIRECT. /admin/set-password's success screen
+     sends everyone to /admin/login, which after item 1 rejects owners — a
+     freshly activated owner gets bounced straight back out. Make the success
+     redirect role-aware (owner → /admin/owner-login). Same for the
+     mustChangePassword branch of both login routes, which returns a
+     setPasswordToken and skips 2FA entirely.
+  VALIDATE: tsc + babel parse-check, then live-verify four paths against a dev
+  server — (a) owner at /admin/login is rejected with the pointer, (b) owner
+  completes 2FA at /admin/owner-login and lands on /admin, (c) a non-owner
+  employee signs in normally at /admin/login, (d) a hand-minted password-only
+  session 403s on an OWNER_ONLY endpoint (/api/admin/expenses is the cheapest).
+  Extend scripts/isolation-test.ts with (d) if it fits the existing harness.
+  NOT IN THIS RUN: the visual pass on the auth pages is REVISE A-13, and the
+  viewer-role gap is the separate item directly below. Do not smuggle either in.
+
+- [ ] OWNER TOTP 2FA (SCHEMA CHANGE, ATTENDED — run second, right after ADMIN
+  AUTH BOUNDARY) — replace the owner's email-delivered 6-digit code with a real
+  authenticator-app second factor, so that holding the owner inbox is no longer
+  sufficient to take the platform. Decision with Cam 2026-08-26: TOTP over SMS —
+  src/lib/two-factor.ts already does Twilio-with-email-fallback for course
+  operators and would have been less new code, but SIM swap is a live attack on
+  precisely the person who controls a payments platform, and Cam already runs
+  KeePassXC + PASSWORD_CHECKLIST.md, so a vault-resident secret fits how he
+  actually works. This item is what makes item 4 above safe.
+  SCHEMA (additive only — create-only → review the SQL → deploy, per the
+  CLAUDE.md migration checklist; Neon branch, attended):
+    AdminUser.twoFactorSecret        String?   // base32 TOTP secret
+    AdminUser.twoFactorEnrolledAt    DateTime?
+    AdminUser.twoFactorRecoveryCodes String[]  // bcrypt hashes, single-use
+  Leave the existing twoFactorCode / twoFactorCodeExpiry / twoFactorAttempts
+  columns in place — attempts is reused, and the email path stays as the
+  enrollment fallback described below. No drops, no renames.
+  1. ENROLLMENT on /admin/profile (owner only, requires a live mfa session):
+     generate a secret, render the otpauth:// URI as a QR plus the secret in
+     copyable text, require ONE correct code before persisting (never enroll on
+     display — an unverified secret locks the account out), then stamp
+     twoFactorEnrolledAt. Use otplib; qrcode for the SVG. Both are new deps —
+     name them at the restate step.
+  2. RECOVERY CODES: on successful enrollment, generate 10, show them exactly
+     ONCE with explicit "save these in KeePassXC now" copy and a copy-all
+     button, store only bcrypt hashes. Each is single-use — consume on use.
+     A "regenerate codes" action on /admin/profile invalidates all ten.
+  3. VERIFY step of /api/admin/owner-login accepts a 6-digit TOTP code OR a
+     recovery code. Window: accept the adjacent step (±30s) for clock skew, no
+     wider. Reuse the existing twoFactorAttempts counter and the existing
+     rateLimit('2fa:admin:'+ip) — same 5-attempt lockout semantics as today.
+     Reject any TOTP code already used in the current step (replay).
+  4. LOCKOUT SAFETY — the part to get right, because Cam is the only owner:
+     while twoFactorSecret is null, /api/admin/owner-login keeps using the
+     CURRENT email-code path exactly as it works today. TOTP only becomes
+     mandatory once enrolled. This means the migration can deploy before Cam
+     enrolls without locking him out of his own platform. Do not delete the
+     email code path in this run.
+  5. docs/RUNBOOK.md gets an "Owner 2FA recovery" section: recovery-code use,
+     what to do when both the authenticator and the codes are gone (the Neon
+     SQL to null twoFactorSecret + twoFactorEnrolledAt, dropping the account
+     back to the email path so he can get in and re-enroll). Procedure and
+     column names only — never a secret value, per the existing RUNBOOK rule.
+  6. Once enrolled and confirmed working, /admin/forgot-password is safe for the
+     owner: the reset link proves inbox control, TOTP proves device possession,
+     and item 6 of the AUTH BOUNDARY item already routes a freshly reset owner
+     through /admin/owner-login rather than /admin/login.
+  VALIDATE: tsc + babel parse-check; enroll end-to-end against a dev server with
+  a real authenticator app; verify a stale code fails, a recovery code works
+  once and fails the second time, the ±30s window is not wider than one step,
+  and an un-enrolled owner still gets the email path. NOT IN THIS RUN: employee
+  2FA (nobody to enroll — zero employees), and any change to operator 2FA.
+
+- [ ] BUG: `viewer` role is a promise the code never keeps (no migration, small)
+  — /admin/employees offers Viewer with the description "Read-only across
+  everything" (src/app/admin/employees/page.tsx:14-19) and
+  /api/admin/employees:7 accepts it as a VALID_ROLE, but `viewer` appears in NO
+  permission constant in src/lib/admin-session.ts — OWNER_ONLY, MANAGER_PLUS
+  and SUPPORT_PLUS are the only gates, and SUPPORT_PLUS is the loosest. A
+  viewer is therefore 403'd by essentially every gated admin API while the UI
+  tells the person hiring them they get read-only access to everything.
+  Decide and implement ONE of: (a) add VIEWER_PLUS = all four roles and gate the
+  genuinely read-only GETs with it (stats, activity, courses, inquiries read
+  paths) while keeping golfer PII and the financial ledger at SUPPORT_PLUS per
+  the security-audit rationale already recorded in this queue — note this makes
+  "read-only across everything" false, so the role description must change too;
+  or (b) remove viewer from VALID_ROLES and the picker entirely. Do not ship a
+  role whose label and behavior disagree. Cam picks a or b at the restate step.
+
 - [ ] BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:
   - Course.publicBookingWindowDays (Int, default 7) — operator sets in dashboard Settings ("How far ahead can golfers book?") with plain explainer
   - MembershipTier.bookingWindowDays (Int?, null = course default) — per-tier member perk, set in the tier editor ("Members of this tier can book N days ahead")
@@ -750,6 +884,33 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 ## Ideas / not yet specced
 
 - OPERATOR STAFF ACCOUNTS rework (Cam, 2026-07-10: "whole thing is going to be reworked and better") — current section contradicts itself: copy says "full dashboard access", role dropdown says "tee sheet access". Rework needs: clear role tiers (e.g. owner / manager / tee-sheet-only), what each can see (money? settings? members?), invite email flow, deactivate/reset from the card, and the same no-silent-failure patterns as admin. Spec when Cam's ready to define the role tiers.
+
+### Role-shaped admin (parked 2026-08-26 — TRIGGER: first employee account provisioned)
+
+Cam's ask: "the admin should see everything about the whole company while the
+employees have to see their specific job." Correct instinct, deliberately NOT
+built — he has zero employees, so every version of this has zero users today.
+Building it now would repeat the exact mistake that produced the `viewer` role:
+a role designed for a hypothetical person, never met one, and it has been
+403'd by every gated API since the day it shipped.
+
+Two tiers, in order, when the trigger fires:
+  (a) CHEAP SHELL (small, no migration) — filter the admin sidebar by role, and
+      gate the Overview's owner-only SECTIONS (P&L statement, platform Stripe
+      card, reconciliation banner, system line) rather than only its buttons.
+      Today an employee's nav lists Revenue/Expenses/System/Employees even
+      though those pages 403 — the nav is a map of the whole company. One
+      component plus one page, no new routes. This is ~80% of what Cam is
+      reacting to.
+  (b) REAL WORKSPACES (big) — separate destinations per role, /admin becoming a
+      role router. Do NOT spec this from imagination. Spec it by watching one
+      real employee do one real job for a week, and only after REVISE A-10
+      /admin/employees is audited — A-10 is where roles are defined, described
+      and provisioned, so it settles how many roles there actually are before
+      anyone designs rooms for them.
+
+Prerequisite either way: the ADMIN AUTH BOUNDARY item above, which is what makes
+role a real boundary rather than a display preference.
 
 ### Future admin tabs (from brainstorm 2026-07-09 — each has a TRIGGER, don't build early)
 - Promo codes / featured placement tools — TRIGGER: marketplace mode ships
