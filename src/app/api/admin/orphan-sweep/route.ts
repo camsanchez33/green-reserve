@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveAdminSession, requireRole, OWNER_ONLY } from '@/lib/admin-session';
+import { resolveAdminSession, requireOwner, ownerGateError } from '@/lib/admin-session';
 import { sweepOrphanCourses, listAcknowledgedOrphans, forceDeleteOrphan } from '@/lib/lifecycle';
 
 // ORPHAN SWEEP (RUN_QUEUE) — GET always dry-runs (prints the list, no
@@ -23,7 +23,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!requireRole(session, OWNER_ONLY)) return NextResponse.json({ error: 'Forbidden — owner only' }, { status: 403 });
+  if (!requireOwner(session)) return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
 
   const body = await req.json().catch(() => ({}));
 

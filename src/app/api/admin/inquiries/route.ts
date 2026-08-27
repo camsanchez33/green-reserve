@@ -4,7 +4,7 @@ import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail, sendDashboardAccessEmail, sendGoLiveSimpleEmail } from '@/lib/email';
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
-import { resolveAdminSession, requireRole, MANAGER_PLUS, OWNER_ONLY, type AdminSession } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, requireOwner, ownerGateError, MANAGER_PLUS, type AdminSession } from '@/lib/admin-session';
 import { encodeChangeAddressed, encodeRequestReReview } from '@/lib/change-requests';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 import { hasAcceptedAgreement } from '@/lib/course-timeline';
@@ -743,7 +743,7 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!requireRole(session, OWNER_ONLY)) return NextResponse.json({ error: 'Forbidden — owner only' }, { status: 403 });
+  if (!requireOwner(session)) return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
   const confirmName = searchParams.get('confirmName');

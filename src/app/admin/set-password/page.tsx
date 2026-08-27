@@ -16,6 +16,7 @@ function SetPasswordForm() {
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
+  const [signInUrl, setSignInUrl] = useState('/admin/login');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => { if (!token) setError('Missing or invalid token.'); }, [token]);
@@ -35,6 +36,10 @@ function SetPasswordForm() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Failed to set password'); return; }
+      // Owners are rejected by /admin/login — send a freshly activated owner
+      // to the door with the second factor instead of bouncing them straight
+      // back out.
+      if (data.role === 'owner') setSignInUrl('/admin/owner-login');
       setDone(true);
     } catch {
       setError('Network error');
@@ -50,7 +55,7 @@ function SetPasswordForm() {
         <h2 className="font-serif text-xl font-medium text-ink mb-2">Password set</h2>
         <p className="text-ink-soft text-sm mb-6">Your account is ready.</p>
         <button
-          onClick={() => router.push('/admin/login')}
+          onClick={() => router.push(signInUrl)}
           className="bg-pine hover:bg-pine-hover text-white text-[12.5px] font-medium px-6 py-2.5 rounded-md transition-colors"
         >
           Sign in

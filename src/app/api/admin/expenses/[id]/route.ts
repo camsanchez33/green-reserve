@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, OWNER_ONLY } from '@/lib/admin-session';
+import { resolveAdminSession, requireOwner, ownerGateError } from '@/lib/admin-session';
 import { isExpenseCategory, isExpenseCadence } from '@/lib/expenses';
 
 // EXPENSE TRACKER (RUN_QUEUE) — edit/end/delete a single fixed cost. Owner-only.
@@ -9,8 +9,9 @@ import { isExpenseCategory, isExpenseCadence } from '@/lib/expenses';
 // is for a mistaken entry.
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await resolveAdminSession();
-  if (!session || !requireRole(session, OWNER_ONLY)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!requireOwner(session)) {
+    return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
   }
   const { id } = await params;
   const existing = await prisma.expense.findUnique({ where: { id } });
@@ -58,8 +59,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await resolveAdminSession();
-  if (!session || !requireRole(session, OWNER_ONLY)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!requireOwner(session)) {
+    return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
   }
   const { id } = await params;
   const existing = await prisma.expense.findUnique({ where: { id } });

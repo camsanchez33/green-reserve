@@ -47,6 +47,7 @@ type SortKey = 'name' | 'bookings' | 'serviceFees' | 'greenFeeVolume' | 'failedC
 interface RevenueData {
   period: { kind: PeriodKind; label: string; from: string; to: string };
   isOwner: boolean;
+  ownerMfaRequired?: boolean;
   pnl: {
     feesEarned: number; feesEarnedDelta: Delta;
     stripeProcessing?: number; stripeUnavailable?: boolean;
@@ -285,6 +286,19 @@ export default function RevenuePage() {
           {error && (
             <div className="bg-bad/5 border border-bad/20 rounded-lg px-4 py-3 text-sm text-bad mb-5 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 shrink-0"/>{error}
+            </div>
+          )}
+
+          {/* An owner on a session that never presented a second factor sees the
+              support-level page. Say so — otherwise the P&L silently vanishes. */}
+          {data?.ownerMfaRequired && (
+            <div className="bg-warn/5 border border-warn/20 rounded-lg px-4 py-3 text-sm text-ink mb-5 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-warn mt-0.5"/>
+              <span>
+                Owner sections (expenses, net P&amp;L, Stripe balance) are hidden — this session
+                was not verified with a second factor.{' '}
+                <a href="/admin/owner-login" className="text-pine font-medium hover:underline">Sign in again at owner sign-in →</a>
+              </span>
             </div>
           )}
 

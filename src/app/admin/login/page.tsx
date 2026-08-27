@@ -10,11 +10,13 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [ownerRedirect, setOwnerRedirect] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    setOwnerRedirect(false);
     setLoading(true);
     try {
       const res = await fetch('/api/admin/login', {
@@ -23,7 +25,13 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Login failed'); return; }
+      if (!res.ok) {
+        // Owner accounts are rejected here by design — point at the door that
+        // does have a second factor rather than leaving them stuck.
+        if (data.ownerRedirect) { setOwnerRedirect(true); return; }
+        setError(data.error || 'Login failed');
+        return;
+      }
       if (data.mustChangePassword && data.setPasswordToken) {
         router.push(`/admin/set-password?token=${encodeURIComponent(data.setPasswordToken)}`);
         return;
@@ -50,6 +58,18 @@ export default function AdminLoginPage() {
           {error && (
             <div className="bg-bad/5 border border-bad/20 rounded-md px-3 py-2 text-bad text-sm mb-5">
               {error}
+            </div>
+          )}
+
+          {ownerRedirect && (
+            <div className="bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink mb-5">
+              <p className="font-medium mb-0.5">This is an owner account.</p>
+              <p className="text-ink-soft text-[13px]">
+                Owner accounts sign in with a second factor.{' '}
+                <a href="/admin/owner-login" className="text-pine font-medium hover:underline">
+                  Continue to owner sign-in →
+                </a>
+              </p>
             </div>
           )}
 
@@ -97,6 +117,9 @@ export default function AdminLoginPage() {
         </div>
 
         <p className="mt-5 text-center text-xs text-ink-muted">
+          Owner? <a href="/admin/owner-login" className="text-pine font-medium hover:underline">Owner sign-in →</a>
+        </p>
+        <p className="mt-2 text-center text-xs text-ink-muted">
           Course operator? <a href="/dashboard/login" className="text-pine font-medium hover:underline">Sign in at your dashboard →</a>
         </p>
       </div>

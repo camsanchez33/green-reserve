@@ -182,6 +182,15 @@ async function seed() {
     update: { passwordHash: hash, role: 'viewer', active: true },
   });
 
+  // Admin owner — ADMIN AUTH BOUNDARY. Exists to prove the password-only door
+  // rejects owners, and that an owner session without the mfa claim cannot
+  // reach owner-only endpoints.
+  const adminOwner = await prisma.adminUser.upsert({
+    where: { email: `${TS}-owner@test.local` },
+    create: { name: 'Isol Owner', email: `${TS}-owner@test.local`, passwordHash: hash, role: 'owner', active: true },
+    update: { passwordHash: hash, role: 'owner', active: true, lockoutUntil: null, failedLoginAttempts: 0 },
+  });
+
   // GOLFER_SPEC G5b — Golfer A is a member at Course A ONLY. Recognition via
   // the gr_golfer session must never bleed into Course B.
   await prisma.courseMembership.deleteMany({ where: { golferId: golferA.id, courseId: courseA.id } });
@@ -189,18 +198,18 @@ async function seed() {
     data: { golferId: golferA.id, courseId: courseA.id, status: 'active', membershipType: 'Full Member' },
   });
 
-  return { opA, opB, courseA, courseB, golferA, golferB, teeTimeA, teeTimeB, bookingA, bookingB, adminViewer, membershipA };
+  return { opA, opB, courseA, courseB, golferA, golferB, teeTimeA, teeTimeB, bookingA, bookingB, adminViewer, adminOwner, membershipA };
 }
 
 async function cleanup(data: Awaited<ReturnType<typeof seed>>) {
-  const { courseA, courseB, golferA, golferB, teeTimeA, teeTimeB, bookingA, bookingB, opA, opB, adminViewer, membershipA } = data;
+  const { courseA, courseB, golferA, golferB, teeTimeA, teeTimeB, bookingA, bookingB, opA, opB, adminViewer, adminOwner, membershipA } = data;
   await prisma.courseMembership.deleteMany({ where: { id: membershipA.id } });
   await prisma.booking.deleteMany({ where: { id: { in: [bookingA.id, bookingB.id] } } });
   await prisma.teeTime.deleteMany({ where: { id: { in: [teeTimeA.id, teeTimeB.id] } } });
   await prisma.course.deleteMany({ where: { id: { in: [courseA.id, courseB.id] } } });
   await prisma.golferAccount.deleteMany({ where: { id: { in: [golferA.id, golferB.id] } } });
   await prisma.courseOperator.deleteMany({ where: { id: { in: [opA.id, opB.id] } } });
-  await prisma.adminUser.deleteMany({ where: { id: adminViewer.id } });
+  await prisma.adminUser.deleteMany({ where: { id: { in: [adminViewer.id, adminOwner.id] } } });
 }
 
 // ── Test runner ───────────────────────────────────────────────────────────────
@@ -418,6 +427,55 @@ async function main() {
     // Viewer CAN access non-PII admin stats
     const r = await api('/api/admin/stats', { cookie: viewerCookie });
     checkStatus('Viewer can access admin stats (aggregated, no PII) → 200', r.status, 200);
+  }
+
+  console.log('\n── Admin owner auth boundary ─────────────────────────────────────');
+  {
+    // (a) The password-only door must refuse owner accounts — AFTER checking
+    // the password, so it never reveals which emails are owners.
+    const r = await api('/api/admin/login', {
+      method: 'POST',
+      body: { email: `${TS}-owner@test.local`, password: PASS },
+    });
+    checkStatus('Owner at /api/admin/login (correct password) → 403', r.status, 403);
+    check(
+      'Owner rejection carries ownerRedirect so the page can point at the owner door',
+      (r.body as { ownerRedirect?: boolean })?.ownerRedirect === true,
+    );
+  }
+  {
+    // Enumeration guard: a wrong password for an owner email must look exactly
+    // like a wrong password for any other account.
+    const r = await api('/api/admin/login', {
+      method: 'POST',
+      body: { email: `${TS}-owner@test.local`, password: 'WrongPassword#1234' },
+    });
+    checkStatus('Owner email + wrong password → generic 401, not 403', r.status, 401);
+    check(
+      'Wrong-password response does not leak ownerRedirect',
+      (r.body as { ownerRedirect?: boolean })?.ownerRedirect !== true,
+    );
+  }
+  {
+    // (d) A hand-minted owner session WITHOUT the mfa claim — what every
+    // session issued before this shipped looks like — must not reach an
+    // owner-only endpoint.
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const noMfa = await signAdminToken({
+      adminId: data.adminOwner.id, email: data.adminOwner.email,
+      name: data.adminOwner.name, role: 'owner',
+    });
+    const r = await api('/api/admin/expenses', { cookie: `admin_session=${noMfa}` });
+    checkStatus('Password-only owner session → owner-only endpoint → 403', r.status, 403);
+
+    // …and the same session WITH the claim must pass, so this proves a gate
+    // rather than a uniformly broken endpoint.
+    const withMfa = await signAdminToken({
+      adminId: data.adminOwner.id, email: data.adminOwner.email,
+      name: data.adminOwner.name, role: 'owner', mfa: true,
+    });
+    const r2 = await api('/api/admin/expenses', { cookie: `admin_session=${withMfa}` });
+    checkStatus('2FA-backed owner session → owner-only endpoint → 200', r2.status, 200);
   }
 
   console.log('\n── Member cross-course session isolation ─────────────────────────');

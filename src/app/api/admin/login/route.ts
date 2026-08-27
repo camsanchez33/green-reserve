@@ -40,6 +40,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }
 
+  // ── Owner accounts do not sign in here ───────────────────────────────
+  // This door has no second factor, so an owner reaching it would receive a
+  // session indistinguishable from a 2FA-backed one. Reject AFTER the password
+  // check, never before: rejecting on email alone would turn this endpoint
+  // into an owner-account oracle. A wrong password still returns the generic
+  // 401 above, so the 403 only ever reaches someone who already holds the
+  // owner's password. Clear the failure counter first — the password was
+  // correct — but do not stamp lastLoginAt, since no login happened.
+  if (admin.role === 'owner') {
+    await prisma.adminUser.update({ where: { id: admin.id }, data: { failedLoginAttempts: 0, lockoutUntil: null } });
+    return NextResponse.json(
+      { error: 'Owner accounts sign in through the owner door.', ownerRedirect: true },
+      { status: 403 },
+    );
+  }
+
   await prisma.adminUser.update({ where: { id: admin.id }, data: { failedLoginAttempts: 0, lockoutUntil: null, lastLoginAt: new Date() } });
 
   if (admin.mustChangePassword) {

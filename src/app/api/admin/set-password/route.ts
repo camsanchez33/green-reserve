@@ -47,5 +47,7 @@ export async function POST(req: NextRequest) {
       .catch(err => console.error('Admin password-changed notification failed:', err));
   }
 
-  return NextResponse.json({ success: true });
+  // Role is returned so the success screen can send the account to a door it
+  // will actually be admitted through — /admin/login rejects owners.
+  return NextResponse.json({ success: true, role: admin.role });
 }

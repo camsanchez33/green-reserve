@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, OWNER_ONLY } from '@/lib/admin-session';
+import { resolveAdminSession, requireOwner, ownerGateError } from '@/lib/admin-session';
 import { isExpenseCategory, isExpenseCadence } from '@/lib/expenses';
 
 // EXPENSE TRACKER (RUN_QUEUE) — GreenReserve's own fixed operating costs.
@@ -8,8 +8,9 @@ import { isExpenseCategory, isExpenseCadence } from '@/lib/expenses';
 // data any manager/support needs. All routes 403 non-owners before any read.
 export async function GET() {
   const session = await resolveAdminSession();
-  if (!session || !requireRole(session, OWNER_ONLY)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!requireOwner(session)) {
+    return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
   }
   const expenses = await prisma.expense.findMany({ orderBy: [{ endedAt: 'asc' }, { startedAt: 'desc' }] });
   return NextResponse.json({ expenses });
@@ -17,8 +18,9 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const session = await resolveAdminSession();
-  if (!session || !requireRole(session, OWNER_ONLY)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!requireOwner(session)) {
+    return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
   }
 
   const body = await req.json().catch(() => ({}));

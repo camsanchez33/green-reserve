@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, SUPPORT_PLUS, OWNER_ONLY } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, requireOwner, SUPPORT_PLUS } from '@/lib/admin-session';
 import { COMPLETED_BOOKING_STATUSES, computeNetPnL, periodDelta } from '@/lib/course-metrics';
 import { sumExpensesForPeriodCents } from '@/lib/expenses';
 import { fetchStripeFeeWindow } from '@/lib/platform-stripe';
@@ -56,7 +56,12 @@ export async function GET(req: NextRequest) {
   if (!session || !requireRole(session, SUPPORT_PLUS)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
-  const isOwner = requireRole(session, OWNER_ONLY);
+  // Owner sections need a 2FA-backed session, same as every other owner-only
+  // surface. This one hides rather than 403s, so flag the mfa-less owner case
+  // explicitly — otherwise the P&L just silently vanishes for the one person
+  // it belongs to.
+  const isOwner = requireOwner(session);
+  const ownerMfaRequired = session.role === 'owner' && !isOwner;
 
   const sp = req.nextUrl.searchParams;
   const kindParam = sp.get('period');
@@ -144,6 +149,7 @@ export async function GET(req: NextRequest) {
   const base = {
     period: { kind, label, from: dayStr(current.start), to: dayStr(current.end) },
     isOwner,
+    ownerMfaRequired,
     pnl: {
       feesEarned: feesEarnedCents / 100,
       feesEarnedDelta: periodDelta(feesEarnedCents, feesPriorCents),

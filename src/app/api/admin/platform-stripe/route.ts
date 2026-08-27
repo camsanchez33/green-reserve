@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveAdminSession, requireRole, OWNER_ONLY } from '@/lib/admin-session';
+import { resolveAdminSession, requireOwner, ownerGateError } from '@/lib/admin-session';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 
@@ -11,8 +11,9 @@ let cache: { key: string; data: unknown; expires: number } | null = null;
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
-  if (!session || !requireRole(session, OWNER_ONLY)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!requireOwner(session)) {
+    return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
   }
 
   const period = req.nextUrl.searchParams.get('period') === '7d' ? '7d' : '30d';

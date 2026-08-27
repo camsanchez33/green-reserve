@@ -68,7 +68,9 @@ export async function POST(req: NextRequest) {
       data: { twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0, lastLoginAt: new Date() },
     });
 
-    const token = await signAdminToken({ adminId: admin.id, email: admin.email, name: admin.name, role: admin.role });
+    // mfa: true is set HERE and nowhere else — this is the only code path in
+    // the app that has seen a second factor. Owner-only gates assert it.
+    const token = await signAdminToken({ adminId: admin.id, email: admin.email, name: admin.name, role: admin.role, mfa: true });
     const cookieStore = await cookies();
     cookieStore.set('admin_session', token, {
       httpOnly: true,
@@ -95,6 +97,12 @@ export async function POST(req: NextRequest) {
   }
   if (!admin.active) return NextResponse.json({ error: 'Account inactive' }, { status: 403 });
   if (admin.lockoutUntil && admin.lockoutUntil > new Date()) return lockoutResponse(admin.lockoutUntil);
+
+  // Same guard as /api/admin/login:31 — bcrypt.compare throws on a null hash,
+  // so an owner row created but never activated would 500 instead of getting
+  // the actionable "not activated" message.
+  if (!admin.passwordHash)
+    return NextResponse.json({ error: 'Account not activated — check your email for a set-password link' }, { status: 401 });
 
   const valid = await bcrypt.compare(String(password), admin.passwordHash);
   if (!valid) {
