@@ -139,7 +139,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] Small run: dead-end pages get exits (no migration) — new shared <GolferExitLinks> ("View My Bookings" → portal, "Back to {Course Name}" → course page) wired into /manage/[bookingId]'s cancelled + modified confirmations, /checkin/[bookingId]'s check-in-complete screen, and /receipt/[bookingId] (not named in the item but the same dead end, reachable from check-in success + the portal's past-rounds list). /api/alerts/unsubscribe/[token] was a raw-HTML page hardcoded to the generic marketplace /courses — now looks up the alert's own course first and links back to it + its portal. Audited the preview-intercept + demo-intercept modals: both dismiss onto the same live page underneath rather than stranding anyone, so neither needed the fix — left as-is — 64d3288
 - [x] Small run: suppress marketing nav on course-world pages (no migration) — split isBookingMode() into isCourseWorld() (/courses/[slug]* — course page, member portal, golfer portal: Nav + Footer return null entirely, own branded header/footer) and isBookingMode() (/book, /checkin, /manage, /receipt, /membership: minimal wordmark-only nav + powered-by footer, no marketing links). Audit found /manage and /receipt were missing from the old list entirely — they were rendering the FULL marketing nav (How It Works/Pricing/FAQ/Operator Login/List Your Course). New MainOffset wrapper replaces the hardcoded main pt-16 (Nav is fixed and reserves that space; removing it on course-world pages without this leaves a blank gap above the hero) — scoped to isCourseWorld only, admin/dashboard untouched. Verified live against a real course page + /book + /manage + /receipt + both portals via curl against a dev server — d4b219d
 
-- [ ] ADMIN AUTH BOUNDARY (no migration, small/medium) — the two admin login
+- [x] ADMIN AUTH BOUNDARY (no migration, small/medium) — the two admin login
   doors exist but do not form a boundary. Audited 2026-08-26: /api/admin/login
   has NO role check anywhere, so an owner signs in there with no 2FA and
   receives a byte-identical admin_session to one minted at /admin/owner-login
@@ -203,6 +203,35 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   Extend scripts/isolation-test.ts with (d) if it fits the existing harness.
   NOT IN THIS RUN: the visual pass on the auth pages is REVISE A-13, and the
   viewer-role gap is the separate item directly below. Do not smuggle either in.
+  SHIPPED b07c6d0. All 6 sub-items built as specified; forgot-password untouched
+  per item 4. requireOwner() added AND requireRole() routes an owner-only role
+  list through it, so both options the spec offered are in place — a future
+  requireRole(session, OWNER_ONLY) can't silently skip the mfa assertion. Swept
+  all 6 OWNER_ONLY call sites (expenses, expenses/[id], platform-stripe,
+  orphan-sweep, inquiries DELETE, revenue).
+  ONE THING NOT IN THE SPEC, driven by the no-silent-failures rule: revenue's
+  OWNER_ONLY check is a display flag, not a gate — an mfa-less owner would have
+  seen the P&L, expenses drawer and Stripe balance silently disappear. The route
+  now returns ownerMfaRequired and the page renders one inline line naming the
+  owner door. Owner-gate 403s elsewhere carry the same actionable copy
+  (ownerGateError) instead of a bare "Forbidden".
+  VALIDATED: tsc clean, babel parse-check clean on all 3 .tsx. Live against a dev
+  server, (d) confirmed end to end — password-only owner session → 403 with the
+  pointer, mfa:true session → 200, support role → plain "owner only" (no
+  misleading advice); revenue returns ownerMfaRequired=true/false correctly;
+  /admin/login renders the Owner sign-in link.
+  NOT LIVE-VERIFIED — (a), (b), (c) need an owner AdminUser fixture, and .env
+  points at the production Neon DB (ep-rough-bar-at7lstx2, unbranched neondb).
+  Would not create even a temporary owner-role admin row in production. All three
+  are encoded as assertions in scripts/isolation-test.ts (owner 403 + ownerRedirect,
+  wrong-password 401 with no ownerRedirect leak, plus the existing viewer login
+  which already proves (c)) — run the harness against a Neon branch to close them:
+  `npx dotenv -e .env.local -- npx tsx scripts/isolation-test.ts` with a branch DB
+  in .env.local. (b) still needs one manual pass with the real inbox.
+  CAM MUST SIGN IN AGAIN ONCE: the current admin_session predates the mfa claim
+  and will 403 on /api/admin/expenses, /api/admin/platform-stripe, the inquiries
+  DELETE and orphan-sweep POST until re-authenticated at /admin/owner-login.
+  No grace period, no backfill — that was the spec's explicit instruction.
 
 - [ ] OWNER TOTP 2FA (SCHEMA CHANGE, ATTENDED — run second, right after ADMIN
   AUTH BOUNDARY) — replace the owner's email-delivered 6-digit code with a real
