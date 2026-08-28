@@ -144,7 +144,7 @@ Three of these can cost a customer, a lead, or a course record today.
 
 ## §3 — PAGE VERDICTS
 
-### /admin — Overview · RESHAPE
+### /admin — Overview · RESHAPE — **PARKED, see §6** (spec not in repo)
 Per Deep Dive 01: five zones — a one-row Today band (ET, booked + collected), the
 deduplicated "Your Move" rail with a named next milestone, the revenue ticker
 as-is, a Growth band (30d stats + demand-side counts + pipeline stock), and Fleet
@@ -420,8 +420,19 @@ non-additive piece and needs a data migration plus a full-codebase sweep.
 
 ## §6 — RUN ORDER
 
-Correctness before redesign; each run is one commit-shaped unit. OV-1…OV-3 come
-from Deep Dive 01. MP-9/10/11 are the ADMIN_V4 survivors (see RECONCILIATION).
+Correctness before redesign; each run is one commit-shaped unit. MP-9/10/11/12
+are the ADMIN_V4 survivors (see RECONCILIATION).
+
+**OV-1 and OV-2 are PARKED (Cam, 2026-08-27).** Both cited "Deep Dive 01" as
+their spec and that document is not in this repo — this file and RUN_QUEUE.md
+are the only places that mention it, and both merely point at it. Rather than
+let a run improvise the Overview redesign from the two-line summary in §3, they
+are out of the run order. Their one correctness bug — the ET day boundary, which
+makes every "today" number reset at 8pm ET, and which also causes the Activity
+page's permanent "No events found" — moved into MP-1. TO REVIVE: write Deep Dive
+01 into the repo as OVERVIEW_SPEC.md, then requeue. §3's Overview entry stays
+below as the record of intent, NOT as a runnable spec. Do not let a run build
+the Activity-strip or Money-in-Motion absorptions from it.
 
 - **MP-0** — ADMIN_V4 V4-1 shell fixes. MainOffset one-liner for /admin +
   /dashboard, course-detail 165px overflow + scrollable tab strip, two
@@ -433,13 +444,9 @@ from Deep Dive 01. MP-9/10/11 are the ADMIN_V4 survivors (see RECONCILIATION).
   any session; `inquiries` GET returning `detailsToken`), one-door login with
   inline 2FA step, tokens out of URLs, role gates on messages GET / employees
   GET / palette search. *medium · no migration*
-- **OV-1** — Overview truth layer (ET boundaries, booked/collected, viewer money
-  gate, error states). *medium · no migration*
 - **MP-3** — THE BIG MIGRATION. All of §5 in one attended run. *attended*
 - **MP-4** — Pipeline reshape. *big · after MP-3*
 - **MP-5** — Courses reshape. *big*
-- **OV-2** — Overview rail + bands; absorbs Activity strip + Money in Motion.
-  *medium-big*
 - **MP-6** — Money reshape (Revenue problems/collected-basis/payouts/unit
   economics; Golfers record page + support actions; failed-charge badge).
   *big · after MP-3*

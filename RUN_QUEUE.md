@@ -321,16 +321,18 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     restore-from-closed 400ing on every attempt, the wizard orphan hard-delete
     trap (→ synthetic-inquiry path), admin tee-sheet cancel → performCancellation,
     retry-charge confirm + collect-without-check-in variant, phantom pending
-    late-cancel fees, archived-inquiry token block + expiry (medium)
+    late-cancel fees, archived-inquiry token block + expiry. PLUS the ET day
+    boundary (rescued from OV-1, which is parked): every "today" number on the
+    Overview is computed on UTC days, so the whole band resets at 8pm ET — the
+    Activity page's 30-day default has the same bug and is why its steady state
+    is "No events found" even when events exist. This is a correctness bug, not
+    part of the Overview redesign (medium)
   - [ ] MP-2 — auth & access: fix-now #8-#10 (requireOwner on broadcasts +
     employees, per-request active check, lockout clear on reset, dead-end token
     states) + the two ADMIN_V4 V4-2 token leaks (verify-operator returning live
     verificationToken/setupLink to any session; inquiries GET returning
     detailsToken) + one-door login with inline 2FA step + tokens out of URL query
     strings + role gates on messages GET / employees GET / palette search (medium)
-  - [ ] OV-1 — Overview truth layer: ET day boundaries (every "today" number
-    currently resets at 8pm ET), booked vs collected, viewer money gate, error
-    states — per Deep Dive 01 (medium)
   - [ ] MP-3 — THE BIG MIGRATION, one attended run, everything in
     ADMIN_MASTER_PLAN §5: money Float → integer cents (+ full codebase sweep),
     PaymentEvent ledger, Booking/Message/InquiryStatusEvent/CourseInquiry/TeeTime
@@ -346,8 +348,6 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     rendered), 10→6 tab split, offline/archive booking-consequence flows +
     operator notification, Feature decision (build the directory or delete the
     button), sheet-vs-live config diff card (big)
-  - [ ] OV-2 — Overview rail + bands; absorbs the Activity strip and Money in
-    Motion (medium-big)
   - [ ] MP-6 — money reshape: Revenue problems pinned all-time + collected-basis
     P&L + payout history + unit economics; Golfers record page + palette search
     extension + support actions (cancel, receipt, card-update link); red sidebar
@@ -374,6 +374,19 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     once server-side and passed down, twelve per-page fetches deleted, local role
     arrays deleted, the six catch(()=>router.push('/admin/login')) bugs deleted
     with them, useResource hook. This is LAW rule 2 (medium)
+  PARKED 2026-08-27 — the Overview reshape (was OV-1/OV-2: five zones, Today
+  band, deduplicated Your Move rail, Growth band, Fleet Watch with no_traction,
+  absorbing the Activity strip + Money in Motion). Both cited "Deep Dive 01" as
+  their spec and THAT DOCUMENT IS NOT IN THE REPO — ADMIN_MASTER_PLAN.md and
+  this file are the only places that even mention it, and both merely point at
+  it. Cam's call: run the master plan without them rather than let a run
+  improvise the Overview from a two-line summary. Its one correctness bug (the
+  ET day boundary) was moved into MP-1. TO REVIVE: paste Deep Dive 01, write it
+  in as OVERVIEW_SPEC.md, then requeue. Note that MP-1's Money-in-Motion fix and
+  MP-8's chrome work both assume the Overview absorptions eventually happen —
+  neither is blocked by the parking, but don't let a run "helpfully" build the
+  absorption without the spec.
+
   - [ ] MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState
     → nine tab files + useCourseDetail. AFTER MP-9 so tabs inherit shared
     components; overlaps MP-5's tab reshape, so run MP-5 first and let this
