@@ -542,6 +542,15 @@ in flight at a time.
      dashboard — reference, not headline.
   7. Vocabulary + count hygiene per the audit (one status language,
      headers match rows).
+- [~] A-07 through A-13 — SUPERSEDED 2026-08-27 by the full admin console audit,
+  now specced as the ADMIN_V4 campaign (ADMIN_V4_SPEC.md, ten phases in
+  RUN_QUEUE.md). That audit walked golfers, messages, activity, employees,
+  broadcasts and create live as owner AND read the source, which is a stronger
+  teardown than step 1 of this process would have produced page by page. Do NOT
+  run these as separate teardown→spec→build cycles; the findings for all six
+  live in the V4 phases. Left listed rather than deleted so the numbering and
+  the history stay readable.
+
 - [ ] A-07 /admin/golfers — support lookup
 - [ ] A-08 /admin/messages — threads (Cam 2026-07-23: functionally fine, "just needs to look a little better" — visual notes go to the AESTHETIC PASS; only structural findings would reopen this)
 - [ ] A-09 /admin/activity — ledger + filters

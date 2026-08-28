@@ -302,6 +302,83 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   or (b) remove viewer from VALID_ROLES and the picker entirely. Do not ship a
   role whose label and behavior disagree. Cam picks a or b at the restate step.
 
+- ADMIN MASTER PLAN — full spec in ADMIN_MASTER_PLAN.md; the ADMIN_V4 phases it
+  does NOT cover survive as MP-9/10/11/12 and their detail stays in
+  ADMIN_V4_SPEC.md (whose LAW section still governs and is not repealed).
+  READ ADMIN_MASTER_PLAN.md §RECONCILIATION BEFORE RUNNING ANYTHING.
+  Both audits state their source read at cb9bcb7, now several commits behind —
+  RE-LOCATE EVERY FINDING BY SYMBOL, NEVER BY LINE NUMBER.
+  Verified by Cowork 2026-08-27 before queueing: fix-now #1 (money is cents in a
+  Float column, email.ts divides by 100, the golfers resend multiplies by 100
+  again → a $50 green fee resends as $5,000) and fix-now #8 (broadcasts:38,
+  employees:35 and :64 all use `session.role !== 'owner'`, bypassing
+  requireOwner and therefore NOT asserting the mfa claim b07c6d0 built).
+  - [ ] MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin
+    + /dashboard (64px dead band on every screen), course-detail 165px
+    horizontal overflow + scrollable tab strip, two overflow-hidden table
+    wrappers → overflow-x-auto, CLAUDE.md dark-theme correction (small)
+  - [ ] MP-1 — stop the bleeding: fix-now #1-#7 — the ×100 resend email,
+    restore-from-closed 400ing on every attempt, the wizard orphan hard-delete
+    trap (→ synthetic-inquiry path), admin tee-sheet cancel → performCancellation,
+    retry-charge confirm + collect-without-check-in variant, phantom pending
+    late-cancel fees, archived-inquiry token block + expiry (medium)
+  - [ ] MP-2 — auth & access: fix-now #8-#10 (requireOwner on broadcasts +
+    employees, per-request active check, lockout clear on reset, dead-end token
+    states) + the two ADMIN_V4 V4-2 token leaks (verify-operator returning live
+    verificationToken/setupLink to any session; inquiries GET returning
+    detailsToken) + one-door login with inline 2FA step + tokens out of URL query
+    strings + role gates on messages GET / employees GET / palette search (medium)
+  - [ ] OV-1 — Overview truth layer: ET day boundaries (every "today" number
+    currently resets at 8pm ET), booked vs collected, viewer money gate, error
+    states — per Deep Dive 01 (medium)
+  - [ ] MP-3 — THE BIG MIGRATION, one attended run, everything in
+    ADMIN_MASTER_PLAN §5: money Float → integer cents (+ full codebase sweep),
+    PaymentEvent ledger, Booking/Message/InquiryStatusEvent/CourseInquiry/TeeTime
+    indexes, inquiry growth columns (source/closedReason/snoozeUntil/
+    nextFollowUpAt), real ChangeRequest table, Course.firstWentLiveAt, CronRunLog
+    + admin audit-log writes + CourseOperator.lastLoginAt, cancellationFeeApplies,
+    AdminUser.sessionVersion (SCHEMA CHANGE, ATTENDED)
+  - [ ] MP-4 — pipeline reshape: queue-first inquiries list (dedup, true
+    days-in-stage from events not updatedAt, waiting-on-them section), detail tab
+    trim, snooze/source/closedReason UI, builder consolidation on
+    create_draft_course, duplicate-intake guard (big, after MP-3)
+  - [ ] MP-5 — courses reshape: evidence on list rows (already computed, never
+    rendered), 10→6 tab split, offline/archive booking-consequence flows +
+    operator notification, Feature decision (build the directory or delete the
+    button), sheet-vs-live config diff card (big)
+  - [ ] OV-2 — Overview rail + bands; absorbs the Activity strip and Money in
+    Motion (medium-big)
+  - [ ] MP-6 — money reshape: Revenue problems pinned all-time + collected-basis
+    P&L + payout history + unit economics; Golfers record page + palette search
+    extension + support actions (cancel, receipt, card-update link); red sidebar
+    badge for failed charges (big, after MP-3)
+  - [ ] MP-7 — comms merge: Broadcasts composer into Messages (owner-only),
+    single-announcement storage with per-course read state, real delivery counts
+    from awaited sends, unanswered-first sort + age badges, thread close +
+    archived labelling, context card (medium)
+  - [ ] MP-8 — chrome + System: sidebar real links + self-fetched badges +
+    demotions, palette capability gating, System project-deep links + read-only
+    Platform card + live cron dots, orphan sweep relocated off the Courses list
+    (small-medium, needs MP-3)
+  - [ ] MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in
+    ADMIN_V4_SPEC.md): codemod to Card/Eyebrow/PageHeader/Btn (verified: ONE
+    import exists in all of src/, StatusDot ×10), ESLint guard so it can't
+    regress, create lib/format.ts (fmtMoney ×6, fmtDate ×7), promote Modal with
+    dialog semantics, baseline a11y. NOT in the deep dive — this is what stops
+    the next audit finding the same class again (big)
+  - [ ] MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,
+    transactions; batch the orphan sweep; bound the courses groupBy. LOWEST
+    PRIORITY — every endpoint measured 112-440ms. Insurance, not firefighting
+    (medium)
+  - [ ] MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved
+    once server-side and passed down, twelve per-page fetches deleted, local role
+    arrays deleted, the six catch(()=>router.push('/admin/login')) bugs deleted
+    with them, useResource hook. This is LAW rule 2 (medium)
+  - [ ] MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState
+    → nine tab files + useCourseDetail. AFTER MP-9 so tabs inherit shared
+    components; overlaps MP-5's tab reshape, so run MP-5 first and let this
+    finish it (big)
+
 - [ ] BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:
   - Course.publicBookingWindowDays (Int, default 7) — operator sets in dashboard Settings ("How far ahead can golfers book?") with plain explainer
   - MembershipTier.bookingWindowDays (Int?, null = course default) — per-tier member perk, set in the tier editor ("Members of this tier can book N days ahead")
