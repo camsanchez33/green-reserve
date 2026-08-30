@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
 
 export async function GET() {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // MP-2d: the nav hides System at MANAGER_PLUS; hiding a link is not a gate, so make the claim true.
+  if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   // We don't log raw Stripe webhook receipts anywhere, so this is a proxy
   // signal, not a real log: the most recently updated course that has a

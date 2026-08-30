@@ -32,10 +32,9 @@ export default function BroadcastsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [sRes, bRes] = await Promise.all([
-        fetch('/api/admin/session'),
-        fetch('/api/admin/broadcasts'),
-      ]);
+      // MP-2d: bRes was fetched here, never read, and adminFetch re-requested
+      // the same gated URL below — two GETs per load and per Refresh.
+      const sRes = await fetch('/api/admin/session');
       if (!sRes.ok) { router.push(LOGIN_SESSION_ENDED); return; }
       // MP-2c: MP-2b's SUPPORT_PLUS gate on this endpoint made 403 reachable and
       // this line parsed the error body as data — empty announcement history
@@ -51,10 +50,17 @@ export default function BroadcastsPage() {
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
-    fetch('/api/admin/courses', { headers: { 'Content-Type': 'application/json' } })
-      .then(r => r.ok ? r.json() : [])
-      .then((list: { active: boolean }[]) => setRecipientCount(Array.isArray(list) ? list.filter(c => c.active).length : 0))
-      .catch(() => {});
+    // MP-2d B1: this collapsed ANY non-2xx into [], so recipientCount became 0
+    // rather than null — the confirm button read "Send to 0 operators" while the
+    // server mails every operator with an active course. The label contradicted
+    // the action on an irreversible mass email, and MP-2c's SUPPORT_PLUS gate on
+    // /api/admin/courses is what made that branch reachable. null already has a
+    // correct rendering ("all active operators"); failure must fall back to it.
+    adminFetch<{ active: boolean }[]>('/api/admin/courses', { subject: 'the recipient list' })
+      .then(res => {
+        if (!res.ok || !Array.isArray(res.data)) { setRecipientCount(null); return; }
+        setRecipientCount(res.data.filter(c => c.active).length);
+      });
   }, []);
 
   async function sendBroadcast() {
@@ -82,10 +88,12 @@ export default function BroadcastsPage() {
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="broadcasts" />
       <div className="admin-content flex-1 min-h-screen">
-        {loadError && (
-          <ErrorBanner message={loadError.msg} kind={loadError.kind} onRetry={() => load()} />
-        )}
         <div className="px-8 py-7 max-w-4xl">
+          {/* MP-2d: was a sibling of this container, so it rendered full-bleed
+              against the sidebar and above the page title. */}
+          {loadError && (
+            <ErrorBanner message={loadError.msg} kind={loadError.kind} onRetry={() => load()} />
+          )}
           <div className="flex items-center justify-between mb-7">
             <div>
               <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Broadcasts</h1>
@@ -184,7 +192,7 @@ export default function BroadcastsPage() {
           <div>
             <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">History</div>
             {loading && <div className="text-ink-muted text-sm py-8 text-center">Loading...</div>}
-            {!loading && broadcasts.length === 0 && (
+            {!loading && !loadError && broadcasts.length === 0 && (
               <div className="text-ink-muted text-sm py-12 text-center bg-white border border-line rounded-lg">
                 No broadcasts yet
               </div>

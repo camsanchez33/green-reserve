@@ -105,11 +105,18 @@ export async function resolveAdminSession(): Promise<AdminSession | null> {
   // by that catch two lines later and the whole thing was inert — a Postgres
   // blip still became a 401 and still logged every admin out. It is outside now,
   // which is the difference between the fix existing and not.
-  let admin: { active: boolean } | null;
+  // MP-2d B2: role comes from the ROW, not the token. MP-2c selected only
+  // `active` and returned claims.role, so a demoted admin kept their old
+  // privileges for up to 12h — and employees/route.ts blocks self-modification
+  // but not changing ANOTHER owner's role, so a demoted owner could demote the
+  // real owner back and mint a fresh owner account. The row was already on the
+  // wire; this costs nothing. (mfa stays a claim: it records how this session
+  // was authenticated, which no later row change can retroactively alter.)
+  let admin: { active: boolean; role: string } | null;
   try {
     admin = await prisma.adminUser.findUnique({
       where: { id: claims.adminId },
-      select: { active: true },
+      select: { active: true, role: true },
     });
   } catch (err) {
     console.error(JSON.stringify({ ev: 'admin_session.db_unavailable', adminId: claims.adminId, error: err instanceof Error ? err.message : String(err) }));
@@ -119,7 +126,7 @@ export async function resolveAdminSession(): Promise<AdminSession | null> {
   // Deleted or deactivated since the token was minted — the session is over.
   if (!admin || !admin.active) return null;
 
-  return { adminId: claims.adminId, email: claims.email, name: claims.name, role: claims.role, mfa: claims.mfa === true };
+  return { adminId: claims.adminId, email: claims.email, name: claims.name, role: admin.role, mfa: claims.mfa === true };
 }
 
 export async function signAdminSetPasswordToken(payload: { adminId: string; email: string }) {

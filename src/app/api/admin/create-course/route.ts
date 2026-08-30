@@ -8,7 +8,10 @@ import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-sess
 const MONTHS = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 export async function GET(req: NextRequest) {
-  if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const session = await resolveAdminSession();
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // MP-2d: GET is a slug-existence oracle and the nav hides Manual build at MANAGER_PLUS.
+  if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const slug = new URL(req.url).searchParams.get('slug') || '';
   if (!slug) return NextResponse.json({ available: false });
   const exists = await prisma.course.findUnique({ where: { slug }, select: { id: true } });

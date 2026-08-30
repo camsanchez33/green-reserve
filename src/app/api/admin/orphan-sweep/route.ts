@@ -13,6 +13,9 @@ import { sweepOrphanCourses, listAcknowledgedOrphans, forceDeleteOrphan } from '
 export async function GET() {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // MP-2d: the dry run is the preview of an owner-only destructive action —
+  // it enumerates every orphan and what a sweep would delete. Same gate as POST.
+  if (!requireOwner(session)) return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
   const [items, acknowledged] = await Promise.all([
     sweepOrphanCourses(session.name, true),
     listAcknowledgedOrphans(),

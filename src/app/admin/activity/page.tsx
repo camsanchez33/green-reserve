@@ -5,6 +5,7 @@ import { LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
 import { RefreshCw, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { LoadFailure } from '@/components/ui/ErrorState';
 
 interface Course { id: string; name: string; archivedAt: string | null; }
 interface EventRow {
@@ -35,6 +36,7 @@ export default function ActivityPage() {
   const [events, setEvents] = useState<EventRow[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [courseId, setCourseId] = useState('');
@@ -56,11 +58,28 @@ export default function ActivityPage() {
         fetch(`/api/admin/activity?${params}`),
         fetch('/api/admin/courses?simple=1'),
       ]);
-      const [aData, cData] = await Promise.all([aRes.json(), cRes.json()]);
+      // MP-2d B5: this parsed a 403 body as data, so /api/admin/activity's
+      // SUPPORT_PLUS gate rendered as "No events found". MP-2c's queue entry
+      // claimed this was fixed alongside broadcasts and courses; it was not.
+      if (!aRes.ok) {
+        setEvents([]);
+        setLoadError(aRes.status === 403
+          ? 'You do not have access to the activity feed. Ask an owner if you need it.'
+          : aRes.status === 401 ? 'Your session ended. Sign in again to continue.'
+          : 'Could not load activity. Try again.');
+        return;
+      }
+      const aData = await aRes.json();
       setEvents(Array.isArray(aData.items) ? aData.items : []);
       setHasMore(aData.page < aData.pages);
+      setLoadError('');
+      // The course filter is a nicety — its own gate failing must not blank the feed.
+      const cData = cRes.ok ? await cRes.json().catch(() => []) : [];
       setCourses(Array.isArray(cData) ? cData : (Array.isArray(cData.courses) ? cData.courses : []));
-    } catch { /* stay on page */ }
+    } catch {
+      setEvents([]);
+      setLoadError('Network error loading activity. Check your connection and try again.');
+    }
     finally { setLoading(false); }
   }, [router]);
 
@@ -132,7 +151,9 @@ export default function ActivityPage() {
             {loading ? (
               <div className="py-12 text-center text-ink-muted text-sm">Loading...</div>
             ) : events.length === 0 ? (
-              <div className="py-12 text-center text-ink-muted text-sm">No events found</div>
+              loadError
+                ? <div className="py-12"><LoadFailure message={loadError} onRetry={() => doLoad(page, courseId, from, to)} compact /></div>
+                : <div className="py-12 text-center text-ink-muted text-sm">No events found</div>
             ) : (
               <div className="divide-y divide-line-soft">
                 {events.map(ev => (

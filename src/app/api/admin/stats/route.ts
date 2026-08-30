@@ -491,11 +491,16 @@ export async function GET() {
   }
   const courseHealthWatchlist = watchlistRaw.sort((a, b) => b.severity - a.severity).slice(0, 5).map(({ severity: _severity, ...rest }) => rest);
 
+  // MP-2d: isSupportPlus was computed here and used only to filter unread
+  // messages and failed charges — the money itself shipped to every role,
+  // including viewer. HARDENING_SPEC: "viewer gets NO financial ledger or
+  // golfer PII." The same numbers are SUPPORT_PLUS-gated on
+  // /api/admin/transactions, so this was the way around that gate.
   return NextResponse.json({
     pendingInquiries,
-    topStrip,
+    topStrip: isSupportPlus ? topStrip : { ...topStrip, feesToday: null },
     actionQueue: { red, redCount, amber, amberCount },
-    revenue,
+    revenue: isSupportPlus ? revenue : null,
     thirtyDay: {
       activeCourses,
       totalCourses,
@@ -504,9 +509,13 @@ export async function GET() {
       newCoursesPrev30d,
       bookings30d: recentBookings,
       bookingsPrev30d: prevBookings,
-      fees30d: Number(recentRevenue._sum.accessFeeTotal ?? 0) / 100,
-      feesPrev30d: Number(prevRevenue._sum.accessFeeTotal ?? 0) / 100,
+      fees30d: isSupportPlus ? Number(recentRevenue._sum.accessFeeTotal ?? 0) / 100 : null,
+      feesPrev30d: isSupportPlus ? Number(prevRevenue._sum.accessFeeTotal ?? 0) / 100 : null,
     },
-    bottomTrio: { pipeline, teeSheetToday, courseHealthWatchlist },
+    bottomTrio: {
+      pipeline,
+      teeSheetToday: isSupportPlus ? teeSheetToday : { ...teeSheetToday, grFeesExpected: null, grossExpected: null },
+      courseHealthWatchlist,
+    },
   });
 }

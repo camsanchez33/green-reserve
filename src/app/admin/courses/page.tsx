@@ -112,10 +112,12 @@ function CoursesContent() {
     checkOrphans();
   }, [adminReady, orphanChecked, checkOrphans]);
 
+  // MP-2d B4: no try/catch, so a rejected fetch left orphanRunning true and the
+  // button read "Cleaning up..." until a reload.
   async function runOrphanSweep() {
     setOrphanRunning(true); setOrphanResult('');
+    try {
     const r = await fetch('/api/admin/orphan-sweep', { method: 'POST', headers: H() });
-    setOrphanRunning(false);
     if (r.ok) {
       const d = await r.json();
       setOrphanResult(`Cleaned up ${d.items.length} item${d.items.length === 1 ? '' : 's'}: ` + d.items.map((i: OrphanSweepItem) => `"${i.name}" ${i.action}`).join('; '));
@@ -126,6 +128,11 @@ function CoursesContent() {
       const d = await r.json().catch(() => ({}));
       setOrphanResult('Sweep failed: ' + (d.error || 'unknown error'));
     }
+    } catch {
+      setOrphanResult('Sweep failed: network error — nothing was changed.');
+    } finally {
+      setOrphanRunning(false);
+    }
   }
 
   // Owner-authorized override — hard-deletes ONE specific acknowledged
@@ -135,11 +142,13 @@ function CoursesContent() {
   async function runForceDelete() {
     if (!forceDeleteTarget) return;
     setForceDeleteBusy(true); setForceDeleteError('');
+    // MP-2d B4: same latch as the sweep, on the console's single most
+    // destructive action.
+    try {
     const r = await fetch('/api/admin/orphan-sweep', {
       method: 'POST', headers: H(),
       body: JSON.stringify({ forceDeleteId: forceDeleteTarget.id, confirmName: forceDeleteConfirm }),
     });
-    setForceDeleteBusy(false);
     if (r.ok) {
       const d = await r.json();
       setOrphanResult(`Permanently deleted "${d.deleted.name}": ${d.deleted.bookings} booking(s), ${d.deleted.paidMemberships} paid membership(s), ${d.deleted.staff} staff row(s)${d.deleted.operatorDeleted ? ', operator login' : ''}.`);
@@ -150,6 +159,11 @@ function CoursesContent() {
     } else {
       const d = await r.json().catch(() => ({}));
       setForceDeleteError(d.error || 'Delete failed — try again.');
+    }
+    } catch {
+      setForceDeleteError('Network error — nothing was deleted. Check your connection and try again.');
+    } finally {
+      setForceDeleteBusy(false);
     }
   }
 
@@ -186,16 +200,17 @@ function CoursesContent() {
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="courses" />
       <div className="admin-content flex-1 flex flex-col min-h-screen">
-        {loadError && (
-          <ErrorBanner message={loadError.msg} kind={loadError.kind} onRetry={() => loadCourses(stateFilter)} />
-        )}
         <div className="px-8 py-7">
+          {/* MP-2d: was a sibling of this container — full-bleed, above the title. */}
+          {loadError && (
+            <ErrorBanner message={loadError.msg} kind={loadError.kind} onRetry={() => loadCourses(stateFilter)} />
+          )}
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">All Courses</h1>
               {/* A-04 item 5: count line always reflects the active filter set */}
               <p className="text-sm text-ink-soft mt-0.5">
-                {filteredCourses.length} course{filteredCourses.length === 1 ? '' : 's'}
+                {loadError ? '—' : `${filteredCourses.length} course${filteredCourses.length === 1 ? '' : 's'}`}
                 {(filterHealth !== 'all' || filterType || filterFeatured || q) ? ' matching filters' : ''}
               </p>
             </div>
@@ -377,7 +392,7 @@ function CoursesContent() {
                 </div>
               </Link>
             ))}
-            {!loading && filteredCourses.length === 0 && (
+            {!loading && !loadError && filteredCourses.length === 0 && (
               <EmptyState message="No courses found" />
             )}
           </div>

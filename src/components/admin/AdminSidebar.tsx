@@ -3,11 +3,7 @@ import { useRouter } from 'next/navigation';
 import { SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-roles';
 import Image from 'next/image';
 import { useEffect, useState, useCallback } from 'react';
-import {
-  BarChart2, AlertCircle, Building2, Hammer, Users,
-  Radio, Activity, MessageSquare, UserCircle, ChevronLeft, ChevronRight,
-  DollarSign, Search, Wrench,
-} from 'lucide-react';
+import { BarChart2, AlertCircle, Building2, Hammer, Users, Radio, Activity, MessageSquare, UserCircle, ChevronLeft, ChevronRight, DollarSign, Search, Wrench, LogOut } from 'lucide-react';
 import CommandPalette from '@/components/admin/CommandPalette';
 
 export type AdminNavKey = 'overview' | 'inquiries' | 'courses' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system';
@@ -21,7 +17,10 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
 }) {
   const router = useRouter();
   const [unread, setUnread] = useState(unreadMessages);
-  const [role, setRole] = useState<string>('');
+  const [role, setRole] = useState<string | null>(null);        // null = not yet known
+  const [roleFailed, setRoleFailed] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem(LS_KEY) === 'true';
@@ -32,16 +31,25 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   // One session read for the whole shell. ADMIN_V4 LAW rule 2 wants role
   // resolved once server-side in the layout (Phase V4-7); until that lands this
   // is one fetch per page rather than one per nav item.
+  // MP-2d B3: this had an empty catch — verbatim what the no-silent-failures
+  // rule forbids — and `role` started as ''. "Not known yet", "lookup failed"
+  // and "you are a viewer" all rendered as a two-item nav, permanently, with no
+  // retry: an owner during a DB blip saw a sidebar asserting they had lost
+  // access to everything. Three states now, and an unknown role shows the full
+  // nav rather than a false one. The API gates are the real boundary; this
+  // filter only decides which doors to offer.
   useEffect(() => {
+    let cancelled = false;
     fetch('/api/admin/session')
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (d?.role) setRole(String(d.role)); })
-      .catch(() => {});
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then(d => { if (!cancelled) { setRole(String(d?.role ?? '')); setRoleFailed(false); } })
+      .catch(() => { if (!cancelled) setRoleFailed(true); });
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
     if (unreadMessages > 0) return;
-    if (role && !SUPPORT_PLUS.includes(role)) return; // would 403
+    if (role !== null && !SUPPORT_PLUS.includes(role)) return; // would 403
     fetch('/api/admin/messages?unreadCount=1')
       .then(r => r.ok ? r.json() : { count: 0 })
       .then(d => setUnread(d.count ?? 0))
@@ -72,9 +80,22 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   const toggle = useCallback(() => setCollapsed(v => !v), []);
   const openPalette = useCallback(() => window.dispatchEvent(new CustomEvent('open-cmd-palette')), []);
 
+  // MP-2d B4: no try/catch and no res.ok check. If the request rejected, the
+  // function threw before router.push and the user stayed on the page with no
+  // error — clicking Sign out on a shared machine and reasonably believing it
+  // worked. Navigate regardless once we know the outcome; only a thrown request
+  // leaves them here, and then they are told.
   async function signOut() {
-    await fetch('/api/admin/logout', { method: 'POST' });
-    router.push('/admin/login');
+    if (signingOut) return;
+    setSigningOut(true); setSignOutError(false);
+    try {
+      await fetch('/api/admin/logout', { method: 'POST' });
+      router.push('/admin/login');
+    } catch {
+      setSignOutError(true);
+    } finally {
+      setSigningOut(false);
+    }
   }
 
   // MP-2c: the nav is a map of the company, and it was showing every role a
@@ -106,9 +127,10 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     { key: 'profile', label: 'My profile',   href: '/admin/profile',  icon: <UserCircle className="w-[18px] h-[18px]"/> },
   ];
 
-  // Until the role is known, show only the ungated items rather than flashing
-  // links the user is about to lose.
-  const canSee = (item: NavItem) => !item.minRole || (!!role && item.minRole.includes(role));
+  // Unknown role (still loading, or the lookup failed) shows everything: a nav
+  // that silently removes ten links is a worse lie than one that offers a door
+  // the API will refuse. Filtering starts only once the role is actually known.
+  const canSee = (item: NavItem) => !item.minRole || role === null || item.minRole.includes(role);
   const mainNav = allMainNav.filter(canSee);
   const bottomNav = allBottomNav.filter(canSee);
 
@@ -174,6 +196,19 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       </div>
 
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
+        {/* MP-2d B3: the nav is showing everything because it could not confirm
+            the role. Say so rather than letting it look authoritative. */}
+        {roleFailed && !collapsed && (
+          <div className="mx-1 mb-2 rounded-md bg-white/10 px-2.5 py-2">
+            <p className="text-[11px] text-[#A9BFAF] leading-snug">Couldn&rsquo;t confirm your access level.</p>
+            <button
+              onClick={() => { setRoleFailed(false); setRole(null); fetch('/api/admin/session').then(r => (r.ok ? r.json() : Promise.reject(new Error()))).then(d => setRole(String(d?.role ?? ''))).catch(() => setRoleFailed(true)); }}
+              className="text-[11px] font-medium text-paper hover:underline mt-0.5"
+            >
+              Retry
+            </button>
+          </div>
+        )}
         {mainNav.map(item => (
           <NavItem
             key={item.key}
@@ -188,15 +223,21 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
         {bottomNav.map(item => <NavItem key={item.key} item={item} />)}
         <button
           onClick={signOut}
-          className={`w-full flex items-center ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-2 text-[13px] text-[#A9BFAF] hover:text-paper hover:bg-white/10 rounded-md transition-colors`}
+          disabled={signingOut}
+          className={`w-full flex items-center ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-2 text-[13px] text-[#A9BFAF] hover:text-paper hover:bg-white/10 rounded-md transition-colors disabled:opacity-50`}
           title={collapsed ? 'Sign out' : undefined}
         >
           {collapsed ? (
-            <span className="text-[11px] font-medium">↪</span>
+            <LogOut className="w-[18px] h-[18px]" />
           ) : (
-            <span>Sign out</span>
+            <span>{signingOut ? 'Signing out…' : 'Sign out'}</span>
           )}
         </button>
+        {signOutError && !collapsed && (
+          <p className="px-3 pb-1 text-[11px] text-[#F0B6A6] leading-snug">
+            Sign-out failed — you are still signed in. Check your connection and try again.
+          </p>
+        )}
       </div>
 
       {/* Collapse toggle */}

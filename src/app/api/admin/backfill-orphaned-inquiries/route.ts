@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, OWNER_ONLY } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, OWNER_ONLY, ownerGateError } from '@/lib/admin-session';
 
 // One-time fix: inquiries whose course was hard-deleted before Phase 2d
 // were left at 'details_submitted' by the old Phase 2c code.
@@ -9,7 +9,7 @@ export async function POST() {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   // MP-2c: a one-time backfill that rewrites lifecycle history platform-wide — a viewer could run it.
-  if (!requireRole(session, OWNER_ONLY)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!requireRole(session, OWNER_ONLY)) return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
 
   const orphans = await prisma.courseInquiry.findMany({
     where: {

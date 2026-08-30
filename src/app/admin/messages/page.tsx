@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { adminFetch, type AdminFetchFailure, LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
+import { ErrorBanner } from '@/components/ui/ErrorState';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Send, MessageSquare, ArrowUpRight, RefreshCw, Radio } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
@@ -47,6 +48,7 @@ function MessagesContent() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [listError, setListError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
   const [threadError, setThreadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
+  const [sendError, setSendError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
@@ -105,22 +107,26 @@ function MessagesContent() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [thread?.messages?.length]);
 
+  // MP-2d B4: this was a bare async with no try/catch — a rejected fetch (or
+  // .json() on the HTML 500 page an AdminSessionUnavailable now produces) threw
+  // past setSending(false) and latched the button on "Sending..." forever. The
+  // failure path was also alert('Forbidden'), which is neither inline nor
+  // explanatory. Mutations go through the classifier now, same as loads.
   async function sendMessage() {
     if (!selectedCourseId || !compose.trim() || sending) return;
-    setSending(true);
-    const r = await fetch('/api/admin/messages', {
-      method: 'POST', headers: H(),
-      body: JSON.stringify({ courseId: selectedCourseId, body: compose.trim() }),
-    });
-    if (r.ok) {
+    setSending(true); setSendError(null);
+    try {
+      const res = await adminFetch('/api/admin/messages', {
+        method: 'POST',
+        body: JSON.stringify({ courseId: selectedCourseId, body: compose.trim() }),
+        subject: 'this message',
+      });
+      if (!res.ok) { setSendError({ msg: res.message, kind: res.kind }); return; }
       setCompose('');
       await loadThread(selectedCourseId);
-      await loadThreads();
-    } else {
-      const d = await r.json();
-      alert(d.error || 'Send failed');
+    } finally {
+      setSending(false);
     }
-    setSending(false);
   }
 
   const q = search.toLowerCase().trim();
@@ -276,6 +282,12 @@ function MessagesContent() {
 
               {/* Composer */}
               <div className="px-6 py-4 border-t border-line bg-white shrink-0">
+                {/* MP-2d: the send failure was a browser alert reading
+                    "Forbidden". It renders inline now, and a denial disables the
+                    composer instead of inviting a write that can only fail. */}
+                {sendError && (
+                  <ErrorBanner message={sendError.msg} kind={sendError.kind} onDismiss={() => setSendError(null)} />
+                )}
                 <div className="flex gap-3 items-end">
                   <textarea
                     value={compose}
@@ -283,16 +295,17 @@ function MessagesContent() {
                     onKeyDown={e => {
                       if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) sendMessage();
                     }}
-                    placeholder="Message this course..."
+                    placeholder={threadError?.kind === 'forbidden' || threadError?.kind === 'unauthorized' ? 'You do not have access to this conversation.' : 'Message this course...'}
+                    disabled={threadError?.kind === 'forbidden' || threadError?.kind === 'unauthorized'}
                     rows={2}
                     className="flex-1 bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40 resize-none"
                   />
                   <button
                     onClick={sendMessage}
-                    disabled={!compose.trim() || sending}
+                    disabled={!compose.trim() || sending || threadError?.kind === 'forbidden' || threadError?.kind === 'unauthorized'}
                     className="flex items-center gap-1.5 px-4 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white text-sm font-medium rounded-md transition-colors shrink-0"
                   >
-                    <Send className="w-3.5 h-3.5" />Send
+                    <Send className="w-3.5 h-3.5" />{sending ? 'Sending…' : 'Send'}
                   </button>
                 </div>
                 <div className="text-[10px] text-ink-faint mt-1.5">⌘/Ctrl + Enter to send</div>

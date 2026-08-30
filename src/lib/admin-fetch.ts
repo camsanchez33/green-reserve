@@ -58,7 +58,12 @@ export function adminErrorMessage(kind: AdminFetchFailure, subject?: string, ser
       return `Network error${subject ? ` loading ${subject}` : ''}. Check your connection and try again.`;
     case 'server':
     default:
-      return usefulServerMessage(serverMessage) ?? `Could not load ${subject ?? 'that'}. Try again.`;
+      // MP-2d: 5xx bodies are NOT shown. Several routes answer with
+      // `{ error: e.message }`, and a Prisma exception embeds the failing query,
+      // the model and often a field value — rendered verbatim into a banner for
+      // whatever role reached the route. Server copy is honoured only for 403,
+      // where ownerGateError is the whole point.
+      return `Could not load ${subject ?? 'that'}. Try again.`;
   }
 }
 

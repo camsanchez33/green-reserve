@@ -120,6 +120,7 @@ export default function CommandPalette() {
       if (inputRef.current) inputRef.current.value = '';
       setHasQuery(false);
       setResults([]);
+      setSearchError('');   // MP-2d: a stale error greeted the next Ctrl+K
       setRecents(loadRecents());
       setSelectedIdx(0);
       setTimeout(() => inputRef.current?.focus(), 10);
@@ -141,6 +142,7 @@ export default function CommandPalette() {
     setHasQuery(v.length > 0);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (v.length === 0) {
+      setSearchError('');
       setResults([]);
       setLoading(false);
       return;
