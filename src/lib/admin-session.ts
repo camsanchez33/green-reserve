@@ -32,9 +32,10 @@ export class AdminSessionUnavailable extends Error {
   constructor() { super('Admin session store unavailable'); this.name = 'AdminSessionUnavailable'; }
 }
 
-export const OWNER_ONLY   = ['owner'];
-export const MANAGER_PLUS = ['owner', 'manager'];
-export const SUPPORT_PLUS = ['owner', 'manager', 'support'];
+// Defined in admin-roles.ts (client-safe) and re-exported here so existing
+// server-side imports are unchanged. This module is server-only — it pulls in
+// prisma and next/headers — so client components must import from admin-roles.
+export { OWNER_ONLY, MANAGER_PLUS, SUPPORT_PLUS } from './admin-roles';
 
 /**
  * The owner gate. Role alone is not enough — the session must also carry the
@@ -88,32 +89,37 @@ export async function resolveAdminSession(): Promise<AdminSession | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get('admin_session')?.value;
   if (!token) return null;
+
+  // Step 1 — verify the token. A bad/expired/tampered token is simply "no
+  // session"; its catch must NOT extend over the DB read below.
+  let claims: (AdminSession & { type: string }) | null = null;
   try {
     const { payload } = await jwtVerify(token, secret);
-    const p = payload as unknown as AdminSession & { type: string };
-    if (p.type !== 'admin_session') return null;
-
-    // MP-2b: this lookup must not share the JWT's catch. A Postgres blip would
-    // otherwise be swallowed as `return null`, every admin API would answer 401,
-    // and all 14 admin pages would bounce to /admin/login — indistinguishable
-    // from being fired, during an outage where signing back in also fails.
-    // A transient infrastructure error rethrows as AdminSessionUnavailable so
-    // routes can answer 503; only a real missing/inactive row ends the session.
-    let admin: { active: boolean } | null;
-    try {
-      admin = await prisma.adminUser.findUnique({
-        where: { id: p.adminId },
-        select: { active: true },
-      });
-    } catch (err) {
-      console.error(JSON.stringify({ ev: 'admin_session.db_unavailable', adminId: p.adminId, error: err instanceof Error ? err.message : String(err) }));
-      throw new AdminSessionUnavailable();
-    }
-    // Deleted or deactivated since the token was minted — the session is over.
-    if (!admin || !admin.active) return null;
-
-    return { adminId: p.adminId, email: p.email, name: p.name, role: p.role, mfa: p.mfa === true };
+    claims = payload as unknown as AdminSession & { type: string };
   } catch { return null; }
+  if (!claims || claims.type !== 'admin_session') return null;
+
+  // Step 2 — is the account still active? (MP-2 fix-now #9.)
+  //
+  // MP-2b put this inside the JWT try/catch, so the rethrow below was swallowed
+  // by that catch two lines later and the whole thing was inert — a Postgres
+  // blip still became a 401 and still logged every admin out. It is outside now,
+  // which is the difference between the fix existing and not.
+  let admin: { active: boolean } | null;
+  try {
+    admin = await prisma.adminUser.findUnique({
+      where: { id: claims.adminId },
+      select: { active: true },
+    });
+  } catch (err) {
+    console.error(JSON.stringify({ ev: 'admin_session.db_unavailable', adminId: claims.adminId, error: err instanceof Error ? err.message : String(err) }));
+    throw new AdminSessionUnavailable();
+  }
+
+  // Deleted or deactivated since the token was minted — the session is over.
+  if (!admin || !admin.active) return null;
+
+  return { adminId: claims.adminId, email: claims.email, name: claims.name, role: claims.role, mfa: claims.mfa === true };
 }
 
 export async function signAdminSetPasswordToken(payload: { adminId: string; email: string }) {

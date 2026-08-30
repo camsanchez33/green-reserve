@@ -248,7 +248,10 @@ async function handleAction(
         courseName: inquiry.courseName, tempPassword, setupLink,
       }).catch(emailErr => console.error('Resend welcome email failed:', emailErr));
       await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `Welcome email resent by ${adminName}`);
-      return NextResponse.json({ success: true, tempPassword, setupLink });
+      // MP-2c: the email carries these. Echoing a rotated password and a verify
+      // link back in JSON puts them in browser memory and every proxy log —
+      // MP-2b applied this rule to /api/preview/send and missed the twins here.
+      return NextResponse.json({ success: true });
     } catch (e) {
       return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
     }
@@ -270,7 +273,10 @@ async function handleAction(
         courseName: inquiry.courseName, tempPassword, setupLink,
       }).catch(emailErr => console.error('Dashboard access email failed:', emailErr));
       await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `Dashboard access sent by ${adminName}`);
-      return NextResponse.json({ success: true, tempPassword, setupLink });
+      // MP-2c: the email carries these. Echoing a rotated password and a verify
+      // link back in JSON puts them in browser memory and every proxy log —
+      // MP-2b applied this rule to /api/preview/send and missed the twins here.
+      return NextResponse.json({ success: true });
     } catch (e) {
       return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
     }

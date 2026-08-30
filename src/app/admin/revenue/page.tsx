@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
 import {
   RefreshCw, AlertTriangle, X, Plus, Pencil, Trash2, TrendingUp, TrendingDown, Minus,
   RotateCw, Clock, CheckCircle2, Search, ChevronUp, ChevronDown, Download, Landmark, ExternalLink,
@@ -116,7 +117,7 @@ export default function RevenuePage() {
     setError('');
     try {
       const sRes = await fetch('/api/admin/session');
-      if (!sRes.ok) { router.push('/admin/login'); return; }
+      if (!sRes.ok) { router.push(LOGIN_SESSION_ENDED); return; }
       const params = new URLSearchParams();
       if (p === 'custom' && cFrom && cTo) { params.set('period', 'custom'); params.set('from', cFrom); params.set('to', cTo); }
       else params.set('period', p);

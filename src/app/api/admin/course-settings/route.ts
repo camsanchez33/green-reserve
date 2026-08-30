@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS } from '@/lib/admin-session';
 import { logSettingsChanged } from '@/lib/course-timeline';
 
 // GET /api/admin/course-settings?courseId=X — full course record for the admin editor
 export async function GET(req: NextRequest) {
-  if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const session = await resolveAdminSession();
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // MP-2c: findUnique with no select ships the whole Course row, stripeAccountId included.
+  if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const courseId = req.nextUrl.searchParams.get('courseId');
   if (!courseId) return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });
   const course = await prisma.course.findUnique({ where: { id: courseId } });

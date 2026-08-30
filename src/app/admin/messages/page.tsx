@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { adminFetch, type AdminFetchFailure, LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Send, MessageSquare, ArrowUpRight, RefreshCw, Radio } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
@@ -44,7 +45,8 @@ function MessagesContent() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [loadError, setLoadError] = useState('');
+  const [listError, setListError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
+  const [threadError, setThreadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
@@ -52,47 +54,40 @@ function MessagesContent() {
   // else branch, so a 403 (viewer) or a 401 (deactivated mid-session) rendered
   // as "No messages yet." — and the thread pane then invited them to send a
   // message that could only fail. Emptiness and denial must not look alike.
+  // MP-2c: two loaders, two error slots. MP-2b gave them one shared string, so
+  // loadThread's error was wiped by the loadThreads() call at the end of the
+  // same function — the message survived about a frame and the pane fell back
+  // to "No messages yet. Send one below.", reintroducing the exact bug the fix
+  // was written for.
   const loadThreads = useCallback(async () => {
-    try {
-      const r = await fetch('/api/admin/messages', { headers: H() });
-      if (r.ok) { setThreads(await r.json()); setLoadError(''); return; }
-      setThreads([]);
-      setLoadError(r.status === 403 ? 'Messages require support access.'
-        : r.status === 401 ? 'Your session ended — sign in again.'
-        : 'Could not load messages. Try again.');
-    } catch {
-      setThreads([]);
-      setLoadError('Network error loading messages. Check your connection.');
-    }
-  }, [H]);
+    const res = await adminFetch<ThreadSummary[]>('/api/admin/messages', { subject: 'messages' });
+    if (!res.ok) { setThreads([]); setListError({ msg: res.message, kind: res.kind }); return; }
+    setThreads(res.data);
+    setListError(null);
+  }, []);
 
   const loadThread = useCallback(async (courseId: string) => {
     setLoading(true);
-    const r = await fetch(`/api/admin/messages?courseId=${courseId}`, { headers: H() });
-    if (r.ok) {
-      const data = await r.json();
-      setThread(data);
-      setLoadError('');
-    } else {
-      setThread(null);
-      setLoadError(r.status === 403 ? 'Messages require support access.'
-        : r.status === 401 ? 'Your session ended — sign in again.'
-        : 'Could not load this conversation. Try again.');
+    try {
+      const res = await adminFetch<FullThread>(`/api/admin/messages?courseId=${courseId}`, { subject: 'this conversation' });
+      if (!res.ok) { setThread(null); setThreadError({ msg: res.message, kind: res.kind }); return; }
+      setThread(res.data);
+      setThreadError(null);
+      // Mark as read (best effort — never let this fail the view)
+      await fetch('/api/admin/messages', {
+        method: 'PATCH', headers: H(), body: JSON.stringify({ courseId }),
+      }).catch(() => {});
+      loadThreads();
+    } finally {
+      setLoading(false);
     }
-    // Mark as read
-    await fetch('/api/admin/messages', {
-      method: 'PATCH', headers: H(), body: JSON.stringify({ courseId }),
-    });
-    setLoading(false);
-    // Refresh thread list unread counts
-    loadThreads();
   }, [H, loadThreads]);
 
   useEffect(() => {
     fetch('/api/admin/session').then(r => {
-      if (!r.ok) { router.push('/admin/login'); return; }
+      if (!r.ok) { router.push(LOGIN_SESSION_ENDED); return; }
       setAdminReady(true);
-    }).catch(() => router.push('/admin/login'));
+    }).catch(() => router.push(LOGIN_SESSION_ENDED));
   }, [router]);
 
   useEffect(() => {
@@ -152,8 +147,8 @@ function MessagesContent() {
           </div>
           <div className="flex-1 overflow-y-auto">
             {filteredThreads.length === 0 && (
-              <div className="px-4 py-8 text-center text-xs text-ink-muted">
-                {loadError || (threads.length === 0 ? 'No messages yet.' : 'No matches.')}
+              <div className={'px-4 py-8 text-center text-xs ' + (listError ? 'text-bad' : 'text-ink-muted')}>
+                {listError ? listError.msg : (threads.length === 0 ? 'No messages yet.' : 'No matches.')}
               </div>
             )}
             {filteredThreads.map(t => {
@@ -238,7 +233,7 @@ function MessagesContent() {
                 {!loading && (!thread || thread.messages.length === 0) && (
                   <div className="text-center py-10">
                     <MessageSquare className="w-8 h-8 text-ink-faint mx-auto mb-2" />
-                    <div className={'text-sm ' + (loadError ? 'text-bad' : 'text-ink-muted')}>{loadError || 'No messages yet. Send one below to start the conversation.'}</div>
+                    <div className={'text-sm ' + (threadError ? 'text-bad' : 'text-ink-muted')}>{threadError ? threadError.msg : 'No messages yet. Send one below to start the conversation.'}</div>
                   </div>
                 )}
                 {!loading && thread && thread.messages.map(msg => {

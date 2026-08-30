@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
 import { HardDrive, Clock3, Zap, GitBranch, Bug, ExternalLink } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -32,9 +33,9 @@ export default function AdminSystemPage() {
 
   useEffect(() => {
     fetch('/api/admin/session').then(r => {
-      if (!r.ok) { router.push('/admin/login'); return; }
+      if (!r.ok) { router.push(LOGIN_SESSION_ENDED); return; }
       return r.json();
-    }).then(d => { if (d) setAdminReady(true); }).catch(() => router.push('/admin/login'));
+    }).then(d => { if (d) setAdminReady(true); }).catch(() => router.push(LOGIN_SESSION_ENDED));
   }, [router]);
 
   useEffect(() => {

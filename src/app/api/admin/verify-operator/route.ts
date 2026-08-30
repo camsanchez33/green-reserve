@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
   });
   // No setupLink in the response — this call already sets emailVerified, so the
   // operator does not need the link, and returning it would hand the caller a
-  // credential that logs in as them.
+  // token that can mark operators verified. (Corrected in MP-2c: it does NOT
+  // grant a session; see the note at the top of this file.)
   return NextResponse.json({ email, verified: true });
 }

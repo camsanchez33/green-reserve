@@ -1,6 +1,8 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { adminFetch, LOGIN_SESSION_ENDED, type AdminFetchFailure } from '@/lib/admin-fetch';
+import { ErrorBanner } from '@/components/ui/ErrorState';
 import { Radio, Mail, Users, RefreshCw, Send } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
@@ -16,6 +18,7 @@ const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 
 export default function BroadcastsPage() {
   const router = useRouter();
   const [adminReady, setAdminReady] = useState(false);
+  const [loadError, setLoadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState('');
@@ -33,11 +36,15 @@ export default function BroadcastsPage() {
         fetch('/api/admin/session'),
         fetch('/api/admin/broadcasts'),
       ]);
-      if (!sRes.ok) { router.push('/admin/login'); return; }
-      const list = await bRes.json();
-      setBroadcasts(Array.isArray(list) ? list : []);
+      if (!sRes.ok) { router.push(LOGIN_SESSION_ENDED); return; }
+      // MP-2c: MP-2b's SUPPORT_PLUS gate on this endpoint made 403 reachable and
+      // this line parsed the error body as data — empty announcement history
+      // with no explanation, and a live composer underneath.
+      const res = await adminFetch<Broadcast[]>('/api/admin/broadcasts', { subject: 'broadcasts' });
+      if (!res.ok) { setBroadcasts([]); setLoadError({ msg: res.message, kind: res.kind }); }
+      else { setBroadcasts(res.data); setLoadError(null); }
       setAdminReady(true);
-    } catch { router.push('/admin/login'); }
+    } catch { router.push(LOGIN_SESSION_ENDED); }
     finally { setLoading(false); }
   }, [router]);
 
@@ -75,6 +82,9 @@ export default function BroadcastsPage() {
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="broadcasts" />
       <div className="admin-content flex-1 min-h-screen">
+        {loadError && (
+          <ErrorBanner message={loadError.msg} kind={loadError.kind} onRetry={() => load()} />
+        )}
         <div className="px-8 py-7 max-w-4xl">
           <div className="flex items-center justify-between mb-7">
             <div>

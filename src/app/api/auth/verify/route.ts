@@ -10,7 +10,17 @@ export async function POST(req: NextRequest) {
   });
 
   if (!operator) return NextResponse.json({ error: 'Invalid token' }, { status: 400 });
-  if (operator.emailVerified) return NextResponse.json({ success: true, alreadyVerified: true });
+  if (operator.emailVerified) {
+    // MP-2c: MP-2b cleared the token only on FIRST verification, so every
+    // already-verified operator kept a live one — and the resend/preview paths
+    // mint fresh tokens on verified operators, which were never burned at all.
+    // Re-visiting a used link is also a normal thing to do, so this stays a
+    // success rather than "Verification failed".
+    if (operator.verificationToken) {
+      await prisma.courseOperator.update({ where: { id: operator.id }, data: { verificationToken: null } });
+    }
+    return NextResponse.json({ success: true, alreadyVerified: true });
+  }
 
   await prisma.courseOperator.update({
     where: { id: operator.id },

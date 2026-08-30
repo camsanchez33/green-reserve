@@ -1,5 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
+import { SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-roles';
 import Image from 'next/image';
 import { useEffect, useState, useCallback } from 'react';
 import {
@@ -20,6 +21,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
 }) {
   const router = useRouter();
   const [unread, setUnread] = useState(unreadMessages);
+  const [role, setRole] = useState<string>('');
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem(LS_KEY) === 'true';
@@ -27,13 +29,24 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
 
   useEffect(() => { setUnread(unreadMessages); }, [unreadMessages]);
 
+  // One session read for the whole shell. ADMIN_V4 LAW rule 2 wants role
+  // resolved once server-side in the layout (Phase V4-7); until that lands this
+  // is one fetch per page rather than one per nav item.
+  useEffect(() => {
+    fetch('/api/admin/session')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d?.role) setRole(String(d.role)); })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (unreadMessages > 0) return;
+    if (role && !SUPPORT_PLUS.includes(role)) return; // would 403
     fetch('/api/admin/messages?unreadCount=1')
       .then(r => r.ok ? r.json() : { count: 0 })
       .then(d => setUnread(d.count ?? 0))
       .catch(() => {});
-  }, [unreadMessages]);
+  }, [unreadMessages, role]);
 
   // Apply CSS class and persist
   useEffect(() => {
@@ -64,23 +77,40 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     router.push('/admin/login');
   }
 
-  const mainNav: { key: AdminNavKey; label: string; href: string; icon: React.ReactNode }[] = [
+  // MP-2c: the nav is a map of the company, and it was showing every role a
+  // door it could not open. MP-2's gates made Employees, Messages, Courses,
+  // Broadcasts, Revenue and Golfers 403 for lower roles, and the pages then
+  // rendered that denial as "no data" — a class of bug three reviews kept
+  // finding. Not offering the link is the root fix; the pages still handle 403
+  // for anyone who types the URL.
+  //
+  // `minRole` mirrors the API gate on each surface. Overview and My profile are
+  // deliberately open to every role.
+  type NavItem = { key: AdminNavKey; label: string; href: string; icon: React.ReactNode; minRole?: string[] };
+
+  const allMainNav: NavItem[] = [
     { key: 'overview',   label: 'Overview',   href: '/admin',            icon: <BarChart2 className="w-[18px] h-[18px]"/> },
-    { key: 'inquiries',  label: 'Inquiries',  href: '/admin/inquiries',  icon: <AlertCircle className="w-[18px] h-[18px]"/> },
-    { key: 'courses',    label: 'Courses',    href: '/admin/courses',    icon: <Building2 className="w-[18px] h-[18px]"/> },
-    { key: 'messages',   label: 'Messages',   href: '/admin/messages',   icon: <MessageSquare className="w-[18px] h-[18px]"/> },
-    { key: 'revenue',    label: 'Revenue',    href: '/admin/revenue',    icon: <DollarSign className="w-[18px] h-[18px]"/> },
-    { key: 'golfers',    label: 'Golfers',    href: '/admin/golfers',    icon: <Search className="w-[18px] h-[18px]"/> },
-    { key: 'employees',  label: 'Employees',  href: '/admin/employees',  icon: <Users className="w-[18px] h-[18px]"/> },
-    { key: 'broadcasts', label: 'Broadcasts', href: '/admin/broadcasts', icon: <Radio className="w-[18px] h-[18px]"/> },
-    { key: 'activity',   label: 'Activity',   href: '/admin/activity',   icon: <Activity className="w-[18px] h-[18px]"/> },
+    { key: 'inquiries',  label: 'Inquiries',  href: '/admin/inquiries',  icon: <AlertCircle className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
+    { key: 'courses',    label: 'Courses',    href: '/admin/courses',    icon: <Building2 className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
+    { key: 'messages',   label: 'Messages',   href: '/admin/messages',   icon: <MessageSquare className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
+    { key: 'revenue',    label: 'Revenue',    href: '/admin/revenue',    icon: <DollarSign className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
+    { key: 'golfers',    label: 'Golfers',    href: '/admin/golfers',    icon: <Search className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
+    { key: 'employees',  label: 'Employees',  href: '/admin/employees',  icon: <Users className="w-[18px] h-[18px]"/>, minRole: MANAGER_PLUS },
+    { key: 'broadcasts', label: 'Broadcasts', href: '/admin/broadcasts', icon: <Radio className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
+    { key: 'activity',   label: 'Activity',   href: '/admin/activity',   icon: <Activity className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
   ];
 
-  const bottomNav: { key: AdminNavKey; label: string; href: string; icon: React.ReactNode }[] = [
-    { key: 'create',  label: 'Manual build', href: '/admin/create',   icon: <Hammer className="w-[18px] h-[18px]"/> },
-    { key: 'system',  label: 'System',       href: '/admin/system',  icon: <Wrench className="w-[18px] h-[18px]"/> },
+  const allBottomNav: NavItem[] = [
+    { key: 'create',  label: 'Manual build', href: '/admin/create',   icon: <Hammer className="w-[18px] h-[18px]"/>, minRole: MANAGER_PLUS },
+    { key: 'system',  label: 'System',       href: '/admin/system',  icon: <Wrench className="w-[18px] h-[18px]"/>, minRole: MANAGER_PLUS },
     { key: 'profile', label: 'My profile',   href: '/admin/profile',  icon: <UserCircle className="w-[18px] h-[18px]"/> },
   ];
+
+  // Until the role is known, show only the ungated items rather than flashing
+  // links the user is about to lose.
+  const canSee = (item: NavItem) => !item.minRole || (!!role && item.minRole.includes(role));
+  const mainNav = allMainNav.filter(canSee);
+  const bottomNav = allBottomNav.filter(canSee);
 
   const w = collapsed ? 'w-14' : 'w-56';
 

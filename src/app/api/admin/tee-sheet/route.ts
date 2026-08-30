@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS } from '@/lib/admin-session';
 import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
 import { performCancellation } from '@/lib/cancel-booking';
 
 // GET /api/admin/tee-sheet?courseId=X&date=Y
 export async function GET(req: NextRequest) {
-  if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const session = await resolveAdminSession();
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // MP-2c: returns golferName/Email/Phone + totalAmount for any course; PATCH/POST here are already MANAGER_PLUS.
+  if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const courseId = req.nextUrl.searchParams.get('courseId');
   const date = req.nextUrl.searchParams.get('date');
   if (!courseId || !date) return NextResponse.json({ error: 'Missing params' }, { status: 400 });

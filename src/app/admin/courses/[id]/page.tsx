@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
 import Link from 'next/link';
 import {
   ArrowLeft, Star, Power, Globe, ArchiveX, ArchiveRestore, Mail, Phone,
@@ -311,9 +312,9 @@ export default function CourseDetailPage() {
 
   useEffect(() => {
     fetch('/api/admin/session').then(r => {
-      if (!r.ok) { router.push('/admin/login'); return; }
+      if (!r.ok) { router.push(LOGIN_SESSION_ENDED); return; }
       setAdminReady(true);
-    }).catch(() => router.push('/admin/login'));
+    }).catch(() => router.push(LOGIN_SESSION_ENDED));
   }, [router]);
 
   useEffect(() => {

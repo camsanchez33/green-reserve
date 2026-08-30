@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { Plus, RefreshCw, Lock, Copy, KeyRound } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
+import { ErrorBanner } from '@/components/ui/ErrorState';
 
 interface Admin {
   id: string; email: string; name: string; role: string;
@@ -69,7 +71,7 @@ export default function EmployeesPage() {
   const [createTempPwd, setCreateTempPwd] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionError, setActionError] = useState('');
-  const [loadError, setLoadError] = useState('');
+  const [loadError, setLoadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
   const [resetPwds, setResetPwds] = useState<Record<string, string>>({});
 
   const [cpCurrentPassword, setCpCurrentPassword] = useState('');
@@ -82,21 +84,21 @@ export default function EmployeesPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [sRes, aRes] = await Promise.all([
-        fetch('/api/admin/session'),
-        fetch('/api/admin/employees'),
-      ]);
+      const sRes = await fetch('/api/admin/session');
       if (!sRes.ok) { router.push('/admin/login?reason=session_ended'); return; }
       const s = await sRes.json();
       setSession(s);
       // MP-2b: the roster is MANAGER_PLUS since MP-2. Parsing a 403 body as data
       // told a support/viewer employee the company has zero admin accounts.
-      if (aRes.status === 403) { setLoadError('Employee accounts require manager access.'); setAdmins([]); return; }
-      if (!aRes.ok) { setLoadError('Could not load employee accounts. Try again.'); setAdmins([]); return; }
-      const a = await aRes.json();
-      setLoadError('');
-      setAdmins(Array.isArray(a) ? a : []);
-    } catch { setLoadError('Network error loading employee accounts. Check your connection and try again.'); }
+      // MP-2c: one classifier, and the banner renders above the table rather
+      // than inside the empty-row cell — MP-2b's version could not display the
+      // catch branch at all, because that branch left a loaded roster on screen
+      // and the cell only renders when admins.length === 0.
+      const res = await adminFetch<Admin[]>('/api/admin/employees', { subject: 'employee accounts' });
+      if (!res.ok) { setAdmins([]); setLoadError({ msg: res.message, kind: res.kind }); return; }
+      setAdmins(res.data);
+      setLoadError(null);
+    } catch { setAdmins([]); setLoadError({ msg: 'Network error loading employee accounts. Check your connection and try again.', kind: 'network' }); }
     finally { setLoading(false); }
   }, [router]);
 
@@ -257,16 +259,11 @@ export default function EmployeesPage() {
             </div>
           )}
 
+          {loadError && (
+            <ErrorBanner message={loadError.msg} kind={loadError.kind} onRetry={() => load()} />
+          )}
           {actionError && (
-
-            <div className="mb-4 rounded-md bg-bad/5 border border-bad/20 px-4 py-2.5 flex items-start justify-between gap-3">
-
-              <p className="text-xs text-bad">{actionError}</p>
-
-              <button onClick={() => setActionError('')} className="text-ink-muted hover:text-ink transition-colors shrink-0" aria-label="Dismiss">&times;</button>
-
-            </div>
-
+            <ErrorBanner message={actionError} onDismiss={() => setActionError('')} />
           )}
 
 
@@ -355,12 +352,10 @@ export default function EmployeesPage() {
                     )}
                   </>
                 ))}
-                {admins.length === 0 && (
+                {admins.length === 0 && !loadError && (
                   <tr>
                     <td colSpan={isOwner ? 5 : 4} className="px-5 py-8 text-center text-sm text-ink-muted">
-                      {/* MP-2b: "none" and "not allowed to see them" are different
-                          answers and must never render the same way. */}
-                      {loadError || 'No admin accounts yet'}
+                      No admin accounts yet
                     </td>
                   </tr>
                 )}

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
 import { RefreshCw, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -46,7 +47,7 @@ export default function ActivityPage() {
     setLoading(true);
     try {
       const sRes = await fetch('/api/admin/session');
-      if (!sRes.ok) { router.push('/admin/login'); return; }
+      if (!sRes.ok) { router.push(LOGIN_SESSION_ENDED); return; }
       const params = new URLSearchParams({ page: String(p), limit: '50' });
       if (cId) params.set('courseId', cId);
       if (f) params.set('from', f);

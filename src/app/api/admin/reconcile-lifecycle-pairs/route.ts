@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { resolveAdminSession } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, OWNER_ONLY } from '@/lib/admin-session';
 import { reconcileLifecyclePairs } from '@/lib/lifecycle';
 
 // One-time backfill (RUN_QUEUE "LIFECYCLE PARITY LAW" item 6) — existing
@@ -10,6 +10,8 @@ import { reconcileLifecyclePairs } from '@/lib/lifecycle';
 export async function POST() {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // MP-2c: writes status changes across every course/inquiry pair, attributed to the caller.
+  if (!requireRole(session, OWNER_ONLY)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const report = await reconcileLifecyclePairs(session.name);
   return NextResponse.json({ fixed: report.length, changes: report });

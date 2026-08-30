@@ -170,10 +170,17 @@ ${pageTable}
 **Public pages** (no auth required):
 \`/\`, \`/for-courses\`, \`/for-courses/details\` (token-gated), \`/courses\`, \`/courses/[slug]\`, \`/contact\`, \`/privacy\`, \`/terms\`, login pages (\`/account/login\`, \`/account/register\`, \`/api/auth/login\`)
 
-**Auth-protected pages** — middleware redirects unauthenticated hits:
-- \`/admin/*\` → redirects to \`/admin/login\`
-- \`/dashboard/*\` → redirects to \`/login\`
-- \`/account/*\` → redirects to \`/account/login\`
+**Auth-protected pages.** Corrected MP-2c — this previously claimed middleware
+guards \`/admin/*\` and \`/account/*\`. It does not. \`src/middleware.ts\` matches
+\`['/dashboard/:path*']\` ONLY. Two consecutive security audits used this file as
+their route map, and four ungated admin endpoints survived three admin-auth
+commits partly because of it.
+- \`/dashboard/*\` → middleware redirects to \`/login\`
+- \`/admin/*\` → NO middleware. Each page checks \`/api/admin/session\` client-side
+  and redirects to \`/admin/login?reason=session_ended\`; every \`/api/admin/*\`
+  route enforces its own \`resolveAdminSession\` + \`requireRole\` gate. The API
+  gates are the real boundary — a missing one is not covered by anything else.
+- \`/account/*\` → NO middleware; golfer session checked per route.
 
 ---
 

@@ -9,6 +9,8 @@ import {
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { STATUS_DOT_MAP, STATUS_LABEL, ACTIVE_STATUSES } from '@/lib/inquiry-status';
+import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
+import { LoadFailure } from '@/components/ui/ErrorState';
 import {
   CATEGORY_LABEL, latestPageDecision, computeOpenChanges,
   hasRequestedChangesThisRound, describeChangeEvent, decodeChangeAddressed,
@@ -320,7 +322,7 @@ function InquiryDetailInner() {
   const [adminReady, setAdminReady] = useState(false);
   const [inq, setInq] = useState<Inquiry | null>(null);
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
+  const [loadError, setLoadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
   const [processing, setProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState<'contact' | 'answers' | 'sheet' | 'activity'>('contact');
   const [editContact, setEditContact] = useState(false);
@@ -352,25 +354,21 @@ function InquiryDetailInner() {
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
+  // MP-2c: was un-wrapped, so a rejected fetch left loading=true forever and the
+  // `if (!adminReady || loading) return null` guard held — a permanent white
+  // screen, and Retry made it worse by converting a visible error card into one.
   const loadInquiry = useCallback(async () => {
     setLoading(true);
-    const r = await fetch('/api/admin/inquiries?id=' + params.id, { headers: H() });
-    if (r.ok) {
-      const data = await r.json();
-      setInq(data);
-      setStageOverride(data.status);
-    } else {
-      // MP-2b: CLAUDE.md verbatim — "Never silently redirect away on a fetch
-      // failure — show an inline error state with a retry option." MP-2's
-      // SUPPORT_PLUS gate made this 403 reachable, and it bounced the user to a
-      // list that then claimed to be empty: two silent failures in a row.
-      setLoadError(r.status === 403 ? 'This inquiry requires support access.'
-        : r.status === 401 ? 'Your session ended — sign in again.'
-        : r.status === 404 ? 'That inquiry no longer exists.'
-        : 'Could not load this inquiry. Try again.');
+    try {
+      const res = await adminFetch<Inquiry>(`/api/admin/inquiries?id=${params.id}`, { subject: 'this inquiry' });
+      if (!res.ok) { setInq(null); setLoadError({ msg: res.message, kind: res.kind }); return; }
+      setInq(res.data);
+      setStageOverride(res.data.status);
+      setLoadError(null);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, [params.id, H, router]);
+  }, [params.id]);
 
   useEffect(() => {
     fetch('/api/admin/session').then(r => {
@@ -615,17 +613,18 @@ function InquiryDetailInner() {
 
   if (!adminReady || loading) return null;
   if (!inq) {
-    // MP-2b: was `return null` after a silent router.push — a blank screen.
     return (
       <div className="min-h-screen bg-paper flex">
         <AdminSidebar active="inquiries" />
         <div className="admin-content flex-1 flex items-center justify-center p-8">
-          <div className="max-w-md w-full rounded-lg border border-bad/20 bg-bad/5 px-6 py-8 text-center">
-            <p className="text-sm text-bad mb-4">{loadError || 'Could not load this inquiry.'}</p>
-            <div className="flex items-center justify-center gap-2">
-              <button onClick={() => loadInquiry()} className="text-xs font-medium text-ink-soft hover:text-ink px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">Retry</button>
-              <button onClick={() => router.push('/admin/inquiries')} className="text-xs font-medium text-white bg-pine hover:bg-pine-hover px-3 py-1.5 rounded-md transition-colors">Back to inquiries</button>
-            </div>
+          <div className="max-w-md w-full">
+            <LoadFailure
+              message={loadError?.msg ?? 'Could not load this inquiry.'}
+              kind={loadError?.kind}
+              onRetry={() => loadInquiry()}
+              secondaryLabel="Back to inquiries"
+              onSecondary={() => router.push('/admin/inquiries')}
+            />
           </div>
         </div>
       </div>

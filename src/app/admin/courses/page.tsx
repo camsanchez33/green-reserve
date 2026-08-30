@@ -1,6 +1,8 @@
 'use client';
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { adminFetch, type AdminFetchFailure, LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
+import { ErrorBanner } from '@/components/ui/ErrorState';
 import Link from 'next/link';
 import { Star, RefreshCw, Search } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
@@ -44,6 +46,7 @@ function CoursesContent() {
   const params = useSearchParams();
   const [adminReady, setAdminReady] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [loadError, setLoadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [stateFilter, setStateFilter] = useState<StateFilter>('live');
@@ -72,18 +75,20 @@ function CoursesContent() {
     setLoading(true);
     try {
       const url = '/api/admin/courses' + (sf === 'archived' ? '?showArchived=1' : '');
-      const r = await fetch(url, { headers: H() });
-      if (r.ok) setCourses(await r.json());
-      else setCourses([]);
-    } catch { setCourses([]); }
+      // MP-2c: MP-2b gated this endpoint at SUPPORT_PLUS and this branch turned
+      // the 403 into an empty course list with no explanation.
+      const res = await adminFetch<Course[]>(url, { subject: 'courses' });
+      if (!res.ok) { setCourses([]); setLoadError({ msg: res.message, kind: res.kind }); }
+      else { setCourses(res.data); setLoadError(null); }
+    } catch { setCourses([]); setLoadError({ msg: 'Network error loading courses. Check your connection and try again.', kind: 'network' }); }
     setLoading(false);
   }, [H]);
 
   useEffect(() => {
     fetch('/api/admin/session').then(r => {
-      if (!r.ok) { router.push('/admin/login'); return; }
+      if (!r.ok) { router.push(LOGIN_SESSION_ENDED); return; }
       setAdminReady(true);
-    }).catch(() => router.push('/admin/login'));
+    }).catch(() => router.push(LOGIN_SESSION_ENDED));
   }, [router]);
 
   useEffect(() => {
@@ -181,6 +186,9 @@ function CoursesContent() {
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="courses" />
       <div className="admin-content flex-1 flex flex-col min-h-screen">
+        {loadError && (
+          <ErrorBanner message={loadError.msg} kind={loadError.kind} onRetry={() => loadCourses(stateFilter)} />
+        )}
         <div className="px-8 py-7">
           <div className="flex items-center justify-between mb-4">
             <div>

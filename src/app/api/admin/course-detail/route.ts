@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS } from '@/lib/admin-session';
 import { sendCourseLiveOrientationEmail } from '@/lib/email';
 import { getApprovalState } from '@/lib/approval-state';
 import { COMPLETED_BOOKING_STATUSES, computeCourseHealth } from '@/lib/course-metrics';
@@ -9,7 +9,10 @@ import { getCourseTimeline, isRemindersPaused, hasAcceptedAgreement, latestAgree
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 
 export async function GET(req: NextRequest) {
-  if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const session = await resolveAdminSession();
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // MP-2c: this is the per-course twin of /api/admin/courses. Gating the list and leaving this open just meant iterating detail calls instead.
+  if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const courseId = req.nextUrl.searchParams.get('courseId');
   if (!courseId) return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });
 

@@ -69,10 +69,11 @@ export default function AdminLoginPage() {
           <h1 className="text-[22px] font-serif font-medium text-ink mb-1">Sign in</h1>
           <p className="text-sm text-ink-soft mb-6">Admin console access</p>
 
-          {sessionEnded && !error && (
+          {sessionEnded && (
             <div className="mb-4 rounded-md bg-paper border border-line px-4 py-3">
               <p className="text-sm text-ink-soft">
-                Your session ended. If you were signed out unexpectedly, your account may have been deactivated — contact an owner.
+                Your session ended — that is normal after 12 hours. Sign in again below.
+                If your correct password is rejected, your account may have been deactivated; contact an owner.
               </p>
             </div>
           )}

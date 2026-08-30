@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
 import { Lock, User } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
@@ -26,7 +27,7 @@ export default function ProfilePage() {
 
   const load = useCallback(async () => {
     const res = await fetch('/api/admin/session');
-    if (!res.ok) { router.push('/admin/login'); return; }
+    if (!res.ok) { router.push(LOGIN_SESSION_ENDED); return; }
     setSession(await res.json());
     setLoading(false);
   }, [router]);

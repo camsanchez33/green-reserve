@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
 import { CheckCircle, Copy, ChevronRight, ArrowLeft, Eye, Globe, Lock } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
@@ -95,9 +96,9 @@ function WizardContent() {
 
   useEffect(() => {
     fetch('/api/admin/session').then(r => {
-      if (!r.ok) { router.push('/admin/login'); return; }
+      if (!r.ok) { router.push(LOGIN_SESSION_ENDED); return; }
       setAdminReady(true);
-    }).catch(() => router.push('/admin/login'));
+    }).catch(() => router.push(LOGIN_SESSION_ENDED));
   }, [router]);
 
   useEffect(() => {
