@@ -579,6 +579,52 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
         test runner exists.
       - Phantom $10 backfill still pending Cam's approval for a prod write.
 
+  - [ ] MP-2c — SHIPPED e5b5413, box open until reviewed. STRUCTURAL, not a
+    sweep: MP-2b's surface-by-surface approach failed measurably (2 fixes
+    unreachable, 1 self-erasing, 3 new instances created), so this builds the
+    single implementation instead.
+      - NEW src/lib/admin-fetch.ts — one classifier + one copy source. Treats a
+        non-JSON 2xx as failure, not emptiness (the original bug's exact shape).
+        Ignores bare "Forbidden" in favour of subject-aware copy.
+      - NEW src/components/ui/ErrorState.tsx — ErrorBanner + LoadFailure on top
+        of Btn. Retry suppressed on 401/403; 401 offers a sign-in link.
+      - NEW src/lib/admin-roles.ts — client-safe role arrays (admin-session
+        imports prisma + next/headers and cannot be imported by a client
+        component). admin-session re-exports; no server import site changed.
+      - Sidebar role-filtered. Verified in-browser: owner 12 items, support 9.
+      - AdminSessionUnavailable actually escapes now (MP-2b's sat inside the
+        JWT catch and was inert — that claim was false).
+      - All 6 MP-2b review blockers fixed, including the 3 surfaces MP-2b's own
+        gates broke (broadcasts, courses, activity).
+      - 4 ungated routes gated, incl. course-detail which DEFEATED MP-2b's gate
+        on /api/admin/courses by serving the same data per-course. 2 maintenance
+        POSTs -> OWNER_ONLY.
+      - auth/verify burns the token on the already-verified branch too;
+        inquiries stopped echoing rotated credentials in JSON; the retracted
+        "logs in as them" sentence removed.
+      - ARCHITECTURE.md regenerated + its false middleware claim fixed IN THE
+        GENERATOR (it said middleware guards /admin/*; it guards /dashboard
+        only — two audits used it as their route map).
+      - All 16 bare /admin/login redirects carry ?reason=session_ended.
+    NOTE: two defects in this run's own work were caught by the live browser
+    pass and fixed pre-commit (bare "Forbidden" leaking as the message; empty
+    state rendering under the denial). Reasoning from source would have missed
+    both — the browser check is not optional on this surface.
+    STILL OPEN (carried, none security-critical):
+      - api/admin/revenue computes days in UTC (8pm ET reset).
+      - viewer receives revenue tickers from /api/admin/stats.
+      - courses/[id]: toggleActive has no try/catch; Archive/Restore kebab rows
+        close before awaiting; cancelBooking has no res.ok check; Feature button
+        has no pending label; toggleFeatured writes into the go-live banner and
+        clears an unread go-live block; Approved tinted pill should be StatusDot.
+      - checkin-booking.ts comment overclaims Stripe idempotency.
+      - Overview / inquiries list / CommandPalette still hand-roll their error
+        states — adopt ErrorBanner/LoadFailure when next touched.
+      - Palette is gated whole-endpoint; MP-8 wants per-row capability gating.
+      - No test runner exists, so MP-1 #2's archive-then-restore test remains
+        unbuildable.
+      - Phantom $10 backfill still pending Cam's approval for a prod write.
+
   - [ ] MP-3 — THE BIG MIGRATION, one attended run, everything in
     ADMIN_MASTER_PLAN §5: money Float → integer cents (+ full codebase sweep),
     PaymentEvent ledger, Booking/Message/InquiryStatusEvent/CourseInquiry/TeeTime
