@@ -302,6 +302,80 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   or (b) remove viewer from VALID_ROLES and the picker entirely. Do not ship a
   role whose label and behavior disagree. Cam picks a or b at the restate step.
 
+- SITE + DASHBOARD CAMPAIGN — full spec in SITE_DASHBOARD_SPEC.md. Public site +
+  operator dashboard deep dive (975 + 3,978 lines read, plus live walkthrough).
+  **SD-1 RUNS BEFORE MP-1.** The admin campaign below is 13 runs on the console
+  only Cam uses; this is the two surfaces a customer touches, and SD-1 closes a
+  LIVE unauthenticated leak.
+  Verified by Cowork 2026-08-27 before queueing — all three ship-blockers real,
+  and #1 is worse than the audit said: GET /api/inquiries is `findMany` with NO
+  select behind a comment reading "// Admin only — check admin secret" and NO
+  guard, so it returns every lead's PII **plus CourseInquiry.detailsToken**, and
+  /api/inquiries/details authenticates on that token alone with no session —
+  an unauthenticated READ AND WRITE path into the whole pipeline, live now.
+  Also verified: OperatorSidebar.tsx:104 is `w-56 shrink-0` with ZERO sm:/md:/lg:
+  prefixes in the entire file; dashboard/page.tsx:39 is
+  `const today = () => new Date().toISOString().split('T')[0]` (UTC).
+  - [ ] SD-1 — plug the leaks: auth the inquiries GET + explicit select with no
+    detailsToken, wire the honeypot (its value is currently hardcoded empty in
+    the payload) + rate-limit the lead intake, DELETE the orphaned public
+    register endpoint (no callers, no rate limit, mints an operator + Course +
+    session with no 2FA), server-side validation on the settings PATCH (numeric
+    ranges + https-only giftCardUrl, which today can be a javascript: URL that
+    executes on the golfer-facing course page), enforce the staff role (today a
+    staff login can change fees, add/delete staff and un-list the course, and
+    bypasses 2FA entirely) — medium, no migration, RUNS FIRST
+  - [ ] SD-2 — the mobile shell: bottom nav below md, drop h-screen
+    overflow-hidden from the ten page shells, responsive stat grids, touch
+    targets + real error toasts. One component + ten one-line edits. The persona
+    is a head pro checking golfers in on a phone at the counter and the product
+    is currently unusable there (medium)
+  - [ ] SD-3 — course-local time: Course.timezone column, every dashboard and
+    cron "today" derives from it (crons already have a timezone to copy),
+    backward date nav unclamped. At 5pm Pacific the sheet flips to tomorrow and
+    today becomes unreachable (SCHEMA CHANGE, ATTENDED)
+  - [ ] SD-4 — money truth: analytics counts completed bookings by play date
+    (today it selects confirmed only, so every paid round vanishes at check-in
+    while unpaid future bookings count in); utilization bounded + status-filtered;
+    check-in reports REAL refund success instead of "refund attempted"; declined
+    card gets retry + mark-paid-in-person instead of a dead end; tee-sheet
+    revenue stat matches Payments (medium, pairs with SD-5)
+  - [ ] SD-5 — lifecycle states: walk-in/phone booking POST (the biggest
+    functional gap AND the site already promises it), checkedInPlayers,
+    noShowAt, paidOffline, cancellationHoursAtBooking snapshot, session
+    versioning; then walk-in entry, partial-party check-in, no-show, close-a-day
+    weather flow (note: the existing blackout endpoint deleteManys tee times
+    before blocking, so it 500s or destroys paid bookings) (SCHEMA CHANGE,
+    ATTENDED + big UI)
+  - [ ] SD-6 — marketing honesty: the walk-in FAQ (only AFTER SD-5 makes it
+    true), "public course listing page" vs "unlisted" (no directory exists —
+    /api/courses has zero callers), "5 min" vs the real 10-15, "no contract" vs
+    Operator Agreement §5's 30-day notice, contrast on the hero fee line and the
+    "$6 per 4-player round" example (both render at text-white/20-/35 over a
+    photo), self-host the Unsplash hero (small)
+  - [ ] SD-7 — SEO + assets: sitemap.ts (robots.txt advertises one that 404s),
+    OG/Twitter meta + metadataBase, FAQPage JSON-LD, noindex the token-gated
+    details sheet, {{COMPANY_LEGAL_NAME}} → plain "GreenReserve" text on the
+    legal pages. BLOCKED ON CAM for the last two items: three real dashboard
+    screenshots into public/screenshots/ (empty today, so the homepage shows
+    three grey placeholder boxes) and a seeded demo course slug for
+    DEMO_COURSE_SLUGS (empty, so the Live-demo section says "coming soon")
+    (small-medium)
+  - [ ] SD-8 — merge + split: Payments + Cancellations → one Money page with
+    tabs (they already query the same endpoint) + the Stripe payout card moved
+    here from Settings + the literal $1.50/player figure; Settings 9 tabs → 5
+    with per-section save, res.ok checks and a dirty-guard (focus-refetch
+    currently clobbers in-progress edits); course active/name/address become
+    read-only "request a change" rows (medium)
+  - [ ] SD-9 — funnel + auth polish: split the details sheet into a required core
+    that finishes the lead and a deferrable polish pass (scorecard photo upload
+    replaces the tee-sets grid for most courses), "prefer to do this on a call?"
+    escape hatch, persist step position, try/catch both submit paths ("Submitting…"
+    hangs forever on a blip today), fix optional qualifiers silently gating whole
+    sheet sections; onboarding step-1 persistence (never bumps onboardingStep, so
+    each re-entry logs a duplicate agreement acceptance), 2FA backup codes, staff
+    password recovery, Stripe multi-course findFirst bug (medium)
+
 - ADMIN MASTER PLAN — full spec in ADMIN_MASTER_PLAN.md; the ADMIN_V4 phases it
   does NOT cover survive as MP-9/10/11/12 and their detail stays in
   ADMIN_V4_SPEC.md (whose LAW section still governs and is not repealed).
