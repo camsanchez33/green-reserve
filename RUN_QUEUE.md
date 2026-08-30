@@ -530,6 +530,55 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     verificationToken/setupLink to any session; inquiries GET returning
     detailsToken) + one-door login with inline 2FA step + tokens out of URL query
     strings + role gates on messages GET / employees GET / palette search (medium)
+  - [ ] MP-2b — SHIPPED a134af5, box open until reviewed. Queued as a sweep of
+    nine small follow-ups; the MP-2 review landed mid-run and displaced most of
+    them with 6 blockers + 1 pre-existing HIGH. Those were done instead:
+      - MP-2 REGRESSION: every admin Receipt link was dead (dual-auth landed on
+        the API, the page still hard-required ?token=). Fixed + verified.
+      - HIGH (pre-existing): /api/preview/send let ANY admin session, viewer
+        included, rotate an arbitrary operator's password and read it from the
+        response. Now MANAGER_PLUS, credentials no longer returned.
+      - Ungated GETs now SUPPORT_PLUS: /api/admin/courses (operator email +
+        revenue30d), /api/admin/broadcasts.
+      - V4-2 A.5: /api/auth/verify now burns verificationToken on use.
+      - 5 surfaces stopped rendering 403/401 as "no data"; inquiry detail
+        stopped silently redirecting; Overview stopped freezing on stale data;
+        3 employee actions stopped discarding ownerGateError.
+      - ?reason=session_ended so a mid-shift logout is explained.
+      - set-password refuses deactivated accounts (was a closed loop of three
+        false confirmations).
+      - DB blip no longer reads as a revoked session (AdminSessionUnavailable).
+      - Owner-initiated employee reset clears the lockout too.
+      - Sheet-token gate shared via src/lib/sheet-token.ts (upload route was
+        still on the pre-MP-1 status list = archived token held a Blob write).
+    CORRECTION TO THE RECORD: MP-2 claimed the leaked verify link "logs the
+    holder in as that operator". FALSE — /api/auth/verify sets no cookie and
+    mints no session; it flips emailVerified. The leak was real, the severity
+    narrative was not. Rank the remaining setupLink emitters on password
+    knowledge, not session grant.
+    STILL NOT DONE — the original MP-2b list, displaced, all still open:
+      - api/admin/revenue/route.ts:18-26 computes days in UTC (same 8pm ET
+        reset MP-1 fixed on Overview).
+      - viewer receives revenue tickers from /api/admin/stats while the same
+        numbers are SUPPORT_PLUS-gated on /api/admin/transactions.
+      - toggleActive has no try/catch (sticks on "Working..." forever).
+      - Archive/Restore kebab rows still close the menu before awaiting.
+      - courses/[id] cancelBooking has no res.ok check — material since
+        performCancellation now returns 409 where the old code always 200'd.
+      - header Feature button has no pending label; toggleFeatured still writes
+        its errors into the go-live banner and clears an unread go-live block.
+      - checkin-booking.ts comment still overclaims Stripe idempotency.
+      - Approved tinted pill should be StatusDot (CLAUDE.md BANNED).
+      - ARCHITECTURE.md is ~47 routes stale and still claims middleware guards
+        /admin/* — re-run scripts/route-inventory.ts.
+      - AdminSidebar shows Employees/Messages to roles that now 403 — the
+        cleanest fix is role-filtering the nav (also REVISE A-12's cheap tier).
+      - Palette is gated whole-endpoint; MP-8 wants per-row capability gating,
+        and search/route.ts isSupportPlus is dead until then.
+      - MP-1 #2's "test that archives then restores" still unbuildable — no
+        test runner exists.
+      - Phantom $10 backfill still pending Cam's approval for a prod write.
+
   - [ ] MP-3 — THE BIG MIGRATION, one attended run, everything in
     ADMIN_MASTER_PLAN §5: money Float → integer cents (+ full codebase sweep),
     PaymentEvent ledger, Booking/Message/InquiryStatusEvent/CourseInquiry/TeeTime
