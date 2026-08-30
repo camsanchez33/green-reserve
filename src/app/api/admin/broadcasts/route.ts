@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, OWNER_ONLY, ownerGateError } from '@/lib/admin-session';
 import { sendAnnouncementEmail } from '@/lib/email';
 
 export async function GET() {
@@ -35,7 +35,11 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (session.role !== 'owner') return NextResponse.json({ error: 'Forbidden — owner only' }, { status: 403 });
+  // MP-2 fix-now #8: a raw role check skips requireOwner()'s mfa assertion,
+  // so a password-only owner session could send mass email. Mass email and
+  // admin-account creation were the only two owner powers still bypassing the
+  // invariant b07c6d0 built for exactly this.
+  if (!requireRole(session, OWNER_ONLY)) return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
 
   const { title, body, sendEmail } = await req.json();
   if (!title?.trim() || !body?.trim()) {

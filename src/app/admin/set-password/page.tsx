@@ -10,7 +10,16 @@ const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm 
 function SetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get('token') || '';
+  // MP-2 fix-now #10: hold the token in memory and strip it from the address
+  // bar. It grants a password set for 24h, and in the URL it persists in browser
+  // history, in the Referer on any outbound click, and in anything syncing tabs.
+  // The emailed link necessarily carries it; it does not have to stay there.
+  const [token] = useState(() => searchParams.get('token') || '');
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.search.includes('token=')) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -19,7 +28,10 @@ function SetPasswordForm() {
   const [signInUrl, setSignInUrl] = useState('/admin/login');
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => { if (!token) setError('Missing or invalid token.'); }, [token]);
+  const [needsNewLink, setNeedsNewLink] = useState(false);
+  useEffect(() => {
+    if (!token) { setError('This link is missing its token — it may have been truncated by your email client.'); setNeedsNewLink(true); }
+  }, [token]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -35,7 +47,14 @@ function SetPasswordForm() {
         body: JSON.stringify({ token, password }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Failed to set password'); return; }
+      if (!res.ok) {
+        setError(data.error || 'Failed to set password');
+        // Expired or already-used token: a dead end with no way forward is the
+        // bug. Offer the reset flow instead of leaving them stuck on a form
+        // that can never succeed.
+        if (res.status === 400 || res.status === 401 || res.status === 410) setNeedsNewLink(true);
+        return;
+      }
       // Owners are rejected by /admin/login — send a freshly activated owner
       // to the door with the second factor instead of bouncing them straight
       // back out.
@@ -69,6 +88,12 @@ function SetPasswordForm() {
       <h1 className="font-serif text-xl font-medium text-ink mb-1">Set your password</h1>
       <p className="text-ink-soft text-sm mb-6">Choose a password for your GreenReserve admin account.</p>
 
+      {needsNewLink && (
+        <div className="mb-4 rounded-md bg-paper border border-line px-4 py-3">
+          <p className="text-sm text-ink-soft mb-2">Password links expire after 24 hours and can only be used once.</p>
+          <a href="/admin/forgot-password" className="text-sm font-medium text-pine hover:underline">Request a new link &rarr;</a>
+        </div>
+      )}
       {error && (
         <div className="bg-bad/5 border border-bad/20 rounded-md px-3 py-2 text-bad text-sm mb-5">
           {error}

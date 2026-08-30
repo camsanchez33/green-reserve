@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+import { prisma } from './prisma';
 
 const rawSecret =
   process.env.JWT_SECRET ||
@@ -63,6 +64,18 @@ export async function signAdminToken(payload: AdminSession) {
     .sign(secret);
 }
 
+/**
+ * MP-2 fix-now #9: `active` used to be checked at LOGIN ONLY, so deactivating an
+ * admin left them with full access for up to 12h — the control did not do what
+ * its label promised. It is now re-checked on every request.
+ *
+ * This costs one indexed findUnique per admin request. Measured admin endpoints
+ * run 112–440ms, so a primary-key lookup is noise, and correctness on "this
+ * person is fired" outranks it. MP-3's AdminUser.sessionVersion replaces this
+ * with a cheaper claim comparison and additionally covers role changes, which
+ * this deliberately does NOT — a demoted admin keeps their old role until the
+ * token expires. That gap is recorded in RUN_QUEUE.
+ */
 export async function resolveAdminSession(): Promise<AdminSession | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get('admin_session')?.value;
@@ -71,6 +84,14 @@ export async function resolveAdminSession(): Promise<AdminSession | null> {
     const { payload } = await jwtVerify(token, secret);
     const p = payload as unknown as AdminSession & { type: string };
     if (p.type !== 'admin_session') return null;
+
+    const admin = await prisma.adminUser.findUnique({
+      where: { id: p.adminId },
+      select: { active: true },
+    });
+    // Deleted or deactivated since the token was minted — the session is over.
+    if (!admin || !admin.active) return null;
+
     return { adminId: p.adminId, email: p.email, name: p.name, role: p.role, mfa: p.mfa === true };
   } catch { return null; }
 }

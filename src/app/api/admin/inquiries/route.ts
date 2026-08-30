@@ -5,25 +5,37 @@ import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail, sendDashboardAccessEmail, sendGoLiveSimpleEmail } from '@/lib/email';
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
-import { resolveAdminSession, requireRole, requireOwner, ownerGateError, MANAGER_PLUS, type AdminSession } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, requireOwner, ownerGateError, MANAGER_PLUS, SUPPORT_PLUS, type AdminSession } from '@/lib/admin-session';
 import { encodeChangeAddressed, encodeRequestReReview } from '@/lib/change-requests';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 import { hasAcceptedAgreement } from '@/lib/course-timeline';
 import { deleteInquiryOrPair } from '@/lib/lifecycle';
 
+// MP-2 (ADMIN_V4 V4-2 leak): this returned the whole CourseInquiry row, which
+// includes detailsToken — the sole credential for the public setup-sheet routes.
+// Any admin session could read every lead's token and then read or overwrite
+// their sheet. The token never leaves the server now; it is only ever used to
+// build the emailed link in request_details/resend_details below.
+function stripSecrets<T extends { detailsToken?: string | null }>(inquiry: T) {
+  const { detailsToken: _detailsToken, ...safe } = inquiry;
+  return safe;
+}
+
 export async function GET(req: NextRequest) {
-  if (!await resolveAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const session = await resolveAdminSession();
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const id = req.nextUrl.searchParams.get('id');
   if (id) {
     const inquiry = await prisma.courseInquiry.findUnique({ where: { id }, include: { events: { orderBy: { createdAt: 'asc' } } } });
     if (!inquiry) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    return NextResponse.json(inquiry);
+    return NextResponse.json(stripSecrets(inquiry));
   }
   const inquiries = await prisma.courseInquiry.findMany({
     orderBy: { createdAt: 'desc' },
     include: { events: { orderBy: { createdAt: 'asc' } } },
   });
-  return NextResponse.json(inquiries);
+  return NextResponse.json(inquiries.map(stripSecrets));
 }
 
 async function logEvent(

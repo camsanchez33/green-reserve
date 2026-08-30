@@ -38,7 +38,16 @@ export async function POST(req: NextRequest) {
       setPasswordToken: null,
       setPasswordTokenExpiry: null,
       mustChangePassword: false,
-      active: true,
+      // MP-2 fix-now #10: clear the lockout. A locked-out admin who completed
+      // forgot-password still got "Too many attempts" with their brand-new
+      // password — the reset appeared to work and then didn't.
+      failedLoginAttempts: 0,
+      lockoutUntil: null,
+      // NOT `active: true` any more. This used to reactivate unconditionally, so
+      // a deactivated admin holding a token minted before deactivation could let
+      // themselves back in inside its 24h window. forgot-password already
+      // refuses inactive accounts (route.ts:20); this closes the other end.
+      // First-time activation still works: employees are created active.
     },
   });
 

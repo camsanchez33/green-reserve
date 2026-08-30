@@ -12,6 +12,9 @@ const ONE_HOUR_MS = 60 * 60 * 1000;
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // MP-2: admin<->course threads carry operator contact detail and business
+  // discussion. Support-plus, not any session.
+  if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { searchParams } = req.nextUrl;
   const courseId = searchParams.get('courseId');

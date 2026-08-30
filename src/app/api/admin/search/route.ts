@@ -5,6 +5,9 @@ import { resolveAdminSession, requireRole, SUPPORT_PLUS, MANAGER_PLUS } from '@/
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // MP-2: the palette searches courses, inquiries and golfers in one query —
+  // it must not be a way around the per-page role gates.
+  if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const q = (req.nextUrl.searchParams.get('q') ?? '').trim();
   if (!q || q.length < 1) return NextResponse.json({ results: [] });

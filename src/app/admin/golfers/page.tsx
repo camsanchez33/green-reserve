@@ -25,7 +25,7 @@ interface BookingDetail {
   players: number; totalAmount: number; accessFeeTotal: number;
   greenFeeTotal: number; cancellationFeeTotal: number;
   checkedInAt: string | null; cancelledAt: string | null;
-  checkInFailReason: string; checkInToken: string | null;
+  checkInFailReason: string;
   createdAt: string; courseName: string; courseId: string;
   teeDate: string; teeTime: string; holes: number;
 }
@@ -215,9 +215,11 @@ function GolfersInner() {
                     <div className="space-y-2">
                       {detail.bookings.map(b => {
                         const st = resendState[b.id] ?? 'idle';
-                        const receiptUrl = b.checkInToken
-                          ? `${BASE_URL}/receipt/${b.id}?token=${b.checkInToken}`
-                          : null;
+                        // MP-2: no ?token= — the receipt route now accepts the
+                        // admin session directly. The API used to hand every
+                        // admin the booking's checkInToken just to build this
+                        // link, and that token also authorizes a card charge.
+                        const receiptUrl = `${BASE_URL}/receipt/${b.id}`;
                         return (
                           <div key={b.id} className="bg-white border border-line rounded-lg px-5 py-4">
                             <div className="flex items-start gap-3">
