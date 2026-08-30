@@ -595,7 +595,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       - AdminSessionUnavailable actually escapes now (MP-2b's sat inside the
         JWT catch and was inert — that claim was false).
       - All 6 MP-2b review blockers fixed, including the 3 surfaces MP-2b's own
-        gates broke (broadcasts, courses, activity).
+        gates broke (broadcasts, courses) — CORRECTED MP-2d: this line
+        originally said "broadcasts, courses, activity". Activity was NOT fixed
+        in MP-2c; it still parsed a 403 as data. Fixed in MP-2d 22d0f68.
       - 4 ungated routes gated, incl. course-detail which DEFEATED MP-2b's gate
         on /api/admin/courses by serving the same data per-course. 2 maintenance
         POSTs -> OWNER_ONLY.
@@ -623,6 +625,48 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       - Palette is gated whole-endpoint; MP-8 wants per-row capability gating.
       - No test runner exists, so MP-1 #2's archive-then-restore test remains
         unbuildable.
+      - Phantom $10 backfill still pending Cam's approval for a prod write.
+
+  - [ ] MP-2d — SHIPPED 22d0f68, box open until reviewed. Finishes MP-2c: the
+    shared classifier was adopted for GET loads only, so every mutation still
+    had the original defect. All 6 MP-2c review blockers closed:
+      B1 broadcasts read "Send to 0 operators" and mailed all of them (non-2xx
+         collapsed to 0 instead of null; MP-2c's own gate made it reachable).
+      B2 role now read from the AdminUser row, not the JWT claim — a demoted
+         admin kept privileges 12h with a real escalation path. Verified: a
+         signed token claiming owner for a support row now 403s.
+      B3 nav had an empty catch and no unknown state; owner saw a 2-item
+         sidebar on every navigation and during any blip. Tri-state now;
+         verified 12 items across hydration and an in-app route change.
+      B4 sendMessage / runOrphanSweep / runForceDelete / Sign out could latch
+         in "pending" forever. Sign out mattered most.
+      B5 /admin/activity actually fixed (see the corrected MP-2c line above).
+      B6 denial no longer renders beside "0 courses"; both banners moved into
+         the page gutter.
+    Plus 5 more ungated/looser admin GETs (schedule, system, create-course,
+    orphan-sweep GET, stats money blocks), adminFetch no longer renders 5xx
+    bodies (Prisma exception text was reaching users), ownerGateError on the two
+    OWNER_ONLY maintenance routes, lucide LogOut, broadcasts double-fetch, and
+    the palette's stale error.
+    STILL OPEN:
+      - VIEWER ROLE IS A PRODUCT DECISION, NOT A BUG: a viewer now sees only
+        Overview + My profile, which makes employees/page.tsx's "Read-only
+        across everything" false. Either give viewer SUPPORT_PLUS read scopes
+        or change the role description. Cam's call — REVISE A-12 territory.
+      - build_course + create-course still return tempPassword/setupLink in
+        JSON (2 of 4 fixed). create/page.tsx renders them as the manual-share
+        fallback, so removing them needs a UI decision first.
+      - Overview + inquiries list still hand-roll their error states and offer a
+        dead Retry on 401/403; convert to ErrorBanner/LoadFailure when touched.
+      - LoadFailure geometry doesn't match the courses/[id] card it cites; the
+        `compact` prop now has call sites (activity, inquiries list pending).
+      - inquiries/[id] Retry unmounts the page while loading (no spinner).
+      - api/admin/revenue still computes days in UTC; checkin-booking comment
+        still overclaims Stripe idempotency; courses/[id] toggleActive /
+        kebab-await / cancelBooking / Feature-pending / Approved-pill all open.
+      - ARCHITECTURE.md generator now asserts "every /api/admin/* route enforces
+        requireRole" — verify that is true after MP-2d before trusting it.
+      - No test runner exists; MP-1 #2's archive-then-restore test unbuildable.
       - Phantom $10 backfill still pending Cam's approval for a prod write.
 
   - [ ] MP-3 — THE BIG MIGRATION, one attended run, everything in
