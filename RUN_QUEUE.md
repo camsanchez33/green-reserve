@@ -493,7 +493,38 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       - ARCHITECTURE.md is 31 routes stale and missing every money route —
         re-run scripts/route-inventory.ts.
 
-  - [ ] MP-2 — auth & access: fix-now #8-#10 (requireOwner on broadcasts +
+  - [ ] MP-2 — SHIPPED 958f229, box open until /gr-review MP-2 passes.
+    Cam's call at restate: KEEP TWO DOORS — the "one-door login with inline 2FA"
+    sub-item is deliberately NOT built and should be struck from this item, not
+    carried forward. Reason: one door challenging for 2FA only on owner accounts
+    makes the challenge itself an owner-email oracle, which is the enumeration
+    b07c6d0 specifically avoided. Two doors already satisfy "the protection is
+    the 2FA, not the URL".
+    Built: leak A (verify-operator GET deleted — it returned every operator's
+    live verificationToken + a login-as-them link to ANY admin session, and had
+    no caller), leak B (inquiries GET now SUPPORT_PLUS + detailsToken stripped),
+    the checkInToken bypass (receipt route takes an admin session; token no
+    longer leaves the server), #8 (all three raw owner checks now assert mfa),
+    #9 (per-request active check), #10 (lockout cleared on reset, no
+    unconditional active:true, token stripped from the URL, expired-link
+    recovery), and role gates on employees/messages/search GET.
+    NOT DONE / follow-ups:
+      - resolveAdminSession does NOT re-read role, so a DEMOTED admin keeps
+        their old role until the 12h token expires. MP-3's sessionVersion is
+        the real fix; until then deactivate rather than demote.
+      - api/inquiries/upload/route.ts:23 still carries the old status list
+        (archived/expired sheet token still holds a Blob write endpoint) —
+        carried over from the MP-1 review, still open.
+      - api/admin/revenue/route.ts:18-26 still computes days in UTC.
+      - viewer still receives revenue tickers from /api/admin/stats.
+      - toggleActive still has no try/catch; Archive/Restore kebab rows still
+        close before awaiting; courses/[id] cancelBooking has no res.ok check.
+      - checkin-booking.ts comment still overclaims Stripe idempotency (records
+        expire at 24h; the DB flag is what protects the collect->check-in gap).
+      - MP-1 #2's "test that archives then restores" remains unbuildable — no
+        test runner exists in the repo at all.
+      - phantom $10 rows still need Cam's approval for a prod backfill.
+    ORIGINAL SPEC: fix-now #8-#10 (requireOwner on broadcasts +
     employees, per-request active check, lockout clear on reset, dead-end token
     states) + the two ADMIN_V4 V4-2 token leaks (verify-operator returning live
     verificationToken/setupLink to any session; inquiries GET returning
