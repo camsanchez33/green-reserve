@@ -452,6 +452,47 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     Activity page's 30-day default has the same bug and is why its steady state
     is "No events found" even when events exist. This is a correctness bug, not
     part of the Overview redesign (medium)
+  - [ ] MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until
+    reviewed. Closed 4 review blockers + 1 pre-existing critical:
+    B1 (CRITICAL, introduced by MP-1) collectPayment created confirmed+paid
+      bookings that performCancellation would cancel without refunding — slot
+      resold, money kept. Now refunds on the connected account, and refuses to
+      cancel if the refund fails. Blast radius was zero (no booking was ever in
+      that state; collectPayment had never run in prod).
+    B2 (HIGH, introduced by MP-1) week ticker was shifted a full day —
+      weekStartKey returned ET but was re-parsed at UTC midnight. Fixed and
+      re-verified live (6 points, Mon 08-24..Sat 08-29).
+    B3 (HIGH) retryCharge + both restore paths had no catch.
+    B4 (HIGH) the retry success message unmounted with its own row.
+    PUBLIC LEAK (pre-existing, worse than B1): GET /api/inquiries was
+      unauthenticated and returned every detailsToken + lead PII. Deleted; it
+      had no caller. This had fully defeated MP-1 #7.
+    STILL OPEN from the MP-1 review — NOT done in MP-1b, each needs an item:
+      - /api/admin/golfers returns checkInToken to SUPPORT role; that token
+        alone authorizes a card charge via /api/checkin/[bookingId] and a
+        token-path cancel. Role-gate bypass. MP-2 material.
+      - api/inquiries/upload/route.ts:23 still has the old status list — an
+        archived/expired token still holds a working Blob write endpoint.
+      - api/admin/revenue/route.ts:18-26 still computes days in UTC (same 8pm
+        reset MP-1 fixed on Overview).
+      - viewer role receives revenue tickers from /api/admin/stats while the
+        same numbers are SUPPORT_PLUS-gated on /api/admin/transactions.
+      - toggleActive has no try/catch (its imitator toggleFeatured now does);
+        Archive/Restore kebab rows still close before awaiting;
+        courses/[id] cancelBooking has no res.ok check — now material since
+        performCancellation returns 409 where the old inline code always 200'd.
+      - checkin-booking.ts comment overclaims: Stripe idempotency records
+        expire after 24h, so the collect->check-in gap is protected by the DB
+        flag, NOT the key. Correct the comment; consider recording the
+        PaymentIntent id if the post-charge DB write fails.
+      - MP-1 #2's "add a test that archives then restores" is UNBUILDABLE as
+        written: the repo has no test runner, no test script, no spec files.
+        Either add test infrastructure as its own item or drop the sub-claim.
+      - #6 shipped no backfill, so Cam's existing phantom $10 rows survive.
+        One-line update, pending Cam's approval for a prod write.
+      - ARCHITECTURE.md is 31 routes stale and missing every money route —
+        re-run scripts/route-inventory.ts.
+
   - [ ] MP-2 — auth & access: fix-now #8-#10 (requireOwner on broadcasts +
     employees, per-request active check, lockout clear on reset, dead-end token
     states) + the two ADMIN_V4 V4-2 token leaks (verify-operator returning live
