@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
 import { prisma } from '@/lib/prisma';
+import { gateSheetAccess } from '@/lib/sheet-token';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 
 const MAX_BYTES = 8 * 1024 * 1024; // 8MB — the client downscales large images before upload
@@ -20,9 +21,11 @@ export async function POST(req: NextRequest) {
 
   const inquiry = await prisma.courseInquiry.findUnique({ where: { detailsToken: token } });
   if (!inquiry) return NextResponse.json({ error: 'Invalid link' }, { status: 404 });
-  if (['building', 'live', 'rejected'].includes(inquiry.status)) {
-    return NextResponse.json({ error: 'Sheet already submitted' }, { status: 409 });
-  }
+  // MP-2b: MP-1 #7 gated the sibling details routes and left this one on the
+  // old list — so an archived or expired sheet token still held a working
+  // authenticated Blob write endpoint. Same gate, same source of truth.
+  const gate = await gateSheetAccess(inquiry);
+  if (gate) return NextResponse.json({ error: gate.error }, { status: gate.status });
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return NextResponse.json(

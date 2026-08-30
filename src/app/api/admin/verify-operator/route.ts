@@ -5,9 +5,15 @@ import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-sess
 
 // GET deliberately removed (MP-2, ADMIN_V4 V4-2 leak). It returned EVERY
 // operator's live verificationToken plus a ready-made /dashboard/verify link —
-// to any admin session, with no role gate. That link logs the holder in as that
-// operator, so a viewer-role employee could take over every course account on
-// the platform. It had no caller anywhere in src/.
+// to any admin session, with no role gate. It had no caller anywhere in src/.
+//
+// CORRECTION (MP-2b): MP-2's commit message claimed that link "logs the holder
+// in as that operator". It does not. /api/auth/verify sets no cookie and mints
+// no session — it flips emailVerified, which is a go-live precondition. So the
+// real impact was marking any operator verified (or burning their verification),
+// not account takeover. Recorded here because the wrong threat model would make
+// a future run mis-rank the remaining setupLink emitters, which grant password
+// knowledge rather than a session.
 
 export async function POST(req: NextRequest) {
   const session = await resolveAdminSession();

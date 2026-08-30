@@ -36,8 +36,13 @@ function ReceiptPageInner() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!bookingId || !token) { setError('Missing required link parameters.'); setLoading(false); return; }
-    fetch(`/api/receipt/${bookingId}?token=${encodeURIComponent(token)}`)
+    if (!bookingId) { setError('Missing required link parameters.'); setLoading(false); return; }
+    // MP-2b: a missing token is NOT an error any more. /api/receipt accepts an
+    // admin session as an alternative (MP-2), and the admin console links here
+    // without one — bailing early made every Receipt link in the console dead.
+    // Golfers still arrive with ?token=; let the API decide either way.
+    const qs = token ? `?token=${encodeURIComponent(token)}` : '';
+    fetch(`/api/receipt/${bookingId}${qs}`)
       .then(async r => {
         if (!r.ok) throw new Error();
         return r.json();

@@ -210,6 +210,7 @@ export default function AdminOverviewPage() {
   const [role, setRole] = useState('');
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(false);
+  const [statsError, setStatsError] = useState('');
   const [gran, setGran] = useState<Gran>('day');
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [, setTick] = useState(0);
@@ -218,18 +219,26 @@ export default function AdminOverviewPage() {
 
   const loadStats = useCallback(async () => {
     setLoading(true);
-    const r = await fetch('/api/admin/stats', { headers: { 'Content-Type': 'application/json' } });
-    if (r.ok) { setStats(await r.json()); setLastUpdated(Date.now()); }
+    try {
+      const r = await fetch('/api/admin/stats', { headers: { 'Content-Type': 'application/json' } });
+      // MP-2b: no else branch meant a deactivated admin clicked Refresh, the
+      // spinner turned, and every number stayed stale with no error — the
+      // session guard only runs once at mount.
+      if (r.ok) { setStats(await r.json()); setLastUpdated(Date.now()); setStatsError(''); }
+      else setStatsError(r.status === 401 ? 'Your session ended — sign in again to refresh these numbers.' : 'Could not refresh. These numbers may be out of date.');
+    } catch {
+      setStatsError('Network error — these numbers may be out of date.');
+    }
     setLoading(false);
   }, []);
 
   useEffect(() => {
     fetch('/api/admin/session').then(r => {
-      if (!r.ok) { router.push('/admin/login'); return; }
+      if (!r.ok) { router.push('/admin/login?reason=session_ended'); return; }
       return r.json();
     }).then(d => {
       if (d) { setRole(d.role ?? ''); setAdminReady(true); }
-    }).catch(() => router.push('/admin/login'));
+    }).catch(() => router.push('/admin/login?reason=session_ended'));
   }, [router]);
 
   useEffect(() => {
@@ -295,7 +304,14 @@ export default function AdminOverviewPage() {
             </button>
           </div>
 
+          {statsError && (
+            <div className="mb-5 rounded-md border border-bad/20 bg-bad/5 px-4 py-2.5 flex items-start justify-between gap-3">
+              <p className="text-xs text-bad">{statsError}</p>
+              <button onClick={() => loadStats()} className="text-xs font-medium text-ink-soft hover:text-ink shrink-0">Retry</button>
+            </div>
+          )}
           {!stats && loading && <div className="text-ink-muted text-center py-20 text-sm">Loading...</div>}
+          {!stats && !loading && !statsError && <div className="text-ink-muted text-center py-20 text-sm">No data yet.</div>}
 
           {stats && <>
             {/* 1. TOP STRIP — the morning pulse */}

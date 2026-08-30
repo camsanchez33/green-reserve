@@ -30,7 +30,7 @@ function SetPasswordForm() {
 
   const [needsNewLink, setNeedsNewLink] = useState(false);
   useEffect(() => {
-    if (!token) { setError('This link is missing its token — it may have been truncated by your email client.'); setNeedsNewLink(true); }
+    if (!token) { setError('This page no longer has your link’s token — that happens if you refresh. Re-open the link from your email, or request a new one.'); setNeedsNewLink(true); }
   }, [token]);
 
   async function handleSubmit(e: React.FormEvent) {

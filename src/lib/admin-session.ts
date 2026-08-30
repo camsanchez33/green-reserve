@@ -24,6 +24,14 @@ export interface AdminSession {
   mfa?: boolean;
 }
 
+/**
+ * Thrown when the session store itself is unreachable. Distinct from "no
+ * session" so a route can answer 503 rather than logging everyone out.
+ */
+export class AdminSessionUnavailable extends Error {
+  constructor() { super('Admin session store unavailable'); this.name = 'AdminSessionUnavailable'; }
+}
+
 export const OWNER_ONLY   = ['owner'];
 export const MANAGER_PLUS = ['owner', 'manager'];
 export const SUPPORT_PLUS = ['owner', 'manager', 'support'];
@@ -85,10 +93,22 @@ export async function resolveAdminSession(): Promise<AdminSession | null> {
     const p = payload as unknown as AdminSession & { type: string };
     if (p.type !== 'admin_session') return null;
 
-    const admin = await prisma.adminUser.findUnique({
-      where: { id: p.adminId },
-      select: { active: true },
-    });
+    // MP-2b: this lookup must not share the JWT's catch. A Postgres blip would
+    // otherwise be swallowed as `return null`, every admin API would answer 401,
+    // and all 14 admin pages would bounce to /admin/login — indistinguishable
+    // from being fired, during an outage where signing back in also fails.
+    // A transient infrastructure error rethrows as AdminSessionUnavailable so
+    // routes can answer 503; only a real missing/inactive row ends the session.
+    let admin: { active: boolean } | null;
+    try {
+      admin = await prisma.adminUser.findUnique({
+        where: { id: p.adminId },
+        select: { active: true },
+      });
+    } catch (err) {
+      console.error(JSON.stringify({ ev: 'admin_session.db_unavailable', adminId: p.adminId, error: err instanceof Error ? err.message : String(err) }));
+      throw new AdminSessionUnavailable();
+    }
     // Deleted or deactivated since the token was minted — the session is over.
     if (!admin || !admin.active) return null;
 

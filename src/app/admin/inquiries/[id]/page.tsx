@@ -320,6 +320,7 @@ function InquiryDetailInner() {
   const [adminReady, setAdminReady] = useState(false);
   const [inq, setInq] = useState<Inquiry | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [processing, setProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState<'contact' | 'answers' | 'sheet' | 'activity'>('contact');
   const [editContact, setEditContact] = useState(false);
@@ -359,16 +360,23 @@ function InquiryDetailInner() {
       setInq(data);
       setStageOverride(data.status);
     } else {
-      router.push('/admin/inquiries');
+      // MP-2b: CLAUDE.md verbatim — "Never silently redirect away on a fetch
+      // failure — show an inline error state with a retry option." MP-2's
+      // SUPPORT_PLUS gate made this 403 reachable, and it bounced the user to a
+      // list that then claimed to be empty: two silent failures in a row.
+      setLoadError(r.status === 403 ? 'This inquiry requires support access.'
+        : r.status === 401 ? 'Your session ended — sign in again.'
+        : r.status === 404 ? 'That inquiry no longer exists.'
+        : 'Could not load this inquiry. Try again.');
     }
     setLoading(false);
   }, [params.id, H, router]);
 
   useEffect(() => {
     fetch('/api/admin/session').then(r => {
-      if (!r.ok) { router.push('/admin/login'); return; }
+      if (!r.ok) { router.push('/admin/login?reason=session_ended'); return; }
       setAdminReady(true);
-    }).catch(() => router.push('/admin/login'));
+    }).catch(() => router.push('/admin/login?reason=session_ended'));
   }, [router]);
 
   useEffect(() => {
@@ -606,7 +614,23 @@ function InquiryDetailInner() {
   }
 
   if (!adminReady || loading) return null;
-  if (!inq) return null;
+  if (!inq) {
+    // MP-2b: was `return null` after a silent router.push — a blank screen.
+    return (
+      <div className="min-h-screen bg-paper flex">
+        <AdminSidebar active="inquiries" />
+        <div className="admin-content flex-1 flex items-center justify-center p-8">
+          <div className="max-w-md w-full rounded-lg border border-bad/20 bg-bad/5 px-6 py-8 text-center">
+            <p className="text-sm text-bad mb-4">{loadError || 'Could not load this inquiry.'}</p>
+            <div className="flex items-center justify-center gap-2">
+              <button onClick={() => loadInquiry()} className="text-xs font-medium text-ink-soft hover:text-ink px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">Retry</button>
+              <button onClick={() => router.push('/admin/inquiries')} className="text-xs font-medium text-white bg-pine hover:bg-pine-hover px-3 py-1.5 rounded-md transition-colors">Back to inquiries</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const isArchived = TERMINAL_STATUSES.has(inq.status);
   const dot = (STATUS_DOT_MAP[inq.status] || 'neutral') as 'ok' | 'bad' | 'warn' | 'neutral';

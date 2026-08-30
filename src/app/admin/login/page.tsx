@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -12,6 +12,20 @@ export default function AdminLoginPage() {
   const [error, setError] = useState('');
   const [ownerRedirect, setOwnerRedirect] = useState(false);
   const [loading, setLoading] = useState(false);
+  // MP-2b: MP-2's per-request active check means a session can now end
+  // mid-shift, and 14 admin pages bounce here when it does. Landing on a bare
+  // form is indistinguishable from being fired — and retyping correct
+  // credentials then returns "Invalid credentials", because the login route
+  // refuses inactive accounts (deliberately, to avoid enumeration for an
+  // anonymous caller). The app knows more than the login route does at this
+  // point, so it says so here. Read from location rather than useSearchParams
+  // to avoid forcing a Suspense boundary around the whole form.
+  const [sessionEnded, setSessionEnded] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('reason') === 'session_ended') {
+      setSessionEnded(true);
+    }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -55,6 +69,13 @@ export default function AdminLoginPage() {
           <h1 className="text-[22px] font-serif font-medium text-ink mb-1">Sign in</h1>
           <p className="text-sm text-ink-soft mb-6">Admin console access</p>
 
+          {sessionEnded && !error && (
+            <div className="mb-4 rounded-md bg-paper border border-line px-4 py-3">
+              <p className="text-sm text-ink-soft">
+                Your session ended. If you were signed out unexpectedly, your account may have been deactivated — contact an owner.
+              </p>
+            </div>
+          )}
           {error && (
             <div className="bg-bad/5 border border-bad/20 rounded-md px-3 py-2 text-bad text-sm mb-5">
               {error}

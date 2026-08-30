@@ -68,6 +68,8 @@ export default function EmployeesPage() {
   const [createError, setCreateError] = useState('');
   const [createTempPwd, setCreateTempPwd] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [actionError, setActionError] = useState('');
+  const [loadError, setLoadError] = useState('');
   const [resetPwds, setResetPwds] = useState<Record<string, string>>({});
 
   const [cpCurrentPassword, setCpCurrentPassword] = useState('');
@@ -84,11 +86,17 @@ export default function EmployeesPage() {
         fetch('/api/admin/session'),
         fetch('/api/admin/employees'),
       ]);
-      if (!sRes.ok) { router.push('/admin/login'); return; }
-      const [s, a] = await Promise.all([sRes.json(), aRes.json()]);
+      if (!sRes.ok) { router.push('/admin/login?reason=session_ended'); return; }
+      const s = await sRes.json();
       setSession(s);
+      // MP-2b: the roster is MANAGER_PLUS since MP-2. Parsing a 403 body as data
+      // told a support/viewer employee the company has zero admin accounts.
+      if (aRes.status === 403) { setLoadError('Employee accounts require manager access.'); setAdmins([]); return; }
+      if (!aRes.ok) { setLoadError('Could not load employee accounts. Try again.'); setAdmins([]); return; }
+      const a = await aRes.json();
+      setLoadError('');
       setAdmins(Array.isArray(a) ? a : []);
-    } catch { router.push('/admin/login'); }
+    } catch { setLoadError('Network error loading employee accounts. Check your connection and try again.'); }
     finally { setLoading(false); }
   }, [router]);
 
@@ -112,40 +120,44 @@ export default function EmployeesPage() {
     finally { setCreating(false); }
   }
 
+  // MP-2b: all three actions discarded the response. MP-2 made this endpoint
+  // assert the mfa claim and wrote deliberate recovery copy for the failure
+  // ("Sign in again at /admin/owner-login") — and the page threw it away, so an
+  // mfa-less owner clicked Deactivate and simply nothing happened.
+  async function runEmployeeAction(key: string, body: Record<string, unknown>): Promise<Record<string, unknown> | null> {
+    setActionLoading(key); setActionError('');
+    try {
+      const res = await fetch('/api/admin/employees', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setActionError(data.error || 'That did not work. Try again.'); return null; }
+      return data;
+    } catch {
+      setActionError('Network error — nothing was changed. Check your connection and try again.');
+      return null;
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
   async function toggleActive(admin: Admin) {
-    setActionLoading(admin.id + '_active');
-    await fetch('/api/admin/employees', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: admin.id, active: !admin.active }),
-    });
-    setActionLoading(null);
-    load();
+    const ok = await runEmployeeAction(admin.id + '_active', { id: admin.id, active: !admin.active });
+    if (ok) load();
   }
 
   async function changeRole(admin: Admin, newRoleVal: string) {
-    setActionLoading(admin.id + '_role');
-    await fetch('/api/admin/employees', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: admin.id, role: newRoleVal }),
-    });
-    setActionLoading(null);
-    load();
+    const ok = await runEmployeeAction(admin.id + '_role', { id: admin.id, role: newRoleVal });
+    if (ok) load();
   }
 
   async function resetPassword(admin: Admin) {
     if (!confirm(`Reset ${admin.name}'s password? They will be required to change it on next login.`)) return;
-    setActionLoading(admin.id + '_reset');
-    const res = await fetch('/api/admin/employees', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: admin.id, action: 'reset_password' }),
-    });
-    const data = await res.json();
-    setActionLoading(null);
-    if (res.ok && data.tempPassword) {
-      setResetPwds(p => ({ ...p, [admin.id]: data.tempPassword }));
+    const data = await runEmployeeAction(admin.id + '_reset', { id: admin.id, action: 'reset_password' });
+    if (data?.tempPassword) {
+      setResetPwds(p => ({ ...p, [admin.id]: String(data.tempPassword) }));
       load();
     }
   }
@@ -245,6 +257,19 @@ export default function EmployeesPage() {
             </div>
           )}
 
+          {actionError && (
+
+            <div className="mb-4 rounded-md bg-bad/5 border border-bad/20 px-4 py-2.5 flex items-start justify-between gap-3">
+
+              <p className="text-xs text-bad">{actionError}</p>
+
+              <button onClick={() => setActionError('')} className="text-ink-muted hover:text-ink transition-colors shrink-0" aria-label="Dismiss">&times;</button>
+
+            </div>
+
+          )}
+
+
           {/* Employee list */}
           <div className="bg-white border border-line rounded-lg overflow-x-auto mb-6">
             <table className="w-full">
@@ -333,7 +358,9 @@ export default function EmployeesPage() {
                 {admins.length === 0 && (
                   <tr>
                     <td colSpan={isOwner ? 5 : 4} className="px-5 py-8 text-center text-sm text-ink-muted">
-                      No admin accounts yet
+                      {/* MP-2b: "none" and "not allowed to see them" are different
+                          answers and must never render the same way. */}
+                      {loadError || 'No admin accounts yet'}
                     </td>
                   </tr>
                 )}

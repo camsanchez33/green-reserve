@@ -18,6 +18,16 @@ export async function POST(req: NextRequest) {
   const admin = await prisma.adminUser.findUnique({ where: { id: payload.adminId } });
   if (!admin) return NextResponse.json({ error: 'Account not found' }, { status: 404 });
 
+  // MP-2b: MP-2 stopped this route setting active:true (so a pre-deactivation
+  // token could not reactivate an account) but left it happily writing a
+  // password for one — reporting "Your account is ready", then /admin/login
+  // saying "Invalid credentials", then forgot-password returning a fake
+  // "check your email" because it refuses inactive accounts by design. Three
+  // false confirmations and no way out. Say the true thing instead.
+  if (!admin.active) {
+    return NextResponse.json({ error: 'This account has been deactivated — contact an owner to have it re-enabled.' }, { status: 403 });
+  }
+
   // Single-use: token stored in DB must match
   if (admin.setPasswordToken !== token)
     return NextResponse.json({ error: 'Token already used or invalid' }, { status: 400 });

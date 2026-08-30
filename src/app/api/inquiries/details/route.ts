@@ -1,45 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendDetailsSubmittedNotification, sendDetailsSheetConfirmationEmail } from '@/lib/email';
+import { gateSheetAccess } from '@/lib/sheet-token';
 
-// MP-1 fix-now #7 — a stale sheet link used to resurrect a closed inquiry.
-//
-// (a) The three handlers below blocked building/live/rejected but NOT
-//     'archived', so the operator of an archived course could reopen their old
-//     link, submit, and flip the inquiry back into the active funnel — past
-//     every guarded lifecycle transition.
-// (b) detailsToken never expired. There is no detailsTokenExpiry column and
-//     MP-1 is a no-migration run, so the expiry is DERIVED from the ledger
-//     that already records when the sheet was sent: the most recent event
-//     whose toStatus is 'details_requested'. That row is written by the
-//     request_details / resend_details actions, so a resend legitimately
-//     restarts the clock, which is exactly the behaviour a real expiry wants.
-const CLOSED_TO_SHEET = ['building', 'live', 'rejected', 'archived'];
-export const DETAILS_TOKEN_TTL_DAYS = 60;
-
-type SheetGate = { error: string; status: number } | null;
-
-async function gateSheetAccess(inquiry: { id: string; status: string; createdAt: Date }): Promise<SheetGate> {
-  if (CLOSED_TO_SHEET.includes(inquiry.status)) {
-    return { error: 'This inquiry has already moved past the setup-sheet stage.', status: 409 };
-  }
-  const sentEvent = await prisma.inquiryStatusEvent.findFirst({
-    where: { inquiryId: inquiry.id, toStatus: 'details_requested' },
-    orderBy: { createdAt: 'desc' },
-    select: { createdAt: true },
-  });
-  // No event (pre-ledger inquiry) falls back to the inquiry's own age rather
-  // than failing open — an unbounded token is the bug being fixed.
-  const issuedAt = sentEvent?.createdAt ?? inquiry.createdAt;
-  const ageDays = (Date.now() - issuedAt.getTime()) / (24 * 60 * 60 * 1000);
-  if (ageDays > DETAILS_TOKEN_TTL_DAYS) {
-    return {
-      error: 'This setup-sheet link has expired. Reply to your GreenReserve email and we will send you a fresh one.',
-      status: 410,
-    };
-  }
-  return null;
-}
+// MP-2b: the gate that used to live here now lives in src/lib/sheet-token.ts so
+// api/inquiries/upload shares it — it had been left on the old status list.
 
 export async function PATCH(req: NextRequest) {
   const body = await req.json();

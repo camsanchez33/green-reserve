@@ -48,6 +48,7 @@ export default function CommandPalette() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [searchError, setSearchError] = useState('');
   const [recents, setRecents] = useState<SearchResult[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -64,12 +65,29 @@ export default function CommandPalette() {
     setLoading(true);
     try {
       const r = await fetch(`/api/admin/search?q=${encodeURIComponent(q)}`, { signal: controller.signal });
+      if (controller.signal.aborted) return;
+      // MP-2b: search is SUPPORT_PLUS since MP-2, and the non-ok branch rendered
+      // nothing — so a 403 and a network failure both read as `No results for
+      // "x"`, the exact string a successful empty search produces. The palette
+      // is on every admin page; it is the worst place to lie about emptiness.
       if (r.ok) {
         const d = await r.json();
-        if (!controller.signal.aborted) setResults(d.results ?? []);
+        setResults(d.results ?? []);
+        setSearchError('');
+      } else if (r.status === 403) {
+        setResults([]);
+        setSearchError('Search requires support access.');
+      } else if (r.status === 401) {
+        setResults([]);
+        setSearchError('Your session ended — sign in again.');
+      } else {
+        setResults([]);
+        setSearchError('Search failed. Try again.');
       }
     } catch (e) {
       if ((e as Error)?.name === 'AbortError') return;
+      setResults([]);
+      setSearchError('Search failed — check your connection.');
     }
     if (!controller.signal.aborted) setLoading(false);
   }, []);
@@ -174,8 +192,10 @@ export default function CommandPalette() {
         {/* Results */}
         <div className="max-h-80 overflow-y-auto">
           {displayed.length === 0 && (
-            <div className="py-10 text-center text-sm text-ink-muted">
-              {hasQuery && !loading ? `No results for "${inputRef.current?.value ?? ''}"` : 'Start typing to search…'}
+            <div className={'py-10 text-center text-sm ' + (searchError ? 'text-bad' : 'text-ink-muted')}>
+              {searchError
+                ? searchError
+                : hasQuery && !loading ? `No results for "${inputRef.current?.value ?? ''}"` : 'Start typing to search…'}
             </div>
           )}
           {displayed.length > 0 && (

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
 import { signPreviewToken } from '@/lib/preview-token';
 import { sendPreviewWithDashboardAccessEmail } from '@/lib/email';
 import { getApprovalState } from '@/lib/approval-state';
@@ -16,6 +16,12 @@ import { getApprovalState } from '@/lib/approval-state';
 export async function POST(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // MP-2b: this route ROTATES AN OPERATOR'S PASSWORD. It was gated on "any admin
+  // session", so a viewer-role employee could POST an arbitrary courseId, lock
+  // that operator out of their own dashboard, and read the new password out of
+  // the response. Every sibling route that rotates an operator password is
+  // MANAGER_PLUS; this one was the exception.
+  if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { inquiryId, courseId: rawCourseId } = await req.json() as {
     inquiryId?: string;
@@ -66,7 +72,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ ok: true, previewUrl, tempPassword, setupLink });
+    // tempPassword/setupLink deliberately NOT returned — the email carries them.
+    return NextResponse.json({ ok: true, previewUrl });
   }
 
   if (rawCourseId) {
@@ -116,7 +123,8 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ ok: true, previewUrl, tempPassword, setupLink });
+    // tempPassword/setupLink deliberately NOT returned — the email carries them.
+    return NextResponse.json({ ok: true, previewUrl });
   }
 
   return NextResponse.json({ error: 'inquiryId or courseId required' }, { status: 400 });

@@ -82,7 +82,10 @@ export async function PATCH(req: NextRequest) {
     const passwordHash = await bcrypt.hash(tempPassword, 12);
     await prisma.adminUser.update({
       where: { id },
-      data: { passwordHash, mustChangePassword: true },
+      // MP-2b: MP-2 cleared the lockout on the forgot-password path and left
+      // this one — an owner resetting a locked-out employee still handed them a
+      // password that answered "Too many attempts". Same bug, other door.
+      data: { passwordHash, mustChangePassword: true, failedLoginAttempts: 0, lockoutUntil: null },
     });
     return NextResponse.json({ success: true, tempPassword });
   }

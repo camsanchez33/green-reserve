@@ -99,6 +99,7 @@ function InquiriesListInner() {
   const [adminReady, setAdminReady] = useState(false);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState('');
   const [search, setSearch] = useState(searchParams.get('q') || '');
   const [backfillRan, setBackfillRan] = useState(false);
   const [page, setPage] = useState(0);
@@ -148,18 +149,32 @@ function InquiriesListInner() {
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
+  // MP-2b: inquiries became SUPPORT_PLUS in MP-2, and this had no else branch —
+  // a viewer saw an empty pipeline and was told nothing.
   const loadInquiries = useCallback(async () => {
     setLoading(true);
-    const r = await fetch('/api/admin/inquiries', { headers: H() });
-    if (r.ok) setInquiries(await r.json());
-    setLoading(false);
+    try {
+      const r = await fetch('/api/admin/inquiries', { headers: H() });
+      if (r.ok) { setInquiries(await r.json()); setLoadError(''); }
+      else {
+        setInquiries([]);
+        setLoadError(r.status === 403 ? 'Inquiries require support access.'
+          : r.status === 401 ? 'Your session ended — sign in again.'
+          : 'Could not load inquiries. Try again.');
+      }
+    } catch {
+      setInquiries([]);
+      setLoadError('Network error loading inquiries. Check your connection.');
+    } finally {
+      setLoading(false);
+    }
   }, [H]);
 
   useEffect(() => {
     fetch('/api/admin/session').then(r => {
-      if (!r.ok) { router.push('/admin/login'); return; }
+      if (!r.ok) { router.push('/admin/login?reason=session_ended'); return; }
       setAdminReady(true);
-    }).catch(() => router.push('/admin/login'));
+    }).catch(() => router.push('/admin/login?reason=session_ended'));
   }, [router]);
 
   useEffect(() => {
@@ -623,7 +638,13 @@ function InquiriesListInner() {
 
           {/* List */}
           {loading && <div className="py-20 text-center text-ink-muted text-sm">Loading...</div>}
-          {!loading && filtered.length === 0 && (
+          {!loading && loadError && (
+            <div className="rounded-lg border border-bad/20 bg-bad/5 px-5 py-6 text-center">
+              <p className="text-sm text-bad mb-3">{loadError}</p>
+              <button onClick={() => loadInquiries()} className="text-xs font-medium text-ink-soft hover:text-ink px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">Retry</button>
+            </div>
+          )}
+          {!loading && !loadError && filtered.length === 0 && (
             <EmptyState message={q ? 'No results — clear your search' : currentTab.description} />
           )}
 

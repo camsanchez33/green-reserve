@@ -44,12 +44,26 @@ function MessagesContent() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [loadError, setLoadError] = useState('');
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
+  // MP-2b: messages became SUPPORT_PLUS in MP-2 and these two loaders had no
+  // else branch, so a 403 (viewer) or a 401 (deactivated mid-session) rendered
+  // as "No messages yet." — and the thread pane then invited them to send a
+  // message that could only fail. Emptiness and denial must not look alike.
   const loadThreads = useCallback(async () => {
-    const r = await fetch('/api/admin/messages', { headers: H() });
-    if (r.ok) setThreads(await r.json());
+    try {
+      const r = await fetch('/api/admin/messages', { headers: H() });
+      if (r.ok) { setThreads(await r.json()); setLoadError(''); return; }
+      setThreads([]);
+      setLoadError(r.status === 403 ? 'Messages require support access.'
+        : r.status === 401 ? 'Your session ended — sign in again.'
+        : 'Could not load messages. Try again.');
+    } catch {
+      setThreads([]);
+      setLoadError('Network error loading messages. Check your connection.');
+    }
   }, [H]);
 
   const loadThread = useCallback(async (courseId: string) => {
@@ -58,8 +72,12 @@ function MessagesContent() {
     if (r.ok) {
       const data = await r.json();
       setThread(data);
+      setLoadError('');
     } else {
       setThread(null);
+      setLoadError(r.status === 403 ? 'Messages require support access.'
+        : r.status === 401 ? 'Your session ended — sign in again.'
+        : 'Could not load this conversation. Try again.');
     }
     // Mark as read
     await fetch('/api/admin/messages', {
@@ -135,7 +153,7 @@ function MessagesContent() {
           <div className="flex-1 overflow-y-auto">
             {filteredThreads.length === 0 && (
               <div className="px-4 py-8 text-center text-xs text-ink-muted">
-                {threads.length === 0 ? 'No messages yet.' : 'No matches.'}
+                {loadError || (threads.length === 0 ? 'No messages yet.' : 'No matches.')}
               </div>
             )}
             {filteredThreads.map(t => {
@@ -220,7 +238,7 @@ function MessagesContent() {
                 {!loading && (!thread || thread.messages.length === 0) && (
                   <div className="text-center py-10">
                     <MessageSquare className="w-8 h-8 text-ink-faint mx-auto mb-2" />
-                    <div className="text-sm text-ink-muted">No messages yet. Send one below to start the conversation.</div>
+                    <div className={'text-sm ' + (loadError ? 'text-bad' : 'text-ink-muted')}>{loadError || 'No messages yet. Send one below to start the conversation.'}</div>
                   </div>
                 )}
                 {!loading && thread && thread.messages.map(msg => {
