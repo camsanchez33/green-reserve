@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
+import { adminFetch, LOGIN_SESSION_ENDED, type AdminFetchFailure } from '@/lib/admin-fetch';
+import { LoadFailure } from '@/components/ui/ErrorState';
 import { HardDrive, Clock3, Zap, GitBranch, Bug, ExternalLink } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -30,6 +31,7 @@ export default function AdminSystemPage() {
   const router = useRouter();
   const [adminReady, setAdminReady] = useState(false);
   const [data, setData] = useState<SystemData | null>(null);
+  const [loadError, setLoadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
 
   useEffect(() => {
     fetch('/api/admin/session').then(r => {
@@ -40,10 +42,15 @@ export default function AdminSystemPage() {
 
   useEffect(() => {
     if (!adminReady) return;
-    fetch('/api/admin/system', { headers: { 'Content-Type': 'application/json' } })
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d) setData(d); })
-      .catch(() => {});
+    // MP-2e: MP-2d gated this route at MANAGER_PLUS and left the consumer's
+    // empty catch in place, so a denial rendered as "No Stripe-connected
+    // courses yet" — a fabricated fact, reachable from Overview's Systems
+    // button, which every role sees.
+    adminFetch<SystemData>('/api/admin/system', { subject: 'system status' })
+      .then(res => {
+        if (!res.ok) { setLoadError({ msg: res.message, kind: res.kind }); return; }
+        setData(res.data); setLoadError(null);
+      });
   }, [adminReady]);
 
   if (!adminReady) return null;
@@ -53,6 +60,11 @@ export default function AdminSystemPage() {
       <AdminSidebar active="system" />
       <div className="admin-content flex-1 min-h-screen">
         <div className="px-8 py-7 max-w-3xl">
+          {loadError && (
+            <div className="mb-5">
+              <LoadFailure message={loadError.msg} kind={loadError.kind} onRetry={() => location.reload()} compact />
+            </div>
+          )}
           <div className="mb-7">
             <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">System</h1>
             <p className="text-sm text-ink-soft mt-0.5">30-second health check — backups, crons, webhooks, CI, errors.</p>

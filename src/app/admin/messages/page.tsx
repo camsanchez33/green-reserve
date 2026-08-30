@@ -49,6 +49,9 @@ function MessagesContent() {
   const [listError, setListError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
   const [threadError, setThreadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
   const [sendError, setSendError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
+  // MP-2e: cleared on conversation switch — the banner about course A used to
+  // hang over course B's composer.
+  useEffect(() => { setSendError(null); }, [selectedCourseId]);
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
@@ -120,6 +123,7 @@ function MessagesContent() {
         method: 'POST',
         body: JSON.stringify({ courseId: selectedCourseId, body: compose.trim() }),
         subject: 'this message',
+        action: 'send',
       });
       if (!res.ok) { setSendError({ msg: res.message, kind: res.kind }); return; }
       setCompose('');

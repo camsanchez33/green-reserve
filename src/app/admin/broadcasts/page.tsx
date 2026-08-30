@@ -73,7 +73,10 @@ export default function BroadcastsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: title.trim(), body: body.trim(), sendEmail }),
       });
-      const d = await r.json();
+      // MP-2e: .json() ran before the r.ok check, so an HTML error page threw
+      // into the catch and reported "Network error" — indistinguishable from
+      // never reaching the server, on the console's only irreversible action.
+      const d = await r.json().catch(() => ({} as { error?: string }));
       if (!r.ok) { setSendResult({ error: d.error || 'Failed' }); return; }
       setSendResult({ emailCount: d.emailCount });
       setTitle(''); setBody(''); setSendEmail(false); setReviewing(false);

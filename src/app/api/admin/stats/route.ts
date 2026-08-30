@@ -499,7 +499,11 @@ export async function GET() {
   return NextResponse.json({
     pendingInquiries,
     topStrip: isSupportPlus ? topStrip : { ...topStrip, feesToday: null },
-    actionQueue: { red, redCount, amber, amberCount },
+    // MP-2e: the money was nulled but this still carried operator staff names,
+    // course names and deep links to inquiry IDs that /api/admin/inquiries and
+    // /api/admin/courses both 403 for a viewer — the same route-around-the-gate
+    // the money nulling closed.
+    actionQueue: isSupportPlus ? { red, redCount, amber, amberCount } : { red: [], redCount: 0, amber: [], amberCount: 0 },
     revenue: isSupportPlus ? revenue : null,
     thirtyDay: {
       activeCourses,

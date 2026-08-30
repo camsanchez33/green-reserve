@@ -86,7 +86,7 @@ function WizardContent() {
   const [fees, setFees] = useState<FeesData>(BLANK_FEES);
   const [op, setOp] = useState<OpData>(BLANK_OP);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
-  const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'ok' | 'taken'>('idle');
+  const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'ok' | 'taken' | 'error'>('idle');
   const [creating, setCreating] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [sheetData, setSheetData] = useState<Record<string, unknown> | null>(null);
@@ -179,9 +179,13 @@ function WizardContent() {
     const t = setTimeout(async () => {
       try {
         const r = await fetch(`/api/admin/create-course?slug=${encodeURIComponent(basics.slug)}`);
+        // MP-2e: MP-2d gated this GET at MANAGER_PLUS. Without an r.ok check a
+        // 403 body has no `available`, so EVERY slug reported "taken" — a
+        // fabricated fact with no explanation.
+        if (!r.ok) { setSlugStatus('error'); return; }
         const d = await r.json();
         setSlugStatus(d.available ? 'ok' : 'taken');
-      } catch { setSlugStatus('idle'); }
+      } catch { setSlugStatus('error'); }
     }, 400);
     return () => clearTimeout(t);
   }, [basics.slug]);
@@ -251,8 +255,8 @@ function WizardContent() {
   const step3Valid = fees.weekdayFee !== '' && fees.weekendFee !== '' && !isNaN(parseFloat(fees.weekdayFee)) && !isNaN(parseFloat(fees.weekendFee));
   const step4Valid = op.contactName.length > 0 && op.contactEmail.includes('@') && op.contactPhone.length > 0;
 
-  const slugStatusLabel = slugStatus === 'ok' ? 'available' : slugStatus === 'taken' ? 'taken' : slugStatus === 'checking' ? 'checking...' : '';
-  const slugStatusCls = slugStatus === 'ok' ? 'text-ok' : slugStatus === 'taken' ? 'text-bad' : 'text-ink-muted';
+  const slugStatusLabel = slugStatus === 'ok' ? 'available' : slugStatus === 'taken' ? 'taken' : slugStatus === 'checking' ? 'checking...' : slugStatus === 'error' ? 'could not check' : '';
+  const slugStatusCls = slugStatus === 'ok' ? 'text-ok' : slugStatus === 'taken' || slugStatus === 'error' ? 'text-bad' : 'text-ink-muted';
   const slugInputCls = iCls + (slugStatus === 'taken' ? ' border-bad/40' : slugStatus === 'ok' ? ' border-ok/30' : '');
 
   // Pre-compute review rows to avoid multi-line ternaries in JSX
@@ -481,6 +485,7 @@ function WizardContent() {
                   {!basics.slug && <div>URL slug is required.</div>}
                   {basics.slug && slugStatus === 'taken' && <div>That slug is already taken — choose another.</div>}
                   {basics.slug && slugStatus === 'checking' && <div>Checking slug availability…</div>}
+                  {basics.slug && slugStatus === 'error' && <div>Could not check this slug — you may not have access, or the connection dropped. Manual build requires manager access.</div>}
                 </div>
               )}
               <div className="flex gap-3">

@@ -18,26 +18,30 @@ interface ActionRow {
 interface Stats {
   pendingInquiries: number;
   topStrip: {
-    feesToday: number; bookingsToday: number; checkInsToday: number; cancellationsToday: number;
+    feesToday: number | null; bookingsToday: number; checkInsToday: number; cancellationsToday: number;
     unreadMessages: number; unreadNewestSender: string | null;
     waitingNewInquiries: number; waitingOldestAgeDays: number | null;
     waitingDrafts: number; waitingDraftsList: { id: string; name: string }[];
   };
   actionQueue: { red: ActionRow[]; redCount: number; amber: ActionRow[]; amberCount: number };
+  // MP-2e: /api/admin/stats nulls every money field below SUPPORT_PLUS
+  // (MP-2d). The interface still said `number`, so tsc could not see the
+  // mismatch and fmtMoney(null) threw on render — a viewer's only page was a
+  // blank client-exception screen. The type describes the wire format now.
   revenue: {
     day: { t: number; gross: number; fees: number; ghostGross: number; ghostFees: number }[];
     week: { t: number; gross: number; fees: number; ghostGross: number; ghostFees: number }[];
     month: { t: number; gross: number; fees: number; ghostGross: number; ghostFees: number }[];
-  };
+  } | null;
   thirtyDay: {
     activeCourses: number; totalCourses: number; archivedCourses: number;
     newCourses30d: number; newCoursesPrev30d: number;
     bookings30d: number; bookingsPrev30d: number;
-    fees30d: number; feesPrev30d: number;
+    fees30d: number | null; feesPrev30d: number | null;
   };
   bottomTrio: {
     pipeline: { newInquiries: number; sheetsOut: number; building: number; wentLive: number };
-    teeSheetToday: { roundsToday: number; checkInsDone: number; grFeesExpected: number; grossExpected: number };
+    teeSheetToday: { roundsToday: number; checkInsDone: number; grFeesExpected: number | null; grossExpected: number | null };
     courseHealthWatchlist: { id: string; name: string; reason: string }[];
   };
 }
@@ -46,7 +50,9 @@ const SUPPORT_PLUS_ROLES = ['owner', 'manager', 'support'];
 const MANAGER_PLUS_ROLES = ['owner', 'manager'];
 const REFRESH_MS = 5 * 60 * 1000;
 
-const fmtMoney = (n: number) => '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+// null means "not visible at your access level" — render a dash, never NaN.
+const fmtMoney = (n: number | null | undefined) =>
+  n == null ? '—' : '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
 function fmtAgo(ts: number, nowMs: number) {
   const s = Math.floor((nowMs - ts) / 1000);
@@ -57,7 +63,10 @@ function fmtAgo(ts: number, nowMs: number) {
   return `${Math.floor(m / 60)}h ago`;
 }
 
-function Trend({ current, prev, suffix = 'vs prior 30d' }: { current: number; prev: number; suffix?: string }) {
+function Trend({ current, prev, suffix = 'vs prior 30d' }: { current: number | null; prev: number | null; suffix?: string }) {
+  // MP-2e: null means the value is above the viewer's access level. Computing
+  // (null-null)/null*100 rendered "NaN% vs prior 30d".
+  if (current == null || prev == null) return null;
   if (prev === 0 && current === 0) return null;
   if (prev === 0) return <span className="text-[11px] text-ink-muted">— {suffix}</span>;
   const delta = ((current - prev) / prev) * 100;
@@ -439,7 +448,9 @@ export default function AdminOverviewPage() {
                   ))}
                 </div>
               </div>
-              <RevenueChart data={stats.revenue[gran]} gran={gran}/>
+              {stats.revenue
+                ? <RevenueChart data={stats.revenue[gran]} gran={gran}/>
+                : <div className="py-12 text-center text-sm text-ink-muted">Revenue detail requires support access.</div>}
             </div>
 
             {/* 4. 30-DAY ROW */}

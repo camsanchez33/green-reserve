@@ -29,8 +29,16 @@ export type AdminFetchFailure =
   | 'unauthorized'   // 401 — session gone
   | 'forbidden'      // 403 — real session, wrong role
   | 'notfound'       // 404
+  | 'rejected'       // 400/409/422/429 — the server explained why; show it
   | 'server'         // 5xx or an unclassified non-2xx
   | 'network';       // fetch threw / offline / body was not JSON
+
+/**
+ * What the caller was doing. MP-2e: every message said "load", so a failed
+ * SEND read "Could not load this message" — which tells the operator nothing
+ * about whether it went out, the only thing they actually need to know.
+ */
+export type AdminFetchAction = 'load' | 'send' | 'save';
 
 export type AdminFetchResult<T> =
   | { ok: true; data: T }
@@ -41,7 +49,14 @@ export type AdminFetchResult<T> =
  *   "inquiries" -> "Inquiries require support access."
  * Omit it for a generic phrasing.
  */
-export function adminErrorMessage(kind: AdminFetchFailure, subject?: string, serverMessage?: string): string {
+export function adminErrorMessage(
+  kind: AdminFetchFailure,
+  subject?: string,
+  serverMessage?: string,
+  action: AdminFetchAction = 'load',
+): string {
+  const verb = action === 'send' ? 'send' : action === 'save' ? 'save' : 'load';
+  const verbing = action === 'send' ? 'sending' : action === 'save' ? 'saving' : 'loading';
   switch (kind) {
     case 'unauthorized':
       return 'Your session ended. Sign in again to continue.';
@@ -54,8 +69,14 @@ export function adminErrorMessage(kind: AdminFetchFailure, subject?: string, ser
         ?? `You do not have access to ${subject ?? 'this'}. Ask an owner if you need it.`;
     case 'notfound':
       return subject ? `Could not find ${subject}.` : 'Not found.';
+    case 'rejected':
+      // The server rejected the request for a stated reason (validation, a
+      // conflict, a rate limit). That copy is the whole value of the response.
+      return usefulServerMessage(serverMessage) ?? `Could not ${verb} ${subject ?? 'that'}. Try again.`;
     case 'network':
-      return `Network error${subject ? ` loading ${subject}` : ''}. Check your connection and try again.`;
+      return action === 'load'
+        ? `Network error${subject ? ` loading ${subject}` : ''}. Check your connection and try again.`
+        : `Network error — ${subject ?? 'it'} may not have been ${action === 'send' ? 'sent' : 'saved'}. Check before trying again.`;
     case 'server':
     default:
       // MP-2d: 5xx bodies are NOT shown. Several routes answer with
@@ -63,7 +84,9 @@ export function adminErrorMessage(kind: AdminFetchFailure, subject?: string, ser
       // the model and often a field value — rendered verbatim into a banner for
       // whatever role reached the route. Server copy is honoured only for 403,
       // where ownerGateError is the whole point.
-      return `Could not load ${subject ?? 'that'}. Try again.`;
+      return action === 'load'
+        ? `Could not load ${subject ?? 'that'}. Try again.`
+        : `Could not ${verb} ${subject ?? 'that'} — it may not have gone through. Check before trying again.`;
   }
 }
 
@@ -82,14 +105,18 @@ function classify(status: number): AdminFetchFailure {
   if (status === 401) return 'unauthorized';
   if (status === 403) return 'forbidden';
   if (status === 404) return 'notfound';
+  // MP-2e: these carry a reason the user needs ("Email already exists", "Too
+  // many attempts"). Lumping them into 'server' discarded it.
+  if (status === 400 || status === 409 || status === 422 || status === 429) return 'rejected';
   return 'server';
 }
 
 export async function adminFetch<T = unknown>(
   input: string,
-  init?: RequestInit & { subject?: string },
+  init?: RequestInit & { subject?: string; action?: AdminFetchAction },
 ): Promise<AdminFetchResult<T>> {
   const subject = init?.subject;
+  const action = init?.action ?? 'load';
   try {
     const res = await fetch(input, {
       ...init,
@@ -105,7 +132,7 @@ export async function adminFetch<T = unknown>(
         ok: false,
         kind,
         status: res.status,
-        message: adminErrorMessage(kind, subject, typeof body?.error === 'string' ? body.error : undefined),
+        message: adminErrorMessage(kind, subject, typeof body?.error === 'string' ? body.error : undefined, action),
       };
     }
 
@@ -113,10 +140,10 @@ export async function adminFetch<T = unknown>(
     // `undefined` for a caller to render as emptiness.
     const data = await res.json().catch(() => null);
     if (data === null) {
-      return { ok: false, kind: 'server', status: res.status, message: adminErrorMessage('server', subject) };
+      return { ok: false, kind: 'server', status: res.status, message: adminErrorMessage('server', subject, undefined, action) };
     }
     return { ok: true, data: data as T };
   } catch {
-    return { ok: false, kind: 'network', status: null, message: adminErrorMessage('network', subject) };
+    return { ok: false, kind: 'network', status: null, message: adminErrorMessage('network', subject, undefined, action) };
   }
 }

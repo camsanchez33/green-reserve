@@ -58,11 +58,13 @@ function CoursesContent() {
 
   // ORPHAN SWEEP (RUN_QUEUE) — dry-run check on first load. Read-only
   // ("print the list"); actually cleaning up is an explicit owner click.
+  const [orphanNote, setOrphanNote] = useState('');
   const [orphanItems, setOrphanItems] = useState<OrphanSweepItem[]>([]);
   const [orphanAcknowledged, setOrphanAcknowledged] = useState<AcknowledgedOrphan[]>([]);
   const [orphanChecked, setOrphanChecked] = useState(false);
   const [orphanRunning, setOrphanRunning] = useState(false);
   const [orphanResult, setOrphanResult] = useState('');
+  const [orphanFailed, setOrphanFailed] = useState(false);
   const [orphanDismissed, setOrphanDismissed] = useState(false);
   const [forceDeleteTarget, setForceDeleteTarget] = useState<AcknowledgedOrphan | null>(null);
   const [forceDeleteConfirm, setForceDeleteConfirm] = useState('');
@@ -98,13 +100,23 @@ function CoursesContent() {
     if (courseId) router.replace('/admin/courses/' + courseId);
   }, [adminReady, stateFilter, loadCourses, params, router]);
 
-  const checkOrphans = useCallback(() => {
-    fetch('/api/admin/orphan-sweep', { headers: H() }).then(r => r.ok ? r.json() : null).then(d => {
-      if (!d) return;
-      setOrphanItems(d.items ?? []);
-      setOrphanAcknowledged(d.acknowledged ?? []);
-    }).catch(() => {});
-  }, [H]);
+  // MP-2e: MP-2d gated this GET at requireOwner (role owner AND mfa), so the
+  // panel silently disappeared for managers and for any owner on a
+  // password-only session — the route even carries ownerGateError copy telling
+  // them to sign in at /admin/owner-login, and this threw it away. A 403 is
+  // expected for managers, so it is a quiet note rather than an error banner.
+  const checkOrphans = useCallback(async () => {
+    const res = await adminFetch<{ items?: OrphanSweepItem[]; acknowledged?: AcknowledgedOrphan[] }>(
+      '/api/admin/orphan-sweep', { subject: 'the orphan sweep' });
+    if (!res.ok) {
+      setOrphanItems([]); setOrphanAcknowledged([]);
+      setOrphanNote(res.kind === 'forbidden' ? res.message : '');
+      return;
+    }
+    setOrphanNote('');
+    setOrphanItems(res.data.items ?? []);
+    setOrphanAcknowledged(res.data.acknowledged ?? []);
+  }, []);
 
   useEffect(() => {
     if (!adminReady || orphanChecked) return;
@@ -115,7 +127,7 @@ function CoursesContent() {
   // MP-2d B4: no try/catch, so a rejected fetch left orphanRunning true and the
   // button read "Cleaning up..." until a reload.
   async function runOrphanSweep() {
-    setOrphanRunning(true); setOrphanResult('');
+    setOrphanRunning(true); setOrphanResult(''); setOrphanFailed(false);
     try {
     const r = await fetch('/api/admin/orphan-sweep', { method: 'POST', headers: H() });
     if (r.ok) {
@@ -126,10 +138,10 @@ function CoursesContent() {
       loadCourses(stateFilter);
     } else {
       const d = await r.json().catch(() => ({}));
-      setOrphanResult('Sweep failed: ' + (d.error || 'unknown error'));
+      setOrphanFailed(true); setOrphanResult('Sweep failed: ' + (d.error || 'unknown error'));
     }
     } catch {
-      setOrphanResult('Sweep failed: network error — nothing was changed.');
+      setOrphanFailed(true); setOrphanResult('Sweep failed: network error — nothing was changed.');
     } finally {
       setOrphanRunning(false);
     }
@@ -261,11 +273,19 @@ function CoursesContent() {
               </ul>
             </div>
           )}
+          {/* MP-2e: success and failure both wrote into orphanResult and this
+              banner was styled green unconditionally — "Sweep failed: network
+              error" was rendered as a success. */}
           {orphanResult && (
-            <div className="mb-5 px-4 py-3 rounded-lg bg-ok/5 border border-ok/20 flex items-center justify-between gap-3">
-              <span className="text-sm text-ok">{orphanResult}</span>
-              <button onClick={() => setOrphanResult('')} className="text-xs text-ink-muted hover:text-ink transition-colors">Dismiss</button>
+            <div className={'mb-5 px-4 py-3 rounded-lg border flex items-center justify-between gap-3 ' + (orphanFailed ? 'bg-bad/5 border-bad/20' : 'bg-ok/5 border-ok/20')}>
+              <span className={'text-sm ' + (orphanFailed ? 'text-bad' : 'text-ok')}>{orphanResult}</span>
+              <button onClick={() => { setOrphanResult(''); setOrphanFailed(false); }} className="text-xs text-ink-muted hover:text-ink transition-colors">Dismiss</button>
             </div>
+          )}
+          {/* Expected for managers — the sweep is owner-only — so a quiet note,
+              not an error. Previously the whole panel just vanished. */}
+          {orphanNote && (
+            <p className="mb-5 text-xs text-ink-muted">{orphanNote}</p>
           )}
 
           {/* Acknowledged orphans (already archived + flagged by a prior

@@ -81,9 +81,11 @@ export async function signAdminToken(payload: AdminSession) {
  * This costs one indexed findUnique per admin request. Measured admin endpoints
  * run 112–440ms, so a primary-key lookup is noise, and correctness on "this
  * person is fired" outranks it. MP-3's AdminUser.sessionVersion replaces this
- * with a cheaper claim comparison and additionally covers role changes, which
- * this deliberately does NOT — a demoted admin keeps their old role until the
- * token expires. That gap is recorded in RUN_QUEUE.
+ * with a cheaper claim comparison.
+ *
+ * Role is read from that same row (MP-2d), so a demotion also takes effect at
+ * once. `mfa` remains a claim: it records how this session was authenticated,
+ * which no later row change retroactively alters.
  */
 export async function resolveAdminSession(): Promise<AdminSession | null> {
   const cookieStore = await cookies();

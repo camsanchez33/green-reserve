@@ -28,6 +28,16 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
 
   useEffect(() => { setUnread(unreadMessages); }, [unreadMessages]);
 
+  // MP-2e: both failure notices render only when expanded, and `collapsed` is
+  // persisted in localStorage — so for anyone whose last session left the rail
+  // collapsed, these states could not reach a JSX site at all. That is the
+  // third time this run series shipped state that cannot render. Rather than
+  // build a second collapsed-only treatment, uncollapse when there is something
+  // the user must actually read.
+  useEffect(() => {
+    if (roleFailed || signOutError) setCollapsed(false);
+  }, [roleFailed, signOutError]);
+
   // One session read for the whole shell. ADMIN_V4 LAW rule 2 wants role
   // resolved once server-side in the layout (Phase V4-7); until that lands this
   // is one fetch per page rather than one per nav item.
@@ -89,7 +99,12 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     if (signingOut) return;
     setSigningOut(true); setSignOutError(false);
     try {
-      await fetch('/api/admin/logout', { method: 'POST' });
+      // MP-2e: fetch does not reject on 5xx, so a proxy 502 fell through to the
+      // redirect and the user landed on the login screen with a live session
+      // cookie — the strongest possible "you are signed out" signal, while they
+      // were not. Only navigate once the server confirms it cleared the cookie.
+      const r = await fetch('/api/admin/logout', { method: 'POST' });
+      if (!r.ok) { setSignOutError(true); return; }
       router.push('/admin/login');
     } catch {
       setSignOutError(true);

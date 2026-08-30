@@ -6,6 +6,7 @@ import { RefreshCw, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { LoadFailure } from '@/components/ui/ErrorState';
+import type { AdminFetchFailure } from '@/lib/admin-fetch';
 
 interface Course { id: string; name: string; archivedAt: string | null; }
 interface EventRow {
@@ -37,6 +38,7 @@ export default function ActivityPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [loadErrorKind, setLoadErrorKind] = useState<AdminFetchFailure | undefined>(undefined);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [courseId, setCourseId] = useState('');
@@ -63,6 +65,7 @@ export default function ActivityPage() {
       // claimed this was fixed alongside broadcasts and courses; it was not.
       if (!aRes.ok) {
         setEvents([]);
+        setLoadErrorKind(aRes.status === 403 ? 'forbidden' : aRes.status === 401 ? 'unauthorized' : 'server');
         setLoadError(aRes.status === 403
           ? 'You do not have access to the activity feed. Ask an owner if you need it.'
           : aRes.status === 401 ? 'Your session ended. Sign in again to continue.'
@@ -72,13 +75,13 @@ export default function ActivityPage() {
       const aData = await aRes.json();
       setEvents(Array.isArray(aData.items) ? aData.items : []);
       setHasMore(aData.page < aData.pages);
-      setLoadError('');
+      setLoadError(''); setLoadErrorKind(undefined);
       // The course filter is a nicety — its own gate failing must not blank the feed.
       const cData = cRes.ok ? await cRes.json().catch(() => []) : [];
       setCourses(Array.isArray(cData) ? cData : (Array.isArray(cData.courses) ? cData.courses : []));
     } catch {
       setEvents([]);
-      setLoadError('Network error loading activity. Check your connection and try again.');
+      setLoadErrorKind('network'); setLoadError('Network error loading activity. Check your connection and try again.');
     }
     finally { setLoading(false); }
   }, [router]);
@@ -152,7 +155,7 @@ export default function ActivityPage() {
               <div className="py-12 text-center text-ink-muted text-sm">Loading...</div>
             ) : events.length === 0 ? (
               loadError
-                ? <div className="py-12"><LoadFailure message={loadError} onRetry={() => doLoad(page, courseId, from, to)} compact /></div>
+                ? <div className="py-12"><LoadFailure message={loadError} kind={loadErrorKind} onRetry={() => doLoad(page, courseId, from, to)} compact /></div>
                 : <div className="py-12 text-center text-ink-muted text-sm">No events found</div>
             ) : (
               <div className="divide-y divide-line-soft">
