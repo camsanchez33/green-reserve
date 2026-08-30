@@ -1338,7 +1338,7 @@ function InquiryDetailInner() {
                   {shTeeSets.length > 0 && shTeeSets.some(ts => ts.name) && (
                     <div>
                       <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Tee Sets</div>
-                      <div className="bg-white border border-line rounded-lg overflow-hidden">
+                      <div className="bg-white border border-line rounded-lg overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="border-b border-line bg-paper">

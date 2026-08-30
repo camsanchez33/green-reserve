@@ -592,7 +592,7 @@ export default function CourseDetailPage() {
             <div className="flex items-center gap-1.5 shrink-0">
               <button
                 onClick={() => toggleFeatured(!c.featured)}
-                className={'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ' + (c.featured ? 'text-warn bg-warn/10 border-warn/20' : 'text-ink-soft border-line hover:text-warn hover:bg-warn/5')}
+                className={'hidden min-[1200px]:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ' + (c.featured ? 'text-warn bg-warn/10 border-warn/20' : 'text-ink-soft border-line hover:text-warn hover:bg-warn/5')}
               >
                 <Star className="w-3.5 h-3.5" />{c.featured ? 'Featured' : 'Feature'}
               </button>
@@ -626,7 +626,7 @@ export default function CourseDetailPage() {
               <button
                 onClick={() => confirm(c.active ? `Take "${c.name}" offline? Golfers will no longer be able to book.` : `Set "${c.name}" live? Golfers will be able to book immediately.`) && toggleActive(!c.active)}
                 disabled={liveToggleBusy}
-                className={'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors disabled:opacity-50 ' + (c.active ? 'bg-bad/5 text-bad border-bad/20 hover:bg-bad/10' : 'bg-ok/5 text-ok border-ok/20 hover:bg-ok/10')}
+                className={'hidden min-[1200px]:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors disabled:opacity-50 ' + (c.active ? 'bg-bad/5 text-bad border-bad/20 hover:bg-bad/10' : 'bg-ok/5 text-ok border-ok/20 hover:bg-ok/10')}
               >
                 <Power className="w-3.5 h-3.5" />
                 {liveToggleBusy ? 'Working…' : c.active ? 'Take offline' : 'Set live'}
@@ -634,13 +634,13 @@ export default function CourseDetailPage() {
               <a
                 href={'/courses/' + c.slug}
                 target="_blank"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-line text-ink-soft hover:text-pine hover:border-pine/30 hover:bg-pine/5 transition-colors"
+                className="hidden min-[1200px]:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-line text-ink-soft hover:text-pine hover:border-pine/30 hover:bg-pine/5 transition-colors"
               >
                 <Globe className="w-3.5 h-3.5" />View page
               </a>
               <button
                 onClick={loadDetail}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-line text-ink-soft hover:text-ink hover:bg-paper transition-colors"
+                className="hidden min-[1200px]:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-line text-ink-soft hover:text-ink hover:bg-paper transition-colors"
               >
                 <RefreshCw className="w-3.5 h-3.5" />Refresh
               </button>
@@ -656,6 +656,45 @@ export default function CourseDetailPage() {
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setDangerOpen(false)} />
                     <div className="absolute right-0 top-10 z-20 bg-white border border-line rounded-lg shadow-lg w-64 py-1.5">
+                      {/* Below ~1200px the header's action row cannot fit, so
+                          Feature / Take offline / View page / Refresh live here
+                          instead. Same handlers, same pending + disabled state —
+                          relocated, not duplicated behaviour. */}
+                      <div className="min-[1200px]:hidden">
+                        <button
+                          onClick={() => { setDangerOpen(false); toggleFeatured(!c.featured); }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-ink-soft hover:bg-paper transition-colors"
+                        >
+                          <Star className={'w-3.5 h-3.5 ' + (c.featured ? 'text-warn fill-warn' : '')} />
+                          {c.featured ? 'Unfeature course' : 'Feature course'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setDangerOpen(false);
+                            if (confirm(c.active ? `Take "${c.name}" offline? Golfers will no longer be able to book.` : `Set "${c.name}" live? Golfers will be able to book immediately.`)) toggleActive(!c.active);
+                          }}
+                          disabled={liveToggleBusy}
+                          className={'w-full flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-paper transition-colors disabled:opacity-50 ' + (c.active ? 'text-bad' : 'text-ok')}
+                        >
+                          <Power className="w-3.5 h-3.5" />
+                          {liveToggleBusy ? 'Working…' : c.active ? 'Take offline' : 'Set live'}
+                        </button>
+                        <a
+                          href={'/courses/' + c.slug}
+                          target="_blank"
+                          onClick={() => setDangerOpen(false)}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-ink-soft hover:bg-paper transition-colors"
+                        >
+                          <Globe className="w-3.5 h-3.5" />View page
+                        </a>
+                        <button
+                          onClick={() => { setDangerOpen(false); loadDetail(); }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-ink-soft hover:bg-paper transition-colors"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />Refresh
+                        </button>
+                        <div className="border-t border-line-soft my-1.5" />
+                      </div>
                       {c.archivedAt ? (
                         <button
                           onClick={() => { setDangerOpen(false); restoreCourse(); }}
@@ -719,8 +758,7 @@ export default function CourseDetailPage() {
 
           <div className="flex items-center gap-4 mt-4 overflow-x-auto">
             {TAB_GROUPS.map(group => (
-              <div key={group.label} className="flex items-center gap-1.5 shrink-0">
-                <span className="text-[10px] uppercase tracking-[0.06em] text-ink-faint pl-0.5">{group.label}</span>
+              <div key={group.label} className="flex items-center shrink-0">
                 <div className="flex gap-0.5 bg-paper border border-line rounded-lg p-1">
                   {group.tabs.map(t => (
                     <button

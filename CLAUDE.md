@@ -40,8 +40,8 @@ Admin page manages all stages. Operators get dashboard access when approved.
 ```
 src/app/                  Next.js App Router pages
 src/app/api/             API routes
-src/app/admin/           Internal admin console (dark theme)
-src/app/dashboard/       Operator dashboard (dark theme)
+src/app/admin/           Internal admin console (light — Clubhouse)
+src/app/dashboard/       Operator dashboard (light — Clubhouse)
 src/app/book/            Golfer booking flow
 src/app/account/         Golfer account + booking history
 src/app/checkin/         Golfer self check-in page

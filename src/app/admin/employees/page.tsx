@@ -246,7 +246,7 @@ export default function EmployeesPage() {
           )}
 
           {/* Employee list */}
-          <div className="bg-white border border-line rounded-lg overflow-hidden mb-6">
+          <div className="bg-white border border-line rounded-lg overflow-x-auto mb-6">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-line bg-paper">
