@@ -317,6 +317,32 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     + /dashboard (64px dead band on every screen), course-detail 165px
     horizontal overflow + scrollable tab strip, two overflow-hidden table
     wrappers → overflow-x-auto, CLAUDE.md dark-theme correction (small)
+    SHIPPED 7246a62 — box stays open until /gr-review MP-0 passes. All four
+    sub-items built. Notes for the reviewer:
+    (1) The tab strip ALREADY had overflow-x-auto before this run — that
+        sub-claim was already satisfied, so the header fix is the two things
+        that remained: the four actions collapsed into the kebab below 1200px
+        (Tailwind v4 compiles the arbitrary variant as `@media (width >=
+        1200px)`, verified present in the served CSS) and the dropped
+        Business/Operations group labels.
+    (2) The audit's "165px" did not reproduce as 165px — on the course I
+        measured (TEE TIME, which renders the Approved + Request re-review
+        pair rather than Send Preview) the pre-fix control overflowed 18px at
+        the header and 50px at the action row. Same defect, different
+        conditional buttons, so the number is course-dependent. Post-fix
+        overflow is 0px at simulated 1024/1280/1440.
+    (3) Verified against a dev server with a locally-minted admin session (dev
+        JWT fallback secret, no DB row created, reads only). VIEWPORT RESIZE
+        DID NOT WORK in the automation (window stayed 1528px), so the three
+        widths were simulated by constraining .admin-content and applying the
+        <1200px state by hand rather than by firing the media query. The
+        breakpoint's own behaviour at a real 1024px viewport is therefore NOT
+        browser-verified — that is Cam's manual check.
+    (4) NOT FIXED, out of scope, needs its own item: `toggleFeatured` in
+        src/app/admin/courses/[id]/page.tsx does not check res.ok and updates
+        local state regardless, so a failed feature-toggle silently appears to
+        succeed. This run only relocated the button; the no-silent-failures
+        violation predates it.
   - [ ] MP-1 — stop the bleeding: fix-now #1-#7 — the ×100 resend email,
     restore-from-closed 400ing on every attempt, the wizard orphan hard-delete
     trap (→ synthetic-inquiry path), admin tee-sheet cancel → performCancellation,
