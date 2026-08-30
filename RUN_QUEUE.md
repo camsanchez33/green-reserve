@@ -669,6 +669,54 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       - No test runner exists; MP-1 #2's archive-then-restore test unbuildable.
       - Phantom $10 backfill still pending Cam's approval for a prod write.
 
+  - [ ] MP-2e — SHIPPED bf3bcb2, box open until reviewed. CLOSES THE MP-2 SERIES.
+    All 6 MP-2d blockers fixed, plus the queue items from that review:
+      - The viewer Overview crash MP-2d shipped (null money to an unconverted
+        consumer; fmtMoney(null) threw, no error.tsx, and the interface lied so
+        tsc was blind). Types now match the wire format — widening them
+        immediately surfaced 3 unsafe call sites. Blast radius was zero: prod
+        has only owner + support rows, no viewer.
+      - Sign out no longer redirects on a non-2xx.
+      - signOutError + roleFailed could not render while collapsed (3rd time
+        this series shipped unrenderable state) — the rail uncollapses now.
+      - /admin/system and /admin/create: MP-2d's gates with unconverted
+        consumers ("No Stripe-connected courses yet" as fact; every slug
+        "taken").
+      - Failed orphan sweep rendered in the GREEN success banner; orphan panel
+        vanished silently for managers/password-only owners.
+      - stats actionQueue leaked operator + course names and inquiry deep links
+        to viewers (money was gated in MP-2d, this was not).
+      - adminFetch knows about mutations ("may not have been sent" vs "could not
+        load") and no longer discards 400/409/422/429 server reasons.
+      - activity LoadFailure passes kind; stale sendError cleared on switch;
+        broadcasts POST parses after the ok check; admin-session doc comment
+        corrected.
+    THE DISCIPLINE CHECK THAT SHOULD HAVE RUN SINCE MP-2b: every gated
+    /api/admin route enumerated against its client callers — 39 pairs, all
+    either adminFetch or an explicit ok-check, none unhandled. Run this before
+    adding any future gate.
+    NOT VERIFIED LIVE: the viewer path. Role comes from the AdminUser row since
+    MP-2d, so a viewer session cannot be minted without a viewer row and one was
+    not created in production. Type-enforced, not observed.
+    STILL OPEN (carried, none blocking):
+      - VIEWER ROLE IS A PRODUCT DECISION: a viewer sees 2 nav items and no
+        money, which makes employees/page.tsx's "Read-only across everything"
+        false. Give viewers read scopes or change the description. Cam's call.
+      - build_course + create-course still return tempPassword/setupLink in
+        JSON; create/page.tsx renders them as the manual-share fallback, so
+        removing them needs a UI decision first.
+      - Overview + inquiries list still hand-roll their error states (they do
+        distinguish denial from emptiness, but offer a dead Retry on 401/403).
+      - inquiries/[id] Retry unmounts the page while loading (no spinner).
+      - LoadFailure geometry differs from the courses/[id] card it cites.
+      - api/admin/revenue still computes days in UTC; checkin-booking comment
+        still overclaims Stripe idempotency; courses/[id] toggleActive /
+        kebab-await / cancelBooking / Feature-pending / Approved-pill open.
+      - /api/cron/generate-tee-times fails OPEN when CRON_SECRET is unset (the
+        other four crons fail closed). Pre-existing, worth its own small item.
+      - No test runner exists; MP-1 #2's archive-then-restore test unbuildable.
+      - Phantom $10 backfill still pending Cam's approval for a prod write.
+
   - [ ] MP-3 — THE BIG MIGRATION, one attended run, everything in
     ADMIN_MASTER_PLAN §5: money Float → integer cents (+ full codebase sweep),
     PaymentEvent ledger, Booking/Message/InquiryStatusEvent/CourseInquiry/TeeTime
