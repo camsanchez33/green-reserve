@@ -343,7 +343,32 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
         local state regardless, so a failed feature-toggle silently appears to
         succeed. This run only relocated the button; the no-silent-failures
         violation predates it.
-  - [ ] MP-1 — stop the bleeding: fix-now #1-#7 — the ×100 resend email,
+  - [ ] MP-1 — SHIPPED 41f5ea8, box stays open until /gr-review MP-1 passes.
+    All 7 fix-now items + the ET day boundary built. Cam's calls at the restate
+    step: #3 = age guard only (synthetic-inquiry rebuild stays in MP-4);
+    #5 = shared collectPayment() rather than a second endpoint.
+    Notes for the reviewer:
+    (a) NOT DONE — the "Activity page's 30-day default has the same bug and is
+        why its steady state is 'No events found'" claim DOES NOT REPRODUCE.
+        api/admin/activity defaults to a rolling 30 days (now-30d .. now) and
+        activity/page.tsx's `from` default is correctly 30 days back. Nothing
+        there yields an empty result. Did not invent a fix. If Cam still sees
+        "No events found" on a populated DB, that needs its own investigation
+        item — the cause is not the date default.
+    (b) #7's token expiry (60d) is DERIVED from the most recent
+        details_requested event, not a column — MP-1 was no-migration and
+        CourseInquiry has no detailsTokenExpiry. A resend restarts the clock.
+        If MP-3 adds a real column, replace the derivation.
+    (c) #5 changed a money path: performCheckIn now SKIPS the charge when the
+        booking is already paid, so collect-then-check-in can't double-charge.
+        The Stripe idempotency key is deliberately unchanged.
+    (d) #6 clears cancellationFeeTotal on a free cancel. Safe because the
+        cutoff cron only charges bookings still 'confirmed' — verify that
+        invariant still holds before MP-3 changes the cron.
+    (e) Also fixed here: MP-0 review blocker B1 (toggleFeatured silent
+        failure) and the kebab pending-state regression. MP-0's box still
+        needs Cam's browser checks M1-M3 before it can be ticked.
+    Original spec: fix-now #1-#7 — the ×100 resend email,
     restore-from-closed 400ing on every attempt, the wizard orphan hard-delete
     trap (→ synthetic-inquiry path), admin tee-sheet cancel → performCancellation,
     retry-charge confirm + collect-without-check-in variant, phantom pending
