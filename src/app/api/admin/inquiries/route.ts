@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { ACTIVE_STATUSES, ARCHIVED_STATUSES, type InquiryStatus } from '@/lib/inquiry-status';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail, sendDashboardAccessEmail, sendGoLiveSimpleEmail } from '@/lib/email';
@@ -328,6 +329,37 @@ async function handleAction(
     });
     await logEvent(inquiryId, 'contact_updated', 'contact_updated', 'admin', adminName);
     return NextResponse.json({ success: true });
+  }
+
+  // ── restore (reopen a closed lead) ─────────────────────────────────
+  // MP-1 fix-now #2: both Restore paths used to call set_status, which
+  // requires the CURRENT status to already be a pipeline stage — and a closed
+  // inquiry's is 'archived' or 'rejected'. So every restore of an unbuilt lead
+  // 400'd, the UI offered a button that never worked, and a mis-clicked bulk
+  // archive permanently ate leads. This is its own guarded transition rather
+  // than a loosening of set_status, whose pipeline-only rule exists so a stage
+  // override can never silently un-reject something.
+  //
+  // The target stage is computed HERE, from the ledger, not taken from the
+  // client: the fromStatus of the most recent event that closed this inquiry.
+  if (action === 'restore') {
+    if (!ARCHIVED_STATUSES.includes(inquiry.status as InquiryStatus)) {
+      return NextResponse.json({ error: 'Only a rejected or archived inquiry can be restored.' }, { status: 400 });
+    }
+    const closingEvent = await prisma.inquiryStatusEvent.findFirst({
+      where: { inquiryId, toStatus: { in: ARCHIVED_STATUSES } },
+      orderBy: { createdAt: 'desc' },
+      select: { fromStatus: true },
+    });
+    // Fall back to in_review when the history is missing or predates the
+    // completeness fix — always land on a real pipeline stage, never a
+    // lifecycle state.
+    const prior = closingEvent?.fromStatus ?? '';
+    const target = ACTIVE_STATUSES.includes(prior as InquiryStatus) ? prior : 'in_review';
+    const from = inquiry.status;
+    await prisma.courseInquiry.update({ where: { id: inquiryId }, data: { status: target } });
+    await logEvent(inquiryId, from, target, 'admin', `Restored by ${adminName}`);
+    return NextResponse.json({ success: true, status: target });
   }
 
   // ── set_status (manual stage override) ─────────────────────────────

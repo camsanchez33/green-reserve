@@ -156,6 +156,9 @@ export async function POST(req: NextRequest) {
   });
   if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
 
+  // MP-1 fix-now #1: these are CENTS in the database already — the booking
+  // path (api/bookings/route.ts) writes dollars*100 and email.ts divides by
+  // 100 to render. Re-multiplying here resent every amount at 100x.
   sendBookingConfirmation({
     golferName: booking.golferName,
     golferEmail: booking.golferEmail,
@@ -165,14 +168,14 @@ export async function POST(req: NextRequest) {
     time: booking.teeTime.time,
     players: booking.players,
     holes: booking.teeTime.holes,
-    greenFeeTotal: Math.round(booking.greenFeeTotal * 100),
-    cartFeeTotal: Math.round(booking.cartFeeTotal * 100),
-    accessFeeTotal: Math.round(booking.accessFeeTotal * 100),
-    totalAmount: Math.round(booking.totalAmount * 100),
+    greenFeeTotal: booking.greenFeeTotal,
+    cartFeeTotal: booking.cartFeeTotal,
+    accessFeeTotal: booking.accessFeeTotal,
+    totalAmount: booking.totalAmount,
     bookingId: booking.id,
     appliedRate: booking.appliedRate,
-    rangeBallsTotal: Math.round(booking.rangeBallsTotal * 100),
-    cancellationFeeTotal: Math.round(booking.cancellationFeeTotal * 100),
+    rangeBallsTotal: booking.rangeBallsTotal,
+    cancellationFeeTotal: booking.cancellationFeeTotal,
     cancellationHours: booking.course.cancellationHours ?? 24,
     checkInToken: booking.checkInToken ?? undefined,
     noCard: !booking.stripePaymentMethodId,

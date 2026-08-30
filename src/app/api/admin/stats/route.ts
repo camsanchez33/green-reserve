@@ -1,21 +1,22 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
+import { dayKey, platformHour, startOfPlatformDay, startOfPlatformWeek, startOfPlatformMonth, startOfPlatformDaysAgo, startOfPlatformMonthsAgo } from '@/lib/admin-day';
 import { ACTIVE_STATUSES } from '@/lib/inquiry-status';
 import { computeOpenChanges, oldestOpenChangeRequestDate, CATEGORY_LABEL } from '@/lib/change-requests';
 import { COMPLETED_BOOKING_STATUSES, TREND_MIN_AGE_DAYS, TREND_DROP_PCT_THRESHOLD, computeCourseHealth } from '@/lib/course-metrics';
 
 const COMPLETED = COMPLETED_BOOKING_STATUSES;
 
+// MP-1 fix-now (ET day boundary): these were UTC-based, so every "today"
+// number reset at 8pm ET. They now resolve against the platform timezone —
+// see src/lib/admin-day.ts for why the Overview reports on one timezone
+// rather than each course's own.
 function weekStartKey(d: Date) {
-  const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-  const day = x.getUTCDay();
-  const diff = (day === 0 ? -6 : 1) - day;
-  x.setUTCDate(x.getUTCDate() + diff);
-  return x.toISOString().split('T')[0];
+  return dayKey(startOfPlatformWeek(d));
 }
 function dayKeyOf(d: Date) {
-  return d.toISOString().split('T')[0];
+  return dayKey(d);
 }
 
 type Bucket = { gross: number; fees: number };
@@ -26,14 +27,15 @@ export async function GET() {
   const isSupportPlus = requireRole(session, SUPPORT_PLUS);
 
   const now = new Date();
-  const startOfToday = new Date(dayKeyOf(now) + 'T00:00:00.000Z');
+  const startOfToday = startOfPlatformDay(now);
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const sixtyDaysAgo = new Date(now.getTime() - TREND_MIN_AGE_DAYS * 24 * 60 * 60 * 1000);
   const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
   const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
   const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const startOfMonth = startOfPlatformMonth(now);
+  const [thisMonthYear, thisMonthIdx] = (() => { const [y, m] = dayKey(now).split('-').map(Number); return [y, m - 1]; })();
   const todayDateStr = dayKeyOf(now);
 
   // Money-ticker source ranges (A-01e — cumulative line, not bars):
@@ -42,8 +44,8 @@ export async function GET() {
   // The month-ticker's ghost (last calendar month) needs its own range since
   // it can reach ~60 days back.
   const dayMapStart = new Date(now.getTime() - 36 * 24 * 60 * 60 * 1000);
-  const yesterdayStart = new Date(startOfToday.getTime() - 24 * 60 * 60 * 1000);
-  const prevMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+  const yesterdayStart = startOfPlatformDaysAgo(now, 1);
+  const prevMonthStart = startOfPlatformMonthsAgo(now, 1);
 
   const [
     totalCourses,
@@ -359,17 +361,17 @@ export async function GET() {
     const dk = dayKeyOf(b.createdAt);
     if (dayMap[dk]) { dayMap[dk].gross += gross; dayMap[dk].fees += fees; }
     if (b.createdAt >= startOfToday) {
-      const bucket = todayHourly[b.createdAt.getUTCHours()];
+      const bucket = todayHourly[platformHour(b.createdAt)];
       bucket.gross += gross; bucket.fees += fees;
     } else if (b.createdAt >= yesterdayStart) {
-      const bucket = yesterdayHourly[b.createdAt.getUTCHours()];
+      const bucket = yesterdayHourly[platformHour(b.createdAt)];
       bucket.gross += gross; bucket.fees += fees;
     }
   }
 
   // Day view: cumulative fees since midnight vs yesterday's cumulative at the
   // same time-of-day — "am I ahead of yesterday" in one glance.
-  const currentHour = now.getUTCHours();
+  const currentHour = platformHour(now);
   const dayTicker: { t: number; gross: number; fees: number; ghostGross: number; ghostFees: number }[] = [];
   {
     let curGross = 0, curFees = 0, ghostGross = 0, ghostFees = 0;
@@ -399,17 +401,17 @@ export async function GET() {
   // Month view: cumulative since the 1st vs last month's line to the same day.
   const prevMonthDaily: Record<number, Bucket> = {};
   for (const b of prevMonthTickerBookings) {
-    const dom = b.createdAt.getUTCDate();
+    const dom = Number(dayKey(b.createdAt).split('-')[2]);
     if (!prevMonthDaily[dom]) prevMonthDaily[dom] = { gross: 0, fees: 0 };
     prevMonthDaily[dom].gross += b.totalAmount / 100;
     prevMonthDaily[dom].fees += b.accessFeeTotal / 100;
   }
-  const daysElapsedThisMonth = now.getUTCDate();
+  const daysElapsedThisMonth = Number(dayKey(now).split('-')[2]);
   const monthTicker: { t: number; gross: number; fees: number; ghostGross: number; ghostFees: number }[] = [];
   {
     let curGross = 0, curFees = 0, ghostGross = 0, ghostFees = 0;
     for (let d = 1; d <= daysElapsedThisMonth; d++) {
-      const curBucket = dayMap[dayKeyOf(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), d)))] ?? { gross: 0, fees: 0 };
+      const curBucket = dayMap[dayKeyOf(new Date(Date.UTC(thisMonthYear, thisMonthIdx, d, 12)))] ?? { gross: 0, fees: 0 };
       const ghostBucket = prevMonthDaily[d] ?? { gross: 0, fees: 0 };
       curGross += curBucket.gross; curFees += curBucket.fees;
       ghostGross += ghostBucket.gross; ghostFees += ghostBucket.fees;

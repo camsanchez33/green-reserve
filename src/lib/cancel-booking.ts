@@ -16,10 +16,25 @@ export async function performCancellation(bookingId: string) {
 
   const feeAlreadyCharged = booking.paymentStatus === 'cancellation_fee_charged';
 
+  // MP-1 fix-now #6: a free cancel must not leave a stamped fee behind.
+  // Every booking at a fee-policy course carries cancellationFeeTotal from
+  // creation. The cutoff cron only charges bookings that are STILL
+  // 'confirmed' (see api/cron/cancellation-cutoff — "Bookings the golfer
+  // already cancelled are excluded by status:'confirmed'"), so once we
+  // cancel here the fee can never be charged. Leaving the amount stamped is
+  // what made Revenue's Money-in-Motion show the same $10 rows as "pending"
+  // forever. If it was never charged, it never will be — clear it.
+  // (MP-3's cancellationFeeApplies flag replaces this with a real state.)
+  const clearPhantomFee = !feeAlreadyCharged && booking.cancellationFeeTotal > 0;
+
   await prisma.$transaction([
     prisma.booking.update({
       where: { id: bookingId },
-      data: { status: 'cancelled', cancelledAt: new Date() },
+      data: {
+        status: 'cancelled',
+        cancelledAt: new Date(),
+        ...(clearPhantomFee ? { cancellationFeeTotal: 0 } : {}),
+      },
     }),
     prisma.teeTime.update({
       where: { id: booking.teeTimeId },
@@ -77,7 +92,7 @@ export async function performCancellation(bookingId: string) {
     time: booking.teeTime.time,
     players: booking.players,
     feeCharged: feeAlreadyCharged,
-    feeAmount: booking.cancellationFeeTotal,
+    feeAmount: feeAlreadyCharged ? booking.cancellationFeeTotal : 0,
     bookingId: booking.id,
   }).catch(console.error);
 

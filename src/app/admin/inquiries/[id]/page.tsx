@@ -547,15 +547,13 @@ function InquiryDetailInner() {
       return;
     }
     // No linked course (e.g. rejected before ever building, or a manual
-    // stage override) — just revert the inquiry's own status to whatever
-    // it was immediately before archiving/rejecting. Guard against stale/
-    // invalid history (e.g. a status from before A-02c's completeness fix)
-    // — only ever land on a real pipeline stage.
-    const priorEvent = inq ? [...inq.events].reverse().find(e => e.toStatus === 'archived' || e.toStatus === 'rejected') : undefined;
-    const priorStatus = priorEvent?.fromStatus;
-    const prevStatus = priorStatus && (ACTIVE_STATUSES as readonly string[]).includes(priorStatus) ? priorStatus : 'in_review';
+    // stage override) — reopen the inquiry itself. MP-1 fix-now #2: this used
+    // to call set_status, which refuses any inquiry whose CURRENT status isn't
+    // a pipeline stage, so it 400'd on every closed inquiry — exactly the ones
+    // this button exists for. The 'restore' action resolves the target stage
+    // server-side from the event ledger.
     setProcessing(false);
-    await action('set_status', { newStatus: prevStatus });
+    await action('restore');
   }
 
   async function copyBookingLink() {

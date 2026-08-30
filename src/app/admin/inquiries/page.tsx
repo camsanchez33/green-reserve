@@ -237,15 +237,14 @@ function InquiriesListInner() {
       setDeleteError(`Restore failed for "${inq.courseName}": ${d.error || 'unknown error'}`);
       return;
     }
-    // No linked course (rejected before ever building) — revert the
-    // inquiry's own status to whatever it was right before closing. Guard
-    // against stale/invalid history (e.g. a status from before A-02c's
-    // completeness fix) — only ever land on a real pipeline stage.
-    const priorEvent = [...inq.events].reverse().find(e => e.toStatus === 'archived' || e.toStatus === 'rejected');
-    const priorStatus = priorEvent?.fromStatus;
-    const prevStatus = priorStatus && (ACTIVE_STATUSES as readonly string[]).includes(priorStatus) ? priorStatus : 'in_review';
+    // No linked course (rejected before ever building) — reopen the inquiry
+    // itself. MP-1 fix-now #2: this used to call set_status, which rejects any
+    // inquiry whose CURRENT status isn't a pipeline stage — so it 400'd every
+    // single time and Restore was a button that did nothing. The dedicated
+    // 'restore' action computes the target stage server-side from the event
+    // ledger, so the client no longer has to guess it from a partial history.
     const r = await fetch('/api/admin/inquiries', {
-      method: 'POST', headers: H(), body: JSON.stringify({ id: inq.id, action: 'set_status', newStatus: prevStatus }),
+      method: 'POST', headers: H(), body: JSON.stringify({ id: inq.id, action: 'restore' }),
     });
     if (r.ok) { await loadInquiries(); return; }
     const d = await r.json().catch(() => ({}));

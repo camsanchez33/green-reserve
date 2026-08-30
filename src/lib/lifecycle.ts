@@ -212,6 +212,11 @@ export async function reconcileLifecyclePairs(adminName: string): Promise<{ id: 
   return report;
 }
 
+// A course younger than this is never swept — see the AGE GUARD note in
+// sweepOrphanCourses. Deliberately generous: the cost of waiting is a row
+// lingering in a cleanup list, the cost of being wrong is a destroyed course.
+export const ORPHAN_GRACE_DAYS = 30;
+
 export const ORPHAN_FLAG = '[ORPHAN] No linked inquiry — predates the deletion doctrine, orphaned by a pre-doctrine hard delete.';
 
 export interface OrphanSweepItem {
@@ -244,7 +249,7 @@ export interface OrphanSweepItem {
 // individually via forceDeleteOrphan below for an explicit owner override.
 export async function sweepOrphanCourses(adminName: string, dryRun: boolean): Promise<OrphanSweepItem[]> {
   const [allCourses, linkedInquiries] = await Promise.all([
-    prisma.course.findMany({ select: { id: true, name: true, archivedAt: true, adminNotes: true, operatorId: true } }),
+    prisma.course.findMany({ select: { id: true, name: true, archivedAt: true, adminNotes: true, operatorId: true, createdAt: true } }),
     prisma.courseInquiry.findMany({ where: { builtCourseId: { not: null } }, select: { id: true, courseName: true, status: true, builtCourseId: true } }),
   ]);
 
@@ -256,11 +261,24 @@ export async function sweepOrphanCourses(adminName: string, dryRun: boolean): Pr
 
   const results: OrphanSweepItem[] = [];
 
+  const graceCutoff = new Date(Date.now() - ORPHAN_GRACE_DAYS * 24 * 60 * 60 * 1000);
+
   for (const c of orphanCourses) {
     // Already acknowledged (archived + flagged by a prior run) — nothing
     // left to do passively. Stop reporting it; forceDeleteOrphan is the
     // only way to go further from here, and that's an explicit owner click.
     if (c.archivedAt && c.adminNotes.includes('[ORPHAN]')) continue;
+
+    // MP-1 fix-now #3 — AGE GUARD. The manual wizard builds a course with no
+    // inquiry behind it, so the moment it is created it looks exactly like an
+    // orphan: no linked inquiry, no bookings, no paid memberships. The sweep
+    // dry-runs on every Courses visit, so a course built minutes ago was
+    // classified `would_delete` and one click destroyed it along with its
+    // schedules, its staff and the operator's login. Nothing that recent has
+    // had time to prove itself. The real fix — every course starting from an
+    // inquiry, synthetic if built in person — is MP-4; until then a young
+    // course is simply never swept.
+    if (c.createdAt > graceCutoff) continue;
 
     const [bookingCount, paidMemberCount] = await Promise.all([
       prisma.booking.count({ where: { courseId: c.id } }),

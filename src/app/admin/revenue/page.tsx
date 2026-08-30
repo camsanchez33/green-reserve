@@ -186,16 +186,31 @@ export default function RevenuePage() {
     else { const err = await res.json().catch(() => ({})); setExpenseError(err.error || 'Could not delete.'); }
   }
 
-  async function retryCharge(bookingId: string) {
-    setRetryingId(bookingId); setRetryMsg(null);
-    const res = await fetch(`/api/admin/retry-charge/${bookingId}`, { method: 'POST' });
+  // MP-1 fix-now #5: this used to silently check the golfer in and email them
+  // a receipt for a round they had not played, because the endpoint was
+  // performCheckIn verbatim. It now collects payment only, and says so before
+  // moving any money.
+  async function retryCharge(p: FailedCharge) {
+    const ok = confirm(
+      `Charge ${fmtMoney(p.amount)} to ${p.golferName}'s saved card for their ${p.teeDate} ${p.teeTime} round at ${p.courseName}?
+
+`
+      + `This collects payment only. They will NOT be checked in and will not be emailed a receipt — `
+      + `check them in as normal when they arrive.`
+    );
+    if (!ok) return;
+    setRetryingId(p.bookingId); setRetryMsg(null);
+    const res = await fetch(`/api/admin/retry-charge/${p.bookingId}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ checkIn: false }),
+    });
     setRetryingId(null);
     if (res.ok) {
-      setRetryMsg({ id: bookingId, ok: true, text: 'Charged — the golfer is now checked in.' });
+      setRetryMsg({ id: p.bookingId, ok: true, text: 'Charged. The golfer is not checked in — check them in when they arrive.' });
       load(period, customFrom, customTo);
     } else {
       const e = await res.json().catch(() => ({}));
-      setRetryMsg({ id: bookingId, ok: false, text: e.error || 'Retry failed.' });
+      setRetryMsg({ id: p.bookingId, ok: false, text: e.error || 'Retry failed.' });
     }
   }
 
@@ -385,7 +400,7 @@ export default function RevenuePage() {
                         </div>
                         <div className="text-right shrink-0">
                           <div className="text-sm font-medium text-ink tabular-nums mb-1.5">{fmtMoney(p.amount)}</div>
-                          <button onClick={() => retryCharge(p.bookingId)} disabled={retryingId === p.bookingId}
+                          <button onClick={() => retryCharge(p)} disabled={retryingId === p.bookingId}
                             className="inline-flex items-center gap-1 text-[11px] font-medium text-white bg-pine hover:bg-pine-hover disabled:opacity-50 px-2.5 py-1 rounded-md transition-colors">
                             <RotateCw className={'w-3 h-3 ' + (retryingId === p.bookingId ? 'animate-spin' : '')}/>{retryingId === p.bookingId ? 'Retrying…' : 'Retry charge'}
                           </button>
@@ -395,7 +410,7 @@ export default function RevenuePage() {
                   ))}
                 </div>
               )}
-              <p className="text-xs text-ink-muted mt-3">Retry reruns the check-in charge on the saved card. A hard decline needs a new card or in-person payment.</p>
+              <p className="text-xs text-ink-muted mt-3">Retry collects payment on the saved card. It does not check the golfer in. A hard decline needs a new card or in-person payment.</p>
             </div>
           )}
 

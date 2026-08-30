@@ -210,6 +210,7 @@ export default function CourseDetailPage() {
   const [dangerOpen, setDangerOpen] = useState(false);
   const [archiveBusy, setArchiveBusy] = useState(false);
   const [liveToggleBusy, setLiveToggleBusy] = useState(false);
+  const [featuredBusy, setFeaturedBusy] = useState(false);
   const [liveBlockReason, setLiveBlockReason] = useState('');
   const [liveBlockMissing, setLiveBlockMissing] = useState<'agreement' | 'stripe' | null>(null);
   const [reminderNudgeBusy, setReminderNudgeBusy] = useState(false);
@@ -350,11 +351,29 @@ export default function CourseDetailPage() {
     if (r.ok) setReminderNudgeSent(true);
   }
 
+  // MP-0 review blocker B1 (no-silent-failures): this used to fire and forget
+  // — no res.ok check, no catch, no pending state — and wrote the local state
+  // regardless, so a 401/403/500 flipped the star and the menu label for a
+  // write that never persisted, reverting on the next load with no
+  // explanation. Mirrors toggleActive above: busy flag, real error surface,
+  // local state only on success.
   async function toggleFeatured(featured: boolean) {
-    await fetch('/api/admin/course-detail', {
-      method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, featured }),
-    });
-    setDetail(d => d ? { ...d, course: { ...d.course, featured } } : d);
+    setFeaturedBusy(true); setLiveBlockReason(''); setLiveBlockMissing(null);
+    try {
+      const r = await fetch('/api/admin/course-detail', {
+        method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, featured }),
+      });
+      if (r.ok) {
+        setDetail(d => d ? { ...d, course: { ...d.course, featured } } : d);
+      } else {
+        const d = await r.json().catch(() => ({}));
+        setLiveBlockReason(d.error || `Could not ${featured ? 'feature' : 'unfeature'} this course — try again.`);
+      }
+    } catch {
+      setLiveBlockReason('Network error — the course was not updated. Check your connection and try again.');
+    } finally {
+      setFeaturedBusy(false);
+    }
   }
 
   async function archiveCourse() {
@@ -592,7 +611,8 @@ export default function CourseDetailPage() {
             <div className="flex items-center gap-1.5 shrink-0">
               <button
                 onClick={() => toggleFeatured(!c.featured)}
-                className={'hidden min-[1200px]:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ' + (c.featured ? 'text-warn bg-warn/10 border-warn/20' : 'text-ink-soft border-line hover:text-warn hover:bg-warn/5')}
+                disabled={featuredBusy}
+                className={'hidden min-[1200px]:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors disabled:opacity-50 ' + (c.featured ? 'text-warn bg-warn/10 border-warn/20' : 'text-ink-soft border-line hover:text-warn hover:bg-warn/5')}
               >
                 <Star className="w-3.5 h-3.5" />{c.featured ? 'Featured' : 'Feature'}
               </button>
@@ -662,16 +682,18 @@ export default function CourseDetailPage() {
                           relocated, not duplicated behaviour. */}
                       <div className="min-[1200px]:hidden">
                         <button
-                          onClick={() => { setDangerOpen(false); toggleFeatured(!c.featured); }}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-ink-soft hover:bg-paper transition-colors"
+                          onClick={async () => { await toggleFeatured(!c.featured); setDangerOpen(false); }}
+                          disabled={featuredBusy}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-ink-soft hover:bg-paper transition-colors disabled:opacity-50"
                         >
                           <Star className={'w-3.5 h-3.5 ' + (c.featured ? 'text-warn fill-warn' : '')} />
-                          {c.featured ? 'Unfeature course' : 'Feature course'}
+                          {featuredBusy ? 'Saving…' : c.featured ? 'Unfeature course' : 'Feature course'}
                         </button>
                         <button
-                          onClick={() => {
+                          onClick={async () => {
+                            if (!confirm(c.active ? `Take "${c.name}" offline? Golfers will no longer be able to book.` : `Set "${c.name}" live? Golfers will be able to book immediately.`)) { setDangerOpen(false); return; }
+                            await toggleActive(!c.active);
                             setDangerOpen(false);
-                            if (confirm(c.active ? `Take "${c.name}" offline? Golfers will no longer be able to book.` : `Set "${c.name}" live? Golfers will be able to book immediately.`)) toggleActive(!c.active);
                           }}
                           disabled={liveToggleBusy}
                           className={'w-full flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-paper transition-colors disabled:opacity-50 ' + (c.active ? 'text-bad' : 'text-ok')}

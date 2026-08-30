@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
 import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
+import { performCancellation } from '@/lib/cancel-booking';
 
 // GET /api/admin/tee-sheet?courseId=X&date=Y
 export async function GET(req: NextRequest) {
@@ -32,13 +33,16 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json();
 
   if (body.action === 'cancel_booking') {
-    const booking = await prisma.booking.findUnique({ where: { id: body.bookingId } });
-    if (!booking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
-    await prisma.$transaction([
-      prisma.booking.update({ where: { id: body.bookingId }, data: { status: 'cancelled' } }),
-      prisma.teeTime.update({ where: { id: booking.teeTimeId }, data: { playersBooked: { decrement: booking.players }, playersAvailable: { increment: booking.players } } }),
-    ]);
-    return NextResponse.json({ success: true });
+    // MP-1 fix-now #4: this used to flip status and adjust the slot counts
+    // inline — a second cancellation implementation that sent no golfer email,
+    // fired no tee-time alerts, and had no already-cancelled guard, so two
+    // clicks decremented playersBooked twice and overbooked the slot. The
+    // vetted service does all of it; there is exactly one cancellation path.
+    const result = await performCancellation(body.bookingId);
+    if ('error' in result) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
+    }
+    return NextResponse.json({ success: true, feeCharged: result.feeCharged });
   }
 
   if (body.action === 'block' || body.action === 'unblock') {
