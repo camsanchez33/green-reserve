@@ -534,16 +534,24 @@ function InquiryDetailInner() {
     else { const d = await r.json().catch(() => ({})); setActionError('Archive failed: ' + (d.error || 'unknown')); }
   }
 
+  // MP-1b B3: the built-course branch had no catch, so a rejection left
+  // processing=true forever — which disables the whole action rail and every ⋯
+  // item, with no error and no spinner. Only a reload recovered.
   async function restoreArchivedInquiry() {
     setProcessing(true); setActionError('');
     if (inq?.builtCourseId) {
-      const r = await fetch('/api/admin/archive-course', {
-        method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, action: 'restore' }),
-      });
-      setProcessing(false);
-      if (r.ok) { await loadInquiry(); return; }
-      const d = await r.json().catch(() => ({}));
-      setActionError('Restore failed: ' + (d.error || 'unknown'));
+      try {
+        const r = await fetch('/api/admin/archive-course', {
+          method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, action: 'restore' }),
+        });
+        if (r.ok) { await loadInquiry(); return; }
+        const d = await r.json().catch(() => ({}));
+        setActionError('Restore failed: ' + (d.error || 'unknown'));
+      } catch {
+        setActionError('Restore failed: network error — nothing was changed. Check your connection and try again.');
+      } finally {
+        setProcessing(false);
+      }
       return;
     }
     // No linked course (e.g. rejected before ever building, or a manual
@@ -552,7 +560,6 @@ function InquiryDetailInner() {
     // a pipeline stage, so it 400'd on every closed inquiry — exactly the ones
     // this button exists for. The 'restore' action resolves the target stage
     // server-side from the event ledger.
-    setProcessing(false);
     await action('restore');
   }
 

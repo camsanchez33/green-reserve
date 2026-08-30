@@ -200,17 +200,25 @@ export default function RevenuePage() {
     );
     if (!ok) return;
     setRetryingId(p.bookingId); setRetryMsg(null);
-    const res = await fetch(`/api/admin/retry-charge/${p.bookingId}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ checkIn: false }),
-    });
-    setRetryingId(null);
-    if (res.ok) {
-      setRetryMsg({ id: p.bookingId, ok: true, text: 'Charged. The golfer is not checked in — check them in when they arrive.' });
-      load(period, customFrom, customTo);
-    } else {
-      const e = await res.json().catch(() => ({}));
-      setRetryMsg({ id: p.bookingId, ok: false, text: e.error || 'Retry failed.' });
+    // MP-1b B3: no try/catch meant a dropped connection left the button spinning
+    // "Retrying…" forever with no message — on a money action, where the operator
+    // most needs to know whether the card was charged.
+    try {
+      const res = await fetch(`/api/admin/retry-charge/${p.bookingId}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ checkIn: false }),
+      });
+      if (res.ok) {
+        setRetryMsg({ id: p.bookingId, ok: true, text: `Charged ${fmtMoney(p.amount)} to ${p.golferName}. They are NOT checked in — check them in when they arrive.` });
+        load(period, customFrom, customTo);
+      } else {
+        const e = await res.json().catch(() => ({}));
+        setRetryMsg({ id: p.bookingId, ok: false, text: e.error || 'Retry failed.' });
+      }
+    } catch {
+      setRetryMsg({ id: p.bookingId, ok: false, text: 'Network error — the card may or may not have been charged. Check Stripe before retrying.' });
+    } finally {
+      setRetryingId(null);
     }
   }
 
@@ -377,6 +385,19 @@ export default function RevenuePage() {
                 <AlertTriangle className="w-4 h-4 text-bad"/>
                 <span className="text-sm font-medium text-bad">Failed charges ({failed.length})</span>
               </div>
+              {/* MP-1b B4: this lived inside the row it described. A successful
+                  collect clears checkInFailReason, so the refetch dropped the row
+                  and unmounted the message with it — and the message is the whole
+                  point of fix #5, since it is the only place the operator is told
+                  the golfer was NOT checked in. Section-level, so it survives. */}
+              {retryMsg && (
+                <div className={'mb-4 rounded-md px-4 py-2.5 flex items-start justify-between gap-3 ' + (retryMsg.ok ? 'bg-ok/5 border border-ok/20' : 'bg-bad/5 border border-bad/20')}>
+                  <p className={'text-xs ' + (retryMsg.ok ? 'text-ok' : 'text-bad')}>{retryMsg.text}</p>
+                  <button onClick={() => setRetryMsg(null)} className="text-ink-muted hover:text-ink transition-colors shrink-0" aria-label="Dismiss">
+                    <X className="w-3.5 h-3.5"/>
+                  </button>
+                </div>
+              )}
               {failed.length === 0 ? (
                 <p className="text-xs text-ink-muted">None — nothing to collect.</p>
               ) : (
@@ -394,9 +415,6 @@ export default function RevenuePage() {
                           </div>
                           <div className="text-xs text-bad mt-1">{p.reason}</div>
                           <div className="text-xs text-ink-muted mt-0.5">{p.golferEmail}</div>
-                          {retryMsg?.id === p.bookingId && (
-                            <div className={'text-xs mt-1 font-medium ' + (retryMsg.ok ? 'text-ok' : 'text-bad')}>{retryMsg.text}</div>
-                          )}
                         </div>
                         <div className="text-right shrink-0">
                           <div className="text-sm font-medium text-ink tabular-nums mb-1.5">{fmtMoney(p.amount)}</div>

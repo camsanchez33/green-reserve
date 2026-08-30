@@ -383,15 +383,24 @@ export async function GET() {
   }
 
   // Week view: cumulative since Monday vs last week's line to the same day.
-  const thisWeekMonday = new Date(weekStartKey(now) + 'T00:00:00.000Z');
-  const elapsedDaysThisWeek = Math.floor((startOfToday.getTime() - thisWeekMonday.getTime()) / 86400000) + 1;
-  const priorWeekMonday = new Date(thisWeekMonday.getTime() - 7 * 24 * 60 * 60 * 1000);
+  // MP-1b B2: weekStartKey() returns the ET Monday, but re-parsing it at UTC
+  // midnight lands on 8pm ET the PREVIOUS day, so every dayKeyOf() lookup below
+  // came back one day early — the week line read Sunday-to-yesterday and today's
+  // bookings never appeared. Anchor on the real platform-week instant instead,
+  // and step the lookups by calendar date rather than by 86400000ms so a DST
+  // week doesn't shift them again.
+  const thisWeekMonday = startOfPlatformWeek(now);
+  const elapsedDaysThisWeek = Math.round((startOfToday.getTime() - thisWeekMonday.getTime()) / 86400000) + 1;
+  const dayKeyPlus = (anchor: Date, days: number) => {
+    const [y, m, d] = dayKey(anchor).split('-').map(Number);
+    return dayKey(new Date(Date.UTC(y, m - 1, d + days, 12)));
+  };
   const weekTicker: { t: number; gross: number; fees: number; ghostGross: number; ghostFees: number }[] = [];
   {
     let curGross = 0, curFees = 0, ghostGross = 0, ghostFees = 0;
     for (let i = 0; i < elapsedDaysThisWeek; i++) {
-      const curBucket = dayMap[dayKeyOf(new Date(thisWeekMonday.getTime() + i * 86400000))] ?? { gross: 0, fees: 0 };
-      const ghostBucket = dayMap[dayKeyOf(new Date(priorWeekMonday.getTime() + i * 86400000))] ?? { gross: 0, fees: 0 };
+      const curBucket = dayMap[dayKeyPlus(thisWeekMonday, i)] ?? { gross: 0, fees: 0 };
+      const ghostBucket = dayMap[dayKeyPlus(thisWeekMonday, i - 7)] ?? { gross: 0, fees: 0 };
       curGross += curBucket.gross; curFees += curBucket.fees;
       ghostGross += ghostBucket.gross; ghostFees += ghostBucket.fees;
       weekTicker.push({ t: i, gross: curGross, fees: curFees, ghostGross, ghostFees });

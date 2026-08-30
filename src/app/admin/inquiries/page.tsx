@@ -226,8 +226,20 @@ function InquiriesListInner() {
   // A-02d: Closed tab's only actions are Restore and Permanently delete —
   // both route through the same lifecycle service the courses tab uses
   // (LIFECYCLE PARITY LAW), never a one-sided status flip.
+  // MP-1b B3: neither branch had a catch, so a network failure was an unhandled
+  // rejection — no spinner, no banner, no row change, nothing. MP-1 is what made
+  // Restore reachable at all (it used to 400 every time), so this became a live
+  // path with no failure surface.
   async function restoreInquiry(inq: Inquiry) {
     setDeleteError('');
+    try {
+      await doRestore(inq);
+    } catch {
+      setDeleteError(`Restore failed for "${inq.courseName}": network error — nothing was changed. Check your connection and try again.`);
+    }
+  }
+
+  async function doRestore(inq: Inquiry) {
     if (inq.builtCourseId) {
       const r = await fetch('/api/admin/archive-course', {
         method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, action: 'restore' }),

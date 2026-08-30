@@ -70,8 +70,12 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ success: true, id: inquiry.id });
 }
 
-export async function GET() {
-  // Admin only — check admin secret
-  const inquiries = await prisma.courseInquiry.findMany({ orderBy: { createdAt: 'desc' } });
-  return NextResponse.json(inquiries);
-}
+// GET deliberately removed (MP-1b). It was PUBLIC — no session check behind a
+// comment that claimed "Admin only" — and returned every CourseInquiry with no
+// select: contact names, emails, phones, adminNotes, detailsJson, and every
+// detailsToken. Those tokens are the sole credential for the setup-sheet routes,
+// so this handed out exactly what MP-1 #7 was built to protect. It had no
+// caller: the public lead form only POSTs here (for-courses/ForCoursesContent
+// .tsx:170) and the admin console reads /api/admin/inquiries, which is session-
+// and role-gated. Deleted rather than gated — an endpoint nobody calls should
+// not exist.

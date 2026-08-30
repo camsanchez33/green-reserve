@@ -1,18 +1,47 @@
 import { prisma } from './prisma';
 import { sendCancellationEmail, sendTeeTimeAlertEmail } from './email';
+import { refundOnConnectedAccount } from './stripe';
 
 export async function performCancellation(bookingId: string) {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
       teeTime: true,
-      course: { select: { name: true, slug: true, cancellationHours: true } },
+      course: { select: { name: true, slug: true, cancellationHours: true, stripeAccountId: true } },
     },
   });
 
   if (!booking) return { error: 'Booking not found', status: 404 } as const;
   if (booking.status === 'cancelled') return { error: 'Already cancelled', status: 409 } as const;
   if (booking.status === 'completed') return { error: 'This round was already checked in and paid for — nothing to cancel', status: 409 } as const;
+
+  // MP-1b B1 — a round can now be PAID while still 'confirmed'.
+  // collectPayment() (MP-1 fix-now #5) charges without checking anyone in, so a
+  // booking can sit at confirmed + paid + roundPaymentIntentId with checkedInAt
+  // null. Before this guard the two status checks above let such a booking
+  // cancel straight through: the slot was freed for resale, the golfer was told
+  // no fee was charged, and the full round charge was silently kept. Refund it
+  // as part of the cancellation, and if the refund does not go through, refuse
+  // to cancel rather than release the slot while holding their money.
+  const roundPaid = booking.paymentStatus === 'paid' && !!booking.roundPaymentIntentId;
+  let roundRefunded = false;
+  if (roundPaid) {
+    if (!booking.course.stripeAccountId) {
+      return { error: 'This round was already paid but the course has no connected Stripe account — refund it manually before cancelling.', status: 409 } as const;
+    }
+    try {
+      await refundOnConnectedAccount({
+        paymentIntentId: booking.roundPaymentIntentId as string,
+        connectedAccountId: booking.course.stripeAccountId,
+      });
+      roundRefunded = true;
+      console.log(JSON.stringify({ ev: 'cancel.round_refund.ok', bookingId, paymentIntentId: booking.roundPaymentIntentId }));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(JSON.stringify({ ev: 'cancel.round_refund.fail', bookingId, error: message }));
+      return { error: `This round was already paid and the refund failed (${message}). The booking was NOT cancelled — refund it in Stripe, then cancel.`, status: 502 } as const;
+    }
+  }
 
   const feeAlreadyCharged = booking.paymentStatus === 'cancellation_fee_charged';
 
@@ -34,6 +63,7 @@ export async function performCancellation(bookingId: string) {
         status: 'cancelled',
         cancelledAt: new Date(),
         ...(clearPhantomFee ? { cancellationFeeTotal: 0 } : {}),
+        ...(roundRefunded ? { paymentStatus: 'refunded', roundPaymentIntentId: '' } : {}),
       },
     }),
     prisma.teeTime.update({
@@ -96,5 +126,5 @@ export async function performCancellation(bookingId: string) {
     bookingId: booking.id,
   }).catch(console.error);
 
-  return { success: true, feeCharged: feeAlreadyCharged } as const;
+  return { success: true, feeCharged: feeAlreadyCharged, roundRefunded } as const;
 }
