@@ -47,7 +47,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: clearCode ? 'Too many incorrect attempts. Please sign in again to get a new code.' : 'Invalid or expired code.' }, { status: 400 });
   }
 
-  await prisma.courseOperator.update({ where: { id: operator.id }, data: { twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0 } });
+  // MP-3: stamp the login here, not at the password step — an operator who
+  // never completes 2FA has not logged in. This is the column A-07's
+  // "operator last login" health signal needed; it rendered "—" for every
+  // course because CourseOperator had no such field until now.
+  await prisma.courseOperator.update({
+    where: { id: operator.id },
+    data: { twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0, lastLoginAt: new Date() },
+  });
 
   const token = await signToken({ operatorId: operator.id, email: operator.email });
   let redirect = '/dashboard';

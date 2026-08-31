@@ -26,6 +26,9 @@ model CourseOperator {
   twoFactorCodeExpiry DateTime?
   twoFactorAttempts   Int       @default(0)
   phone               String    @default("")
+  // MP-3: AdminUser has had this; CourseOperator never did, which is why
+  // A-07's operator-last-login column renders "—" everywhere.
+  lastLoginAt         DateTime?
   createdAt           DateTime  @default(now())
   course              Course[]
 }
@@ -106,6 +109,11 @@ model Course {
   featured              Boolean            @default(false)
   active                Boolean            @default(false)
   liveStatus            String             @default("draft")
+  // MP-3: welcomeEmailSentAt was doing double duty as "has this course ever
+  // been live", which corrupts health states — a course taken offline looks
+  // like one that never launched. These record the two facts separately.
+  firstWentLiveAt       DateTime?
+  offlineAt             DateTime?
   welcomeEmailSentAt    DateTime?
   adminNotes            String             @default("")
   archivedAt            DateTime?
@@ -332,6 +340,8 @@ model TeeTime {
   teeTimeAlerts    TeeTimeAlert[]
 
   @@index([courseId, date])
+  // MP-3: the tee-sheet and generation paths filter on date alone across courses.
+  @@index([date])
 }
 
 model Booking {
@@ -376,7 +386,19 @@ model Booking {
   // Booking terms consent — recorded at the moment of booking, never backfilled.
   termsAcceptedAt          DateTime?
   termsVersion             String?
+  // MP-3: set at the cutoff crossing. Distinguishes "fee was owed and is
+  // collectable" from "fee was stamped at booking but the golfer cancelled
+  // free" — MP-1 #6 clears the amount on a free cancel, which fixed the
+  // symptom; this records the state instead of inferring it from a zero.
+  cancellationFeeApplies   Boolean        @default(false)
   createdAt                DateTime       @default(now())
+  paymentEvents            PaymentEvent[]
+
+  // MP-3: Booking had ZERO indexes. Every admin money surface scans the table.
+  @@index([courseId, createdAt])
+  @@index([status, createdAt])
+  @@index([teeTimeId])
+  @@index([golferAccountId])
 }
 
 model TeeTimeSchedule {
@@ -461,9 +483,25 @@ model CourseInquiry {
   detailsJson          String   @default("")
   reviewStartedAt      DateTime?
   wentLiveAt           DateTime?
+  // MP-3 growth columns. Cheap now, unanswerable later:
+  //   source        — which channel converts. THE pre-launch question, and
+  //                   nothing in the schema can answer it today.
+  //   closedReason  — "why do we lose leads" is currently unanswerable because
+  //                   Reject captures no reason.
+  //   snoozeUntil   — "the GM said call after Labor Day" currently either nags
+  //                   forever or gets archived and forgotten.
+  //   nextFollowUpAt— the queue-first pipeline in MP-4 sorts on it.
+  source               String?
+  closedReason         String?
+  snoozeUntil          DateTime?
+  nextFollowUpAt       DateTime?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
   events               InquiryStatusEvent[]
+  changeRequests       ChangeRequest[]
+
+  // MP-3: the orphan sweep and every lifecycle pairing filter on this.
+  @@index([builtCourseId])
 }
 
 model InquiryStatusEvent {
@@ -475,6 +513,10 @@ model InquiryStatusEvent {
   actorName  String?
   createdAt  DateTime      @default(now())
   inquiry    CourseInquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+
+  // MP-3: read on every inquiry detail load and by the stage-entry-time
+  // derivations MP-4 needs.
+  @@index([inquiryId])
 }
 
 // Per-IP fixed-window rate limiting (shared across serverless instances)
@@ -501,6 +543,15 @@ model AdminUser {
   twoFactorAttempts      Int       @default(0)
   failedLoginAttempts    Int       @default(0)
   lockoutUntil           DateTime?
+  // MP-3. NOTE: the spec justified this as the fix for "deactivating an admin
+  // doesn't end their session". MP-2 already fixed that with a per-request
+  // `active` check and MP-2d extended it to re-read `role`, so demotion and
+  // deactivation both take effect immediately without this. It also cannot
+  // save the query — you would read the row to get the version. What remains
+  // is a deliberate "sign out everywhere" lever: bump it to invalidate every
+  // outstanding token for this admin at once. Added while migrations are cheap.
+  sessionVersion         Int       @default(0)
+  auditLogs              AdminAuditLog[]
 }
 
 model Announcement {
@@ -545,6 +596,8 @@ model Message {
   isBroadcast Boolean       @default(false)
   createdAt   DateTime      @default(now())
   thread      MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
 }
 
 // GreenReserve's own fixed operating costs (Vercel, Neon, Resend, Twilio,
@@ -566,4 +619,93 @@ model Expense {
   updatedAt  DateTime  @updatedAt
 
   @@index([startedAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MP-3 — the three tables §5 asks for. Storage only in this run; the code that
+// writes to them ships with the features that need them (MP-6 money, MP-4
+// pipeline, MP-8 system). Tables are what is expensive to add at scale — the
+// writers are not.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Every movement of money against a booking, as an append-only ledger.
+/// Today the P&L is reconstructed by reading Booking columns and inferring what
+/// must have happened — refunds in particular already occur and already fail
+/// invisibly. `kind` is one of:
+///   fee_collected · cancel_fee_charged · cancel_fee_refunded · refund · dispute
+/// amountCents is ALWAYS integer cents, independent of the Float→cents
+/// conversion in run B — new money data starts correct.
+model PaymentEvent {
+  id              String   @id @default(cuid())
+  bookingId       String
+  booking         Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  kind            String
+  amountCents     Int
+  /// Stripe PaymentIntent / Refund id, when the event corresponds to one.
+  stripeId        String   @default("")
+  /// Who or what caused it: 'cron' | 'admin' | 'operator' | 'golfer' | 'stripe'
+  actor           String   @default("system")
+  actorName       String?
+  /// Free-text detail — a decline reason, a dispute code, a note.
+  detail          String   @default("")
+  createdAt       DateTime @default(now())
+
+  @@index([bookingId])
+  @@index([kind, createdAt])
+  @@index([createdAt])
+}
+
+/// The course-approval / change-request loop, currently encoded as JSON stuffed
+/// into InquiryStatusEvent.actorName. One reworded log line breaks it today.
+model ChangeRequest {
+  id          String        @id @default(cuid())
+  inquiryId   String
+  inquiry     CourseInquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  /// Which part of the page the course wants changed.
+  category    String
+  body        String        @default("")
+  /// 'open' | 'addressed' | 'dismissed'
+  status      String        @default("open")
+  raisedBy    String        @default("course")
+  addressedBy String?
+  addressedAt DateTime?
+  createdAt   DateTime      @default(now())
+
+  @@index([inquiryId])
+  @@index([status, createdAt])
+}
+
+/// Heartbeat for the crons. They charge cards on a schedule with no record that
+/// they ran, so a silently dead cron is invisible until someone notices money
+/// stopped moving. The System page turns red off this.
+model CronRunLog {
+  id          String    @id @default(cuid())
+  job         String
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+  /// 'ok' | 'error'
+  outcome     String    @default("ok")
+  /// Whatever the job wants to record — counts, ids, a decline summary.
+  detail      String    @default("")
+  error       String    @default("")
+
+  @@index([job, startedAt])
+  @@index([startedAt])
+}
+
+/// Admin audit trail. Cannot be backfilled, so the column has to exist before
+/// the first action worth auditing.
+model AdminAuditLog {
+  id        String    @id @default(cuid())
+  adminId   String
+  admin     AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  action    String
+  /// What was acted on: 'course' | 'inquiry' | 'booking' | 'admin' | ...
+  targetType String   @default("")
+  targetId  String    @default("")
+  detail    String    @default("")
+  createdAt DateTime  @default(now())
+
+  @@index([adminId, createdAt])
+  @@index([createdAt])
 }
