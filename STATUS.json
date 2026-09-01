@@ -1,22 +1,24 @@
 {
-  "generatedAt": "2026-09-01T21:08:46.748Z",
+  "generatedAt": "2026-09-01T23:58:07.657Z",
   "repo": {
-    "head": "703a7d0",
+    "head": "7b6d5c2",
     "branch": "main",
-    "dirtyCount": 6,
+    "dirtyCount": 1,
     "dirty": [
-      "M src/app/api/cron/cancellation-cutoff/route.ts",
-      " M src/app/api/cron/chase-onboarding/route.ts",
-      " M src/app/api/cron/generate-tee-times/route.ts",
-      " M src/app/api/cron/hourly/route.ts",
-      " M src/app/api/cron/send-reminders/route.ts",
-      "?? src/lib/cron-auth.ts"
+      "M RUN_QUEUE.md"
     ],
-    "looksLikeRunInProgress": true
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-09-01T16:53:29-04:00",
     "unrecorded": [
+      {
+        "h": "7691996",
+        "date": "2026-09-01T17:08:47-04:00",
+        "subject": "Close the cron fail-open: one shared bearer check across all five cron routes",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "703a7d0",
         "date": "2026-09-01T16:58:44-04:00",
@@ -34,10 +36,10 @@
     ]
   },
   "counts": {
-    "runDone": 119,
+    "runDone": 120,
     "runAwaiting": 8,
     "runInFlight": 1,
-    "runNotStarted": 28,
+    "runNotStarted": 30,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -46,7 +48,7 @@
   "inFlight": [
     {
       "title": "BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET",
-      "line": 1296,
+      "line": 1310,
       "body": [
         "FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because \"no linked inquiry\" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding them outright. FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() + a \"Force delete permanently\" button per acknowledged orphan — owner-only, typed name confirm, server re-verifies the course is still an orphan before touching anything (refuses if it turns out to have a real inquiry link — this can never be used to route around the doctrine for a real course). This is the mechanism for Cam's DaisyLinks exception, but I have NOT executed it against DaisyLinks yet:",
         "- Last session's raw Prisma script (a read-only check confirming Fake",
@@ -178,83 +180,93 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "MP-4 — pipeline reshape: queue-first inquiries list (dedup, true",
+      "title": "MP-4 — pipeline reshape (split into 4a/4b/4c)",
       "line": 797,
       "section": "Queue (run in this order)"
     },
     {
-      "title": "MP-5 — courses reshape: evidence on list rows (already computed, never",
-      "line": 801,
+      "title": "MP-4b — queue-first list rebuild: waiting-on-them section, queue",
+      "line": 810,
       "section": "Queue (run in this order)"
     },
     {
-      "title": "MP-6 — money reshape: Revenue problems pinned all-time + collected-basis",
-      "line": 805,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-7 — comms merge: Broadcasts composer into Messages (owner-only),",
-      "line": 809,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-8 — chrome + System: sidebar real links + self-fetched badges +",
+      "title": "MP-4c — detail tab trim + snooze/source/closedReason UI (needs the",
       "line": 813,
       "section": "Queue (run in this order)"
     },
     {
-      "title": "MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in",
-      "line": 817,
+      "title": "MP-5 — courses reshape: evidence on list rows (already computed, never",
+      "line": 815,
       "section": "Queue (run in this order)"
     },
     {
-      "title": "MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,",
+      "title": "MP-6 — money reshape: Revenue problems pinned all-time + collected-basis",
+      "line": 819,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-7 — comms merge: Broadcasts composer into Messages (owner-only),",
       "line": 823,
       "section": "Queue (run in this order)"
     },
     {
-      "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved",
+      "title": "MP-8 — chrome + System: sidebar real links + self-fetched badges +",
       "line": 827,
       "section": "Queue (run in this order)"
     },
     {
+      "title": "MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in",
+      "line": 831,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,",
+      "line": 837,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved",
+      "line": 841,
+      "section": "Queue (run in this order)"
+    },
+    {
       "title": "MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState",
-      "line": 844,
+      "line": 858,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:",
-      "line": 849,
+      "line": 863,
       "section": "Queue (run in this order)"
     },
     {
       "title": "COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)",
-      "line": 870,
+      "line": 884,
       "section": "Queue (run in this order)"
     },
     {
       "title": "COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small)",
-      "line": 871,
+      "line": 885,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
-      "line": 893,
+      "line": 907,
       "section": "Queue (run in this order)"
     },
     {
       "title": "ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule), every dashboard ta",
-      "line": 913,
+      "line": 927,
       "section": "Queue (run in this order)"
     },
     {
       "title": "ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → \"Send updated preview\"), Messa",
-      "line": 915,
+      "line": 929,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
-      "line": 972,
+      "line": 986,
       "section": "Queue (run in this order)"
     }
   ],
@@ -292,7 +304,7 @@
     {
       "item": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
       "note": "CAM: confirm the state before this runs — e",
-      "line": 893
+      "line": 907
     }
   ],
   "ideas": {
@@ -815,6 +827,16 @@
   },
   "recentCommits": [
     {
+      "h": "7b6d5c2",
+      "date": "2026-09-01",
+      "subject": "MP-4a: one stage clock, one builder, one inquiry per course"
+    },
+    {
+      "h": "7691996",
+      "date": "2026-09-01",
+      "subject": "Close the cron fail-open: one shared bearer check across all five cron routes"
+    },
+    {
       "h": "703a7d0",
       "date": "2026-09-01",
       "subject": "Status board: fix the Windows git calls, regenerate, and make it a per-run step"
@@ -862,16 +884,6 @@
     {
       "h": "6c929be",
       "date": "2026-08-30",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "bf3bcb2",
-      "date": "2026-08-30",
-      "subject": "MP-2e: close the MP-2 series — fix the viewer crash MP-2d shipped, convert the last consumers"
-    },
-    {
-      "h": "3d3f4d8",
-      "date": "2026-08-29",
       "subject": "queue/spec update"
     }
   ]
