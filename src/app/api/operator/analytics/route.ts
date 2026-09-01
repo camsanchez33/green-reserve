@@ -18,7 +18,7 @@ export async function GET() {
     }),
     prisma.teeTime.findMany({
       where: { courseId, date: { gte: thirtyDaysAgoStr } },
-      select: { date: true, playersAvailable: true, playersBooked: true, status: true, greenFee: true },
+      select: { date: true, playersAvailable: true, playersBooked: true, status: true, greenFeeCents: true },
     }),
   ]);
 

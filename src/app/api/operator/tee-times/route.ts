@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { dollarsToCentsOr0 } from '@/lib/money';
+import { teeTimeToWire } from '@/lib/schedule-wire';
 import { resolveDashboardSession } from '@/lib/session';
 
 export async function GET(req: NextRequest) {
@@ -29,11 +31,12 @@ export async function POST(req: NextRequest) {
       courseId: session.courseId,
       date: body.date, time: body.time, holes: body.holes || 18,
       playersAvailable: Number(body.playersAvailable) || 4, playersBooked: 0,
-      greenFee: Number(body.greenFee), cartFee: Number(body.cartFee) || 0,
+      // MP-3 B2c: the form sends dollars; the columns are cents.
+      greenFeeCents: dollarsToCentsOr0(body.greenFee), cartFeeCents: dollarsToCentsOr0(body.cartFee),
       walkingAllowed: body.walkingAllowed !== false, status: 'available',
     },
   });
-  return NextResponse.json(teeTime);
+  return NextResponse.json(teeTimeToWire(teeTime));
 }
 
 export async function PATCH(req: NextRequest) {

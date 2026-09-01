@@ -148,7 +148,7 @@ async function seed() {
 
   await prisma.teeTime.deleteMany({ where: { courseId: courseA.id, date: dateStr, time: '09:00' } });
   const teeTimeA = await prisma.teeTime.create({
-    data: { courseId: courseA.id, date: dateStr, time: '09:00', holes: 18, greenFee: 50, cartFee: 20, playersAvailable: 4, playersBooked: 0, status: 'available' },
+    data: { courseId: courseA.id, date: dateStr, time: '09:00', holes: 18, greenFeeCents: 5000, cartFeeCents: 2000, playersAvailable: 4, playersBooked: 0, status: 'available' },
   });
 
   // Booking for golfer A on course A — golfer B must not be able to cancel it
@@ -164,7 +164,7 @@ async function seed() {
   // Booking on Course B — Op A must not be able to see it from their session
   await prisma.teeTime.deleteMany({ where: { courseId: courseB.id, date: dateStr, time: '09:00' } });
   const teeTimeB = await prisma.teeTime.create({
-    data: { courseId: courseB.id, date: dateStr, time: '09:00', holes: 18, greenFee: 60, cartFee: 25, playersAvailable: 4, playersBooked: 1, status: 'available' },
+    data: { courseId: courseB.id, date: dateStr, time: '09:00', holes: 18, greenFeeCents: 6000, cartFeeCents: 2500, playersAvailable: 4, playersBooked: 1, status: 'available' },
   });
   const bookingB = await prisma.booking.create({
     data: {

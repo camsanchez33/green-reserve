@@ -72,8 +72,9 @@ export async function POST(req: NextRequest) {
   const teeTime = await prisma.teeTime.findUnique({ where: { id: teeTimeId } });
   if (!teeTime) return NextResponse.json({ error: 'Tee time not found' }, { status: 404 });
 
-  const greenFeeTotal = Math.round(teeTime.greenFee * players * 100);
-  const cartFeeTotal = Math.round(teeTime.cartFee * players * 100);
+  // MP-3 B2c: rates are cents; the x100 is gone.
+  const greenFeeTotal = teeTime.greenFeeCents * players;
+  const cartFeeTotal = teeTime.cartFeeCents * players;
   const accessFeeTotal = 150 * players;
   const totalAmount = greenFeeTotal + cartFeeTotal + accessFeeTotal;
 

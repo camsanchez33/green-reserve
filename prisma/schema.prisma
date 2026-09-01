@@ -345,10 +345,16 @@ model TeeTime {
   holes            Int        @default(18)
   playersAvailable Int        @default(4)
   playersBooked    Int        @default(0)
-  greenFee         Float
-  memberRate       Float?
-  residentRate     Float?
-  cartFee          Float      @default(0)
+  // MP-3 runs B2c+B2d: integer cents, renamed *Cents so a stale reader is a
+  // compile error. TeeTime and TeeTimeSchedule convert in the SAME migration
+  // because tee-sheet-engine copies schedule rates straight onto generated tee
+  // times — converting one alone would need a x100 in the middle of that copy,
+  // which is precisely the kind of stray multiplication this whole exercise is
+  // meant to delete.
+  greenFeeCents    Int
+  memberRateCents  Int?
+  residentRateCents Int?
+  cartFeeCents     Int        @default(0)
   walkingAllowed   Boolean    @default(true)
   tierName         String     @default("standard")
   status           String     @default("available")
@@ -437,13 +443,16 @@ model TeeTimeSchedule {
   endTime             String
   intervalMinutes     Int      @default(8)
   holes               Int      @default(18)
-  greenFeeWeekday     Float
-  greenFeeWeekend     Float
-  memberRateWeekday   Float?
-  memberRateWeekend   Float?
-  residentRateWeekday Float?
-  residentRateWeekend Float?
-  cartFee             Float    @default(0)
+  // MP-3 run B2d — integer cents. NOTE greenFeeWeekdayCents also exists on
+  // MembershipTier (B2a); both are cents now, so mixing them is a semantic
+  // error rather than a silent unit error.
+  greenFeeWeekdayCents     Int
+  greenFeeWeekendCents     Int
+  memberRateWeekdayCents   Int?
+  memberRateWeekendCents   Int?
+  residentRateWeekdayCents Int?
+  residentRateWeekendCents Int?
+  cartFeeCents             Int  @default(0)
   walkingAllowed      Boolean  @default(true)
   active              Boolean  @default(true)
   createdAt           DateTime @default(now())

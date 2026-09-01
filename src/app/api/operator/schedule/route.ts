@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { scheduleMoneyFromWire, scheduleMoneyForCreate, scheduleToWire } from '@/lib/schedule-wire';
 import { resolveDashboardSession } from '@/lib/session';
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 
@@ -28,13 +29,8 @@ export async function POST(req: NextRequest) {
       endTime: body.endTime,
       intervalMinutes: Number(body.intervalMinutes) || 8,
       holes: Number(body.holes) || 18,
-      greenFeeWeekday: Number(body.greenFeeWeekday),
-      greenFeeWeekend: Number(body.greenFeeWeekend),
-      memberRateWeekday: body.memberRateWeekday ? Number(body.memberRateWeekday) : null,
-      memberRateWeekend: body.memberRateWeekend ? Number(body.memberRateWeekend) : null,
-      residentRateWeekday: body.residentRateWeekday ? Number(body.residentRateWeekday) : null,
-      residentRateWeekend: body.residentRateWeekend ? Number(body.residentRateWeekend) : null,
-      cartFee: Number(body.cartFee) || 0,
+      // MP-3 B2d: the schedule editor sends dollars; the columns are cents.
+      ...scheduleMoneyForCreate(body),
       walkingAllowed: body.walkingAllowed !== false,
     },
   });
@@ -47,7 +43,7 @@ export async function POST(req: NextRequest) {
     await generateTeeTimes(session.courseId, d.toISOString().split('T')[0]);
   }
 
-  return NextResponse.json(schedule);
+  return NextResponse.json(scheduleToWire(schedule));
 }
 
 export async function PATCH(req: NextRequest) {
@@ -71,13 +67,9 @@ export async function PATCH(req: NextRequest) {
       endTime: data.endTime ?? existing.endTime,
       intervalMinutes: data.intervalMinutes !== undefined ? Number(data.intervalMinutes) : existing.intervalMinutes,
       holes: data.holes !== undefined ? Number(data.holes) : existing.holes,
-      greenFeeWeekday: data.greenFeeWeekday !== undefined ? Number(data.greenFeeWeekday) : existing.greenFeeWeekday,
-      greenFeeWeekend: data.greenFeeWeekend !== undefined ? Number(data.greenFeeWeekend) : existing.greenFeeWeekend,
-      memberRateWeekday: data.memberRateWeekday !== undefined ? (data.memberRateWeekday ? Number(data.memberRateWeekday) : null) : existing.memberRateWeekday,
-      memberRateWeekend: data.memberRateWeekend !== undefined ? (data.memberRateWeekend ? Number(data.memberRateWeekend) : null) : existing.memberRateWeekend,
-      residentRateWeekday: data.residentRateWeekday !== undefined ? (data.residentRateWeekday ? Number(data.residentRateWeekday) : null) : existing.residentRateWeekday,
-      residentRateWeekend: data.residentRateWeekend !== undefined ? (data.residentRateWeekend ? Number(data.residentRateWeekend) : null) : existing.residentRateWeekend,
-      cartFee: data.cartFee !== undefined ? Number(data.cartFee) : existing.cartFee,
+      // Only the money keys actually present in the body are converted; the
+      // rest keep their existing cents values.
+      ...scheduleMoneyFromWire(data),
       walkingAllowed: data.walkingAllowed !== undefined ? data.walkingAllowed : existing.walkingAllowed,
     },
   });

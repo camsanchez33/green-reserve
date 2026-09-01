@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { dollarsToCentsOr0 } from '@/lib/money';
+import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { sendOperatorWelcomeEmail } from '@/lib/email';
@@ -139,12 +139,13 @@ export async function POST(req: NextRequest) {
           endTime: seedLastTeeTime || '17:30',
           intervalMinutes: seedIntervalMinutes ? Number(seedIntervalMinutes) : 10,
           holes: scheduleHoles,
-          greenFeeWeekday: Number(seedWeekdayFee),
-          greenFeeWeekend: Number(seedWeekendFee),
-          cartFee: seedCartFee != null ? Number(seedCartFee) : 0,
+          // MP-3 B2d: TeeTimeSchedule money is cents; seeds are dollars.
+          greenFeeWeekdayCents: dollarsToCentsOr0(seedWeekdayFee),
+          greenFeeWeekendCents: dollarsToCentsOr0(seedWeekendFee),
+          cartFeeCents: dollarsToCentsOr0(seedCartFee),
           walkingAllowed: seedWalkingAllowed !== false,
-          residentRateWeekday: seedResidentWeekday != null ? Number(seedResidentWeekday) : null,
-          residentRateWeekend: seedResidentWeekend != null ? Number(seedResidentWeekend) : null,
+          residentRateWeekdayCents: dollarsToCents(seedResidentWeekday as number),
+          residentRateWeekendCents: dollarsToCents(seedResidentWeekend as number),
         },
       });
       seedScheduleCreated = true;

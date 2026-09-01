@@ -23,7 +23,7 @@ function isWeekend(dateStr: string): boolean {
  * Falls back to the tee time's standard rates if no membership or no override.
  */
 function applyTierRates(
-  teeTime: { greenFee: number; cartFee: number; memberRate: number | null; date: string },
+  teeTime: { greenFeeCents: number; cartFeeCents: number; memberRateCents: number | null; date: string },
   tier: {
     greenFeeWeekdayCents: number | null;
     greenFeeWeekendCents: number | null;
@@ -31,46 +31,41 @@ function applyTierRates(
     cartFeeWeekendCents:  number | null;
     discountPct:          number | null;
   } | null
-): { greenFee: number; cartFee: number } {
-  if (!tier) return { greenFee: teeTime.greenFee, cartFee: teeTime.cartFee };
+): { greenFeeCents: number; cartFeeCents: number } {
+  // MP-3 B2c: everything here is CENTS now. The unit boundary this function
+  // carried through B2a is gone — TeeTime and MembershipTier finally agree, so
+  // there is no conversion left to get wrong. discountPct is still a percentage
+  // and is the only non-money number in sight.
+  if (!tier) return { greenFeeCents: teeTime.greenFeeCents, cartFeeCents: teeTime.cartFeeCents };
 
   const weekend = isWeekend(teeTime.date);
 
-  // MP-3 B2a — THE UNIT BOUNDARY. teeTime.* is still DOLLARS (TeeTime is run
-  // B2c); tier.*Cents is CENTS. This function's contract is dollars in, dollars
-  // out, because its result feeds Math.round(fee * players * 100) downstream.
-  // So the tier's cents are converted to dollars here, once, before any
-  // comparison or fallback mixes the two. Getting this wrong prices a member's
-  // round at 100x, silently.
-  const tierGreenWeekday = centsToDollars(tier.greenFeeWeekdayCents);
-  const tierGreenWeekend = centsToDollars(tier.greenFeeWeekendCents);
-  const tierCartWeekday  = centsToDollars(tier.cartFeeWeekdayCents);
-  const tierCartWeekend  = centsToDollars(tier.cartFeeWeekendCents);
-
   // Flat rate overrides
-  if (tierGreenWeekday != null || tierGreenWeekend != null) {
-    const greenFee = weekend
-      ? (tierGreenWeekend ?? tierGreenWeekday ?? teeTime.greenFee)
-      : (tierGreenWeekday ?? teeTime.greenFee);
-    const cartFee = weekend
-      ? (tierCartWeekend ?? tierCartWeekday ?? teeTime.cartFee)
-      : (tierCartWeekday ?? teeTime.cartFee);
-    return { greenFee, cartFee };
+  if (tier.greenFeeWeekdayCents != null || tier.greenFeeWeekendCents != null) {
+    const greenFeeCents = weekend
+      ? (tier.greenFeeWeekendCents ?? tier.greenFeeWeekdayCents ?? teeTime.greenFeeCents)
+      : (tier.greenFeeWeekdayCents ?? teeTime.greenFeeCents);
+    const cartFeeCents = weekend
+      ? (tier.cartFeeWeekendCents ?? tier.cartFeeWeekdayCents ?? teeTime.cartFeeCents)
+      : (tier.cartFeeWeekdayCents ?? teeTime.cartFeeCents);
+    return { greenFeeCents, cartFeeCents };
   }
 
-  // Percentage discount off standard
+  // Percentage discount off standard. Rounding in cents is the point: the old
+  // version did Math.round(dollars * mult * 100) / 100, i.e. float dollars
+  // rounded back to 2dp. This rounds to the nearest cent directly.
   if (tier.discountPct != null) {
     const mult = 1 - tier.discountPct / 100;
     return {
-      greenFee: Math.round(teeTime.greenFee * mult * 100) / 100,
-      cartFee:  Math.round(teeTime.cartFee  * mult * 100) / 100,
+      greenFeeCents: Math.round(teeTime.greenFeeCents * mult),
+      cartFeeCents:  Math.round(teeTime.cartFeeCents  * mult),
     };
   }
 
   // No override — fall back to legacy memberRate if set, else standard
   return {
-    greenFee: teeTime.memberRate ?? teeTime.greenFee,
-    cartFee:  teeTime.cartFee,
+    greenFeeCents: teeTime.memberRateCents ?? teeTime.greenFeeCents,
+    cartFeeCents:  teeTime.cartFeeCents,
   };
 }
 
@@ -129,8 +124,8 @@ export async function POST(req: NextRequest) {
       : null;
     if (membership?.tier) {
       const rates = applyTierRates(teeTimeFull, membership.tier);
-      resolvedGreenFeeOverride = rates.greenFee;
-      resolvedCartFeeOverride  = rates.cartFee;
+      resolvedGreenFeeOverride = rates.greenFeeCents;
+      resolvedCartFeeOverride  = rates.cartFeeCents;
       appliedTierName = membership.tier.name;
       appliedRate     = membership.tier.name;
     }
@@ -144,8 +139,8 @@ export async function POST(req: NextRequest) {
       });
       if (membership?.tier && membership.status === 'active') {
         const rates = applyTierRates(teeTimeFull, membership.tier);
-        resolvedGreenFeeOverride = rates.greenFee;
-        resolvedCartFeeOverride  = rates.cartFee;
+        resolvedGreenFeeOverride = rates.greenFeeCents;
+        resolvedCartFeeOverride  = rates.cartFeeCents;
         appliedTierName = membership.tier.name;
         appliedRate     = membership.tier.name;
       }
@@ -153,12 +148,15 @@ export async function POST(req: NextRequest) {
   }
 
   // Compute fees
-  const greenFeePerPlayer = resolvedGreenFeeOverride ?? teeTimeFull.greenFee;
-  const cartFeePerPlayer  = resolvedCartFeeOverride  ?? teeTimeFull.cartFee;
+  // MP-3 B2c: cents in, cents out. The x100 that used to live here is gone —
+  // per-player rates are already cents, so the total is a plain multiply and
+  // there is no float in the money path at all.
+  const greenFeePerPlayerCents = resolvedGreenFeeOverride ?? teeTimeFull.greenFeeCents;
+  const cartFeePerPlayerCents  = resolvedCartFeeOverride  ?? teeTimeFull.cartFeeCents;
   const wantsCart = teeTimeFull.course.cartRequired ? true : !!cartSelected;
 
-  const greenFeeTotal  = Math.round(greenFeePerPlayer * players * 100);
-  const cartFeeTotal   = wantsCart ? Math.round(cartFeePerPlayer * players * 100) : 0;
+  const greenFeeTotal  = greenFeePerPlayerCents * players;
+  const cartFeeTotal   = wantsCart ? cartFeePerPlayerCents * players : 0;
 
   let rangeBallsTotal = 0;
   const ballsSize = String(rangeBallsSize || '');

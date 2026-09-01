@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { centsToDollars } from '@/lib/money';
+import { centsToDollarsOr0 } from '@/lib/money';
 import { getMemberSession, getGolferMembership } from '@/lib/member-session';
 
 export async function GET(
@@ -58,19 +58,19 @@ export async function GET(
       let memberGreenFee: number | null = null;
       let memberCartFee: number | null = null;
       if (tier) {
-        // MP-3 B2a — UNIT BOUNDARY: tier.*Cents is cents, t.greenFee/memberRate
-        // are still dollars (TeeTime is run B2c). Convert once, here, so the
-        // comparisons and fallbacks below never mix units.
-        const flatGreen = centsToDollars(isWeekend ? tier.greenFeeWeekendCents : tier.greenFeeWeekdayCents);
-        const flatCart = centsToDollars(isWeekend ? tier.cartFeeWeekendCents : tier.cartFeeWeekdayCents);
-        if (flatGreen != null) {
-          memberGreenFee = flatGreen;
-        } else if (t.memberRate != null) {
-          memberGreenFee = t.memberRate;
+        // MP-3 B2c: the B2a unit boundary is GONE — tier and TeeTime are both
+        // cents now, so nothing here converts and nothing can mix units. Work
+        // entirely in cents and convert once, at the response below.
+        const flatGreenCents = isWeekend ? tier.greenFeeWeekendCents : tier.greenFeeWeekdayCents;
+        const flatCartCents = isWeekend ? tier.cartFeeWeekendCents : tier.cartFeeWeekdayCents;
+        if (flatGreenCents != null) {
+          memberGreenFee = flatGreenCents;
+        } else if (t.memberRateCents != null) {
+          memberGreenFee = t.memberRateCents;
         } else if (tier.discountPct != null) {
-          memberGreenFee = Math.round(t.greenFee * (1 - tier.discountPct / 100) * 100) / 100;
+          memberGreenFee = Math.round(t.greenFeeCents * (1 - tier.discountPct / 100));
         }
-        if (flatCart != null) memberCartFee = flatCart;
+        if (flatCartCents != null) memberCartFee = flatCartCents;
       }
 
       return {
@@ -79,9 +79,10 @@ export async function GET(
         time: t.time,
         holes: t.holes,
         players_available: spotsLeft,
-        green_fee: t.greenFee,
-        member_green_fee: memberGreenFee ?? t.greenFee,
-        cart_fee: memberCartFee ?? t.cartFee,
+        // cents at rest, dollars on the wire — the course page renders these.
+        green_fee: centsToDollarsOr0(t.greenFeeCents),
+        member_green_fee: centsToDollarsOr0(memberGreenFee ?? t.greenFeeCents),
+        cart_fee: centsToDollarsOr0(memberCartFee ?? t.cartFeeCents),
         walking_allowed: t.walkingAllowed,
         status: slotStatus,
         has_member_rate: memberGreenFee !== null,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { centsToDollarsOr0 } from '@/lib/money';
 import { normalizeDbCourse } from '@/lib/normalize-course';
 
 export async function GET(
@@ -11,7 +12,7 @@ export async function GET(
   const dbCourse = await prisma.course.findUnique({
     where: { slug },
     include: {
-      schedules: { where: { active: true }, select: { greenFeeWeekday: true } },
+      schedules: { where: { active: true }, select: { greenFeeWeekdayCents: true } },
       photos: { orderBy: { sortOrder: 'asc' as const } },
     },
   });
@@ -22,6 +23,8 @@ export async function GET(
     return NextResponse.json({ error: 'Course not found' }, { status: 404 });
   }
 
-  const cheapest = dbCourse.schedules.length > 0 ? Math.min(...dbCourse.schedules.map(s => s.greenFeeWeekday)) : 0;
+  // MP-3 B2d: schedules are cents; the public course page shows a "from $X" price, so convert here.
+  const cheapestCents = dbCourse.schedules.length > 0 ? Math.min(...dbCourse.schedules.map((s: { greenFeeWeekdayCents: number }) => s.greenFeeWeekdayCents)) : 0;
+  const cheapest = centsToDollarsOr0(cheapestCents);
   return NextResponse.json(normalizeDbCourse(dbCourse, cheapest));
 }
