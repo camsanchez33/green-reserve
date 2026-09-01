@@ -357,18 +357,27 @@ model Booking {
   golferPhone              String         @default("")
   players                  Int
   appliedRate              String         @default("standard")
-  greenFeeTotal            Float
-  cartFeeTotal             Float          @default(0)
+  // MP-3 run B1: these six were ALREADY cents, stored in a Float — the worst of
+  // both worlds, and the direct cause of the x100 resend-email bug (MP-1 #1),
+  // where a caller assumed dollars. Now Int, so the unit is in the type. Every
+  // stored value was already integral, so this migration changes no data and
+  // needs no code changes: Prisma hands JS the same numbers as before.
+  //
+  // Dollar-denominated money elsewhere (TeeTime, TeeTimeSchedule, Course,
+  // MembershipTier) is NOT converted here — that is a 64-file render sweep and
+  // is its own run. Do not mix the two.
+  greenFeeTotal            Int
+  cartFeeTotal             Int            @default(0)
   cartSelected             Boolean        @default(false)
   rangeBallsSize           String         @default("")
-  rangeBallsTotal          Float          @default(0)
-  accessFeeTotal           Float
-  totalAmount              Float
+  rangeBallsTotal          Int            @default(0)
+  accessFeeTotal           Int
+  totalAmount              Int
   // Card-on-file, deferred-payment flow — nothing is charged at booking time.
   stripeCustomerId         String         @default("")
   stripePaymentMethodId    String         @default("")
   stripePaymentIntentId    String         @default("")
-  cancellationFeeTotal     Float          @default(0)
+  cancellationFeeTotal     Int            @default(0)
   cancellationFeeChargeId  String         @default("")
   cancellationFeeChargedAt DateTime?
   cancelledAt              DateTime?
