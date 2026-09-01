@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { centsToDollarsOr0 } from '@/lib/money';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
 
 const PAGE_SIZE = 50;
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest) {
       select: {
         id: true, inviteName: true, inviteEmail: true, lastPaidAt: true,
         golfer: { select: { firstName: true, lastName: true, email: true } },
-        tier: { select: { name: true, annualFee: true } },
+        tier: { select: { name: true, annualFeeCents: true } },
       },
       orderBy: { lastPaidAt: 'desc' },
     }),
@@ -83,7 +84,8 @@ export async function GET(req: NextRequest) {
         type: 'membership_payment' as const,
         golferName: name,
         golferEmail: email,
-        amount: p.tier?.annualFee ?? 0,
+        // MP-3 B2a: cents at rest; `amount` here is dollars (line 70 divides).
+        amount: centsToDollarsOr0(p.tier?.annualFeeCents),
         platformFee: 0,
         status: 'paid',
         date: (p.lastPaidAt ?? new Date()).toISOString(),

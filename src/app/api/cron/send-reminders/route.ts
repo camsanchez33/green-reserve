@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { centsToDollarsOr0 } from '@/lib/money';
 import { sendReminderEmail, sendMembershipPaymentLinkEmail } from '@/lib/email';
 
 export async function GET(req: NextRequest) {
@@ -58,14 +59,17 @@ export async function GET(req: NextRequest) {
 
   let renewalsSent = 0;
   for (const m of expiring) {
-    if (!m.tier || m.tier.annualFee <= 0 || !m.course.stripeAccountActive) continue;
+    if (!m.tier || m.tier.annualFeeCents <= 0 || !m.course.stripeAccountActive) continue;
     try {
       await sendMembershipPaymentLinkEmail({
         name: m.inviteName,
         email: m.inviteEmail,
         courseName: m.course.name,
         tierName: m.tier.name,
-        annualFee: m.tier.annualFee,
+        // MP-3 B2a: column is cents; sendMembershipPaymentLinkEmail renders
+        // dollars ($${annualFee.toFixed(2)}), unlike the booking emails which
+        // take cents. Convert at the caller.
+        annualFee: centsToDollarsOr0(m.tier.annualFeeCents),
         initiationFee: 0,
         payLink: `${process.env.NEXT_PUBLIC_URL}/membership/${m.id}?token=${m.payToken}`,
         isRenewal: true,

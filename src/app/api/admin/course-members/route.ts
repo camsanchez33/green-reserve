@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { centsToDollarsOr0 } from '@/lib/money';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
 
 export async function GET(req: NextRequest) {
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     tiers: tiers.map(t => ({
-      id: t.id, name: t.name, annualFee: t.annualFee,
+      id: t.id, name: t.name, annualFee: centsToDollarsOr0(t.annualFeeCents),
       active: t.active, memberCount: t._count.memberships,
     })),
     members: members.map(m => ({

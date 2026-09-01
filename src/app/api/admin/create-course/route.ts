@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { dollarsToCentsOr0 } from '@/lib/money';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { sendOperatorWelcomeEmail } from '@/lib/email';
@@ -156,7 +157,9 @@ export async function POST(req: NextRequest) {
         data: {
           courseId,
           name: seedStarterTierName,
-          annualFee: seedStarterTierFee != null ? Number(seedStarterTierFee) : 0,
+          // MP-3 B2a: tier money is cents. (The greenFeeWeekday above is a
+          // TeeTimeSchedule field and is still dollars — different model.)
+          annualFeeCents: dollarsToCentsOr0(seedStarterTierFee),
           advanceBookingDays: seedMemberAdvanceDays ? Number(seedMemberAdvanceDays) : 14,
         },
       });
