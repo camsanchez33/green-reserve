@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendInquiryNotification, sendInquiryConfirmation } from '@/lib/email';
+import { ALIVE_STATUSES } from '@/lib/inquiry-status';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -21,6 +22,58 @@ export async function POST(req: NextRequest) {
   }
 
   const contactName = `${body.firstName} ${body.lastName}`.trim();
+
+  // Duplicate-intake guard (MP-4a). This form is public and unauthenticated, so
+  // the same course arrives twice for entirely ordinary reasons: an impatient
+  // double-submit, or a follow-up a week later because nobody replied. Each one
+  // used to create a second CourseInquiry — two rows in the pipeline for one
+  // course, duplicated outreach, and a live risk of building the same course
+  // twice.
+  //
+  // Only ALIVE inquiries dedupe. A course rejected or archived months ago that
+  // applies again is a genuine new lead, not a duplicate.
+  const existing = await prisma.courseInquiry.findFirst({
+    where: {
+      status: { in: ALIVE_STATUSES },
+      OR: [
+        { email: { equals: email, mode: 'insensitive' } },
+        {
+          AND: [
+            { courseName: { equals: String(body.courseName).trim(), mode: 'insensitive' } },
+            { city: { equals: String(body.city).trim(), mode: 'insensitive' } },
+            { state: { equals: String(body.state).trim(), mode: 'insensitive' } },
+          ],
+        },
+      ],
+    },
+    orderBy: { createdAt: 'desc' },
+    select: { id: true, status: true },
+  });
+
+  if (existing) {
+    // A self-loop event: it shows up on the timeline without changing status or
+    // restarting the stage clock (see inquiry-status.stageEnteredAt, which
+    // ignores fromStatus === toStatus for exactly this reason).
+    await prisma.inquiryStatusEvent.create({
+      data: {
+        inquiryId: existing.id,
+        fromStatus: existing.status,
+        toStatus: existing.status,
+        trigger: 'course',
+        actorName: 'Course submitted the interest form again',
+      },
+    }).catch(err => console.error('Duplicate-intake event failed:', err));
+
+    // The course still gets its confirmation — from their side nothing unusual
+    // happened. The response shape is deliberately identical to a fresh submit:
+    // a "duplicate" flag would turn this public endpoint into an oracle for
+    // which courses are already in the pipeline. No admin new-lead notification
+    // fires, because this is not a new lead.
+    sendInquiryConfirmation({ firstName: body.firstName, contactName, email, courseName: body.courseName, needs: body.needs || null })
+      .catch(err => console.error('Inquiry confirmation email failed:', err));
+
+    return NextResponse.json({ success: true, id: existing.id });
+  }
   const inquiry = await prisma.courseInquiry.create({
     data: {
       firstName: body.firstName,

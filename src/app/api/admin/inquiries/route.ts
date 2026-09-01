@@ -127,114 +127,6 @@ async function handleAction(
   }
 
   // ── Build course draft ────────────────────────────────────────────
-  if (action === 'build_course') {
-    try {
-      const tempPassword = randomBytes(8).toString('hex');
-      const hashed = await bcrypt.hash(tempPassword, 12);
-      const baseSlug = inquiry.courseName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      let slug = baseSlug;
-      const slugExists = await prisma.course.findUnique({ where: { slug } });
-      if (slugExists) slug = `${baseSlug}-${randomBytes(3).toString('hex')}`;
-      const verificationToken = randomBytes(32).toString('hex');
-      const operatorEmail = inquiry.email.trim().toLowerCase();
-      const existing = await prisma.courseOperator.findUnique({ where: { email: operatorEmail } });
-      if (existing) return NextResponse.json({ error: 'Operator with this email already exists' }, { status: 409 });
-
-      let d: Record<string, unknown> = {};
-      try { d = inquiry.detailsJson ? JSON.parse(inquiry.detailsJson) : {}; } catch { /* ignore */ }
-      const str = (v: unknown, fallback = '') => (typeof v === 'string' && v ? v : fallback);
-      const num = (v: unknown, fallback: number) => (typeof v === 'number' && !Number.isNaN(v) ? v : fallback);
-      const bool = (v: unknown, fallback = false) => (typeof v === 'boolean' ? v : fallback);
-      const arr = (v: unknown): string[] => (Array.isArray(v) ? v.filter(x => typeof x === 'string') : []);
-      const flt = (v: unknown, fallback: number) => {
-        if (typeof v === 'number' && !Number.isNaN(v)) return v;
-        if (typeof v === 'string' && v !== '' && !Number.isNaN(Number(v))) return Number(v);
-        return fallback;
-      };
-
-      const operator = await prisma.courseOperator.create({
-        data: {
-          email: operatorEmail,
-          password: hashed,
-          name: inquiry.contactName,
-          emailVerified: false,
-          verificationToken,
-          onboardingStep: 0,
-          course: {
-            create: {
-              slug, name: inquiry.courseName, type: inquiry.courseType,
-              address: inquiry.address, city: inquiry.city, state: inquiry.state,
-              zipCode: inquiry.zipCode, phone: inquiry.phone, website: inquiry.website,
-              active: false, liveStatus: 'draft',
-              walkingAllowed: str(d.walkingAllowed, 'always'), walkingNote: str(d.walkingNote, ''),
-              cartRequired: bool(d.cartRequired, false), dresscode: arr(d.dresscode),
-              cancellationHours: num(d.cancellationHours, 24), rainCheckPolicy: str(d.rainCheckPolicy, ''),
-              publicAdvanceDays: num(d.publicAdvanceDays, 7), memberAdvanceDays: num(d.memberAdvanceDays, 14),
-              hasMemberPricing: bool(d.hasMemberPricing, inquiry.hasMemberPricing),
-              hasResidentPricing: bool(d.hasResidentPricing, inquiry.hasResidentPricing),
-              residentCounty: str(d.residentCounty, ''), residentState: str(d.residentState, inquiry.state),
-              hasCaddies: bool(d.hasCaddies, inquiry.hasCaddies), caddieType: str(d.caddieType, ''),
-              // MP-3 B2b: Course money is cents; sheet answers are dollars.
-              caddieLooperRateCents: dollarsToCentsOr0(flt(d.caddieLooperRate, 0)),
-              caddieForeRateCents: dollarsToCentsOr0(flt(d.caddieForeRate, 0)),
-              caddieNote: str(d.caddieNote, ''), hasDrivingRange: bool(d.hasDrivingRange, false),
-              rangeBallsFree: bool(d.rangeBallsFree, true), hasPuttingGreen: bool(d.hasPuttingGreen, false),
-              hasShortGameArea: bool(d.hasShortGameArea, false), hasProShop: bool(d.hasProShop, false),
-              proShopPhone: str(d.proShopPhone, ''), restaurantType: str(d.restaurantType, 'none'),
-              hasCartGirl: bool(d.hasCartGirl, false), hasLessons: bool(d.hasLessons, false),
-              hasClubRental: bool(d.hasClubRental, false), hasBagStorage: bool(d.hasBagStorage, false),
-              hasGpsCarts: bool(d.hasGpsCarts, false), hasTournaments: bool(d.hasTournaments, false),
-              tournamentFrequency: str(d.tournamentFrequency, ''),
-            },
-          },
-        },
-        include: { course: true },
-      });
-
-      const builtCourseId = operator.course?.[0]?.id ?? null;
-      const from = inquiry.status;
-      await prisma.courseInquiry.update({
-        where: { id: inquiryId },
-        data: { status: 'building', builtCourseId },
-      });
-      await logEvent(inquiryId, from, 'building', 'admin', adminName);
-
-      const sch = d.schedule as Record<string, unknown> | undefined;
-      if (builtCourseId && sch && (sch.greenFeeWeekday || sch.greenFeeWeekend)) {
-        await prisma.teeTimeSchedule.create({
-          data: {
-            courseId: builtCourseId, tierName: 'standard',
-            daysOfWeek: Array.isArray(sch.daysOfWeek) ? sch.daysOfWeek as number[] : [],
-            startTime: str(sch.startTime, '06:00'), endTime: str(sch.endTime, '18:00'),
-            intervalMinutes: num(sch.intervalMinutes, 8), holes: 18,
-            greenFeeWeekdayCents: dollarsToCentsOr0(num(Number(sch.greenFeeWeekday), 0)),
-            greenFeeWeekendCents: dollarsToCentsOr0(num(Number(sch.greenFeeWeekend), 0)),
-            memberRateWeekdayCents: dollarsToCents(sch.memberRateWeekday as number),
-            memberRateWeekendCents: dollarsToCents(sch.memberRateWeekend as number),
-            residentRateWeekdayCents: dollarsToCents(sch.residentRateWeekday as number),
-            residentRateWeekendCents: dollarsToCents(sch.residentRateWeekend as number),
-            cartFeeCents: dollarsToCentsOr0(num(Number(sch.cartFee), 0)), walkingAllowed: bool(sch.walkingAllowed, true),
-          },
-        });
-        const today = new Date();
-        for (let i = 0; i < 8; i++) {
-          const dt = new Date(today);
-          dt.setDate(dt.getDate() + i);
-          await generateTeeTimes(builtCourseId, dt.toISOString().split('T')[0]);
-        }
-      }
-
-      const setupLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/verify?token=${verificationToken}`;
-      sendOperatorWelcomeEmail({
-        operatorName: inquiry.contactName, operatorEmail: inquiry.email,
-        courseName: inquiry.courseName, tempPassword, setupLink,
-      }).catch(emailErr => console.error('Welcome email failed:', emailErr));
-      return NextResponse.json({ success: true, tempPassword, setupLink, operatorId: operator.id, slug });
-    } catch (e) {
-      return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
-    }
-  }
-
   // ── Resend welcome email ──────────────────────────────────────────
   if (action === 'resend_welcome') {
     try {
@@ -404,11 +296,26 @@ async function handleAction(
     return NextResponse.json({ success: true });
   }
 
-  // ── Create draft course (no email) ───────────────────────────────
-  if (action === 'create_draft_course') {
+  // ── Build the course from the setup sheet ─────────────────────────
+  //   create_draft_course = build only · build_course = build + welcome email
+  // MP-4a: ONE builder. `build_course` used to be a second, older implementation
+  // of this exact block that mapped only a fraction of the setup sheet — no
+  // facilitiesV2, no passes/tiers, no tee sets, no nines or course products, no
+  // description, no cancellation policy. Which button an admin happened to press
+  // therefore decided how complete the resulting course was, and the thin one
+  // was the one wired to "Build & Email". Both actions now run this path;
+  // build_course is exactly this plus the operator welcome email.
+  if (action === 'create_draft_course' || action === 'build_course') {
+    const buildAndEmail = action === 'build_course';
     try {
       const operatorEmail = inquiry.email.trim().toLowerCase();
       const existingOp = await prisma.courseOperator.findUnique({ where: { email: operatorEmail } });
+      // Preserved from the old build_course path: "Build & Email" mints a new
+      // login, so an existing operator account is a hard stop rather than the
+      // attach-to-existing flow the draft builder allows.
+      if (buildAndEmail && existingOp) {
+        return NextResponse.json({ error: 'Operator with this email already exists' }, { status: 409 });
+      }
       if (existingOp && inquiry.builtCourseId) {
         return NextResponse.json({ courseId: inquiry.builtCourseId, needsReview: [], alreadyBuilt: true });
       }
@@ -598,6 +505,9 @@ async function handleAction(
         adminNotes,
       };
 
+      // Captured out of the create branch below so build_course can put them in
+      // the welcome email. Stays null when attaching to an existing operator.
+      let newLogin: { tempPassword: string; verificationToken: string; operatorId: string } | null = null;
       let builtCourseId: string | null = null;
       if (existingOp) {
         // V9-1b: operator having a course is no longer a dead-end.
@@ -645,6 +555,7 @@ async function handleAction(
           include: { course: true },
         });
         builtCourseId = operator.course?.[0]?.id ?? null;
+        newLogin = { tempPassword, verificationToken, operatorId: operator.id };
       }
       const from = inquiry.status;
       await prisma.courseInquiry.update({
@@ -783,6 +694,25 @@ async function handleAction(
         }
       }
 
+      if (buildAndEmail) {
+        if (!newLogin) {
+          // Unreachable: the guard above rejects an existing operator, so the
+          // create branch always ran. Surfaced rather than asserted, because a
+          // silent success here would mean a course with no way to log in.
+          return NextResponse.json({ error: 'Course was created but no operator login was minted — check the course in Courses before retrying' }, { status: 500 });
+        }
+        const setupLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/verify?token=${newLogin.verificationToken}`;
+        sendOperatorWelcomeEmail({
+          operatorName: inquiry.contactName, operatorEmail,
+          courseName: inquiry.courseName, tempPassword: newLogin.tempPassword, setupLink,
+        }).catch(emailErr => console.error('Welcome email failed:', emailErr));
+        // Response shape unchanged — the detail page renders tempPassword and
+        // setupLink after a build. (Removing them from JSON is its own queue item.)
+        return NextResponse.json({
+          success: true, tempPassword: newLogin.tempPassword, setupLink,
+          operatorId: newLogin.operatorId, slug, courseId: builtCourseId, needsReview,
+        });
+      }
       return NextResponse.json({ courseId: builtCourseId, needsReview });
     } catch (e) {
       return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });

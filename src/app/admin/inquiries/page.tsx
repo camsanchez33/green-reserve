@@ -6,7 +6,7 @@ import { RefreshCw, Search, Trash2, ChevronRight, ArchiveRestore } from 'lucide-
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
-import { FUNNEL_SEGMENTS, ARCHIVED_STATUSES, ACTIVE_STATUSES, ALIVE_STATUSES, KNOWN_STATUSES, STATUS_DOT_MAP, STATUS_LABEL, isYourMove } from '@/lib/inquiry-status';
+import { FUNNEL_SEGMENTS, ARCHIVED_STATUSES, ACTIVE_STATUSES, ALIVE_STATUSES, KNOWN_STATUSES, STATUS_DOT_MAP, STATUS_LABEL, isYourMove, stageEnteredAt, daysSince } from '@/lib/inquiry-status';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -54,7 +54,7 @@ const TABS = [
 // decided; funnel counts, list filtering, and bulk-select eligibility all
 // route through it.
 function tabMatches(key: string, inq: Inquiry): boolean {
-  if (key === 'your-move') return isYourMove(inq.status, inq.updatedAt || inq.createdAt);
+  if (key === 'your-move') return isYourMove(inq.status, inq.createdAt, inq.events);
   if (key === 'all') return (ALIVE_STATUSES as readonly string[]).includes(inq.status);
   if (key === 'archived') return (ARCHIVED_STATUSES as readonly string[]).includes(inq.status);
   const seg = FUNNEL_SEGMENTS.find(s => s.key === key);
@@ -78,13 +78,18 @@ const SORT_LS_KEY = 'admin-inquiries-sort-by-tab';
 const PAGE_SIZE = 50;
 
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-function daysAgo(d: string) { return Math.max(0, Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24))); }
+// MP-4a: time in the CURRENT stage, derived from the event ledger. This used
+// to read updatedAt, which any write bumps — saving an admin note on a
+// three-week-old stalled inquiry made it read "0d" and dropped it out of the
+// stale filter and the longest-in-stage sort.
+const stageStart = (inq: Inquiry) => stageEnteredAt(inq.status, inq.createdAt, inq.events);
+const stageDays = (inq: Inquiry) => daysSince(stageStart(inq));
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const hasBadEmail = (inq: Inquiry) => !!inq.email && !EMAIL_RE.test(inq.email.trim());
 
 function whyArchived(inq: Inquiry): { reason: string; date: string } {
-  if (inq.status === 'live') return { reason: 'Went live', date: inq.updatedAt || inq.createdAt };
-  if (inq.status === 'rejected') return { reason: 'Rejected', date: inq.updatedAt || inq.createdAt };
+  if (inq.status === 'live') return { reason: 'Went live', date: stageEnteredAt(inq.status, inq.createdAt, inq.events).toISOString() };
+  if (inq.status === 'rejected') return { reason: 'Rejected', date: stageEnteredAt(inq.status, inq.createdAt, inq.events).toISOString() };
   const lastEvent = inq.events.length > 0 ? inq.events[inq.events.length - 1] : null;
   const actorName = lastEvent?.actorName || '';
   if (actorName.toLowerCase().includes('permanently deleted')) return { reason: 'Course deleted', date: lastEvent?.createdAt || inq.updatedAt || inq.createdAt };
@@ -309,7 +314,7 @@ function InquiriesListInner() {
   const sortFn = (a: Inquiry, b: Inquiry) => {
     if (sortBy === 'oldest') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
     if (sortBy === 'name') return a.courseName.localeCompare(b.courseName);
-    if (sortBy === 'longest_stage') return new Date(a.updatedAt || a.createdAt).getTime() - new Date(b.updatedAt || b.createdAt).getTime();
+    if (sortBy === 'longest_stage') return stageStart(a).getTime() - stageStart(b).getTime();
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   };
 
@@ -317,7 +322,7 @@ function InquiriesListInner() {
     if (filterCourseType && inq.courseType !== filterCourseType) return false;
     if (filterState && inq.state.toUpperCase() !== filterState.toUpperCase()) return false;
     if (filterAgeBucket) {
-      const days = daysAgo(inq.updatedAt || inq.createdAt);
+      const days = stageDays(inq);
       if (days <= Number(filterAgeBucket)) return false;
     }
     if (filterBadDataOnly && !hasBadEmail(inq)) return false;
@@ -653,7 +658,7 @@ function InquiriesListInner() {
 
             const renderRow = (inq: Inquiry) => {
               const dot = (STATUS_DOT_MAP[inq.status] || 'neutral') as 'ok' | 'bad' | 'warn' | 'neutral';
-              const days = daysAgo(inq.updatedAt || inq.createdAt);
+              const days = stageDays(inq);
               const stale = !isClosedTab && days > 7;
               const closed = isClosedTab ? whyArchived(inq) : null;
 

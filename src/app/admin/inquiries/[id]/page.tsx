@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
-import { STATUS_DOT_MAP, STATUS_LABEL, ACTIVE_STATUSES } from '@/lib/inquiry-status';
+import { STATUS_DOT_MAP, STATUS_LABEL, ACTIVE_STATUSES, stageEnteredAt, daysSince } from '@/lib/inquiry-status';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { LoadFailure } from '@/components/ui/ErrorState';
 import {
@@ -47,8 +47,8 @@ function daysAgo(d: string) {
 }
 
 function whyArchived(inq: Inquiry): { reason: string; date: string } {
-  if (inq.status === 'live') return { reason: 'Went live', date: inq.updatedAt || inq.createdAt };
-  if (inq.status === 'rejected') return { reason: 'Rejected', date: inq.updatedAt || inq.createdAt };
+  if (inq.status === 'live') return { reason: 'Went live', date: stageEnteredAt(inq.status, inq.createdAt, inq.events).toISOString() };
+  if (inq.status === 'rejected') return { reason: 'Rejected', date: stageEnteredAt(inq.status, inq.createdAt, inq.events).toISOString() };
   const lastEvent = inq.events.length > 0 ? inq.events[inq.events.length - 1] : null;
   const actorName = lastEvent?.actorName || '';
   if (actorName.toLowerCase().includes('permanently deleted')) return { reason: 'Course deleted', date: lastEvent?.createdAt || inq.updatedAt || inq.createdAt };
@@ -633,7 +633,9 @@ function InquiryDetailInner() {
 
   const isArchived = TERMINAL_STATUSES.has(inq.status);
   const dot = (STATUS_DOT_MAP[inq.status] || 'neutral') as 'ok' | 'bad' | 'warn' | 'neutral';
-  const days = daysAgo(inq.updatedAt || inq.createdAt);
+  // MP-4a: days in the CURRENT stage from the event ledger, not updatedAt —
+  // identical derivation to the list page so the two can't disagree.
+  const days = daysSince(stageEnteredAt(inq.status, inq.createdAt, inq.events));
 
   const sheetSentEvent = [...inq.events].reverse().find(e => e.toStatus === 'details_requested');
   const liveEvent = [...inq.events].reverse().find(e => e.toStatus === 'live');
