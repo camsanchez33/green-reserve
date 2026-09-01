@@ -717,7 +717,77 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       - No test runner exists; MP-1 #2's archive-then-restore test unbuildable.
       - Phantom $10 backfill still pending Cam's approval for a prod write.
 
-  - [ ] MP-3 — THE BIG MIGRATION, one attended run, everything in
+  - [x] MP-3 — SHIPPED AND LIVE. Ran as FIVE migrations, not one, on Cam's call.
+    Every money column in the schema is now integer cents; the only remaining
+    Floats are ratings and discountPct, which are not money.
+      A    5ad596d  additive: PaymentEvent, ChangeRequest, CronRunLog,
+           AdminAuditLog, 9 columns, 17 indexes. Booking had ZERO indexes —
+           every admin money query was a sequential scan.
+      B1   5cd8f21  Booking money Float -> Int. Already cents; no data change,
+           no code change. All 72 values verified integral first.
+      B2a  52ec22f  MembershipTier -> cents
+      B2b  3c7a803  Course -> cents
+      B2cd 76f743a  TeeTime + TeeTimeSchedule -> cents (one migration: the
+           engine copies schedule rates onto tee times, so splitting them would
+           have put a x100 inside that copy)
+    WHY IT SPLIT: the spec says "money Float -> integer cents everywhere" as one
+    change. The database said otherwise — Booking held CENTS in a Float while
+    TeeTime/Course/MembershipTier/Schedule held DOLLARS. Course.lateCancellation
+    Fee was 10/20 while Booking.cancellationFeeTotal was 1000/2000: THE SAME FEE
+    IN TWO UNITS. A blanket "convert every Float" would have destroyed one of
+    them, plus four ratings and discountPct.
+    THE TECHNIQUE THAT MADE IT VERIFIABLE — reuse this: columns were RENAMED
+    (*Cents), not just retyped. Float and Int are both `number` to TypeScript,
+    so retyping in place lets every stale caller compile and price at 100x
+    silently. Renaming turned an unverifiable ~450-site sweep into compile
+    errors worked to zero (63 + 8 + 74). Convention follows Expense.amountCents.
+    WHERE THE COMPILER STOPS — this is the durable lesson. tsc reached zero and
+    code was STILL broken, three times, all found by grepping the old names
+    AFTER the build was green:
+      1. `any`. normalize-course.ts (B2b) and normalizeDbTeeTime (B2cd, with an
+         explicit eslint-disable) read undefined and fell through to defaults.
+         The second would have shown NO PRICE on every tee time on every course
+         page — the primary booking surface.
+      2. Excess-property checks do not fire through a variable. The draft-build
+         assembles `const courseFields = {...}` then passes it to
+         prisma.course.create, so six stale money keys were silently dropped and
+         columns fell back to defaults.
+    ALWAYS grep the old names after tsc is clean.
+    TWO PRE-EXISTING BUGS FIXED INCIDENTALLY:
+      - manage/swap-time wrote dollars into Booking.greenFeeTotal (cents) with
+        no conversion — swapping a tee time repriced the round at 1/100th
+        ($50 -> $0.50). Nobody had noticed.
+      - api/membership/[id] derived cents as Math.round(annualFee * 100); once
+        the column was cents that would have charged members 100x. Caught by
+        tsc via the function signature — grep would not have, the line has no
+        column name in it.
+    CONTRACT now enforced by src/lib/money.ts + tier-wire/course-wire/
+    schedule-wire: cents at rest and in arithmetic, DOLLARS on the wire. Keeping
+    the wire unchanged meant no form or client component was touched, so none
+    could be silently missed. Money keys were also REMOVED from both settings
+    allowlists so a future contributor cannot write a raw dollar into a cents
+    column.
+    VERIFIED LIVE on greenreserve.app after merge: 12,750 tee times, sum exactly
+    x100, zero Float money columns, and the golfer tee sheet returns
+    green_fee 50 / cart_fee 34 / late_cancellation_fee 20 — the pre-migration
+    values.
+    FOLLOW-UPS:
+      - lib/email.ts is inconsistent about units: sendBookingConfirmation takes
+        CENTS and divides, sendMembershipPaymentLinkEmail takes DOLLARS and
+        renders directly. Callers convert to suit. Same latent bug class; own item.
+      - Writers for PaymentEvent / ChangeRequest / CronRunLog / AdminAuditLog
+        ship with the features that use them (MP-6, MP-4, MP-8). Tables exist.
+      - cancellationFeeApplies and AdminUser.sessionVersion were added but their
+        stated rationale is already solved (MP-1 #6 and MP-2/MP-2d). See the
+        schema comments; sessionVersion's remaining value is "sign out
+        everywhere".
+      - Vercel PREVIEW builds fail: JWT_SECRET is Production-scoped only, and
+        five lib modules throw on it at import. Tick Preview on that variable —
+        with a DIFFERENT value, so preview sessions cannot work against prod.
+        CLAUDE.md's env list should say vars are per-environment.
+      - Delete the mp3-cents Neon branch; rotate the neondb_owner password.
+
+  - [ ] MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) —
     ADMIN_MASTER_PLAN §5: money Float → integer cents (+ full codebase sweep),
     PaymentEvent ledger, Booking/Message/InquiryStatusEvent/CourseInquiry/TeeTime
     indexes, inquiry growth columns (source/closedReason/snoozeUntil/
