@@ -5,11 +5,19 @@
 // Run: node scripts/status.mjs
 
 import { readFileSync, writeFileSync, existsSync, statSync } from 'node:fs'
-import { execSync } from 'node:child_process'
+import { execSync, execFileSync } from 'node:child_process'
 import { join } from 'node:path'
 
 const ROOT = process.cwd()
 const sh = (cmd) => { try { return execSync(cmd, { cwd: ROOT, encoding: 'utf8' }).trim() } catch { return '' } }
+// git WITHOUT a shell. execSync goes through cmd.exe on Windows, which mangles
+// a bare `--format=%cI` ("'%cI' is not recognized") and passes single quotes
+// through literally, so several git calls silently returned ''. Passing argv
+// directly avoids every layer of shell quoting on both Windows and POSIX.
+const git = (...args) => {
+  try { return execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' }).trim() }
+  catch { return '' }
+}
 const read = (f) => existsSync(join(ROOT, f)) ? readFileSync(join(ROOT, f), 'utf8') : ''
 
 // ---------- git facts ----------
@@ -18,7 +26,7 @@ const BRANCH = sh('git rev-parse --abbrev-ref HEAD')
 const DIRTY = sh('git status --porcelain').split('\n').filter(Boolean)
 const knownHashes = new Set(sh('git log --format=%h --all -n 4000').split('\n').filter(Boolean))
 const hashDate = {}
-for (const line of sh("git log --format='%h|%cI|%s' --all -n 4000").split('\n').filter(Boolean)) {
+for (const line of git('log', '--format=%h|%cI|%s', '--all', '-n', '4000').split('\n').filter(Boolean)) {
   const [h, d, ...s] = line.split('|')
   hashDate[h] = { date: d, subject: s.join('|') }
 }
@@ -28,7 +36,7 @@ const isRealHash = (h) => {
   if (!full) return null
   const short = full.slice(0, 7)
   if (!hashDate[short]) {
-    const line = sh(`git log -1 --format='%h|%cI|%s' ${full}`)
+    const line = git('log', '-1', '--format=%h|%cI|%s', full)
     const [hh, d, ...s] = line.split('|')
     hashDate[hh] = { date: d, subject: s.join('|') }
     return hh
@@ -121,8 +129,8 @@ const runItems = parseItems('RUN_QUEUE.md').map(classify)
 const revItems = parseItems('REVISE_QUEUE.md').map(classify)
 
 // ---------- drift: commits the queue has not recorded ----------
-const queueLastCommit = sh('git log -1 --format=%cI -- RUN_QUEUE.md')
-const sinceQueue = sh(`git log --format='%h|%cI|%s' --since="${queueLastCommit}" --no-merges`)
+const queueLastCommit = git('log', '-1', '--format=%cI', '--', 'RUN_QUEUE.md')
+const sinceQueue = git('log', '--format=%h|%cI|%s', `--since=${queueLastCommit}`, '--no-merges')
   .split('\n').filter(Boolean).map((l) => { const [h, d, ...s] = l.split('|'); return { h, date: d, subject: s.join('|') } })
   .filter((c) => !/^queue\/spec update/i.test(c.subject))
   .filter((c) => c.date > queueLastCommit)
@@ -194,7 +202,7 @@ function auditBank() {
   }
   flush()
   const totals = pages.reduce((a, p) => ({ sec: a.sec + p.sec, money: a.money + p.money, polish: a.polish + p.polish, ideas: a.ideas + (p.hasIdeas ? 1 : 0) }), { sec: 0, money: 0, polish: 0, ideas: 0 })
-  const lastTouched = sh('git log -1 --format=%cI -- AUDIT_MASTER.md')
+  const lastTouched = git('log', '-1', '--format=%cI', '--', 'AUDIT_MASTER.md')
   return { pages, totals, tracked: !!lastTouched, lastTouched }
 }
 const bank = auditBank()
@@ -215,7 +223,7 @@ const specFiles = sh("git ls-files '*_SPEC.md' 'ADMIN_MASTER_PLAN.md' 'ARCHITECT
 const specs = specFiles.map((f) => {
   const base = f.replace(/\.md$/, '')
   const openRefs = notStarted.concat(awaiting, inFlight).filter((i) => [i.title, ...i.body].join(' ').includes(base)).length
-  const last = sh(`git log -1 --format=%cI -- "${f}"`)
+  const last = git('log', '-1', '--format=%cI', '--', f)
   return { file: f, openRefs, lastTouched: last ? last.slice(0, 10) : '', ageDays: daysSince(last) }
 }).sort((a, b) => (b.openRefs - a.openRefs) || (a.ageDays - b.ageDays))
 
@@ -240,7 +248,7 @@ const payload = {
   revise: { done: revDone, open: revOpen.map((i) => ({ title: i.shortTitle, line: i.line, state: i.state })) },
   specs,
   bank,
-  recentCommits: sh("git log -12 --format='%h|%cI|%s' --no-merges").split('\n').filter(Boolean)
+  recentCommits: git('log', '-12', '--format=%h|%cI|%s', '--no-merges').split('\n').filter(Boolean)
     .map((l) => { const [h, d, ...s] = l.split('|'); return { h, date: d.slice(0, 10), subject: s.join('|') } }),
 }
 

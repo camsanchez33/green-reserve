@@ -204,6 +204,22 @@ GitHub secret `SHADOW_DATABASE_URL` must be set in the repo for the CI check to 
 Sliding renewal is implemented in `src/lib/auth.ts` → `getOperatorSession()` / `getGolferSession()`.
 Re-run `scripts/route-inventory.ts` after adding routes to keep ARCHITECTURE.md current.
 
+### Status board — regenerate at the end of EVERY run
+
+`STATUS.md` / `STATUS.json` / `STATUS.artifact.html` are how Cam sees what has
+shipped and what is planned without reading the queue. They are generated, not
+hand-edited. Last step of every run, after the work is committed:
+
+```bash
+node scripts/status.mjs && node scripts/status-html.mjs
+```
+
+then commit the three outputs with the run. A stale board is worse than none —
+it reports work as "not started" that shipped hours ago.
+
+`AUDIT_MASTER.md` is Cam's private ideas bank. It is gitignored. Never commit it,
+and never move its contents into the queue without asking.
+
 ### Doc-file commit rule
 After every run, `git status` — if dirty:
 - **Doc files** (`RUN_QUEUE.md`, `*_SPEC.md`, `CLAUDE.md`): COMMIT with message `"queue/spec update"` — never discard; Cowork edits them between runs.

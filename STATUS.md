@@ -4,44 +4,32 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-01 20:11 UTC · branch `feat/mp3b2b-course-money-cents` · HEAD `f42e86c` · working tree **6 dirty file(s)**
+Generated 2026-09-01 20:58 UTC · branch `main` · HEAD `ae37ae1` · working tree **5 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-08-30**. 5 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-09-01**. 1 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `f42e86c` | 2026-09-01 | MP-3 run B2b: Course money to integer cents — and the two places the rename did NOT protect |
-| `244cf1a` | 2026-09-01 | MP-3 run B2a: MembershipTier money to integer cents — renamed so the compiler enforces it |
-| `0ac78f4` | 2026-09-01 | Remove _tmp_snap.ts — scratch script accidentally committed in the B1 merge |
-| `83798d3` | 2026-09-01 | MP-3 run B1: Booking money Float -> Int (no data change, no code change) |
-| `d38d2b2` | 2026-08-30 | MP-3 run A: the eight additive schema changes (no data rewrite) |
+| `ae37ae1` | 2026-09-01 | Add the status board (STATUS.md/json/html + generators); gitignore AUDIT_MASTER.md |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-Matched back to the queue items they belong to:
+### Uncommitted working tree (5 file(s))
 
-- `f42e86c` **MP-3 run B2b: Course money to integer cents — and the two places the rename did ** → item still reads *not-started*: MP-3 — THE BIG MIGRATION, one attended run, everything in — `RUN_QUEUE.md:720`
-- `244cf1a` **MP-3 run B2a: MembershipTier money to integer cents — renamed so the compiler en** → item still reads *not-started*: MP-3 — THE BIG MIGRATION, one attended run, everything in — `RUN_QUEUE.md:720`
-- `83798d3` **MP-3 run B1: Booking money Float -> Int (no data change, no code change)** → item still reads *not-started*: MP-3 — THE BIG MIGRATION, one attended run, everything in — `RUN_QUEUE.md:720`
-- `d38d2b2` **MP-3 run A: the eight additive schema changes (no data rewrite)** → item still reads *not-started*: MP-3 — THE BIG MIGRATION, one attended run, everything in — `RUN_QUEUE.md:720`
-
-### Uncommitted working tree (6 file(s))
-
-- `?? AUDIT_MASTER.md`
-- `?? STATUS.artifact.html`
-- `?? STATUS.json`
-- `?? STATUS.md`
-- `?? scripts/status-html.mjs`
-- `?? scripts/status.mjs`
+- `M CLAUDE.md`
+- `M STATUS.artifact.html`
+- `M STATUS.json`
+- `M STATUS.md`
+- `M scripts/status.mjs`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
 
 ## In flight
 
-- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:1226`
+- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:1296`
   - FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because "no linked inquiry" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding the
   - Last session's raw Prisma script (a read-only check confirming Fake
   - Fairways existed) got blocked by this sandbox's auto-mode classifier as a potential production-database access outside the app's own authenticated API. That block is almost certainly the intended, correct behavior — a raw script has no place touching real course/booking/ operator data, authorized or not — so I did NOT retry it, and built the override into the sanctioned admin API instead, per the 
@@ -79,23 +67,23 @@ This is the distinction a raw checkbox count gets wrong.
 9. SD-7 — SEO + assets: sitemap.ts (robots.txt advertises one that 404s), — `RUN_QUEUE.md:356`
 10. SD-8 — merge + split: Payments + Cancellations → one Money page with — `RUN_QUEUE.md:364`
 11. SD-9 — funnel + auth polish: split the details sheet into a required core — `RUN_QUEUE.md:370`
-12. MP-3 — THE BIG MIGRATION, one attended run, everything in — `RUN_QUEUE.md:720`
-13. MP-4 — pipeline reshape: queue-first inquiries list (dedup, true — `RUN_QUEUE.md:727`
-14. MP-5 — courses reshape: evidence on list rows (already computed, never — `RUN_QUEUE.md:731`
-15. MP-6 — money reshape: Revenue problems pinned all-time + collected-basis — `RUN_QUEUE.md:735`
-16. MP-7 — comms merge: Broadcasts composer into Messages (owner-only), — `RUN_QUEUE.md:739`
-17. MP-8 — chrome + System: sidebar real links + self-fetched badges + — `RUN_QUEUE.md:743`
-18. MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in — `RUN_QUEUE.md:747`
-19. MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity, — `RUN_QUEUE.md:753`
-20. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved — `RUN_QUEUE.md:757`
-21. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:774`
-22. BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet: — `RUN_QUEUE.md:779`
-23. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:800`
-24. COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small) — `RUN_QUEUE.md:801`
-25. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:823`
-26. ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule) — `RUN_QUEUE.md:843`
-27. ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → "Send upda — `RUN_QUEUE.md:845`
-28. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:902`
+12. MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) — — `RUN_QUEUE.md:790`
+13. MP-4 — pipeline reshape: queue-first inquiries list (dedup, true — `RUN_QUEUE.md:797`
+14. MP-5 — courses reshape: evidence on list rows (already computed, never — `RUN_QUEUE.md:801`
+15. MP-6 — money reshape: Revenue problems pinned all-time + collected-basis — `RUN_QUEUE.md:805`
+16. MP-7 — comms merge: Broadcasts composer into Messages (owner-only), — `RUN_QUEUE.md:809`
+17. MP-8 — chrome + System: sidebar real links + self-fetched badges + — `RUN_QUEUE.md:813`
+18. MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in — `RUN_QUEUE.md:817`
+19. MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity, — `RUN_QUEUE.md:823`
+20. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved — `RUN_QUEUE.md:827`
+21. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:844`
+22. BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet: — `RUN_QUEUE.md:849`
+23. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:870`
+24. COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small) — `RUN_QUEUE.md:871`
+25. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:893`
+26. ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule) — `RUN_QUEUE.md:913`
+27. ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → "Send upda — `RUN_QUEUE.md:915`
+28. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:972`
 
 ## Waiting on you (not on a build)
 
@@ -105,7 +93,7 @@ This is the distinction a raw checkbox count gets wrong.
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:582`
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:630`
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:672`
-- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:823`
+- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:893`
 
 ## Revise campaign (page-by-page pass)
 
@@ -148,21 +136,21 @@ This is the distinction a raw checkbox count gets wrong.
 Page-by-page findings and maybes. **Noticed, not scheduled** — nothing here is on the queue
 until it becomes a RUN_QUEUE item. Counts are unfixed findings as written in that file.
 
-Totals: **17 security/data-loss · 42 money-truth · 31 polish** findings across 34 page blocks; 14 of them carry ideas.
+Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across 43 page blocks; 15 of them carry ideas.
 
 | page | verdict | sec | money | polish | ideas |
 |---|---|---|---|---|---|
+| /dashboard — Tee sheet (+ ?tab=analytics) | Reshape (strip onboarding chrome once live; this is the product). | 2 | 6 | 5 | yes |
 | /admin/courses (+ /[id]) — Fleet | Reshape list (put the evidence on rows); detail 10 tabs → 6. | 2 | 4 | 1 | yes |
+| /dashboard/settings — 9-tab settings | Reshape (split 9 tabs → 5; close the write-holes). | 2 | 3 | 3 | yes |
 | /admin/inquiries (+ /[id]) — Pipeline | Reshape list queue-first; keep detail (best-built admin page). | 2 | 3 | 1 | yes |
-| /dashboard/settings — 9-tab settings | Reshape (split 9 tabs → 5; close the write-holes). | 2 | 3 | 1 | yes |
+| /courses/[slug] — The course page (storefront) | Keep + reshape — the strongest page in the product. | 2 | 2 | 1 | yes |
 | /admin/employees — Team &amp; access | Keep, demote to utility, slim to one card. | 2 |  | 1 |  |
-| /dashboard — Tee sheet (+ ?tab=analytics) | Reshape (strip onboarding chrome once live; this is the product). | 1 | 5 | 2 | yes |
 | /dashboard/verify · /dashboard/2fa · /dashboard/login · /dashboard/forgot-password · /dashboard/reset-password — Auth | Keep (mostly well-built), fix the recovery dead-ends. | 1 | 2 | 1 |  |
 | /admin/messages — Operator comms | Keep + absorb Broadcasts. | 1 | 2 |  | yes |
 | /admin/broadcasts — Mass operator email | Merge into Messages, then park the page (trigger: ~10 courses). | 1 | 2 |  | yes |
 | /for-courses — Lead form | Keep (good on a phone), fix the plumbing. | 1 | 1 | 1 |  |
 | /admin/golfers — Support lookup | Reshape into a record page; search → ⌘K palette. | 1 | 1 |  | yes |
-| Golfer-facing pages — /courses/[slug], /book, /checkin, /manage, /receipt, /membership | Not yet deep-dived (this audit covered admin, dashboard, and the marketing/funnel site). | 1 |  | 1 |  |
 | /api/inquiries — Lead intake API | Fix now (ship-blocker). | 1 |  |  |  |
 | /admin/create — "Manual build" wizard | Delete as a destination. | 1 |  |  | yes |
 | /admin — Overview | Reshape (5 zones — see Deep Dive 01). |  | 5 | 3 | yes |
@@ -171,15 +159,17 @@ Totals: **17 security/data-loss · 42 money-truth · 31 polish** findings across
 | /admin/activity — Cross-course feed | Merge a 15-event strip into Overview, park the page (trigger: >20 events/day). |  | 2 |  |  |
 | /admin/system — Health check | Keep — make the dots able to turn red. |  | 2 |  | yes |
 | / — Homepage | Reshape (honesty + assets, not structure). |  | 1 | 6 | yes |
-| /dashboard/payments + /dashboard/cancellations — Money | Merge into one "Money" page (same endpoint already). |  | 1 |  | yes |
+| /dashboard/payments + /dashboard/cancellations — Money | Merge into one "Money" page (same endpoint already). |  | 1 | 1 | yes |
+| /book — Checkout (card capture) | Keep — the model the other pages should match. |  | 1 |  |  |
+| /manage/[bookingId] — Manage a booking | Keep. Most feature-complete terminal — cancel, change time (slot picker + price deltas), change party size (repriced), all timezone-correct. |  | 1 |  |  |
 | /dashboard/schedules — Tee-time generator | Keep (best-explained page in the app). |  | 1 |  |  |
 | /dashboard/onboarding — Guided first-run | Keep (self-destructs once live), fix the state bug. |  | 1 |  |  |
 | Admin chrome — AdminSidebar · CommandPalette |  |  |  | 3 |  |
+| /dashboard/members — Membership tiers | Keep — freeze (over-built for pre-launch). |  |  | 3 |  |
 | SEO plumbing (robots / sitemap / metadata) | Fix now (build it). |  |  | 2 |  |
 | /terms · /privacy · /operator-agreement — Legal | Keep, fix the template. |  |  | 1 |  |
 | /admin/profile — Account | Keep — make it the sole home of change-password. |  |  | 1 |  |
 | /admin/login · /admin/owner-login · /admin/set-password · /admin/forgot-password — Doors | Merge to one door; keep set/forgot. |  |  | 1 |  |
-| /dashboard/members — Membership tiers | Keep — freeze (over-built for pre-launch). |  |  | 1 |  |
 | Stubs — /dashboard/tournaments · /dashboard/outings · (empty dashboard/tee-times/) | Keep the honest stubs; delete the empty dir. |  |  | 1 |  |
 
 ## Spec inventory
@@ -188,30 +178,12 @@ Totals: **17 security/data-loss · 42 money-truth · 31 polish** findings across
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `ARCHITECTURE.md` | 4 | 2026-08-29 | 2d |
-| `CLAUDE.md` | 4 | 2026-08-29 | 2d |
-| `ONBOARDING_V2_SPEC.md` | 2 | 2026-07-20 | 43d |
-| `COURSE_LAYOUT_SPEC.md` | 2 | 2026-07-16 | 47d |
-| `ADMIN_MASTER_PLAN.md` | 1 | 2026-08-28 | 3d |
-| `ADMIN_V4_SPEC.md` | 1 | 2026-08-28 | 3d |
-| `BIRDIE_AI_SPEC.md` | 1 | 2026-07-20 | 43d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-08-29 | 2d |
-| `GOLFER_SPEC.md` | 0 | 2026-07-14 | 48d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-07-09 | 53d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-07-09 | 53d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-07-09 | 54d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-07-08 | 54d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-07-08 | 54d |
-| `RECEIPT_SPEC.md` | 0 | 2026-07-08 | 54d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-07-07 | 55d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-07-07 | 55d |
-| `HARDENING_SPEC.md` | 0 | 2026-07-07 | 55d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-07-07 | 55d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-07-06 | 56d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-07-07 | 56d |
 
 ## Recent commits
 
+- `ae37ae1` 2026-09-01 — Add the status board (STATUS.md/json/html + generators); gitignore AUDIT_MASTER.md
+- `0001c5f` 2026-09-01 — queue/spec update — MP-3 shipped across five migrations
+- `a2a9788` 2026-09-01 — MP-3 runs B2c+B2d: TeeTime and TeeTimeSchedule to integer cents — the money path is now float-free
 - `f42e86c` 2026-09-01 — MP-3 run B2b: Course money to integer cents — and the two places the rename did NOT protect
 - `244cf1a` 2026-09-01 — MP-3 run B2a: MembershipTier money to integer cents — renamed so the compiler enforces it
 - `0ac78f4` 2026-09-01 — Remove _tmp_snap.ts — scratch script accidentally committed in the B1 merge
@@ -221,10 +193,7 @@ Totals: **17 security/data-loss · 42 money-truth · 31 polish** findings across
 - `bf3bcb2` 2026-08-30 — MP-2e: close the MP-2 series — fix the viewer crash MP-2d shipped, convert the last consumers
 - `3d3f4d8` 2026-08-29 — queue/spec update
 - `22d0f68` 2026-08-29 — MP-2d: mutations join the classifier, role comes from the row, and the nav stops lying
-- `298b978` 2026-08-29 — queue/spec update
-- `e5b5413` 2026-08-29 — MP-2c: one adminFetch, two shared error components, a role-filtered nav — kill the class
-- `8f67066` 2026-08-29 — queue/spec update
 
 ---
 
-**Totals:** 118 done · 8 awaiting review · 1 in flight · 28 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 119 done · 8 awaiting review · 1 in flight · 28 not started · 8 revise pages open · 15 ideas · 2 parked.

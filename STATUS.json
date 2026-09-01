@@ -1,93 +1,32 @@
 {
-  "generatedAt": "2026-09-01T20:11:46.927Z",
+  "generatedAt": "2026-09-01T20:58:43.931Z",
   "repo": {
-    "head": "f42e86c",
-    "branch": "feat/mp3b2b-course-money-cents",
-    "dirtyCount": 6,
+    "head": "ae37ae1",
+    "branch": "main",
+    "dirtyCount": 5,
     "dirty": [
-      "?? AUDIT_MASTER.md",
-      "?? STATUS.artifact.html",
-      "?? STATUS.json",
-      "?? STATUS.md",
-      "?? scripts/status-html.mjs",
-      "?? scripts/status.mjs"
+      "M CLAUDE.md",
+      " M STATUS.artifact.html",
+      " M STATUS.json",
+      " M STATUS.md",
+      " M scripts/status.mjs"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-08-30T12:14:40-04:00",
+    "queueLastCommit": "2026-09-01T16:53:29-04:00",
     "unrecorded": [
       {
-        "h": "f42e86c",
-        "date": "2026-09-01T16:11:29-04:00",
-        "subject": "MP-3 run B2b: Course money to integer cents — and the two places the rename did NOT protect",
-        "ids": [
-          "MP-3"
-        ],
-        "matches": [
-          {
-            "title": "MP-3 — THE BIG MIGRATION, one attended run, everything in",
-            "line": 720,
-            "state": "not-started"
-          }
-        ]
-      },
-      {
-        "h": "244cf1a",
-        "date": "2026-09-01T15:57:05-04:00",
-        "subject": "MP-3 run B2a: MembershipTier money to integer cents — renamed so the compiler enforces it",
-        "ids": [
-          "MP-3"
-        ],
-        "matches": [
-          {
-            "title": "MP-3 — THE BIG MIGRATION, one attended run, everything in",
-            "line": 720,
-            "state": "not-started"
-          }
-        ]
-      },
-      {
-        "h": "0ac78f4",
-        "date": "2026-09-01T15:40:09-04:00",
-        "subject": "Remove _tmp_snap.ts — scratch script accidentally committed in the B1 merge",
+        "h": "ae37ae1",
+        "date": "2026-09-01T16:55:52-04:00",
+        "subject": "Add the status board (STATUS.md/json/html + generators); gitignore AUDIT_MASTER.md",
         "ids": [],
         "matches": []
-      },
-      {
-        "h": "83798d3",
-        "date": "2026-09-01T15:37:35-04:00",
-        "subject": "MP-3 run B1: Booking money Float -> Int (no data change, no code change)",
-        "ids": [
-          "MP-3"
-        ],
-        "matches": [
-          {
-            "title": "MP-3 — THE BIG MIGRATION, one attended run, everything in",
-            "line": 720,
-            "state": "not-started"
-          }
-        ]
-      },
-      {
-        "h": "d38d2b2",
-        "date": "2026-08-30T15:40:35-04:00",
-        "subject": "MP-3 run A: the eight additive schema changes (no data rewrite)",
-        "ids": [
-          "MP-3"
-        ],
-        "matches": [
-          {
-            "title": "MP-3 — THE BIG MIGRATION, one attended run, everything in",
-            "line": 720,
-            "state": "not-started"
-          }
-        ]
       }
     ]
   },
   "counts": {
-    "runDone": 118,
+    "runDone": 119,
     "runAwaiting": 8,
     "runInFlight": 1,
     "runNotStarted": 28,
@@ -99,7 +38,7 @@
   "inFlight": [
     {
       "title": "BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET",
-      "line": 1226,
+      "line": 1296,
       "body": [
         "FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because \"no linked inquiry\" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding them outright. FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() + a \"Force delete permanently\" button per acknowledged orphan — owner-only, typed name confirm, server re-verifies the course is still an orphan before touching anything (refuses if it turns out to have a real inquiry link — this can never be used to route around the doctrine for a real course). This is the mechanism for Cam's DaisyLinks exception, but I have NOT executed it against DaisyLinks yet:",
         "- Last session's raw Prisma script (a read-only check confirming Fake",
@@ -226,88 +165,88 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "MP-3 — THE BIG MIGRATION, one attended run, everything in",
-      "line": 720,
+      "title": "MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) —",
+      "line": 790,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-4 — pipeline reshape: queue-first inquiries list (dedup, true",
-      "line": 727,
+      "line": 797,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-5 — courses reshape: evidence on list rows (already computed, never",
-      "line": 731,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-6 — money reshape: Revenue problems pinned all-time + collected-basis",
-      "line": 735,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-7 — comms merge: Broadcasts composer into Messages (owner-only),",
-      "line": 739,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-8 — chrome + System: sidebar real links + self-fetched badges +",
-      "line": 743,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in",
-      "line": 747,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,",
-      "line": 753,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved",
-      "line": 757,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState",
-      "line": 774,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:",
-      "line": 779,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)",
-      "line": 800,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small)",
       "line": 801,
       "section": "Queue (run in this order)"
     },
     {
-      "title": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
+      "title": "MP-6 — money reshape: Revenue problems pinned all-time + collected-basis",
+      "line": 805,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-7 — comms merge: Broadcasts composer into Messages (owner-only),",
+      "line": 809,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-8 — chrome + System: sidebar real links + self-fetched badges +",
+      "line": 813,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in",
+      "line": 817,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,",
       "line": 823,
       "section": "Queue (run in this order)"
     },
     {
+      "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved",
+      "line": 827,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState",
+      "line": 844,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:",
+      "line": 849,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)",
+      "line": 870,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small)",
+      "line": 871,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
+      "line": 893,
+      "section": "Queue (run in this order)"
+    },
+    {
       "title": "ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule), every dashboard ta",
-      "line": 843,
+      "line": 913,
       "section": "Queue (run in this order)"
     },
     {
       "title": "ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → \"Send updated preview\"), Messa",
-      "line": 845,
+      "line": 915,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
-      "line": 902,
+      "line": 972,
       "section": "Queue (run in this order)"
     }
   ],
@@ -345,7 +284,7 @@
     {
       "item": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
       "note": "CAM: confirm the state before this runs — e",
-      "line": 823
+      "line": 893
     }
   ],
   "ideas": {
@@ -416,134 +355,7 @@
       }
     ]
   },
-  "specs": [
-    {
-      "file": "ARCHITECTURE.md",
-      "openRefs": 4,
-      "lastTouched": "2026-08-29",
-      "ageDays": 2
-    },
-    {
-      "file": "CLAUDE.md",
-      "openRefs": 4,
-      "lastTouched": "2026-08-29",
-      "ageDays": 2
-    },
-    {
-      "file": "ONBOARDING_V2_SPEC.md",
-      "openRefs": 2,
-      "lastTouched": "2026-07-20",
-      "ageDays": 43
-    },
-    {
-      "file": "COURSE_LAYOUT_SPEC.md",
-      "openRefs": 2,
-      "lastTouched": "2026-07-16",
-      "ageDays": 47
-    },
-    {
-      "file": "ADMIN_MASTER_PLAN.md",
-      "openRefs": 1,
-      "lastTouched": "2026-08-28",
-      "ageDays": 3
-    },
-    {
-      "file": "ADMIN_V4_SPEC.md",
-      "openRefs": 1,
-      "lastTouched": "2026-08-28",
-      "ageDays": 3
-    },
-    {
-      "file": "BIRDIE_AI_SPEC.md",
-      "openRefs": 1,
-      "lastTouched": "2026-07-20",
-      "ageDays": 43
-    },
-    {
-      "file": "SITE_DASHBOARD_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-08-29",
-      "ageDays": 2
-    },
-    {
-      "file": "GOLFER_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-14",
-      "ageDays": 48
-    },
-    {
-      "file": "ADMIN_V3_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-09",
-      "ageDays": 53
-    },
-    {
-      "file": "PUBLIC_SITE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-09",
-      "ageDays": 53
-    },
-    {
-      "file": "GOLFER_EDGE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-09",
-      "ageDays": 54
-    },
-    {
-      "file": "MANAGE_BOOKING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-08",
-      "ageDays": 54
-    },
-    {
-      "file": "PRODUCTION_READINESS_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-08",
-      "ageDays": 54
-    },
-    {
-      "file": "RECEIPT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-08",
-      "ageDays": 54
-    },
-    {
-      "file": "ADMIN_V2_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-07",
-      "ageDays": 55
-    },
-    {
-      "file": "BACKUP_OPS_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-07",
-      "ageDays": 55
-    },
-    {
-      "file": "HARDENING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-07",
-      "ageDays": 55
-    },
-    {
-      "file": "ONBOARDING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-07",
-      "ageDays": 55
-    },
-    {
-      "file": "ADMIN_REBUILD_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-06",
-      "ageDays": 56
-    },
-    {
-      "file": "DESIGN_SYSTEM_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-07-07",
-      "ageDays": 56
-    }
-  ],
+  "specs": [],
   "bank": {
     "pages": [
       {
@@ -609,12 +421,100 @@
         "inIdeas": false
       },
       {
-        "group": "PUBLIC SITE",
-        "name": "Golfer-facing pages — /courses/[slug], /book, /checkin, /manage, /receipt, /membership",
-        "verdict": "Not yet deep-dived (this audit covered admin, dashboard, and the marketing/funnel site).",
-        "sec": 1,
-        "money": 0,
+        "group": "GOLFER BOOKING",
+        "name": "/courses/[slug] — The course page (storefront)",
+        "verdict": "Keep + reshape — the strongest page in the product.",
+        "sec": 2,
+        "money": 2,
         "polish": 1,
+        "ideas": 0,
+        "inIdeas": true,
+        "hasIdeas": true
+      },
+      {
+        "group": "GOLFER BOOKING",
+        "name": "/book — Checkout (card capture)",
+        "verdict": "Keep — the model the other pages should match.",
+        "sec": 0,
+        "money": 1,
+        "polish": 0,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "GOLFER BOOKING",
+        "name": "/checkin/[bookingId] — Golfer self check-in",
+        "verdict": "Keep. Token-gated; saved-card one-tap and walk-up card paths; shows the late-cancel refund line; links to receipt; never dead-ends. Solid.",
+        "sec": 0,
+        "money": 0,
+        "polish": 0,
+        "ideas": 0
+      },
+      {
+        "group": "GOLFER BOOKING",
+        "name": "/manage/[bookingId] — Manage a booking",
+        "verdict": "Keep. Most feature-complete terminal — cancel, change time (slot picker + price deltas), change party size (repriced), all timezone-correct.",
+        "sec": 0,
+        "money": 1,
+        "polish": 0,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "GOLFER BOOKING",
+        "name": "/receipt/[bookingId] — Confirmation / receipt",
+        "verdict": "Keep + minor reshape. Itemized (incl. the $1.50 fee), printable, handles completed/cancelled/pending.",
+        "sec": 0,
+        "money": 0,
+        "polish": 0,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "GOLFER BOOKING",
+        "name": "/courses/[slug]/member — Member booking portal",
+        "verdict": "Reshape (functional, off the design system).",
+        "sec": 0,
+        "money": 0,
+        "polish": 0,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "GOLFER BOOKING",
+        "name": "/membership/[id] — Member dues payment",
+        "verdict": "Keep. A tokenized dues/initiation payment page; self-contained and fine.",
+        "sec": 0,
+        "money": 0,
+        "polish": 0,
+        "ideas": 0
+      },
+      {
+        "group": "GOLFER BOOKING",
+        "name": "/courses/[slug]/account — Golfer account portal",
+        "verdict": "Keep + rethink scope. Per-course OTP portal (upcoming/past bookings, check-in/manage/receipt links) — good page, wrong scope: one island per course.",
+        "sec": 0,
+        "money": 0,
+        "polish": 0,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "GOLFER BOOKING",
+        "name": "Golfer trust gaps (cold visitor about to enter a card)",
+        "verdict": "",
+        "sec": 0,
+        "money": 0,
+        "polish": 0,
+        "ideas": 0
+      },
+      {
+        "group": "GOLFER BOOKING",
+        "name": "Golfer-facing chrome — CourseCard, /courses directory",
+        "verdict": "Decide: build the directory or delete the card.",
+        "sec": 0,
+        "money": 0,
+        "polish": 0,
         "ideas": 0,
         "inIdeas": false
       },
@@ -771,9 +671,9 @@
         "group": "OPERATOR DASHBOARD",
         "name": "/dashboard — Tee sheet (+ ?tab=analytics)",
         "verdict": "Reshape (strip onboarding chrome once live; this is the product).",
-        "sec": 1,
-        "money": 5,
-        "polish": 2,
+        "sec": 2,
+        "money": 6,
+        "polish": 5,
         "ideas": 0,
         "inIdeas": true,
         "hasIdeas": true
@@ -784,7 +684,7 @@
         "verdict": "Merge into one \"Money\" page (same endpoint already).",
         "sec": 0,
         "money": 1,
-        "polish": 0,
+        "polish": 1,
         "ideas": 0,
         "inIdeas": true,
         "hasIdeas": true
@@ -805,7 +705,7 @@
         "verdict": "Keep — freeze (over-built for pre-launch).",
         "sec": 0,
         "money": 0,
-        "polish": 1,
+        "polish": 3,
         "ideas": 0,
         "inIdeas": false
       },
@@ -815,7 +715,7 @@
         "verdict": "Reshape (split 9 tabs → 5; close the write-holes).",
         "sec": 2,
         "money": 3,
-        "polish": 1,
+        "polish": 3,
         "ideas": 0,
         "inIdeas": true,
         "hasIdeas": true
@@ -897,15 +797,30 @@
       }
     ],
     "totals": {
-      "sec": 17,
-      "money": 42,
-      "polish": 31,
-      "ideas": 14
+      "sec": 19,
+      "money": 47,
+      "polish": 39,
+      "ideas": 15
     },
     "tracked": false,
     "lastTouched": ""
   },
   "recentCommits": [
+    {
+      "h": "ae37ae1",
+      "date": "2026-09-01",
+      "subject": "Add the status board (STATUS.md/json/html + generators); gitignore AUDIT_MASTER.md"
+    },
+    {
+      "h": "0001c5f",
+      "date": "2026-09-01",
+      "subject": "queue/spec update — MP-3 shipped across five migrations"
+    },
+    {
+      "h": "a2a9788",
+      "date": "2026-09-01",
+      "subject": "MP-3 runs B2c+B2d: TeeTime and TeeTimeSchedule to integer cents — the money path is now float-free"
+    },
     {
       "h": "f42e86c",
       "date": "2026-09-01",
@@ -950,21 +865,6 @@
       "h": "22d0f68",
       "date": "2026-08-29",
       "subject": "MP-2d: mutations join the classifier, role comes from the row, and the nav stops lying"
-    },
-    {
-      "h": "298b978",
-      "date": "2026-08-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "e5b5413",
-      "date": "2026-08-29",
-      "subject": "MP-2c: one adminFetch, two shared error components, a role-filtered nav — kill the class"
-    },
-    {
-      "h": "8f67066",
-      "date": "2026-08-29",
-      "subject": "queue/spec update"
     }
   ]
 }

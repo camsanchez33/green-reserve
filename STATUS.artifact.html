@@ -117,22 +117,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-09-01 20:11 UTC</span><span>feat/mp3b2b-course-money-cents @ f42e86c</span>
-    <span>6 uncommitted</span>
+    <span>2026-09-01 20:58 UTC</span><span>main @ ae37ae1</span>
+    <span>5 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">5 runs have shipped that the queue doesn't know about</div>
-<p class="note">RUN_QUEUE.md was last committed 2026-08-30. These commits appear nowhere in it.</p>
+<div class="lede">1 run has shipped that the queue doesn't know about</div>
+<p class="note">RUN_QUEUE.md was last committed 2026-09-01. These commits appear nowhere in it.</p>
 <ul>
-<li><span class="h">f42e86c</span><span>MP-3 run B2b: Course money to integer cents — and the two places the rename did NOT protect <span class="chip idle">item still reads not-started &middot; line 720</span></span></li>
-<li><span class="h">244cf1a</span><span>MP-3 run B2a: MembershipTier money to integer cents — renamed so the compiler enforces it <span class="chip idle">item still reads not-started &middot; line 720</span></span></li>
-<li><span class="h">0ac78f4</span><span>Remove _tmp_snap.ts — scratch script accidentally committed in the B1 merge</span></li>
-<li><span class="h">83798d3</span><span>MP-3 run B1: Booking money Float -&gt; Int (no data change, no code change) <span class="chip idle">item still reads not-started &middot; line 720</span></span></li>
-<li><span class="h">d38d2b2</span><span>MP-3 run A: the eight additive schema changes (no data rewrite) <span class="chip idle">item still reads not-started &middot; line 720</span></span></li>
+<li><span class="h">ae37ae1</span><span>Add the status board (STATUS.md/json/html + generators); gitignore AUDIT_MASTER.md</span></li>
 </ul></div>
 <div class="tiles">
-  <div class="tile t-good"><span class="n">118</span><span class="l">Done</span></div>
+  <div class="tile t-good"><span class="n">119</span><span class="l">Done</span></div>
   <div class="tile t-warn"><span class="n">8</span><span class="l">Awaiting review</span></div>
   <div class="tile t-alarm"><span class="n">1</span><span class="l">In flight</span></div>
   <div class="tile t-idle"><span class="n">28</span><span class="l">Not started</span></div>
@@ -142,7 +138,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card">
 <h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>?? AUDIT_MASTER.md</code></li><li><code>?? STATUS.artifact.html</code></li><li><code>?? STATUS.json</code></li><li><code>?? STATUS.md</code></li><li><code>?? scripts/status-html.mjs</code></li><li><code>?? scripts/status.mjs</code></li></ul>
+<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M STATUS.artifact.html</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li><li><code>M scripts/status.mjs</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -157,23 +153,23 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="row"><span class="idx">9</span><span class="t">SD-7 — SEO + assets: sitemap.ts (robots.txt advertises one that 404s),</span><span class="where">:356</span></div>
 <div class="row"><span class="idx">10</span><span class="t">SD-8 — merge + split: Payments + Cancellations → one Money page with</span><span class="where">:364</span></div>
 <div class="row"><span class="idx">11</span><span class="t">SD-9 — funnel + auth polish: split the details sheet into a required core</span><span class="where">:370</span></div>
-<div class="row"><span class="idx">12</span><span class="t">MP-3 — THE BIG MIGRATION, one attended run, everything in</span><span class="where">:720</span></div>
-<div class="row"><span class="idx">13</span><span class="t">MP-4 — pipeline reshape: queue-first inquiries list (dedup, true</span><span class="where">:727</span></div>
-<div class="row"><span class="idx">14</span><span class="t">MP-5 — courses reshape: evidence on list rows (already computed, never</span><span class="where">:731</span></div>
-<div class="row"><span class="idx">15</span><span class="t">MP-6 — money reshape: Revenue problems pinned all-time + collected-basis</span><span class="where">:735</span></div>
-<div class="row"><span class="idx">16</span><span class="t">MP-7 — comms merge: Broadcasts composer into Messages (owner-only),</span><span class="where">:739</span></div>
-<div class="row"><span class="idx">17</span><span class="t">MP-8 — chrome + System: sidebar real links + self-fetched badges +</span><span class="where">:743</span></div>
-<div class="row"><span class="idx">18</span><span class="t">MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in</span><span class="where">:747</span></div>
-<div class="row"><span class="idx">19</span><span class="t">MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,</span><span class="where">:753</span></div>
-<div class="row"><span class="idx">20</span><span class="t">MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved</span><span class="where">:757</span></div>
-<div class="row"><span class="idx">21</span><span class="t">MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState</span><span class="where">:774</span></div>
-<div class="row"><span class="idx">22</span><span class="t">BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:</span><span class="where">:779</span></div>
-<div class="row"><span class="idx">23</span><span class="t">COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)</span><span class="where">:800</span></div>
-<div class="row"><span class="idx">24</span><span class="t">COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small)</span><span class="where">:801</span></div>
-<div class="row"><span class="idx">25</span><span class="t">Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with &quot;TheGreenReserve LLC&quot; + formation state (CAM: confirm the state before thi</span><span class="where">:823</span></div>
-<div class="row"><span class="idx">26</span><span class="t">ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule), every dashboard ta</span><span class="where">:843</span></div>
-<div class="row"><span class="idx">27</span><span class="t">ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → &quot;Send updated preview&quot;), Messa</span><span class="where">:845</span></div>
-<div class="row"><span class="idx">28</span><span class="t">BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as</span><span class="where">:902</span></div>
+<div class="row"><span class="idx">12</span><span class="t">MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) —</span><span class="where">:790</span></div>
+<div class="row"><span class="idx">13</span><span class="t">MP-4 — pipeline reshape: queue-first inquiries list (dedup, true</span><span class="where">:797</span></div>
+<div class="row"><span class="idx">14</span><span class="t">MP-5 — courses reshape: evidence on list rows (already computed, never</span><span class="where">:801</span></div>
+<div class="row"><span class="idx">15</span><span class="t">MP-6 — money reshape: Revenue problems pinned all-time + collected-basis</span><span class="where">:805</span></div>
+<div class="row"><span class="idx">16</span><span class="t">MP-7 — comms merge: Broadcasts composer into Messages (owner-only),</span><span class="where">:809</span></div>
+<div class="row"><span class="idx">17</span><span class="t">MP-8 — chrome + System: sidebar real links + self-fetched badges +</span><span class="where">:813</span></div>
+<div class="row"><span class="idx">18</span><span class="t">MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in</span><span class="where">:817</span></div>
+<div class="row"><span class="idx">19</span><span class="t">MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,</span><span class="where">:823</span></div>
+<div class="row"><span class="idx">20</span><span class="t">MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved</span><span class="where">:827</span></div>
+<div class="row"><span class="idx">21</span><span class="t">MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState</span><span class="where">:844</span></div>
+<div class="row"><span class="idx">22</span><span class="t">BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:</span><span class="where">:849</span></div>
+<div class="row"><span class="idx">23</span><span class="t">COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)</span><span class="where">:870</span></div>
+<div class="row"><span class="idx">24</span><span class="t">COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small)</span><span class="where">:871</span></div>
+<div class="row"><span class="idx">25</span><span class="t">Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with &quot;TheGreenReserve LLC&quot; + formation state (CAM: confirm the state before thi</span><span class="where">:893</span></div>
+<div class="row"><span class="idx">26</span><span class="t">ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule), every dashboard ta</span><span class="where">:913</span></div>
+<div class="row"><span class="idx">27</span><span class="t">ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → &quot;Send updated preview&quot;), Messa</span><span class="where">:915</span></div>
+<div class="row"><span class="idx">28</span><span class="t">BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as</span><span class="where">:972</span></div>
 </div></section>
 <section><h2>Revise campaign &mdash; page by page</h2>
 <p class="note">14 pages closed, 8 open. One page in flight at a time.</p>
@@ -193,7 +189,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <p>FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because &quot;no linked inquiry&quot; never becomes false on its own. New listAcknowledgedOrphans() surfaces alrea&hellip;</p>
 <p>- Last session's raw Prisma script (a read-only check confirming Fake</p>
 <p>Fairways existed) got blocked by this sandbox's auto-mode classifier as a potential production-database access outside the app's own authenticated API. That block is almost certainly the intended, correct behavior — a raw script has no place touching real course/booking/ operator data, authorized or not — so I did NOT &hellip;</p>
-<p class="note"><code>RUN_QUEUE.md:1226</code></p></div>
+<p class="note"><code>RUN_QUEUE.md:1296</code></p></div>
 </section>
 <section><h2>Built, not signed off</h2>
 <p class="note">The box is open because <code>/gr-review</code> hasn't run &mdash; not because the code is missing.</p>
@@ -208,25 +204,25 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="row"><span class="t">MP-2e</span><span class="age">2d</span><span class="where">bf3bcb2</span></div>
 </div></section>
 <section><h2>Waiting on you, not on a build</h2>
-<ul class="plain"><li>pending Cam's approval for a prod write <span class="where">:455</span></li><li>Cam's approval for a prod backfill <span class="where">:496</span></li><li>pending Cam's approval for a prod write <span class="where">:533</span></li><li>pending Cam's approval for a prod write <span class="where">:582</span></li><li>pending Cam's approval for a prod write <span class="where">:630</span></li><li>pending Cam's approval for a prod write <span class="where">:672</span></li><li>CAM: confirm the state before this runs — e <span class="where">:823</span></li></ul>
+<ul class="plain"><li>pending Cam's approval for a prod write <span class="where">:455</span></li><li>Cam's approval for a prod backfill <span class="where">:496</span></li><li>pending Cam's approval for a prod write <span class="where">:533</span></li><li>pending Cam's approval for a prod write <span class="where">:582</span></li><li>pending Cam's approval for a prod write <span class="where">:630</span></li><li>pending Cam's approval for a prod write <span class="where">:672</span></li><li>CAM: confirm the state before this runs — e <span class="where">:893</span></li></ul>
 </section>
 <section><h2>Parked, with triggers</h2><ul class="plain"><li>Role-shaped admin (parked 2026-08-26 — TRIGGER: first employee account provisioned)</li><li>Future admin tabs (from brainstorm 2026-07-09 — each has a TRIGGER, don't build early)</li></ul></section>
 </div></div>
 <section><h2>Ideas &mdash; not specced, not queued</h2><ul class="plain"><li>OPERATOR STAFF ACCOUNTS rework (Cam, 2026-07-10: &quot;whole thing is going to be reworked and better&quot;) — current section contradicts itself: copy says &quot;full dashboard access&quot;, role dropdown says &quot;tee sheet access&quot;. Rework needs: clear role tiers (e.g. owner / manager / tee-sheet-only), what each can see (money? settings? members?), invite email flow, deactivate/reset from the card, and the same no-silent-failure patterns as admin. Spec when Cam's ready to define the role tiers.</li><li>Promo codes / featured placement tools — TRIGGER: marketplace mode ships</li><li>Admin audit log (who changed what, beyond activity feed) — TRIGGER: 2nd real employee with manager+ role</li><li>Disputes / refund-request queue — TRIGGER: first real golfer dispute</li><li>Reviews &amp; reputation — TRIGGER: marketplace mode</li><li>Referral program (course-refers-course) — TRIGGER: 10+ live courses; earlier fit: &quot;founding courses&quot; word-of-mouth</li><li>PRELAUNCH (when go-live nears): scripts/purge-test-data.ts — owner-run purge of test courses + all related records, dry-run mode first, backup before, attended; keeps the payment-history archive guard intact in the app</li><li>MANAGE_BOOKING M3 (update card via token-gated SetupIntent) — SKIPPED 2026-07-08, Cam's call: check-in fresh-card path covers it; revisit if a golfer/course asks</li><li>Remove or keep &quot;No account yet&quot; badge on dashboard members list (GolferAccount linking undecided)</li><li>Outings &amp; tournaments: real models + operator features (dashboard pages are placeholders)</li><li>Marketplace mode: golfer-facing homepage + course directory (when course volume justifies)</li><li>Work email provisioning for employees (Google Workspace — outside the app)</li><li>Product walkthrough video for homepage (SHOW_VIDEO flag ready after public site run)</li><li>Dashboard screenshots → public/screenshots/dashboard-1/2/3.png (Cam captures — retake AFTER Clubhouse sweep)</li><li>Course hero photos: upload flow for course pages (D3 adds the slot)</li></ul></section>
 <section><h2>Ideas bank &mdash; AUDIT_MASTER.md</h2>
-<p class="note">Page-by-page findings and maybes. <strong>Noticed, not scheduled</strong> &mdash; nothing here is queued work until it becomes a RUN_QUEUE item. 17 security &middot; 42 money-truth &middot; 31 polish across 34 page blocks.</p>
+<p class="note">Page-by-page findings and maybes. <strong>Noticed, not scheduled</strong> &mdash; nothing here is queued work until it becomes a RUN_QUEUE item. 19 security &middot; 47 money-truth &middot; 39 polish across 43 page blocks.</p>
 <div class="tablewrap"><table><thead><tr><th>Page</th><th>Verdict</th><th>Sec</th><th>Money</th><th>Polish</th><th>Ideas</th></tr></thead><tbody>
+<tr><td><code>/dashboard — Tee sheet (+ ?tab=analytics)</code></td><td>Reshape (strip onboarding chrome once live; this is the product).</td><td class="num"><span class="chip alarm">2</span></td><td class="num"><span class="chip warn">6</span></td><td class="num"><span class="chip idle">5</span></td><td class="num">&bull;</td></tr>
 <tr><td><code>/admin/courses (+ /[id]) — Fleet</code></td><td>Reshape list (put the evidence on rows); detail 10 tabs → 6.</td><td class="num"><span class="chip alarm">2</span></td><td class="num"><span class="chip warn">4</span></td><td class="num"><span class="chip idle">1</span></td><td class="num">&bull;</td></tr>
+<tr><td><code>/dashboard/settings — 9-tab settings</code></td><td>Reshape (split 9 tabs → 5; close the write-holes).</td><td class="num"><span class="chip alarm">2</span></td><td class="num"><span class="chip warn">3</span></td><td class="num"><span class="chip idle">3</span></td><td class="num">&bull;</td></tr>
 <tr><td><code>/admin/inquiries (+ /[id]) — Pipeline</code></td><td>Reshape list queue-first; keep detail (best-built admin page).</td><td class="num"><span class="chip alarm">2</span></td><td class="num"><span class="chip warn">3</span></td><td class="num"><span class="chip idle">1</span></td><td class="num">&bull;</td></tr>
-<tr><td><code>/dashboard/settings — 9-tab settings</code></td><td>Reshape (split 9 tabs → 5; close the write-holes).</td><td class="num"><span class="chip alarm">2</span></td><td class="num"><span class="chip warn">3</span></td><td class="num"><span class="chip idle">1</span></td><td class="num">&bull;</td></tr>
+<tr><td><code>/courses/[slug] — The course page (storefront)</code></td><td>Keep + reshape — the strongest page in the product.</td><td class="num"><span class="chip alarm">2</span></td><td class="num"><span class="chip warn">2</span></td><td class="num"><span class="chip idle">1</span></td><td class="num">&bull;</td></tr>
 <tr><td><code>/admin/employees — Team &amp;amp; access</code></td><td>Keep, demote to utility, slim to one card.</td><td class="num"><span class="chip alarm">2</span></td><td class="num"></td><td class="num"><span class="chip idle">1</span></td><td class="num"></td></tr>
-<tr><td><code>/dashboard — Tee sheet (+ ?tab=analytics)</code></td><td>Reshape (strip onboarding chrome once live; this is the product).</td><td class="num"><span class="chip alarm">1</span></td><td class="num"><span class="chip warn">5</span></td><td class="num"><span class="chip idle">2</span></td><td class="num">&bull;</td></tr>
 <tr><td><code>/dashboard/verify · /dashboard/2fa · /dashboard/login · /dashboard/forgot-password · /dashboard/reset-password — Auth</code></td><td>Keep (mostly well-built), fix the recovery dead-ends.</td><td class="num"><span class="chip alarm">1</span></td><td class="num"><span class="chip warn">2</span></td><td class="num"><span class="chip idle">1</span></td><td class="num"></td></tr>
 <tr><td><code>/admin/messages — Operator comms</code></td><td>Keep + absorb Broadcasts.</td><td class="num"><span class="chip alarm">1</span></td><td class="num"><span class="chip warn">2</span></td><td class="num"></td><td class="num">&bull;</td></tr>
 <tr><td><code>/admin/broadcasts — Mass operator email</code></td><td>Merge into Messages, then park the page (trigger: ~10 courses).</td><td class="num"><span class="chip alarm">1</span></td><td class="num"><span class="chip warn">2</span></td><td class="num"></td><td class="num">&bull;</td></tr>
 <tr><td><code>/for-courses — Lead form</code></td><td>Keep (good on a phone), fix the plumbing.</td><td class="num"><span class="chip alarm">1</span></td><td class="num"><span class="chip warn">1</span></td><td class="num"><span class="chip idle">1</span></td><td class="num"></td></tr>
 <tr><td><code>/admin/golfers — Support lookup</code></td><td>Reshape into a record page; search → ⌘K palette.</td><td class="num"><span class="chip alarm">1</span></td><td class="num"><span class="chip warn">1</span></td><td class="num"></td><td class="num">&bull;</td></tr>
-<tr><td><code>Golfer-facing pages — /courses/[slug], /book, /checkin, /manage, /receipt, /membership</code></td><td>Not yet deep-dived (this audit covered admin, dashboard, and the marketing/funnel site).</td><td class="num"><span class="chip alarm">1</span></td><td class="num"></td><td class="num"><span class="chip idle">1</span></td><td class="num"></td></tr>
 <tr><td><code>/api/inquiries — Lead intake API</code></td><td>Fix now (ship-blocker).</td><td class="num"><span class="chip alarm">1</span></td><td class="num"></td><td class="num"></td><td class="num"></td></tr>
 <tr><td><code>/admin/create — &quot;Manual build&quot; wizard</code></td><td>Delete as a destination.</td><td class="num"><span class="chip alarm">1</span></td><td class="num"></td><td class="num"></td><td class="num">&bull;</td></tr>
 <tr><td><code>/admin — Overview</code></td><td>Reshape (5 zones — see Deep Dive 01).</td><td class="num"></td><td class="num"><span class="chip warn">5</span></td><td class="num"><span class="chip idle">3</span></td><td class="num">&bull;</td></tr>
@@ -235,43 +231,27 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>/admin/activity — Cross-course feed</code></td><td>Merge a 15-event strip into Overview, park the page (trigger: &gt;20 events/day).</td><td class="num"></td><td class="num"><span class="chip warn">2</span></td><td class="num"></td><td class="num"></td></tr>
 <tr><td><code>/admin/system — Health check</code></td><td>Keep — make the dots able to turn red.</td><td class="num"></td><td class="num"><span class="chip warn">2</span></td><td class="num"></td><td class="num">&bull;</td></tr>
 <tr><td><code>/ — Homepage</code></td><td>Reshape (honesty + assets, not structure).</td><td class="num"></td><td class="num"><span class="chip warn">1</span></td><td class="num"><span class="chip idle">6</span></td><td class="num">&bull;</td></tr>
-<tr><td><code>/dashboard/payments + /dashboard/cancellations — Money</code></td><td>Merge into one &quot;Money&quot; page (same endpoint already).</td><td class="num"></td><td class="num"><span class="chip warn">1</span></td><td class="num"></td><td class="num">&bull;</td></tr>
+<tr><td><code>/dashboard/payments + /dashboard/cancellations — Money</code></td><td>Merge into one &quot;Money&quot; page (same endpoint already).</td><td class="num"></td><td class="num"><span class="chip warn">1</span></td><td class="num"><span class="chip idle">1</span></td><td class="num">&bull;</td></tr>
+<tr><td><code>/book — Checkout (card capture)</code></td><td>Keep — the model the other pages should match.</td><td class="num"></td><td class="num"><span class="chip warn">1</span></td><td class="num"></td><td class="num"></td></tr>
+<tr><td><code>/manage/[bookingId] — Manage a booking</code></td><td>Keep. Most feature-complete terminal — cancel, change time (slot picker + price deltas), change party size (repriced), all timezone-correct.</td><td class="num"></td><td class="num"><span class="chip warn">1</span></td><td class="num"></td><td class="num"></td></tr>
 <tr><td><code>/dashboard/schedules — Tee-time generator</code></td><td>Keep (best-explained page in the app).</td><td class="num"></td><td class="num"><span class="chip warn">1</span></td><td class="num"></td><td class="num"></td></tr>
 <tr><td><code>/dashboard/onboarding — Guided first-run</code></td><td>Keep (self-destructs once live), fix the state bug.</td><td class="num"></td><td class="num"><span class="chip warn">1</span></td><td class="num"></td><td class="num"></td></tr>
 <tr><td><code>Admin chrome — AdminSidebar · CommandPalette</code></td><td></td><td class="num"></td><td class="num"></td><td class="num"><span class="chip idle">3</span></td><td class="num"></td></tr>
+<tr><td><code>/dashboard/members — Membership tiers</code></td><td>Keep — freeze (over-built for pre-launch).</td><td class="num"></td><td class="num"></td><td class="num"><span class="chip idle">3</span></td><td class="num"></td></tr>
 <tr><td><code>SEO plumbing (robots / sitemap / metadata)</code></td><td>Fix now (build it).</td><td class="num"></td><td class="num"></td><td class="num"><span class="chip idle">2</span></td><td class="num"></td></tr>
 <tr><td><code>/terms · /privacy · /operator-agreement — Legal</code></td><td>Keep, fix the template.</td><td class="num"></td><td class="num"></td><td class="num"><span class="chip idle">1</span></td><td class="num"></td></tr>
 <tr><td><code>/admin/profile — Account</code></td><td>Keep — make it the sole home of change-password.</td><td class="num"></td><td class="num"></td><td class="num"><span class="chip idle">1</span></td><td class="num"></td></tr>
 <tr><td><code>/admin/login · /admin/owner-login · /admin/set-password · /admin/forgot-password — Doors</code></td><td>Merge to one door; keep set/forgot.</td><td class="num"></td><td class="num"></td><td class="num"><span class="chip idle">1</span></td><td class="num"></td></tr>
-<tr><td><code>/dashboard/members — Membership tiers</code></td><td>Keep — freeze (over-built for pre-launch).</td><td class="num"></td><td class="num"></td><td class="num"><span class="chip idle">1</span></td><td class="num"></td></tr>
 <tr><td><code>Stubs — /dashboard/tournaments · /dashboard/outings · (empty dashboard/tee-times/)</code></td><td>Keep the honest stubs; delete the empty dir.</td><td class="num"></td><td class="num"></td><td class="num"><span class="chip idle">1</span></td><td class="num"></td></tr>
 </tbody></table></div></section>
 <section><h2>Spec inventory</h2>
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
-<tr><td><code>ARCHITECTURE.md</code></td><td class="num">4</td><td class="num">2026-08-29 &middot; 2d</td></tr>
-<tr><td><code>CLAUDE.md</code></td><td class="num">4</td><td class="num">2026-08-29 &middot; 2d</td></tr>
-<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">2</td><td class="num">2026-07-20 &middot; 43d</td></tr>
-<tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">2</td><td class="num">2026-07-16 &middot; 47d</td></tr>
-<tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">1</td><td class="num">2026-08-28 &middot; 3d</td></tr>
-<tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">1</td><td class="num">2026-08-28 &middot; 3d</td></tr>
-<tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-07-20 &middot; 43d</td></tr>
-<tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-08-29 &middot; 2d</td></tr>
-<tr><td><code>GOLFER_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-07-14 &middot; 48d</td></tr>
-<tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-07-09 &middot; 53d</td></tr>
-<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-07-09 &middot; 53d</td></tr>
-<tr><td><code>GOLFER_EDGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-07-09 &middot; 54d</td></tr>
-<tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-07-08 &middot; 54d</td></tr>
-<tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-07-08 &middot; 54d</td></tr>
-<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-07-08 &middot; 54d</td></tr>
-<tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-07-07 &middot; 55d</td></tr>
-<tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-07-07 &middot; 55d</td></tr>
-<tr><td><code>HARDENING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-07-07 &middot; 55d</td></tr>
-<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-07-07 &middot; 55d</td></tr>
-<tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-07-06 &middot; 56d</td></tr>
-<tr><td><code>DESIGN_SYSTEM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-07-07 &middot; 56d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">ae37ae1</td><td class="num">2026-09-01</td><td>Add the status board (STATUS.md/json/html + generators); gitignore AUDIT_MASTER.md</td></tr>
+<tr><td class="num">0001c5f</td><td class="num">2026-09-01</td><td>queue/spec update — MP-3 shipped across five migrations</td></tr>
+<tr><td class="num">a2a9788</td><td class="num">2026-09-01</td><td>MP-3 runs B2c+B2d: TeeTime and TeeTimeSchedule to integer cents — the money path is now float-free</td></tr>
 <tr><td class="num">f42e86c</td><td class="num">2026-09-01</td><td>MP-3 run B2b: Course money to integer cents — and the two places the rename did NOT protect</td></tr>
 <tr><td class="num">244cf1a</td><td class="num">2026-09-01</td><td>MP-3 run B2a: MembershipTier money to integer cents — renamed so the compiler enforces it</td></tr>
 <tr><td class="num">0ac78f4</td><td class="num">2026-09-01</td><td>Remove _tmp_snap.ts — scratch script accidentally committed in the B1 merge</td></tr>
@@ -281,9 +261,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">bf3bcb2</td><td class="num">2026-08-30</td><td>MP-2e: close the MP-2 series — fix the viewer crash MP-2d shipped, convert the last consumers</td></tr>
 <tr><td class="num">3d3f4d8</td><td class="num">2026-08-29</td><td>queue/spec update</td></tr>
 <tr><td class="num">22d0f68</td><td class="num">2026-08-29</td><td>MP-2d: mutations join the classifier, role comes from the row, and the nav stops lying</td></tr>
-<tr><td class="num">298b978</td><td class="num">2026-08-29</td><td>queue/spec update</td></tr>
-<tr><td class="num">e5b5413</td><td class="num">2026-08-29</td><td>MP-2c: one adminFetch, two shared error components, a role-filtered nav — kill the class</td></tr>
-<tr><td class="num">8f67066</td><td class="num">2026-08-29</td><td>queue/spec update</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
