@@ -1,0 +1,970 @@
+{
+  "generatedAt": "2026-09-01T20:11:46.927Z",
+  "repo": {
+    "head": "f42e86c",
+    "branch": "feat/mp3b2b-course-money-cents",
+    "dirtyCount": 6,
+    "dirty": [
+      "?? AUDIT_MASTER.md",
+      "?? STATUS.artifact.html",
+      "?? STATUS.json",
+      "?? STATUS.md",
+      "?? scripts/status-html.mjs",
+      "?? scripts/status.mjs"
+    ],
+    "looksLikeRunInProgress": false
+  },
+  "drift": {
+    "queueLastCommit": "2026-08-30T12:14:40-04:00",
+    "unrecorded": [
+      {
+        "h": "f42e86c",
+        "date": "2026-09-01T16:11:29-04:00",
+        "subject": "MP-3 run B2b: Course money to integer cents — and the two places the rename did NOT protect",
+        "ids": [
+          "MP-3"
+        ],
+        "matches": [
+          {
+            "title": "MP-3 — THE BIG MIGRATION, one attended run, everything in",
+            "line": 720,
+            "state": "not-started"
+          }
+        ]
+      },
+      {
+        "h": "244cf1a",
+        "date": "2026-09-01T15:57:05-04:00",
+        "subject": "MP-3 run B2a: MembershipTier money to integer cents — renamed so the compiler enforces it",
+        "ids": [
+          "MP-3"
+        ],
+        "matches": [
+          {
+            "title": "MP-3 — THE BIG MIGRATION, one attended run, everything in",
+            "line": 720,
+            "state": "not-started"
+          }
+        ]
+      },
+      {
+        "h": "0ac78f4",
+        "date": "2026-09-01T15:40:09-04:00",
+        "subject": "Remove _tmp_snap.ts — scratch script accidentally committed in the B1 merge",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "83798d3",
+        "date": "2026-09-01T15:37:35-04:00",
+        "subject": "MP-3 run B1: Booking money Float -> Int (no data change, no code change)",
+        "ids": [
+          "MP-3"
+        ],
+        "matches": [
+          {
+            "title": "MP-3 — THE BIG MIGRATION, one attended run, everything in",
+            "line": 720,
+            "state": "not-started"
+          }
+        ]
+      },
+      {
+        "h": "d38d2b2",
+        "date": "2026-08-30T15:40:35-04:00",
+        "subject": "MP-3 run A: the eight additive schema changes (no data rewrite)",
+        "ids": [
+          "MP-3"
+        ],
+        "matches": [
+          {
+            "title": "MP-3 — THE BIG MIGRATION, one attended run, everything in",
+            "line": 720,
+            "state": "not-started"
+          }
+        ]
+      }
+    ]
+  },
+  "counts": {
+    "runDone": 118,
+    "runAwaiting": 8,
+    "runInFlight": 1,
+    "runNotStarted": 28,
+    "reviseDone": 14,
+    "reviseOpen": 8,
+    "ideas": 15,
+    "parked": 2
+  },
+  "inFlight": [
+    {
+      "title": "BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET",
+      "line": 1226,
+      "body": [
+        "FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because \"no linked inquiry\" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding them outright. FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() + a \"Force delete permanently\" button per acknowledged orphan — owner-only, typed name confirm, server re-verifies the course is still an orphan before touching anything (refuses if it turns out to have a real inquiry link — this can never be used to route around the doctrine for a real course). This is the mechanism for Cam's DaisyLinks exception, but I have NOT executed it against DaisyLinks yet:",
+        "- Last session's raw Prisma script (a read-only check confirming Fake",
+        "Fairways existed) got blocked by this sandbox's auto-mode classifier as a potential production-database access outside the app's own authenticated API. That block is almost certainly the intended, correct behavior — a raw script has no place touching real course/booking/ operator data, authorized or not — so I did NOT retry it, and built the override into the sanctioned admin API instead, per the tool's own guidance (\"stop and explain, let the user decide\").",
+        "- I have no admin login credentials to trigger the sanctioned API myself",
+        "either (no seed/bootstrap admin account exists in this repo).",
+        "- So: the button exists and is ready, but DaisyLinks has NOT actually",
+        "been deleted. Cam (or Cowork with real admin access) needs to open /admin/courses, find DaisyLinks under \"acknowledged orphans,\" type its name, and click Force delete permanently — or explicitly grant a Bash permission rule if script-based execution is preferred instead. STILL TO VERIFY once that click happens: DaisyLinks gone from courses, Revenue, Activity, and Overview; banner gone; reload ×3 → still gone; a genuinely new orphan still triggers the banner (this part follows directly from the loop fix above and should already hold)."
+      ]
+    }
+  ],
+  "awaiting": [
+    {
+      "title": "MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin",
+      "line": 390,
+      "hash": "7246a62",
+      "shipDate": "2026-08-29",
+      "ageDays": 2
+    },
+    {
+      "title": "MP-1",
+      "line": 420,
+      "hash": "41f5ea8",
+      "shipDate": "2026-08-29",
+      "ageDays": 2
+    },
+    {
+      "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
+      "line": 455,
+      "hash": "4ef11dd",
+      "shipDate": "2026-08-29",
+      "ageDays": 2
+    },
+    {
+      "title": "MP-2",
+      "line": 496,
+      "hash": "958f229",
+      "shipDate": "2026-08-29",
+      "ageDays": 2
+    },
+    {
+      "title": "MP-2b",
+      "line": 533,
+      "hash": "a134af5",
+      "shipDate": "2026-08-29",
+      "ageDays": 2
+    },
+    {
+      "title": "MP-2c",
+      "line": 582,
+      "hash": "e5b5413",
+      "shipDate": "2026-08-29",
+      "ageDays": 2
+    },
+    {
+      "title": "MP-2d",
+      "line": 630,
+      "hash": "22d0f68",
+      "shipDate": "2026-08-29",
+      "ageDays": 2
+    },
+    {
+      "title": "MP-2e",
+      "line": 672,
+      "hash": "bf3bcb2",
+      "shipDate": "2026-08-30",
+      "ageDays": 2
+    }
+  ],
+  "next": [
+    {
+      "title": "OWNER TOTP 2FA (SCHEMA CHANGE, ATTENDED — run second, right after ADMIN",
+      "line": 236,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "BUG: `viewer` role is a promise the code never keeps (no migration, small)",
+      "line": 289,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "SD-1 — plug the leaks: auth the inquiries GET + explicit select with no",
+      "line": 319,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "SD-2 — the mobile shell: bottom nav below md, drop h-screen",
+      "line": 328,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "SD-3 — course-local time: Course.timezone column, every dashboard and",
+      "line": 333,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "SD-4 — money truth: analytics counts completed bookings by play date",
+      "line": 337,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "SD-5 — lifecycle states: walk-in/phone booking POST (the biggest",
+      "line": 343,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "SD-6 — marketing honesty: the walk-in FAQ (only AFTER SD-5 makes it",
+      "line": 350,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "SD-7 — SEO + assets: sitemap.ts (robots.txt advertises one that 404s),",
+      "line": 356,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "SD-8 — merge + split: Payments + Cancellations → one Money page with",
+      "line": 364,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "SD-9 — funnel + auth polish: split the details sheet into a required core",
+      "line": 370,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-3 — THE BIG MIGRATION, one attended run, everything in",
+      "line": 720,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-4 — pipeline reshape: queue-first inquiries list (dedup, true",
+      "line": 727,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-5 — courses reshape: evidence on list rows (already computed, never",
+      "line": 731,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-6 — money reshape: Revenue problems pinned all-time + collected-basis",
+      "line": 735,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-7 — comms merge: Broadcasts composer into Messages (owner-only),",
+      "line": 739,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-8 — chrome + System: sidebar real links + self-fetched badges +",
+      "line": 743,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in",
+      "line": 747,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,",
+      "line": 753,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved",
+      "line": 757,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState",
+      "line": 774,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:",
+      "line": 779,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)",
+      "line": 800,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small)",
+      "line": 801,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
+      "line": 823,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule), every dashboard ta",
+      "line": 843,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → \"Send updated preview\"), Messa",
+      "line": 845,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
+      "line": 902,
+      "section": "Queue (run in this order)"
+    }
+  ],
+  "waitingOnCam": [
+    {
+      "item": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
+      "note": "pending Cam's approval for a prod write",
+      "line": 455
+    },
+    {
+      "item": "MP-2",
+      "note": "Cam's approval for a prod backfill",
+      "line": 496
+    },
+    {
+      "item": "MP-2b",
+      "note": "pending Cam's approval for a prod write",
+      "line": 533
+    },
+    {
+      "item": "MP-2c",
+      "note": "pending Cam's approval for a prod write",
+      "line": 582
+    },
+    {
+      "item": "MP-2d",
+      "note": "pending Cam's approval for a prod write",
+      "line": 630
+    },
+    {
+      "item": "MP-2e",
+      "note": "pending Cam's approval for a prod write",
+      "line": 672
+    },
+    {
+      "item": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
+      "note": "CAM: confirm the state before this runs — e",
+      "line": 823
+    }
+  ],
+  "ideas": {
+    "bullets": [
+      "OPERATOR STAFF ACCOUNTS rework (Cam, 2026-07-10: \"whole thing is going to be reworked and better\") — current section contradicts itself: copy says \"full dashboard access\", role dropdown says \"tee sheet access\". Rework needs: clear role tiers (e.g. owner / manager / tee-sheet-only), what each can see (money? settings? members?), invite email flow, deactivate/reset from the card, and the same no-silent-failure patterns as admin. Spec when Cam's ready to define the role tiers.",
+      "Promo codes / featured placement tools — TRIGGER: marketplace mode ships",
+      "Admin audit log (who changed what, beyond activity feed) — TRIGGER: 2nd real employee with manager+ role",
+      "Disputes / refund-request queue — TRIGGER: first real golfer dispute",
+      "Reviews & reputation — TRIGGER: marketplace mode",
+      "Referral program (course-refers-course) — TRIGGER: 10+ live courses; earlier fit: \"founding courses\" word-of-mouth",
+      "PRELAUNCH (when go-live nears): scripts/purge-test-data.ts — owner-run purge of test courses + all related records, dry-run mode first, backup before, attended; keeps the payment-history archive guard intact in the app",
+      "MANAGE_BOOKING M3 (update card via token-gated SetupIntent) — SKIPPED 2026-07-08, Cam's call: check-in fresh-card path covers it; revisit if a golfer/course asks",
+      "Remove or keep \"No account yet\" badge on dashboard members list (GolferAccount linking undecided)",
+      "Outings & tournaments: real models + operator features (dashboard pages are placeholders)",
+      "Marketplace mode: golfer-facing homepage + course directory (when course volume justifies)",
+      "Work email provisioning for employees (Google Workspace — outside the app)",
+      "Product walkthrough video for homepage (SHOW_VIDEO flag ready after public site run)",
+      "Dashboard screenshots → public/screenshots/dashboard-1/2/3.png (Cam captures — retake AFTER Clubhouse sweep)",
+      "Course hero photos: upload flow for course pages (D3 adds the slot)"
+    ],
+    "parked": [
+      "Role-shaped admin (parked 2026-08-26 — TRIGGER: first employee account provisioned)",
+      "Future admin tabs (from brainstorm 2026-07-09 — each has a TRIGGER, don't build early)"
+    ]
+  },
+  "revise": {
+    "done": 14,
+    "open": [
+      {
+        "title": "A-03 /admin/inquiries/[id] — DETAIL — items 1-7 BUILT (item 1 cbbf1e0,",
+        "line": 292,
+        "state": "shipped-unverified"
+      },
+      {
+        "title": "A-07 /admin/golfers — support lookup",
+        "line": 554,
+        "state": "not-started"
+      },
+      {
+        "title": "A-08 /admin/messages — threads (Cam 2026-07-23: functionally fine, \"just needs to look a little better\" — visual notes go to the AESTHETIC PASS; only structural findings would reopen this)",
+        "line": 555,
+        "state": "not-started"
+      },
+      {
+        "title": "A-09 /admin/activity — ledger + filters",
+        "line": 556,
+        "state": "not-started"
+      },
+      {
+        "title": "A-10 /admin/employees — roles, provisioning",
+        "line": 557,
+        "state": "not-started"
+      },
+      {
+        "title": "A-11 /admin/broadcasts — compose, preview, history",
+        "line": 558,
+        "state": "not-started"
+      },
+      {
+        "title": "A-12 /admin/create — manual build wizard (in-person tool)",
+        "line": 559,
+        "state": "not-started"
+      },
+      {
+        "title": "A-13 /admin",
+        "line": 560,
+        "state": "not-started"
+      }
+    ]
+  },
+  "specs": [
+    {
+      "file": "ARCHITECTURE.md",
+      "openRefs": 4,
+      "lastTouched": "2026-08-29",
+      "ageDays": 2
+    },
+    {
+      "file": "CLAUDE.md",
+      "openRefs": 4,
+      "lastTouched": "2026-08-29",
+      "ageDays": 2
+    },
+    {
+      "file": "ONBOARDING_V2_SPEC.md",
+      "openRefs": 2,
+      "lastTouched": "2026-07-20",
+      "ageDays": 43
+    },
+    {
+      "file": "COURSE_LAYOUT_SPEC.md",
+      "openRefs": 2,
+      "lastTouched": "2026-07-16",
+      "ageDays": 47
+    },
+    {
+      "file": "ADMIN_MASTER_PLAN.md",
+      "openRefs": 1,
+      "lastTouched": "2026-08-28",
+      "ageDays": 3
+    },
+    {
+      "file": "ADMIN_V4_SPEC.md",
+      "openRefs": 1,
+      "lastTouched": "2026-08-28",
+      "ageDays": 3
+    },
+    {
+      "file": "BIRDIE_AI_SPEC.md",
+      "openRefs": 1,
+      "lastTouched": "2026-07-20",
+      "ageDays": 43
+    },
+    {
+      "file": "SITE_DASHBOARD_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-08-29",
+      "ageDays": 2
+    },
+    {
+      "file": "GOLFER_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-07-14",
+      "ageDays": 48
+    },
+    {
+      "file": "ADMIN_V3_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-07-09",
+      "ageDays": 53
+    },
+    {
+      "file": "PUBLIC_SITE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-07-09",
+      "ageDays": 53
+    },
+    {
+      "file": "GOLFER_EDGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-07-09",
+      "ageDays": 54
+    },
+    {
+      "file": "MANAGE_BOOKING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-07-08",
+      "ageDays": 54
+    },
+    {
+      "file": "PRODUCTION_READINESS_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-07-08",
+      "ageDays": 54
+    },
+    {
+      "file": "RECEIPT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-07-08",
+      "ageDays": 54
+    },
+    {
+      "file": "ADMIN_V2_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-07-07",
+      "ageDays": 55
+    },
+    {
+      "file": "BACKUP_OPS_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-07-07",
+      "ageDays": 55
+    },
+    {
+      "file": "HARDENING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-07-07",
+      "ageDays": 55
+    },
+    {
+      "file": "ONBOARDING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-07-07",
+      "ageDays": 55
+    },
+    {
+      "file": "ADMIN_REBUILD_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-07-06",
+      "ageDays": 56
+    },
+    {
+      "file": "DESIGN_SYSTEM_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-07-07",
+      "ageDays": 56
+    }
+  ],
+  "bank": {
+    "pages": [
+      {
+        "group": "PUBLIC SITE",
+        "name": "/ — Homepage",
+        "verdict": "Reshape (honesty + assets, not structure).",
+        "sec": 0,
+        "money": 1,
+        "polish": 6,
+        "ideas": 3,
+        "inIdeas": true,
+        "hasIdeas": true
+      },
+      {
+        "group": "PUBLIC SITE",
+        "name": "/for-courses — Lead form",
+        "verdict": "Keep (good on a phone), fix the plumbing.",
+        "sec": 1,
+        "money": 1,
+        "polish": 1,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "PUBLIC SITE",
+        "name": "/for-courses/details — Concierge details sheet",
+        "verdict": "Reshape (split it).",
+        "sec": 0,
+        "money": 2,
+        "polish": 2,
+        "ideas": 0,
+        "inIdeas": true,
+        "hasIdeas": true
+      },
+      {
+        "group": "PUBLIC SITE",
+        "name": "/api/inquiries — Lead intake API",
+        "verdict": "Fix now (ship-blocker).",
+        "sec": 1,
+        "money": 0,
+        "polish": 0,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "PUBLIC SITE",
+        "name": "/terms · /privacy · /operator-agreement — Legal",
+        "verdict": "Keep, fix the template.",
+        "sec": 0,
+        "money": 0,
+        "polish": 1,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "PUBLIC SITE",
+        "name": "SEO plumbing (robots / sitemap / metadata)",
+        "verdict": "Fix now (build it).",
+        "sec": 0,
+        "money": 0,
+        "polish": 2,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "PUBLIC SITE",
+        "name": "Golfer-facing pages — /courses/[slug], /book, /checkin, /manage, /receipt, /membership",
+        "verdict": "Not yet deep-dived (this audit covered admin, dashboard, and the marketing/funnel site).",
+        "sec": 1,
+        "money": 0,
+        "polish": 1,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "ADMIN CONSOLE",
+        "name": "/admin — Overview",
+        "verdict": "Reshape (5 zones — see Deep Dive 01).",
+        "sec": 0,
+        "money": 5,
+        "polish": 3,
+        "ideas": 0,
+        "inIdeas": true,
+        "hasIdeas": true
+      },
+      {
+        "group": "ADMIN CONSOLE",
+        "name": "/admin/inquiries (+ /[id]) — Pipeline",
+        "verdict": "Reshape list queue-first; keep detail (best-built admin page).",
+        "sec": 2,
+        "money": 3,
+        "polish": 1,
+        "ideas": 0,
+        "inIdeas": true,
+        "hasIdeas": true
+      },
+      {
+        "group": "ADMIN CONSOLE",
+        "name": "/admin/courses (+ /[id]) — Fleet",
+        "verdict": "Reshape list (put the evidence on rows); detail 10 tabs → 6.",
+        "sec": 2,
+        "money": 4,
+        "polish": 1,
+        "ideas": 0,
+        "inIdeas": true,
+        "hasIdeas": true
+      },
+      {
+        "group": "ADMIN CONSOLE",
+        "name": "/admin/revenue — Money",
+        "verdict": "Reshape (problems pinned on top, P&L on a collected basis).",
+        "sec": 0,
+        "money": 4,
+        "polish": 1,
+        "ideas": 0,
+        "inIdeas": true,
+        "hasIdeas": true
+      },
+      {
+        "group": "ADMIN CONSOLE",
+        "name": "/admin/golfers — Support lookup",
+        "verdict": "Reshape into a record page; search → ⌘K palette.",
+        "sec": 1,
+        "money": 1,
+        "polish": 0,
+        "ideas": 0,
+        "inIdeas": true,
+        "hasIdeas": true
+      },
+      {
+        "group": "ADMIN CONSOLE",
+        "name": "/admin/messages — Operator comms",
+        "verdict": "Keep + absorb Broadcasts.",
+        "sec": 1,
+        "money": 2,
+        "polish": 0,
+        "ideas": 0,
+        "inIdeas": true,
+        "hasIdeas": true
+      },
+      {
+        "group": "ADMIN CONSOLE",
+        "name": "/admin/employees — Team &amp; access",
+        "verdict": "Keep, demote to utility, slim to one card.",
+        "sec": 2,
+        "money": 0,
+        "polish": 1,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "ADMIN CONSOLE",
+        "name": "/admin/broadcasts — Mass operator email",
+        "verdict": "Merge into Messages, then park the page (trigger: ~10 courses).",
+        "sec": 1,
+        "money": 2,
+        "polish": 0,
+        "ideas": 0,
+        "inIdeas": true,
+        "hasIdeas": true
+      },
+      {
+        "group": "ADMIN CONSOLE",
+        "name": "/admin/activity — Cross-course feed",
+        "verdict": "Merge a 15-event strip into Overview, park the page (trigger: >20 events/day).",
+        "sec": 0,
+        "money": 2,
+        "polish": 0,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "ADMIN CONSOLE",
+        "name": "/admin/create — \"Manual build\" wizard",
+        "verdict": "Delete as a destination.",
+        "sec": 1,
+        "money": 0,
+        "polish": 0,
+        "ideas": 0,
+        "inIdeas": true,
+        "hasIdeas": true
+      },
+      {
+        "group": "ADMIN CONSOLE",
+        "name": "/admin/system — Health check",
+        "verdict": "Keep — make the dots able to turn red.",
+        "sec": 0,
+        "money": 2,
+        "polish": 0,
+        "ideas": 0,
+        "inIdeas": true,
+        "hasIdeas": true
+      },
+      {
+        "group": "ADMIN CONSOLE",
+        "name": "/admin/profile — Account",
+        "verdict": "Keep — make it the sole home of change-password.",
+        "sec": 0,
+        "money": 0,
+        "polish": 1,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "ADMIN CONSOLE",
+        "name": "/admin/login · /admin/owner-login · /admin/set-password · /admin/forgot-password — Doors",
+        "verdict": "Merge to one door; keep set/forgot.",
+        "sec": 0,
+        "money": 0,
+        "polish": 1,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "ADMIN CONSOLE",
+        "name": "Admin chrome — AdminSidebar · CommandPalette",
+        "verdict": "",
+        "sec": 0,
+        "money": 0,
+        "polish": 3,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "OPERATOR DASHBOARD",
+        "name": "/dashboard — Tee sheet (+ ?tab=analytics)",
+        "verdict": "Reshape (strip onboarding chrome once live; this is the product).",
+        "sec": 1,
+        "money": 5,
+        "polish": 2,
+        "ideas": 0,
+        "inIdeas": true,
+        "hasIdeas": true
+      },
+      {
+        "group": "OPERATOR DASHBOARD",
+        "name": "/dashboard/payments + /dashboard/cancellations — Money",
+        "verdict": "Merge into one \"Money\" page (same endpoint already).",
+        "sec": 0,
+        "money": 1,
+        "polish": 0,
+        "ideas": 0,
+        "inIdeas": true,
+        "hasIdeas": true
+      },
+      {
+        "group": "OPERATOR DASHBOARD",
+        "name": "/dashboard/schedules — Tee-time generator",
+        "verdict": "Keep (best-explained page in the app).",
+        "sec": 0,
+        "money": 1,
+        "polish": 0,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "OPERATOR DASHBOARD",
+        "name": "/dashboard/members — Membership tiers",
+        "verdict": "Keep — freeze (over-built for pre-launch).",
+        "sec": 0,
+        "money": 0,
+        "polish": 1,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "OPERATOR DASHBOARD",
+        "name": "/dashboard/settings — 9-tab settings",
+        "verdict": "Reshape (split 9 tabs → 5; close the write-holes).",
+        "sec": 2,
+        "money": 3,
+        "polish": 1,
+        "ideas": 0,
+        "inIdeas": true,
+        "hasIdeas": true
+      },
+      {
+        "group": "OPERATOR DASHBOARD",
+        "name": "/dashboard/onboarding — Guided first-run",
+        "verdict": "Keep (self-destructs once live), fix the state bug.",
+        "sec": 0,
+        "money": 1,
+        "polish": 0,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "OPERATOR DASHBOARD",
+        "name": "/dashboard/verify · /dashboard/2fa · /dashboard/login · /dashboard/forgot-password · /dashboard/reset-password — Auth",
+        "verdict": "Keep (mostly well-built), fix the recovery dead-ends.",
+        "sec": 1,
+        "money": 2,
+        "polish": 1,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "OPERATOR DASHBOARD",
+        "name": "Stubs — /dashboard/tournaments · /dashboard/outings · (empty dashboard/tee-times/)",
+        "verdict": "Keep the honest stubs; delete the empty dir.",
+        "sec": 0,
+        "money": 0,
+        "polish": 1,
+        "ideas": 0,
+        "inIdeas": false
+      },
+      {
+        "group": "CROSS-CUTTING",
+        "name": "Schema changes worth making while cheap",
+        "verdict": "",
+        "sec": 0,
+        "money": 0,
+        "polish": 0,
+        "ideas": 0
+      },
+      {
+        "group": "CROSS-CUTTING",
+        "name": "Pages we considered and rejected / parked",
+        "verdict": "",
+        "sec": 0,
+        "money": 0,
+        "polish": 0,
+        "ideas": 0
+      },
+      {
+        "group": "CROSS-CUTTING",
+        "name": "Myths busted — do NOT re-audit",
+        "verdict": "",
+        "sec": 0,
+        "money": 0,
+        "polish": 0,
+        "ideas": 0
+      },
+      {
+        "group": "CROSS-CUTTING",
+        "name": "Daily check — finding → run → (look up done-ness in STATUS.md)",
+        "verdict": "",
+        "sec": 0,
+        "money": 0,
+        "polish": 0,
+        "ideas": 0
+      },
+      {
+        "group": "CROSS-CUTTING",
+        "name": "Where the line-cited detail lives",
+        "verdict": "",
+        "sec": 0,
+        "money": 0,
+        "polish": 0,
+        "ideas": 0
+      }
+    ],
+    "totals": {
+      "sec": 17,
+      "money": 42,
+      "polish": 31,
+      "ideas": 14
+    },
+    "tracked": false,
+    "lastTouched": ""
+  },
+  "recentCommits": [
+    {
+      "h": "f42e86c",
+      "date": "2026-09-01",
+      "subject": "MP-3 run B2b: Course money to integer cents — and the two places the rename did NOT protect"
+    },
+    {
+      "h": "244cf1a",
+      "date": "2026-09-01",
+      "subject": "MP-3 run B2a: MembershipTier money to integer cents — renamed so the compiler enforces it"
+    },
+    {
+      "h": "0ac78f4",
+      "date": "2026-09-01",
+      "subject": "Remove _tmp_snap.ts — scratch script accidentally committed in the B1 merge"
+    },
+    {
+      "h": "83798d3",
+      "date": "2026-09-01",
+      "subject": "MP-3 run B1: Booking money Float -> Int (no data change, no code change)"
+    },
+    {
+      "h": "d38d2b2",
+      "date": "2026-08-30",
+      "subject": "MP-3 run A: the eight additive schema changes (no data rewrite)"
+    },
+    {
+      "h": "6c929be",
+      "date": "2026-08-30",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "bf3bcb2",
+      "date": "2026-08-30",
+      "subject": "MP-2e: close the MP-2 series — fix the viewer crash MP-2d shipped, convert the last consumers"
+    },
+    {
+      "h": "3d3f4d8",
+      "date": "2026-08-29",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "22d0f68",
+      "date": "2026-08-29",
+      "subject": "MP-2d: mutations join the classifier, role comes from the row, and the nav stops lying"
+    },
+    {
+      "h": "298b978",
+      "date": "2026-08-29",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "e5b5413",
+      "date": "2026-08-29",
+      "subject": "MP-2c: one adminFetch, two shared error components, a role-filtered nav — kill the class"
+    },
+    {
+      "h": "8f67066",
+      "date": "2026-08-29",
+      "subject": "queue/spec update"
+    }
+  ]
+}

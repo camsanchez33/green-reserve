@@ -49,3 +49,6 @@ next-env.d.ts
 .claude/settings.local.json
 
 .vercel
+
+# Cam's private ideas/audit bank — never commit.
+AUDIT_MASTER.md
