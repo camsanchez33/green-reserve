@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { scheduleMoneyFromWire, scheduleMoneyForCreate, scheduleToWire } from '@/lib/schedule-wire';
+import { centsToDollarsOr0, dollarsToCentsOr0 } from '@/lib/money';
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS } from '@/lib/admin-session';
 import { logSettingsChanged } from '@/lib/course-timeline';
@@ -13,7 +15,7 @@ export async function GET(req: NextRequest) {
   const courseId = req.nextUrl.searchParams.get('courseId');
   if (!courseId) return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });
   const schedules = await prisma.teeTimeSchedule.findMany({ where: { courseId }, orderBy: { createdAt: 'asc' } });
-  return NextResponse.json(schedules);
+  return NextResponse.json(schedules.map(scheduleToWire));
 }
 
 export async function POST(req: NextRequest) {
@@ -33,13 +35,8 @@ export async function POST(req: NextRequest) {
       endTime: body.endTime,
       intervalMinutes: Number(body.intervalMinutes) || 8,
       holes: Number(body.holes) || 18,
-      greenFeeWeekday: Number(body.greenFeeWeekday),
-      greenFeeWeekend: Number(body.greenFeeWeekend),
-      memberRateWeekday: body.memberRateWeekday ? Number(body.memberRateWeekday) : null,
-      memberRateWeekend: body.memberRateWeekend ? Number(body.memberRateWeekend) : null,
-      residentRateWeekday: body.residentRateWeekday ? Number(body.residentRateWeekday) : null,
-      residentRateWeekend: body.residentRateWeekend ? Number(body.residentRateWeekend) : null,
-      cartFee: Number(body.cartFee) || 0,
+      // MP-3 B2d: editor sends dollars, columns are cents.
+      ...scheduleMoneyForCreate(body),
       walkingAllowed: body.walkingAllowed !== false,
     },
   });
@@ -52,9 +49,9 @@ export async function POST(req: NextRequest) {
     await generateTeeTimes(courseId, d.toISOString().split('T')[0]);
   }
 
-  await logSettingsChanged(courseId, [{ field: 'schedule', from: null, to: `${schedule.greenFeeWeekday}/${schedule.greenFeeWeekend} added` }], session.name);
+  await logSettingsChanged(courseId, [{ field: 'schedule', from: null, to: `${centsToDollarsOr0(schedule.greenFeeWeekdayCents)}/${centsToDollarsOr0(schedule.greenFeeWeekendCents)} added` }], session.name);
 
-  return NextResponse.json(schedule);
+  return NextResponse.json(scheduleToWire(schedule));
 }
 
 export async function PATCH(req: NextRequest) {
@@ -77,21 +74,19 @@ export async function PATCH(req: NextRequest) {
       endTime: data.endTime ?? existing.endTime,
       intervalMinutes: data.intervalMinutes !== undefined ? Number(data.intervalMinutes) : existing.intervalMinutes,
       holes: data.holes !== undefined ? Number(data.holes) : existing.holes,
-      greenFeeWeekday: data.greenFeeWeekday !== undefined ? Number(data.greenFeeWeekday) : existing.greenFeeWeekday,
-      greenFeeWeekend: data.greenFeeWeekend !== undefined ? Number(data.greenFeeWeekend) : existing.greenFeeWeekend,
-      memberRateWeekday: data.memberRateWeekday !== undefined ? (data.memberRateWeekday ? Number(data.memberRateWeekday) : null) : existing.memberRateWeekday,
-      memberRateWeekend: data.memberRateWeekend !== undefined ? (data.memberRateWeekend ? Number(data.memberRateWeekend) : null) : existing.memberRateWeekend,
-      residentRateWeekday: data.residentRateWeekday !== undefined ? (data.residentRateWeekday ? Number(data.residentRateWeekday) : null) : existing.residentRateWeekday,
-      residentRateWeekend: data.residentRateWeekend !== undefined ? (data.residentRateWeekend ? Number(data.residentRateWeekend) : null) : existing.residentRateWeekend,
-      cartFee: data.cartFee !== undefined ? Number(data.cartFee) : existing.cartFee,
+      // MP-3 B2d: only the money keys present in the body are converted; the
+      // rest keep their existing cents values (Prisma leaves omitted fields).
+      ...scheduleMoneyFromWire(data),
       walkingAllowed: data.walkingAllowed !== undefined ? data.walkingAllowed : existing.walkingAllowed,
     },
   });
 
   const feeChanges: { field: string; from: unknown; to: unknown }[] = [];
-  if (data.greenFeeWeekday !== undefined && Number(data.greenFeeWeekday) !== existing.greenFeeWeekday) feeChanges.push({ field: 'greenFeeWeekday', from: existing.greenFeeWeekday, to: updated.greenFeeWeekday });
-  if (data.greenFeeWeekend !== undefined && Number(data.greenFeeWeekend) !== existing.greenFeeWeekend) feeChanges.push({ field: 'greenFeeWeekend', from: existing.greenFeeWeekend, to: updated.greenFeeWeekend });
-  if (data.cartFee !== undefined && Number(data.cartFee) !== existing.cartFee) feeChanges.push({ field: 'cartFee', from: existing.cartFee, to: updated.cartFee });
+  // MP-3 B2d: compare cents to cents. Comparing an incoming dollar value against
+  // a cents column would have logged a "change" on every single save.
+  if (data.greenFeeWeekday !== undefined && dollarsToCentsOr0(data.greenFeeWeekday as number) !== existing.greenFeeWeekdayCents) feeChanges.push({ field: 'greenFeeWeekday', from: centsToDollarsOr0(existing.greenFeeWeekdayCents), to: centsToDollarsOr0(updated.greenFeeWeekdayCents) });
+  if (data.greenFeeWeekend !== undefined && dollarsToCentsOr0(data.greenFeeWeekend as number) !== existing.greenFeeWeekendCents) feeChanges.push({ field: 'greenFeeWeekend', from: centsToDollarsOr0(existing.greenFeeWeekendCents), to: centsToDollarsOr0(updated.greenFeeWeekendCents) });
+  if (data.cartFee !== undefined && dollarsToCentsOr0(data.cartFee as number) !== existing.cartFeeCents) feeChanges.push({ field: 'cartFee', from: centsToDollarsOr0(existing.cartFeeCents), to: centsToDollarsOr0(updated.cartFeeCents) });
   if (feeChanges.length > 0) await logSettingsChanged(existing.courseId, feeChanges, session.name);
 
   return NextResponse.json(updated);

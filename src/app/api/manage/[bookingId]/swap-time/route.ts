@@ -42,7 +42,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
 
       const newSlot = await tx.teeTime.findUnique({
         where: { id: newTeeTimeId },
-        select: { id: true, courseId: true, date: true, time: true, holes: true, status: true, playersBooked: true, playersAvailable: true, greenFee: true, cartFee: true },
+        select: { id: true, courseId: true, date: true, time: true, holes: true, status: true, playersBooked: true, playersAvailable: true, greenFeeCents: true, cartFeeCents: true },
       });
       const oldSlot = await tx.teeTime.findUnique({
         where: { id: booking.teeTimeId },
@@ -59,8 +59,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
 
       // Recompute fees based on new slot rates
       const players = booking.players;
-      const greenFeeTotal = Math.round(newSlot.greenFee * players);
-      const cartFeeTotal = booking.cartSelected ? Math.round(newSlot.cartFee * players) : 0;
+      // MP-3 B2c — this was a PRE-EXISTING BUG, fixed incidentally by the
+      // conversion. newSlot.greenFee was DOLLARS and this wrote the result
+      // straight into Booking.greenFeeTotal, which is CENTS, with no x100 — so
+      // swapping a tee time repriced the round at 1/100th ($50 became $0.50).
+      // Now both sides are cents and the multiply is simply correct.
+      const greenFeeTotal = newSlot.greenFeeCents * players;
+      const cartFeeTotal = booking.cartSelected ? newSlot.cartFeeCents * players : 0;
       const accessFeeTotal = 150 * players;
       const totalAmount = greenFeeTotal + cartFeeTotal + Math.round(booking.rangeBallsTotal) + accessFeeTotal;
 

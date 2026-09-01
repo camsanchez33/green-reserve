@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { centsToDollarsOr0 } from '@/lib/money';
 import { verifyPreviewToken } from '@/lib/preview-token';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -13,8 +14,14 @@ function normalizeDbTeeTime(t: any) {
     time: t.time,
     holes: t.holes,
     players_available: spotsLeft,
-    green_fee: t.greenFee,
-    cart_fee: t.cartFee,
+    // MP-3 B2c — THE `any` HOLE AGAIN. This mapper takes `t: any` (with an
+    // explicit eslint-disable), so the renamed columns produced NO compile
+    // error: t.greenFee simply read undefined and every tee time on the
+    // preview page would have rendered with no price. Found by grepping the old
+    // names after tsc went green — the same way B2b's normalize-course was.
+    // Cents at rest, dollars on the wire (the UI formats dollars).
+    green_fee: centsToDollarsOr0(t.greenFeeCents),
+    cart_fee: centsToDollarsOr0(t.cartFeeCents),
     walking_allowed: t.walkingAllowed,
     status,
   };

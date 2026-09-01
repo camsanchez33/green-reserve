@@ -39,24 +39,27 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
   // Build the desired slot map (time -> data) from schedules. If two active
   // schedules overlap on the same time, the later one in the list wins —
   // same single-row-per-time guarantee the old code lacked.
+  // MP-3 B2c+B2d: cents throughout. Because TeeTimeSchedule and TeeTime were
+  // converted in the SAME migration, this copy stays a straight pass-through —
+  // no x100 anywhere in the generation path.
   const desired = new Map<string, {
-    holes: number; greenFee: number; memberRate: number | null; residentRate: number | null;
-    cartFee: number; walkingAllowed: boolean; tierName: string;
+    holes: number; greenFeeCents: number; memberRateCents: number | null; residentRateCents: number | null;
+    cartFeeCents: number; walkingAllowed: boolean; tierName: string;
   }>();
   for (const schedule of applicable) {
-    const greenFee     = isWeekend ? schedule.greenFeeWeekend     : schedule.greenFeeWeekday;
-    const memberRate   = isWeekend ? schedule.memberRateWeekend   : schedule.memberRateWeekday;
-    const residentRate = isWeekend ? schedule.residentRateWeekend : schedule.residentRateWeekday;
+    const greenFeeCents     = isWeekend ? schedule.greenFeeWeekendCents     : schedule.greenFeeWeekdayCents;
+    const memberRateCents   = isWeekend ? schedule.memberRateWeekendCents   : schedule.memberRateWeekdayCents;
+    const residentRateCents = isWeekend ? schedule.residentRateWeekendCents : schedule.residentRateWeekdayCents;
 
     let current = timeToMinutes(schedule.startTime);
     const end = timeToMinutes(schedule.endTime);
     while (current < end) {
       desired.set(minutesToTime(current), {
         holes: schedule.holes,
-        greenFee,
-        memberRate: memberRate ?? null,
-        residentRate: residentRate ?? null,
-        cartFee: schedule.cartFee,
+        greenFeeCents,
+        memberRateCents: memberRateCents ?? null,
+        residentRateCents: residentRateCents ?? null,
+        cartFeeCents: schedule.cartFeeCents,
         walkingAllowed: schedule.walkingAllowed,
         tierName: schedule.tierName,
       });
@@ -92,10 +95,10 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
         holes: slot.holes,
         playersAvailable: 4,
         playersBooked: 0,
-        greenFee: slot.greenFee,
-        memberRate: slot.memberRate,
-        residentRate: slot.residentRate,
-        cartFee: slot.cartFee,
+        greenFeeCents: slot.greenFeeCents,
+        memberRateCents: slot.memberRateCents,
+        residentRateCents: slot.residentRateCents,
+        cartFeeCents: slot.cartFeeCents,
         walkingAllowed: slot.walkingAllowed,
         tierName: slot.tierName,
         status: 'available',

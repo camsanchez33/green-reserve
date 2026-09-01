@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { centsToDollarsOr0 } from '@/lib/money';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { getGolferSession } from '@/lib/auth';
 
@@ -41,8 +42,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
       time: t.time,
       holes: t.holes,
       spotsLeft: t.playersAvailable - t.playersBooked,
-      greenFee: t.greenFee,
-      cartFee: t.cartFee,
+      // MP-3 B2c: cents at rest, dollars on the wire — the manage page renders
+      // these with a dollars() formatter and was not changed.
+      greenFee: centsToDollarsOr0(t.greenFeeCents),
+      cartFee: centsToDollarsOr0(t.cartFeeCents),
     }));
 
   return NextResponse.json(available);
