@@ -1,21 +1,29 @@
 {
-  "generatedAt": "2026-09-01T20:58:43.931Z",
+  "generatedAt": "2026-09-01T21:08:46.748Z",
   "repo": {
-    "head": "ae37ae1",
+    "head": "703a7d0",
     "branch": "main",
-    "dirtyCount": 5,
+    "dirtyCount": 6,
     "dirty": [
-      "M CLAUDE.md",
-      " M STATUS.artifact.html",
-      " M STATUS.json",
-      " M STATUS.md",
-      " M scripts/status.mjs"
+      "M src/app/api/cron/cancellation-cutoff/route.ts",
+      " M src/app/api/cron/chase-onboarding/route.ts",
+      " M src/app/api/cron/generate-tee-times/route.ts",
+      " M src/app/api/cron/hourly/route.ts",
+      " M src/app/api/cron/send-reminders/route.ts",
+      "?? src/lib/cron-auth.ts"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-09-01T16:53:29-04:00",
     "unrecorded": [
+      {
+        "h": "703a7d0",
+        "date": "2026-09-01T16:58:44-04:00",
+        "subject": "Status board: fix the Windows git calls, regenerate, and make it a per-run step",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "ae37ae1",
         "date": "2026-09-01T16:55:52-04:00",
@@ -807,6 +815,11 @@
   },
   "recentCommits": [
     {
+      "h": "703a7d0",
+      "date": "2026-09-01",
+      "subject": "Status board: fix the Windows git calls, regenerate, and make it a per-run step"
+    },
+    {
       "h": "ae37ae1",
       "date": "2026-09-01",
       "subject": "Add the status board (STATUS.md/json/html + generators); gitignore AUDIT_MASTER.md"
@@ -860,11 +873,6 @@
       "h": "3d3f4d8",
       "date": "2026-08-29",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "22d0f68",
-      "date": "2026-08-29",
-      "subject": "MP-2d: mutations join the classifier, role comes from the row, and the nav stops lying"
     }
   ]
 }

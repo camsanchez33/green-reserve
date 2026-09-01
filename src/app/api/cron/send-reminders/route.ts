@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cronAuthFailure } from '@/lib/cron-auth';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { sendReminderEmail, sendMembershipPaymentLinkEmail } from '@/lib/email';
 
 export async function GET(req: NextRequest) {
-  const auth = req.headers.get('authorization');
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = cronAuthFailure(req);
+  if (denied) return denied;
 
   const now = new Date();
   const tomorrow = new Date(now);

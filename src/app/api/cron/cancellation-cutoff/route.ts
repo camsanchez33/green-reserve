@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cronAuthFailure } from '@/lib/cron-auth';
 import { prisma } from '@/lib/prisma';
 import { chargeOnConnectedAccount } from '@/lib/stripe';
 import { sendCancellationFeeChargedEmail, sendCheckInAvailableEmail } from '@/lib/email';
@@ -22,10 +23,8 @@ import { teeToUtcMs } from '@/lib/tee-time-utils';
  * meantime, because status='cancelled' falls out of the candidate filter.
  */
 export async function GET(req: NextRequest) {
-  const auth = req.headers.get('authorization');
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = cronAuthFailure(req);
+  if (denied) return denied;
 
   const now = new Date();
 

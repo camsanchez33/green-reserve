@@ -4,28 +4,30 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-01 20:58 UTC · branch `main` · HEAD `ae37ae1` · working tree **5 dirty file(s)**
+Generated 2026-09-01 21:08 UTC · branch `main` · HEAD `703a7d0` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-09-01**. 1 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-09-01**. 2 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `703a7d0` | 2026-09-01 | Status board: fix the Windows git calls, regenerate, and make it a per-run step |
 | `ae37ae1` | 2026-09-01 | Add the status board (STATUS.md/json/html + generators); gitignore AUDIT_MASTER.md |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (5 file(s))
+### Uncommitted working tree (6 file(s))
 
-- `M CLAUDE.md`
-- `M STATUS.artifact.html`
-- `M STATUS.json`
-- `M STATUS.md`
-- `M scripts/status.mjs`
+- `M src/app/api/cron/cancellation-cutoff/route.ts`
+- `M src/app/api/cron/chase-onboarding/route.ts`
+- `M src/app/api/cron/generate-tee-times/route.ts`
+- `M src/app/api/cron/hourly/route.ts`
+- `M src/app/api/cron/send-reminders/route.ts`
+- `?? src/lib/cron-auth.ts`
 
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -181,6 +183,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `703a7d0` 2026-09-01 — Status board: fix the Windows git calls, regenerate, and make it a per-run step
 - `ae37ae1` 2026-09-01 — Add the status board (STATUS.md/json/html + generators); gitignore AUDIT_MASTER.md
 - `0001c5f` 2026-09-01 — queue/spec update — MP-3 shipped across five migrations
 - `a2a9788` 2026-09-01 — MP-3 runs B2c+B2d: TeeTime and TeeTimeSchedule to integer cents — the money path is now float-free
@@ -192,7 +195,6 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `6c929be` 2026-08-30 — queue/spec update
 - `bf3bcb2` 2026-08-30 — MP-2e: close the MP-2 series — fix the viewer crash MP-2d shipped, convert the last consumers
 - `3d3f4d8` 2026-08-29 — queue/spec update
-- `22d0f68` 2026-08-29 — MP-2d: mutations join the classifier, role comes from the row, and the nav stops lying
 
 ---
 

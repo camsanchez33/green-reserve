@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cronAuthFailure } from '@/lib/cron-auth';
 import { prisma } from '@/lib/prisma';
 import { chargeOnConnectedAccount } from '@/lib/stripe';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
@@ -23,10 +24,8 @@ import {
  *    Sets paymentStatus = 'awaiting_checkin' as dedup.
  */
 export async function GET(req: NextRequest) {
-  const auth = req.headers.get('authorization');
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = cronAuthFailure(req);
+  if (denied) return denied;
 
   const now = new Date();
   const results = { warnings: 0, charged: 0, checkIns: 0, failed: 0 };

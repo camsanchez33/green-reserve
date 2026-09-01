@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cronAuthFailure } from '@/lib/cron-auth';
 import { prisma } from '@/lib/prisma';
 import { sendOnboardingChaseEmail } from '@/lib/email';
 import { getApprovalState } from '@/lib/approval-state';
@@ -34,10 +35,8 @@ function isDue(events: Awaited<ReturnType<typeof getCourseTimeline>>, createdAt:
 }
 
 export async function GET(req: NextRequest) {
-  const auth = req.headers.get('authorization');
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = cronAuthFailure(req);
+  if (denied) return denied;
 
   const now = new Date();
   const results: { courseId: string; sent: boolean; reason: string }[] = [];
