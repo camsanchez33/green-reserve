@@ -794,10 +794,24 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     nextFollowUpAt), real ChangeRequest table, Course.firstWentLiveAt, CronRunLog
     + admin audit-log writes + CourseOperator.lastLoginAt, cancellationFeeApplies,
     AdminUser.sessionVersion (SCHEMA CHANGE, ATTENDED)
-  - [ ] MP-4 — pipeline reshape: queue-first inquiries list (dedup, true
-    days-in-stage from events not updatedAt, waiting-on-them section), detail tab
-    trim, snooze/source/closedReason UI, builder consolidation on
-    create_draft_course, duplicate-intake guard (big, after MP-3)
+  - [ ] MP-4 — pipeline reshape (split into 4a/4b/4c)
+    - [x] MP-4a — the logic, no UI rebuild (7b6d5c2): days-in-stage derived from
+      the event ledger (`stageEnteredAt`, ignores self-loop marker events so a
+      "Preview sent" can't restart the clock) and shared by the list AND detail
+      pages; "your move" hands `building` back to the course once a preview is
+      out, reclaims it on any decision or after 5 quiet days (PREVIEW_STALL_DAYS);
+      duplicate-intake guard on public POST /api/inquiries (ALIVE-only dedupe on
+      email or name+city+state, records a timeline event, response shape
+      identical to a fresh submit so it is not a pipeline-membership oracle);
+      builder consolidated — `build_course` now runs the `create_draft_course`
+      path plus the welcome email, keeping its 409-on-existing-operator and its
+      tempPassword/setupLink response shape. 15 unit assertions on the new
+      derivations passed. NEEDS REVIEW.
+    - [ ] MP-4b — queue-first list rebuild: waiting-on-them section, queue
+      ordering, the dedup/"already in pipeline" surfacing for admins (the guard
+      records the event; nothing renders it yet)
+    - [ ] MP-4c — detail tab trim + snooze/source/closedReason UI (needs the
+      MP-3 inquiry growth columns)
   - [ ] MP-5 — courses reshape: evidence on list rows (already computed, never
     rendered), 10→6 tab split, offline/archive booking-consequence flows +
     operator notification, Feature decision (build the directory or delete the
