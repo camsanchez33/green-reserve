@@ -1,3 +1,4 @@
+import { centsToDollarsOr0 } from './money';
 /**
  * Maps a Prisma Course row (camelCase) onto the snake_case shape the golfer-facing
  * UI (CourseCard, /courses, /courses/[slug]) was built against. Used by every public
@@ -37,11 +38,18 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     // Deferred-payment booking flow (range balls / cancellation policy display)
     has_driving_range:       c.hasDrivingRange ?? false,
     range_balls_free:        c.rangeBallsFree ?? true,
-    range_balls_small_price: c.rangeBallsSmallPrice ?? 0,
-    range_balls_medium_price: c.rangeBallsMediumPrice ?? 0,
-    range_balls_large_price: c.rangeBallsLargePrice ?? 0,
+    // MP-3 B2b — THE HOLE IN THE RENAME. This function takes `c: any`, so the
+    // renamed columns did NOT produce a compile error here: the old names simply
+    // read undefined and fell through to these defaults, which would have shown
+    // every golfer a $10 late-cancel fee and free range balls regardless of what
+    // the course actually charges. Loose types are where a rename stops
+    // protecting you, so these read the cents columns and convert explicitly.
+    // The wire contract for this normalizer stays DOLLARS.
+    range_balls_small_price: centsToDollarsOr0(c.rangeBallsSmallPriceCents),
+    range_balls_medium_price: centsToDollarsOr0(c.rangeBallsMediumPriceCents),
+    range_balls_large_price: centsToDollarsOr0(c.rangeBallsLargePriceCents),
     cancellation_hours:      c.cancellationHours ?? 24,
-    late_cancellation_fee:   c.lateCancellationFee ?? 10,
+    late_cancellation_fee:   c.lateCancellationFeeCents != null ? centsToDollarsOr0(c.lateCancellationFeeCents) : 10,
     brand_color:             c.brandColor ?? '#24513B',
     gift_card_url:           c.giftCardUrl ?? '',
     hero_photo_url:          c.heroPhotoUrl ?? '',
