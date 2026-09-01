@@ -163,17 +163,21 @@ export async function POST(req: NextRequest) {
   let rangeBallsTotal = 0;
   const ballsSize = String(rangeBallsSize || '');
   if (teeTimeFull.course.hasDrivingRange && !teeTimeFull.course.rangeBallsFree && ballsSize) {
-    const priceMap: Record<string, number> = {
-      small: teeTimeFull.course.rangeBallsSmallPrice,
-      medium: teeTimeFull.course.rangeBallsMediumPrice,
-      large: teeTimeFull.course.rangeBallsLargePrice,
+    // MP-3 B2b: these are CENTS now, so the x100 that used to convert them is
+    // gone. Leaving it would have charged 100x for range balls.
+    const priceMapCents: Record<string, number> = {
+      small: teeTimeFull.course.rangeBallsSmallPriceCents,
+      medium: teeTimeFull.course.rangeBallsMediumPriceCents,
+      large: teeTimeFull.course.rangeBallsLargePriceCents,
     };
-    rangeBallsTotal = Math.round((priceMap[ballsSize] || 0) * 100);
+    rangeBallsTotal = priceMapCents[ballsSize] || 0;
   }
 
   const accessFeeTotal = ACCESS_FEE_CENTS * players;
   const totalCents     = greenFeeTotal + cartFeeTotal + rangeBallsTotal + accessFeeTotal;
-  const cancellationFeeTotal = Math.round((teeTimeFull.course.lateCancellationFee || 0) * 100);
+  // MP-3 B2b: also cents now. Booking.cancellationFeeTotal and
+  // Course.lateCancellationFeeCents finally hold the same fee in the same unit.
+  const cancellationFeeTotal = teeTimeFull.course.lateCancellationFeeCents || 0;
 
   // Stripe card attachment — happens BEFORE the claim transaction so the DB
   // transaction stays pure (no network I/O). If the claim subsequently fails,

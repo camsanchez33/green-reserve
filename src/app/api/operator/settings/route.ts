@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { courseToWire, courseMoneyFromWire } from '@/lib/course-wire';
 import { resolveDashboardSession } from '@/lib/session';
 
 // Never cache — the dashboard's live/draft status must reflect the DB the
@@ -22,7 +23,9 @@ export async function GET() {
     twoFactorPhone = operator?.phone ?? '';
   }
 
-  return NextResponse.json({ ...course, twoFactorMethod, twoFactorPhone });
+  // MP-3 B2b: cents at rest, dollars on the wire — the settings form was not
+  // changed and still sends/receives dollar field names.
+  return NextResponse.json({ ...courseToWire(course), twoFactorMethod, twoFactorPhone });
 }
 
 export async function PATCH(req: NextRequest) {
@@ -36,12 +39,12 @@ export async function PATCH(req: NextRequest) {
     'hasMemberPricing','memberAdvanceDays',
     'hasResidentPricing','residentCounty','residentState','residentProofRequired',
     'walkingAllowed','walkingNote','cartRequired',
-    'cancellationHours','checkInWindowHours','lateCancellationFee','rainCheckPolicy','publicAdvanceDays',
+    'cancellationHours','checkInWindowHours','rainCheckPolicy','publicAdvanceDays',
     'dresscode','minPlayers','maxPlayers',
     'hasDrivingRange','drivingRangeType','rangeBallsFree','hasPuttingGreen','hasShortGameArea',
-    'hasProShop','proShopPhone','restaurantType','hasCartGirl','hasLessons','hasClubRental','clubRentalRate',
-    'hasPushCartRental','pushCartRate','hasBagStorage','hasLockerRoom','hasGpsCarts',
-    'hasTournaments','tournamentFrequency','hasCaddies','caddieType','caddieLooperRate','caddieForeRate','caddieNote',
+    'hasProShop','proShopPhone','restaurantType','hasCartGirl','hasLessons','hasClubRental',
+    'hasPushCartRental','hasBagStorage','hasLockerRoom','hasGpsCarts',
+    'hasTournaments','tournamentFrequency','hasCaddies','caddieType','caddieNote',
     'amenities',
     'brandColor','establishedYear','giftCardUrl',
   ];
@@ -49,6 +52,10 @@ export async function PATCH(req: NextRequest) {
   for (const key of allowed) {
     if (key in body) data[key] = body[key];
   }
+  // Money arrives in dollars under its old field names; courseMoneyFromWire
+  // maps each to its *Cents column. They are deliberately OUT of the allowlist
+  // above so a raw dollar value can never be written into a cents column.
+  Object.assign(data, courseMoneyFromWire(body));
   const updated = await prisma.course.update({ where: { id: session.courseId }, data });
 
   // 2FA settings live on CourseOperator, not Course — can't go in the whitelist above.

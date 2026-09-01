@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { courseToWire, courseMoneyFromWire } from '@/lib/course-wire';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS } from '@/lib/admin-session';
 import { logSettingsChanged } from '@/lib/course-timeline';
 
@@ -13,7 +14,9 @@ export async function GET(req: NextRequest) {
   if (!courseId) return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });
   const course = await prisma.course.findUnique({ where: { id: courseId } });
   if (!course) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  return NextResponse.json(course);
+  // MP-3 B2b: cents at rest, dollars on the wire — the admin settings form
+  // was not changed and still reads dollar field names.
+  return NextResponse.json(courseToWire(course));
 }
 
 export async function PATCH(req: NextRequest) {
@@ -34,9 +37,9 @@ export async function PATCH(req: NextRequest) {
     'cancellationHours','rainCheckPolicy','publicAdvanceDays',
     'dresscode','minPlayers','maxPlayers',
     'hasDrivingRange','drivingRangeType','rangeBallsFree','hasPuttingGreen','hasShortGameArea',
-    'hasProShop','proShopPhone','restaurantType','hasCartGirl','hasLessons','hasClubRental','clubRentalRate',
-    'hasPushCartRental','pushCartRate','hasBagStorage','hasLockerRoom','hasGpsCarts',
-    'hasTournaments','tournamentFrequency','hasCaddies','caddieType','caddieLooperRate','caddieForeRate','caddieNote',
+    'hasProShop','proShopPhone','restaurantType','hasCartGirl','hasLessons','hasClubRental',
+    'hasPushCartRental','hasBagStorage','hasLockerRoom','hasGpsCarts',
+    'hasTournaments','tournamentFrequency','hasCaddies','caddieType','caddieNote',
     'amenities',
   ];
   const data: Record<string, unknown> = {};
@@ -51,6 +54,10 @@ export async function PATCH(req: NextRequest) {
   const before = keys.length > 0
     ? await prisma.course.findUnique({ where: { id: courseId }, select: Object.fromEntries(keys.map(k => [k, true])) })
     : null;
+  // MP-3 B2b: money arrives in dollars under its old field names and is
+  // mapped to the *Cents columns here. Deliberately out of the allowlist so a
+  // raw dollar value can never be written straight into a cents column.
+  Object.assign(data, courseMoneyFromWire(body));
   const updated = await prisma.course.update({ where: { id: courseId }, data });
 
   if (before) {

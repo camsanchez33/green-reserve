@@ -60,7 +60,13 @@ model Course {
   maxPlayers            Int                @default(4)
   cancellationHours     Int                @default(24)
   checkInWindowHours    Int                @default(3)
-  lateCancellationFee   Float              @default(10)
+  // MP-3 run B2b: Course money -> integer cents, renamed so a stale reader is
+  // a compile error rather than a silent 100x. lateCancellationFee in
+  // particular was DOLLARS while Booking.cancellationFeeTotal was CENTS —
+  // the same fee in two units in one schema, which is what made a blanket
+  // conversion dangerous. Both are cents now.
+  // courseRating and rating below are NOT money and stay Float.
+  lateCancellationFeeCents Int             @default(1000)
   timezone              String             @default("America/New_York")
   rainCheckPolicy       String             @default("")
   publicAdvanceDays     Int                @default(7)
@@ -72,15 +78,15 @@ model Course {
   residentProofRequired Boolean            @default(false)
   hasCaddies            Boolean            @default(false)
   caddieType            String             @default("")
-  caddieLooperRate      Float              @default(0)
-  caddieForeRate        Float              @default(0)
+  caddieLooperRateCents Int                @default(0)
+  caddieForeRateCents   Int                @default(0)
   caddieNote            String             @default("")
   hasDrivingRange       Boolean            @default(false)
   drivingRangeType      String             @default("")
   rangeBallsFree        Boolean            @default(true)
-  rangeBallsSmallPrice  Float              @default(0)
-  rangeBallsMediumPrice Float              @default(0)
-  rangeBallsLargePrice  Float              @default(0)
+  rangeBallsSmallPriceCents  Int           @default(0)
+  rangeBallsMediumPriceCents Int           @default(0)
+  rangeBallsLargePriceCents  Int           @default(0)
   hasPuttingGreen       Boolean            @default(false)
   hasShortGameArea      Boolean            @default(false)
   hasProShop            Boolean            @default(false)
@@ -90,9 +96,9 @@ model Course {
   tournamentFrequency   String             @default("")
   hasLessons            Boolean            @default(false)
   hasClubRental         Boolean            @default(false)
-  clubRentalRate        Float              @default(0)
+  clubRentalRateCents   Int                @default(0)
   hasPushCartRental     Boolean            @default(false)
-  pushCartRate          Float              @default(0)
+  pushCartRateCents     Int                @default(0)
   hasBagStorage         Boolean            @default(false)
   hasLockerRoom         Boolean            @default(false)
   hasGpsCarts           Boolean            @default(false)

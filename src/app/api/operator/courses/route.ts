@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { courseToWire } from '@/lib/course-wire';
 import { resolveDashboardSession } from '@/lib/session';
 import { CHANGES_REQUESTED_PREFIX, LEGACY_CHANGES_REQUESTED_MARKER, isChangesRequestedEvent } from '@/lib/change-requests';
 
@@ -34,7 +35,9 @@ export async function GET() {
     }
   }
 
-  return NextResponse.json({ ...course, pageApprovalStatus });
+  // MP-3 B2b: cents at rest, dollars on the wire — the dashboard reads dollar
+  // field names (dashboard/settings, dashboard/cancellations).
+  return NextResponse.json({ ...courseToWire(course), pageApprovalStatus });
 }
 
 export async function PATCH(req: NextRequest) {

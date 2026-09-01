@@ -174,7 +174,9 @@ async function handleAction(
               hasResidentPricing: bool(d.hasResidentPricing, inquiry.hasResidentPricing),
               residentCounty: str(d.residentCounty, ''), residentState: str(d.residentState, inquiry.state),
               hasCaddies: bool(d.hasCaddies, inquiry.hasCaddies), caddieType: str(d.caddieType, ''),
-              caddieLooperRate: flt(d.caddieLooperRate, 0), caddieForeRate: flt(d.caddieForeRate, 0),
+              // MP-3 B2b: Course money is cents; sheet answers are dollars.
+              caddieLooperRateCents: dollarsToCentsOr0(flt(d.caddieLooperRate, 0)),
+              caddieForeRateCents: dollarsToCentsOr0(flt(d.caddieForeRate, 0)),
               caddieNote: str(d.caddieNote, ''), hasDrivingRange: bool(d.hasDrivingRange, false),
               rangeBallsFree: bool(d.rangeBallsFree, true), hasPuttingGreen: bool(d.hasPuttingGreen, false),
               hasShortGameArea: bool(d.hasShortGameArea, false), hasProShop: bool(d.hasProShop, false),
@@ -569,18 +571,29 @@ async function handleAction(
         holes: num(holes, 18), par: num(par, 72),
         walkingAllowed, walkingNote: str(d.walkingNote, ''),
         cartRequired: bool(d.cartRequired, false), dresscode: [],
-        cancellationHours, lateCancellationFee, rainCheckPolicy: '',
+        // MP-3 B2b: this said `lateCancellationFee`, which no longer exists.
+        // It compiled because courseFields is assigned to a variable before
+        // reaching prisma.course.create, which bypasses TypeScript's
+        // excess-property check — so the operator's stated late fee was being
+        // silently dropped and the column fell back to its $10 default.
+        cancellationHours, lateCancellationFeeCents: dollarsToCentsOr0(lateCancellationFee), rainCheckPolicy: '',
         publicAdvanceDays: num(Number(d.publicAdvanceDays), 7),
         memberAdvanceDays: num(Number(d.memberAdvanceDays), 14),
         hasMemberPricing, hasResidentPricing,
         residentCounty, residentState: str(d.residentState, inquiry.state),
         hasCaddies: bool(d.hasCaddies, inquiry.hasCaddies),
-        caddieType: '', caddieLooperRate: 0, caddieForeRate: 0, caddieNote: '',
+        // MP-3 B2b: all Course money is cents. These were dropped silently for
+        // the same reason as lateCancellationFee above — the excess-property
+        // check does not fire on a variable. The locals hold dollars from the
+        // operator's sheet.
+        caddieType: '', caddieLooperRateCents: 0, caddieForeRateCents: 0, caddieNote: '',
         hasDrivingRange, drivingRangeType, rangeBallsFree,
-        rangeBallsSmallPrice, rangeBallsMediumPrice, rangeBallsLargePrice,
+        rangeBallsSmallPriceCents: dollarsToCentsOr0(rangeBallsSmallPrice),
+        rangeBallsMediumPriceCents: dollarsToCentsOr0(rangeBallsMediumPrice),
+        rangeBallsLargePriceCents: dollarsToCentsOr0(rangeBallsLargePrice),
         hasPuttingGreen, hasShortGameArea, hasProShop, proShopPhone,
         restaurantType, hasCartGirl: false, hasLessons, hasClubRental,
-        hasPushCartRental, pushCartRate, hasBagStorage, hasLockerRoom,
+        hasPushCartRental, pushCartRateCents: dollarsToCentsOr0(pushCartRate), hasBagStorage, hasLockerRoom,
         hasGpsCarts, hasTournaments, tournamentFrequency,
         adminNotes,
       };
