@@ -268,19 +268,30 @@ model MembershipTier {
   course             Course             @relation(fields: [courseId], references: [id])
   name               String // "Full Member", "Junior", "Senior Associate"
   color              String             @default("#1b4332")
-  // Pricing — flat rate overrides. null = fall back to discountPct or standard rate
-  greenFeeWeekday    Float?
-  greenFeeWeekend    Float?
-  cartFeeWeekday     Float?
-  cartFeeWeekend     Float?
-  // Alternative: percentage off the standard rate (0–100)
+  // Pricing — flat rate overrides, INTEGER CENTS. null = fall back to
+  // discountPct or the standard rate.
+  //
+  // MP-3 run B2a: these were dollars in a Float and are now cents in an Int.
+  // The columns are RENAMED rather than just retyped, deliberately: Float and
+  // Int are both `number` to TypeScript, so a silent missed conversion would
+  // not fail to compile — it would just price something wrong by 100x. Renaming
+  // makes every stale reader a compile error, which turns an unverifiable sweep
+  // into an exhaustive one. It also disambiguates greenFeeWeekday, which exists
+  // on BOTH this model and TeeTimeSchedule (still dollars, run B2d).
+  // Convention matches Expense.amountCents, already in this schema.
+  greenFeeWeekdayCents  Int?
+  greenFeeWeekendCents  Int?
+  cartFeeWeekdayCents   Int?
+  cartFeeWeekendCents   Int?
+  // Alternative: percentage off the standard rate (0–100). NOT money — stays a
+  // Float and must never be scaled by 100.
   discountPct        Float?
   // Access privileges
   advanceBookingDays Int                @default(14)
   guestPassesPerYear Int                @default(0)
   // Informational
-  annualFee          Float              @default(0)
-  initiationFee      Float              @default(0) // one-time, charged with the first dues payment
+  annualFeeCents     Int                @default(0)
+  initiationFeeCents Int                @default(0) // one-time, charged with the first dues payment
   termMonths         Int                @default(12)
   notes              String             @default("")
   active             Boolean            @default(true)

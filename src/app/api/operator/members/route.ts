@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { centsToDollarsOr0 } from '@/lib/money';
 import { resolveDashboardSession } from '@/lib/session';
 import { randomUUID } from 'crypto';
 import { signMemberInviteToken } from '@/lib/auth';
@@ -12,16 +13,18 @@ async function maybeSendPayLink(membershipId: string, isRenewal = false) {
     include: { tier: true, course: { select: { name: true, stripeAccountActive: true } } },
   });
   if (!m || !m.tier) return;
-  const initiation = m.lastPaidAt ? 0 : m.tier.initiationFee;
-  if (m.tier.annualFee + initiation <= 0) return;
+  // MP-3 B2a: compare in cents, convert to dollars only for the email, which
+  // renders $${annualFee.toFixed(2)}.
+  const initiationCents = m.lastPaidAt ? 0 : m.tier.initiationFeeCents;
+  if (m.tier.annualFeeCents + initiationCents <= 0) return;
   if (!m.course.stripeAccountActive) return;
   await sendMembershipPaymentLinkEmail({
     name: m.inviteName,
     email: m.inviteEmail,
     courseName: m.course.name,
     tierName: m.tier.name,
-    annualFee: m.tier.annualFee,
-    initiationFee: initiation,
+    annualFee: centsToDollarsOr0(m.tier.annualFeeCents),
+    initiationFee: centsToDollarsOr0(initiationCents),
     payLink: `${process.env.NEXT_PUBLIC_URL}/membership/${m.id}?token=${m.payToken}`,
     isRenewal,
   });
@@ -35,7 +38,7 @@ export async function GET() {
     where: { courseId: session.courseId },
     include: {
       golfer: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
-      tier:   { select: { id: true, name: true, color: true, annualFee: true, initiationFee: true, termMonths: true } },
+      tier:   { select: { id: true, name: true, color: true, annualFeeCents: true, initiationFeeCents: true, termMonths: true } },
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -55,8 +58,8 @@ export async function GET() {
     startedAt:      m.startedAt,
     paymentStatus:  m.paymentStatus,
     lastPaidAt:     m.lastPaidAt,
-    annualFee:      m.tier?.annualFee ?? 0,
-    initiationFee:  m.tier?.initiationFee ?? 0,
+    annualFee:      centsToDollarsOr0(m.tier?.annualFeeCents),
+    initiationFee:  centsToDollarsOr0(m.tier?.initiationFeeCents),
     notes:          m.notes,
     createdAt:      m.createdAt,
     linked:         !!m.golferId,

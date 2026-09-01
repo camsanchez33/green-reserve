@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { centsToDollars } from '@/lib/money';
 import { getMemberSession, getGolferMembership } from '@/lib/member-session';
 
 export async function GET(
@@ -57,8 +58,11 @@ export async function GET(
       let memberGreenFee: number | null = null;
       let memberCartFee: number | null = null;
       if (tier) {
-        const flatGreen = isWeekend ? tier.greenFeeWeekend : tier.greenFeeWeekday;
-        const flatCart = isWeekend ? tier.cartFeeWeekend : tier.cartFeeWeekday;
+        // MP-3 B2a — UNIT BOUNDARY: tier.*Cents is cents, t.greenFee/memberRate
+        // are still dollars (TeeTime is run B2c). Convert once, here, so the
+        // comparisons and fallbacks below never mix units.
+        const flatGreen = centsToDollars(isWeekend ? tier.greenFeeWeekendCents : tier.greenFeeWeekdayCents);
+        const flatCart = centsToDollars(isWeekend ? tier.cartFeeWeekendCents : tier.cartFeeWeekdayCents);
         if (flatGreen != null) {
           memberGreenFee = flatGreen;
         } else if (t.memberRate != null) {

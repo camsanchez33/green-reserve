@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { centsToDollars, centsToDollarsOr0 } from '@/lib/money';
 import { getMemberSession, getGolferMembership } from '@/lib/member-session';
 
 export async function GET(
@@ -60,14 +61,16 @@ export async function GET(
           id: membership.tier.id,
           name: membership.tier.name,
           color: membership.tier.color,
-          greenFeeWeekday: membership.tier.greenFeeWeekday,
-          greenFeeWeekend: membership.tier.greenFeeWeekend,
-          cartFeeWeekday: membership.tier.cartFeeWeekday,
-          cartFeeWeekend: membership.tier.cartFeeWeekend,
+          // MP-3 B2a: cents at rest, dollars on the wire — the course page's
+          // member-pricing UI formats these as dollars and was not changed.
+          greenFeeWeekday: centsToDollars(membership.tier.greenFeeWeekdayCents),
+          greenFeeWeekend: centsToDollars(membership.tier.greenFeeWeekendCents),
+          cartFeeWeekday: centsToDollars(membership.tier.cartFeeWeekdayCents),
+          cartFeeWeekend: centsToDollars(membership.tier.cartFeeWeekendCents),
           discountPct: membership.tier.discountPct,
           advanceBookingDays: membership.tier.advanceBookingDays,
-          annualFee: membership.tier.annualFee,
-          initiationFee: membership.tier.initiationFee,
+          annualFee: centsToDollarsOr0(membership.tier.annualFeeCents),
+          initiationFee: centsToDollarsOr0(membership.tier.initiationFeeCents),
         }
       : null,
   });

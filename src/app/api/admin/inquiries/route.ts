@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
 import { ACTIVE_STATUSES, ARCHIVED_STATUSES, type InquiryStatus } from '@/lib/inquiry-status';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
@@ -753,10 +754,12 @@ async function handleAction(
             data: {
               courseId: builtCourseId,
               name,
-              annualFee: flt(p.fee, 0),
+              // MP-3 B2a: MembershipTier money is integer cents. The sheet values
+              // (p.fee, perRound*) are dollars as the operator typed them.
+              annualFeeCents: dollarsToCentsOr0(flt(p.fee, 0)),
               termMonths: str(p.feePeriod) === 'monthly' ? 1 : 12,
-              greenFeeWeekday: perRoundWeekday,
-              greenFeeWeekend: perRoundWeekend,
+              greenFeeWeekdayCents: dollarsToCents(perRoundWeekday),
+              greenFeeWeekendCents: dollarsToCents(perRoundWeekend),
               notes: notesParts.join(' · '),
             },
           });

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
+import { tierToWire } from '@/lib/tier-wire';
 import { resolveDashboardSession } from '@/lib/session';
 
 export async function GET() {
@@ -11,7 +13,7 @@ export async function GET() {
     include: { _count: { select: { memberships: { where: { status: 'active' } } } } },
     orderBy: { createdAt: 'asc' },
   });
-  return NextResponse.json(tiers);
+  return NextResponse.json(tiers.map(tierToWire));
 }
 
 export async function POST(req: NextRequest) {
@@ -36,20 +38,22 @@ export async function POST(req: NextRequest) {
       courseId: session.courseId,
       name: name.trim(),
       color: color || '#1b4332',
-      greenFeeWeekday:    greenFeeWeekday    != null ? Number(greenFeeWeekday)    : null,
-      greenFeeWeekend:    greenFeeWeekend    != null ? Number(greenFeeWeekend)    : null,
-      cartFeeWeekday:     cartFeeWeekday     != null ? Number(cartFeeWeekday)     : null,
-      cartFeeWeekend:     cartFeeWeekend     != null ? Number(cartFeeWeekend)     : null,
+      // MP-3 B2a: the wire stays dollars (that is what the form collects); the
+      // column is integer cents. This route is the only place the unit changes.
+      greenFeeWeekdayCents: dollarsToCents(greenFeeWeekday),
+      greenFeeWeekendCents: dollarsToCents(greenFeeWeekend),
+      cartFeeWeekdayCents:  dollarsToCents(cartFeeWeekday),
+      cartFeeWeekendCents:  dollarsToCents(cartFeeWeekend),
       discountPct:        discountPct        != null ? Number(discountPct)        : null,
       advanceBookingDays: advanceBookingDays != null ? Number(advanceBookingDays) : 14,
       guestPassesPerYear: guestPassesPerYear != null ? Number(guestPassesPerYear) : 0,
-      annualFee:          annualFee          != null ? Number(annualFee)          : 0,
-      initiationFee:      initiationFee      != null ? Number(initiationFee)      : 0,
+      annualFeeCents:     dollarsToCentsOr0(annualFee),
+      initiationFeeCents: dollarsToCentsOr0(initiationFee),
       termMonths:         termMonths         != null ? Number(termMonths)         : 12,
       notes: notes || '',
     },
   });
-  return NextResponse.json(tier, { status: 201 });
+  return NextResponse.json(tierToWire(tier), { status: 201 });
 }
 
 export async function PATCH(req: NextRequest) {
@@ -68,21 +72,21 @@ export async function PATCH(req: NextRequest) {
     data: {
       name:               updates.name               ?? tier.name,
       color:              updates.color              ?? tier.color,
-      greenFeeWeekday:    updates.greenFeeWeekday    !== undefined ? (updates.greenFeeWeekday != null ? Number(updates.greenFeeWeekday) : null) : tier.greenFeeWeekday,
-      greenFeeWeekend:    updates.greenFeeWeekend    !== undefined ? (updates.greenFeeWeekend != null ? Number(updates.greenFeeWeekend) : null) : tier.greenFeeWeekend,
-      cartFeeWeekday:     updates.cartFeeWeekday     !== undefined ? (updates.cartFeeWeekday  != null ? Number(updates.cartFeeWeekday)  : null) : tier.cartFeeWeekday,
-      cartFeeWeekend:     updates.cartFeeWeekend     !== undefined ? (updates.cartFeeWeekend  != null ? Number(updates.cartFeeWeekend)  : null) : tier.cartFeeWeekend,
+      greenFeeWeekdayCents: updates.greenFeeWeekday !== undefined ? dollarsToCents(updates.greenFeeWeekday) : tier.greenFeeWeekdayCents,
+      greenFeeWeekendCents: updates.greenFeeWeekend !== undefined ? dollarsToCents(updates.greenFeeWeekend) : tier.greenFeeWeekendCents,
+      cartFeeWeekdayCents:  updates.cartFeeWeekday  !== undefined ? dollarsToCents(updates.cartFeeWeekday)  : tier.cartFeeWeekdayCents,
+      cartFeeWeekendCents:  updates.cartFeeWeekend  !== undefined ? dollarsToCents(updates.cartFeeWeekend)  : tier.cartFeeWeekendCents,
       discountPct:        updates.discountPct        !== undefined ? (updates.discountPct     != null ? Number(updates.discountPct)     : null) : tier.discountPct,
       advanceBookingDays: updates.advanceBookingDays != null ? Number(updates.advanceBookingDays) : tier.advanceBookingDays,
       guestPassesPerYear: updates.guestPassesPerYear != null ? Number(updates.guestPassesPerYear) : tier.guestPassesPerYear,
-      annualFee:          updates.annualFee          != null ? Number(updates.annualFee)          : tier.annualFee,
-      initiationFee:      updates.initiationFee      != null ? Number(updates.initiationFee)      : tier.initiationFee,
+      annualFeeCents:     updates.annualFee     != null ? dollarsToCentsOr0(updates.annualFee)     : tier.annualFeeCents,
+      initiationFeeCents: updates.initiationFee != null ? dollarsToCentsOr0(updates.initiationFee) : tier.initiationFeeCents,
       termMonths:         updates.termMonths         != null ? Number(updates.termMonths)         : tier.termMonths,
       notes:              updates.notes              ?? tier.notes,
       active:             updates.active             !== undefined ? updates.active : tier.active,
     },
   });
-  return NextResponse.json(updated);
+  return NextResponse.json(tierToWire(updated));
 }
 
 export async function DELETE(req: NextRequest) {

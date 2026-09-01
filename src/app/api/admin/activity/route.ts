@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { centsToDollarsOr0 } from '@/lib/money';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
 
 const PAGE_SIZE = 50;
@@ -59,7 +60,7 @@ export async function GET(req: NextRequest) {
       where: { paymentStatus: { in: ['paid', 'paid_offline'] }, lastPaidAt: { gte: fromDate, lte: toDate }, ...cFilter },
       select: {
         id: true, lastPaidAt: true, inviteName: true, inviteEmail: true,
-        tier: { select: { name: true, annualFee: true } },
+        tier: { select: { name: true, annualFeeCents: true } },
         golfer: { select: { firstName: true, lastName: true, email: true } },
         course: { select: { name: true } },
       },
@@ -106,7 +107,9 @@ export async function GET(req: NextRequest) {
       golferName: p.golfer ? `${p.golfer.firstName} ${p.golfer.lastName}` : (p.inviteName || '—'),
       golferEmail: p.golfer?.email || p.inviteEmail || '',
       description: `Dues payment${p.tier?.name ? ` — ${p.tier.name}` : ''}`,
-      amount: p.tier?.annualFee ?? 0,
+      // MP-3 B2a: column is cents; `amount` on this route is dollars (see the
+      // booking rows above, which divide by 100).
+      amount: centsToDollarsOr0(p.tier?.annualFeeCents),
     })),
   ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 

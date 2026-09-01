@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { centsToDollarsOr0 } from '@/lib/money';
 import { getMemberSession } from '@/lib/member-session';
 
 export async function GET(
@@ -35,7 +36,7 @@ export async function GET(
   if (membership.lastPaidAt) {
     records.push({
       type: 'dues',
-      amount: membership.tier?.annualFee ?? 0,
+      amount: centsToDollarsOr0(membership.tier?.annualFeeCents),
       date: membership.lastPaidAt,
       status: membership.paymentStatus,
       tierName: membership.tier?.name ?? membership.membershipType,
@@ -44,12 +45,12 @@ export async function GET(
 
   if (
     membership.startedAt &&
-    membership.tier?.initiationFee &&
-    membership.tier.initiationFee > 0
+    membership.tier?.initiationFeeCents &&
+    membership.tier.initiationFeeCents > 0
   ) {
     records.push({
       type: 'initiation',
-      amount: membership.tier.initiationFee,
+      amount: centsToDollarsOr0(membership.tier.initiationFeeCents),
       date: membership.startedAt,
       status: 'paid',
       tierName: membership.tier.name,
@@ -70,8 +71,8 @@ export async function GET(
       expiresAt: membership.expiresAt,
       startedAt: membership.startedAt,
       tierName: membership.tier?.name ?? membership.membershipType,
-      annualFee: membership.tier?.annualFee ?? 0,
-      initiationFee: membership.tier?.initiationFee ?? 0,
+      annualFee: centsToDollarsOr0(membership.tier?.annualFeeCents),
+      initiationFee: centsToDollarsOr0(membership.tier?.initiationFeeCents),
     },
     records,
     courseName: course.name,

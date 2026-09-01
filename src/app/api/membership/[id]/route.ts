@@ -21,10 +21,13 @@ async function authorize(id: string, token: string | null) {
 }
 
 /** Initiation is only owed on the first payment ever. */
-function amountsDue(m: { lastPaidAt: Date | null; tier: { annualFee: number; initiationFee: number } | null }) {
-  const annual = m.tier?.annualFee ?? 0;
-  const initiation = m.lastPaidAt ? 0 : (m.tier?.initiationFee ?? 0);
-  return { annualCents: Math.round(annual * 100), initiationCents: Math.round(initiation * 100) };
+function amountsDue(m: { lastPaidAt: Date | null; tier: { annualFeeCents: number; initiationFeeCents: number } | null }) {
+  // MP-3 B2a: this used to multiply dollars by 100 to reach cents. The columns
+  // ARE cents now, so that multiplication would have charged 100x — exactly the
+  // silent failure the rename exists to make impossible.
+  const annualCents = m.tier?.annualFeeCents ?? 0;
+  const initiationCents = m.lastPaidAt ? 0 : (m.tier?.initiationFeeCents ?? 0);
+  return { annualCents, initiationCents };
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

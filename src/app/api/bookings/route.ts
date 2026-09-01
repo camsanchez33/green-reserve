@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
+import { centsToDollars } from '@/lib/money';
 import { getGolferSession } from '@/lib/auth';
 import { getMemberSession, getGolferMembership } from '@/lib/member-session';
 import { stripe, ACCESS_FEE_CENTS } from '@/lib/stripe';
@@ -24,25 +25,36 @@ function isWeekend(dateStr: string): boolean {
 function applyTierRates(
   teeTime: { greenFee: number; cartFee: number; memberRate: number | null; date: string },
   tier: {
-    greenFeeWeekday: number | null;
-    greenFeeWeekend: number | null;
-    cartFeeWeekday:  number | null;
-    cartFeeWeekend:  number | null;
-    discountPct:     number | null;
+    greenFeeWeekdayCents: number | null;
+    greenFeeWeekendCents: number | null;
+    cartFeeWeekdayCents:  number | null;
+    cartFeeWeekendCents:  number | null;
+    discountPct:          number | null;
   } | null
 ): { greenFee: number; cartFee: number } {
   if (!tier) return { greenFee: teeTime.greenFee, cartFee: teeTime.cartFee };
 
   const weekend = isWeekend(teeTime.date);
 
+  // MP-3 B2a — THE UNIT BOUNDARY. teeTime.* is still DOLLARS (TeeTime is run
+  // B2c); tier.*Cents is CENTS. This function's contract is dollars in, dollars
+  // out, because its result feeds Math.round(fee * players * 100) downstream.
+  // So the tier's cents are converted to dollars here, once, before any
+  // comparison or fallback mixes the two. Getting this wrong prices a member's
+  // round at 100x, silently.
+  const tierGreenWeekday = centsToDollars(tier.greenFeeWeekdayCents);
+  const tierGreenWeekend = centsToDollars(tier.greenFeeWeekendCents);
+  const tierCartWeekday  = centsToDollars(tier.cartFeeWeekdayCents);
+  const tierCartWeekend  = centsToDollars(tier.cartFeeWeekendCents);
+
   // Flat rate overrides
-  if (tier.greenFeeWeekday != null || tier.greenFeeWeekend != null) {
+  if (tierGreenWeekday != null || tierGreenWeekend != null) {
     const greenFee = weekend
-      ? (tier.greenFeeWeekend ?? tier.greenFeeWeekday ?? teeTime.greenFee)
-      : (tier.greenFeeWeekday ?? teeTime.greenFee);
+      ? (tierGreenWeekend ?? tierGreenWeekday ?? teeTime.greenFee)
+      : (tierGreenWeekday ?? teeTime.greenFee);
     const cartFee = weekend
-      ? (tier.cartFeeWeekend ?? tier.cartFeeWeekday ?? teeTime.cartFee)
-      : (tier.cartFeeWeekday ?? teeTime.cartFee);
+      ? (tierCartWeekend ?? tierCartWeekday ?? teeTime.cartFee)
+      : (tierCartWeekday ?? teeTime.cartFee);
     return { greenFee, cartFee };
   }
 
