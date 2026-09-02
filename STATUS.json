@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-02T20:56:47.600Z",
+  "generatedAt": "2026-09-02T21:20:12.145Z",
   "repo": {
-    "head": "6a5a3dd",
+    "head": "4232820",
     "branch": "main",
     "dirtyCount": 2,
     "dirty": [
@@ -11,14 +11,14 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-02T16:48:27-04:00",
+    "queueLastCommit": "2026-09-02T16:56:48-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 126,
+    "runDone": 127,
     "runAwaiting": 8,
     "runInFlight": 1,
-    "runNotStarted": 29,
+    "runNotStarted": 33,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -27,7 +27,7 @@
   "inFlight": [
     {
       "title": "BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET",
-      "line": 1397,
+      "line": 1437,
       "body": [
         "FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because \"no linked inquiry\" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding them outright. FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() + a \"Force delete permanently\" button per acknowledged orphan — owner-only, typed name confirm, server re-verifies the course is still an orphan before touching anything (refuses if it turns out to have a real inquiry link — this can never be used to route around the doctrine for a real course). This is the mechanism for Cam's DaisyLinks exception, but I have NOT executed it against DaisyLinks yet:",
         "- Last session's raw Prisma script (a read-only check confirming Fake",
@@ -169,78 +169,98 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "MP-5 — courses reshape: evidence on list rows (already computed, never",
+      "title": "MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong",
       "line": 902,
       "section": "Queue (run in this order)"
     },
     {
+      "title": "MP-5b — take-offline / archive ignore existing FUTURE bookings: no",
+      "line": 927,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-5c — the list: put the evidence on the row (last booking, 30d",
+      "line": 931,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-5d — detail tabs 10 → 6: Overview · Money · Records · Messages ·",
+      "line": 936,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-5e — Feature decision (the flag drives an admin filter and an",
+      "line": 940,
+      "section": "Queue (run in this order)"
+    },
+    {
       "title": "MP-6 — money reshape: Revenue problems pinned all-time + collected-basis",
-      "line": 906,
+      "line": 946,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-7 — comms merge: Broadcasts composer into Messages (owner-only),",
-      "line": 910,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-8 — chrome + System: sidebar real links + self-fetched badges +",
-      "line": 914,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in",
-      "line": 918,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,",
-      "line": 924,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved",
-      "line": 928,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState",
-      "line": 945,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:",
       "line": 950,
       "section": "Queue (run in this order)"
     },
     {
+      "title": "MP-8 — chrome + System: sidebar real links + self-fetched badges +",
+      "line": 954,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in",
+      "line": 958,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,",
+      "line": 964,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved",
+      "line": 968,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState",
+      "line": 985,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:",
+      "line": 990,
+      "section": "Queue (run in this order)"
+    },
+    {
       "title": "COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)",
-      "line": 971,
+      "line": 1011,
       "section": "Queue (run in this order)"
     },
     {
       "title": "COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small)",
-      "line": 972,
+      "line": 1012,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
-      "line": 994,
+      "line": 1034,
       "section": "Queue (run in this order)"
     },
     {
       "title": "ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule), every dashboard ta",
-      "line": 1014,
+      "line": 1054,
       "section": "Queue (run in this order)"
     },
     {
       "title": "ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → \"Send updated preview\"), Messa",
-      "line": 1016,
+      "line": 1056,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
-      "line": 1073,
+      "line": 1113,
       "section": "Queue (run in this order)"
     }
   ],
@@ -278,7 +298,7 @@
     {
       "item": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
       "note": "CAM: confirm the state before this runs — e",
-      "line": 994
+      "line": 1034
     }
   ],
   "ideas": {
@@ -801,6 +821,16 @@
   },
   "recentCommits": [
     {
+      "h": "4232820",
+      "date": "2026-09-02",
+      "subject": "MP-5a: the courses surface stops lying, and contracts stop being public"
+    },
+    {
+      "h": "d2ecccb",
+      "date": "2026-09-02",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "6a5a3dd",
       "date": "2026-09-02",
       "subject": "MP-4d: Overview stops deriving \"whose move is it\" for itself"
@@ -848,16 +878,6 @@
     {
       "h": "9d67ea9",
       "date": "2026-09-02",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "a48ece7",
-      "date": "2026-09-02",
-      "subject": "MP-4b: the inquiries list becomes a ranked work queue"
-    },
-    {
-      "h": "25bc47e",
-      "date": "2026-09-01",
       "subject": "queue/spec update"
     }
   ]

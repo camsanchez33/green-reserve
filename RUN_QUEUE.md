@@ -899,10 +899,50 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       three dead SQL thresholds and MP-4c's snooze stopgap go with them.
       Per-row affordances preserved (resend_sheet, resend_preview, the
       changes-requested category list). 20 assertions passed. NEEDS REVIEW.
-  - [ ] MP-5 — courses reshape: evidence on list rows (already computed, never
-    rendered), 10→6 tab split, offline/archive booking-consequence flows +
-    operator notification, Feature decision (build the directory or delete the
-    button), sheet-vs-live config diff card (big)
+  - [ ] MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong
+    today rather than by spec order)
+    - [x] MP-5a — the lies and the leak (4232820). Five confirmed findings,
+      no schema. (1) Deleting a tee-time schedule left every slot it had
+      generated ON SALE for up to 8 days — golfers could book times the course
+      no longer offered; editing one had the same hole. Both now rebuild the
+      rolling window via `regenerateUpcoming` in tee-sheet-engine (the
+      generator is idempotent and never touches booked or blocked slots).
+      Delete also gained a confirm and a failure path — it had neither, and a
+      failed delete looked identical to a successful one. (2) The admin day-of
+      tee sheet filtered to `confirmed`, so a booking vanished at check-in —
+      the sheet emptied as the day succeeded and slot chips undercounted;
+      8 completed bookings in prod were invisible. (3) "Last booking" was the
+      one aggregate with no status filter, so a cancelled booking counted as
+      last activity (list + detail both fixed; no course's value actually
+      moves today, but the going-quiet detection was unsound). (4) Members
+      swallowed every fetch failure and then told the reader to click a Load
+      button that only exists on Transactions. (5) Signed contracts uploaded
+      as PUBLIC blobs — readable by anyone who ever saw the URL, no session,
+      no expiry, nothing to revoke. Now private, served via an authenticated
+      route that checks the document belongs to the course being viewed; zero
+      documents existed in prod so nothing needed migrating. NEEDS REVIEW.
+      NOT COVERED BY TESTS: there is no test DB, and tee-time generation must
+      not be run against production — the regeneration paths are verified by
+      reading the generator and by Cam's manual check, not by assertions.
+    - [ ] MP-5b — take-offline / archive ignore existing FUTURE bookings: no
+      cancel, no refund, no notification, not even a count in the confirm, so
+      golfers hold confirmed tee times at a course whose page now 404s and the
+      operator is never told. Highest-harm item left on this surface.
+    - [ ] MP-5c — the list: put the evidence on the row (last booking, 30d
+      bookings, trend, revenue are ALREADY computed and rendered nowhere, which
+      is why two courses both show a green "Healthy" pill with nothing behind
+      it); rename "Offline" (it lumps never-live drafts with deliberately
+      paused courses); move the orphan sweep off list-mount.
+    - [ ] MP-5d — detail tabs 10 → 6: Overview · Money · Records · Messages ·
+      Operate (merged Tee Sheet + Schedule, all mutations through the shared
+      services) · Setup. Staff tab dies (its one action moves to Overview's
+      contact rail); Members becomes a read-only card.
+    - [ ] MP-5e — Feature decision (the flag drives an admin filter and an
+      ordering in /api/courses, which has ZERO callers — build the golfer
+      directory or delete the button), sheet-vs-live config diff card, the
+      Overview relationship feed, and real `firstWentLiveAt` so health stops
+      reading a failed welcome email as "setup incomplete" forever
+      (SCHEMA CHANGE, ATTENDED).
   - [ ] MP-6 — money reshape: Revenue problems pinned all-time + collected-basis
     P&L + payout history + unit economics; Golfers record page + palette search
     extension + support actions (cancel, receipt, card-update link); red sidebar
