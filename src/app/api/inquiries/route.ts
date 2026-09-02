@@ -32,19 +32,22 @@ export async function POST(req: NextRequest) {
   //
   // Only ALIVE inquiries dedupe. A course rejected or archived months ago that
   // applies again is a genuine new lead, not a duplicate.
+  const courseName = String(body.courseName).trim();
+  const city = String(body.city).trim();
+  const state = String(body.state).trim();
+
+  // A duplicate is the same COURSE, not the same person. The first version of
+  // this guard also matched on email alone, which is wrong twice over: a
+  // management company, or a GM who looks after two courses, submits both from
+  // one address — and every one of those legitimate second courses was
+  // silently absorbed into the first inquiry and never appeared in the
+  // pipeline. Identity here is the course: name + city + state.
   const existing = await prisma.courseInquiry.findFirst({
     where: {
       status: { in: ALIVE_STATUSES },
-      OR: [
-        { email: { equals: email, mode: 'insensitive' } },
-        {
-          AND: [
-            { courseName: { equals: String(body.courseName).trim(), mode: 'insensitive' } },
-            { city: { equals: String(body.city).trim(), mode: 'insensitive' } },
-            { state: { equals: String(body.state).trim(), mode: 'insensitive' } },
-          ],
-        },
-      ],
+      courseName: { equals: courseName, mode: 'insensitive' },
+      city: { equals: city, mode: 'insensitive' },
+      state: { equals: state, mode: 'insensitive' },
     },
     orderBy: { createdAt: 'desc' },
     select: { id: true, status: true },
@@ -60,7 +63,10 @@ export async function POST(req: NextRequest) {
         fromStatus: existing.status,
         toStatus: existing.status,
         trigger: 'course',
-        actorName: RESUBMIT_ACTOR,
+        // Carry WHAT they submitted. Without it a swallowed submission leaves
+        // no evidence of what was actually sent, which is no way to tell a
+        // real duplicate from a guard that matched too widely.
+        actorName: `${RESUBMIT_ACTOR} — "${courseName}", ${city} ${state} <${email}>`,
       },
     }).catch(err => console.error('Duplicate-intake event failed:', err));
 

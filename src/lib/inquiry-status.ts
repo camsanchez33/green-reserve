@@ -196,8 +196,10 @@ export function queueSignal(inq: QueueInput, now: Date = new Date()): QueueSigna
   const inStage = daysSince(enteredAt, now);
   // Only re-submissions since this stage began count. One from three stages
   // ago was already answered by moving the inquiry forward.
+  // startsWith, not equality: the event carries what was submitted after the
+  // marker so a swallowed duplicate can be told apart from an over-eager guard.
   const resubmits = evs.filter(
-    e => e.actorName === RESUBMIT_ACTOR && new Date(e.createdAt).getTime() >= enteredAt.getTime(),
+    e => e.actorName?.startsWith(RESUBMIT_ACTOR) && new Date(e.createdAt).getTime() >= enteredAt.getTime(),
   ).length;
   const base = { status, enteredAt, resubmits };
 
