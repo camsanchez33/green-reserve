@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendInquiryNotification, sendInquiryConfirmation } from '@/lib/email';
-import { ALIVE_STATUSES } from '@/lib/inquiry-status';
+import { ALIVE_STATUSES, RESUBMIT_ACTOR } from '@/lib/inquiry-status';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
         fromStatus: existing.status,
         toStatus: existing.status,
         trigger: 'course',
-        actorName: 'Course submitted the interest form again',
+        actorName: RESUBMIT_ACTOR,
       },
     }).catch(err => console.error('Duplicate-intake event failed:', err));
 

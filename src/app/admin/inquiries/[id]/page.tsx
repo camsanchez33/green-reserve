@@ -306,15 +306,16 @@ function InquiryDetailInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // MP-4b: the list dropped its per-tab sort memory when it became a ranked
+  // queue, so there is no `sort` to carry back — only which stage filter and
+  // search the founder was looking at.
   const backTab = searchParams.get('tab') || '';
   const backSearch = searchParams.get('q') || '';
-  const backSort = searchParams.get('sort') || '';
-  const backUrl = '/admin/inquiries' + (backTab || backSearch || backSort
+  const backUrl = '/admin/inquiries' + (backTab || backSearch
     ? '?' + new URLSearchParams(
         Object.fromEntries([
           backTab && ['tab', backTab],
           backSearch && ['q', backSearch],
-          backSort && ['sort', backSort],
         ].filter(Boolean) as [string, string][])
       ).toString()
     : '');

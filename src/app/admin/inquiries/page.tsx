@@ -1,12 +1,16 @@
 'use client';
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { RefreshCw, Search, Trash2, ChevronRight, ArchiveRestore } from 'lucide-react';
+import { RefreshCw, Search, Trash2, ChevronRight, ArchiveRestore, RotateCcw } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
-import { FUNNEL_SEGMENTS, ARCHIVED_STATUSES, ACTIVE_STATUSES, ALIVE_STATUSES, KNOWN_STATUSES, STATUS_DOT_MAP, STATUS_LABEL, isYourMove, stageEnteredAt, daysSince } from '@/lib/inquiry-status';
+import {
+  FUNNEL_SEGMENTS, ARCHIVED_STATUSES, ACTIVE_STATUSES, ALIVE_STATUSES, KNOWN_STATUSES,
+  STATUS_DOT_MAP, STATUS_LABEL, stageEnteredAt, daysSince, queueSignal, compareQueue,
+  type QueueSignal,
+} from '@/lib/inquiry-status';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -24,58 +28,36 @@ interface Inquiry {
   events: InquiryStatusEvent[];
 }
 
-// A-02c: TABS is built from the shared FUNNEL_SEGMENTS constant so the list,
-// the funnel row, the Overview strip, and the action queue can never disagree
-// about what each stage means. "Your move" is no longer a fixed status set —
-// it's derived (isYourMove) so an aged sheet-sent/pending inquiry surfaces
-// here too, not just details_submitted/building.
-const TABS = [
-  { key: 'your-move', label: 'Your move', description: 'Needs your action now — sheet in, building, or stalled past its threshold.' },
-  ...FUNNEL_SEGMENTS.map(seg => ({
-    key: seg.key, label: seg.label,
-    description:
-      seg.key === 'new' ? 'Just submitted — not yet reviewed.'
-      : seg.key === 'in-review' ? "You're evaluating these."
-      : seg.key === 'sheet-sent' ? 'Setup sheet sent — waiting on the course.'
-      : seg.key === 'sheet-in' ? 'Sheet is back — review and build.'
-      : seg.key === 'building' ? 'Draft created — being built/reviewed before go-live.'
-      : 'Converted wins — successfully launched.',
-  })),
-  // A-02d: alive vs closed never mix. "All" = every ALIVE inquiry (the
-  // funnel total) — the name finally means what it says. Closed records
-  // (rejected, or archived via the lifecycle parity law) live ONLY in the
-  // Closed tab, never here.
-  { key: 'all', label: 'All', description: 'Every active inquiry — the whole funnel, New through Live.' },
-  { key: 'archived', label: 'Closed', description: 'Rejected or archived — restore or permanently delete here.' },
-];
+// MP-4b: this page is a WORK QUEUE, not a CRM browser. It used to be three UIs
+// stapled together — a queue, a tabbed record browser with four filters and
+// four sorts with per-tab memory, and a records console — five control layers
+// over one row of data, at a volume where none of them earned their keep.
+//
+// Now: the funnel strip on top narrows the queue (click a stage, click it
+// again to clear); the body is the ranked queue, split by whose move it is so
+// nothing an inquiry is waiting on is invisible; "All" and "Closed" are footer
+// links, not peers of the work.
+//
+// The `?tab=` param keeps its old name and its old values on purpose — the
+// Overview deep-links (?tab=new, ?tab=sheet-sent, ?tab=building, ?tab=live)
+// and any bookmark keep working. 'your-move' and '' both mean the whole queue.
+const SEGMENT_KEYS = FUNNEL_SEGMENTS.map(s => s.key) as string[];
+const VIEW_ALL = 'all';
+const VIEW_CLOSED = 'archived';
 
-// A tab's membership is a predicate, not a static status list — "Your move"
-// depends on age, not just status. This is the ONLY place tab membership is
-// decided; funnel counts, list filtering, and bulk-select eligibility all
-// route through it.
-function tabMatches(key: string, inq: Inquiry): boolean {
-  if (key === 'your-move') return isYourMove(inq.status, inq.createdAt, inq.events);
-  if (key === 'all') return (ALIVE_STATUSES as readonly string[]).includes(inq.status);
-  if (key === 'archived') return (ARCHIVED_STATUSES as readonly string[]).includes(inq.status);
-  const seg = FUNNEL_SEGMENTS.find(s => s.key === key);
-  return seg ? (seg.statuses as readonly string[]).includes(inq.status) : false;
-}
-
-// A-02b: the tab row splits into a connected pipeline funnel (how an inquiry
-// actually flows left to right) and a separate "lenses" group (cross-cutting
-// views that aren't a pipeline stage).
-const PIPELINE_KEYS = FUNNEL_SEGMENTS.map(s => s.key) as string[];
-const LENS_KEYS = ['your-move', 'all', 'archived'];
-
-// Work tabs default to longest-in-stage first — it's a queue, oldest overdue
-// should scream first. Informational tabs (Live/All/Archived) default newest.
-const DEFAULT_SORT_BY_TAB: Record<string, string> = {
-  'your-move': 'longest_stage', 'new': 'longest_stage', 'in-review': 'longest_stage',
-  'sheet-sent': 'longest_stage', 'sheet-in': 'longest_stage', 'building': 'longest_stage',
-  'live': 'newest', 'all': 'newest', 'archived': 'newest',
+const SEGMENT_HINT: Record<string, string> = {
+  'new': 'Just submitted — not yet reviewed.',
+  'in-review': "You're evaluating these.",
+  'sheet-sent': 'Setup sheet sent — waiting on the course.',
+  'sheet-in': 'Sheet is back — review and build.',
+  'building': 'Draft created — being built and reviewed before go-live.',
+  'live': 'Converted wins — successfully launched.',
 };
-const SORT_LS_KEY = 'admin-inquiries-sort-by-tab';
+
 const PAGE_SIZE = 50;
+// A section that runs longer than this is a signal in itself — show the top
+// slice and say how many are behind it rather than rendering a wall.
+const SECTION_CAP = 50;
 
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 // MP-4a: time in the CURRENT stage, derived from the event ledger. This used
@@ -86,10 +68,14 @@ const stageStart = (inq: Inquiry) => stageEnteredAt(inq.status, inq.createdAt, i
 const stageDays = (inq: Inquiry) => daysSince(stageStart(inq));
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const hasBadEmail = (inq: Inquiry) => !!inq.email && !EMAIL_RE.test(inq.email.trim());
+const segmentOf = (status: string) => SEGMENT_KEYS.find(k => {
+  const seg = FUNNEL_SEGMENTS.find(s => s.key === k)!;
+  return (seg.statuses as readonly string[]).includes(status);
+}) || null;
 
 function whyArchived(inq: Inquiry): { reason: string; date: string } {
-  if (inq.status === 'live') return { reason: 'Went live', date: stageEnteredAt(inq.status, inq.createdAt, inq.events).toISOString() };
-  if (inq.status === 'rejected') return { reason: 'Rejected', date: stageEnteredAt(inq.status, inq.createdAt, inq.events).toISOString() };
+  if (inq.status === 'live') return { reason: 'Went live', date: stageStart(inq).toISOString() };
+  if (inq.status === 'rejected') return { reason: 'Rejected', date: stageStart(inq).toISOString() };
   const lastEvent = inq.events.length > 0 ? inq.events[inq.events.length - 1] : null;
   const actorName = lastEvent?.actorName || '';
   if (actorName.toLowerCase().includes('permanently deleted')) return { reason: 'Course deleted', date: lastEvent?.createdAt || inq.updatedAt || inq.createdAt };
@@ -108,11 +94,6 @@ function InquiriesListInner() {
   const [search, setSearch] = useState(searchParams.get('q') || '');
   const [backfillRan, setBackfillRan] = useState(false);
   const [page, setPage] = useState(0);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [filterCourseType, setFilterCourseType] = useState('');
-  const [filterState, setFilterState] = useState('');
-  const [filterAgeBucket, setFilterAgeBucket] = useState('');
-  const [filterBadDataOnly, setFilterBadDataOnly] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkPreview, setBulkPreview] = useState<{ kind: 'send_sheet' | 'archive'; ids: string[] } | null>(null);
   const [bulkConfirmText, setBulkConfirmText] = useState('');
@@ -125,32 +106,13 @@ function InquiriesListInner() {
   const [reconcileRan, setReconcileRan] = useState(false);
   const [reconcileResult, setReconcileResult] = useState('');
 
-  const rawTabParam = searchParams.get('tab') || '';
-  const [activeTabKey, setActiveTabKey] = useState(
-    TABS.find(t => t.key === rawTabParam) ? rawTabParam : 'your-move'
+  const rawTab = searchParams.get('tab') || '';
+  const [tab, setTab] = useState(
+    rawTab === VIEW_ALL || rawTab === VIEW_CLOSED || SEGMENT_KEYS.includes(rawTab) ? rawTab : ''
   );
-
-  const [sortByTab, setSortByTab] = useState<Record<string, string>>(() => {
-    let stored: Record<string, string> = {};
-    if (typeof window !== 'undefined') {
-      try { stored = JSON.parse(localStorage.getItem(SORT_LS_KEY) || '{}'); } catch { /* ignore */ }
-    }
-    const merged = { ...DEFAULT_SORT_BY_TAB, ...stored };
-    const urlSort = searchParams.get('sort');
-    if (urlSort) merged[activeTabKey] = urlSort;
-    return merged;
-  });
-  const sortBy = sortByTab[activeTabKey] ?? DEFAULT_SORT_BY_TAB[activeTabKey] ?? 'newest';
-  function setSortForActiveTab(val: string) {
-    setSortByTab(prev => {
-      const next = { ...prev, [activeTabKey]: val };
-      try { localStorage.setItem(SORT_LS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
-      return next;
-    });
-    const p = new URLSearchParams(window.location.search);
-    if (val === DEFAULT_SORT_BY_TAB[activeTabKey]) p.delete('sort'); else p.set('sort', val);
-    window.history.replaceState(null, '', '/admin/inquiries?' + p.toString());
-  }
+  const view: 'queue' | 'all' | 'closed' =
+    tab === VIEW_ALL ? 'all' : tab === VIEW_CLOSED ? 'closed' : 'queue';
+  const stage = view === 'queue' && SEGMENT_KEYS.includes(tab) ? tab : null;
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
@@ -186,21 +148,21 @@ function InquiriesListInner() {
     if (adminReady) loadInquiries();
   }, [adminReady, loadInquiries]);
 
-  // One-time backfill on first visit to the Closed tab
+  // One-time backfill on first visit to Closed
   useEffect(() => {
-    if (activeTabKey !== 'archived' || backfillRan || !adminReady) return;
+    if (view !== 'closed' || backfillRan || !adminReady) return;
     setBackfillRan(true);
     fetch('/api/admin/backfill-orphaned-inquiries', { method: 'POST', headers: H() })
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d && d.fixed > 0) loadInquiries(); })
       .catch(() => {});
-  }, [activeTabKey, backfillRan, adminReady, H, loadInquiries]);
+  }, [view, backfillRan, adminReady, H, loadInquiries]);
 
   // One-time LIFECYCLE PARITY LAW reconciliation sweep (RUN_QUEUE item 6.6)
   // — also triggered by the first visit to Closed, prints exactly what it
   // changed (never a silent rewrite of history).
   useEffect(() => {
-    if (activeTabKey !== 'archived' || reconcileRan || !adminReady) return;
+    if (view !== 'closed' || reconcileRan || !adminReady) return;
     setReconcileRan(true);
     fetch('/api/admin/reconcile-lifecycle-pairs', { method: 'POST', headers: H() })
       .then(r => r.ok ? r.json() : null)
@@ -211,14 +173,14 @@ function InquiriesListInner() {
         }
       })
       .catch(() => {});
-  }, [activeTabKey, reconcileRan, adminReady, H, loadInquiries]);
+  }, [view, reconcileRan, adminReady, H, loadInquiries]);
 
   // DELETION DOCTRINE (RUN_QUEUE): only reachable for UNBUILT inquiries
   // (gated at the call site below) — the server refuses regardless if this
   // is ever somehow called on a built one (lifecycle.ts). Typed confirm
-  // required (item 3's fix): trimmed + case-insensitive, matching what the
-  // server itself compares against, so this can never disagree with the API
-  // about what "matches."
+  // required: trimmed + case-insensitive, matching what the server itself
+  // compares against, so this can never disagree with the API about what
+  // "matches."
   async function deleteInquiry(id: string, name: string, confirmText: string) {
     setDeleteError('');
     setDeleteBusy(true);
@@ -232,8 +194,7 @@ function InquiriesListInner() {
       }
       // Optimistic removal ONLY after a confirmed success — no-silent-failures:
       // a failed delete (e.g. name mismatch) must never make the row silently
-      // vanish from this view while it's still in the DB (that's exactly what
-      // made a "deleted" inquiry keep reappearing in All).
+      // vanish from this view while it is still in the DB.
       setInquiries(prev => prev.filter(i => i.id !== id));
       setDeleteTarget(null);
       setDeleteConfirmText('');
@@ -243,13 +204,9 @@ function InquiriesListInner() {
     setDeleteBusy(false);
   }
 
-  // A-02d: Closed tab's only actions are Restore and Permanently delete —
-  // both route through the same lifecycle service the courses tab uses
-  // (LIFECYCLE PARITY LAW), never a one-sided status flip.
-  // MP-1b B3: neither branch had a catch, so a network failure was an unhandled
-  // rejection — no spinner, no banner, no row change, nothing. MP-1 is what made
-  // Restore reachable at all (it used to 400 every time), so this became a live
-  // path with no failure surface.
+  // A-02d: Closed's only actions are Restore and Permanently delete — both
+  // route through the same lifecycle service the courses tab uses (LIFECYCLE
+  // PARITY LAW), never a one-sided status flip.
   async function restoreInquiry(inq: Inquiry) {
     setDeleteError('');
     try {
@@ -270,11 +227,8 @@ function InquiriesListInner() {
       return;
     }
     // No linked course (rejected before ever building) — reopen the inquiry
-    // itself. MP-1 fix-now #2: this used to call set_status, which rejects any
-    // inquiry whose CURRENT status isn't a pipeline stage — so it 400'd every
-    // single time and Restore was a button that did nothing. The dedicated
-    // 'restore' action computes the target stage server-side from the event
-    // ledger, so the client no longer has to guess it from a partial history.
+    // itself. The dedicated 'restore' action computes the target stage
+    // server-side from the event ledger, so the client never guesses it.
     const r = await fetch('/api/admin/inquiries', {
       method: 'POST', headers: H(), body: JSON.stringify({ id: inq.id, action: 'restore' }),
     });
@@ -285,24 +239,32 @@ function InquiriesListInner() {
 
   function detailHref(inq: Inquiry) {
     const p = new URLSearchParams();
-    p.set('tab', activeTabKey);
+    if (tab) p.set('tab', tab);
     if (search) p.set('q', search);
-    if (sortBy !== (DEFAULT_SORT_BY_TAB[activeTabKey] ?? 'newest')) p.set('sort', sortBy);
-    return '/admin/inquiries/' + inq.id + '?' + p.toString();
+    const qs = p.toString();
+    return '/admin/inquiries/' + inq.id + (qs ? '?' + qs : '');
   }
 
-  function switchTab(key: string) {
-    setActiveTabKey(key);
-    // Sync tab into URL without full navigation so refresh restores it
-    const p = new URLSearchParams(window.location.search);
-    p.set('tab', key);
-    if (!search) p.delete('q'); else p.set('q', search);
-    const tabSort = sortByTab[key] ?? DEFAULT_SORT_BY_TAB[key] ?? 'newest';
-    if (tabSort === DEFAULT_SORT_BY_TAB[key]) p.delete('sort'); else p.set('sort', tabSort);
-    window.history.replaceState(null, '', '/admin/inquiries?' + p.toString());
+  function goTo(nextTab: string) {
+    setTab(nextTab);
+    setPage(0);
+    setSelected(new Set());
+    const p = new URLSearchParams();
+    if (nextTab) p.set('tab', nextTab);
+    if (search) p.set('q', search);
+    const qs = p.toString();
+    window.history.replaceState(null, '', '/admin/inquiries' + (qs ? '?' + qs : ''));
   }
 
-  const currentTab = TABS.find(t => t.key === activeTabKey) || TABS[0];
+  // One signal per inquiry per render pass, from one `now` — two rows must
+  // never be ranked against different clocks.
+  const signals = useMemo(() => {
+    const now = new Date();
+    const m = new Map<string, QueueSignal>();
+    for (const i of inquiries) m.set(i.id, queueSignal(i.status, i.createdAt, i.events, now));
+    return m;
+  }, [inquiries]);
+  const sig = (inq: Inquiry) => signals.get(inq.id) as QueueSignal;
 
   const q = search.toLowerCase().trim();
   const matchesSearch = (inq: Inquiry) => !q || (
@@ -311,52 +273,58 @@ function InquiriesListInner() {
     inq.email.toLowerCase().includes(q) ||
     inq.city.toLowerCase().includes(q)
   );
-  const sortFn = (a: Inquiry, b: Inquiry) => {
-    if (sortBy === 'oldest') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-    if (sortBy === 'name') return a.courseName.localeCompare(b.courseName);
-    if (sortBy === 'longest_stage') return stageStart(a).getTime() - stageStart(b).getTime();
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  };
+  const newestFirst = (a: Inquiry, b: Inquiry) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  const byQueue = (a: Inquiry, b: Inquiry) => compareQueue(sig(a), sig(b));
 
-  const matchesFilters = (inq: Inquiry) => {
-    if (filterCourseType && inq.courseType !== filterCourseType) return false;
-    if (filterState && inq.state.toUpperCase() !== filterState.toUpperCase()) return false;
-    if (filterAgeBucket) {
-      const days = stageDays(inq);
-      if (days <= Number(filterAgeBucket)) return false;
-    }
-    if (filterBadDataOnly && !hasBadEmail(inq)) return false;
-    return true;
-  };
+  const visible = inquiries.filter(matchesSearch);
 
-  const filtered = inquiries
-    .filter(i => tabMatches(currentTab.key, i) && matchesSearch(i) && matchesFilters(i))
-    .sort(sortFn);
+  // The queue body. With no stage selected it is the whole active pipeline
+  // (live is a destination, not work); with one selected it narrows to that
+  // stage — including Live, which has no "move" and so renders flat.
+  const queueBase = visible.filter(i => stage
+    ? segmentOf(i.status) === stage
+    : (ACTIVE_STATUSES as readonly string[]).includes(i.status));
+  const secYours = queueBase.filter(i => sig(i).yourMove).sort(byQueue);
+  const secThem = queueBase.filter(i => !sig(i).yourMove && sig(i).waitingOn === 'them').sort(byQueue);
+  const secSoon = queueBase.filter(i => !sig(i).yourMove && sig(i).waitingOn === 'us').sort(byQueue);
+  const liveRows = stage === 'live' ? [...queueBase].sort(newestFirst) : [];
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const pagedInquiries = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const allRows = visible.filter(i => (ALIVE_STATUSES as readonly string[]).includes(i.status)).sort(newestFirst);
+  const closedRows = visible.filter(i => (ARCHIVED_STATUSES as readonly string[]).includes(i.status)).sort(newestFirst);
+  const flatRows = view === 'all' ? allRows : view === 'closed' ? closedRows : [];
+  const totalPages = Math.max(1, Math.ceil(flatRows.length / PAGE_SIZE));
+  const pagedFlat = flatRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  const courseTypeOptions = Array.from(new Set(inquiries.map(i => i.courseType).filter(Boolean))).sort();
+  useEffect(() => { setPage(0); }, [q]);
 
-  useEffect(() => { setPage(0); }, [activeTabKey, q, filterCourseType, filterState, filterAgeBucket, filterBadDataOnly]);
-  useEffect(() => { setSelected(new Set()); }, [activeTabKey]);
+  const countForSegment = (key: string) => inquiries.filter(i => segmentOf(i.status) === key).length;
+  const activeCount = inquiries.filter(i => (ACTIVE_STATUSES as readonly string[]).includes(i.status)).length;
+  const needsYouCount = inquiries.filter(i => signals.get(i.id)?.yourMove).length;
+  const liveAllTimeCount = inquiries.filter(i => i.status === 'live').length;
+  const closedCount = inquiries.filter(i => (ARCHIVED_STATUSES as readonly string[]).includes(i.status)).length;
+  const aliveCount = inquiries.filter(i => (ALIVE_STATUSES as readonly string[]).includes(i.status)).length;
 
-  const canBulkSelect = !['archived', 'live'].includes(activeTabKey);
+  // A-02c/A-02d INVARIANT: every inquiry maps to exactly one funnel segment
+  // (or is closed). If a future status is added and forgotten, this catches it
+  // loudly instead of inquiries silently vanishing from the pipeline the way
+  // "Sheet In" once did.
+  const unmappedCount = inquiries.filter(i => !(KNOWN_STATUSES as readonly string[]).includes(i.status)).length;
+  const funnelSum = SEGMENT_KEYS.reduce((sum, key) => sum + countForSegment(key), 0);
+  const invariantBroken = unmappedCount > 0
+    || funnelSum !== activeCount + liveAllTimeCount
+    || aliveCount !== funnelSum
+    || unmappedCount + aliveCount + closedCount !== inquiries.length;
+
+  // Bulk lives with the work. Closed is a graveyard (row actions only) and the
+  // All browse mixes live courses in, where a mis-aimed Archive is expensive.
+  const canBulkSelect = view === 'queue' && stage !== 'live';
+  const selectedRows = inquiries.filter(i => selected.has(i.id));
+  const canSendSheet = selectedRows.length > 0 && selectedRows.every(i => i.status === 'pending');
 
   function toggleSelected(id: string) {
     setSelected(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  }
-  function toggleSelectAllOnPage() {
-    setSelected(prev => {
-      const pageIds = pagedInquiries.map(i => i.id);
-      const allSelected = pageIds.every(id => prev.has(id));
-      const next = new Set(prev);
-      if (allSelected) pageIds.forEach(id => next.delete(id));
-      else pageIds.forEach(id => next.add(id));
       return next;
     });
   }
@@ -368,12 +336,11 @@ function InquiriesListInner() {
     let ok = 0, failed = 0;
     for (const id of bulkPreview.ids) {
       try {
-        // A-02d availability recap: "archive" is pair-aware — an inquiry
-        // with a built course goes through the LIFECYCLE PARITY LAW
-        // (archivePair, via /api/admin/archive-course) so the course comes
-        // offline too, not just the inquiry status; a course-less inquiry
-        // has nothing to archive, so it's rejected instead (the same
-        // "close it out" outcome the confirm copy has always promised).
+        // A-02d: "archive" is pair-aware — an inquiry with a built course goes
+        // through the LIFECYCLE PARITY LAW (archivePair, via
+        // /api/admin/archive-course) so the course comes offline too; a
+        // course-less inquiry has nothing to archive, so it is rejected
+        // instead (the same "close it out" outcome the copy promises).
         const target = inquiries.find(i => i.id === id);
         const r = bulkPreview.kind === 'send_sheet'
           ? await fetch('/api/admin/inquiries', { method: 'POST', headers: H(), body: JSON.stringify({ id, action: 'request_details' }) })
@@ -389,30 +356,145 @@ function InquiriesListInner() {
     await loadInquiries();
   }
 
-  const countFor = (tab: { key: string }) => inquiries.filter(i => tabMatches(tab.key, i)).length;
-
-  const yourMoveTab = TABS.find(t => t.key === 'your-move')!;
-  const activeCount = inquiries.filter(i => (ACTIVE_STATUSES as readonly string[]).includes(i.status)).length;
-  const needsYouCount = countFor(yourMoveTab);
-  const liveAllTimeCount = inquiries.filter(i => i.status === 'live').length;
-
-  // A-02c/A-02d INVARIANT: every inquiry must map to exactly one funnel
-  // segment (or be closed). If a future status is ever added and forgotten
-  // here, this catches it loudly instead of inquiries silently vanishing
-  // from the pipeline, the way "Sheet In" (details_submitted) once did.
-  // A-02d extends it: alive total = funnel sum = the "All" tab's own count
-  // (two independent derivations of the same thing must agree), and closed
-  // is counted separately so nothing is double-counted or dropped.
-  const unmappedCount = inquiries.filter(i => !(KNOWN_STATUSES as readonly string[]).includes(i.status)).length;
-  const funnelSum = PIPELINE_KEYS.reduce((sum, key) => sum + countFor({ key }), 0);
-  const allTabCount = countFor(TABS.find(t => t.key === 'all')!);
-  const closedCount = inquiries.filter(i => (ARCHIVED_STATUSES as readonly string[]).includes(i.status)).length;
-  const invariantBroken = unmappedCount > 0
-    || funnelSum !== activeCount + liveAllTimeCount
-    || allTabCount !== funnelSum
-    || unmappedCount + allTabCount + closedCount !== inquiries.length;
-
   if (!adminReady) return null;
+
+  const renderRow = (inq: Inquiry, mode: 'queue' | 'flat' | 'closed') => {
+    const dot = (STATUS_DOT_MAP[inq.status] || 'neutral') as 'ok' | 'bad' | 'warn' | 'neutral';
+    const s = sig(inq);
+    const days = stageDays(inq);
+    const overdue = mode === 'queue' && s.pressureDays > 0;
+    const closed = mode === 'closed' ? whyArchived(inq) : null;
+    const selectable = canBulkSelect && mode === 'queue';
+
+    return (
+      <Link
+        key={inq.id}
+        href={detailHref(inq)}
+        className="bg-white border border-line rounded-lg px-5 py-3.5 flex items-center gap-4 hover:border-pine/30 hover:bg-pine/[0.02] transition-colors"
+      >
+        {selectable && (
+          <input
+            type="checkbox"
+            checked={selected.has(inq.id)}
+            onClick={e => e.stopPropagation()}
+            onChange={() => toggleSelected(inq.id)}
+            className="shrink-0"
+          />
+        )}
+        <span title={STATUS_LABEL[inq.status] || inq.status}><StatusDot status={dot} /></span>
+
+        {/* Course name + location */}
+        <div className="w-48 shrink-0 min-w-0">
+          <div className="text-sm font-medium text-ink truncate flex items-center gap-1.5">
+            <span className="truncate">{inq.courseName}</span>
+            {s.resubmits > 0 && (
+              <span title="Submitted the interest form again while already in the pipeline" className="shrink-0">
+                <RotateCcw className="w-3 h-3 text-warn" />
+              </span>
+            )}
+          </div>
+          <div className="text-xs text-ink-muted truncate">{inq.city}, {inq.state}</div>
+        </div>
+
+        {/* Why it is here (queue) or who it is (browse) */}
+        <div className="flex-1 min-w-0">
+          {mode === 'queue' && (
+            <div className="text-xs text-ink-soft truncate">{s.reason}</div>
+          )}
+          {mode !== 'queue' && (
+            <div className="text-xs text-ink-soft truncate">
+              {inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''}
+            </div>
+          )}
+          <div className="text-[10px] text-ink-faint truncate flex items-center gap-1.5">
+            {inq.email}
+            {hasBadEmail(inq) && (
+              <span className="shrink-0 text-[9px] font-medium uppercase tracking-wide bg-warn/10 text-warn px-1.5 py-0.5 rounded-full">Bad email</span>
+            )}
+          </div>
+        </div>
+
+        {/* Stage + days-in-stage, or why/how it closed */}
+        <div className="shrink-0 text-right hidden lg:block min-w-[110px]">
+          {closed && (
+            <>
+              <div className="text-xs text-ink-soft">{closed.reason}</div>
+              <div className="text-[10px] text-ink-faint">{fmtDate(closed.date)}</div>
+            </>
+          )}
+          {!closed && (
+            <>
+              <div className="text-xs text-ink-soft">{STATUS_LABEL[inq.status] || inq.status}</div>
+              <div className={'text-[10px] font-medium ' + (overdue ? 'text-bad' : 'text-ink-faint')}>{days}d in stage</div>
+            </>
+          )}
+        </div>
+
+        {/* Submitted date */}
+        <div className="shrink-0 text-xs text-ink-faint hidden xl:block w-24 text-right">
+          {fmtDate(inq.createdAt)}
+        </div>
+
+        {/* Closed view: Restore, and Permanently delete ONLY for inquiries that
+            never became a course (DELETION DOCTRINE) — built ones are
+            archive-only. */}
+        {mode === 'closed' && (
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={e => { e.preventDefault(); e.stopPropagation(); restoreInquiry(inq); }}
+              className="w-7 h-7 flex items-center justify-center rounded text-ink-faint hover:text-ok hover:bg-ok/5 transition-colors"
+              title="Restore"
+            >
+              <ArchiveRestore className="w-3.5 h-3.5" />
+            </button>
+            {!inq.builtCourseId && (
+              <button
+                onClick={e => { e.preventDefault(); e.stopPropagation(); setDeleteTarget({ id: inq.id, name: inq.courseName }); setDeleteConfirmText(''); }}
+                className="w-7 h-7 flex items-center justify-center rounded text-ink-faint hover:text-bad hover:bg-bad/5 transition-colors"
+                title="Delete permanently"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        )}
+      </Link>
+    );
+  };
+
+  const renderSection = (title: string, hint: string, rows: Inquiry[]) => {
+    if (rows.length === 0) return null;
+    const shown = rows.slice(0, SECTION_CAP);
+    const allShownSelected = shown.every(i => selected.has(i.id));
+    const toggleSection = () => setSelected(prev => {
+      const next = new Set(prev);
+      if (allShownSelected) shown.forEach(i => next.delete(i.id));
+      else shown.forEach(i => next.add(i.id));
+      return next;
+    });
+    return (
+      <div key={title}>
+        <div className="flex items-baseline gap-2 mb-2">
+          <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{title}</span>
+          <span className="text-[11px] text-ink-faint">{rows.length} · {hint}</span>
+          {canBulkSelect && (
+            <button onClick={toggleSection} className="ml-auto text-[11px] text-ink-faint hover:text-ink transition-colors">
+              {allShownSelected ? 'Clear' : 'Select all'}
+            </button>
+          )}
+        </div>
+        <div className="space-y-1.5">{shown.map(r => renderRow(r, 'queue'))}</div>
+        {rows.length > SECTION_CAP && (
+          <p className="mt-2 text-[11px] text-ink-faint">
+            Showing the top {SECTION_CAP} of {rows.length} — narrow it with search or a stage.
+          </p>
+        )}
+      </div>
+    );
+  };
+
+  const queueEmpty = secYours.length === 0 && secThem.length === 0 && secSoon.length === 0;
+  const stageLabel = stage ? (FUNNEL_SEGMENTS.find(s => s.key === stage)?.label || stage) : '';
 
   return (
     <div className="min-h-screen bg-paper flex">
@@ -420,7 +502,7 @@ function InquiriesListInner() {
       <div className="admin-content flex-1 flex flex-col min-h-screen">
         <div className="px-8 py-7">
 
-          {/* Row 1: title + pipeline summary, search + refresh */}
+          {/* Title + pipeline summary, search + refresh */}
           <div className="flex items-center justify-between mb-5">
             <div>
               <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Inquiries</h1>
@@ -454,156 +536,50 @@ function InquiriesListInner() {
             </div>
           </div>
 
-          {/* Row 2: pipeline funnel + lenses, then filters/sort below */}
-          <div className="flex items-center justify-between gap-x-6 gap-y-2 flex-wrap border-b border-line pb-3 mb-3">
-            {/* Pipeline — connected funnel, teaches how an inquiry flows */}
-            <div className="flex items-center gap-0.5 flex-wrap">
-              {PIPELINE_KEYS.map((key, i) => {
-                const tab = TABS.find(t => t.key === key)!;
-                const count = countFor(tab);
-                const active = key === activeTabKey;
-                return (
-                  <div key={key} className="flex items-center">
-                    <button
-                      onClick={() => switchTab(key)}
-                      title={tab.description}
-                      className={
-                        'flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ' + (
-                          active ? 'border-pine text-pine'
-                          : count === 0 ? 'border-transparent text-ink-faint/60 hover:text-ink-muted'
-                          : 'border-transparent text-ink-muted hover:text-ink'
-                        )
-                      }
-                    >
-                      {tab.label}
-                      <span className={
-                        'text-[10px] font-medium rounded-full px-1.5 py-0.5 min-w-[18px] text-center ' + (
-                          active ? 'bg-pine/15 text-pine'
-                          : count > 0 ? 'bg-line-strong text-ink-muted' : 'text-ink-faint'
-                        )
-                      }>
-                        {count}
-                      </span>
-                    </button>
-                    {i < PIPELINE_KEYS.length - 1 && <ChevronRight className="w-3.5 h-3.5 text-ink-faint shrink-0"/>}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Lenses — cross-cutting views, visually separated */}
-            <div className="flex items-center gap-1 pl-4 border-l border-line-soft">
-              {LENS_KEYS.map(key => {
-                const tab = TABS.find(t => t.key === key)!;
-                const count = countFor(tab);
-                const active = key === activeTabKey;
-                const yourMoveAlert = key === 'your-move' && count > 0;
-                return (
+          {/* Funnel strip — a filter, not a tab bar. The body below is always
+              the queue; clicking a stage narrows it, clicking it again clears. */}
+          <div className="flex items-center gap-0.5 flex-wrap border-b border-line pb-3 mb-4">
+            {SEGMENT_KEYS.map((key, i) => {
+              const seg = FUNNEL_SEGMENTS.find(s => s.key === key)!;
+              const count = countForSegment(key);
+              const active = key === stage;
+              const idle = count === 0 ? 'border-transparent text-ink-faint/60 hover:text-ink-muted' : 'border-transparent text-ink-muted hover:text-ink';
+              return (
+                <div key={key} className="flex items-center">
                   <button
-                    key={key}
-                    onClick={() => switchTab(key)}
-                    title={tab.description}
+                    onClick={() => goTo(active ? '' : key)}
+                    title={SEGMENT_HINT[key]}
                     className={
-                      'flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ' + (
-                        active ? 'border-pine text-pine' : 'border-transparent text-ink-muted hover:text-ink'
-                      )
+                      'flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ' +
+                      (active ? 'border-pine text-pine' : idle)
                     }
                   >
-                    {tab.label}
+                    {seg.label}
                     <span className={
                       'text-[10px] font-medium rounded-full px-1.5 py-0.5 min-w-[18px] text-center ' + (
                         active ? 'bg-pine/15 text-pine'
-                        : yourMoveAlert ? 'bg-warn/15 text-warn'
                         : count > 0 ? 'bg-line-strong text-ink-muted' : 'text-ink-faint'
                       )
                     }>
                       {count}
                     </span>
                   </button>
-                );
-              })}
-            </div>
+                  {i < SEGMENT_KEYS.length - 1 && <ChevronRight className="w-3.5 h-3.5 text-ink-faint shrink-0"/>}
+                </div>
+              );
+            })}
+            {stage && (
+              <button onClick={() => goTo('')} className="ml-3 text-xs text-ink-faint hover:text-ink transition-colors">
+                Clear stage
+              </button>
+            )}
           </div>
-
-          <div className="flex items-center justify-end gap-2 mb-4">
-            <button
-              onClick={() => setFiltersOpen(v => !v)}
-              className={'text-xs font-medium rounded-md px-3 py-1.5 border transition-colors ' + (
-                filtersOpen || filterCourseType || filterState || filterAgeBucket || filterBadDataOnly
-                  ? 'border-pine/40 text-pine bg-pine/5'
-                  : 'border-line text-ink-soft hover:text-ink bg-white'
-              )}
-            >
-              Filters
-            </button>
-            <select
-              value={sortBy}
-              onChange={e => setSortForActiveTab(e.target.value)}
-              className="bg-white border border-line text-ink-soft text-xs rounded-md px-3 py-1.5 outline-none focus:border-pine/40 cursor-pointer"
-            >
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-              <option value="name">Name A–Z</option>
-              <option value="longest_stage">Longest in stage</option>
-            </select>
-          </div>
-
-          {/* Collapsible filters row */}
-          {filtersOpen && (
-            <div className="flex items-center gap-3 flex-wrap bg-white border border-line rounded-lg px-4 py-3 mb-4 text-xs">
-              <div className="flex items-center gap-1.5">
-                <span className="text-ink-muted">Course type</span>
-                <select value={filterCourseType} onChange={e => setFilterCourseType(e.target.value)}
-                  className="bg-paper border border-line rounded-md px-2 py-1 outline-none focus:border-pine/40 cursor-pointer">
-                  <option value="">Any</option>
-                  {courseTypeOptions.map(ct => <option key={ct} value={ct}>{ct}</option>)}
-                </select>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-ink-muted">State</span>
-                <input value={filterState} onChange={e => setFilterState(e.target.value.slice(0, 2))}
-                  placeholder="Any" className="bg-paper border border-line rounded-md px-2 py-1 w-14 outline-none focus:border-pine/40 uppercase placeholder-ink-faint" />
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-ink-muted">Age</span>
-                <select value={filterAgeBucket} onChange={e => setFilterAgeBucket(e.target.value)}
-                  className="bg-paper border border-line rounded-md px-2 py-1 outline-none focus:border-pine/40 cursor-pointer">
-                  <option value="">Any</option>
-                  <option value="3">&gt;3 days</option>
-                  <option value="7">&gt;7 days</option>
-                  <option value="14">&gt;14 days</option>
-                </select>
-              </div>
-              <label className="flex items-center gap-1.5 cursor-pointer">
-                <input type="checkbox" checked={filterBadDataOnly} onChange={e => setFilterBadDataOnly(e.target.checked)} />
-                <span className="text-ink-muted">Bad email only</span>
-              </label>
-              {(filterCourseType || filterState || filterAgeBucket || filterBadDataOnly) && (
-                <button
-                  onClick={() => { setFilterCourseType(''); setFilterState(''); setFilterAgeBucket(''); setFilterBadDataOnly(false); }}
-                  className="text-ink-faint hover:text-ink transition-colors ml-1"
-                >
-                  Clear filters
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Status legend — dots are never the only signal */}
-          {!loading && filtered.length > 0 && (
-            <div className="flex items-center gap-4 mb-3 text-[11px] text-ink-muted">
-              <span className="flex items-center gap-1.5"><StatusDot status="ok"/>Live</span>
-              <span className="flex items-center gap-1.5"><StatusDot status="warn"/>New / building</span>
-              <span className="flex items-center gap-1.5"><StatusDot status="neutral"/>In progress</span>
-              <span className="flex items-center gap-1.5"><StatusDot status="bad"/>Rejected</span>
-            </div>
-          )}
 
           {/* Bulk action bar */}
           {canBulkSelect && selected.size > 0 && (
             <div className="flex items-center gap-3 bg-pine/5 border border-pine/20 rounded-lg px-4 py-2.5 mb-3 text-sm">
               <span className="font-medium text-ink">{selected.size} selected</span>
-              {activeTabKey === 'new' && (
+              {canSendSheet && (
                 <button
                   onClick={() => setBulkPreview({ kind: 'send_sheet', ids: Array.from(selected) })}
                   className="text-xs font-medium text-pine hover:text-pine-hover px-2.5 py-1 rounded-md border border-pine/30 hover:bg-pine/10 transition-colors"
@@ -641,7 +617,6 @@ function InquiriesListInner() {
             </div>
           )}
 
-          {/* List */}
           {loading && <div className="py-20 text-center text-ink-muted text-sm">Loading...</div>}
           {!loading && loadError && (
             <div className="rounded-lg border border-bad/20 bg-bad/5 px-5 py-6 text-center">
@@ -649,147 +624,68 @@ function InquiriesListInner() {
               <button onClick={() => loadInquiries()} className="text-xs font-medium text-ink-soft hover:text-ink px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">Retry</button>
             </div>
           )}
-          {!loading && !loadError && filtered.length === 0 && (
-            <EmptyState message={q ? 'No results — clear your search' : currentTab.description} />
+
+          {/* THE QUEUE — ranked, split by whose move it is. Every active
+              inquiry lands in exactly one of these three, so none can be
+              invisible the way waiting-on-them ones used to be. */}
+          {!loading && !loadError && view === 'queue' && stage !== 'live' && (
+            <div className="space-y-6">
+              {renderSection('Your move', 'needs you now — most overdue first', secYours)}
+              {renderSection('Waiting on the course', 'sent, not answered yet', secThem)}
+              {renderSection('No action due yet', 'yours to work, still inside its window', secSoon)}
+              {queueEmpty && (
+                <EmptyState message={q ? 'No results — clear your search' : stage ? `Nothing in ${stageLabel}.` : 'Queue is clear — nothing is waiting.'} />
+              )}
+            </div>
           )}
 
-          {!loading && filtered.length > 0 && (() => {
-            const isClosedTab = currentTab.key === 'archived';
+          {/* Live is a destination, not work — no move to rank. */}
+          {!loading && !loadError && view === 'queue' && stage === 'live' && (
+            <div className="space-y-1.5">
+              {liveRows.length === 0 && <EmptyState message={q ? 'No results — clear your search' : 'No courses have gone live yet.'} />}
+              {liveRows.map(r => renderRow(r, 'flat'))}
+            </div>
+          )}
 
-            const renderRow = (inq: Inquiry) => {
-              const dot = (STATUS_DOT_MAP[inq.status] || 'neutral') as 'ok' | 'bad' | 'warn' | 'neutral';
-              const days = stageDays(inq);
-              const stale = !isClosedTab && days > 7;
-              const closed = isClosedTab ? whyArchived(inq) : null;
+          {!loading && !loadError && view === 'all' && (
+            <div className="space-y-1.5">
+              {pagedFlat.length === 0 && <EmptyState message={q ? 'No results — clear your search' : 'No inquiries yet.'} />}
+              {pagedFlat.map(r => renderRow(r, 'flat'))}
+            </div>
+          )}
 
-              return (
-                <Link
-                  key={inq.id}
-                  href={detailHref(inq)}
-                  className="bg-white border border-line rounded-lg px-5 py-3.5 flex items-center gap-4 hover:border-pine/30 hover:bg-pine/[0.02] transition-colors"
-                >
-                  {canBulkSelect && (
-                    <input
-                      type="checkbox"
-                      checked={selected.has(inq.id)}
-                      onClick={e => e.stopPropagation()}
-                      onChange={() => toggleSelected(inq.id)}
-                      className="shrink-0"
-                    />
-                  )}
-                  <span title={STATUS_LABEL[inq.status] || inq.status}><StatusDot status={dot} /></span>
-
-                  {/* Course name + location */}
-                  <div className="w-44 shrink-0 min-w-0">
-                    <div className="text-sm font-medium text-ink truncate">{inq.courseName}</div>
-                    <div className="text-xs text-ink-muted truncate">{inq.city}, {inq.state}</div>
-                  </div>
-
-                  {/* Contact */}
-                  <div className="flex-1 min-w-0 hidden md:block">
-                    <div className="text-xs text-ink-soft truncate">
-                      {inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''}
-                    </div>
-                    <div className="text-[10px] text-ink-faint truncate flex items-center gap-1.5">
-                      {inq.email}
-                      {hasBadEmail(inq) && (
-                        <span className="shrink-0 text-[9px] font-medium uppercase tracking-wide bg-warn/10 text-warn px-1.5 py-0.5 rounded-full">Bad email</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Stage + days-in-stage, or why/how it closed */}
-                  <div className="shrink-0 text-right hidden lg:block min-w-[110px]">
-                    {isClosedTab && closed ? (
-                      <>
-                        <div className="text-xs text-ink-soft">{closed.reason}</div>
-                        <div className="text-[10px] text-ink-faint">{fmtDate(closed.date)}</div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="text-xs text-ink-soft">{STATUS_LABEL[inq.status] || inq.status}</div>
-                        <div className={'text-[10px] font-medium ' + (stale ? 'text-bad' : 'text-ink-faint')}>{days}d in stage</div>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Submitted date */}
-                  <div className="shrink-0 text-xs text-ink-faint hidden xl:block w-24 text-right">
-                    {fmtDate(inq.createdAt)}
-                  </div>
-
-                  {/* Closed tab: Restore, and Permanently delete ONLY for
-                      inquiries that never became a course (DELETION
-                      DOCTRINE) — built ones are archive-only. */}
-                  {isClosedTab && (
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        onClick={e => { e.preventDefault(); e.stopPropagation(); restoreInquiry(inq); }}
-                        className="w-7 h-7 flex items-center justify-center rounded text-ink-faint hover:text-ok hover:bg-ok/5 transition-colors"
-                        title="Restore"
-                      >
-                        <ArchiveRestore className="w-3.5 h-3.5" />
-                      </button>
-                      {!inq.builtCourseId && (
-                        <button
-                          onClick={e => { e.preventDefault(); e.stopPropagation(); setDeleteTarget({ id: inq.id, name: inq.courseName }); setDeleteConfirmText(''); }}
-                          className="w-7 h-7 flex items-center justify-center rounded text-ink-faint hover:text-bad hover:bg-bad/5 transition-colors"
-                          title="Delete permanently"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </Link>
-              );
-            };
-
-            if (!isClosedTab) {
-              return (
-                <div className="space-y-1.5">
-                  {canBulkSelect && (
-                    <label className="flex items-center gap-2 px-5 py-1 text-xs text-ink-muted cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={pagedInquiries.length > 0 && pagedInquiries.every(i => selected.has(i.id))}
-                        onChange={toggleSelectAllOnPage}
-                      />
-                      Select all on this page
-                    </label>
-                  )}
-                  {pagedInquiries.map(renderRow)}
-                </div>
-              );
+          {/* A-02d: Closed is a managed graveyard, not a dump — grouped
+              Rejected vs Archived so the two very different "how it ended"
+              stories never blur together. */}
+          {!loading && !loadError && view === 'closed' && (() => {
+            const rejectedRows = pagedFlat.filter(i => i.status === 'rejected');
+            const archivedOnly = pagedFlat.filter(i => i.status === 'archived');
+            if (pagedFlat.length === 0) {
+              return <EmptyState message={q ? 'No results — clear your search' : 'Nothing closed out yet.'} />;
             }
-
-            // A-02d: Closed is a managed graveyard, not a dump — grouped
-            // Rejected vs Archived so the two very different "how it ended"
-            // stories never blur together.
-            const rejectedRows = pagedInquiries.filter(i => i.status === 'rejected');
-            const archivedRows = pagedInquiries.filter(i => i.status === 'archived');
             return (
               <div className="space-y-5">
                 {rejectedRows.length > 0 && (
                   <div>
                     <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Rejected ({rejectedRows.length})</div>
-                    <div className="space-y-1.5">{rejectedRows.map(renderRow)}</div>
+                    <div className="space-y-1.5">{rejectedRows.map(r => renderRow(r, 'closed'))}</div>
                   </div>
                 )}
-                {archivedRows.length > 0 && (
+                {archivedOnly.length > 0 && (
                   <div>
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Archived ({archivedRows.length})</div>
-                    <div className="space-y-1.5">{archivedRows.map(renderRow)}</div>
+                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Archived ({archivedOnly.length})</div>
+                    <div className="space-y-1.5">{archivedOnly.map(r => renderRow(r, 'closed'))}</div>
                   </div>
                 )}
               </div>
             );
           })()}
 
-          {/* Pagination */}
-          {!loading && filtered.length > PAGE_SIZE && (
+          {/* Pagination — only the flat browse views paginate; the queue is
+              capped per section instead. */}
+          {!loading && view !== 'queue' && flatRows.length > PAGE_SIZE && (
             <div className="flex items-center justify-between mt-4 text-xs text-ink-muted">
-              <span>Page {page + 1} of {totalPages} · {filtered.length} total</span>
+              <span>Page {page + 1} of {totalPages} · {flatRows.length} total</span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setPage(p => Math.max(0, p - 1))}
@@ -806,6 +702,29 @@ function InquiriesListInner() {
                   Next
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* Records, demoted out of the work. */}
+          {!loading && (
+            <div className="mt-8 pt-4 border-t border-line-soft flex items-center gap-4 text-xs">
+              {view !== 'queue' && (
+                <button onClick={() => goTo('')} className="text-pine hover:text-pine-hover font-medium transition-colors">
+                  Back to the queue
+                </button>
+              )}
+              <button
+                onClick={() => goTo(VIEW_ALL)}
+                className={'transition-colors ' + (view === 'all' ? 'text-ink font-medium' : 'text-ink-muted hover:text-ink')}
+              >
+                All active ({aliveCount})
+              </button>
+              <button
+                onClick={() => goTo(VIEW_CLOSED)}
+                className={'transition-colors ' + (view === 'closed' ? 'text-ink font-medium' : 'text-ink-muted hover:text-ink')}
+              >
+                Closed ({closedCount})
+              </button>
             </div>
           )}
         </div>

@@ -127,6 +127,122 @@ function lastPreviewSent(events: InquiryEventLike[]): InquiryEventLike | null {
   return latest;
 }
 
+/** How deep in the funnel a status sits. Deeper = closer to revenue, so it
+ *  wins ties in the queue. -1 for anything off the funnel (closed). */
+export function stageDepth(status: string): number {
+  return FUNNEL_SEGMENTS.findIndex(s => (s.statuses as readonly string[]).includes(status));
+}
+
+// Written by POST /api/inquiries when a course fills the interest form for an
+// inquiry that is already alive (MP-4a's duplicate guard). Exported so the
+// writer and every reader share one string — a magic literal in two files is
+// a silent break waiting for a typo.
+export const RESUBMIT_ACTOR = 'Course submitted the interest form again';
+
+/**
+ * Everything the work queue needs to know about one inquiry, from one pass
+ * over its event ledger.
+ *
+ * `waitingOn` is whose court the ball is in. `yourMove` is whether it needs
+ * action NOW — those are different questions: a lead that arrived an hour ago
+ * is waiting on us but is not yet due. `pressureDays` is how far past due it
+ * is (negative = not due yet), and it is the queue's ranking number.
+ */
+export type QueueSignal = {
+  status: string;
+  enteredAt: Date;
+  waitingOn: 'us' | 'them' | 'none';
+  yourMove: boolean;
+  pressureDays: number;
+  reason: string;
+  resubmits: number;
+};
+
+export function queueSignal(
+  status: string,
+  createdAt: string | Date,
+  events: InquiryEventLike[] | undefined,
+  now: Date = new Date(),
+): QueueSignal {
+  const evs = events || [];
+  const enteredAt = stageEnteredAt(status, createdAt, evs);
+  const inStage = daysSince(enteredAt, now);
+  // Only re-submissions since this stage began count. One from three stages
+  // ago was already answered by moving the inquiry forward.
+  const resubmits = evs.filter(
+    e => e.actorName === RESUBMIT_ACTOR && new Date(e.createdAt).getTime() >= enteredAt.getTime(),
+  ).length;
+  const base = { status, enteredAt, resubmits };
+
+  if (status === 'live' || (ARCHIVED_STATUSES as readonly string[]).includes(status)) {
+    return { ...base, waitingOn: 'none', yourMove: false, pressureDays: 0,
+      reason: status === 'live' ? 'Live' : 'Closed' };
+  }
+
+  const signal = ((): Omit<QueueSignal, 'status' | 'enteredAt' | 'resubmits'> => {
+    if (status === 'details_submitted') {
+      return { waitingOn: 'us', yourMove: true, pressureDays: inStage,
+        reason: inStage < 1 ? 'Sheet just came in — review and build' : `Sheet in ${inStage}d ago — review and build` };
+    }
+
+    if (status === 'building') {
+      const preview = lastPreviewSent(evs);
+      if (!preview) {
+        return { waitingOn: 'us', yourMove: true, pressureDays: inStage,
+          reason: 'Draft created — no preview sent yet' };
+      }
+      const sincePreview = daysSince(new Date(preview.createdAt), now);
+      const decision = latestPageDecision(evs);
+      if (decision === 'changes_requested') {
+        return { waitingOn: 'us', yourMove: true, pressureDays: sincePreview,
+          reason: 'Course requested changes to their page' };
+      }
+      if (decision === 'approved') {
+        return { waitingOn: 'us', yourMove: true, pressureDays: sincePreview,
+          reason: 'Course approved their page — take it live' };
+      }
+      return { waitingOn: 'them', yourMove: sincePreview > PREVIEW_STALL_DAYS,
+        pressureDays: sincePreview - PREVIEW_STALL_DAYS,
+        reason: `Preview sent ${sincePreview}d ago — no reply yet` };
+    }
+
+    if (status === 'details_requested') {
+      return { waitingOn: 'them', yourMove: inStage > SHEET_SENT_STALL_DAYS,
+        pressureDays: inStage - SHEET_SENT_STALL_DAYS,
+        reason: `Setup sheet sent ${inStage}d ago — not returned` };
+    }
+
+    // pending / in_review — ours to work through.
+    return { waitingOn: 'us', yourMove: inStage > PENDING_STALL_DAYS,
+      pressureDays: inStage - PENDING_STALL_DAYS,
+      reason: status === 'pending'
+        ? (inStage < 1 ? 'New lead — not reviewed yet' : `New lead, unreviewed for ${inStage}d`)
+        : `In review for ${inStage}d` };
+  })();
+
+  // A course that fills the form again is asking for attention, whatever
+  // stage it is in and whoever we thought the ball was with.
+  if (resubmits > 0) {
+    return { ...base, ...signal, waitingOn: 'us', yourMove: true,
+      reason: resubmits === 1
+        ? 'Submitted the interest form again — they are waiting on us'
+        : `Submitted the interest form ${resubmits} more times — they are waiting on us` };
+  }
+
+  return { ...base, ...signal };
+}
+
+/**
+ * Queue order: most overdue first, then the deepest stage (closest to
+ * revenue), then whoever has been sitting there longest.
+ */
+export function compareQueue(a: QueueSignal, b: QueueSignal): number {
+  if (a.pressureDays !== b.pressureDays) return b.pressureDays - a.pressureDays;
+  const depth = stageDepth(b.status) - stageDepth(a.status);
+  if (depth !== 0) return depth;
+  return a.enteredAt.getTime() - b.enteredAt.getTime();
+}
+
 /**
  * Is this inquiry waiting on us?
  *
@@ -140,26 +256,5 @@ export function isYourMove(
   events: InquiryEventLike[] | undefined,
   now: Date = new Date(),
 ): boolean {
-  const evs = events || [];
-
-  // The course sent their sheet back and nobody has picked it up yet.
-  if (status === 'details_submitted') return true;
-
-  if (status === 'building') {
-    const preview = lastPreviewSent(evs);
-    // Nothing sent yet — the build itself is ours to do.
-    if (!preview) return true;
-    // Sent, so their answer decides. Any decision hands it back to us: fix
-    // what they asked for, or flip an approved page live. No decision means we
-    // are waiting on them — until they go quiet long enough to need a nudge.
-    // (latestPageDecision scopes to the current preview round itself, and
-    // returns null for an admin-requested re-review, which is also their turn.)
-    if (latestPageDecision(evs)) return true;
-    return daysSince(new Date(preview.createdAt), now) > PREVIEW_STALL_DAYS;
-  }
-
-  const ageDays = daysSince(stageEnteredAt(status, createdAt, evs), now);
-  if ((status === 'pending' || status === 'in_review') && ageDays > PENDING_STALL_DAYS) return true;
-  if (status === 'details_requested' && ageDays > SHEET_SENT_STALL_DAYS) return true;
-  return false;
+  return queueSignal(status, createdAt, events, now).yourMove;
 }
