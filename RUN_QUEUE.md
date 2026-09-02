@@ -826,8 +826,36 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       Deliberately NOT in scope: bulk select is now queue-only (it used to be
       available in All, where live courses mix in and a mis-aimed Archive is
       expensive); estimated pipeline value as a ranking input waits for MP-4c.
-    - [ ] MP-4c — detail tab trim + snooze/source/closedReason UI (needs the
-      MP-3 inquiry growth columns)
+    - [x] MP-4c — detail trim + the growth columns put to work (e651928).
+      Tabs 4 -> 4 but the right four: Contact+Answers merged into **Lead**,
+      **Notes** promoted out from under the Activity ledger, Sheet and Activity
+      unchanged; the landing tab is stage-aware (sheet-in/building -> Sheet,
+      finished -> Activity, else Lead) and lands once, so an action never yanks
+      you off the tab you opened. Manual build moved from a card inside the
+      Sheet tab into the header ⋮ menu.
+      `source` is an admin-set field on Lead; `closedReason` is now REQUIRED in
+      the Reject modal (stored on the row, named in the ledger, shown on the
+      closed row as "Rejected · Price") and cleared on restore so a reopened
+      lead cannot carry a stale verdict; `snoozeUntil`+`nextFollowUpAt` are set
+      together by a Snooze action in ⋮ — the snooze suppresses the queue
+      verdict, a re-submit breaks it, and when it expires `nextFollowUpAt`
+      survives so the queue can say "Follow-up was due 3d ago". A follow-up
+      only outranks the stage clock when it is the more overdue of the two, so
+      a kept promise can never bury a rotting inquiry. Both vocabularies live
+      in `lib/inquiry-status.ts` so the dropdown and the server validation
+      cannot drift. `queueSignal` takes an object now — every caller had to be
+      converted rather than silently ranking against a stale rulebook; the
+      unused `isYourMove` alias was dropped. 17 new + 17 regression assertions
+      passed. NEEDS REVIEW.
+    - [ ] MP-4d — Overview action queue still derives "waiting on us" itself:
+      `api/admin/stats/route.ts` builds three amber rows (waitingOnUs,
+      sheetNoResponse, previewSentAmber) from SQL on `updatedAt` with its own
+      3/5/7-day thresholds — the exact parallel derivation MP-4a/4b removed
+      from the Inquiries list, so Overview and Inquiries can disagree about
+      whose move an inquiry is and how old it is. MP-4c only stopped it
+      nagging about snoozed inquiries. Convert the three to `queueSignal`
+      (watch the payload size — this route must not start pulling every
+      inquiry's full event history; see ADMIN_V4_SPEC perf notes).
   - [ ] MP-5 — courses reshape: evidence on list rows (already computed, never
     rendered), 10→6 tab split, offline/archive booking-consequence flows +
     operator notification, Feature decision (build the directory or delete the

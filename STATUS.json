@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-02T19:32:04.128Z",
+  "generatedAt": "2026-09-02T19:47:07.993Z",
   "repo": {
-    "head": "a48ece7",
+    "head": "e651928",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,11 +10,11 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-01T19:58:12-04:00",
+    "queueLastCommit": "2026-09-02T15:32:09-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 121,
+    "runDone": 122,
     "runAwaiting": 8,
     "runInFlight": 1,
     "runNotStarted": 29,
@@ -26,7 +26,7 @@
   "inFlight": [
     {
       "title": "BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET",
-      "line": 1326,
+      "line": 1354,
       "body": [
         "FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because \"no linked inquiry\" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding them outright. FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() + a \"Force delete permanently\" button per acknowledged orphan — owner-only, typed name confirm, server re-verifies the course is still an orphan before touching anything (refuses if it turns out to have a real inquiry link — this can never be used to route around the doctrine for a real course). This is the mechanism for Cam's DaisyLinks exception, but I have NOT executed it against DaisyLinks yet:",
         "- Last session's raw Prisma script (a read-only check confirming Fake",
@@ -163,83 +163,83 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "MP-4c — detail tab trim + snooze/source/closedReason UI (needs the",
-      "line": 829,
+      "title": "MP-4d — Overview action queue still derives \"waiting on us\" itself:",
+      "line": 850,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-5 — courses reshape: evidence on list rows (already computed, never",
-      "line": 831,
+      "line": 859,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-6 — money reshape: Revenue problems pinned all-time + collected-basis",
-      "line": 835,
+      "line": 863,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-7 — comms merge: Broadcasts composer into Messages (owner-only),",
-      "line": 839,
+      "line": 867,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-8 — chrome + System: sidebar real links + self-fetched badges +",
-      "line": 843,
+      "line": 871,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in",
-      "line": 847,
+      "line": 875,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,",
-      "line": 853,
+      "line": 881,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved",
-      "line": 857,
+      "line": 885,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState",
-      "line": 874,
+      "line": 902,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:",
-      "line": 879,
+      "line": 907,
       "section": "Queue (run in this order)"
     },
     {
       "title": "COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)",
-      "line": 900,
+      "line": 928,
       "section": "Queue (run in this order)"
     },
     {
       "title": "COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small)",
-      "line": 901,
+      "line": 929,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
-      "line": 923,
+      "line": 951,
       "section": "Queue (run in this order)"
     },
     {
       "title": "ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule), every dashboard ta",
-      "line": 943,
+      "line": 971,
       "section": "Queue (run in this order)"
     },
     {
       "title": "ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → \"Send updated preview\"), Messa",
-      "line": 945,
+      "line": 973,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
-      "line": 1002,
+      "line": 1030,
       "section": "Queue (run in this order)"
     }
   ],
@@ -277,7 +277,7 @@
     {
       "item": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
       "note": "CAM: confirm the state before this runs — e",
-      "line": 923
+      "line": 951
     }
   ],
   "ideas": {
@@ -800,6 +800,16 @@
   },
   "recentCommits": [
     {
+      "h": "e651928",
+      "date": "2026-09-02",
+      "subject": "MP-4c: the inquiry detail trims down and the growth columns go to work"
+    },
+    {
+      "h": "9d67ea9",
+      "date": "2026-09-02",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "a48ece7",
       "date": "2026-09-02",
       "subject": "MP-4b: the inquiries list becomes a ranked work queue"
@@ -848,16 +858,6 @@
       "h": "f42e86c",
       "date": "2026-09-01",
       "subject": "MP-3 run B2b: Course money to integer cents — and the two places the rename did NOT protect"
-    },
-    {
-      "h": "244cf1a",
-      "date": "2026-09-01",
-      "subject": "MP-3 run B2a: MembershipTier money to integer cents — renamed so the compiler enforces it"
-    },
-    {
-      "h": "0ac78f4",
-      "date": "2026-09-01",
-      "subject": "Remove _tmp_snap.ts — scratch script accidentally committed in the B1 merge"
     }
   ]
 }
