@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendInquiryNotification, sendInquiryConfirmation } from '@/lib/email';
-import { ALIVE_STATUSES, RESUBMIT_ACTOR } from '@/lib/inquiry-status';
+import { ALIVE_STATUSES, encodeResubmit } from '@/lib/inquiry-status';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -63,10 +63,20 @@ export async function POST(req: NextRequest) {
         fromStatus: existing.status,
         toStatus: existing.status,
         trigger: 'course',
-        // Carry WHAT they submitted. Without it a swallowed submission leaves
-        // no evidence of what was actually sent, which is no way to tell a
-        // real duplicate from a guard that matched too widely.
-        actorName: `${RESUBMIT_ACTOR} — "${courseName}", ${city} ${state} <${email}>`,
+        // Carry WHAT they submitted, not just that they did. A course
+        // re-submitting is usually correcting something — a new phone number,
+        // a fixed course name — and discarding it made the guard lossy. The
+        // admin gets a diff against what is on file and decides; nothing is
+        // overwritten behind their back.
+        actorName: encodeResubmit({
+          contactName, contactTitle: body.contactTitle || '', email,
+          phone: body.phone || '', courseName, address: body.address || '',
+          city, state, zipCode: body.zipCode || '', website: body.website || '',
+          courseType: body.courseType || '', teeTimesPerDay: body.teeTimesPerDay || null,
+          greenFeeRange: body.greenFeeRange || '', pricingNotes: body.pricingNotes || '',
+          additionalNotes: body.additionalNotes || '',
+          lookingFor: Array.isArray(body.lookingFor) ? body.lookingFor : [],
+        }),
       },
     }).catch(err => console.error('Duplicate-intake event failed:', err));
 

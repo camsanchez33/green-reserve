@@ -4,13 +4,14 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft, Mail, Wrench, Power, CheckCircle, Clock, Trash2,
   XCircle, ArrowUpRight, Copy, Archive, Pencil, Save, RefreshCw, Eye, MoreHorizontal, Check,
-  Globe, ArchiveRestore,
+  Globe, ArchiveRestore, RotateCcw,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import {
   STATUS_DOT_MAP, STATUS_LABEL, ACTIVE_STATUSES, stageEnteredAt, daysSince,
-  INQUIRY_SOURCES, CLOSED_REASONS,
+  INQUIRY_SOURCES, CLOSED_REASONS, RESUBMIT_ACTOR,
+  unreviewedResubmit, diffResubmit, decodeResubmit,
 } from '@/lib/inquiry-status';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { LoadFailure } from '@/components/ui/ErrorState';
@@ -382,6 +383,8 @@ function InquiryDetailInner() {
   const [snoozeDate, setSnoozeDate] = useState('');
   const [rejectReason, setRejectReason] = useState('');
   const [rejectNotify, setRejectNotify] = useState(true);
+  // null means "everything in the diff" — the founder has not narrowed it yet.
+  const [resubPicked, setResubPicked] = useState<Set<string> | null>(null);
   // The stage-aware default lands ONCE, on first load. Re-applying it after
   // every action would yank the founder off whatever tab he opened.
   const tabInitialised = useRef(false);
@@ -695,6 +698,15 @@ function InquiryDetailInner() {
   // full history, never pre-filter here, so every reader of this state
   // (this page, the courses tab, the Send Preview gate, go-live preflight)
   // can only ever agree.
+  // MP-4e: the most recent re-submission the founder has not dealt with, and
+  // what it would change. Only fields the course actually filled in count —
+  // a blank on the new form is silence, not a request to erase what is here.
+  const resubmit = unreviewedResubmit(inq.events);
+  const resubDiff = resubmit?.payload
+    ? diffResubmit(inq as unknown as Record<string, unknown>, resubmit.payload)
+    : [];
+  const resubPickedSet = resubPicked ?? new Set(resubDiff.map(d => d.field));
+
   // MP-4c: one read of the snooze, shared by the banner, the menu and the
   // modal — three places asking the date separately is three chances to
   // disagree about whether this inquiry is parked.
@@ -1003,6 +1015,76 @@ function InquiryDetailInner() {
                 className="ml-auto shrink-0 font-medium underline hover:no-underline disabled:opacity-50">
                 Clear
               </button>
+            </div>
+          )}
+
+          {/* MP-4e: the duplicate guard kept this submission out of the
+              pipeline, which is right — but what they sent is not nothing.
+              Shown as a diff, applied only where ticked, never silently. */}
+          {resubmit && (
+            <div className="mt-3 max-w-3xl bg-warn/5 border border-warn/20 rounded-lg px-4 py-3">
+              <div className="flex items-center gap-2 mb-1.5">
+                <RotateCcw className="w-3.5 h-3.5 text-warn shrink-0" />
+                <span className="text-xs font-medium text-warn">
+                  They submitted the interest form again on {fmtDate(resubmit.at.toISOString())}
+                </span>
+              </div>
+              {!resubmit.payload && (
+                <p className="text-xs text-ink-soft">
+                  This one predates us storing what was sent, so there is nothing to compare.
+                </p>
+              )}
+              {resubmit.payload && resubDiff.length === 0 && (
+                <p className="text-xs text-ink-soft">
+                  Nothing they sent differs from what is on file — most likely an impatient second submit.
+                </p>
+              )}
+              {resubDiff.length > 0 && (
+                <>
+                  <p className="text-xs text-ink-soft mb-2">
+                    Nothing was overwritten. Tick what is worth keeping.
+                  </p>
+                  <div className="bg-white border border-line rounded-md divide-y divide-line mb-2">
+                    {resubDiff.map(d => (
+                      <label key={d.field} className="flex items-start gap-2.5 px-3 py-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={resubPickedSet.has(d.field)}
+                          onChange={() => setResubPicked(() => {
+                            const next = new Set(resubPickedSet);
+                            if (next.has(d.field)) next.delete(d.field); else next.add(d.field);
+                            return next;
+                          })}
+                          className="mt-1 shrink-0"
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[10px] uppercase tracking-[0.06em] text-ink-muted">{d.label}</span>
+                          <span className="block text-xs text-ink-faint line-through truncate">{d.from || 'blank'}</span>
+                          <span className="block text-xs text-ink font-medium truncate">{d.to}</span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </>
+              )}
+              <div className="flex items-center gap-2">
+                {resubDiff.length > 0 && (
+                  <button
+                    onClick={async () => { await action('apply_resubmit', { fields: Array.from(resubPickedSet) }); setResubPicked(null); }}
+                    disabled={processing || resubPickedSet.size === 0}
+                    className="text-xs font-medium bg-pine hover:bg-pine-hover disabled:opacity-40 text-white px-2.5 py-1 rounded-md transition-colors"
+                  >
+                    {processing ? 'Applying…' : `Apply ${resubPickedSet.size} change${resubPickedSet.size === 1 ? '' : 's'}`}
+                  </button>
+                )}
+                <button
+                  onClick={async () => { await action('dismiss_resubmit'); setResubPicked(null); }}
+                  disabled={processing}
+                  className="text-xs text-ink-muted hover:text-ink disabled:opacity-40 transition-colors"
+                >
+                  {resubDiff.length > 0 ? 'Keep what we have' : 'Got it'}
+                </button>
+              </div>
             </div>
           )}
 
@@ -1672,6 +1754,14 @@ function InquiryDetailInner() {
                       const isTransition = ev.fromStatus !== ev.toStatus;
                       const contactUpdate = ev.fromStatus === 'contact_updated';
                       const changeDesc = describeChangeEvent(ev.actorName);
+                      // MP-4e encodes the re-submitted payload after the
+                      // marker; without this the ledger would print raw JSON.
+                      const resubPayload = decodeResubmit(ev.actorName);
+                      const isResub = !!ev.actorName?.startsWith(RESUBMIT_ACTOR);
+                      const resubText = !isResub ? null
+                        : resubPayload?.courseName
+                          ? `${RESUBMIT_ACTOR} — “${resubPayload.courseName}”, ${resubPayload.city || ''} ${resubPayload.state || ''}`.trim()
+                          : RESUBMIT_ACTOR;
                       const changeAddr = decodeChangeAddressed(ev.actorName);
                       const OVERRIDE_PREFIX = 'Stage overridden by ';
                       const isOverride = !!ev.actorName?.startsWith(OVERRIDE_PREFIX);
@@ -1696,7 +1786,7 @@ function InquiryDetailInner() {
                                     <span className="font-medium">{STATUS_LABEL[ev.toStatus] || ev.toStatus}</span>
                                     {isOverride && <span className="ml-2 text-[10px] uppercase tracking-wide text-warn">Manual override</span>}
                                   </>
-                                ) : (changeDesc || ev.actorName || 'Update')}
+                                ) : (resubText || changeDesc || ev.actorName || 'Update')}
                             </div>
                             <div className="text-xs text-ink-faint mt-0.5">
                               {(contactUpdate || isTransition) ? attribution + ' · ' : ''}{fmtDate(ev.createdAt)}

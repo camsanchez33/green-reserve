@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
-import { ACTIVE_STATUSES, ARCHIVED_STATUSES, ALIVE_STATUSES, INQUIRY_SOURCES, CLOSED_REASONS, type InquiryStatus } from '@/lib/inquiry-status';
+import {
+  ACTIVE_STATUSES, ARCHIVED_STATUSES, ALIVE_STATUSES, INQUIRY_SOURCES, CLOSED_REASONS,
+  RESUBMIT_PREFIX, RESUBMIT_REVIEWED_ACTOR, RESUBMIT_FIELDS, RESUBMIT_FIELD_LABEL,
+  decodeResubmit, type InquiryStatus,
+} from '@/lib/inquiry-status';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail, sendDashboardAccessEmail, sendGoLiveSimpleEmail, sendInquiryDeclinedEmail } from '@/lib/email';
@@ -113,6 +117,47 @@ async function handleAction(
       }
     }
     return NextResponse.json({ success: true, emailSent, emailError });
+  }
+
+  // ── MP-4e: acting on a re-submission ──────────────────────────────
+  // The course sent the intake form again and the duplicate guard kept it out
+  // of the pipeline. Its contents are on the ledger; these two actions are the
+  // only way they reach the inquiry, and only the fields the founder ticks.
+  if (action === 'apply_resubmit' || action === 'dismiss_resubmit') {
+    const latest = await prisma.inquiryStatusEvent.findFirst({
+      where: { inquiryId, actorName: { startsWith: RESUBMIT_PREFIX } },
+      orderBy: { createdAt: 'desc' },
+      select: { actorName: true },
+    });
+    const submitted = decodeResubmit(latest?.actorName);
+
+    if (action === 'dismiss_resubmit') {
+      await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin',
+        `${RESUBMIT_REVIEWED_ACTOR} — nothing applied, by ${adminName}`);
+      return NextResponse.json({ success: true, applied: [] });
+    }
+
+    if (!submitted) {
+      return NextResponse.json({ error: 'No re-submitted details are on file for this inquiry' }, { status: 400 });
+    }
+    const asked: string[] = Array.isArray(payload?.fields) ? (payload!.fields as unknown[]).map(String) : [];
+    // The allow-list is RESUBMIT_FIELDS itself, so a crafted request cannot
+    // reach status, adminNotes, detailsToken or anything else on the row.
+    const data: Record<string, unknown> = {};
+    for (const f of asked) {
+      if (!(RESUBMIT_FIELDS as string[]).includes(f)) continue;
+      const v = (submitted as Record<string, unknown>)[f];
+      if (v === undefined || v === null || v === '') continue;
+      data[f] = v;
+    }
+    if (Object.keys(data).length === 0) {
+      return NextResponse.json({ error: 'Nothing selected to apply' }, { status: 400 });
+    }
+    await prisma.courseInquiry.update({ where: { id: inquiryId }, data });
+    const labels = Object.keys(data).map(f => RESUBMIT_FIELD_LABEL[f] || f).join(', ');
+    await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin',
+      `${RESUBMIT_REVIEWED_ACTOR} — applied ${labels}, by ${adminName}`);
+    return NextResponse.json({ success: true, applied: Object.keys(data) });
   }
 
   // ── MP-4c growth columns ──────────────────────────────────────────

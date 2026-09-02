@@ -139,6 +139,111 @@ export function stageDepth(status: string): number {
 // a silent break waiting for a typo.
 export const RESUBMIT_ACTOR = 'Course submitted the interest form again';
 
+// MP-4e. A swallowed re-submission used to record only that it happened, so a
+// course correcting its phone number or its own name got a timeline entry and
+// nothing else — the correction was thrown away. The payload now rides in the
+// event, encoded after this prefix.
+//
+// This is JSON stuffed into actorName, the same debt the change-request loop
+// carries. It is the established pattern here and it needs no migration, but
+// it belongs in a real table alongside the ChangeRequest migration — one
+// reworded log line breaks any of it.
+export const RESUBMIT_PREFIX = `${RESUBMIT_ACTOR}::`;
+
+// Written when the founder has looked at a re-submission (applied part of it,
+// or decided none of it was worth keeping). Re-submissions before this marker
+// are history; only later ones still demand attention.
+export const RESUBMIT_REVIEWED_ACTOR = 'Re-submission reviewed';
+
+// Exactly the intake fields a re-submission can carry. This is also the
+// allow-list the apply action writes through — a payload cannot reach status,
+// adminNotes, or anything else it has no business touching.
+export type ResubmitPayload = {
+  contactName?: string; contactTitle?: string; email?: string; phone?: string;
+  courseName?: string; address?: string; city?: string; state?: string; zipCode?: string;
+  website?: string; courseType?: string; teeTimesPerDay?: number | null;
+  greenFeeRange?: string; pricingNotes?: string; additionalNotes?: string;
+  lookingFor?: string[];
+};
+
+export const RESUBMIT_FIELDS: (keyof ResubmitPayload)[] = [
+  'courseName', 'contactName', 'contactTitle', 'email', 'phone', 'website',
+  'address', 'city', 'state', 'zipCode', 'courseType', 'teeTimesPerDay',
+  'greenFeeRange', 'lookingFor', 'pricingNotes', 'additionalNotes',
+];
+
+export const RESUBMIT_FIELD_LABEL: Record<string, string> = {
+  courseName: 'Course name', contactName: 'Contact name', contactTitle: 'Title',
+  email: 'Email', phone: 'Phone', website: 'Website', address: 'Address',
+  city: 'City', state: 'State', zipCode: 'ZIP', courseType: 'Course type',
+  teeTimesPerDay: 'Tee times per day', greenFeeRange: 'Green fees',
+  lookingFor: 'Looking for', pricingNotes: 'Pricing notes', additionalNotes: 'Additional notes',
+};
+
+export function encodeResubmit(payload: ResubmitPayload): string {
+  return RESUBMIT_PREFIX + JSON.stringify(payload);
+}
+
+export function decodeResubmit(actorName: string | null | undefined): ResubmitPayload | null {
+  if (!actorName?.startsWith(RESUBMIT_PREFIX)) return null;
+  try {
+    const parsed = JSON.parse(actorName.slice(RESUBMIT_PREFIX.length));
+    return parsed && typeof parsed === 'object' ? parsed as ResubmitPayload : null;
+  } catch {
+    // A malformed payload is still a real re-submission — the event counts,
+    // there is just nothing to diff.
+    return null;
+  }
+}
+
+/** Display value for one field, on either side of the diff. */
+function fieldText(v: unknown): string {
+  if (v === null || v === undefined || v === '') return '';
+  if (Array.isArray(v)) return v.join(', ');
+  return String(v);
+}
+
+/**
+ * What the re-submission would change. Only fields the course actually filled
+ * in are considered — a blank on the new form is silence, not a request to
+ * erase what is on file.
+ */
+export function diffResubmit(
+  current: Record<string, unknown>,
+  submitted: ResubmitPayload,
+): { field: string; label: string; from: string; to: string }[] {
+  const out: { field: string; label: string; from: string; to: string }[] = [];
+  for (const field of RESUBMIT_FIELDS) {
+    const to = fieldText(submitted[field]);
+    if (!to) continue;
+    const from = fieldText(current[field]);
+    if (from.trim().toLowerCase() === to.trim().toLowerCase()) continue;
+    out.push({ field, label: RESUBMIT_FIELD_LABEL[field] || field, from, to });
+  }
+  return out;
+}
+
+/** The most recent re-submission the founder has not yet dealt with. */
+export function unreviewedResubmit(
+  events: InquiryEventLike[] | null | undefined,
+): { at: Date; payload: ResubmitPayload | null } | null {
+  let reviewedAt = 0;
+  for (const ev of events || []) {
+    if (ev.actorName?.startsWith(RESUBMIT_REVIEWED_ACTOR)) {
+      reviewedAt = Math.max(reviewedAt, new Date(ev.createdAt).getTime());
+    }
+  }
+  let latest: InquiryEventLike | null = null;
+  for (const ev of events || []) {
+    if (!ev.actorName?.startsWith(RESUBMIT_ACTOR)) continue;
+    const at = new Date(ev.createdAt).getTime();
+    if (at <= reviewedAt) continue;
+    if (!latest || at > new Date(latest.createdAt).getTime()) latest = ev;
+  }
+  if (!latest) return null;
+  return { at: new Date(latest.createdAt), payload: decodeResubmit(latest.actorName) };
+}
+
 // MP-4c vocabularies. Defined once so the admin UI's options and the API's
 // validation can never drift into "the dropdown offers a value the server
 // rejects" — and so the answers stay countable instead of becoming free text
@@ -198,9 +303,21 @@ export function queueSignal(inq: QueueInput, now: Date = new Date()): QueueSigna
   // ago was already answered by moving the inquiry forward.
   // startsWith, not equality: the event carries what was submitted after the
   // marker so a swallowed duplicate can be told apart from an over-eager guard.
-  const resubmits = evs.filter(
-    e => e.actorName?.startsWith(RESUBMIT_ACTOR) && new Date(e.createdAt).getTime() >= enteredAt.getTime(),
-  ).length;
+  //
+  // A re-submission the founder has already looked at must stop forcing "your
+  // move" — otherwise reviewing one is impossible and the inquiry stays hot
+  // for ever (MP-4e).
+  let reviewedAt = 0;
+  for (const e of evs) {
+    if (e.actorName?.startsWith(RESUBMIT_REVIEWED_ACTOR)) {
+      reviewedAt = Math.max(reviewedAt, new Date(e.createdAt).getTime());
+    }
+  }
+  const resubmits = evs.filter(e => {
+    if (!e.actorName?.startsWith(RESUBMIT_ACTOR)) return false;
+    const at = new Date(e.createdAt).getTime();
+    return at >= enteredAt.getTime() && at > reviewedAt;
+  }).length;
   const base = { status, enteredAt, resubmits };
 
   if (status === 'live' || (ARCHIVED_STATUSES as readonly string[]).includes(status)) {
