@@ -807,9 +807,25 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       path plus the welcome email, keeping its 409-on-existing-operator and its
       tempPassword/setupLink response shape. 15 unit assertions on the new
       derivations passed. NEEDS REVIEW.
-    - [ ] MP-4b — queue-first list rebuild: waiting-on-them section, queue
-      ordering, the dedup/"already in pipeline" surfacing for admins (the guard
-      records the event; nothing renders it yet)
+    - [x] MP-4b — queue-first list rebuild (a48ece7): one `queueSignal`
+      derivation in `lib/inquiry-status.ts` answers whose move it is, how
+      overdue it is (`pressureDays`), why, and how many times the course has
+      re-submitted — `isYourMove` now delegates to it, so there is still one
+      definition. `compareQueue` ranks: most overdue first, then deepest stage,
+      then longest sitting. The list is a queue: funnel strip on top filters
+      (click a stage, click again to clear), the body is three ranked sections
+      (Your move · Waiting on the course · No action due yet) so a
+      waiting-on-them inquiry is visible instead of absent, and All/Closed are
+      footer links. Killed: the 4-filter panel, the colour legend, the 4-sort
+      dropdown and its per-tab localStorage memory (ranking replaces it) — the
+      detail page's dead `?sort` back-param went with it. MP-4a's duplicate
+      guard is now surfaced: a re-submit since stage entry shows a marker on
+      the row, rewrites the queue reason, and forces "your move" at any stage.
+      `?tab=` keeps its old name and values so the Overview deep-links and
+      bookmarks still work. 28 unit assertions passed. NEEDS REVIEW.
+      Deliberately NOT in scope: bulk select is now queue-only (it used to be
+      available in All, where live courses mix in and a mis-aimed Archive is
+      expensive); estimated pipeline value as a ranking input waits for MP-4c.
     - [ ] MP-4c — detail tab trim + snooze/source/closedReason UI (needs the
       MP-3 inquiry growth columns)
   - [ ] MP-5 — courses reshape: evidence on list rows (already computed, never
