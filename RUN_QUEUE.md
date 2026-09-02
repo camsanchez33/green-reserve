@@ -847,6 +847,22 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       converted rather than silently ranking against a stale rulebook; the
       unused `isYourMove` alias was dropped. 17 new + 17 regression assertions
       passed. NEEDS REVIEW.
+    - [x] MP-4a FIX (7023411) — the duplicate-intake guard matched on email
+      ALONE as well as on course identity, so every legitimate second course
+      submitted from one address (management company, a GM with two courses,
+      or Cam testing the form) was absorbed into the first alive inquiry
+      carrying that email and never reached the pipeline. Two live submissions
+      on 2026-09-02 were swallowed this way. Identity is now name+city+state
+      only. The re-submit event records what was actually submitted, so a
+      swallowed duplicate leaves evidence; queueSignal matches the marker by
+      prefix. 5 assertions passed. NEEDS REVIEW.
+    - [ ] MP-4e — a swallowed re-submission still DISCARDS its payload. When a
+      course fills the form again with a new phone number, a corrected course
+      name or fresh notes, none of it is stored — only the fact that they
+      submitted, plus the summary line the fix above added. Decide where the
+      new payload lands (a pending-changes card on the detail page is the
+      obvious answer; adminNotes is the founder's own writing and should not
+      be machine-appended) and surface a diff against what is on file.
     - [ ] MP-4d — Overview action queue still derives "waiting on us" itself:
       `api/admin/stats/route.ts` builds three amber rows (waitingOnUs,
       sheetNoResponse, previewSentAmber) from SQL on `updatedAt` with its own
