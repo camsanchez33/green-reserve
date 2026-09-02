@@ -924,10 +924,27 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       NOT COVERED BY TESTS: there is no test DB, and tee-time generation must
       not be run against production — the regeneration paths are verified by
       reading the generator and by Cam's manual check, not by assertions.
-    - [ ] MP-5b — take-offline / archive ignore existing FUTURE bookings: no
-      cancel, no refund, no notification, not even a count in the confirm, so
-      golfers hold confirmed tee times at a course whose page now 404s and the
-      operator is never told. Highest-harm item left on this surface.
+    - [x] MP-5b (853bfb0) — closing a course stops stranding its golfers. Both
+      paths (course-detail PATCH active:false, archive-course POST) now refuse
+      to close over standing future bookings unless the caller passed
+      `cancelBookings: true`; the 409 carries the impact so the confirm states
+      bookings / players / golfers-to-email / soonest date / how many already
+      took money, rather than a bare confirm() naming no consequence.
+      Cancelling routes through the SHARED `performCancellation`, so refunds,
+      phantom-fee clearing and slot release stay in one implementation.
+      Cancels run BEFORE the flag flips — a failed refund leaves the course
+      live with every booking valid (recoverable) instead of golfers holding
+      tee times at a dead page. `performCancellation` gained
+      `{ notifySlotAlerts, reason }`: closure cancellations suppress the
+      "a tee time opened up" alert (worst possible message about a course
+      that is shutting) and tell the golfer why they were cancelled. New
+      `sendCourseClosedNotice` tells the operator, awaited and reported so a
+      bounce is visible. Bulk archive on the inquiries list now names the
+      courses it skipped and why. NEW FILE: `lib/course-closure.ts`.
+      NOT COVERED BY TESTS: no test DB, and the cancel path moves money — the
+      impact query was verified read-only against production (correct date
+      cutoff, zero false positives) but nothing exercises a real cancellation.
+      Cam must walk it with a live future booking. NEEDS REVIEW.
     - [ ] MP-5c — the list: put the evidence on the row (last booking, 30d
       bookings, trend, revenue are ALREADY computed and rendered nowhere, which
       is why two courses both show a green "Healthy" pill with nothing behind
