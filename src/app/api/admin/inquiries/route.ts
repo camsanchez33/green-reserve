@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
-import { ACTIVE_STATUSES, ARCHIVED_STATUSES, type InquiryStatus } from '@/lib/inquiry-status';
+import { ACTIVE_STATUSES, ARCHIVED_STATUSES, ALIVE_STATUSES, INQUIRY_SOURCES, CLOSED_REASONS, type InquiryStatus } from '@/lib/inquiry-status';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail, sendDashboardAccessEmail, sendGoLiveSimpleEmail } from '@/lib/email';
@@ -70,10 +70,67 @@ async function handleAction(
     return NextResponse.json({ success: true });
   }
 
+  // MP-4c: Reject captures WHY. "Why do we lose leads" was unanswerable
+  // because nothing recorded it — the reason is stored on the row (countable)
+  // and named in the ledger (readable), and it is validated against one shared
+  // vocabulary so the answers stay aggregatable.
   if (action === 'reject') {
+    const raw = String(payload?.closedReason ?? '').trim();
+    if (raw && !(CLOSED_REASONS as readonly string[]).includes(raw)) {
+      return NextResponse.json({ error: `Unknown close reason "${raw}"` }, { status: 400 });
+    }
     const from = inquiry.status;
-    await prisma.courseInquiry.update({ where: { id: inquiryId }, data: { status: 'rejected' } });
-    await logEvent(inquiryId, from, 'rejected', 'admin', adminName);
+    await prisma.courseInquiry.update({
+      where: { id: inquiryId },
+      data: { status: 'rejected', closedReason: raw || null, snoozeUntil: null, nextFollowUpAt: null },
+    });
+    await logEvent(inquiryId, from, 'rejected', 'admin', raw ? `${adminName} — ${raw}` : adminName);
+    return NextResponse.json({ success: true });
+  }
+
+  // ── MP-4c growth columns ──────────────────────────────────────────
+  // Where this lead came from. The pre-launch question the schema could not
+  // answer at all before MP-3 added the column.
+  if (action === 'set_source') {
+    const raw = String(payload?.source ?? '').trim();
+    if (raw && !(INQUIRY_SOURCES as readonly string[]).includes(raw)) {
+      return NextResponse.json({ error: `Unknown source "${raw}"` }, { status: 400 });
+    }
+    await prisma.courseInquiry.update({ where: { id: inquiryId }, data: { source: raw || null } });
+    await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin',
+      raw ? `Source set to ${raw} by ${adminName}` : `Source cleared by ${adminName}`);
+    return NextResponse.json({ success: true, source: raw || null });
+  }
+
+  // "The GM said call after Labor Day." Parking an inquiry used to mean
+  // either letting it nag forever or archiving it and forgetting it existed.
+  // snoozeUntil suppresses the queue verdict; nextFollowUpAt outlives the
+  // snooze so that when the date lands the queue can say WHY it came back.
+  if (action === 'snooze') {
+    if (!(ALIVE_STATUSES as readonly string[]).includes(inquiry.status)) {
+      return NextResponse.json({ error: 'Only an open inquiry can be snoozed' }, { status: 400 });
+    }
+    const until = new Date(String(payload?.until ?? ''));
+    if (isNaN(until.getTime())) return NextResponse.json({ error: 'Pick a date to snooze until' }, { status: 400 });
+    if (until.getTime() <= Date.now()) return NextResponse.json({ error: 'Snooze date must be in the future' }, { status: 400 });
+    if (until.getTime() > Date.now() + 366 * 86400000) {
+      return NextResponse.json({ error: 'Snooze at most a year out — past that, close it instead' }, { status: 400 });
+    }
+    await prisma.courseInquiry.update({
+      where: { id: inquiryId },
+      data: { snoozeUntil: until, nextFollowUpAt: until },
+    });
+    const label = until.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `Snoozed until ${label} by ${adminName}`);
+    return NextResponse.json({ success: true, snoozeUntil: until.toISOString() });
+  }
+
+  if (action === 'unsnooze') {
+    await prisma.courseInquiry.update({
+      where: { id: inquiryId },
+      data: { snoozeUntil: null, nextFollowUpAt: null },
+    });
+    await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `Snooze cleared by ${adminName}`);
     return NextResponse.json({ success: true });
   }
 
@@ -270,7 +327,13 @@ async function handleAction(
     const prior = closingEvent?.fromStatus ?? '';
     const target = ACTIVE_STATUSES.includes(prior as InquiryStatus) ? prior : 'in_review';
     const from = inquiry.status;
-    await prisma.courseInquiry.update({ where: { id: inquiryId }, data: { status: target } });
+    // MP-4c: the close reason described a decision that has just been undone.
+    // Leaving it would make a reopened lead read as "Rejected · Price" the
+    // next time it is closed for something else entirely.
+    await prisma.courseInquiry.update({
+      where: { id: inquiryId },
+      data: { status: target, closedReason: null },
+    });
     await logEvent(inquiryId, from, target, 'admin', `Restored by ${adminName}`);
     return NextResponse.json({ success: true, status: target });
   }

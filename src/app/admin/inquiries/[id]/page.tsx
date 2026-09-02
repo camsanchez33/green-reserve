@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft, Mail, Wrench, Power, CheckCircle, Clock, Trash2,
@@ -8,7 +8,10 @@ import {
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
-import { STATUS_DOT_MAP, STATUS_LABEL, ACTIVE_STATUSES, stageEnteredAt, daysSince } from '@/lib/inquiry-status';
+import {
+  STATUS_DOT_MAP, STATUS_LABEL, ACTIVE_STATUSES, stageEnteredAt, daysSince,
+  INQUIRY_SOURCES, CLOSED_REASONS,
+} from '@/lib/inquiry-status';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { LoadFailure } from '@/components/ui/ErrorState';
 import {
@@ -28,6 +31,9 @@ interface Inquiry {
   hasCaddies: boolean; pricingNotes: string; lookingFor: string[]; additionalNotes: string;
   status: string; adminNotes: string; builtCourseId: string | null; createdAt: string;
   updatedAt?: string;
+  // MP-3 growth columns, put to work in MP-4c.
+  source?: string | null; closedReason?: string | null;
+  snoozeUntil?: string | null; nextFollowUpAt?: string | null;
   detailsToken?: string | null; detailsJson?: string; needsJson?: string;
   events: InquiryStatusEvent[];
 }
@@ -48,7 +54,12 @@ function daysAgo(d: string) {
 
 function whyArchived(inq: Inquiry): { reason: string; date: string } {
   if (inq.status === 'live') return { reason: 'Went live', date: stageEnteredAt(inq.status, inq.createdAt, inq.events).toISOString() };
-  if (inq.status === 'rejected') return { reason: 'Rejected', date: stageEnteredAt(inq.status, inq.createdAt, inq.events).toISOString() };
+  if (inq.status === 'rejected') {
+    return {
+      reason: inq.closedReason ? `Rejected · ${inq.closedReason}` : 'Rejected',
+      date: stageEnteredAt(inq.status, inq.createdAt, inq.events).toISOString(),
+    };
+  }
   const lastEvent = inq.events.length > 0 ? inq.events[inq.events.length - 1] : null;
   const actorName = lastEvent?.actorName || '';
   if (actorName.toLowerCase().includes('permanently deleted')) return { reason: 'Course deleted', date: lastEvent?.createdAt || inq.updatedAt || inq.createdAt };
@@ -284,6 +295,22 @@ function renderFacilities(fv2: Record<string, unknown>): { label: string; detail
   return items;
 }
 
+// MP-4c: four tabs, trimmed from four that split the same story badly.
+// Contact and Answers were one thing (who this lead is) shown as two; Notes —
+// the founder's working memory — was buried under Activity next to a
+// machine-written ledger it has nothing to do with.
+type TabKey = 'lead' | 'sheet' | 'notes' | 'activity';
+const TAB_LABEL: Record<TabKey, string> = { lead: 'Lead', sheet: 'Sheet', notes: 'Notes', activity: 'Activity' };
+
+// Which tab you actually want on arrival depends on where the inquiry is: an
+// unreviewed lead means read the lead, a returned sheet means read the sheet,
+// and a finished one means read what happened.
+function defaultTabFor(status: string): TabKey {
+  if (status === 'details_submitted' || status === 'building') return 'sheet';
+  if (status === 'live' || status === 'rejected' || status === 'archived') return 'activity';
+  return 'lead';
+}
+
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10 focus:outline-none transition-colors';
 
 const NEEDS_LABELS: Record<string, string> = {
@@ -325,7 +352,7 @@ function InquiryDetailInner() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
   const [processing, setProcessing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'contact' | 'answers' | 'sheet' | 'activity'>('contact');
+  const [activeTab, setActiveTab] = useState<TabKey>('lead');
   const [editContact, setEditContact] = useState(false);
   const [contactEdits, setContactEdits] = useState<Record<string, string>>({});
   const [stageOverride, setStageOverride] = useState('');
@@ -340,7 +367,7 @@ function InquiryDetailInner() {
   const [addressingCategory, setAddressingCategory] = useState<string | null>(null);
   const [requestingReReview, setRequestingReReview] = useState(false);
   const [pendingAction, setPendingAction] = useState<
-    'delete' | 'send_sheet' | 'resend_sheet' | 'create_draft' | 'reject' | 'build_without_sheet' | 'dashboard_access' | 'send_preview' | 'go_live'
+    'delete' | 'send_sheet' | 'resend_sheet' | 'create_draft' | 'reject' | 'build_without_sheet' | 'dashboard_access' | 'send_preview' | 'go_live' | 'snooze'
     | 'archive_course' | 'delete_course' | 'restore_archived' | null
   >(null);
   const [courseSlug, setCourseSlug] = useState('');
@@ -352,6 +379,12 @@ function InquiryDetailInner() {
   const [reminderSending, setReminderSending] = useState<string | null>(null);
   const [reminderSent, setReminderSent] = useState<Set<string>>(new Set());
   const [buildConfirmText, setBuildConfirmText] = useState('');
+  const [snoozeDate, setSnoozeDate] = useState('');
+  const [rejectReason, setRejectReason] = useState('');
+  // The stage-aware default lands ONCE, on first load. Re-applying it after
+  // every action would yank the founder off whatever tab he opened.
+  const tabInitialised = useRef(false);
+  const pickTab = (t: TabKey) => { tabInitialised.current = true; setActiveTab(t); };
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
@@ -365,6 +398,10 @@ function InquiryDetailInner() {
       if (!res.ok) { setInq(null); setLoadError({ msg: res.message, kind: res.kind }); return; }
       setInq(res.data);
       setStageOverride(res.data.status);
+      if (!tabInitialised.current) {
+        tabInitialised.current = true;
+        setActiveTab(defaultTabFor(res.data.status));
+      }
       setLoadError(null);
     } finally {
       setLoading(false);
@@ -649,6 +686,11 @@ function InquiryDetailInner() {
   // full history, never pre-filter here, so every reader of this state
   // (this page, the courses tab, the Send Preview gate, go-live preflight)
   // can only ever agree.
+  // MP-4c: one read of the snooze, shared by the banner, the menu and the
+  // modal — three places asking the date separately is three chances to
+  // disagree about whether this inquiry is parked.
+  const isSnoozed = !!inq.snoozeUntil && new Date(inq.snoozeUntil).getTime() > Date.now();
+
   const latestDecision = latestPageDecision(inq.events);
   const pageApproved = inq.status === 'building' && latestDecision === 'approved';
   const pageChangesRequested = inq.status === 'building' && latestDecision === 'changes_requested';
@@ -793,6 +835,24 @@ function InquiryDetailInner() {
                     </select>
                   </div>
                 )}
+                {!isArchived && inq.status !== 'live' && !isSnoozed && (
+                  <button onClick={() => { setMoreOpen(false); setSnoozeDate(''); setPendingAction('snooze'); }} disabled={processing}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    <Clock className="w-3.5 h-3.5" />Snooze&hellip;
+                  </button>
+                )}
+                {!isArchived && inq.status !== 'live' && isSnoozed && (
+                  <button onClick={() => { setMoreOpen(false); action('unsnooze'); }} disabled={processing}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    <Clock className="w-3.5 h-3.5" />Clear snooze
+                  </button>
+                )}
+                {!inq.builtCourseId && !isArchived && inq.status !== 'building' && (
+                  <button onClick={() => { setMoreOpen(false); router.push('/admin/create?' + wizardParams.toString()); }}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    <ArrowUpRight className="w-3.5 h-3.5" />Manual build (in person)
+                  </button>
+                )}
                 {(inq.status === 'pending' || inq.status === 'in_review' || inq.status === 'details_requested' || inq.status === 'details_submitted') && (
                   <button onClick={() => { setMoreOpen(false); setPendingAction('reject'); }} disabled={processing}
                     className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">
@@ -923,6 +983,20 @@ function InquiryDetailInner() {
             </div>
           </div>
 
+          {isSnoozed && (
+            <div className="mt-3 flex items-center gap-2 bg-warn/5 border border-warn/20 rounded-lg px-4 py-2.5 text-xs text-warn max-w-3xl">
+              <Clock className="w-3.5 h-3.5 shrink-0" />
+              <span>
+                Snoozed until {fmtDate(inq.snoozeUntil as string)} — it stays out of the work queue until then,
+                unless the course gets in touch first.
+              </span>
+              <button onClick={() => action('unsnooze')} disabled={processing}
+                className="ml-auto shrink-0 font-medium underline hover:no-underline disabled:opacity-50">
+                Clear
+              </button>
+            </div>
+          )}
+
           {/* Stage checkpoints — the flight plan */}
           {!isArchived && inq.status !== 'rejected' && (
             <CheckpointStepper checkpoints={getCheckpoints(inq, hasSheet)} />
@@ -933,7 +1007,7 @@ function InquiryDetailInner() {
             <div className="mt-3 text-sm text-ink max-w-3xl">
               {(inq.status === 'pending' || inq.status === 'in_review') && (
                 hasAnswers
-                  ? <>Review the <button onClick={() => setActiveTab('answers')} className="font-medium text-pine hover:underline">Answers tab</button>, then send the course their setup sheet.</>
+                  ? <>Review the <button onClick={() => pickTab('lead')} className="font-medium text-pine hover:underline">Lead tab</button>, then send the course their setup sheet.</>
                   : <>No extra answers were submitted with this inquiry — send the course their setup sheet when ready.</>
               )}
               {inq.status === 'details_requested' && (
@@ -944,7 +1018,7 @@ function InquiryDetailInner() {
                 </>
               )}
               {inq.status === 'details_submitted' && (
-                <>Sheet received. Review the <button onClick={() => setActiveTab('sheet')} className="font-medium text-pine hover:underline">Sheet tab</button>, then create the draft course.</>
+                <>Sheet received. Review the <button onClick={() => pickTab('sheet')} className="font-medium text-pine hover:underline">Sheet tab</button>, then create the draft course.</>
               )}
               {inq.status === 'building' && (
                 allChangesAddressed
@@ -1062,12 +1136,12 @@ function InquiryDetailInner() {
         {/* ── Tab nav ──────────────────────────────────────────────── */}
         <div className="border-b border-line bg-white shrink-0 px-8">
           <div className="flex gap-0">
-            {(['contact', 'answers', 'sheet', 'activity'] as const).map(t => (
-              <button key={t} onClick={() => setActiveTab(t)}
+            {(['lead', 'sheet', 'notes', 'activity'] as const).map(t => (
+              <button key={t} onClick={() => pickTab(t)}
                 className={'px-4 py-3 text-sm font-medium border-b-2 transition-colors ' + (
                   activeTab === t ? 'border-pine text-pine' : 'border-transparent text-ink-muted hover:text-ink'
                 )}>
-                {t === 'contact' ? 'Contact' : t === 'answers' ? 'Answers' : t === 'sheet' ? 'Sheet' : 'Activity'}
+                {TAB_LABEL[t]}
               </button>
             ))}
           </div>
@@ -1076,8 +1150,8 @@ function InquiryDetailInner() {
         {/* ── Tab content ──────────────────────────────────────────── */}
         <div className="flex-1 px-8 py-7">
 
-          {/* Contact tab */}
-          {activeTab === 'contact' && (
+          {/* Lead tab — who they are, then what they told us. */}
+          {activeTab === 'lead' && (
             <div className="max-w-3xl">
               <div className="flex items-center justify-between mb-4">
                 <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Contact Info</div>
@@ -1130,6 +1204,22 @@ function InquiryDetailInner() {
                       <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1">Course type</div>
                       <div className="text-ink font-medium capitalize">{inq.courseType}</div>
                     </div>
+                    {/* MP-4c: which channel this lead came from — the
+                        pre-launch growth question nothing could answer.
+                        "Not recorded" stays a real, visible state; it must
+                        never be silently folded into a category. */}
+                    <div className="col-span-2 bg-white border border-line rounded-lg px-4 py-3">
+                      <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1">Source</div>
+                      <select
+                        value={inq.source || ''}
+                        disabled={processing}
+                        onChange={e => action('set_source', { source: e.target.value })}
+                        className="bg-paper border border-line rounded-md px-2 py-1.5 text-sm text-ink outline-none focus:border-pine/40 cursor-pointer disabled:opacity-50"
+                      >
+                        <option value="">Not recorded</option>
+                        {INQUIRY_SOURCES.map(src => <option key={src} value={src}>{src}</option>)}
+                      </select>
+                    </div>
                     {inq.website && (
                       <div className="col-span-2 bg-white border border-line rounded-lg px-4 py-3">
                         <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1">Website</div>
@@ -1152,9 +1242,9 @@ function InquiryDetailInner() {
             </div>
           )}
 
-          {/* Answers tab */}
-          {activeTab === 'answers' && (
-            <div className="max-w-3xl space-y-5">
+          {activeTab === 'lead' && (
+            <div className="max-w-3xl space-y-5 mt-8">
+              <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">What they told us</div>
               {(() => {
                 const rows: [string, string][] = [];
                 if (inq.currentBookingMethod) rows.push(['Current booking', inq.currentBookingMethod]);
@@ -1228,19 +1318,6 @@ function InquiryDetailInner() {
           {/* Sheet tab */}
           {activeTab === 'sheet' && (
             <div className="max-w-3xl space-y-7">
-              {!inq.builtCourseId && !isArchived && inq.status !== 'building' && (
-                <div className="flex items-center justify-between bg-paper border border-line rounded-lg px-4 py-3">
-                  <div>
-                    <div className="text-xs font-medium text-ink-muted">Manual build (in person)</div>
-                    <div className="text-[10px] text-ink-faint mt-0.5">Opens pre-fill wizard for in-person setup sessions</div>
-                  </div>
-                  <button onClick={() => router.push('/admin/create?' + wizardParams.toString())}
-                    className="flex items-center gap-1.5 text-xs font-medium text-ink-muted hover:text-ink bg-white hover:bg-paper border border-line px-3 py-1.5 rounded-md transition-colors shrink-0">
-                    Open Wizard <ArrowUpRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              )}
-
               {!inq.detailsJson && (
                 <p className="text-sm text-ink-faint text-center py-10">No sheet submitted yet.</p>
               )}
@@ -1622,29 +1699,39 @@ function InquiryDetailInner() {
                   </div>
                 </div>
               )}
-              <div>
-                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Internal Notes</div>
-                {inq.adminNotes && (
-                  <pre className="text-sm text-ink-soft bg-white border border-line rounded-lg px-4 py-3 mb-3 whitespace-pre-wrap font-sans">
-                    {inq.adminNotes}
-                  </pre>
-                )}
-                <div className="flex gap-2">
-                  <textarea
-                    value={noteText}
-                    onChange={e => setNoteText(e.target.value)}
-                    placeholder="Add a note..."
-                    rows={3}
-                    className="flex-1 bg-white border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 resize-none"
-                  />
-                  <button
-                    onClick={() => action('add_note', { note: noteText })}
-                    disabled={!noteText.trim() || processing}
-                    className="px-4 py-2 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white text-xs font-medium rounded-md transition-colors self-start"
-                  >
-                    Save
-                  </button>
-                </div>
+            </div>
+          )}
+
+          {/* Notes tab — the founder's working memory. It used to sit under
+              Activity, below a machine-written ledger it has nothing to do
+              with, which is a strange place to keep the one thing on this
+              page a human writes. */}
+          {activeTab === 'notes' && (
+            <div className="max-w-3xl">
+              <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Internal Notes</div>
+              {inq.adminNotes && (
+                <pre className="text-sm text-ink-soft bg-white border border-line rounded-lg px-4 py-3 mb-3 whitespace-pre-wrap font-sans">
+                  {inq.adminNotes}
+                </pre>
+              )}
+              {!inq.adminNotes && (
+                <p className="text-sm text-ink-faint mb-3">Nothing written down yet.</p>
+              )}
+              <div className="flex gap-2">
+                <textarea
+                  value={noteText}
+                  onChange={e => setNoteText(e.target.value)}
+                  placeholder="Add a note..."
+                  rows={3}
+                  className="flex-1 bg-white border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 resize-none"
+                />
+                <button
+                  onClick={() => action('add_note', { note: noteText })}
+                  disabled={!noteText.trim() || processing}
+                  className="px-4 py-2 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white text-xs font-medium rounded-md transition-colors self-start"
+                >
+                  Save
+                </button>
               </div>
             </div>
           )}
@@ -1656,7 +1743,7 @@ function InquiryDetailInner() {
           a bare browser confirm() — each states exactly what happens and who
           gets emailed before firing. */}
       {pendingAction && (() => {
-        const close = () => { setPendingAction(null); setGoLiveOverride(''); setBuildConfirmText(''); setGoLiveChecks(null); setDeleteCourseConfirm(''); setReminderSent(new Set()); };
+        const close = () => { setPendingAction(null); setGoLiveOverride(''); setBuildConfirmText(''); setGoLiveChecks(null); setDeleteCourseConfirm(''); setReminderSent(new Set()); setSnoozeDate(''); setRejectReason(''); };
         const fire = (fn: () => void) => { fn(); close(); };
 
         if (pendingAction === 'delete') {
@@ -1708,8 +1795,43 @@ function InquiryDetailInner() {
         if (pendingAction === 'reject') {
           return (
             <ModalShell title="Reject this inquiry?" danger onClose={close}>
-              <p className="text-sm text-ink-soft">Moves it to Archived. No email is sent to {inq.contactName}.</p>
-              <ModalActions onCancel={close} onConfirm={() => fire(() => action('reject'))} confirmLabel="Reject" danger disabled={processing}/>
+              <p className="text-sm text-ink-soft mb-3">Moves it to Closed. No email is sent to {inq.contactName}.</p>
+              <label className="block text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1">Why are we losing this one?</label>
+              <select value={rejectReason} onChange={e => setRejectReason(e.target.value)} className={iCls}>
+                <option value="">Pick a reason&hellip;</option>
+                {CLOSED_REASONS.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+              <p className="text-[11px] text-ink-faint mt-1.5">
+                Stored on the inquiry and named in the timeline — this is the only place &quot;why do we lose leads&quot; ever gets answered.
+              </p>
+              <ModalActions onCancel={close} onConfirm={() => fire(() => action('reject', { closedReason: rejectReason }))}
+                confirmLabel="Reject" danger disabled={!rejectReason || processing}/>
+            </ModalShell>
+          );
+        }
+        if (pendingAction === 'snooze') {
+          const plus = (d: number) => new Date(Date.now() + d * 86400000).toISOString().slice(0, 10);
+          const chosen = snoozeDate ? new Date(snoozeDate + 'T12:00:00') : null;
+          const valid = !!chosen && !isNaN(chosen.getTime()) && chosen.getTime() > Date.now();
+          return (
+            <ModalShell title="Snooze this inquiry?" onClose={close}>
+              <p className="text-sm text-ink-soft mb-3">
+                It drops out of the work queue until this date, then comes back as an overdue follow-up.
+                If the course fills the interest form again in the meantime, the snooze breaks and it returns straight away.
+              </p>
+              <label className="block text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1">Come back on</label>
+              <input type="date" value={snoozeDate} min={plus(1)} onChange={e => setSnoozeDate(e.target.value)} className={iCls} />
+              <div className="flex items-center gap-2 mt-2">
+                {[7, 14, 30, 90].map(d => (
+                  <button key={d} onClick={() => setSnoozeDate(plus(d))}
+                    className="text-[11px] text-ink-muted hover:text-ink border border-line rounded-md px-2 py-1 transition-colors">
+                    +{d}d
+                  </button>
+                ))}
+              </div>
+              <ModalActions onCancel={close}
+                onConfirm={() => fire(() => action('snooze', { until: (chosen as Date).toISOString() }))}
+                confirmLabel="Snooze" disabled={!valid || processing}/>
             </ModalShell>
           );
         }

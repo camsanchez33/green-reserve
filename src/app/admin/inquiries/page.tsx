@@ -24,6 +24,9 @@ interface Inquiry {
   hasCaddies: boolean; pricingNotes: string; lookingFor: string[]; additionalNotes: string;
   status: string; adminNotes: string; builtCourseId: string | null; createdAt: string;
   updatedAt?: string;
+  // MP-3 growth columns, put to work in MP-4c.
+  source?: string | null; closedReason?: string | null;
+  snoozeUntil?: string | null; nextFollowUpAt?: string | null;
   detailsToken?: string | null; detailsJson?: string; needsJson?: string;
   events: InquiryStatusEvent[];
 }
@@ -75,7 +78,11 @@ const segmentOf = (status: string) => SEGMENT_KEYS.find(k => {
 
 function whyArchived(inq: Inquiry): { reason: string; date: string } {
   if (inq.status === 'live') return { reason: 'Went live', date: stageStart(inq).toISOString() };
-  if (inq.status === 'rejected') return { reason: 'Rejected', date: stageStart(inq).toISOString() };
+  // MP-4c: Reject captures a reason now, so "why do we lose leads" has an
+  // answer on the row instead of only in someone's memory.
+  if (inq.status === 'rejected') {
+    return { reason: inq.closedReason ? `Rejected · ${inq.closedReason}` : 'Rejected', date: stageStart(inq).toISOString() };
+  }
   const lastEvent = inq.events.length > 0 ? inq.events[inq.events.length - 1] : null;
   const actorName = lastEvent?.actorName || '';
   if (actorName.toLowerCase().includes('permanently deleted')) return { reason: 'Course deleted', date: lastEvent?.createdAt || inq.updatedAt || inq.createdAt };
@@ -261,7 +268,7 @@ function InquiriesListInner() {
   const signals = useMemo(() => {
     const now = new Date();
     const m = new Map<string, QueueSignal>();
-    for (const i of inquiries) m.set(i.id, queueSignal(i.status, i.createdAt, i.events, now));
+    for (const i of inquiries) m.set(i.id, queueSignal(i, now));
     return m;
   }, [inquiries]);
   const sig = (inq: Inquiry) => signals.get(inq.id) as QueueSignal;
@@ -287,6 +294,7 @@ function InquiriesListInner() {
   const secYours = queueBase.filter(i => sig(i).yourMove).sort(byQueue);
   const secThem = queueBase.filter(i => !sig(i).yourMove && sig(i).waitingOn === 'them').sort(byQueue);
   const secSoon = queueBase.filter(i => !sig(i).yourMove && sig(i).waitingOn === 'us').sort(byQueue);
+  const secSnoozed = queueBase.filter(i => sig(i).waitingOn === 'snoozed').sort(byQueue);
   const liveRows = stage === 'live' ? [...queueBase].sort(newestFirst) : [];
 
   const allRows = visible.filter(i => (ALIVE_STATUSES as readonly string[]).includes(i.status)).sort(newestFirst);
@@ -493,7 +501,7 @@ function InquiriesListInner() {
     );
   };
 
-  const queueEmpty = secYours.length === 0 && secThem.length === 0 && secSoon.length === 0;
+  const queueEmpty = secYours.length === 0 && secThem.length === 0 && secSoon.length === 0 && secSnoozed.length === 0;
   const stageLabel = stage ? (FUNNEL_SEGMENTS.find(s => s.key === stage)?.label || stage) : '';
 
   return (
@@ -633,6 +641,7 @@ function InquiriesListInner() {
               {renderSection('Your move', 'needs you now — most overdue first', secYours)}
               {renderSection('Waiting on the course', 'sent, not answered yet', secThem)}
               {renderSection('No action due yet', 'yours to work, still inside its window', secSoon)}
+              {renderSection('Snoozed', 'deliberately parked — they come back on their date', secSnoozed)}
               {queueEmpty && (
                 <EmptyState message={q ? 'No results — clear your search' : stage ? `Nothing in ${stageLabel}.` : 'Queue is clear — nothing is waiting.'} />
               )}

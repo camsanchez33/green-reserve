@@ -34,6 +34,13 @@ export async function GET() {
   const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
   const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  // MP-4c: a snoozed inquiry is a decision, not neglect — it must not keep
+  // nagging from the Overview action queue after the founder has parked it.
+  // (These three amber rows still derive staleness in SQL off updatedAt with
+  // their own thresholds, which is the parallel derivation MP-4a/4b removed
+  // from the Inquiries list. Converting them to queueSignal is its own queue
+  // item — this change only stops snooze from being a half-working feature.)
+  const notSnoozed = { OR: [{ snoozeUntil: null }, { snoozeUntil: { lte: now } }] };
   const startOfMonth = startOfPlatformMonth(now);
   const [thisMonthYear, thisMonthIdx] = (() => { const [y, m] = dayKey(now).split('-').map(Number); return [y, m - 1]; })();
   const todayDateStr = dayKeyOf(now);
@@ -135,22 +142,22 @@ export async function GET() {
     prisma.course.findMany({ where: { active: true, stripeAccountActive: false, archivedAt: null }, select: { id: true, name: true, slug: true }, take: 5 }),
 
     prisma.courseInquiry.findMany({
-      where: { status: { in: ACTIVE_STATUSES.filter(s => s !== 'details_requested') }, updatedAt: { lt: threeDaysAgo } },
+      where: { status: { in: ACTIVE_STATUSES.filter(s => s !== 'details_requested') }, updatedAt: { lt: threeDaysAgo }, ...notSnoozed },
       select: { id: true, courseName: true, status: true, updatedAt: true },
       orderBy: { updatedAt: 'asc' },
       take: 5,
     }),
-    prisma.courseInquiry.count({ where: { status: { in: ACTIVE_STATUSES.filter(s => s !== 'details_requested') }, updatedAt: { lt: threeDaysAgo } } }),
+    prisma.courseInquiry.count({ where: { status: { in: ACTIVE_STATUSES.filter(s => s !== 'details_requested') }, updatedAt: { lt: threeDaysAgo }, ...notSnoozed } }),
     prisma.course.findMany({ where: { active: false, archivedAt: null, createdAt: { lt: twoDaysAgo } }, select: { id: true, name: true, createdAt: true }, orderBy: { createdAt: 'asc' }, take: 5 }),
     prisma.course.count({ where: { active: false, archivedAt: null, createdAt: { lt: twoDaysAgo } } }),
     prisma.inquiryStatusEvent.findMany({
-      where: { actorName: { startsWith: 'Preview sent' }, createdAt: { lt: fiveDaysAgo } },
+      where: { actorName: { startsWith: 'Preview sent' }, createdAt: { lt: fiveDaysAgo }, inquiry: notSnoozed },
       select: { inquiryId: true, createdAt: true, inquiry: { select: { id: true, courseName: true, status: true } } },
       orderBy: { createdAt: 'desc' },
       take: 50,
     }),
-    prisma.courseInquiry.findMany({ where: { status: 'details_requested', updatedAt: { lt: sevenDaysAgo } }, select: { id: true, courseName: true, updatedAt: true }, orderBy: { updatedAt: 'asc' }, take: 5 }),
-    prisma.courseInquiry.count({ where: { status: 'details_requested', updatedAt: { lt: sevenDaysAgo } } }),
+    prisma.courseInquiry.findMany({ where: { status: 'details_requested', updatedAt: { lt: sevenDaysAgo }, ...notSnoozed }, select: { id: true, courseName: true, updatedAt: true }, orderBy: { updatedAt: 'asc' }, take: 5 }),
+    prisma.courseInquiry.count({ where: { status: 'details_requested', updatedAt: { lt: sevenDaysAgo }, ...notSnoozed } }),
     prisma.messageThread.findMany({
       select: { id: true, courseId: true, course: { select: { name: true } }, messages: { orderBy: { createdAt: 'desc' }, take: 1, select: { senderType: true, senderName: true, createdAt: true } } },
       take: 200,

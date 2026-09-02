@@ -139,6 +139,21 @@ export function stageDepth(status: string): number {
 // a silent break waiting for a typo.
 export const RESUBMIT_ACTOR = 'Course submitted the interest form again';
 
+// MP-4c vocabularies. Defined once so the admin UI's options and the API's
+// validation can never drift into "the dropdown offers a value the server
+// rejects" — and so the answers stay countable instead of becoming free text
+// nobody can aggregate. Both are nullable in the schema: "not recorded" is an
+// honest state and must not masquerade as a category.
+export const INQUIRY_SOURCES = [
+  'Inbound form', 'Cold outreach', 'Referral', 'Event or conference', 'Partner', 'Other',
+] as const;
+
+export const CLOSED_REASONS = [
+  'Price', 'Timing — not ready', 'Uses another platform', 'Never responded',
+  'Not a fit', 'Duplicate', 'Other',
+] as const;
+
+
 /**
  * Everything the work queue needs to know about one inquiry, from one pass
  * over its event ledger.
@@ -151,20 +166,32 @@ export const RESUBMIT_ACTOR = 'Course submitted the interest form again';
 export type QueueSignal = {
   status: string;
   enteredAt: Date;
-  waitingOn: 'us' | 'them' | 'none';
+  waitingOn: 'us' | 'them' | 'snoozed' | 'none';
   yourMove: boolean;
   pressureDays: number;
   reason: string;
   resubmits: number;
 };
 
-export function queueSignal(
-  status: string,
-  createdAt: string | Date,
-  events: InquiryEventLike[] | undefined,
-  now: Date = new Date(),
-): QueueSignal {
-  const evs = events || [];
+/**
+ * The shape the queue reads. Taking the inquiry itself rather than four loose
+ * arguments is deliberate: MP-4c added snooze and follow-up dates, and an
+ * object means a caller that forgets to pass them fails to compile instead of
+ * silently ranking against a stale rulebook.
+ */
+export type QueueInput = {
+  status: string;
+  createdAt: string | Date;
+  events?: InquiryEventLike[] | null;
+  snoozeUntil?: string | Date | null;
+  nextFollowUpAt?: string | Date | null;
+};
+
+const shortDate = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+export function queueSignal(inq: QueueInput, now: Date = new Date()): QueueSignal {
+  const { status, createdAt } = inq;
+  const evs = inq.events || [];
   const enteredAt = stageEnteredAt(status, createdAt, evs);
   const inStage = daysSince(enteredAt, now);
   // Only re-submissions since this stage began count. One from three stages
@@ -177,6 +204,17 @@ export function queueSignal(
   if (status === 'live' || (ARCHIVED_STATUSES as readonly string[]).includes(status)) {
     return { ...base, waitingOn: 'none', yourMove: false, pressureDays: 0,
       reason: status === 'live' ? 'Live' : 'Closed' };
+  }
+
+  // MP-4c: a snooze is a decision ("the GM said call after Labor Day"), so it
+  // suppresses the whole queue verdict — except when the course itself gets
+  // back in touch, which is exactly the news the snooze was betting against.
+  const snoozeUntil = inq.snoozeUntil ? new Date(inq.snoozeUntil) : null;
+  if (snoozeUntil && snoozeUntil.getTime() > now.getTime() && resubmits === 0) {
+    return { ...base, waitingOn: 'snoozed', yourMove: false,
+      // Ranked below everything live, furthest-out snooze last.
+      pressureDays: -daysSince(now, snoozeUntil),
+      reason: `Snoozed until ${shortDate(snoozeUntil)}` };
   }
 
   const signal = ((): Omit<QueueSignal, 'status' | 'enteredAt' | 'resubmits'> => {
@@ -229,6 +267,21 @@ export function queueSignal(
         : `Submitted the interest form ${resubmits} more times — they are waiting on us` };
   }
 
+  // MP-4c: a follow-up date is a promise the founder made to himself. Once it
+  // lands, this is your move no matter what the stage clock says — and it
+  // outranks the stage clock only when it is the more overdue of the two, so
+  // a kept promise can never bury a genuinely rotting inquiry.
+  const followUp = inq.nextFollowUpAt ? new Date(inq.nextFollowUpAt) : null;
+  if (followUp && followUp.getTime() <= now.getTime()) {
+    const over = daysSince(followUp, now);
+    const winsOnPressure = over >= signal.pressureDays;
+    return { ...base, ...signal, waitingOn: 'us', yourMove: true,
+      pressureDays: Math.max(over, signal.pressureDays),
+      reason: winsOnPressure
+        ? (over < 1 ? 'Follow-up due today' : `Follow-up was due ${over}d ago`)
+        : signal.reason };
+  }
+
   return { ...base, ...signal };
 }
 
@@ -237,24 +290,14 @@ export function queueSignal(
  * revenue), then whoever has been sitting there longest.
  */
 export function compareQueue(a: QueueSignal, b: QueueSignal): number {
+  // Parked work sorts below live work, always. Without this tier a two-day
+  // snooze (-2) and a day-old lead (-2) collide, and the two states have
+  // nothing to do with each other — one is a decision, one is a clock.
+  const snoozed = Number(a.waitingOn === 'snoozed') - Number(b.waitingOn === 'snoozed');
+  if (snoozed !== 0) return snoozed;
   if (a.pressureDays !== b.pressureDays) return b.pressureDays - a.pressureDays;
   const depth = stageDepth(b.status) - stageDepth(a.status);
   if (depth !== 0) return depth;
   return a.enteredAt.getTime() - b.enteredAt.getTime();
 }
 
-/**
- * Is this inquiry waiting on us?
- *
- * Pass the inquiry's FULL event history — these derivations scope it
- * themselves (see change-requests.scopeToCurrentRound). Pre-filtering is how
- * two callers end up with two different answers to the same question.
- */
-export function isYourMove(
-  status: string,
-  createdAt: string | Date,
-  events: InquiryEventLike[] | undefined,
-  now: Date = new Date(),
-): boolean {
-  return queueSignal(status, createdAt, events, now).yourMove;
-}
