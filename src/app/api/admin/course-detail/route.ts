@@ -4,6 +4,7 @@ import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS } from '@/
 import { sendCourseLiveOrientationEmail } from '@/lib/email';
 import { getApprovalState } from '@/lib/approval-state';
 import { COMPLETED_BOOKING_STATUSES, computeCourseHealth } from '@/lib/course-metrics';
+import { closureImpact, cancelFutureBookingsForClosure, notifyOperatorOfClosure } from '@/lib/course-closure';
 import { computeOpenChanges, CATEGORY_LABEL } from '@/lib/change-requests';
 import { getCourseTimeline, isRemindersPaused, hasAcceptedAgreement, latestAgreementAcceptance } from '@/lib/course-timeline';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
@@ -105,7 +106,7 @@ export async function PATCH(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  const { courseId, active, featured } = await req.json();
+  const { courseId, active, featured, cancelBookings } = await req.json();
   if (!courseId) return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });
 
   // STRIPE RULE FINAL + AGREEMENT = GO-LIVE GATE (RUN_QUEUE) — "Set live" is
@@ -124,6 +125,39 @@ export async function PATCH(req: NextRequest) {
     }
     if (!agreementOk) {
       return NextResponse.json({ error: 'The operator must accept the Operator Agreement before this course can go live — no exceptions.', missing: 'agreement' }, { status: 400 });
+    }
+  }
+
+  // MP-5b: closing a course is a booking-consequence action, and it used to
+  // pretend it was not. Refuse to strand golfers: if standing future bookings
+  // exist, the caller must have SEEN the count and asked for them to be
+  // cancelled. A 409 carrying the impact is how the confirm gets its numbers.
+  //
+  // Cancel BEFORE flipping the flag. If a refund fails we abort with the course
+  // still live and every booking still valid, which is the recoverable failure;
+  // flipping first would leave golfers holding tee times at a dead page.
+  let closureCancelled = 0;
+  let closureFailed: { bookingId: string; golferEmail: string; error: string }[] = [];
+  if (active === false) {
+    const impact = await closureImpact(courseId);
+    if (impact.bookings > 0 && cancelBookings !== true) {
+      return NextResponse.json({
+        error: `${impact.bookings} upcoming booking${impact.bookings === 1 ? '' : 's'} would be left stranded at a course golfers can no longer see.`,
+        needsBookingDecision: true,
+        impact,
+      }, { status: 409 });
+    }
+    if (impact.bookings > 0) {
+      const result = await cancelFutureBookingsForClosure(courseId);
+      closureCancelled = result.cancelled;
+      closureFailed = result.failed;
+      if (result.failed.length > 0) {
+        return NextResponse.json({
+          error: `${result.failed.length} booking${result.failed.length === 1 ? '' : 's'} could not be cancelled, so the course is still live and nobody has been stranded. Resolve these in Stripe, then try again.`,
+          cancelled: result.cancelled,
+          failed: result.failed,
+        }, { status: 502 });
+      }
     }
   }
 
@@ -168,5 +202,18 @@ export async function PATCH(req: NextRequest) {
     }
   }
 
-  return NextResponse.json(updated);
+  // MP-5b: the operator hears it from us, not from a golfer ringing the pro
+  // shop. Awaited so a bounce is reported rather than logged and forgotten —
+  // but never allowed to undo a closure that has already happened.
+  let operatorNotified: boolean | null = null;
+  if (active === false) {
+    operatorNotified = await notifyOperatorOfClosure(courseId, 'offline', closureCancelled);
+  }
+
+  return NextResponse.json({
+    ...updated,
+    ...(active === false
+      ? { cancelledBookings: closureCancelled, failedCancellations: closureFailed, operatorNotified }
+      : {}),
+  });
 }

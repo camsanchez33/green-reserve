@@ -342,6 +342,7 @@ function InquiriesListInner() {
     setBulkRunning(true);
     setBulkResult('');
     let ok = 0, failed = 0;
+    const skipped: string[] = [];
     for (const id of bulkPreview.ids) {
       try {
         // A-02d: "archive" is pair-aware — an inquiry with a built course goes
@@ -355,11 +356,20 @@ function InquiriesListInner() {
           : target?.builtCourseId
             ? await fetch('/api/admin/archive-course', { method: 'POST', headers: H(), body: JSON.stringify({ courseId: target.builtCourseId, action: 'archive' }) })
             : await fetch('/api/admin/inquiries', { method: 'POST', headers: H(), body: JSON.stringify({ id, action: 'reject' }) });
-        if (r.ok) ok++; else failed++;
+        if (r.ok) { ok++; continue; }
+        failed++;
+        // MP-5b: archiving a course with standing bookings is refused rather
+        // than done silently. "1 failed" with no reason would send the founder
+        // hunting; name the course and say what to do instead.
+        const d = await r.json().catch(() => ({}));
+        if (d.needsBookingDecision) skipped.push(target?.courseName || id);
       } catch { failed++; }
     }
     setBulkRunning(false);
-    setBulkResult(`${ok} succeeded${failed > 0 ? `, ${failed} failed` : ''}.`);
+    const skippedNote = skipped.length > 0
+      ? ` ${skipped.join(', ')} still ${skipped.length === 1 ? 'has' : 'have'} upcoming bookings — archive ${skipped.length === 1 ? 'it' : 'them'} from the course page, where you can cancel and notify the golfers.`
+      : '';
+    setBulkResult(`${ok} succeeded${failed > 0 ? `, ${failed} failed` : ''}.${skippedNote}`);
     setSelected(new Set());
     await loadInquiries();
   }
@@ -754,7 +764,7 @@ function InquiriesListInner() {
               <p className="text-xs text-ink-muted mb-3">
                 {isArchive
                   ? (withCourse > 0
-                    ? `Closes each out. ${withCourse} of these have a built course — archiving takes that course offline too (restorable). The rest have no course yet, so they're marked rejected. Nothing is deleted, and no email is sent.`
+                    ? `Closes each out. ${withCourse} of these have a built course — archiving takes that course offline too (restorable). The rest have no course yet, so they're marked rejected. Nothing is deleted, and no email is sent. A course with upcoming golfer bookings is skipped here — close it from its own page, where you can cancel and notify them.`
                     : 'Marks each as rejected/closed. Nothing is deleted, and no email is sent — reject an inquiry on its own page if the course should be told.')
                   : 'Sends the setup-sheet email to each recipient below.'}
               </p>

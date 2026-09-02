@@ -2,7 +2,21 @@ import { prisma } from './prisma';
 import { sendCancellationEmail, sendTeeTimeAlertEmail } from './email';
 import { refundOnConnectedAccount } from './stripe';
 
-export async function performCancellation(bookingId: string) {
+export type CancellationOptions = {
+  /**
+   * MP-5b. Cancelling normally frees a slot, so anyone watching for that time
+   * gets "a tee time opened up". When the cancellation is because the COURSE
+   * is closing, that email invites golfers to book at a course that is about
+   * to stop taking bookings — so the closure path turns it off, and leaves the
+   * alerts unnotified for a genuine opening later.
+   */
+  notifySlotAlerts?: boolean;
+  /** Shown to the golfer so a cancellation they did not ask for is explained. */
+  reason?: string;
+};
+
+export async function performCancellation(bookingId: string, opts: CancellationOptions = {}) {
+  const { notifySlotAlerts = true, reason } = opts;
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -73,7 +87,7 @@ export async function performCancellation(bookingId: string) {
   ]);
 
   // Find all unnotified alerts for this slot (specific-slot or criteria-based)
-  const alerts = await prisma.teeTimeAlert.findMany({
+  const alerts = notifySlotAlerts ? await prisma.teeTimeAlert.findMany({
     where: {
       notifiedAt: null,
       OR: [
@@ -85,7 +99,7 @@ export async function performCancellation(bookingId: string) {
         },
       ],
     },
-  });
+  }) : [];
 
   // For criteria alerts, filter by time window in-memory
   const matching = alerts.filter((a) => {
@@ -124,6 +138,7 @@ export async function performCancellation(bookingId: string) {
     feeCharged: feeAlreadyCharged,
     feeAmount: feeAlreadyCharged ? booking.cancellationFeeTotal : 0,
     bookingId: booking.id,
+    reason,
   }).catch(console.error);
 
   return { success: true, feeCharged: feeAlreadyCharged, roundRefunded } as const;

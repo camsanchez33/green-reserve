@@ -215,6 +215,15 @@ export default function CourseDetailPage() {
   const [dangerOpen, setDangerOpen] = useState(false);
   const [archiveBusy, setArchiveBusy] = useState(false);
   const [liveToggleBusy, setLiveToggleBusy] = useState(false);
+  // MP-5b: the server refuses to close a course over standing bookings unless
+  // the caller has seen the count. The 409 carries the impact, so this prompt
+  // never has to guess the numbers — or go and fetch them separately.
+  const [closurePrompt, setClosurePrompt] = useState<{
+    action: 'offline' | 'archive';
+    impact: { bookings: number; players: number; golfers: number; nextDate: string | null; withMoney: number };
+  } | null>(null);
+  const [closureBusy, setClosureBusy] = useState(false);
+  const [closureError, setClosureError] = useState('');
   const [featuredBusy, setFeaturedBusy] = useState(false);
   const [liveBlockReason, setLiveBlockReason] = useState('');
   const [liveBlockMissing, setLiveBlockMissing] = useState<'agreement' | 'stripe' | null>(null);
@@ -343,20 +352,33 @@ export default function CourseDetailPage() {
   // ever (STRIPE RULE FINAL / AGREEMENT = GO-LIVE GATE). A blocked "Set
   // live" surfaces the exact reason and a one-click reminder instead of
   // silently no-op'ing or offering a way around it.
-  async function toggleActive(active: boolean) {
-    setLiveToggleBusy(true); setLiveBlockReason(''); setLiveBlockMissing(null);
+  async function toggleActive(active: boolean, cancelBookings = false) {
+    setLiveToggleBusy(true); setLiveBlockReason(''); setLiveBlockMissing(null); setClosureError('');
     const r = await fetch('/api/admin/course-detail', {
-      method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, active }),
+      method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, active, cancelBookings }),
     });
     setLiveToggleBusy(false);
     if (r.ok) {
-      setDetail(d => d ? { ...d, course: { ...d.course, active } } : d);
-      loadDetail();
-    } else {
+      setClosurePrompt(null);
       const d = await r.json().catch(() => ({}));
-      setLiveBlockReason(d.error || 'Failed to update — try again.');
-      setLiveBlockMissing(d.missing === 'agreement' || d.missing === 'stripe' ? d.missing : null);
+      // Never let a bounced operator notice pass as a clean close.
+      if (active === false && d.operatorNotified === false) {
+        setLiveBlockReason('Course is offline, but the notice to the operator did not send — tell them yourself.');
+      }
+      setDetail(dd => dd ? { ...dd, course: { ...dd.course, active } } : dd);
+      loadDetail();
+      return;
     }
+    const d = await r.json().catch(() => ({}));
+    // MP-5b: golfers are holding tee times. Say how many, and make cancelling
+    // them a decision rather than a side effect.
+    if (r.status === 409 && d.needsBookingDecision && d.impact) {
+      setClosurePrompt({ action: 'offline', impact: d.impact });
+      return;
+    }
+    if (closurePrompt) { setClosureError(d.error || 'Failed to take the course offline.'); return; }
+    setLiveBlockReason(d.error || 'Failed to update — try again.');
+    setLiveBlockMissing(d.missing === 'agreement' || d.missing === 'stripe' ? d.missing : null);
   }
 
   async function sendGoLiveReminder(missing: 'agreement' | 'stripe') {
@@ -393,16 +415,25 @@ export default function CourseDetailPage() {
     }
   }
 
-  async function archiveCourse() {
+  // MP-5b: was a bare browser confirm that named no consequence, then an
+  // alert() on failure. Archiving is now gated on the same booking decision as
+  // taking a course offline.
+  async function archiveCourse(cancelBookings = false) {
     if (!detail) return;
-    if (!confirm(`Archive "${detail.course.name}"? The course disappears from the public site but data is retained. You can restore it later.`)) return;
-    setArchiveBusy(true);
+    setArchiveBusy(true); setClosureError('');
     const r = await fetch('/api/admin/archive-course', {
-      method: 'POST', headers: H(), body: JSON.stringify({ courseId, action: 'archive' }),
+      method: 'POST', headers: H(), body: JSON.stringify({ courseId, action: 'archive', cancelBookings }),
     });
     setArchiveBusy(false);
-    if (r.ok) router.push('/admin/courses');
-    else { const d = await r.json(); alert(`Archive failed: ${d.error}`); }
+    if (r.ok) { router.push('/admin/courses'); return; }
+    const d = await r.json().catch(() => ({}));
+    if (r.status === 409 && d.needsBookingDecision && d.impact) {
+      setClosurePrompt({ action: 'archive', impact: d.impact });
+      return;
+    }
+    if (closurePrompt) { setClosureError(d.error || 'Archive failed.'); return; }
+    setClosureError('');
+    setLiveBlockReason(d.error ? `Archive failed: ${d.error}` : 'Archive failed — try again.');
   }
 
   async function restoreCourse() {
@@ -678,7 +709,13 @@ export default function CourseDetailPage() {
                 </button>
               )}
               <button
-                onClick={() => confirm(c.active ? `Take "${c.name}" offline? Golfers will no longer be able to book.` : `Set "${c.name}" live? Golfers will be able to book immediately.`) && toggleActive(!c.active)}
+                onClick={() => {
+                  // Going live is announced by the preflight; going offline is
+                  // gated by the server's booking check, which supplies the
+                  // real numbers instead of a confirm() guessing at them.
+                  if (c.active) { setClosureError(''); toggleActive(false); }
+                  else if (confirm(`Set "${c.name}" live? Golfers will be able to book immediately.`)) toggleActive(true);
+                }}
                 disabled={liveToggleBusy}
                 className={'hidden min-[1200px]:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors disabled:opacity-50 ' + (c.active ? 'bg-bad/5 text-bad border-bad/20 hover:bg-bad/10' : 'bg-ok/5 text-ok border-ok/20 hover:bg-ok/10')}
               >
@@ -1922,6 +1959,62 @@ export default function CourseDetailPage() {
 
         </div>
       </div>
+
+      {/* MP-5b: the consequence, in numbers, before anything happens. This
+          only ever appears because the SERVER refused to close a course over
+          standing bookings — the counts are its, not a guess made here. */}
+      {closurePrompt && (() => {
+        const { action, impact } = closurePrompt;
+        const verb = action === 'archive' ? 'Archive' : 'Take offline';
+        const busy = action === 'archive' ? archiveBusy : liveToggleBusy;
+        const plural = impact.bookings === 1 ? '' : 's';
+        return (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white border border-line rounded-lg p-6 w-full max-w-md shadow-2xl">
+              <h3 className="font-serif font-medium text-ink mb-2">
+                {impact.bookings} golfer booking{plural} {impact.bookings === 1 ? 'is' : 'are'} still standing
+              </h3>
+              <p className="text-sm text-ink-soft mb-3">
+                {verb === 'Archive' ? 'Archiving' : 'Taking'} <strong>{detail?.course.name}</strong>
+                {verb === 'Archive' ? '' : ' offline'} removes it from the public site. These rounds would be left
+                booked at a course golfers can no longer see.
+              </p>
+              <div className="bg-paper border border-line rounded-md px-4 py-3 mb-3 text-sm space-y-1">
+                <div className="flex justify-between"><span className="text-ink-muted">Bookings</span><span className="text-ink font-medium">{impact.bookings}</span></div>
+                <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="text-ink font-medium">{impact.players}</span></div>
+                <div className="flex justify-between"><span className="text-ink-muted">Golfers to email</span><span className="text-ink font-medium">{impact.golfers}</span></div>
+                {impact.nextDate && (
+                  <div className="flex justify-between"><span className="text-ink-muted">Soonest</span><span className="text-ink font-medium">{impact.nextDate}</span></div>
+                )}
+                {impact.withMoney > 0 && (
+                  <div className="flex justify-between"><span className="text-warn">Already took money</span><span className="text-warn font-medium">{impact.withMoney}</span></div>
+                )}
+              </div>
+              <p className="text-xs text-ink-muted mb-1">
+                Continuing cancels {impact.bookings === 1 ? 'it' : 'them all'} and emails {impact.golfers === 1 ? 'the golfer' : 'each golfer'} to explain why.
+                {impact.withMoney > 0 && ' Anything already charged is refunded.'}
+              </p>
+              <p className="text-xs text-ink-muted mb-4">
+                Golfers watching for an opening at these times are deliberately NOT told — the course is closing, not freeing up.
+              </p>
+              {closureError && <p className="text-xs text-bad mb-3">{closureError}</p>}
+              <div className="flex gap-3">
+                <button onClick={() => { setClosurePrompt(null); setClosureError(''); }}
+                  className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors">
+                  Leave it live
+                </button>
+                <button
+                  onClick={() => { if (action === 'archive') archiveCourse(true); else toggleActive(false, true); }}
+                  disabled={busy}
+                  className="flex-1 bg-bad hover:bg-bad/90 text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors"
+                >
+                  {busy ? 'Working…' : `Cancel ${impact.bookings} & ${verb.toLowerCase()}`}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* MP-5a: deleting a schedule now says what it costs, and the rebuild it
           triggers is described honestly — unsold slots go, sold ones stay. */}

@@ -162,11 +162,18 @@ export async function sendCancellationEmail(data: {
   golferName: string; golferEmail: string; courseName: string;
   date: string; time: string; players: number; bookingId: string;
   feeCharged: boolean; feeAmount: number; // feeCharged = cancelled after the window closed, fee already taken & non-refundable
+  // MP-5b: set when the golfer did not ask for this — the course closed. A
+  // cancellation with no explanation reads as a mistake or a bait-and-switch.
+  reason?: string;
 }) {
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#fee2e2;color:#991b1b;font-size:13px;font-weight:600;padding:4px 12px;border-radius:3px;">Booking Cancelled</span></div>
     <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">Your booking has been cancelled.</h1>
-    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">${data.courseName} &middot; ${data.date} at ${data.time} &middot; ${data.players} player${data.players > 1 ? 's' : ''}</p>
+    <p style="margin:0 0 ${data.reason ? '16px' : '24px'};color:#6b7280;font-size:15px;">${data.courseName} &middot; ${data.date} at ${data.time} &middot; ${data.players} player${data.players > 1 ? 's' : ''}</p>
+    ${data.reason
+      ? `<p style="margin:0 0 24px;color:#6b7280;font-size:15px;line-height:1.6;">${data.reason}</p>`
+      : ''
+    }
     ${!data.feeCharged
       ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#166534;font-size:15px;font-weight:600;">&#10003; You weren't charged anything &mdash; your card has been released.</p></div>`
       : `<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:4px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#92400e;font-size:14px;font-weight:600;">The $${(data.feeAmount / 100).toFixed(2)} cancellation fee you were charged is non-refundable &mdash; this cancellation came after the course&rsquo;s free-cancellation window closed.</p></div>`
@@ -179,6 +186,41 @@ export async function sendCancellationEmail(data: {
 // Fired by the cancellation-fee cron the moment it successfully auto-charges
 // someone for not cancelling in time. Refundable later at check-in, so this
 // is explicitly NOT framed as a final charge.
+// MP-5b. Taking a course offline or archiving it used to happen entirely
+// behind the operator's back: their page stopped accepting bookings, any
+// future tee times were left dangling, and nobody told them. If we cancelled
+// their golfers' rounds, they need to know before a golfer phones them about it.
+export async function sendCourseClosedNotice(data: {
+  operatorName: string; operatorEmail: string; courseName: string;
+  action: 'offline' | 'archived';
+  cancelledCount: number;
+}) {
+  const what = data.action === 'archived' ? 'archived' : 'taken offline';
+  const bookingLine = data.cancelledCount === 0
+    ? 'There were no upcoming bookings, so no golfers were affected.'
+    : `${data.cancelledCount} upcoming booking${data.cancelledCount === 1 ? ' was' : 's were'} cancelled, and ${data.cancelledCount === 1 ? 'that golfer has' : 'those golfers have'} been emailed. Nobody was charged for a round they will not play.`;
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:22px;font-weight:700;">${data.courseName} has been ${what}.</h1>
+    <p style="margin:0 0 16px;color:#6b7280;font-size:15px;line-height:1.6;">
+      Hi ${data.operatorName} — your GreenReserve booking page is no longer accepting tee times.
+    </p>
+    <p style="margin:0 0 16px;color:#6b7280;font-size:15px;line-height:1.6;">${bookingLine}</p>
+    <p style="margin:0 0 20px;color:#6b7280;font-size:15px;line-height:1.6;">
+      Nothing has been deleted — your tee sheet, bookings and history are all still here, and we can put you back
+      online whenever you are ready. If this is not what you expected, reply to this email and we will sort it out.
+    </p>
+    <p style="margin:0;color:#98968B;font-size:12px;">
+      Questions? Reply to this email — hello@greenreserve.app.
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.operatorEmail,
+    subject: `${data.courseName} is no longer taking bookings on GreenReserve`,
+    html,
+  });
+}
+
 export async function sendCancellationFeeChargedEmail(data: {
   golferName: string; golferEmail: string; courseName: string;
   date: string; time: string; feeAmount: number; bookingId: string; checkInToken?: string | null;
