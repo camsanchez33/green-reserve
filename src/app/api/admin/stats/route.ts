@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
 import { dayKey, platformHour, startOfPlatformDay, startOfPlatformWeek, startOfPlatformMonth, startOfPlatformDaysAgo, startOfPlatformMonthsAgo } from '@/lib/admin-day';
 import { ACTIVE_STATUSES } from '@/lib/inquiry-status';
-import { computeOpenChanges, oldestOpenChangeRequestDate, CATEGORY_LABEL } from '@/lib/change-requests';
+import { buildInquiryQueueRows } from '@/lib/inquiry-action-queue';
 import { COMPLETED_BOOKING_STATUSES, TREND_MIN_AGE_DAYS, TREND_DROP_PCT_THRESHOLD, computeCourseHealth } from '@/lib/course-metrics';
 
 const COMPLETED = COMPLETED_BOOKING_STATUSES;
@@ -31,16 +31,6 @@ export async function GET() {
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const sixtyDaysAgo = new Date(now.getTime() - TREND_MIN_AGE_DAYS * 24 * 60 * 60 * 1000);
   const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
-  const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
-  const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
-  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  // MP-4c: a snoozed inquiry is a decision, not neglect — it must not keep
-  // nagging from the Overview action queue after the founder has parked it.
-  // (These three amber rows still derive staleness in SQL off updatedAt with
-  // their own thresholds, which is the parallel derivation MP-4a/4b removed
-  // from the Inquiries list. Converting them to queueSignal is its own queue
-  // item — this change only stops snooze from being a half-working feature.)
-  const notSnoozed = { OR: [{ snoozeUntil: null }, { snoozeUntil: { lte: now } }] };
   const startOfMonth = startOfPlatformMonth(now);
   const [thisMonthYear, thisMonthIdx] = (() => { const [y, m] = dayKey(now).split('-').map(Number); return [y, m - 1]; })();
   const todayDateStr = dayKeyOf(now);
@@ -85,15 +75,10 @@ export async function GET() {
     failedChargesCount,
     noStripe,
 
-    waitingOnUs,
-    waitingOnUsCount,
     draftsAmber,
     draftsAmberCount,
-    previewSentEventsRaw,
-    sheetNoResponse,
-    sheetNoResponseCount,
     threadsForUnanswered,
-    buildingInquiriesForChanges,
+    activePipeline,
 
     newInquiriesMTD,
     sheetsOutMTDRaw,
@@ -141,31 +126,28 @@ export async function GET() {
     isSupportPlus ? prisma.booking.count({ where: { checkInFailReason: { not: '' }, checkedInAt: null } }) : Promise.resolve(0),
     prisma.course.findMany({ where: { active: true, stripeAccountActive: false, archivedAt: null }, select: { id: true, name: true, slug: true }, take: 5 }),
 
-    prisma.courseInquiry.findMany({
-      where: { status: { in: ACTIVE_STATUSES.filter(s => s !== 'details_requested') }, updatedAt: { lt: threeDaysAgo }, ...notSnoozed },
-      select: { id: true, courseName: true, status: true, updatedAt: true },
-      orderBy: { updatedAt: 'asc' },
-      take: 5,
-    }),
-    prisma.courseInquiry.count({ where: { status: { in: ACTIVE_STATUSES.filter(s => s !== 'details_requested') }, updatedAt: { lt: threeDaysAgo }, ...notSnoozed } }),
     prisma.course.findMany({ where: { active: false, archivedAt: null, createdAt: { lt: twoDaysAgo } }, select: { id: true, name: true, createdAt: true }, orderBy: { createdAt: 'asc' }, take: 5 }),
     prisma.course.count({ where: { active: false, archivedAt: null, createdAt: { lt: twoDaysAgo } } }),
-    prisma.inquiryStatusEvent.findMany({
-      where: { actorName: { startsWith: 'Preview sent' }, createdAt: { lt: fiveDaysAgo }, inquiry: notSnoozed },
-      select: { inquiryId: true, createdAt: true, inquiry: { select: { id: true, courseName: true, status: true } } },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
-    }),
-    prisma.courseInquiry.findMany({ where: { status: 'details_requested', updatedAt: { lt: sevenDaysAgo }, ...notSnoozed }, select: { id: true, courseName: true, updatedAt: true }, orderBy: { updatedAt: 'asc' }, take: 5 }),
-    prisma.courseInquiry.count({ where: { status: 'details_requested', updatedAt: { lt: sevenDaysAgo }, ...notSnoozed } }),
     prisma.messageThread.findMany({
       select: { id: true, courseId: true, course: { select: { name: true } }, messages: { orderBy: { createdAt: 'desc' }, take: 1, select: { senderType: true, senderName: true, createdAt: true } } },
       take: 200,
       orderBy: { updatedAt: 'desc' },
     }),
+    // MP-4d: the whole active pipeline, with the events queueSignal reads.
+    // This replaces four separate queries (two findMany + two count) that each
+    // guessed at staleness in SQL, so it is a net reduction in round trips —
+    // and it is bounded by how many courses are mid-onboarding, not by the
+    // inquiry table. Live and closed inquiries are excluded: they are not work.
     prisma.courseInquiry.findMany({
-      where: { status: 'building' },
-      select: { id: true, courseName: true, events: { select: { actorName: true, createdAt: true }, orderBy: { createdAt: 'asc' } } },
+      where: { status: { in: ACTIVE_STATUSES } },
+      select: {
+        id: true, courseName: true, status: true, createdAt: true,
+        snoozeUntil: true, nextFollowUpAt: true,
+        events: {
+          select: { fromStatus: true, toStatus: true, actorName: true, createdAt: true },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
     }),
 
     prisma.courseInquiry.count({ where: { createdAt: { gte: startOfMonth } } }),
@@ -245,21 +227,10 @@ export async function GET() {
   ];
   const redCount = failedChargesCount + noStripe.length;
 
-  const waitingOnUsDoThis: Record<string, string> = {
-    pending: 'Review the inquiry and either request their details sheet or reject it.',
-    in_review: 'Finish reviewing — request their details sheet or reject it.',
-    details_submitted: 'Sheet’s back — review their answers and build the course.',
-    building: 'Course is mid-build — finish it, then send dashboard access or go live.',
-  };
-  const waitingOnUsRows: Row[] = waitingOnUs.map(i => ({
-    id: `wu-${i.id}`,
-    who: i.courseName,
-    why: `Waiting on us — ${i.status.replace('_', ' ')}`,
-    doThis: waitingOnUsDoThis[i.status] ?? 'Needs our next action.',
-    ageDays: Math.floor((now.getTime() - i.updatedAt.getTime()) / 86400000),
-    actionLabel: 'Open',
-    href: `/admin/inquiries/${i.id}`,
-  }));
+  // MP-4d: one row per inquiry, from the same derivation the Inquiries list
+  // uses. Lives in lib/inquiry-action-queue.ts — see the header there for what
+  // it replaced and why.
+  const pipelineRows: Row[] = buildInquiryQueueRows(activePipeline, now);
 
   const draftsAmberRows: Row[] = draftsAmber.map(c => ({
     id: `dr-${c.id}`,
@@ -269,39 +240,6 @@ export async function GET() {
     ageDays: Math.floor((now.getTime() - c.createdAt.getTime()) / 86400000),
     actionLabel: 'Review',
     href: `/admin/courses?courseId=${c.id}&tab=overview`,
-  }));
-
-  const previewSeen = new Set<string>();
-  const previewSentAmber: Row[] = [];
-  for (const ev of previewSentEventsRaw) {
-    if (previewSeen.has(ev.inquiryId)) continue;
-    previewSeen.add(ev.inquiryId);
-    // Allow-list, not deny-list: only inquiries still actually in the active
-    // pipeline can be "stalled." An inquiry whose course later got archived
-    // keeps its old InquiryStatusEvent history, so denying just 'live'/
-    // 'rejected' let stale 'archived' inquiries surface here forever.
-    if (!ev.inquiry || !(ACTIVE_STATUSES as readonly string[]).includes(ev.inquiry.status)) continue;
-    previewSentAmber.push({
-      id: `ps-${ev.inquiryId}`,
-      who: ev.inquiry.courseName,
-      why: 'Preview sent, no reply',
-      doThis: 'They haven’t responded to the preview — resend it or call to confirm they saw it.',
-      ageDays: Math.floor((now.getTime() - ev.createdAt.getTime()) / 86400000),
-      actionLabel: 'Open',
-      href: `/admin/inquiries/${ev.inquiryId}`,
-      fire: { kind: 'resend_preview', inquiryId: ev.inquiryId },
-    });
-  }
-
-  const sheetNoResponseRows: Row[] = sheetNoResponse.map(i => ({
-    id: `sh-${i.id}`,
-    who: i.courseName,
-    why: 'Sheet sent, no response',
-    doThis: 'They haven’t submitted their details sheet — resend the link or follow up by phone.',
-    ageDays: Math.floor((now.getTime() - i.updatedAt.getTime()) / 86400000),
-    actionLabel: 'Open',
-    href: `/admin/inquiries/${i.id}`,
-    fire: { kind: 'resend_sheet', inquiryId: i.id },
   }));
 
   const threadAmber: Row[] = threadsForUnanswered
@@ -317,37 +255,16 @@ export async function GET() {
       fire: { kind: 'send_nudge', courseId: t.courseId },
     }));
 
-  // V13b item 3: a building-stage inquiry with unaddressed change requests is
-  // always OUR move, regardless of age — the course already told us what to
-  // fix. Anchored the same way the inquiry detail page anchors it (per-round,
-  // via computeOpenChanges), so this can never disagree with that page.
-  const changesRequestedAmber: Row[] = buildingInquiriesForChanges
-    .map(inq => ({ inq, open: computeOpenChanges(inq.events) }))
-    .filter(({ open }) => open.length > 0)
-    .map(({ inq, open }) => {
-      const categories = open.map(it => CATEGORY_LABEL[it.category] || it.category).join(', ');
-      const oldestRequest = oldestOpenChangeRequestDate(inq.events);
-      return {
-        id: `cr-${inq.id}`,
-        who: inq.courseName,
-        why: `Changes requested — ${categories}`,
-        doThis: `Address each item on the inquiry (${categories}), then send an updated preview.`,
-        ageDays: oldestRequest ? Math.floor((now.getTime() - oldestRequest.getTime()) / 86400000) : 0,
-        actionLabel: 'Open',
-        href: `/admin/inquiries/${inq.id}`,
-      };
-    });
-
   const amber: Row[] = [
-    ...waitingOnUsRows,
+    ...pipelineRows,
     ...draftsAmberRows,
-    ...previewSentAmber,
-    ...sheetNoResponseRows,
     ...threadAmber,
-    ...changesRequestedAmber,
   ].sort((a, b) => b.ageDays - a.ageDays).slice(0, 5);
 
-  const amberCount = waitingOnUsCount + draftsAmberCount + previewSentAmber.length + sheetNoResponseCount + threadAmber.length + changesRequestedAmber.length;
+  // One row per inquiry means this is finally a count of things to do rather
+  // than a count of reasons — the badge used to add the same inquiry up to
+  // three times.
+  const amberCount = pipelineRows.length + draftsAmberCount + threadAmber.length;
 
   // ---- revenue: cumulative money ticker (A-01e — supersedes the A-01c bars) ----
   // Every point is inherently an honest "so far" comparison: both the current
