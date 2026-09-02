@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-02T20:27:59.622Z",
+  "generatedAt": "2026-09-02T20:35:48.956Z",
   "repo": {
-    "head": "7023411",
+    "head": "96c0693",
     "branch": "main",
     "dirtyCount": 2,
     "dirty": [
@@ -11,11 +11,11 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-02T15:47:09-04:00",
+    "queueLastCommit": "2026-09-02T16:28:00-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 123,
+    "runDone": 124,
     "runAwaiting": 8,
     "runInFlight": 1,
     "runNotStarted": 30,
@@ -27,7 +27,7 @@
   "inFlight": [
     {
       "title": "BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET",
-      "line": 1370,
+      "line": 1380,
       "body": [
         "FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because \"no linked inquiry\" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding them outright. FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() + a \"Force delete permanently\" button per acknowledged orphan — owner-only, typed name confirm, server re-verifies the course is still an orphan before touching anything (refuses if it turns out to have a real inquiry link — this can never be used to route around the doctrine for a real course). This is the mechanism for Cam's DaisyLinks exception, but I have NOT executed it against DaisyLinks yet:",
         "- Last session's raw Prisma script (a read-only check confirming Fake",
@@ -165,87 +165,87 @@
     },
     {
       "title": "MP-4e — a swallowed re-submission still DISCARDS its payload. When a",
-      "line": 859,
+      "line": 869,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-4d — Overview action queue still derives \"waiting on us\" itself:",
-      "line": 866,
+      "line": 876,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-5 — courses reshape: evidence on list rows (already computed, never",
-      "line": 875,
+      "line": 885,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-6 — money reshape: Revenue problems pinned all-time + collected-basis",
-      "line": 879,
+      "line": 889,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-7 — comms merge: Broadcasts composer into Messages (owner-only),",
-      "line": 883,
+      "line": 893,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-8 — chrome + System: sidebar real links + self-fetched badges +",
-      "line": 887,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in",
-      "line": 891,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,",
       "line": 897,
       "section": "Queue (run in this order)"
     },
     {
-      "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved",
+      "title": "MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in",
       "line": 901,
       "section": "Queue (run in this order)"
     },
     {
+      "title": "MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,",
+      "line": 907,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved",
+      "line": 911,
+      "section": "Queue (run in this order)"
+    },
+    {
       "title": "MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState",
-      "line": 918,
+      "line": 928,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:",
-      "line": 923,
+      "line": 933,
       "section": "Queue (run in this order)"
     },
     {
       "title": "COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)",
-      "line": 944,
+      "line": 954,
       "section": "Queue (run in this order)"
     },
     {
       "title": "COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small)",
-      "line": 945,
+      "line": 955,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
-      "line": 967,
+      "line": 977,
       "section": "Queue (run in this order)"
     },
     {
       "title": "ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule), every dashboard ta",
-      "line": 987,
+      "line": 997,
       "section": "Queue (run in this order)"
     },
     {
       "title": "ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → \"Send updated preview\"), Messa",
-      "line": 989,
+      "line": 999,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
-      "line": 1046,
+      "line": 1056,
       "section": "Queue (run in this order)"
     }
   ],
@@ -283,7 +283,7 @@
     {
       "item": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
       "note": "CAM: confirm the state before this runs — e",
-      "line": 967
+      "line": 977
     }
   ],
   "ideas": {
@@ -806,6 +806,16 @@
   },
   "recentCommits": [
     {
+      "h": "96c0693",
+      "date": "2026-09-02",
+      "subject": "Send a decline email when an inquiry is rejected"
+    },
+    {
+      "h": "08d1c47",
+      "date": "2026-09-02",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "7023411",
       "date": "2026-09-02",
       "subject": "Fix the duplicate-intake guard: a duplicate is the same course, not the same person"
@@ -854,16 +864,6 @@
       "h": "703a7d0",
       "date": "2026-09-01",
       "subject": "Status board: fix the Windows git calls, regenerate, and make it a per-run step"
-    },
-    {
-      "h": "ae37ae1",
-      "date": "2026-09-01",
-      "subject": "Add the status board (STATUS.md/json/html + generators); gitignore AUDIT_MASTER.md"
-    },
-    {
-      "h": "0001c5f",
-      "date": "2026-09-01",
-      "subject": "queue/spec update — MP-3 shipped across five migrations"
     }
   ]
 }

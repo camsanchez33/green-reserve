@@ -856,6 +856,16 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       only. The re-submit event records what was actually submitted, so a
       swallowed duplicate leaves evidence; queueSignal matches the marker by
       prefix. 5 assertions passed. NEEDS REVIEW.
+    - [x] Rejection email (96c0693) — `sendInquiryDeclinedEmail`: short, polite,
+      door left open, and it never names the internal closeReason. Notifying is
+      an EXPLICIT `sendEmail` flag, not a side effect of the status change,
+      because bulk archive routes through the same `reject` action and a
+      default-on flag would make one mis-aimed bulk confirm an unrecallable
+      mailshot; the bulk modal now says it sends nothing. The send is awaited
+      and its outcome returned, so a bounce surfaces in the admin instead of
+      joining the fire-and-forget pile whose "Email failed" UI is dead code.
+      Closing as Duplicate defaults the notification OFF — that course is
+      mid-onboarding under another inquiry. NEEDS REVIEW.
     - [ ] MP-4e — a swallowed re-submission still DISCARDS its payload. When a
       course fills the form again with a new phone number, a corrected course
       name or fresh notes, none of it is stored — only the fact that they
