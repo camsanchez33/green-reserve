@@ -27,7 +27,8 @@ export async function GET(req: NextRequest) {
     prisma.booking.count({ where: { courseId, status: { in: COMPLETED_BOOKING_STATUSES } } }),
     prisma.booking.aggregate({ where: { courseId, status: { in: COMPLETED_BOOKING_STATUSES }, createdAt: { gte: thirtyDaysAgo } }, _sum: { greenFeeTotal: true, accessFeeTotal: true, totalAmount: true }, _count: { id: true } }),
     prisma.courseStaff.findMany({ where: { courseId }, select: { id: true, name: true, email: true, role: true, active: true } }),
-    prisma.booking.aggregate({ where: { courseId }, _max: { createdAt: true } }),
+    // MP-5a: unfiltered, so a cancelled booking read as "Last booking: today".
+    prisma.booking.aggregate({ where: { courseId, status: { in: COMPLETED_BOOKING_STATUSES } }, _max: { createdAt: true } }),
     prisma.booking.count({ where: { courseId, status: { in: COMPLETED_BOOKING_STATUSES }, createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } } }),
     getApprovalState(courseId),
     prisma.message.count({ where: { thread: { courseId }, senderType: 'operator', readAt: null, isBroadcast: false } }),

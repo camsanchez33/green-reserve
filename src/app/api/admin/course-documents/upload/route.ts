@@ -30,8 +30,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'File too large (15MB max)' }, { status: 400 });
   }
 
+  // MP-5a: these are signed contracts. As public blobs they were readable by
+  // anyone who ever saw the URL — no session, no expiry, and nothing to revoke.
+  // Private blobs are served only through the authenticated download route.
   const blob = await put(`course-documents/${courseId}/${Date.now()}-${file.name}`, file, {
-    access: 'public',
+    access: 'private',
     contentType: 'application/pdf',
   });
 

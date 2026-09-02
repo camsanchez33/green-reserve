@@ -23,6 +23,24 @@ function minutesToTime(m: number): string {
  * golfer's paid booking. Booked slots are left untouched; only empty slots are
  * deleted/recreated to pick up schedule or pricing changes.
  */
+/**
+ * Rebuild the rolling tee-sheet window after a schedule changes.
+ *
+ * MP-5a: creating a schedule regenerated; editing and deleting one did not.
+ * A deleted schedule's slots therefore stayed on sale for up to eight days —
+ * golfers could book a time the course no longer offered. generateTeeTimes is
+ * idempotent and never touches booked or operator-blocked slots, so replaying
+ * the window is the whole fix.
+ */
+export async function regenerateUpcoming(courseId: string, days = 8): Promise<void> {
+  const today = new Date();
+  for (let i = 0; i < days; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() + i);
+    await generateTeeTimes(courseId, d.toISOString().split('T')[0]);
+  }
+}
+
 export async function generateTeeTimes(courseId: string, dateStr: string): Promise<number> {
   const d = new Date(dateStr + 'T12:00:00');
   const dayOfWeek = d.getDay();

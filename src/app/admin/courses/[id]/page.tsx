@@ -189,6 +189,10 @@ export default function CourseDetailPage() {
 
   // Members tab
   const [membersData, setMembersData] = useState<{ tiers: TierRow[]; members: MemberRow[] } | null>(null);
+  const [membersError, setMembersError] = useState('');
+  const [schedDeleteTarget, setSchedDeleteTarget] = useState<string | null>(null);
+  const [schedDeleteBusy, setSchedDeleteBusy] = useState(false);
+  const [schedDeleteError, setSchedDeleteError] = useState('');
   const [membersLoading, setMembersLoading] = useState(false);
 
   // Staff tab
@@ -267,10 +271,22 @@ export default function CourseDetailPage() {
     setTxLoading(false);
   }, [courseId, H]);
 
+  // MP-5a: this swallowed every failure — no catch, no else. A 403 or a
+  // dropped connection left membersData null, and the empty state then told
+  // the reader to "click Load above", a button this tab has never had. The
+  // documents loader right below always did this correctly; copy it.
   const loadMembers = useCallback(async () => {
-    setMembersLoading(true);
-    const r = await fetch(`/api/admin/course-members?courseId=${courseId}`, { headers: H() });
-    if (r.ok) setMembersData(await r.json());
+    setMembersLoading(true); setMembersError('');
+    try {
+      const r = await fetch(`/api/admin/course-members?courseId=${courseId}`, { headers: H() });
+      if (r.ok) setMembersData(await r.json());
+      else {
+        const e = await r.json().catch(() => ({}));
+        setMembersError(e.error || (r.status === 403 ? 'Members require manager access.' : 'Could not load members.'));
+      }
+    } catch {
+      setMembersError('Network error loading members. Check your connection.');
+    }
     setMembersLoading(false);
   }, [courseId, H]);
 
@@ -468,9 +484,26 @@ export default function CourseDetailPage() {
     else setSchedMsg('error');
   }
 
+  // MP-5a: fired straight off the trash icon with no confirm and no failure
+  // path — a mis-click removed a course's entire bookable window, and a failed
+  // delete looked exactly like a successful one.
   async function deleteSchedule(id: string) {
-    await fetch('/api/admin/schedule', { method: 'DELETE', headers: H(), body: JSON.stringify({ id }) });
-    loadSchedules();
+    setSchedDeleteBusy(true); setSchedDeleteError('');
+    try {
+      const r = await fetch('/api/admin/schedule', { method: 'DELETE', headers: H(), body: JSON.stringify({ id }) });
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({}));
+        setSchedDeleteError(e.error || 'Could not delete that schedule. Nothing was changed.');
+        setSchedDeleteBusy(false);
+        return;
+      }
+      setSchedDeleteTarget(null);
+      loadSchedules();
+      loadTeeSheet(tsDate);
+    } catch {
+      setSchedDeleteError('Network error — nothing was changed.');
+    }
+    setSchedDeleteBusy(false);
   }
 
   async function blockSlot(teeTimeId: string, block: boolean) {
@@ -1171,7 +1204,10 @@ export default function CourseDetailPage() {
                     ) : (
                       <div className="divide-y divide-line-soft">
                         {docsData.documents.map((doc, i) => (
-                          <a key={i} href={doc.url} target="_blank" className="flex items-center gap-3 py-2.5 text-sm hover:text-pine transition-colors">
+                          // MP-5a: contracts are private blobs now — served
+                          // through the authenticated route, never by raw URL.
+                          <a key={i} href={`/api/admin/course-documents/download?courseId=${courseId}&url=${encodeURIComponent(doc.url)}`}
+                            target="_blank" rel="noreferrer" className="flex items-center gap-3 py-2.5 text-sm hover:text-pine transition-colors">
                             <FileText className="w-4 h-4 text-ink-muted shrink-0" />
                             <span className="flex-1 min-w-0 truncate text-ink">{doc.name}</span>
                             <span className="text-xs text-ink-faint shrink-0">{fmtDate(doc.at)} · {doc.by}</span>
@@ -1337,7 +1373,7 @@ export default function CourseDetailPage() {
                           </div>
                         </div>
                         <button
-                          onClick={() => deleteSchedule(s.id)}
+                          onClick={() => { setSchedDeleteError(''); setSchedDeleteTarget(s.id); }}
                           className="text-ink-muted hover:text-bad transition-colors p-1.5 rounded-md hover:bg-bad/5"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -1434,9 +1470,15 @@ export default function CourseDetailPage() {
           {tab === 'members' && (
             <div className="max-w-4xl">
               {membersLoading && <div className="text-center text-ink-muted py-12 text-sm">Loading...</div>}
-              {!membersLoading && !membersData && (
+              {!membersLoading && membersError && (
+                <div className="rounded-lg border border-bad/20 bg-bad/5 px-5 py-6 text-center">
+                  <p className="text-sm text-bad mb-3">{membersError}</p>
+                  <button onClick={() => loadMembers()} className="text-xs font-medium text-ink-soft hover:text-ink px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">Retry</button>
+                </div>
+              )}
+              {!membersLoading && !membersError && !membersData && (
                 <div className="text-center text-ink-muted py-12 text-sm bg-white border border-line rounded-lg">
-                  Click Load above to view members
+                  No membership data for this course.
                 </div>
               )}
               {!membersLoading && membersData && (
@@ -1880,6 +1922,38 @@ export default function CourseDetailPage() {
 
         </div>
       </div>
+
+      {/* MP-5a: deleting a schedule now says what it costs, and the rebuild it
+          triggers is described honestly — unsold slots go, sold ones stay. */}
+      {schedDeleteTarget && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-line rounded-lg p-6 w-full max-w-sm shadow-2xl">
+            <h3 className="font-serif font-medium text-ink mb-2">Delete this schedule?</h3>
+            <p className="text-sm text-ink-soft mb-2">
+              The tee sheet is rebuilt straight away, so the times this schedule was creating stop being bookable.
+            </p>
+            <p className="text-sm text-ink-soft mb-4">
+              Tee times that are already booked or blocked are kept — golfers who have paid keep their slot.
+            </p>
+            {schedDeleteError && (
+              <p className="text-xs text-bad mb-3">{schedDeleteError}</p>
+            )}
+            <div className="flex gap-3">
+              <button onClick={() => { setSchedDeleteTarget(null); setSchedDeleteError(''); }}
+                className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors">
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteSchedule(schedDeleteTarget)}
+                disabled={schedDeleteBusy}
+                className="flex-1 bg-bad hover:bg-bad/90 text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors"
+              >
+                {schedDeleteBusy ? 'Deleting…' : 'Delete schedule'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Send Preview confirm — lists both things being sent + recipient (RUN_QUEUE "Send Preview = one combined send") */}
       {showPreviewConfirm && detail?.course.operator && (

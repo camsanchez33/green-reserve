@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { scheduleMoneyFromWire, scheduleMoneyForCreate, scheduleToWire } from '@/lib/schedule-wire';
 import { centsToDollarsOr0, dollarsToCentsOr0 } from '@/lib/money';
-import { generateTeeTimes } from '@/lib/tee-sheet-engine';
+import { regenerateUpcoming } from '@/lib/tee-sheet-engine';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS } from '@/lib/admin-session';
 import { logSettingsChanged } from '@/lib/course-timeline';
 
@@ -41,13 +41,8 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // Generate next 8 days immediately, same as operator self-serve flow
-  const today = new Date();
-  for (let i = 0; i < 8; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() + i);
-    await generateTeeTimes(courseId, d.toISOString().split('T')[0]);
-  }
+  // Generate the rolling window immediately, same as the operator self-serve flow.
+  await regenerateUpcoming(courseId);
 
   await logSettingsChanged(courseId, [{ field: 'schedule', from: null, to: `${centsToDollarsOr0(schedule.greenFeeWeekdayCents)}/${centsToDollarsOr0(schedule.greenFeeWeekendCents)} added` }], session.name);
 
@@ -89,6 +84,11 @@ export async function PATCH(req: NextRequest) {
   if (data.cartFee !== undefined && dollarsToCentsOr0(data.cartFee as number) !== existing.cartFeeCents) feeChanges.push({ field: 'cartFee', from: centsToDollarsOr0(existing.cartFeeCents), to: centsToDollarsOr0(updated.cartFeeCents) });
   if (feeChanges.length > 0) await logSettingsChanged(existing.courseId, feeChanges, session.name);
 
+  // MP-5a: an edited schedule used to leave the already-generated slots alone,
+  // so changing the hours or the fee only took effect beyond the current
+  // window — the sheet kept selling the old times at the old price.
+  await regenerateUpcoming(existing.courseId);
+
   return NextResponse.json(updated);
 }
 
@@ -99,7 +99,15 @@ export async function DELETE(req: NextRequest) {
   const { id } = await req.json();
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
   const existing = await prisma.teeTimeSchedule.findUnique({ where: { id }, select: { courseId: true } });
+  if (!existing) return NextResponse.json({ error: 'Schedule not found' }, { status: 404 });
   await prisma.teeTimeSchedule.deleteMany({ where: { id } });
-  if (existing) await logSettingsChanged(existing.courseId, [{ field: 'schedule', from: 'removed', to: null }], session.name);
+  await logSettingsChanged(existing.courseId, [{ field: 'schedule', from: 'removed', to: null }], session.name);
+
+  // MP-5a: THE bug. Deleting a schedule left every slot it had already
+  // generated on sale for up to eight days, so golfers could book tee times
+  // the course had stopped offering. Booked and blocked slots survive the
+  // rebuild — only unsold ones the schedule no longer justifies are removed.
+  await regenerateUpcoming(existing.courseId);
+
   return NextResponse.json({ success: true });
 }

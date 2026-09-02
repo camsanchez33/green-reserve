@@ -74,8 +74,12 @@ export async function GET(req: NextRequest) {
       where: { status: 'active' },
       _count: { id: true },
     }),
+    // MP-5a: the one aggregate on this page with no status filter, so a
+    // cancelled booking counted as the course's last activity — quietly
+    // defeating the going-quiet detection this feeds.
     prisma.booking.groupBy({
       by: ['courseId'],
+      where: { status: { in: COMPLETED_BOOKING_STATUSES } },
       _max: { createdAt: true },
     }),
     prisma.booking.groupBy({

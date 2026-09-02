@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS } from '@/lib/admin-session';
 import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
 import { performCancellation } from '@/lib/cancel-booking';
+import { COMPLETED_BOOKING_STATUSES } from '@/lib/course-metrics';
 
 // GET /api/admin/tee-sheet?courseId=X&date=Y
 export async function GET(req: NextRequest) {
@@ -19,7 +20,11 @@ export async function GET(req: NextRequest) {
     orderBy: { time: 'asc' },
     include: {
       bookings: {
-        where: { status: 'confirmed' },
+        // MP-5a: 'confirmed' only meant a booking vanished from the admin day
+        // view the moment it was checked in — the sheet emptied as the day
+        // succeeded, and the slot chips undercounted. A cancelled booking is
+        // still excluded; those really have left the slot.
+        where: { status: { in: COMPLETED_BOOKING_STATUSES } },
         select: { id: true, golferName: true, golferEmail: true, golferPhone: true, players: true, totalAmount: true, paymentStatus: true, createdAt: true },
       },
     },
