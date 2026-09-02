@@ -4,7 +4,7 @@ import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
 import { ACTIVE_STATUSES, ARCHIVED_STATUSES, ALIVE_STATUSES, INQUIRY_SOURCES, CLOSED_REASONS, type InquiryStatus } from '@/lib/inquiry-status';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
-import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail, sendDashboardAccessEmail, sendGoLiveSimpleEmail } from '@/lib/email';
+import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail, sendDashboardAccessEmail, sendGoLiveSimpleEmail, sendInquiryDeclinedEmail } from '@/lib/email';
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 import { resolveAdminSession, requireRole, requireOwner, ownerGateError, MANAGER_PLUS, SUPPORT_PLUS, type AdminSession } from '@/lib/admin-session';
 import { encodeChangeAddressed, encodeRequestReReview } from '@/lib/change-requests';
@@ -85,7 +85,34 @@ async function handleAction(
       data: { status: 'rejected', closedReason: raw || null, snoozeUntil: null, nextFollowUpAt: null },
     });
     await logEvent(inquiryId, from, 'rejected', 'admin', raw ? `${adminName} — ${raw}` : adminName);
-    return NextResponse.json({ success: true });
+
+    // Notifying the course is EXPLICIT, never implied by the status change:
+    // bulk archive routes through this same action, and a flag that defaulted
+    // to "on" would turn one mis-aimed bulk confirm into a mailshot of
+    // rejections that cannot be recalled.
+    //
+    // Awaited, not fire-and-forget. Every other email on this page is
+    // fire-and-forget and the "Email failed" UI that was supposed to catch it
+    // is dead code, so a bounced send is invisible — a new email should not
+    // join that pile. The caller is told whether it actually went.
+    let emailSent: boolean | null = null;
+    let emailError: string | null = null;
+    if (payload?.sendEmail === true) {
+      try {
+        await sendInquiryDeclinedEmail({
+          contactName: inquiry.contactName,
+          email: inquiry.email,
+          courseName: inquiry.courseName,
+        });
+        emailSent = true;
+        await logEvent(inquiryId, 'rejected', 'rejected', 'admin', `Decline email sent to ${inquiry.email}`);
+      } catch (e) {
+        emailSent = false;
+        emailError = e instanceof Error ? e.message : String(e);
+        await logEvent(inquiryId, 'rejected', 'rejected', 'admin', `Decline email FAILED to ${inquiry.email}`);
+      }
+    }
+    return NextResponse.json({ success: true, emailSent, emailError });
   }
 
   // ── MP-4c growth columns ──────────────────────────────────────────

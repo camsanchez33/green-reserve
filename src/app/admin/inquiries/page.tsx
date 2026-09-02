@@ -754,8 +754,8 @@ function InquiriesListInner() {
               <p className="text-xs text-ink-muted mb-3">
                 {isArchive
                   ? (withCourse > 0
-                    ? `Closes each out. ${withCourse} of these have a built course — archiving takes that course offline too (restorable). The rest have no course yet, so they're marked rejected. Nothing is deleted.`
-                    : 'Marks each as rejected/closed. This does not delete anything.')
+                    ? `Closes each out. ${withCourse} of these have a built course — archiving takes that course offline too (restorable). The rest have no course yet, so they're marked rejected. Nothing is deleted, and no email is sent.`
+                    : 'Marks each as rejected/closed. Nothing is deleted, and no email is sent — reject an inquiry on its own page if the course should be told.')
                   : 'Sends the setup-sheet email to each recipient below.'}
               </p>
               <div className="max-h-48 overflow-y-auto space-y-1 mb-4 bg-paper border border-line rounded-md p-2">

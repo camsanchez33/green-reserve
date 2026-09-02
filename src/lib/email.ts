@@ -1082,6 +1082,40 @@ export async function sendDetailsRequestEmail(data: {
   });
 }
 
+// Sent when an inquiry is declined. Deliberately does NOT name the internal
+// close reason: "Price" or "Not a fit" is a note to ourselves, and a course
+// that reads it back in an email learns something we did not choose to tell
+// them. It also leaves the door open, because at this stage most declines are
+// about our capacity and sequencing, not about the course.
+export async function sendInquiryDeclinedEmail(data: {
+  contactName: string; email: string; courseName: string;
+}) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:22px;font-weight:700;">Thanks for considering GreenReserve.</h1>
+    <p style="margin:0 0 16px;color:#6b7280;font-size:15px;line-height:1.6;">
+      Hi ${data.contactName} — we&apos;ve looked over your inquiry for <strong>${data.courseName}</strong>,
+      and we&apos;re not able to take it on right now.
+    </p>
+    <p style="margin:0 0 16px;color:#6b7280;font-size:15px;line-height:1.6;">
+      That is not a verdict on your course. We are a small team bringing courses on in a deliberate order,
+      and where we are in that order changes. If you would like us to take another look later,
+      just reply to this email — we keep every inquiry on file.
+    </p>
+    <p style="margin:0 0 20px;color:#6b7280;font-size:15px;line-height:1.6;">
+      Either way, thank you for the time you spent telling us about ${data.courseName}.
+    </p>
+    <p style="margin:0;color:#98968B;font-size:12px;">
+      Questions? Reply to this email — hello@greenreserve.app.
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.email,
+    subject: `Your GreenReserve inquiry — ${data.courseName}`,
+    html,
+  });
+}
+
 export async function sendDetailsSubmittedNotification(data: { courseName: string; contactName: string }) {
   const html = baseTemplate(`
     <h2 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:700;">Setup sheet submitted ✅</h2>

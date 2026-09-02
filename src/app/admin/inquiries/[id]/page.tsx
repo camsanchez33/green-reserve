@@ -381,6 +381,7 @@ function InquiryDetailInner() {
   const [buildConfirmText, setBuildConfirmText] = useState('');
   const [snoozeDate, setSnoozeDate] = useState('');
   const [rejectReason, setRejectReason] = useState('');
+  const [rejectNotify, setRejectNotify] = useState(true);
   // The stage-aware default lands ONCE, on first load. Re-applying it after
   // every action would yank the founder off whatever tab he opened.
   const tabInitialised = useRef(false);
@@ -480,6 +481,14 @@ function InquiryDetailInner() {
           setApproveResult(d as ApproveResult);
         }
         if (act === 'add_note') setNoteText('');
+        // The decline email is awaited server-side, so a bounce is knowable
+        // here. Saying nothing would leave the founder believing a course was
+        // told when it was not.
+        if (act === 'reject' && d.emailSent === false) {
+          setActionError('Rejected, but the decline email did not send'
+            + (d.emailError ? ': ' + String(d.emailError) : '')
+            + '. The inquiry is closed — email ' + (inq?.email || 'the contact') + ' yourself if they should hear it.');
+        }
         await loadInquiry();
       } else {
         setActionError('Failed (' + r.status + '): ' + ((d.error as string) || text.slice(0, 200)));
@@ -1743,7 +1752,7 @@ function InquiryDetailInner() {
           a bare browser confirm() — each states exactly what happens and who
           gets emailed before firing. */}
       {pendingAction && (() => {
-        const close = () => { setPendingAction(null); setGoLiveOverride(''); setBuildConfirmText(''); setGoLiveChecks(null); setDeleteCourseConfirm(''); setReminderSent(new Set()); setSnoozeDate(''); setRejectReason(''); };
+        const close = () => { setPendingAction(null); setGoLiveOverride(''); setBuildConfirmText(''); setGoLiveChecks(null); setDeleteCourseConfirm(''); setReminderSent(new Set()); setSnoozeDate(''); setRejectReason(''); setRejectNotify(true); };
         const fire = (fn: () => void) => { fn(); close(); };
 
         if (pendingAction === 'delete') {
@@ -1795,16 +1804,31 @@ function InquiryDetailInner() {
         if (pendingAction === 'reject') {
           return (
             <ModalShell title="Reject this inquiry?" danger onClose={close}>
-              <p className="text-sm text-ink-soft mb-3">Moves it to Closed. No email is sent to {inq.contactName}.</p>
+              <p className="text-sm text-ink-soft mb-3">Moves it to Closed.</p>
               <label className="block text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1">Why are we losing this one?</label>
-              <select value={rejectReason} onChange={e => setRejectReason(e.target.value)} className={iCls}>
+              <select value={rejectReason} onChange={e => { setRejectReason(e.target.value); setRejectNotify(e.target.value !== 'Duplicate'); }} className={iCls}>
                 <option value="">Pick a reason&hellip;</option>
                 {CLOSED_REASONS.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
               <p className="text-[11px] text-ink-faint mt-1.5">
                 Stored on the inquiry and named in the timeline — this is the only place &quot;why do we lose leads&quot; ever gets answered.
               </p>
-              <ModalActions onCancel={close} onConfirm={() => fire(() => action('reject', { closedReason: rejectReason }))}
+              <label className="flex items-start gap-2 mt-4 cursor-pointer">
+                <input type="checkbox" checked={rejectNotify} onChange={e => setRejectNotify(e.target.checked)} className="mt-0.5" />
+                <span className="text-xs text-ink-soft">
+                  Email {inq.contactName} that we are not moving forward
+                  <span className="block text-[11px] text-ink-faint mt-0.5">
+                    A short, polite note. It never names the reason above — that stays internal.
+                  </span>
+                </span>
+              </label>
+              {rejectReason === 'Duplicate' && rejectNotify && (
+                <p className="mt-2 text-[11px] text-bad">
+                  This course is already in the pipeline under another inquiry — a decline email would tell them
+                  they have been turned down while we are still onboarding them.
+                </p>
+              )}
+              <ModalActions onCancel={close} onConfirm={() => fire(() => action('reject', { closedReason: rejectReason, sendEmail: rejectNotify }))}
                 confirmLabel="Reject" danger disabled={!rejectReason || processing}/>
             </ModalShell>
           );
