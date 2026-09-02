@@ -883,15 +883,22 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       The schema already carries a real `ChangeRequest` table for the first
       two (unused). One reworded log line breaks any of them. Migrate all
       three onto real rows (SCHEMA CHANGE, ATTENDED).
-    - [ ] MP-4d — Overview action queue still derives "waiting on us" itself:
-      `api/admin/stats/route.ts` builds three amber rows (waitingOnUs,
-      sheetNoResponse, previewSentAmber) from SQL on `updatedAt` with its own
-      3/5/7-day thresholds — the exact parallel derivation MP-4a/4b removed
-      from the Inquiries list, so Overview and Inquiries can disagree about
-      whose move an inquiry is and how old it is. MP-4c only stopped it
-      nagging about snoozed inquiries. Convert the three to `queueSignal`
-      (watch the payload size — this route must not start pulling every
-      inquiry's full event history; see ADMIN_V4_SPEC perf notes).
+    - [x] MP-4d (6a5a3dd) — Overview stops deriving "whose move is it" for
+      itself. It built FOUR overlapping amber sources in SQL over `updatedAt`
+      with its own 3/5/7-day thresholds (waitingOnUs, sheetNoResponse,
+      previewSentAmber, changesRequestedAmber) while the Inquiries list read
+      the event ledger — saving a note moved one and not the other. The four
+      also overlapped: one building inquiry with a stale preview AND open
+      change requests produced three rows and was counted three times, so the
+      amber badge counted reasons, not things to do. Now one pass over the
+      active pipeline through `queueSignal`, extracted to
+      `lib/inquiry-action-queue.ts` so the row logic is testable instead of
+      buried in a route handler. Four queries collapse to one (bounded by
+      pipeline size, not the inquiry table — the ADMIN_V4 payload warning is
+      about the client-facing list, this is server-side aggregation); the
+      three dead SQL thresholds and MP-4c's snooze stopgap go with them.
+      Per-row affordances preserved (resend_sheet, resend_preview, the
+      changes-requested category list). 20 assertions passed. NEEDS REVIEW.
   - [ ] MP-5 — courses reshape: evidence on list rows (already computed, never
     rendered), 10→6 tab split, offline/archive booking-consequence flows +
     operator notification, Feature decision (build the directory or delete the
