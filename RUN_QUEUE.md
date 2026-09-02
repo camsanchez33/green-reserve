@@ -866,13 +866,23 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       joining the fire-and-forget pile whose "Email failed" UI is dead code.
       Closing as Duplicate defaults the notification OFF — that course is
       mid-onboarding under another inquiry. NEEDS REVIEW.
-    - [ ] MP-4e — a swallowed re-submission still DISCARDS its payload. When a
-      course fills the form again with a new phone number, a corrected course
-      name or fresh notes, none of it is stored — only the fact that they
-      submitted, plus the summary line the fix above added. Decide where the
-      new payload lands (a pending-changes card on the detail page is the
-      obvious answer; adminNotes is the founder's own writing and should not
-      be machine-appended) and surface a diff against what is on file.
+    - [x] MP-4e (25b0d83) — a swallowed re-submission keeps what it carried.
+      The payload rides in the event (`RESUBMIT_PREFIX` + JSON, the same
+      JSON-in-actorName pattern the change-request loop uses — no migration,
+      see MP-4f). The detail page shows it as a diff against what is on file
+      and applies ONLY ticked fields, through the `RESUBMIT_FIELDS`
+      allow-list, so a crafted request cannot reach status/adminNotes/
+      detailsToken; a blank on the new form is silence, never an erase.
+      Reviewing writes a `RESUBMIT_REVIEWED_ACTOR` marker so `queueSignal`
+      stops calling it your move once dealt with, and a LATER re-submission
+      asks again. Legacy bare markers still count. adminNotes untouched — it
+      is the founder's own writing. 20 assertions passed. NEEDS REVIEW.
+    - [ ] MP-4f — retire the JSON-in-actorName pattern. Three separate things
+      now encode structured data into `InquiryStatusEvent.actorName`:
+      `CHANGES_REQUESTED::`, `CHANGE_ADDRESSED::` and MP-4e's `RESUBMIT::`.
+      The schema already carries a real `ChangeRequest` table for the first
+      two (unused). One reworded log line breaks any of them. Migrate all
+      three onto real rows (SCHEMA CHANGE, ATTENDED).
     - [ ] MP-4d — Overview action queue still derives "waiting on us" itself:
       `api/admin/stats/route.ts` builds three amber rows (waitingOnUs,
       sheetNoResponse, previewSentAmber) from SQL on `updatedAt` with its own
