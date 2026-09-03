@@ -955,16 +955,38 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       — now an explicit "Data check" button, since it is a tripwire for an
       invariant that should never break, not a scan to run on every visit.
       10 assertions on the shared formatters. NEEDS REVIEW.
-    - [ ] MP-5d — detail tabs 10 → 6: Overview · Money · Records · Messages ·
+    - [x] MP-5e part 1 — sheet-vs-live config diff (2b67440). New
+      `lib/sheet-vs-live.ts`: compares the inquiry row + setup sheet against
+      the built Course and renders the disagreements on the course Overview.
+      Read-only by design — a drift can mean an admin fixed a typo after
+      building OR that the build got it wrong, and only a human knows which.
+      Casing/padding is not drift; a blank on the intake side is silence, not
+      an erase; the sheet is diffed server-side so it never crosses the wire.
+      Running it against PRODUCTION before shipping caught a false positive:
+      it flagged the free-cancellation window on every no-fee course, because
+      the setup form leaves "24" in cancellationHours even when the course
+      answers "no policy" and the builder correctly writes 0. Now mirrors the
+      builder's `hasCancellationPolicy` gate; production reports zero drift.
+      19 assertions. NEEDS REVIEW.
+    - [ ] MP-5e part 2 — CAM'S DECISION NEEDED: the Feature button. Verified
+      2026-09-03: `/api/courses` supports `featured=1` and orders by it but
+      has ZERO callers anywhere in src/, and `src/app/courses/` contains only
+      `[slug]` — there is no golfer course directory, so the star button on
+      the course header changes nothing a golfer can see. Either build the
+      directory (a real feature: index page, search, cards, and it is not in
+      the perf-audit page list) or delete the button. Not guessing this one.
+    - [ ] MP-5e part 3 — the Overview relationship feed (notes + settings
+      changes + messages + status events all exist, none rendered as one
+      chronological timeline), operator engagement (last dashboard login),
+      an all-time "this course has earned GR $X" line, and real
+      `firstWentLiveAt` so health stops reading a failed welcome email as
+      "setup incomplete" forever (SCHEMA CHANGE, ATTENDED — needs the
+      migration checklist, a Neon branch and Cam present).
+    - [ ] MP-5d — detail tabs 10 -> 6: Overview · Money · Records · Messages ·
       Operate (merged Tee Sheet + Schedule, all mutations through the shared
       services) · Setup. Staff tab dies (its one action moves to Overview's
-      contact rail); Members becomes a read-only card.
-    - [ ] MP-5e — Feature decision (the flag drives an admin filter and an
-      ordering in /api/courses, which has ZERO callers — build the golfer
-      directory or delete the button), sheet-vs-live config diff card, the
-      Overview relationship feed, and real `firstWentLiveAt` so health stops
-      reading a failed welcome email as "setup incomplete" forever
-      (SCHEMA CHANGE, ATTENDED).
+      contact rail); Members becomes a read-only card. Deferred behind 5e
+      because it is ergonomics on a 2,180-line page, not a correctness fix.
   - [ ] MP-6 — money reshape: Revenue problems pinned all-time + collected-basis
     P&L + payout history + unit economics; Golfers record page + palette search
     extension + support actions (cancel, receipt, card-update link); red sidebar
