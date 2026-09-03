@@ -65,6 +65,9 @@ interface CourseDetail {
   bookings30d: number;
   lastBookingAt: string | null;
   bookingsPrior30d: number;
+  // MP-5e: what the course told us vs what golfers see. Server-computed —
+  // the setup sheet itself never crosses the wire.
+  configDrift?: { field: string; label: string; sheet: string; live: string }[];
   approval: { status: 'none' | 'approved' | 'changes_requested'; approvedAt: string | null };
   health: { status: CourseHealthStatus; label: string; dot: 'ok' | 'bad' | 'warn' | 'neutral'; reason: string };
   openItems: { unreadMessages: number; openChanges: string[]; hasSchedule: boolean };
@@ -923,6 +926,54 @@ export default function CourseDetailPage() {
                         <li key={i} className="text-sm text-ink-soft">{line.replace(/^• /, '')}</li>
                       ))}
                     </ul>
+                  </div>
+                )}
+
+                {/* MP-5e: the intake typo that survives to production. An
+                    inquiry saying "Mahwah, AL" and a live course saying
+                    "MAHWAH, NJ" both sit in the database one screen apart, and
+                    nothing had ever put them side by side. Read-only on
+                    purpose: a drift can mean an admin fixed a typo after
+                    building (the sheet is stale) or that the build got it
+                    wrong, and only a human knows which. */}
+                {detail.configDrift && detail.configDrift.length > 0 && (
+                  <div className="bg-white border border-warn/30 rounded-lg p-5">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="text-[11px] uppercase tracking-[0.06em] text-warn">
+                        Setup sheet disagrees with the live course
+                      </div>
+                      <span className="text-[11px] text-ink-faint">
+                        {detail.configDrift.length} field{detail.configDrift.length === 1 ? '' : 's'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-ink-soft mb-3">
+                      Neither side is assumed correct — this only shows that they differ.
+                    </p>
+                    <div className="border border-line rounded-md divide-y divide-line">
+                      <div className="grid grid-cols-[1fr_1fr_1fr] gap-3 px-3 py-2 bg-paper">
+                        <span className="text-[10px] uppercase tracking-[0.06em] text-ink-muted">Field</span>
+                        <span className="text-[10px] uppercase tracking-[0.06em] text-ink-muted">They told us</span>
+                        <span className="text-[10px] uppercase tracking-[0.06em] text-ink-muted">Golfers see</span>
+                      </div>
+                      {detail.configDrift.map(d2 => (
+                        <div key={d2.field} className="grid grid-cols-[1fr_1fr_1fr] gap-3 px-3 py-2">
+                          <span className="text-xs text-ink-muted truncate">{d2.label}</span>
+                          <span className="text-xs text-ink-soft break-words">{d2.sheet}</span>
+                          <span className="text-xs text-ink font-medium break-words">{d2.live}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-3 mt-3">
+                      <button onClick={() => setTab('setup')} className="text-xs font-medium text-pine hover:text-pine-hover transition-colors">
+                        Fix on Setup
+                      </button>
+                      {detail.origin && (
+                        <a href={`/admin/inquiries/${detail.origin.inquiryId}`}
+                          className="text-xs text-ink-muted hover:text-ink transition-colors">
+                          Open their sheet
+                        </a>
+                      )}
+                    </div>
                   </div>
                 )}
 

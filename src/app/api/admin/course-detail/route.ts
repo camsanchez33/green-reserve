@@ -5,6 +5,7 @@ import { sendCourseLiveOrientationEmail } from '@/lib/email';
 import { getApprovalState } from '@/lib/approval-state';
 import { COMPLETED_BOOKING_STATUSES, computeCourseHealth } from '@/lib/course-metrics';
 import { closureImpact, cancelFutureBookingsForClosure, notifyOperatorOfClosure } from '@/lib/course-closure';
+import { sheetVsLive } from '@/lib/sheet-vs-live';
 import { computeOpenChanges, CATEGORY_LABEL } from '@/lib/change-requests';
 import { getCourseTimeline, isRemindersPaused, hasAcceptedAgreement, latestAgreementAcceptance } from '@/lib/course-timeline';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
@@ -33,7 +34,18 @@ export async function GET(req: NextRequest) {
     prisma.booking.count({ where: { courseId, status: { in: COMPLETED_BOOKING_STATUSES }, createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } } }),
     getApprovalState(courseId),
     prisma.message.count({ where: { thread: { courseId }, senderType: 'operator', readAt: null, isBroadcast: false } }),
-    prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId }, select: { id: true, createdAt: true, events: { select: { actorName: true, toStatus: true, createdAt: true } } } }),
+    // MP-5e: the intake side of the sheet-vs-live comparison. detailsJson can
+    // be large, so it is read here and DIFFED here — only the drift rows go
+    // over the wire, never the whole sheet.
+    prisma.courseInquiry.findFirst({
+      where: { builtCourseId: courseId },
+      select: {
+        id: true, createdAt: true,
+        courseName: true, courseType: true, address: true, city: true,
+        state: true, zipCode: true, phone: true, website: true, detailsJson: true,
+        events: { select: { actorName: true, toStatus: true, createdAt: true } },
+      },
+    }),
     getCourseTimeline(courseId),
   ]);
 
@@ -53,6 +65,15 @@ export async function GET(req: NextRequest) {
   });
 
   const openChanges = linkedInquiry ? computeOpenChanges(linkedInquiry.events) : [];
+
+  // MP-5e: what the course told us vs what golfers see. Computed server-side
+  // so the sheet itself never has to be shipped to the browser.
+  const configDrift = sheetVsLive(linkedInquiry, {
+    name: course.name, type: course.type, address: course.address, city: course.city,
+    state: course.state, zipCode: course.zipCode, phone: course.phone,
+    website: course.website, holes: course.holes, par: course.par,
+    cancellationHours: course.cancellationHours, description: course.description,
+  });
 
   // A-05/ORPHAN SWEEP item 2 (FUTURE-PROOF) — the origin card: when did this
   // inquiry get picked up? First transition out of 'pending', falling back
@@ -76,6 +97,7 @@ export async function GET(req: NextRequest) {
     bookings30d,
     lastBookingAt: lastBookingAgg._max.createdAt?.toISOString() ?? null,
     bookingsPrior30d: priorBookingsCount,
+    configDrift,
     // Approval is course-level truth, not inquiry trivia (RUN_QUEUE
     // "approval propagates + gates previews", item 1).
     approval: { status: approval.status, approvedAt: approval.approvedAt?.toISOString() ?? null },
