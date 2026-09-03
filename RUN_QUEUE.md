@@ -945,11 +945,16 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       impact query was verified read-only against production (correct date
       cutoff, zero false positives) but nothing exercises a real cancellation.
       Cam must walk it with a live future booking. NEEDS REVIEW.
-    - [ ] MP-5c — the list: put the evidence on the row (last booking, 30d
-      bookings, trend, revenue are ALREADY computed and rendered nowhere, which
-      is why two courses both show a green "Healthy" pill with nothing behind
-      it); rename "Offline" (it lumps never-live drafts with deliberately
-      paused courses); move the orphan sweep off list-mount.
+    - [x] MP-5c (c433c83) — the list row carries its evidence: 30d bookings
+      with a trend vs the prior 30 (periodDelta — null prior shows nothing,
+      never a fabricated 0%), 30d fees, and last-booking age. All four were
+      already fetched and rendered nowhere. `lastBookingLabel` moved into
+      course-metrics so the list and detail page cannot word it differently.
+      "Offline" → "Not live" (the bucket is mostly never-live drafts; the
+      honest split needs firstWentLiveAt, MP-5e). Orphan sweep off list-mount
+      — now an explicit "Data check" button, since it is a tripwire for an
+      invariant that should never break, not a scan to run on every visit.
+      10 assertions on the shared formatters. NEEDS REVIEW.
     - [ ] MP-5d — detail tabs 10 → 6: Overview · Money · Records · Messages ·
       Operate (merged Tee Sheet + Schedule, all mutations through the shared
       services) · Setup. Staff tab dies (its one action moves to Overview's

@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-02T22:26:07.465Z",
+  "generatedAt": "2026-09-03T13:19:34.072Z",
   "repo": {
-    "head": "853bfb0",
+    "head": "c433c83",
     "branch": "main",
     "dirtyCount": 2,
     "dirty": [
@@ -11,14 +11,14 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-02T17:20:13-04:00",
+    "queueLastCommit": "2026-09-02T18:26:08-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 128,
+    "runDone": 129,
     "runAwaiting": 8,
     "runInFlight": 1,
-    "runNotStarted": 32,
+    "runNotStarted": 31,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -27,7 +27,7 @@
   "inFlight": [
     {
       "title": "BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET",
-      "line": 1454,
+      "line": 1459,
       "body": [
         "FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because \"no linked inquiry\" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding them outright. FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() + a \"Force delete permanently\" button per acknowledged orphan — owner-only, typed name confirm, server re-verifies the course is still an orphan before touching anything (refuses if it turns out to have a real inquiry link — this can never be used to route around the doctrine for a real course). This is the mechanism for Cam's DaisyLinks exception, but I have NOT executed it against DaisyLinks yet:",
         "- Last session's raw Prisma script (a read-only check confirming Fake",
@@ -45,49 +45,49 @@
       "line": 390,
       "hash": "7246a62",
       "shipDate": "2026-08-29",
-      "ageDays": 3
+      "ageDays": 4
     },
     {
       "title": "MP-1",
       "line": 420,
       "hash": "41f5ea8",
       "shipDate": "2026-08-29",
-      "ageDays": 3
+      "ageDays": 4
     },
     {
       "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
       "line": 455,
       "hash": "4ef11dd",
       "shipDate": "2026-08-29",
-      "ageDays": 3
+      "ageDays": 4
     },
     {
       "title": "MP-2",
       "line": 496,
       "hash": "958f229",
       "shipDate": "2026-08-29",
-      "ageDays": 3
+      "ageDays": 4
     },
     {
       "title": "MP-2b",
       "line": 533,
       "hash": "a134af5",
       "shipDate": "2026-08-29",
-      "ageDays": 3
+      "ageDays": 4
     },
     {
       "title": "MP-2c",
       "line": 582,
       "hash": "e5b5413",
       "shipDate": "2026-08-29",
-      "ageDays": 3
+      "ageDays": 4
     },
     {
       "title": "MP-2d",
       "line": 630,
       "hash": "22d0f68",
       "shipDate": "2026-08-29",
-      "ageDays": 3
+      "ageDays": 4
     },
     {
       "title": "MP-2e",
@@ -174,88 +174,83 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "MP-5c — the list: put the evidence on the row (last booking, 30d",
-      "line": 948,
-      "section": "Queue (run in this order)"
-    },
-    {
       "title": "MP-5d — detail tabs 10 → 6: Overview · Money · Records · Messages ·",
-      "line": 953,
+      "line": 958,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-5e — Feature decision (the flag drives an admin filter and an",
-      "line": 957,
+      "line": 962,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-6 — money reshape: Revenue problems pinned all-time + collected-basis",
-      "line": 963,
+      "line": 968,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-7 — comms merge: Broadcasts composer into Messages (owner-only),",
-      "line": 967,
+      "line": 972,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-8 — chrome + System: sidebar real links + self-fetched badges +",
-      "line": 971,
+      "line": 976,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in",
-      "line": 975,
+      "line": 980,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,",
-      "line": 981,
+      "line": 986,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved",
-      "line": 985,
+      "line": 990,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState",
-      "line": 1002,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:",
       "line": 1007,
       "section": "Queue (run in this order)"
     },
     {
+      "title": "BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:",
+      "line": 1012,
+      "section": "Queue (run in this order)"
+    },
+    {
       "title": "COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)",
-      "line": 1028,
+      "line": 1033,
       "section": "Queue (run in this order)"
     },
     {
       "title": "COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small)",
-      "line": 1029,
+      "line": 1034,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
-      "line": 1051,
+      "line": 1056,
       "section": "Queue (run in this order)"
     },
     {
       "title": "ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule), every dashboard ta",
-      "line": 1071,
+      "line": 1076,
       "section": "Queue (run in this order)"
     },
     {
       "title": "ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → \"Send updated preview\"), Messa",
-      "line": 1073,
+      "line": 1078,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
-      "line": 1130,
+      "line": 1135,
       "section": "Queue (run in this order)"
     }
   ],
@@ -293,7 +288,7 @@
     {
       "item": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
       "note": "CAM: confirm the state before this runs — e",
-      "line": 1051
+      "line": 1056
     }
   ],
   "ideas": {
@@ -816,6 +811,16 @@
   },
   "recentCommits": [
     {
+      "h": "c433c83",
+      "date": "2026-09-03",
+      "subject": "MP-5c: put the evidence the API already computes on the course row"
+    },
+    {
+      "h": "b13e444",
+      "date": "2026-09-02",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "853bfb0",
       "date": "2026-09-02",
       "subject": "MP-5b: closing a course stops stranding its golfers"
@@ -862,16 +867,6 @@
     },
     {
       "h": "08d1c47",
-      "date": "2026-09-02",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "7023411",
-      "date": "2026-09-02",
-      "subject": "Fix the duplicate-intake guard: a duplicate is the same course, not the same person"
-    },
-    {
-      "h": "0a62bd8",
       "date": "2026-09-02",
       "subject": "queue/spec update"
     }
