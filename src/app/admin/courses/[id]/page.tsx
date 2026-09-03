@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
-import { periodDelta, type CourseHealthStatus } from '@/lib/course-metrics';
+import { periodDelta, lastBookingLabel, type CourseHealthStatus } from '@/lib/course-metrics';
 
 type TabName = 'overview' | 'transactions' | 'documents' | 'messages' | 'teesheet' | 'schedule' | 'members' | 'staff' | 'setup';
 
@@ -905,8 +905,7 @@ export default function CourseDetailPage() {
           {tab === 'overview' && (() => {
             const steps = onboardingSteps(detail);
             const doneSteps = steps.filter(s => s.done).length;
-            const lastDays = detail.lastBookingAt ? Math.floor((Date.now() - new Date(detail.lastBookingAt).getTime()) / 86400000) : null;
-            const lastLabel = detail.lastBookingAt ? (lastDays === 0 ? 'Today' : lastDays === 1 ? '1d ago' : lastDays! < 14 ? `${lastDays}d ago` : lastDays! < 60 ? `${Math.floor(lastDays!/7)}w ago` : `${Math.floor(lastDays!/30)}mo ago`) : 'Never';
+            const lastLabel = lastBookingLabel(detail.lastBookingAt);
             const trend = periodDelta(detail.bookings30d, detail.bookingsPrior30d);
             const openItemsList = [
               ...(detail.openItems.unreadMessages > 0 ? [`${detail.openItems.unreadMessages} unread message${detail.openItems.unreadMessages !== 1 ? 's' : ''}`] : []),

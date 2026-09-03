@@ -46,6 +46,21 @@ export function periodDelta(current: number, prior: number): PeriodDelta {
   return { pct, direction: pct > 0.5 ? 'up' : pct < -0.5 ? 'down' : 'flat' };
 }
 
+/**
+ * "Last booking" as a human reads it. MP-5c: the detail page had this inline
+ * and the list had nothing; putting the evidence on both rows without sharing
+ * the formatter is how "3d ago" and "3 days" end up on the same screen.
+ */
+export function lastBookingLabel(iso: string | null | undefined): string {
+  if (!iso) return 'No bookings yet';
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (days <= 0) return 'Today';
+  if (days === 1) return '1d ago';
+  if (days < 14) return `${days}d ago`;
+  if (days < 60) return `${Math.floor(days / 7)}w ago`;
+  return `${Math.floor(days / 30)}mo ago`;
+}
+
 // ---- Course health status (worst-truth-wins worded chip) ------------------
 // Used by BOTH the courses list (batch) and the course detail header (single)
 // so the two can never disagree about what a course's status word means.

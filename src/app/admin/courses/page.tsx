@@ -8,7 +8,7 @@ import { Star, RefreshCw, Search } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
-import { HEALTH_STATUS_SEVERITY, type CourseHealthStatus } from '@/lib/course-metrics';
+import { HEALTH_STATUS_SEVERITY, periodDelta, lastBookingLabel, type CourseHealthStatus } from '@/lib/course-metrics';
 
 const PAGE_SIZE = 50;
 
@@ -118,11 +118,10 @@ function CoursesContent() {
     setOrphanAcknowledged(res.data.acknowledged ?? []);
   }, []);
 
-  useEffect(() => {
-    if (!adminReady || orphanChecked) return;
-    setOrphanChecked(true);
-    checkOrphans();
-  }, [adminReady, orphanChecked, checkOrphans]);
+  // MP-5c: this used to fire on every visit to the courses list — a
+  // data-repair scan running as a side effect of looking at a page. It is a
+  // tripwire for an invariant that should never break, not something to run
+  // hundreds of times a week, so it is an explicit click now.
 
   // MP-2d B4: no try/catch, so a rejected fetch left orphanRunning true and the
   // button read "Cleaning up..." until a reload.
@@ -315,7 +314,12 @@ function CoursesContent() {
           <div className="flex items-center gap-2 mb-5 flex-wrap">
             {/* A-04b: segmented control owns STATE only — Live / Offline / Archived */}
             <div className="flex items-center gap-1 bg-white border border-line rounded-lg p-1">
-              {([['live', 'Live'], ['offline', 'Offline'], ['archived', 'Archived']] as const).map(([key, label]) => (
+              {/* MP-5c: "Offline" read as "a course we switched off", but this
+                  bucket is mostly courses that have never been live at all —
+                  drafts still in setup. "Not live" is the honest umbrella; the
+                  health word on each row says which kind it is. Splitting the
+                  two properly needs a real firstWentLiveAt (MP-5e). */}
+              {([['live', 'Live'], ['offline', 'Not live'], ['archived', 'Archived']] as const).map(([key, label]) => (
                 <button
                   key={key}
                   onClick={() => { setStateFilter(key); setFilterHealth('all'); }}
@@ -356,6 +360,18 @@ function CoursesContent() {
               </>
             )}
 
+            {/* MP-5c: the orphan sweep is a deliberate check now, not a
+                side effect of opening the page. */}
+            <button
+              onClick={() => { setOrphanChecked(true); checkOrphans(); }}
+              className={'px-3 py-1.5 rounded-md text-[11px] font-medium border transition-colors ' + (
+                orphanChecked ? 'text-ink border-line-strong bg-paper' : 'text-ink-muted border-line hover:border-line-strong hover:text-ink'
+              )}
+              title="Check for courses and inquiries that lost their link to each other"
+            >
+              {orphanChecked && orphanItems.length === 0 && !orphanNote ? 'Data check — clean' : 'Data check'}
+            </button>
+
             <div className="flex items-center gap-1 bg-white border border-line rounded-lg p-1 ml-auto">
               {(['severity', 'newest', 'name'] as const).map(s => (
                 <button
@@ -395,9 +411,37 @@ function CoursesContent() {
                     {course.city}, {course.state} · <span className="capitalize">{course.type || 'public'}</span>
                   </div>
                 </div>
-                <div className="w-44 min-w-0 hidden md:block">
+                <div className="w-36 min-w-0 hidden xl:block">
                   <div className="text-xs text-ink-soft truncate">{course.operator?.name || 'No operator'}</div>
                 </div>
+
+                {/* MP-5c: the API has ALWAYS computed these — 30d bookings,
+                    the prior period to trend against, revenue and the last
+                    booking — and the row rendered none of them, which is why
+                    two courses could both show a green "Healthy" with nothing
+                    behind it. The evidence is already paid for; show it. */}
+                {(() => {
+                  const trend = periodDelta(course.bookings30d, course.bookingsPrior30d ?? 0);
+                  const trendText = trend.pct === null ? null : `${trend.pct > 0 ? '+' : ''}${Math.round(trend.pct)}%`;
+                  const trendClass = trend.direction === 'up' ? 'text-ok' : trend.direction === 'down' ? 'text-bad' : 'text-ink-faint';
+                  return (
+                    <>
+                      <div className="w-24 shrink-0 text-right hidden lg:block">
+                        <div className="text-xs text-ink">
+                          {course.bookings30d}
+                          <span className="text-ink-muted"> in 30d</span>
+                          {trendText && <span className={'ml-1.5 ' + trendClass}>{trendText}</span>}
+                        </div>
+                        <div className="text-[10px] text-ink-faint">{lastBookingLabel(course.lastBookingAt)}</div>
+                      </div>
+                      <div className="w-16 shrink-0 text-right hidden lg:block">
+                        <div className="text-xs text-ink">${Math.round(course.revenue30d)}</div>
+                        <div className="text-[10px] text-ink-faint">fees 30d</div>
+                      </div>
+                    </>
+                  );
+                })()}
+
                 <div className="shrink-0 text-right" title={course.health.reason}>
                   <span className={
                     'text-xs font-medium px-2 py-1 rounded-md inline-block ' + (
