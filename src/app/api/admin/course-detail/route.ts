@@ -188,6 +188,12 @@ export async function PATCH(req: NextRequest) {
     data.active = active;
     data.liveStatus = active ? 'live' : 'draft';
   }
+  // 2026-09-04, Cam's call: the admin's Feature button was removed. It set
+  // this flag to push a course up a golfer-facing browse page that does not
+  // exist — /api/courses supports `featured=1` and orders by it, but has no
+  // callers and there is no /courses index. The column and this write stay so
+  // that building the directory later re-enables featuring in one line;
+  // nothing in the UI calls it today.
   if (featured !== undefined) data.featured = featured;
   const updated = await prisma.course.update({ where: { id: courseId }, data, include: { operator: { select: { name: true, email: true } } } });
 

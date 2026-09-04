@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
 import Link from 'next/link';
 import {
-  ArrowLeft, Star, Power, Globe, ArchiveX, ArchiveRestore, Mail, Phone,
+  ArrowLeft, Power, Globe, ArchiveX, ArchiveRestore, Mail, Phone,
   Calendar, Ban, Plus, X, RefreshCw, Search, MessageSquare, Send, Trash2, Eye, CheckCircle,
   FileText, Upload, StickyNote, AlertTriangle, MoreVertical, Pause, Play,
 } from 'lucide-react';
@@ -227,7 +227,6 @@ export default function CourseDetailPage() {
   } | null>(null);
   const [closureBusy, setClosureBusy] = useState(false);
   const [closureError, setClosureError] = useState('');
-  const [featuredBusy, setFeaturedBusy] = useState(false);
   const [liveBlockReason, setLiveBlockReason] = useState('');
   const [liveBlockMissing, setLiveBlockMissing] = useState<'agreement' | 'stripe' | null>(null);
   const [reminderNudgeBusy, setReminderNudgeBusy] = useState(false);
@@ -399,24 +398,6 @@ export default function CourseDetailPage() {
   // write that never persisted, reverting on the next load with no
   // explanation. Mirrors toggleActive above: busy flag, real error surface,
   // local state only on success.
-  async function toggleFeatured(featured: boolean) {
-    setFeaturedBusy(true); setLiveBlockReason(''); setLiveBlockMissing(null);
-    try {
-      const r = await fetch('/api/admin/course-detail', {
-        method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, featured }),
-      });
-      if (r.ok) {
-        setDetail(d => d ? { ...d, course: { ...d.course, featured } } : d);
-      } else {
-        const d = await r.json().catch(() => ({}));
-        setLiveBlockReason(d.error || `Could not ${featured ? 'feature' : 'unfeature'} this course — try again.`);
-      }
-    } catch {
-      setLiveBlockReason('Network error — the course was not updated. Check your connection and try again.');
-    } finally {
-      setFeaturedBusy(false);
-    }
-  }
 
   // MP-5b: was a bare browser confirm that named no consequence, then an
   // alert() on failure. Archiving is now gated on the same booking decision as
@@ -663,7 +644,6 @@ export default function CourseDetailPage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2.5 mb-0.5">
                 <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink truncate">{c.name}</h1>
-                {c.featured && <Star className="w-4 h-4 text-warn fill-warn shrink-0" />}
               </div>
               <div className="flex items-center gap-3 flex-wrap">
                 <span title={detail.health.reason}><StatusDot status={detail.health.dot} label={detail.health.label} /></span>
@@ -677,13 +657,6 @@ export default function CourseDetailPage() {
               </div>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
-              <button
-                onClick={() => toggleFeatured(!c.featured)}
-                disabled={featuredBusy}
-                className={'hidden min-[1200px]:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors disabled:opacity-50 ' + (c.featured ? 'text-warn bg-warn/10 border-warn/20' : 'text-ink-soft border-line hover:text-warn hover:bg-warn/5')}
-              >
-                <Star className="w-3.5 h-3.5" />{c.featured ? 'Featured' : 'Feature'}
-              </button>
               {!c.active && c.operator && detail?.approval.status === 'approved' && (
                 <>
                   <span className="px-3 py-1.5 rounded-md text-xs font-medium border bg-ok/5 text-ok border-ok/20 flex items-center gap-1.5">
@@ -751,18 +724,10 @@ export default function CourseDetailPage() {
                     <div className="fixed inset-0 z-10" onClick={() => setDangerOpen(false)} />
                     <div className="absolute right-0 top-10 z-20 bg-white border border-line rounded-lg shadow-lg w-64 py-1.5">
                       {/* Below ~1200px the header's action row cannot fit, so
-                          Feature / Take offline / View page / Refresh live here
-                          instead. Same handlers, same pending + disabled state —
+                          Take offline / View page / Refresh live here instead.
+                          Same handlers, same pending + disabled state —
                           relocated, not duplicated behaviour. */}
                       <div className="min-[1200px]:hidden">
-                        <button
-                          onClick={async () => { await toggleFeatured(!c.featured); setDangerOpen(false); }}
-                          disabled={featuredBusy}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-ink-soft hover:bg-paper transition-colors disabled:opacity-50"
-                        >
-                          <Star className={'w-3.5 h-3.5 ' + (c.featured ? 'text-warn fill-warn' : '')} />
-                          {featuredBusy ? 'Saving…' : c.featured ? 'Unfeature course' : 'Feature course'}
-                        </button>
                         <button
                           onClick={async () => {
                             if (!confirm(c.active ? `Take "${c.name}" offline? Golfers will no longer be able to book.` : `Set "${c.name}" live? Golfers will be able to book immediately.`)) { setDangerOpen(false); return; }

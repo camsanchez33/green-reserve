@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { adminFetch, type AdminFetchFailure, LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
 import { ErrorBanner } from '@/components/ui/ErrorState';
 import Link from 'next/link';
-import { Star, RefreshCw, Search } from 'lucide-react';
+import { RefreshCw, Search } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
@@ -51,7 +51,6 @@ function CoursesContent() {
   const [search, setSearch] = useState('');
   const [stateFilter, setStateFilter] = useState<StateFilter>('live');
   const [filterHealth, setFilterHealth] = useState<HealthFilter>('all');
-  const [filterFeatured, setFilterFeatured] = useState(false);
   const [filterType, setFilterType] = useState('');
   const [sortBy, setSortBy] = useState<'severity' | 'newest' | 'name'>('severity');
   const [page, setPage] = useState(0);
@@ -193,7 +192,6 @@ function CoursesContent() {
     filteredCourses = filteredCourses.filter(c => (stateFilter === 'live') === c.active);
     if (filterHealth === 'needs_attention') filteredCourses = filteredCourses.filter(c => NEEDS_ATTENTION_STATUSES.includes(c.health.status));
     else if (filterHealth !== 'all') filteredCourses = filteredCourses.filter(c => c.health.status === filterHealth);
-    if (filterFeatured) filteredCourses = filteredCourses.filter(c => c.featured);
     if (filterType) filteredCourses = filteredCourses.filter(c => (c.type || 'public') === filterType);
   }
   if (sortBy === 'name') filteredCourses = [...filteredCourses].sort((a, b) => a.name.localeCompare(b.name));
@@ -203,7 +201,7 @@ function CoursesContent() {
   const totalPages = Math.max(1, Math.ceil(filteredCourses.length / PAGE_SIZE));
   const pagedCourses = filteredCourses.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  useEffect(() => { setPage(0); }, [stateFilter, filterHealth, filterFeatured, filterType, q]);
+  useEffect(() => { setPage(0); }, [stateFilter, filterHealth, filterType, q]);
 
   if (!adminReady) return null;
 
@@ -222,7 +220,7 @@ function CoursesContent() {
               {/* A-04 item 5: count line always reflects the active filter set */}
               <p className="text-sm text-ink-soft mt-0.5">
                 {loadError ? '—' : `${filteredCourses.length} course${filteredCourses.length === 1 ? '' : 's'}`}
-                {(filterHealth !== 'all' || filterType || filterFeatured || q) ? ' matching filters' : ''}
+                {(filterHealth !== 'all' || filterType || q) ? ' matching filters' : ''}
               </p>
             </div>
             <div className="flex gap-2 items-center">
@@ -342,12 +340,6 @@ function CoursesContent() {
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
                 </select>
-                <button
-                  onClick={() => setFilterFeatured(v => !v)}
-                  className={'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium border transition-colors ' + (filterFeatured ? 'bg-warn/10 text-warn border-warn/30' : 'text-ink-muted border-line hover:border-line-strong hover:text-ink')}
-                >
-                  <Star className="w-3 h-3" />Featured
-                </button>
                 <select
                   value={filterType}
                   onChange={e => setFilterType(e.target.value)}
@@ -402,7 +394,6 @@ function CoursesContent() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2.5 mb-0.5">
                     <span className="font-medium text-ink truncate">{course.name}</span>
-                    {course.featured && <Star className="w-3.5 h-3.5 text-warn fill-warn shrink-0" />}
                     {course.approvalStatus === 'approved' && course.health.status === 'setup_incomplete' && (
                       <span className="text-[11px] px-1.5 py-0.5 rounded bg-ok/5 text-ok border border-ok/20 shrink-0">Approved</span>
                     )}
