@@ -66,7 +66,7 @@ function CoursesContent() {
       else { setCourses(res.data); setLoadError(null); }
     } catch { setCourses([]); setLoadError({ msg: 'Network error loading courses. Check your connection and try again.', kind: 'network' }); }
     setLoading(false);
-  }, [H]);
+  }, []);
 
   useEffect(() => {
     fetch('/api/admin/session').then(r => {
