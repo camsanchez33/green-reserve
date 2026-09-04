@@ -989,11 +989,25 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       `firstWentLiveAt` so health stops reading a failed welcome email as
       "setup incomplete" forever (SCHEMA CHANGE, ATTENDED — needs the
       migration checklist, a Neon branch and Cam present).
-    - [ ] MP-5d — detail tabs 10 -> 6: Overview · Money · Records · Messages ·
-      Operate (merged Tee Sheet + Schedule, all mutations through the shared
-      services) · Setup. Staff tab dies (its one action moves to Overview's
-      contact rail); Members becomes a read-only card. Deferred behind 5e
-      because it is ergonomics on a 2,180-line page, not a correctness fix.
+    - [x] MP-5d (87a9695) — detail tabs 9 -> 6 (the "10" counted Contact,
+      folded in earlier): Overview · Money · Records · Messages · Operate ·
+      Setup. Staff tab gone — resend-login sits on the Overview staff card;
+      Members is a read-only card on Operate. NOT cosmetic: new
+      `lib/schedule-service.ts` is the ONE place a schedule is created,
+      changed or removed and a slot is blocked, and BOTH /api/admin/schedule
+      and /api/operator/schedule are thin callers. The operator route was a
+      separate copy that never received MP-5a's regenerate fix, so deleting,
+      pausing or re-pricing a schedule on /dashboard/schedules kept selling
+      the old times at the old price for up to 8 days — the exact bug 5a
+      closed on the admin side only. Its GET/PATCH also returned raw cents
+      rows to a page reading dollar fields (wire-shaped now). Operator block
+      route rejects any status other than blocked/available. Operate gained
+      schedule EDIT (PATCH had no UI caller); block / cancel / manual booking
+      show pending + inline failure (cancel also says when the late fee was
+      charged). NOT COVERED BY TESTS: the service is Prisma calls and there is
+      no test DB; verified by reading both routes against the service and by
+      tsc. Cam must walk edit + delete on a course with a live schedule.
+      NEEDS REVIEW.
   - [ ] MP-6 — money reshape: Revenue problems pinned all-time + collected-basis
     P&L + payout history + unit economics; Golfers record page + palette search
     extension + support actions (cancel, receipt, card-update link); red sidebar
