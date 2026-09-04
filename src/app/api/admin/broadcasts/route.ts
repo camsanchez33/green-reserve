@@ -3,12 +3,36 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, OWNER_ONLY, SUPPORT_PLUS, ownerGateError } from '@/lib/admin-session';
 import { sendAnnouncementEmail } from '@/lib/email';
 
-export async function GET() {
+// MP-7a: ONE recipient filter. Thread-insert, email and the preview count
+// each used a different one (active courses; operators with SOME active
+// course; the client counting active rows from /api/admin/courses — which
+// included archived ones). An announcement goes to every course that is live
+// and not archived, and to the operator of each. Same list, three uses.
+async function recipients() {
+  const courses = await prisma.course.findMany({
+    where: { active: true, archivedAt: null },
+    select: { id: true, name: true, operator: { select: { id: true, email: true, name: true } } },
+    orderBy: { name: 'asc' },
+  });
+  // One operator can run several courses — email them once.
+  const operators = new Map<string, { email: string; name: string }>();
+  for (const c of courses) if (c.operator) operators.set(c.operator.id, { email: c.operator.email, name: c.operator.name });
+  return { courses, operators: [...operators.values()] };
+}
+
+// GET /api/admin/broadcasts            — history
+// GET /api/admin/broadcasts?recipients=1 — who a send would reach, from the same filter the send uses
+export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   // MP-2b: POST was tightened by MP-2 and GET was not — announcement bodies
   // and senders were readable by any session.
   if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+  if (req.nextUrl.searchParams.get('recipients') === '1') {
+    const r = await recipients();
+    return NextResponse.json({ courses: r.courses.length, operators: r.operators.length });
+  }
 
   const announcements = await prisma.announcement.findMany({
     orderBy: { createdAt: 'desc' },
@@ -53,16 +77,13 @@ export async function POST(req: NextRequest) {
     data: { title: title.trim(), body: body.trim(), sentById: session.adminId },
   });
 
-  let emailSent = false;
-  let emailError = '';
-  let emailCount = 0;
+  const { courses, operators } = await recipients();
 
-  // Insert broadcast message into every active course's thread (create thread if needed)
-  const activeCourses = await prisma.course.findMany({
-    where: { active: true, archivedAt: null },
-    select: { id: true },
-  });
-  for (const course of activeCourses) {
+  // Insert the announcement into every recipient course's thread. (7b stores
+  // it once with per-course read state; until then this is N copies.)
+  let threadInserts = 0;
+  const threadFailures: string[] = [];
+  for (const course of courses) {
     try {
       const thread = await prisma.messageThread.upsert({
         where: { courseId: course.id },
@@ -79,27 +100,43 @@ export async function POST(req: NextRequest) {
           isBroadcast: true,
         },
       });
+      threadInserts++;
     } catch (e) {
       console.error('Broadcast message insert failed for course', course.id, e);
+      threadFailures.push(course.name);
     }
   }
 
+  // MP-7a: delivery truth. The sends used to fire AFTER the response returned
+  // (a serverless function can be frozen mid-flight) and "N emails delivered"
+  // was the recipient count, not a result. Now every send is awaited, counted
+  // by outcome, and the failures are named — and emailSent on the record is
+  // only true when at least one email actually went.
+  let emailsSent = 0;
+  const emailFailures: string[] = [];
   if (sendEmail) {
-    const operators = await prisma.courseOperator.findMany({
-      where: { course: { some: { active: true } } },
-      select: { email: true, name: true },
+    const results = await Promise.allSettled(
+      operators.map(op => sendAnnouncementEmail({ operatorName: op.name, operatorEmail: op.email, title: title.trim(), body: body.trim() })),
+    );
+    results.forEach((r, i) => {
+      if (r.status === 'fulfilled') emailsSent++;
+      else {
+        console.error('Announcement email failed for', operators[i].email, r.reason);
+        emailFailures.push(operators[i].email);
+      }
     });
-    emailCount = operators.length;
-    emailSent = operators.length > 0;
-    // Fire all emails without blocking the response
-    Promise.allSettled(
-      operators.map(op =>
-        sendAnnouncementEmail({ operatorName: op.name, operatorEmail: op.email, title: title.trim(), body: body.trim() })
-          .catch(e => console.error('Announcement email failed for', op.email, e))
-      )
-    ).then(() => prisma.announcement.update({ where: { id: announcement.id }, data: { emailSent: true } }))
-     .catch(e => console.error('Failed to mark announcement emailSent:', e));
+    if (emailsSent > 0) {
+      await prisma.announcement.update({ where: { id: announcement.id }, data: { emailSent: true } });
+    }
   }
 
-  return NextResponse.json({ id: announcement.id, emailSent, emailCount, emailError });
+  return NextResponse.json({
+    id: announcement.id,
+    threadInserts,
+    threadFailures,
+    emailRequested: !!sendEmail,
+    emailRecipients: sendEmail ? operators.length : 0,
+    emailsSent,
+    emailFailures,
+  });
 }

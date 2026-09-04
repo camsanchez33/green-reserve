@@ -1433,10 +1433,14 @@ export async function sendAnnouncementEmail(data: {
     <div style="margin:0 0 20px;">${bodyHtml}</div>
     <p style="margin:0;color:#9ca3af;font-size:12px;">This message is from the GreenReserve team to all course operators on the platform.</p>
   `);
-  await getResend().emails.send({
+  // MP-7a: the Resend SDK returns { error } rather than throwing, and this
+  // function discarded it — a rejected email counted as sent. Throw, so the
+  // broadcast route's per-recipient tally is real.
+  const r = await getResend().emails.send({
     from: FROM,
     to: data.operatorEmail,
     subject: `[GreenReserve] ${data.title}`,
     html,
   });
+  if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }

@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation';
 import { SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-roles';
 import Image from 'next/image';
 import { useEffect, useState, useCallback } from 'react';
-import { BarChart2, AlertCircle, Building2, Hammer, Users, Radio, Activity, MessageSquare, UserCircle, ChevronLeft, ChevronRight, DollarSign, Search, Wrench, LogOut } from 'lucide-react';
+import { BarChart2, AlertCircle, Building2, Hammer, Users, Activity, MessageSquare, UserCircle, ChevronLeft, ChevronRight, DollarSign, Search, Wrench, LogOut } from 'lucide-react';
 import CommandPalette from '@/components/admin/CommandPalette';
 
 export type AdminNavKey = 'overview' | 'inquiries' | 'courses' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system';
@@ -143,7 +143,6 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     { key: 'revenue',    label: 'Revenue',    href: '/admin/revenue',    icon: <DollarSign className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
     { key: 'golfers',    label: 'Golfers',    href: '/admin/golfers',    icon: <Search className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
     { key: 'employees',  label: 'Employees',  href: '/admin/employees',  icon: <Users className="w-[18px] h-[18px]"/>, minRole: MANAGER_PLUS },
-    { key: 'broadcasts', label: 'Broadcasts', href: '/admin/broadcasts', icon: <Radio className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
     { key: 'activity',   label: 'Activity',   href: '/admin/activity',   icon: <Activity className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
   ];
 

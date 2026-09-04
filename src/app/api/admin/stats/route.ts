@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
 import { dayKey, platformHour, startOfPlatformDay, startOfPlatformWeek, startOfPlatformMonth, startOfPlatformDaysAgo, startOfPlatformMonthsAgo } from '@/lib/admin-day';
 import { ACTIVE_STATUSES } from '@/lib/inquiry-status';
+import { threadSignal } from '@/lib/thread-signal';
 import { buildInquiryQueueRows } from '@/lib/inquiry-action-queue';
 import { COMPLETED_BOOKING_STATUSES, TREND_MIN_AGE_DAYS, TREND_DROP_PCT_THRESHOLD, computeCourseHealth } from '@/lib/course-metrics';
 
@@ -129,7 +130,9 @@ export async function GET() {
     prisma.course.findMany({ where: { active: false, archivedAt: null, createdAt: { lt: twoDaysAgo } }, select: { id: true, name: true, createdAt: true }, orderBy: { createdAt: 'asc' }, take: 5 }),
     prisma.course.count({ where: { active: false, archivedAt: null, createdAt: { lt: twoDaysAgo } } }),
     prisma.messageThread.findMany({
-      select: { id: true, courseId: true, course: { select: { name: true } }, messages: { orderBy: { createdAt: 'desc' }, take: 1, select: { senderType: true, senderName: true, createdAt: true } } },
+      // MP-7a: a few messages, with isBroadcast, so threadSignal can skip
+      // announcements — the inbox reads the same rows the same way.
+      select: { id: true, courseId: true, course: { select: { name: true } }, messages: { orderBy: { createdAt: 'desc' }, take: 6, select: { senderType: true, senderName: true, createdAt: true, isBroadcast: true } } },
       take: 200,
       orderBy: { updatedAt: 'desc' },
     }),
@@ -242,16 +245,19 @@ export async function GET() {
     href: `/admin/courses?courseId=${c.id}&tab=overview`,
   }));
 
+  // MP-7a: lib/thread-signal is THE derivation — the Messages list sorts and
+  // badges from the same function, so this row and that badge cannot disagree.
   const threadAmber: Row[] = threadsForUnanswered
-    .filter(t => t.messages[0]?.senderType === 'operator' && t.messages[0].createdAt < twoDaysAgo)
-    .map(t => ({
+    .map(t => ({ t, signal: threadSignal(t.messages, now), last: t.messages.find(m => !m.isBroadcast) }))
+    .filter(x => x.signal.overdue && x.last)
+    .map(({ t, signal, last }) => ({
       id: `msg-${t.id}`,
       who: t.course.name,
-      why: `Message from ${t.messages[0].senderName}, unanswered`,
+      why: `Message from ${last!.senderName}, unanswered`,
       doThis: 'They’re waiting on a reply — send a quick nudge or a full response.',
-      ageDays: Math.floor((now.getTime() - t.messages[0].createdAt.getTime()) / 86400000),
+      ageDays: signal.ageDays,
       actionLabel: 'Reply',
-      href: '/admin/messages',
+      href: `/admin/messages?courseId=${t.courseId}`,
       fire: { kind: 'send_nudge', courseId: t.courseId },
     }));
 

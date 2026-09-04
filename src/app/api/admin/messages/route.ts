@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
 import { sendMessageNotificationEmail } from '@/lib/email';
+import { threadSignal } from '@/lib/thread-signal';
 
-const ADMIN_EMAIL = 'hello@greenreserve.app';
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
 // GET /api/admin/messages — thread list (no courseId param)
@@ -32,23 +32,30 @@ export async function GET(req: NextRequest) {
       where: { courseId },
       include: {
         messages: { orderBy: { createdAt: 'asc' } },
-        course: { select: { name: true, slug: true } },
+        course: { select: { name: true, slug: true, active: true, archivedAt: true } },
       },
     });
-    if (!thread) return NextResponse.json(null);
+    if (!thread) {
+      // No thread yet — the page still needs to know whether it may start one.
+      const course = await prisma.course.findUnique({ where: { id: courseId }, select: { name: true, slug: true, active: true, archivedAt: true } });
+      if (!course) return NextResponse.json(null);
+      return NextResponse.json({ id: null, courseId, messages: [], course, inquiryId: null });
+    }
     // Lets the message list link change-request mirrors back to the inquiry
     // where the structured, addressable version of the ask actually lives.
     const inquiry = await prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId }, select: { id: true } });
     return NextResponse.json({ ...thread, inquiryId: inquiry?.id ?? null });
   }
 
-  // Thread list
+  // Thread list. MP-7a: the last few messages come along so the signal can
+  // skip announcements — an admin broadcast on top of an operator's question
+  // must not read as "answered".
   const threads = await prisma.messageThread.findMany({
     include: {
-      course: { select: { id: true, name: true, slug: true } },
+      course: { select: { id: true, name: true, slug: true, active: true, archivedAt: true } },
       messages: {
         orderBy: { createdAt: 'desc' },
-        take: 1,
+        take: 6,
       },
     },
     orderBy: { updatedAt: 'desc' },
@@ -64,14 +71,18 @@ export async function GET(req: NextRequest) {
     : [];
   const unreadMap = new Map(unreadCounts.map(u => [u.threadId, u._count.id]));
 
+  const now = new Date();
   const result = threads.map(t => ({
     id: t.id,
     courseId: t.course.id,
     courseName: t.course.name,
     courseSlug: t.course.slug,
+    courseActive: t.course.active,
+    courseArchived: !!t.course.archivedAt,
     lastMessage: t.messages[0] ?? null,
     unreadCount: unreadMap.get(t.id) ?? 0,
     updatedAt: t.updatedAt,
+    signal: threadSignal(t.messages, now),
   }));
 
   return NextResponse.json(result);
@@ -88,9 +99,15 @@ export async function POST(req: NextRequest) {
 
   const course = await prisma.course.findUnique({
     where: { id: courseId },
-    select: { id: true, name: true, operator: { select: { email: true, name: true } } },
+    select: { id: true, name: true, archivedAt: true, operator: { select: { email: true, name: true } } },
   });
   if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+  // MP-7a: an archived course's thread stayed listed and messageable, so you
+  // could email an operator who has left the platform. The UI locks the
+  // composer; this is the rule behind it.
+  if (course.archivedAt) {
+    return NextResponse.json({ error: 'This course is archived — its operator has left the platform. Restore the course before messaging them.' }, { status: 409 });
+  }
 
   // Upsert thread
   const thread = await prisma.messageThread.upsert({
