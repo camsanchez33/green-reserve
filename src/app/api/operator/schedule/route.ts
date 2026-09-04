@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { scheduleMoneyFromWire, scheduleMoneyForCreate, scheduleToWire } from '@/lib/schedule-wire';
 import { resolveDashboardSession } from '@/lib/session';
-import { generateTeeTimes } from '@/lib/tee-sheet-engine';
+import { listSchedules, createSchedule, updateSchedule, deleteSchedule } from '@/lib/schedule-service';
+
+// MP-5d: thin caller of the shared schedule service (see lib/schedule-service).
+// Before this, PATCH and DELETE here did NOT rebuild the tee-sheet window, so
+// an operator who deleted, paused or re-priced a schedule kept selling the old
+// times at the old price for up to eight days — the same bug MP-5a had already
+// fixed on the admin side only. GET and PATCH also returned raw rows (cents
+// columns) to a page that reads dollar fields; every response is wire-shaped
+// now. The session's course is the scope: nothing here can touch another
+// course's rows.
 
 export async function GET() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  return NextResponse.json(
-    await prisma.teeTimeSchedule.findMany({
-      where: { courseId: session.courseId },
-      orderBy: { createdAt: 'asc' },
-    })
-  );
+  return NextResponse.json(await listSchedules(session.courseId));
 }
 
 export async function POST(req: NextRequest) {
@@ -20,60 +22,20 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
-  const schedule = await prisma.teeTimeSchedule.create({
-    data: {
-      courseId: session.courseId,
-      tierName: body.tierName || 'standard',
-      daysOfWeek: body.daysOfWeek ?? [],
-      startTime: body.startTime,
-      endTime: body.endTime,
-      intervalMinutes: Number(body.intervalMinutes) || 8,
-      holes: Number(body.holes) || 18,
-      // MP-3 B2d: the schedule editor sends dollars; the columns are cents.
-      ...scheduleMoneyForCreate(body),
-      walkingAllowed: body.walkingAllowed !== false,
-    },
-  });
-
-  // Generate next 8 days immediately
-  const today = new Date();
-  for (let i = 0; i < 8; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() + i);
-    await generateTeeTimes(session.courseId, d.toISOString().split('T')[0]);
-  }
-
-  return NextResponse.json(scheduleToWire(schedule));
+  if (!body.startTime || !body.endTime) return NextResponse.json({ error: 'First and last tee are required' }, { status: 400 });
+  return NextResponse.json(await createSchedule(session.courseId, body));
 }
 
 export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id, ...data } = await req.json();
+  const { id, courseId: _ignored, ...data } = await req.json();
+  void _ignored;
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
-  // Verify ownership
-  const existing = await prisma.teeTimeSchedule.findFirst({ where: { id, courseId: session.courseId } });
-  if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-
-  const updated = await prisma.teeTimeSchedule.update({
-    where: { id },
-    data: {
-      active: data.active !== undefined ? data.active : existing.active,
-      tierName: data.tierName ?? existing.tierName,
-      daysOfWeek: data.daysOfWeek ?? existing.daysOfWeek,
-      startTime: data.startTime ?? existing.startTime,
-      endTime: data.endTime ?? existing.endTime,
-      intervalMinutes: data.intervalMinutes !== undefined ? Number(data.intervalMinutes) : existing.intervalMinutes,
-      holes: data.holes !== undefined ? Number(data.holes) : existing.holes,
-      // Only the money keys actually present in the body are converted; the
-      // rest keep their existing cents values.
-      ...scheduleMoneyFromWire(data),
-      walkingAllowed: data.walkingAllowed !== undefined ? data.walkingAllowed : existing.walkingAllowed,
-    },
-  });
-
+  const updated = await updateSchedule(id, data, { scopeCourseId: session.courseId });
+  if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json(updated);
 }
 
@@ -82,6 +44,8 @@ export async function DELETE(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await req.json();
-  await prisma.teeTimeSchedule.deleteMany({ where: { id, courseId: session.courseId } });
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+  const removed = await deleteSchedule(id, { scopeCourseId: session.courseId });
+  if (!removed) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json({ success: true });
 }

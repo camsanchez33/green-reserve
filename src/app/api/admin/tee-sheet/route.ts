@@ -4,6 +4,7 @@ import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS } from '@/
 import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
 import { performCancellation } from '@/lib/cancel-booking';
 import { COMPLETED_BOOKING_STATUSES } from '@/lib/course-metrics';
+import { setTeeTimeBlocked } from '@/lib/schedule-service';
 
 // GET /api/admin/tee-sheet?courseId=X&date=Y
 export async function GET(req: NextRequest) {
@@ -54,10 +55,10 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (body.action === 'block' || body.action === 'unblock') {
-    await prisma.teeTime.update({
-      where: { id: body.teeTimeId },
-      data: { status: body.action === 'block' ? 'blocked' : 'available' },
-    });
+    // MP-5d: same service the operator dashboard's Block button calls.
+    if (!body.teeTimeId) return NextResponse.json({ error: 'Missing teeTimeId' }, { status: 400 });
+    const row = await setTeeTimeBlocked(body.teeTimeId, body.action === 'block');
+    if (!row) return NextResponse.json({ error: 'Tee time not found' }, { status: 404 });
     return NextResponse.json({ success: true });
   }
 

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { dollarsToCentsOr0 } from '@/lib/money';
 import { teeTimeToWire } from '@/lib/schedule-wire';
 import { resolveDashboardSession } from '@/lib/session';
+import { setTeeTimeBlocked } from '@/lib/schedule-service';
 
 export async function GET(req: NextRequest) {
   const session = await resolveDashboardSession();
@@ -45,11 +46,15 @@ export async function PATCH(req: NextRequest) {
 
   const { id, status } = await req.json();
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
-
-  const teeTime = await prisma.teeTime.findFirst({ where: { id, courseId: session.courseId } });
-  if (!teeTime) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-
-  return NextResponse.json(await prisma.teeTime.update({ where: { id }, data: { status } }));
+  // MP-5d: this used to write whatever `status` string arrived. The only two
+  // states a person can put a slot into are open and blocked; anything else
+  // is the engine's to set. Goes through the same service the admin uses.
+  if (status !== 'blocked' && status !== 'available') {
+    return NextResponse.json({ error: 'status must be "blocked" or "available"' }, { status: 400 });
+  }
+  const row = await setTeeTimeBlocked(id, status === 'blocked', { scopeCourseId: session.courseId });
+  if (!row) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  return NextResponse.json(row);
 }
 
 export async function DELETE(req: NextRequest) {

@@ -6,25 +6,28 @@ import Link from 'next/link';
 import {
   ArrowLeft, Power, Globe, ArchiveX, ArchiveRestore, Mail, Phone,
   Calendar, Ban, Plus, X, RefreshCw, Search, MessageSquare, Send, Trash2, Eye, CheckCircle,
-  FileText, Upload, StickyNote, AlertTriangle, MoreVertical, Pause, Play,
+  FileText, Upload, StickyNote, AlertTriangle, MoreVertical, Pause, Play, Pencil,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { periodDelta, lastBookingLabel, type CourseHealthStatus } from '@/lib/course-metrics';
 
-type TabName = 'overview' | 'transactions' | 'documents' | 'messages' | 'teesheet' | 'schedule' | 'members' | 'staff' | 'setup';
+type TabName = 'overview' | 'money' | 'records' | 'messages' | 'operate' | 'setup';
 
-const TAB_LABELS: Record<TabName, string> = {
-  overview: 'Overview', transactions: 'Transactions', documents: 'Documents', messages: 'Messages',
-  teesheet: 'Tee Sheet', schedule: 'Schedule', members: 'Members', staff: 'Staff', setup: 'Setup',
-};
-// A-05 item 1: tabs reorganized into two labeled groups — Contact folds into
-// Overview's client card instead of staying its own tab.
-const TAB_GROUPS: { label: string; tabs: TabName[] }[] = [
-  { label: 'Business', tabs: ['overview', 'transactions', 'documents', 'messages'] },
-  { label: 'Operations', tabs: ['teesheet', 'schedule', 'members', 'staff', 'setup'] },
+// MP-5d: nine tabs became six. Transactions and Documents are named for what
+// they hold (Money, Records) rather than the table they read. Tee Sheet and
+// Schedule merged into Operate — one is the output of the other, and every
+// mutation there now goes through the shared schedule service the operator's
+// own dashboard calls. Staff died as a tab: its only action (resend login)
+// sits on the Overview contact rail. Members is a read-only card on Operate.
+const TABS: { key: TabName; label: string }[] = [
+  { key: 'overview', label: 'Overview' },
+  { key: 'money', label: 'Money' },
+  { key: 'records', label: 'Records' },
+  { key: 'messages', label: 'Messages' },
+  { key: 'operate', label: 'Operate' },
+  { key: 'setup', label: 'Setup' },
 ];
-const ALL_TABS: TabName[] = TAB_GROUPS.flatMap(g => g.tabs);
 
 const TX_STATUS: Record<string, { dot: string; label: string }> = {
   card_saved: { dot: 'neutral', label: 'Card saved' },
@@ -111,6 +114,109 @@ interface MemberRow {
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+interface ScheduleRow {
+  id: string; daysOfWeek: number[]; startTime: string; endTime: string;
+  intervalMinutes: number; greenFeeWeekday: number; greenFeeWeekend: number;
+  memberRateWeekday: number | null; memberRateWeekend: number | null;
+  cartFee: number; walkingAllowed: boolean; active: boolean;
+}
+
+// What the schedule editor holds. Member rates are strings so an empty field
+// can mean "no member rate" — the wire gets null, never 0.
+interface ScheduleFormState {
+  daysOfWeek: number[]; startTime: string; endTime: string; intervalMinutes: number;
+  greenFeeWeekday: number; greenFeeWeekend: number;
+  memberRateWeekday: string; memberRateWeekend: string;
+  cartFee: number; walkingAllowed: boolean;
+}
+const EMPTY_SCHEDULE: ScheduleFormState = {
+  daysOfWeek: [], startTime: '06:00', endTime: '18:00',
+  intervalMinutes: 8, greenFeeWeekday: 65, greenFeeWeekend: 85,
+  memberRateWeekday: '', memberRateWeekend: '', cartFee: 18, walkingAllowed: true,
+};
+
+// MP-5d: ONE set of fields for add and edit. Before this only "add" had a
+// form; the PATCH endpoint existed with no UI caller.
+function ScheduleFields({ value, onChange, showMemberRates }: {
+  value: ScheduleFormState;
+  onChange: (patch: Partial<ScheduleFormState>) => void;
+  showMemberRates: boolean;
+}) {
+  const toggleDay = (d: number) => onChange({
+    daysOfWeek: value.daysOfWeek.includes(d) ? value.daysOfWeek.filter(x => x !== d) : [...value.daysOfWeek, d],
+  });
+  return (
+    <>
+      <div>
+        <label className="text-xs text-ink-muted block mb-1.5">Days <span className="text-ink-faint">(none = every day)</span></label>
+        <div className="flex gap-1.5">
+          {DAYS.map((day, i) => (
+            <button
+              key={day}
+              type="button"
+              onClick={() => toggleDay(i)}
+              className={'flex-1 py-1.5 rounded-md text-xs font-medium border transition-colors ' + (value.daysOfWeek.includes(i) ? 'bg-pine text-white border-pine' : 'bg-paper text-ink-muted border-line hover:border-pine/40 hover:text-ink')}
+            >
+              {day}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <div>
+          <label className="text-xs text-ink-muted block mb-1">First tee</label>
+          <input type="time" value={value.startTime} onChange={e => onChange({ startTime: e.target.value })} className={iCls} />
+        </div>
+        <div>
+          <label className="text-xs text-ink-muted block mb-1">Last tee</label>
+          <input type="time" value={value.endTime} onChange={e => onChange({ endTime: e.target.value })} className={iCls} />
+        </div>
+        <div>
+          <label className="text-xs text-ink-muted block mb-1">Interval</label>
+          <select value={value.intervalMinutes} onChange={e => onChange({ intervalMinutes: Number(e.target.value) })} className={iCls}>
+            {[7, 8, 9, 10, 12, 15].map(v => <option key={v} value={v}>{v} min</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <div>
+          <label className="text-xs text-ink-muted block mb-1">WD Green fee $</label>
+          <input type="number" value={value.greenFeeWeekday} onChange={e => onChange({ greenFeeWeekday: Number(e.target.value) })} className={iCls} />
+        </div>
+        <div>
+          <label className="text-xs text-ink-muted block mb-1">WE Green fee $</label>
+          <input type="number" value={value.greenFeeWeekend} onChange={e => onChange({ greenFeeWeekend: Number(e.target.value) })} className={iCls} />
+        </div>
+        <div>
+          <label className="text-xs text-ink-muted block mb-1">Cart fee $</label>
+          <input type="number" value={value.cartFee} onChange={e => onChange({ cartFee: Number(e.target.value) })} className={iCls} />
+        </div>
+      </div>
+      {showMemberRates && (
+        <div className="grid grid-cols-2 gap-3 bg-pine/5 border border-pine/20 rounded-md p-3">
+          <div>
+            <label className="text-xs font-medium text-pine block mb-1">Member rate WD $</label>
+            <input type="number" value={value.memberRateWeekday} onChange={e => onChange({ memberRateWeekday: e.target.value })} className={iCls} />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-pine block mb-1">Member rate WE $</label>
+            <input type="number" value={value.memberRateWeekend} onChange={e => onChange({ memberRateWeekend: e.target.value })} className={iCls} />
+          </div>
+        </div>
+      )}
+      <label className="flex items-center gap-2 text-sm text-ink cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={value.walkingAllowed}
+          onChange={e => onChange({ walkingAllowed: e.target.checked })}
+          className="w-4 h-4 accent-pine rounded"
+        />
+        Walking allowed
+      </label>
+    </>
+  );
+}
+
 const fmtDate = (d: string) =>
   new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 const fmtMoney = (n: number) =>
@@ -158,29 +264,29 @@ export default function CourseDetailPage() {
   const [setupSaving, setSetupSaving] = useState(false);
   const [setupMsg, setSetupMsg] = useState('');
 
-  // Schedules (Schedule tab)
-  const [schedules, setSchedules] = useState<{
-    id: string; daysOfWeek: number[]; startTime: string; endTime: string;
-    intervalMinutes: number; greenFeeWeekday: number; greenFeeWeekend: number;
-    memberRateWeekday: number | null; memberRateWeekend: number | null;
-    cartFee: number; walkingAllowed: boolean;
-  }[]>([]);
-  const [newSchedule, setNewSchedule] = useState({
-    daysOfWeek: [] as number[], startTime: '06:00', endTime: '18:00',
-    intervalMinutes: 8, greenFeeWeekday: 65, greenFeeWeekend: 85,
-    memberRateWeekday: '', memberRateWeekend: '', cartFee: 18, walkingAllowed: true,
-  });
+  // Operate: schedules
+  const [schedules, setSchedules] = useState<ScheduleRow[]>([]);
+  const [newSchedule, setNewSchedule] = useState<ScheduleFormState>(EMPTY_SCHEDULE);
+  const [showAddSched, setShowAddSched] = useState(false);
   const [schedSaving, setSchedSaving] = useState(false);
-  const [schedMsg, setSchedMsg] = useState('');
+  const [schedMsg, setSchedMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [editSched, setEditSched] = useState<{ id: string; form: ScheduleFormState } | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState('');
 
-  // Tee sheet
+  // Operate: tee sheet. MP-5d — every mutation reports pending + failure
+  // inline; block/cancel used to swallow errors and manual booking alert()ed.
   const [tsDate, setTsDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [tsSlots, setTsSlots] = useState<TeeSlot[]>([]);
   const [tsLoading, setTsLoading] = useState(false);
+  const [slotBusy, setSlotBusy] = useState<string | null>(null);
+  const [opNote, setOpNote] = useState<{ ok: boolean; text: string } | null>(null);
   const [manualSlot, setManualSlot] = useState<string | null>(null);
   const [manualForm, setManualForm] = useState({ name: '', email: '', phone: '', players: 1 });
+  const [manualSaving, setManualSaving] = useState(false);
+  const [manualError, setManualError] = useState('');
 
-  // Transactions tab
+  // Money tab
   const [txItems, setTxItems] = useState<TxRow[]>([]);
   const [txLoading, setTxLoading] = useState(false);
   const [txPage, setTxPage] = useState(1);
@@ -190,7 +296,7 @@ export default function CourseDetailPage() {
   const [txTo, setTxTo] = useState('');
   const [txSearch, setTxSearch] = useState('');
 
-  // Members tab
+  // Operate: members (read-only card)
   const [membersData, setMembersData] = useState<{ tiers: TierRow[]; members: MemberRow[] } | null>(null);
   const [membersError, setMembersError] = useState('');
   const [schedDeleteTarget, setSchedDeleteTarget] = useState<string | null>(null);
@@ -198,7 +304,8 @@ export default function CourseDetailPage() {
   const [schedDeleteError, setSchedDeleteError] = useState('');
   const [membersLoading, setMembersLoading] = useState(false);
 
-  // Staff tab
+  // Resend staff login — lives on the Overview contact rail (the Staff tab's
+  // one real action; MP-5d retired the tab).
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [resendMsg, setResendMsg] = useState('');
 
@@ -232,7 +339,7 @@ export default function CourseDetailPage() {
   const [reminderNudgeBusy, setReminderNudgeBusy] = useState(false);
   const [reminderNudgeSent, setReminderNudgeSent] = useState(false);
 
-  // A-05 item 5: Documents tab
+  // A-05 item 5: Records tab (was Documents)
   const [docsData, setDocsData] = useState<{
     approval: { status: string; approvedAt: string | null };
     stripeAgreementDate: string | null;
@@ -480,23 +587,73 @@ export default function CourseDetailPage() {
     if (r.ok) loadDetail();
   }
 
-  function toggleDay(d: number) {
-    setNewSchedule(s => ({
-      ...s,
-      daysOfWeek: s.daysOfWeek.includes(d)
-        ? s.daysOfWeek.filter(x => x !== d)
-        : [...s.daysOfWeek, d],
-    }));
+  // MP-5d: Operate loads all three of its panels at once. Transactions'
+  // "View" jumps here with a date, so the date is a parameter.
+  function openOperate(date = tsDate) {
+    setTab('operate'); setTsDate(date); setOpNote(null);
+    loadTeeSheet(date); loadSchedules(); loadMembers();
+  }
+
+  // '' in a member-rate field means "no member rate" — the wire wants null.
+  function schedulePayload(f: ScheduleFormState) {
+    return { ...f, memberRateWeekday: f.memberRateWeekday || null, memberRateWeekend: f.memberRateWeekend || null };
   }
 
   async function addSchedule() {
-    setSchedSaving(true); setSchedMsg('');
-    const r = await fetch('/api/admin/schedule', {
-      method: 'POST', headers: H(), body: JSON.stringify({ courseId, ...newSchedule }),
-    });
+    if (newSchedule.startTime >= newSchedule.endTime) { setSchedMsg({ ok: false, text: 'Last tee must be after first tee.' }); return; }
+    setSchedSaving(true); setSchedMsg(null);
+    try {
+      const r = await fetch('/api/admin/schedule', {
+        method: 'POST', headers: H(), body: JSON.stringify({ courseId, ...schedulePayload(newSchedule) }),
+      });
+      if (r.ok) {
+        setSchedMsg({ ok: true, text: 'Schedule saved — tee times generated for the next 8 days.' });
+        setShowAddSched(false); setNewSchedule(EMPTY_SCHEDULE);
+        loadSchedules(); loadTeeSheet(tsDate);
+      } else {
+        const e = await r.json().catch(() => ({}));
+        setSchedMsg({ ok: false, text: e.error || 'Could not save the schedule — nothing was changed.' });
+      }
+    } catch {
+      setSchedMsg({ ok: false, text: 'Network error — nothing was saved.' });
+    }
     setSchedSaving(false);
-    if (r.ok) { setSchedMsg('schedule_saved'); loadSchedules(); }
-    else setSchedMsg('error');
+  }
+
+  function beginScheduleEdit(sch: ScheduleRow) {
+    setEditError(''); setShowAddSched(false); setSchedMsg(null);
+    setEditSched({
+      id: sch.id,
+      form: {
+        daysOfWeek: sch.daysOfWeek, startTime: sch.startTime, endTime: sch.endTime,
+        intervalMinutes: sch.intervalMinutes, greenFeeWeekday: sch.greenFeeWeekday, greenFeeWeekend: sch.greenFeeWeekend,
+        memberRateWeekday: sch.memberRateWeekday != null ? String(sch.memberRateWeekday) : '',
+        memberRateWeekend: sch.memberRateWeekend != null ? String(sch.memberRateWeekend) : '',
+        cartFee: sch.cartFee, walkingAllowed: sch.walkingAllowed,
+      },
+    });
+  }
+
+  async function saveScheduleEdit() {
+    if (!editSched) return;
+    if (editSched.form.startTime >= editSched.form.endTime) { setEditError('Last tee must be after first tee.'); return; }
+    setEditSaving(true); setEditError('');
+    try {
+      const r = await fetch('/api/admin/schedule', {
+        method: 'PATCH', headers: H(), body: JSON.stringify({ id: editSched.id, ...schedulePayload(editSched.form) }),
+      });
+      if (r.ok) {
+        setEditSched(null);
+        setSchedMsg({ ok: true, text: 'Schedule updated — open tee times were rebuilt to match. Booked times were left alone.' });
+        loadSchedules(); loadTeeSheet(tsDate);
+      } else {
+        const e = await r.json().catch(() => ({}));
+        setEditError(e.error || 'Could not save — nothing was changed.');
+      }
+    } catch {
+      setEditError('Network error — nothing was changed.');
+    }
+    setEditSaving(false);
   }
 
   // MP-5a: fired straight off the trash icon with no confirm and no failure
@@ -522,34 +679,66 @@ export default function CourseDetailPage() {
   }
 
   async function blockSlot(teeTimeId: string, block: boolean) {
-    await fetch('/api/admin/tee-sheet', {
-      method: 'PATCH', headers: H(),
-      body: JSON.stringify({ action: block ? 'block' : 'unblock', teeTimeId }),
-    });
-    loadTeeSheet(tsDate);
+    setSlotBusy(teeTimeId); setOpNote(null);
+    try {
+      const r = await fetch('/api/admin/tee-sheet', {
+        method: 'PATCH', headers: H(),
+        body: JSON.stringify({ action: block ? 'block' : 'unblock', teeTimeId }),
+      });
+      if (r.ok) await loadTeeSheet(tsDate);
+      else {
+        const e = await r.json().catch(() => ({}));
+        setOpNote({ ok: false, text: e.error || `Could not ${block ? 'block' : 'unblock'} that time — nothing was changed.` });
+      }
+    } catch {
+      setOpNote({ ok: false, text: 'Network error — the tee sheet was not changed.' });
+    }
+    setSlotBusy(null);
   }
 
-  async function cancelBooking(bookingId: string) {
-    if (!confirm('Cancel this booking?')) return;
-    await fetch('/api/admin/tee-sheet', {
-      method: 'PATCH', headers: H(), body: JSON.stringify({ action: 'cancel_booking', bookingId }),
-    });
-    loadTeeSheet(tsDate);
+  async function cancelBooking(bookingId: string, teeTimeId: string) {
+    if (!confirm('Cancel this booking? The golfer will be emailed.')) return;
+    setSlotBusy(teeTimeId); setOpNote(null);
+    try {
+      const r = await fetch('/api/admin/tee-sheet', {
+        method: 'PATCH', headers: H(), body: JSON.stringify({ action: 'cancel_booking', bookingId }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok) {
+        await loadTeeSheet(tsDate);
+        // The shared cancellation service applies the course's own late policy;
+        // say so when it did, rather than letting a charge pass silently.
+        setOpNote(d.feeCharged
+          ? { ok: false, text: 'Booking cancelled. It was inside the course\'s cancellation window, so the late fee was charged to the golfer\'s card.' }
+          : { ok: true, text: 'Booking cancelled — the golfer has been emailed.' });
+      } else {
+        setOpNote({ ok: false, text: d.error || 'Could not cancel that booking — nothing was changed.' });
+      }
+    } catch {
+      setOpNote({ ok: false, text: 'Network error — the booking was not cancelled.' });
+    }
+    setSlotBusy(null);
   }
 
   async function addManualBooking() {
     if (!manualSlot) return;
-    const r = await fetch('/api/admin/tee-sheet', {
-      method: 'POST', headers: H(), body: JSON.stringify({ teeTimeId: manualSlot, ...manualForm }),
-    });
-    if (r.ok) {
-      setManualSlot(null);
-      setManualForm({ name: '', email: '', phone: '', players: 1 });
-      loadTeeSheet(tsDate);
-    } else {
-      const d = await r.json();
-      alert(d.error);
+    setManualSaving(true); setManualError('');
+    try {
+      const r = await fetch('/api/admin/tee-sheet', {
+        method: 'POST', headers: H(), body: JSON.stringify({ teeTimeId: manualSlot, ...manualForm }),
+      });
+      if (r.ok) {
+        setManualSlot(null);
+        setManualForm({ name: '', email: '', phone: '', players: 1 });
+        loadTeeSheet(tsDate);
+      } else {
+        const d = await r.json().catch(() => ({}));
+        setManualError(d.error || 'Could not add the booking — nothing was changed.');
+      }
+    } catch {
+      setManualError('Network error — nothing was booked.');
     }
+    setManualSaving(false);
   }
 
   async function resendSetup(staffId: string, staffName: string) {
@@ -818,32 +1007,26 @@ export default function CourseDetailPage() {
           )}
 
           <div className="flex items-center gap-4 mt-4 overflow-x-auto">
-            {TAB_GROUPS.map(group => (
-              <div key={group.label} className="flex items-center shrink-0">
-                <div className="flex gap-0.5 bg-paper border border-line rounded-lg p-1">
-                  {group.tabs.map(t => (
-                    <button
-                      key={t}
-                      onClick={() => {
-                        setTab(t);
-                        if (t === 'teesheet') loadTeeSheet(tsDate);
-                        if (t === 'schedule') loadSchedules();
-                        if (t === 'transactions') loadTransactions(1, '', '', '');
-                        if (t === 'members') loadMembers();
-                        if (t === 'messages') loadCourseThread();
-                        if (t === 'documents') loadDocuments();
-                      }}
-                      className={'px-4 py-1.5 rounded-md text-[12px] font-medium transition-colors whitespace-nowrap ' + (tab === t ? 'bg-white text-ink border border-line shadow-sm' : 'text-ink-muted hover:text-ink')}
-                    >
-                      {TAB_LABELS[t]}
-                      {t === 'messages' && detail.openItems.unreadMessages > 0 && (
-                        <span className="ml-1.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-bad text-white text-[10px] font-medium">{detail.openItems.unreadMessages}</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
+            <div className="flex gap-0.5 bg-paper border border-line rounded-lg p-1 shrink-0">
+              {TABS.map(t => (
+                <button
+                  key={t.key}
+                  onClick={() => {
+                    if (t.key === 'operate') { openOperate(); return; }
+                    setTab(t.key);
+                    if (t.key === 'money') loadTransactions(1, '', '', '');
+                    if (t.key === 'records') loadDocuments();
+                    if (t.key === 'messages') loadCourseThread();
+                  }}
+                  className={'px-4 py-1.5 rounded-md text-[12px] font-medium transition-colors whitespace-nowrap ' + (tab === t.key ? 'bg-white text-ink border border-line shadow-sm' : 'text-ink-muted hover:text-ink')}
+                >
+                  {t.label}
+                  {t.key === 'messages' && detail.openItems.unreadMessages > 0 && (
+                    <span className="ml-1.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-bad text-white text-[10px] font-medium">{detail.openItems.unreadMessages}</span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -1047,10 +1230,13 @@ export default function CourseDetailPage() {
                         </a>
                       )}
                     </div>
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="flex gap-3 flex-wrap">
                       {c.operator.emailVerified
                         ? <StatusDot status="ok" label="Email verified" />
                         : <StatusDot status="bad" label="Email not verified" />}
+                      {c.stripeAccountActive
+                        ? <StatusDot status="ok" label="Stripe connected" />
+                        : <StatusDot status="warn" label="No Stripe" />}
                     </div>
                   </div>
                 )}
@@ -1084,6 +1270,9 @@ export default function CourseDetailPage() {
                   </div>
                 </div>
 
+                {/* MP-5d: the Staff tab's one real action — resend a login —
+                    lives here now. Everything else that tab showed is on
+                    this rail already. */}
                 {detail.staff.length > 0 && (
                   <div className="bg-white border border-line rounded-lg p-5">
                     <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Staff Contacts</div>
@@ -1091,15 +1280,26 @@ export default function CourseDetailPage() {
                       {detail.staff.map(s => (
                         <div key={s.id} className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded bg-pine/10 flex items-center justify-center text-pine font-medium text-sm shrink-0">{s.name[0]}</div>
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <div className="text-sm font-medium text-ink truncate">
-                              {s.name} <span className="text-xs text-ink-muted font-normal">· {s.role}</span>
+                              {s.name} <span className="text-xs text-ink-muted font-normal">· {s.role}{s.active ? '' : ' · inactive'}</span>
                             </div>
                             <a href={'mailto:' + s.email} className="text-xs text-pine hover:underline truncate block">{s.email}</a>
                           </div>
+                          <button
+                            onClick={() => resendSetup(s.id, s.name)}
+                            disabled={resendingId === s.id}
+                            title="Email this person a fresh dashboard login"
+                            className="shrink-0 text-[11px] font-medium text-pine hover:text-pine-hover px-2 py-1 rounded-md border border-pine/20 hover:bg-pine/5 transition-colors disabled:opacity-50"
+                          >
+                            {resendingId === s.id ? 'Sending…' : 'Resend login'}
+                          </button>
                         </div>
                       ))}
                     </div>
+                    {resendMsg && (
+                      <p className={'text-xs mt-3 ' + (resendMsg.startsWith('Error') ? 'text-bad' : 'text-ok')}>{resendMsg}</p>
+                    )}
                   </div>
                 )}
               </div>
@@ -1107,8 +1307,8 @@ export default function CourseDetailPage() {
             );
           })()}
 
-          {/* TRANSACTIONS */}
-          {tab === 'transactions' && (
+          {/* MONEY (was Transactions) */}
+          {tab === 'money' && (
             <div className="max-w-5xl">
               <div className="bg-white border border-line rounded-lg p-4 mb-5">
                 <div className="flex flex-wrap gap-3">
@@ -1164,7 +1364,7 @@ export default function CourseDetailPage() {
                             {tx.detail}
                             {tx.status === 'fee_charged' && tx.type === 'booking' && (
                               <button
-                                onClick={() => { const d = tx.date; setTab('teesheet'); setTsDate(d); loadTeeSheet(d); }}
+                                onClick={() => openOperate(tx.date)}
                                 className="ml-1.5 text-pine hover:underline"
                               >View</button>
                             )}
@@ -1200,8 +1400,8 @@ export default function CourseDetailPage() {
             </div>
           )}
 
-          {/* DOCUMENTS — A-05 item 5 */}
-          {tab === 'documents' && (
+          {/* RECORDS (was Documents) — A-05 item 5 */}
+          {tab === 'records' && (
             <div className="max-w-3xl space-y-5">
               {docsError && (
                 <div className="text-sm font-medium px-4 py-2.5 rounded-md border bg-bad/5 text-bad border-bad/20">{docsError}</div>
@@ -1310,113 +1510,173 @@ export default function CourseDetailPage() {
             </div>
           )}
 
-          {/* TEE SHEET */}
-          {tab === 'teesheet' && (
-            <div className="max-w-3xl">
-              <div className="flex items-center gap-3 mb-5">
-                <Calendar className="w-4 h-4 text-ink-muted" />
-                <input
-                  type="date"
-                  value={tsDate}
-                  onChange={e => { setTsDate(e.target.value); loadTeeSheet(e.target.value); }}
-                  className="bg-white border border-line text-ink rounded-md px-3 py-1.5 text-sm outline-none focus:border-pine/40"
-                />
-                {!tsLoading && (
-                  <span className="text-xs text-ink-muted">
-                    {tsSlots.length} slots · {tsSlots.filter(s => s.bookings.length > 0).length} booked
-                  </span>
-                )}
-              </div>
+          {/* OPERATE — MP-5d: Tee Sheet + Schedule merged. The sheet is the
+              output of the schedules, so they belong on one screen, and every
+              mutation here goes through lib/schedule-service — the same code
+              the operator's own dashboard now calls. Members is a read-only
+              card at the bottom: the admin never had a write on it. */}
+          {tab === 'operate' && (
+            <div className="max-w-3xl space-y-6">
 
-              {tsLoading && <div className="text-center text-ink-muted py-12 text-sm">Loading tee sheet...</div>}
-              {!tsLoading && tsSlots.length === 0 && (
-                <div className="text-center text-ink-muted py-12 text-sm bg-white border border-line rounded-lg">
-                  No tee times for this date
+              {/* Tee sheet */}
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <Calendar className="w-4 h-4 text-ink-muted" />
+                  <input
+                    type="date"
+                    value={tsDate}
+                    onChange={e => { setTsDate(e.target.value); loadTeeSheet(e.target.value); }}
+                    className="bg-white border border-line text-ink rounded-md px-3 py-1.5 text-sm outline-none focus:border-pine/40"
+                  />
+                  {!tsLoading && (
+                    <span className="text-xs text-ink-muted">
+                      {tsSlots.length} slots · {tsSlots.filter(s => s.bookings.length > 0).length} booked
+                    </span>
+                  )}
                 </div>
-              )}
 
-              <div className="space-y-2">
-                {tsSlots.map(slot => (
-                  <div
-                    key={slot.id}
-                    className={'rounded-md border overflow-hidden ' + (slot.status === 'blocked' ? 'border-bad/20 bg-bad/5' : slot.bookings.length > 0 ? 'border-ok/20 bg-ok/5' : 'border-line bg-white')}
-                  >
-                    <div className="px-4 py-3 flex items-center gap-3">
-                      <span className="font-mono font-medium text-ink text-sm w-14 shrink-0">{slot.time}</span>
-                      <span className="text-xs text-ink-muted">{slot.holes}h · ${slot.greenFee}</span>
-                      <span className={'text-xs px-2 py-0.5 rounded font-medium ' + (slot.status === 'blocked' ? 'bg-bad/10 text-bad' : slot.bookings.length > 0 ? 'bg-ok/10 text-ok' : 'bg-paper text-ink-muted border border-line')}>
-                        {slot.status === 'blocked' ? 'Blocked' : slot.bookings.length > 0 ? `${slot.bookings.length} booked` : `${slot.playersAvailable} open`}
-                      </span>
-                      <div className="ml-auto flex items-center gap-1.5">
-                        <button
-                          onClick={() => setManualSlot(slot.id)}
-                          className="text-xs px-2.5 py-1 bg-pine hover:bg-pine-hover text-white rounded-md flex items-center gap-1 transition-colors"
-                        >
-                          <Plus className="w-3 h-3" />Add
-                        </button>
-                        <button
-                          onClick={() => blockSlot(slot.id, slot.status !== 'blocked')}
-                          className={'text-xs px-2.5 py-1 rounded-md flex items-center gap-1 border transition-colors ' + (slot.status === 'blocked' ? 'border-ok/20 text-ok bg-ok/5 hover:bg-ok/10' : 'border-bad/20 text-bad bg-bad/5 hover:bg-bad/10')}
-                        >
-                          <Ban className="w-3 h-3" />{slot.status === 'blocked' ? 'Unblock' : 'Block'}
-                        </button>
+                {opNote && (
+                  <div className={'mb-3 text-sm font-medium px-4 py-2.5 rounded-md border flex items-center justify-between gap-3 ' + (opNote.ok ? 'bg-ok/5 text-ok border-ok/20' : 'bg-bad/5 text-bad border-bad/20')}>
+                    <span>{opNote.text}</span>
+                    <button onClick={() => setOpNote(null)} className="text-ink-muted hover:text-ink transition-colors shrink-0"><X className="w-3.5 h-3.5" /></button>
+                  </div>
+                )}
+
+                {tsLoading && <div className="text-center text-ink-muted py-12 text-sm">Loading tee sheet...</div>}
+                {!tsLoading && tsSlots.length === 0 && (
+                  <div className="text-center text-ink-muted py-12 text-sm bg-white border border-line rounded-lg">
+                    {schedules.length === 0
+                      ? 'No tee times for this date — this course has no schedule yet. Add one below.'
+                      : 'No tee times for this date'}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  {tsSlots.map(slot => {
+                    const busy = slotBusy === slot.id;
+                    return (
+                    <div
+                      key={slot.id}
+                      className={'rounded-md border overflow-hidden ' + (slot.status === 'blocked' ? 'border-bad/20 bg-bad/5' : slot.bookings.length > 0 ? 'border-ok/20 bg-ok/5' : 'border-line bg-white') + (busy ? ' opacity-60' : '')}
+                    >
+                      <div className="px-4 py-3 flex items-center gap-3">
+                        <span className="font-mono font-medium text-ink text-sm w-14 shrink-0">{slot.time}</span>
+                        <span className="text-xs text-ink-muted">{slot.holes}h · ${slot.greenFee}</span>
+                        <span className={'text-xs px-2 py-0.5 rounded font-medium ' + (slot.status === 'blocked' ? 'bg-bad/10 text-bad' : slot.bookings.length > 0 ? 'bg-ok/10 text-ok' : 'bg-paper text-ink-muted border border-line')}>
+                          {slot.status === 'blocked' ? 'Blocked' : slot.bookings.length > 0 ? `${slot.bookings.length} booked` : `${slot.playersAvailable} open`}
+                        </span>
+                        <div className="ml-auto flex items-center gap-1.5">
+                          <button
+                            onClick={() => { setManualError(''); setManualSlot(slot.id); }}
+                            disabled={busy || slot.status === 'blocked'}
+                            className="text-xs px-2.5 py-1 bg-pine hover:bg-pine-hover text-white rounded-md flex items-center gap-1 transition-colors disabled:opacity-50"
+                          >
+                            <Plus className="w-3 h-3" />Add
+                          </button>
+                          <button
+                            onClick={() => blockSlot(slot.id, slot.status !== 'blocked')}
+                            disabled={busy}
+                            className={'text-xs px-2.5 py-1 rounded-md flex items-center gap-1 border transition-colors disabled:opacity-50 ' + (slot.status === 'blocked' ? 'border-ok/20 text-ok bg-ok/5 hover:bg-ok/10' : 'border-bad/20 text-bad bg-bad/5 hover:bg-bad/10')}
+                          >
+                            <Ban className="w-3 h-3" />{busy ? 'Working…' : slot.status === 'blocked' ? 'Unblock' : 'Block'}
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    {slot.bookings.length > 0 && (
-                      <div className="border-t border-line/50 px-4 py-2 space-y-2">
-                        {slot.bookings.map(b => (
-                          <div key={b.id} className="flex items-center justify-between py-0.5">
-                            <div className="flex items-center gap-3">
-                              <div className="w-6 h-6 rounded bg-pine/10 flex items-center justify-center text-pine font-medium text-xs shrink-0">{b.golferName[0]}</div>
-                              <div>
-                                <div className="font-medium text-ink text-xs">
-                                  {b.golferName} <span className="text-ink-muted font-normal">· {b.players}p</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <a href={'mailto:' + b.golferEmail} className="text-xs text-pine hover:underline">{b.golferEmail}</a>
-                                  {b.golferPhone && <span className="text-xs text-ink-muted">{b.golferPhone}</span>}
-                                  {b.paymentStatus === 'manual' && (
-                                    <span className="text-xs px-1.5 py-0.5 bg-warn/10 text-warn rounded border border-warn/20">Manual</span>
-                                  )}
+                      {slot.bookings.length > 0 && (
+                        <div className="border-t border-line/50 px-4 py-2 space-y-2">
+                          {slot.bookings.map(b => (
+                            <div key={b.id} className="flex items-center justify-between py-0.5">
+                              <div className="flex items-center gap-3">
+                                <div className="w-6 h-6 rounded bg-pine/10 flex items-center justify-center text-pine font-medium text-xs shrink-0">{b.golferName[0]}</div>
+                                <div>
+                                  <div className="font-medium text-ink text-xs">
+                                    {b.golferName} <span className="text-ink-muted font-normal">· {b.players}p</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <a href={'mailto:' + b.golferEmail} className="text-xs text-pine hover:underline">{b.golferEmail}</a>
+                                    {b.golferPhone && <span className="text-xs text-ink-muted">{b.golferPhone}</span>}
+                                    {b.paymentStatus === 'manual' && (
+                                      <span className="text-xs px-1.5 py-0.5 bg-warn/10 text-warn rounded border border-warn/20">Manual</span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs font-medium text-ok">{fmtMoney(b.totalAmount / 100)}</span>
+                                <button
+                                  onClick={() => cancelBooking(b.id, slot.id)}
+                                  disabled={busy}
+                                  className="text-xs text-bad hover:text-bad/80 px-2 py-0.5 border border-bad/20 rounded-md hover:bg-bad/5 transition-colors disabled:opacity-50"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                              <span className="text-xs font-medium text-ok">{fmtMoney(b.totalAmount / 100)}</span>
-                              <button
-                                onClick={() => cancelBooking(b.id)}
-                                className="text-xs text-bad hover:text-bad/80 px-2 py-0.5 border border-bad/20 rounded-md hover:bg-bad/5 transition-colors"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* SCHEDULE */}
-          {tab === 'schedule' && (
-            <div className="max-w-2xl space-y-5">
-              {schedMsg && (
-                <div className={'text-sm font-medium px-4 py-2.5 rounded-md border ' + (schedMsg === 'error' ? 'bg-bad/5 text-bad border-bad/20' : 'bg-ok/5 text-ok border-ok/20')}>
-                  {schedMsg === 'error' ? 'Error saving' : schedMsg === 'schedule_saved' ? 'Schedule saved — tee times generated for next 8 days' : 'Saved'}
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    );
+                  })}
                 </div>
-              )}
+              </div>
+
+              {/* Schedules — with EDIT. The PATCH endpoint had existed with no
+                  UI caller, so fixing a fee typo meant delete + recreate, which
+                  rebuilt the whole sheet. */}
               <div className="bg-white border border-line rounded-lg p-6 space-y-4">
-                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Tee Time Schedules</div>
+                <div className="flex items-center justify-between">
+                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Tee Time Schedules</div>
+                  {!showAddSched && !editSched && (
+                    <button
+                      onClick={() => { setSchedMsg(null); setShowAddSched(true); }}
+                      className="flex items-center gap-1.5 text-xs font-medium text-pine hover:text-pine-hover transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />Add schedule
+                    </button>
+                  )}
+                </div>
+
+                {schedMsg && (
+                  <div className={'text-sm font-medium px-4 py-2.5 rounded-md border flex items-center justify-between gap-3 ' + (schedMsg.ok ? 'bg-ok/5 text-ok border-ok/20' : 'bg-bad/5 text-bad border-bad/20')}>
+                    <span>{schedMsg.text}</span>
+                    <button onClick={() => setSchedMsg(null)} className="text-ink-muted hover:text-ink transition-colors shrink-0"><X className="w-3.5 h-3.5" /></button>
+                  </div>
+                )}
+
                 {schedules.length > 0 ? (
                   <div className="space-y-2">
-                    {schedules.map(s => (
-                      <div key={s.id} className="flex items-center justify-between bg-paper border border-line rounded-md px-4 py-3">
-                        <div>
-                          <div className="font-medium text-ink text-sm">
-                            {s.daysOfWeek.length === 0 ? 'Every day' : s.daysOfWeek.map(d => DAYS[d]).join(', ')} · {s.startTime}–{s.endTime} every {s.intervalMinutes}min
+                    {schedules.map(s => editSched?.id === s.id ? (
+                      <div key={s.id} className="bg-paper border border-pine/30 rounded-md p-4 space-y-3">
+                        <div className="text-[11px] uppercase tracking-[0.06em] text-pine">Editing schedule</div>
+                        <ScheduleFields
+                          value={editSched.form}
+                          onChange={p => setEditSched(e => e ? { ...e, form: { ...e.form, ...p } } : e)}
+                          showMemberRates={!!setupForm.hasMemberPricing}
+                        />
+                        {editError && <p className="text-xs text-bad">{editError}</p>}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => { setEditSched(null); setEditError(''); }}
+                            className="flex-1 border border-line text-ink-soft py-2 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={saveScheduleEdit}
+                            disabled={editSaving}
+                            className="flex-1 bg-pine hover:bg-pine-hover disabled:opacity-50 text-white py-2 rounded-md text-[12.5px] font-medium transition-colors"
+                          >
+                            {editSaving ? 'Saving…' : 'Save & rebuild tee sheet'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div key={s.id} className={'flex items-center justify-between bg-paper border border-line rounded-md px-4 py-3' + (s.active ? '' : ' opacity-60')}>
+                        <div className="min-w-0">
+                          <div className="font-medium text-ink text-sm flex items-center gap-2 flex-wrap">
+                            <span>{s.daysOfWeek.length === 0 ? 'Every day' : s.daysOfWeek.map(d => DAYS[d]).join(', ')} · {s.startTime}–{s.endTime} every {s.intervalMinutes}min</span>
+                            {!s.active && <StatusDot status="neutral" label="Paused by course" />}
                           </div>
                           <div className="text-ink-muted text-xs mt-0.5">
                             WD ${s.greenFeeWeekday} / WE ${s.greenFeeWeekend} · Cart ${s.cartFee}
@@ -1424,238 +1684,123 @@ export default function CourseDetailPage() {
                             {s.walkingAllowed ? ' · Walking' : ''}
                           </div>
                         </div>
-                        <button
-                          onClick={() => { setSchedDeleteError(''); setSchedDeleteTarget(s.id); }}
-                          className="text-ink-muted hover:text-bad transition-colors p-1.5 rounded-md hover:bg-bad/5"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          <button
+                            onClick={() => beginScheduleEdit(s)}
+                            disabled={!!editSched}
+                            title="Edit schedule"
+                            className="text-ink-muted hover:text-pine transition-colors p-1.5 rounded-md hover:bg-pine/5 disabled:opacity-40"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => { setSchedDeleteError(''); setSchedDeleteTarget(s.id); }}
+                            title="Delete schedule"
+                            className="text-ink-muted hover:text-bad transition-colors p-1.5 rounded-md hover:bg-bad/5"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <p className="text-sm text-ink-muted bg-paper rounded-md p-4 border border-line">
-                    No schedule yet — add one below to make this course bookable.
+                    No schedule yet — add one to make this course bookable.
                   </p>
                 )}
 
-                <div className="border-t border-line pt-4 space-y-3">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Add Schedule</div>
-                  <div>
-                    <label className="text-xs text-ink-muted block mb-1.5">Days <span className="text-ink-faint">(none = every day)</span></label>
-                    <div className="flex gap-1.5">
-                      {DAYS.map((day, i) => (
-                        <button
-                          key={day}
-                          onClick={() => toggleDay(i)}
-                          className={'flex-1 py-1.5 rounded-md text-xs font-medium border transition-colors ' + (newSchedule.daysOfWeek.includes(i) ? 'bg-pine text-white border-pine' : 'bg-paper text-ink-muted border-line hover:border-pine/40 hover:text-ink')}
-                        >
-                          {day}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="text-xs text-ink-muted block mb-1">First tee</label>
-                      <input type="time" value={newSchedule.startTime} onChange={e => setNewSchedule(s => ({ ...s, startTime: e.target.value }))} className={iCls} />
-                    </div>
-                    <div>
-                      <label className="text-xs text-ink-muted block mb-1">Last tee</label>
-                      <input type="time" value={newSchedule.endTime} onChange={e => setNewSchedule(s => ({ ...s, endTime: e.target.value }))} className={iCls} />
-                    </div>
-                    <div>
-                      <label className="text-xs text-ink-muted block mb-1">Interval</label>
-                      <select value={newSchedule.intervalMinutes} onChange={e => setNewSchedule(s => ({ ...s, intervalMinutes: Number(e.target.value) }))} className={iCls}>
-                        {[7, 8, 9, 10, 12, 15].map(v => <option key={v} value={v}>{v} min</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="text-xs text-ink-muted block mb-1">WD Green fee $</label>
-                      <input type="number" value={newSchedule.greenFeeWeekday} onChange={e => setNewSchedule(s => ({ ...s, greenFeeWeekday: Number(e.target.value) }))} className={iCls} />
-                    </div>
-                    <div>
-                      <label className="text-xs text-ink-muted block mb-1">WE Green fee $</label>
-                      <input type="number" value={newSchedule.greenFeeWeekend} onChange={e => setNewSchedule(s => ({ ...s, greenFeeWeekend: Number(e.target.value) }))} className={iCls} />
-                    </div>
-                    <div>
-                      <label className="text-xs text-ink-muted block mb-1">Cart fee $</label>
-                      <input type="number" value={newSchedule.cartFee} onChange={e => setNewSchedule(s => ({ ...s, cartFee: Number(e.target.value) }))} className={iCls} />
-                    </div>
-                  </div>
-                  {!!setupForm.hasMemberPricing && (
-                    <div className="grid grid-cols-2 gap-3 bg-pine/5 border border-pine/20 rounded-md p-3">
-                      <div>
-                        <label className="text-xs font-medium text-pine block mb-1">Member rate WD $</label>
-                        <input type="number" value={newSchedule.memberRateWeekday} onChange={e => setNewSchedule(s => ({ ...s, memberRateWeekday: e.target.value }))} className={iCls} />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-pine block mb-1">Member rate WE $</label>
-                        <input type="number" value={newSchedule.memberRateWeekend} onChange={e => setNewSchedule(s => ({ ...s, memberRateWeekend: e.target.value }))} className={iCls} />
-                      </div>
-                    </div>
-                  )}
-                  <label className="flex items-center gap-2 text-sm text-ink cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={newSchedule.walkingAllowed}
-                      onChange={e => setNewSchedule(s => ({ ...s, walkingAllowed: e.target.checked }))}
-                      className="w-4 h-4 accent-pine rounded"
+                {showAddSched && (
+                  <div className="border-t border-line pt-4 space-y-3">
+                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Add Schedule</div>
+                    <ScheduleFields
+                      value={newSchedule}
+                      onChange={p => setNewSchedule(s => ({ ...s, ...p }))}
+                      showMemberRates={!!setupForm.hasMemberPricing}
                     />
-                    Walking allowed
-                  </label>
-                  <button
-                    onClick={addSchedule}
-                    disabled={schedSaving}
-                    className="w-full bg-pine hover:bg-pine-hover disabled:opacity-50 text-white py-2.5 rounded-md text-[12.5px] font-medium transition-colors"
-                  >
-                    {schedSaving ? 'Saving...' : 'Save Schedule & Generate Tee Times'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* MEMBERS */}
-          {tab === 'members' && (
-            <div className="max-w-4xl">
-              {membersLoading && <div className="text-center text-ink-muted py-12 text-sm">Loading...</div>}
-              {!membersLoading && membersError && (
-                <div className="rounded-lg border border-bad/20 bg-bad/5 px-5 py-6 text-center">
-                  <p className="text-sm text-bad mb-3">{membersError}</p>
-                  <button onClick={() => loadMembers()} className="text-xs font-medium text-ink-soft hover:text-ink px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">Retry</button>
-                </div>
-              )}
-              {!membersLoading && !membersError && !membersData && (
-                <div className="text-center text-ink-muted py-12 text-sm bg-white border border-line rounded-lg">
-                  No membership data for this course.
-                </div>
-              )}
-              {!membersLoading && membersData && (
-                <div className="space-y-6">
-                  <div>
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Membership Tiers</div>
-                    {membersData.tiers.length === 0 ? (
-                      <div className="text-sm text-ink-muted bg-white border border-line rounded-lg p-6 text-center">No tiers set up</div>
-                    ) : (
-                      <div className="bg-white border border-line rounded-lg divide-y divide-line-soft">
-                        {membersData.tiers.map(t => (
-                          <div key={t.id} className="flex items-center gap-4 px-5 py-3.5">
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-ink text-sm">{t.name}</div>
-                              <div className="text-xs text-ink-muted">{t.memberCount} active member{t.memberCount !== 1 ? 's' : ''} · ${t.annualFee}/yr</div>
-                            </div>
-                            <StatusDot status={t.active ? 'ok' : 'neutral'} label={t.active ? 'Active' : 'Inactive'} />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">
-                      Members — {membersData.members.length} total
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setShowAddSched(false)}
+                        className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={addSchedule}
+                        disabled={schedSaving}
+                        className="flex-1 bg-pine hover:bg-pine-hover disabled:opacity-50 text-white py-2.5 rounded-md text-[12.5px] font-medium transition-colors"
+                      >
+                        {schedSaving ? 'Saving...' : 'Save Schedule & Generate Tee Times'}
+                      </button>
                     </div>
-                    {membersData.members.length === 0 ? (
-                      <div className="text-sm text-ink-muted bg-white border border-line rounded-lg p-6 text-center">No members</div>
-                    ) : (
-                      <div className="bg-white border border-line rounded-lg divide-y divide-line-soft">
-                        {membersData.members.map(m => {
-                          const name = m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}` : (m.inviteName || '—');
-                          const email = m.golfer?.email || m.inviteEmail || '';
-                          const initial = name[0] || '?';
-                          return (
-                            <div key={m.id} className="flex items-center gap-4 px-5 py-3">
-                              <div className="w-8 h-8 rounded bg-pine/10 flex items-center justify-center text-pine font-medium text-sm shrink-0">
-                                {initial}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="font-medium text-ink text-sm">{name}</div>
-                                <div className="text-xs text-ink-muted truncate">{email}{m.tierName ? ` · ${m.tierName}` : ''}</div>
-                              </div>
-                              <div className="flex flex-col items-end gap-0.5">
-                                <StatusDot status={m.status === 'active' ? 'ok' : 'neutral'} label={m.status} />
-                                <span className="text-[10px] text-ink-faint capitalize">{m.paymentStatus.replace('_', ' ')}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* STAFF */}
-          {tab === 'staff' && (
-            <div className="max-w-2xl space-y-5">
-              {c.operator && (
-                <div className="bg-white border border-line rounded-lg p-5">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Operator Account</div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-md bg-pine/10 flex items-center justify-center text-pine font-medium text-base shrink-0">
-                      {c.operator.name[0]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-ink">{c.operator.name}</div>
-                      <div className="text-sm text-ink-muted">{c.operator.email}</div>
-                      <div className="text-xs text-ink-faint mt-0.5">Onboarding {c.operator.onboardingStep}/3</div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap justify-end">
-                      {c.operator.emailVerified
-                        ? <StatusDot status="ok" label="Verified" />
-                        : <StatusDot status="bad" label="Unverified" />}
-                      {c.stripeAccountActive
-                        ? <span className="text-[11px] px-1.5 py-0.5 rounded bg-pine/5 text-pine border border-pine/20">Stripe</span>
-                        : <span className="text-[11px] px-1.5 py-0.5 rounded bg-warn/5 text-warn border border-warn/20">No Stripe</span>}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="bg-white border border-line rounded-lg">
-                <div className="px-5 py-3.5 border-b border-line">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">
-                    Staff Accounts — {detail.staff.length}
-                  </div>
-                </div>
-                {detail.staff.length === 0 ? (
-                  <div className="px-5 py-8 text-center text-sm text-ink-muted">No staff accounts</div>
-                ) : (
-                  <div className="divide-y divide-line-soft">
-                    {detail.staff.map(s => (
-                      <div key={s.id} className="flex items-center gap-4 px-5 py-3.5">
-                        <div className="w-9 h-9 rounded bg-pine/10 flex items-center justify-center text-pine font-medium text-sm shrink-0">
-                          {s.name[0]}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-ink text-sm">{s.name}</div>
-                          <div className="text-xs text-ink-muted">{s.email} · <span className="capitalize">{s.role}</span></div>
-                        </div>
-                        <StatusDot status={s.active ? 'ok' : 'neutral'} label={s.active ? 'Active' : 'Inactive'} />
-                        <button
-                          onClick={() => resendSetup(s.id, s.name)}
-                          disabled={resendingId === s.id}
-                          className="flex items-center gap-1.5 text-[12px] font-medium text-pine hover:text-pine-hover px-3 py-1.5 rounded-md border border-pine/20 hover:bg-pine/5 transition-colors disabled:opacity-50 shrink-0"
-                        >
-                          <Send className="w-3.5 h-3.5" />
-                          {resendingId === s.id ? 'Sending...' : 'Resend login'}
-                        </button>
-                      </div>
-                    ))}
                   </div>
                 )}
               </div>
 
-              {resendMsg && (
-                <div className={'text-sm font-medium px-4 py-2.5 rounded-md border ' + (resendMsg.startsWith('Error') ? 'bg-bad/5 text-bad border-bad/20' : 'bg-ok/5 text-ok border-ok/20')}>
-                  {resendMsg}
+              {/* Members — read-only. The course runs its own programme from
+                  the dashboard; this is a window onto it, not a control. */}
+              <div className="bg-white border border-line rounded-lg p-6">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Members</div>
+                  <span className="text-[11px] text-ink-faint">Read-only — the course manages this</span>
                 </div>
-              )}
+                {membersLoading && <div className="text-center text-ink-muted py-8 text-sm">Loading...</div>}
+                {!membersLoading && membersError && (
+                  <div className="rounded-md border border-bad/20 bg-bad/5 px-4 py-4 text-center mt-3">
+                    <p className="text-sm text-bad mb-2">{membersError}</p>
+                    <button onClick={() => loadMembers()} className="text-xs font-medium text-ink-soft hover:text-ink px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">Retry</button>
+                  </div>
+                )}
+                {!membersLoading && !membersError && membersData && (
+                  membersData.tiers.length === 0 && membersData.members.length === 0 ? (
+                    <p className="text-sm text-ink-muted mt-2">No membership programme set up.</p>
+                  ) : (
+                    <div className="space-y-4 mt-3">
+                      {membersData.tiers.length > 0 && (
+                        <div className="border border-line rounded-md divide-y divide-line-soft">
+                          {membersData.tiers.map(t => (
+                            <div key={t.id} className="flex items-center gap-4 px-4 py-2.5">
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-ink text-sm">{t.name}</div>
+                                <div className="text-xs text-ink-muted">{t.memberCount} active member{t.memberCount !== 1 ? 's' : ''} · ${t.annualFee}/yr</div>
+                              </div>
+                              <StatusDot status={t.active ? 'ok' : 'neutral'} label={t.active ? 'Active' : 'Inactive'} />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div>
+                        <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">
+                          {membersData.members.length} member{membersData.members.length === 1 ? '' : 's'}
+                        </div>
+                        {membersData.members.length === 0 ? (
+                          <p className="text-sm text-ink-muted">No members yet.</p>
+                        ) : (
+                          <div className="border border-line rounded-md divide-y divide-line-soft">
+                            {membersData.members.map(m => {
+                              const name = m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}` : (m.inviteName || '—');
+                              const email = m.golfer?.email || m.inviteEmail || '';
+                              return (
+                                <div key={m.id} className="flex items-center gap-3 px-4 py-2.5">
+                                  <div className="w-7 h-7 rounded bg-pine/10 flex items-center justify-center text-pine font-medium text-xs shrink-0">{name[0] || '?'}</div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="font-medium text-ink text-sm truncate">{name}</div>
+                                    <div className="text-xs text-ink-muted truncate">{email}{m.tierName ? ` · ${m.tierName}` : ''}</div>
+                                  </div>
+                                  <div className="flex flex-col items-end gap-0.5">
+                                    <StatusDot status={m.status === 'active' ? 'ok' : 'neutral'} label={m.status} />
+                                    <span className="text-[10px] text-ink-faint capitalize">{m.paymentStatus.replace('_', ' ')}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                )}
+              </div>
             </div>
           )}
 
@@ -2121,6 +2266,7 @@ export default function CourseDetailPage() {
                 </select>
               </div>
             </div>
+            {manualError && <p className="text-xs text-bad mt-3">{manualError}</p>}
             <div className="flex gap-3 mt-5">
               <button
                 onClick={() => setManualSlot(null)}
@@ -2130,9 +2276,10 @@ export default function CourseDetailPage() {
               </button>
               <button
                 onClick={addManualBooking}
-                className="flex-1 px-4 py-2.5 bg-pine hover:bg-pine-hover text-white rounded-md text-[12.5px] font-medium transition-colors"
+                disabled={manualSaving}
+                className="flex-1 px-4 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-50 text-white rounded-md text-[12.5px] font-medium transition-colors"
               >
-                Add Booking
+                {manualSaving ? 'Adding…' : 'Add Booking'}
               </button>
             </div>
           </div>

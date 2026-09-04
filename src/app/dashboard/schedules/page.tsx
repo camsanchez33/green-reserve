@@ -85,7 +85,7 @@ export default function SchedulesPage() {
   }
 
   async function del(id: string) {
-    if (!confirm('Delete this schedule? Future tee times from this schedule will not be re-generated.')) return;
+    if (!confirm('Delete this schedule?\n\nOpen tee times it was creating are removed from the sheet straight away. Times that already have bookings are kept.')) return;
     await fetch('/api/operator/schedule',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
     setSchedules(s=>s.filter(x=>x.id!==id));
   }
