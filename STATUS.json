@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-04T23:53:09.187Z",
+  "generatedAt": "2026-09-04T23:54:15.158Z",
   "repo": {
-    "head": "4eb1c9d",
+    "head": "892af22",
     "branch": "main",
     "dirtyCount": 2,
     "dirty": [
@@ -11,7 +11,7 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-04T19:26:37-04:00",
+    "queueLastCommit": "2026-09-04T19:53:10-04:00",
     "unrecorded": []
   },
   "counts": {
@@ -836,6 +836,16 @@
   },
   "recentCommits": [
     {
+      "h": "892af22",
+      "date": "2026-09-04",
+      "subject": "MP-8a fix: stale [H] dependency after the orphan-sweep move (tsc was red on main)"
+    },
+    {
+      "h": "0b51cc5",
+      "date": "2026-09-04",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "4eb1c9d",
       "date": "2026-09-04",
       "subject": "MP-8a: sidebar links are links, badges survive leaving the Overview, System says what is deployed"
@@ -882,16 +892,6 @@
     },
     {
       "h": "1b2840e",
-      "date": "2026-09-03",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "2b67440",
-      "date": "2026-09-03",
-      "subject": "MP-5e (part): surface where the setup sheet and the live course disagree"
-    },
-    {
-      "h": "b2159c8",
       "date": "2026-09-03",
       "subject": "queue/spec update"
     }

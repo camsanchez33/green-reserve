@@ -1080,7 +1080,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       per-thread context card (course health, last booking, open items) so a
       reply does not need a tab hop; send-test-to-self on the composer.
   - [ ] MP-8 — chrome + System (split into 8a–8b)
-    - [x] MP-8a (4eb1c9d) — sidebar nav items are real <Link>s (middle/cmd-click
+    - [x] MP-8a (4eb1c9d, fix 892af22) — sidebar nav items are real <Link>s (middle/cmd-click
       work); ONE /api/admin/nav-badges fetch feeds inquiries + messages + money
       badges (inquiries used to render only when the Overview passed the prop,
       so it vanished off-Overview) from the same predicates the pages use —

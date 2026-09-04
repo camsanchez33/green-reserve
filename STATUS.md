@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-04 23:53 UTC · branch `main` · HEAD `4eb1c9d` · working tree **2 dirty file(s)**
+Generated 2026-09-04 23:54 UTC · branch `main` · HEAD `892af22` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -180,6 +180,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `892af22` 2026-09-04 — MP-8a fix: stale [H] dependency after the orphan-sweep move (tsc was red on main)
+- `0b51cc5` 2026-09-04 — queue/spec update
 - `4eb1c9d` 2026-09-04 — MP-8a: sidebar links are links, badges survive leaving the Overview, System says what is deployed
 - `9dc1f2c` 2026-09-04 — queue/spec update
 - `6c94836` 2026-09-04 — MP-7a: Messages says who is waiting; Broadcasts stops lying about delivery
@@ -190,8 +192,6 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `694545f` 2026-09-04 — queue/spec update
 - `2c11518` 2026-09-04 — Remove the Feature button — it set a flag no golfer could ever see
 - `1b2840e` 2026-09-03 — queue/spec update
-- `2b67440` 2026-09-03 — MP-5e (part): surface where the setup sheet and the live course disagree
-- `b2159c8` 2026-09-03 — queue/spec update
 
 ---
 
