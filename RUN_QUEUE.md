@@ -1008,10 +1008,52 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       no test DB; verified by reading both routes against the service and by
       tsc. Cam must walk edit + delete on a course with a live schedule.
       NEEDS REVIEW.
-  - [ ] MP-6 — money reshape: Revenue problems pinned all-time + collected-basis
-    P&L + payout history + unit economics; Golfers record page + palette search
-    extension + support actions (cancel, receipt, card-update link); red sidebar
-    badge for failed charges (big, after MP-3)
+  - [ ] MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today)
+    - [x] MP-6a (c2c35dc) — the numbers on /admin/revenue stop lying. Headline
+      is fees COLLECTED (paid rounds, placed by checkedInAt) — the old one
+      summed every confirmed booking by createdAt, so a no-show counted as
+      earned forever and the reconciliation banner fired STRUCTURALLY on any
+      booking made in one window and checked in during another. "Booked,
+      awaiting check-in" stays as the pipeline line. Reconciliation is
+      like-for-like and tri-state (Stripe unreachable = couldn't verify, not
+      a pass). Problems pinned to the top, ALL-TIME: failed charges + rounds
+      past their tee time never checked in (the leak the accrual number hid,
+      with $ uncollected); per-course Failed column all-time to match; red
+      sidebar badge on Revenue. Late-cancel fees labelled COURSE revenue (GR
+      $0 — cron charges applicationFeeCents: 0), two states charged /
+      refunded-at-check-in; the old "pending" rows were pre-MP-1 phantoms
+      (verified in prod: 2 rows, July, never chargeable) — gone. Net delta in
+      absolute dollars; CSV names period, basis and filters.
+      APPROXIMATION, STATED: no paidAt column, so collection time =
+      checkedInAt; only retry-charge-then-check-in-later differs, by hours.
+      NOT COVERED BY TESTS: no test DB — verified read-only against prod
+      (accrual vs collected agree on the 8 paid rounds; missed = the 2
+      test-course no-shows; late-fee states all correct). NEEDS REVIEW.
+    - [ ] MP-6b — refund primitive + chargeback visibility (no migration):
+      there is NO refund UI anywhere — the only refund is the automatic
+      late-fee refund at check-in, and when it fails it is a console.error
+      with a comment saying support can do it in Stripe. Add a shared
+      refundBooking() service (partial + full, idempotency key, PaymentEvent
+      row, golfer email) and an admin action on the Golfers record + course
+      Money tab. Webhook handles exactly ONE event type (account.updated);
+      add charge.refunded, charge.dispute.created / closed, and
+      payment_intent.payment_failed so the first chargeback is not invisible
+      until the bank letter. Surface disputes in the Problems block.
+    - [ ] MP-6c — payout history + unit economics (no migration): "money
+      that reached the bank" is fetched from Stripe and discarded — list
+      payouts with arrival dates under the Platform Stripe card; effective
+      take per booking after Stripe's fixed component (the margin story
+      differs wildly between 1-player and 4-player bookings, data already
+      fetched); transaction-level CSV for an accountant (all courses, period,
+      one row per charge/refund). Real paidAt column is the schema half —
+      attended, and it makes 6a's checkedInAt approximation exact.
+    - [ ] MP-6d — Golfers record page (no migration): palette search extended
+      with phone + guest-booking matching, deep-link ?id=; record = identity +
+      trust strip (rounds, no-shows, late cancels, failed charges, lifetime
+      collected) + merged bookings/money timeline + action row: resend
+      confirmation (fixed — reports success only after the send), resend
+      receipt, cancel via performCancellation, card-update link, refund once
+      6b lands. paymentStatus is fetched and never rendered — render it.
   - [ ] MP-7 — comms merge: Broadcasts composer into Messages (owner-only),
     single-announcement storage with per-course read state, real delivery counts
     from awaited sends, unanswered-first sort + age badges, thread close +
