@@ -968,13 +968,20 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       answers "no policy" and the builder correctly writes 0. Now mirrors the
       builder's `hasCancellationPolicy` gate; production reports zero drift.
       19 assertions. NEEDS REVIEW.
-    - [ ] MP-5e part 2 — CAM'S DECISION NEEDED: the Feature button. Verified
-      2026-09-03: `/api/courses` supports `featured=1` and orders by it but
-      has ZERO callers anywhere in src/, and `src/app/courses/` contains only
-      `[slug]` — there is no golfer course directory, so the star button on
-      the course header changes nothing a golfer can see. Either build the
-      directory (a real feature: index page, search, cards, and it is not in
-      the perf-audit page list) or delete the button. Not guessing this one.
+    - [x] MP-5e part 2 (2c11518) — Feature button DELETED. Cam's call
+      2026-09-04: it set a flag no golfer could ever see (`/api/courses`
+      supports `featured=1` and orders by it but has zero callers, and
+      `src/app/courses/` holds only `[slug]`). Removed the header button, the
+      ⋮ item, the list's Featured filter and the state stars. The
+      `course.featured` column and the PATCH that writes it stay, so building
+      the directory later re-enables featuring in one line, not a migration.
+      `/api/courses` left in place — verified it leaks nothing (live,
+      non-archived courses; public card data) and it is the natural data
+      source for the directory if it is ever built. NEEDS REVIEW.
+    - [ ] Golfer course directory (`/courses`) — NOT scheduled. If Cam wants
+      browse/search, this is the feature: index page, search + filters, cards,
+      and it must be added to the perf-audit page list. `/api/courses` already
+      serves exactly the right payload. Featuring comes back with it.
     - [ ] MP-5e part 3 — the Overview relationship feed (notes + settings
       changes + messages + status events all exist, none rendered as one
       chronological timeline), operator engagement (last dashboard login),
