@@ -1054,10 +1054,31 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       confirmation (fixed — reports success only after the send), resend
       receipt, cancel via performCancellation, card-update link, refund once
       6b lands. paymentStatus is fetched and never rendered — render it.
-  - [ ] MP-7 — comms merge: Broadcasts composer into Messages (owner-only),
-    single-announcement storage with per-course read state, real delivery counts
-    from awaited sends, unanswered-first sort + age badges, thread close +
-    archived labelling, context card (medium)
+  - [ ] MP-7 — comms merge (split into 7a–7b)
+    - [x] MP-7a (6c94836) — Messages says who is waiting; Broadcasts stops lying
+      about delivery. NEW `lib/thread-signal.ts` is THE derivation for
+      "waiting on us / for how long": the Overview action queue had its own
+      copy and the inbox had none. Inbox sorts waiting-first (longest wait on
+      top) with an age badge; the signal IGNORES announcements so a broadcast
+      cannot make an operator's open question look answered. Archived courses'
+      threads labelled + composer locked, server refuses too (you could email
+      a departed operator); not-live labelled. Broadcast sends are AWAITED and
+      counted by outcome with failures named — they fired after the response
+      and reported the recipient count as "delivered"; `sendAnnouncementEmail`
+      now throws on Resend's `{ error }` instead of discarding it. ONE
+      recipient filter for thread-insert / email / preview (were three).
+      Broadcasts merged into Messages as an Announcements view (owner-only
+      composer, history for support+); /admin/broadcasts redirects; nav item
+      removed, palette repointed. GET role gate was already SUPPORT_PLUS
+      (MP-2) — met, nothing to do. 9 assertions
+      (scripts/thread-signal-test.ts). NEEDS REVIEW.
+    - [ ] MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE,
+      ATTENDED): store an announcement ONCE with per-course read state instead
+      of N copied Message rows (which reorder the whole inbox and overwrite
+      every preview with "[Announcement]…"); thread close/reopen with a
+      closedAt so a finished conversation stops competing for attention;
+      per-thread context card (course health, last booking, open items) so a
+      reply does not need a tab hop; send-test-to-self on the composer.
   - [ ] MP-8 — chrome + System: sidebar real links + self-fetched badges +
     demotions, palette capability gating, System project-deep links + read-only
     Platform card + live cron dots, orphan sweep relocated off the Courses list
