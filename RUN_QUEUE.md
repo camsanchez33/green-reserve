@@ -1079,10 +1079,30 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       closedAt so a finished conversation stops competing for attention;
       per-thread context card (course health, last booking, open items) so a
       reply does not need a tab hop; send-test-to-self on the composer.
-  - [ ] MP-8 — chrome + System: sidebar real links + self-fetched badges +
-    demotions, palette capability gating, System project-deep links + read-only
-    Platform card + live cron dots, orphan sweep relocated off the Courses list
-    (small-medium, needs MP-3)
+  - [ ] MP-8 — chrome + System (split into 8a–8b)
+    - [x] MP-8a (4eb1c9d) — sidebar nav items are real <Link>s (middle/cmd-click
+      work); ONE /api/admin/nav-badges fetch feeds inquiries + messages + money
+      badges (inquiries used to render only when the Overview passed the prop,
+      so it vanished off-Overview) from the same predicates the pages use —
+      `lib/money-problems.ts` is shared with the Revenue route; Golfers icon no
+      longer a second magnifier; palette Announcements gated support+. System:
+      Sentry/GitHub links project-deep from env, Vercel via optional
+      ADMIN_VERCEL_PROJECT_URL (says when generic — the team slug is not
+      exposed); Crons card lists the five real schedules from vercel.json;
+      read-only Platform card (fee, deployed commit/branch/env, integration
+      keys present — presence only, Stripe balance for owner); Webhook and
+      Sentry cards go red/amber when their secret is missing. Orphan sweep
+      MOVED from the Courses list to System (banners, button, force-delete
+      modal). "Demotions" (Employees → utility cluster as "Team & access") NOT
+      done — Employees still sits in main nav; that is a one-line move once
+      Cam agrees. NEEDS REVIEW.
+    - [ ] MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table
+      (path, startedAt, finishedAt, ok, error, counts) written by every
+      /api/cron/* route; System's Crons card turns red when a scheduled run is
+      missing or failed — the first card on that page that can. Also: webhook
+      receipt log (StripeEvent id + type + receivedAt) so the Webhook card
+      stops using a course's updatedAt as a proxy; Employees demoted to the
+      utility cluster as "Team & access" if Cam agrees.
   - [ ] MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in
     ADMIN_V4_SPEC.md): codemod to Card/Eyebrow/PageHeader/Btn (verified: ONE
     import exists in all of src/, StatusDot ×10), ESLint guard so it can't

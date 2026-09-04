@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-04 23:26 UTC · branch `main` · HEAD `6c94836` · working tree **2 dirty file(s)**
+Generated 2026-09-04 23:53 UTC · branch `main` · HEAD `4eb1c9d` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -20,7 +20,7 @@ these actually are first.
 
 ## In flight
 
-- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:1565`
+- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:1585`
   - FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because "no linked inquiry" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding the
   - Last session's raw Prisma script (a read-only check confirming Fake
   - Fairways existed) got blocked by this sandbox's auto-mode classifier as a potential production-database access outside the app's own authenticated API. That block is almost certainly the intended, correct behavior — a raw script has no place touching real course/booking/ operator data, authorized or not — so I did NOT retry it, and built the override into the sanctioned admin API instead, per the 
@@ -70,18 +70,19 @@ This is the distinction a raw checkbox count gets wrong.
 21. MP-6d — Golfers record page (no migration): palette search extended — `RUN_QUEUE.md:1050`
 22. MP-7 — comms merge (split into 7a–7b) — `RUN_QUEUE.md:1057`
 23. MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE, — `RUN_QUEUE.md:1075`
-24. MP-8 — chrome + System: sidebar real links + self-fetched badges + — `RUN_QUEUE.md:1082`
-25. MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in — `RUN_QUEUE.md:1086`
-26. MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity, — `RUN_QUEUE.md:1092`
-27. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved — `RUN_QUEUE.md:1096`
-28. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1113`
-29. BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet: — `RUN_QUEUE.md:1118`
-30. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1139`
-31. COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small) — `RUN_QUEUE.md:1140`
-32. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1162`
-33. ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule) — `RUN_QUEUE.md:1182`
-34. ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → "Send upda — `RUN_QUEUE.md:1184`
-35. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1241`
+24. MP-8 — chrome + System (split into 8a–8b) — `RUN_QUEUE.md:1082`
+25. MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table — `RUN_QUEUE.md:1099`
+26. MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in — `RUN_QUEUE.md:1106`
+27. MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity, — `RUN_QUEUE.md:1112`
+28. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved — `RUN_QUEUE.md:1116`
+29. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1133`
+30. BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet: — `RUN_QUEUE.md:1138`
+31. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1159`
+32. COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small) — `RUN_QUEUE.md:1160`
+33. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1182`
+34. ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule) — `RUN_QUEUE.md:1202`
+35. ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → "Send upda — `RUN_QUEUE.md:1204`
+36. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1261`
 
 ## Waiting on you (not on a build)
 
@@ -91,7 +92,7 @@ This is the distinction a raw checkbox count gets wrong.
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:582`
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:630`
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:672`
-- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1162`
+- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1182`
 
 ## Revise campaign (page-by-page pass)
 
@@ -179,6 +180,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `4eb1c9d` 2026-09-04 — MP-8a: sidebar links are links, badges survive leaving the Overview, System says what is deployed
+- `9dc1f2c` 2026-09-04 — queue/spec update
 - `6c94836` 2026-09-04 — MP-7a: Messages says who is waiting; Broadcasts stops lying about delivery
 - `819d68c` 2026-09-04 — queue/spec update
 - `c2c35dc` 2026-09-04 — MP-6a: Revenue on a collected basis, problems pinned all-time, late fees named as course money
@@ -189,9 +192,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `1b2840e` 2026-09-03 — queue/spec update
 - `2b67440` 2026-09-03 — MP-5e (part): surface where the setup sheet and the live course disagree
 - `b2159c8` 2026-09-03 — queue/spec update
-- `c433c83` 2026-09-03 — MP-5c: put the evidence the API already computes on the course row
-- `b13e444` 2026-09-02 — queue/spec update
 
 ---
 
-**Totals:** 134 done · 8 awaiting review · 1 in flight · 35 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 135 done · 8 awaiting review · 1 in flight · 36 not started · 8 revise pages open · 15 ideas · 2 parked.
