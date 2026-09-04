@@ -38,8 +38,6 @@ const HEALTH_FILTER_OPTIONS: { value: HealthFilter; label: string }[] = [
 ];
 const NEEDS_ATTENTION_STATUSES: CourseHealthStatus[] = ['setup_incomplete', 'payments_broken', 'going_quiet', 'offline', 'orphaned'];
 
-interface OrphanSweepItem { kind: 'course' | 'inquiry'; id: string; name: string; action: string; reason: string }
-interface AcknowledgedOrphan { id: string; name: string; archivedAt: string }
 
 function CoursesContent() {
   const router = useRouter();
@@ -55,22 +53,7 @@ function CoursesContent() {
   const [sortBy, setSortBy] = useState<'severity' | 'newest' | 'name'>('severity');
   const [page, setPage] = useState(0);
 
-  // ORPHAN SWEEP (RUN_QUEUE) — dry-run check on first load. Read-only
-  // ("print the list"); actually cleaning up is an explicit owner click.
-  const [orphanNote, setOrphanNote] = useState('');
-  const [orphanItems, setOrphanItems] = useState<OrphanSweepItem[]>([]);
-  const [orphanAcknowledged, setOrphanAcknowledged] = useState<AcknowledgedOrphan[]>([]);
-  const [orphanChecked, setOrphanChecked] = useState(false);
-  const [orphanRunning, setOrphanRunning] = useState(false);
-  const [orphanResult, setOrphanResult] = useState('');
-  const [orphanFailed, setOrphanFailed] = useState(false);
-  const [orphanDismissed, setOrphanDismissed] = useState(false);
-  const [forceDeleteTarget, setForceDeleteTarget] = useState<AcknowledgedOrphan | null>(null);
-  const [forceDeleteConfirm, setForceDeleteConfirm] = useState('');
-  const [forceDeleteBusy, setForceDeleteBusy] = useState(false);
-  const [forceDeleteError, setForceDeleteError] = useState('');
 
-  const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
   const loadCourses = useCallback(async (sf: StateFilter) => {
     setLoading(true);
@@ -98,84 +81,6 @@ function CoursesContent() {
     const courseId = params.get('courseId');
     if (courseId) router.replace('/admin/courses/' + courseId);
   }, [adminReady, stateFilter, loadCourses, params, router]);
-
-  // MP-2e: MP-2d gated this GET at requireOwner (role owner AND mfa), so the
-  // panel silently disappeared for managers and for any owner on a
-  // password-only session — the route even carries ownerGateError copy telling
-  // them to sign in at /admin/owner-login, and this threw it away. A 403 is
-  // expected for managers, so it is a quiet note rather than an error banner.
-  const checkOrphans = useCallback(async () => {
-    const res = await adminFetch<{ items?: OrphanSweepItem[]; acknowledged?: AcknowledgedOrphan[] }>(
-      '/api/admin/orphan-sweep', { subject: 'the orphan sweep' });
-    if (!res.ok) {
-      setOrphanItems([]); setOrphanAcknowledged([]);
-      setOrphanNote(res.kind === 'forbidden' ? res.message : '');
-      return;
-    }
-    setOrphanNote('');
-    setOrphanItems(res.data.items ?? []);
-    setOrphanAcknowledged(res.data.acknowledged ?? []);
-  }, []);
-
-  // MP-5c: this used to fire on every visit to the courses list — a
-  // data-repair scan running as a side effect of looking at a page. It is a
-  // tripwire for an invariant that should never break, not something to run
-  // hundreds of times a week, so it is an explicit click now.
-
-  // MP-2d B4: no try/catch, so a rejected fetch left orphanRunning true and the
-  // button read "Cleaning up..." until a reload.
-  async function runOrphanSweep() {
-    setOrphanRunning(true); setOrphanResult(''); setOrphanFailed(false);
-    try {
-    const r = await fetch('/api/admin/orphan-sweep', { method: 'POST', headers: H() });
-    if (r.ok) {
-      const d = await r.json();
-      setOrphanResult(`Cleaned up ${d.items.length} item${d.items.length === 1 ? '' : 's'}: ` + d.items.map((i: OrphanSweepItem) => `"${i.name}" ${i.action}`).join('; '));
-      setOrphanItems([]);
-      checkOrphans();
-      loadCourses(stateFilter);
-    } else {
-      const d = await r.json().catch(() => ({}));
-      setOrphanFailed(true); setOrphanResult('Sweep failed: ' + (d.error || 'unknown error'));
-    }
-    } catch {
-      setOrphanFailed(true); setOrphanResult('Sweep failed: network error — nothing was changed.');
-    } finally {
-      setOrphanRunning(false);
-    }
-  }
-
-  // Owner-authorized override — hard-deletes ONE specific acknowledged
-  // orphan regardless of its (fake/test) history. The server independently
-  // re-verifies it's still an orphan and the typed name matches before
-  // touching anything.
-  async function runForceDelete() {
-    if (!forceDeleteTarget) return;
-    setForceDeleteBusy(true); setForceDeleteError('');
-    // MP-2d B4: same latch as the sweep, on the console's single most
-    // destructive action.
-    try {
-    const r = await fetch('/api/admin/orphan-sweep', {
-      method: 'POST', headers: H(),
-      body: JSON.stringify({ forceDeleteId: forceDeleteTarget.id, confirmName: forceDeleteConfirm }),
-    });
-    if (r.ok) {
-      const d = await r.json();
-      setOrphanResult(`Permanently deleted "${d.deleted.name}": ${d.deleted.bookings} booking(s), ${d.deleted.paidMemberships} paid membership(s), ${d.deleted.staff} staff row(s)${d.deleted.operatorDeleted ? ', operator login' : ''}.`);
-      setForceDeleteTarget(null);
-      setForceDeleteConfirm('');
-      checkOrphans();
-      loadCourses(stateFilter);
-    } else {
-      const d = await r.json().catch(() => ({}));
-      setForceDeleteError(d.error || 'Delete failed — try again.');
-    }
-    } catch {
-      setForceDeleteError('Network error — nothing was deleted. Check your connection and try again.');
-    } finally {
-      setForceDeleteBusy(false);
-    }
-  }
 
   const q = search.toLowerCase().trim();
   let filteredCourses = q
@@ -242,73 +147,6 @@ function CoursesContent() {
             </div>
           </div>
 
-          {/* ORPHAN SWEEP (RUN_QUEUE) — dry-run result. Printed, not acted on
-              automatically; the link is sacred, so cleanup is an explicit click. */}
-          {!orphanDismissed && orphanItems.length > 0 && (
-            <div className="mb-5 px-4 py-3 rounded-lg bg-warn/5 border border-warn/20">
-              <div className="flex items-center justify-between gap-3 mb-2">
-                <span className="text-sm font-medium text-warn">
-                  {orphanItems.length} orphaned record{orphanItems.length === 1 ? '' : 's'} found — no linked inquiry, or an inquiry pointing at a deleted course.
-                </span>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button onClick={() => setOrphanDismissed(true)} className="text-xs text-ink-muted hover:text-ink transition-colors">Dismiss</button>
-                  <button
-                    onClick={runOrphanSweep}
-                    disabled={orphanRunning}
-                    className="text-xs font-medium px-3 py-1.5 rounded-md bg-warn text-white hover:bg-warn/90 transition-colors disabled:opacity-50"
-                  >
-                    {orphanRunning ? 'Cleaning up…' : 'Clean up now'}
-                  </button>
-                </div>
-              </div>
-              <ul className="space-y-0.5">
-                {orphanItems.map(i => (
-                  <li key={i.kind + i.id} className="text-xs text-ink-soft">
-                    <span className="font-medium">{i.name}</span> — {i.reason} <span className="text-ink-faint">(will be {i.action.replace('would_', '')})</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {/* MP-2e: success and failure both wrote into orphanResult and this
-              banner was styled green unconditionally — "Sweep failed: network
-              error" was rendered as a success. */}
-          {orphanResult && (
-            <div className={'mb-5 px-4 py-3 rounded-lg border flex items-center justify-between gap-3 ' + (orphanFailed ? 'bg-bad/5 border-bad/20' : 'bg-ok/5 border-ok/20')}>
-              <span className={'text-sm ' + (orphanFailed ? 'text-bad' : 'text-ok')}>{orphanResult}</span>
-              <button onClick={() => { setOrphanResult(''); setOrphanFailed(false); }} className="text-xs text-ink-muted hover:text-ink transition-colors">Dismiss</button>
-            </div>
-          )}
-          {/* Expected for managers — the sweep is owner-only — so a quiet note,
-              not an error. Previously the whole panel just vanished. */}
-          {orphanNote && (
-            <p className="mb-5 text-xs text-ink-muted">{orphanNote}</p>
-          )}
-
-          {/* Acknowledged orphans (already archived + flagged by a prior
-              sweep) — informational only, never nags, but an owner can still
-              force-delete one individually (Cam's DaisyLinks exception). */}
-          {orphanAcknowledged.length > 0 && (
-            <div className="mb-5 px-4 py-3 rounded-lg bg-paper border border-line">
-              <div className="text-xs font-medium text-ink-muted mb-2">
-                {orphanAcknowledged.length} acknowledged orphan{orphanAcknowledged.length === 1 ? '' : 's'} — archived, flagged, no linked inquiry
-              </div>
-              <ul className="space-y-1">
-                {orphanAcknowledged.map(a => (
-                  <li key={a.id} className="text-xs text-ink-soft flex items-center justify-between gap-3">
-                    <span>{a.name} <span className="text-ink-faint">— archived {new Date(a.archivedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span></span>
-                    <button
-                      onClick={() => { setForceDeleteTarget(a); setForceDeleteConfirm(''); setForceDeleteError(''); }}
-                      className="text-bad hover:underline shrink-0"
-                    >
-                      Force delete permanently
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
           <div className="flex items-center gap-2 mb-5 flex-wrap">
             {/* A-04b: segmented control owns STATE only — Live / Offline / Archived */}
             <div className="flex items-center gap-1 bg-white border border-line rounded-lg p-1">
@@ -351,18 +189,6 @@ function CoursesContent() {
                 </select>
               </>
             )}
-
-            {/* MP-5c: the orphan sweep is a deliberate check now, not a
-                side effect of opening the page. */}
-            <button
-              onClick={() => { setOrphanChecked(true); checkOrphans(); }}
-              className={'px-3 py-1.5 rounded-md text-[11px] font-medium border transition-colors ' + (
-                orphanChecked ? 'text-ink border-line-strong bg-paper' : 'text-ink-muted border-line hover:border-line-strong hover:text-ink'
-              )}
-              title="Check for courses and inquiries that lost their link to each other"
-            >
-              {orphanChecked && orphanItems.length === 0 && !orphanNote ? 'Data check — clean' : 'Data check'}
-            </button>
 
             <div className="flex items-center gap-1 bg-white border border-line rounded-lg p-1 ml-auto">
               {(['severity', 'newest', 'name'] as const).map(s => (
@@ -476,42 +302,6 @@ function CoursesContent() {
         </div>
       </div>
 
-      {/* Force-delete confirm — owner-authorized override, typed name confirm,
-          server re-verifies it's still an orphan before touching anything. */}
-      {forceDeleteTarget && (
-        <div className="fixed inset-0 bg-ink/30 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-lg border border-line max-w-md w-full p-5">
-            <div className="text-sm font-medium text-ink mb-1">Permanently delete &quot;{forceDeleteTarget.name}&quot;?</div>
-            <p className="text-xs text-ink-muted mb-3">
-              This cannot be undone — deletes the course, its bookings, tee times, and staff, and the operator&apos;s login if this was their only course. Owner-authorized override: this bypasses the usual archive-only rule because this course is an acknowledged orphan with no real history behind the doctrine&apos;s protection.
-            </p>
-            {forceDeleteError && (
-              <div className="text-xs text-bad mb-2">{forceDeleteError}</div>
-            )}
-            <label className="block text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1">Type &quot;{forceDeleteTarget.name}&quot; to confirm</label>
-            <input
-              value={forceDeleteConfirm}
-              onChange={e => setForceDeleteConfirm(e.target.value)}
-              className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-4"
-            />
-            <div className="flex items-center justify-end gap-2">
-              <button
-                onClick={() => { setForceDeleteTarget(null); setForceDeleteConfirm(''); setForceDeleteError(''); }}
-                className="text-xs text-ink-muted hover:text-ink px-3 py-1.5 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={runForceDelete}
-                disabled={forceDeleteBusy || forceDeleteConfirm.trim().toLowerCase() !== forceDeleteTarget.name.trim().toLowerCase()}
-                className="text-xs font-medium px-3 py-1.5 rounded-md text-white bg-bad hover:bg-bad/90 transition-colors disabled:opacity-40"
-              >
-                {forceDeleteBusy ? 'Deleting…' : 'Delete permanently'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

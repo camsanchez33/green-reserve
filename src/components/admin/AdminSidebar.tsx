@@ -2,8 +2,9 @@
 import { useRouter } from 'next/navigation';
 import { SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-roles';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
-import { BarChart2, AlertCircle, Building2, Hammer, Users, Activity, MessageSquare, UserCircle, ChevronLeft, ChevronRight, DollarSign, Search, Wrench, LogOut } from 'lucide-react';
+import { BarChart2, AlertCircle, Building2, Hammer, Users, Activity, MessageSquare, UserCircle, ChevronLeft, ChevronRight, DollarSign, Search, UserSearch, Wrench, LogOut } from 'lucide-react';
 import CommandPalette from '@/components/admin/CommandPalette';
 
 export type AdminNavKey = 'overview' | 'inquiries' | 'courses' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system';
@@ -20,6 +21,11 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   // MP-6a: failed charges, all-time. Red because it is money that should
   // exist and does not, and because the Revenue page is the only place to fix it.
   const [moneyProblems, setMoneyProblems] = useState(0);
+  // MP-8a: the inquiries badge self-fetches. It used to render only when the
+  // Overview passed the prop, so leaving the Overview made pending inquiries
+  // vanish from the nav.
+  const [pending, setPending] = useState(pendingInquiries);
+  useEffect(() => { setPending(pendingInquiries); }, [pendingInquiries]);
   const [role, setRole] = useState<string | null>(null);        // null = not yet known
   const [roleFailed, setRoleFailed] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -60,22 +66,23 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     return () => { cancelled = true; };
   }, []);
 
+  // MP-8a: ONE fetch for all three badges (was two, and none for inquiries).
+  // A page that passes a live prop (Messages passes unread; Overview passes
+  // pending) keeps its fresher number — the fetch only fills what was 0.
   useEffect(() => {
-    if (unreadMessages > 0) return;
-    if (role !== null && !SUPPORT_PLUS.includes(role)) return; // would 403
-    fetch('/api/admin/messages?unreadCount=1')
-      .then(r => r.ok ? r.json() : { count: 0 })
-      .then(d => setUnread(d.count ?? 0))
+    if (role !== null && !SUPPORT_PLUS.includes(role)) return; // would be zeros anyway
+    let cancelled = false;
+    fetch('/api/admin/nav-badges')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (cancelled || !d) return;
+        if (pendingInquiries === 0) setPending(Number(d.pendingInquiries) || 0);
+        if (unreadMessages === 0) setUnread(Number(d.unreadMessages) || 0);
+        setMoneyProblems(Number(d.moneyProblems) || 0);
+      })
       .catch(() => {});
-  }, [unreadMessages, role]);
-
-  useEffect(() => {
-    if (role !== null && !SUPPORT_PLUS.includes(role)) return; // would 403
-    fetch('/api/admin/revenue?problemsCount=1')
-      .then(r => r.ok ? r.json() : { failed: 0 })
-      .then(d => setMoneyProblems(Number(d.failed) || 0))
-      .catch(() => {});
-  }, [role]);
+    return () => { cancelled = true; };
+  }, [role, pendingInquiries, unreadMessages]);
 
   // Apply CSS class and persist
   useEffect(() => {
@@ -141,7 +148,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     { key: 'courses',    label: 'Courses',    href: '/admin/courses',    icon: <Building2 className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
     { key: 'messages',   label: 'Messages',   href: '/admin/messages',   icon: <MessageSquare className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
     { key: 'revenue',    label: 'Revenue',    href: '/admin/revenue',    icon: <DollarSign className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
-    { key: 'golfers',    label: 'Golfers',    href: '/admin/golfers',    icon: <Search className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
+    { key: 'golfers',    label: 'Golfers',    href: '/admin/golfers',    icon: <UserSearch className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
     { key: 'employees',  label: 'Employees',  href: '/admin/employees',  icon: <Users className="w-[18px] h-[18px]"/>, minRole: MANAGER_PLUS },
     { key: 'activity',   label: 'Activity',   href: '/admin/activity',   icon: <Activity className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
   ];
@@ -167,7 +174,9 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       isActive ? 'bg-white/10 text-paper rounded-md' : 'text-[#A9BFAF] hover:text-paper hover:bg-white/10 rounded-md'
     }`;
     return (
-      <button key={item.key} onClick={() => router.push(item.href)} className={cls} title={collapsed ? item.label : undefined}>
+      // MP-8a: a real link — middle-click and cmd-click open a tab, the
+      // browser shows the destination, and the nav works before hydration.
+      <Link href={item.href} className={cls} title={collapsed ? item.label : undefined}>
         <span className="shrink-0">{item.icon}</span>
         {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
         {!collapsed && badge}
@@ -179,13 +188,13 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
             {item.label}
           </span>
         )}
-      </button>
+      </Link>
     );
   }
 
-  const inquiriesBadge = pendingInquiries > 0 ? (
+  const inquiriesBadge = pending > 0 ? (
     <span className="bg-warn text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium leading-none shrink-0">
-      {pendingInquiries}
+      {pending > 99 ? '99+' : pending}
     </span>
   ) : undefined;
 

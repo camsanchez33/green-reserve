@@ -5,6 +5,7 @@ import { computeNetPnL, periodDelta } from '@/lib/course-metrics';
 import { sumExpensesForPeriodCents } from '@/lib/expenses';
 import { fetchStripeFeeWindow } from '@/lib/platform-stripe';
 import { friendlyStripeError } from '@/lib/stripe-errors';
+import { FAILED_CHARGE_WHERE, missedCheckInWhere } from '@/lib/money-problems';
 
 // REVISE_QUEUE A-06 — /admin/revenue rebuilt as a real P&L. ONE period picker
 // (day / week / month-to-date / custom) drives the ENTIRE page. Support+ sees
@@ -63,23 +64,6 @@ function resolveWindows(kind: PeriodKind, now: Date, from: string | null, to: st
 /** A round whose charge went through — the only moment GR's fee exists. */
 const PAID = { paymentStatus: 'paid', roundPaymentIntentId: { not: '' } } as const;
 
-/** Failed charge: the card was tried at check-in and declined; nobody has collected since. */
-const FAILED = { checkInFailReason: { not: '' }, checkedInAt: null } as const;
-
-/**
- * Missed check-in: the tee time has passed, the booking still stands, and no
- * one ever charged it. Not a failed card — nothing was tried. This is the
- * leak the accrual headline hid: every one of these is a fee that was counted
- * as earned and never collected.
- */
-function missedWhere(todayStr: string) {
-  return {
-    status: 'confirmed', checkedInAt: null, checkInFailReason: '',
-    paymentStatus: { not: 'paid' },
-    teeTime: { date: { lt: todayStr } },
-  } as const;
-}
-
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session || !requireRole(session, SUPPORT_PLUS)) {
@@ -94,8 +78,8 @@ export async function GET(req: NextRequest) {
   // so the badge and the block can never disagree.
   if (sp.get('problemsCount') === '1') {
     const [failed, missed] = await Promise.all([
-      prisma.booking.count({ where: FAILED }),
-      prisma.booking.count({ where: missedWhere(todayStr) }),
+      prisma.booking.count({ where: FAILED_CHARGE_WHERE }),
+      prisma.booking.count({ where: missedCheckInWhere(todayStr) }),
     ]);
     return NextResponse.json({ failed, missed });
   }
@@ -136,18 +120,18 @@ export async function GET(req: NextRequest) {
     prisma.course.findMany({ select: { id: true, name: true, active: true, archivedAt: true, stripeAccountActive: true }, orderBy: { name: 'asc' } }),
     // ALL-TIME, to agree with the problems list. It was period-filtered while
     // the list below it was not, so the two disagreed on the same screen.
-    prisma.booking.groupBy({ by: ['courseId'], where: FAILED, _count: { id: true } }),
+    prisma.booking.groupBy({ by: ['courseId'], where: FAILED_CHARGE_WHERE, _count: { id: true } }),
     prisma.booking.findMany({
-      where: FAILED,
+      where: FAILED_CHARGE_WHERE,
       select: { id: true, golferName: true, golferEmail: true, checkInFailReason: true, totalAmount: true, accessFeeTotal: true, createdAt: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true, time: true } } },
       orderBy: { createdAt: 'desc' }, take: 100,
     }),
     prisma.booking.findMany({
-      where: missedWhere(todayStr),
+      where: missedCheckInWhere(todayStr),
       select: { id: true, golferName: true, golferEmail: true, players: true, accessFeeTotal: true, totalAmount: true, paymentStatus: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true, time: true } } },
       orderBy: { teeTime: { date: 'desc' } }, take: 100,
     }),
-    prisma.booking.aggregate({ where: missedWhere(todayStr), _sum: { accessFeeTotal: true }, _count: { id: true } }),
+    prisma.booking.aggregate({ where: missedCheckInWhere(todayStr), _sum: { accessFeeTotal: true }, _count: { id: true } }),
     prisma.booking.findMany({
       where: { status: 'confirmed', checkedInAt: null, teeTime: { date: { in: [todayStr, tomorrowStr] } } },
       select: { id: true, golferName: true, players: true, accessFeeTotal: true, totalAmount: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true, time: true } } },
