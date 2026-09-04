@@ -17,6 +17,9 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
 }) {
   const router = useRouter();
   const [unread, setUnread] = useState(unreadMessages);
+  // MP-6a: failed charges, all-time. Red because it is money that should
+  // exist and does not, and because the Revenue page is the only place to fix it.
+  const [moneyProblems, setMoneyProblems] = useState(0);
   const [role, setRole] = useState<string | null>(null);        // null = not yet known
   const [roleFailed, setRoleFailed] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -65,6 +68,14 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       .then(d => setUnread(d.count ?? 0))
       .catch(() => {});
   }, [unreadMessages, role]);
+
+  useEffect(() => {
+    if (role !== null && !SUPPORT_PLUS.includes(role)) return; // would 403
+    fetch('/api/admin/revenue?problemsCount=1')
+      .then(r => r.ok ? r.json() : { failed: 0 })
+      .then(d => setMoneyProblems(Number(d.failed) || 0))
+      .catch(() => {});
+  }, [role]);
 
   // Apply CSS class and persist
   useEffect(() => {
@@ -179,6 +190,12 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     </span>
   ) : undefined;
 
+  const revenueBadge = moneyProblems > 0 ? (
+    <span className="bg-bad text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium leading-none shrink-0" title={`${moneyProblems} failed charge${moneyProblems === 1 ? '' : 's'} to collect`}>
+      {moneyProblems > 99 ? '99+' : moneyProblems}
+    </span>
+  ) : undefined;
+
   const messagesBadge = unread > 0 ? (
     <span className="bg-ok text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium leading-none shrink-0">
       {unread > 99 ? '99+' : unread}
@@ -228,7 +245,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
           <NavItem
             key={item.key}
             item={item}
-            badge={item.key === 'inquiries' ? inquiriesBadge : item.key === 'messages' ? messagesBadge : undefined}
+            badge={item.key === 'inquiries' ? inquiriesBadge : item.key === 'messages' ? messagesBadge : item.key === 'revenue' ? revenueBadge : undefined}
           />
         ))}
       </nav>

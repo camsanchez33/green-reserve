@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
 import {
   RefreshCw, AlertTriangle, X, Plus, Pencil, Trash2, TrendingUp, TrendingDown, Minus,
-  RotateCw, Clock, CheckCircle2, Search, ChevronUp, ChevronDown, Download, Landmark, ExternalLink,
+  RotateCw, CheckCircle2, Search, ChevronUp, ChevronDown, Download, Landmark, ExternalLink,
 } from 'lucide-react';
 import Link from 'next/link';
 import AdminSidebar from '@/components/admin/AdminSidebar';
@@ -20,7 +20,10 @@ interface Delta { pct: number | null; direction: 'up' | 'down' | 'flat' | null }
 
 interface CourseRow {
   courseId: string; name: string; active: boolean; archived: boolean; stripeActive: boolean;
-  bookings: number; serviceFees: number; greenFeeVolume: number; failedCharges: number;
+  // MP-6a: two bases, each named. `booked` = rounds made in the period;
+  // `collectedRounds` / `serviceFees` = rounds checked in and paid in it.
+  // `failedCharges` is ALL-TIME, matching the problems list.
+  booked: number; collectedRounds: number; serviceFees: number; greenFeeVolume: number; failedCharges: number;
 }
 interface FailedCharge {
   bookingId: string; courseId: string; courseName: string; golferName: string; golferEmail: string;
@@ -30,9 +33,13 @@ interface UpcomingCheckIn {
   bookingId: string; courseId: string; courseName: string; golferName: string; players: number;
   teeDate: string; teeTime: string; ourTake: number; total: number;
 }
-interface PendingFee {
+interface MissedCheckIn {
+  bookingId: string; courseId: string; courseName: string; golferName: string; golferEmail: string;
+  players: number; teeDate: string; teeTime: string; amount: number; ourTake: number; noShowFeeCharged: boolean;
+}
+interface LateFee {
   bookingId: string; courseId: string; courseName: string; golferName: string;
-  fee: number; status: 'charged' | 'pending'; teeDate: string; teeTime: string;
+  fee: number; status: 'charged' | 'refunded'; teeDate: string; teeTime: string;
 }
 interface Expense {
   id: string; name: string; category: string; amountCents: number; cadence: string;
@@ -43,22 +50,26 @@ interface PlatformStripeData {
   nextPayout: { amount: number; arrivalDate: string; status: string } | null;
   period: string;
 }
-type SortKey = 'name' | 'bookings' | 'serviceFees' | 'greenFeeVolume' | 'failedCharges';
+type SortKey = 'name' | 'booked' | 'collectedRounds' | 'serviceFees' | 'greenFeeVolume' | 'failedCharges';
 
 interface RevenueData {
   period: { kind: PeriodKind; label: string; from: string; to: string };
   isOwner: boolean;
   ownerMfaRequired?: boolean;
   pnl: {
-    feesEarned: number; feesEarnedDelta: Delta;
+    // MP-6a: collected basis. bookedPending is the pipeline, shown but never
+    // added to the headline.
+    feesCollected: number; collectedRounds: number; feesCollectedDelta: Delta;
+    bookedPending: number; bookedPendingRounds: number;
     stripeProcessing?: number; stripeUnavailable?: boolean;
     expenses?: number; expensesDelta?: Delta;
-    net?: number; netDelta?: Delta;
+    net?: number; netDeltaAbs?: number;
   };
   byCourse: CourseRow[];
-  moneyInMotion: { upcomingCheckIns: UpcomingCheckIn[]; pendingLateCancelFees: PendingFee[]; todayStr: string; tomorrowStr: string };
-  problems: { failedCheckIn: FailedCharge[] };
-  reconciliation?: { expected: number; actual: number; gap: number; reconciles: boolean; unavailable: boolean; composingBookingIds: string[] };
+  moneyInMotion: { upcomingCheckIns: UpcomingCheckIn[]; lateCancelFees: LateFee[]; todayStr: string; tomorrowStr: string };
+  problems: { failedCheckIn: FailedCharge[]; missedCheckIn: MissedCheckIn[]; missedTotal: number; missedFees: number };
+  // reconciles: null = Stripe could not be reached, so nobody knows.
+  reconciliation?: { expected: number; actual: number; gap: number; reconciles: boolean | null; unavailable: boolean };
 }
 
 const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-ink text-sm placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
@@ -239,16 +250,21 @@ export default function RevenuePage() {
 
   function exportCsv() {
     if (!data) return;
-    const header = ['Course', 'Status', 'Bookings', 'Service fees', 'Green fee volume', 'Failed charges', 'Stripe'];
+    // MP-6a: this exported whatever the table happened to be filtered to and
+    // said nothing about it. The first line now states the period, the basis
+    // and every filter in force, and a filtered file is named as one.
+    const header = ['Course', 'Status', 'Booked', 'Rounds collected', 'Fees collected', 'Green fee volume', 'Failed charges (all-time)', 'Stripe'];
     const esc = (v: string) => /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
-    const statusOf = (r: CourseRow) => r.archived ? 'Archived' : r.active ? 'Live' : 'Offline';
-    const lines = rows.map(r => [r.name, statusOf(r), String(r.bookings), r.serviceFees.toFixed(2), r.greenFeeVolume.toFixed(2), String(r.failedCharges), r.stripeActive ? 'Connected' : 'Not connected'].map(esc).join(','));
-    const csv = [header.join(','), ...lines].join('\n');
+    const statusOf = (r: CourseRow) => r.archived ? 'Archived' : r.active ? 'Live' : 'Not live';
+    const filters = [search ? `search "${search}"` : null, showArchived ? null : 'archived courses hidden'].filter(Boolean).join('; ');
+    const note = `# GreenReserve fees by course · ${data.period.label} (${data.period.from} to ${data.period.to}) · collected basis (rounds checked in and paid)${filters ? ' · filters: ' + filters : ' · no filters'} · ${rows.length} of ${data.byCourse.length} courses`;
+    const lines = rows.map(r => [r.name, statusOf(r), String(r.booked), String(r.collectedRounds), r.serviceFees.toFixed(2), r.greenFeeVolume.toFixed(2), String(r.failedCharges), r.stripeActive ? 'Connected' : 'Not connected'].map(esc).join(','));
+    const csv = [note, header.join(','), ...lines].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `greenreserve-revenue_${data.period.from}_to_${data.period.to}.csv`;
+    a.download = `greenreserve-fees_${data.period.from}_to_${data.period.to}${filters ? '_filtered' : ''}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -268,7 +284,13 @@ export default function RevenuePage() {
   const upcoming = (motion?.upcomingCheckIns ?? []).filter(u => u.teeDate === (motionDay === 'today' ? motion?.todayStr : motion?.tomorrowStr));
   const upcomingTake = upcoming.reduce((s, u) => s + u.ourTake, 0);
   const failed = data?.problems.failedCheckIn ?? [];
-  const composingIds = new Set(data?.reconciliation?.composingBookingIds ?? []);
+  const missed = data?.problems.missedCheckIn ?? [];
+  const recon = data?.reconciliation;
+  // The block renders whenever there is anything to say — a failed card, a
+  // round nobody charged, a gap, or a Stripe we could not reach. When it is
+  // all clear it says so in one line rather than vanishing, so "no problems"
+  // and "did not load" stop looking identical.
+  const hasProblems = failed.length > 0 || missed.length > 0 || (!!recon && recon.reconciles !== true);
 
   return (
     <div className="min-h-screen bg-paper flex">
@@ -326,14 +348,145 @@ export default function RevenuePage() {
             </div>
           )}
 
-          {/* SECTION 1 — Headline: fees earned leads, full P&L statement beneath (owner) */}
+          {/* PROBLEMS — MP-6a: pinned to the top, ALL-TIME. Money that should
+              exist and does not. This is the one home for money-broken
+              execution; the Overview rail links here rather than repeating
+              it. Everything below this block follows the period picker; this
+              block deliberately does not. */}
+          {data && (
+            <div className={'border rounded-lg p-5 mb-6 ' + (hasProblems ? 'bg-bad/5 border-bad/20' : 'bg-white border-line')}>
+              <div className="flex items-center justify-between gap-3 mb-1">
+                <div className="flex items-center gap-2">
+                  {hasProblems ? <AlertTriangle className="w-4 h-4 text-bad"/> : <CheckCircle2 className="w-4 h-4 text-ok"/>}
+                  <span className={'text-sm font-medium ' + (hasProblems ? 'text-bad' : 'text-ink')}>
+                    {hasProblems ? 'Money problems' : 'No money problems'}
+                  </span>
+                </div>
+                <span className="text-[10px] uppercase tracking-[0.06em] text-ink-faint">All time · not filtered by period</span>
+              </div>
+
+              {/* Reconciliation (owner): collected vs what Stripe shows. Same
+                  event, same clock — a gap here is real. Tri-state. */}
+              {isOwner && recon && recon.reconciles === false && (
+                <div className="mt-3 pb-4 border-b border-bad/15">
+                  <div className="text-sm font-medium text-bad mb-1">Fees don&apos;t reconcile with Stripe · {data.period.label}</div>
+                  <p className="text-xs text-ink-soft">
+                    Collected {fmtMoney(recon.expected)} in fees this period, Stripe shows {fmtMoney(recon.actual)} — a {fmtMoney(Math.abs(recon.gap))} gap
+                    {recon.gap > 0 ? ' short.' : ' over.'}{' '}
+                    {failed.length > 0
+                      ? 'A charge that failed after we recorded it is the usual cause — the failed charges below are where to look.'
+                      : 'No failed charges, so this is either a refund landing in this window or a payout at the period edge. Check the Stripe balance.'}
+                  </p>
+                </div>
+              )}
+              {isOwner && recon && recon.reconciles === null && (
+                <div className="mt-3 pb-4 border-b border-warn/20">
+                  <div className="text-sm font-medium text-warn mb-1">Couldn&apos;t verify against Stripe</div>
+                  <p className="text-xs text-ink-soft">Stripe didn&apos;t answer, so the collected figure below is unchecked. Refresh in a minute — this is not a pass.</p>
+                </div>
+              )}
+
+              {/* Failed charges — the card was tried and declined. */}
+              {failed.length > 0 && (
+                <div className="mt-4">
+                  <div className="text-sm font-medium text-bad mb-3">Failed charges ({failed.length})</div>
+                  {/* MP-1b B4: section-level so a successful collect (which
+                      drops the row) cannot unmount the message that says the
+                      golfer was NOT checked in. */}
+                  {retryMsg && (
+                    <div className={'mb-4 rounded-md px-4 py-2.5 flex items-start justify-between gap-3 ' + (retryMsg.ok ? 'bg-ok/5 border border-ok/20' : 'bg-bad/5 border border-bad/20')}>
+                      <p className={'text-xs ' + (retryMsg.ok ? 'text-ok' : 'text-bad')}>{retryMsg.text}</p>
+                      <button onClick={() => setRetryMsg(null)} className="text-ink-muted hover:text-ink transition-colors shrink-0" aria-label="Dismiss">
+                        <X className="w-3.5 h-3.5"/>
+                      </button>
+                    </div>
+                  )}
+                  <div className="space-y-3">
+                    {failed.map(p => (
+                      <div key={p.bookingId} className="bg-white border border-bad/15 rounded-md px-4 py-3">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm font-medium text-ink">{p.golferName}</span>
+                              <span className="text-[11px] text-ink-faint">·</span>
+                              <Link href={`/admin/courses/${p.courseId}`} className="text-xs text-pine hover:underline">{p.courseName}</Link>
+                              <span className="text-[11px] text-ink-faint">·</span>
+                              <span className="text-xs text-ink-muted">{p.teeDate} {p.teeTime}</span>
+                            </div>
+                            <div className="text-xs text-bad mt-1">{p.reason}</div>
+                            <div className="text-xs text-ink-muted mt-0.5">{p.golferEmail}</div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <div className="text-sm font-medium text-ink tabular-nums mb-1.5">{fmtMoney(p.amount)}</div>
+                            <button onClick={() => retryCharge(p)} disabled={retryingId === p.bookingId}
+                              className="inline-flex items-center gap-1 text-[11px] font-medium text-white bg-pine hover:bg-pine-hover disabled:opacity-50 px-2.5 py-1 rounded-md transition-colors">
+                              <RotateCw className={'w-3 h-3 ' + (retryingId === p.bookingId ? 'animate-spin' : '')}/>{retryingId === p.bookingId ? 'Retrying…' : 'Retry charge'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-ink-muted mt-3">Retry collects payment on the saved card. It does not check the golfer in. A hard decline needs a new card or in-person payment.</p>
+                </div>
+              )}
+
+              {/* Missed check-ins — nothing was tried. The tee time passed,
+                  the booking still stands, nobody charged it. Under the old
+                  accrual headline every one of these counted as earned. */}
+              {missed.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-bad/15">
+                  <div className="flex items-center justify-between gap-3 mb-1">
+                    <span className="text-sm font-medium text-bad">Rounds never checked in ({data.problems.missedTotal})</span>
+                    <span className="text-xs text-ink-soft"><span className="font-medium text-bad tabular-nums">{fmtMoney(data.problems.missedFees)}</span> in fees uncollected</span>
+                  </div>
+                  <p className="text-xs text-ink-soft mb-3">
+                    The tee time has passed and the course never checked the golfer in, so the round was never charged and GR&apos;s fee never existed.
+                    Either the golfer played and the course forgot (ask them to check in from the dashboard — the card is still on file), or it was a no-show.
+                  </p>
+                  <div className="divide-y divide-bad/10 bg-white border border-bad/15 rounded-md">
+                    {missed.slice(0, 25).map(m => (
+                      <Link key={m.bookingId} href={`/admin/courses/${m.courseId}`} className="flex items-center justify-between gap-4 px-4 py-2 hover:bg-paper/60 transition-colors">
+                        <div className="min-w-0">
+                          <span className="text-sm text-ink">{m.golferName}</span>
+                          <span className="text-xs text-ink-muted"> · {m.courseName} · {m.teeDate} {m.teeTime} · {m.players}p</span>
+                          {m.noShowFeeCharged && <span className="text-[10px] text-ink-faint ml-2">no-show fee went to the course</span>}
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="text-sm font-medium text-ink tabular-nums">{fmtMoney(m.amount)}</span>
+                          <span className="text-xs text-ink-muted"> · GR {fmtMoney(m.ourTake)}</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                  {data.problems.missedTotal > 25 && (
+                    <p className="text-[11px] text-ink-faint mt-2">Showing the 25 most recent of {data.problems.missedTotal}.</p>
+                  )}
+                </div>
+              )}
+
+              {!hasProblems && (
+                <p className="text-xs text-ink-muted mt-1">Every charge attempted has gone through, every past tee time was checked in{isOwner && recon ? ', and the period reconciles with Stripe' : ''}.</p>
+              )}
+            </div>
+          )}
+
+          {/* HEADLINE — fees collected leads, full P&L statement beneath (owner) */}
           {pnl && (
             <div className="bg-white border border-line rounded-lg p-6 mb-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1">Fees earned · {data?.period.label}</div>
-                  <div className="text-[34px] font-serif font-medium text-ink tabular-nums leading-none">{fmtMoney(pnl.feesEarned)}</div>
-                  <div className="mt-2"><DeltaBadge delta={pnl.feesEarnedDelta}/></div>
+                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1">Fees collected · {data?.period.label}</div>
+                  <div className="text-[34px] font-serif font-medium text-ink tabular-nums leading-none">{fmtMoney(pnl.feesCollected)}</div>
+                  <div className="mt-2 flex items-center gap-3 flex-wrap">
+                    <DeltaBadge delta={pnl.feesCollectedDelta}/>
+                    <span className="text-[11px] text-ink-muted">{fmtCount(pnl.collectedRounds)} round{pnl.collectedRounds === 1 ? '' : 's'} checked in and paid</span>
+                  </div>
+                  {/* The pipeline, kept in view but never added in. */}
+                  <div className="mt-3 text-xs text-ink-soft">
+                    Booked this period, awaiting check-in: <span className="font-medium text-ink tabular-nums">{fmtMoney(pnl.bookedPending)}</span>
+                    <span className="text-ink-muted"> across {fmtCount(pnl.bookedPendingRounds)} round{pnl.bookedPendingRounds === 1 ? '' : 's'} — collected only when the golfer checks in.</span>
+                  </div>
                 </div>
                 {isOwner && (
                   <button onClick={openDrawer}
@@ -343,17 +496,21 @@ export default function RevenuePage() {
                 )}
               </div>
 
-              {/* Owner-only: the statement — fees − stripe − expenses = net */}
+              {/* Owner-only: the statement — collected − stripe − expenses = net */}
               {isOwner && pnl.net !== undefined && (
                 <div className="mt-5 pt-5 border-t border-line-soft max-w-md space-y-2.5">
-                  <StatementLine label="Fees earned" value={pnl.feesEarned}/>
+                  <StatementLine label="Fees collected" value={pnl.feesCollected}/>
                   <StatementLine label="Stripe processing" value={-(pnl.stripeProcessing ?? 0)} muted
                     note={pnl.stripeUnavailable ? 'Stripe unavailable' : undefined}/>
                   <StatementLine label="Operating expenses" value={-(pnl.expenses ?? 0)} muted delta={pnl.expensesDelta} deltaGoodWhenUp={false}/>
                   <div className="flex items-center justify-between pt-2.5 border-t border-line">
                     <span className="text-sm font-medium text-ink">Net</span>
                     <div className="flex items-center gap-3">
-                      <DeltaBadge delta={pnl.netDelta}/>
+                      {pnl.netDeltaAbs !== undefined && (
+                        <span className={'text-[11px] font-medium ' + (pnl.netDeltaAbs > 0 ? 'text-ok' : pnl.netDeltaAbs < 0 ? 'text-bad' : 'text-ink-muted')}>
+                          {pnl.netDeltaAbs >= 0 ? '+' : ''}{fmtMoney(pnl.netDeltaAbs)} vs prior
+                        </span>
+                      )}
                       <span className={'text-lg font-serif font-medium tabular-nums ' + ((pnl.net ?? 0) >= 0 ? 'text-ink' : 'text-bad')}>{fmtMoney(pnl.net ?? 0)}</span>
                     </div>
                   </div>
@@ -362,74 +519,6 @@ export default function RevenuePage() {
                   )}
                 </div>
               )}
-            </div>
-          )}
-
-          {/* SECTION 4 — Problems made actionable */}
-          {data && (failed.length > 0 || (data.reconciliation && !data.reconciliation.reconciles)) && (
-            <div className="bg-bad/5 border border-bad/20 rounded-lg p-5 mb-6">
-              {/* Reconciliation gap (owner) — lists the bookings composing it */}
-              {isOwner && data.reconciliation && !data.reconciliation.reconciles && !data.reconciliation.unavailable && (
-                <div className="mb-4 pb-4 border-b border-bad/15">
-                  <div className="flex items-center gap-2 mb-1">
-                    <AlertTriangle className="w-4 h-4 text-bad"/>
-                    <span className="text-sm font-medium text-bad">Fees don&apos;t reconcile with Stripe</span>
-                  </div>
-                  <p className="text-xs text-ink-soft">
-                    Expected {fmtMoney(data.reconciliation.expected)} in fees, Stripe shows {fmtMoney(data.reconciliation.actual)} — a {fmtMoney(Math.abs(data.reconciliation.gap))} gap.
-                    {composingIds.size > 0 ? ' The failed charges below are the likely cause — clear them to close the gap.' : ' No failed charges this period, so the difference is likely refund/payout timing at the period edge.'}
-                  </p>
-                </div>
-              )}
-
-              <div className="flex items-center gap-2 mb-4">
-                <AlertTriangle className="w-4 h-4 text-bad"/>
-                <span className="text-sm font-medium text-bad">Failed charges ({failed.length})</span>
-              </div>
-              {/* MP-1b B4: this lived inside the row it described. A successful
-                  collect clears checkInFailReason, so the refetch dropped the row
-                  and unmounted the message with it — and the message is the whole
-                  point of fix #5, since it is the only place the operator is told
-                  the golfer was NOT checked in. Section-level, so it survives. */}
-              {retryMsg && (
-                <div className={'mb-4 rounded-md px-4 py-2.5 flex items-start justify-between gap-3 ' + (retryMsg.ok ? 'bg-ok/5 border border-ok/20' : 'bg-bad/5 border border-bad/20')}>
-                  <p className={'text-xs ' + (retryMsg.ok ? 'text-ok' : 'text-bad')}>{retryMsg.text}</p>
-                  <button onClick={() => setRetryMsg(null)} className="text-ink-muted hover:text-ink transition-colors shrink-0" aria-label="Dismiss">
-                    <X className="w-3.5 h-3.5"/>
-                  </button>
-                </div>
-              )}
-              {failed.length === 0 ? (
-                <p className="text-xs text-ink-muted">None — nothing to collect.</p>
-              ) : (
-                <div className="space-y-3">
-                  {failed.map(p => (
-                    <div key={p.bookingId} className={'bg-white border rounded-md px-4 py-3 ' + (composingIds.has(p.bookingId) ? 'border-bad/30' : 'border-bad/15')}>
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-medium text-ink">{p.golferName}</span>
-                            <span className="text-[11px] text-ink-faint">·</span>
-                            <Link href={`/admin/courses/${p.courseId}`} className="text-xs text-pine hover:underline">{p.courseName}</Link>
-                            <span className="text-[11px] text-ink-faint">·</span>
-                            <span className="text-xs text-ink-muted">{p.teeDate} {p.teeTime}</span>
-                          </div>
-                          <div className="text-xs text-bad mt-1">{p.reason}</div>
-                          <div className="text-xs text-ink-muted mt-0.5">{p.golferEmail}</div>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <div className="text-sm font-medium text-ink tabular-nums mb-1.5">{fmtMoney(p.amount)}</div>
-                          <button onClick={() => retryCharge(p)} disabled={retryingId === p.bookingId}
-                            className="inline-flex items-center gap-1 text-[11px] font-medium text-white bg-pine hover:bg-pine-hover disabled:opacity-50 px-2.5 py-1 rounded-md transition-colors">
-                            <RotateCw className={'w-3 h-3 ' + (retryingId === p.bookingId ? 'animate-spin' : '')}/>{retryingId === p.bookingId ? 'Retrying…' : 'Retry charge'}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <p className="text-xs text-ink-muted mt-3">Retry collects payment on the saved card. It does not check the golfer in. A hard decline needs a new card or in-person payment.</p>
             </div>
           )}
 
@@ -470,22 +559,29 @@ export default function RevenuePage() {
                 </div>
               )}
 
-              {/* Pending late-cancel fees */}
-              {(motion?.pendingLateCancelFees.length ?? 0) > 0 && (
+              {/* Late-cancellation fees — COURSE revenue. The cron charges
+                  these with applicationFeeCents: 0, so GR's take is $0, and a
+                  charged fee is refunded in full when the golfer checks in
+                  anyway. They used to sit under "Our take" with a green
+                  "charged" chip that was not final. */}
+              {(motion?.lateCancelFees.length ?? 0) > 0 && (
                 <div className="mt-5 pt-4 border-t border-line-soft">
-                  <div className="text-sm font-medium text-ink mb-2">Late-cancellation fees</div>
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <span className="text-sm font-medium text-ink">Late-cancellation fees</span>
+                    <span className="text-[10px] uppercase tracking-[0.06em] text-ink-faint">Course revenue · GR takes $0</span>
+                  </div>
                   <div className="divide-y divide-line-soft">
-                    {motion!.pendingLateCancelFees.map(f => (
+                    {motion!.lateCancelFees.map(f => (
                       <Link key={f.bookingId} href={`/admin/courses/${f.courseId}`} className="flex items-center justify-between gap-4 py-2 hover:bg-paper/60 -mx-2 px-2 rounded transition-colors">
                         <div className="min-w-0 flex items-center gap-2">
                           <span className="text-sm text-ink">{f.golferName}</span>
                           <span className="text-xs text-ink-muted truncate">· {f.courseName} · {f.teeDate}</span>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <span className={'inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded ' + (f.status === 'charged' ? 'bg-ok/10 text-ok' : 'bg-warn/10 text-warn')}>
-                            {f.status === 'charged' ? <CheckCircle2 className="w-3 h-3"/> : <Clock className="w-3 h-3"/>}{f.status}
-                          </span>
-                          <span className="text-sm font-medium text-ink tabular-nums">{fmtMoney(f.fee)}</span>
+                          <StatusDot
+                            status={f.status === 'charged' ? 'ok' : 'neutral'}
+                            label={f.status === 'charged' ? 'Charged' : 'Refunded at check-in'}/>
+                          <span className={'text-sm font-medium tabular-nums ' + (f.status === 'refunded' ? 'text-ink-muted line-through' : 'text-ink')}>{fmtMoney(f.fee)}</span>
                         </div>
                       </Link>
                     ))}
@@ -516,17 +612,18 @@ export default function RevenuePage() {
                 </div>
               </div>
               {rows.length === 0 ? (
-                <div className="py-16 text-center text-ink-muted text-sm">{search ? 'No courses match your search' : `No revenue for ${data.period.label}`}</div>
+                <div className="py-16 text-center text-ink-muted text-sm">{search ? 'No courses match your search' : `Nothing collected for ${data.period.label}`}</div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-line-soft">
                         <th className="text-left px-5 py-3 font-normal"><SortHead col="name" label="Course"/></th>
-                        <th className="px-4 py-3 font-normal"><div className="flex justify-end"><SortHead col="bookings" label="Bookings" right/></div></th>
-                        <th className="px-4 py-3 font-normal"><div className="flex justify-end"><SortHead col="serviceFees" label="Service fees" right/></div></th>
+                        <th className="px-4 py-3 font-normal"><div className="flex justify-end"><SortHead col="booked" label="Booked" right/></div></th>
+                        <th className="px-4 py-3 font-normal"><div className="flex justify-end"><SortHead col="collectedRounds" label="Checked in" right/></div></th>
+                        <th className="px-4 py-3 font-normal"><div className="flex justify-end"><SortHead col="serviceFees" label="Fees collected" right/></div></th>
                         <th className="px-4 py-3 font-normal"><div className="flex justify-end"><SortHead col="greenFeeVolume" label="Green fee vol." right/></div></th>
-                        <th className="px-4 py-3 font-normal"><div className="flex justify-end"><SortHead col="failedCharges" label="Failed" right/></div></th>
+                        <th className="px-4 py-3 font-normal" title="All time — matches the problems list above, not the period"><div className="flex justify-end"><SortHead col="failedCharges" label="Failed · all time" right/></div></th>
                         <th className="text-center px-4 py-3 font-normal"><span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Stripe</span></th>
                       </tr>
                     </thead>
@@ -538,10 +635,11 @@ export default function RevenuePage() {
                               <Link href={`/admin/courses/${r.courseId}`} className={'font-medium hover:underline ' + (r.archived ? 'text-ink-muted' : 'text-ink')}>{r.name}</Link>
                               {r.archived
                                 ? <span className="text-[10px] text-ink-faint bg-line rounded px-1.5 py-0.5">Archived</span>
-                                : !r.active && <span className="text-[10px] text-ink-faint bg-line rounded px-1.5 py-0.5">Offline</span>}
+                                : !r.active && <span className="text-[10px] text-ink-faint bg-line rounded px-1.5 py-0.5">Not live</span>}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-right tabular-nums text-ink-soft">{fmtCount(r.bookings)}</td>
+                          <td className="px-4 py-3 text-right tabular-nums text-ink-soft">{fmtCount(r.booked)}</td>
+                          <td className="px-4 py-3 text-right tabular-nums text-ink-soft">{fmtCount(r.collectedRounds)}</td>
                           <td className="px-4 py-3 text-right tabular-nums font-medium text-ink">{fmtMoney(r.serviceFees)}</td>
                           <td className="px-4 py-3 text-right tabular-nums text-ink-soft">{fmtMoney(r.greenFeeVolume)}</td>
                           <td className="px-4 py-3 text-right tabular-nums">{r.failedCharges > 0 ? <span className="text-bad font-medium">{r.failedCharges}</span> : <span className="text-ink-faint">—</span>}</td>
