@@ -88,6 +88,10 @@ function WizardContent() {
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'ok' | 'taken' | 'error'>('idle');
   const [creating, setCreating] = useState(false);
+  // MP-11b: were alert()s. The create failure sits above the button that caused
+  // it; a sheet that failed to load says so instead of silently starting blank.
+  const [createError, setCreateError] = useState('');
+  const [prefillNote, setPrefillNote] = useState('');
   const [result, setResult] = useState<Result | null>(null);
   const [sheetData, setSheetData] = useState<Record<string, unknown> | null>(null);
   const [step2Attempted, setStep2Attempted] = useState(false);
@@ -121,7 +125,7 @@ function WizardContent() {
     setInquiryId(iid);
     if (iid) {
       fetch(`/api/admin/inquiries?id=${encodeURIComponent(iid)}`)
-        .then(r => r.ok ? r.json() : null)
+        .then(r => { if (!r.ok) { setPrefillNote('Could not load this inquiry’s setup sheet — the form starts blank. Reload to try again.'); return null; } return r.json(); })
         .then(inq => {
           if (!inq?.detailsJson) return;
           let d: Record<string, unknown> = {};
@@ -156,7 +160,7 @@ function WizardContent() {
           // Also pre-fill website from sheet if present
           if (d.website) setBasics(b => ({ ...b, website: String(d.website) || b.website }));
         })
-        .catch(() => {});
+        .catch(() => setPrefillNote('Network error loading this inquiry’s setup sheet — the form starts blank. Reload to try again.'));
     }
   }, [params]);
 
@@ -184,7 +188,7 @@ function WizardContent() {
   }, [basics.slug]);
 
   async function create() {
-    setCreating(true);
+    setCreating(true); setCreateError('');
     try {
       const payload: Record<string, unknown> = {
         courseName: basics.name, courseType,
@@ -229,10 +233,10 @@ function WizardContent() {
         if (sheetData.description) payload.seedDescription = sheetData.description;
       }
       const r = await fetch('/api/admin/create-course', { method: 'POST', headers: H(), body: JSON.stringify(payload) });
-      const d = await r.json();
+      const d = await r.json().catch(() => ({}));
       if (r.ok) setResult(d);
-      else alert(`Error: ${d.error}`);
-    } catch (e) { alert(`Error: ${e}`); }
+      else setCreateError(d.error || `Could not create the course (${r.status}). Nothing was created.`);
+    } catch { setCreateError('Network error — the course may or may not have been created. Check the Courses list before retrying.'); }
     setCreating(false);
   }
 
@@ -370,6 +374,7 @@ function WizardContent() {
             <p className="text-sm text-ink-soft mt-0.5">
               {inquiryId ? 'Pre-filled from inquiry · ' : ''}Create an operator account and course page
             </p>
+            {prefillNote && <p className="text-xs text-bad mt-1">{prefillNote}</p>}
           </div>
 
           {/* Step indicator */}
@@ -722,6 +727,9 @@ function WizardContent() {
                   A welcome email with a temporary password and setup link will be sent to <strong>{op.contactEmail}</strong>.
                 </div>
               </div>
+              {createError && (
+                <div className="mb-3 text-sm text-bad bg-bad/5 border border-bad/20 rounded-md px-4 py-2.5">{createError}</div>
+              )}
               <div className="flex gap-3">
                 <button onClick={() => setStep(4)} className="flex items-center gap-1.5 px-5 py-3 border border-line text-ink-muted hover:text-ink hover:border-line-strong rounded-md text-[12.5px] font-medium transition-colors">
                   <ArrowLeft className="w-4 h-4"/>Back

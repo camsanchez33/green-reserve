@@ -10,6 +10,7 @@ import {
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { periodDelta, lastBookingLabel, type CourseHealthStatus } from '@/lib/course-metrics';
+import { useResource } from '@/lib/use-resource';
 
 type TabName = 'overview' | 'money' | 'records' | 'messages' | 'operate' | 'setup';
 
@@ -265,7 +266,10 @@ export default function CourseDetailPage() {
   const [setupMsg, setSetupMsg] = useState('');
 
   // Operate: schedules
-  const [schedules, setSchedules] = useState<ScheduleRow[]>([]);
+  // MP-11b: loaders that used to be `if (r.ok) set...` with no else — a 403 or
+  // a 500 rendered as an empty tee sheet / no schedules / no messages.
+  const sched = useResource<ScheduleRow[]>('schedules');
+  const schedules = sched.data ?? [];
   const [newSchedule, setNewSchedule] = useState<ScheduleFormState>(EMPTY_SCHEDULE);
   const [showAddSched, setShowAddSched] = useState(false);
   const [schedSaving, setSchedSaving] = useState(false);
@@ -277,8 +281,9 @@ export default function CourseDetailPage() {
   // Operate: tee sheet. MP-5d — every mutation reports pending + failure
   // inline; block/cancel used to swallow errors and manual booking alert()ed.
   const [tsDate, setTsDate] = useState(() => new Date().toISOString().split('T')[0]);
-  const [tsSlots, setTsSlots] = useState<TeeSlot[]>([]);
-  const [tsLoading, setTsLoading] = useState(false);
+  const ts = useResource<TeeSlot[]>('the tee sheet');
+  const tsSlots = ts.data ?? [];
+  const tsLoading = ts.loading;
   const [slotBusy, setSlotBusy] = useState<string | null>(null);
   const [opNote, setOpNote] = useState<{ ok: boolean; text: string } | null>(null);
   const [manualSlot, setManualSlot] = useState<string | null>(null);
@@ -316,8 +321,10 @@ export default function CourseDetailPage() {
   const [requestingReReview, setRequestingReReview] = useState(false);
 
   // Messages tab
-  const [msgThread, setMsgThread] = useState<{ id: string; messages: { id: string; senderType: string; senderName: string; body: string; readAt: string | null; isBroadcast: boolean; createdAt: string }[] } | null>(null);
-  const [msgLoading, setMsgLoading] = useState(false);
+  const thr = useResource<{ id: string; messages: { id: string; senderType: string; senderName: string; body: string; readAt: string | null; isBroadcast: boolean; createdAt: string }[] }>('this conversation');
+  const msgThread = thr.data;
+  const msgLoading = thr.loading;
+  const [msgError, setMsgError] = useState('');
   const [msgCompose, setMsgCompose] = useState('');
   const [msgSending, setMsgSending] = useState(false);
 
@@ -338,6 +345,7 @@ export default function CourseDetailPage() {
   const [liveBlockMissing, setLiveBlockMissing] = useState<'agreement' | 'stripe' | null>(null);
   const [reminderNudgeBusy, setReminderNudgeBusy] = useState(false);
   const [reminderNudgeSent, setReminderNudgeSent] = useState(false);
+  const [reminderNudgeError, setReminderNudgeError] = useState('');
 
   // A-05 item 5: Records tab (was Documents)
   const [docsData, setDocsData] = useState<{
@@ -357,20 +365,17 @@ export default function CourseDetailPage() {
 
   // A-05 item 4b: auto-chase reminders kill switch
   const [remindersBusy, setRemindersBusy] = useState(false);
+  const [remindersError, setRemindersError] = useState('');
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
-  const loadSchedules = useCallback(async () => {
-    const r = await fetch(`/api/admin/schedule?courseId=${courseId}`, { headers: H() });
-    if (r.ok) setSchedules(await r.json());
-  }, [courseId, H]);
+  const loadSchedules = useCallback(
+    () => sched.load(`/api/admin/schedule?courseId=${courseId}`),
+    [courseId, sched.load]);
 
-  const loadTeeSheet = useCallback(async (date: string) => {
-    setTsLoading(true); setTsSlots([]);
-    const r = await fetch(`/api/admin/tee-sheet?courseId=${courseId}&date=${date}`, { headers: H() });
-    if (r.ok) setTsSlots(await r.json());
-    setTsLoading(false);
-  }, [courseId, H]);
+  const loadTeeSheet = useCallback(
+    (date: string) => ts.load(`/api/admin/tee-sheet?courseId=${courseId}&date=${date}`, { clear: true }),
+    [courseId, ts.load]);
 
   const loadTransactions = useCallback(async (p: number, f: string, t: string, s: string) => {
     setTxLoading(true);
@@ -417,13 +422,10 @@ export default function CourseDetailPage() {
   }, [courseId, H]);
 
   const loadCourseThread = useCallback(async () => {
-    setMsgLoading(true);
-    const r = await fetch(`/api/admin/messages?courseId=${courseId}`, { headers: H() });
-    if (r.ok) setMsgThread(await r.json());
-    setMsgLoading(false);
-    // Mark operator messages as read
-    await fetch('/api/admin/messages', { method: 'PATCH', headers: H(), body: JSON.stringify({ courseId }) });
-  }, [courseId, H]);
+    await thr.load(`/api/admin/messages?courseId=${courseId}`);
+    // Mark operator messages as read — best effort, never user-facing state.
+    await fetch('/api/admin/messages', { method: 'PATCH', headers: H(), body: JSON.stringify({ courseId }) }).catch(() => {});
+  }, [courseId, H, thr.load]);
 
   const loadDetail = useCallback(async () => {
     setLoading(true);
@@ -484,12 +486,17 @@ export default function CourseDetailPage() {
   }
 
   async function sendGoLiveReminder(missing: 'agreement' | 'stripe') {
-    setReminderNudgeBusy(true);
-    const r = await fetch('/api/admin/send-golive-reminder', {
-      method: 'POST', headers: H(), body: JSON.stringify({ courseId, missing }),
-    });
+    setReminderNudgeBusy(true); setReminderNudgeError('');
+    try {
+      const r = await fetch('/api/admin/send-golive-reminder', {
+        method: 'POST', headers: H(), body: JSON.stringify({ courseId, missing }),
+      });
+      if (r.ok) setReminderNudgeSent(true);
+      else { const d = await r.json().catch(() => ({})); setReminderNudgeError(d.error || 'The reminder did not send — try again.'); }
+    } catch {
+      setReminderNudgeError('Network error — the reminder was not sent.');
+    }
     setReminderNudgeBusy(false);
-    if (r.ok) setReminderNudgeSent(true);
   }
 
   // MP-0 review blocker B1 (no-silent-failures): this used to fire and forget
@@ -527,18 +534,22 @@ export default function CourseDetailPage() {
     });
     setArchiveBusy(false);
     if (r.ok) loadDetail();
-    else { const d = await r.json(); alert(`Restore failed: ${d.error}`); }
+    else { const d = await r.json().catch(() => ({})); setLiveBlockReason(`Restore failed: ${d.error || 'try again'}`); }
   }
 
   // A-05 item 4b — kill switch, logged to the course timeline.
   async function toggleRemindersPaused(paused: boolean) {
-    setRemindersBusy(true);
-    const r = await fetch('/api/admin/course-reminders', {
-      method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, paused }),
-    });
+    setRemindersBusy(true); setRemindersError('');
+    try {
+      const r = await fetch('/api/admin/course-reminders', {
+        method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, paused }),
+      });
+      if (r.ok) loadDetail();
+      else { const d = await r.json().catch(() => ({})); setRemindersError(d.error || 'Could not change the reminder setting — nothing was saved.'); }
+    } catch {
+      setRemindersError('Network error — nothing was saved.');
+    }
     setRemindersBusy(false);
-    if (r.ok) loadDetail();
-    else { const d = await r.json().catch(() => ({})); alert(d.error || 'Failed to update'); }
   }
 
   async function addClientNote() {
@@ -549,7 +560,7 @@ export default function CourseDetailPage() {
     });
     setNoteSaving(false);
     if (r.ok) { setNoteDraft(''); loadDocuments(); }
-    else { const d = await r.json().catch(() => ({})); alert(d.error || 'Failed to save note'); }
+    else { const d = await r.json().catch(() => ({})); setDocsError(d.error || 'Could not save the note — nothing was changed.'); }
   }
 
   async function uploadDocument(file: File) {
@@ -732,6 +743,24 @@ export default function CourseDetailPage() {
       setManualError('Network error — nothing was booked.');
     }
     setManualSaving(false);
+  }
+
+  // MP-11b: the send lived twice (Ctrl+Enter and the button), both ending in
+  // alert(). One function, one inline error above the composer.
+  async function sendCourseMessage() {
+    if (!msgCompose.trim() || msgSending) return;
+    setMsgSending(true); setMsgError('');
+    try {
+      const r = await fetch('/api/admin/messages', {
+        method: 'POST', headers: H(),
+        body: JSON.stringify({ courseId, body: msgCompose.trim() }),
+      });
+      if (r.ok) { setMsgCompose(''); await loadCourseThread(); }
+      else { const d = await r.json().catch(() => ({})); setMsgError(d.error || 'The message did not send — try again.'); }
+    } catch {
+      setMsgError('Network error — the message was not sent.');
+    }
+    setMsgSending(false);
   }
 
   async function resendSetup(staffId: string, staffName: string) {
@@ -974,9 +1003,12 @@ export default function CourseDetailPage() {
               reminder nudge instead of a way around it. */}
           {liveBlockReason && (
             <div className="mt-3 rounded-md px-4 py-2.5 bg-bad/5 border border-bad/20 flex items-center justify-between gap-3">
-              <p className="text-xs text-bad">{liveBlockReason}</p>
+              <p className="text-xs text-bad">
+                {liveBlockReason}
+                {reminderNudgeError && <span className="block mt-0.5">{reminderNudgeError}</span>}
+              </p>
               <div className="flex items-center gap-2 shrink-0">
-                <button onClick={() => { setLiveBlockReason(''); setLiveBlockMissing(null); setReminderNudgeSent(false); }} className="text-xs text-ink-muted hover:text-ink transition-colors">Dismiss</button>
+                <button onClick={() => { setLiveBlockReason(''); setLiveBlockMissing(null); setReminderNudgeSent(false); setReminderNudgeError(''); }} className="text-xs text-ink-muted hover:text-ink transition-colors">Dismiss</button>
                 {liveBlockMissing && (
                   <button
                     onClick={() => sendGoLiveReminder(liveBlockMissing)}
@@ -1536,7 +1568,13 @@ export default function CourseDetailPage() {
                 )}
 
                 {tsLoading && <div className="text-center text-ink-muted py-12 text-sm">Loading tee sheet...</div>}
-                {!tsLoading && tsSlots.length === 0 && (
+                {!tsLoading && ts.error && (
+                  <div className="text-center py-10 bg-white border border-bad/20 rounded-lg">
+                    <div className="text-sm text-bad mb-2">{ts.error.msg}</div>
+                    <button onClick={() => loadTeeSheet(tsDate)} className="text-xs font-medium text-ink-soft hover:text-ink px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">Retry</button>
+                  </div>
+                )}
+                {!tsLoading && !ts.error && tsSlots.length === 0 && (
                   <div className="text-center text-ink-muted py-12 text-sm bg-white border border-line rounded-lg">
                     {schedules.length === 0
                       ? 'No tee times for this date — this course has no schedule yet. Add one below.'
@@ -1637,6 +1675,12 @@ export default function CourseDetailPage() {
                   </div>
                 )}
 
+                {sched.error && (
+                  <div className="text-sm text-bad flex items-center justify-between gap-3">
+                    <span>{sched.error.msg}</span>
+                    <button onClick={loadSchedules} className="text-xs font-medium text-ink-soft hover:text-ink px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">Retry</button>
+                  </div>
+                )}
                 {schedules.length > 0 ? (
                   <div className="space-y-2">
                     {schedules.map(s => editSched?.id === s.id ? (
@@ -1804,7 +1848,13 @@ export default function CourseDetailPage() {
                 {/* Messages list */}
                 <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4" style={{ maxHeight: 420 }}>
                   {msgLoading && <div className="py-8 text-center text-ink-muted text-sm">Loading...</div>}
-                  {!msgLoading && (!msgThread || msgThread.messages.length === 0) && (
+                  {!msgLoading && thr.error && (
+                    <div className="py-8 text-center">
+                      <div className="text-sm text-bad mb-2">{thr.error.msg}</div>
+                      <button onClick={loadCourseThread} className="text-xs font-medium text-ink-soft hover:text-ink px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">Retry</button>
+                    </div>
+                  )}
+                  {!msgLoading && !thr.error && (!msgThread || msgThread.messages.length === 0) && (
                     <div className="py-8 text-center">
                       <MessageSquare className="w-8 h-8 text-ink-muted mx-auto mb-2" />
                       <div className="text-sm text-ink-muted">No messages yet. Start the conversation below.</div>
@@ -1841,24 +1891,18 @@ export default function CourseDetailPage() {
 
                 {/* Composer */}
                 <div className="border-t border-line px-5 py-4 shrink-0">
+                  {msgError && (
+                    <div className="mb-3 text-xs text-bad bg-bad/5 border border-bad/20 rounded-md px-3 py-2 flex items-center justify-between gap-3">
+                      <span>{msgError}</span>
+                      <button onClick={() => setMsgError('')} className="text-ink-muted hover:text-ink transition-colors"><X className="w-3.5 h-3.5" /></button>
+                    </div>
+                  )}
                   <div className="flex gap-3 items-end">
                     <textarea
                       value={msgCompose}
                       onChange={e => setMsgCompose(e.target.value)}
                       onKeyDown={e => {
-                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && msgCompose.trim() && !msgSending) {
-                          e.preventDefault();
-                          (async () => {
-                            setMsgSending(true);
-                            const r = await fetch('/api/admin/messages', {
-                              method: 'POST', headers: H(),
-                              body: JSON.stringify({ courseId, body: msgCompose.trim() }),
-                            });
-                            if (r.ok) { setMsgCompose(''); await loadCourseThread(); }
-                            else { const d = await r.json(); alert(d.error || 'Send failed'); }
-                            setMsgSending(false);
-                          })();
-                        }
+                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); sendCourseMessage(); }
                       }}
                       placeholder="Message this course..."
                       rows={2}
@@ -1866,20 +1910,10 @@ export default function CourseDetailPage() {
                     />
                     <button
                       disabled={!msgCompose.trim() || msgSending}
-                      onClick={async () => {
-                        if (!msgCompose.trim() || msgSending) return;
-                        setMsgSending(true);
-                        const r = await fetch('/api/admin/messages', {
-                          method: 'POST', headers: H(),
-                          body: JSON.stringify({ courseId, body: msgCompose.trim() }),
-                        });
-                        if (r.ok) { setMsgCompose(''); await loadCourseThread(); }
-                        else { const d = await r.json(); alert(d.error || 'Send failed'); }
-                        setMsgSending(false);
-                      }}
+                      onClick={sendCourseMessage}
                       className="flex items-center gap-1.5 px-4 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white text-sm font-medium rounded-md transition-colors shrink-0"
                     >
-                      <Send className="w-3.5 h-3.5" />Send
+                      <Send className="w-3.5 h-3.5" />{msgSending ? 'Sending…' : 'Send'}
                     </button>
                   </div>
                   <div className="text-[10px] text-ink-faint mt-1.5">⌘/Ctrl + Enter to send · <button onClick={() => window.open('/admin/messages?courseId=' + courseId, '_blank')} className="text-pine hover:underline">Open full view</button></div>
@@ -1938,6 +1972,7 @@ export default function CourseDetailPage() {
                 <p className="text-sm text-ink-soft mb-3">
                   Emails at 3, 7, and 14 days after the course record is created, then weekly, until the course goes live. Stops instantly once live.
                 </p>
+                {remindersError && <p className="text-xs text-bad mb-3">{remindersError}</p>}
                 {detail.timeline === null ? (
                   <p className="text-xs text-ink-faint">No linked inquiry — reminders can&apos;t be tracked for this course.</p>
                 ) : reminderEvents.length === 0 ? (

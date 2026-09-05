@@ -154,9 +154,9 @@ function InquiriesListInner() {
     if (view !== 'closed' || backfillRan || !adminReady) return;
     setBackfillRan(true);
     fetch('/api/admin/backfill-orphaned-inquiries', { method: 'POST', headers: H() })
-      .then(r => r.ok ? r.json() : null)
+      .then(r => { if (!r.ok) { setReconcileResult(`Background orphan check could not run (${r.status}) — the Closed list may be missing archived inquiries.`); return null; } return r.json(); })
       .then(d => { if (d && d.fixed > 0) loadInquiries(); })
-      .catch(() => {});
+      .catch(() => setReconcileResult('Background orphan check could not run (network) — the Closed list may be missing archived inquiries.'));
   }, [view, backfillRan, adminReady, H, loadInquiries]);
 
   // One-time LIFECYCLE PARITY LAW reconciliation sweep (RUN_QUEUE item 6.6)
@@ -166,14 +166,14 @@ function InquiriesListInner() {
     if (view !== 'closed' || reconcileRan || !adminReady) return;
     setReconcileRan(true);
     fetch('/api/admin/reconcile-lifecycle-pairs', { method: 'POST', headers: H() })
-      .then(r => r.ok ? r.json() : null)
+      .then(r => { if (!r.ok) { setReconcileResult(`Lifecycle parity check could not run (${r.status}) — an inquiry and its course may disagree about being archived.`); return null; } return r.json(); })
       .then(d => {
         if (d && d.fixed > 0) {
           setReconcileResult(`Reconciled ${d.fixed} out-of-parity pair${d.fixed === 1 ? '' : 's'}: ${d.changes.map((c: { action: string }) => c.action).join('; ')}`);
           loadInquiries();
         }
       })
-      .catch(() => {});
+      .catch(() => setReconcileResult('Lifecycle parity check could not run (network) — an inquiry and its course may disagree about being archived.'));
   }, [view, reconcileRan, adminReady, H, loadInquiries]);
 
   // DELETION DOCTRINE (RUN_QUEUE): only reachable for UNBUILT inquiries

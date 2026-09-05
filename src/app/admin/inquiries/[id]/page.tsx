@@ -373,7 +373,8 @@ function InquiryDetailInner() {
     | 'archive_course' | 'delete_course' | 'restore_archived' | null
   >(null);
   const [courseSlug, setCourseSlug] = useState('');
-  const [courseBookings30d, setCourseBookings30d] = useState(0);
+  // null = could not be loaded; never shown as 0.
+  const [courseBookings30d, setCourseBookings30d] = useState<number | null>(null);
   const [deleteCourseConfirm, setDeleteCourseConfirm] = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
   const [goLiveChecks, setGoLiveChecks] = useState<{ key: string; label: string; ok: boolean; absolute: boolean }[] | null>(null);
@@ -426,9 +427,9 @@ function InquiryDetailInner() {
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (d?.course?.slug) setCourseSlug(d.course.slug);
-        setCourseBookings30d(d?.bookings30d ?? 0);
+        setCourseBookings30d(typeof d?.bookings30d === 'number' ? d.bookings30d : null);
       })
-      .catch(() => {});
+      .catch(() => setCourseBookings30d(null));
   }, [inq?.builtCourseId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -1863,9 +1864,11 @@ function InquiryDetailInner() {
           );
         }
         if (pendingAction === 'archive_course') {
-          const activityWarn = courseBookings30d > 0
-            ? ` This course has ${courseBookings30d} booking${courseBookings30d !== 1 ? 's' : ''} in the last 30 days — existing bookings and their data are preserved.`
-            : '';
+          const activityWarn = courseBookings30d === null
+            ? ' Recent booking activity could not be checked — look at the course page before archiving.'
+            : courseBookings30d > 0
+              ? ` This course has ${courseBookings30d} booking${courseBookings30d !== 1 ? 's' : ''} in the last 30 days — existing bookings and their data are preserved.`
+              : '';
           return (
             <ModalShell title={`Archive "${inq.courseName}"?`} onClose={close}>
               <p className="text-sm text-ink-soft">The course disappears from the public site but data is retained. You can restore it later.{activityWarn}</p>
