@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 import { cleanChangeItems, submitChangeRequest } from '@/lib/submit-change-request';
 
 // Logged-in-operator counterpart to /api/preview/[courseId]/request-changes
@@ -9,6 +9,7 @@ import { cleanChangeItems, submitChangeRequest } from '@/lib/submit-change-reque
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   const { items } = await req.json().catch(() => ({ items: [] }));
   const cleanItems = cleanChangeItems(items);

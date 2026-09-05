@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 
 export async function GET() {
   const session = await resolveDashboardSession();
@@ -23,6 +23,7 @@ async function validNineIds(courseId: string, nineIds: unknown): Promise<string[
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   const body = await req.json();
   if (!body.label?.trim()) return NextResponse.json({ error: 'Label is required' }, { status: 400 });
@@ -45,6 +46,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   const { id, ...data } = await req.json();
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
@@ -70,6 +72,7 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   const { id } = await req.json();
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });

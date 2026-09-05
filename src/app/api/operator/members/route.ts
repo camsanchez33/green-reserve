@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 import { randomUUID } from 'crypto';
 import { signMemberInviteToken } from '@/lib/auth';
 import { sendMemberInviteEmail, sendMemberLinkedNotification, sendMembershipPaymentLinkEmail } from '@/lib/email';
@@ -71,6 +71,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   const body = await req.json();
   const { email, name, phone, tierId, notes, expiresAt } = body;
@@ -175,6 +176,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   const body = await req.json();
   const { id, tierId, status, notes, expiresAt, action } = body;
@@ -246,6 +248,7 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');

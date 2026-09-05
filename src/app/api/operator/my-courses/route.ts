@@ -9,7 +9,9 @@ import { resolveDashboardSession } from '@/lib/session';
 export async function GET() {
   const session = await getOperatorSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (session.kind !== 'operator') return NextResponse.json({ courses: [], activeCourseId: null });
+  // SD-1: the sidebar hides the configuration tabs for staff — no point
+  // offering doors that now 403.
+  if (session.kind !== 'operator') return NextResponse.json({ courses: [], activeCourseId: null, isStaff: true });
 
   const courses = await prisma.course.findMany({
     where: { operatorId: session.operatorId },
@@ -19,5 +21,5 @@ export async function GET() {
 
   const resolved = await resolveDashboardSession();
 
-  return NextResponse.json({ courses, activeCourseId: resolved?.courseId ?? courses[0]?.id ?? null });
+  return NextResponse.json({ courses, activeCourseId: resolved?.courseId ?? courses[0]?.id ?? null, isStaff: false });
 }

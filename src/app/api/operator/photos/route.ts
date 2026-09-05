@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 
 const MAX_BYTES = 8 * 1024 * 1024; // 8MB — the client downscales large images before upload
 const ALLOWED_TYPES: Record<string, string> = {
@@ -24,6 +24,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return NextResponse.json({ error: 'Image storage is not configured. Contact hello@greenreserve.app.' }, { status: 503 });

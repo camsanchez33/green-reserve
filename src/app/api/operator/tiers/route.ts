@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
 import { tierToWire } from '@/lib/tier-wire';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 
 export async function GET() {
   const session = await resolveDashboardSession();
@@ -19,6 +19,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   const body = await req.json();
   const { name, color, greenFeeWeekday, greenFeeWeekend, cartFeeWeekday, cartFeeWeekend,
@@ -59,6 +60,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   const body = await req.json();
   const { id, ...updates } = body;
@@ -92,6 +94,7 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');

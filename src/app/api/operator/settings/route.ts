@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { courseToWire, courseMoneyFromWire } from '@/lib/course-wire';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
+import { validateSettingsPatch } from '@/lib/settings-validation';
 
 // Never cache — the dashboard's live/draft status must reflect the DB the
 // moment admin flips it, not a stale response served to an already-open tab.
@@ -31,6 +32,7 @@ export async function GET() {
 export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
   const body = await req.json();
   // Whitelist what can be updated
   const allowed = [
@@ -48,10 +50,12 @@ export async function PATCH(req: NextRequest) {
     'amenities',
     'brandColor','establishedYear','giftCardUrl',
   ];
-  const data: Record<string, unknown> = {};
-  for (const key of allowed) {
-    if (key in body) data[key] = body[key];
-  }
+  // SD-1: this used to copy every allow-listed key straight into the row —
+  // negative hole counts, a 40KB description, a javascript: gift-card URL that
+  // the golfer page renders as a raw href. The API is the boundary.
+  const checked = validateSettingsPatch(body, allowed);
+  if (!checked.ok) return NextResponse.json({ error: checked.error }, { status: 400 });
+  const data: Record<string, unknown> = checked.data;
   // Money arrives in dollars under its old field names; courseMoneyFromWire
   // maps each to its *Cents column. They are deliberately OUT of the allowlist
   // above so a raw dollar value can never be written into a cents column.

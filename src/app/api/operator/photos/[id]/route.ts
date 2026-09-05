@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { del } from '@vercel/blob';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 
 export async function DELETE(
   _req: NextRequest,
@@ -9,6 +9,7 @@ export async function DELETE(
 ) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   const { id } = await params;
 

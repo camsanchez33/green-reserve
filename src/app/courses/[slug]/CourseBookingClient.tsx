@@ -1273,7 +1273,10 @@ export default function CourseDetailPage({
                 <div className="bg-white rounded-lg p-7 border border-line">
                   <h2 className="font-semibold text-ink text-xl mb-4">About This Course</h2>
                   <p className="text-ink-soft leading-relaxed">{course.description}</p>
-                  {course.gift_card_url && (
+                  {/* SD-1: defence in depth — the settings API validates this
+                      now, but a row written before that rule is rendered as a
+                      raw href here, so the render refuses anything but http(s). */}
+                  {course.gift_card_url && /^https?:\/\//i.test(course.gift_card_url) && (
                     <a
                       href={course.gift_card_url}
                       target="_blank"

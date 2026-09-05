@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 
@@ -18,6 +18,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
   const { name, email: rawEmail, role } = await req.json();
   if (!name || !rawEmail) return NextResponse.json({ error: 'Name and email required' }, { status: 400 });
   const email = String(rawEmail).trim().toLowerCase();
@@ -36,6 +37,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
   const { id, active } = await req.json();
   const staff = await prisma.courseStaff.findUnique({ where: { id } });
   if (!staff || staff.courseId !== session.courseId) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -46,6 +48,7 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
   const { id } = await req.json();
   const staff = await prisma.courseStaff.findUnique({ where: { id } });
   if (!staff || staff.courseId !== session.courseId) return NextResponse.json({ error: 'Not found' }, { status: 404 });

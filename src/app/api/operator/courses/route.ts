@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { courseToWire } from '@/lib/course-wire';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
+import { normalizeHttpUrl } from '@/lib/settings-validation';
 import { CHANGES_REQUESTED_PREFIX, LEGACY_CHANGES_REQUESTED_MARKER, isChangesRequestedEvent } from '@/lib/change-requests';
 
 // Never cache — the dashboard's live/draft banner reads this and must
@@ -43,10 +44,21 @@ export async function GET() {
 export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   const body = await req.json();
   const course = await prisma.course.findUnique({ where: { id: session.courseId } });
   if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+
+  // SD-1: same rule as the settings route — a URL golfers get sent to is
+  // http(s) or nothing.
+  for (const k of ['website', 'bookingUrl'] as const) {
+    if (body[k] !== undefined && body[k] !== null) {
+      const u = normalizeHttpUrl(body[k]);
+      if (u === null) return NextResponse.json({ error: `${k} must be a web address starting with http:// or https://.` }, { status: 400 });
+      body[k] = u;
+    }
+  }
 
   const updated = await prisma.course.update({
     where: { id: session.courseId },

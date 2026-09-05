@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 import { logAgreementAccepted, getCourseTimeline, latestAgreementAcceptance } from '@/lib/course-timeline';
 
 // A-05 item 5a — Operator Agreement clickwrap, an extension of the existing
@@ -15,6 +15,7 @@ export async function GET() {
 export async function POST() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
   const ok = await logAgreementAccepted(session.courseId, session.email);
   if (!ok) return NextResponse.json({ error: 'Could not record acceptance' }, { status: 400 });
   return NextResponse.json({ success: true });

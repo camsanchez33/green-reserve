@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 import { sendCourseApprovedNotification } from '@/lib/email';
 import { latestPageDecision } from '@/lib/change-requests';
 
@@ -8,6 +8,7 @@ import { latestPageDecision } from '@/lib/change-requests';
 export async function POST() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   const course = await prisma.course.findUnique({
     where: { id: session.courseId },

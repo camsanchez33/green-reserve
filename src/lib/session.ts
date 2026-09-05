@@ -4,6 +4,13 @@ import { prisma } from './prisma';
 
 export const ACTIVE_COURSE_COOKIE = 'gr_active_course';
 
+// SD-1: staff run the tee sheet; they do not configure the course. "Staff (tee
+// sheet access)" was a label the API never enforced — a staff login (which has
+// no 2FA) could change fees, add or delete staff, and un-list the course. Every
+// write on a configuration route returns this; reads stay open because the
+// tee-sheet page needs the course's config to render.
+export const STAFF_FORBIDDEN = 'Staff accounts run the tee sheet but cannot change course settings — ask the course operator.';
+
 export interface ResolvedSession {
   courseId: string;
   email: string;

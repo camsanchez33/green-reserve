@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 
 // nineYardages/productRatings included for the Course & Layout tab (L1) —
 // onboarding's GET consumer (dashboard/onboarding/page.tsx) only destructures
@@ -62,6 +62,7 @@ async function replaceProductRatings(teeSetId: string, courseId: string, rows: u
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   const body = await req.json();
   if (!body.name?.trim()) return NextResponse.json({ error: 'Name is required' }, { status: 400 });
@@ -91,6 +92,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   const { id, ...data } = await req.json();
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
@@ -123,6 +125,7 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   const { id } = await req.json();
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
@@ -134,6 +137,7 @@ export async function DELETE(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   const body = await req.json();
   const teeSets: unknown[] = Array.isArray(body.teeSets) ? body.teeSets : [];

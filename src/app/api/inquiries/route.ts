@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendInquiryNotification, sendInquiryConfirmation } from '@/lib/email';
 import { ALIVE_STATUSES, encodeResubmit } from '@/lib/inquiry-status';
+import { rateLimit, clientIp } from '@/lib/rate-limit';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -10,6 +11,12 @@ export async function POST(req: NextRequest) {
 
   // Honeypot: bots fill hidden fields, humans leave them blank. Silently accept but discard.
   if (body._website) return NextResponse.json({ success: true });
+
+  // SD-1: the intake sends two emails per submission and creates a row; it had
+  // no limit at all. Five an hour per connection is generous for a human.
+  if (!(await rateLimit(`inquiry:${clientIp(req)}`, 5, 3600))) {
+    return NextResponse.json({ error: 'Too many submissions from this connection — try again in an hour, or email hello@greenreserve.app.' }, { status: 429 });
+  }
 
   const required = ['firstName', 'lastName', 'contactTitle', 'email', 'phone', 'courseName', 'city', 'state', 'courseType'];
   for (const field of required) {

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 
 export async function GET() {
   const session = await resolveDashboardSession();
@@ -23,6 +23,7 @@ export async function GET() {
 export async function PATCH() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
   // Staff cannot modify operator profile/onboarding state.
   if (session.isStaff) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 

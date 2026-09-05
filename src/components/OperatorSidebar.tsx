@@ -31,6 +31,8 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   const [identity, setIdentity] = useState<CourseIdentity>({ name: '', type: 'public', brandColor: '#24513B', establishedYear: null });
   const [myCourses, setMyCourses] = useState<MyCourse[]>([]);
   const [switchingCourse, setSwitchingCourse] = useState(false);
+  // SD-1: staff run the tee sheet; the configuration tabs are not theirs.
+  const [isStaff, setIsStaff] = useState(false);
 
   // Every dashboard page renders this sidebar with its tab as `active` — the
   // one place we can credit a tab visit for the Getting Started checklist's
@@ -54,7 +56,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     // switcher stays hidden, same as today.
     fetch('/api/operator/my-courses')
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.courses) setMyCourses(d.courses); })
+      .then(d => { if (d?.courses) setMyCourses(d.courses); setIsStaff(!!d?.isStaff); })
       .catch(() => {});
   }, []);
 
@@ -92,10 +94,11 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     { key: 'settings',      label: 'Settings',     href: '/dashboard/settings',      icon: <Settings className="w-4 h-4"/> },
   ];
 
+  const STAFF_HIDDEN: OperatorNavKey[] = ['schedule', 'members', 'payments', 'settings'];
   const groups = [
     { label: 'Dashboard', keys: ['teesheet', 'analytics'] as OperatorNavKey[] },
     { label: 'Bookings',  keys: ['cancellations', 'tournaments', 'outings'] as OperatorNavKey[] },
-    { label: 'Manage',    keys: ['schedule', 'members', 'payments', 'messages', 'settings'] as OperatorNavKey[] },
+    { label: 'Manage',    keys: (['schedule', 'members', 'payments', 'messages', 'settings'] as OperatorNavKey[]).filter(k => !isStaff || !STAFF_HIDDEN.includes(k)) },
   ];
 
   return (
