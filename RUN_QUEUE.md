@@ -1131,15 +1131,24 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       is pre-existing). tsc green. CAM MUST CHECK: sign out, sign in again
       (both /admin/login and /admin/owner-login) — you must land on the
       Overview, not loop back to login. NEEDS REVIEW.
-    - [ ] MP-11b — `useResource` hook (no migration): ~a dozen loaders are
-      `if (r.ok) setData(...)` with no else, so a 403/500 renders as "no
-      inquiries" / "no events"; Overview has no error branch at all; 14
-      swallowed `.catch(() => {})`; 10 surviving `alert()` calls (5 on the
-      course detail page: restore, reminders, note, message send ×2). Extract
-      the courses/[id] `docsError` pattern into a hook with error state, 401
-      handling and abort-on-unmount; convert the hand-rolled fetches; replace
-      every alert() with an inline surface. Validate by forcing a 403 on one
-      loader and by going offline mid-session (error + retry, no redirect).
+    - [x] MP-11b (99ed266) — no admin action fails silently. NEW
+      `lib/use-resource.ts` (data / loading / classified error /
+      abort-on-supersede) replaces the course detail's three `if (r.ok)
+      set...`-with-no-else loaders (schedules, tee sheet, message thread), each
+      of which rendered a 403/500 as emptiness; each shows the failure with a
+      Retry now. ZERO alert() calls remain in the admin: restore course,
+      pause/resume reminders, add note, send message (×2 → one function),
+      create-course wizard (×2) are inline surfaces. Go-live reminder nudge
+      gained a failure path (had none). Create wizard reports a setup sheet
+      that could not load instead of silently starting blank. Inquiries list's
+      two one-time sweeps report when they could not run. Inquiry detail's
+      archive confirm no longer asserts "0 bookings" when the lookup failed
+      (null → "could not be checked"). The spec's "Overview has no error
+      branch" and "14 swallowed catches" were already largely fixed by MP-2b–e;
+      three best-effort `.catch(() => {})` remain on purpose (two mark-as-read
+      PATCHes, the sidebar badge fetch — none user-facing). NOT converted: the
+      loaders that already had a correct else (members, documents, revenue,
+      activity, employees) — churn for no truth gain. NEEDS REVIEW.
   PARKED 2026-08-27 — the Overview reshape (was OV-1/OV-2: five zones, Today
   band, deduplicated Your Move rail, Growth band, Fleet Watch with no_traction,
   absorbing the Activity strip + Money in Motion). Both cited "Deep Dive 01" as

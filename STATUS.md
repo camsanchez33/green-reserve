@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-05 04:23 UTC · branch `main` · HEAD `341161a` · working tree **2 dirty file(s)**
+Generated 2026-09-05 04:31 UTC · branch `main` · HEAD `99ed266` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -20,7 +20,7 @@ these actually are first.
 
 ## In flight
 
-- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:1608`
+- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:1617`
   - FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because "no linked inquiry" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding the
   - Last session's raw Prisma script (a read-only check confirming Fake
   - Fairways existed) got blocked by this sandbox's auto-mode classifier as a potential production-database access outside the app's own authenticated API. That block is almost certainly the intended, correct behavior — a raw script has no place touching real course/booking/ operator data, authorized or not — so I did NOT retry it, and built the override into the sanctioned admin API instead, per the 
@@ -75,15 +75,14 @@ This is the distinction a raw checkbox count gets wrong.
 26. MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in — `RUN_QUEUE.md:1106`
 27. MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity, — `RUN_QUEUE.md:1112`
 28. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1116`
-29. MP-11b — `useResource` hook (no migration): ~a dozen loaders are — `RUN_QUEUE.md:1134`
-30. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1156`
-31. BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet: — `RUN_QUEUE.md:1161`
-32. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1182`
-33. COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small) — `RUN_QUEUE.md:1183`
-34. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1205`
-35. ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule) — `RUN_QUEUE.md:1225`
-36. ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → "Send upda — `RUN_QUEUE.md:1227`
-37. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1284`
+29. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1165`
+30. BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet: — `RUN_QUEUE.md:1170`
+31. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1191`
+32. COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small) — `RUN_QUEUE.md:1192`
+33. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1214`
+34. ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule) — `RUN_QUEUE.md:1234`
+35. ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → "Send upda — `RUN_QUEUE.md:1236`
+36. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1293`
 
 ## Waiting on you (not on a build)
 
@@ -93,7 +92,7 @@ This is the distinction a raw checkbox count gets wrong.
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:582`
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:630`
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:672`
-- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1205`
+- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1214`
 
 ## Revise campaign (page-by-page pass)
 
@@ -181,6 +180,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `99ed266` 2026-09-05 — MP-11b: no admin action fails silently -- useResource, zero alert()s
+- `2dd6466` 2026-09-05 — queue/spec update
 - `341161a` 2026-09-05 — MP-11a: the admin session is resolved once, in the layout
 - `849861f` 2026-09-04 — queue/spec update
 - `892af22` 2026-09-04 — MP-8a fix: stale [H] dependency after the orphan-sweep move (tsc was red on main)
@@ -191,9 +192,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `819d68c` 2026-09-04 — queue/spec update
 - `c2c35dc` 2026-09-04 — MP-6a: Revenue on a collected basis, problems pinned all-time, late fees named as course money
 - `21db018` 2026-09-04 — queue/spec update
-- `87a9695` 2026-09-04 — MP-5d: course detail 9 tabs -> 6, and one schedule service for both surfaces
-- `694545f` 2026-09-04 — queue/spec update
 
 ---
 
-**Totals:** 136 done · 8 awaiting review · 1 in flight · 37 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 137 done · 8 awaiting review · 1 in flight · 36 not started · 8 revise pages open · 15 ideas · 2 parked.
