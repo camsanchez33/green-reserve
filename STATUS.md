@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-04 23:54 UTC · branch `main` · HEAD `892af22` · working tree **2 dirty file(s)**
+Generated 2026-09-05 04:23 UTC · branch `main` · HEAD `341161a` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -20,7 +20,7 @@ these actually are first.
 
 ## In flight
 
-- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:1585`
+- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:1608`
   - FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because "no linked inquiry" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding the
   - Last session's raw Prisma script (a read-only check confirming Fake
   - Fairways existed) got blocked by this sandbox's auto-mode classifier as a potential production-database access outside the app's own authenticated API. That block is almost certainly the intended, correct behavior — a raw script has no place touching real course/booking/ operator data, authorized or not — so I did NOT retry it, and built the override into the sanctioned admin API instead, per the 
@@ -36,13 +36,13 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 5d | `7246a62` | `RUN_QUEUE.md:390` |
-| MP-1 | 2026-08-29 | 5d | `41f5ea8` | `RUN_QUEUE.md:420` |
-| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 5d | `4ef11dd` | `RUN_QUEUE.md:455` |
-| MP-2 | 2026-08-29 | 5d | `958f229` | `RUN_QUEUE.md:496` |
-| MP-2b | 2026-08-29 | 5d | `a134af5` | `RUN_QUEUE.md:533` |
-| MP-2c | 2026-08-29 | 5d | `e5b5413` | `RUN_QUEUE.md:582` |
-| MP-2d | 2026-08-29 | 5d | `22d0f68` | `RUN_QUEUE.md:630` |
+| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 6d | `7246a62` | `RUN_QUEUE.md:390` |
+| MP-1 | 2026-08-29 | 6d | `41f5ea8` | `RUN_QUEUE.md:420` |
+| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 6d | `4ef11dd` | `RUN_QUEUE.md:455` |
+| MP-2 | 2026-08-29 | 6d | `958f229` | `RUN_QUEUE.md:496` |
+| MP-2b | 2026-08-29 | 6d | `a134af5` | `RUN_QUEUE.md:533` |
+| MP-2c | 2026-08-29 | 6d | `e5b5413` | `RUN_QUEUE.md:582` |
+| MP-2d | 2026-08-29 | 6d | `22d0f68` | `RUN_QUEUE.md:630` |
 | MP-2e | 2026-08-30 | 5d | `bf3bcb2` | `RUN_QUEUE.md:672` |
 
 ## Not started — the actual queue
@@ -74,15 +74,16 @@ This is the distinction a raw checkbox count gets wrong.
 25. MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table — `RUN_QUEUE.md:1099`
 26. MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in — `RUN_QUEUE.md:1106`
 27. MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity, — `RUN_QUEUE.md:1112`
-28. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved — `RUN_QUEUE.md:1116`
-29. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1133`
-30. BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet: — `RUN_QUEUE.md:1138`
-31. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1159`
-32. COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small) — `RUN_QUEUE.md:1160`
-33. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1182`
-34. ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule) — `RUN_QUEUE.md:1202`
-35. ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → "Send upda — `RUN_QUEUE.md:1204`
-36. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1261`
+28. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1116`
+29. MP-11b — `useResource` hook (no migration): ~a dozen loaders are — `RUN_QUEUE.md:1134`
+30. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1156`
+31. BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet: — `RUN_QUEUE.md:1161`
+32. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1182`
+33. COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small) — `RUN_QUEUE.md:1183`
+34. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1205`
+35. ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule) — `RUN_QUEUE.md:1225`
+36. ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → "Send upda — `RUN_QUEUE.md:1227`
+37. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1284`
 
 ## Waiting on you (not on a build)
 
@@ -92,7 +93,7 @@ This is the distinction a raw checkbox count gets wrong.
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:582`
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:630`
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:672`
-- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1182`
+- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1205`
 
 ## Revise campaign (page-by-page pass)
 
@@ -180,6 +181,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `341161a` 2026-09-05 — MP-11a: the admin session is resolved once, in the layout
+- `849861f` 2026-09-04 — queue/spec update
 - `892af22` 2026-09-04 — MP-8a fix: stale [H] dependency after the orphan-sweep move (tsc was red on main)
 - `0b51cc5` 2026-09-04 — queue/spec update
 - `4eb1c9d` 2026-09-04 — MP-8a: sidebar links are links, badges survive leaving the Overview, System says what is deployed
@@ -190,9 +193,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `21db018` 2026-09-04 — queue/spec update
 - `87a9695` 2026-09-04 — MP-5d: course detail 9 tabs -> 6, and one schedule service for both surfaces
 - `694545f` 2026-09-04 — queue/spec update
-- `2c11518` 2026-09-04 — Remove the Feature button — it set a flag no golfer could ever see
-- `1b2840e` 2026-09-03 — queue/spec update
 
 ---
 
-**Totals:** 135 done · 8 awaiting review · 1 in flight · 36 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 136 done · 8 awaiting review · 1 in flight · 37 not started · 8 revise pages open · 15 ideas · 2 parked.

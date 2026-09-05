@@ -1113,10 +1113,33 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     transactions; batch the orphan sweep; bound the courses groupBy. LOWEST
     PRIORITY — every endpoint measured 112-440ms. Insurance, not firefighting
     (medium)
-  - [ ] MP-11 — auth guard into the layout (was ADMIN_V4 V4-7): session resolved
-    once server-side and passed down, twelve per-page fetches deleted, local role
-    arrays deleted, the six catch(()=>router.push('/admin/login')) bugs deleted
-    with them, useResource hook. This is LAW rule 2 (medium)
+  - [ ] MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)
+    - [x] MP-11a (341161a) — LAW rule 2 made real. `admin/layout.tsx` is a server
+      component that resolves the session ONCE and hands it down via
+      `lib/admin-session-context.tsx` (AdminSessionProvider + useAdminSession).
+      Thirteen pages fetched /api/admin/session, awaited it, then fetched data;
+      Golfers re-fetched it before every search — all deleted. The six
+      `.catch(() => router.push('/admin/login'))` sites (network blip = ejected
+      mid-task) are gone with the check; a DB blip while resolving renders a
+      retry, not a login. Overview's local SUPPORT_PLUS_ROLES / MANAGER_PLUS_ROLES
+      copies deleted for lib/admin-roles. Sidebar loses its own session fetch
+      and the "couldn't confirm your access level" state. Auth pages under
+      /admin pass through ungated; sign-in and sign-out hard-navigate
+      (window.location.assign) because a soft push reuses the layout and
+      would bounce a fresh login straight back. `next build` compiles clean
+      (page-data collection cannot run locally — no JWT_SECRET in .env; that
+      is pre-existing). tsc green. CAM MUST CHECK: sign out, sign in again
+      (both /admin/login and /admin/owner-login) — you must land on the
+      Overview, not loop back to login. NEEDS REVIEW.
+    - [ ] MP-11b — `useResource` hook (no migration): ~a dozen loaders are
+      `if (r.ok) setData(...)` with no else, so a 403/500 renders as "no
+      inquiries" / "no events"; Overview has no error branch at all; 14
+      swallowed `.catch(() => {})`; 10 surviving `alert()` calls (5 on the
+      course detail page: restore, reminders, note, message send ×2). Extract
+      the courses/[id] `docsError` pattern into a hook with error state, 401
+      handling and abort-on-unmount; convert the hand-rolled fetches; replace
+      every alert() with an inline surface. Validate by forcing a 403 on one
+      loader and by going offline mid-session (error + retry, no redirect).
   PARKED 2026-08-27 — the Overview reshape (was OV-1/OV-2: five zones, Today
   band, deduplicated Your Move rail, Growth band, Fleet Watch with no_traction,
   absorbing the Activity strip + Money in Motion). Both cited "Deep Dive 01" as
