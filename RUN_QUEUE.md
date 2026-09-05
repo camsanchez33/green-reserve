@@ -316,15 +316,25 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   Also verified: OperatorSidebar.tsx:104 is `w-56 shrink-0` with ZERO sm:/md:/lg:
   prefixes in the entire file; dashboard/page.tsx:39 is
   `const today = () => new Date().toISOString().split('T')[0]` (UTC).
-  - [ ] SD-1 — plug the leaks: auth the inquiries GET + explicit select with no
-    detailsToken, wire the honeypot (its value is currently hardcoded empty in
-    the payload) + rate-limit the lead intake, DELETE the orphaned public
-    register endpoint (no callers, no rate limit, mints an operator + Course +
-    session with no 2FA), server-side validation on the settings PATCH (numeric
-    ranges + https-only giftCardUrl, which today can be a javascript: URL that
-    executes on the golfer-facing course page), enforce the staff role (today a
-    staff login can change fees, add/delete staff and un-list the course, and
-    bypasses 2FA entirely) — medium, no migration, RUNS FIRST
+  - [x] SD-1 (f274690) — plug the leaks. Ran 2026-09-05, NOT before MP-1 as
+    ordered — every "next" went to the admin campaign instead; that is a
+    process failure worth naming. Audited first: the inquiries GET leak was
+    ALREADY closed (route has no GET; admin route strips detailsToken) and the
+    honeypot ALREADY wired (form sends `_website` from a hidden input, server
+    drops it) — met, no change. DONE: staff role ENFORCED — 33 write handlers
+    across 18 configuration routes return 403 for staff (`STAFF_FORBIDDEN` in
+    lib/session; reads stay open, the tee-sheet page needs them); sidebar
+    hides Schedule/Members/Payments/Settings for staff via my-courses.isStaff.
+    Settings PATCH validated (NEW lib/settings-validation.ts: int ranges,
+    enums, hex colour, lengths, http(s)-only URLs); giftCardUrl IS rendered
+    as a raw href on the golfer page (CourseBookingClient) — confirmed — and
+    that render now also refuses non-http(s) for pre-rule rows; operator
+    courses PATCH gets the URL rule too. Lead intake rate-limited 5/h/IP.
+    Orphaned /api/auth/register DELETED. 27 assertions
+    (scripts/settings-validation-test.ts). NOT in this run: staff 2FA / staff
+    password recovery (SD-9), the operator `courses` PATCH still lets an
+    OPERATOR flip `active` raw (SD-8 makes it a request-a-change row).
+    NEEDS REVIEW.
   - [ ] SD-2 — the mobile shell: bottom nav below md, drop h-screen
     overflow-hidden from the ten page shells, responsive stat grids, touch
     targets + real error toasts. One component + ten one-line edits. The persona
@@ -1231,9 +1241,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   (2) MANUAL: new `Expense` table (name, category [infra/tools/legal/other], amountCents, cadence [monthly/annual/one-time], startedAt, endedAt?) — admin CRUD on /admin/revenue for the fixed costs (Vercel, Neon, Resend, Twilio, domain, etc.), monthly costs prorated into period views.
   Display on /admin/revenue (and the Overview P&L header once A-01b lands): Fees earned − Stripe processing − expenses = NET, per Day/Week/Month period, with vs-prior delta. Migration via checklist (additive table — create-only → review → deploy pattern OK).
 
-- [ ] ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule), every dashboard tab introduces itself with plain-English intro cards + reopenable "?", emails point to the checklist (BIG, no migration — full spec in ONBOARDING_V2_SPEC.md)
+- [x] ONBOARDING_V2_SPEC Phase V13 (d2b7475, 6a3250c, ec016a5 — spec marked BUILT; queue box was stale until 2026-09-05) — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule), every dashboard tab introduces itself with plain-English intro cards + reopenable "?", emails point to the checklist (BIG, no migration — full spec in ONBOARDING_V2_SPEC.md)
 
-- [ ] ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → "Send updated preview"), Messages gets a mirror link only, stall logic counts unaddressed requests as Your Move (medium, no migration)
+- [x] ONBOARDING_V2_SPEC Phase V13b (6deac02, 02b167e — spec marked BUILT; queue box was stale until 2026-09-05) — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → "Send updated preview"), Messages gets a mirror link only, stall logic counts unaddressed requests as Your Move (medium, no migration)
 
 - [x] BUG: checklist approve button is a dead wire — FIXED, code-verified (live
   click-through/email-delivery confirmation still pending Cam's own test —

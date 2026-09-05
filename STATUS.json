@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-05T04:31:49.355Z",
+  "generatedAt": "2026-09-05T04:43:08.534Z",
   "repo": {
-    "head": "99ed266",
+    "head": "f274690",
     "branch": "main",
     "dirtyCount": 2,
     "dirty": [
@@ -11,14 +11,14 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-05T00:23:16-04:00",
+    "queueLastCommit": "2026-09-05T00:31:50-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 137,
+    "runDone": 140,
     "runAwaiting": 8,
     "runInFlight": 1,
-    "runNotStarted": 36,
+    "runNotStarted": 33,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -27,7 +27,7 @@
   "inFlight": [
     {
       "title": "BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET",
-      "line": 1617,
+      "line": 1627,
       "body": [
         "FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because \"no linked inquiry\" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding them outright. FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() + a \"Force delete permanently\" button per acknowledged orphan — owner-only, typed name confirm, server re-verifies the course is still an orphan before touching anything (refuses if it turns out to have a real inquiry link — this can never be used to route around the doctrine for a real course). This is the mechanism for Cam's DaisyLinks exception, but I have NOT executed it against DaisyLinks yet:",
         "- Last session's raw Prisma script (a read-only check confirming Fake",
@@ -42,56 +42,56 @@
   "awaiting": [
     {
       "title": "MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin",
-      "line": 390,
+      "line": 400,
       "hash": "7246a62",
       "shipDate": "2026-08-29",
       "ageDays": 6
     },
     {
       "title": "MP-1",
-      "line": 420,
+      "line": 430,
       "hash": "41f5ea8",
       "shipDate": "2026-08-29",
       "ageDays": 6
     },
     {
       "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
-      "line": 455,
+      "line": 465,
       "hash": "4ef11dd",
       "shipDate": "2026-08-29",
       "ageDays": 6
     },
     {
       "title": "MP-2",
-      "line": 496,
+      "line": 506,
       "hash": "958f229",
       "shipDate": "2026-08-29",
       "ageDays": 6
     },
     {
       "title": "MP-2b",
-      "line": 533,
+      "line": 543,
       "hash": "a134af5",
       "shipDate": "2026-08-29",
       "ageDays": 6
     },
     {
       "title": "MP-2c",
-      "line": 582,
+      "line": 592,
       "hash": "e5b5413",
       "shipDate": "2026-08-29",
       "ageDays": 6
     },
     {
       "title": "MP-2d",
-      "line": 630,
+      "line": 640,
       "hash": "22d0f68",
       "shipDate": "2026-08-29",
       "ageDays": 6
     },
     {
       "title": "MP-2e",
-      "line": 672,
+      "line": 682,
       "hash": "bf3bcb2",
       "shipDate": "2026-08-30",
       "ageDays": 5
@@ -109,173 +109,158 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "SD-1 — plug the leaks: auth the inquiries GET + explicit select with no",
-      "line": 319,
-      "section": "Queue (run in this order)"
-    },
-    {
       "title": "SD-2 — the mobile shell: bottom nav below md, drop h-screen",
-      "line": 328,
+      "line": 338,
       "section": "Queue (run in this order)"
     },
     {
       "title": "SD-3 — course-local time: Course.timezone column, every dashboard and",
-      "line": 333,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "SD-4 — money truth: analytics counts completed bookings by play date",
-      "line": 337,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "SD-5 — lifecycle states: walk-in/phone booking POST (the biggest",
       "line": 343,
       "section": "Queue (run in this order)"
     },
     {
+      "title": "SD-4 — money truth: analytics counts completed bookings by play date",
+      "line": 347,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "SD-5 — lifecycle states: walk-in/phone booking POST (the biggest",
+      "line": 353,
+      "section": "Queue (run in this order)"
+    },
+    {
       "title": "SD-6 — marketing honesty: the walk-in FAQ (only AFTER SD-5 makes it",
-      "line": 350,
+      "line": 360,
       "section": "Queue (run in this order)"
     },
     {
       "title": "SD-7 — SEO + assets: sitemap.ts (robots.txt advertises one that 404s),",
-      "line": 356,
+      "line": 366,
       "section": "Queue (run in this order)"
     },
     {
       "title": "SD-8 — merge + split: Payments + Cancellations → one Money page with",
-      "line": 364,
+      "line": 374,
       "section": "Queue (run in this order)"
     },
     {
       "title": "SD-9 — funnel + auth polish: split the details sheet into a required core",
-      "line": 370,
+      "line": 380,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) —",
-      "line": 790,
+      "line": 800,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-4 — pipeline reshape (split into 4a/4b/4c)",
-      "line": 797,
+      "line": 807,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-4f — retire the JSON-in-actorName pattern. Three separate things",
-      "line": 880,
+      "line": 890,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong",
-      "line": 902,
+      "line": 912,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Golfer course directory (`/courses`) — NOT scheduled. If Cam wants",
-      "line": 981,
+      "line": 991,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-5e part 3 — the Overview relationship feed (notes + settings",
-      "line": 985,
+      "line": 995,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today)",
-      "line": 1011,
+      "line": 1021,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-6b — refund primitive + chargeback visibility (no migration):",
-      "line": 1032,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-6c — payout history + unit economics (no migration): \"money",
       "line": 1042,
       "section": "Queue (run in this order)"
     },
     {
+      "title": "MP-6c — payout history + unit economics (no migration): \"money",
+      "line": 1052,
+      "section": "Queue (run in this order)"
+    },
+    {
       "title": "MP-6d — Golfers record page (no migration): palette search extended",
-      "line": 1050,
+      "line": 1060,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-7 — comms merge (split into 7a–7b)",
-      "line": 1057,
+      "line": 1067,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE,",
-      "line": 1075,
+      "line": 1085,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-8 — chrome + System (split into 8a–8b)",
-      "line": 1082,
+      "line": 1092,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table",
-      "line": 1099,
+      "line": 1109,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in",
-      "line": 1106,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,",
-      "line": 1112,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)",
       "line": 1116,
       "section": "Queue (run in this order)"
     },
     {
+      "title": "MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,",
+      "line": 1122,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)",
+      "line": 1126,
+      "section": "Queue (run in this order)"
+    },
+    {
       "title": "MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState",
-      "line": 1165,
+      "line": 1175,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:",
-      "line": 1170,
+      "line": 1180,
       "section": "Queue (run in this order)"
     },
     {
       "title": "COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)",
-      "line": 1191,
+      "line": 1201,
       "section": "Queue (run in this order)"
     },
     {
       "title": "COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small)",
-      "line": 1192,
+      "line": 1202,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
-      "line": 1214,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "ONBOARDING_V2_SPEC Phase V13 — guided operator onboarding: Getting Started checklist derived from real state (verify/password/look around/review page/connect Stripe/check schedule), every dashboard ta",
-      "line": 1234,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "ONBOARDING_V2_SPEC Phase V13b — request-changes v2: structured category form on the preview page, requests live ON the inquiry (checkpoint area + addressable item list → \"Send updated preview\"), Messa",
-      "line": 1236,
+      "line": 1224,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
-      "line": 1293,
+      "line": 1303,
       "section": "Queue (run in this order)"
     }
   ],
@@ -283,37 +268,37 @@
     {
       "item": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
       "note": "pending Cam's approval for a prod write",
-      "line": 455
+      "line": 465
     },
     {
       "item": "MP-2",
       "note": "Cam's approval for a prod backfill",
-      "line": 496
+      "line": 506
     },
     {
       "item": "MP-2b",
       "note": "pending Cam's approval for a prod write",
-      "line": 533
+      "line": 543
     },
     {
       "item": "MP-2c",
       "note": "pending Cam's approval for a prod write",
-      "line": 582
+      "line": 592
     },
     {
       "item": "MP-2d",
       "note": "pending Cam's approval for a prod write",
-      "line": 630
+      "line": 640
     },
     {
       "item": "MP-2e",
       "note": "pending Cam's approval for a prod write",
-      "line": 672
+      "line": 682
     },
     {
       "item": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
       "note": "CAM: confirm the state before this runs — e",
-      "line": 1214
+      "line": 1224
     }
   ],
   "ideas": {
@@ -836,6 +821,16 @@
   },
   "recentCommits": [
     {
+      "h": "f274690",
+      "date": "2026-09-05",
+      "subject": "SD-1: plug the leaks on the two surfaces a customer touches"
+    },
+    {
+      "h": "41f3e5a",
+      "date": "2026-09-05",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "99ed266",
       "date": "2026-09-05",
       "subject": "MP-11b: no admin action fails silently -- useResource, zero alert()s"
@@ -882,16 +877,6 @@
     },
     {
       "h": "819d68c",
-      "date": "2026-09-04",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "c2c35dc",
-      "date": "2026-09-04",
-      "subject": "MP-6a: Revenue on a collected basis, problems pinned all-time, late fees named as course money"
-    },
-    {
-      "h": "21db018",
       "date": "2026-09-04",
       "subject": "queue/spec update"
     }
