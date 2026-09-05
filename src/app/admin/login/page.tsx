@@ -50,7 +50,7 @@ export default function AdminLoginPage() {
         router.push(`/admin/set-password?token=${encodeURIComponent(data.setPasswordToken)}`);
         return;
       }
-      router.push('/admin');
+      window.location.assign('/admin'); // MP-11a: hard nav — the layout must re-read the new cookie
     } catch {
       setError('Network error');
     } finally {

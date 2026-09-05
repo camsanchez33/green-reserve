@@ -1,10 +1,11 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { adminFetch, LOGIN_SESSION_ENDED, type AdminFetchFailure } from '@/lib/admin-fetch';
+import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { LoadFailure } from '@/components/ui/ErrorState';
 import { HardDrive, Clock3, Zap, GitBranch, Bug, ExternalLink, Landmark, Link2 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
 
 interface SystemData {
@@ -61,8 +62,9 @@ function OutLink({ href, children, deep = true }: { href: string; children: Reac
 
 export default function AdminSystemPage() {
   const router = useRouter();
-  const [adminReady, setAdminReady] = useState(false);
-  const [isOwner, setIsOwner] = useState(false);
+  // MP-11a: the layout resolved the session; a page never re-checks it.
+  const adminReady = true;
+  const isOwner = useAdminSession().role === 'owner';
   const [data, setData] = useState<SystemData | null>(null);
   const [loadError, setLoadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
   const [stripe, setStripe] = useState<PlatformStripe | null>(null);
@@ -83,13 +85,6 @@ export default function AdminSystemPage() {
   const [forceDeleteError, setForceDeleteError] = useState('');
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
-
-  useEffect(() => {
-    fetch('/api/admin/session').then(r => {
-      if (!r.ok) { router.push(LOGIN_SESSION_ENDED); return; }
-      return r.json();
-    }).then(d => { if (d) { setIsOwner(d?.role === 'owner'); setAdminReady(true); } }).catch(() => router.push(LOGIN_SESSION_ENDED));
-  }, [router]);
 
   useEffect(() => {
     if (!adminReady) return;

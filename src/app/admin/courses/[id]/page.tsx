@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
 import Link from 'next/link';
 import {
   ArrowLeft, Power, Globe, ArchiveX, ArchiveRestore, Mail, Phone,
@@ -253,7 +252,8 @@ export default function CourseDetailPage() {
   const { id: courseId } = useParams() as { id: string };
   const router = useRouter();
 
-  const [adminReady, setAdminReady] = useState(false);
+  // MP-11a: the layout resolved the session; a page never re-checks it.
+  const adminReady = true;
   const [detail, setDetail] = useState<CourseDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -443,13 +443,6 @@ export default function CourseDetailPage() {
     }
     setLoading(false);
   }, [courseId, H]);
-
-  useEffect(() => {
-    fetch('/api/admin/session').then(r => {
-      if (!r.ok) { router.push(LOGIN_SESSION_ENDED); return; }
-      setAdminReady(true);
-    }).catch(() => router.push(LOGIN_SESSION_ENDED));
-  }, [router]);
 
   useEffect(() => {
     if (adminReady) loadDetail();

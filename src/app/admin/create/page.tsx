@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
 import { CheckCircle, Copy, ChevronRight, ArrowLeft, Eye, Globe, Lock } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
@@ -78,7 +77,8 @@ function WizardContent() {
   const router = useRouter();
   const params = useSearchParams();
 
-  const [adminReady, setAdminReady] = useState(false);
+  // MP-11a: the layout resolved the session; a page never re-checks it.
+  const adminReady = true;
   const [inquiryId, setInquiryId] = useState('');
   const [step, setStep] = useState<WStep>(1);
   const [courseType, setCourseType] = useState('public');
@@ -93,13 +93,6 @@ function WizardContent() {
   const [step2Attempted, setStep2Attempted] = useState(false);
   const [step3Attempted, setStep3Attempted] = useState(false);
   const [step4Attempted, setStep4Attempted] = useState(false);
-
-  useEffect(() => {
-    fetch('/api/admin/session').then(r => {
-      if (!r.ok) { router.push(LOGIN_SESSION_ENDED); return; }
-      setAdminReady(true);
-    }).catch(() => router.push(LOGIN_SESSION_ENDED));
-  }, [router]);
 
   useEffect(() => {
     const pType = params.get('type') || '';

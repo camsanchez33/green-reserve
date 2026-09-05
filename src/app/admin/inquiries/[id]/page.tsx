@@ -348,7 +348,8 @@ function InquiryDetailInner() {
       ).toString()
     : '');
 
-  const [adminReady, setAdminReady] = useState(false);
+  // MP-11a: the layout resolved the session; a page never re-checks it.
+  const adminReady = true;
   const [inq, setInq] = useState<Inquiry | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
@@ -411,13 +412,6 @@ function InquiryDetailInner() {
       setLoading(false);
     }
   }, [params.id]);
-
-  useEffect(() => {
-    fetch('/api/admin/session').then(r => {
-      if (!r.ok) { router.push('/admin/login?reason=session_ended'); return; }
-      setAdminReady(true);
-    }).catch(() => router.push('/admin/login?reason=session_ended'));
-  }, [router]);
 
   useEffect(() => {
     if (adminReady) loadInquiry();

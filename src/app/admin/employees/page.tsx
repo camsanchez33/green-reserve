@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, RefreshCw, Lock, Copy, KeyRound } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { ErrorBanner } from '@/components/ui/ErrorState';
@@ -11,7 +12,6 @@ interface Admin {
   id: string; email: string; name: string; role: string;
   active: boolean; mustChangePassword: boolean; lastLoginAt: string | null; createdAt: string;
 }
-interface Session { adminId: string; email: string; name: string; role: string; }
 
 const ROLES = [
   { value: 'owner',   label: 'Owner',   desc: 'Full access, manages employees & broadcasts' },
@@ -60,7 +60,7 @@ function TempPasswordBox({ label, pwd, onDismiss }: { label: string; pwd: string
 
 export default function EmployeesPage() {
   const router = useRouter();
-  const [session, setSession] = useState<Session | null>(null);
+  const session = useAdminSession();
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -84,10 +84,6 @@ export default function EmployeesPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const sRes = await fetch('/api/admin/session');
-      if (!sRes.ok) { router.push('/admin/login?reason=session_ended'); return; }
-      const s = await sRes.json();
-      setSession(s);
       // MP-2b: the roster is MANAGER_PLUS since MP-2. Parsing a 403 body as data
       // told a support/viewer employee the company has zero admin accounts.
       // MP-2c: one classifier, and the banner renders above the table rather

@@ -6,6 +6,8 @@ import {
   ArrowUpRight, ArrowDownRight, Minus, ChevronRight, CheckCircle2,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import { useAdminSession } from '@/lib/admin-session-context';
+import { SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-roles';
 import { StatusDot } from '@/components/ui/StatusDot';
 
 interface QueueItem { id: string; label: string; ageDays: number; }
@@ -46,8 +48,8 @@ interface Stats {
   };
 }
 
-const SUPPORT_PLUS_ROLES = ['owner', 'manager', 'support'];
-const MANAGER_PLUS_ROLES = ['owner', 'manager'];
+// MP-11a: role lists come from ONE place. Local copies were the mechanism by
+// which the owner's view and an employee's could drift (LAW rule 2).
 const REFRESH_MS = 5 * 60 * 1000;
 
 // null means "not visible at your access level" — render a dash, never NaN.
@@ -215,8 +217,9 @@ function QueueRow({ row, severity, router, expanded, onToggleExpand, fireStatus,
 
 export default function AdminOverviewPage() {
   const router = useRouter();
-  const [adminReady, setAdminReady] = useState(false);
-  const [role, setRole] = useState('');
+  // MP-11a: the layout resolved the session; a page never re-checks it.
+  const adminReady = true;
+  const { role } = useAdminSession();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(false);
   const [statsError, setStatsError] = useState('');
@@ -242,15 +245,6 @@ export default function AdminOverviewPage() {
   }, []);
 
   useEffect(() => {
-    fetch('/api/admin/session').then(r => {
-      if (!r.ok) { router.push('/admin/login?reason=session_ended'); return; }
-      return r.json();
-    }).then(d => {
-      if (d) { setRole(d.role ?? ''); setAdminReady(true); }
-    }).catch(() => router.push('/admin/login?reason=session_ended'));
-  }, [router]);
-
-  useEffect(() => {
     if (!adminReady) return;
     loadStats();
     const refreshInterval = setInterval(loadStats, REFRESH_MS);
@@ -268,8 +262,8 @@ export default function AdminOverviewPage() {
 
   function canFireRow(row: ActionRow) {
     if (!row.fire) return false;
-    if (row.fire.kind === 'resend_sheet') return MANAGER_PLUS_ROLES.includes(role);
-    if (row.fire.kind === 'send_nudge') return SUPPORT_PLUS_ROLES.includes(role);
+    if (row.fire.kind === 'resend_sheet') return MANAGER_PLUS.includes(role);
+    if (row.fire.kind === 'send_nudge') return SUPPORT_PLUS.includes(role);
     return true;
   }
 
@@ -293,7 +287,7 @@ export default function AdminOverviewPage() {
 
   if (!adminReady) return null;
 
-  const isSupportPlus = SUPPORT_PLUS_ROLES.includes(role);
+  const isSupportPlus = SUPPORT_PLUS.includes(role);
 
   return (
     <div className="min-h-screen bg-paper flex">

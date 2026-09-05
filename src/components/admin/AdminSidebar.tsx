@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
 import { BarChart2, AlertCircle, Building2, Hammer, Users, Activity, MessageSquare, UserCircle, ChevronLeft, ChevronRight, DollarSign, Search, UserSearch, Wrench, LogOut } from 'lucide-react';
 import CommandPalette from '@/components/admin/CommandPalette';
+import { useAdminSession } from '@/lib/admin-session-context';
 
 export type AdminNavKey = 'overview' | 'inquiries' | 'courses' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system';
 
@@ -26,8 +27,10 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   // vanish from the nav.
   const [pending, setPending] = useState(pendingInquiries);
   useEffect(() => { setPending(pendingInquiries); }, [pendingInquiries]);
-  const [role, setRole] = useState<string | null>(null);        // null = not yet known
-  const [roleFailed, setRoleFailed] = useState(false);
+  // MP-11a: role comes from the layout's one session read. The rail used to
+  // fetch it again, with a 'could not confirm your access level' state for when
+  // that second fetch failed. There is no second fetch to fail now.
+  const { role } = useAdminSession();
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
@@ -44,33 +47,14 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   // build a second collapsed-only treatment, uncollapse when there is something
   // the user must actually read.
   useEffect(() => {
-    if (roleFailed || signOutError) setCollapsed(false);
-  }, [roleFailed, signOutError]);
-
-  // One session read for the whole shell. ADMIN_V4 LAW rule 2 wants role
-  // resolved once server-side in the layout (Phase V4-7); until that lands this
-  // is one fetch per page rather than one per nav item.
-  // MP-2d B3: this had an empty catch — verbatim what the no-silent-failures
-  // rule forbids — and `role` started as ''. "Not known yet", "lookup failed"
-  // and "you are a viewer" all rendered as a two-item nav, permanently, with no
-  // retry: an owner during a DB blip saw a sidebar asserting they had lost
-  // access to everything. Three states now, and an unknown role shows the full
-  // nav rather than a false one. The API gates are the real boundary; this
-  // filter only decides which doors to offer.
-  useEffect(() => {
-    let cancelled = false;
-    fetch('/api/admin/session')
-      .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then(d => { if (!cancelled) { setRole(String(d?.role ?? '')); setRoleFailed(false); } })
-      .catch(() => { if (!cancelled) setRoleFailed(true); });
-    return () => { cancelled = true; };
-  }, []);
+    if (signOutError) setCollapsed(false);
+  }, [signOutError]);
 
   // MP-8a: ONE fetch for all three badges (was two, and none for inquiries).
   // A page that passes a live prop (Messages passes unread; Overview passes
   // pending) keeps its fresher number — the fetch only fills what was 0.
   useEffect(() => {
-    if (role !== null && !SUPPORT_PLUS.includes(role)) return; // would be zeros anyway
+    if (!SUPPORT_PLUS.includes(role)) return; // would be zeros anyway
     let cancelled = false;
     fetch('/api/admin/nav-badges')
       .then(r => r.ok ? r.json() : null)
@@ -123,7 +107,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       // were not. Only navigate once the server confirms it cleared the cookie.
       const r = await fetch('/api/admin/logout', { method: 'POST' });
       if (!r.ok) { setSignOutError(true); return; }
-      router.push('/admin/login');
+      window.location.assign('/admin/login');
     } catch {
       setSignOutError(true);
     } finally {
@@ -159,10 +143,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     { key: 'profile', label: 'My profile',   href: '/admin/profile',  icon: <UserCircle className="w-[18px] h-[18px]"/> },
   ];
 
-  // Unknown role (still loading, or the lookup failed) shows everything: a nav
-  // that silently removes ten links is a worse lie than one that offers a door
-  // the API will refuse. Filtering starts only once the role is actually known.
-  const canSee = (item: NavItem) => !item.minRole || role === null || item.minRole.includes(role);
+  const canSee = (item: NavItem) => !item.minRole || item.minRole.includes(role);
   const mainNav = allMainNav.filter(canSee);
   const bottomNav = allBottomNav.filter(canSee);
 
@@ -236,19 +217,6 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       </div>
 
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
-        {/* MP-2d B3: the nav is showing everything because it could not confirm
-            the role. Say so rather than letting it look authoritative. */}
-        {roleFailed && !collapsed && (
-          <div className="mx-1 mb-2 rounded-md bg-white/10 px-2.5 py-2">
-            <p className="text-[11px] text-[#A9BFAF] leading-snug">Couldn&rsquo;t confirm your access level.</p>
-            <button
-              onClick={() => { setRoleFailed(false); setRole(null); fetch('/api/admin/session').then(r => (r.ok ? r.json() : Promise.reject(new Error()))).then(d => setRole(String(d?.role ?? ''))).catch(() => setRoleFailed(true)); }}
-              className="text-[11px] font-medium text-paper hover:underline mt-0.5"
-            >
-              Retry
-            </button>
-          </div>
-        )}
         {mainNav.map(item => (
           <NavItem
             key={item.key}

@@ -36,7 +36,7 @@ export default function OwnerLoginPage() {
         setStep('verify');
         return;
       }
-      router.push('/admin');
+      window.location.assign('/admin'); // MP-11a: hard nav — the layout must re-read the new cookie
     } catch {
       setError('Network error');
     } finally {
@@ -56,7 +56,7 @@ export default function OwnerLoginPage() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Verification failed'); return; }
-      router.push('/admin');
+      window.location.assign('/admin'); // MP-11a: hard nav — the layout must re-read the new cookie
     } catch {
       setError('Network error');
     } finally {

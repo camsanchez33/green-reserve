@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
 import { Search, User, ArrowLeft, ExternalLink, Send, AlertTriangle, ChevronRight } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -74,8 +73,6 @@ function GolfersInner() {
     setSearching(true);
     setSearchError('');
     try {
-      const sRes = await fetch('/api/admin/session');
-      if (!sRes.ok) { router.push(LOGIN_SESSION_ENDED); return; }
       const res = await fetch(`/api/admin/golfers?q=${encodeURIComponent(q)}`);
       if (res.status === 403) { setSearchError('This page requires elevated permissions.'); setSearching(false); return; }
       if (!res.ok) { setSearchError('Search failed — try again.'); setSearching(false); return; }

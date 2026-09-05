@@ -1,11 +1,8 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
+import { useState } from 'react';
 import { Lock, User } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
-
-interface Session { adminId: string; email: string; name: string; role: string; }
+import { useAdminSession } from '@/lib/admin-session-context';
 
 const ROLE_LABELS: Record<string, string> = {
   owner: 'Owner', manager: 'Manager', support: 'Support', viewer: 'Viewer',
@@ -14,9 +11,8 @@ const ROLE_LABELS: Record<string, string> = {
 const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-ink text-sm placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-full';
 
 export default function ProfilePage() {
-  const router = useRouter();
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  // MP-11a: the session comes from the layout — nothing to fetch, no loading state.
+  const session = useAdminSession();
 
   const [cpCurrent, setCpCurrent] = useState('');
   const [cpNew, setCpNew] = useState('');
@@ -24,15 +20,6 @@ export default function ProfilePage() {
   const [cpLoading, setCpLoading] = useState(false);
   const [cpError, setCpError] = useState('');
   const [cpSuccess, setCpSuccess] = useState('');
-
-  const load = useCallback(async () => {
-    const res = await fetch('/api/admin/session');
-    if (!res.ok) { router.push(LOGIN_SESSION_ENDED); return; }
-    setSession(await res.json());
-    setLoading(false);
-  }, [router]);
-
-  useEffect(() => { load(); }, [load]);
 
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
@@ -52,14 +39,6 @@ export default function ProfilePage() {
       setCpCurrent(''); setCpNew(''); setCpConfirm('');
     } catch { setCpError('Network error'); }
     finally { setCpLoading(false); }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-paper flex items-center justify-center">
-        <div className="text-ink-muted text-sm">Loading...</div>
-      </div>
-    );
   }
 
   return (
@@ -82,18 +61,18 @@ export default function ProfilePage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between py-2 border-b border-line-soft">
                 <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Name</span>
-                <span className="text-sm text-ink font-medium">{session?.name}</span>
+                <span className="text-sm text-ink font-medium">{session.name}</span>
               </div>
               <div className="flex items-center justify-between py-2 border-b border-line-soft">
                 <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Email</span>
-                <span className="text-sm text-ink">{session?.email}</span>
+                <span className="text-sm text-ink">{session.email}</span>
               </div>
               <div className="flex items-center justify-between py-2">
                 <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Role</span>
-                <span className="text-sm text-ink font-medium">{ROLE_LABELS[session?.role ?? ''] ?? session?.role}</span>
+                <span className="text-sm text-ink font-medium">{ROLE_LABELS[session.role ?? ''] ?? session.role}</span>
               </div>
             </div>
-            {session?.role === 'owner' && (
+            {session.role === 'owner' && (
               <div className="mt-4 pt-3 border-t border-line-soft">
                 <a href="/admin/owner-login" className="text-xs text-pine underline hover:text-pine-hover transition-colors">
                   Use secure owner login (with 2FA) next time

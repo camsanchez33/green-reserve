@@ -1,10 +1,11 @@
 'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
-import { adminFetch, type AdminFetchFailure, LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
+import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { ErrorBanner } from '@/components/ui/ErrorState';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Send, MessageSquare, ArrowUpRight, RefreshCw, Radio, Mail, Users, Archive } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { compareThreads, type ThreadSignal } from '@/lib/thread-signal';
 
@@ -56,8 +57,9 @@ const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm 
 function MessagesContent() {
   const router = useRouter();
   const params = useSearchParams();
-  const [adminReady, setAdminReady] = useState(false);
-  const [isOwner, setIsOwner] = useState(false);
+  // MP-11a: the layout resolved the session; a page never re-checks it.
+  const adminReady = true;
+  const isOwner = useAdminSession().role === 'owner';
   const [view, setView] = useState<View>('conversations');
   const [threads, setThreads] = useState<ThreadSummary[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
@@ -108,17 +110,6 @@ function MessagesContent() {
       setLoading(false);
     }
   }, [H, loadThreads]);
-
-  useEffect(() => {
-    fetch('/api/admin/session').then(async r => {
-      if (!r.ok) { router.push(LOGIN_SESSION_ENDED); return; }
-      const d = await r.json().catch(() => ({}));
-      // The composer is offered to the owner role; the server still requires
-      // the 2FA-backed session and explains itself if it is missing.
-      setIsOwner(d?.role === 'owner');
-      setAdminReady(true);
-    }).catch(() => router.push(LOGIN_SESSION_ENDED));
-  }, [router]);
 
   useEffect(() => {
     if (!adminReady) return;

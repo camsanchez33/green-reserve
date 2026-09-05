@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { adminFetch, type AdminFetchFailure, LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
+import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { ErrorBanner } from '@/components/ui/ErrorState';
 import Link from 'next/link';
 import { RefreshCw, Search } from 'lucide-react';
@@ -42,7 +42,8 @@ const NEEDS_ATTENTION_STATUSES: CourseHealthStatus[] = ['setup_incomplete', 'pay
 function CoursesContent() {
   const router = useRouter();
   const params = useSearchParams();
-  const [adminReady, setAdminReady] = useState(false);
+  // MP-11a: the layout resolved the session; a page never re-checks it.
+  const adminReady = true;
   const [courses, setCourses] = useState<Course[]>([]);
   const [loadError, setLoadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -67,13 +68,6 @@ function CoursesContent() {
     } catch { setCourses([]); setLoadError({ msg: 'Network error loading courses. Check your connection and try again.', kind: 'network' }); }
     setLoading(false);
   }, []);
-
-  useEffect(() => {
-    fetch('/api/admin/session').then(r => {
-      if (!r.ok) { router.push(LOGIN_SESSION_ENDED); return; }
-      setAdminReady(true);
-    }).catch(() => router.push(LOGIN_SESSION_ENDED));
-  }, [router]);
 
   useEffect(() => {
     if (!adminReady) return;

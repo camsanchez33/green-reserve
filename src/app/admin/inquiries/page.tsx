@@ -94,7 +94,8 @@ function InquiriesListInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [adminReady, setAdminReady] = useState(false);
+  // MP-11a: the layout resolved the session; a page never re-checks it.
+  const adminReady = true;
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState('');
@@ -143,13 +144,6 @@ function InquiriesListInner() {
       setLoading(false);
     }
   }, [H]);
-
-  useEffect(() => {
-    fetch('/api/admin/session').then(r => {
-      if (!r.ok) { router.push('/admin/login?reason=session_ended'); return; }
-      setAdminReady(true);
-    }).catch(() => router.push('/admin/login?reason=session_ended'));
-  }, [router]);
 
   useEffect(() => {
     if (adminReady) loadInquiries();
