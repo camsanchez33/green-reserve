@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — GreenReserve',
+  title: 'Privacy Policy',
   description: 'GreenReserve privacy policy. How we collect, use, and protect your personal information.',
 };
 

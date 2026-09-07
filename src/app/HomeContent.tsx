@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { HOME_FAQ } from '@/lib/faq';
 import Link from 'next/link';
 import { ArrowRight, Check, X, Play, Monitor } from 'lucide-react';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
@@ -352,14 +353,7 @@ export default function HomeContent() {
             <h2 className="text-3xl font-serif font-medium text-ink tracking-tight">Common questions</h2>
           </div>
           <div className="divide-y divide-line">
-            {[
-              { q: 'How long does onboarding take?', a: 'Typically 1–2 business days from your initial inquiry. Our team handles setup and walks you through everything.' },
-              { q: 'Do we need any technical knowledge?', a: 'None. We build your booking page. You add a link on your website and log in to manage your tee sheet.' },
-              { q: 'Can we still take phone and walk-in bookings?', a: 'Yes. Your dashboard lets you manually add bookings for walk-ins or phone reservations anytime.' },
-              { q: 'What happens when a golfer cancels?', a: "The slot opens back up automatically. If inside your cancellation window, Stripe handles the charge — no action needed." },
-              { q: 'How do payouts work?', a: 'We connect your bank account via Stripe during setup. Green fees transfer directly to your account after each booking.' },
-              { q: 'Can we control who sees our tee times?', a: 'Your booking page is unlisted until you share the link. You decide when and where to promote it.' },
-            ].map(({ q, a }) => (
+            {HOME_FAQ.map(({ q, a }) => (
               <div key={q} className="py-6">
                 <div className="font-medium text-ink text-sm mb-2">{q}</div>
                 <div className="text-ink-soft text-sm leading-relaxed">{a}</div>

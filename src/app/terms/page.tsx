@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service — GreenReserve',
+  title: 'Terms of Service',
   description: 'GreenReserve terms of service. The rules governing use of our online tee sheet platform for golf courses and golfers.',
 };
 

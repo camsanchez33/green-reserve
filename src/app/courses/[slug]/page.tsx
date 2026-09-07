@@ -14,16 +14,16 @@ export async function generateMetadata(
   });
   const isDemo = DEMO_COURSE_SLUGS.includes(slug);
   const robots = isDemo ? { index: false, follow: false } : undefined;
-  if (!course) return { title: 'Book Tee Times — GreenReserve' };
+  if (!course) return { title: 'Book Tee Times' };
   if (course.type === 'private') {
     return {
-      title: `${course.name} — Member Portal | GreenReserve`,
+      title: `${course.name} — Member Portal`,
       description: `${course.name} is a private club on GreenReserve. Members sign in to book tee times.`,
       robots,
     };
   }
   return {
-    title: `${course.name} — Book Tee Times | GreenReserve`,
+    title: `${course.name} — Book Tee Times`,
     description: `Book tee times at ${course.name} in ${course.city}, ${course.state}. Online reservations powered by GreenReserve — direct booking, no middleman.`,
     robots,
   };

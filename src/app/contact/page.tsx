@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ArrowRight, Mail } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Contact — GreenReserve',
+  title: 'Contact',
   description: 'Get in touch with the GreenReserve team. Questions about listing your course or using our platform — we\'re happy to help.',
 };
 

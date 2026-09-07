@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import ForCoursesContent from './ForCoursesContent';
 
 export const metadata: Metadata = {
-  title: 'List Your Course Free — GreenReserve',
+  title: 'List Your Course Free',
   description: 'Get your golf course on GreenReserve for free. No monthly fees, no commission on green fees. We build your online booking page — golfers pay $1.50/player, you keep 100%.',
 };
 

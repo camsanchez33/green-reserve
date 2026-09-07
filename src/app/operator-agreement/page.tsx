@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Operator Agreement — GreenReserve',
+  title: 'Operator Agreement',
   description: 'The agreement between GreenReserve and golf courses listing on the platform — fees, liability, data, and termination.',
 };
 
