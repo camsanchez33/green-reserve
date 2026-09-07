@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-07 20:04 UTC · branch `main` · HEAD `8effd59` · working tree **2 dirty file(s)**
+Generated 2026-09-07 20:15 UTC · branch `main` · HEAD `17e68c9` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -20,7 +20,7 @@ these actually are first.
 
 ## In flight
 
-- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:1665`
+- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:1675`
   - FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because "no linked inquiry" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding the
   - Last session's raw Prisma script (a read-only check confirming Fake
   - Fairways existed) got blocked by this sandbox's auto-mode classifier as a potential production-database access outside the app's own authenticated API. That block is almost certainly the intended, correct behavior — a raw script has no place touching real course/booking/ operator data, authorized or not — so I did NOT retry it, and built the override into the sanctioned admin API instead, per the 
@@ -36,14 +36,14 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 8d | `7246a62` | `RUN_QUEUE.md:438` |
-| MP-1 | 2026-08-29 | 8d | `41f5ea8` | `RUN_QUEUE.md:468` |
-| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 8d | `4ef11dd` | `RUN_QUEUE.md:503` |
-| MP-2 | 2026-08-29 | 8d | `958f229` | `RUN_QUEUE.md:544` |
-| MP-2b | 2026-08-29 | 8d | `a134af5` | `RUN_QUEUE.md:581` |
-| MP-2c | 2026-08-29 | 8d | `e5b5413` | `RUN_QUEUE.md:630` |
-| MP-2d | 2026-08-29 | 8d | `22d0f68` | `RUN_QUEUE.md:678` |
-| MP-2e | 2026-08-30 | 8d | `bf3bcb2` | `RUN_QUEUE.md:720` |
+| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 8d | `7246a62` | `RUN_QUEUE.md:448` |
+| MP-1 | 2026-08-29 | 8d | `41f5ea8` | `RUN_QUEUE.md:478` |
+| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 8d | `4ef11dd` | `RUN_QUEUE.md:513` |
+| MP-2 | 2026-08-29 | 8d | `958f229` | `RUN_QUEUE.md:554` |
+| MP-2b | 2026-08-29 | 8d | `a134af5` | `RUN_QUEUE.md:591` |
+| MP-2c | 2026-08-29 | 8d | `e5b5413` | `RUN_QUEUE.md:640` |
+| MP-2d | 2026-08-29 | 8d | `22d0f68` | `RUN_QUEUE.md:688` |
+| MP-2e | 2026-08-30 | 8d | `bf3bcb2` | `RUN_QUEUE.md:730` |
 
 ## Not started — the actual queue
 
@@ -52,43 +52,44 @@ This is the distinction a raw checkbox count gets wrong.
 3. SD-3 — course-local time: Course.timezone column, every dashboard and — `RUN_QUEUE.md:352`
 4. SD-5 — lifecycle states: walk-in/phone booking POST (the biggest — `RUN_QUEUE.md:374`
 5. SD-6 — marketing honesty: the walk-in FAQ (only AFTER SD-5 makes it — `RUN_QUEUE.md:381`
-6. SD-7 — SEO + assets: sitemap.ts (robots.txt advertises one that 404s), — `RUN_QUEUE.md:387`
-7. SD-8 — merge + split: Payments + Cancellations → one Money page with — `RUN_QUEUE.md:412`
-8. SD-9 — funnel + auth polish: split the details sheet into a required core — `RUN_QUEUE.md:418`
-9. MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) — — `RUN_QUEUE.md:838`
-10. MP-4 — pipeline reshape (split into 4a/4b/4c) — `RUN_QUEUE.md:845`
-11. MP-4f — retire the JSON-in-actorName pattern. Three separate things — `RUN_QUEUE.md:928`
-12. MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong — `RUN_QUEUE.md:950`
-13. Golfer course directory (`/courses`) — NOT scheduled. If Cam wants — `RUN_QUEUE.md:1029`
-14. MP-5e part 3 — the Overview relationship feed (notes + settings — `RUN_QUEUE.md:1033`
-15. MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today) — `RUN_QUEUE.md:1059`
-16. MP-6b — refund primitive + chargeback visibility (no migration): — `RUN_QUEUE.md:1080`
-17. MP-6c — payout history + unit economics (no migration): "money — `RUN_QUEUE.md:1090`
-18. MP-6d — Golfers record page (no migration): palette search extended — `RUN_QUEUE.md:1098`
-19. MP-7 — comms merge (split into 7a–7b) — `RUN_QUEUE.md:1105`
-20. MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE, — `RUN_QUEUE.md:1123`
-21. MP-8 — chrome + System (split into 8a–8b) — `RUN_QUEUE.md:1130`
-22. MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table — `RUN_QUEUE.md:1147`
-23. MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in — `RUN_QUEUE.md:1154`
-24. MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity, — `RUN_QUEUE.md:1160`
-25. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1164`
-26. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1213`
-27. BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet: — `RUN_QUEUE.md:1218`
-28. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1239`
-29. COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small) — `RUN_QUEUE.md:1240`
-30. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1262`
-31. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1341`
-32. UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). Run order U-0 → H-1 → U-G → B-1 → B-2 →  — `RUN_QUEUE.md:1826`
+6. SD-7b — assets, BLOCKED ON CAM: three real dashboard screenshots into — `RUN_QUEUE.md:401`
+7. SD-8 — merge + split: Payments + Cancellations → one Money page with — `RUN_QUEUE.md:422`
+8. SD-9 — funnel + auth polish: split the details sheet into a required core — `RUN_QUEUE.md:428`
+9. MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) — — `RUN_QUEUE.md:848`
+10. MP-4 — pipeline reshape (split into 4a/4b/4c) — `RUN_QUEUE.md:855`
+11. MP-4f — retire the JSON-in-actorName pattern. Three separate things — `RUN_QUEUE.md:938`
+12. MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong — `RUN_QUEUE.md:960`
+13. Golfer course directory (`/courses`) — NOT scheduled. If Cam wants — `RUN_QUEUE.md:1039`
+14. MP-5e part 3 — the Overview relationship feed (notes + settings — `RUN_QUEUE.md:1043`
+15. MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today) — `RUN_QUEUE.md:1069`
+16. MP-6b — refund primitive + chargeback visibility (no migration): — `RUN_QUEUE.md:1090`
+17. MP-6c — payout history + unit economics (no migration): "money — `RUN_QUEUE.md:1100`
+18. MP-6d — Golfers record page (no migration): palette search extended — `RUN_QUEUE.md:1108`
+19. MP-7 — comms merge (split into 7a–7b) — `RUN_QUEUE.md:1115`
+20. MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE, — `RUN_QUEUE.md:1133`
+21. MP-8 — chrome + System (split into 8a–8b) — `RUN_QUEUE.md:1140`
+22. MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table — `RUN_QUEUE.md:1157`
+23. MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in — `RUN_QUEUE.md:1164`
+24. MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity, — `RUN_QUEUE.md:1170`
+25. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1174`
+26. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1223`
+27. BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet: — `RUN_QUEUE.md:1228`
+28. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1249`
+29. COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small) — `RUN_QUEUE.md:1250`
+30. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1272`
+31. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1351`
+32. UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). Run order U-0 → H-1 → U-G → B-1 → B-2 →  — `RUN_QUEUE.md:1836`
 
 ## Waiting on you (not on a build)
 
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:503`
-- Cam's approval for a prod backfill — `RUN_QUEUE.md:544`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:581`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:630`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:678`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:720`
-- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1262`
+- CAM: three real dashboard screenshots into public/screenshots/ (empty, so the homepage shows three grey placeholder boxes) and a seeded demo course slug for DEMO_COURSE_SLUGS (empt — `RUN_QUEUE.md:401`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:513`
+- Cam's approval for a prod backfill — `RUN_QUEUE.md:554`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:591`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:640`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:688`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:730`
+- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1272`
 
 ## Revise campaign (page-by-page pass)
 
@@ -176,6 +177,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `17e68c9` 2026-09-07 — SD-7a: the SEO half -- sitemap that exists, a social card, structured FAQ, noindex on the sheet
+- `459d050` 2026-09-07 — queue/spec update
 - `8effd59` 2026-09-07 — SD-8/9a: the correctness half of SD-8 and SD-9
 - `e1107c4` 2026-09-07 — queue/spec update
 - `a3102e5` 2026-09-07 — queue/spec update
@@ -186,9 +189,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `f274690` 2026-09-05 — SD-1: plug the leaks on the two surfaces a customer touches
 - `41f3e5a` 2026-09-05 — queue/spec update
 - `99ed266` 2026-09-05 — MP-11b: no admin action fails silently -- useResource, zero alert()s
-- `2dd6466` 2026-09-05 — queue/spec update
-- `341161a` 2026-09-05 — MP-11a: the admin session is resolved once, in the layout
 
 ---
 
-**Totals:** 143 done · 8 awaiting review · 1 in flight · 32 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 144 done · 8 awaiting review · 1 in flight · 32 not started · 8 revise pages open · 15 ideas · 2 parked.

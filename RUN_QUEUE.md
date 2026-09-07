@@ -384,14 +384,24 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     Operator Agreement §5's 30-day notice, contrast on the hero fee line and the
     "$6 per 4-player round" example (both render at text-white/20-/35 over a
     photo), self-host the Unsplash hero (small)
-  - [ ] SD-7 — SEO + assets: sitemap.ts (robots.txt advertises one that 404s),
-    OG/Twitter meta + metadataBase, FAQPage JSON-LD, noindex the token-gated
-    details sheet, {{COMPANY_LEGAL_NAME}} → plain "GreenReserve" text on the
-    legal pages. BLOCKED ON CAM for the last two items: three real dashboard
-    screenshots into public/screenshots/ (empty today, so the homepage shows
-    three grey placeholder boxes) and a seeded demo course slug for
-    DEMO_COURSE_SLUGS (empty, so the Live-demo section says "coming soon")
-    (small-medium)
+  - [x] SD-7a (17e68c9) — the SEO half. NEW src/app/sitemap.ts (robots.txt had
+    advertised a 404 since launch): six public pages + live, non-archived,
+    non-private, non-demo course pages; static-only on DB failure. Root
+    layout: metadataBase, title template, openGraph/twitter defaults,
+    canonical; NEW src/app/opengraph-image.tsx renders the social card at
+    request time (there was none). Six child pages drop their hardcoded
+    " — GreenReserve" suffix so the template does not double it. FAQPage
+    JSON-LD from NEW lib/faq.ts — the accordion renders the same array. NEW
+    for-courses/details/layout.tsx: robots noindex/nofollow on the tokenised
+    sheet. NOT done: {{COMPANY_LEGAL_NAME}} → UI_REVISE_SPEC (2026-09-05, newer)
+    says the placeholders STAY visible until legal clears LQ-1 — left as is.
+    CAM MUST CHECK: https://greenreserve.app/sitemap.xml returns XML;
+    https://greenreserve.app/opengraph-image renders the card; paste the
+    homepage URL into iMessage/Slack and see a card. NEEDS REVIEW.
+  - [ ] SD-7b — assets, BLOCKED ON CAM: three real dashboard screenshots into
+    public/screenshots/ (empty, so the homepage shows three grey placeholder
+    boxes) and a seeded demo course slug for DEMO_COURSE_SLUGS (empty, so the
+    Live-demo section says "coming soon"). Nothing to build until both exist.
   - [x] SD-8/9a (8effd59) — the CORRECTNESS half of SD-8 + SD-9, pulled out so
     the UI restructures could wait (Cam 2026-09-07: function first, looks
     later). Stripe connect + dashboard-link resolved the course with an
