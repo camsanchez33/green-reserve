@@ -335,11 +335,20 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     password recovery (SD-9), the operator `courses` PATCH still lets an
     OPERATOR flip `active` raw (SD-8 makes it a request-a-change row).
     NEEDS REVIEW.
-  - [ ] SD-2 — the mobile shell: bottom nav below md, drop h-screen
-    overflow-hidden from the ten page shells, responsive stat grids, touch
-    targets + real error toasts. One component + ten one-line edits. The persona
-    is a head pro checking golfers in on a phone at the counter and the product
-    is currently unusable there (medium)
+  - [x] SD-2 (e21ef4a) — the mobile shell. OperatorSidebar: desktop aside is
+    `hidden md:flex`; below md a slim top strip (course name, switcher, sign
+    out) + a fixed bottom nav (56px targets; Tee Sheet / Cancellations /
+    Schedule / Messages / Settings, staff subset per SD-1). Ten shells →
+    `flex-col md:flex-row min-h-screen md:h-screen md:overflow-hidden`, main
+    pads for the bar (pb-24 md:pb-0). Stat/form grids: grid-cols-4 → 2/4,
+    six grid-cols-3 → 1/3. Tee-sheet Block/Del buttons 40px tall on mobile.
+    ALL 13 alert() calls → NEW components/dashboard/Toast (ok/warn/bad, above
+    the bottom bar, dismissable, never blocks the sheet). scripts/parse-check.js
+    added (the CLAUDE.md SWC-parity check as a script). NOT done: the Messages
+    page's composer sits below the fold on a phone (its two-pane layout is
+    SD-8's); no per-page touch sweep beyond the tee-sheet row buttons. CAM MUST
+    CHECK ON A PHONE: /dashboard at 390px — bottom nav visible, sheet uses the
+    full width, check a golfer in and see a toast not a popup. NEEDS REVIEW.
   - [ ] SD-3 — course-local time: Course.timezone column, every dashboard and
     cron "today" derives from it (crons already have a timezone to copy),
     backward date nav unclamped. At 5pm Pacific the sheet flips to tomorrow and
