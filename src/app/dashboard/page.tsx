@@ -29,9 +29,12 @@ type TeeTime = {
 type Booking = {
   id: string; golferName: string; golferEmail: string; players: number; createdAt: string;
   status: string; paymentStatus: string; totalAmount: number;
+  // SD-4: set by a failed check-in charge; cleared when a charge goes through.
+  checkInFailReason?: string;
 };
 interface AnalyticsData {
-  summary: { totalRevenue: number; totalBookings: number; totalPlayers: number; utilization: number };
+  basis?: string;
+  summary: { totalRevenue: number; totalBookings: number; totalPlayers: number; utilization: number; upcomingBookings?: number; upcomingPlayers?: number; upcomingRevenue?: number };
   revenueByDay: { date: string; revenue: number; bookings: number }[];
   utilizationByDow: { dow: number; label: string; pct: number }[];
 }
@@ -96,6 +99,7 @@ function DashboardPageInner() {
   const [savingConditions, setSavingConditions] = useState(false);
   const [checkingInId, setCheckingInId] = useState<string | null>(null);
   const [cardModalBooking, setCardModalBooking] = useState<Booking | null>(null);
+  const [cardModalReason, setCardModalReason] = useState('');
   const [search, setSearch] = useState('');
   const [emailVerified, setEmailVerified] = useState(true);
   const [onboardingStepNum, setOnboardingStepNum] = useState(3);
@@ -108,17 +112,40 @@ function DashboardPageInner() {
   const teesheetIntro = useTabIntro('teesheet');
   const analyticsIntro = useTabIntro('analytics');
 
+  // SD-4: one wording for a check-in result, and it distinguishes a refund
+  // that happened from one that failed — the service reports both now.
+  function chargeOutcome(data: { totalCharged: number; feeRefunded?: boolean; feeRefundFailed?: boolean; feeRefundAmount?: number }) {
+    const charged = `Checked in — charged $${(data.totalCharged / 100).toFixed(2)}`;
+    if (data.feeRefundFailed) {
+      toast(`${charged}. The $${((data.feeRefundAmount ?? 0) / 100).toFixed(2)} late-cancellation fee refund FAILED — issue it in Stripe or the golfer is still out that money.`, 'warn');
+    } else if (data.feeRefunded) {
+      toast(`${charged}, and refunded the $${((data.feeRefundAmount ?? 0) / 100).toFixed(2)} late-cancellation fee.`, 'ok');
+    } else {
+      toast(`${charged}.`, 'ok');
+    }
+  }
+
   async function checkInBooking(b: Booking) {
-    if (b.paymentStatus === 'no_payment_method') { setCardModalBooking(b); return; }
+    if (b.paymentStatus === 'no_payment_method') { setCardModalReason(''); setCardModalBooking(b); return; }
     if (!confirm(`Check in ${b.golferName} and charge their card $${(b.totalAmount / 100).toFixed(2)} for the round?`)) return;
     setCheckingInId(b.id);
     const res = await fetch('/api/operator/bookings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: b.id, action: 'checkin' }) });
     const data = await res.json();
     setCheckingInId(null);
-    if (!res.ok) { toast(data.error || 'Check-in failed'); return; }
-    toast(data.feeRefunded
-      ? `Checked in — charged $${(data.totalCharged / 100).toFixed(2)}, and refunded the $${(data.feeRefundAmount / 100).toFixed(2)} late-cancellation fee.`
-      : `Checked in — charged $${(data.totalCharged / 100).toFixed(2)}.`, 'ok');
+    if (!res.ok) {
+      // SD-4: a declined card was a dead end — an alert, the row unchanged,
+      // the reason written to the DB and shown only to the admin. The modal
+      // that takes a fresh card already existed for no-card bookings; a
+      // decline opens it as a retry, with the decline reason on it.
+      if (res.status === 402) {
+        setCardModalReason(data.error || 'The saved card was declined.');
+        setCardModalBooking(b);
+        loadTimes(selectedDate); // the row now carries the decline
+        return;
+      }
+      toast(data.error || 'Check-in failed'); return;
+    }
+    chargeOutcome(data);
     loadTimes(selectedDate);
   }
 
@@ -128,11 +155,8 @@ function DashboardPageInner() {
     const data = await res.json();
     setCheckingInId(null);
     if (!res.ok) { return data.error || 'Check-in failed'; }
-    const msg = data.feeRefunded
-      ? `Checked in — charged $${(data.totalCharged / 100).toFixed(2)}, refunded $${(data.feeRefundAmount / 100).toFixed(2)} late-cancellation fee.`
-      : `Checked in — charged $${(data.totalCharged / 100).toFixed(2)}.`;
-    toast(msg, 'ok');
-    setCardModalBooking(null);
+    chargeOutcome(data);
+    setCardModalBooking(null); setCardModalReason('');
     loadTimes(selectedDate);
     return null;
   }
@@ -442,10 +466,10 @@ function DashboardPageInner() {
                   <div className="bg-white border border-line rounded-lg p-5">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 divide-x divide-line-soft">
                       {[
-                        { label:'Revenue',     value:`$${analytics.summary.totalRevenue.toFixed(0)}`, sub:'green + cart fees', onClick:()=>router.push('/dashboard/payments') },
-                        { label:'Bookings',    value:analytics.summary.totalBookings,                 sub:'confirmed',       onClick:undefined },
+                        { label:'Revenue',     value:`$${analytics.summary.totalRevenue.toFixed(0)}`, sub:'collected · green + cart', onClick:()=>router.push('/dashboard/payments') },
+                        { label:'Rounds',      value:analytics.summary.totalBookings,                 sub:'checked in',      onClick:undefined },
                         { label:'Players',     value:analytics.summary.totalPlayers,                  sub:'total rounds',    onClick:undefined },
-                        { label:'Utilization', value:`${analytics.summary.utilization}%`,             sub:'slots filled',    onClick:undefined },
+                        { label:'Utilization', value:`${analytics.summary.utilization}%`,             sub:'open slots filled, last 30 days', onClick:undefined },
                       ].map(s => (
                         <button key={s.label} onClick={s.onClick} disabled={!s.onClick}
                           className={'pl-4 first:pl-0 text-left ' + (s.onClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : 'cursor-default')}>
@@ -503,7 +527,7 @@ function DashboardPageInner() {
                   {[
                     { label:'Total Slots', value:totalSlots,               icon:<Users className="w-4 h-4"/>,     onClick:undefined },
                     { label:'Booked',      value:bookedSlots,              icon:<Calendar className="w-4 h-4"/>,  onClick:undefined },
-                    { label:'Revenue',     value:`$${revenue.toFixed(0)}`, icon:<DollarSign className="w-4 h-4"/>, onClick:()=>router.push(`/dashboard/payments?date=${selectedDate}`) },
+                    { label:'Expected',    value:`$${revenue.toFixed(0)}`, icon:<DollarSign className="w-4 h-4"/>, onClick:()=>router.push(`/dashboard/payments?date=${selectedDate}`) },
                     { label:'Blocked',     value:blocked,                  icon:<Ban className="w-4 h-4"/>,       onClick:undefined },
                   ].map(s => (
                     <button key={s.label} onClick={s.onClick} disabled={!s.onClick}
@@ -638,11 +662,17 @@ function DashboardPageInner() {
                                   <span className="text-ink-muted ml-2">{b.players} player{b.players!==1?'s':''}</span>
                                   <div className="text-xs text-ink-muted truncate">{b.golferEmail}</div>
                                 </div>
-                                <span className={'shrink-0 text-xs font-medium ' + toneText(bStatus.tone)}>{bStatus.label}</span>
+                                {b.status === 'confirmed' && b.checkInFailReason ? (
+                                  <span className="shrink-0 text-xs font-medium text-bad" title={b.checkInFailReason}>Card declined</span>
+                                ) : (
+                                  <span className={'shrink-0 text-xs font-medium ' + toneText(bStatus.tone)}>{bStatus.label}</span>
+                                )}
                                 {b.status !== 'completed' && b.status !== 'cancelled' && (
-                                  <button onClick={e=>{e.stopPropagation();checkInBooking(b);}} disabled={checkingInId===b.id}
-                                    className="shrink-0 text-white bg-pine hover:bg-pine-hover px-2.5 py-1 rounded-md text-xs font-medium disabled:opacity-50 transition-colors">
-                                    {checkingInId===b.id ? 'Charging…' : 'Check In'}
+                                  <button
+                                    onClick={e => { e.stopPropagation(); if (b.checkInFailReason) { setCardModalReason(b.checkInFailReason); setCardModalBooking(b); } else checkInBooking(b); }}
+                                    disabled={checkingInId===b.id}
+                                    className={'shrink-0 text-white px-2.5 min-h-[36px] md:min-h-0 py-1 rounded-md text-xs font-medium disabled:opacity-50 transition-colors ' + (b.checkInFailReason ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')}>
+                                    {checkingInId===b.id ? 'Charging…' : b.checkInFailReason ? 'Retry with new card' : 'Check In'}
                                   </button>
                                 )}
                               </div>
@@ -679,7 +709,7 @@ function DashboardPageInner() {
       {cardModalBooking && (
         <div className="fixed inset-0 bg-ink/20 z-50 flex items-center justify-center p-4">
           <Elements stripe={stripePromise}>
-            <CardCheckInModal booking={cardModalBooking} onConfirm={(pmId) => checkInWithCard(cardModalBooking, pmId)} onCancel={() => setCardModalBooking(null)}/>
+            <CardCheckInModal booking={cardModalBooking} reason={cardModalReason} onConfirm={(pmId) => checkInWithCard(cardModalBooking, pmId)} onCancel={() => { setCardModalBooking(null); setCardModalReason(''); }}/>
           </Elements>
         </div>
       )}
@@ -764,8 +794,10 @@ function AddTeeTimeForm({ date, onSave, onCancel }: { date: string; onSave: ()=>
 }
 
 /* ─── Card Check-In Modal ───────────────────────────────────────────────── */
-function CardCheckInModal({ booking, onConfirm, onCancel }: {
+function CardCheckInModal({ booking, reason, onConfirm, onCancel }: {
   booking: Booking;
+  /** SD-4: why this opened — the decline message when it is a retry. */
+  reason?: string;
   onConfirm: (paymentMethodId: string) => Promise<string | null>;
   onCancel: () => void;
 }) {
@@ -793,11 +825,16 @@ function CardCheckInModal({ booking, onConfirm, onCancel }: {
     <div className="bg-white border border-line w-full max-w-sm rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="font-serif font-medium text-ink text-[17px]">Check In — {booking.golferName}</h3>
+          <h3 className="font-serif font-medium text-ink text-[17px]">{reason ? 'Retry with a new card' : 'Check In'} — {booking.golferName}</h3>
           <p className="text-xs text-ink-muted mt-0.5">Enter golfer&apos;s card to charge ${(booking.totalAmount / 100).toFixed(2)}</p>
         </div>
         <button onClick={onCancel} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
       </div>
+      {reason && (
+        <div className="mb-4 text-xs text-bad bg-bad/5 border border-bad/20 rounded-md px-3 py-2">
+          {reason} The booking still stands — take a different card, or collect in person and leave it for the operator to mark.
+        </div>
+      )}
       <div className="mb-4">
         <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Card Details</label>
         <div className="w-full px-4 py-3.5 rounded-md border border-line bg-paper focus-within:border-pine/40 transition-colors">

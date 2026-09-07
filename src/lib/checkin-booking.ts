@@ -62,6 +62,11 @@ async function chargeBooking(
   }
 
   const refundPendingFee = booking.paymentStatus === 'cancellation_fee_charged' && !!booking.cancellationFeeChargeId;
+  // SD-4: `feeRefunded` used to be this flag — the INTENT to refund. The
+  // attempt below can fail, and when it did the dashboard toast, the golfer's
+  // receipt and the self-check-in page all said "refunded". Track the outcome.
+  let feeRefundOk = false;
+  let feeRefundError = '';
   let paymentIntentId = booking.roundPaymentIntentId;
 
   // ── Money ────────────────────────────────────────────────────────────────
@@ -126,11 +131,14 @@ async function chargeBooking(
           paymentIntentId: booking.cancellationFeeChargeId,
           connectedAccountId: booking.course.stripeAccountId as string,
         });
+        feeRefundOk = true;
         console.log(JSON.stringify({ ev: `${ev}.fee_refund.ok`, bookingId, cancelFeeChargeId: booking.cancellationFeeChargeId }));
       } catch (err) {
         // The round charge already succeeded -- don't fail over a refund
-        // hiccup, just log it so support can issue it manually from Stripe.
-        console.error(JSON.stringify({ ev: `${ev}.fee_refund.fail`, bookingId, error: err instanceof Error ? err.message : String(err) }));
+        // hiccup. Log it AND report it, so the person at the counter knows
+        // the golfer is still out the fee until someone issues it in Stripe.
+        feeRefundError = err instanceof Error ? err.message : String(err);
+        console.error(JSON.stringify({ ev: `${ev}.fee_refund.fail`, bookingId, error: feeRefundError }));
       }
     }
   }
@@ -161,7 +169,7 @@ async function chargeBooking(
       rangeBallsTotal: booking.rangeBallsTotal,
       accessFeeTotal: booking.accessFeeTotal,
       totalAmount: booking.totalAmount,
-      feeRefunded: refundPendingFee,
+      feeRefunded: feeRefundOk,
       feeRefundAmount: booking.cancellationFeeTotal,
       bookingId: booking.id,
       checkInToken: booking.checkInToken,
@@ -171,7 +179,11 @@ async function chargeBooking(
   return {
     success: true,
     totalCharged: booking.totalAmount,
-    feeRefunded: refundPendingFee,
+    /** The late-cancellation fee was actually refunded. */
+    feeRefunded: feeRefundOk,
+    /** A fee was owed back and the refund FAILED — someone must issue it in Stripe. */
+    feeRefundFailed: refundPendingFee && !feeRefundOk,
+    feeRefundError: refundPendingFee && !feeRefundOk ? feeRefundError : '',
     feeRefundAmount: refundPendingFee ? booking.cancellationFeeTotal : 0,
     alreadyPaid,
   } as const;

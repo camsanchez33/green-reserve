@@ -36,7 +36,7 @@ function fmtDate(d: string) {
 
 function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, onResult, onError }: {
   bookingId: string; token: string; totalAmount: number; golferName: string;
-  onResult: (r: { totalCharged: number; feeRefunded: boolean; feeRefundAmount: number }) => void;
+  onResult: (r: { totalCharged: number; feeRefunded: boolean; feeRefundFailed?: boolean; feeRefundAmount: number }) => void;
   onError: (msg: string) => void;
 }) {
   const stripe = useStripe();
@@ -103,7 +103,7 @@ function CheckInPageInner() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [checkingIn, setCheckingIn] = useState(false);
-  const [result, setResult] = useState<{ totalCharged: number; feeRefunded: boolean; feeRefundAmount: number } | null>(null);
+  const [result, setResult] = useState<{ totalCharged: number; feeRefunded: boolean; feeRefundFailed?: boolean; feeRefundAmount: number } | null>(null);
 
   useEffect(() => {
     if (!bookingId || !token) { setError('This check-in link is missing required details.'); setLoading(false); return; }
@@ -161,6 +161,13 @@ function CheckInPageInner() {
             {result?.feeRefunded && (
               <div className="bg-ok/5 border border-ok/20 rounded-md p-4 mb-6 text-left">
                 <p className="text-ok text-xs">Your earlier ${(result.feeRefundAmount / 100).toFixed(2)} late-cancellation fee has been refunded.</p>
+              </div>
+            )}
+            {/* SD-4: this page used to say "refunded" whenever a refund was
+                attempted. Now it only says so when it went through. */}
+            {result?.feeRefundFailed && (
+              <div className="bg-warn/5 border border-warn/20 rounded-md p-4 mb-6 text-left">
+                <p className="text-warn text-xs">Your earlier ${(result.feeRefundAmount / 100).toFixed(2)} late-cancellation fee is owed back to you, but the refund did not go through automatically. The course has been notified — if it hasn&apos;t appeared within a few days, contact them or hello@greenreserve.app.</p>
               </div>
             )}
             <p className="text-xs text-ink-muted mb-4">A receipt has been emailed to you.</p>
