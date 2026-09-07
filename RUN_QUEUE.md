@@ -1087,16 +1087,29 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       NOT COVERED BY TESTS: no test DB — verified read-only against prod
       (accrual vs collected agree on the 8 paid rounds; missed = the 2
       test-course no-shows; late-fee states all correct). NEEDS REVIEW.
-    - [ ] MP-6b — refund primitive + chargeback visibility (no migration):
-      there is NO refund UI anywhere — the only refund is the automatic
-      late-fee refund at check-in, and when it fails it is a console.error
-      with a comment saying support can do it in Stripe. Add a shared
-      refundBooking() service (partial + full, idempotency key, PaymentEvent
-      row, golfer email) and an admin action on the Golfers record + course
-      Money tab. Webhook handles exactly ONE event type (account.updated);
-      add charge.refunded, charge.dispute.created / closed, and
-      payment_intent.payment_failed so the first chargeback is not invisible
-      until the bank letter. Surface disputes in the Problems block.
+    - [x] MP-6b (60de81d) — refund primitive + chargeback visibility. NEW
+      `lib/refund-booking.ts`: full/partial refund of a paid round against the
+      course's connected account, `refund_application_fee: true` so GR's fee
+      reverses pro rata, idempotency key per (booking, amount, prior refunds),
+      required reason → NEW `sendRefundEmail` (throws on Resend error), and a
+      PaymentEvent row — the table had ZERO writers. `POST /api/admin/refund`
+      (MANAGER_PLUS) + Refund control on the course Money tab (amount blank =
+      full; reason required; result note says whether the email sent);
+      transactions API reports 'refunded'. Webhook handled ONE event type; now
+      also charge.refunded (dashboard-issued refunds reach the ledger, deduped
+      on refund id; full refund flips paymentStatus), charge.dispute.
+      created/updated/closed (one row per dispute state, evidence due date in
+      detail), payment_intent.payment_failed; handler errors → 500 + logged
+      event id so Stripe retries. NEW `openDisputes()` in lib/money-problems →
+      Revenue Problems block "Chargebacks open" with Respond-in-Stripe link,
+      counted in the sidebar red badge and the problemsCount. NOT done:
+      operator-side refund (dashboard) — admin only for now; refund of a
+      collect-without-check-in booking (transactions maps it to 'card_saved',
+      so no Refund button appears — edge). CAM MUST DO: register the webhook
+      endpoint in Stripe as a CONNECT webhook (events on connected accounts)
+      and add charge.refunded, charge.dispute.*, payment_intent.payment_failed
+      to its event list, or none of this fires. NOT COVERED BY TESTS: moves
+      money; no test DB. NEEDS REVIEW.
     - [ ] MP-6c — payout history + unit economics (no migration): "money
       that reached the bank" is fetched from Stripe and discarded — list
       payouts with arrival dates under the Platform Stripe card; effective

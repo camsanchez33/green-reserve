@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-07T20:15:26.569Z",
+  "generatedAt": "2026-09-07T20:23:30.681Z",
   "repo": {
-    "head": "17e68c9",
+    "head": "60de81d",
     "branch": "main",
     "dirtyCount": 2,
     "dirty": [
@@ -11,14 +11,14 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-07T16:04:52-04:00",
+    "queueLastCommit": "2026-09-07T16:15:27-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 144,
+    "runDone": 145,
     "runAwaiting": 8,
     "runInFlight": 1,
-    "runNotStarted": 32,
+    "runNotStarted": 31,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -27,7 +27,7 @@
   "inFlight": [
     {
       "title": "BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET",
-      "line": 1675,
+      "line": 1688,
       "body": [
         "FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because \"no linked inquiry\" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding them outright. FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() + a \"Force delete permanently\" button per acknowledged orphan — owner-only, typed name confirm, server re-verifies the course is still an orphan before touching anything (refuses if it turns out to have a real inquiry link — this can never be used to route around the doctrine for a real course). This is the mechanism for Cam's DaisyLinks exception, but I have NOT executed it against DaisyLinks yet:",
         "- Last session's raw Prisma script (a read-only check confirming Fake",
@@ -174,88 +174,83 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "MP-6b — refund primitive + chargeback visibility (no migration):",
-      "line": 1090,
-      "section": "Queue (run in this order)"
-    },
-    {
       "title": "MP-6c — payout history + unit economics (no migration): \"money",
-      "line": 1100,
+      "line": 1113,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-6d — Golfers record page (no migration): palette search extended",
-      "line": 1108,
+      "line": 1121,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-7 — comms merge (split into 7a–7b)",
-      "line": 1115,
+      "line": 1128,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE,",
-      "line": 1133,
+      "line": 1146,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-8 — chrome + System (split into 8a–8b)",
-      "line": 1140,
+      "line": 1153,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table",
-      "line": 1157,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in",
-      "line": 1164,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,",
       "line": 1170,
       "section": "Queue (run in this order)"
     },
     {
+      "title": "MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in",
+      "line": 1177,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,",
+      "line": 1183,
+      "section": "Queue (run in this order)"
+    },
+    {
       "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)",
-      "line": 1174,
+      "line": 1187,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState",
-      "line": 1223,
+      "line": 1236,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:",
-      "line": 1228,
+      "line": 1241,
       "section": "Queue (run in this order)"
     },
     {
       "title": "COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)",
-      "line": 1249,
+      "line": 1262,
       "section": "Queue (run in this order)"
     },
     {
       "title": "COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small)",
-      "line": 1250,
+      "line": 1263,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
-      "line": 1272,
+      "line": 1285,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
-      "line": 1351,
+      "line": 1364,
       "section": "Queue (run in this order)"
     },
     {
       "title": "UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). Run order U-0 → H-1 → U-G → B-1 → B-2 → U-O → B-6 → U-A → U-",
-      "line": 1836,
+      "line": 1849,
       "section": "Queue (run in this order)"
     }
   ],
@@ -298,7 +293,7 @@
     {
       "item": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
       "note": "CAM: confirm the state before this runs — e",
-      "line": 1272
+      "line": 1285
     }
   ],
   "ideas": {
@@ -821,6 +816,16 @@
   },
   "recentCommits": [
     {
+      "h": "60de81d",
+      "date": "2026-09-07",
+      "subject": "MP-6b: a refund primitive, and chargebacks that are visible before the bank letter"
+    },
+    {
+      "h": "98edb1c",
+      "date": "2026-09-07",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "17e68c9",
       "date": "2026-09-07",
       "subject": "SD-7a: the SEO half -- sitemap that exists, a social card, structured FAQ, noindex on the sheet"
@@ -869,16 +874,6 @@
       "h": "f274690",
       "date": "2026-09-05",
       "subject": "SD-1: plug the leaks on the two surfaces a customer touches"
-    },
-    {
-      "h": "41f3e5a",
-      "date": "2026-09-05",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "99ed266",
-      "date": "2026-09-05",
-      "subject": "MP-11b: no admin action fails silently -- useResource, zero alert()s"
     }
   ]
 }
