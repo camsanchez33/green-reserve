@@ -392,6 +392,23 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     three grey placeholder boxes) and a seeded demo course slug for
     DEMO_COURSE_SLUGS (empty, so the Live-demo section says "coming soon")
     (small-medium)
+  - [x] SD-8/9a (8effd59) — the CORRECTNESS half of SD-8 + SD-9, pulled out so
+    the UI restructures could wait (Cam 2026-09-07: function first, looks
+    later). Stripe connect + dashboard-link resolved the course with an
+    unordered findFirst while Settings used the active-course cookie — a
+    two-course operator could attach Stripe to the WRONG course; both use
+    resolveDashboardSession now. Settings save() checks res.ok (it showed
+    "Saved" on 400/500), a dirty flag stops the focus-refetch clobbering
+    edits, beforeunload guard, save errors inline + toast. Onboarding step 1
+    persists (profile PATCH existed, nobody called it) and the agreement is
+    POSTed once, not on every re-save; all four saves check results. Details
+    sheet: final submit try/catch (hung on "Submitting…"), draft-save failure
+    surfaces as a soft warning. tsc + parse green; no test DB. CAM MUST CHECK:
+    edit a setting, switch tabs and back — the edit must survive; save an
+    invalid value (holes = 99) and see the refusal, not "Saved". NEEDS REVIEW.
+    REMAINING in SD-8 / SD-9 (below): UI restructures (parked until the
+    functional queue is done) + 2FA backup codes, staff password recovery,
+    password change revoking other sessions (functional, still open).
   - [ ] SD-8 — merge + split: Payments + Cancellations → one Money page with
     tabs (they already query the same endpoint) + the Stripe payout card moved
     here from Settings + the literal $1.50/player figure; Settings 9 tabs → 5
