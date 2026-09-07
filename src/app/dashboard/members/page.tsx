@@ -5,6 +5,7 @@ import {
   RefreshCw, UserCheck, UserX, ChevronDown, AlertCircle, CheckCircle2, UserPlus,
 } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { toast } from '@/components/dashboard/Toast';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
 
@@ -111,7 +112,7 @@ export default function MembersPage() {
     const r = await fetch(`/api/operator/tiers?id=${id}`, { method: 'DELETE' });
     const d = await r.json();
     if (r.ok) setTiers(prev => prev.filter(t => t.id !== id));
-    else alert(d.error);
+    else toast(d.error || 'Could not delete that tier.');
   };
 
   const startAddMember = (tierId?: string) => {
@@ -161,7 +162,7 @@ export default function MembersPage() {
   const canContinue = wizStep === 1 ? !!tierForm.name?.trim() : true;
 
   if (loading) return (
-    <div className="flex h-screen bg-paper overflow-hidden">
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="members"/>
       <main className="flex-1 flex items-center justify-center">
         <RefreshCw className="w-6 h-6 text-pine animate-spin"/>
@@ -171,9 +172,9 @@ export default function MembersPage() {
 
   /* ── Wizard view ── */
   if (view === 'wizard') return (
-    <div className="flex h-screen bg-paper overflow-hidden">
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="members"/>
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <div className="max-w-2xl mx-auto px-6 py-10">
 
           <button onClick={closeWizard} className="flex items-center gap-2 text-sm text-ink-muted hover:text-ink mb-6 transition-colors">
@@ -356,9 +357,9 @@ export default function MembersPage() {
 
   /* ── Complete view ── */
   if (view === 'complete' && createdTier) return (
-    <div className="flex h-screen bg-paper overflow-hidden">
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="members"/>
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <div className="max-w-lg mx-auto px-6 py-16 text-center">
           <div className="w-14 h-14 rounded-full bg-ok/10 flex items-center justify-center mx-auto mb-5">
             <CheckCircle2 className="w-7 h-7 text-ok"/>
@@ -417,9 +418,9 @@ export default function MembersPage() {
 
   /* ── List view ── */
   return (
-    <div className="flex h-screen bg-paper overflow-hidden">
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="members"/>
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <div className="bg-white border-b border-line sticky top-0 z-10">
           <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-4">
             <div className="flex items-center gap-2">

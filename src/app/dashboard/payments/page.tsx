@@ -87,9 +87,9 @@ function PaymentsPageInner() {
   });
 
   return (
-    <div className="flex h-screen bg-paper overflow-hidden">
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="payments"/>
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <div className="max-w-5xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
@@ -125,7 +125,7 @@ function PaymentsPageInner() {
           )}
 
           <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Collected</div>
-          <div className="grid grid-cols-3 gap-3 mb-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
             <StatCard accent icon={<DollarSign className="w-4 h-4"/>} label="Revenue Collected"
               value={`$${(collectedRevenue / 100).toFixed(2)}`}
               sub={`${collected.length} round${collected.length!==1?'s':''} checked in & paid`}/>
@@ -138,7 +138,7 @@ function PaymentsPageInner() {
           </div>
 
           <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Pending</div>
-          <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
             <StatCard icon={<Clock3 className="w-4 h-4"/>} label="Card on File"
               value={`${cardOnFile.length} booking${cardOnFile.length!==1?'s':''}`}
               sub={`~$${(expectedCardOnFile / 100).toFixed(2)} expected${noCardCount > 0 ? ` · ${noCardCount} no card required` : ' · free cancel window open'}`}/>

@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Send, MessageSquare, Radio } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { toast } from '@/components/dashboard/Toast';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
 
@@ -50,17 +51,17 @@ function MessagesContent() {
     setSending(true);
     const r = await fetch('/api/operator/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body: compose.trim() }) });
     if (r.ok) { setCompose(''); await loadThread(); }
-    else { const d = await r.json(); alert(d.error || 'Send failed'); }
+    else { const d = await r.json().catch(() => ({})); toast(d.error || 'The message did not send — try again.'); }
     setSending(false);
   }
 
   const messages = thread?.messages ?? [];
 
   return (
-    <div className="flex h-screen bg-paper overflow-hidden">
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="messages"/>
 
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col md:overflow-hidden pb-24 md:pb-0">
         <div className="px-6 py-4 border-b border-line shrink-0 bg-white">
           <div className="flex items-center gap-2">
             <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink leading-none">Messages</h1>

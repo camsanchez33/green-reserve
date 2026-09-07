@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Pencil, Check, X, Power, RefreshCw } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { toast } from '@/components/dashboard/Toast';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
 
@@ -46,7 +47,7 @@ export default function SchedulesPage() {
   const set = (k: string, v: unknown) => setForm(f=>({...f,[k]:v}));
 
   async function save() {
-    if (!form.daysOfWeek.length) return alert('Select at least one day');
+    if (!form.daysOfWeek.length) return toast('Select at least one day.', 'warn');
     const clash = schedules.find(s => {
       if (editId && s.id === editId) return false;
       if (!s.active) return false;
@@ -56,10 +57,10 @@ export default function SchedulesPage() {
     });
     if (clash) {
       const days = clash.daysOfWeek.filter(d => form.daysOfWeek.includes(d)).map(d => DAYS[d]).join(', ');
-      alert(`This overlaps your "${clash.tierName}" schedule on ${days} (${fmtTime(clash.startTime)} – ${fmtTime(clash.endTime)}).\n\nTwo schedules can't cover the same time on the same day. Adjust the times or edit the existing schedule instead.`);
+      toast(`This overlaps your "${clash.tierName}" schedule on ${days} (${fmtTime(clash.startTime)} – ${fmtTime(clash.endTime)}).\n\nTwo schedules can't cover the same time on the same day. Adjust the times or edit the existing schedule instead.`, 'warn');
       return;
     }
-    if (form.startTime >= form.endTime) { alert('End time must be after start time.'); return; }
+    if (form.startTime >= form.endTime) { toast('End time must be after start time.', 'warn'); return; }
     setSaving(true);
     const payload = { ...form, memberRateWeekday:form.memberRateWeekday||null, memberRateWeekend:form.memberRateWeekend||null, residentRateWeekday:form.residentRateWeekday||null, residentRateWeekend:form.residentRateWeekend||null };
     if (editId) {
@@ -80,8 +81,8 @@ export default function SchedulesPage() {
     const r = await fetch('/api/operator/regenerate-tee-times', { method: 'POST' });
     const data = await r.json();
     setRegenerating(false);
-    if (data.errors?.length) alert(`Done with some errors: ${data.errors.join(', ')}`);
-    else alert(`Done! ${data.created} new tee time slot${data.created !== 1 ? 's' : ''} created across the next 8 days.`);
+    if (data.errors?.length) toast(`Done with some errors: ${data.errors.join(', ')}`, 'warn');
+    else toast(`Done — ${data.created} new tee time slot${data.created !== 1 ? 's' : ''} created across the next 8 days.`, 'ok');
   }
 
   async function del(id: string) {
@@ -97,9 +98,9 @@ export default function SchedulesPage() {
   }
 
   return (
-    <div className="flex h-screen bg-paper overflow-hidden">
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="schedule"/>
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <div className="bg-white border-b border-line px-6 py-4 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-2">
             <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Tee Sheet Schedules</h1>
@@ -222,7 +223,7 @@ export default function SchedulesPage() {
                     ))}
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div><label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Start Time</label><input type="time" value={form.startTime} onChange={e=>set('startTime',e.target.value)} className={iCls}/></div>
                   <div><label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">End Time</label><input type="time" value={form.endTime} onChange={e=>set('endTime',e.target.value)} className={iCls}/></div>
                   <div>

@@ -6,9 +6,9 @@ import OperatorSidebar from '@/components/OperatorSidebar';
 export default function OutingsPage() {
   const prefill = encodeURIComponent("I'd like to use Outings tools for my course — here's what I need: ");
   return (
-    <div className="flex h-screen bg-paper overflow-hidden">
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="outings"/>
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <div className="max-w-2xl mx-auto px-6 py-16 text-center">
           <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-4">Outings</div>
           <Image src="/brand/birdie-sitting.png" alt="" width={96} height={135} className="mx-auto mb-5" />

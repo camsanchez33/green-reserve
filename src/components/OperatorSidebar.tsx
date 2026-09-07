@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
 import { recordTabVisit } from '@/lib/dashboard-visits';
+import { Toaster } from '@/components/dashboard/Toast';
 
 export type OperatorNavKey =
   | 'teesheet' | 'analytics' | 'cancellations' | 'tournaments' | 'outings'
@@ -101,10 +102,65 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     { label: 'Manage',    keys: (['schedule', 'members', 'payments', 'messages', 'settings'] as OperatorNavKey[]).filter(k => !isStaff || !STAFF_HIDDEN.includes(k)) },
   ];
 
+  // SD-2: what fits in a thumb row. Staff never see the configuration tabs
+  // (SD-1), so their row ends at Messages.
+  const mobileKeys: OperatorNavKey[] = isStaff
+    ? ['teesheet', 'cancellations', 'analytics', 'messages']
+    : ['teesheet', 'cancellations', 'schedule', 'messages', 'settings'];
+  const mobileItems = navItems.filter(n => mobileKeys.includes(n.key) && !n.soon);
+
   return (
     <>
     <AnnouncementBanner />
-    <aside className="w-56 shrink-0 bg-white border-r border-line flex flex-col h-full overflow-y-auto">
+    <Toaster />
+
+    {/* SD-2: below md the 224px rail is gone. A slim strip carries identity,
+        the course switcher and sign-out; the tabs live in a bottom bar. */}
+    <header className="md:hidden bg-white border-b border-line px-4 py-2.5 flex items-center gap-3">
+      <div className="flex-1 min-w-0">
+        <div className="font-serif text-[14px] text-ink leading-snug truncate">{name || 'GreenReserve'}</div>
+        {name && <div className="text-[10px] text-ink-muted uppercase tracking-[0.05em] truncate">{meta}</div>}
+      </div>
+      {myCourses.length > 1 && (
+        <select
+          value={identity.id || ''}
+          onChange={e => switchCourse(e.target.value)}
+          disabled={switchingCourse}
+          aria-label="Switch course"
+          className="max-w-[40%] bg-paper border border-line rounded-md px-2 py-2 text-[12px] text-ink-soft disabled:opacity-50"
+        >
+          {myCourses.map(c => (
+            <option key={c.id} value={c.id}>{c.name}{c.active && c.liveStatus === 'live' ? '' : ' (draft)'}</option>
+          ))}
+        </select>
+      )}
+      <button onClick={logout} aria-label="Sign out" className="shrink-0 w-11 h-11 -mr-2 flex items-center justify-center rounded-md text-ink-soft hover:text-bad transition-colors">
+        <LogOut className="w-4 h-4"/>
+      </button>
+    </header>
+
+    <nav aria-label="Dashboard" className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-line flex pb-[env(safe-area-inset-bottom)]">
+      {mobileItems.map(item => {
+        const isActive = active === item.key;
+        return (
+          <button
+            key={item.key}
+            onClick={() => router.push(item.href)}
+            className={'flex-1 min-h-[56px] flex flex-col items-center justify-center gap-1 text-[10.5px] font-medium transition-colors relative ' + (isActive ? 'text-ink' : 'text-ink-muted')}
+            style={isActive ? { color: brandColor } : undefined}
+            aria-current={isActive ? 'page' : undefined}
+          >
+            {item.icon}
+            <span className="leading-none">{item.label}</span>
+            {item.key === 'messages' && unreadMessages > 0 && (
+              <span className="absolute top-1.5 right-[calc(50%-18px)] w-2 h-2 rounded-full bg-ok" aria-label={`${unreadMessages} unread`} />
+            )}
+          </button>
+        );
+      })}
+    </nav>
+
+    <aside className="hidden md:flex w-56 shrink-0 bg-white border-r border-line flex-col h-full overflow-y-auto">
       <div className="px-4 py-4 border-b border-line">
         <div className="text-center mb-3">
           <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={190} height={36} priority className="w-full h-auto" />

@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff, CreditCard, CheckCircle2, AlertCircle, Loader2, KeyRound, Mail, Smartphone, Image as ImageIcon, X } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { toast } from '@/components/dashboard/Toast';
 import CourseLayoutTab from '@/components/dashboard/CourseLayoutTab';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
@@ -219,7 +220,7 @@ function SettingsPageInner() {
     const data = await res.json();
     setAddingStaff(false);
     if(res.ok){ setStaffResult({tempPassword:data.tempPassword,name:newStaff.name}); setNewStaff({name:'',email:'',role:'staff'}); fetch('/api/operator/staff').then(r=>r.json()).then(setStaff); }
-    else alert(data.error);
+    else toast(data.error || 'Could not add that staff account.');
   }
 
   async function removeStaff(id:string) {
@@ -267,9 +268,9 @@ function SettingsPageInner() {
   const dresscodes = (form.dresscode as string[])||[];
 
   return (
-    <div className="flex h-screen bg-paper overflow-hidden">
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="settings"/>
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <div className="bg-white border-b border-line px-6 py-4 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-2">
             <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Settings</h1>
@@ -312,7 +313,7 @@ function SettingsPageInner() {
                 <Field label="Phone"><FInput value={form.phone as string} onChange={v=>set('phone',v)} type="tel"/></Field>
                 <Field label="Website"><FInput value={form.website as string} onChange={v=>set('website',v)} placeholder="https://"/></Field>
                 <Field label="Address"><FInput value={form.address as string} onChange={v=>set('address',v)}/></Field>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <Field label="City"><FInput value={form.city as string} onChange={v=>set('city',v)}/></Field>
                   <Field label="State"><FInput value={form.state as string} onChange={v=>set('state',v)} maxLength={2}/></Field>
                   <Field label="ZIP"><FInput value={form.zipCode as string} onChange={v=>set('zipCode',v)}/></Field>
@@ -359,7 +360,7 @@ function SettingsPageInner() {
           {active==='Course & Layout' && (
             <div className="space-y-5">
               <SectionCard title="Course Details">
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <Field label="Holes"><FInput value={form.holes as number} onChange={v=>set('holes',Number(v))} type="number"/></Field>
                   <Field label="Par"><FInput value={form.par as number} onChange={v=>set('par',Number(v))} type="number"/></Field>
                   <Field label="Yardage"><FInput value={form.yardage as number} onChange={v=>set('yardage',Number(v))} type="number"/></Field>

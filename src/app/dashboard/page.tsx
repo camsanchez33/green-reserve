@@ -9,6 +9,7 @@ import {
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { toast } from '@/components/dashboard/Toast';
 import GettingStartedChecklist from '@/components/dashboard/GettingStartedChecklist';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
@@ -114,10 +115,10 @@ function DashboardPageInner() {
     const res = await fetch('/api/operator/bookings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: b.id, action: 'checkin' }) });
     const data = await res.json();
     setCheckingInId(null);
-    if (!res.ok) { alert(data.error || 'Check-in failed'); return; }
-    alert(data.feeRefunded
+    if (!res.ok) { toast(data.error || 'Check-in failed'); return; }
+    toast(data.feeRefunded
       ? `Checked in — charged $${(data.totalCharged / 100).toFixed(2)}, and refunded the $${(data.feeRefundAmount / 100).toFixed(2)} late-cancellation fee.`
-      : `Checked in — charged $${(data.totalCharged / 100).toFixed(2)}.`);
+      : `Checked in — charged $${(data.totalCharged / 100).toFixed(2)}.`, 'ok');
     loadTimes(selectedDate);
   }
 
@@ -130,7 +131,7 @@ function DashboardPageInner() {
     const msg = data.feeRefunded
       ? `Checked in — charged $${(data.totalCharged / 100).toFixed(2)}, refunded $${(data.feeRefundAmount / 100).toFixed(2)} late-cancellation fee.`
       : `Checked in — charged $${(data.totalCharged / 100).toFixed(2)}.`;
-    alert(msg);
+    toast(msg, 'ok');
     setCardModalBooking(null);
     loadTimes(selectedDate);
     return null;
@@ -276,10 +277,10 @@ function DashboardPageInner() {
     : teeTimes;
 
   return (
-    <div className="flex h-screen bg-paper overflow-hidden">
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active={tab} onAlertClick={() => setShowConditions(true)}/>
 
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         {courseDraft && !courseArchived && (
           <div className="bg-pine/5 border-b border-pine/20 px-6 py-3">
             <div className="flex items-center gap-2 text-sm text-ink-soft flex-wrap">
@@ -498,7 +499,7 @@ function DashboardPageInner() {
             <>
               {/* Stats */}
               <div className="bg-white border border-line rounded-lg p-5 mb-5">
-                <div className="grid grid-cols-4 gap-4 divide-x divide-line-soft">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:divide-x divide-line-soft">
                   {[
                     { label:'Total Slots', value:totalSlots,               icon:<Users className="w-4 h-4"/>,     onClick:undefined },
                     { label:'Booked',      value:bookedSlots,              icon:<Calendar className="w-4 h-4"/>,  onClick:undefined },
@@ -617,11 +618,11 @@ function DashboardPageInner() {
                         </div>
                         <div className="flex items-center gap-2">
                           <button onClick={e => { e.stopPropagation(); fetch('/api/operator/tee-times',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:tt.id,status:tt.status==='blocked'?'available':'blocked'})}).then(()=>loadTimes(selectedDate)); }}
-                            className="text-xs px-2 py-1 rounded-md border border-line text-ink-soft hover:text-ink hover:border-line-strong transition-colors">
+                            className="text-xs px-3 md:px-2 min-h-[40px] md:min-h-0 py-1 rounded-md border border-line text-ink-soft hover:text-ink hover:border-line-strong transition-colors">
                             {tt.status==='blocked'?'Unblock':'Block'}
                           </button>
                           <button onClick={e => { e.stopPropagation(); if(confirm('Delete this tee time?')) fetch('/api/operator/tee-times',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:tt.id})}).then(()=>loadTimes(selectedDate)); }}
-                            className="text-xs px-2 py-1 rounded-md border border-bad/30 text-bad hover:bg-bad/5 transition-colors">
+                            className="text-xs px-3 md:px-2 min-h-[40px] md:min-h-0 py-1 rounded-md border border-bad/30 text-bad hover:bg-bad/5 transition-colors">
                             Del
                           </button>
                         </div>
@@ -741,7 +742,7 @@ function AddTeeTimeForm({ date, onSave, onCancel }: { date: string; onSave: ()=>
         <div><label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Time</label><input type="time" value={time} onChange={e=>setTime(e.target.value)} className={inp}/></div>
         <div><label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Holes</label><select value={holes} onChange={e=>setHoles(Number(e.target.value))} className={inp}><option value={9}>9</option><option value={18}>18</option></select></div>
       </div>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div><label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Slots</label><input type="number" value={players} min={1} max={8} onChange={e=>setPlayers(Number(e.target.value))} className={inp}/></div>
         <div><label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Green $</label><input type="number" value={greenFee} min={0} onChange={e=>setGreenFee(Number(e.target.value))} className={inp}/></div>
         <div><label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Cart $</label><input type="number" value={cartFee} min={0} onChange={e=>setCartFee(Number(e.target.value))} className={inp}/></div>

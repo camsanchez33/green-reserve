@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, XCircle, RefreshCw, Undo2 } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { toast } from '@/components/dashboard/Toast';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
 
@@ -67,8 +68,8 @@ export default function CancellationsPage() {
     const res = await fetch('/api/operator/bookings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: b.id, action: 'cancel' }) });
     const data = await res.json();
     setCancelingId(null);
-    if (!res.ok) { alert(data.error || 'Cancel failed'); return; }
-    alert(data.feeCharged ? 'Cancelled — the late-cancellation fee already charged is non-refundable.' : 'Cancelled — no charge was made, nothing to refund.');
+    if (!res.ok) { toast(data.error || 'Cancel failed'); return; }
+    toast(data.feeCharged ? 'Cancelled — the late-cancellation fee already charged is non-refundable.' : 'Cancelled — no charge was made, nothing to refund.', 'ok');
     load();
   }
 
@@ -79,9 +80,9 @@ export default function CancellationsPage() {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   return (
-    <div className="flex h-screen bg-paper overflow-hidden">
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="cancellations"/>
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <div className="max-w-4xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
