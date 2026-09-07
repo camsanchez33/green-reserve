@@ -316,7 +316,10 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   Also verified: OperatorSidebar.tsx:104 is `w-56 shrink-0` with ZERO sm:/md:/lg:
   prefixes in the entire file; dashboard/page.tsx:39 is
   `const today = () => new Date().toISOString().split('T')[0]` (UTC).
-  - [x] SD-1 (f274690) — plug the leaks. Ran 2026-09-05, NOT before MP-1 as
+  - [x] SD-1 (f274690; HOTFIX ed9aff1 from /gr-review: amenities String[] made EVERY
+    Settings save 400 for two days — array branch + regression test; staff JWT
+    now re-checked against CourseStaff.active on every request; upload route
+    staff-gated) — plug the leaks. Ran 2026-09-05, NOT before MP-1 as
     ordered — every "next" went to the admin campaign instead; that is a
     process failure worth naming. Audited first: the inquiries GET leak was
     ALREADY closed (route has no GET; admin route strips detailsToken) and the
