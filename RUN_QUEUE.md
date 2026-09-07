@@ -353,12 +353,24 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     cron "today" derives from it (crons already have a timezone to copy),
     backward date nav unclamped. At 5pm Pacific the sheet flips to tomorrow and
     today becomes unreachable (SCHEMA CHANGE, ATTENDED)
-  - [ ] SD-4 — money truth: analytics counts completed bookings by play date
-    (today it selects confirmed only, so every paid round vanishes at check-in
-    while unpaid future bookings count in); utilization bounded + status-filtered;
-    check-in reports REAL refund success instead of "refund attempted"; declined
-    card gets retry + mark-paid-in-person instead of a dead end; tee-sheet
-    revenue stat matches Payments (medium, pairs with SD-5)
+  - [x] SD-4 (346017d) — money truth. Operator analytics = COMPLETED rounds
+    (checked in + paid) by PLAY date, the Payments page's collected basis —
+    it selected confirmed-by-createdAt, so a paid round vanished at check-in
+    and next week's unpaid booking counted today; utilization bounded to the
+    last 30 days, open slots only (it had included the 8 generated future days
+    and blocked slots); upcoming standing bookings reported separately, never
+    added. Tee-sheet "Revenue" stat (booked × rate) relabelled "Expected".
+    Check-in refund truth: `performCheckIn` returns feeRefunded ONLY on
+    success + feeRefundFailed/feeRefundError; dashboard toast (warn: "refund
+    FAILED — issue it in Stripe"), receipt email and golfer self-check-in page
+    all say the honest thing. Declined card: 402 opens the existing new-card
+    modal as a RETRY with the decline reason; row shows "Card declined" + red
+    "Retry with new card"; survives reload (checkInFailReason already on the
+    wire). NOT done: "mark paid in person" (needs SD-5's paidOffline). NOT
+    COVERED BY TESTS: no test DB; the analytics query was verified by reading
+    against the Payments page's filters. CAM MUST CHECK: Analytics tab numbers
+    make sense against Payments; decline a test card at check-in and see the
+    retry modal. NEEDS REVIEW.
   - [ ] SD-5 — lifecycle states: walk-in/phone booking POST (the biggest
     functional gap AND the site already promises it), checkedInPlayers,
     noShowAt, paidOffline, cancellationHoursAtBooking snapshot, session
@@ -1793,6 +1805,8 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   Keep readable structure (the current plain-English tone), no legalese
   walls. The attorney-review comment stays: "drafted without counsel;
   review before scale."
+
+- [ ] UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). Run order U-0 → H-1 → U-G → B-1 → B-2 → U-O → B-6 → U-A → U-M. Reskin runs are ZERO behavior; behavior items are separate. Doc file: commit, never discard.
 
 ## Ideas / not yet specced
 
