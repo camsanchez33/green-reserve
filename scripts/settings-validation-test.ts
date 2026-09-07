@@ -7,7 +7,7 @@ function check(name: string, cond: boolean, got?: unknown) {
   if (cond) console.log('  ok   ', name);
   else { failed++; console.log('  FAIL ', name, got !== undefined ? '— got: ' + JSON.stringify(got) : ''); }
 }
-const ALLOWED = ['name', 'holes', 'par', 'minPlayers', 'maxPlayers', 'cancellationHours', 'giftCardUrl', 'website', 'brandColor', 'type', 'walkingAllowed', 'hasCaddies', 'description', 'establishedYear', 'courseRating', 'phone'];
+const ALLOWED = ['amenities', 'name', 'holes', 'par', 'minPlayers', 'maxPlayers', 'cancellationHours', 'giftCardUrl', 'website', 'brandColor', 'type', 'walkingAllowed', 'hasCaddies', 'description', 'establishedYear', 'courseRating', 'phone'];
 const v = (body: Record<string, unknown>) => validateSettingsPatch(body, ALLOWED);
 
 console.log('normalizeHttpUrl');
@@ -38,6 +38,8 @@ console.log('validateSettingsPatch');
 { const r = v({ establishedYear: 1899 }); check('establishedYear 1899 accepted', r.ok, r); }
 { const r = v({ courseRating: 71.4 }); check('float rating accepted', r.ok && r.data.courseRating === 71.4, r); }
 { const r = v({ phone: '(555) 123-4567', bogusKey: 'ignored' }); check('non-allow-listed key dropped', r.ok && !('bogusKey' in r.data) && r.data.phone === '(555) 123-4567', r); }
+{ const r = v({ amenities: ['Range', ' Putting green ', ''] }); check('REGRESSION: amenities array accepted and cleaned', r.ok && JSON.stringify(r.data.amenities) === JSON.stringify(['Range', 'Putting green']), r); }
+{ const r = v({ amenities: 'Range' }); check('amenities as a bare string refused', !r.ok, r); }
 { const r = v({}); check('empty patch is fine', r.ok && Object.keys(r.data).length === 0, r); }
 
 console.log(failed === 0 ? '\nALL PASSED' : `\n${failed} FAILED`);

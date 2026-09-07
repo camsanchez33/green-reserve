@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { put, del } from '@vercel/blob';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 
 // Course branding image upload (logo / hero photo) via Vercel Blob.
 // Requires BLOB_READ_WRITE_TOKEN in the environment (auto-set when a Blob
@@ -21,6 +21,7 @@ function fieldFor(kind: string) {
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return NextResponse.json({ error: 'Image storage is not configured yet. Contact hello@greenreserve.app.' }, { status: 503 });
@@ -64,6 +65,7 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
   const kind = new URL(req.url).searchParams.get('kind') === 'logo' ? 'logo' : 'hero';
   const field = fieldFor(kind);

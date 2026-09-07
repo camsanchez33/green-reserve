@@ -34,8 +34,15 @@ export async function resolveDashboardSession(): Promise<ResolvedSession | null>
   if (!session) return null;
 
   if (session.kind === 'staff') {
+    // HOTFIX after the SD review: the staff JWT was trusted for its whole
+    // 7-day life. An operator who deactivated or deleted a staff account was
+    // not actually locking them out — the cookie kept working, and the
+    // sliding refresh kept reissuing it. Read the row on every request, like
+    // the admin session does.
+    const row = await prisma.courseStaff.findUnique({ where: { id: session.staffId }, select: { active: true, courseId: true } });
+    if (!row || !row.active) return null;
     return {
-      courseId: session.courseId,
+      courseId: row.courseId,
       email: session.email,
       operatorId: null,
       staffId: session.staffId,

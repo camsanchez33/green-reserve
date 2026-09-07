@@ -33,7 +33,7 @@ const STRING_MAX: Record<string, number> = {
   address: 200, city: 100, state: 40, zipCode: 20,
   description: 5000, walkingNote: 500, rainCheckPolicy: 1000, dresscode: 1000,
   residentCounty: 100, residentState: 40, drivingRangeType: 60, restaurantType: 60,
-  tournamentFrequency: 60, caddieType: 60, caddieNote: 500, amenities: 2000,
+  tournamentFrequency: 60, caddieType: 60, caddieNote: 500,
 };
 const URL_FIELDS = new Set(['website', 'giftCardUrl']);
 const ENUMS: Record<string, string[]> = {
@@ -82,6 +82,14 @@ export function validateSettingsPatch(body: Record<string, unknown>, allowed: st
       data[key] = n; continue;
     }
     if (BOOLEANS.has(key)) { data[key] = v === true || v === 'true'; continue; }
+    // HOTFIX after the SD review: amenities is a String[] column. The first
+    // cut listed it under STRING_MAX, whose branch refuses arrays — and the
+    // Settings page sends the whole course row, so EVERY save returned 400.
+    if (key === 'amenities') {
+      if (!Array.isArray(v)) return { ok: false, error: 'amenities must be a list.' };
+      data[key] = v.map(x => String(x).trim()).filter(Boolean).slice(0, 50);
+      continue;
+    }
     if (key in ENUMS) {
       const s = String(v ?? '');
       if (!ENUMS[key].includes(s)) return { ok: false, error: `${key} must be one of: ${ENUMS[key].join(', ')}.` };
