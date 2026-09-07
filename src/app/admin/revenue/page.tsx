@@ -36,6 +36,10 @@ interface MissedCheckIn {
   bookingId: string; courseId: string; courseName: string; golferName: string; golferEmail: string;
   players: number; teeDate: string; teeTime: string; amount: number; ourTake: number; noShowFeeCharged: boolean;
 }
+interface Dispute {
+  eventId: string; bookingId: string; courseId: string; courseName: string; golferName: string; golferEmail: string;
+  teeDate: string; teeTime: string; amount: number; detail: string; openedAt: string;
+}
 interface LateFee {
   bookingId: string; courseId: string; courseName: string; golferName: string;
   fee: number; status: 'charged' | 'refunded'; teeDate: string; teeTime: string;
@@ -66,7 +70,7 @@ interface RevenueData {
   };
   byCourse: CourseRow[];
   moneyInMotion: { upcomingCheckIns: UpcomingCheckIn[]; lateCancelFees: LateFee[]; todayStr: string; tomorrowStr: string };
-  problems: { failedCheckIn: FailedCharge[]; missedCheckIn: MissedCheckIn[]; missedTotal: number; missedFees: number };
+  problems: { failedCheckIn: FailedCharge[]; missedCheckIn: MissedCheckIn[]; missedTotal: number; missedFees: number; disputes: Dispute[] };
   // reconciles: null = Stripe could not be reached, so nobody knows.
   reconciliation?: { expected: number; actual: number; gap: number; reconciles: boolean | null; unavailable: boolean };
 }
@@ -282,12 +286,13 @@ export default function RevenuePage() {
   const upcomingTake = upcoming.reduce((s, u) => s + u.ourTake, 0);
   const failed = data?.problems.failedCheckIn ?? [];
   const missed = data?.problems.missedCheckIn ?? [];
+  const disputes = data?.problems.disputes ?? [];
   const recon = data?.reconciliation;
   // The block renders whenever there is anything to say — a failed card, a
   // round nobody charged, a gap, or a Stripe we could not reach. When it is
   // all clear it says so in one line rather than vanishing, so "no problems"
   // and "did not load" stop looking identical.
-  const hasProblems = failed.length > 0 || missed.length > 0 || (!!recon && recon.reconciles !== true);
+  const hasProblems = failed.length > 0 || missed.length > 0 || disputes.length > 0 || (!!recon && recon.reconciles !== true);
 
   return (
     <div className="min-h-screen bg-paper flex">
@@ -380,6 +385,35 @@ export default function RevenuePage() {
                 <div className="mt-3 pb-4 border-b border-warn/20">
                   <div className="text-sm font-medium text-warn mb-1">Couldn&apos;t verify against Stripe</div>
                   <p className="text-xs text-ink-soft">Stripe didn&apos;t answer, so the collected figure below is unchecked. Refresh in a minute — this is not a pass.</p>
+                </div>
+              )}
+
+              {/* MP-6b: chargebacks. Before the webhook handled disputes, the
+                  first one was invisible until the bank letter. Money is held
+                  from the course from the moment the bank opens it. */}
+              {disputes.length > 0 && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between gap-3 mb-1">
+                    <span className="text-sm font-medium text-bad">Chargebacks open ({disputes.length})</span>
+                    <span className="text-xs text-ink-soft"><span className="font-medium text-bad tabular-nums">{fmtMoney(disputes.reduce((s, d) => s + d.amount, 0))}</span> in dispute</span>
+                  </div>
+                  <p className="text-xs text-ink-soft mb-3">
+                    The golfer&apos;s bank has reversed the charge pending evidence. Respond in Stripe before the deadline in each row — an unanswered dispute is lost by default, and the course pays the bank&apos;s fee on top.
+                  </p>
+                  <div className="divide-y divide-bad/10 bg-white border border-bad/15 rounded-md">
+                    {disputes.map(d => (
+                      <div key={d.eventId} className="flex items-center justify-between gap-4 px-4 py-2.5">
+                        <div className="min-w-0">
+                          <div className="text-sm text-ink">{d.golferName} <span className="text-xs text-ink-muted">· <Link href={`/admin/courses/${d.courseId}`} className="text-pine hover:underline">{d.courseName}</Link> · {d.teeDate} {d.teeTime}</span></div>
+                          <div className="text-xs text-bad mt-0.5">{d.detail}</div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="text-sm font-medium text-ink tabular-nums">{fmtMoney(d.amount)}</div>
+                          <a href="https://dashboard.stripe.com/disputes" target="_blank" rel="noopener noreferrer" className="text-[11px] text-pine hover:underline">Respond in Stripe</a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 

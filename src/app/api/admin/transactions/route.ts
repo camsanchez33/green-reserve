@@ -57,6 +57,8 @@ export async function GET(req: NextRequest) {
 
   function bookingStatus(b: { status: string; paymentStatus: string; cancellationFeeTotal: number }) {
     if (b.status === 'cancelled') return b.cancellationFeeTotal > 0 ? 'fee_charged' : 'cancelled';
+    // MP-6b: a refunded round is not "completed" money any more.
+    if (b.paymentStatus === 'refunded') return 'refunded';
     if (b.status === 'completed') return 'completed';
     if (b.paymentStatus === 'manual') return 'manual';
     return 'card_saved';

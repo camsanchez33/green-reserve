@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
-import { FAILED_CHARGE_WHERE } from '@/lib/money-problems';
+import { FAILED_CHARGE_WHERE, openDisputes } from '@/lib/money-problems';
 
 // MP-8a: the sidebar's three badges in ONE fetch per page shell. Before this
 // the rail fetched unread messages and money problems separately and never
@@ -23,11 +23,13 @@ export async function GET() {
     return NextResponse.json({ pendingInquiries: 0, unreadMessages: 0, moneyProblems: 0 });
   }
 
-  const [pendingInquiries, unreadMessages, moneyProblems] = await Promise.all([
+  const [pendingInquiries, unreadMessages, failed, disputes] = await Promise.all([
     prisma.courseInquiry.count({ where: { status: 'pending' } }),
     prisma.message.count({ where: { senderType: 'operator', readAt: null, isBroadcast: false } }),
     prisma.booking.count({ where: FAILED_CHARGE_WHERE }),
+    openDisputes(),
   ]);
 
-  return NextResponse.json({ pendingInquiries, unreadMessages, moneyProblems });
+  // MP-6b: an open chargeback is the reddest money problem there is.
+  return NextResponse.json({ pendingInquiries, unreadMessages, moneyProblems: failed + disputes.length });
 }

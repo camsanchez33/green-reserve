@@ -1444,3 +1444,22 @@ export async function sendAnnouncementEmail(data: {
   });
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
+
+// MP-6b. A refund the golfer did not see coming reads as a mistake; one they
+// asked for and never hear about reads as ignored. Either way, tell them.
+export async function sendRefundEmail(data: {
+  golferName: string; golferEmail: string; courseName: string;
+  date: string; time: string; amountCents: number; full: boolean; reason: string; bookingId: string;
+}) {
+  const amount = `$${(data.amountCents / 100).toFixed(2)}`;
+  const html = baseTemplate(`
+    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#f0fdf4;color:#166534;font-size:13px;font-weight:600;padding:4px 12px;border-radius:3px;">Refund issued</span></div>
+    <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">${amount} is on its way back to your card.</h1>
+    <p style="margin:0 0 16px;color:#6b7280;font-size:15px;">${data.courseName} &middot; ${data.date} at ${data.time}${data.full ? '' : ' &middot; partial refund'}</p>
+    <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.6;">${data.reason}</p>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:14px;line-height:1.6;">Refunds usually appear on your statement within 5&ndash;10 business days, depending on your bank. It goes back to the card you paid with.</p>
+    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
+  `);
+  const r = await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Refund: ${amount} from ${data.courseName}`, html });
+  if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
+}

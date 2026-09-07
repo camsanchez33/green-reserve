@@ -5,7 +5,7 @@ import { computeNetPnL, periodDelta } from '@/lib/course-metrics';
 import { sumExpensesForPeriodCents } from '@/lib/expenses';
 import { fetchStripeFeeWindow } from '@/lib/platform-stripe';
 import { friendlyStripeError } from '@/lib/stripe-errors';
-import { FAILED_CHARGE_WHERE, missedCheckInWhere } from '@/lib/money-problems';
+import { FAILED_CHARGE_WHERE, missedCheckInWhere, openDisputes } from '@/lib/money-problems';
 
 // REVISE_QUEUE A-06 — /admin/revenue rebuilt as a real P&L. ONE period picker
 // (day / week / month-to-date / custom) drives the ENTIRE page. Support+ sees
@@ -77,11 +77,12 @@ export async function GET(req: NextRequest) {
   // lines — the same two ALL-TIME queries the Problems block is built from,
   // so the badge and the block can never disagree.
   if (sp.get('problemsCount') === '1') {
-    const [failed, missed] = await Promise.all([
+    const [failed, missed, disputes] = await Promise.all([
       prisma.booking.count({ where: FAILED_CHARGE_WHERE }),
       prisma.booking.count({ where: missedCheckInWhere(todayStr) }),
+      openDisputes(),
     ]);
-    return NextResponse.json({ failed, missed });
+    return NextResponse.json({ failed, missed, disputes: disputes.length });
   }
 
   // Owner sections need a 2FA-backed session, same as every other owner-only
@@ -106,6 +107,7 @@ export async function GET(req: NextRequest) {
     failedCheckIns,
     missedRaw, missedAgg,
     upcomingRaw, lateFeesRaw,
+    disputesRaw,
   ] = await Promise.all([
     // Collected: fee exists, placed by the check-in that produced it.
     prisma.booking.aggregate({ where: { ...PAID, checkedInAt: inCurrent }, _sum: { accessFeeTotal: true }, _count: { id: true } }),
@@ -148,6 +150,8 @@ export async function GET(req: NextRequest) {
       select: { id: true, golferName: true, cancellationFeeTotal: true, cancellationFeeChargedAt: true, paymentStatus: true, checkedInAt: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true, time: true } } },
       orderBy: { cancellationFeeChargedAt: 'desc' }, take: 100,
     }),
+    // MP-6b: chargebacks the bank opened and Stripe has not closed.
+    openDisputes(),
   ]);
 
   const failedCountByCourse = new Map(failedByCourseRaw.map(r => [r.courseId, r._count.id]));
@@ -230,6 +234,12 @@ export async function GET(req: NextRequest) {
       missedCheckIn,
       missedTotal: missedAgg._count.id,
       missedFees: (missedAgg._sum.accessFeeTotal ?? 0) / 100,
+      disputes: disputesRaw.map(d => ({
+        eventId: d.id, bookingId: d.bookingId, courseId: d.booking.course.id, courseName: d.booking.course.name,
+        golferName: d.booking.golferName, golferEmail: d.booking.golferEmail,
+        teeDate: d.booking.teeTime.date, teeTime: d.booking.teeTime.time,
+        amount: d.amountCents / 100, detail: d.detail, openedAt: d.createdAt,
+      })),
     },
   };
 

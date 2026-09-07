@@ -36,6 +36,7 @@ const TX_STATUS: Record<string, { dot: string; label: string }> = {
   fee_charged: { dot: 'bad', label: 'Fee charged' },
   cancelled: { dot: 'bad', label: 'Cancelled' },
   paid: { dot: 'ok', label: 'Paid' },
+  refunded: { dot: 'neutral', label: 'Refunded' },
 };
 
 interface TimelineEventDTO {
@@ -293,6 +294,13 @@ export default function CourseDetailPage() {
 
   // Money tab
   const [txItems, setTxItems] = useState<TxRow[]>([]);
+  // MP-6b: refund a paid round from here. There was no refund anywhere.
+  const [refundTarget, setRefundTarget] = useState<TxRow | null>(null);
+  const [refundAmount, setRefundAmount] = useState('');
+  const [refundReason, setRefundReason] = useState('');
+  const [refundBusy, setRefundBusy] = useState(false);
+  const [refundError, setRefundError] = useState('');
+  const [refundNote, setRefundNote] = useState('');
   const [txLoading, setTxLoading] = useState(false);
   const [txPage, setTxPage] = useState(1);
   const [txPages, setTxPages] = useState(1);
@@ -761,6 +769,29 @@ export default function CourseDetailPage() {
       setMsgError('Network error — the message was not sent.');
     }
     setMsgSending(false);
+  }
+
+  async function submitRefund() {
+    if (!refundTarget) return;
+    const dollars = refundAmount.trim() === '' ? null : Number(refundAmount);
+    if (dollars !== null && (!Number.isFinite(dollars) || dollars <= 0)) { setRefundError('Enter an amount in dollars, or leave it blank for a full refund.'); return; }
+    if (!refundReason.trim()) { setRefundError('A reason is required — the golfer sees it in their email.'); return; }
+    setRefundBusy(true); setRefundError('');
+    try {
+      const r = await fetch('/api/admin/refund', {
+        method: 'POST', headers: H(),
+        body: JSON.stringify({ bookingId: refundTarget.id, amountCents: dollars === null ? undefined : Math.round(dollars * 100), reason: refundReason.trim() }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) { setRefundError(d.error || `Refund failed (${r.status}). Nothing was refunded.`); return; }
+      setRefundNote(`Refunded ${fmtMoney(d.amountCents / 100)} to ${refundTarget.golferName}${d.full ? '' : ' (partial)'}${d.emailSent ? ' — they have been emailed.' : ' — the email did NOT send; tell them yourself.'}`);
+      setRefundTarget(null); setRefundAmount(''); setRefundReason('');
+      loadTransactions(txPage, txFrom, txTo, txSearch);
+    } catch {
+      setRefundError('Network error — the refund may or may not have gone through. Check Stripe before retrying.');
+    } finally {
+      setRefundBusy(false);
+    }
   }
 
   async function resendSetup(staffId: string, staffName: string) {
@@ -1358,6 +1389,13 @@ export default function CourseDetailPage() {
                 </div>
               </div>
 
+              {refundNote && (
+                <div className="mb-4 text-sm font-medium px-4 py-2.5 rounded-md border bg-ok/5 text-ok border-ok/20 flex items-center justify-between gap-3">
+                  <span>{refundNote}</span>
+                  <button onClick={() => setRefundNote('')} className="text-ink-muted hover:text-ink transition-colors"><X className="w-3.5 h-3.5" /></button>
+                </div>
+              )}
+
               {txLoading && <div className="text-center text-ink-muted py-12 text-sm">Loading...</div>}
 
               {!txLoading && txItems.length === 0 && (
@@ -1392,6 +1430,12 @@ export default function CourseDetailPage() {
                                 onClick={() => openOperate(tx.date)}
                                 className="ml-1.5 text-pine hover:underline"
                               >View</button>
+                            )}
+                            {tx.type === 'booking' && (tx.status === 'completed' || tx.status === 'paid') && (
+                              <button
+                                onClick={() => { setRefundTarget(tx); setRefundAmount(''); setRefundReason(''); setRefundError(''); }}
+                                className="ml-1.5 text-ink-muted hover:text-bad hover:underline"
+                              >Refund</button>
                             )}
                           </div>
                           <div className="text-sm font-medium text-ink tabular-nums">{fmtMoney(tx.amount)}</div>
@@ -2230,6 +2274,38 @@ export default function CourseDetailPage() {
                 className="flex-1 bg-bad hover:bg-bad/90 text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors"
               >
                 {schedDeleteBusy ? 'Deleting…' : 'Delete schedule'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MP-6b: refund a paid round. Money leaves the course's Stripe account
+          and GreenReserve's fee on it is reversed pro rata; the golfer is
+          emailed the reason. Full unless an amount is given. */}
+      {refundTarget && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-line rounded-lg p-6 w-full max-w-sm shadow-2xl">
+            <h3 className="font-serif font-medium text-ink mb-1">Refund {refundTarget.golferName}</h3>
+            <p className="text-sm text-ink-soft mb-4">
+              {fmtMoney(refundTarget.amount)} was charged for {fmtDate(refundTarget.date)}. The money goes back to the card they paid with; the course&apos;s payout and GreenReserve&apos;s fee are both reduced.
+            </p>
+            <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Amount (blank = full refund)</label>
+            <div className="relative mb-3">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
+              <input type="number" step="0.01" min="0.01" max={refundTarget.amount} value={refundAmount} onChange={e => setRefundAmount(e.target.value)} placeholder={refundTarget.amount.toFixed(2)} className={iCls + ' pl-7'} />
+            </div>
+            <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Reason — the golfer reads this</label>
+            <textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} rows={3} placeholder="Course closed for weather on the day — refunding the round in full." className={iCls + ' resize-none mb-3'} />
+            {refundError && <p className="text-xs text-bad mb-3">{refundError}</p>}
+            <div className="flex gap-3">
+              <button onClick={() => setRefundTarget(null)} disabled={refundBusy}
+                className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors disabled:opacity-50">
+                Cancel
+              </button>
+              <button onClick={submitRefund} disabled={refundBusy}
+                className="flex-1 bg-bad hover:bg-bad/90 text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors">
+                {refundBusy ? 'Refunding…' : refundAmount.trim() ? `Refund $${Number(refundAmount || 0).toFixed(2)}` : `Refund ${fmtMoney(refundTarget.amount)}`}
               </button>
             </div>
           </div>
