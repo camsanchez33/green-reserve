@@ -382,14 +382,19 @@ function DetailsForm() {
     return '';
   };
 
+  // SD-9: a failed draft save was swallowed — the course thought its progress
+  // was kept and it was not. It is a soft warning, never a blocker.
   const saveDraft = async (sectionData: Partial<Draft>) => {
     try {
-      await fetch('/api/inquiries/details', {
+      const r = await fetch('/api/inquiries/details', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, ...sectionData }),
       });
-    } catch { /* silently continue */ }
+      if (!r.ok) setError('Heads up: this section could not be saved as a draft just now — you can keep going, but finish in one sitting or check your connection.');
+    } catch {
+      setError('Heads up: this section could not be saved as a draft (network) — you can keep going, but finish in one sitting or check your connection.');
+    }
   };
 
   const goNext = async () => {
@@ -400,16 +405,23 @@ function DetailsForm() {
 
     const isLast = activeIdx === sections.length - 1;
     if (isLast) {
+      // SD-9: no try/catch here meant a dropped connection left "Submitting…"
+      // on screen forever with nothing saved and nothing said.
       setSaving(true);
-      const res = await fetch('/api/inquiries/details', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, ...draft }),
-      });
-      setSaving(false);
-      if (res.ok) { setSubmitted(true); return; }
-      const d = await res.json();
-      setError(d.error || 'Something went wrong.');
+      try {
+        const res = await fetch('/api/inquiries/details', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, ...draft }),
+        });
+        if (res.ok) { setSubmitted(true); return; }
+        const d = await res.json().catch(() => ({}));
+        setError(d.error || `Something went wrong (${res.status}). Your answers are still here — try again.`);
+      } catch {
+        setError('Network error — your answers are still here. Check your connection and press Submit again.');
+      } finally {
+        setSaving(false);
+      }
       return;
     }
 

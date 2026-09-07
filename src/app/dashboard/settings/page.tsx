@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff, CreditCard, CheckCircle2, AlertCircle, Loader2, KeyRound, Mail, Smartphone, Image as ImageIcon, X } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
@@ -111,6 +111,12 @@ function SettingsPageInner() {
   const [form, setForm] = useState<Record<string,unknown>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  // SD-8: true from the first edit until a successful save. The focus-refetch
+  // below used to replace the whole form with the server copy on every
+  // window focus — switching to a calendar tab and back wiped an in-progress
+  // edit. While dirty, nothing overwrites the form.
+  const [dirty, setDirty] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [newStaff, setNewStaff] = useState({ name:'', email:'', role:'staff' });
   const [addingStaff, setAddingStaff] = useState(false);
@@ -133,7 +139,9 @@ function SettingsPageInner() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoErr, setPhotoErr] = useState('');
 
-  const refreshForm = () => fetch('/api/operator/settings').then(r=>r.json()).then(setForm);
+  const dirtyRef = useRef(false);
+  useEffect(() => { dirtyRef.current = dirty; }, [dirty]);
+  const refreshForm = () => fetch('/api/operator/settings').then(r => r.ok ? r.json() : null).then(d => { if (d && !dirtyRef.current) setForm(d); }).catch(() => {});
 
   const refreshPhotos = () => fetch('/api/operator/photos').then(r=>r.json()).then(setPhotos);
 
@@ -204,13 +212,37 @@ function SettingsPageInner() {
     setOpeningStripeDashboard(false);
   }
 
-  const set = (k:string, v:unknown) => setForm(f=>({...f,[k]:v}));
-  const tog = (k:string) => setForm(f=>({...f,[k]:!f[k]}));
+  const set = (k:string, v:unknown) => { setDirty(true); setForm(f=>({...f,[k]:v})); };
+  const tog = (k:string) => { setDirty(true); setForm(f=>({...f,[k]:!f[k]})); };
+
+  // Leaving with unsaved edits asks first — the browser's own prompt.
+  useEffect(() => {
+    if (!dirty) return;
+    const guard = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', guard);
+    return () => window.removeEventListener('beforeunload', guard);
+  }, [dirty]);
 
   async function save() {
-    setSaving(true);
-    await fetch('/api/operator/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(form)});
-    setSaving(false); setSaved(true); setTimeout(()=>setSaved(false),2000);
+    setSaving(true); setSaveError('');
+    try {
+      const res = await fetch('/api/operator/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(form)});
+      if (!res.ok) {
+        // SD-8: this never checked res.ok, so "Saved" showed on a 400 (the
+        // validation SD-1 added) and on a 500 alike. Say what was refused.
+        const d = await res.json().catch(() => ({}));
+        setSaveError(d.error || `Could not save (${res.status}). Nothing was changed.`);
+        toast(d.error || 'Settings were not saved.');
+        return;
+      }
+      setDirty(false); setSaved(true); setTimeout(()=>setSaved(false),2000);
+      refreshForm();
+    } catch {
+      setSaveError('Network error — nothing was saved. Check your connection and try again.');
+      toast('Network error — settings were not saved.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function addStaffMember() {
@@ -279,7 +311,7 @@ function SettingsPageInner() {
           {active !== 'Staff' && active !== 'Account' && active !== 'Photos' && (
             <button onClick={save} disabled={saving}
               className="flex items-center gap-2 bg-pine hover:bg-pine-hover text-white px-4 py-2 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
-              <Save className="w-4 h-4"/> {saved ? 'Saved' : saving ? 'Saving...' : 'Save Changes'}
+              <Save className="w-4 h-4"/> {saved ? 'Saved' : saving ? 'Saving...' : dirty ? 'Save Changes' : 'Saved'}
             </button>
           )}
         </div>

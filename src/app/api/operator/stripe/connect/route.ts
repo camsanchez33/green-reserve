@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
-import { getOperatorSession } from '@/lib/auth';
+import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 
 const CAPABILITIES = {
@@ -11,11 +11,15 @@ const CAPABILITIES = {
 export async function GET(req: NextRequest) {
   try {
     const from = req.nextUrl.searchParams.get('from') === 'onboarding' ? 'onboarding' : 'settings';
-    const session = await getOperatorSession();
+    // SD-9: this was findFirst over the operator's courses with no ordering.
+    // Settings resolves the ACTIVE course from the switcher cookie, so a
+    // two-course operator clicking Connect on course B could attach the Stripe
+    // account to course A. Same resolver as every other dashboard route now.
+    const session = await resolveDashboardSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (session.kind !== 'operator') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
 
-    const course = await prisma.course.findFirst({ where: { operator: { id: session.operatorId } } });
+    const course = await prisma.course.findUnique({ where: { id: session.courseId } });
     if (!course) return NextResponse.json({ error: 'No course' }, { status: 404 });
 
     if (!process.env.NEXT_PUBLIC_URL) {

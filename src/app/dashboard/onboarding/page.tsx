@@ -23,6 +23,10 @@ function OnboardingInner() {
   const [connecting, setConnecting] = useState(false);
   const [stripeBanner, setStripeBanner] = useState('');
   const [agreementAccepted, setAgreementAccepted] = useState(false);
+  // SD-9: the acceptance already on file. Re-entering step 1 used to POST the
+  // agreement again on every save — one GM, several timeline rows.
+  const [agreementOnFile, setAgreementOnFile] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
     const stripeParam = params.get('stripe');
@@ -48,7 +52,7 @@ function OnboardingInner() {
       setStripeActive(!!c.stripeAccountActive);
     });
     fetch('/api/operator/agreement').then(r => r.json()).then(d => {
-      if (d?.agreement) setAgreementAccepted(true);
+      if (d?.agreement) { setAgreementAccepted(true); setAgreementOnFile(true); }
     }).catch(() => {});
     fetch('/api/operator/tee-sets').then(r => r.json()).then(rows => {
       if (Array.isArray(rows) && rows.length > 0) {
@@ -65,12 +69,29 @@ function OnboardingInner() {
   const removeTee = (id: string) => setTeeSets(ts => ts.filter(t => t.id !== id));
 
   const saveDetails = async () => {
-    setSaving(true);
-    await fetch('/api/operator/courses', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(details) });
-    await fetch('/api/operator/tee-sets', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ teeSets: teeSets.filter(t => t.name.trim()) }) });
-    await fetch('/api/operator/agreement', { method: 'POST' });
-    setSaving(false);
-    setStep(2);
+    setSaving(true); setSaveError('');
+    try {
+      const J = { 'Content-Type': 'application/json' };
+      const fail = async (r: Response, what: string) => { const d = await r.json().catch(() => ({})); throw new Error(d.error || `Could not save ${what} (${r.status}).`); };
+      const r1 = await fetch('/api/operator/courses', { method: 'PATCH', headers: J, body: JSON.stringify(details) });
+      if (!r1.ok) await fail(r1, 'course details');
+      const r2 = await fetch('/api/operator/tee-sets', { method: 'PUT', headers: J, body: JSON.stringify({ teeSets: teeSets.filter(t => t.name.trim()) }) });
+      if (!r2.ok) await fail(r2, 'tee sets');
+      if (!agreementOnFile) {
+        const r3 = await fetch('/api/operator/agreement', { method: 'POST' });
+        if (!r3.ok) await fail(r3, 'the agreement');
+        setAgreementOnFile(true);
+      }
+      // SD-9: the endpoint that bumps onboardingStep to 2 existed and was
+      // called by nobody, so a GM who got pulled away re-landed on step 1.
+      const r4 = await fetch('/api/operator/profile', { method: 'PATCH' });
+      if (!r4.ok) await fail(r4, 'your progress');
+      setStep(2);
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : 'Something went wrong — nothing was lost, try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const connectStripe = async () => {
@@ -183,6 +204,7 @@ function OnboardingInner() {
               <span>I have read and agree to the <a href="/operator-agreement" target="_blank" className="text-pine hover:underline">GreenReserve Operator Agreement</a>.</span>
             </label>
 
+            {saveError && <p className="text-sm text-bad mb-3">{saveError}</p>}
             <button onClick={saveDetails} disabled={saving || !agreementAccepted}
               className="w-full mt-3 bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 disabled:bg-line-strong transition-colors flex items-center justify-center gap-2">
               {saving ? <><Loader2 className="w-4 h-4 animate-spin"/>Saving...</> : <>Continue<ChevronRight className="w-4 h-4"/></>}
