@@ -84,6 +84,30 @@ export async function GET(req: NextRequest) {
     ? { inquiryId: linkedInquiry.id, acceptedAt: (acceptedEvent?.createdAt ?? linkedInquiry.createdAt).toISOString() }
     : null;
 
+  // COURSE_LAYOUT L3: what the course actually configured (nines, products,
+  // tee sets with per-product rating/slope), so the admin can see the layout
+  // the sheet's answers became without opening the operator dashboard.
+  const [nines, products, teeSets] = await Promise.all([
+    prisma.nine.findMany({ where: { courseId }, orderBy: { sortOrder: 'asc' }, select: { id: true, name: true, par: true } }),
+    prisma.courseProduct.findMany({
+      where: { courseId }, orderBy: { sortOrder: 'asc' },
+      select: { id: true, label: true, holes: true, nineIds: true, active: true, teeSetRatings: { select: { rating: true, slope: true, teeSet: { select: { id: true, name: true } } } } },
+    }),
+    prisma.teeSet.findMany({ where: { courseId }, orderBy: { sortOrder: 'asc' }, select: { id: true, name: true, yardage: true, rating: true, slope: true, nineYardages: { select: { nineId: true, yardage: true } } } }),
+  ]);
+  const nineName = new Map(nines.map(n => [n.id, n.name]));
+  const layout = {
+    nines,
+    products: products.map(pr => ({
+      id: pr.id, label: pr.label, holes: pr.holes, active: pr.active,
+      nines: pr.nineIds.map(id => nineName.get(id) ?? '(deleted nine)'),
+      ratings: pr.teeSetRatings.map(r => ({ teeSet: r.teeSet.name, rating: r.rating, slope: r.slope })),
+    })),
+    teeSets: teeSets.map(t => ({ id: t.id, name: t.name, yardage: t.yardage, rating: t.rating, slope: t.slope, perNine: t.nineYardages.map(y => ({ nine: nineName.get(y.nineId) ?? '?', yardage: y.yardage })) })),
+    // A simple 18-hole course configures none of this — the flat Course fields are its layout.
+    configured: nines.length > 0 || products.length > 0,
+  };
+
   return NextResponse.json({
     course,
     staff,
@@ -98,6 +122,7 @@ export async function GET(req: NextRequest) {
     lastBookingAt: lastBookingAgg._max.createdAt?.toISOString() ?? null,
     bookingsPrior30d: priorBookingsCount,
     configDrift,
+    layout,
     // Approval is course-level truth, not inquiry trivia (RUN_QUEUE
     // "approval propagates + gates previews", item 1).
     approval: { status: approval.status, approvedAt: approval.approvedAt?.toISOString() ?? null },

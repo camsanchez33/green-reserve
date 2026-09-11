@@ -72,6 +72,13 @@ interface CourseDetail {
   // MP-5e: what the course told us vs what golfers see. Server-computed —
   // the setup sheet itself never crosses the wire.
   configDrift?: { field: string; label: string; sheet: string; live: string }[];
+  // COURSE_LAYOUT L3: read-only view of what the course configured.
+  layout?: {
+    nines: { id: string; name: string; par: number }[];
+    products: { id: string; label: string; holes: number; active: boolean; nines: string[]; ratings: { teeSet: string; rating: number; slope: number }[] }[];
+    teeSets: { id: string; name: string; yardage: number; rating: number; slope: number; perNine: { nine: string; yardage: number }[] }[];
+    configured: boolean;
+  };
   approval: { status: 'none' | 'approved' | 'changes_requested'; approvedAt: string | null };
   health: { status: CourseHealthStatus; label: string; dot: 'ok' | 'bad' | 'warn' | 'neutral'; reason: string };
   openItems: { unreadMessages: number; openChanges: string[]; hasSchedule: boolean };
@@ -2144,6 +2151,56 @@ export default function CourseDetailPage() {
                         className={iCls}
                       />
                     </div>
+                  </div>
+                )}
+              </div>
+
+              {/* COURSE_LAYOUT L3: the layout the sheet's answers became. Read-only
+                  here — the operator configures it on their Course & Layout tab. */}
+              <div className="bg-white border border-line rounded-lg p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Course layout</div>
+                  {detail.layout && <span className="text-[11px] text-ink-faint">{detail.layout.configured ? `${detail.layout.nines.length} nine${detail.layout.nines.length === 1 ? '' : 's'} · ${detail.layout.products.filter(x => x.active).length} bookable product${detail.layout.products.filter(x => x.active).length === 1 ? '' : 's'}` : 'simple layout'}</span>}
+                </div>
+                {!detail.layout || !detail.layout.configured ? (
+                  <p className="text-sm text-ink-soft">
+                    No named nines or products configured — golfers book the course as one {Number(setupForm.holes ?? 18)}-hole layout at the rates on its schedule. Multi-nine courses configure combos on their dashboard&apos;s Course &amp; Layout tab.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Nines</div>
+                      <div className="flex flex-wrap gap-2">
+                        {detail.layout.nines.map(n => <span key={n.id} className="text-xs text-ink bg-paper border border-line rounded-md px-2 py-1">{n.name} <span className="text-ink-muted">· par {n.par}</span></span>)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Products golfers can book</div>
+                      <div className="border border-line rounded-md divide-y divide-line-soft">
+                        {detail.layout.products.map(pr => (
+                          <div key={pr.id} className={'px-3 py-2 ' + (pr.active ? '' : 'opacity-60')}>
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="text-sm text-ink font-medium">{pr.label} <span className="text-xs text-ink-muted font-normal">· {pr.holes} holes · {pr.nines.join(' + ') || 'no nines'}</span></span>
+                              <StatusDot status={pr.active ? 'ok' : 'neutral'} label={pr.active ? 'Bookable' : 'Off'} />
+                            </div>
+                            {pr.ratings.length > 0 && (
+                              <div className="text-[11px] text-ink-muted mt-0.5">{pr.ratings.map(r => `${r.teeSet}: ${r.rating}/${r.slope}`).join(' · ')}</div>
+                            )}
+                          </div>
+                        ))}
+                        {detail.layout.products.length === 0 && <div className="px-3 py-2 text-xs text-ink-muted">Nines are named but no product has been built from them yet — nothing multi-nine is bookable.</div>}
+                      </div>
+                    </div>
+                    {detail.layout.teeSets.length > 0 && (
+                      <div>
+                        <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Tee sets</div>
+                        <div className="text-xs text-ink-soft space-y-0.5">
+                          {detail.layout.teeSets.map(t => (
+                            <div key={t.id}>{t.name} — {t.yardage ? `${t.yardage}y` : 'no yardage'}{t.rating ? ` · ${t.rating}/${t.slope}` : ''}{t.perNine.length > 0 ? ` · ${t.perNine.map(y => `${y.nine} ${y.yardage}y`).join(', ')}` : ''}</div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

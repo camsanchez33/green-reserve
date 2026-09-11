@@ -1413,6 +1413,14 @@ function InquiryDetailInner() {
 
               {hasSheet && (
                 <>
+                  {/* COURSE_LAYOUT L3: once built, the sheet's layout answers
+                      have a configured counterpart on the course. Link them. */}
+                  {inq.builtCourseId && (
+                    <div className="bg-paper border border-line rounded-lg px-4 py-3 text-sm text-ink-soft flex items-center justify-between gap-3">
+                      <span>These answers were built into a course. The configured layout (nines, products, tee sets) lives on the course&apos;s Setup tab.</span>
+                      <button onClick={() => router.push('/admin/courses/' + inq.builtCourseId)} className="shrink-0 text-xs font-medium text-pine hover:text-pine-hover">Open course →</button>
+                    </div>
+                  )}
                   {/* Course Basics */}
                   <SSection title="Course Basics">
                     <SField label="Holes" value={sd.holes ? String(sd.holes) + '-hole course' : null} amber />

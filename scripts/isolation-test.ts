@@ -296,6 +296,35 @@ async function main() {
     check('Op A tee-times has no Course B ID', !bodyStr.includes(courseB.id));
   }
 
+  console.log('\n── Course layout isolation (COURSE_LAYOUT L3) ─────────────────');
+  {
+    // Course B owns a nine and a product; Op A must never see either, and
+    // must not be able to build a product out of B's nine.
+    const nineB = await prisma.nine.create({ data: { courseId: courseB.id, name: `${TS}-NorthB`, par: 36 } });
+    const productB = await prisma.courseProduct.create({ data: { courseId: courseB.id, label: `${TS}-B-combo`, holes: 18, nineIds: [nineB.id] } });
+    try {
+      const list = await api('/api/operator/course-products', { cookie: cookieA });
+      const listStr = JSON.stringify(list.body);
+      checkStatus('Op A course-products endpoint returns 200', list.status, 200);
+      check('Op A course-products has no Course B product', !listStr.includes(productB.id), listStr.includes(productB.id) ? `LEAK: ${productB.id}` : undefined);
+      check('Op A course-products has no Course B nine', !listStr.includes(nineB.id));
+      const nines = await api('/api/operator/nines', { cookie: cookieA });
+      check('Op A nines has no Course B nine', !JSON.stringify(nines.body).includes(nineB.id));
+      const steal = await api('/api/operator/course-products', { method: 'POST', cookie: cookieA, body: { label: `${TS}-steal`, holes: 18, nineIds: [nineB.id] } });
+      // The route filters nineIds to owned ones (a foreign nine is dropped, not
+      // a 4xx) — the property that matters is asserted on the DB below.
+      checkStatus('Op A product build with Course B\'s nine is handled', steal.status, [200, 201, 400, 403, 404, 422]);
+      const leaked = await prisma.courseProduct.findFirst({ where: { courseId: courseA.id, label: `${TS}-steal` } });
+      if (leaked) { check('Stolen-nine product on Course A carries no Course B nine', !leaked.nineIds.includes(nineB.id)); await prisma.courseProduct.delete({ where: { id: leaked.id } }); }
+      const stolen = await prisma.courseProduct.findFirst({ where: { courseId: courseA.id, nineIds: { has: nineB.id } } });
+      check('No Course A product references Course B\'s nine', !stolen);
+      if (stolen) await prisma.courseProduct.delete({ where: { id: stolen.id } });
+    } finally {
+      await prisma.courseProduct.deleteMany({ where: { id: productB.id } });
+      await prisma.nine.deleteMany({ where: { id: nineB.id } });
+    }
+  }
+
   console.log('\n── Golfer cross-account booking isolation ────────────────────────');
   {
     // Golfer B cannot cancel Golfer A's booking
