@@ -1247,10 +1247,20 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     regress, create lib/format.ts (fmtMoney ×6, fmtDate ×7), promote Modal with
     dialog semantics, baseline a11y. NOT in the deep dive — this is what stops
     the next audit finding the same class again (big)
-  - [ ] MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,
-    transactions; batch the orphan sweep; bound the courses groupBy. LOWEST
-    PRIORITY — every endpoint measured 112-440ms. Insurance, not firefighting
-    (medium)
+  - [x] MP-10 (a954491) — server-side pagination (was ADMIN_V4 V4-4).
+    Activity + transactions: each source returns only its newest page×50
+    rows ordered in the DB (top-N of a merge ⊂ top-N of each part, pages
+    stay exact), totals from counts, page capped at 200; transactions
+    search moved into the WHERE (tokenised, case-insensitive, golfer
+    relation included). Courses list: groupBys bounded to the listed ids
+    (the all-time last-booking aggregate scanned archived courses too).
+    Orphan sweep: two grouped counts instead of two counts per orphan.
+    Inquiries list: drops detailsJson/needsJson (unused by the list) and
+    bounds events to the newest 25 per inquiry (still oldest-first). Also
+    fixed while there: course Money-tab transactions loader swallowed every
+    failure — inline error + Retry now. NOT DONE (schema): indexes on
+    Booking(courseId, checkedInAt) / CourseMembership(courseId, lastPaidAt)
+    would make the bounded queries index-only — attended. NEEDS REVIEW.
   - [ ] MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)
     - [x] MP-11a (341161a) — LAW rule 2 made real. `admin/layout.tsx` is a server
       component that resolves the session ONCE and hands it down via

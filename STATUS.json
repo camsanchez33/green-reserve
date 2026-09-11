@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-11T23:36:16.228Z",
+  "generatedAt": "2026-09-11T23:40:30.058Z",
   "repo": {
-    "head": "b468723",
+    "head": "a954491",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,14 +10,14 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-11T19:31:15-04:00",
+    "queueLastCommit": "2026-09-11T19:36:16-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 153,
+    "runDone": 154,
     "runAwaiting": 8,
     "runInFlight": 1,
-    "runNotStarted": 26,
+    "runNotStarted": 25,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -26,7 +26,7 @@
   "inFlight": [
     {
       "title": "BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET",
-      "line": 1761,
+      "line": 1771,
       "body": [
         "FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because \"no linked inquiry\" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding them outright. FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() + a \"Force delete permanently\" button per acknowledged orphan — owner-only, typed name confirm, server re-verifies the course is still an orphan before touching anything (refuses if it turns out to have a real inquiry link — this can never be used to route around the doctrine for a real course). This is the mechanism for Cam's DaisyLinks exception, but I have NOT executed it against DaisyLinks yet:",
         "- Last session's raw Prisma script (a read-only check confirming Fake",
@@ -188,43 +188,38 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,",
-      "line": 1250,
-      "section": "Queue (run in this order)"
-    },
-    {
       "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)",
-      "line": 1254,
+      "line": 1264,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState",
-      "line": 1303,
+      "line": 1313,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:",
-      "line": 1308,
+      "line": 1318,
       "section": "Queue (run in this order)"
     },
     {
       "title": "COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)",
-      "line": 1329,
+      "line": 1339,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
-      "line": 1358,
+      "line": 1368,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
-      "line": 1437,
+      "line": 1447,
       "section": "Queue (run in this order)"
     },
     {
       "title": "UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). Run order U-0 → H-1 → U-G → B-1 → B-2 → U-O → B-6 → U-A → U-",
-      "line": 1922,
+      "line": 1932,
       "section": "Queue (run in this order)"
     }
   ],
@@ -267,7 +262,7 @@
     {
       "item": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
       "note": "CAM: confirm the state before this runs — e",
-      "line": 1358
+      "line": 1368
     }
   ],
   "ideas": {
@@ -790,6 +785,16 @@
   },
   "recentCommits": [
     {
+      "h": "a954491",
+      "date": "2026-09-11",
+      "subject": "MP-10: bound every admin list query instead of paging in memory"
+    },
+    {
+      "h": "ae32878",
+      "date": "2026-09-11",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "b468723",
       "date": "2026-09-11",
       "subject": "MP-6c: payouts that reached the bank, unit economics, and a ledger export"
@@ -838,16 +843,6 @@
       "h": "acaa21e",
       "date": "2026-09-11",
       "subject": "BUG: the viewer role now keeps a promise it can actually keep"
-    },
-    {
-      "h": "db96cb4",
-      "date": "2026-09-11",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "4668826",
-      "date": "2026-09-11",
-      "subject": "queue/spec update"
     }
   ]
 }
