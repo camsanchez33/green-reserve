@@ -213,7 +213,7 @@ export default function ForCoursesContent() {
         <div className="space-y-0 mb-8 border border-line rounded-md overflow-hidden">
           {[
             ['We review your submission', "We'll reply within 1 business day. As long as you run a real golf course, you're in — we review to prevent spam, not to reject courses."],
-            ['You fill out a details sheet', 'Pricing, policies, facilities — about 5 minutes. Saves as you go.'],
+            ['You fill out a details sheet', 'Pricing, policies, facilities — about 10–15 minutes. Saves as you go, so you can come back.'],
             ['We build your page', 'You review, approve, and go live. Golfers can book the same day.'],
           ].map(([title, desc], i) => (
             <div key={i} className={`px-5 py-4 ${i < 2 ? 'border-b border-line' : ''}`}>
@@ -571,10 +571,10 @@ export default function ForCoursesContent() {
           <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-5">Quick answers</p>
           <div className="space-y-5">
             {[
-              { q: 'What does it cost to list my course?', a: 'Nothing. $0 to set up, $0/month, no contracts. We charge golfers $1.50 per player at checkout.' },
+              { q: 'What does it cost to list my course?', a: 'Nothing. $0 to set up, $0/month, no long-term contract. We charge golfers $1.50 per player at checkout.' },
               { q: 'Who pays the $1.50?', a: 'The golfer pays it, not you. It shows as a service fee on their checkout. Your green fee is never reduced.' },
               { q: 'How long does it take to go live?', a: 'Usually 1–2 business days after you submit the details sheet. We handle setup and run a test before flipping you live.' },
-              { q: 'Can I leave anytime?', a: 'Yes. No contract, no cancellation fee. If you decide to leave, we deactivate your page and your data is yours to keep.' },
+              { q: 'Can I leave anytime?', a: 'Yes, with 30 days’ notice — the same either way, and there is no cancellation fee. We deactivate your page and your data is yours to keep.' },
             ].map(({ q, a }) => (
               <div key={q}>
                 <p className="text-sm font-medium text-ink mb-1">{q}</p>

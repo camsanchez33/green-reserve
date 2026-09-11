@@ -37,7 +37,7 @@ export default function HomeContent() {
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage: 'url(https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?auto=format&fit=crop&w=2000&q=80)',
+            backgroundImage: 'url(/hero/ball-in-cup.jpg)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
@@ -62,7 +62,7 @@ export default function HomeContent() {
                 Operator login →
               </Link>
             </div>
-            <p className="text-white/35 text-sm">
+            <p className="text-white/75 text-sm">
               Golfers pay a $1.50 booking fee. You keep 100% of your green fees. $0/month.
             </p>
           </div>
@@ -79,7 +79,7 @@ export default function HomeContent() {
           <div className="space-y-10">
             {[
               { n: '01', title: 'We review your submission', body: "We'll reply within 1 business day. As long as you run a real golf course, you're in — we review to prevent spam, not to reject courses." },
-              { n: '02', title: 'You fill out a details sheet', body: 'Pricing, policies, facilities — about 5 minutes. Saves as you go.' },
+              { n: '02', title: 'You fill out a details sheet', body: 'Pricing, policies, facilities — about 10–15 minutes. Saves as you go, so you can come back.' },
               { n: '03', title: 'We build your page', body: 'You review, approve, and go live. Golfers can book the same day.' },
             ].map((s) => (
               <div key={s.n} className="flex gap-10">
@@ -226,7 +226,7 @@ export default function HomeContent() {
 
           <div className="mt-16 pt-8 border-t border-line">
             <p className="text-ink-muted text-sm">
-              Also includes: tee time generator, cancellation policy engine, member &amp; resident rates, staff logins, email confirmations, and a public course listing page.
+              Also includes: tee time generator, cancellation policy engine, member &amp; resident rates, staff logins, email confirmations, and your own shareable booking page.
             </p>
           </div>
         </div>
@@ -294,7 +294,7 @@ export default function HomeContent() {
                 {[
                   'Your tee times are never resold',
                   '0% commission — you keep 100% of green fees',
-                  'No contract — leave anytime',
+                  'No long-term contract — leave with 30 days’ notice',
                   'Your golfer data is yours, always',
                   '$0/month, no setup fee, forever',
                 ].map(item => (
@@ -317,7 +317,7 @@ export default function HomeContent() {
           <div className="mb-16">
             <p className="text-[11px] uppercase tracking-[0.06em] text-paper/60 font-medium mb-3">Pricing</p>
             <h2 className="text-3xl sm:text-4xl font-serif font-medium text-white tracking-tight mb-2">Simple and honest</h2>
-            <p className="text-white/40 text-sm">No setup fees. No monthly fees. No contracts.</p>
+            <p className="text-white/75 text-sm">No setup fees. No monthly fees. Leave with 30 days&apos; notice.</p>
           </div>
           <div className="grid sm:grid-cols-2 gap-6">
             <div className="border border-white/15 p-8 rounded-lg">
@@ -338,7 +338,7 @@ export default function HomeContent() {
               <p className="text-white/40 text-sm leading-relaxed mb-4">
                 Golfers pay a small service fee at checkout. You never see this charge — it goes to GreenReserve.
               </p>
-              <p className="text-white/20 text-xs">
+              <p className="text-white/60 text-xs">
                 Example: 4-player round = $6 total service fee charged to golfers. Your green fee revenue is untouched.
               </p>
             </div>
