@@ -2,7 +2,7 @@
 name: reskin-worker
 description: Builds ONE zero-behavior reskin item from UI_REVISE_SPEC §3 (or any spec section explicitly labeled zero-behavior) inside its own git worktree, restricted to an explicit allowed-file list. Only dispatched by /gr-batch. Never for behavior items, schema changes, bug fixes, or anything not on a §3-style list — those go through /gr-run in the main thread.
 tools: Read, Edit, Write, Grep, Glob, Bash
-model: inherit
+model: opus
 isolation: worktree
 permissionMode: acceptEdits
 ---

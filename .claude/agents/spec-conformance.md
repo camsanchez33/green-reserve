@@ -1,6 +1,7 @@
 ---
 name: spec-conformance
 description: Verifies that shipped code actually implements a given spec block from RUN_QUEUE.md, REVISE_QUEUE.md or a *_SPEC.md phase, item by item. Use after a build run completes and before checking the box. Read-only; returns a per-item verdict, never edits.
+model: opus
 tools: Read, Grep, Glob, Bash
 ---
 

@@ -1,6 +1,7 @@
 ---
 name: security-auditor
 description: Audits GreenReserve API routes and lib code for authz, tenant-isolation, payment-integrity and data-exposure defects. Use after any run that touched src/app/api, src/lib/auth.ts, src/lib/session.ts, src/lib/stripe.ts, or added a route. Read-only; reports findings by severity, never edits or fixes.
+model: opus
 tools: Read, Grep, Glob, Bash
 ---
 

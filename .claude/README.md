@@ -127,9 +127,13 @@ four costs roughly four runs. The token savings in this layer come from elsewher
 - `tsc` and the status board run once on the merged tree, not once per item
 - one `/gr-review` over the batch instead of four
 - workers are told to read §1 + their own block, not the queue or the whole spec
-- `design-auditor` and `admin-ux-auditor` run on `sonnet` — their checks are mechanical
-  (banned classes, swallowed catches); `security-auditor` and `spec-conformance` keep the
-  parent model because they need judgment
+- every agent pins its model explicitly; none inherits. Fable is reserved for the main
+  thread (where Cam steers). `design-auditor` and `admin-ux-auditor` run on `sonnet` —
+  their checks are mechanical (banned classes, swallowed catches). `security-auditor`,
+  `spec-conformance` and `reskin-worker` run on `opus` — judgment work, but never the
+  main-thread model. No agent runs on `haiku`: the evidence rule (open the file, confirm,
+  false positives cost more than misses) is what a small model is worst at, and the
+  haiku-shaped jobs are already scripts
 
 ### Worktree mechanics worth knowing
 
