@@ -1,25 +1,23 @@
 {
-  "generatedAt": "2026-09-11T23:27:52.371Z",
+  "generatedAt": "2026-09-11T23:31:15.285Z",
   "repo": {
-    "head": "4bdbb0f",
+    "head": "af2fdf8",
     "branch": "main",
-    "dirtyCount": 3,
+    "dirtyCount": 1,
     "dirty": [
-      "M RUN_QUEUE.md",
-      "?? .claude/.write-test",
-      "?? legal/"
+      "M RUN_QUEUE.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-11T19:27:00-04:00",
+    "queueLastCommit": "2026-09-11T19:27:52-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 151,
+    "runDone": 152,
     "runAwaiting": 8,
     "runInFlight": 1,
-    "runNotStarted": 28,
+    "runNotStarted": 27,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -28,7 +26,7 @@
   "inFlight": [
     {
       "title": "BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET",
-      "line": 1746,
+      "line": 1752,
       "body": [
         "FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because \"no linked inquiry\" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding them outright. FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() + a \"Force delete permanently\" button per acknowledged orphan — owner-only, typed name confirm, server re-verifies the course is still an orphan before touching anything (refuses if it turns out to have a real inquiry link — this can never be used to route around the doctrine for a real course). This is the mechanism for Cam's DaisyLinks exception, but I have NOT executed it against DaisyLinks yet:",
         "- Last session's raw Prisma script (a read-only check confirming Fake",
@@ -220,23 +218,18 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small)",
-      "line": 1321,
-      "section": "Queue (run in this order)"
-    },
-    {
       "title": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
-      "line": 1343,
+      "line": 1349,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
-      "line": 1422,
+      "line": 1428,
       "section": "Queue (run in this order)"
     },
     {
       "title": "UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). Run order U-0 → H-1 → U-G → B-1 → B-2 → U-O → B-6 → U-A → U-",
-      "line": 1907,
+      "line": 1913,
       "section": "Queue (run in this order)"
     }
   ],
@@ -279,7 +272,7 @@
     {
       "item": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
       "note": "CAM: confirm the state before this runs — e",
-      "line": 1343
+      "line": 1349
     }
   ],
   "ideas": {
@@ -802,6 +795,26 @@
   },
   "recentCommits": [
     {
+      "h": "af2fdf8",
+      "date": "2026-09-11",
+      "subject": "COURSE_LAYOUT L3: admin sees the configured layout; isolation test covers products"
+    },
+    {
+      "h": "bfc8db3",
+      "date": "2026-09-11",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "3774499",
+      "date": "2026-09-11",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "35ecaba",
+      "date": "2026-09-11",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "4bdbb0f",
       "date": "2026-09-11",
       "subject": "BUG viewer role: the gates, sidebar and copy that acaa21e's message described but a failed script left out"
@@ -838,26 +851,6 @@
     },
     {
       "h": "623dc53",
-      "date": "2026-09-11",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "3d6dd5e",
-      "date": "2026-09-11",
-      "subject": "MP-6d: the Golfers record page"
-    },
-    {
-      "h": "85b07e6",
-      "date": "2026-09-11",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "6fb70a7",
-      "date": "2026-09-11",
-      "subject": "SD-11: the SD-review candidates -- callback auth, staff pricing, courses PATCH validation, honest role label"
-    },
-    {
-      "h": "4d08c90",
       "date": "2026-09-11",
       "subject": "queue/spec update"
     }
