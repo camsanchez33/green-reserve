@@ -381,12 +381,21 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     weather flow (note: the existing blackout endpoint deleteManys tee times
     before blocking, so it 500s or destroys paid bookings) (SCHEMA CHANGE,
     ATTENDED + big UI)
-  - [ ] SD-6 — marketing honesty: the walk-in FAQ (only AFTER SD-5 makes it
-    true), "public course listing page" vs "unlisted" (no directory exists —
-    /api/courses has zero callers), "5 min" vs the real 10-15, "no contract" vs
-    Operator Agreement §5's 30-day notice, contrast on the hero fee line and the
-    "$6 per 4-player round" example (both render at text-white/20-/35 over a
-    photo), self-host the Unsplash hero (small)
+  - [x] SD-6 (f61cc1c) — marketing honesty. "5 minutes" → "10–15 minutes" (home +
+    /for-courses); "no contract — leave anytime" / "no contracts" → "no
+    long-term contract — leave with 30 days' notice" (Operator Agreement §5;
+    home ×2, /for-courses FAQ ×2); "public course listing page" → "your own
+    shareable booking page" (no directory exists); walk-in FAQ reworded to
+    what is TRUE today rather than waiting for SD-5 (walk-ins stay in the
+    shop; block/add times; entering them into the sheet is coming);
+    "unlisted until you share" reworded because SD-7a's sitemap submits live
+    course pages (no marketplace; search engines can find you once live) —
+    both answers feed the FAQPage JSON-LD too. Contrast on the three fee lines
+    20–40% → 60–75% white. Hero self-hosted at public/hero/ball-in-cup.jpg
+    (Unsplash free licence). NOT touched: the "you keep 100%" / "we charge
+    golfers" fee copy — frozen behind LQ-2 per UI_REVISE_SPEC decision 6.
+    Note: H-1 rebuilds the homepage later; these are the words prospects read
+    until then. NEEDS REVIEW.
   - [x] SD-7a (17e68c9) — the SEO half. NEW src/app/sitemap.ts (robots.txt had
     advertised a 404 since launch): six public pages + live, non-archived,
     non-private, non-demo course pages; static-only on DB failure. Root
