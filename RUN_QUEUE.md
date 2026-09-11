@@ -1162,14 +1162,23 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       and add charge.refunded, charge.dispute.*, payment_intent.payment_failed
       to its event list, or none of this fires. NOT COVERED BY TESTS: moves
       money; no test DB. NEEDS REVIEW.
-    - [ ] MP-6c — payout history + unit economics (no migration): "money
-      that reached the bank" is fetched from Stripe and discarded — list
-      payouts with arrival dates under the Platform Stripe card; effective
-      take per booking after Stripe's fixed component (the margin story
-      differs wildly between 1-player and 4-player bookings, data already
-      fetched); transaction-level CSV for an accountant (all courses, period,
-      one row per charge/refund). Real paidAt column is the schema half —
-      attended, and it makes 6a's checkedInAt approximation exact.
+    - [x] MP-6c (b468723) — payout history + unit economics, NO-MIGRATION
+      HALF. Platform Stripe card now lists the last 12 payouts (arrival
+      date, status dot, amount, sum paid out); "Unit economics" block from
+      Stripe's own application_fee balance transactions — gross / Stripe
+      cost / net per charge, % kept, players per collected round, with the
+      1-player-vs-foursome margin note. Its reconciliation moved to the
+      COLLECTED basis (paid rounds by checkedInAt) so it agrees with the P&L
+      above it — it was still accrual (confirmed by createdAt). NEW
+      /api/admin/transactions/export (MANAGER_PLUS): CSV, one row per money
+      event across all courses for from/to — round charge (by check-in),
+      late_cancellation_fee, refund (from PaymentEvent, GR fee reversed pro
+      rata); "Export transactions" button beside the summary CSV on Revenue.
+      LIVE CHECK (owner): /admin/revenue → Platform card shows payouts +
+      unit economics (5-min cache; period=30d); Export transactions
+      downloads a CSV whose row count matches the period. SCHEMA HALF STILL
+      OPEN: real paidAt column on Booking (attended) — makes the checkedInAt
+      approximation exact. NEEDS REVIEW.
     - [x] MP-6d (3d6dd5e) — Golfers record page. Identity (account OR guest by
       email — `?guest=`), trust strip (rounds, upcoming, no-shows, late
       cancels, failed charges, lifetime paid net of refunds), every booking
