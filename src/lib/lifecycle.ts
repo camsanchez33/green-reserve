@@ -263,6 +263,18 @@ export async function sweepOrphanCourses(adminName: string, dryRun: boolean): Pr
 
   const graceCutoff = new Date(Date.now() - ORPHAN_GRACE_DAYS * 24 * 60 * 60 * 1000);
 
+  // MP-10: this dry-runs on every /admin/system visit and used to issue two
+  // count queries PER orphan. Now two grouped counts over the candidates
+  // that survive the acknowledged + age guards, before the loop.
+  const candidates = orphanCourses.filter(c => !(c.archivedAt && c.adminNotes.includes('[ORPHAN]')) && c.createdAt <= graceCutoff);
+  const candidateIds = candidates.map(c => c.id);
+  const [bookingCounts, paidMemberCounts] = candidateIds.length === 0 ? [[], []] : await Promise.all([
+    prisma.booking.groupBy({ by: ['courseId'], where: { courseId: { in: candidateIds } }, _count: { id: true } }),
+    prisma.courseMembership.groupBy({ by: ['courseId'], where: { courseId: { in: candidateIds }, paymentStatus: { in: ['paid', 'paid_offline'] } }, _count: { id: true } }),
+  ]);
+  const bookingCountByCourse = new Map(bookingCounts.map(r => [r.courseId, r._count.id]));
+  const paidMemberCountByCourse = new Map(paidMemberCounts.map(r => [r.courseId, r._count.id]));
+
   for (const c of orphanCourses) {
     // Already acknowledged (archived + flagged by a prior run) — nothing
     // left to do passively. Stop reporting it; forceDeleteOrphan is the
@@ -280,10 +292,8 @@ export async function sweepOrphanCourses(adminName: string, dryRun: boolean): Pr
     // course is simply never swept.
     if (c.createdAt > graceCutoff) continue;
 
-    const [bookingCount, paidMemberCount] = await Promise.all([
-      prisma.booking.count({ where: { courseId: c.id } }),
-      prisma.courseMembership.count({ where: { courseId: c.id, paymentStatus: { in: ['paid', 'paid_offline'] } } }),
-    ]);
+    const bookingCount = bookingCountByCourse.get(c.id) ?? 0;
+    const paidMemberCount = paidMemberCountByCourse.get(c.id) ?? 0;
     const hasHistory = bookingCount > 0 || paidMemberCount > 0;
 
     if (!hasHistory) {

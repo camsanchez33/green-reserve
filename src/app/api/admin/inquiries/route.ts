@@ -36,11 +36,20 @@ export async function GET(req: NextRequest) {
     if (!inquiry) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json(stripSecrets(inquiry));
   }
+  // MP-10: the list used to ship every inquiry's full setup sheet
+  // (detailsJson — the largest column in the table) and its entire event
+  // history, and the list page reads neither blob. The sheet stays on `?id=`.
+  // Events are bounded to the newest 25 per inquiry (returned oldest-first as
+  // before): the page derives "entered this stage at" (newest event into the
+  // current status) and "why closed" (the last event) — both live at the tail.
   const inquiries = await prisma.courseInquiry.findMany({
     orderBy: { createdAt: 'desc' },
-    include: { events: { orderBy: { createdAt: 'asc' } } },
+    include: { events: { orderBy: { createdAt: 'desc' }, take: 25 } },
   });
-  return NextResponse.json(inquiries.map(stripSecrets));
+  return NextResponse.json(inquiries.map(inq => {
+    const { detailsJson: _detailsJson, needsJson: _needsJson, facilitiesNotes: _facilitiesNotes, events, ...rest } = stripSecrets(inq);
+    return { ...rest, events: events.slice().reverse() };
+  }));
 }
 
 async function logEvent(

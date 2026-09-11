@@ -4,6 +4,12 @@ import { centsToDollarsOr0 } from '@/lib/money';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
 
 const PAGE_SIZE = 50;
+// MP-10: the feed is a union of four sources sorted by time. Each source now
+// returns only its newest `page × PAGE_SIZE` rows (ordered in the DB) instead
+// of every row in the window — the top N of a merged list is always contained
+// in the top N of each part, so the page is exact. `total` comes from counts.
+// Page is capped so a runaway ?page= can't ask for the whole table anyway.
+const MAX_PAGE = 200;
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -11,7 +17,7 @@ export async function GET(req: NextRequest) {
   if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const url = new URL(req.url);
-  const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
+  const page = Math.min(MAX_PAGE, Math.max(1, parseInt(url.searchParams.get('page') || '1') || 1));
   const courseId = url.searchParams.get('courseId') || '';
   const fromStr = url.searchParams.get('from') || '';
   const toStr = url.searchParams.get('to') || '';
@@ -21,51 +27,68 @@ export async function GET(req: NextRequest) {
   const toDate = toStr ? new Date(toStr + 'T23:59:59.999Z') : now;
 
   const cFilter = courseId ? { courseId } : {};
+  const take = page * PAGE_SIZE;
 
-  const [bookings, cancellations, memberships, memberPayments, allCourses] = await Promise.all([
+  const bookingWhere = { status: { in: ['confirmed', 'completed'] }, createdAt: { gte: fromDate, lte: toDate }, ...cFilter };
+  const cancelWhere = {
+    status: 'cancelled', ...cFilter,
+    OR: [
+      { cancelledAt: { gte: fromDate, lte: toDate } },
+      { cancelledAt: null, createdAt: { gte: fromDate, lte: toDate } },
+    ],
+  };
+  const memberWhere = { createdAt: { gte: fromDate, lte: toDate }, ...cFilter };
+  const paymentWhere = { paymentStatus: { in: ['paid', 'paid_offline'] }, lastPaidAt: { gte: fromDate, lte: toDate }, ...cFilter };
+
+  const [bookings, cancellations, memberships, memberPayments, allCourses, nBookings, nCancels, nMembers, nPayments] = await Promise.all([
     prisma.booking.findMany({
-      where: { status: { in: ['confirmed', 'completed'] }, createdAt: { gte: fromDate, lte: toDate }, ...cFilter },
+      where: bookingWhere,
       select: {
         id: true, createdAt: true, golferName: true, golferEmail: true,
         players: true, totalAmount: true, accessFeeTotal: true,
         course: { select: { name: true } },
         teeTime: { select: { date: true, time: true } },
       },
+      orderBy: { createdAt: 'desc' }, take,
     }),
+    // Sorted by cancelledAt with nulls last; the null-cancelledAt legacy rows
+    // fall back to createdAt in the merge below, so they can only be missed
+    // if there are more than `take` real cancellations newer than them.
     prisma.booking.findMany({
-      where: {
-        status: 'cancelled', ...cFilter,
-        OR: [
-          { cancelledAt: { gte: fromDate, lte: toDate } },
-          { cancelledAt: null, createdAt: { gte: fromDate, lte: toDate } },
-        ],
-      },
+      where: cancelWhere,
       select: {
         id: true, createdAt: true, cancelledAt: true, golferName: true, golferEmail: true,
         players: true, cancellationFeeTotal: true,
         course: { select: { name: true } },
         teeTime: { select: { date: true, time: true } },
       },
+      orderBy: [{ cancelledAt: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }], take,
     }),
     prisma.courseMembership.findMany({
-      where: { createdAt: { gte: fromDate, lte: toDate }, ...cFilter },
+      where: memberWhere,
       select: {
         id: true, createdAt: true, inviteName: true, inviteEmail: true,
         tier: { select: { name: true } },
         golfer: { select: { firstName: true, lastName: true, email: true } },
         course: { select: { name: true } },
       },
+      orderBy: { createdAt: 'desc' }, take,
     }),
     prisma.courseMembership.findMany({
-      where: { paymentStatus: { in: ['paid', 'paid_offline'] }, lastPaidAt: { gte: fromDate, lte: toDate }, ...cFilter },
+      where: paymentWhere,
       select: {
         id: true, lastPaidAt: true, inviteName: true, inviteEmail: true,
         tier: { select: { name: true, annualFeeCents: true } },
         golfer: { select: { firstName: true, lastName: true, email: true } },
         course: { select: { name: true } },
       },
+      orderBy: { lastPaidAt: 'desc' }, take,
     }),
     prisma.course.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+    prisma.booking.count({ where: bookingWhere }),
+    prisma.booking.count({ where: cancelWhere }),
+    prisma.courseMembership.count({ where: memberWhere }),
+    prisma.courseMembership.count({ where: paymentWhere }),
   ]);
 
   const events = [
@@ -113,7 +136,7 @@ export async function GET(req: NextRequest) {
     })),
   ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-  const total = events.length;
+  const total = nBookings + nCancels + nMembers + nPayments;
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const items = events.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 

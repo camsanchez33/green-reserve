@@ -57,21 +57,28 @@ export async function GET(req: NextRequest) {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
 
-  const [courses, bookingAggs, memberAggs, lastBookingAggs, priorBookingAggs, linkedInquiries] = await Promise.all([
-    prisma.course.findMany({
-      where: showArchived ? { archivedAt: { not: null } } : { archivedAt: null },
-      include: { operator: { select: { email: true, name: true, onboardingStep: true, emailVerified: true } } },
-      orderBy: { createdAt: 'desc' },
-    }),
+  // MP-10: the courses come first so every aggregate below is bounded to the
+  // ids on this list (active OR archived, never both). The all-time
+  // last-booking groupBy in particular scanned every booking of every course
+  // — including the archived half that this response was about to drop.
+  const courses = await prisma.course.findMany({
+    where: showArchived ? { archivedAt: { not: null } } : { archivedAt: null },
+    include: { operator: { select: { email: true, name: true, onboardingStep: true, emailVerified: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
+  const listedIds = courses.map(c => c.id);
+  const inListed = { courseId: { in: listedIds } };
+
+  const [bookingAggs, memberAggs, lastBookingAggs, priorBookingAggs, linkedInquiries] = await Promise.all([
     prisma.booking.groupBy({
       by: ['courseId'],
-      where: { status: { in: COMPLETED_BOOKING_STATUSES }, createdAt: { gte: thirtyDaysAgo } },
+      where: { ...inListed, status: { in: COMPLETED_BOOKING_STATUSES }, createdAt: { gte: thirtyDaysAgo } },
       _count: { id: true },
       _sum: { accessFeeTotal: true },
     }),
     prisma.courseMembership.groupBy({
       by: ['courseId'],
-      where: { status: 'active' },
+      where: { ...inListed, status: 'active' },
       _count: { id: true },
     }),
     // MP-5a: the one aggregate on this page with no status filter, so a
@@ -79,12 +86,12 @@ export async function GET(req: NextRequest) {
     // defeating the going-quiet detection this feeds.
     prisma.booking.groupBy({
       by: ['courseId'],
-      where: { status: { in: COMPLETED_BOOKING_STATUSES } },
+      where: { ...inListed, status: { in: COMPLETED_BOOKING_STATUSES } },
       _max: { createdAt: true },
     }),
     prisma.booking.groupBy({
       by: ['courseId'],
-      where: { status: { in: COMPLETED_BOOKING_STATUSES }, createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } },
+      where: { ...inListed, status: { in: COMPLETED_BOOKING_STATUSES }, createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } },
       _count: { id: true },
     }),
     // ORPHAN SWEEP tripwire (RUN_QUEUE) — every course should have a linked

@@ -1,9 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
 
 const PAGE_SIZE = 50;
+// MP-10: same shape as /api/admin/activity — two sources merged by date, each
+// bounded to its newest `page × PAGE_SIZE` rows in the DB, search pushed into
+// the WHERE instead of filtering the whole course history in memory.
+const MAX_PAGE = 200;
+
+/** Every whitespace-separated token must match at least one of the fields
+ *  (so "john smith" still finds John Smith, as the old concatenated-string
+ *  filter did). */
+function tokenFilter<T>(search: string, fieldsFor: (token: string) => T[]): { AND: { OR: T[] }[] } | undefined {
+  const tokens = search.split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return undefined;
+  return { AND: tokens.map(t => ({ OR: fieldsFor(t) })) };
+}
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -14,10 +28,10 @@ export async function GET(req: NextRequest) {
   const courseId = searchParams.get('courseId');
   if (!courseId) return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });
 
-  const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+  const page = Math.min(MAX_PAGE, Math.max(1, parseInt(searchParams.get('page') || '1') || 1));
   const fromStr = searchParams.get('from') || '';
   const toStr = searchParams.get('to') || '';
-  const search = (searchParams.get('search') || '').toLowerCase().trim();
+  const search = (searchParams.get('search') || '').trim();
 
   const fromDate = fromStr ? new Date(fromStr + 'T00:00:00.000Z') : undefined;
   const toDate = toStr ? new Date(toStr + 'T23:59:59.999Z') : undefined;
@@ -25,34 +39,55 @@ export async function GET(req: NextRequest) {
     ...(fromDate ? { gte: fromDate } : {}),
     ...(toDate ? { lte: toDate } : {}),
   };
+  const take = page * PAGE_SIZE;
+  const ci = Prisma.QueryMode.insensitive;
 
-  const [bookings, memberPayments] = await Promise.all([
+  const bookingWhere: Prisma.BookingWhereInput = {
+    courseId,
+    ...(fromDate || toDate ? { createdAt: dateFilter } : {}),
+    ...(tokenFilter<Prisma.BookingWhereInput>(search, t => [
+      { golferName: { contains: t, mode: ci } },
+      { golferEmail: { contains: t, mode: ci } },
+    ]) ?? {}),
+  };
+  const paymentWhere: Prisma.CourseMembershipWhereInput = {
+    courseId,
+    paymentStatus: { in: ['paid', 'paid_offline'] },
+    ...(fromDate || toDate ? { lastPaidAt: dateFilter } : {}),
+    ...(tokenFilter<Prisma.CourseMembershipWhereInput>(search, t => [
+      { inviteName: { contains: t, mode: ci } },
+      { inviteEmail: { contains: t, mode: ci } },
+      { golfer: { firstName: { contains: t, mode: ci } } },
+      { golfer: { lastName: { contains: t, mode: ci } } },
+      { golfer: { email: { contains: t, mode: ci } } },
+    ]) ?? {}),
+  };
+
+  const [bookings, memberPayments, nBookings, nPayments] = await Promise.all([
     prisma.booking.findMany({
-      where: {
-        courseId,
-        ...(fromDate || toDate ? { createdAt: dateFilter } : {}),
-      },
+      where: bookingWhere,
       select: {
         id: true, golferName: true, golferEmail: true, players: true,
         totalAmount: true, accessFeeTotal: true, cancellationFeeTotal: true,
         paymentStatus: true, status: true, createdAt: true,
         teeTime: { select: { date: true, time: true } },
       },
-      orderBy: { createdAt: 'desc' },
+      // The merged list sorts on the play date, so bound by that, not by createdAt.
+      orderBy: [{ teeTime: { date: 'desc' } }, { createdAt: 'desc' }],
+      take,
     }),
     prisma.courseMembership.findMany({
-      where: {
-        courseId,
-        paymentStatus: { in: ['paid', 'paid_offline'] },
-        ...(fromDate || toDate ? { lastPaidAt: dateFilter } : {}),
-      },
+      where: paymentWhere,
       select: {
         id: true, inviteName: true, inviteEmail: true, lastPaidAt: true,
         golfer: { select: { firstName: true, lastName: true, email: true } },
         tier: { select: { name: true, annualFeeCents: true } },
       },
-      orderBy: { lastPaidAt: 'desc' },
+      orderBy: [{ lastPaidAt: { sort: 'desc', nulls: 'last' } }],
+      take,
     }),
+    prisma.booking.count({ where: bookingWhere }),
+    prisma.courseMembership.count({ where: paymentWhere }),
   ]);
 
   function bookingStatus(b: { status: string; paymentStatus: string; cancellationFeeTotal: number }) {
@@ -64,7 +99,7 @@ export async function GET(req: NextRequest) {
     return 'card_saved';
   }
 
-  const allItems = [
+  const merged = [
     ...bookings.map(b => ({
       id: b.id,
       type: 'booking' as const,
@@ -94,17 +129,11 @@ export async function GET(req: NextRequest) {
         detail: p.tier?.name ? `Dues — ${p.tier.name}` : 'Membership dues',
       };
     }),
-  ]
-    .filter(item =>
-      !search ||
-      item.golferName.toLowerCase().includes(search) ||
-      item.golferEmail.toLowerCase().includes(search)
-    )
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const total = allItems.length;
+  const total = nBookings + nPayments;
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const items = allItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const items = merged.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return NextResponse.json({ items, total, page, pages });
 }

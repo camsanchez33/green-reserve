@@ -309,6 +309,7 @@ export default function CourseDetailPage() {
   const [refundError, setRefundError] = useState('');
   const [refundNote, setRefundNote] = useState('');
   const [txLoading, setTxLoading] = useState(false);
+  const [txError, setTxError] = useState('');
   const [txPage, setTxPage] = useState(1);
   const [txPages, setTxPages] = useState(1);
   const [txTotal, setTxTotal] = useState(0);
@@ -398,13 +399,26 @@ export default function CourseDetailPage() {
     if (f) params.set('from', f);
     if (t) params.set('to', t);
     if (s) params.set('search', s);
-    const r = await fetch(`/api/admin/transactions?${params}`, { headers: H() });
-    if (r.ok) {
-      const d = await r.json();
-      setTxItems(d.items);
-      setTxPage(d.page);
-      setTxPages(d.pages);
-      setTxTotal(d.total);
+    // MP-10: this swallowed every failure — a 403 or a dropped connection
+    // rendered as "No transactions found". Same fix the members loader got.
+    setTxError('');
+    try {
+      const r = await fetch(`/api/admin/transactions?${params}`, { headers: H() });
+      if (r.ok) {
+        const d = await r.json();
+        setTxItems(d.items);
+        setTxPage(d.page);
+        setTxPages(d.pages);
+        setTxTotal(d.total);
+      } else {
+        setTxItems([]);
+        setTxError(r.status === 403 ? 'Transactions require support access.'
+          : r.status === 401 ? 'Your session ended — sign in again.'
+          : 'Could not load transactions. Try again.');
+      }
+    } catch {
+      setTxItems([]);
+      setTxError('Network error loading transactions. Check your connection and try again.');
     }
     setTxLoading(false);
   }, [courseId, H]);
@@ -1405,7 +1419,14 @@ export default function CourseDetailPage() {
 
               {txLoading && <div className="text-center text-ink-muted py-12 text-sm">Loading...</div>}
 
-              {!txLoading && txItems.length === 0 && (
+              {!txLoading && txError && (
+                <div className="mb-4 text-sm px-4 py-2.5 rounded-md border bg-bad/5 text-bad border-bad/20 flex items-center justify-between gap-3">
+                  <span>{txError}</span>
+                  <button onClick={() => loadTransactions(txPage, txFrom, txTo, txSearch)} className="text-xs font-medium underline underline-offset-2">Retry</button>
+                </div>
+              )}
+
+              {!txLoading && !txError && txItems.length === 0 && (
                 <div className="text-center text-ink-muted py-12 text-sm bg-white border border-line rounded-lg">
                   No transactions found
                 </div>
