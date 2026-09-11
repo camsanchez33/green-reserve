@@ -36,7 +36,8 @@ Before touching code, output:
 - the item you're running, and the atomic claims you extracted from its spec
 - the files you expect to touch
 - **whether this item requires a schema change** — if it does, stop here and say so.
-  Schema changes follow the migration checklist in `CLAUDE.md` and are run attended,
+  Schema changes follow the migration checklist in `docs/SHIPPING.md` (the
+  never-bend rules are in the Shipping section of `CLAUDE.md`) and are run attended,
   never swept into a batch.
 - anything in the spec that is ambiguous or that conflicts with current code
 
