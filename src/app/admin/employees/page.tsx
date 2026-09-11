@@ -17,7 +17,7 @@ const ROLES = [
   { value: 'owner',   label: 'Owner',   desc: 'Full access, manages employees & broadcasts' },
   { value: 'manager', label: 'Manager', desc: 'Courses, inquiries, messages; no employees or broadcasts' },
   { value: 'support', label: 'Support', desc: 'View + reply to messages; no create/edit/delete' },
-  { value: 'viewer',  label: 'Viewer',  desc: 'Read-only across everything' },
+  { value: 'viewer',  label: 'Viewer',  desc: 'Read-only: Overview, inquiries and the courses list. No money, golfer data, messages or course settings.' },
 ];
 
 function roleBadgeClass(role: string) {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, SUPPORT_PLUS, VIEWER_PLUS, MANAGER_PLUS } from '@/lib/admin-session';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 import { getApprovalState } from '@/lib/approval-state';
 import { latestPageDecision } from '@/lib/change-requests';
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   // MP-2b: returns every operator's email/name plus per-course bookings30d and
   // revenue30d. HARDENING_SPEC gives viewer no financial ledger and no PII.
-  if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!requireRole(session, VIEWER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   // Lightweight list for dropdowns — all courses including archived
   if (req.nextUrl.searchParams.get('simple') === '1') {

@@ -1,6 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-roles';
+import { SUPPORT_PLUS, MANAGER_PLUS, VIEWER_PLUS } from '@/lib/admin-roles';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
@@ -128,8 +128,8 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
 
   const allMainNav: NavItem[] = [
     { key: 'overview',   label: 'Overview',   href: '/admin',            icon: <BarChart2 className="w-[18px] h-[18px]"/> },
-    { key: 'inquiries',  label: 'Inquiries',  href: '/admin/inquiries',  icon: <AlertCircle className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
-    { key: 'courses',    label: 'Courses',    href: '/admin/courses',    icon: <Building2 className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
+    { key: 'inquiries',  label: 'Inquiries',  href: '/admin/inquiries',  icon: <AlertCircle className="w-[18px] h-[18px]"/>, minRole: VIEWER_PLUS },
+    { key: 'courses',    label: 'Courses',    href: '/admin/courses',    icon: <Building2 className="w-[18px] h-[18px]"/>, minRole: VIEWER_PLUS },
     { key: 'messages',   label: 'Messages',   href: '/admin/messages',   icon: <MessageSquare className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
     { key: 'revenue',    label: 'Revenue',    href: '/admin/revenue',    icon: <DollarSign className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
     { key: 'golfers',    label: 'Golfers',    href: '/admin/golfers',    icon: <UserSearch className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
