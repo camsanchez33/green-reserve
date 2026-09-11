@@ -97,6 +97,9 @@ function RadioGroup({ label, options, value, onChange }: {
 export default function ForCoursesContent() {
   const searchParams = useSearchParams();
   const [form, setForm] = useState<FormData>(init);
+  // SD review: the honeypot input existed but its value was never sent — the
+  // payload hardcoded ''. Bots that fill every field now get the silent 200.
+  const honeypotRef = useRef<HTMLInputElement>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submittedName, setSubmittedName] = useState('');
@@ -178,8 +181,8 @@ export default function ForCoursesContent() {
         courseType: form.courseType,
         additionalNotes: form.notes,
         needs,
-        // honeypot (always empty for real users)
-        _website: '',
+        // honeypot (always empty for real users; bots fill it)
+        _website: honeypotRef.current?.value ?? '',
       }),
     });
     setSubmitting(false);
@@ -269,7 +272,7 @@ export default function ForCoursesContent() {
         {/* Honeypot — hidden from humans, read by bots */}
         <div style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }} aria-hidden="true">
           <label htmlFor="hp-website">Website</label>
-          <input id="hp-website" name="_website" type="text" tabIndex={-1} autoComplete="off"/>
+          <input ref={honeypotRef} id="hp-website" name="_website" type="text" tabIndex={-1} autoComplete="off" defaultValue=""/>
         </div>
 
         {/* Section 1: You */}

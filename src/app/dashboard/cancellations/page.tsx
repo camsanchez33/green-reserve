@@ -3,6 +3,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, XCircle, RefreshCw, Undo2 } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { dfetch } from '@/lib/dashboard-fetch';
+import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
@@ -28,6 +30,8 @@ export default function CancellationsPage() {
   const router = useRouter();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [policyLoaded, setPolicyLoaded] = useState(false);
   const [cancelingId, setCancelingId] = useState<string | null>(null);
   const [policy, setPolicy] = useState({ cancellationHours: 24, lateCancellationFee: 10 });
   const [policySaving, setPolicySaving] = useState(false);
@@ -37,24 +41,31 @@ export default function CancellationsPage() {
 
   async function savePolicy() {
     setPolicySaving(true);
-    await fetch('/api/operator/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cancellationHours: Number(policy.cancellationHours), lateCancellationFee: Number(policy.lateCancellationFee) }) });
-    setPolicySaving(false); setPolicySaved(true); setTimeout(() => setPolicySaved(false), 2000);
+    // SD-10: "Saved" used to show on a 403 (staff) and a 400 alike.
+    const r = await dfetch('/api/operator/settings', { method: 'PATCH', body: JSON.stringify({ cancellationHours: Number(policy.cancellationHours), lateCancellationFee: Number(policy.lateCancellationFee) }) });
+    setPolicySaving(false);
+    if (!r.ok) { toast(r.error); return; }
+    setPolicySaved(true); setTimeout(() => setPolicySaved(false), 2000);
   }
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch('/api/operator/bookings');
-    if (res.status === 401) { router.push('/dashboard/login'); return; }
-    const data = await res.json();
-    setBookings(Array.isArray(data) ? data : []);
+    const r = await dfetch<Booking[]>('/api/operator/bookings');
+    if (r.status === 401) { router.push('/dashboard/login'); return; }
+    if (!r.ok) { setBookings([]); setLoadError(r.error); }
+    else { setBookings(Array.isArray(r.data) ? r.data : []); setLoadError(''); }
     setLoading(false);
   }, [router]);
 
   useEffect(() => {
-    fetch('/api/operator/courses').then(r => r.json()).then(c => {
-      if (c) setPolicy({ cancellationHours: c.cancellationHours ?? 24, lateCancellationFee: c.lateCancellationFee ?? 10 });
+    // SD-10: a failed course load left the policy form on its 24h / $10
+    // defaults, and Save would have written those over the real policy.
+    fetch('/api/operator/courses').then(r => r.ok ? r.json() : null).then(c => {
+      if (!c) { toast('Could not load your cancellation policy — the form is locked until it loads. Refresh to retry.'); return; }
+      setPolicy({ cancellationHours: c.cancellationHours ?? 24, lateCancellationFee: c.lateCancellationFee ?? 10 });
       setStripeAccountActive(!!c?.stripeAccountActive);
-    });
+      setPolicyLoaded(true);
+    }).catch(() => toast('Network error loading your cancellation policy — refresh to retry.'));
     load();
   }, [load]);
 
@@ -65,10 +76,10 @@ export default function CancellationsPage() {
       : `Cancel ${b.golferName}'s booking?\n\nNo money has been charged — their card will simply never be billed.`;
     if (!confirm(msg)) return;
     setCancelingId(b.id);
-    const res = await fetch('/api/operator/bookings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: b.id, action: 'cancel' }) });
-    const data = await res.json();
+    const r = await dfetch<{ feeCharged?: boolean }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'cancel' }) });
     setCancelingId(null);
-    if (!res.ok) { toast(data.error || 'Cancel failed'); return; }
+    if (!r.ok) { toast(r.error); return; }
+    const data = r.data ?? {};
     toast(data.feeCharged ? 'Cancelled — the late-cancellation fee already charged is non-refundable.' : 'Cancelled — no charge was made, nothing to refund.', 'ok');
     load();
   }
@@ -108,6 +119,8 @@ export default function CancellationsPage() {
             ]}
           />
 
+          {loadError && <LoadError message={loadError} onRetry={load} />}
+
           {loading ? (
             <div className="flex items-center justify-center py-16 text-ink-muted gap-2"><Loader2 className="w-5 h-5 animate-spin"/>Loading...</div>
           ) : (
@@ -134,7 +147,7 @@ export default function CancellationsPage() {
                       onChange={e => setPolicy(pol => ({ ...pol, lateCancellationFee: Number(e.target.value) }))}
                       className={iCls + ' w-32'}/>
                   </div>
-                  <button onClick={savePolicy} disabled={policySaving}
+                  <button onClick={savePolicy} disabled={policySaving || !policyLoaded}
                     className="bg-pine hover:bg-pine-hover text-white text-[12.5px] font-medium px-4 py-2 rounded-md disabled:opacity-50 transition-colors">
                     {policySaved ? 'Saved' : policySaving ? 'Saving...' : 'Save Policy'}
                   </button>

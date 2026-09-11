@@ -5,6 +5,8 @@ import {
   RefreshCw, UserCheck, UserX, ChevronDown, AlertCircle, CheckCircle2, UserPlus,
 } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { dfetch } from '@/lib/dashboard-fetch';
+import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
@@ -54,6 +56,7 @@ export default function MembersPage() {
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [view, setView] = useState<View>('list');
   const [panel, setPanel] = useState<'tiers' | 'members'>('tiers');
   const intro = useTabIntro('members');
@@ -77,11 +80,12 @@ export default function MembersPage() {
   const [filterStatus, setFilterStatus] = useState('active');
 
   const loadAll = useCallback(async () => {
-    const [tr, mb] = await Promise.all([
-      fetch('/api/operator/tiers').then(r => r.ok ? r.json() : []),
-      fetch('/api/operator/members').then(r => r.ok ? r.json() : []),
-    ]);
-    setTiers(tr); setMembers(mb); setLoading(false);
+    const [tr, mb] = await Promise.all([dfetch<Tier[]>('/api/operator/tiers'), dfetch<Member[]>('/api/operator/members')]);
+    // SD-10: a 403/500 here used to render "No membership tiers yet".
+    setTiers(tr.ok && Array.isArray(tr.data) ? tr.data : []);
+    setMembers(mb.ok && Array.isArray(mb.data) ? mb.data : []);
+    setLoadError(!tr.ok ? tr.error : !mb.ok ? mb.error : '');
+    setLoading(false);
   }, []);
 
   useEffect(() => { loadAll(); }, [loadAll]);
@@ -131,7 +135,8 @@ export default function MembersPage() {
   };
 
   const updateMemberTier = async (memberId: string, tierId: string) => {
-    await fetch('/api/operator/members', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: memberId, tierId }) });
+    const r = await dfetch('/api/operator/members', { method: 'PATCH', body: JSON.stringify({ id: memberId, tierId }) });
+    if (!r.ok) { toast(r.error); return; }
     setMembers(prev => prev.map(m => {
       if (m.id !== memberId) return m;
       const tier = tiers.find(t => t.id === tierId);
@@ -142,14 +147,17 @@ export default function MembersPage() {
 
   const toggleMemberStatus = async (m: Member) => {
     const newStatus = m.status === 'active' ? 'inactive' : 'active';
-    await fetch('/api/operator/members', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: m.id, status: newStatus }) });
+    const r = await dfetch('/api/operator/members', { method: 'PATCH', body: JSON.stringify({ id: m.id, status: newStatus }) });
+    if (!r.ok) { toast(r.error); return; }
     setMembers(prev => prev.map(x => x.id === m.id ? { ...x, status: newStatus } : x));
   };
 
   const removeMember = async (id: string, name: string) => {
     if (!confirm(`Remove ${name} from this course?`)) return;
-    await fetch(`/api/operator/members?id=${id}`, { method: 'DELETE' });
+    const r = await dfetch(`/api/operator/members?id=${id}`, { method: 'DELETE' });
+    if (!r.ok) { toast(r.error); return; }
     setMembers(prev => prev.filter(m => m.id !== id));
+    toast(`${name} removed.`, 'ok');
   };
 
   const filteredMembers = members.filter(m => {
@@ -165,6 +173,7 @@ export default function MembersPage() {
     <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="members"/>
       <main className="flex-1 flex items-center justify-center">
+        {loadError && <div className="px-6 pt-6"><LoadError message={loadError} onRetry={loadAll} /></div>}
         <RefreshCw className="w-6 h-6 text-pine animate-spin"/>
       </main>
     </div>

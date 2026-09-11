@@ -24,8 +24,6 @@ export async function PATCH() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
-  // Staff cannot modify operator profile/onboarding state.
-  if (session.isStaff) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const op = await prisma.courseOperator.findUnique({ where: { id: session.operatorId! } });
   if (!op) return NextResponse.json({ error: 'Not found' }, { status: 404 });

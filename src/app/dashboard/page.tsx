@@ -9,6 +9,8 @@ import {
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { dfetch } from '@/lib/dashboard-fetch';
+import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import GettingStartedChecklist from '@/components/dashboard/GettingStartedChecklist';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
@@ -100,6 +102,10 @@ function DashboardPageInner() {
   const [checkingInId, setCheckingInId] = useState<string | null>(null);
   const [cardModalBooking, setCardModalBooking] = useState<Booking | null>(null);
   const [cardModalReason, setCardModalReason] = useState('');
+  // SD-10: failure is never emptiness, and no button stays stuck.
+  const [sheetError, setSheetError] = useState('');
+  const [slotBusy, setSlotBusy] = useState<string | null>(null);
+  const [analyticsError, setAnalyticsError] = useState('');
   const [search, setSearch] = useState('');
   const [emailVerified, setEmailVerified] = useState(true);
   const [onboardingStepNum, setOnboardingStepNum] = useState(3);
@@ -129,8 +135,15 @@ function DashboardPageInner() {
     if (b.paymentStatus === 'no_payment_method') { setCardModalReason(''); setCardModalBooking(b); return; }
     if (!confirm(`Check in ${b.golferName} and charge their card $${(b.totalAmount / 100).toFixed(2)} for the round?`)) return;
     setCheckingInId(b.id);
-    const res = await fetch('/api/operator/bookings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: b.id, action: 'checkin' }) });
-    const data = await res.json();
+    let res: Response; let data: Record<string, unknown> & { error?: string; totalCharged: number };
+    try {
+      res = await fetch('/api/operator/bookings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: b.id, action: 'checkin' }) });
+      data = await res.json().catch(() => ({}));
+    } catch {
+      setCheckingInId(null);
+      toast('Network error — the card may or may not have been charged. Refresh before trying again.');
+      return;
+    }
     setCheckingInId(null);
     if (!res.ok) {
       // SD-4: a declined card was a dead end — an alert, the row unchanged,
@@ -151,10 +164,22 @@ function DashboardPageInner() {
 
   async function checkInWithCard(b: Booking, paymentMethodId: string) {
     setCheckingInId(b.id);
-    const res = await fetch('/api/operator/bookings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: b.id, action: 'checkin', paymentMethodId }) });
-    const data = await res.json();
+    let res: Response; let data: Record<string, unknown> & { error?: string; totalCharged: number };
+    try {
+      res = await fetch('/api/operator/bookings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: b.id, action: 'checkin', paymentMethodId }) });
+      data = await res.json().catch(() => ({}));
+    } catch {
+      setCheckingInId(null);
+      return 'Network error — the card may or may not have been charged. Refresh the sheet before trying again.';
+    }
     setCheckingInId(null);
-    if (!res.ok) { return data.error || 'Check-in failed'; }
+    if (!res.ok) {
+      // A second decline: show the new reason where the first one was, and let
+      // the row catch up.
+      const msg = data.error || 'Check-in failed';
+      setCardModalReason(msg); loadTimes(selectedDate);
+      return msg;
+    }
     chargeOutcome(data);
     setCardModalBooking(null); setCardModalReason('');
     loadTimes(selectedDate);
@@ -169,32 +194,35 @@ function DashboardPageInner() {
 
   const loadTimes = useCallback(async (date: string) => {
     setLoading(true);
-    try {
-      const res = await fetch(`/api/operator/tee-times?date=${date}&withBookings=1`);
-      if (res.status === 401) { router.push('/dashboard/login'); return; }
-      const data = await res.json();
-      setTeeTimes(Array.isArray(data) ? data : []);
-    } catch { setTeeTimes([]); }
+    const r = await dfetch<TeeTime[]>(`/api/operator/tee-times?date=${date}&withBookings=1`);
+    if (r.status === 401) { router.push('/dashboard/login'); return; }
+    if (!r.ok) { setTeeTimes([]); setSheetError(r.error); }
+    else { setTeeTimes(Array.isArray(r.data) ? r.data : []); setSheetError(''); }
     setLoading(false);
   }, [router]);
 
   const loadCourseStatus = useCallback(() => {
-    fetch('/api/operator/courses').then(r => r.json()).then(c => {
+    // An error body has no `active`, so it used to read as "draft" and put the
+    // "your course isn't live" banner on a live course. Keep what we had.
+    fetch('/api/operator/courses').then(r => r.ok ? r.json() : null).then(c => {
+      if (!c) return;
       if (c?.name) setCourseName(c.name);
       setCourseArchived(!!c?.archivedAt);
       setCourseDraft(!c?.active || c?.liveStatus !== 'live');
       setPageApprovalStatus(c?.pageApprovalStatus === 'approved' || c?.pageApprovalStatus === 'changes_requested' ? c.pageApprovalStatus : 'none');
       setStripeAccountActive(!!c?.stripeAccountActive);
       if (c?.conditions) { setConditions(c.conditions); setConditionsInput(c.conditions); }
-    });
+    }).catch(() => {});
   }, []);
 
   async function connectStripeFromChecklist() {
     setConnectingStripe(true);
     try {
-      const r = await fetch('/api/operator/stripe/connect?from=dashboard');
-      const d = await r.json();
-      if (d.url) window.location.href = d.url;
+      const r = await dfetch<{ url?: string; connected?: boolean }>('/api/operator/stripe/connect?from=dashboard');
+      if (!r.ok) { toast(r.error); return; }
+      if (r.data?.url) { window.location.href = r.data.url; return; }
+      if (r.data?.connected) { toast('Stripe is already connected.', 'ok'); loadCourseStatus(); return; }
+      toast('Stripe did not return a setup link — try again in a minute.');
     } finally {
       setConnectingStripe(false);
     }
@@ -203,17 +231,37 @@ function DashboardPageInner() {
   async function acceptAgreement() {
     setAcceptingAgreement(true);
     try {
-      const r = await fetch('/api/operator/agreement', { method: 'POST' });
+      const r = await dfetch('/api/operator/agreement', { method: 'POST' });
       if (r.ok) setAgreementAccepted(true);
+      else toast(r.error);
     } finally {
       setAcceptingAgreement(false);
     }
   }
 
   async function viewOwnPreview() {
-    const r = await fetch('/api/operator/preview-link');
-    const d = await r.json().catch(() => null);
-    if (d?.url) window.open(d.url, '_blank', 'noopener,noreferrer');
+    const r = await dfetch<{ url?: string }>('/api/operator/preview-link');
+    if (!r.ok) { toast(r.error); return; }
+    if (r.data?.url) window.open(r.data.url, '_blank', 'noopener,noreferrer');
+    else toast('No preview link came back — try again.');
+  }
+
+  // SD-10: Block / Unblock / Del were fire-and-forget with no result check —
+  // a 500 refetched the list and it looked identical; two fast taps fired twice.
+  async function toggleBlock(tt: TeeTime) {
+    setSlotBusy(tt.id);
+    const r = await dfetch('/api/operator/tee-times', { method: 'PATCH', body: JSON.stringify({ id: tt.id, status: tt.status === 'blocked' ? 'available' : 'blocked' }) });
+    if (!r.ok) toast(r.error);
+    await loadTimes(selectedDate);
+    setSlotBusy(null);
+  }
+  async function deleteTime(tt: TeeTime) {
+    if (!confirm('Delete this tee time?')) return;
+    setSlotBusy(tt.id);
+    const r = await dfetch('/api/operator/tee-times', { method: 'DELETE', body: JSON.stringify({ id: tt.id }) });
+    if (!r.ok) toast(r.error);
+    await loadTimes(selectedDate);
+    setSlotBusy(null);
   }
 
   async function approvePage() {
@@ -255,12 +303,13 @@ function DashboardPageInner() {
   }
 
   useEffect(() => {
-    fetch('/api/operator/profile').then(r => r.json()).then(p => {
-      if (!p || !p.emailVerified) { router.push('/dashboard/verify'); return; }
+    fetch('/api/operator/profile').then(r => r.ok ? r.json() : null).then(p => {
+      if (!p) return; // could not load — never guess at a redirect from an error body
+      if (!p.emailVerified) { router.push('/dashboard/verify'); return; }
       if (p.onboardingStep < 3)   { router.push('/dashboard/onboarding'); return; }
       setEmailVerified(!!p.emailVerified);
       setOnboardingStepNum(p.onboardingStep);
-    });
+    }).catch(() => {});
     loadCourseStatus();
     fetch('/api/operator/agreement').then(r => r.ok ? r.json() : null).then(d => {
       setAgreementAccepted(!!d?.agreement);
@@ -276,8 +325,13 @@ function DashboardPageInner() {
 
   useEffect(() => {
     if (tab === 'analytics' && !analytics) {
-      setAnalyticsLoading(true);
-      fetch('/api/operator/analytics').then(r => r.json()).then(d => { setAnalytics(d); setAnalyticsLoading(false); });
+      setAnalyticsLoading(true); setAnalyticsError('');
+      // `{error}` used to be handed to setAnalytics and `.summary.totalRevenue` threw — a blank page.
+      dfetch<AnalyticsData>('/api/operator/analytics').then(r => {
+        if (r.ok && r.data?.summary) setAnalytics(r.data);
+        else setAnalyticsError(r.ok ? 'Analytics came back empty — try again.' : r.error);
+        setAnalyticsLoading(false);
+      });
     }
   }, [tab, analytics]);
 
@@ -286,8 +340,11 @@ function DashboardPageInner() {
 
   async function saveConditions() {
     setSavingConditions(true);
-    await fetch('/api/operator/conditions', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conditions: conditionsInput }) });
-    setConditions(conditionsInput); setSavingConditions(false); setShowConditions(false);
+    const r = await dfetch('/api/operator/conditions', { method: 'PATCH', body: JSON.stringify({ conditions: conditionsInput }) });
+    setSavingConditions(false);
+    if (!r.ok) { toast(r.error); return; } // the modal stays open with the text intact
+    setConditions(conditionsInput); setShowConditions(false);
+    toast(conditionsInput.trim() ? 'Course alert saved — golfers see it on your page.' : 'Course alert cleared.', 'ok');
   }
 
   const nowHM = `${new Date().getHours().toString().padStart(2, '0')}:${new Date().getMinutes().toString().padStart(2, '0')}`;
@@ -461,6 +518,7 @@ function DashboardPageInner() {
                 ]}
               />
               {analyticsLoading && <div className="text-center py-20 text-ink-muted"><Loader2 className="w-6 h-6 animate-spin mx-auto"/></div>}
+              {!analyticsLoading && analyticsError && <LoadError message={analyticsError} onRetry={() => { setAnalytics(null); setAnalyticsError(''); }} />}
               {analytics && (
                 <div className="space-y-5">
                   <div className="bg-white border border-line rounded-lg p-5">
@@ -593,6 +651,8 @@ function DashboardPageInner() {
                 </div>
               </div>
 
+              {sheetError && <LoadError message={sheetError} onRetry={() => loadTimes(selectedDate)} />}
+
               {/* Legend */}
               <div className="flex gap-4 mb-3 text-xs text-ink-muted">
                 {([['bg-white border-line','Open'],['bg-warn/5 border-warn/20','Filling'],['bg-bad/5 border-bad/20','Full'],['bg-paper border-line opacity-60','Blocked']] as [string,string][]).map(([cls,label]) => (
@@ -641,12 +701,12 @@ function DashboardPageInner() {
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <button onClick={e => { e.stopPropagation(); fetch('/api/operator/tee-times',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:tt.id,status:tt.status==='blocked'?'available':'blocked'})}).then(()=>loadTimes(selectedDate)); }}
-                            className="text-xs px-3 md:px-2 min-h-[40px] md:min-h-0 py-1 rounded-md border border-line text-ink-soft hover:text-ink hover:border-line-strong transition-colors">
-                            {tt.status==='blocked'?'Unblock':'Block'}
+                          <button onClick={e => { e.stopPropagation(); toggleBlock(tt); }} disabled={slotBusy === tt.id}
+                            className="text-xs px-3 md:px-2 min-h-[40px] md:min-h-0 py-1 rounded-md border border-line text-ink-soft hover:text-ink hover:border-line-strong transition-colors disabled:opacity-50">
+                            {slotBusy === tt.id ? '…' : tt.status==='blocked'?'Unblock':'Block'}
                           </button>
-                          <button onClick={e => { e.stopPropagation(); if(confirm('Delete this tee time?')) fetch('/api/operator/tee-times',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:tt.id})}).then(()=>loadTimes(selectedDate)); }}
-                            className="text-xs px-3 md:px-2 min-h-[40px] md:min-h-0 py-1 rounded-md border border-bad/30 text-bad hover:bg-bad/5 transition-colors">
+                          <button onClick={e => { e.stopPropagation(); deleteTime(tt); }} disabled={slotBusy === tt.id}
+                            className="text-xs px-3 md:px-2 min-h-[40px] md:min-h-0 py-1 rounded-md border border-bad/30 text-bad hover:bg-bad/5 transition-colors disabled:opacity-50">
                             Del
                           </button>
                         </div>
@@ -695,7 +755,7 @@ function DashboardPageInner() {
       {/* ── Add Tee Time Modal ── */}
       {showAddModal && (
         <div className="fixed inset-0 bg-ink/20 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-white border border-line w-full sm:max-w-sm rounded-t-lg sm:rounded-lg p-6">
+          <div className="bg-white border border-line w-full sm:max-w-sm rounded-t-lg sm:rounded-lg p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-serif font-medium text-ink text-[17px]">Add Tee Time — {fmtDate(selectedDate)}</h3>
               <button onClick={() => setShowAddModal(false)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
@@ -757,17 +817,22 @@ function AddTeeTimeForm({ date, onSave, onCancel }: { date: string; onSave: ()=>
   const [cartFee,  setCartFee]  = useState(18);
   const [walking,  setWalking]  = useState(true);
   const [saving,   setSaving]   = useState(false);
+  const [err,      setErr]      = useState('');
 
   const inp = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-full';
 
   async function save() {
-    setSaving(true);
-    await fetch('/api/operator/tee-times', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({date,time,holes,playersAvailable:players,greenFee,cartFee,walkingAllowed:walking}) });
-    setSaving(false); onSave();
+    setSaving(true); setErr('');
+    const r = await dfetch('/api/operator/tee-times', { method:'POST', body:JSON.stringify({date,time,holes,playersAvailable:players,greenFee,cartFee,walkingAllowed:walking}) });
+    setSaving(false);
+    // SD-10: this closed the modal and refetched no matter what the server said.
+    if (!r.ok) { setErr(r.error); return; }
+    onSave();
   }
 
   return (
     <div className="space-y-3">
+      {err && <p className="text-xs text-bad bg-bad/5 border border-bad/20 rounded-md px-3 py-2">{err}</p>}
       <div className="grid grid-cols-2 gap-3">
         <div><label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Time</label><input type="time" value={time} onChange={e=>setTime(e.target.value)} className={inp}/></div>
         <div><label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Holes</label><select value={holes} onChange={e=>setHoles(Number(e.target.value))} className={inp}><option value={9}>9</option><option value={18}>18</option></select></div>

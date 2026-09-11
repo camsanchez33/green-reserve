@@ -27,6 +27,8 @@ function OnboardingInner() {
   // agreement again on every save — one GM, several timeline rows.
   const [agreementOnFile, setAgreementOnFile] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [loadError, setLoadError] = useState('');
+  const [finishError, setFinishError] = useState('');
 
   useEffect(() => {
     const stripeParam = params.get('stripe');
@@ -38,6 +40,7 @@ function OnboardingInner() {
   useEffect(() => {
     fetch('/api/operator/profile').then(r => {
       if (r.status === 401) { router.push('/dashboard/login'); return null; }
+      if (!r.ok) { setLoadError(`Could not load your account (${r.status}).`); return null; }
       return r.json();
     }).then(data => {
       if (!data) return;
@@ -45,7 +48,7 @@ function OnboardingInner() {
       if (data.onboardingStep >= 3) { router.push('/dashboard'); return; }
       setStep(data.onboardingStep >= 2 ? 2 : 1);
       setLoading(false);
-    });
+    }).catch(() => setLoadError('Network error loading your account.')); // SD-10: was a spinner forever
     fetch('/api/operator/courses').then(r => r.json()).then(c => {
       if (!c) return;
       setDetails(d => ({ ...d, description: c.description ?? '', holes: c.holes ?? 18, par: c.par ?? 72 }));
@@ -96,19 +99,39 @@ function OnboardingInner() {
 
   const connectStripe = async () => {
     setConnecting(true);
-    const r = await fetch('/api/operator/stripe/connect?from=onboarding');
-    const d = await r.json();
-    setConnecting(false);
-    if (d.url) window.location.href = d.url;
-    else setStripeBanner('error');
+    try {
+      const r = await fetch('/api/operator/stripe/connect?from=onboarding');
+      const d = await r.json().catch(() => ({}));
+      if (r.ok && d.url) { window.location.href = d.url; return; }
+      setStripeBanner('error');
+    } catch {
+      setStripeBanner('error'); // SD-10: was "Connecting..." forever
+    } finally {
+      setConnecting(false);
+    }
   };
 
   const finishOnboarding = async () => {
-    setSaving(true);
-    await fetch('/api/operator/onboarding-complete', { method: 'POST' });
-    setSaving(false);
-    setStep(3);
+    setSaving(true); setFinishError('');
+    try {
+      const r = await fetch('/api/operator/onboarding-complete', { method: 'POST' });
+      if (!r.ok) { const d = await r.json().catch(() => ({})); setFinishError(d.error || `Could not finish setup (${r.status}) — try again.`); return; }
+      setStep(3);
+    } catch {
+      setFinishError('Network error — try again.');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loadError) return (
+    <div className="min-h-screen bg-paper flex items-center justify-center p-6">
+      <div className="bg-white border border-bad/20 rounded-lg px-6 py-5 max-w-sm text-center">
+        <p className="text-sm text-bad mb-4">{loadError}</p>
+        <button onClick={() => window.location.reload()} className="px-4 py-2 bg-pine hover:bg-pine-hover text-white text-sm font-medium rounded-md transition-colors">Reload</button>
+      </div>
+    </div>
+  );
 
   if (loading) return (
     <div className="min-h-screen bg-paper flex items-center justify-center">
@@ -253,6 +276,7 @@ function OnboardingInner() {
             {/* STRIPE RULE FINAL (RUN_QUEUE) — fully skippable pre-live,
                 regardless of fee policy. Required only at actual go-live
                 time (enforced server-side in go-live-preflight.ts). */}
+            {finishError && <p className="text-sm text-bad mb-3">{finishError}</p>}
             <button onClick={finishOnboarding} disabled={saving}
               className="w-full mt-4 bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 disabled:bg-line-strong transition-colors flex items-center justify-center gap-2">
               {saving ? <><Loader2 className="w-4 h-4 animate-spin"/>Finishing...</> : !isConnected ? "Skip for now — I'll do this later" : 'Continue'}

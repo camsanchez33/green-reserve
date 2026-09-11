@@ -143,12 +143,13 @@ function SettingsPageInner() {
   useEffect(() => { dirtyRef.current = dirty; }, [dirty]);
   const refreshForm = () => fetch('/api/operator/settings').then(r => r.ok ? r.json() : null).then(d => { if (d && !dirtyRef.current) setForm(d); }).catch(() => {});
 
-  const refreshPhotos = () => fetch('/api/operator/photos').then(r=>r.json()).then(setPhotos);
+  // SD-10: `{error}` into setPhotos crashed the Photos tab on `.map`.
+  const refreshPhotos = () => fetch('/api/operator/photos').then(r => r.ok ? r.json() : null).then(d => { if (Array.isArray(d)) setPhotos(d); else setPhotoErr('Could not load your photos — reload to try again.'); }).catch(() => setPhotoErr('Network error loading photos.'));
 
   useEffect(() => {
     refreshForm();
-    fetch('/api/operator/staff').then(r=>r.json()).then(setStaff);
-    fetch('/api/operator/profile').then(r=>r.json()).then(p=>{ if(p?.email) setOperatorEmail(p.email); });
+    fetch('/api/operator/staff').then(r => r.ok ? r.json() : null).then(d => { if (Array.isArray(d)) setStaff(d); }).catch(() => {});
+    fetch('/api/operator/profile').then(r => r.ok ? r.json() : null).then(p => { if (p?.email) setOperatorEmail(p.email); }).catch(() => {});
     refreshPhotos();
     // Admin can flip live/draft status or Stripe connection state while this
     // tab sits open in the background — refresh on refocus instead of
@@ -184,9 +185,12 @@ function SettingsPageInner() {
   async function emailResetLinkInstead() {
     if (!operatorEmail) return;
     setEmailingReset(true);
-    await fetch('/api/auth/forgot-password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email: operatorEmail }) });
-    setEmailingReset(false);
-    setResetEmailSent(true);
+    try {
+      const r = await fetch('/api/auth/forgot-password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email: operatorEmail }) });
+      if (!r.ok) { toast('Could not send the reset link — try again.'); return; }
+      setResetEmailSent(true);
+    } catch { toast('Network error — the reset link was not sent.'); }
+    finally { setEmailingReset(false); }
   }
 
   async function connectStripe() {
@@ -257,13 +261,18 @@ function SettingsPageInner() {
 
   async function removeStaff(id:string) {
     if(!confirm('Remove this staff member?')) return;
-    await fetch('/api/operator/staff',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+    // SD-10: the row vanished whether or not the server agreed.
+    const r = await fetch('/api/operator/staff',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}).catch(() => null);
+    if (!r || !r.ok) { const d = r ? await r.json().catch(() => ({})) : {}; toast(d.error || 'Could not remove that staff member.'); return; }
     setStaff(s=>s.filter(m=>m.id!==id));
+    toast('Staff member removed — their login stops working now.', 'ok');
   }
 
   async function toggleStaff(id:string, active:boolean) {
-    await fetch('/api/operator/staff',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,active})});
+    const r = await fetch('/api/operator/staff',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,active})}).catch(() => null);
+    if (!r || !r.ok) { const d = r ? await r.json().catch(() => ({})) : {}; toast(d.error || 'Could not change that staff account.'); return; }
     setStaff(s=>s.map(m=>m.id===id?{...m,active}:m));
+    toast(active ? 'Staff account re-enabled.' : 'Staff account disabled — their login stops working now.', 'ok');
   }
 
   async function save2FA() {
@@ -276,8 +285,8 @@ function SettingsPageInner() {
       body: JSON.stringify({ twoFactorMethod: method, twoFactorPhone: phone }),
     });
     setSaving2FA(false);
-    if (res.ok) { setSaved2FA(true); setTimeout(() => setSaved2FA(false), 2000); }
-    else setError2FA('Could not save. Try again.');
+    if (res.ok) { setSaved2FA(true); setDirty(false); setTimeout(() => setSaved2FA(false), 2000); }
+    else { const d = await res.json().catch(() => ({})); setError2FA(d.error || 'Could not save. Try again.'); }
   }
 
   async function changePassword() {
@@ -309,12 +318,18 @@ function SettingsPageInner() {
             <TabIntroButton onClick={intro.show}/>
           </div>
           {active !== 'Staff' && active !== 'Account' && active !== 'Photos' && (
-            <button onClick={save} disabled={saving}
+            <button onClick={save} disabled={saving || (!dirty && !saved)}
               className="flex items-center gap-2 bg-pine hover:bg-pine-hover text-white px-4 py-2 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
-              <Save className="w-4 h-4"/> {saved ? 'Saved' : saving ? 'Saving...' : dirty ? 'Save Changes' : 'Saved'}
+              <Save className="w-4 h-4"/> {saved ? 'Saved' : saving ? 'Saving...' : dirty ? 'Save Changes' : 'No changes'}
             </button>
           )}
         </div>
+        {saveError && (
+          <div className="mx-6 mt-4 bg-bad/5 border border-bad/20 rounded-lg px-4 py-3 text-sm text-bad flex items-center justify-between gap-3" role="alert">
+            <span>{saveError}</span>
+            <button onClick={() => setSaveError('')} className="text-xs text-ink-muted hover:text-ink">Dismiss</button>
+          </div>
+        )}
 
         <div className="max-w-3xl mx-auto px-6 py-6">
           <TabIntroCard
@@ -382,8 +397,8 @@ function SettingsPageInner() {
               </SectionCard>
               <SectionCard title="Branding">
                 <p className="text-sm text-ink-soft -mt-1">These appear on your public tee sheet. Uploads save immediately.</p>
-                <ImageUpload label="Course Logo" kind="logo" value={(form.logoUrl as string)||''} onUploaded={url=>set('logoUrl',url)} hint="Square works best (PNG with transparent background ideal). Max 8MB (large photos are auto-resized)."/>
-                <ImageUpload label="Course Photo" kind="hero" value={(form.heroImageUrl as string)||''} onUploaded={url=>set('heroImageUrl',url)} hint="Wide landscape shot of your course — shown as the banner behind your course name. Max 8MB (large photos are auto-resized)."/>
+                <ImageUpload label="Course Logo" kind="logo" value={(form.logoUrl as string)||''} onUploaded={url=>setForm(f=>({...f,logoUrl:url}))} hint="Square works best (PNG with transparent background ideal). Max 8MB (large photos are auto-resized)."/>
+                <ImageUpload label="Course Photo" kind="hero" value={(form.heroImageUrl as string)||''} onUploaded={url=>setForm(f=>({...f,heroImageUrl:url}))} hint="Wide landscape shot of your course — shown as the banner behind your course name. Max 8MB (large photos are auto-resized)."/>
               </SectionCard>
             </div>
           )}

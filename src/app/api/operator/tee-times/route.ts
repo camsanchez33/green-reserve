@@ -62,6 +62,14 @@ export async function DELETE(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await req.json();
-  await prisma.teeTime.deleteMany({ where: { id, courseId: session.courseId } });
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+  // SD-10: Booking.teeTimeId is ON DELETE RESTRICT, so deleting a booked slot
+  // threw P2003 → an unhandled 500 the dashboard swallowed. Say it instead.
+  const booked = await prisma.booking.count({ where: { teeTimeId: id, status: { in: ['confirmed', 'completed'] } } });
+  if (booked > 0) {
+    return NextResponse.json({ error: `This tee time has ${booked} booking${booked === 1 ? '' : 's'} — cancel ${booked === 1 ? 'it' : 'them'} first, or block the time instead.` }, { status: 409 });
+  }
+  const r = await prisma.teeTime.deleteMany({ where: { id, courseId: session.courseId } });
+  if (r.count === 0) return NextResponse.json({ error: 'That tee time no longer exists.' }, { status: 404 });
   return NextResponse.json({ success: true });
 }

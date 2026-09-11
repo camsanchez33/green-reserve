@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Send, MessageSquare, Radio } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { dfetch } from '@/lib/dashboard-fetch';
+import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
@@ -20,6 +22,7 @@ function MessagesContent() {
   const searchParams = useSearchParams();
   const [thread, setThread] = useState<Thread | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   // Feature-request links (e.g. the coming-soon Outings/Tournaments pages)
   // land here with a starter message pre-filled — a real feedback channel,
   // not a dead mailto.
@@ -29,18 +32,21 @@ function MessagesContent() {
   const intro = useTabIntro('messages');
 
   const loadThread = useCallback(async () => {
-    const r = await fetch('/api/operator/messages');
+    const r = await dfetch<Thread>('/api/operator/messages');
     if (r.status === 401) { router.push('/dashboard/login'); return; }
-    if (r.ok) setThread(await r.json());
+    if (r.ok) { setThread(r.data); setLoadError(''); }
+    else setLoadError(r.error); // SD-10: a 500 used to read as "No messages yet"
     setLoading(false);
-    await fetch('/api/operator/messages', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    // Mark read — best effort, never user-facing state.
+    await fetch('/api/operator/messages', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: '{}' }).catch(() => {});
   }, [router]);
 
   useEffect(() => {
-    fetch('/api/operator/profile').then(r => r.json()).then(p => {
-      if (!p || !p.emailVerified) { router.push('/dashboard/verify'); return; }
+    fetch('/api/operator/profile').then(r => r.ok ? r.json() : null).then(p => {
+      if (!p) return; // never redirect off an error body
+      if (!p.emailVerified) { router.push('/dashboard/verify'); return; }
       if (p.onboardingStep < 3) { router.push('/dashboard/onboarding'); return; }
-    });
+    }).catch(() => {});
     loadThread();
   }, [router, loadThread]);
 
@@ -80,6 +86,7 @@ function MessagesContent() {
               'Reply here anytime you have a question — a real person reads every message.',
             ]}
           />
+          {loadError && <LoadError message={loadError} onRetry={loadThread} />}
           {loading && <div className="text-center py-10 text-ink-muted text-sm">Loading...</div>}
           {!loading && messages.length === 0 && (
             <div className="flex-1 flex flex-col items-center justify-center text-center py-20">

@@ -59,7 +59,16 @@ export async function PATCH(req: NextRequest) {
   // Money arrives in dollars under its old field names; courseMoneyFromWire
   // maps each to its *Cents column. They are deliberately OUT of the allowlist
   // above so a raw dollar value can never be written into a cents column.
-  Object.assign(data, courseMoneyFromWire(body));
+  // SD review: the dollar→cents conversion accepts any magnitude and sign.
+  // Bound the one that becomes a card charge without a person in the loop.
+  const money = courseMoneyFromWire(body);
+  if ('lateCancellationFeeCents' in money) {
+    const c = money.lateCancellationFeeCents;
+    if (!Number.isFinite(c) || c < 0 || c > 50000) {
+      return NextResponse.json({ error: 'Late-cancellation fee must be between $0 and $500.' }, { status: 400 });
+    }
+  }
+  Object.assign(data, money);
   const updated = await prisma.course.update({ where: { id: session.courseId }, data });
 
   // 2FA settings live on CourseOperator, not Course — can't go in the whitelist above.

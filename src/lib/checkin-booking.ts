@@ -82,23 +82,30 @@ async function chargeBooking(
     let chargePaymentMethodId = booking.stripePaymentMethodId;
     const externalPm = opts?.externalPaymentMethodId;
 
-    if (!chargePaymentMethodId) {
-      if (!externalPm) {
-        return { error: 'No card on file -- enter card details to complete check-in.', status: 422 } as const;
-      }
+    // SD review: a card entered at the counter used to be honoured ONLY when
+    // the booking had no saved card. After a decline, "Retry with new card"
+    // therefore re-charged the declined card under the same idempotency key
+    // and Stripe replayed the decline. A fresh card always wins.
+    if (externalPm) {
       try {
-        const tempCustomer = await stripe.customers.create({
-          email: booking.golferEmail,
-          name: booking.golferName,
-          metadata: { bookingId: booking.id, source: 'walk_up_checkin' },
-        });
-        await stripe.paymentMethods.attach(externalPm, { customer: tempCustomer.id });
-        chargeCustomerId = tempCustomer.id;
+        let customerId = chargeCustomerId;
+        if (!customerId) {
+          const tempCustomer = await stripe.customers.create({
+            email: booking.golferEmail,
+            name: booking.golferName,
+            metadata: { bookingId: booking.id, source: 'walk_up_checkin' },
+          });
+          customerId = tempCustomer.id;
+        }
+        await stripe.paymentMethods.attach(externalPm, { customer: customerId });
+        chargeCustomerId = customerId;
         chargePaymentMethodId = externalPm;
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Could not save card.';
         return { error: `Card setup failed: ${message}`, status: 402 } as const;
       }
+    } else if (!chargePaymentMethodId) {
+      return { error: 'No card on file -- enter card details to complete check-in.', status: 422 } as const;
     }
 
     const ev = mode.recordCheckIn ? 'checkin' : 'collect';
@@ -170,6 +177,7 @@ async function chargeBooking(
       accessFeeTotal: booking.accessFeeTotal,
       totalAmount: booking.totalAmount,
       feeRefunded: feeRefundOk,
+      feeRefundFailed: refundPendingFee && !feeRefundOk,
       feeRefundAmount: booking.cancellationFeeTotal,
       bookingId: booking.id,
       checkInToken: booking.checkInToken,

@@ -332,6 +332,8 @@ export async function sendCheckInReceiptEmail(data: {
   date: string; time: string; players: number;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number; totalAmount: number;
   feeRefunded: boolean; feeRefundAmount: number;
+  /** SD review: a fee was owed back and the automatic refund failed — say so, do not go quiet. */
+  feeRefundFailed?: boolean;
   bookingId: string; checkInToken?: string | null;
 }) {
   const html = baseTemplate(`
@@ -349,6 +351,7 @@ export async function sendCheckInReceiptEmail(data: {
       </table>
     </div>
     ${data.feeRefunded ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#166534;font-size:14px;font-weight:600;">&#10003; The $${(data.feeRefundAmount / 100).toFixed(2)} late-cancellation fee you were charged earlier has been refunded.</p></div>` : ''}
+    ${data.feeRefundFailed ? `<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:4px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#92400e;font-size:14px;font-weight:600;">Your earlier $${(data.feeRefundAmount / 100).toFixed(2)} late-cancellation fee is owed back to you, but the automatic refund did not go through. The course has been notified — if it has not appeared within a few days, contact them or hello@greenreserve.app.</p></div>` : ''}
     ${data.checkInToken ? `<a href="${process.env.NEXT_PUBLIC_URL}/receipt/${data.bookingId}?token=${data.checkInToken}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:600;font-size:15px;margin-bottom:16px;">View Receipt &rarr;</a>` : ''}
     ${data.courseSlug ? `<a href="${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}/account?email=${encodeURIComponent(data.golferEmail)}" style="display:block;color:#6b7280;text-decoration:none;text-align:center;padding:4px;font-weight:600;font-size:12px;margin-bottom:16px;">View your tee times at ${data.courseName} &rarr;</a>` : ''}
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>

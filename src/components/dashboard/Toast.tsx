@@ -39,7 +39,7 @@ export function Toaster() {
 
   if (items.length === 0) return null;
   return (
-    <div className="fixed z-50 left-1/2 -translate-x-1/2 bottom-20 md:bottom-6 w-[calc(100%-2rem)] max-w-md space-y-2 pointer-events-none">
+    <div className="fixed z-[60] left-1/2 -translate-x-1/2 bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-6 w-[calc(100%-2rem)] max-w-md space-y-2 pointer-events-none">
       {items.map(t => (
         <div
           key={t.id}

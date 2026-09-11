@@ -3,6 +3,8 @@ import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, RefreshCw, DollarSign, CreditCard, Clock3, X, AlertCircle, CheckCircle2 } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { dfetch } from '@/lib/dashboard-fetch';
+import { LoadError } from '@/components/dashboard/LoadError';
 import { getBookingStatus } from '@/lib/booking-status';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
@@ -45,6 +47,7 @@ function PaymentsPageInner() {
   const dateFilter = searchParams.get('date') || '';
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const intro = useTabIntro('payments');
@@ -52,10 +55,10 @@ function PaymentsPageInner() {
   const load = useCallback(async () => {
     setLoading(true);
     const url = dateFilter ? `/api/operator/bookings?date=${dateFilter}` : '/api/operator/bookings';
-    const res = await fetch(url);
-    if (res.status === 401) { router.push('/dashboard/login'); return; }
-    const data = await res.json();
-    setBookings(Array.isArray(data) ? data : []);
+    const r = await dfetch<Booking[]>(url);
+    if (r.status === 401) { router.push('/dashboard/login'); return; }
+    if (!r.ok) { setBookings([]); setLoadError(r.error); }
+    else { setBookings(Array.isArray(r.data) ? r.data : []); setLoadError(''); }
     setLoading(false);
   }, [router, dateFilter]);
 
@@ -163,6 +166,8 @@ function PaymentsPageInner() {
             </div>
             {(q || statusFilter !== 'all') && <span className="text-xs text-ink-muted">{allRows.length} of {bookings.length} bookings</span>}
           </div>
+
+          {loadError && <LoadError message={loadError} onRetry={load} />}
 
           {loading ? (
             <div className="flex items-center justify-center py-16 text-ink-muted gap-2"><Loader2 className="w-5 h-5 animate-spin"/>Loading...</div>

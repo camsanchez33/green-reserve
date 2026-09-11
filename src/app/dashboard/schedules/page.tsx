@@ -1,7 +1,9 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, Pencil, Check, X, Power, RefreshCw } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { dfetch } from '@/lib/dashboard-fetch';
+import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
@@ -23,6 +25,7 @@ const emptyForm = () => ({ tierName:'standard', daysOfWeek:[0,1,2,3,4,5,6] as nu
 export default function SchedulesPage() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [editId, setEditId] = useState<string|null>(null);
   const [form, setForm] = useState(emptyForm());
@@ -32,10 +35,18 @@ export default function SchedulesPage() {
   const [hasResident, setHasResident] = useState(false);
   const intro = useTabIntro('schedule');
 
-  useEffect(() => {
-    fetch('/api/operator/schedule').then(r=>r.json()).then(d=>{ setSchedules(Array.isArray(d)?d:[]); setLoading(false); });
-    fetch('/api/operator/settings').then(r=>r.json()).then(c=>{ setHasMember(!!c.hasMemberPricing); setHasResident(!!c.hasResidentPricing); });
+  // SD-10: a 403 (staff by URL) or 500 here used to render "No schedules yet".
+  const loadSchedules = useCallback(async () => {
+    setLoading(true);
+    const r = await dfetch<Schedule[]>('/api/operator/schedule');
+    if (r.ok) { setSchedules(Array.isArray(r.data) ? r.data : []); setLoadError(''); }
+    else { setSchedules([]); setLoadError(r.error); }
+    setLoading(false);
   }, []);
+  useEffect(() => {
+    loadSchedules();
+    fetch('/api/operator/settings').then(r => r.ok ? r.json() : null).then(c => { if (!c) return; setHasMember(!!c.hasMemberPricing); setHasResident(!!c.hasResidentPricing); }).catch(() => {});
+  }, [loadSchedules]);
 
   function openAdd() { setForm(emptyForm()); setEditId(null); setShowAdd(true); }
   function openEdit(s: Schedule) {
@@ -63,38 +74,44 @@ export default function SchedulesPage() {
     if (form.startTime >= form.endTime) { toast('End time must be after start time.', 'warn'); return; }
     setSaving(true);
     const payload = { ...form, memberRateWeekday:form.memberRateWeekday||null, memberRateWeekend:form.memberRateWeekend||null, residentRateWeekday:form.residentRateWeekday||null, residentRateWeekend:form.residentRateWeekend||null };
-    if (editId) {
-      const r = await fetch('/api/operator/schedule',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:editId,...payload})});
-      const updated = await r.json();
-      setSchedules(s=>s.map(x=>x.id===editId?updated:x));
-    } else {
-      const r = await fetch('/api/operator/schedule',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-      const created = await r.json();
-      setSchedules(s=>[...s,created]);
-    }
-    setSaving(false); setShowAdd(false); setEditId(null);
+    // SD-10: the `{error}` body used to be written into schedules[] as a row and
+    // the page went blank on `daysOfWeek.map`. Check first; keep the modal open.
+    const r = editId
+      ? await dfetch<Schedule>('/api/operator/schedule', { method: 'PATCH', body: JSON.stringify({ id: editId, ...payload }) })
+      : await dfetch<Schedule>('/api/operator/schedule', { method: 'POST', body: JSON.stringify(payload) });
+    setSaving(false);
+    if (!r.ok || !r.data) { toast(r.ok ? 'The schedule came back empty — refresh and check.' : r.error); return; }
+    const row = r.data;
+    setSchedules(s => editId ? s.map(x => x.id === editId ? row : x) : [...s, row]);
+    toast(editId ? 'Schedule updated — the tee sheet was rebuilt.' : 'Schedule saved — tee times generated for the next 8 days.', 'ok');
+    setShowAdd(false); setEditId(null);
   }
 
   async function regenerate() {
     if (!confirm('Update the tee sheet now?\n\nThis rebuilds open tee times for the next 8 days from your current schedules. Times that already have bookings are never touched.')) return;
     setRegenerating(true);
-    const r = await fetch('/api/operator/regenerate-tee-times', { method: 'POST' });
-    const data = await r.json();
+    const r = await dfetch<{ created?: number; errors?: string[] }>('/api/operator/regenerate-tee-times', { method: 'POST' });
     setRegenerating(false);
+    if (!r.ok) { toast(r.error); return; }
+    const data = r.data ?? {};
     if (data.errors?.length) toast(`Done with some errors: ${data.errors.join(', ')}`, 'warn');
-    else toast(`Done — ${data.created} new tee time slot${data.created !== 1 ? 's' : ''} created across the next 8 days.`, 'ok');
+    else toast(`Done — ${data.created ?? 0} new tee time slot${data.created !== 1 ? 's' : ''} created across the next 8 days.`, 'ok');
   }
 
   async function del(id: string) {
     if (!confirm('Delete this schedule?\n\nOpen tee times it was creating are removed from the sheet straight away. Times that already have bookings are kept.')) return;
-    await fetch('/api/operator/schedule',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
-    setSchedules(s=>s.filter(x=>x.id!==id));
+    const r = await dfetch('/api/operator/schedule', { method: 'DELETE', body: JSON.stringify({ id }) });
+    if (!r.ok) { toast(r.error); return; } // the row stays; the server refused
+    setSchedules(s => s.filter(x => x.id !== id));
+    toast('Schedule deleted — open tee times it created are gone from the sheet.', 'ok');
   }
 
   async function toggleActive(s: Schedule) {
-    const r = await fetch('/api/operator/schedule',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:s.id,active:!s.active})});
-    const updated = await r.json();
-    setSchedules(prev=>prev.map(x=>x.id===s.id?updated:x));
+    const r = await dfetch<Schedule>('/api/operator/schedule', { method: 'PATCH', body: JSON.stringify({ id: s.id, active: !s.active }) });
+    if (!r.ok || !r.data) { toast(r.ok ? 'No response — refresh and check.' : r.error); return; }
+    const row = r.data;
+    setSchedules(prev => prev.map(x => x.id === s.id ? row : x));
+    toast(row.active ? 'Schedule resumed — its times are back on the sheet.' : 'Schedule paused — its open times are off the sheet.', 'ok');
   }
 
   return (
@@ -131,6 +148,8 @@ export default function SchedulesPage() {
           <div className="bg-pine/5 border border-pine/20 rounded-lg p-4 text-sm text-ink-soft leading-relaxed">
             <span className="font-medium text-ink">How this works:</span> each schedule is a recipe — days, hours, interval, and pricing — and GreenReserve automatically generates your bookable tee times from it every night for the next 8 days. Editing a schedule changes <span className="font-medium text-ink">future</span> generation only; to update the tee sheet right now, hit <span className="font-medium text-ink">Apply to Tee Sheet</span> above. Times that already have bookings are never touched.
           </div>
+
+          {loadError && <LoadError message={loadError} onRetry={loadSchedules} />}
 
           {loading && <div className="text-center py-12 text-ink-muted">Loading schedules...</div>}
           {!loading && schedules.length === 0 && (
@@ -191,7 +210,7 @@ export default function SchedulesPage() {
 
         {showAdd && (
           <div className="fixed inset-0 bg-ink/20 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-            <div className="bg-white border border-line w-full sm:max-w-xl rounded-t-lg sm:rounded-lg max-h-[92vh] overflow-y-auto">
+            <div className="bg-white border border-line w-full sm:max-w-xl rounded-t-lg sm:rounded-lg max-h-[92vh] overflow-y-auto pb-[env(safe-area-inset-bottom)] sm:pb-0">
               <div className="sticky top-0 bg-white px-5 pt-5 pb-4 border-b border-line flex items-center justify-between z-10">
                 <span className="font-serif font-medium text-ink text-[17px]">{editId ? 'Edit Schedule' : 'New Schedule'}</span>
                 <button onClick={() => { setShowAdd(false); setEditId(null); }} className="text-ink-muted hover:text-ink transition-colors"><X className="w-5 h-5"/></button>

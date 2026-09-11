@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
 import { recordTabVisit } from '@/lib/dashboard-visits';
-import { Toaster } from '@/components/dashboard/Toast';
+import { Toaster, toast } from '@/components/dashboard/Toast';
 
 export type OperatorNavKey =
   | 'teesheet' | 'analytics' | 'cancellations' | 'tournaments' | 'outings'
@@ -65,17 +65,24 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     if (switchingCourse || courseId === identity.id) return;
     setSwitchingCourse(true);
     try {
-      await fetch('/api/operator/active-course', {
+      const r = await fetch('/api/operator/active-course', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ courseId }),
       });
-    } finally {
+      // SD-10: this reloaded whether or not the switch happened — you landed
+      // back on the same course with no explanation.
+      if (!r.ok) { const d = await r.json().catch(() => ({})); toast(d.error || 'Could not switch course.'); setSwitchingCourse(false); return; }
       window.location.href = '/dashboard';
+    } catch {
+      toast('Network error — could not switch course.'); setSwitchingCourse(false);
     }
   }
 
   async function logout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/dashboard/login');
+    try {
+      const r = await fetch('/api/auth/logout', { method: 'POST' });
+      if (!r.ok) { toast('Sign-out did not go through — try again.'); return; }
+      window.location.assign('/dashboard/login');
+    } catch { toast('Network error — you are still signed in.'); }
   }
 
   const { brandColor, name, type, establishedYear } = identity;

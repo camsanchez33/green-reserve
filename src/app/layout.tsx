@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, Fraunces } from 'next/font/google';
 import './globals.css';
 import Nav from '@/components/Nav';
@@ -26,6 +26,10 @@ const fraunces = Fraunces({
 const SITE_URL = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
 const DESCRIPTION = 'Free online booking platform for golf courses. Set up your tee sheet in minutes. Golfers book direct — you keep 100% of green fees.';
 
+// env(safe-area-inset-*) only resolves with viewport-fit=cover — the dashboard's
+// bottom nav and toasts pad for the home indicator.
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover' };
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: 'GreenReserve — Online Tee Sheet for Golf Courses', template: '%s | GreenReserve' },
@@ -36,7 +40,8 @@ export const metadata: Metadata = {
     title: 'GreenReserve — Online Tee Sheet for Golf Courses', description: DESCRIPTION,
   },
   twitter: { card: 'summary_large_image', title: 'GreenReserve — Online Tee Sheet for Golf Courses', description: DESCRIPTION },
-  alternates: { canonical: '/' },
+  // './' resolves per path; '/' would have told search engines every page IS the homepage.
+  alternates: { canonical: './' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
