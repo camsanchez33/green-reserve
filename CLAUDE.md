@@ -222,7 +222,7 @@ and never move its contents into the queue without asking.
 
 ### Doc-file commit rule
 After every run, `git status` — if dirty:
-- **Doc files** (`RUN_QUEUE.md`, `*_SPEC.md`, `CLAUDE.md`): COMMIT with message `"queue/spec update"` — never discard; Cowork edits them between runs.
+- **Doc files** (`RUN_QUEUE.md`, `*_SPEC.md`, `CLAUDE.md`, everything under `.claude/`, `scripts/*.mjs`, everything under `legal/`): COMMIT with message `"queue/spec update"` — never discard; Cowork edits them between runs.
 - **Non-doc files**: `git checkout -- .` to discard.
 
 First action of every run: commit any dirty doc files BEFORE reading the queue.
