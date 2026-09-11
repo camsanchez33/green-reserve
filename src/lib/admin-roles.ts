@@ -10,3 +10,7 @@
 export const OWNER_ONLY = ['owner'];
 export const MANAGER_PLUS = ['owner', 'manager'];
 export const SUPPORT_PLUS = ['owner', 'manager', 'support'];
+// Viewer: read-only, and only the surfaces with no golfer PII and no ledger —
+// the Overview (money fields are nulled below support), the inquiries list
+// and detail (business leads), and the courses list. Nothing else.
+export const VIEWER_PLUS = ['owner', 'manager', 'support', 'viewer'];

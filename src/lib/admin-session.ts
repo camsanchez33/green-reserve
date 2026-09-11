@@ -35,7 +35,7 @@ export class AdminSessionUnavailable extends Error {
 // Defined in admin-roles.ts (client-safe) and re-exported here so existing
 // server-side imports are unchanged. This module is server-only — it pulls in
 // prisma and next/headers — so client components must import from admin-roles.
-export { OWNER_ONLY, MANAGER_PLUS, SUPPORT_PLUS } from './admin-roles';
+export { OWNER_ONLY, MANAGER_PLUS, SUPPORT_PLUS, VIEWER_PLUS } from './admin-roles';
 
 /**
  * The owner gate. Role alone is not enough — the session must also carry the
