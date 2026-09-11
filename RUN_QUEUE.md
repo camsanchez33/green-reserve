@@ -440,6 +440,18 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     editable form until Save (needs an up-front read-only notice); Members
     header overflow at 360px unverified; opengraph card in Georgia not
     Fraunces; Toast border tints read as neutral. NEEDS REVIEW.
+  - [x] SD-11 (6fb70a7) — the SD-review candidates. Stripe callback authenticated
+    (own active course must hold the account) + try/catch → ?stripe=error;
+    tee-time POST validates date/time/players, staff cannot set a price (the
+    schedule for that day prices the walk-in slot; 409 if no schedule),
+    operator fees bounded; operator courses PATCH through
+    validateSettingsPatch + boolean `active`; Settings role picker drops
+    "Manager (full access)" (no such role in the session — every staff login
+    is tee-sheet access; existing 'manager' rows work as staff); NEW
+    components/dashboard/StaffNotice on Settings/Schedule/Members/Payments
+    for staff arriving by URL; ARCHITECTURE.md regenerated. NOT done (design
+    nits, parked with the UI revise): opengraph font, Toast border tints,
+    retry-button colour, 360px labels. NEEDS REVIEW.
   - [ ] SD-8 — merge + split: Payments + Cancellations → one Money page with
     tabs (they already query the same endpoint) + the Stripe payout card moved
     here from Settings + the literal $1.50/player figure; Settings 9 tabs → 5
