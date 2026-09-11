@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Search, Building2, AlertCircle, User, Users, LayoutDashboard, ArrowRight } from 'lucide-react';
 
 interface SearchResult {
-  type: 'course' | 'inquiry' | 'golfer' | 'employee' | 'nav';
+  type: 'course' | 'inquiry' | 'golfer' | 'guest' | 'employee' | 'nav';
   id: string;
   label: string;
   sub: string;
@@ -28,6 +28,7 @@ const TYPE_ICON: Record<SearchResult['type'], React.ReactNode> = {
   course:   <Building2 className="w-3.5 h-3.5 text-ink-muted"/>,
   inquiry:  <AlertCircle className="w-3.5 h-3.5 text-warn"/>,
   golfer:   <User className="w-3.5 h-3.5 text-pine"/>,
+  guest:    <User className="w-3.5 h-3.5 text-ink-muted"/>,
   employee: <Users className="w-3.5 h-3.5 text-ink-muted"/>,
   nav:      <LayoutDashboard className="w-3.5 h-3.5 text-ink-faint"/>,
 };
@@ -36,6 +37,7 @@ const TYPE_LABEL: Record<SearchResult['type'], string> = {
   course:   'Course',
   inquiry:  'Inquiry',
   golfer:   'Golfer',
+  guest:    'Guest golfer',
   employee: 'Employee',
   nav:      'Go to',
 };

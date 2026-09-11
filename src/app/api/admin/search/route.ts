@@ -16,8 +16,9 @@ export async function GET(req: NextRequest) {
   const isManagerPlus = requireRole(session, MANAGER_PLUS);
 
   const lq = q.toLowerCase();
+  const digits = q.replace(/\D/g, '');
 
-  const [courses, inquiries, golfers, employees] = await Promise.all([
+  const [courses, inquiries, golfers, guests, employees] = await Promise.all([
     prisma.course.findMany({
       where: {
         archivedAt: null,
@@ -50,10 +51,27 @@ export async function GET(req: NextRequest) {
               { email: { contains: lq, mode: 'insensitive' } },
               { firstName: { contains: lq, mode: 'insensitive' } },
               { lastName: { contains: lq, mode: 'insensitive' } },
+              ...(digits.length >= 4 ? [{ phone: { contains: digits } }] : []),
             ],
           },
           select: { id: true, email: true, firstName: true, lastName: true },
           take: 5,
+          orderBy: { createdAt: 'desc' },
+        })
+      : Promise.resolve([]),
+    // MP-6d: guest bookings (no account) — most support calls are about these.
+    isSupportPlus
+      ? prisma.booking.findMany({
+          where: {
+            golferAccountId: null,
+            OR: [
+              { golferEmail: { contains: lq, mode: 'insensitive' } },
+              { golferName: { contains: lq, mode: 'insensitive' } },
+              ...(digits.length >= 4 ? [{ golferPhone: { contains: digits } }] : []),
+            ],
+          },
+          select: { golferName: true, golferEmail: true, course: { select: { name: true } }, teeTime: { select: { date: true } } },
+          take: 8,
           orderBy: { createdAt: 'desc' },
         })
       : Promise.resolve([]),
@@ -96,6 +114,7 @@ export async function GET(req: NextRequest) {
     | { type: 'course'; id: string; label: string; sub: string; href: string }
     | { type: 'inquiry'; id: string; label: string; sub: string; href: string }
     | { type: 'golfer'; id: string; label: string; sub: string; href: string }
+    | { type: 'guest'; id: string; label: string; sub: string; href: string }
     | { type: 'employee'; id: string; label: string; sub: string; href: string }
     | { type: 'nav'; id: string; label: string; sub: string; href: string };
 
@@ -120,6 +139,14 @@ export async function GET(req: NextRequest) {
       label: `${g.firstName} ${g.lastName}`,
       sub: g.email,
       href: `/admin/golfers?id=${g.id}`,
+    })),
+    // one row per guest email, not per booking
+    ...[...new Map((Array.isArray(guests) ? guests : []).map(g => [g.golferEmail.toLowerCase(), g])).values()].map(g => ({
+      type: 'guest' as const,
+      id: g.golferEmail.toLowerCase(),
+      label: g.golferName,
+      sub: `${g.golferEmail} · guest · last ${g.course.name} ${g.teeTime.date}`,
+      href: `/admin/golfers?guest=${encodeURIComponent(g.golferEmail.toLowerCase())}`,
     })),
     ...(Array.isArray(employees) ? employees : []).map(e => ({
       type: 'employee' as const,
