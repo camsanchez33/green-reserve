@@ -179,7 +179,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   ) : undefined;
 
   const revenueBadge = moneyProblems > 0 ? (
-    <span className="bg-bad text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium leading-none shrink-0" title={`${moneyProblems} failed charge${moneyProblems === 1 ? '' : 's'} to collect`}>
+    <span className="bg-bad text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium leading-none shrink-0" title={`${moneyProblems} money problem${moneyProblems === 1 ? '' : 's'} — failed charges and open chargebacks`}>
       {moneyProblems > 99 ? '99+' : moneyProblems}
     </span>
   ) : undefined;

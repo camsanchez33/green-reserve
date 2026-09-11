@@ -118,6 +118,7 @@ export default function RevenuePage() {
   const [editing, setEditing] = useState<Expense | null>(null);
   const [draft, setDraft] = useState({ name: '', category: 'infra', amount: '', cadence: 'monthly' });
   const [savingExpense, setSavingExpense] = useState(false);
+  const [expenseBusy, setExpenseBusy] = useState<string | null>(null);
 
   // Money in motion + problems
   const [motionDay, setMotionDay] = useState<'today' | 'tomorrow'>('today');
@@ -197,15 +198,33 @@ export default function RevenuePage() {
     else { const e = await res.json().catch(() => ({})); setExpenseError(e.error || 'Could not save.'); }
   }
 
+  // Review (no-silent-failures): no busy state (double-clickable) and no
+  // catch (a network throw was fully silent).
   async function endExpense(e: Expense) {
-    const res = await fetch(`/api/admin/expenses/${e.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endedAt: new Date().toISOString() }) });
-    if (res.ok) { await loadExpenses(); load(period, customFrom, customTo); }
-    else { const err = await res.json().catch(() => ({})); setExpenseError(err.error || 'Could not update.'); }
+    if (expenseBusy) return;
+    setExpenseBusy(e.id); setExpenseError('');
+    try {
+      const res = await fetch(`/api/admin/expenses/${e.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endedAt: new Date().toISOString() }) });
+      if (res.ok) { await loadExpenses(); load(period, customFrom, customTo); }
+      else { const err = await res.json().catch(() => ({})); setExpenseError(err.error || 'Could not update.'); }
+    } catch {
+      setExpenseError('Network error — the expense was not changed. Check your connection and try again.');
+    } finally {
+      setExpenseBusy(null);
+    }
   }
   async function deleteExpense(e: Expense) {
-    const res = await fetch(`/api/admin/expenses/${e.id}`, { method: 'DELETE' });
-    if (res.ok) { await loadExpenses(); load(period, customFrom, customTo); }
-    else { const err = await res.json().catch(() => ({})); setExpenseError(err.error || 'Could not delete.'); }
+    if (expenseBusy) return;
+    setExpenseBusy(e.id); setExpenseError('');
+    try {
+      const res = await fetch(`/api/admin/expenses/${e.id}`, { method: 'DELETE' });
+      if (res.ok) { await loadExpenses(); load(period, customFrom, customTo); }
+      else { const err = await res.json().catch(() => ({})); setExpenseError(err.error || 'Could not delete.'); }
+    } catch {
+      setExpenseError('Network error — the expense was not deleted. Check your connection and try again.');
+    } finally {
+      setExpenseBusy(null);
+    }
   }
 
   // MP-1 fix-now #5: this used to silently check the golfer in and email them
@@ -847,8 +866,8 @@ export default function RevenuePage() {
                           <div className="text-sm font-medium text-ink tabular-nums">{fmtMoney(e.amountCents / 100)}</div>
                           <div className="flex items-center gap-2 mt-1 justify-end">
                             <button onClick={() => startEdit(e)} className="text-ink-muted hover:text-ink" title="Edit"><Pencil className="w-3.5 h-3.5"/></button>
-                            {!e.endedAt && <button onClick={() => endExpense(e)} className="text-[11px] text-ink-muted hover:text-warn" title="Stop counting this cost">End</button>}
-                            <button onClick={() => deleteExpense(e)} className="text-ink-muted hover:text-bad" title="Delete"><Trash2 className="w-3.5 h-3.5"/></button>
+                            {!e.endedAt && <button onClick={() => endExpense(e)} disabled={expenseBusy === e.id} className="text-[11px] text-ink-muted hover:text-warn disabled:opacity-40" title="Stop counting this cost">{expenseBusy === e.id ? 'Working…' : 'End'}</button>}
+                            <button onClick={() => deleteExpense(e)} disabled={expenseBusy === e.id} className="text-ink-muted hover:text-bad disabled:opacity-40" title="Delete"><Trash2 className="w-3.5 h-3.5"/></button>
                           </div>
                         </div>
                       </div>

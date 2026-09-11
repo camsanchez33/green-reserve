@@ -67,6 +67,7 @@ export default function MembersPage() {
   const [editingTier, setEditingTier] = useState<string | null>(null);
   const [pricingMode, setPricingMode] = useState<PricingMode>('flat');
   const [tierSaving, setTierSaving] = useState(false);
+  const [tierDeleting, setTierDeleting] = useState<string | null>(null);
   const [tierError, setTierError] = useState('');
   const [createdTier, setCreatedTier] = useState<Tier | null>(null);
 
@@ -103,21 +104,25 @@ export default function MembersPage() {
     const payload = { ...tierForm, ...(pricingMode === 'pct' ? { greenFeeWeekday: null, greenFeeWeekend: null, cartFeeWeekday: null, cartFeeWeekend: null } : { discountPct: null }) };
     const method = editingTier ? 'PATCH' : 'POST';
     const body   = editingTier ? { ...payload, id: editingTier } : payload;
-    const r = await fetch('/api/operator/tiers', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    const d = await r.json();
+    // Review (no-silent-failures): raw fetch + unguarded r.json() threw past
+    // the busy reset on a network drop or an HTML error page, locking the
+    // wizard on "Saving…". dfetch never throws.
+    const r = await dfetch<Tier>('/api/operator/tiers', { method, body: JSON.stringify(body) });
     if (r.ok) {
       await loadAll();
-      if (editingTier) { closeWizard(); } else { setCreatedTier(d); setView('complete'); }
+      if (editingTier) { closeWizard(); } else { setCreatedTier(r.data); setView('complete'); }
       setTierForm(emptyTier()); setEditingTier(null);
-    } else { setTierError(d.error || 'Save failed'); }
+    } else { setTierError(r.error); }
     setTierSaving(false);
   };
 
   const deleteTier = async (id: string) => {
-    const r = await fetch(`/api/operator/tiers?id=${id}`, { method: 'DELETE' });
-    const d = await r.json();
+    if (tierDeleting) return;
+    setTierDeleting(id);
+    const r = await dfetch(`/api/operator/tiers?id=${id}`, { method: 'DELETE' });
     if (r.ok) setTiers(prev => prev.filter(t => t.id !== id));
-    else toast(d.error || 'Could not delete that tier.');
+    else toast(r.error);
+    setTierDeleting(null);
   };
 
   const startAddMember = (tierId?: string) => {
@@ -128,10 +133,9 @@ export default function MembersPage() {
 
   const addMember = async () => {
     setMemberSaving(true); setMemberError('');
-    const r = await fetch('/api/operator/members', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(memberForm) });
-    const d = await r.json();
+    const r = await dfetch('/api/operator/members', { method: 'POST', body: JSON.stringify(memberForm) });
     if (r.ok) { await loadAll(); setMemberForm(emptyMember()); setAddOpen(false); }
-    else setMemberError(d.error || 'Failed to add member');
+    else setMemberError(r.error);
     setMemberSaving(false);
   };
 
@@ -501,7 +505,7 @@ export default function MembersPage() {
                       </div>
                       <div className="flex gap-1">
                         <button onClick={() => openWizard(t)} className="p-1.5 text-ink-faint hover:text-pine transition-colors"><Edit2 className="w-3.5 h-3.5"/></button>
-                        <button onClick={() => deleteTier(t.id)} className="p-1.5 text-ink-faint hover:text-bad transition-colors"><Trash2 className="w-3.5 h-3.5"/></button>
+                        <button onClick={() => deleteTier(t.id)} disabled={tierDeleting === t.id} className="p-1.5 text-ink-faint hover:text-bad transition-colors disabled:opacity-40" title={tierDeleting === t.id ? 'Deleting…' : 'Delete tier'}><Trash2 className="w-3.5 h-3.5"/></button>
                       </div>
                     </div>
 

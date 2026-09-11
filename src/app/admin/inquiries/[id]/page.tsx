@@ -549,12 +549,17 @@ function InquiryDetailInner() {
   async function sendGoLiveReminder(missing: 'agreement' | 'stripe') {
     if (!inq?.builtCourseId) return;
     setReminderSending(missing);
-    const r = await fetch('/api/admin/send-golive-reminder', {
-      method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, missing }),
-    });
-    setReminderSending(null);
-    if (r.ok) setReminderSent(prev => new Set(prev).add(missing));
-    else { const d = await r.json().catch(() => ({})); setActionError('Reminder failed: ' + (d.error || 'unknown')); }
+    try {
+      const r = await fetch('/api/admin/send-golive-reminder', {
+        method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, missing }),
+      });
+      if (r.ok) setReminderSent(prev => new Set(prev).add(missing));
+      else { const d = await r.json().catch(() => ({})); setActionError('Reminder failed: ' + (d.error || 'unknown')); }
+    } catch {
+      setActionError('Reminder failed: network error — nothing was sent. Check your connection and try again.');
+    } finally {
+      setReminderSending(null);
+    }
   }
 
   async function requestReReview() {
@@ -577,12 +582,20 @@ function InquiryDetailInner() {
   async function archiveLiveCourse() {
     if (!inq?.builtCourseId) return;
     setProcessing(true); setActionError('');
-    const r = await fetch('/api/admin/archive-course', {
-      method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, action: 'archive' }),
-    });
-    setProcessing(false);
-    if (r.ok) await loadInquiry();
-    else { const d = await r.json().catch(() => ({})); setActionError('Archive failed: ' + (d.error || 'unknown')); }
+    // Review: the same hang restoreArchivedInquiry below was fixed for —
+    // `processing` gates the whole action rail, so a dropped connection here
+    // froze the page until reload.
+    try {
+      const r = await fetch('/api/admin/archive-course', {
+        method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, action: 'archive' }),
+      });
+      if (r.ok) await loadInquiry();
+      else { const d = await r.json().catch(() => ({})); setActionError('Archive failed: ' + (d.error || 'unknown')); }
+    } catch {
+      setActionError('Archive failed: network error — nothing was changed. Check your connection and try again.');
+    } finally {
+      setProcessing(false);
+    }
   }
 
   // MP-1b B3: the built-course branch had no catch, so a rejection left
@@ -631,15 +644,21 @@ function InquiryDetailInner() {
   // delete), case-insensitive/trimmed, validated again server-side.
   async function deleteInquiry() {
     if (!inq) return;
-    setActionError('');
-    const r = await fetch('/api/admin/inquiries?id=' + inq.id + '&confirmName=' + encodeURIComponent(deleteCourseConfirm), { method: 'DELETE', headers: H() });
-    if (r.ok) { router.push(backUrl); return; }
-    // No-silent-failures: a failed delete (name mismatch, or this inquiry
-    // turned out to have a built course after all) must show why, not just
-    // look like nothing happened while the record is still fully there.
-    const d = await r.json().catch(() => ({}));
-    setActionError('Delete failed: ' + (d.error || 'unknown'));
-    await loadInquiry();
+    setActionError(''); setProcessing(true);
+    try {
+      const r = await fetch('/api/admin/inquiries?id=' + inq.id + '&confirmName=' + encodeURIComponent(deleteCourseConfirm), { method: 'DELETE', headers: H() });
+      if (r.ok) { router.push(backUrl); return; }
+      // No-silent-failures: a failed delete (name mismatch, or this inquiry
+      // turned out to have a built course after all) must show why, not just
+      // look like nothing happened while the record is still fully there.
+      const d = await r.json().catch(() => ({}));
+      setActionError('Delete failed: ' + (d.error || 'unknown'));
+      await loadInquiry();
+    } catch {
+      setActionError('Delete failed: network error — the inquiry is still here. Check your connection and try again.');
+    } finally {
+      setProcessing(false);
+    }
   }
 
   async function saveContact() {

@@ -40,6 +40,7 @@ export async function chargeOnConnectedAccount(opts: {
    * with a NEW card (walk-up decline -> different card) gets a fresh key.
    */
   idempotencyKey?: string;
+  metadata?: Record<string, string>;
 }) {
   // The clone must be idempotent too: on a retry, a fresh clone would change
   // the PaymentIntent params under the same key, which Stripe rejects.
@@ -57,6 +58,8 @@ export async function chargeOnConnectedAccount(opts: {
       off_session: true,
       application_fee_amount: opts.applicationFeeCents > 0 ? opts.applicationFeeCents : undefined,
       description: opts.description,
+      // Review: lets a retry find a charge that succeeded but never reported back.
+      metadata: opts.metadata,
     },
     { stripeAccount: opts.connectedAccountId, idempotencyKey: opts.idempotencyKey }
   );
@@ -68,8 +71,14 @@ export async function refundOnConnectedAccount(opts: {
   connectedAccountId: string;
   amountCents?: number; // omit to refund in full
 }) {
+  // Review (security, HIGH): every refund of a round charge must give back
+  // GreenReserve's application fee pro rata — the refund primitive
+  // (refund-booking.ts) already did, this path (cancellations) did not, so
+  // the course was paying our $1.50/player on rounds it had refunded. The
+  // cancellation-fee charge this also refunds carried no application fee, so
+  // the flag is a no-op there.
   return stripe.refunds.create(
-    { payment_intent: opts.paymentIntentId, amount: opts.amountCents },
+    { payment_intent: opts.paymentIntentId, amount: opts.amountCents, refund_application_fee: true },
     { stripeAccount: opts.connectedAccountId }
   );
 }

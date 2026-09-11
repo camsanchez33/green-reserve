@@ -17,7 +17,7 @@ interface Course {
   stripeAccountActive: boolean; slug: string; type?: string;
   operator: { email: string; name: string; onboardingStep: number; emailVerified: boolean } | null;
   createdAt: string; archivedAt?: string | null; archivedBy?: string | null;
-  bookings30d: number; revenue30d: number; activeMemberCount: number;
+  bookings30d: number; revenue30d: number | null; activeMemberCount: number;
   lastBookingAt?: string | null; bookingsPrior30d?: number;
   approvalStatus?: 'none' | 'approved' | 'changes_requested';
   health: { status: CourseHealthStatus; label: string; dot: 'ok' | 'bad' | 'warn' | 'neutral'; reason: string };
@@ -246,7 +246,7 @@ function CoursesContent() {
                         <div className="text-[10px] text-ink-faint">{lastBookingLabel(course.lastBookingAt)}</div>
                       </div>
                       <div className="w-16 shrink-0 text-right hidden lg:block">
-                        <div className="text-xs text-ink">${Math.round(course.revenue30d)}</div>
+                        <div className="text-xs text-ink">{course.revenue30d === null ? '—' : `$${Math.round(course.revenue30d)}`}</div>
                         <div className="text-[10px] text-ink-faint">fees 30d</div>
                       </div>
                     </>

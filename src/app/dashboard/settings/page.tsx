@@ -253,11 +253,17 @@ function SettingsPageInner() {
   async function addStaffMember() {
     if(!newStaff.name||!newStaff.email) return;
     setAddingStaff(true);
-    const res = await fetch('/api/operator/staff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(newStaff)});
-    const data = await res.json();
-    setAddingStaff(false);
-    if(res.ok){ setStaffResult({tempPassword:data.tempPassword,name:newStaff.name}); setNewStaff({name:'',email:'',role:'staff'}); fetch('/api/operator/staff').then(r=>r.json()).then(setStaff); }
-    else toast(data.error || 'Could not add that staff account.');
+    // Review (no-silent-failures): same try/catch/finally SD-1 gave save().
+    try {
+      const res = await fetch('/api/operator/staff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(newStaff)});
+      const data = await res.json().catch(() => ({}));
+      if(res.ok){ setStaffResult({tempPassword:data.tempPassword,name:newStaff.name}); setNewStaff({name:'',email:'',role:'staff'}); fetch('/api/operator/staff').then(r=>r.json()).then(setStaff).catch(() => {}); }
+      else toast(data.error || 'Could not add that staff account.');
+    } catch {
+      toast('Network error — the staff account was not created. Check your connection and try again.');
+    } finally {
+      setAddingStaff(false);
+    }
   }
 
   async function removeStaff(id:string) {
@@ -281,13 +287,18 @@ function SettingsPageInner() {
     const phone = (form.twoFactorPhone as string) || '';
     if (method === 'sms' && !phone.trim()) { setError2FA('Enter a phone number to receive SMS codes.'); return; }
     setError2FA(''); setSaving2FA(true);
-    const res = await fetch('/api/operator/settings', {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ twoFactorMethod: method, twoFactorPhone: phone }),
-    });
-    setSaving2FA(false);
-    if (res.ok) { setSaved2FA(true); setDirty(false); setTimeout(() => setSaved2FA(false), 2000); }
-    else { const d = await res.json().catch(() => ({})); setError2FA(d.error || 'Could not save. Try again.'); }
+    try {
+      const res = await fetch('/api/operator/settings', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ twoFactorMethod: method, twoFactorPhone: phone }),
+      });
+      if (res.ok) { setSaved2FA(true); setDirty(false); setTimeout(() => setSaved2FA(false), 2000); }
+      else { const d = await res.json().catch(() => ({})); setError2FA(d.error || 'Could not save. Try again.'); }
+    } catch {
+      setError2FA('Network error — nothing was saved. Check your connection and try again.');
+    } finally {
+      setSaving2FA(false);
+    }
   }
 
   async function changePassword() {
@@ -297,14 +308,19 @@ function SettingsPageInner() {
     if (strengthError) { setPwError(strengthError); return; }
     if (pwForm.newPassword !== pwForm.confirmPassword) { setPwError('New passwords do not match.'); return; }
     setPwSaving(true);
-    const res = await fetch('/api/operator/change-password', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword }),
-    });
-    const data = await res.json();
-    setPwSaving(false);
-    if (res.ok) { setPwMsg('Password updated.'); setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' }); }
-    else setPwError(data.error || 'Something went wrong.');
+    try {
+      const res = await fetch('/api/operator/change-password', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) { setPwMsg('Password updated.'); setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' }); }
+      else setPwError(data.error || 'Something went wrong.');
+    } catch {
+      setPwError('Network error — your password was not changed. Check your connection and try again.');
+    } finally {
+      setPwSaving(false);
+    }
   }
 
   const dresscodes = (form.dresscode as string[])||[];

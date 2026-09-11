@@ -10,9 +10,12 @@ import { hasAcceptedAgreement } from '@/lib/course-timeline';
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  // MP-2b: returns every operator's email/name plus per-course bookings30d and
-  // revenue30d. HARDENING_SPEC gives viewer no financial ledger and no PII.
+  // MP-2b / viewer bug: the list is open to viewers, but HARDENING_SPEC gives
+  // viewer no financial ledger and no PII — so below SUPPORT_PLUS the rows are
+  // shaped (operator email, revenue30d, adminNotes, stripeAccountId removed)
+  // at the bottom of this handler. The gate alone was not enough.
   if (!requireRole(session, VIEWER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const seesMoneyAndPii = requireRole(session, SUPPORT_PLUS);
 
   // Lightweight list for dropdowns — all courses including archived
   if (req.nextUrl.searchParams.get('simple') === '1') {
@@ -162,7 +165,11 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  return NextResponse.json(result);
+  if (seesMoneyAndPii) return NextResponse.json(result);
+  return NextResponse.json(result.map(c => {
+    const { adminNotes: _n, stripeAccountId: _s, operator, ...rest } = c;
+    return { ...rest, adminNotes: '', stripeAccountId: null, revenue30d: null, operator: operator ? { ...operator, email: '' } : null };
+  }));
 }
 
 // Archive/restore/delete all route through src/lib/lifecycle.ts via

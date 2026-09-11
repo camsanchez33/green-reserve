@@ -55,9 +55,11 @@ function MessagesContent() {
   async function sendMessage() {
     if (!compose.trim() || sending) return;
     setSending(true);
-    const r = await fetch('/api/operator/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body: compose.trim() }) });
+    // Review (no-silent-failures): a network drop threw past setSending(false)
+    // and trapped the draft behind a permanently disabled Send.
+    const r = await dfetch('/api/operator/messages', { method: 'POST', body: JSON.stringify({ body: compose.trim() }) });
     if (r.ok) { setCompose(''); await loadThread(); }
-    else { const d = await r.json().catch(() => ({})); toast(d.error || 'The message did not send — try again.'); }
+    else toast(r.error === 'Network error — check your connection and try again.' ? 'The message did not send — check your connection and try again.' : r.error);
     setSending(false);
   }
 

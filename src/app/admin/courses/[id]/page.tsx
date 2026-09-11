@@ -271,6 +271,8 @@ export default function CourseDetailPage() {
   // Setup / policy form
   const [setupForm, setSetupForm] = useState<Record<string, unknown>>({});
   const [setupSaving, setSetupSaving] = useState(false);
+  // '' | 'saving' | 'saved' | an error sentence
+  const [phoneState, setPhoneState] = useState('');
   const [setupMsg, setSetupMsg] = useState('');
 
   // Operate: schedules
@@ -487,31 +489,40 @@ export default function CourseDetailPage() {
   // silently no-op'ing or offering a way around it.
   async function toggleActive(active: boolean, cancelBookings = false) {
     setLiveToggleBusy(true); setLiveBlockReason(''); setLiveBlockMissing(null); setClosureError('');
-    const r = await fetch('/api/admin/course-detail', {
-      method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, active, cancelBookings }),
-    });
-    setLiveToggleBusy(false);
-    if (r.ok) {
-      setClosurePrompt(null);
-      const d = await r.json().catch(() => ({}));
-      // Never let a bounced operator notice pass as a clean close.
-      if (active === false && d.operatorNotified === false) {
-        setLiveBlockReason('Course is offline, but the notice to the operator did not send — tell them yourself.');
+    // Review (no-silent-failures): a dropped connection threw past the busy
+    // reset and left the button on "Working…" forever. try/finally, like
+    // sendGoLiveReminder two functions down.
+    try {
+      const r = await fetch('/api/admin/course-detail', {
+        method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, active, cancelBookings }),
+      });
+      if (r.ok) {
+        setClosurePrompt(null);
+        const d = await r.json().catch(() => ({}));
+        // Never let a bounced operator notice pass as a clean close.
+        if (active === false && d.operatorNotified === false) {
+          setLiveBlockReason('Course is offline, but the notice to the operator did not send — tell them yourself.');
+        }
+        setDetail(dd => dd ? { ...dd, course: { ...dd.course, active } } : dd);
+        loadDetail();
+        return;
       }
-      setDetail(dd => dd ? { ...dd, course: { ...dd.course, active } } : dd);
-      loadDetail();
-      return;
+      const d = await r.json().catch(() => ({}));
+      // MP-5b: golfers are holding tee times. Say how many, and make cancelling
+      // them a decision rather than a side effect.
+      if (r.status === 409 && d.needsBookingDecision && d.impact) {
+        setClosurePrompt({ action: 'offline', impact: d.impact });
+        return;
+      }
+      if (closurePrompt) { setClosureError(d.error || 'Failed to take the course offline.'); return; }
+      setLiveBlockReason(d.error || 'Failed to update — try again.');
+      setLiveBlockMissing(d.missing === 'agreement' || d.missing === 'stripe' ? d.missing : null);
+    } catch {
+      if (closurePrompt) setClosureError('Network error — nothing was changed. Check your connection and try again.');
+      else setLiveBlockReason('Network error — nothing was changed. Check your connection and try again.');
+    } finally {
+      setLiveToggleBusy(false);
     }
-    const d = await r.json().catch(() => ({}));
-    // MP-5b: golfers are holding tee times. Say how many, and make cancelling
-    // them a decision rather than a side effect.
-    if (r.status === 409 && d.needsBookingDecision && d.impact) {
-      setClosurePrompt({ action: 'offline', impact: d.impact });
-      return;
-    }
-    if (closurePrompt) { setClosureError(d.error || 'Failed to take the course offline.'); return; }
-    setLiveBlockReason(d.error || 'Failed to update — try again.');
-    setLiveBlockMissing(d.missing === 'agreement' || d.missing === 'stripe' ? d.missing : null);
   }
 
   async function sendGoLiveReminder(missing: 'agreement' | 'stripe') {
@@ -541,29 +552,40 @@ export default function CourseDetailPage() {
   async function archiveCourse(cancelBookings = false) {
     if (!detail) return;
     setArchiveBusy(true); setClosureError('');
-    const r = await fetch('/api/admin/archive-course', {
-      method: 'POST', headers: H(), body: JSON.stringify({ courseId, action: 'archive', cancelBookings }),
-    });
-    setArchiveBusy(false);
-    if (r.ok) { router.push('/admin/courses'); return; }
-    const d = await r.json().catch(() => ({}));
-    if (r.status === 409 && d.needsBookingDecision && d.impact) {
-      setClosurePrompt({ action: 'archive', impact: d.impact });
-      return;
+    try {
+      const r = await fetch('/api/admin/archive-course', {
+        method: 'POST', headers: H(), body: JSON.stringify({ courseId, action: 'archive', cancelBookings }),
+      });
+      if (r.ok) { router.push('/admin/courses'); return; }
+      const d = await r.json().catch(() => ({}));
+      if (r.status === 409 && d.needsBookingDecision && d.impact) {
+        setClosurePrompt({ action: 'archive', impact: d.impact });
+        return;
+      }
+      if (closurePrompt) { setClosureError(d.error || 'Archive failed.'); return; }
+      setClosureError('');
+      setLiveBlockReason(d.error ? `Archive failed: ${d.error}` : 'Archive failed — try again.');
+    } catch {
+      if (closurePrompt) setClosureError('Archive failed: network error — nothing was changed.');
+      else setLiveBlockReason('Archive failed: network error — nothing was changed. Check your connection and try again.');
+    } finally {
+      setArchiveBusy(false);
     }
-    if (closurePrompt) { setClosureError(d.error || 'Archive failed.'); return; }
-    setClosureError('');
-    setLiveBlockReason(d.error ? `Archive failed: ${d.error}` : 'Archive failed — try again.');
   }
 
   async function restoreCourse() {
     setArchiveBusy(true);
-    const r = await fetch('/api/admin/archive-course', {
-      method: 'POST', headers: H(), body: JSON.stringify({ courseId, action: 'restore' }),
-    });
-    setArchiveBusy(false);
-    if (r.ok) loadDetail();
-    else { const d = await r.json().catch(() => ({})); setLiveBlockReason(`Restore failed: ${d.error || 'try again'}`); }
+    try {
+      const r = await fetch('/api/admin/archive-course', {
+        method: 'POST', headers: H(), body: JSON.stringify({ courseId, action: 'restore' }),
+      });
+      if (r.ok) loadDetail();
+      else { const d = await r.json().catch(() => ({})); setLiveBlockReason(`Restore failed: ${d.error || 'try again'}`); }
+    } catch {
+      setLiveBlockReason('Restore failed: network error — nothing was changed. Check your connection and try again.');
+    } finally {
+      setArchiveBusy(false);
+    }
   }
 
   // A-05 item 4b — kill switch, logged to the course timeline.
@@ -583,13 +605,18 @@ export default function CourseDetailPage() {
 
   async function addClientNote() {
     if (!noteDraft.trim()) return;
-    setNoteSaving(true);
-    const r = await fetch('/api/admin/course-documents', {
-      method: 'POST', headers: H(), body: JSON.stringify({ courseId, kind: 'note', text: noteDraft.trim() }),
-    });
-    setNoteSaving(false);
-    if (r.ok) { setNoteDraft(''); loadDocuments(); }
-    else { const d = await r.json().catch(() => ({})); setDocsError(d.error || 'Could not save the note — nothing was changed.'); }
+    setNoteSaving(true); setDocsError('');
+    try {
+      const r = await fetch('/api/admin/course-documents', {
+        method: 'POST', headers: H(), body: JSON.stringify({ courseId, kind: 'note', text: noteDraft.trim() }),
+      });
+      if (r.ok) { setNoteDraft(''); loadDocuments(); }
+      else { const d = await r.json().catch(() => ({})); setDocsError(d.error || 'Could not save the note — nothing was changed.'); }
+    } catch {
+      setDocsError('Network error — the note was not saved. Check your connection and try again.');
+    } finally {
+      setNoteSaving(false);
+    }
   }
 
   async function uploadDocument(file: File) {
@@ -597,27 +624,46 @@ export default function CourseDetailPage() {
     const form = new FormData();
     form.append('file', file);
     form.append('courseId', courseId);
-    const r = await fetch('/api/admin/course-documents/upload', { method: 'POST', body: form });
-    setDocUploading(false);
-    if (r.ok) loadDocuments();
-    else { const d = await r.json().catch(() => ({})); setDocsError(d.error || 'Upload failed'); }
+    try {
+      const r = await fetch('/api/admin/course-documents/upload', { method: 'POST', body: form });
+      if (r.ok) loadDocuments();
+      else { const d = await r.json().catch(() => ({})); setDocsError(d.error || 'Upload failed'); }
+    } catch {
+      setDocsError('Network error — the file was not uploaded. Check your connection and try again.');
+    } finally {
+      setDocUploading(false);
+    }
   }
 
   async function saveSetup() {
     setSetupSaving(true); setSetupMsg('');
-    const r = await fetch('/api/admin/course-settings', {
-      method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, ...setupForm }),
-    });
-    setSetupSaving(false);
-    setSetupMsg(r.ok ? 'saved' : 'error');
-    if (r.ok) loadDetail();
+    try {
+      const r = await fetch('/api/admin/course-settings', {
+        method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, ...setupForm }),
+      });
+      setSetupMsg(r.ok ? 'saved' : 'error');
+      if (r.ok) loadDetail();
+    } catch {
+      setSetupMsg('error');
+    } finally {
+      setSetupSaving(false);
+    }
   }
 
+  // Review (no-silent-failures): the phone blur-save had no else, no busy
+  // state and no catch — a refused or dropped save looked accepted until the
+  // next reload quietly reverted it.
   async function savePhone(phone: string) {
-    const r = await fetch('/api/admin/course-settings', {
-      method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, phone }),
-    });
-    if (r.ok) loadDetail();
+    setPhoneState('saving');
+    try {
+      const r = await fetch('/api/admin/course-settings', {
+        method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, phone }),
+      });
+      if (r.ok) { setPhoneState('saved'); loadDetail(); setTimeout(() => setPhoneState(''), 2000); }
+      else { const d = await r.json().catch(() => ({})); setPhoneState(d.error || 'Phone was not saved — try again.'); }
+    } catch {
+      setPhoneState('Network error — phone was not saved.');
+    }
   }
 
   // MP-5d: Operate loads all three of its panels at once. Transactions'
@@ -1331,7 +1377,12 @@ export default function CourseDetailPage() {
                         placeholder="Not set"
                         className="flex-1 min-w-0 bg-transparent text-ink font-medium outline-none border-b border-transparent focus:border-pine/40 transition-colors"
                       />
+                      {phoneState === 'saving' && <span className="text-[11px] text-ink-muted shrink-0">Saving…</span>}
+                      {phoneState === 'saved' && <span className="text-[11px] text-ok shrink-0">Saved</span>}
                     </div>
+                    {phoneState && phoneState !== 'saving' && phoneState !== 'saved' && (
+                      <div className="text-[11px] text-bad pl-[76px]">{phoneState}</div>
+                    )}
                     <div className="flex gap-3 text-sm">
                       <span className="text-ink-muted w-16 shrink-0">Type</span>
                       <span className="text-ink font-medium capitalize">{c.type}</span>

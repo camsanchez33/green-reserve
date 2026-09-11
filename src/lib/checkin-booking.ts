@@ -109,6 +109,30 @@ async function chargeBooking(
     }
 
     const ev = mode.recordCheckIn ? 'checkin' : 'collect';
+
+    // Review (security, MEDIUM): a new card changes the idempotency key. If
+    // the FIRST attempt actually succeeded at Stripe but the response never
+    // reached us (timeout), "retry with a new card" would charge the golfer a
+    // second full round. Ask Stripe whether this booking already has a
+    // succeeded charge before charging a different card.
+    if (externalPm) {
+      try {
+        const found = await stripe.paymentIntents.search(
+          { query: `metadata['bookingId']:'${booking.id}' AND status:'succeeded'`, limit: 1 },
+          { stripeAccount: booking.course.stripeAccountId as string },
+        );
+        const prior = found.data[0];
+        if (prior) {
+          console.warn(JSON.stringify({ ev: `${ev}.charge.already_succeeded`, bookingId, paymentIntentId: prior.id }));
+          await prisma.booking.update({ where: { id: bookingId }, data: { roundPaymentIntentId: prior.id, paymentStatus: 'paid', checkInFailReason: '' } });
+          return { error: 'This round was already charged on the first attempt (the confirmation was lost in transit). It is now recorded as paid — refresh and check the golfer in without a card.', status: 409 } as const;
+        }
+      } catch (err) {
+        // Search is best-effort; a failure here must not block the counter.
+        console.warn(JSON.stringify({ ev: `${ev}.charge.search_failed`, bookingId, error: err instanceof Error ? err.message : String(err) }));
+      }
+    }
+
     try {
       console.log(JSON.stringify({ ev: `${ev}.charge.attempt`, bookingId, amountCents: Math.round(booking.totalAmount) }));
       const paymentIntent = await chargeOnConnectedAccount({
@@ -118,6 +142,7 @@ async function chargeBooking(
         amountCents: Math.round(booking.totalAmount),
         applicationFeeCents: Math.round(booking.accessFeeTotal),
         description: `Round charge - ${booking.course.name} - booking ${booking.id}`,
+        metadata: { bookingId: booking.id },
         // Unchanged on purpose: the key is the booking + payment method, NOT
         // the entry point, so a collect followed by a check-in (or a retry
         // after a timeout) can never become two charges.

@@ -16,7 +16,13 @@ export async function GET(req: NextRequest) {
   const teeTimes = await prisma.teeTime.findMany({
     where: { courseId: session.courseId, date },
     orderBy: { time: 'asc' },
-    include: withBookings ? { bookings: { where: { status: { in: ['confirmed', 'completed'] } }, orderBy: { createdAt: 'asc' } } } : undefined,
+    // Review (security, LOW): this was an `include` — whole Booking rows, with
+    // each golfer's checkInToken (a bearer credential that charges their card)
+    // and Stripe ids, on every staff terminal. The sheet renders these fields.
+    include: withBookings ? { bookings: {
+      where: { status: { in: ['confirmed', 'completed'] } }, orderBy: { createdAt: 'asc' },
+      select: { id: true, golferName: true, golferEmail: true, players: true, createdAt: true, status: true, paymentStatus: true, totalAmount: true, checkInFailReason: true },
+    } } : undefined,
   });
 
   return NextResponse.json(teeTimes);
@@ -90,7 +96,7 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
   // SD-10: Booking.teeTimeId is ON DELETE RESTRICT, so deleting a booked slot
   // threw P2003 → an unhandled 500 the dashboard swallowed. Say it instead.
-  const booked = await prisma.booking.count({ where: { teeTimeId: id, status: { in: ['confirmed', 'completed'] } } });
+  const booked = await prisma.booking.count({ where: { teeTimeId: id, courseId: session.courseId, status: { in: ['confirmed', 'completed'] } } });
   if (booked > 0) {
     return NextResponse.json({ error: `This tee time has ${booked} booking${booked === 1 ? '' : 's'} — cancel ${booked === 1 ? 'it' : 'them'} first, or block the time instead.` }, { status: 409 });
   }

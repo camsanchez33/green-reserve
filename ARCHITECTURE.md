@@ -9,7 +9,7 @@
 
 | Route | Methods | Surface | Purpose |
 |-------|---------|---------|---------|
-| `/api/admin/activity` | GET | admin | — |
+| `/api/admin/activity` | GET | admin | MP-10: the feed is a union of four sources sorted by time. Each source now |
 | `/api/admin/archive-course` | POST | admin | Thin wrapper — all lifecycle mutation logic lives in src/lib/lifecycle.ts |
 | `/api/admin/backfill-orphaned-inquiries` | POST | admin | One-time fix: inquiries whose course was hard-deleted before Phase 2d |
 | `/api/admin/bootstrap` | POST | admin | — |
@@ -28,7 +28,7 @@
 | `/api/admin/expenses` | GET, POST | admin | EXPENSE TRACKER (RUN_QUEUE) — GreenReserve's own fixed operating costs. |
 | `/api/admin/expenses/[id]` | PATCH, DELETE | admin | EXPENSE TRACKER (RUN_QUEUE) — edit/end/delete a single fixed cost. Owner-only. |
 | `/api/admin/forgot-password` | POST | admin | — |
-| `/api/admin/golfers` | GET, POST | admin | — |
+| `/api/admin/golfers` | GET, POST | admin | MP-6d: the Golfers record page. Search finds accounts AND guest bookings by |
 | `/api/admin/inquiries` | GET, POST, PATCH, DELETE | admin | MP-2 (ADMIN_V4 V4-2 leak): this returned the whole CourseInquiry row, which |
 | `/api/admin/login` | POST | admin | — |
 | `/api/admin/logout` | POST | admin | — |
@@ -51,7 +51,8 @@
 | `/api/admin/stats` | GET | admin | MP-1 fix-now (ET day boundary): these were UTC-based, so every "today" |
 | `/api/admin/system` | GET | admin | MP-8a: System used to be five cards with hardcoded neutral dots and two |
 | `/api/admin/tee-sheet` | GET, POST, PATCH | admin | GET /api/admin/tee-sheet?courseId=X&date=Y |
-| `/api/admin/transactions` | GET | admin | — |
+| `/api/admin/transactions` | GET | admin | MP-10: same shape as /api/admin/activity — two sources merged by date, each |
+| `/api/admin/transactions/export` | GET | admin | MP-6c: a transaction-level export for an accountant. One row per money |
 | `/api/admin/verify-operator` | POST | admin | GET deliberately removed (MP-2, ADMIN_V4 V4-2 leak). It returned EVERY |
 | `/api/alerts` | POST | public | — |
 | `/api/alerts/unsubscribe/[token]` | GET | public | — |
@@ -236,9 +237,18 @@ commits partly because of it.
    → Cancellation fee refunded if previously charged
    → Booking.status = 'completed'
 
-4. STRIPE WEBHOOKS  (src/app/api/stripe/webhook)
-   account.updated → sync Course.stripeAccountActive
-   (idempotent: updateMany with same value is safe to replay)
+4. STRIPE WEBHOOKS  (src/app/api/stripe/webhook) — registered as a CONNECT webhook
+   account.updated                 → sync Course.stripeAccountActive
+   charge.refunded                 → PaymentEvent 'refund' (deduped on refund id); full refund → paymentStatus 'refunded'
+   charge.dispute.created/updated/closed → PaymentEvent 'dispute' / 'dispute_closed' (one row per state, evidence due date in detail)
+   payment_intent.payment_failed   → PaymentEvent 'charge_failed'
+   (idempotent: every handler dedupes on a Stripe id or a composite marker)
+
+5. REFUNDS — two paths, one money rule
+   lib/refund-booking.ts (admin Refund, MANAGER_PLUS) and lib/stripe.ts
+   refundOnConnectedAccount (cancellations) both pass refund_application_fee:
+   true — GreenReserve's fee reverses pro rata on every refunded round.
+   PaymentEvent is the ledger; /api/admin/transactions/export is the CSV of it.
 ```
 
 ---
@@ -285,7 +295,7 @@ Key models:
 |------|---------|
 | `src/lib/admin-day.ts` | Platform day boundaries. |
 | `src/lib/admin-fetch.ts` | Routes commonly answer with a bare `{ error: 'Forbidden' }`. That is a |
-| `src/lib/admin-roles.ts` | Role lists, client-safe. |
+| `src/lib/admin-roles.ts` | Viewer: read-only, and only the surfaces with no golfer PII and no led |
 | `src/lib/admin-session-context.tsx` | MP-11a (ADMIN_V4 V4-7, LAW rule 2): the admin session is resolved ONCE |
 | `src/lib/admin-session.ts` | Defined in admin-roles.ts (client-safe) and re-exported here so existi |
 | `src/lib/api-response.ts` | Common JSON response helpers to reduce boilerplate in API routes. |
@@ -335,6 +345,7 @@ Key models:
 | `src/lib/settings-validation.ts` | SD-1. Server-side validation for the operator settings PATCH. Before t |
 | `src/lib/sheet-token.ts` | The setup-sheet token gate, shared by every route a `detailsToken` ope |
 | `src/lib/sheet-vs-live.ts` | MP-5e. Two sides of the same course sit in the database and nothing ha |
+| `src/lib/staff-fonts.ts` | U-0 (UI_REVISE_SPEC §1b): the STAFF look. /dashboard and /admin set th |
 | `src/lib/stripe-errors.ts` | Friendly-message map for Stripe decline/error strings (REVISE_QUEUE A- |
 | `src/lib/stripe.ts` | Charges a card the platform saved (via SetupIntent on a platform Custo |
 | `src/lib/submit-change-request.ts` | Shared by both request-changes entry points (token-gated preview page  |
