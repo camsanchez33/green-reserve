@@ -1151,13 +1151,19 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       fetched); transaction-level CSV for an accountant (all courses, period,
       one row per charge/refund). Real paidAt column is the schema half —
       attended, and it makes 6a's checkedInAt approximation exact.
-    - [ ] MP-6d — Golfers record page (no migration): palette search extended
-      with phone + guest-booking matching, deep-link ?id=; record = identity +
-      trust strip (rounds, no-shows, late cancels, failed charges, lifetime
-      collected) + merged bookings/money timeline + action row: resend
-      confirmation (fixed — reports success only after the send), resend
-      receipt, cancel via performCancellation, card-update link, refund once
-      6b lands. paymentStatus is fetched and never rendered — render it.
+    - [x] MP-6d (3d6dd5e) — Golfers record page. Identity (account OR guest by
+      email — `?guest=`), trust strip (rounds, upcoming, no-shows, late
+      cancels, failed charges, lifetime paid net of refunds), every booking
+      with its PaymentEvent ledger and a worded status that renders
+      paymentStatus at last; guest bookings sharing the account's email sit on
+      the record. Actions: resend confirmation (AWAITED — was fire-and-forget
+      "Sent"), resend receipt, cancel-for-them via performCancellation with a
+      reason the golfer reads (MANAGER_PLUS), refund via /api/admin/refund
+      (MANAGER_PLUS). Search + command palette match phone (4+ digits) and
+      guest bookings; palette gains a 'guest' result type deep-linking to the
+      record. NOT done: card-update link — no golfer page exists to swap a
+      booking's card (feature, queue it if wanted); admin audit log of support
+      actions still console-only. NEEDS REVIEW.
   - [ ] MP-7 — comms merge (split into 7a–7b)
     - [x] MP-7a (6c94836) — Messages says who is waiting; Broadcasts stops lying
       about delivery. NEW `lib/thread-signal.ts` is THE derivation for

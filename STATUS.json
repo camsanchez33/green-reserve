@@ -1,24 +1,36 @@
 {
-  "generatedAt": "2026-09-11T23:16:33.138Z",
+  "generatedAt": "2026-09-11T23:22:44.221Z",
   "repo": {
-    "head": "6fb70a7",
+    "head": "3d6dd5e",
     "branch": "main",
-    "dirtyCount": 2,
+    "dirtyCount": 14,
     "dirty": [
-      "M RUN_QUEUE.md",
-      "?? legal/"
+      "M .claude/README.md",
+      " M .claude/agents/admin-ux-auditor.md",
+      " M .claude/agents/design-auditor.md",
+      " M .gitignore",
+      " M RUN_QUEUE.md",
+      "?? .claude/.write-test",
+      "?? .claude/agents/reskin-worker.md",
+      "?? .claude/batches/",
+      "?? .claude/commands/gr-batch.md",
+      "?? .claude/hooks/",
+      "?? .claude/settings.json",
+      "?? legal/",
+      "?? scripts/batch-plan.mjs",
+      "?? scripts/reskin-guard.mjs"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-11T19:12:59-04:00",
+    "queueLastCommit": "2026-09-11T19:16:33-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 147,
+    "runDone": 148,
     "runAwaiting": 8,
     "runInFlight": 1,
-    "runNotStarted": 31,
+    "runNotStarted": 30,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -27,7 +39,7 @@
   "inFlight": [
     {
       "title": "BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET",
-      "line": 1721,
+      "line": 1727,
       "body": [
         "FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because \"no linked inquiry\" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding them outright. FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() + a \"Force delete permanently\" button per acknowledged orphan — owner-only, typed name confirm, server re-verifies the course is still an orphan before touching anything (refuses if it turns out to have a real inquiry link — this can never be used to route around the doctrine for a real course). This is the mechanism for Cam's DaisyLinks exception, but I have NOT executed it against DaisyLinks yet:",
         "- Last session's raw Prisma script (a read-only check confirming Fake",
@@ -179,78 +191,73 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "MP-6d — Golfers record page (no migration): palette search extended",
-      "line": 1154,
-      "section": "Queue (run in this order)"
-    },
-    {
       "title": "MP-7 — comms merge (split into 7a–7b)",
-      "line": 1161,
+      "line": 1167,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE,",
-      "line": 1179,
+      "line": 1185,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-8 — chrome + System (split into 8a–8b)",
-      "line": 1186,
+      "line": 1192,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table",
-      "line": 1203,
+      "line": 1209,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in",
-      "line": 1210,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,",
       "line": 1216,
       "section": "Queue (run in this order)"
     },
     {
+      "title": "MP-10 — server-side pagination (was ADMIN_V4 V4-4): inquiries, activity,",
+      "line": 1222,
+      "section": "Queue (run in this order)"
+    },
+    {
       "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)",
-      "line": 1220,
+      "line": 1226,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState",
-      "line": 1269,
+      "line": 1275,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:",
-      "line": 1274,
+      "line": 1280,
       "section": "Queue (run in this order)"
     },
     {
       "title": "COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)",
-      "line": 1295,
+      "line": 1301,
       "section": "Queue (run in this order)"
     },
     {
       "title": "COURSE_LAYOUT_SPEC Phase L3 — isolation tests + admin layout summary (small)",
-      "line": 1296,
+      "line": 1302,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
-      "line": 1318,
+      "line": 1324,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
-      "line": 1397,
+      "line": 1403,
       "section": "Queue (run in this order)"
     },
     {
       "title": "UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). Run order U-0 → H-1 → U-G → B-1 → B-2 → U-O → B-6 → U-A → U-",
-      "line": 1882,
+      "line": 1888,
       "section": "Queue (run in this order)"
     }
   ],
@@ -293,7 +300,7 @@
     {
       "item": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
       "note": "CAM: confirm the state before this runs — e",
-      "line": 1318
+      "line": 1324
     }
   ],
   "ideas": {
@@ -816,6 +823,16 @@
   },
   "recentCommits": [
     {
+      "h": "3d6dd5e",
+      "date": "2026-09-11",
+      "subject": "MP-6d: the Golfers record page"
+    },
+    {
+      "h": "85b07e6",
+      "date": "2026-09-11",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "6fb70a7",
       "date": "2026-09-11",
       "subject": "SD-11: the SD-review candidates -- callback auth, staff pricing, courses PATCH validation, honest role label"
@@ -862,16 +879,6 @@
     },
     {
       "h": "459d050",
-      "date": "2026-09-07",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "8effd59",
-      "date": "2026-09-07",
-      "subject": "SD-8/9a: the correctness half of SD-8 and SD-9"
-    },
-    {
-      "h": "e1107c4",
       "date": "2026-09-07",
       "subject": "queue/spec update"
     }
