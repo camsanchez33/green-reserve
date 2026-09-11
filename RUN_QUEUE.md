@@ -286,7 +286,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   and an un-enrolled owner still gets the email path. NOT IN THIS RUN: employee
   2FA (nobody to enroll — zero employees), and any change to operator 2FA.
 
-- [x] BUG (acaa21e, option a, picked by Claude under 'keep getting shit done' —
+- [x] BUG (acaa21e + 4bdbb0f, option a, picked by Claude under 'keep getting shit done' —
   Cam can flip to b by deleting VIEWER_PLUS and the picker option): `viewer`
   role now = Overview + inquiries list/detail + courses list, read-only, no
   PII/ledger; sidebar + role description match. Course DETAIL stays support+

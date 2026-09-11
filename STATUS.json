@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-11T23:26:59.944Z",
+  "generatedAt": "2026-09-11T23:27:52.371Z",
   "repo": {
-    "head": "acaa21e",
+    "head": "4bdbb0f",
     "branch": "main",
     "dirtyCount": 3,
     "dirty": [
@@ -12,7 +12,7 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-11T19:25:52-04:00",
+    "queueLastCommit": "2026-09-11T19:27:00-04:00",
     "unrecorded": []
   },
   "counts": {
@@ -802,6 +802,16 @@
   },
   "recentCommits": [
     {
+      "h": "4bdbb0f",
+      "date": "2026-09-11",
+      "subject": "BUG viewer role: the gates, sidebar and copy that acaa21e's message described but a failed script left out"
+    },
+    {
+      "h": "e919c68",
+      "date": "2026-09-11",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "acaa21e",
       "date": "2026-09-11",
       "subject": "BUG: the viewer role now keeps a promise it can actually keep"
@@ -849,16 +859,6 @@
     {
       "h": "4d08c90",
       "date": "2026-09-11",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "bf74725",
-      "date": "2026-09-11",
-      "subject": "SD-10: no dashboard action fails silently -- plus the SD-review blockers"
-    },
-    {
-      "h": "dfff441",
-      "date": "2026-09-07",
       "subject": "queue/spec update"
     }
   ]

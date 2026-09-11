@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-11 23:26 UTC · branch `main` · HEAD `acaa21e` · working tree **3 dirty file(s)**
+Generated 2026-09-11 23:27 UTC · branch `main` · HEAD `4bdbb0f` · working tree **3 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -174,6 +174,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `4bdbb0f` 2026-09-11 — BUG viewer role: the gates, sidebar and copy that acaa21e's message described but a failed script left out
+- `e919c68` 2026-09-11 — queue/spec update
 - `acaa21e` 2026-09-11 — BUG: the viewer role now keeps a promise it can actually keep
 - `db96cb4` 2026-09-11 — queue/spec update
 - `4668826` 2026-09-11 — queue/spec update
@@ -184,8 +186,6 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `85b07e6` 2026-09-11 — queue/spec update
 - `6fb70a7` 2026-09-11 — SD-11: the SD-review candidates -- callback auth, staff pricing, courses PATCH validation, honest role label
 - `4d08c90` 2026-09-11 — queue/spec update
-- `bf74725` 2026-09-11 — SD-10: no dashboard action fails silently -- plus the SD-review blockers
-- `dfff441` 2026-09-07 — queue/spec update
 
 ---
 
