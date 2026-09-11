@@ -27,13 +27,38 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
+  // SD-11: these were written raw — "garbage" dates made rows nothing renders.
+  const date = String(body.date ?? '');
+  const time = String(body.time ?? '');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date + 'T12:00:00'))) return NextResponse.json({ error: 'Date must be YYYY-MM-DD.' }, { status: 400 });
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return NextResponse.json({ error: 'Time must be HH:MM (24-hour).' }, { status: 400 });
+  const players = Number(body.playersAvailable) || 4;
+  if (players < 1 || players > 8) return NextResponse.json({ error: 'Players must be between 1 and 8.' }, { status: 400 });
+
+  // SD-11: staff can open a walk-in slot (that is the job) but never price it.
+  // The price comes from the course's own schedule for that day; the body's
+  // fee fields are ignored for staff.
+  let greenFeeCents = dollarsToCentsOr0(body.greenFee);
+  let cartFeeCents = dollarsToCentsOr0(body.cartFee);
+  if (session.isStaff) {
+    const dow = new Date(date + 'T12:00:00').getDay();
+    const weekend = dow === 0 || dow === 6;
+    const schedules = await prisma.teeTimeSchedule.findMany({ where: { courseId: session.courseId, active: true }, orderBy: { createdAt: 'desc' } });
+    const sched = schedules.find(x => x.daysOfWeek.length === 0 || x.daysOfWeek.includes(dow)) ?? schedules[0];
+    if (!sched) return NextResponse.json({ error: 'No schedule to price this time from — ask the course operator to add one.' }, { status: 409 });
+    greenFeeCents = weekend ? sched.greenFeeWeekendCents : sched.greenFeeWeekdayCents;
+    cartFeeCents = sched.cartFeeCents;
+  } else if (greenFeeCents < 0 || greenFeeCents > 100000 || cartFeeCents < 0 || cartFeeCents > 50000) {
+    return NextResponse.json({ error: 'Fees must be between $0 and $1,000 (green) / $500 (cart).' }, { status: 400 });
+  }
+
   const teeTime = await prisma.teeTime.create({
     data: {
       courseId: session.courseId,
-      date: body.date, time: body.time, holes: body.holes || 18,
-      playersAvailable: Number(body.playersAvailable) || 4, playersBooked: 0,
+      date, time, holes: Number(body.holes) === 9 ? 9 : 18,
+      playersAvailable: players, playersBooked: 0,
       // MP-3 B2c: the form sends dollars; the columns are cents.
-      greenFeeCents: dollarsToCentsOr0(body.greenFee), cartFeeCents: dollarsToCentsOr0(body.cartFee),
+      greenFeeCents, cartFeeCents,
       walkingAllowed: body.walkingAllowed !== false, status: 'available',
     },
   });

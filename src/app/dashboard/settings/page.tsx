@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff, CreditCard, CheckCircle2, AlertCircle, Loader2, KeyRound, Mail, Smartphone, Image as ImageIcon, X } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { toast } from '@/components/dashboard/Toast';
 import CourseLayoutTab from '@/components/dashboard/CourseLayoutTab';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
@@ -312,6 +313,7 @@ function SettingsPageInner() {
     <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="settings"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
+        <StaffNotice what="these settings" />
         <div className="bg-white border-b border-line px-6 py-4 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-2">
             <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Settings</h1>
@@ -735,8 +737,11 @@ function SettingsPageInner() {
                   </div>
                   <Field label="Role">
                     <select value={newStaff.role} onChange={e=>setNewStaff(s=>({...s,role:e.target.value}))} className={iCls}>
-                      <option value="staff">Staff (tee sheet access)</option>
-                      <option value="manager">Manager (full access)</option>
+                      {/* SD-11: "Manager (full access)" promised a role the
+                          session does not have — every staff login is tee-sheet
+                          access (SD-1). One honest option. Existing rows saved
+                          as "manager" keep working, as staff. */}
+                      <option value="staff">Staff — tee sheet, check-ins, messages</option>
                     </select>
                   </Field>
                   <button onClick={addStaffMember} disabled={addingStaff||!newStaff.name||!newStaff.email}

@@ -5,6 +5,7 @@ import {
   RefreshCw, UserCheck, UserX, ChevronDown, AlertCircle, CheckCircle2, UserPlus,
 } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
@@ -184,6 +185,7 @@ export default function MembersPage() {
     <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="members"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
+        <StaffNotice what="the members list" />
         <div className="max-w-2xl mx-auto px-6 py-10">
 
           <button onClick={closeWizard} className="flex items-center gap-2 text-sm text-ink-muted hover:text-ink mb-6 transition-colors">
@@ -369,6 +371,7 @@ export default function MembersPage() {
     <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="members"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
+        <StaffNotice what="the members list" />
         <div className="max-w-lg mx-auto px-6 py-16 text-center">
           <div className="w-14 h-14 rounded-full bg-ok/10 flex items-center justify-center mx-auto mb-5">
             <CheckCircle2 className="w-7 h-7 text-ok"/>
@@ -430,6 +433,7 @@ export default function MembersPage() {
     <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="members"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
+        <StaffNotice what="the members list" />
         <div className="bg-white border-b border-line sticky top-0 z-10">
           <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-4">
             <div className="flex items-center gap-2">

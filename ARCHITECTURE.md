@@ -1,7 +1,7 @@
 # GreenReserve — Architecture Reference
 
 > **Auto-generated** by `scripts/route-inventory.ts`. Re-run after adding routes.
-> Last generated: 2026-08-30
+> Last generated: 2026-09-11
 
 ---
 
@@ -13,10 +13,11 @@
 | `/api/admin/archive-course` | POST | admin | Thin wrapper — all lifecycle mutation logic lives in src/lib/lifecycle.ts |
 | `/api/admin/backfill-orphaned-inquiries` | POST | admin | One-time fix: inquiries whose course was hard-deleted before Phase 2d |
 | `/api/admin/bootstrap` | POST | admin | — |
-| `/api/admin/broadcasts` | GET, POST | admin | — |
+| `/api/admin/broadcasts` | GET, POST | admin | MP-7a: ONE recipient filter. Thread-insert, email and the preview count |
 | `/api/admin/change-password` | POST | admin | — |
 | `/api/admin/course-detail` | GET, PATCH | admin | — |
 | `/api/admin/course-documents` | GET, POST | admin | A-05 item 5 — Documents tab: auto records (operator agreement acceptance, |
+| `/api/admin/course-documents/download` | GET | admin | MP-5a. Signed contracts used to be uploaded as `access: 'public'` Vercel |
 | `/api/admin/course-documents/upload` | POST | admin | A-05 item 5b — PDF uploads per course, via the same Vercel Blob storage |
 | `/api/admin/course-members` | GET | admin | — |
 | `/api/admin/course-reminders` | PATCH | admin | A-05 item 4b — per-course kill switch for the auto-chase onboarding |
@@ -32,21 +33,23 @@
 | `/api/admin/login` | POST | admin | — |
 | `/api/admin/logout` | POST | admin | — |
 | `/api/admin/messages` | GET, POST, PATCH | admin | GET /api/admin/messages — thread list (no courseId param) |
+| `/api/admin/nav-badges` | GET | admin | MP-8a: the sidebar's three badges in ONE fetch per page shell. Before this |
 | `/api/admin/orphan-sweep` | GET, POST | admin | ORPHAN SWEEP (RUN_QUEUE) — GET always dry-runs (prints the list, no |
 | `/api/admin/owner-login` | POST | admin | — |
 | `/api/admin/platform-stripe` | GET | admin | Cache Stripe responses ~5min — this hits the platform Balance/Payouts/ |
 | `/api/admin/reconcile-lifecycle-pairs` | POST | admin | One-time backfill (RUN_QUEUE "LIFECYCLE PARITY LAW" item 6) — existing |
+| `/api/admin/refund` | POST | admin | MP-6b: POST /api/admin/refund { bookingId, amountCents?, reason } |
 | `/api/admin/request-re-review` | POST | admin | Admin-initiated reopen of the review loop (RUN_QUEUE "approval propagates |
 | `/api/admin/resend-staff-setup` | POST | admin | — |
 | `/api/admin/retry-charge/[bookingId]` | POST | admin | REVISE_QUEUE A-06 item 4 — retry a failed check-in charge from the revenue |
 | `/api/admin/revenue` | GET | admin | REVISE_QUEUE A-06 — /admin/revenue rebuilt as a real P&L. ONE period picker |
-| `/api/admin/schedule` | GET, POST, PATCH, DELETE | admin | GET /api/admin/schedule?courseId=X |
+| `/api/admin/schedule` | GET, POST, PATCH, DELETE | admin | MP-5d: this route and /api/operator/schedule are thin callers of ONE |
 | `/api/admin/search` | GET | admin | — |
 | `/api/admin/send-golive-reminder` | POST | admin | AGREEMENT = GO-LIVE GATE / STRIPE RULE FINAL (RUN_QUEUE) — the one-click |
 | `/api/admin/session` | GET | admin | — |
 | `/api/admin/set-password` | POST | admin | — |
 | `/api/admin/stats` | GET | admin | MP-1 fix-now (ET day boundary): these were UTC-based, so every "today" |
-| `/api/admin/system` | GET | admin | — |
+| `/api/admin/system` | GET | admin | MP-8a: System used to be five cards with hardcoded neutral dots and two |
 | `/api/admin/tee-sheet` | GET, POST, PATCH | admin | GET /api/admin/tee-sheet?courseId=X&date=Y |
 | `/api/admin/transactions` | GET | admin | — |
 | `/api/admin/verify-operator` | POST | admin | GET deliberately removed (MP-2, ADMIN_V4 V4-2 leak). It returned EVERY |
@@ -58,7 +61,6 @@
 | `/api/auth/forgot-password` | POST | operator-auth | — |
 | `/api/auth/login` | POST | operator-auth | — |
 | `/api/auth/logout` | POST | operator-auth | — |
-| `/api/auth/register` | POST | operator-auth | — |
 | `/api/auth/resend-verification` | POST | operator-auth | Real verification email for operators who have a session but aren't yet |
 | `/api/auth/reset-password` | GET, POST | operator-auth | — |
 | `/api/auth/verify` | POST | operator-auth | — |
@@ -100,7 +102,7 @@
 | `/api/membership/[id]` | GET, POST | member | Public, token-gated membership dues payment — the member pays from the |
 | `/api/operator/active-course` | POST | operator | Sets which of an operator's courses the dashboard should act on. Always |
 | `/api/operator/agreement` | GET, POST | operator | A-05 item 5a — Operator Agreement clickwrap, an extension of the existing |
-| `/api/operator/analytics` | GET | operator | — |
+| `/api/operator/analytics` | GET | operator | SD-4: money truth for the operator's Analytics tab. |
 | `/api/operator/announcements` | GET | operator | — |
 | `/api/operator/announcements/dismiss` | POST | operator | — |
 | `/api/operator/approve-page` | POST | operator | Approval is advisory, not automatic — going live stays an admin action. |
@@ -121,10 +123,10 @@
 | `/api/operator/profile` | GET, PATCH | operator | — |
 | `/api/operator/regenerate-tee-times` | POST | operator | — |
 | `/api/operator/request-changes` | POST | operator | Logged-in-operator counterpart to /api/preview/[courseId]/request-changes |
-| `/api/operator/schedule` | GET, POST, PATCH, DELETE | operator | — |
+| `/api/operator/schedule` | GET, POST, PATCH, DELETE | operator | MP-5d: thin caller of the shared schedule service (see lib/schedule-service). |
 | `/api/operator/settings` | GET, PATCH | operator | Never cache — the dashboard's live/draft status must reflect the DB the |
 | `/api/operator/staff` | GET, POST, PATCH, DELETE | operator | — |
-| `/api/operator/stripe/callback` | GET | operator | — |
+| `/api/operator/stripe/callback` | GET | operator | SD-11 (from the SD review): this was unauthenticated and un-try/caught — any |
 | `/api/operator/stripe/connect` | GET | operator | — |
 | `/api/operator/stripe/dashboard-link` | POST | operator | Single-use Stripe Express login link — generated fresh per click, operator |
 | `/api/operator/tee-sets` | GET, POST, PATCH, PUT, DELETE | operator | nineYardages/productRatings included for the Course & Layout tab (L1) — |
@@ -137,7 +139,7 @@
 | `/api/preview/[courseId]/tee-times` | GET | public | eslint-disable-next-line @typescript-eslint/no-explicit-any |
 | `/api/preview/send` | POST | public | RUN_QUEUE "Send Preview = one combined send": pressing Send Preview sends |
 | `/api/receipt/[bookingId]` | GET | public | — |
-| `/api/stripe/webhook` | POST | stripe-webhook | — |
+| `/api/stripe/webhook` | POST | stripe-webhook | MP-6b: this handled exactly ONE event type (account.updated), so the first |
 | `/api/waitlist` | POST | public | Replaced by /api/alerts |
 
 ---
@@ -284,6 +286,7 @@ Key models:
 | `src/lib/admin-day.ts` | Platform day boundaries. |
 | `src/lib/admin-fetch.ts` | Routes commonly answer with a bare `{ error: 'Forbidden' }`. That is a |
 | `src/lib/admin-roles.ts` | Role lists, client-safe. |
+| `src/lib/admin-session-context.tsx` | MP-11a (ADMIN_V4 V4-7, LAW rule 2): the admin session is resolved ONCE |
 | `src/lib/admin-session.ts` | Defined in admin-roles.ts (client-safe) and re-exported here so existi |
 | `src/lib/api-response.ts` | Common JSON response helpers to reduce boilerplate in API routes. |
 | `src/lib/approval-state.ts` | DB-backed counterpart to the pure functions in change-requests.ts — fo |
@@ -291,40 +294,56 @@ Key models:
 | `src/lib/booking-fees.ts` | — |
 | `src/lib/booking-mode.ts` | Course-world pages: the course page itself, its member portal, and its |
 | `src/lib/booking-status.ts` | Single source of truth for what to show a user (operator, staff, or go |
-| `src/lib/cancel-booking.ts` | — |
+| `src/lib/cancel-booking.ts` | MP-5b. Cancelling normally frees a slot, so anyone watching for that t |
 | `src/lib/change-requests.ts` | Single source of truth for structured "request changes" data (V13b). |
 | `src/lib/checkin-booking.ts` | Charging a round, and checking a golfer in, are two different things. |
 | `src/lib/claim-tee-time.ts` | Atomically creates a booking and updates tee-time capacity. |
+| `src/lib/course-closure.ts` | MP-5b. Taking a course offline or archiving it used to ignore the golf |
 | `src/lib/course-metrics.ts` | THE shared metrics brain (REVISE_QUEUE A-04 item 0) — bookings/gross/ |
 | `src/lib/course-timeline.ts` | A-05 items 4/5: a per-course event log with NO schema change — rides o |
+| `src/lib/course-wire.ts` | Course money: cents at rest, dollars on the wire. |
 | `src/lib/courses-data.ts` | Deterministic tee time generation — same output for same course+date e |
+| `src/lib/cron-auth.ts` | The cron bearer check, in one place. |
+| `src/lib/dashboard-fetch.ts` | SD-10 (from the SD review). The operator dashboard's fetches were, alm |
 | `src/lib/dashboard-visits.ts` | Tracks which operator dashboard tabs a device has visited — used to de |
 | `src/lib/data.ts` | Deprecated — use @/lib/courses-data instead |
 | `src/lib/db.ts` | — |
 | `src/lib/demo-courses.ts` | Cam: replace '' with the real demo course slug once the course is poli |
 | `src/lib/email.ts` | Fired by the cancellation-fee cron the moment it successfully auto-cha |
 | `src/lib/expenses.ts` | EXPENSE TRACKER (RUN_QUEUE "EXPENSE TRACKER / real P&L") — the manual  |
+| `src/lib/faq.ts` | SD-7: the homepage FAQ, in one place, so the rendered accordion and th |
 | `src/lib/go-live-preflight.ts` | ONE function, used by BOTH the preflight-check GET (modal display) and |
 | `src/lib/golfer-otp.ts` | Passwordless golfer sign-in (GOLFER_SPEC G5). No schema change was all |
 | `src/lib/image-resize.ts` | Client-side downscale so a 12MB phone photo never has to travel over t |
+| `src/lib/inquiry-action-queue.ts` | The Overview action queue's inquiry rows. |
 | `src/lib/inquiry-status.ts` | Single source of truth for what every inquiry status means and which p |
 | `src/lib/lifecycle.ts` | LIFECYCLE PARITY LAW (RUN_QUEUE) — a linked pair (CourseInquiry.builtC |
 | `src/lib/member-session.ts` | 15-minute magic link token — sent in email |
+| `src/lib/money-problems.ts` | MP-8a. The two "money that should exist and does not" predicates, shar |
+| `src/lib/money.ts` | Money conversions, in one place. |
 | `src/lib/normalize-course.ts` | eslint-disable-next-line @typescript-eslint/no-explicit-any |
 | `src/lib/password.ts` | Shared password strength rule — used on registration, reset, and in-da |
 | `src/lib/platform-stripe.ts` | EXPENSE TRACKER (RUN_QUEUE) — the AUTOMATIC half of the P&L: what Stri |
 | `src/lib/preview-token.ts` | — |
 | `src/lib/prisma.ts` | Cache on globalThis in ALL environments — in serverless (Vercel) each  |
 | `src/lib/rate-limit.ts` | DB-backed fixed-window rate limiter. A single atomic upsert means it c |
+| `src/lib/refund-booking.ts` | MP-6b. The refund primitive, and the PaymentEvent ledger it writes to. |
+| `src/lib/schedule-service.ts` | MP-5d. The one place a tee-time schedule is created, changed or remove |
+| `src/lib/schedule-wire.ts` | TeeTimeSchedule and TeeTime money: cents at rest, dollars on the wire. |
 | `src/lib/seed.ts` | — |
-| `src/lib/session.ts` | — |
+| `src/lib/session.ts` | SD-1: staff run the tee sheet; they do not configure the course. "Staf |
+| `src/lib/settings-validation.ts` | SD-1. Server-side validation for the operator settings PATCH. Before t |
 | `src/lib/sheet-token.ts` | The setup-sheet token gate, shared by every route a `detailsToken` ope |
+| `src/lib/sheet-vs-live.ts` | MP-5e. Two sides of the same course sit in the database and nothing ha |
 | `src/lib/stripe-errors.ts` | Friendly-message map for Stripe decline/error strings (REVISE_QUEUE A- |
 | `src/lib/stripe.ts` | Charges a card the platform saved (via SetupIntent on a platform Custo |
 | `src/lib/submit-change-request.ts` | Shared by both request-changes entry points (token-gated preview page  |
 | `src/lib/tee-sheet-engine.ts` | Generates/refreshes TeeTime rows for one course on one date from its a |
 | `src/lib/tee-time-utils.ts` | Converts a stored tee-time (date "YYYY-MM-DD", time "HH:MM" in the cou |
 | `src/lib/terms.ts` | Bump this whenever /terms materially changes so old bookings keep an |
+| `src/lib/thread-signal.ts` | MP-7a. ONE answer to "is this course waiting on us, and for how long?" |
+| `src/lib/tier-wire.ts` | MembershipTier: cents at rest, dollars on the wire. |
 | `src/lib/twilio.ts` | — |
 | `src/lib/two-factor.ts` | Generates a fresh 6-digit code, stores its hash on the operator, and s |
+| `src/lib/use-resource.ts` | MP-11b (ADMIN_V4 V4-7 item 4). The GET-loader shape that every admin p |
 | `src/lib/use-tab-intro.ts` | Drives the first-visit "what is this page" intro card (V13 item 2) — |

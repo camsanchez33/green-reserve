@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { courseToWire } from '@/lib/course-wire';
 import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
-import { normalizeHttpUrl } from '@/lib/settings-validation';
+import { normalizeHttpUrl, validateSettingsPatch } from '@/lib/settings-validation';
 import { CHANGES_REQUESTED_PREFIX, LEGACY_CHANGES_REQUESTED_MARKER, isChangesRequestedEvent } from '@/lib/change-requests';
 
 // Never cache — the dashboard's live/draft banner reads this and must
@@ -59,6 +59,12 @@ export async function PATCH(req: NextRequest) {
       body[k] = u;
     }
   }
+  // SD-11: the rest was written raw (holes: "abc" → NaN → 500; type: anything).
+  // Same rules as the Settings route, then the checked values replace the body's.
+  const checked = validateSettingsPatch(body, ['name', 'type', 'city', 'state', 'address', 'phone', 'description', 'holes', 'par', 'yardage', 'slope', 'brandColor', 'establishedYear']);
+  if (!checked.ok) return NextResponse.json({ error: checked.error }, { status: 400 });
+  Object.assign(body, checked.data);
+  if (body.active !== undefined && typeof body.active !== 'boolean') return NextResponse.json({ error: 'active must be true or false.' }, { status: 400 });
 
   const updated = await prisma.course.update({
     where: { id: session.courseId },
