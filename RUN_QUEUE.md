@@ -302,6 +302,11 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   or (b) remove viewer from VALID_ROLES and the picker entirely. Do not ship a
   role whose label and behavior disagree. Cam picks a or b at the restate step.
 
+- [x] Tooling (ac52049) — Cowork's /gr-batch command, reskin-worker agent,
+  reskin-guard + batch-plan scripts, parse-on-edit PostToolUse hook and
+  .claude/settings.json arrived between runs and were committed as-is.
+  Nothing runs until /gr-batch is invoked (UI revise is parked).
+
 - SITE + DASHBOARD CAMPAIGN — full spec in SITE_DASHBOARD_SPEC.md. Public site +
   operator dashboard deep dive (975 + 3,978 lines read, plus live walkthrough).
   **SD-1 RUNS BEFORE MP-1.** The admin campaign below is 13 runs on the console
