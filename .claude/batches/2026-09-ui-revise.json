@@ -1,0 +1,29 @@
+{
+  "U-G": [
+    "src/app/courses",
+    "src/app/book",
+    "src/app/receipt",
+    "src/app/manage",
+    "src/app/checkin",
+    "src/app/membership",
+    "src/components/golfer",
+    "src/components/course",
+    "src/components/booking"
+  ],
+  "U-O": [
+    "src/app/dashboard",
+    "src/components/dashboard",
+    "src/components/OperatorSidebar.tsx"
+  ],
+  "U-A": [
+    "src/app/admin",
+    "src/components/admin"
+  ],
+  "U-M": [
+    "src/app/for-courses",
+    "src/app/contact",
+    "src/app/terms",
+    "src/app/privacy",
+    "src/app/operator-agreement"
+  ]
+}

@@ -1,6 +1,7 @@
 ---
 name: design-auditor
 description: Audits GreenReserve UI code for Clubhouse design-system drift — banned classes, wrong radii, emoji, missing StatusDot, wrong surface theme. Use after any run that touched .tsx/.css under src/app or src/components, or when asked whether a page is on-brand. Read-only; reports findings, never edits.
+model: sonnet
 tools: Read, Grep, Glob, Bash
 ---
 

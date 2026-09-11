@@ -52,3 +52,9 @@ next-env.d.ts
 
 # Cam's private ideas/audit bank — never commit.
 AUDIT_MASTER.md
+
+# Claude Code worktrees for /gr-batch workers
+.claude/worktrees/
+
+# Cowork staging folder (safe to delete)
+_to_delete/

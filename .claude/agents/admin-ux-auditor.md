@@ -1,6 +1,7 @@
 ---
 name: admin-ux-auditor
 description: Audits admin and operator-dashboard pages for the no-silent-failures rule — swallowed catches, missing pending states, unexplained redirects, dead ends, empty states. Use after any run touching src/app/admin or src/app/dashboard. Read-only; reports findings, never edits.
+model: sonnet
 tools: Read, Grep, Glob, Bash
 ---
 
