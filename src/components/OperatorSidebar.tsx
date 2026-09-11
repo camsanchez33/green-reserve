@@ -1,6 +1,5 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import {
   Calendar, BarChart2, Clock, Users, Settings, LogOut, XCircle,
@@ -16,12 +15,16 @@ export type OperatorNavKey =
 
 interface CourseIdentity {
   id?: string; name: string; type: string; brandColor: string; establishedYear?: number | null;
+  slug?: string; logoUrl?: string;
 }
 interface MyCourse { id: string; name: string; slug: string; active: boolean; liveStatus: string; }
 
+// U-0 (UI_REVISE_SPEC §1b): active item = accent text, 3px left border in the
+// accent, paper background. The tint wash is gone.
 function accentActive(color: string) {
-  return { borderLeft: `2px solid ${color}`, backgroundColor: color + '14', color };
+  return { borderLeft: `3px solid ${color}`, backgroundColor: '#F7F5EF', color, fontWeight: 600 };
 }
+const initialsOf = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'GR';
 
 export default function OperatorSidebar({ active, onAlertClick }: {
   active: OperatorNavKey;
@@ -49,7 +52,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
       .then(r => r.ok ? r.json() : null)
       .then(c => {
         if (!c) return;
-        setIdentity({ id: c.id, name: c.name || '', type: c.type || 'public', brandColor: c.brandColor || '#24513B', establishedYear: c.establishedYear ?? null });
+        setIdentity({ id: c.id, name: c.name || '', type: c.type || 'public', brandColor: c.brandColor || '#24513B', establishedYear: c.establishedYear ?? null, slug: c.slug || '', logoUrl: c.logoUrl || '' });
       })
       .catch(() => {});
     // Only ever returns >1 row for multi-course operators — staff and
@@ -85,7 +88,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     } catch { toast('Network error — you are still signed in.'); }
   }
 
-  const { brandColor, name, type, establishedYear } = identity;
+  const { brandColor, name, type, establishedYear, slug, logoUrl } = identity;
   const typeLabel = type === 'semi-private' ? 'Semi-Private' : type === 'municipal' ? 'Municipal' : type === 'resort' ? 'Resort' : 'Public Course';
   const meta = [establishedYear ? `Est. ${establishedYear}` : null, typeLabel].filter(Boolean).join(' · ').toUpperCase();
 
@@ -168,17 +171,22 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     </nav>
 
     <aside className="hidden md:flex w-56 shrink-0 bg-white border-r border-line flex-col h-full overflow-y-auto">
+      {/* U-0 (UI_REVISE_SPEC §1b, canvas "Operator · Tee sheet"): the rail is
+          the course's room. Crest (logo, or initials in the accent), serif
+          name, one uppercase meta line. GreenReserve moves to the footer. */}
       <div className="px-4 py-4 border-b border-line">
-        <div className="text-center mb-3">
-          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={190} height={36} priority className="w-full h-auto" />
-          <div className="text-[10px] text-ink-muted font-medium uppercase tracking-wider mt-1.5">Operator</div>
-        </div>
-        {name && (
-          <div className="pl-0.5">
-            <div className="font-serif text-[14.5px] text-ink leading-snug truncate">{name}</div>
-            <div className="text-[10.5px] text-ink-muted uppercase tracking-[0.05em] mt-0.5 truncate">{meta}</div>
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 shrink-0 bg-white border border-line flex items-center justify-center overflow-hidden font-semibold text-[13px]" style={{ color: brandColor }} aria-hidden="true">
+            {logoUrl
+              // eslint-disable-next-line @next/next/no-img-element
+              ? <img src={logoUrl} alt="" className="w-full h-full object-contain" />
+              : initialsOf(name)}
           </div>
-        )}
+          <div className="min-w-0">
+            <div className="font-serif text-[16px] text-ink leading-[1.1] truncate">{name || 'Your course'}</div>
+            {meta && <div className="text-[10.5px] text-ink-muted uppercase tracking-[0.08em] mt-1 truncate">{meta}</div>}
+          </div>
+        </div>
         {myCourses.length > 1 && (
           <select
             value={identity.id || ''}
@@ -199,7 +207,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
             <div className="text-[10px] font-medium text-ink-faint uppercase tracking-[0.08em] px-4 py-1.5">{g.label}</div>
             {navItems.filter(n => g.keys.includes(n.key)).map(item => {
               const isActive = active === item.key;
-              const base = 'w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium transition-colors text-left border-l-2';
+              const base = 'w-full flex items-center gap-2.5 px-4 py-2.5 text-[13.5px] font-medium transition-colors text-left border-l-[3px]';
               if (item.soon) return (
                 <div key={item.key} className={base + ' border-transparent text-ink-faint cursor-default'}>
                   {item.icon}<span className="flex-1">{item.label}</span>
@@ -233,9 +241,13 @@ export default function OperatorSidebar({ active, onAlertClick }: {
         </div>
       </nav>
 
-      <div className="p-3 border-t border-line">
-        <button onClick={logout} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-ink-soft hover:text-bad transition-colors text-left">
-          <LogOut className="w-4 h-4"/>Sign Out
+      <div className="px-4 py-3.5 border-t border-line space-y-1.5 text-[12.5px]">
+        {slug && (
+          <a href={'/courses/' + slug} target="_blank" rel="noopener" className="block text-ink-soft hover:text-ink transition-colors">View your course page ↗</a>
+        )}
+        <div className="text-ink-muted">Powered by GreenReserve</div>
+        <button onClick={logout} className="flex items-center gap-2 pt-1 text-ink-soft hover:text-bad transition-colors text-left">
+          <LogOut className="w-3.5 h-3.5"/>Sign out
         </button>
       </div>
     </aside>

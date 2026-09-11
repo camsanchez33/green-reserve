@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { resolveAdminSession, AdminSessionUnavailable } from '@/lib/admin-session';
 import { AdminSessionProvider, type AdminSessionView } from '@/lib/admin-session-context';
+import { STAFF_LOOK_CLASS } from '@/lib/staff-fonts';
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 // Reads the session cookie on every request — never cache this shell.
@@ -25,9 +26,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     if (err instanceof AdminSessionUnavailable) unavailable = true;
     else throw err;
   }
+  // U-0: the STAFF look (UI_REVISE_SPEC §1b) — Newsreader / Source Sans 3,
+  // square corners, the staff palette — is switched on here for every /admin
+  // route by one wrapper. `display: contents` keeps it out of the box tree.
   return (
     <AdminSessionProvider session={session} unavailable={unavailable}>
-      {children}
+      <div className={STAFF_LOOK_CLASS}>{children}</div>
     </AdminSessionProvider>
   );
 }

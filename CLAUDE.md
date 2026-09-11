@@ -152,35 +152,58 @@ All required in Vercel; the full list is in `docs/SHIPPING.md`, the secrets inve
 
 ---
 
-## Design system — Clubhouse (July 2026)
+## Design system — two looks, split by audience (UI_REVISE_SPEC, Sept 2026)
 
-**All admin pages:** light mode, Clubhouse palette. Golfer pages still use white/gray-50 (D3 phase pending).
+Source of truth for anything visual: `UI_REVISE_SPEC.md` §1 (tokens) and §0 (decisions).
+Clubhouse *structure* (white cards on paper, StatusDot, no pills, no dark mode) holds
+everywhere; the type, corners and palette depend on **who the page is for**.
 
-### Tailwind v4 custom tokens (defined in `globals.css` `@theme {}`)
-- `paper` (#F6F4EC) — page bg; `card` (#FFFFFF) — card bg; `ink` (#1C1C18) — body text
-- `ink-soft` (#6E6D64), `ink-muted` (#87867C), `ink-faint` (#98968B)
-- `line` (#E6E3D7), `line-soft` (#F0EDE2), `line-strong` (#D9D6C8)
-- `pine` (#24513B) / `pine-hover` (#2E6349) — admin accent
-- `ok` (#3D6B4C), `bad` (#A3452F), `warn` (#8A6116), `dot-neutral` (#B3B1A6)
-- `font-sans` = Inter, `font-serif` = Fraunces (page titles + stat numbers)
+| | PUBLIC look | STAFF look |
+|---|---|---|
+| Where | `/`, `/for-courses`, legal pages, every golfer-facing page (`/courses/[slug]`, `/book`, `/checkin`, `/manage`, `/receipt`, member portal) | `/dashboard/*` and `/admin/*` |
+| Fonts | Fraunces display · Inter body (root layout, `--font-serif` / `--font-sans`) | Newsreader display · Source Sans 3 body (`src/lib/staff-fonts.ts`) |
+| Corners | 8px buttons/inputs (`rounded-md`), 14px cards (`rounded-lg`), pills 999px | **0 everywhere.** `rounded-full` only for avatars, dots, swatches |
+| Paper / ink / line | #F6F4EC / #1C1C18 / #E6E3D7 | #F7F5EF / #1D1F1A / #E3E0D5 |
+| Accent | pine (marketing) · per-course `Course.brandColor` (golfer pages) | course accent (operator) · pine (admin) |
 
-### Rules
-- Max border-radius: `rounded-md` for buttons/inputs, `rounded-lg` for cards. Never `rounded-xl/2xl/3xl`.
-- No emojis — use lucide-react icons
-- Nav/Footer: suppressed on `/admin/*` and `/dashboard/*` paths (return null)
-- Admin sidebar: `bg-pine`, inactive `text-[#A9BFAF]`, active `bg-white/10 text-paper`
-- Page titles: `text-[22px] font-serif font-medium tracking-tight text-ink`
-- Eyebrows: `text-[11px] uppercase tracking-[0.06em] text-ink-muted`
+**How the switch works (U-0):** the `/admin` and `/dashboard` route layouts wrap their
+children in `.staff-look` (`STAFF_LOOK_CLASS` from `src/lib/staff-fonts.ts`). That class,
+in `globals.css`, re-points Tailwind's theme variables — `--radius-*` to 0, `--font-serif` /
+`--font-sans` to the staff fonts, the paper/ink/line tokens to the staff palette. Because
+Tailwind v4 utilities resolve through those variables, **write staff pages with the same
+classes as always** (`rounded-md`, `rounded-lg`, `font-serif`, `bg-paper`, `text-ink`); they
+render square and in Newsreader/Source Sans 3 inside the wrapper and rounded/Fraunces/Inter
+outside it. Do not hardcode radii or font-families to force either look.
+
+### Shared tokens (Tailwind v4, `globals.css` `@theme {}`)
+- `paper`, `card` (#FFFFFF), `ink`, `ink-soft`, `ink-muted`, `ink-faint` (#98968B), `line`, `line-soft`, `line-strong` (#D9D6C8)
+- `pine` (#24513B) / `pine-hover` (#2E6349); `ok` (#3D6B4C), `bad` (#A3452F), `warn` (#8A6116), `dot-neutral` (#B3B1A6)
+- `font-sans`, `font-serif` — resolve per look, see above
+
+### Staff-look type scale (§1b)
+- Page title: `font-serif text-[30px] leading-none` (existing 22px titles are acceptable until their reskin run lands)
+- Section title: 15px/600 sans · Eyebrow: `text-[11px] uppercase tracking-[0.1em] text-ink-muted` · body 13.5–14px · tables 13.5px
+- Attention: a 3px **left** border in the semantic color on a white card — the only place borders carry color
+- Operator sidebar: white, 1px `line`; course crest + serif name + 10.5px uppercase meta; active item = accent text, 3px left border, paper bg
+- Admin sidebar: `bg-pine`; wordmark serif 17px `paper`; inactive `#A9BFAF`, active `bg-white/10 text-paper`
+
+### Rules (both looks)
 - Status indicators: `<StatusDot status="ok|bad|warn|neutral" label="..."/>` — 5px dot, no pill badges
 - Input class: `bg-paper border border-line rounded-md px-3 py-2.5 text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10`
-- Primary button: `bg-pine hover:bg-pine-hover text-white font-medium rounded-md`
+- Primary button: `bg-pine hover:bg-pine-hover text-white font-medium rounded-md` (course accent via inline style on operator/golfer surfaces)
+- Inline notices may use a `/5` wash with a `/20` border (`bg-bad/5 border-bad/20`) — the ban below is on tinted status *pills*, not on notice banners
+- No emojis — lucide-react icons. Nav/Footer return null on `/admin/*` and `/dashboard/*`
+- Reskin runs change **zero behavior** (UI_REVISE_SPEC §3); behavior lives in §4, one run each
+- Marketing fee copy is FROZEN behind the LQ-2 placeholder — never restore it in a reskin
 - Email template: ONE light template for all emails (operator + golfer) — white body, ink text, pine accents (`#1b4332`), sharp corners (`border-radius:4px`), zinc border. No logo in the header — content starts straight at the top of the card. Footer: the standalone golfer mark (`public/brand/golfer.png`, ~56px tall) centered above "Green Reserve · greenreserve.app" — no lockup, no Birdie (Birdie is web-only: 404, coming-soon, empty states).
 
 ### BANNED
-- `font-black`, `tracking-widest` — use `font-medium`/`font-semibold` and `tracking-[0.06em]`
-- Dark backgrounds (`bg-gray-950`, `bg-gray-900`) on admin/dashboard
+- `font-black`, `tracking-widest` — use `font-medium`/`font-semibold` and `tracking-[0.06em]` (public) / `tracking-[0.1em]` (staff eyebrows)
+- Dark backgrounds (`bg-gray-950`, `bg-gray-900`) on admin/dashboard; gradients; drop shadows heavier than `0 1px 2px`
 - Tinted colored pill badges — use `<StatusDot>` instead
 - `emerald-600` as accent — use `pine` / `ok` tokens
+- `rounded-xl/2xl/3xl` anywhere; any rounded corner on a staff surface that isn't an avatar/dot/swatch
+- Cursor-tracking motion, bounce easing; anything that moves without `prefers-reduced-motion` respected
 
 ---
 

@@ -25,6 +25,30 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* U-0 — the STAFF look (UI_REVISE_SPEC §1b), scoped to /dashboard and /admin.
+   Tailwind v4 utilities resolve through theme variables (`rounded-md` is
+   `border-radius: var(--radius-md)`, `font-serif` is `var(--font-serif)`,
+   `bg-paper` is `var(--color-paper)`), so re-pointing those variables on one
+   wrapper reskins every existing class inside it: square corners, Newsreader
+   + Source Sans 3, the staff palette. Nothing outside the wrapper changes —
+   the public site keeps Fraunces / Inter / rounded. `rounded-full` is not a
+   variable, so avatars, dots and swatches stay round on purpose. */
+.staff-look {
+  --font-sans:  var(--font-sans-staff), 'Source Sans 3', system-ui, sans-serif;
+  --font-serif: var(--font-serif-staff), 'Newsreader', Georgia, serif;
+  font-family: var(--font-sans);
+
+  --radius-xs: 0; --radius-sm: 0; --radius-md: 0; --radius-lg: 0;
+  --radius-xl: 0; --radius-2xl: 0; --radius-3xl: 0; --radius-4xl: 0;
+
+  --color-paper:     #F7F5EF;
+  --color-ink:       #1D1F1A;
+  --color-ink-soft:  #5D5F56;
+  --color-ink-muted: #8A8B80;
+  --color-line:      #E3E0D5;
+  --color-line-soft: #F0EDE2;
+}
+
 :root {
   --green: #24513B;
   --green-light: #2E6349;

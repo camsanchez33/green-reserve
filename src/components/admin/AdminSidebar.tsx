@@ -1,7 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { SUPPORT_PLUS, MANAGER_PLUS, VIEWER_PLUS } from '@/lib/admin-roles';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
 import { BarChart2, AlertCircle, Building2, Hammer, Users, Activity, MessageSquare, UserCircle, ChevronLeft, ChevronRight, DollarSign, Search, UserSearch, Wrench, LogOut } from 'lucide-react';
@@ -30,7 +29,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   // MP-11a: role comes from the layout's one session read. The rail used to
   // fetch it again, with a 'could not confirm your access level' state for when
   // that second fetch failed. There is no second fetch to fail now.
-  const { role } = useAdminSession();
+  const { role, name } = useAdminSession();
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
@@ -208,10 +207,9 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
                 <Search className="w-3.5 h-3.5 text-[#A9BFAF]"/>
               </button>
             </div>
-            <div className="text-center">
-              <Image src="/brand/logo-lockup-cream-900.png" alt="GreenReserve" width={190} height={36} priority className="w-full h-auto" />
-              <div className="text-[10px] text-[#A9BFAF] font-medium uppercase tracking-wider mt-1.5">Admin</div>
-            </div>
+            {/* U-0 (UI_REVISE_SPEC §1b, canvas "Admin · Overview"): the wordmark
+                is set in the staff serif, not the marketing lockup. */}
+            <div className="font-serif text-[17px] text-paper leading-none">GreenReserve</div>
           </>
         )}
       </div>
@@ -228,6 +226,9 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
 
       {/* Bottom cluster */}
       <div className="p-2 border-t border-white/10 space-y-0.5">
+        {!collapsed && (
+          <div className="px-3 pt-1 pb-2 text-[12.5px] text-[#A9BFAF] truncate">{name || 'Signed in'} · {role}</div>
+        )}
         {bottomNav.map(item => <NavItem key={item.key} item={item} />)}
         <button
           onClick={signOut}

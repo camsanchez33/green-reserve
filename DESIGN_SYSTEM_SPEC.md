@@ -1,5 +1,15 @@
 # GreenReserve Design System — "Clubhouse"
 
+> **SUPERSEDED for `/dashboard` and `/admin` (U-0, 2026-09-11).** The staff surfaces now
+> wear the STAFF look defined in `UI_REVISE_SPEC.md` §1b — Newsreader + Source Sans 3,
+> square corners, the staff palette — switched on by `.staff-look` in `globals.css` from
+> the two route layouts. The Type, Rules (radius) and Sidebars sections below, and the
+> D1/D2 phase descriptions, describe the July 2026 look those surfaces have moved past.
+> Everything about the Clubhouse *structure* (cards, StatusDot, no pills, no dark mode)
+> still holds. D3's golfer-facing white-label rules (per-course accent, serif course
+> name, hero photo, "Powered by GreenReserve") remain in force — the PUBLIC look in
+> `UI_REVISE_SPEC.md` §1a is that phase, formalized.
+
 Read CLAUDE.md first. This REPLACES the June 2026 design system (dark dashboards, emerald-600,
 neon-tinted badges). Everything becomes light. Three tiers: admin wears GreenReserve green,
 operator dashboards wear quiet paper with the course's own accent, golfer-facing course pages

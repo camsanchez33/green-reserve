@@ -4,7 +4,10 @@
 // AnnouncementBanner is rendered inside OperatorSidebar so it only appears on
 // authenticated dashboard pages (login, forgot-password, etc. don't use the sidebar).
 import type { Metadata } from 'next';
+import { STAFF_LOOK_CLASS } from '@/lib/staff-fonts';
 export const metadata: Metadata = { robots: { index: false, follow: false } };
+// U-0: the STAFF look (UI_REVISE_SPEC §1b) for every /dashboard route — see
+// src/lib/staff-fonts.ts and `.staff-look` in globals.css.
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <div className={STAFF_LOOK_CLASS}>{children}</div>;
 }
