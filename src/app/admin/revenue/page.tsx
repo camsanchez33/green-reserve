@@ -51,6 +51,15 @@ interface Expense {
 interface PlatformStripeData {
   balance: { available: number; pending: number; currency: string };
   nextPayout: { amount: number; arrivalDate: string; status: string } | null;
+  // MP-6c: money that reached the bank, and what one collected fee nets.
+  payouts: { id: string; amount: number; status: string; arrivalDate: string; automatic: boolean }[];
+  paidOutRecent: number;
+  unitEconomics: {
+    charges: number; roundsCollected: number; playersCollected: number; avgPlayersPerRound: number | null;
+    grossFeePerCharge: number; stripeCostPerCharge: number; netFeePerCharge: number; takeRate: number | null;
+    stripeCostTotal: number; netTotal: number;
+  };
+  reconciliation: { basis: string; expected: number; actual: number; delta: number; matches: boolean; message: string };
   period: string;
 }
 type SortKey = 'name' | 'booked' | 'collectedRounds' | 'serviceFees' | 'greenFeeVolume' | 'failedCharges';
@@ -640,6 +649,15 @@ export default function RevenuePage() {
                     className="flex items-center gap-1.5 text-[12px] font-medium text-ink-soft hover:text-ink px-3 py-2 rounded-md border border-line hover:border-line-strong disabled:opacity-40 transition-colors">
                     <Download className="w-3.5 h-3.5"/>Export CSV
                   </button>
+                  {/* MP-6c: the ledger, one row per charge / late fee / refund across
+                      every course in the period — for an accountant. Manager+. */}
+                  {data && (
+                    <a href={`/api/admin/transactions/export?from=${data.period.from}&to=${data.period.to}`}
+                      className="flex items-center gap-1.5 text-[12px] font-medium text-ink-soft hover:text-ink px-3 py-2 rounded-md border border-line hover:border-line-strong transition-colors"
+                      title="Every charge, late fee and refund in this period, one row each">
+                      <Download className="w-3.5 h-3.5"/>Export transactions
+                    </a>
+                  )}
                 </div>
               </div>
               {rows.length === 0 ? (
@@ -722,6 +740,49 @@ export default function RevenuePage() {
                   </div>
                 </div>
               ) : null}
+
+              {platform && (
+                <div className="mt-5 pt-5 border-t border-line-soft grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* MP-6c: the payout list was fetched and discarded. This is "money
+                      that reached the bank" — the only number a bank statement agrees with. */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Payouts to the bank</div>
+                      <span className="text-[11px] text-ink-faint">{fmtMoney(platform.paidOutRecent)} paid out, last {platform.payouts.length}</span>
+                    </div>
+                    {platform.payouts.length === 0 ? (
+                      <p className="text-sm text-ink-muted">No payouts yet.</p>
+                    ) : (
+                      <div className="border border-line rounded-md divide-y divide-line-soft">
+                        {platform.payouts.map(p => (
+                          <div key={p.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                            <span className="text-ink-soft tabular-nums">{p.arrivalDate}</span>
+                            <StatusDot status={p.status === 'paid' ? 'ok' : p.status === 'failed' || p.status === 'canceled' ? 'bad' : 'warn'} label={p.status.replace('_', ' ')} />
+                            <span className="text-ink font-medium tabular-nums">{fmtMoney(p.amount)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {/* Unit economics: the $1.50 is per player, Stripe's cut has a fixed
+                      component — so a 1-player round and a 4-player round net very
+                      differently. From Stripe's own balance transactions. */}
+                  <div>
+                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Unit economics · last {platform.period}</div>
+                    {platform.unitEconomics.charges === 0 ? (
+                      <p className="text-sm text-ink-muted">No fees collected in this period yet.</p>
+                    ) : (
+                      <div className="space-y-1.5 text-sm">
+                        <div className="flex justify-between"><span className="text-ink-muted">Fees collected</span><span className="text-ink tabular-nums">{platform.unitEconomics.charges} charge{platform.unitEconomics.charges === 1 ? '' : 's'}{platform.unitEconomics.avgPlayersPerRound !== null ? ` · ${platform.unitEconomics.avgPlayersPerRound.toFixed(1)} players/round` : ''}</span></div>
+                        <div className="flex justify-between"><span className="text-ink-muted">Average fee per charge</span><span className="text-ink tabular-nums">{fmtMoney(platform.unitEconomics.grossFeePerCharge)}</span></div>
+                        <div className="flex justify-between"><span className="text-ink-muted">Stripe&apos;s cut per charge</span><span className="text-bad tabular-nums">−{fmtMoney(platform.unitEconomics.stripeCostPerCharge)}</span></div>
+                        <div className="flex justify-between border-t border-line pt-1.5"><span className="text-ink font-medium">Net per charge</span><span className="text-ink font-medium tabular-nums">{fmtMoney(platform.unitEconomics.netFeePerCharge)}{platform.unitEconomics.takeRate !== null ? <span className="text-ink-muted font-normal"> · {(platform.unitEconomics.takeRate * 100).toFixed(0)}% kept</span> : null}</span></div>
+                        <p className="text-[11px] text-ink-faint pt-1">Stripe takes a fixed amount plus a percentage of each fee, so a single-player round nets far less than a foursome. Period total: {fmtMoney(platform.unitEconomics.netTotal)} net of {fmtMoney(platform.unitEconomics.stripeCostTotal)} in Stripe costs.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
