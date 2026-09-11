@@ -422,6 +422,24 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     REMAINING in SD-8 / SD-9 (below): UI restructures (parked until the
     functional queue is done) + 2FA backup codes, staff password recovery,
     password change revoking other sessions (functional, still open).
+  - [x] SD-10 (bf74725) — no dashboard action fails silently (from /gr-review of
+    SD-1..7a, 2026-09-11: 10 blocking + 14 high UX findings, nearly all
+    pre-existing). NEW lib/dashboard-fetch.ts (never throws; actionable
+    sentence per status) + components/dashboard/LoadError (renders above a
+    list so failure ≠ emptiness). Converted every flagged fetch across the
+    tee sheet, schedules, cancellations, payments, members, messages,
+    onboarding, settings and the sidebar; tee-time DELETE → 409 with a reason
+    when the slot has bookings (was an unhandled P2003); Toast z-[60] above
+    modals + safe-area; viewport-fit=cover. REVIEW BLOCKERS fixed in the same
+    commit: SD-7a root canonical '/' → './' (every page had been canonical to
+    the homepage); SD-1 honeypot actually wired (payload hardcoded ''); SD-4
+    "Retry with new card" now charges the NEW card (it re-charged the declined
+    one under the same idempotency key); receipt email says when the fee
+    refund failed; late-cancellation fee bounded $0–$500. NOT done (review
+    candidates, not blockers): staff reaching hidden pages by URL see an
+    editable form until Save (needs an up-front read-only notice); Members
+    header overflow at 360px unverified; opengraph card in Georgia not
+    Fraunces; Toast border tints read as neutral. NEEDS REVIEW.
   - [ ] SD-8 — merge + split: Payments + Cancellations → one Money page with
     tabs (they already query the same endpoint) + the Stripe payout card moved
     here from Settings + the literal $1.50/player figure; Settings 9 tabs → 5
