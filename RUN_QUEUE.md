@@ -1261,6 +1261,33 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     failure — inline error + Retry now. NOT DONE (schema): indexes on
     Booking(courseId, checkedInAt) / CourseMembership(courseId, lastPaidAt)
     would make the bounded queries index-only — attended. NEEDS REVIEW.
+  - [x] REVIEW FIXES 2026-09-11 (range 17e68c9..a954491; security / admin-UX /
+    design / spec-conformance auditors). Design: clean. Spec: 56 MET, SD-10
+    PARTIAL + viewer bug NOT MET, both fixed here. SECURITY HIGH: cancellation
+    refunds (lib/stripe.ts refundOnConnectedAccount) never reversed
+    GreenReserve's application fee — the course paid our $1.50/player on
+    rounds it refunded; now refund_application_fee: true, matching the MP-6b
+    primitive. MEDIUM: "retry with a new card" after a timed-out first charge
+    could charge twice — PaymentIntents now carry metadata.bookingId and the
+    new-card path searches Stripe for an already-succeeded charge first
+    (records it as paid, 409s). MEDIUM: viewer role got operator emails,
+    revenue30d, adminNotes, stripeAccountId from /api/admin/courses — shaped
+    below SUPPORT_PLUS (courses list shows — for fees). LOW: tee-times DELETE
+    count scoped to the course; tee sheet GET selects fields instead of
+    shipping whole Booking rows (checkInToken, Stripe ids); ARCHITECTURE.md
+    regenerated + Money Flow block updated for MP-6b events. ADMIN-UX (7
+    blocking, all the same shape — raw fetch with no try/catch left a button
+    stuck on a network drop): course detail toggleActive/archive/restore/
+    addClientNote/uploadDocument/saveSetup + savePhone (was fully silent, now
+    Saving…/Saved/error); members saveTier/addMember/deleteTier (dfetch +
+    busy); messages send (dfetch); settings addStaff/changePassword/save2FA;
+    inquiry detail archiveLiveCourse/sendGoLiveReminder/deleteInquiry;
+    revenue expense End/Delete (busy + catch). Sidebar money badge tooltip
+    now says chargebacks too. NOT DONE: openDisputes() findMany unbounded on
+    every badge poll (tiny table today); settings/sidebar background loads
+    still .catch(() => {}) (LOW, page-load not click). Boxes MP-6b, SD-11,
+    MP-6d, L3, MP-6c, MP-10 pass review; SD-10 and viewer bug pass with these
+    fixes.
   - [ ] MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)
     - [x] MP-11a (341161a) — LAW rule 2 made real. `admin/layout.tsx` is a server
       component that resolves the session ONCE and hands it down via

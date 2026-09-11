@@ -4,22 +4,30 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-11 23:40 UTC · branch `main` · HEAD `a954491` · working tree **1 dirty file(s)**
+Generated 2026-09-11 23:59 UTC · branch `main` · HEAD `5eb48c5` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
+`RUN_QUEUE.md` was last committed **2026-09-11**. 2 commit(s) since then are not mentioned anywhere in it:
 
-### Uncommitted working tree (1 file(s))
+| commit | date | subject |
+|---|---|---|
+| `5eb48c5` | 2026-09-11 | Review fixes: fee reversal on cancellation refunds, double-charge guard, viewer shaping, hung buttons |
+| `a3c1bea` | 2026-09-11 | U-0: the staff look — one CSS switch, two fonts, two sidebars |
+
+**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (2 file(s))
 
 - `M RUN_QUEUE.md`
+- `M UI_REVISE_SPEC.md`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
 
 ## In flight
 
-- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:1771`
+- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:1798`
   - FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because "no linked inquiry" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding the
   - Last session's raw Prisma script (a read-only check confirming Fake
   - Fairways existed) got blocked by this sandbox's auto-mode classifier as a potential production-database access outside the app's own authenticated API. That block is almost certainly the intended, correct behavior — a raw script has no place touching real course/booking/ operator data, authorized or not — so I did NOT retry it, and built the override into the sanctioned admin API instead, per the 
@@ -64,13 +72,13 @@ This is the distinction a raw checkbox count gets wrong.
 16. MP-8 — chrome + System (split into 8a–8b) — `RUN_QUEUE.md:1220`
 17. MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table — `RUN_QUEUE.md:1237`
 18. MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in — `RUN_QUEUE.md:1244`
-19. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1264`
-20. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1313`
-21. BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet: — `RUN_QUEUE.md:1318`
-22. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1339`
-23. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1368`
-24. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1447`
-25. UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). Run order U-0 → H-1 → U-G → B-1 → B-2 →  — `RUN_QUEUE.md:1932`
+19. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1291`
+20. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1340`
+21. BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet: — `RUN_QUEUE.md:1345`
+22. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1366`
+23. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1395`
+24. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1474`
+25. UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). Run order U-0 → H-1 → U-G → B-1 → B-2 →  — `RUN_QUEUE.md:1959`
 
 ## Waiting on you (not on a build)
 
@@ -81,7 +89,7 @@ This is the distinction a raw checkbox count gets wrong.
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:692`
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:740`
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:782`
-- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1368`
+- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1395`
 
 ## Revise campaign (page-by-page pass)
 
@@ -169,6 +177,9 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `5eb48c5` 2026-09-11 — Review fixes: fee reversal on cancellation refunds, double-charge guard, viewer shaping, hung buttons
+- `a3c1bea` 2026-09-11 — U-0: the staff look — one CSS switch, two fonts, two sidebars
+- `961c637` 2026-09-11 — queue/spec update
 - `a954491` 2026-09-11 — MP-10: bound every admin list query instead of paging in memory
 - `ae32878` 2026-09-11 — queue/spec update
 - `b468723` 2026-09-11 — MP-6c: payouts that reached the bank, unit economics, and a ledger export
@@ -178,10 +189,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `bfc8db3` 2026-09-11 — queue/spec update
 - `3774499` 2026-09-11 — queue/spec update
 - `35ecaba` 2026-09-11 — queue/spec update
-- `4bdbb0f` 2026-09-11 — BUG viewer role: the gates, sidebar and copy that acaa21e's message described but a failed script left out
-- `e919c68` 2026-09-11 — queue/spec update
-- `acaa21e` 2026-09-11 — BUG: the viewer role now keeps a promise it can actually keep
 
 ---
 
-**Totals:** 154 done · 8 awaiting review · 1 in flight · 25 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 155 done · 8 awaiting review · 1 in flight · 25 not started · 8 revise pages open · 15 ideas · 2 parked.

@@ -61,7 +61,18 @@ Tailwind: keep the existing color tokens, add `--font-serif-staff`/`--font-sans-
 
 ## 2. Design-system run (do this first)
 
-- [ ] **U-0 · Staff design system foundation** (no migration, medium)
+- [ ] **U-0 · Staff design system foundation** (no migration, medium) — SHIPPED a3c1bea,
+  box open until /gr-review U-0 + a live walk. HOW: one `.staff-look` wrapper on the
+  /admin and /dashboard layouts re-points Tailwind's theme variables (radius → 0,
+  --font-serif/--font-sans → Newsreader/Source Sans 3 from `src/lib/staff-fonts.ts`,
+  paper/ink/line → §1b), so step 2 needed NO component edits — every existing
+  `rounded-*` / `font-*` / `bg-paper` class inside the wrapper renders the staff look.
+  Sidebars per the canvas boards (operator: crest + serif name + meta, 3px accent
+  active, footer link + "Powered by GreenReserve"; admin: serif wordmark, name · role).
+  CLAUDE.md rewritten; DESIGN_SYSTEM_SPEC marked superseded for staff surfaces.
+  LIVE CHECK: /dashboard and /admin square + Newsreader; `/`, `/courses/[slug]`, `/book`
+  unchanged (Fraunces, rounded). NOT verified in a browser here (local build cannot
+  collect page data without JWT_SECRET).
   1. Load Newsreader + Source Sans 3 via `next/font/google`; expose as CSS variables on the `/dashboard` and `/admin` route layouts only. Public layout untouched.
   2. Update `src/components/ui/*` (Card, Eyebrow, StatGroup, StatusDot, PageHeader, Btn, SidebarShell) to read radius/fonts from the layout variables so the same components render public-rounded and staff-square depending on where they're mounted. If that's a fight, fork them into `ui/staff/*` — say which in the restate step.
   3. Operator sidebar: identity block per §1b (already partly built in D2 — verify against canvas "Operator · Tee sheet"). Admin sidebar: per §1b (verify against canvas "Admin · Overview").
