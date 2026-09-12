@@ -1,39 +1,25 @@
 {
-  "generatedAt": "2026-09-11T23:59:40.414Z",
+  "generatedAt": "2026-09-12T00:00:44.036Z",
   "repo": {
-    "head": "5eb48c5",
+    "head": "7238dd9",
     "branch": "main",
-    "dirtyCount": 2,
+    "dirtyCount": 3,
     "dirty": [
       "M RUN_QUEUE.md",
-      " M UI_REVISE_SPEC.md"
+      "?? .claude/batches/2026-09-11-reskin.expanded.json",
+      "?? .claude/batches/2026-09-11-reskin.json"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-11T19:40:30-04:00",
-    "unrecorded": [
-      {
-        "h": "5eb48c5",
-        "date": "2026-09-11T19:59:37-04:00",
-        "subject": "Review fixes: fee reversal on cancellation refunds, double-charge guard, viewer shaping, hung buttons",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "a3c1bea",
-        "date": "2026-09-11T19:57:20-04:00",
-        "subject": "U-0: the staff look — one CSS switch, two fonts, two sidebars",
-        "ids": [],
-        "matches": []
-      }
-    ]
+    "queueLastCommit": "2026-09-11T19:59:41-04:00",
+    "unrecorded": []
   },
   "counts": {
     "runDone": 155,
-    "runAwaiting": 8,
+    "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 25,
+    "runNotStarted": 24,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -110,6 +96,13 @@
       "hash": "bf3bcb2",
       "shipDate": "2026-08-30",
       "ageDays": 12
+    },
+    {
+      "title": "UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea (box open until review). Run order U-0 →",
+      "line": 1959,
+      "hash": "a3c1bea",
+      "shipDate": "2026-09-11",
+      "ageDays": 0
     }
   ],
   "next": [
@@ -231,11 +224,6 @@
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
       "line": 1474,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). Run order U-0 → H-1 → U-G → B-1 → B-2 → U-O → B-6 → U-A → U-",
-      "line": 1959,
       "section": "Queue (run in this order)"
     }
   ],
@@ -801,6 +789,11 @@
   },
   "recentCommits": [
     {
+      "h": "7238dd9",
+      "date": "2026-09-11",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "5eb48c5",
       "date": "2026-09-11",
       "subject": "Review fixes: fee reversal on cancellation refunds, double-charge guard, viewer shaping, hung buttons"
@@ -852,11 +845,6 @@
     },
     {
       "h": "3774499",
-      "date": "2026-09-11",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "35ecaba",
       "date": "2026-09-11",
       "subject": "queue/spec update"
     }

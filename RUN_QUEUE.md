@@ -1261,7 +1261,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     failure — inline error + Retry now. NOT DONE (schema): indexes on
     Booking(courseId, checkedInAt) / CourseMembership(courseId, lastPaidAt)
     would make the bounded queries index-only — attended. NEEDS REVIEW.
-  - [x] REVIEW FIXES 2026-09-11 (range 17e68c9..a954491; security / admin-UX /
+  - [x] REVIEW FIXES 2026-09-11 (5eb48c5; range 17e68c9..a954491; security / admin-UX /
     design / spec-conformance auditors). Design: clean. Spec: 56 MET, SD-10
     PARTIAL + viewer bug NOT MET, both fixed here. SECURITY HIGH: cancellation
     refunds (lib/stripe.ts refundOnConnectedAccount) never reversed
@@ -1956,7 +1956,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   walls. The attorney-review comment stays: "drafted without counsel;
   review before scale."
 
-- [ ] UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). Run order U-0 → H-1 → U-G → B-1 → B-2 → U-O → B-6 → U-A → U-M. Reskin runs are ZERO behavior; behavior items are separate. Doc file: commit, never discard.
+- [ ] UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea (box open until review). Run order U-0 → H-1 → U-G → B-1 → B-2 → U-O → B-6 → U-A → U-M. Reskin runs are ZERO behavior; behavior items are separate. Doc file: commit, never discard.
 
 ## Ideas / not yet specced
 
