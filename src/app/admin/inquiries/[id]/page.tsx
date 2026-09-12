@@ -784,7 +784,7 @@ function InquiryDetailInner() {
 
           <div className="flex items-start gap-4">
             <div className="flex-1 min-w-0">
-              <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink leading-snug">{inq.courseName}</h1>
+              <h1 className="text-[30px] font-serif font-medium text-ink leading-snug">{inq.courseName}</h1>
               <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                 <StatusDot status={dot} label={STATUS_LABEL[inq.status] || inq.status} />
                 <span className="text-sm text-ink-muted">{inq.city}, {inq.state}</span>

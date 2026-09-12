@@ -296,8 +296,8 @@ export default function AdminOverviewPage() {
         <div className="px-8 py-7">
           <div className="flex items-center justify-between mb-7">
             <div>
-              <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Platform Overview</h1>
-              <p className="text-sm text-ink-soft mt-0.5">
+              <h1 className="text-[30px] leading-none font-serif font-medium text-ink">Platform Overview</h1>
+              <p className="text-[13.5px] text-ink-soft mt-2">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                 {lastUpdated && <span className="text-ink-faint"> · updated {fmtAgo(lastUpdated, Date.now())}</span>}
               </p>
@@ -323,8 +323,8 @@ export default function AdminOverviewPage() {
                 <div className="flex items-start justify-between mb-2">
                   <div className="p-2 rounded-md bg-pine/10"><DollarSign className="w-4 h-4 text-pine"/></div>
                 </div>
-                <div className="text-[26px] font-serif font-medium text-pine mb-0.5">{fmtMoney(stats.topStrip.feesToday)}</div>
-                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Fees Today</div>
+                <div className="text-[30px] leading-none font-serif font-medium text-pine mb-1">{fmtMoney(stats.topStrip.feesToday)}</div>
+                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">GreenReserve fees today</div>
                 <div className="flex items-center gap-3 mt-2 text-xs text-ink-faint">
                   <span>{stats.topStrip.bookingsToday} booking{stats.topStrip.bookingsToday === 1 ? '' : 's'}</span>
                   <span>·</span>
@@ -338,7 +338,7 @@ export default function AdminOverviewPage() {
                 <div className="flex items-start justify-between mb-2">
                   <div className="p-2 rounded-md bg-paper"><MessageSquare className="w-4 h-4 text-ink-muted"/></div>
                 </div>
-                <div className="text-[26px] font-serif font-medium text-ink mb-0.5">{isSupportPlus ? stats.topStrip.unreadMessages : '—'}</div>
+                <div className="text-[30px] leading-none font-serif font-medium text-ink mb-1">{isSupportPlus ? stats.topStrip.unreadMessages : '—'}</div>
                 <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Unread</div>
                 <div className="text-xs text-ink-faint mt-2">
                   {!isSupportPlus ? 'Requires support access' : stats.topStrip.unreadNewestSender ? `Newest: ${stats.topStrip.unreadNewestSender}` : 'All caught up'}
@@ -466,7 +466,7 @@ export default function AdminOverviewPage() {
               </div>
               <div onClick={() => router.push('/admin/activity')} className="p-5 cursor-pointer hover:bg-paper transition-colors flex items-center justify-between">
                 <div>
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1">GR Fees (30d)</div>
+                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1">GreenReserve fees (30d)</div>
                   <div className="text-xl font-serif font-medium text-ok">{fmtMoney(stats.thirtyDay.fees30d)}</div>
                 </div>
                 <Trend current={stats.thirtyDay.fees30d} prev={stats.thirtyDay.feesPrev30d}/>
@@ -509,7 +509,7 @@ export default function AdminOverviewPage() {
                     <span className="text-sm font-medium text-ink">{stats.bottomTrio.teeSheetToday.checkInsDone} / {stats.bottomTrio.teeSheetToday.roundsToday}</span>
                   </button>
                   <button onClick={() => router.push('/admin/revenue')} className="w-full flex items-center justify-between text-left px-2 py-1.5 -mx-2 rounded-md hover:bg-paper transition-colors">
-                    <span className="text-sm text-ink">GR fees expected</span>
+                    <span className="text-sm text-ink">GreenReserve fees expected</span>
                     <span className="text-sm font-medium text-ok">{fmtMoney(stats.bottomTrio.teeSheetToday.grFeesExpected)}</span>
                   </button>
                   <div className="px-2 text-xs text-ink-faint">courses will collect ~{fmtMoney(stats.bottomTrio.teeSheetToday.grossExpected)}</div>

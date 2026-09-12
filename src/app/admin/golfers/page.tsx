@@ -184,7 +184,7 @@ function GolfersInner() {
         <div className="px-8 py-7 max-w-5xl">
           <div className="mb-6">
             <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1">Support</p>
-            <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">{inRecord ? 'Golfer record' : 'Golfer lookup'}</h1>
+            <h1 className="text-[30px] leading-none font-serif font-medium text-ink">{inRecord ? 'Golfer record' : 'Golfer lookup'}</h1>
           </div>
 
           {inRecord ? (

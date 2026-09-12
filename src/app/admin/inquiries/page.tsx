@@ -61,6 +61,8 @@ const PAGE_SIZE = 50;
 // A section that runs longer than this is a signal in itself — show the top
 // slice and say how many are behind it rather than rendering a wall.
 const SECTION_CAP = 50;
+// U-A: a row this long in one stage is stalled, and fades back in the queue.
+const STALLED_DAYS = 7;
 
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 // MP-4a: time in the CURRENT stage, derived from the event ledger. This used
@@ -377,12 +379,21 @@ function InquiriesListInner() {
     const overdue = mode === 'queue' && s.pressureDays > 0;
     const closed = mode === 'closed' ? whyArchived(inq) : null;
     const selectable = canBulkSelect && mode === 'queue';
+    // U-A (UI_REVISE_SPEC §3, §1b "attention"): the only two things a queue row
+    // has to say across the room — pine left edge = your move, faded = stalled.
+    // Both read off signals the row already computed; nothing new is fetched.
+    const yourMove = mode === 'queue' && s.yourMove;
+    const stalled = mode === 'queue' && !s.yourMove && days >= STALLED_DAYS;
+    const rowCls =
+      'bg-white border border-line rounded-lg px-5 py-3.5 flex items-center gap-4 hover:border-pine/30 hover:bg-pine/[0.02] transition-colors'
+      + (yourMove ? ' border-l-[3px] border-l-pine' : '')
+      + (stalled ? ' opacity-60 hover:opacity-100' : '');
 
     return (
       <Link
         key={inq.id}
         href={detailHref(inq)}
-        className="bg-white border border-line rounded-lg px-5 py-3.5 flex items-center gap-4 hover:border-pine/30 hover:bg-pine/[0.02] transition-colors"
+        className={rowCls}
       >
         {selectable && (
           <input
@@ -421,7 +432,7 @@ function InquiriesListInner() {
           <div className="text-[10px] text-ink-faint truncate flex items-center gap-1.5">
             {inq.email}
             {hasBadEmail(inq) && (
-              <span className="shrink-0 text-[9px] font-medium uppercase tracking-wide bg-warn/10 text-warn px-1.5 py-0.5 rounded-full">Bad email</span>
+              <span className="shrink-0 text-[9px] font-medium uppercase tracking-[0.06em] bg-warn/10 text-warn px-1.5 py-0.5">Bad email</span>
             )}
           </div>
         </div>
@@ -517,8 +528,8 @@ function InquiriesListInner() {
           {/* Title + pipeline summary, search + refresh */}
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Inquiries</h1>
-              <p className="text-sm text-ink-soft mt-0.5">
+              <h1 className="text-[30px] leading-none font-serif font-medium text-ink">Inquiries</h1>
+              <p className="text-[13.5px] text-ink-soft mt-2">
                 {activeCount} active · {needsYouCount} needs you · {liveAllTimeCount} live all-time · {closedCount} closed
               </p>
               {invariantBroken && (
@@ -568,7 +579,7 @@ function InquiriesListInner() {
                   >
                     {seg.label}
                     <span className={
-                      'text-[10px] font-medium rounded-full px-1.5 py-0.5 min-w-[18px] text-center ' + (
+                      'text-[10px] font-medium px-1.5 py-0.5 min-w-[18px] text-center ' + (
                         active ? 'bg-pine/15 text-pine'
                         : count > 0 ? 'bg-line-strong text-ink-muted' : 'text-ink-faint'
                       )

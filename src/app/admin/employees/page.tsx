@@ -198,8 +198,8 @@ export default function EmployeesPage() {
 
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Employees</h1>
-              <p className="text-sm text-ink-soft mt-0.5">Admin account management</p>
+              <h1 className="text-[30px] leading-none font-serif font-medium text-ink">Employees</h1>
+              <p className="text-[13.5px] text-ink-soft mt-2">Admin account management</p>
             </div>
             <button onClick={load} className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors">
               <RefreshCw className="w-4 h-4"/>Refresh

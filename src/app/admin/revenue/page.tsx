@@ -331,7 +331,10 @@ export default function RevenuePage() {
           <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
             <div>
               <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1">Admin</p>
-              <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Revenue</h1>
+              <h1 className="text-[30px] leading-none font-serif font-medium text-ink">Revenue</h1>
+              {/* U-A (UI_REVISE_SPEC §3): say whose money this page counts. Courses
+                  keep 100% of their green fees; none of that is on this page. */}
+              <p className="text-[13.5px] text-ink-soft mt-2">GreenReserve&rsquo;s money — not the courses&rsquo;.</p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <div className="flex items-center gap-1 bg-white border border-line rounded-md p-1">
