@@ -255,316 +255,321 @@ export default function ForCoursesContent() {
         <p className="text-white/50 text-sm">Free to list. $0 / month. We charge golfers $1.50 — not you.</p>
       </div>
 
-      <div ref={formRef} className="max-w-xl mx-auto px-4 py-8 space-y-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 lg:py-14">
+        <div className="lg:grid lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] lg:gap-14 lg:items-start">
 
-        {/* Private-club reassurance */}
-        {form.courseType === 'private' && (
-          <div className="bg-white border border-line rounded-lg px-5 py-4 flex gap-3">
-            <Lock className="w-4 h-4 text-pine shrink-0 mt-0.5" />
-            <div className="text-sm text-ink-soft space-y-1.5">
-              <p><span className="font-medium text-ink">Member-only booking.</span> Your tee sheet can be fully private — no public tee times unless you choose to enable outside play.</p>
-              <p><span className="font-medium text-ink">Your member data stays yours.</span> Member information is scoped to your club and is never shared, aggregated, or marketed to by GreenReserve.</p>
-              <p><span className="font-medium text-ink">Private sign-in portal.</span> Member login is specific to your club — members can&apos;t browse or access any other course.</p>
+          {/* The form */}
+          <div ref={formRef} className="space-y-8 lg:order-last">
+
+          {/* Private-club reassurance */}
+          {form.courseType === 'private' && (
+            <div className="bg-white border border-line rounded-lg px-5 py-4 flex gap-3">
+              <Lock className="w-4 h-4 text-pine shrink-0 mt-0.5" />
+              <div className="text-sm text-ink-soft space-y-1.5">
+                <p><span className="font-medium text-ink">Member-only booking.</span> Your tee sheet can be fully private — no public tee times unless you choose to enable outside play.</p>
+                <p><span className="font-medium text-ink">Your member data stays yours.</span> Member information is scoped to your club and is never shared, aggregated, or marketed to by GreenReserve.</p>
+                <p><span className="font-medium text-ink">Private sign-in portal.</span> Member login is specific to your club — members can&apos;t browse or access any other course.</p>
+              </div>
+            </div>
+          )}
+
+          {/* Honeypot — hidden from humans, read by bots */}
+          <div style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }} aria-hidden="true">
+            <label htmlFor="hp-website">Website</label>
+            <input ref={honeypotRef} id="hp-website" name="_website" type="text" tabIndex={-1} autoComplete="off" defaultValue=""/>
+          </div>
+
+          {/* Section 1: You */}
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">About you</p>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div id="fld-firstName">
+                  <Label text="First name" required />
+                  <input
+                    className={fieldErrors.firstName ? inpErr : inp}
+                    value={form.firstName}
+                    onChange={e => set('firstName', e.target.value)}
+                    onBlur={() => blurField('firstName')}
+                    placeholder="John"
+                    autoComplete="given-name"
+                  />
+                  <FieldError msg={fieldErrors.firstName}/>
+                </div>
+                <div id="fld-lastName">
+                  <Label text="Last name" required />
+                  <input
+                    className={fieldErrors.lastName ? inpErr : inp}
+                    value={form.lastName}
+                    onChange={e => set('lastName', e.target.value)}
+                    onBlur={() => blurField('lastName')}
+                    placeholder="Smith"
+                    autoComplete="family-name"
+                  />
+                  <FieldError msg={fieldErrors.lastName}/>
+                </div>
+              </div>
+              <div id="fld-contactTitle">
+                <Label text="Title / role" required />
+                <select
+                  className={fieldErrors.contactTitle ? selErr : sel}
+                  value={form.contactTitle}
+                  onChange={e => set('contactTitle', e.target.value)}
+                  onBlur={() => blurField('contactTitle')}
+                >
+                  <option value="">Select...</option>
+                  {TITLE_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+                <FieldError msg={fieldErrors.contactTitle}/>
+                {form.contactTitle === 'Other' && (
+                  <div id="fld-contactTitleOther" className="mt-2">
+                    <input
+                      className={fieldErrors.contactTitleOther ? inpErr : inp}
+                      value={form.contactTitleOther}
+                      onChange={e => set('contactTitleOther', e.target.value)}
+                      onBlur={() => blurField('contactTitleOther')}
+                      placeholder="Your title or role"
+                    />
+                    <FieldError msg={fieldErrors.contactTitleOther}/>
+                  </div>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div id="fld-email">
+                  <Label text="Email" required />
+                  <input
+                    type="email"
+                    className={fieldErrors.email ? inpErr : inp}
+                    value={form.email}
+                    onChange={e => set('email', e.target.value)}
+                    onBlur={() => blurField('email')}
+                    placeholder="you@course.com"
+                    autoComplete="email"
+                  />
+                  <FieldError msg={fieldErrors.email}/>
+                </div>
+                <div id="fld-phone">
+                  <Label text="Phone" required />
+                  <input
+                    type="tel"
+                    className={fieldErrors.phone ? inpErr : inp}
+                    value={form.phone}
+                    onChange={e => set('phone', e.target.value)}
+                    onBlur={() => blurField('phone')}
+                    placeholder="(201) 555-0100"
+                    autoComplete="tel"
+                  />
+                  <FieldError msg={fieldErrors.phone}/>
+                </div>
+              </div>
             </div>
           </div>
-        )}
 
-        {/* Honeypot — hidden from humans, read by bots */}
-        <div style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }} aria-hidden="true">
-          <label htmlFor="hp-website">Website</label>
-          <input ref={honeypotRef} id="hp-website" name="_website" type="text" tabIndex={-1} autoComplete="off" defaultValue=""/>
-        </div>
-
-        {/* Section 1: You */}
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">About you</p>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div id="fld-firstName">
-                <Label text="First name" required />
+          {/* Section 2: Your course */}
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">Your course</p>
+            <div className="space-y-4">
+              <div id="fld-courseName">
+                <Label text="Course name" required />
                 <input
-                  className={fieldErrors.firstName ? inpErr : inp}
-                  value={form.firstName}
-                  onChange={e => set('firstName', e.target.value)}
-                  onBlur={() => blurField('firstName')}
-                  placeholder="John"
-                  autoComplete="given-name"
+                  className={fieldErrors.courseName ? inpErr : inp}
+                  value={form.courseName}
+                  onChange={e => set('courseName', e.target.value)}
+                  onBlur={() => blurField('courseName')}
+                  placeholder="Pebble Beach Golf Links"
+                  autoComplete="organization"
                 />
-                <FieldError msg={fieldErrors.firstName}/>
+                <FieldError msg={fieldErrors.courseName}/>
               </div>
-              <div id="fld-lastName">
-                <Label text="Last name" required />
-                <input
-                  className={fieldErrors.lastName ? inpErr : inp}
-                  value={form.lastName}
-                  onChange={e => set('lastName', e.target.value)}
-                  onBlur={() => blurField('lastName')}
-                  placeholder="Smith"
-                  autoComplete="family-name"
-                />
-                <FieldError msg={fieldErrors.lastName}/>
-              </div>
-            </div>
-            <div id="fld-contactTitle">
-              <Label text="Title / role" required />
-              <select
-                className={fieldErrors.contactTitle ? selErr : sel}
-                value={form.contactTitle}
-                onChange={e => set('contactTitle', e.target.value)}
-                onBlur={() => blurField('contactTitle')}
-              >
-                <option value="">Select...</option>
-                {TITLE_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-              <FieldError msg={fieldErrors.contactTitle}/>
-              {form.contactTitle === 'Other' && (
-                <div id="fld-contactTitleOther" className="mt-2">
+              <div className="grid grid-cols-2 gap-3">
+                <div id="fld-city">
+                  <Label text="City" required />
                   <input
-                    className={fieldErrors.contactTitleOther ? inpErr : inp}
-                    value={form.contactTitleOther}
-                    onChange={e => set('contactTitleOther', e.target.value)}
-                    onBlur={() => blurField('contactTitleOther')}
-                    placeholder="Your title or role"
+                    className={fieldErrors.city ? inpErr : inp}
+                    value={form.city}
+                    onChange={e => set('city', e.target.value)}
+                    onBlur={() => blurField('city')}
+                    placeholder="Pebble Beach"
+                    autoComplete="address-level2"
                   />
-                  <FieldError msg={fieldErrors.contactTitleOther}/>
+                  <FieldError msg={fieldErrors.city}/>
+                </div>
+                <div id="fld-state">
+                  <Label text="State" required />
+                  <select
+                    className={fieldErrors.state ? selErr : sel}
+                    value={form.state}
+                    onChange={e => set('state', e.target.value)}
+                    onBlur={() => blurField('state')}
+                    autoComplete="address-level1"
+                  >
+                    <option value="">Select...</option>
+                    {STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                  <FieldError msg={fieldErrors.state}/>
+                </div>
+              </div>
+
+              {/* Course type — two radio cards */}
+              <div>
+                <Label text="Course type" required />
+                <div className="grid grid-cols-2 gap-3">
+                  {([
+                    { value: 'public' as const, label: 'Public', Icon: Globe, desc: 'Open to all golfers. Standard weekday/weekend pricing.' },
+                    { value: 'private' as const, label: 'Private', Icon: Lock, desc: 'Member-controlled access. Restricted or limited public tee times.' },
+                  ] as const).map(({ value, label, Icon, desc }) => {
+                    const active = form.courseType === value;
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setType(value)}
+                        className={
+                          'text-left p-4 rounded-lg border-2 transition-colors ' +
+                          (active ? 'border-pine bg-pine/5' : 'border-line hover:border-pine/30 bg-white')
+                        }
+                      >
+                        <div className={'flex items-center gap-2 mb-1.5 ' + (active ? 'text-pine' : 'text-ink-soft')}>
+                          <Icon className="w-4 h-4" />
+                          <span className="text-[13px] font-medium text-ink">{label}</span>
+                        </div>
+                        <p className="text-xs text-ink-soft leading-relaxed">{desc}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Public branch */}
+              {form.courseType === 'public' && (
+                <div className="space-y-4 border-l-2 border-pine/20 pl-4">
+                  <RadioGroup
+                    label="Discounted rates for town/county residents?"
+                    value={form.residentRates}
+                    onChange={v => set('residentRates', v)}
+                    options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]}
+                  />
+                  <RadioGroup
+                    label="Memberships or season passes?"
+                    value={form.hasMemberships}
+                    onChange={v => set('hasMemberships', v)}
+                    options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]}
+                  />
+                  <RadioGroup
+                    label="Average rounds per month"
+                    value={form.roundsPerMonth}
+                    onChange={v => set('roundsPerMonth', v)}
+                    options={[
+                      { value: 'under_500', label: 'Under 500' },
+                      { value: '500_1500', label: '500–1,500' },
+                      { value: '1500_3000', label: '1,500–3,000' },
+                      { value: '3000_plus', label: '3,000+' },
+                    ]}
+                  />
+                </div>
+              )}
+
+              {/* Private branch */}
+              {form.courseType === 'private' && (
+                <div className="space-y-4 border-l-2 border-pine/20 pl-4">
+                  <RadioGroup
+                    label="Do you allow non-member tee times?"
+                    value={form.publicTeeTimes}
+                    onChange={v => set('publicTeeTimes', v)}
+                    options={[
+                      { value: 'yes_regularly', label: 'Yes, regularly' },
+                      { value: 'limited', label: 'Limited windows' },
+                      { value: 'no', label: 'No, members only' },
+                    ]}
+                  />
+                  <RadioGroup
+                    label="Roughly how many members?"
+                    value={form.memberCount}
+                    onChange={v => set('memberCount', v)}
+                    options={[
+                      { value: 'under_100', label: 'Under 100' },
+                      { value: '100_300', label: '100–300' },
+                      { value: '300_plus', label: '300+' },
+                    ]}
+                  />
+                  <RadioGroup
+                    label="Outside outings or tournaments?"
+                    value={form.outsideOutings}
+                    onChange={v => set('outsideOutings', v)}
+                    options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]}
+                  />
+                  <RadioGroup
+                    label="How do members book today?"
+                    value={form.memberBookingToday}
+                    onChange={v => set('memberBookingToday', v)}
+                    options={[
+                      { value: 'pro_shop_phone', label: 'Pro shop / phone' },
+                      { value: 'signup_sheet', label: 'Sign-up sheet' },
+                      { value: 'booking_software', label: 'Booking software' },
+                      { value: 'other', label: 'Other' },
+                    ]}
+                  />
+                  <RadioGroup
+                    label="Do you charge members per round?"
+                    value={form.chargesMembersPerRound}
+                    onChange={v => set('chargesMembersPerRound', v)}
+                    options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]}
+                  />
                 </div>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div id="fld-email">
-                <Label text="Email" required />
-                <input
-                  type="email"
-                  className={fieldErrors.email ? inpErr : inp}
-                  value={form.email}
-                  onChange={e => set('email', e.target.value)}
-                  onBlur={() => blurField('email')}
-                  placeholder="you@course.com"
-                  autoComplete="email"
-                />
-                <FieldError msg={fieldErrors.email}/>
-              </div>
-              <div id="fld-phone">
-                <Label text="Phone" required />
-                <input
-                  type="tel"
-                  className={fieldErrors.phone ? inpErr : inp}
-                  value={form.phone}
-                  onChange={e => set('phone', e.target.value)}
-                  onBlur={() => blurField('phone')}
-                  placeholder="(201) 555-0100"
-                  autoComplete="tel"
-                />
-                <FieldError msg={fieldErrors.phone}/>
-              </div>
-            </div>
           </div>
-        </div>
 
-        {/* Section 2: Your course */}
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">Your course</p>
-          <div className="space-y-4">
-            <div id="fld-courseName">
-              <Label text="Course name" required />
-              <input
-                className={fieldErrors.courseName ? inpErr : inp}
-                value={form.courseName}
-                onChange={e => set('courseName', e.target.value)}
-                onBlur={() => blurField('courseName')}
-                placeholder="Pebble Beach Golf Links"
-                autoComplete="organization"
-              />
-              <FieldError msg={fieldErrors.courseName}/>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div id="fld-city">
-                <Label text="City" required />
-                <input
-                  className={fieldErrors.city ? inpErr : inp}
-                  value={form.city}
-                  onChange={e => set('city', e.target.value)}
-                  onBlur={() => blurField('city')}
-                  placeholder="Pebble Beach"
-                  autoComplete="address-level2"
-                />
-                <FieldError msg={fieldErrors.city}/>
-              </div>
-              <div id="fld-state">
-                <Label text="State" required />
-                <select
-                  className={fieldErrors.state ? selErr : sel}
-                  value={form.state}
-                  onChange={e => set('state', e.target.value)}
-                  onBlur={() => blurField('state')}
-                  autoComplete="address-level1"
-                >
-                  <option value="">Select...</option>
-                  {STATES.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-                <FieldError msg={fieldErrors.state}/>
-              </div>
-            </div>
-
-            {/* Course type — two radio cards */}
-            <div>
-              <Label text="Course type" required />
-              <div className="grid grid-cols-2 gap-3">
-                {([
-                  { value: 'public' as const, label: 'Public', Icon: Globe, desc: 'Open to all golfers. Standard weekday/weekend pricing.' },
-                  { value: 'private' as const, label: 'Private', Icon: Lock, desc: 'Member-controlled access. Restricted or limited public tee times.' },
-                ] as const).map(({ value, label, Icon, desc }) => {
-                  const active = form.courseType === value;
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setType(value)}
-                      className={
-                        'text-left p-4 rounded-lg border-2 transition-colors ' +
-                        (active ? 'border-pine bg-pine/5' : 'border-line hover:border-pine/30 bg-white')
-                      }
-                    >
-                      <div className={'flex items-center gap-2 mb-1.5 ' + (active ? 'text-pine' : 'text-ink-soft')}>
-                        <Icon className="w-4 h-4" />
-                        <span className="text-[13px] font-medium text-ink">{label}</span>
-                      </div>
-                      <p className="text-xs text-ink-soft leading-relaxed">{desc}</p>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Public branch */}
-            {form.courseType === 'public' && (
-              <div className="space-y-4 border-l-2 border-pine/20 pl-4">
-                <RadioGroup
-                  label="Discounted rates for town/county residents?"
-                  value={form.residentRates}
-                  onChange={v => set('residentRates', v)}
-                  options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]}
-                />
-                <RadioGroup
-                  label="Memberships or season passes?"
-                  value={form.hasMemberships}
-                  onChange={v => set('hasMemberships', v)}
-                  options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]}
-                />
-                <RadioGroup
-                  label="Average rounds per month"
-                  value={form.roundsPerMonth}
-                  onChange={v => set('roundsPerMonth', v)}
-                  options={[
-                    { value: 'under_500', label: 'Under 500' },
-                    { value: '500_1500', label: '500–1,500' },
-                    { value: '1500_3000', label: '1,500–3,000' },
-                    { value: '3000_plus', label: '3,000+' },
-                  ]}
-                />
-              </div>
-            )}
-
-            {/* Private branch */}
-            {form.courseType === 'private' && (
-              <div className="space-y-4 border-l-2 border-pine/20 pl-4">
-                <RadioGroup
-                  label="Do you allow non-member tee times?"
-                  value={form.publicTeeTimes}
-                  onChange={v => set('publicTeeTimes', v)}
-                  options={[
-                    { value: 'yes_regularly', label: 'Yes, regularly' },
-                    { value: 'limited', label: 'Limited windows' },
-                    { value: 'no', label: 'No, members only' },
-                  ]}
-                />
-                <RadioGroup
-                  label="Roughly how many members?"
-                  value={form.memberCount}
-                  onChange={v => set('memberCount', v)}
-                  options={[
-                    { value: 'under_100', label: 'Under 100' },
-                    { value: '100_300', label: '100–300' },
-                    { value: '300_plus', label: '300+' },
-                  ]}
-                />
-                <RadioGroup
-                  label="Outside outings or tournaments?"
-                  value={form.outsideOutings}
-                  onChange={v => set('outsideOutings', v)}
-                  options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]}
-                />
-                <RadioGroup
-                  label="How do members book today?"
-                  value={form.memberBookingToday}
-                  onChange={v => set('memberBookingToday', v)}
-                  options={[
-                    { value: 'pro_shop_phone', label: 'Pro shop / phone' },
-                    { value: 'signup_sheet', label: 'Sign-up sheet' },
-                    { value: 'booking_software', label: 'Booking software' },
-                    { value: 'other', label: 'Other' },
-                  ]}
-                />
-                <RadioGroup
-                  label="Do you charge members per round?"
-                  value={form.chargesMembersPerRound}
-                  onChange={v => set('chargesMembersPerRound', v)}
-                  options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]}
-                />
-              </div>
-            )}
+          {/* Section 3: Optional notes */}
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">Anything we should know? <span className="normal-case tracking-normal font-normal text-ink-faint">(optional)</span></p>
+            <textarea
+              rows={3}
+              className={inp}
+              value={form.notes}
+              onChange={e => set('notes', e.target.value)}
+              placeholder="Special setup, software you're replacing, timeline — whatever's useful."
+            />
           </div>
-        </div>
 
-        {/* Section 3: Optional notes */}
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">Anything we should know? <span className="normal-case tracking-normal font-normal text-ink-faint">(optional)</span></p>
-          <textarea
-            rows={3}
-            className={inp}
-            value={form.notes}
-            onChange={e => set('notes', e.target.value)}
-            placeholder="Special setup, software you're replacing, timeline — whatever's useful."
-          />
-        </div>
+          {serverError && <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm">{serverError}</div>}
 
-        {serverError && <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm">{serverError}</div>}
+          <button
+            onClick={submit}
+            disabled={submitting}
+            className="w-full bg-pine hover:bg-pine-hover text-white py-3.5 rounded-md font-medium text-sm disabled:opacity-50 transition-colors"
+          >
+            {submitting ? 'Submitting...' : 'Submit'}
+          </button>
+          <p className="text-center text-ink-muted text-xs">
+            We review every submission and reply within 1 business day.
+          </p>
+          </div>
 
-        <button
-          onClick={submit}
-          disabled={submitting}
-          className="w-full bg-pine hover:bg-pine-hover text-white py-3.5 rounded-md font-medium text-sm disabled:opacity-50 transition-colors"
-        >
-          {submitting ? 'Submitting...' : 'Submit'}
-        </button>
-        <p className="text-center text-ink-muted text-xs">
-          We review every submission and reply within 1 business day.
-        </p>
-      </div>
-
-      {/* Proof section */}
-      <div className="border-t border-line mt-8">
-        <div className="max-w-xl mx-auto px-4 py-10">
-          <div className="grid grid-cols-3 gap-4 mb-8 text-center">
-            {[
-              { stat: '$1.50', label: 'Per golfer, charged to them' },
-              { stat: '0%', label: 'Commission on green fees' },
-              { stat: '1–2 days', label: 'Typical setup time' },
-            ].map(({ stat, label }) => (
-              <div key={stat}>
-                <div className="text-xl font-serif font-medium text-ink mb-0.5">{stat}</div>
-                <div className="text-[10px] uppercase tracking-[0.05em] text-ink-muted">{label}</div>
+          {/* The pitch — sticky beside the form on desktop */}
+          <aside className="mt-12 lg:mt-0 lg:order-first">
+            <div className="lg:sticky lg:top-10 space-y-6">
+              <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium">Why list with us</p>
+              <div className="bg-white border border-line rounded-lg divide-y divide-line-soft">
+                {[
+                  { stat: '$1.50', label: 'Per golfer, charged to them' },
+                  { stat: '0%', label: 'Commission on green fees' },
+                  { stat: '1–2 days', label: 'Typical setup time' },
+                ].map(({ stat, label }) => (
+                  <div key={stat} className="px-5 py-4">
+                    <div className="text-2xl font-serif font-medium text-ink leading-none mb-1.5">{stat}</div>
+                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{label}</div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div className="bg-white border border-line rounded-md p-5">
-            <p className="text-ink-muted text-xs leading-relaxed">
-              Your course keeps 100% of green fees and cart fees. GreenReserve&apos;s only revenue is the $1.50 per-player service fee charged directly to golfers at checkout — it never touches your Stripe account.
-            </p>
-          </div>
+              <p className="text-ink-muted text-xs leading-relaxed">
+                Your course keeps 100% of green fees and cart fees. GreenReserve&apos;s only revenue is the $1.50 per-player service fee charged directly to golfers at checkout — it never touches your Stripe account.
+              </p>
+            </div>
+          </aside>
+
         </div>
       </div>
-
       {/* Short FAQ */}
       <div className="border-t border-line">
         <div className="max-w-xl mx-auto px-4 py-10 pb-16">
