@@ -7,7 +7,6 @@ import {
   Elements, CardElement, useStripe, useElements,
 } from '@stripe/react-stripe-js';
 import { ChevronLeft, Lock, Loader2, AlertCircle } from 'lucide-react';
-import Image from 'next/image';
 import { ACCESS_FEE_PER_PLAYER, serviceFeeLabel, hoursLabel } from '@/lib/booking-fees';
 import { TrustNote } from '@/components/TrustNote';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
@@ -56,6 +55,50 @@ function displayDate(dateStr: string) {
   if (!dateStr) return '';
   const d = new Date(dateStr + 'T12:00:00');
   return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+}
+// Formatting only: turns the policy's "24 hours before" into the actual moment
+// the free-cancel window shuts, so nobody has to do date arithmetic in their head.
+function deadlineLabel(dateStr: string, timeStr: string, hoursBefore: number) {
+  if (!dateStr || !timeStr) return '';
+  const tee = new Date(`${dateStr}T${timeStr.length === 5 ? timeStr : timeStr.slice(0, 5)}:00`);
+  if (Number.isNaN(tee.getTime())) return '';
+  const cutoff = new Date(tee.getTime() - hoursBefore * 3600_000);
+  const day = cutoff.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const clock = cutoff.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  return `${day} at ${clock}`;
+}
+
+// Numbered step heading — the reserve screen is two steps, and says so.
+function StepHeading({ n, title, note }: { n: number; title: string; note?: string }) {
+  return (
+    <div className="flex items-baseline gap-2.5">
+      <span className="w-5 h-5 rounded-full bg-paper border border-line text-[11px] font-medium text-ink-soft flex items-center justify-center shrink-0 tabular-nums">
+        {n}
+      </span>
+      <div>
+        <h2 className="font-serif font-medium text-ink text-lg leading-none">{title}</h2>
+        {note && <p className="text-xs text-ink-muted mt-1">{note}</p>}
+      </div>
+    </div>
+  );
+}
+
+// One step of the confirmation timeline — a dot, a rule, a line of plain English.
+function TimelineStep({ when, what, last = false, accent }: {
+  when: string; what: React.ReactNode; last?: boolean; accent: string;
+}) {
+  return (
+    <div className="flex gap-3">
+      <div className="flex flex-col items-center pt-1">
+        <span className="w-[7px] h-[7px] rounded-full shrink-0" style={{ backgroundColor: accent }} />
+        {!last && <span className="w-px flex-1 mt-1" style={{ backgroundColor: '#E6E3D7' }} />}
+      </div>
+      <div className={last ? 'pb-0' : 'pb-4'}>
+        <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium">{when}</div>
+        <div className="text-sm text-ink mt-0.5 leading-relaxed">{what}</div>
+      </div>
+    </div>
+  );
 }
 
 const cardStyle = {
@@ -117,13 +160,46 @@ function BookPageInner() {
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
           <CourseHeaderBar courseName={confirmedData.courseName} accent={accent} />
           <div className="p-8 text-center">
-            <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={140} height={26} className="mx-auto mb-5 w-[140px] h-auto" />
-            <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">You&apos;re all set!</h1>
+            <h1 className="text-[26px] font-serif font-medium tracking-tight text-ink mb-2">You&apos;re all set</h1>
             <p className="text-ink-soft mb-6 text-sm">
               {confirmedData.noCard
                 ? <>Your spot is reserved — <strong className="text-ink">no card required</strong>. Pay at the course or use the check-in link in your confirmation email.</>
                 : <>Your card is on file but <strong className="text-ink">nothing has been charged</strong>. We&apos;ll email you a reminder to check in and pay before your round.</>}
             </p>
+
+            {/* What happens next — the same three facts the policy copy already
+                states, laid out in the order they actually happen. */}
+            <div className="rounded-lg border border-line p-5 mb-6 text-left">
+              <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">What happens next</div>
+              <TimelineStep
+                accent={accent}
+                when="Today"
+                what={<>Booked · <strong className="text-ink font-medium">charged today $0.00</strong></>}
+              />
+              <TimelineStep
+                accent={accent}
+                when={confirmedData.cancellationFeeTotal > 0 ? 'Free to cancel until' : 'Any time before your round'}
+                what={confirmedData.cancellationFeeTotal > 0
+                  ? <>
+                      {deadlineLabel(confirmedData.date, confirmedData.time, confirmedData.cancellationHours) || `${hoursLabel(confirmedData.cancellationHours)} before your tee time`}
+                      <span className="block text-ink-muted text-xs mt-0.5">
+                        After that, a ${confirmedData.cancellationFeeTotal.toFixed(2)} late-cancellation fee is charged to your card on file.
+                      </span>
+                    </>
+                  : <>Cancel free of charge — this course has no late-cancellation fee.</>}
+              />
+              <TimelineStep
+                last
+                accent={accent}
+                when={displayDate(confirmedData.date)}
+                what={<>
+                  Check in at {formatTime(confirmedData.time)} and pay ${confirmedData.totalAmount.toFixed(2)}
+                  <span className="block text-ink-muted text-xs mt-0.5">
+                    {confirmedData.noCard ? 'At the pro shop, or online with the link in your email.' : 'Online with the link in your email, or at the pro shop.'}
+                  </span>
+                </>}
+              />
+            </div>
 
             <div className="bg-paper rounded-lg p-5 mb-6 text-left space-y-2 text-sm border border-line">
               <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{displayDate(confirmedData.date)}</span></div>
@@ -139,14 +215,6 @@ function BookPageInner() {
                 </div>
               </div>
             </div>
-
-            {confirmedData.cancellationFeeTotal > 0 && (
-              <div className="bg-warn/5 border border-warn/20 rounded-lg p-4 mb-6 text-left">
-                <p className="text-warn text-xs leading-relaxed">
-                  Cancel at least {hoursLabel(confirmedData.cancellationHours)} before your tee time to avoid a ${confirmedData.cancellationFeeTotal.toFixed(2)} late-cancellation fee charged to your card on file.
-                </p>
-              </div>
-            )}
 
             <button
               onClick={() => router.push(`/courses/${courseSlug}/account?email=${encodeURIComponent(confirmedData.golferEmail)}`)}
@@ -277,11 +345,19 @@ function BookPageInner() {
                   <span>{serviceFeeLabel(players)}</span>
                   <span>${accessTotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between font-semibold text-ink text-base border-t border-line pt-2">
-                  <span>Estimated total at check-in</span><span>${total.toFixed(2)}</span>
+                {/* Two lines, always — the number people owe and the number
+                    that leaves their account today are not the same number. */}
+                <div className="border-t border-line pt-3 space-y-1.5">
+                  <div className="flex justify-between items-baseline">
+                    <span className="font-medium text-ink">You&apos;ll pay at check-in</span>
+                    <span className="font-serif font-medium text-ink text-xl leading-none">${total.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-ink-muted">Charged today</span>
+                    <span className="font-medium text-ink-soft">$0.00</span>
+                  </div>
                 </div>
-                <TrustNote className="pt-1">Nothing is charged today — you pay at the course when you check in.</TrustNote>
-                <TrustNote className="pt-0.5">Green fees go 100% to the course.</TrustNote>
+                <TrustNote className="pt-1">Green fees go 100% to the course.</TrustNote>
               </div>
             </div>
           </div>
@@ -310,14 +386,18 @@ function BookPageInner() {
             </Elements>
           )}
 
-          <div className="bg-pine/5 rounded-lg p-5 border border-pine/20">
-            <p className="text-pine text-sm font-medium mb-1">How this works</p>
+          {/* The question golfers actually ask, answered with the policy facts
+              that were already on this page. */}
+          <div className="bg-white rounded-lg p-5 border border-line">
+            <p className="text-ink text-sm font-medium mb-1.5">
+              {hasNoFeePolicy ? 'How this works' : 'Why a card, if nothing is charged?'}
+            </p>
             {hasNoFeePolicy ? (
-              <p className="text-pine/80 text-xs leading-relaxed">
+              <p className="text-ink-soft text-xs leading-relaxed">
                 No card required. Book your spot now and pay at the course when you check in — or use the check-in link in your confirmation email to pay online before your round.
               </p>
             ) : (
-              <p className="text-pine/80 text-xs leading-relaxed">
+              <p className="text-ink-soft text-xs leading-relaxed">
                 We save your card to hold your tee time — you&apos;re not charged now. Cancel at least {hoursLabel(course.cancellation_hours)} ahead and it&apos;s free; cancelling later (or no-showing) triggers a ${course.late_cancellation_fee.toFixed(2)} late-cancellation fee. Otherwise, you pay for your round when you check in at the course.
               </p>
             )}

@@ -455,9 +455,11 @@ export default function CourseDetailPage({
 
   // Private course: show info + member sign-in only, no public booking
   if (course.type === 'private') {
+    // Public look: a real photo when the course has one, otherwise a flat tint
+    // of the course's own accent — never a stock gradient.
     const heroStyle = course.hero_image_url
       ? { backgroundImage: `url(${course.hero_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-      : { background: course.image_gradient };
+      : { backgroundColor: course.brand_color || '#24513B' };
     const amenities = course.amenities ? course.amenities.filter(Boolean) : [];
     return (
       <>
@@ -465,7 +467,6 @@ export default function CourseDetailPage({
           {course.hero_image_url
             ? <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/5" />
             : <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'repeating-linear-gradient(45deg,rgba(255,255,255,.3) 0,rgba(255,255,255,.3) 1px,transparent 0,transparent 50%)', backgroundSize: '14px 14px' }} />}
-          <div className="absolute bottom-2.5 right-4 z-10 text-[10px] text-white/40">Powered by GreenReserve</div>
           <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 w-full pb-6">
             {course.logo_url && (
               // eslint-disable-next-line @next/next/no-img-element
@@ -515,7 +516,8 @@ export default function CourseDetailPage({
               </p>
               <Link
                 href={`/courses/${slug}/member`}
-                className="block w-full text-center py-3 px-5 bg-pine hover:bg-pine-hover text-white text-sm font-medium rounded-md transition-all"
+                className="block w-full text-center py-3 px-5 text-white text-sm font-medium rounded-md transition-opacity hover:opacity-90"
+                style={{ backgroundColor: course.brand_color || '#24513B' }}
               >
                 Member sign in
               </Link>
@@ -523,6 +525,10 @@ export default function CourseDetailPage({
                 Not a member? Contact the club directly.
               </p>
             </div>
+          </div>
+
+          <div className="mt-12 pt-6 border-t border-line-soft text-center text-[11px] text-ink-faint">
+            Booking by GreenReserve
           </div>
         </div>
       </>
@@ -574,9 +580,11 @@ export default function CourseDetailPage({
   ];
   const directionsUrl = course.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(course.address)}` : '';
 
+  // Public look: a real photo when the course has one, otherwise a flat tint
+  // of the course's own accent — never a stock gradient.
   const heroStyle = course.hero_image_url
     ? { backgroundImage: `url(${course.hero_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-    : { background: course.image_gradient };
+    : { backgroundColor: accent };
   const heroOverlay = course.hero_image_url ? (
     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/5" />
   ) : (
@@ -722,9 +730,6 @@ export default function CourseDetailPage({
       {/* Course hero */}
       <div className="relative h-44 sm:h-56 flex items-end overflow-hidden" style={heroStyle}>
         {heroOverlay}
-        <div className="absolute bottom-2.5 right-4 z-10 text-[10px] text-white/40">
-          Powered by GreenReserve
-        </div>
         {memberSession ? (
           <Link
             href={`/courses/${slug}/account`}
@@ -811,9 +816,9 @@ export default function CourseDetailPage({
 
           {tab === 'tee-times' && (course.type === 'member' ? (
             <div className="max-w-md mx-auto bg-white rounded-lg border border-line p-8 text-center">
-              <Phone size={32} className="mx-auto mb-3 text-pine" />
-              <h2 className="font-semibold text-ink text-lg mb-2">Member-Only Club</h2>
-              <p className="text-ink-soft text-sm mb-4">
+              <Phone size={28} className="mx-auto mb-4" style={{ color: accent }} />
+              <h2 className="font-serif font-medium text-ink text-xl mb-2">Member-only club</h2>
+              <p className="text-ink-soft text-sm mb-5">
                 This is a member-only or invitation-based club. Contact the pro shop for guest access.
               </p>
               {course.phone && (
@@ -1036,7 +1041,7 @@ export default function CourseDetailPage({
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                   <div className="flex items-baseline gap-3 flex-wrap">
-                    <h2 className="font-semibold text-ink text-lg">
+                    <h2 className="font-serif font-medium tracking-tight text-ink text-xl">
                       Tee times for <span style={{ color: accent }}>{displayDate(selectedDate)}</span>
                     </h2>
                     {!loadingTimes && teeTimes.length > 0 && (
@@ -1068,27 +1073,42 @@ export default function CourseDetailPage({
                     ))}
                   </div>
                 ) : filtered.length === 0 ? (
-                  <div className="bg-white rounded-lg border border-line text-center py-14 px-6">
-                    <Clock size={28} className="mx-auto mb-3 text-ink-faint" />
+                  <div className="bg-white rounded-lg border border-line text-center py-16 px-6">
+                    <Clock size={24} className="mx-auto mb-4 text-ink-faint" />
                     {teeTimes.length === 0 ? (
                       <div>
-                        <p className="text-ink-muted text-sm mb-4">No tee times available for this date.</p>
+                        <p className="font-serif font-medium text-ink text-xl mb-1.5">Nothing open on {displayDate(selectedDate)}</p>
+                        <p className="text-ink-muted text-sm mb-5">Every slot for this date is taken.</p>
                         {searchingNext ? (
-                          <p className="text-xs text-ink-faint">Looking for next available date…</p>
+                          <p className="text-xs text-ink-faint">Looking for the next available date…</p>
                         ) : nextAvailable ? (
                           <button
                             onClick={() => setSelectedDate(nextAvailable)}
-                            className="inline-flex items-center gap-1.5 text-sm font-medium text-pine hover:text-pine-hover transition-colors"
+                            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-md text-sm font-medium text-white transition-colors"
+                            style={{ backgroundColor: accent }}
                           >
                             Next available: {displayDate(nextAvailable)} →
                           </button>
                         ) : null}
+                        <div className="mt-5">
+                          <button
+                            onClick={() => openAlert()}
+                            className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-muted hover:text-ink transition-colors"
+                          >
+                            <Bell size={12} /> Tell me if something opens up
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <div>
-                        <p className="text-ink-soft text-sm mb-3">No tee times match your filters.</p>
-                        <button onClick={resetFilters} className="text-sm font-medium text-pine hover:text-pine-hover transition-colors">
-                          Reset filters
+                        <p className="font-serif font-medium text-ink text-xl mb-1.5">No times match your filters</p>
+                        <p className="text-ink-muted text-sm mb-5">There are tee times on this date — your filters rule them all out.</p>
+                        <button
+                          onClick={resetFilters}
+                          className="inline-flex items-center px-4 py-2.5 rounded-md text-sm font-medium border transition-colors"
+                          style={{ borderColor: accent, color: accent }}
+                        >
+                          Clear filters
                         </button>
                       </div>
                     )}
@@ -1126,16 +1146,16 @@ export default function CourseDetailPage({
                                   }}
                                 >
                                   <div className="min-w-0">
-                                    <div className="text-lg sm:text-xl font-bold tracking-tight text-ink">
+                                    <div className="text-xl sm:text-2xl font-serif font-medium tracking-tight text-ink leading-none">
                                       {formatTime(t.time)}
                                     </div>
-                                    <div className="text-xs mt-0.5 flex items-center gap-1.5 flex-wrap">
+                                    <div className="text-xs mt-1.5 flex items-center gap-1.5 flex-wrap">
                                       {isFull ? (
                                         <span className="text-ink-faint">Full</span>
                                       ) : (
                                         <>
                                           <span className={STATUS_STYLE[t.status] || 'text-ink-muted'}>{STATUS_LABEL[t.status] || 'Available'}</span>
-                                          <span className="text-ink-muted">· {t.players_available} {t.players_available === 1 ? 'spot' : 'spots'} left</span>
+                                          <span className="text-ink-muted">· {t.players_available} {t.players_available === 1 ? 'spot' : 'spots'} open</span>
                                         </>
                                       )}
                                       {h !== undefined && <span className="text-ink-muted">· {h} holes</span>}
@@ -1143,20 +1163,25 @@ export default function CourseDetailPage({
                                   </div>
                                   <div className="flex items-center gap-3 sm:gap-5 flex-shrink-0">
                                     <div className="text-right">
-                                      <div className="font-semibold text-ink">${displayGreenFee}</div>
+                                      {/* The unit always rides with the number — a bare
+                                          "$62" reads as the total, which it never is. */}
+                                      <div className="font-medium text-ink whitespace-nowrap">
+                                        ${displayGreenFee}<span className="text-ink-muted font-normal"> / player</span>
+                                      </div>
                                       {hasMemberRate && (
-                                        <div className="text-[10px] text-ink-faint line-through">${t.green_fee}</div>
+                                        <div className="text-[11px] text-ink-faint">
+                                          <span className="line-through">${t.green_fee}</span> · member rate
+                                        </div>
                                       )}
-                                      <div className="text-[11px] text-ink-muted">{hasMemberRate ? 'member rate' : 'per player'}</div>
                                     </div>
                                     {isFull ? (
-                                      <span className="hidden sm:inline-flex px-4 py-2 rounded-md text-xs font-medium border border-line text-ink-faint">Full</span>
+                                      <span className="inline-flex px-3 sm:px-4 py-2 rounded-md text-xs font-medium border border-line text-ink-faint">Full</span>
                                     ) : (
                                       <span
-                                        className="hidden sm:inline-flex px-4 py-2 rounded-md text-xs font-medium transition-colors"
+                                        className="inline-flex items-center gap-1 px-3 sm:px-4 py-2 rounded-md text-xs font-medium transition-colors"
                                         style={isSel ? { backgroundColor: accent, color: '#fff' } : { border: `1px solid ${accent}`, color: accent }}
                                       >
-                                        {isSel ? 'Selected' : 'Select'}
+                                        {isSel ? <><Check size={12} /> Selected</> : 'Select'}
                                       </span>
                                     )}
                                   </div>
@@ -1166,7 +1191,8 @@ export default function CourseDetailPage({
                                   <div className="border-t border-line/60 px-4 sm:px-5 py-2.5 flex justify-end">
                                     <button
                                       onClick={() => openAlert(t.id)}
-                                      className="inline-flex items-center gap-1 text-[11px] font-medium text-pine hover:text-pine-hover transition-colors"
+                                      className="inline-flex items-center gap-1 text-[11px] font-medium transition-opacity hover:opacity-70"
+                                      style={{ color: accent }}
                                     >
                                       <Bell size={10} /> Alert me if this opens
                                     </button>
@@ -1174,7 +1200,9 @@ export default function CourseDetailPage({
                                 )}
 
                                 {isSel && (
-                                  <div className="border-t px-4 sm:px-5 py-5 space-y-4" style={{ borderColor: `${accent}25`, backgroundColor: `${accent}05` }}>
+                                  <div className="border-t px-4 sm:px-5 py-5 grid gap-4 lg:grid-cols-2 lg:gap-6 lg:items-start" style={{ borderColor: `${accent}25`, backgroundColor: `${accent}05` }}>
+                                    {/* LEFT on desktop: what you're choosing */}
+                                    <div className="space-y-4">
                                     {/* Party size */}
                                     <div>
                                       <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2">Players</div>
@@ -1208,7 +1236,10 @@ export default function CourseDetailPage({
                                         <span>${t.cart_fee} / player</span>
                                       </button>
                                     )}
+                                    </div>
 
+                                    {/* RIGHT on desktop: what it costs, and the way out */}
+                                    <div className="space-y-4">
                                     {/* Itemized pricing */}
                                     <div className="bg-white rounded-md border border-line px-4 py-3 space-y-1.5">
                                       <div className="flex justify-between text-sm text-ink-soft">
@@ -1240,6 +1271,7 @@ export default function CourseDetailPage({
                                     >
                                       Continue to Book →
                                     </button>
+                                    </div>
                                   </div>
                                 )}
                               </div>
@@ -1379,6 +1411,12 @@ export default function CourseDetailPage({
               </div>
             </div>
           )}
+
+          {/* Quiet GreenReserve credit — the page belongs to the course, so the
+              platform signs it at the bottom instead of over the hero photo. */}
+          <div className="mt-12 pt-6 border-t border-line-soft text-center text-[11px] text-ink-faint">
+            Booking by GreenReserve
+          </div>
         </div>
       </div>
 
@@ -1391,10 +1429,10 @@ export default function CourseDetailPage({
           <div className="bg-white rounded-lg max-w-sm w-full p-6 shadow-xl" onClick={e => e.stopPropagation()}>
             {alertSent ? (
               <div className="text-center py-2">
-                <div className="w-10 h-10 rounded-full bg-ok/10 flex items-center justify-center mx-auto mb-3">
-                  <Check size={20} className="text-ok" />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: `${accent}14`, color: accent }}>
+                  <Check size={20} />
                 </div>
-                <p className="font-semibold text-ink mb-1">Alert set!</p>
+                <p className="font-serif font-medium text-ink text-xl mb-1.5">Alert set</p>
                 <p className="text-sm text-ink-muted mb-5">We&apos;ll email you when a spot opens up at {course.name}.</p>
                 <button
                   onClick={() => { setAlertModal(null); setAlertSent(false); }}
@@ -1405,9 +1443,9 @@ export default function CourseDetailPage({
               </div>
             ) : (
               <>
-                <div className="flex items-center gap-2 mb-1">
-                  <Bell size={16} className="text-pine" />
-                  <h3 className="font-semibold text-ink text-base">Get an alert</h3>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Bell size={15} style={{ color: accent }} />
+                  <h3 className="font-serif font-medium text-ink text-xl leading-none">Get an alert</h3>
                 </div>
                 <p className="text-sm text-ink-muted mb-5">
                   {alertModal.teeTimeId
@@ -1440,9 +1478,10 @@ export default function CourseDetailPage({
                   <button
                     onClick={submitAlert}
                     disabled={!alertEmail.trim() || alertSubmitting}
-                    className="flex-1 py-2.5 rounded-md bg-pine hover:bg-pine-hover text-white text-sm font-medium disabled:opacity-50 transition-colors"
+                    className="flex-1 py-2.5 rounded-md text-white text-sm font-medium disabled:opacity-50 transition-colors"
+                    style={{ backgroundColor: accent }}
                   >
-                    {alertSubmitting ? 'Setting…' : 'Set Alert'}
+                    {alertSubmitting ? 'Setting…' : 'Set alert'}
                   </button>
                 </div>
               </>

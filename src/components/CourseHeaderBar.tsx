@@ -5,7 +5,7 @@
 export function CourseHeaderBar({ courseName, accent }: { courseName: string; accent?: string }) {
   return (
     <div className="h-14 flex items-center px-6" style={{ backgroundColor: accent || '#24513B' }}>
-      <span className="text-white font-medium">{courseName}</span>
+      <span className="text-white font-serif font-medium text-lg leading-none tracking-tight">{courseName}</span>
     </div>
   );
 }
