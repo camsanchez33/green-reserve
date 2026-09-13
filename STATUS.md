@@ -4,17 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-12 00:00 UTC · branch `main` · HEAD `7238dd9` · working tree **3 dirty file(s)**
+Generated 2026-09-13 23:59 UTC · branch `main` · HEAD `767d81c` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-### Uncommitted working tree (3 file(s))
+### Uncommitted working tree (2 file(s))
 
 - `M RUN_QUEUE.md`
-- `?? .claude/batches/2026-09-11-reskin.expanded.json`
-- `?? .claude/batches/2026-09-11-reskin.json`
+- `M UI_REVISE_SPEC.md`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -37,15 +36,15 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 12d | `7246a62` | `RUN_QUEUE.md:500` |
-| MP-1 | 2026-08-29 | 12d | `41f5ea8` | `RUN_QUEUE.md:530` |
-| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 12d | `4ef11dd` | `RUN_QUEUE.md:565` |
-| MP-2 | 2026-08-29 | 12d | `958f229` | `RUN_QUEUE.md:606` |
-| MP-2b | 2026-08-29 | 12d | `a134af5` | `RUN_QUEUE.md:643` |
-| MP-2c | 2026-08-29 | 12d | `e5b5413` | `RUN_QUEUE.md:692` |
-| MP-2d | 2026-08-29 | 12d | `22d0f68` | `RUN_QUEUE.md:740` |
-| MP-2e | 2026-08-30 | 12d | `bf3bcb2` | `RUN_QUEUE.md:782` |
-| UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | 2026-09-11 | 0d | `a3c1bea` | `RUN_QUEUE.md:1959` |
+| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 14d | `7246a62` | `RUN_QUEUE.md:500` |
+| MP-1 | 2026-08-29 | 14d | `41f5ea8` | `RUN_QUEUE.md:530` |
+| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 14d | `4ef11dd` | `RUN_QUEUE.md:565` |
+| MP-2 | 2026-08-29 | 14d | `958f229` | `RUN_QUEUE.md:606` |
+| MP-2b | 2026-08-29 | 14d | `a134af5` | `RUN_QUEUE.md:643` |
+| MP-2c | 2026-08-29 | 14d | `e5b5413` | `RUN_QUEUE.md:692` |
+| MP-2d | 2026-08-29 | 14d | `22d0f68` | `RUN_QUEUE.md:740` |
+| MP-2e | 2026-08-30 | 14d | `bf3bcb2` | `RUN_QUEUE.md:782` |
+| UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | 2026-09-11 | 2d | `a3c1bea` | `RUN_QUEUE.md:1959` |
 
 ## Not started — the actual queue
 
@@ -171,6 +170,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `767d81c` 2026-09-13 — H-1: the homepage, from the approved prototype
+- `6bc1168` 2026-09-11 — queue/spec update
 - `7238dd9` 2026-09-11 — queue/spec update
 - `5eb48c5` 2026-09-11 — Review fixes: fee reversal on cancellation refunds, double-charge guard, viewer shaping, hung buttons
 - `a3c1bea` 2026-09-11 — U-0: the staff look — one CSS switch, two fonts, two sidebars
@@ -181,8 +182,6 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `9b51048` 2026-09-11 — queue/spec update
 - `b56bf5a` 2026-09-11 — queue/spec update
 - `af2fdf8` 2026-09-11 — COURSE_LAYOUT L3: admin sees the configured layout; isolation test covers products
-- `bfc8db3` 2026-09-11 — queue/spec update
-- `3774499` 2026-09-11 — queue/spec update
 
 ---
 

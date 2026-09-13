@@ -1,18 +1,17 @@
 {
-  "generatedAt": "2026-09-12T00:00:44.036Z",
+  "generatedAt": "2026-09-13T23:59:25.430Z",
   "repo": {
-    "head": "7238dd9",
+    "head": "767d81c",
     "branch": "main",
-    "dirtyCount": 3,
+    "dirtyCount": 2,
     "dirty": [
       "M RUN_QUEUE.md",
-      "?? .claude/batches/2026-09-11-reskin.expanded.json",
-      "?? .claude/batches/2026-09-11-reskin.json"
+      " M UI_REVISE_SPEC.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-11T19:59:41-04:00",
+    "queueLastCommit": "2026-09-11T20:00:44-04:00",
     "unrecorded": []
   },
   "counts": {
@@ -46,63 +45,63 @@
       "line": 500,
       "hash": "7246a62",
       "shipDate": "2026-08-29",
-      "ageDays": 12
+      "ageDays": 14
     },
     {
       "title": "MP-1",
       "line": 530,
       "hash": "41f5ea8",
       "shipDate": "2026-08-29",
-      "ageDays": 12
+      "ageDays": 14
     },
     {
       "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
       "line": 565,
       "hash": "4ef11dd",
       "shipDate": "2026-08-29",
-      "ageDays": 12
+      "ageDays": 14
     },
     {
       "title": "MP-2",
       "line": 606,
       "hash": "958f229",
       "shipDate": "2026-08-29",
-      "ageDays": 12
+      "ageDays": 14
     },
     {
       "title": "MP-2b",
       "line": 643,
       "hash": "a134af5",
       "shipDate": "2026-08-29",
-      "ageDays": 12
+      "ageDays": 14
     },
     {
       "title": "MP-2c",
       "line": 692,
       "hash": "e5b5413",
       "shipDate": "2026-08-29",
-      "ageDays": 12
+      "ageDays": 14
     },
     {
       "title": "MP-2d",
       "line": 740,
       "hash": "22d0f68",
       "shipDate": "2026-08-29",
-      "ageDays": 12
+      "ageDays": 14
     },
     {
       "title": "MP-2e",
       "line": 782,
       "hash": "bf3bcb2",
       "shipDate": "2026-08-30",
-      "ageDays": 12
+      "ageDays": 14
     },
     {
-      "title": "UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea (box open until review). Run order U-0 →",
+      "title": "UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until r",
       "line": 1959,
       "hash": "a3c1bea",
       "shipDate": "2026-09-11",
-      "ageDays": 0
+      "ageDays": 2
     }
   ],
   "next": [
@@ -789,6 +788,16 @@
   },
   "recentCommits": [
     {
+      "h": "767d81c",
+      "date": "2026-09-13",
+      "subject": "H-1: the homepage, from the approved prototype"
+    },
+    {
+      "h": "6bc1168",
+      "date": "2026-09-11",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "7238dd9",
       "date": "2026-09-11",
       "subject": "queue/spec update"
@@ -837,16 +846,6 @@
       "h": "af2fdf8",
       "date": "2026-09-11",
       "subject": "COURSE_LAYOUT L3: admin sees the configured layout; isolation test covers products"
-    },
-    {
-      "h": "bfc8db3",
-      "date": "2026-09-11",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "3774499",
-      "date": "2026-09-11",
-      "subject": "queue/spec update"
     }
   ]
 }

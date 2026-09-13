@@ -117,8 +117,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-09-12 00:00 UTC</span><span>main @ 7238dd9</span>
-    <span>3 uncommitted</span>
+    <span>2026-09-13 23:59 UTC</span><span>main @ 767d81c</span>
+    <span>2 uncommitted</span>
   </div>
 </header>
 <div class="tiles">
@@ -132,7 +132,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card">
 <h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M RUN_QUEUE.md</code></li><li><code>?? .claude/batches/2026-09-11-reskin.expanded.json</code></li><li><code>?? .claude/batches/2026-09-11-reskin.json</code></li></ul>
+<ul class="plain"><li><code>M RUN_QUEUE.md</code></li><li><code>M UI_REVISE_SPEC.md</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -184,15 +184,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Built, not signed off</h2>
 <p class="note">The box is open because <code>/gr-review</code> hasn't run &mdash; not because the code is missing.</p>
 <div class="ledger">
-<div class="row"><span class="t">MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin</span><span class="age">12d</span><span class="where">7246a62</span></div>
-<div class="row"><span class="t">MP-1</span><span class="age">12d</span><span class="where">41f5ea8</span></div>
-<div class="row"><span class="t">MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until</span><span class="age">12d</span><span class="where">4ef11dd</span></div>
-<div class="row"><span class="t">MP-2</span><span class="age">12d</span><span class="where">958f229</span></div>
-<div class="row"><span class="t">MP-2b</span><span class="age">12d</span><span class="where">a134af5</span></div>
-<div class="row"><span class="t">MP-2c</span><span class="age">12d</span><span class="where">e5b5413</span></div>
-<div class="row"><span class="t">MP-2d</span><span class="age">12d</span><span class="where">22d0f68</span></div>
-<div class="row"><span class="t">MP-2e</span><span class="age">12d</span><span class="where">bf3bcb2</span></div>
-<div class="row"><span class="t">UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea (box open until review). Run order U-0 →</span><span class="age">0d</span><span class="where">a3c1bea</span></div>
+<div class="row"><span class="t">MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin</span><span class="age">14d</span><span class="where">7246a62</span></div>
+<div class="row"><span class="t">MP-1</span><span class="age">14d</span><span class="where">41f5ea8</span></div>
+<div class="row"><span class="t">MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until</span><span class="age">14d</span><span class="where">4ef11dd</span></div>
+<div class="row"><span class="t">MP-2</span><span class="age">14d</span><span class="where">958f229</span></div>
+<div class="row"><span class="t">MP-2b</span><span class="age">14d</span><span class="where">a134af5</span></div>
+<div class="row"><span class="t">MP-2c</span><span class="age">14d</span><span class="where">e5b5413</span></div>
+<div class="row"><span class="t">MP-2d</span><span class="age">14d</span><span class="where">22d0f68</span></div>
+<div class="row"><span class="t">MP-2e</span><span class="age">14d</span><span class="where">bf3bcb2</span></div>
+<div class="row"><span class="t">UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until r</span><span class="age">2d</span><span class="where">a3c1bea</span></div>
 </div></section>
 <section><h2>Waiting on you, not on a build</h2>
 <ul class="plain"><li>CAM: three real dashboard screenshots into public/screenshots/ (empty, so the homepage shows three grey placeholder boxes) and a seeded demo course slug for DEMO_COURSE_SLUGS (empt <span class="where">:423</span></li><li>pending Cam's approval for a prod write <span class="where">:565</span></li><li>Cam's approval for a prod backfill <span class="where">:606</span></li><li>pending Cam's approval for a prod write <span class="where">:643</span></li><li>pending Cam's approval for a prod write <span class="where">:692</span></li><li>pending Cam's approval for a prod write <span class="where">:740</span></li><li>pending Cam's approval for a prod write <span class="where">:782</span></li><li>CAM: confirm the state before this runs — e <span class="where">:1395</span></li></ul>
@@ -240,6 +240,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">767d81c</td><td class="num">2026-09-13</td><td>H-1: the homepage, from the approved prototype</td></tr>
+<tr><td class="num">6bc1168</td><td class="num">2026-09-11</td><td>queue/spec update</td></tr>
 <tr><td class="num">7238dd9</td><td class="num">2026-09-11</td><td>queue/spec update</td></tr>
 <tr><td class="num">5eb48c5</td><td class="num">2026-09-11</td><td>Review fixes: fee reversal on cancellation refunds, double-charge guard, viewer shaping, hung buttons</td></tr>
 <tr><td class="num">a3c1bea</td><td class="num">2026-09-11</td><td>U-0: the staff look — one CSS switch, two fonts, two sidebars</td></tr>
@@ -250,8 +252,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">9b51048</td><td class="num">2026-09-11</td><td>queue/spec update</td></tr>
 <tr><td class="num">b56bf5a</td><td class="num">2026-09-11</td><td>queue/spec update</td></tr>
 <tr><td class="num">af2fdf8</td><td class="num">2026-09-11</td><td>COURSE_LAYOUT L3: admin sees the configured layout; isolation test covers products</td></tr>
-<tr><td class="num">bfc8db3</td><td class="num">2026-09-11</td><td>queue/spec update</td></tr>
-<tr><td class="num">3774499</td><td class="num">2026-09-11</td><td>queue/spec update</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

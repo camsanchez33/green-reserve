@@ -1956,7 +1956,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   walls. The attorney-review comment stays: "drafted without counsel;
   review before scale."
 
-- [ ] UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea (box open until review). Run order U-0 → H-1 → U-G → B-1 → B-2 → U-O → B-6 → U-A → U-M. Reskin runs are ZERO behavior; behavior items are separate. Doc file: commit, never discard.
+- [ ] UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until review + live walk). Reskin batch 2026-09-11 in flight (U-A on batch/U-A guard-clean; U-G/U-O/U-M relaunched after a rate-limit kill, WIP on batch/*-wip). Run order U-0 → H-1 → U-G → B-1 → B-2 → U-O → B-6 → U-A → U-M. Reskin runs are ZERO behavior; behavior items are separate. Doc file: commit, never discard.
 
 ## Ideas / not yet specced
 

@@ -143,6 +143,17 @@ Ordered by value ÷ risk. Each is small unless marked.
 
 ## 5. Homepage build — H-1 (its own run, medium-large, no migration)
 
+> **SHIPPED 767d81c (2026-09-13)** — box open until /gr-review H-1 + a live walk. Built as
+> specced below; deviations: (1) the story's "You keep every dollar" beat is frozen by §0.6
+> and reads "Green fees are paid straight to your own account."; (2) the demo device is a
+> standalone component (src/components/home/HomeDemo.tsx), not a CourseBookingClient
+> derivative — that file is 1,500 lines of real booking logic with fetches; (3) the
+> course cards are labelled example pages in the section copy and link to /for-courses
+> until a demo course slug exists; (4) the final CTA's "book a 15-minute call" is an email
+> link — no booking tool exists. FLAG FOR CAM: the README's "TEE" photo (the "We set it
+> up" band) is a hillside of wind turbines, not golf — approved in the prototype, but worth
+> a second look. Not yet Lighthouse-audited.
+
 Build `/` from the approved prototype. Public look. Sections in order:
 1. Nav (white/blur, lockup, links, pine CTA) — shrinks on scroll.
 2. Hero: full-bleed ball-in-cup photo, text LEFT so the ball stays visible, slow settle (scale 1.12→1.06 over 7s) + scroll parallax (0.28×). Headline "The tee sheet your course deserves." Sub, two CTAs, fine print.
