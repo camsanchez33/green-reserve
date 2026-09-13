@@ -1,14 +1,24 @@
 'use client';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import { isBookingMode, isCourseWorld } from '@/lib/booking-mode';
 
 export default function Nav() {
   const [open, setOpen] = useState(false);
+  // H-1: white/blur bar that shrinks once the page has scrolled (prototype
+  // nav.solid). Passive listener; no layout work.
+  const [solid, setSolid] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    const onScroll = () => setSolid((window.scrollY || window.pageYOffset) > 40);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard')) return null;
   // /for-courses + /for-courses/details have their own pine hero (with a
@@ -22,32 +32,32 @@ export default function Nav() {
   // on top of it. GreenReserve presence there shrinks to the footer.
   if (isCourseWorld(pathname) || isBookingMode(pathname)) return null;
 
+  const links = [
+    { href: '/#how', label: 'How it works' },
+    { href: '/#pricing', label: 'Pricing' },
+    { href: '/#faq', label: 'FAQ' },
+    { href: '/dashboard/login', label: 'Operator login' },
+  ];
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-line">
-      <div className="px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center shrink-0">
-          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={200} height={38} priority className="w-[200px] h-auto" />
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/85 backdrop-blur-lg border-b border-black/5">
+      <div className={`px-6 flex items-center justify-between transition-[height] duration-500 ease-[cubic-bezier(.16,1,.3,1)] ${solid ? 'h-14' : 'h-16'}`}>
+        <Link href="/" className="flex items-center shrink-0" aria-label="GreenReserve">
+          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={200} height={38} priority className="w-[180px] md:w-[200px] h-auto" />
         </Link>
 
         <div className="hidden md:flex items-center gap-1">
-          <Link href="/#how-it-works" className="text-ink-soft hover:text-ink text-sm px-3 py-2 rounded-md transition-colors">
-            How It Works
-          </Link>
-          <Link href="/#pricing" className="text-ink-soft hover:text-ink text-sm px-3 py-2 rounded-md transition-colors">
-            Pricing
-          </Link>
-          <Link href="/#faq" className="text-ink-soft hover:text-ink text-sm px-3 py-2 rounded-md transition-colors">
-            FAQ
-          </Link>
-          <Link href="/dashboard/login" className="text-ink-soft hover:text-ink text-sm px-3 py-2 rounded-md transition-colors">
-            Operator Login
-          </Link>
-          <Link href="/for-courses" className="ml-3 bg-pine hover:bg-pine-hover text-white text-sm font-medium px-4 py-2 rounded-md transition-colors">
-            List Your Course
+          {links.map(l => (
+            <Link key={l.href} href={l.href} className="text-ink/80 hover:text-ink text-[15px] font-medium px-3 py-2 rounded-md transition-colors">
+              {l.label}
+            </Link>
+          ))}
+          <Link href="/for-courses" className="ml-3 bg-pine hover:bg-pine-hover text-white text-[14.5px] font-semibold px-[18px] h-[42px] inline-flex items-center rounded-lg transition-colors">
+            List your course
           </Link>
         </div>
 
-        <button className="md:hidden text-ink-soft hover:text-ink p-2" onClick={() => setOpen(!open)}>
+        <button className="md:hidden text-ink-soft hover:text-ink p-2" onClick={() => setOpen(!open)} aria-expanded={open} aria-label={open ? 'Close menu' : 'Open menu'}>
           {open ? <X size={18} /> : <Menu size={18} />}
         </button>
       </div>
@@ -55,11 +65,10 @@ export default function Nav() {
       {open && (
         <div className="md:hidden bg-white border-t border-line">
           <div className="px-6 py-4 flex flex-col gap-1">
-            <Link href="/#how-it-works" onClick={() => setOpen(false)} className="text-ink-soft hover:text-ink text-sm py-2">How It Works</Link>
-            <Link href="/#pricing" onClick={() => setOpen(false)} className="text-ink-soft hover:text-ink text-sm py-2">Pricing</Link>
-            <Link href="/#faq" onClick={() => setOpen(false)} className="text-ink-soft hover:text-ink text-sm py-2">FAQ</Link>
-            <Link href="/dashboard/login" onClick={() => setOpen(false)} className="text-ink-soft hover:text-ink text-sm py-2">Operator Login</Link>
-            <Link href="/for-courses" onClick={() => setOpen(false)} className="mt-2 bg-pine text-white text-sm font-medium px-4 py-2.5 rounded-md text-center">List Your Course</Link>
+            {links.map(l => (
+              <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="text-ink-soft hover:text-ink text-sm py-2">{l.label}</Link>
+            ))}
+            <Link href="/for-courses" onClick={() => setOpen(false)} className="mt-2 bg-pine text-white text-sm font-medium px-4 py-2.5 rounded-lg text-center">List your course</Link>
           </div>
         </div>
       )}

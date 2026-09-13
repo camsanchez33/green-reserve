@@ -15,9 +15,13 @@ import { isCourseWorld, isBookingMode } from '@/lib/booking-mode';
 // also desynchronizes the shell: the sidebar is fixed at top:0 while content
 // started 64px down, and `sticky top-0` page headers stuck 64px down leaving a
 // cream band above them on scroll.
+//
+// H-1: the homepage hero is full-bleed under the translucent nav, so `/` takes
+// no offset either.
 export default function MainOffset({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const noNav =
+    pathname === '/' ||
     isCourseWorld(pathname) ||
     isBookingMode(pathname) ||
     pathname.startsWith('/for-courses') ||
