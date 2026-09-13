@@ -89,21 +89,26 @@ export default function CancellationsPage() {
     .sort((a, b) => (a.teeTime.date + a.teeTime.time).localeCompare(b.teeTime.date + b.teeTime.time));
   const cancelled = bookings.filter(b => b.status === 'cancelled')
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const lateFeeCount = cancelled.filter(b => b.paymentStatus === 'cancellation_fee_charged').length;
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="cancellations"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <div className="max-w-4xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <div>
-                <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Cancellations</h1>
-                <p className="text-xs text-ink-muted mt-0.5">Cancel a booking on a golfer&apos;s behalf, or review cancellation history.</p>
+          {/* U-O (UI_REVISE_SPEC §1b): serif title + one sentence of the page's
+              own numbers, all counted off `bookings`, which is already loaded. */}
+          <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Cancellations</h1>
+                <TabIntroButton onClick={intro.show}/>
               </div>
-              <TabIntroButton onClick={intro.show}/>
+              <p className="text-[13.5px] text-ink-soft mt-2">
+                {upcoming.length} upcoming booking{upcoming.length !== 1 ? 's' : ''} you can cancel · {cancelled.length} cancelled · {lateFeeCount} late fee{lateFeeCount !== 1 ? 's' : ''} charged
+              </p>
             </div>
-            <button onClick={load} className="flex items-center gap-1.5 text-xs text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
+            <button onClick={load} className="flex items-center gap-1.5 text-[12.5px] text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors shrink-0">
               <RefreshCw className="w-3.5 h-3.5"/>Refresh
             </button>
           </div>
@@ -126,10 +131,11 @@ export default function CancellationsPage() {
           ) : (
             <div className="space-y-6">
               <div className="bg-white border border-line rounded-lg p-5">
-                <h2 className="text-sm font-medium text-ink mb-1">Cancellation Policy</h2>
-                <p className="text-xs text-ink-muted mb-4">Golfers can cancel free until this many hours before their tee time. After that, the fee below is automatically charged — and refunded if they still show up and check in.</p>
+                <h2 className="text-[15px] font-medium text-ink mb-1">Cancellation Policy</h2>
+                <p className="text-[13.5px] text-ink-soft mb-4">Golfers can cancel free until this many hours before their tee time. After that, the fee below is automatically charged — and refunded if they still show up and check in.</p>
                 {policy.lateCancellationFee > 0 && !stripeAccountActive && (
-                  <div className="flex items-start gap-2 bg-warn/10 border border-warn/20 rounded-md px-3 py-2.5 mb-4 text-xs text-warn">
+                  // §1b: attention = a 3px left border in the semantic colour on a white card.
+                  <div className="flex items-start gap-2 bg-white border border-line border-l-[3px] border-l-warn rounded-md px-3 py-2.5 mb-4 text-[12.5px] text-warn">
                     <span className="font-medium shrink-0">Paused —</span>
                     <span>your ${policy.lateCancellationFee.toFixed(2)} late-cancel fee can&apos;t be charged until you connect Stripe. Golfers can still book and cancel; no fee is being collected in the meantime.</span>
                   </div>
@@ -162,13 +168,13 @@ export default function CancellationsPage() {
                 ) : (
                   <div className="space-y-2">
                     {upcoming.map(b => (
-                      <div key={b.id} className="bg-white rounded-lg border border-line p-3 flex items-center justify-between">
-                        <div>
-                          <div className="font-medium text-ink text-sm">{b.golferName} <span className="text-ink-muted font-normal">· {b.players} player{b.players !== 1 ? 's' : ''}</span></div>
-                          <div className="text-xs text-ink-soft mt-0.5">{fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)} · {b.golferEmail}</div>
+                      <div key={b.id} className="bg-white rounded-lg border border-line p-3 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="font-medium text-ink text-[13.5px]">{b.golferName} <span className="text-ink-muted font-normal">· {b.players} player{b.players !== 1 ? 's' : ''}</span></div>
+                          <div className="text-[12.5px] text-ink-soft mt-0.5">{fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)} · {b.golferEmail}</div>
                         </div>
                         <button onClick={() => cancelBooking(b)} disabled={cancelingId === b.id}
-                          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-bad/30 text-bad hover:bg-bad/5 disabled:opacity-50 transition-colors">
+                          className="shrink-0 flex items-center gap-1.5 text-[12.5px] px-3 py-1.5 rounded-md border border-bad/30 text-bad hover:bg-bad/5 disabled:opacity-50 transition-colors">
                           <XCircle className="w-3.5 h-3.5"/>{cancelingId === b.id ? 'Cancelling...' : 'Cancel'}
                         </button>
                       </div>
@@ -183,12 +189,14 @@ export default function CancellationsPage() {
                   <div className="text-center py-10 bg-white rounded-lg border border-dashed border-line text-ink-muted text-sm">No cancellations yet.</div>
                 ) : (
                   <div className="space-y-2">
+                    {/* U-O: history fades back; a row that carried a late fee keeps
+                        an amber left edge so the money is findable at a glance. */}
                     {cancelled.map(b => (
-                      <div key={b.id} className="bg-white rounded-lg border border-line p-3 flex items-center justify-between opacity-70">
+                      <div key={b.id} className={'bg-white rounded-lg border border-line p-3 flex items-center justify-between ' + (b.paymentStatus === 'cancellation_fee_charged' ? 'border-l-[3px] border-l-warn' : 'opacity-70')}>
                         <div>
-                          <div className="font-medium text-ink text-sm flex items-center gap-1.5"><Undo2 className="w-3.5 h-3.5 text-ink-muted"/>{b.golferName} <span className="text-ink-muted font-normal">· {b.players} player{b.players !== 1 ? 's' : ''}</span></div>
-                          <div className="text-xs text-ink-soft mt-0.5">Tee time: {fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)}</div>
-                          <div className="text-xs mt-0.5">
+                          <div className="font-medium text-ink text-[13.5px] flex items-center gap-1.5"><Undo2 className="w-3.5 h-3.5 text-ink-muted"/>{b.golferName} <span className="text-ink-muted font-normal">· {b.players} player{b.players !== 1 ? 's' : ''}</span></div>
+                          <div className="text-[12.5px] text-ink-soft mt-0.5">Tee time: {fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)}</div>
+                          <div className="text-[12.5px] mt-0.5">
                             <span className="text-ink-muted">{b.cancelledAt ? `Cancelled ${fmtStamp(b.cancelledAt)}` : 'Cancelled'}</span>
                             {b.paymentStatus === 'cancellation_fee_charged'
                               ? <span className="text-warn font-medium"> · ${(b.cancellationFeeTotal / 100).toFixed(2)} fee charged{b.cancellationFeeChargedAt ? ` on ${fmtStamp(b.cancellationFeeChargedAt)}` : ''}</span>
