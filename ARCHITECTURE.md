@@ -1,7 +1,7 @@
 # GreenReserve — Architecture Reference
 
 > **Auto-generated** by `scripts/route-inventory.ts`. Re-run after adding routes.
-> Last generated: 2026-09-11
+> Last generated: 2026-09-14
 
 ---
 
@@ -114,6 +114,7 @@
 | `/api/operator/course-products` | GET, POST, PATCH, DELETE | operator | Every nineId a product claims must actually belong to this operator's course — |
 | `/api/operator/courses` | GET, PATCH | operator | Never cache — the dashboard's live/draft banner reads this and must |
 | `/api/operator/members` | GET, POST, PATCH, DELETE | operator | — |
+| `/api/operator/members/remind-overdue` | POST | operator | B-10 (UI_REVISE_SPEC §4): one click reminds every overdue member. "Overdue" |
 | `/api/operator/messages` | GET, POST, PATCH | operator | GET /api/operator/messages — own thread with all messages |
 | `/api/operator/my-courses` | GET | operator | Lists every course this operator owns, plus which one is currently active |
 | `/api/operator/nines` | GET, POST, PATCH, DELETE | operator | — |
@@ -237,18 +238,9 @@ commits partly because of it.
    → Cancellation fee refunded if previously charged
    → Booking.status = 'completed'
 
-4. STRIPE WEBHOOKS  (src/app/api/stripe/webhook) — registered as a CONNECT webhook
-   account.updated                 → sync Course.stripeAccountActive
-   charge.refunded                 → PaymentEvent 'refund' (deduped on refund id); full refund → paymentStatus 'refunded'
-   charge.dispute.created/updated/closed → PaymentEvent 'dispute' / 'dispute_closed' (one row per state, evidence due date in detail)
-   payment_intent.payment_failed   → PaymentEvent 'charge_failed'
-   (idempotent: every handler dedupes on a Stripe id or a composite marker)
-
-5. REFUNDS — two paths, one money rule
-   lib/refund-booking.ts (admin Refund, MANAGER_PLUS) and lib/stripe.ts
-   refundOnConnectedAccount (cancellations) both pass refund_application_fee:
-   true — GreenReserve's fee reverses pro rata on every refunded round.
-   PaymentEvent is the ledger; /api/admin/transactions/export is the CSV of it.
+4. STRIPE WEBHOOKS  (src/app/api/stripe/webhook)
+   account.updated → sync Course.stripeAccountActive
+   (idempotent: updateMany with same value is safe to replay)
 ```
 
 ---

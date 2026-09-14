@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Trash2, Users, Edit2, Check, X, ArrowLeft, ArrowRight,
-  RefreshCw, UserCheck, UserX, ChevronDown, AlertCircle, CheckCircle2, UserPlus,
+  RefreshCw, UserCheck, UserX, ChevronDown, AlertCircle, CheckCircle2, UserPlus, Mail,
 } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
@@ -68,6 +68,23 @@ export default function MembersPage() {
   const [pricingMode, setPricingMode] = useState<PricingMode>('flat');
   const [tierSaving, setTierSaving] = useState(false);
   const [tierDeleting, setTierDeleting] = useState<string | null>(null);
+  // B-10: one click reminds every overdue member; the result is a sentence.
+  const [remindingOverdue, setRemindingOverdue] = useState(false);
+
+  const remindOverdue = async () => {
+    if (remindingOverdue) return;
+    setRemindingOverdue(true);
+    const r = await dfetch<{ overdue: number; sent: number; skippedRecent: number; skippedFree: number; skippedNoEmail: number; failed: string[] }>('/api/operator/members/remind-overdue', { method: 'POST' });
+    setRemindingOverdue(false);
+    if (!r.ok) { toast(r.error); return; }
+    const d = r.data;
+    if (!d || d.overdue === 0) { toast('Nobody is overdue — every active member is paid up.', 'ok'); return; }
+    const parts = [`Reminded ${d.sent} member${d.sent === 1 ? '' : 's'}`];
+    if (d.skippedRecent) parts.push(`${d.skippedRecent} already reminded this week`);
+    if (d.skippedNoEmail) parts.push(`${d.skippedNoEmail} with no email on file`);
+    if (d.failed.length) parts.push(`${d.failed.length} FAILED (${d.failed.join(', ')})`);
+    toast(parts.join(' · ') + '.', d.failed.length ? 'warn' : 'ok');
+  };
   const [tierError, setTierError] = useState('');
   const [createdTier, setCreatedTier] = useState<Tier | null>(null);
 
@@ -569,8 +586,13 @@ export default function MembersPage() {
                   <option value="all">All statuses</option>
                 </select>
                 <span className="text-sm text-ink-muted">{filteredMembers.length} member{filteredMembers.length !== 1 ? 's' : ''}</span>
+                <button onClick={remindOverdue} disabled={remindingOverdue || members.length === 0}
+                  title="Emails the dues link to every active member who is unpaid or past their expiry — at most once a week each"
+                  className="ml-auto bg-white border border-line hover:border-line-strong text-ink-soft hover:text-ink rounded-md text-[12.5px] font-medium transition-colors disabled:opacity-40 px-4 py-2 flex items-center gap-2">
+                  <Mail className="w-4 h-4"/>{remindingOverdue ? 'Sending…' : 'Remind overdue members'}
+                </button>
                 <button onClick={() => startAddMember()} disabled={tiers.length === 0}
-                  className="ml-auto bg-pine hover:bg-pine-hover text-white rounded-md text-[12.5px] font-medium transition-colors disabled:opacity-40 px-4 py-2 flex items-center gap-2">
+                  className="bg-pine hover:bg-pine-hover text-white rounded-md text-[12.5px] font-medium transition-colors disabled:opacity-40 px-4 py-2 flex items-center gap-2">
                   <Plus className="w-4 h-4"/>Create New Member
                 </button>
               </div>
