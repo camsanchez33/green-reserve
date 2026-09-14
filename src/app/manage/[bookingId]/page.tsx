@@ -339,14 +339,15 @@ function ManagePageInner() {
                     <button
                       key={slot.id}
                       onClick={() => setSelectedSlot(isSelected ? null : slot)}
-                      className={`w-full flex items-center justify-between px-4 py-3.5 rounded-md border text-sm transition-all ${isSelected ? 'border-pine bg-pine/5' : 'border-line hover:border-pine/30'}`}
+                      className={`w-full flex items-center justify-between px-4 py-3.5 rounded-md border text-sm transition-all ${isSelected ? '' : 'border-line hover:border-line-strong'}`}
+                      style={isSelected ? { borderColor: info.brandColor, backgroundColor: `${info.brandColor}0d` } : undefined}
                     >
                       <div className="text-left">
                         <span className="font-medium text-ink">{fmtTime(slot.time)}</span>
                         <span className="text-ink-muted ml-2">{slot.holes} holes &middot; {slot.spotsLeft} spot{slot.spotsLeft !== 1 ? 's' : ''} left</span>
                       </div>
                       <div className="text-right">
-                        <span className={`font-medium ${isSelected ? 'text-pine' : 'text-ink'}`}>{dollars(slot.greenFee * info.players)}</span>
+                        <span className="font-medium text-ink" style={isSelected ? { color: info.brandColor } : undefined}>{dollars(slot.greenFee * info.players)}</span>
                         {slot.greenFee !== info.greenFeeTotal / info.players && (
                           <span className="block text-[11px] text-ink-muted">vs {dollars(info.greenFeeTotal)}</span>
                         )}
@@ -377,7 +378,8 @@ function ManagePageInner() {
                 <button
                   onClick={handleSwapTime}
                   disabled={swapping}
-                  className="w-full py-3 rounded-md bg-pine text-white font-medium text-sm hover:bg-pine-hover transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                  style={{ backgroundColor: info.brandColor }}
+                  className="w-full py-3 rounded-md text-white font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {swapping ? <><Loader2 size={14} className="animate-spin" /> Changing…</> : 'Confirm New Time'}
                 </button>
@@ -444,7 +446,8 @@ function ManagePageInner() {
             <button
               onClick={handleChangePlayers}
               disabled={changingPlayers || selectedPlayers === info.players}
-              className="w-full py-3 rounded-md bg-pine text-white font-medium text-sm hover:bg-pine-hover transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              style={{ backgroundColor: info.brandColor }}
+              className="w-full py-3 rounded-md text-white font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {changingPlayers ? <><Loader2 size={14} className="animate-spin" /> Updating…</> : `Update to ${selectedPlayers} Player${selectedPlayers !== 1 ? 's' : ''}`}
             </button>

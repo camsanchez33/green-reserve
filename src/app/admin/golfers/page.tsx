@@ -407,7 +407,7 @@ function GolfersInner() {
       {/* Cancel on the golfer's behalf */}
       {cancelTarget && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-line rounded-lg p-6 w-full max-w-sm shadow-2xl">
+          <div className="bg-white border border-line rounded-lg p-6 w-full max-w-sm shadow-sm">
             <h3 className="font-serif font-medium text-ink mb-1">Cancel {cancelTarget.courseName} for {detail?.firstName}?</h3>
             <p className="text-sm text-ink-soft mb-3">
               {cancelTarget.teeDate} at {cancelTarget.teeTime}. {cancelTarget.paymentStatus === 'paid'
@@ -430,7 +430,7 @@ function GolfersInner() {
       {/* Refund */}
       {refundTarget && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-line rounded-lg p-6 w-full max-w-sm shadow-2xl">
+          <div className="bg-white border border-line rounded-lg p-6 w-full max-w-sm shadow-sm">
             <h3 className="font-serif font-medium text-ink mb-1">Refund {detail?.firstName}</h3>
             <p className="text-sm text-ink-soft mb-4">
               {fmtMoney(refundTarget.totalAmount)} was charged for {refundTarget.courseName}, {refundTarget.teeDate}{refundTarget.refundedTotal > 0 ? ` · ${fmtMoney(refundTarget.refundedTotal)} already refunded` : ''}. It goes back to the card they paid with; the course&apos;s payout and GreenReserve&apos;s fee are both reduced.

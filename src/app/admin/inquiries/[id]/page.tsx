@@ -154,7 +154,7 @@ function MoreMenu({ open, onToggle, onClose, children }: { open: boolean; onTogg
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={onClose}/>
-          <div className="absolute right-0 top-full mt-1 w-60 bg-white border border-line rounded-md shadow-lg z-20 py-1.5 px-1.5">
+          <div className="absolute right-0 top-full mt-1 w-60 bg-white border border-line rounded-md shadow-sm z-20 py-1.5 px-1.5">
             {children}
           </div>
         </>

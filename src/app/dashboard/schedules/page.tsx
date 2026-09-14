@@ -291,8 +291,8 @@ export default function SchedulesPage() {
                 <div className="flex items-center justify-between py-2 border-t border-line">
                   <span className="text-sm text-ink">Walking allowed</span>
                   <button onClick={() => set('walkingAllowed', !form.walkingAllowed)}
-                    className={'relative w-11 h-6 rounded-full transition-colors ' + (form.walkingAllowed ? 'bg-pine' : 'bg-line-strong')}>
-                    <span className={'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ' + (form.walkingAllowed ? 'translate-x-5' : '')}/>
+                    className={'relative w-11 h-6 rounded-sm transition-colors ' + (form.walkingAllowed ? 'bg-pine' : 'bg-line-strong')}>
+                    <span className={'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-sm shadow-sm transition-transform ' + (form.walkingAllowed ? 'translate-x-5' : '')}/>
                   </button>
                 </div>
                 <button onClick={save} disabled={saving}

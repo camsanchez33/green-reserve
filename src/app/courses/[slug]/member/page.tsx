@@ -388,7 +388,7 @@ function MemberDashboard({
             </Link>
             <div className="min-w-0">
               <div
-                className="inline-block px-2.5 py-0.5 rounded text-xs font-medium text-white mb-0.5"
+                className="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium text-white mb-0.5"
                 style={{ background: tierColor }}
               >
                 {session.tier?.name ?? session.membershipType}

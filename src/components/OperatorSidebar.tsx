@@ -22,7 +22,7 @@ interface MyCourse { id: string; name: string; slug: string; active: boolean; li
 // U-0 (UI_REVISE_SPEC §1b): active item = accent text, 3px left border in the
 // accent, paper background. The tint wash is gone.
 function accentActive(color: string) {
-  return { borderLeft: `3px solid ${color}`, backgroundColor: '#F7F5EF', color, fontWeight: 600 };
+  return { borderLeft: `3px solid ${color}`, backgroundColor: 'var(--color-paper)', color, fontWeight: 600 };
 }
 const initialsOf = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'GR';
 

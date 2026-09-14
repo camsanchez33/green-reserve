@@ -8,7 +8,7 @@ import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 import { StatusDot } from '@/components/ui/StatusDot';
 
 type ReceiptData = {
-  bookingId: string; golferName: string; courseName: string; courseSlug: string; courseLocation: string;
+  bookingId: string; golferName: string; courseName: string; courseSlug: string; courseLocation: string; brandColor?: string;
   date: string; time: string; holes: number; players: number; cartSelected: boolean;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number;
   accessFeeTotal: number; totalAmount: number; status: string;
@@ -109,6 +109,7 @@ function ReceiptPageInner() {
                 the round the golfer played, not to the platform. */}
             <CourseHeaderBar
               courseName={data.courseName}
+              accent={data.brandColor}
               right={isCompleted ? 'Receipt' : isCancelled ? 'Cancellation' : 'Booking Confirmation'}
             />
 

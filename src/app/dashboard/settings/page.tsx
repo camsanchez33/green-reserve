@@ -62,8 +62,8 @@ function Toggle({ label, checked, onChange }: { label:string; checked:boolean; o
   return (
     <div className="flex items-center justify-between py-1">
       <span className="text-sm text-ink">{label}</span>
-      <button onClick={onChange} className={'relative w-11 h-6 rounded-full transition-colors ' + (checked ? 'bg-pine' : 'bg-line-strong')}>
-        <span className={'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ' + (checked ? 'translate-x-5' : '')}/>
+      <button onClick={onChange} className={'relative w-11 h-6 rounded-sm transition-colors ' + (checked ? 'bg-pine' : 'bg-line-strong')}>
+        <span className={'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-sm shadow-sm transition-transform ' + (checked ? 'translate-x-5' : '')}/>
       </button>
     </div>
   );

@@ -410,7 +410,7 @@ function DashboardPageInner() {
         )}
         {showChangesModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl max-h-[85vh] overflow-y-auto">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-sm max-h-[85vh] overflow-y-auto">
               <div className="text-ink font-medium mb-1">What would you like changed?</div>
               <div className="text-xs text-ink-muted mb-3">Check everything that applies — you can add a note for each.</div>
               <div className="space-y-2 mb-3">
@@ -891,8 +891,8 @@ function AddTeeTimeForm({ date, onSave, onCancel }: { date: string; onSave: ()=>
       </div>
       <div className="flex items-center justify-between py-1">
         <span className="text-sm text-ink">Walking allowed</span>
-        <button onClick={() => setWalking(!walking)} className={'relative w-11 h-6 rounded-full transition-colors ' + (walking ? 'bg-pine' : 'bg-line-strong')}>
-          <span className={'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ' + (walking ? 'translate-x-5' : '')}/>
+        <button onClick={() => setWalking(!walking)} className={'relative w-11 h-6 rounded-sm transition-colors ' + (walking ? 'bg-pine' : 'bg-line-strong')}>
+          <span className={'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-sm shadow-sm transition-transform ' + (walking ? 'translate-x-5' : '')}/>
         </button>
       </div>
       <div className="flex gap-3 pt-1">

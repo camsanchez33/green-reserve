@@ -705,8 +705,8 @@ export default function RevenuePage() {
                             <div className="flex items-center gap-2">
                               <Link href={`/admin/courses/${r.courseId}`} className={'font-medium hover:underline ' + (r.archived ? 'text-ink-muted' : 'text-ink')}>{r.name}</Link>
                               {r.archived
-                                ? <span className="text-[10px] text-ink-faint bg-line rounded px-1.5 py-0.5">Archived</span>
-                                : !r.active && <span className="text-[10px] text-ink-faint bg-line rounded px-1.5 py-0.5">Not live</span>}
+                                ? <StatusDot status="neutral" label="Archived" />
+                                : !r.active && <StatusDot status="neutral" label="Not live" />}
                             </div>
                           </td>
                           <td className="px-4 py-3 text-right tabular-nums text-ink-soft">{fmtCount(r.booked)}</td>
@@ -816,7 +816,7 @@ export default function RevenuePage() {
       {drawerOpen && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-ink/30" onClick={() => setDrawerOpen(false)}/>
-          <div className="relative w-full max-w-md bg-paper h-full shadow-xl border-l border-line overflow-y-auto">
+          <div className="relative w-full max-w-md bg-paper h-full shadow-sm border-l border-line overflow-y-auto">
             <div className="sticky top-0 bg-paper border-b border-line px-5 py-4 flex items-center justify-between">
               <h2 className="text-[15px] font-serif font-medium text-ink">Operating expenses</h2>
               <button onClick={() => setDrawerOpen(false)} className="text-ink-muted hover:text-ink"><X className="w-4 h-4"/></button>
