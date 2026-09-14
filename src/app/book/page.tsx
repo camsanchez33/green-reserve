@@ -498,8 +498,8 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
   // INVIOLABLE: No GolferAccount required to book. Name/email are for the
   // confirmation email only — never for registration or sign-up prompts.
   return (
-    <div className="bg-white rounded-lg border border-line p-6 space-y-4">
-      <h2 className="font-semibold text-ink">Your Details</h2>
+    <div className="bg-white rounded-lg border border-line p-6 space-y-5">
+      <StepHeading n={1} title="Your details" note="Where your confirmation goes — no account is created." />
       <div>
         <label className={lCls}>Full Name</label>
         <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="John Smith" className={iCls} />
@@ -515,6 +515,8 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
         </div>
       </div>
 
+      <div className="pt-1 border-t border-line-soft" />
+      <StepHeading n={2} title="A card to hold your spot" note="Nothing is charged today." />
       <div>
         <label className={lCls}>Card Details</label>
         <div className="w-full px-4 py-3.5 rounded-md border border-line bg-paper focus-within:border-pine/40 focus-within:ring-2 focus-within:ring-pine/10 transition-all">
@@ -593,8 +595,8 @@ function SimpleConfirmForm({ teeTimeId, players, golfer, cartSelected, rangeBall
   }
 
   return (
-    <div className="bg-white rounded-lg border border-line p-6 space-y-4">
-      <h2 className="font-semibold text-ink">Your Details</h2>
+    <div className="bg-white rounded-lg border border-line p-6 space-y-5">
+      <StepHeading n={1} title="Your details" note="Where your confirmation goes — no account is created." />
       <div>
         <label className={lCls}>Full Name</label>
         <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="John Smith" className={iCls} />

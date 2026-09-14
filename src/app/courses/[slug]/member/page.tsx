@@ -7,6 +7,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 type MemberTier = {
   id: string;
@@ -117,9 +118,9 @@ function buildMonthGrid(month: Date): (Date | null)[] {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  available: 'text-emerald-600',
-  limited: 'text-amber-600',
-  almost_full: 'text-red-500',
+  available: 'text-ok',
+  limited: 'text-warn',
+  almost_full: 'text-bad',
 };
 const STATUS_LABEL: Record<string, string> = {
   available: 'Available',
@@ -127,19 +128,16 @@ const STATUS_LABEL: Record<string, string> = {
   almost_full: 'Almost Full',
 };
 
+// Dots, not tinted pills — same four states, same words.
 function PaymentStatusBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; cls: string }> = {
-    paid: { label: 'Paid', cls: 'bg-emerald-100 text-emerald-800' },
-    paid_offline: { label: 'Paid (offline)', cls: 'bg-emerald-100 text-emerald-800' },
-    unpaid: { label: 'Unpaid', cls: 'bg-red-100 text-red-700' },
-    comped: { label: 'Comped', cls: 'bg-gray-100 text-gray-600' },
+  const map: Record<string, { label: string; tone: string }> = {
+    paid: { label: 'Paid', tone: 'ok' },
+    paid_offline: { label: 'Paid (offline)', tone: 'ok' },
+    unpaid: { label: 'Unpaid', tone: 'bad' },
+    comped: { label: 'Comped', tone: 'neutral' },
   };
-  const s = map[status] ?? { label: status, cls: 'bg-gray-100 text-gray-600' };
-  return (
-    <span className={`inline-block px-2.5 py-0.5 rounded text-xs font-semibold ${s.cls}`}>
-      {s.label}
-    </span>
-  );
+  const s = map[status] ?? { label: status, tone: 'neutral' };
+  return <StatusDot status={s.tone} label={s.label} />;
 }
 
 // ── Sign-in panel ──────────────────────────────────────────────────────────────
@@ -179,37 +177,37 @@ function SignInPanel({
   }
 
   return (
-    <div className="min-h-screen bg-[#f8faf9] flex flex-col">
+    <div className="min-h-screen bg-paper flex flex-col">
       <div className="max-w-md mx-auto w-full px-4 py-16">
         <Link
           href={`/courses/${slug}`}
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-8"
+          className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink-soft mb-8"
         >
           <ArrowLeft size={14} />
           Back to course
         </Link>
 
-        <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-8">
+        <div className="bg-white rounded-lg border border-line p-8">
           <div className="mb-6">
-            <span className="text-xs font-bold uppercase tracking-widest text-emerald-700">
+            <span className="text-xs font-medium uppercase tracking-[0.06em] text-pine">
               Member Portal
             </span>
-            <h1 className="text-2xl font-black tracking-tight text-gray-900 mt-1">
+            <h1 className="text-2xl font-serif font-medium tracking-tight text-ink mt-1">
               Sign in to your account
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-ink-muted mt-1">
               Enter your email — we&apos;ll send you a one-click sign-in link.
             </p>
           </div>
 
           {errorParam === 'invalid' && (
-            <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-md p-3 mb-4 text-sm text-red-700">
+            <div className="flex items-start gap-2 bg-bad/5 border border-bad/20 rounded-md p-3 mb-4 text-sm text-bad">
               <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
               That sign-in link has expired or is invalid. Request a new one below.
             </div>
           )}
           {errorParam === 'inactive' && (
-            <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-md p-3 mb-4 text-sm text-amber-800">
+            <div className="flex items-start gap-2 bg-warn/5 border border-warn/20 rounded-md p-3 mb-4 text-sm text-warn">
               <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
               Your membership is inactive. Contact the course for assistance.
             </div>
@@ -217,17 +215,17 @@ function SignInPanel({
 
           {sent ? (
             <div className="text-center py-4">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-100 mb-4">
-                <Mail size={22} className="text-emerald-700" />
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-pine/10 mb-4">
+                <Mail size={22} className="text-pine" />
               </div>
-              <p className="font-semibold text-gray-900 mb-1">Check your email</p>
-              <p className="text-sm text-gray-500">
+              <p className="font-semibold text-ink mb-1">Check your email</p>
+              <p className="text-sm text-ink-muted">
                 If <strong>{email}</strong> is registered as a member, a sign-in link is on its way.
                 It expires in 15 minutes.
               </p>
               <button
                 onClick={() => { setSent(false); setEmail(''); }}
-                className="mt-4 text-sm text-emerald-700 hover:text-emerald-600 font-semibold"
+                className="mt-4 text-sm text-pine hover:text-pine-hover font-semibold"
               >
                 Use a different email
               </button>
@@ -235,7 +233,7 @@ function SignInPanel({
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-xs font-bold text-gray-700 mb-1.5">
+                <label htmlFor="email" className="block text-xs font-medium text-ink-soft mb-1.5">
                   Email address
                 </label>
                 <input
@@ -246,18 +244,18 @@ function SignInPanel({
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full border border-gray-200 rounded-md px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10"
                 />
               </div>
               {err && (
-                <p className="text-sm text-red-600 flex items-center gap-1.5">
+                <p className="text-sm text-bad flex items-center gap-1.5">
                   <AlertCircle size={13} /> {err}
                 </p>
               )}
               <button
                 type="submit"
                 disabled={sending || !email.trim()}
-                className="w-full py-3 rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-md bg-pine hover:bg-pine-hover disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-sm transition-colors flex items-center justify-center gap-2"
               >
                 {sending && <Loader2 size={15} className="animate-spin" />}
                 {sending ? 'Sending…' : 'Send sign-in link'}
@@ -377,30 +375,30 @@ function MemberDashboard({
   const tierColor = session.tier?.color ?? '#1b4332';
 
   return (
-    <div className="min-h-screen bg-[#f8faf9]">
+    <div className="min-h-screen bg-paper">
       {/* Member header bar */}
-      <div className="bg-white border-b border-gray-100">
+      <div className="bg-white border-b border-line">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <Link
               href={`/courses/${slug}`}
-              className="text-gray-400 hover:text-gray-600 flex-shrink-0"
+              className="text-ink-muted hover:text-ink-soft flex-shrink-0"
             >
               <ArrowLeft size={16} />
             </Link>
             <div className="min-w-0">
               <div
-                className="inline-block px-2.5 py-0.5 rounded text-xs font-bold text-white mb-0.5"
+                className="inline-block px-2.5 py-0.5 rounded text-xs font-medium text-white mb-0.5"
                 style={{ background: tierColor }}
               >
                 {session.tier?.name ?? session.membershipType}
               </div>
-              <p className="text-sm font-semibold text-gray-900 truncate">{session.name}</p>
+              <p className="text-sm font-semibold text-ink truncate">{session.name}</p>
             </div>
           </div>
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 flex-shrink-0"
+            className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-ink-soft flex-shrink-0"
           >
             <LogOut size={13} />
             Sign out
@@ -409,7 +407,7 @@ function MemberDashboard({
       </div>
 
       {/* Tabs */}
-      <div className="bg-white border-b border-gray-100">
+      <div className="bg-white border-b border-line">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex gap-0">
             {(['tee-times', 'payments'] as const).map(t => (
@@ -418,8 +416,8 @@ function MemberDashboard({
                 onClick={() => setTab(t)}
                 className={`flex items-center gap-1.5 px-4 py-3.5 text-sm font-semibold border-b-2 transition-colors ${
                   tab === t
-                    ? 'border-emerald-600 text-emerald-700'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-pine text-pine'
+                    : 'border-transparent text-ink-muted hover:text-ink-soft'
                 }`}
               >
                 {t === 'tee-times' ? (
@@ -438,7 +436,7 @@ function MemberDashboard({
           <div className="grid lg:grid-cols-[240px_1fr] gap-8 items-start">
             {/* Left: calendar + players */}
             <aside>
-              <div className="lg:sticky lg:top-20 bg-white rounded-lg border border-gray-100 shadow-sm divide-y divide-gray-100">
+              <div className="lg:sticky lg:top-20 bg-white rounded-lg border border-line divide-y divide-line">
                 {/* Calendar */}
                 <div className="px-4 py-4">
                   <div className="flex items-center justify-between mb-3">
@@ -447,22 +445,22 @@ function MemberDashboard({
                         setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1))
                       }
                       disabled={!canPrevMonth}
-                      className="p-1 rounded text-gray-400 hover:text-gray-700 disabled:opacity-25"
+                      className="p-1 rounded text-ink-muted hover:text-ink-soft disabled:opacity-25"
                     >
                       <ChevronLeft size={15} />
                     </button>
-                    <span className="text-sm font-bold text-gray-900">{monthLabel(calMonth)}</span>
+                    <span className="text-sm font-medium text-ink">{monthLabel(calMonth)}</span>
                     <button
                       onClick={() =>
                         setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1))
                       }
                       disabled={!canNextMonth}
-                      className="p-1 rounded text-gray-400 hover:text-gray-700 disabled:opacity-25"
+                      className="p-1 rounded text-ink-muted hover:text-ink-soft disabled:opacity-25"
                     >
                       <ChevronRight size={15} />
                     </button>
                   </div>
-                  <div className="grid grid-cols-7 text-center text-[10px] font-bold text-gray-400 uppercase mb-1">
+                  <div className="grid grid-cols-7 text-center text-[10px] font-medium text-ink-muted uppercase mb-1">
                     {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
                       <div key={i}>{d}</div>
                     ))}
@@ -476,11 +474,11 @@ function MemberDashboard({
                       const isToday = ds === todayStr;
                       const base =
                         'aspect-square flex items-center justify-center rounded-md text-xs font-semibold transition-colors';
-                      let cls = 'text-gray-700 hover:bg-emerald-50';
-                      if (isPast) cls = 'text-gray-300 cursor-default';
+                      let cls = 'text-ink-soft hover:bg-pine/5';
+                      if (isPast) cls = 'text-ink-faint cursor-default';
                       if (isToday && !isSelected)
-                        cls = 'text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-50';
-                      if (isSelected) cls = 'bg-emerald-600 text-white';
+                        cls = 'text-pine ring-1 ring-pine/20 hover:bg-pine/5';
+                      if (isSelected) cls = 'bg-pine text-white';
                       return (
                         <button
                           key={ds}
@@ -497,7 +495,7 @@ function MemberDashboard({
 
                 {/* Players */}
                 <div className="px-4 py-4">
-                  <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
+                  <div className="text-xs font-medium text-ink-muted uppercase tracking-[0.06em] mb-2">
                     Players
                   </div>
                   <div className="flex gap-1.5">
@@ -505,10 +503,10 @@ function MemberDashboard({
                       <button
                         key={n}
                         onClick={() => { setPlayers(n); setSelectedTime(null); }}
-                        className={`flex-1 py-2 rounded-md border text-sm font-bold transition-all ${
+                        className={`flex-1 py-2 rounded-md border text-sm font-medium transition-all ${
                           players === n
-                            ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
-                            : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                            ? 'border-pine bg-pine/5 text-pine'
+                            : 'border-line text-ink-muted hover:border-line-strong'
                         }`}
                       >
                         {n}
@@ -520,7 +518,7 @@ function MemberDashboard({
                 {/* Member rate legend */}
                 {session.tier && (
                   <div className="px-4 py-3">
-                    <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-semibold">
+                    <div className="flex items-center gap-1.5 text-xs text-pine font-semibold">
                       <Check size={12} />
                       Member rates applied
                     </div>
@@ -543,45 +541,45 @@ function MemberDashboard({
                       onClick={() => setSelectedDate(ds)}
                       className={`flex flex-col items-center px-3 py-2 rounded-md text-xs font-semibold min-w-[3.25rem] transition-all ${
                         isSelected
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-white border border-gray-200 text-gray-700'
+                          ? 'bg-pine text-white'
+                          : 'bg-white border border-line text-ink-soft'
                       }`}
                     >
                       <span className="text-[10px] font-medium opacity-70">
                         {isToday ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' })}
                       </span>
-                      <span className="text-base font-bold leading-tight">{d.getDate()}</span>
+                      <span className="text-base font-medium leading-tight">{d.getDate()}</span>
                     </button>
                   );
                 })}
               </div>
 
               <div className="flex items-baseline justify-between mb-4">
-                <h2 className="font-bold text-gray-900 text-lg">
+                <h2 className="font-serif font-medium tracking-tight text-ink text-xl">
                   Tee times for{' '}
-                  <span className="text-emerald-700">{displayDate(selectedDate)}</span>
+                  <span className="text-pine">{displayDate(selectedDate)}</span>
                 </h2>
                 {!loadingTimes && teeTimes.length > 0 && (
-                  <span className="text-sm text-gray-400">{teeTimes.length} available</span>
+                  <span className="text-sm text-ink-muted">{teeTimes.length} available</span>
                 )}
               </div>
 
               {loadingTimes ? (
                 <div className="space-y-2">
                   {[...Array(5)].map((_, i) => (
-                    <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+                    <div key={i} className="h-16 bg-line-soft rounded-lg animate-pulse" />
                   ))}
                 </div>
               ) : teeTimes.length === 0 ? (
-                <div className="bg-white rounded-lg border border-gray-100 shadow-sm text-center py-14 px-6">
-                  <Clock size={28} className="mx-auto mb-3 text-gray-300" />
-                  <p className="text-gray-400 text-sm">No tee times available for this date.</p>
+                <div className="bg-white rounded-lg border border-line text-center py-14 px-6">
+                  <Clock size={28} className="mx-auto mb-3 text-ink-faint" />
+                  <p className="text-ink-muted text-sm">No tee times available for this date.</p>
                 </div>
               ) : (
                 <div className="space-y-6">
                   {groups.map(g => (
                     <div key={g.key}>
-                      <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                      <div className="text-xs font-medium text-ink-muted uppercase tracking-[0.06em] mb-2 flex items-center gap-1.5">
                         <Clock size={11} /> {g.label}
                       </div>
                       <div className="space-y-2">
@@ -598,46 +596,43 @@ function MemberDashboard({
                               onClick={() => setSelectedTime(isSel ? null : t)}
                               className={`w-full flex items-center justify-between gap-4 rounded-lg border px-4 sm:px-5 py-3.5 text-left transition-all ${
                                 isSel
-                                  ? 'border-emerald-600 bg-emerald-50 ring-1 ring-emerald-600'
-                                  : 'bg-white border-gray-200 hover:border-emerald-500 hover:shadow-sm'
+                                  ? 'border-pine bg-pine/5 ring-1 ring-pine'
+                                  : 'bg-white border-line hover:border-pine/40'
                               }`}
                             >
                               <div className="min-w-0">
-                                <div className="text-lg sm:text-xl font-black tracking-tight text-gray-900">
+                                <div className="text-lg sm:text-xl font-serif font-medium tracking-tight text-ink">
                                   {formatTime(t.time)}
                                 </div>
                                 <div className="text-xs mt-0.5 flex items-center gap-1.5 flex-wrap">
-                                  <span className={STATUS_COLOR[t.status] || 'text-gray-400'}>
+                                  <span className={STATUS_COLOR[t.status] || 'text-ink-muted'}>
                                     {STATUS_LABEL[t.status] || 'Available'}
                                   </span>
-                                  <span className="text-gray-400">· {t.players_available} spots</span>
-                                  <span className="text-gray-400">· {t.holes} holes</span>
+                                  <span className="text-ink-muted">· {t.players_available} spots</span>
+                                  <span className="text-ink-muted">· {t.holes} holes</span>
                                 </div>
                               </div>
                               <div className="flex items-center gap-3 sm:gap-5 flex-shrink-0">
                                 <div className="text-right">
-                                  <div className="font-bold text-emerald-700 text-base">
-                                    ${t.member_green_fee}
+                                  <div className="font-medium text-pine text-base whitespace-nowrap">
+                                    ${t.member_green_fee}<span className="text-ink-muted font-normal"> / player</span>
                                   </div>
                                   {hasSavings && (
-                                    <div className="text-[10px] text-gray-400 line-through">
+                                    <div className="text-[10px] text-ink-muted line-through">
                                       ${t.green_fee}
                                     </div>
                                   )}
                                   {savings && (
-                                    <div className="text-[10px] text-emerald-600 font-semibold">
+                                    <div className="text-[10px] text-ok font-semibold">
                                       Save ${savings}
                                     </div>
                                   )}
-                                  {!hasSavings && (
-                                    <div className="text-[11px] text-gray-400">per player</div>
-                                  )}
                                 </div>
                                 <span
-                                  className={`hidden sm:inline-flex px-4 py-2 rounded-md text-xs font-bold transition-colors ${
+                                  className={`hidden sm:inline-flex px-4 py-2 rounded-md text-xs font-medium transition-colors ${
                                     isSel
-                                      ? 'bg-emerald-600 text-white'
-                                      : 'border border-emerald-600 text-emerald-700'
+                                      ? 'bg-pine text-white'
+                                      : 'border border-pine text-pine'
                                   }`}
                                 >
                                   {isSel ? 'Selected' : 'Select'}
@@ -660,35 +655,35 @@ function MemberDashboard({
             {loadingPayments ? (
               <div className="space-y-3">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-20 bg-gray-100 rounded-lg animate-pulse" />
+                  <div key={i} className="h-20 bg-line-soft rounded-lg animate-pulse" />
                 ))}
               </div>
             ) : paymentsData ? (
               <div className="space-y-6">
                 {/* Membership status card */}
-                <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-6">
-                  <h2 className="font-bold text-gray-900 text-base mb-4">Membership</h2>
+                <div className="bg-white rounded-lg border border-line p-6">
+                  <h2 className="font-serif font-medium text-ink text-lg mb-4">Membership</h2>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     <div>
-                      <div className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-0.5">
+                      <div className="text-xs font-medium uppercase tracking-[0.06em] text-ink-muted mb-0.5">
                         Tier
                       </div>
-                      <div className="font-semibold text-gray-900 text-sm">
+                      <div className="font-semibold text-ink text-sm">
                         {paymentsData.membership.tierName}
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-0.5">
+                      <div className="text-xs font-medium uppercase tracking-[0.06em] text-ink-muted mb-0.5">
                         Status
                       </div>
                       <PaymentStatusBadge status={paymentsData.membership.paymentStatus} />
                     </div>
                     {paymentsData.membership.expiresAt && (
                       <div>
-                        <div className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-0.5">
+                        <div className="text-xs font-medium uppercase tracking-[0.06em] text-ink-muted mb-0.5">
                           Expires
                         </div>
-                        <div className="font-semibold text-gray-900 text-sm">
+                        <div className="font-semibold text-ink text-sm">
                           {new Date(paymentsData.membership.expiresAt).toLocaleDateString(
                             'en-US',
                             { month: 'short', day: 'numeric', year: 'numeric' }
@@ -698,20 +693,20 @@ function MemberDashboard({
                     )}
                     {paymentsData.membership.annualFee > 0 && (
                       <div>
-                        <div className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-0.5">
+                        <div className="text-xs font-medium uppercase tracking-[0.06em] text-ink-muted mb-0.5">
                           Annual dues
                         </div>
-                        <div className="font-semibold text-gray-900 text-sm">
+                        <div className="font-semibold text-ink text-sm">
                           ${paymentsData.membership.annualFee.toFixed(2)}
                         </div>
                       </div>
                     )}
                     {paymentsData.membership.initiationFee > 0 && (
                       <div>
-                        <div className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-0.5">
+                        <div className="text-xs font-medium uppercase tracking-[0.06em] text-ink-muted mb-0.5">
                           Initiation fee
                         </div>
-                        <div className="font-semibold text-gray-900 text-sm">
+                        <div className="font-semibold text-ink text-sm">
                           ${paymentsData.membership.initiationFee.toFixed(2)}
                         </div>
                       </div>
@@ -720,24 +715,24 @@ function MemberDashboard({
                 </div>
 
                 {/* Payment records */}
-                <div className="bg-white rounded-lg border border-gray-100 shadow-sm">
-                  <div className="px-6 py-4 border-b border-gray-100">
-                    <h2 className="font-bold text-gray-900 text-base">Payment History</h2>
+                <div className="bg-white rounded-lg border border-line">
+                  <div className="px-6 py-4 border-b border-line">
+                    <h2 className="font-serif font-medium text-ink text-lg">Payment history</h2>
                   </div>
                   {paymentsData.records.length === 0 ? (
-                    <div className="px-6 py-10 text-center text-sm text-gray-400">
+                    <div className="px-6 py-10 text-center text-sm text-ink-muted">
                       No payment records yet.
                     </div>
                   ) : (
-                    <div className="divide-y divide-gray-100">
+                    <div className="divide-y divide-line">
                       {paymentsData.records.map((r, i) => (
                         <div key={i} className="px-6 py-4 flex items-center justify-between gap-4">
                           <div>
-                            <div className="text-sm font-semibold text-gray-900 capitalize">
+                            <div className="text-sm font-semibold text-ink capitalize">
                               {r.type === 'dues' ? 'Annual Dues' : 'Initiation Fee'} — {r.tierName}
                             </div>
                             {r.date && (
-                              <div className="text-xs text-gray-400 mt-0.5">
+                              <div className="text-xs text-ink-muted mt-0.5">
                                 {new Date(r.date).toLocaleDateString('en-US', {
                                   month: 'long',
                                   day: 'numeric',
@@ -747,7 +742,7 @@ function MemberDashboard({
                             )}
                           </div>
                           <div className="text-right flex-shrink-0">
-                            <div className="font-bold text-gray-900">${r.amount.toFixed(2)}</div>
+                            <div className="font-medium text-ink">${r.amount.toFixed(2)}</div>
                             <PaymentStatusBadge status={r.status} />
                           </div>
                         </div>
@@ -757,7 +752,7 @@ function MemberDashboard({
                 </div>
               </div>
             ) : (
-              <div className="text-center py-10 text-sm text-gray-400">
+              <div className="text-center py-10 text-sm text-ink-muted">
                 Unable to load payment data.
               </div>
             )}
@@ -767,14 +762,14 @@ function MemberDashboard({
 
       {/* Sticky booking bar */}
       {selectedTime && tab === 'tee-times' && (
-        <div className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 shadow-[0_-6px_24px_rgba(0,0,0,0.08)]">
+        <div className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-line shadow-[0_-6px_24px_rgba(0,0,0,0.08)]">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
             <div className="flex-1 min-w-0">
-              <div className="font-bold text-gray-900 text-sm sm:text-base">
+              <div className="font-medium text-ink text-sm sm:text-base">
                 {formatTime(selectedTime.time)} · {displayDate(selectedDate)} · {players}{' '}
                 {players === 1 ? 'player' : 'players'}
               </div>
-              <div className="text-xs text-gray-500 mt-0.5">
+              <div className="text-xs text-ink-muted mt-0.5">
                 Member rate ${selectedTime.member_green_fee} × {players}
                 {selectedTime.has_member_rate && selectedTime.member_green_fee < selectedTime.green_fee
                   ? ` · Saving $${((selectedTime.green_fee - selectedTime.member_green_fee) * players).toFixed(2)} total`
@@ -783,22 +778,22 @@ function MemberDashboard({
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                <div className="text-[10px] font-medium text-ink-muted uppercase tracking-[0.06em]">
                   Total
                 </div>
-                <div className="font-black text-gray-900 text-xl leading-tight">
+                <div className="font-serif font-medium text-ink text-xl leading-tight">
                   ${(selectedTime.member_green_fee * players + 1.5 * players).toFixed(2)}
                 </div>
               </div>
               <button
                 onClick={handleBookMemberTime}
-                className="px-6 py-3 rounded-md font-bold text-white text-sm bg-emerald-600 hover:bg-emerald-500 transition-colors"
+                className="px-6 py-3 rounded-md font-medium text-white text-sm bg-pine hover:bg-pine-hover transition-colors"
               >
                 Book →
               </button>
               <button
                 onClick={() => setSelectedTime(null)}
-                className="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors text-lg leading-none"
+                className="p-2 rounded-md text-ink-muted hover:text-ink-soft hover:bg-line-soft transition-colors text-lg leading-none"
               >
                 ×
               </button>
@@ -838,8 +833,8 @@ export default function MemberPortalPage({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f8faf9] flex items-center justify-center">
-        <Loader2 size={24} className="animate-spin text-emerald-600" />
+      <div className="min-h-screen bg-paper flex items-center justify-center">
+        <Loader2 size={24} className="animate-spin text-ok" />
       </div>
     );
   }
