@@ -201,6 +201,14 @@ function DashboardPageInner() {
   // is read off teeTimes, which is already on the page — nothing new is fetched.
   const checkedIn = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status === 'completed').length ?? 0), 0);
   const bookedPct = totalSlots > 0 ? Math.round((bookedSlots / totalSlots) * 100) : 0;
+  // §1b stat tile = eyebrow / serif 30px / 12.5px note. The notes live beside
+  // the tile array so the array's own lines are left exactly as they were.
+  const TILE_NOTES: Record<string, string> = {
+    'Total Slots': 'spots for sale today',
+    'Booked':      `${bookedPct}% of spots taken`,
+    'Expected':    'green + cart, not yet charged',
+    'Blocked':     'times off the sheet',
+  };
 
   const loadTimes = useCallback(async (date: string) => {
     setLoading(true);
@@ -625,16 +633,16 @@ function DashboardPageInner() {
               <div className="bg-white border border-line rounded-lg p-5 mb-5">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:divide-x divide-line-soft">
                   {[
-                    { label:'Total Slots', value:totalSlots,               note:'spots for sale today',          icon:<Users className="w-4 h-4"/>,     onClick:undefined },
-                    { label:'Booked',      value:bookedSlots,              note:`${bookedPct}% of spots taken`,  icon:<Calendar className="w-4 h-4"/>,  onClick:undefined },
-                    { label:'Expected',    value:`$${revenue.toFixed(0)}`, note:'green + cart, not yet charged', icon:<DollarSign className="w-4 h-4"/>, onClick:()=>router.push(`/dashboard/payments?date=${selectedDate}`) },
-                    { label:'Blocked',     value:blocked,                  note:'times off the sheet',           icon:<Ban className="w-4 h-4"/>,       onClick:undefined },
+                    { label:'Total Slots', value:totalSlots,               icon:<Users className="w-4 h-4"/>,     onClick:undefined },
+                    { label:'Booked',      value:bookedSlots,              icon:<Calendar className="w-4 h-4"/>,  onClick:undefined },
+                    { label:'Expected',    value:`$${revenue.toFixed(0)}`, icon:<DollarSign className="w-4 h-4"/>, onClick:()=>router.push(`/dashboard/payments?date=${selectedDate}`) },
+                    { label:'Blocked',     value:blocked,                  icon:<Ban className="w-4 h-4"/>,       onClick:undefined },
                   ].map(s => (
                     <button key={s.label} onClick={s.onClick} disabled={!s.onClick}
                       className={'pl-4 first:pl-0 text-left ' + (s.onClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : 'cursor-default')}>
                       <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">{s.icon}{s.label}</div>
                       <div className="text-[30px] leading-none font-serif font-medium text-ink tabular-nums">{s.value}</div>
-                      <div className="text-[12.5px] text-ink-soft mt-1.5">{s.note}</div>
+                      <div className="text-[12.5px] text-ink-soft mt-1.5">{TILE_NOTES[s.label]}</div>
                     </button>
                   ))}
                 </div>
