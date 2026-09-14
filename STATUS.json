@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-14T03:49:11.968Z",
+  "generatedAt": "2026-09-14T19:11:16.711Z",
   "repo": {
-    "head": "a42b895",
+    "head": "5bd0a85",
     "branch": "main",
     "dirtyCount": 2,
     "dirty": [
@@ -11,33 +11,11 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-13T23:36:42-04:00",
-    "unrecorded": [
-      {
-        "h": "a42b895",
-        "date": "2026-09-13T23:49:07-04:00",
-        "subject": "Review fixes for B-7, H-2a, H-2b",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "e72802f",
-        "date": "2026-09-13T23:49:07-04:00",
-        "subject": "fix: PaymentIntent has no amount_refunded in this SDK — refund state comes from our ledger (CI was red for one commit)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "7c4c863",
-        "date": "2026-09-13T23:41:50-04:00",
-        "subject": "B-7 review fixes: settings load through dfetch with an inline error, side panels render without schedules, blackout error not beside the empty copy",
-        "ids": [],
-        "matches": []
-      }
-    ]
+    "queueLastCommit": "2026-09-13T23:49:13-04:00",
+    "unrecorded": []
   },
   "counts": {
-    "runDone": 158,
+    "runDone": 159,
     "runAwaiting": 9,
     "runInFlight": 1,
     "runNotStarted": 33,
@@ -109,14 +87,14 @@
       "line": 740,
       "hash": "22d0f68",
       "shipDate": "2026-08-29",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "title": "MP-2e",
       "line": 782,
       "hash": "bf3bcb2",
       "shipDate": "2026-08-30",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "title": "UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until r",
@@ -248,11 +226,6 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "INQUIRY_CALL_SPEC Phase IC-1 — ONE `Call` model (kind discovery|checkin; inquiryId OR courseId) + CourseInquiry.callSkippedReason + Course.nextCheckInAt (SCHEMA CHANGE, attended, additive — also the s",
-      "line": 1961,
-      "section": "Queue (run in this order)"
-    },
-    {
       "title": "INQUIRY_CALL_SPEC Phase IC-2 — inquiry detail: Set-up-call card (date/time/length/direction/number, agenda pre-checked from form gaps, confirmation email, skip-with-reason) + Log-the-call card (outcom",
       "line": 1962,
       "section": "Queue (run in this order)"
@@ -290,6 +263,11 @@
     {
       "title": "AGREEMENT_SPEC Phase AG-3 — version bumps: seed refuses reacceptRequired bumps without counselReviewed; day-0 notice email; dashboard banner → modal after 30 days; operator writes 428 agreement_requir",
       "line": 1976,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "UI_REVISE_SPEC H-2c — KILL THE PHOTO BAND (small, no migration, RUN FIRST): the 'We set it up' band shows a WIND FARM (bad Unsplash id for TEE). Delete the section + tee.jpg + README row, move its hea",
+      "line": 1978,
       "section": "Queue (run in this order)"
     }
   ],
@@ -855,6 +833,16 @@
   },
   "recentCommits": [
     {
+      "h": "5bd0a85",
+      "date": "2026-09-14",
+      "subject": "IC-1: the discovery call — schema, agenda catalog, needs, queue signal, API"
+    },
+    {
+      "h": "bc5e2f0",
+      "date": "2026-09-13",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "a42b895",
       "date": "2026-09-13",
       "subject": "Review fixes for B-7, H-2a, H-2b"
@@ -903,16 +891,6 @@
       "h": "b062574",
       "date": "2026-09-13",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "d801dac",
-      "date": "2026-09-13",
-      "subject": "Security hotfix for B-5 / B-10 (from /gr-review)"
-    },
-    {
-      "h": "42b7f4d",
-      "date": "2026-09-13",
-      "subject": "LQ-2 copy run: the fee sentences are now true everywhere"
     }
   ]
 }

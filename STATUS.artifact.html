@@ -117,20 +117,12 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-09-14 03:49 UTC</span><span>main @ a42b895</span>
+    <span>2026-09-14 19:11 UTC</span><span>main @ 5bd0a85</span>
     <span>2 uncommitted</span>
   </div>
 </header>
-<div class="alarm">
-<div class="lede">3 runs have shipped that the queue doesn't know about</div>
-<p class="note">RUN_QUEUE.md was last committed 2026-09-13. These commits appear nowhere in it.</p>
-<ul>
-<li><span class="h">a42b895</span><span>Review fixes for B-7, H-2a, H-2b</span></li>
-<li><span class="h">e72802f</span><span>fix: PaymentIntent has no amount_refunded in this SDK — refund state comes from our ledger (CI was red for one commit)</span></li>
-<li><span class="h">7c4c863</span><span>B-7 review fixes: settings load through dfetch with an inline error, side panels render without schedules, blackout error not beside the empty copy</span></li>
-</ul></div>
 <div class="tiles">
-  <div class="tile t-good"><span class="n">158</span><span class="l">Done</span></div>
+  <div class="tile t-good"><span class="n">159</span><span class="l">Done</span></div>
   <div class="tile t-warn"><span class="n">9</span><span class="l">Awaiting review</span></div>
   <div class="tile t-alarm"><span class="n">1</span><span class="l">In flight</span></div>
   <div class="tile t-idle"><span class="n">33</span><span class="l">Not started</span></div>
@@ -168,15 +160,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="row"><span class="idx">22</span><span class="t">COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)</span><span class="where">:1366</span></div>
 <div class="row"><span class="idx">23</span><span class="t">Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with &quot;TheGreenReserve LLC&quot; + formation state (CAM: confirm the state before thi</span><span class="where">:1395</span></div>
 <div class="row"><span class="idx">24</span><span class="t">BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as</span><span class="where">:1474</span></div>
-<div class="row"><span class="idx">25</span><span class="t">INQUIRY_CALL_SPEC Phase IC-1 — ONE `Call` model (kind discovery|checkin; inquiryId OR courseId) + CourseInquiry.callSkippedReason + Course.nextCheckInAt (SCHEMA CHANGE, attended, additive — also the s</span><span class="where">:1961</span></div>
-<div class="row"><span class="idx">26</span><span class="t">INQUIRY_CALL_SPEC Phase IC-2 — inquiry detail: Set-up-call card (date/time/length/direction/number, agenda pre-checked from form gaps, confirmation email, skip-with-reason) + Log-the-call card (outcom</span><span class="where">:1962</span></div>
-<div class="row"><span class="idx">27</span><span class="t">INQUIRY_CALL_SPEC Phase IC-3 — /admin/inquiries becomes the sheet: fixed 7-column table (course, contact·phone, stage, next call, still need, in stage, inquired) inside the existing queue sections; Ne</span><span class="where">:1963</span></div>
-<div class="row"><span class="idx">28</span><span class="t">COURSES_SHEET_SPEC Phase CS-1 — course-setup.ts (5 setup steps from existing fields) + course-checkin.ts (14d-after-go-live then every 90d; agenda in code; checkInSignal) + courses API adds calls/setu</span><span class="where">:1968</span></div>
-<div class="row"><span class="idx">29</span><span class="t">COURSES_SHEET_SPEC Phase CS-2 — /admin/courses becomes the sheet: one table, 'Getting live' + 'Live' sections, 8 fixed columns (course, operator, status = setup n-of-5 or health, activity, fees 30d, n</span><span class="where">:1969</span></div>
-<div class="row"><span class="idx">30</span><span class="t">COURSES_SHEET_SPEC Phase CS-3 — course page: Setup card (5 steps + the existing action that completes each) for getting-live courses; Next check-in schedule/log card (IC-2 cards with the check-in agen</span><span class="where">:1970</span></div>
-<div class="row"><span class="idx">31</span><span class="t">AGREEMENT_SPEC Phase AG-1 — AgreementAcceptance + AgreementVersion tables, Course.legalName (SCHEMA CHANGE, attended, additive); agreement text moves to versioned Markdown in legal/documents/ with sha</span><span class="where">:1974</span></div>
-<div class="row"><span class="idx">32</span><span class="t">AGREEMENT_SPEC Phase AG-2 — onboarding 'Sign' step: legal name, signer name/title, scroll-to-end panels, Operator Agreement + authority + brand license (marketing opt-out) + accuracy attestation in on</span><span class="where">:1975</span></div>
-<div class="row"><span class="idx">33</span><span class="t">AGREEMENT_SPEC Phase AG-3 — version bumps: seed refuses reacceptRequired bumps without counselReviewed; day-0 notice email; dashboard banner → modal after 30 days; operator writes 428 agreement_requir</span><span class="where">:1976</span></div>
+<div class="row"><span class="idx">25</span><span class="t">INQUIRY_CALL_SPEC Phase IC-2 — inquiry detail: Set-up-call card (date/time/length/direction/number, agenda pre-checked from form gaps, confirmation email, skip-with-reason) + Log-the-call card (outcom</span><span class="where">:1962</span></div>
+<div class="row"><span class="idx">26</span><span class="t">INQUIRY_CALL_SPEC Phase IC-3 — /admin/inquiries becomes the sheet: fixed 7-column table (course, contact·phone, stage, next call, still need, in stage, inquired) inside the existing queue sections; Ne</span><span class="where">:1963</span></div>
+<div class="row"><span class="idx">27</span><span class="t">COURSES_SHEET_SPEC Phase CS-1 — course-setup.ts (5 setup steps from existing fields) + course-checkin.ts (14d-after-go-live then every 90d; agenda in code; checkInSignal) + courses API adds calls/setu</span><span class="where">:1968</span></div>
+<div class="row"><span class="idx">28</span><span class="t">COURSES_SHEET_SPEC Phase CS-2 — /admin/courses becomes the sheet: one table, 'Getting live' + 'Live' sections, 8 fixed columns (course, operator, status = setup n-of-5 or health, activity, fees 30d, n</span><span class="where">:1969</span></div>
+<div class="row"><span class="idx">29</span><span class="t">COURSES_SHEET_SPEC Phase CS-3 — course page: Setup card (5 steps + the existing action that completes each) for getting-live courses; Next check-in schedule/log card (IC-2 cards with the check-in agen</span><span class="where">:1970</span></div>
+<div class="row"><span class="idx">30</span><span class="t">AGREEMENT_SPEC Phase AG-1 — AgreementAcceptance + AgreementVersion tables, Course.legalName (SCHEMA CHANGE, attended, additive); agreement text moves to versioned Markdown in legal/documents/ with sha</span><span class="where">:1974</span></div>
+<div class="row"><span class="idx">31</span><span class="t">AGREEMENT_SPEC Phase AG-2 — onboarding 'Sign' step: legal name, signer name/title, scroll-to-end panels, Operator Agreement + authority + brand license (marketing opt-out) + accuracy attestation in on</span><span class="where">:1975</span></div>
+<div class="row"><span class="idx">32</span><span class="t">AGREEMENT_SPEC Phase AG-3 — version bumps: seed refuses reacceptRequired bumps without counselReviewed; day-0 notice email; dashboard banner → modal after 30 days; operator writes 428 agreement_requir</span><span class="where">:1976</span></div>
+<div class="row"><span class="idx">33</span><span class="t">UI_REVISE_SPEC H-2c — KILL THE PHOTO BAND (small, no migration, RUN FIRST): the 'We set it up' band shows a WIND FARM (bad Unsplash id for TEE). Delete the section + tee.jpg + README row, move its hea</span><span class="where">:1978</span></div>
 </div></section>
 <section><h2>Revise campaign &mdash; page by page</h2>
 <p class="note">14 pages closed, 8 open. One page in flight at a time.</p>
@@ -207,8 +199,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="row"><span class="t">MP-2</span><span class="age">15d</span><span class="where">958f229</span></div>
 <div class="row"><span class="t">MP-2b</span><span class="age">15d</span><span class="where">a134af5</span></div>
 <div class="row"><span class="t">MP-2c</span><span class="age">15d</span><span class="where">e5b5413</span></div>
-<div class="row"><span class="t">MP-2d</span><span class="age">14d</span><span class="where">22d0f68</span></div>
-<div class="row"><span class="t">MP-2e</span><span class="age">14d</span><span class="where">bf3bcb2</span></div>
+<div class="row"><span class="t">MP-2d</span><span class="age">15d</span><span class="where">22d0f68</span></div>
+<div class="row"><span class="t">MP-2e</span><span class="age">15d</span><span class="where">bf3bcb2</span></div>
 <div class="row"><span class="t">UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until r</span><span class="age">2d</span><span class="where">a3c1bea</span></div>
 </div></section>
 <section><h2>Waiting on you, not on a build</h2>
@@ -257,6 +249,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">5bd0a85</td><td class="num">2026-09-14</td><td>IC-1: the discovery call — schema, agenda catalog, needs, queue signal, API</td></tr>
+<tr><td class="num">bc5e2f0</td><td class="num">2026-09-13</td><td>queue/spec update</td></tr>
 <tr><td class="num">a42b895</td><td class="num">2026-09-13</td><td>Review fixes for B-7, H-2a, H-2b</td></tr>
 <tr><td class="num">e72802f</td><td class="num">2026-09-13</td><td>fix: PaymentIntent has no amount_refunded in this SDK — refund state comes from our ledger (CI was red for one commit)</td></tr>
 <tr><td class="num">072fa1b</td><td class="num">2026-09-13</td><td>Second security hotfix for check-in charging, plus the last three fee claims</td></tr>
@@ -267,8 +261,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">9df9f2f</td><td class="num">2026-09-13</td><td>B-7: Schedule as a time-band table, blocks and booking windows beside it</td></tr>
 <tr><td class="num">54b8268</td><td class="num">2026-09-13</td><td>queue/spec update</td></tr>
 <tr><td class="num">b062574</td><td class="num">2026-09-13</td><td>queue/spec update</td></tr>
-<tr><td class="num">d801dac</td><td class="num">2026-09-13</td><td>Security hotfix for B-5 / B-10 (from /gr-review)</td></tr>
-<tr><td class="num">42b7f4d</td><td class="num">2026-09-13</td><td>LQ-2 copy run: the fee sentences are now true everywhere</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
