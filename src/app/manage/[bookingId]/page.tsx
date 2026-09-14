@@ -2,7 +2,6 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { XCircle, AlertCircle, Loader2, MapPin, Calendar, Clock, Users, ChevronRight, ArrowLeft } from 'lucide-react';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
@@ -69,6 +68,30 @@ function PriceBreakdown({ greenFeeTotal, cartFeeTotal, rangeBallsTotal, accessFe
         <span>Total due at check-in</span><span>{dollars(totalAmount)}</span>
       </div>
     </div>
+  );
+}
+
+// One of the three things you can do to a booking: an icon, what it is,
+// and a line of plain English about what happens if you tap it.
+function ActionCard({ icon, title, subtitle, onClick, tone = 'neutral' }: {
+  icon: React.ReactNode; title: string; subtitle: string;
+  onClick: () => void; tone?: 'neutral' | 'bad';
+}) {
+  const bad = tone === 'bad';
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-start gap-3 text-left px-4 py-3.5 rounded-md border transition-colors ${
+        bad ? 'border-bad/25 hover:bg-bad/5' : 'border-line hover:border-pine/30'
+      }`}
+    >
+      <span className={`mt-0.5 shrink-0 ${bad ? 'text-bad' : 'text-ink-muted'}`}>{icon}</span>
+      <span className="min-w-0 flex-1">
+        <span className={`block font-medium text-sm ${bad ? 'text-bad' : 'text-ink'}`}>{title}</span>
+        <span className="block text-xs text-ink-muted mt-0.5 leading-relaxed">{subtitle}</span>
+      </span>
+      <ChevronRight size={15} className={`mt-0.5 shrink-0 ${bad ? 'text-bad/60' : 'text-ink-faint'}`} />
+    </button>
   );
 }
 
@@ -230,7 +253,6 @@ function ManagePageInner() {
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
           <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
           <div className="p-8 text-center">
-            <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={140} height={26} className="mx-auto mb-5 w-[140px] h-auto" />
             <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Booking cancelled</h1>
             <p className="text-ink-soft text-sm mb-6">Your spot at {info.courseName} on {fmtDate(info.date)} has been cancelled.</p>
             {cancelResult?.feeCharged
@@ -252,7 +274,6 @@ function ManagePageInner() {
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
           <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
           <div className="p-8 text-center">
-            <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={140} height={26} className="mx-auto mb-5 w-[140px] h-auto" />
             <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Booking updated</h1>
             <p className="text-ink-soft text-sm mb-6">A confirmation email has been sent with your updated details.</p>
             <div className="bg-paper rounded-md border border-line p-4 mb-6 text-left space-y-2 text-sm">
@@ -286,6 +307,13 @@ function ManagePageInner() {
     : info.cancellationFeeCharged
       ? `A ${dollars(info.cancellationFeeTotal)} fee was already charged. Cancelling now won't add another charge, but the fee is non-refundable.`
       : `The free-cancel window has closed. Cancelling will charge ${dollars(info.cancellationFeeTotal)} to your card.`;
+
+  // Same policy facts as the banner above, shrunk to one line for the card.
+  const cancelSubtitle = info.cancellationFeeTotal === 0
+    ? 'Free to cancel any time — no late-cancellation fee.'
+    : info.windowOpen
+      ? 'Free right now — nothing is charged to your card.'
+      : `A ${dollars(info.cancellationFeeTotal)} late-cancellation fee applies.`;
 
   // ── Change time: slot picker ──────────────────────────────────────────────
   if (view === 'change-time') {
@@ -459,40 +487,40 @@ function ManagePageInner() {
           {alreadyCancelled && <div className="rounded-md bg-bad/5 border border-bad/20 p-4 mb-5 text-sm text-bad">This booking is cancelled.</div>}
           {alreadyCompleted && <div className="rounded-md bg-ok/5 border border-ok/20 p-4 mb-5 text-sm text-ok">This round was completed and payment was collected at check-in.</div>}
 
-          {/* Modify actions (only when window still open) */}
-          {canModify && view === 'main' && (
-            <div className="space-y-2 mb-4">
-              <button
-                onClick={openChangeTime}
-                className="w-full flex items-center justify-between px-4 py-3.5 rounded-md border border-line hover:border-pine/30 text-sm font-medium text-ink transition-colors"
-              >
-                <span className="flex items-center gap-2"><Clock size={15} className="text-ink-muted" />Change tee time</span>
-                <ChevronRight size={15} className="text-ink-muted" />
-              </button>
-              <button
-                onClick={() => { setSelectedPlayers(info.players); setView('change-players'); }}
-                className="w-full flex items-center justify-between px-4 py-3.5 rounded-md border border-line hover:border-pine/30 text-sm font-medium text-ink transition-colors"
-              >
-                <span className="flex items-center gap-2"><Users size={15} className="text-ink-muted" />Change party size</span>
-                <ChevronRight size={15} className="text-ink-muted" />
-              </button>
+          {/* Three action cards — same three actions, each saying in plain
+              English what it does before you tap it. */}
+          {!alreadyCancelled && !alreadyCompleted && view === 'main' && (
+            <div className="space-y-2.5 mb-4">
+              {canModify && (
+                <ActionCard
+                  icon={<Clock size={16} />}
+                  title="Change time"
+                  subtitle="Move to another tee time on the same day."
+                  onClick={openChangeTime}
+                />
+              )}
+              {canModify && (
+                <ActionCard
+                  icon={<Users size={16} />}
+                  title="Change players"
+                  subtitle="Add or drop players — your total updates to match."
+                  onClick={() => { setSelectedPlayers(info.players); setView('change-players'); }}
+                />
+              )}
+              <ActionCard
+                tone="bad"
+                icon={<XCircle size={16} />}
+                title="Cancel"
+                subtitle={cancelSubtitle}
+                onClick={() => setView('cancel-confirm')}
+              />
             </div>
           )}
 
-          {/* Cancel action */}
-          {!alreadyCancelled && !alreadyCompleted && view === 'main' && (
-            <button
-              onClick={() => setView('cancel-confirm')}
-              className="w-full py-3 rounded-md border border-bad/30 text-bad font-medium text-sm hover:bg-bad/5 transition-colors"
-            >
-              Cancel Booking
-            </button>
-          )}
-
           {view === 'cancel-confirm' && (
-            <div className="border border-line rounded-md p-5 space-y-4 mt-4">
+            <div className={`rounded-md border p-5 space-y-4 mt-4 ${info.windowOpen ? 'border-ok/30 bg-ok/5' : 'border-bad/30 bg-bad/5'}`}>
               <div className="flex items-start gap-2">
-                <XCircle size={16} className="text-bad shrink-0 mt-0.5" />
+                <XCircle size={16} className={`shrink-0 mt-0.5 ${info.windowOpen ? 'text-ok' : 'text-bad'}`} />
                 <p className="text-sm text-ink">{confirmCancelMsg}</p>
               </div>
               {cancelError && <p className="text-bad text-xs">{cancelError}</p>}
