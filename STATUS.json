@@ -1,12 +1,17 @@
 {
-  "generatedAt": "2026-09-14T02:37:36.296Z",
+  "generatedAt": "2026-09-14T03:05:19.826Z",
   "repo": {
-    "head": "2385994",
+    "head": "1896ce5",
     "branch": "main",
-    "dirtyCount": 2,
+    "dirtyCount": 7,
     "dirty": [
-      "M UI_REVISE_SPEC.md",
-      "?? \"Claude outputs/\""
+      "M INQUIRY_CALL_SPEC.md",
+      " M RUN_QUEUE.md",
+      " M UI_REVISE_SPEC.md",
+      "?? COURSES_SHEET_SPEC.md",
+      "?? public/home/story-poster.jpg",
+      "?? public/home/story.mp4",
+      "?? public/home/story.webm"
     ],
     "looksLikeRunInProgress": false
   },
@@ -18,7 +23,7 @@
     "runDone": 155,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 29,
+    "runNotStarted": 32,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -73,7 +78,7 @@
       "line": 643,
       "hash": "a134af5",
       "shipDate": "2026-08-29",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "title": "MP-2c",
@@ -226,7 +231,7 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "INQUIRY_CALL_SPEC Phase IC-1 — InquiryCall model + callSkippedReason (SCHEMA CHANGE, attended, additive), src/lib/inquiry-call.ts agenda catalog + src/lib/inquiry-needs.ts 'still need from them' + que",
+      "title": "INQUIRY_CALL_SPEC Phase IC-1 — ONE `Call` model (kind discovery|checkin; inquiryId OR courseId) + CourseInquiry.callSkippedReason + Course.nextCheckInAt (SCHEMA CHANGE, attended, additive — also the s",
       "line": 1961,
       "section": "Queue (run in this order)"
     },
@@ -248,6 +253,21 @@
     {
       "title": "UI_REVISE_SPEC H-2b — 'See it work' two tabs: What golfers see (today's HomeDemo) · What you see (new standalone HomeDashboardDemo: stats tiles, date strip, tee sheet rows with check-in + block intera",
       "line": 1966,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "COURSES_SHEET_SPEC Phase CS-1 — course-setup.ts (5 setup steps from existing fields) + course-checkin.ts (14d-after-go-live then every 90d; agenda in code; checkInSignal) + courses API adds calls/setu",
+      "line": 1968,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "COURSES_SHEET_SPEC Phase CS-2 — /admin/courses becomes the sheet: one table, 'Getting live' + 'Live' sections, 8 fixed columns (course, operator, status = setup n-of-5 or health, activity, fees 30d, n",
+      "line": 1969,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "COURSES_SHEET_SPEC Phase CS-3 — course page: Setup card (5 steps + the existing action that completes each) for getting-live courses; Next check-in schedule/log card (IC-2 cards with the check-in agen",
+      "line": 1970,
       "section": "Queue (run in this order)"
     }
   ],
@@ -818,6 +838,11 @@
   },
   "recentCommits": [
     {
+      "h": "1896ce5",
+      "date": "2026-09-13",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "2385994",
       "date": "2026-09-13",
       "subject": "queue/spec update"
@@ -869,11 +894,6 @@
     },
     {
       "h": "6bc1168",
-      "date": "2026-09-11",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "7238dd9",
       "date": "2026-09-11",
       "subject": "queue/spec update"
     }

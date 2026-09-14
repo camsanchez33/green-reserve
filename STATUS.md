@@ -4,16 +4,21 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-14 02:37 UTC · branch `main` · HEAD `2385994` · working tree **2 dirty file(s)**
+Generated 2026-09-14 03:05 UTC · branch `main` · HEAD `1896ce5` · working tree **7 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-### Uncommitted working tree (2 file(s))
+### Uncommitted working tree (7 file(s))
 
+- `M INQUIRY_CALL_SPEC.md`
+- `M RUN_QUEUE.md`
 - `M UI_REVISE_SPEC.md`
-- `?? "Claude outputs/"`
+- `?? COURSES_SHEET_SPEC.md`
+- `?? public/home/story-poster.jpg`
+- `?? public/home/story.mp4`
+- `?? public/home/story.webm`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -40,7 +45,7 @@ This is the distinction a raw checkbox count gets wrong.
 | MP-1 | 2026-08-29 | 15d | `41f5ea8` | `RUN_QUEUE.md:530` |
 | MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 15d | `4ef11dd` | `RUN_QUEUE.md:565` |
 | MP-2 | 2026-08-29 | 15d | `958f229` | `RUN_QUEUE.md:606` |
-| MP-2b | 2026-08-29 | 14d | `a134af5` | `RUN_QUEUE.md:643` |
+| MP-2b | 2026-08-29 | 15d | `a134af5` | `RUN_QUEUE.md:643` |
 | MP-2c | 2026-08-29 | 14d | `e5b5413` | `RUN_QUEUE.md:692` |
 | MP-2d | 2026-08-29 | 14d | `22d0f68` | `RUN_QUEUE.md:740` |
 | MP-2e | 2026-08-30 | 14d | `bf3bcb2` | `RUN_QUEUE.md:782` |
@@ -72,11 +77,14 @@ This is the distinction a raw checkbox count gets wrong.
 22. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1366`
 23. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1395`
 24. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1474`
-25. INQUIRY_CALL_SPEC Phase IC-1 — InquiryCall model + callSkippedReason (SCHEMA CHANGE, attended, additive), src/lib/inquiry-call.ts agenda catalog + src/lib/inquiry-needs.ts 'still n — `RUN_QUEUE.md:1961`
+25. INQUIRY_CALL_SPEC Phase IC-1 — ONE `Call` model (kind discovery\|checkin; inquiryId OR courseId) + CourseInquiry.callSkippedReason + Course.nextCheckInAt (SCHEMA CHANGE, attended, a — `RUN_QUEUE.md:1961`
 26. INQUIRY_CALL_SPEC Phase IC-2 — inquiry detail: Set-up-call card (date/time/length/direction/number, agenda pre-checked from form gaps, confirmation email, skip-with-reason) + Log-t — `RUN_QUEUE.md:1962`
 27. INQUIRY_CALL_SPEC Phase IC-3 — /admin/inquiries becomes the sheet: fixed 7-column table (course, contact·phone, stage, next call, still need, in stage, inquired) inside the existin — `RUN_QUEUE.md:1963`
 28. UI_REVISE_SPEC H-2a — homepage story looks like a video: looping muted <video> under the pinned beats (poster = current still, webm+mp4 in public/home/, play/pause on visibility, r — `RUN_QUEUE.md:1965`
 29. UI_REVISE_SPEC H-2b — 'See it work' two tabs: What golfers see (today's HomeDemo) · What you see (new standalone HomeDashboardDemo: stats tiles, date strip, tee sheet rows with che — `RUN_QUEUE.md:1966`
+30. COURSES_SHEET_SPEC Phase CS-1 — course-setup.ts (5 setup steps from existing fields) + course-checkin.ts (14d-after-go-live then every 90d; agenda in code; checkInSignal) + courses — `RUN_QUEUE.md:1968`
+31. COURSES_SHEET_SPEC Phase CS-2 — /admin/courses becomes the sheet: one table, 'Getting live' + 'Live' sections, 8 fixed columns (course, operator, status = setup n-of-5 or health, a — `RUN_QUEUE.md:1969`
+32. COURSES_SHEET_SPEC Phase CS-3 — course page: Setup card (5 steps + the existing action that completes each) for getting-live courses; Next check-in schedule/log card (IC-2 cards wi — `RUN_QUEUE.md:1970`
 
 ## Waiting on you (not on a build)
 
@@ -176,6 +184,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `1896ce5` 2026-09-13 — queue/spec update
 - `2385994` 2026-09-13 — queue/spec update
 - `da3feaa` 2026-09-13 — queue/spec update
 - `ae5ff68` 2026-09-13 — queue/spec update
@@ -187,8 +196,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `e8f91b4` 2026-09-13 — queue/spec update
 - `767d81c` 2026-09-13 — H-1: the homepage, from the approved prototype
 - `6bc1168` 2026-09-11 — queue/spec update
-- `7238dd9` 2026-09-11 — queue/spec update
 
 ---
 
-**Totals:** 155 done · 9 awaiting review · 1 in flight · 29 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 155 done · 9 awaiting review · 1 in flight · 32 not started · 8 revise pages open · 15 ideas · 2 parked.
