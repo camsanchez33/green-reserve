@@ -32,9 +32,12 @@ export async function POST() {
     where: {
       courseId: session.courseId,
       status: 'active',
-      OR: [{ paymentStatus: 'unpaid' }, { expiresAt: { lt: now } }],
+      // Comped memberships never owe dues; a row with no payToken has no link
+      // to send (the reminder cron filters the same way).
+      OR: [{ paymentStatus: 'unpaid' }, { AND: [{ expiresAt: { lt: now } }, { paymentStatus: { not: 'comped' } }] }],
+      payToken: { not: '' },
     },
-    include: { tier: true },
+    include: { tier: true, golfer: { select: { email: true } } },
   });
 
   let sent = 0, skippedRecent = 0, skippedFree = 0, skippedNoEmail = 0;
@@ -43,12 +46,14 @@ export async function POST() {
     if (!m.tier) { skippedFree++; continue; }
     const initiationCents = m.lastPaidAt ? 0 : m.tier.initiationFeeCents;
     if (m.tier.annualFeeCents + initiationCents <= 0) { skippedFree++; continue; }
-    if (!m.inviteEmail) { skippedNoEmail++; continue; }
+    // The account's current email wins over the invite address, as the list does.
+    const to = m.golfer?.email || m.inviteEmail;
+    if (!to) { skippedNoEmail++; continue; }
     if (m.renewalRemindedAt && m.renewalRemindedAt > recent) { skippedRecent++; continue; }
     try {
       await sendMembershipPaymentLinkEmail({
         name: m.inviteName,
-        email: m.inviteEmail,
+        email: to,
         courseName: course.name,
         tierName: m.tier.name,
         annualFee: centsToDollarsOr0(m.tier.annualFeeCents),
@@ -60,7 +65,7 @@ export async function POST() {
       sent++;
     } catch (err) {
       console.error('remind-overdue: send failed', m.id, err);
-      failed.push(m.inviteName || m.inviteEmail);
+      failed.push(m.inviteName || to);
     }
   }
 

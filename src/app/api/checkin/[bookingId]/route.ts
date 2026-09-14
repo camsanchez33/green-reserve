@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { performCheckIn } from '@/lib/checkin-booking';
+import { performCheckIn, cartAddOnCentsFor } from '@/lib/checkin-booking';
+import { rateLimit, clientIp } from '@/lib/rate-limit';
 
 // Public, token-gated check-in endpoint — the golfer doesn't need to be
 // logged in (they may be checking in from a different device than they
@@ -21,6 +22,10 @@ async function authorize(bookingId: string, token: string | null) {
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
+  // HARDENING_SPEC §B: token endpoints rate-limit repeated misses.
+  if (!(await rateLimit('checkin:get:' + clientIp(req), 30, 300))) {
+    return NextResponse.json({ error: 'Too many requests — try again in a few minutes.' }, { status: 429 });
+  }
   const token = req.nextUrl.searchParams.get('token');
   const booking = await authorize(bookingId, token);
   if (!booking) return NextResponse.json({ error: 'Invalid or expired check-in link.' }, { status: 404 });
@@ -42,18 +47,26 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     rangeBallsTotal: booking.rangeBallsTotal,
     accessFeeTotal: booking.accessFeeTotal,
     hasCard: !!booking.stripePaymentMethodId,
-    // B-5: a cart can be added at check-in when the booking has none and the
-    // tee time prices one. The add-on is the tee time's cart fee × players.
-    cartAddOnCents: !booking.cartSelected && booking.cartFeeTotal === 0 && booking.teeTime.cartFeeCents > 0
-      ? booking.teeTime.cartFeeCents * booking.players : 0,
+    // B-5: a cart can be added at check-in when the booking has none, the
+    // round is not yet paid, and a cart is priced — at the member's tier
+    // rate when they have one. Same helper the charge uses.
+    cartAddOnCents: await cartAddOnCentsFor(booking),
   });
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
+  if (!(await rateLimit('checkin:post:' + clientIp(req), 10, 300))) {
+    return NextResponse.json({ error: 'Too many attempts — wait a few minutes, or check in at the pro shop.' }, { status: 429 });
+  }
   const { token, paymentMethodId, addCart } = await req.json().catch(() => ({ token: null, paymentMethodId: undefined, addCart: false }));
   const booking = await authorize(bookingId, token);
   if (!booking) return NextResponse.json({ error: 'Invalid or expired check-in link.' }, { status: 404 });
+  // B-5: a cart cannot be added online once the round is paid — say so rather
+  // than checking in silently without it.
+  if (addCart === true && (await cartAddOnCentsFor(booking)) === 0) {
+    return NextResponse.json({ error: 'A cart can\'t be added to this booking online — ask at the pro shop and check in there.' }, { status: 409 });
+  }
 
   const result = await performCheckIn(bookingId, { externalPaymentMethodId: paymentMethodId || undefined, addCart: addCart === true });
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status });

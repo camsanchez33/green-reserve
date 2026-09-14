@@ -39,6 +39,37 @@ type ChargeOpts = {
   addCart?: boolean;
 };
 
+/**
+ * B-5 (security review): the cart add-on is priced the way the booking route
+ * prices a cart — the golfer's active tier at this course, when they have one
+ * (flat weekday/weekend cart rate), else the tee time's cart fee. Used for
+ * both the quote (GET) and the charge, so they cannot disagree.
+ */
+export async function cartAddOnCentsFor(booking: {
+  golferAccountId: string | null; courseId: string; players: number;
+  cartSelected: boolean; cartFeeTotal: number; paymentStatus: string; roundPaymentIntentId: string;
+  teeTime: { date: string; cartFeeCents: number };
+}): Promise<number> {
+  if (booking.cartSelected || booking.cartFeeTotal > 0) return 0;
+  if (booking.paymentStatus === 'paid' && booking.roundPaymentIntentId) return 0;
+  let perPlayer = booking.teeTime.cartFeeCents;
+  if (booking.golferAccountId) {
+    const m = await prisma.courseMembership.findUnique({
+      where: { golferId_courseId: { golferId: booking.golferAccountId, courseId: booking.courseId } },
+      include: { tier: { select: { cartFeeWeekdayCents: true, cartFeeWeekendCents: true } } },
+    });
+    if (m && m.status === 'active' && m.tier && (m.tier.cartFeeWeekdayCents != null || m.tier.cartFeeWeekendCents != null)) {
+      const d = new Date(booking.teeTime.date + 'T12:00:00');
+      const weekend = d.getDay() === 0 || d.getDay() === 6;
+      perPlayer = weekend
+        ? (m.tier.cartFeeWeekendCents ?? m.tier.cartFeeWeekdayCents ?? perPlayer)
+        : (m.tier.cartFeeWeekdayCents ?? perPlayer);
+    }
+  }
+  if (perPlayer <= 0) return 0;
+  return perPlayer * booking.players;
+}
+
 async function chargeBooking(
   bookingId: string,
   opts: ChargeOpts | undefined,
@@ -70,16 +101,19 @@ async function chargeBooking(
   // money moves, only when the tee time actually prices a cart. The booking's
   // own totals change first so the charge, the receipt and the ledger agree.
   let cartAddedCents = 0;
-  if (opts?.addCart && !alreadyPaid && !booking.cartSelected && booking.cartFeeTotal === 0 && booking.teeTime.cartFeeCents > 0) {
-    cartAddedCents = booking.teeTime.cartFeeCents * booking.players;
-    await prisma.booking.update({
-      where: { id: bookingId },
-      data: { cartSelected: true, cartFeeTotal: cartAddedCents, totalAmount: booking.totalAmount + cartAddedCents },
-    });
-    booking.cartSelected = true;
-    booking.cartFeeTotal = cartAddedCents;
-    booking.totalAmount = booking.totalAmount + cartAddedCents;
-    console.log(JSON.stringify({ ev: 'checkin.cart_added', bookingId, cartAddedCents }));
+  const preCart = { cartSelected: booking.cartSelected, cartFeeTotal: booking.cartFeeTotal, totalAmount: booking.totalAmount };
+  if (opts?.addCart && !alreadyPaid) {
+    cartAddedCents = await cartAddOnCentsFor(booking);
+    if (cartAddedCents > 0) {
+      await prisma.booking.update({
+        where: { id: bookingId },
+        data: { cartSelected: true, cartFeeTotal: cartAddedCents, totalAmount: booking.totalAmount + cartAddedCents },
+      });
+      booking.cartSelected = true;
+      booking.cartFeeTotal = cartAddedCents;
+      booking.totalAmount = booking.totalAmount + cartAddedCents;
+      console.log(JSON.stringify({ ev: 'checkin.cart_added', bookingId, cartAddedCents }));
+    }
   }
 
   const refundPendingFee = booking.paymentStatus === 'cancellation_fee_charged' && !!booking.cancellationFeeChargeId;
@@ -133,10 +167,12 @@ async function chargeBooking(
 
     // Review (security, MEDIUM): a new card changes the idempotency key. If
     // the FIRST attempt actually succeeded at Stripe but the response never
-    // reached us (timeout), "retry with a new card" would charge the golfer a
-    // second full round. Ask Stripe whether this booking already has a
-    // succeeded charge before charging a different card.
-    if (externalPm) {
+    // reached us (timeout), a retry with a new card — or, since B-5, a retry
+    // at a different amount (cart added) — would be a new Stripe request and
+    // a second full charge. Ask Stripe whether this booking already has a
+    // succeeded charge before charging at all. (Security review: this used to
+    // run only for a new card.)
+    {
       try {
         const found = await stripe.paymentIntents.search(
           { query: `metadata['bookingId']:'${booking.id}' AND status:'succeeded'`, limit: 1 },
@@ -146,7 +182,11 @@ async function chargeBooking(
         if (prior) {
           console.warn(JSON.stringify({ ev: `${ev}.charge.already_succeeded`, bookingId, paymentIntentId: prior.id }));
           await prisma.booking.update({ where: { id: bookingId }, data: { roundPaymentIntentId: prior.id, paymentStatus: 'paid', checkInFailReason: '' } });
-          return { error: 'This round was already charged on the first attempt (the confirmation was lost in transit). It is now recorded as paid — refresh and check the golfer in without a card.', status: 409 } as const;
+          if (cartAddedCents > 0) {
+            // The cart was written for a charge that never happens — undo it.
+            await prisma.booking.update({ where: { id: bookingId }, data: preCart });
+          }
+          return { error: 'This round was already charged on an earlier attempt (the confirmation was lost in transit). It is now recorded as paid — refresh and check in without a card.', status: 409 } as const;
         }
       } catch (err) {
         // Search is best-effort; a failure here must not block the counter.
@@ -177,7 +217,10 @@ async function chargeBooking(
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Card could not be charged.';
       console.error(JSON.stringify({ ev: `${ev}.charge.fail`, bookingId, error: message }));
-      await prisma.booking.update({ where: { id: bookingId }, data: { checkInFailReason: message } });
+      // B-5: the cart was written before the charge; a failed charge puts the
+      // booking back exactly as it was so the next attempt (or the counter)
+      // does not charge for a cart nobody bought.
+      await prisma.booking.update({ where: { id: bookingId }, data: { checkInFailReason: message, ...(cartAddedCents > 0 ? preCart : {}) } });
       return { error: `Payment failed: ${message}. Collect payment in person and contact support.`, status: 402 } as const;
     }
 
