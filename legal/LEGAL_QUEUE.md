@@ -16,7 +16,7 @@ attempted. `⚖️` cannot be closed by a Claude session.
       *Two-line change. Removes a live misrepresentation. Do it today.*
       → Findings L-2 · Register PD-1/PD-2/PD-3
 
-- [ ] **LQ-2 — Decide the fee-flow question, then make words and code agree.**
+- [ ] **LQ-2 — DECIDED 2026-09-14 (Cam): keep the payment structure, rewrite the words.** Exact copy for all five surfaces + the L-4 disclosure is in `LQ-2_FEE_COPY.md`; the build item is "LQ-2 copy run" in RUN_QUEUE.md. Open only until that run ships.
       Read `ENTITY_BRIEF.md` §"the fee question" and `FINDINGS_2026-09-02.md`
       L-1. Pick (A) rewrite the promise or (B) split the charge. Then change
       `/terms`, `/operator-agreement`, `HomeContent.tsx:219,338,341`,
@@ -24,7 +24,7 @@ attempted. `⚖️` cannot be closed by a Claude session.
       *Blocked on Cam's decision, not on research.*
       → Findings L-1 · Register PM-4, CC-6
 
-- [ ] **LQ-3 — Refund the application fee on full refunds.**
+- [x] **LQ-3 — Refund the application fee on full refunds.** DONE in code (`refund_application_fee: true` in `src/lib/stripe.ts`, commit 5eb48c5 review fixes); verified 2026-09-14. Register PM-5 updated.
       Add `refund_application_fee: true` to `stripe.refunds.create` in
       `src/lib/stripe.ts:66-76`, or delete the promise from the Operator
       Agreement. The contract currently says one thing and the code does another.

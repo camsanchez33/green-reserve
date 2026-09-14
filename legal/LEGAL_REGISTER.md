@@ -51,8 +51,8 @@ not reached — carries a revisit trigger) · **WATCH** (no action, monitor)
 | PM-1 | Stay out of money transmission | **MET** | Direct charges, connected account is merchant of record, no custody of course funds. **Protect this** — see `README.md` escalation #5 |
 | PM-2 | PCI DSS scope | **MET** | SAQ-A posture: Stripe Elements, tokens only, no PAN touches GreenReserve |
 | PM-3 | Off-session (card-on-file) mandate disclosure | **MET** | `usage: 'off_session'` + matching `/terms` authorization language |
-| PM-4 | Fee disclosure matches actual money flow | **OPEN** | 🔴 L-1 and 🟠 L-4. Highest-value item in this register |
-| PM-5 | Refund mechanics match the contract | **OPEN** | 🔴 L-3 — `refund_application_fee` not set |
+| PM-4 | Fee disclosure matches actual money flow | **OPEN → copy run queued** | 🔴 L-1 decided 2026-09-14 (words change, structure stays) + 🟠 L-4 disclosed in the same pass — see `LQ-2_FEE_COPY.md`. MET once "LQ-2 copy run" ships |
+| PM-5 | Refund mechanics match the contract | **MET** | L-3 fixed in code (`refund_application_fee: true`, 5eb48c5); verified 2026-09-14 |
 | PM-6 | Sales / amusement tax on the service fee | **OPEN** | ⚖️ Unexamined. Some states tax "admissions and amusements," some tax SaaS. NJ and SC both need a read before volume builds |
 | PM-7 | Income tax + Schedule C / entity return | **WATCH** | Cam works at a financial advising firm — this is the one area with in-house intuition. Still a CPA question at first real revenue |
 | PM-8 | 1099-K awareness for courses | **MET** | Stripe issues these to connected accounts directly. Nothing for GreenReserve to do |

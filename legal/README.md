@@ -40,6 +40,7 @@ Escalate to a licensed attorney (do not self-serve) when:
 | `LEGAL_QUEUE.md` | Prioritized action items (LQ-n). Source of truth for what to do next |
 | `FINDINGS_2026-09-02.md` | The audit that produced the initial queue |
 | `ENTITY_BRIEF.md` | Formation decision brief — the gating item |
+| `LQ-2_FEE_COPY.md` | The fee-flow decision (2026-09-14) and the exact replacement copy for every fee claim |
 
 ## Working rules
 
