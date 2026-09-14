@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-14 23:06 UTC · branch `main` · HEAD `054b149` · working tree **1 dirty file(s)**
+Generated 2026-09-14 23:11 UTC · branch `main` · HEAD `9b148ec` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,7 +12,7 @@ Generated 2026-09-14 23:06 UTC · branch `main` · HEAD `054b149` · working tre
 
 | commit | date | subject |
 |---|---|---|
-| `054b149` | 2026-09-14 | AG-2: the signing flow — legal name, signer, read-to-the-end panels, one POST, PDFs to private Blob, courtesy copies by email, admin records |
+| `9b148ec` | 2026-09-14 | AG-3: version bumps and re-acceptance — day-0 notice, banner then modal, 428 on configuration writes, admin chips and queue rows |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
@@ -77,9 +77,8 @@ This is the distinction a raw checkbox count gets wrong.
 22. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1366`
 23. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1395`
 24. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1474`
-25. AGREEMENT_SPEC Phase AG-3 — version bumps: seed refuses reacceptRequired bumps without counselReviewed; day-0 notice email; dashboard banner → modal after 30 days; operator writes  — `RUN_QUEUE.md:1976`
-26. UI_REVISE_SPEC H-2c — KILL THE PHOTO BAND (small, no migration, RUN FIRST): the 'We set it up' band shows a WIND FARM (bad Unsplash id for TEE). Delete the section + tee.jpg + READ — `RUN_QUEUE.md:1978`
-27. UI_REVISE_SPEC H-2d — CLEAN HERO (direction A, chosen by Cam 2026-09-14): cream hero, no photo, headline left + live booking device (HomeDemo hero variant) + static tee-sheet card  — `RUN_QUEUE.md:1980`
+25. UI_REVISE_SPEC H-2c — KILL THE PHOTO BAND (small, no migration, RUN FIRST): the 'We set it up' band shows a WIND FARM (bad Unsplash id for TEE). Delete the section + tee.jpg + READ — `RUN_QUEUE.md:1978`
+26. UI_REVISE_SPEC H-2d — CLEAN HERO (direction A, chosen by Cam 2026-09-14): cream hero, no photo, headline left + live booking device (HomeDemo hero variant) + static tee-sheet card  — `RUN_QUEUE.md:1980`
 
 ## Waiting on you (not on a build)
 
@@ -178,6 +177,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `9b148ec` 2026-09-14 — AG-3: version bumps and re-acceptance — day-0 notice, banner then modal, 428 on configuration writes, admin chips and queue rows
+- `d2fbb9b` 2026-09-14 — queue/spec update
 - `054b149` 2026-09-14 — AG-2: the signing flow — legal name, signer, read-to-the-end panels, one POST, PDFs to private Blob, courtesy copies by email, admin records
 - `f377780` 2026-09-14 — queue/spec update
 - `d41ce1a` 2026-09-14 — CS-3: course page — the Setup card for getting-live courses, the Next check-in card for live ones, calls in Records
@@ -188,9 +189,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `c2f1fc0` 2026-09-14 — IC-3: /admin/inquiries becomes the sheet — one fixed-column table, the Next-call cell, calls this week, Export CSV
 - `b3e26cd` 2026-09-14 — H-2d §2: story video v2 files (Cam's re-render, 2026-09-14) — less frame-to-frame shimmer
 - `4af4399` 2026-09-14 — IC-2: the discovery call on the inquiry page — set it up, log it, and the build gate that points at it
-- `de56fee` 2026-09-14 — queue/spec update
-- `2d1cae5` 2026-09-14 — queue/spec update
 
 ---
 
-**Totals:** 166 done · 9 awaiting review · 1 in flight · 27 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 167 done · 9 awaiting review · 1 in flight · 26 not started · 8 revise pages open · 15 ideas · 2 parked.

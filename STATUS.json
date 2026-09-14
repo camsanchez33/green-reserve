@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-14T23:06:45.668Z",
+  "generatedAt": "2026-09-14T23:11:18.333Z",
   "repo": {
-    "head": "054b149",
+    "head": "9b148ec",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,22 +10,22 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-14T16:40:15-04:00",
+    "queueLastCommit": "2026-09-14T19:06:47-04:00",
     "unrecorded": [
       {
-        "h": "054b149",
-        "date": "2026-09-14T19:06:43-04:00",
-        "subject": "AG-2: the signing flow — legal name, signer, read-to-the-end panels, one POST, PDFs to private Blob, courtesy copies by email, admin records",
+        "h": "9b148ec",
+        "date": "2026-09-14T19:11:16-04:00",
+        "subject": "AG-3: version bumps and re-acceptance — day-0 notice, banner then modal, 428 on configuration writes, admin chips and queue rows",
         "ids": [],
         "matches": []
       }
     ]
   },
   "counts": {
-    "runDone": 166,
+    "runDone": 167,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 27,
+    "runNotStarted": 26,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -230,11 +230,6 @@
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
       "line": 1474,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "AGREEMENT_SPEC Phase AG-3 — version bumps: seed refuses reacceptRequired bumps without counselReviewed; day-0 notice email; dashboard banner → modal after 30 days; operator writes 428 agreement_requir",
-      "line": 1976,
       "section": "Queue (run in this order)"
     },
     {
@@ -810,6 +805,16 @@
   },
   "recentCommits": [
     {
+      "h": "9b148ec",
+      "date": "2026-09-14",
+      "subject": "AG-3: version bumps and re-acceptance — day-0 notice, banner then modal, 428 on configuration writes, admin chips and queue rows"
+    },
+    {
+      "h": "d2fbb9b",
+      "date": "2026-09-14",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "054b149",
       "date": "2026-09-14",
       "subject": "AG-2: the signing flow — legal name, signer, read-to-the-end panels, one POST, PDFs to private Blob, courtesy copies by email, admin records"
@@ -858,16 +863,6 @@
       "h": "4af4399",
       "date": "2026-09-14",
       "subject": "IC-2: the discovery call on the inquiry page — set it up, log it, and the build gate that points at it"
-    },
-    {
-      "h": "de56fee",
-      "date": "2026-09-14",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "2d1cae5",
-      "date": "2026-09-14",
-      "subject": "queue/spec update"
     }
   ]
 }
