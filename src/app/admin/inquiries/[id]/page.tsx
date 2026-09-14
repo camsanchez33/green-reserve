@@ -428,6 +428,15 @@ function InquiryDetailInner() {
     if (adminReady) loadInquiry();
   }, [adminReady, loadInquiry]);
 
+  // IC-3 §2: the sheet's "Set up call" button lands here with ?call=1 — open
+  // the right card (log if something is on the books, set-up otherwise).
+  const wantCall = searchParams.get('call') === '1';
+  useEffect(() => {
+    if (!wantCall || !inq) return;
+    const cs = inq.calls ?? [];
+    setCallFocus({ what: (nextCall(cs) || overdueCall(cs)) ? 'log' : 'setup', n: Date.now() });
+  }, [wantCall, inq?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Course slug + recent-activity count for the live/archived ⋯ menu
   // (Copy booking link, View public page, the archive recent-activity
   // warning) — same course-detail endpoint the courses tab already uses.

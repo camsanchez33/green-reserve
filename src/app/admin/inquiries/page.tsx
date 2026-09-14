@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { RefreshCw, Search, Trash2, ChevronRight, ArchiveRestore, RotateCcw } from 'lucide-react';
+import { RefreshCw, Search, Trash2, ChevronRight, ArchiveRestore, RotateCcw, Download, Phone } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
@@ -11,6 +11,9 @@ import {
   STATUS_DOT_MAP, STATUS_LABEL, stageEnteredAt, daysSince, queueSignal, compareQueue,
   type QueueSignal,
 } from '@/lib/inquiry-status';
+// IC-3: the Next-call column and the calls-this-week count.
+import { nextCall, overdueCall, latestCall, isSameEasternDay, fmtCallClock, easternParts, OUTCOME_LABEL } from '@/lib/inquiry-call';
+import type { NeedItem } from '@/lib/inquiry-needs';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -29,7 +32,10 @@ interface Inquiry {
   snoozeUntil?: string | null; nextFollowUpAt?: string | null;
   detailsToken?: string | null; detailsJson?: string; needsJson?: string;
   events: InquiryStatusEvent[];
-  calls?: { id: string; scheduledAt: string; outcome: string; durationMin: number; direction: string }[];
+  calls?: { id: string; scheduledAt: string; outcome: string; durationMin: number; direction: string; completedAt?: string | null }[];
+  callSkippedReason?: string | null;
+  /** IC-3: computed by the list API (the sheet blobs never ship). */
+  stillNeed?: NeedItem[];
 }
 
 // MP-4b: this page is a WORK QUEUE, not a CRM browser. It used to be three UIs
@@ -66,6 +72,12 @@ const SECTION_CAP = 50;
 const STALLED_DAYS = 7;
 
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+// IC-3 Next-call cell: "Tue Sep 15" and "Sep 9", always in Eastern.
+const fmtDay = (d: string) => new Date(d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'America/New_York' });
+const fmtShort = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' });
+// Stages where a discovery call is still ahead of us.
+const SETUP_CALL_STATUSES = new Set(['pending', 'in_review', 'details_requested', 'details_submitted']);
+const COURSE_TYPE_LABEL: Record<string, string> = { public: 'public', private: 'private', semi_private: 'semi-private', municipal: 'municipal', resort: 'resort' };
 // MP-4a: time in the CURRENT stage, derived from the event ledger. This used
 // to read updatedAt, which any write bumps — saving an admin note on a
 // three-week-old stalled inquiry made it read "0d" and dropped it out of the
@@ -307,6 +319,20 @@ function InquiriesListInner() {
   const needsYouCount = inquiries.filter(i => signals.get(i.id)?.yourMove).length;
   const liveAllTimeCount = inquiries.filter(i => i.status === 'live').length;
   const closedCount = inquiries.filter(i => (ARCHIVED_STATUSES as readonly string[]).includes(i.status)).length;
+  // IC-3 §4: scheduled calls Mon–Sun of the current Eastern week.
+  const callsThisWeek = (() => {
+    const today = easternParts(new Date()).date;
+    const t = new Date(today + 'T12:00:00Z');
+    const mon = new Date(t.getTime() - ((t.getUTCDay() + 6) % 7) * 86_400_000).toISOString().slice(0, 10);
+    const sun = new Date(new Date(mon + 'T12:00:00Z').getTime() + 6 * 86_400_000).toISOString().slice(0, 10);
+    let n = 0;
+    for (const i of inquiries) for (const c of i.calls ?? []) {
+      if (c.outcome !== 'scheduled') continue;
+      const d = easternParts(c.scheduledAt).date;
+      if (d >= mon && d <= sun) n++;
+    }
+    return n;
+  })();
   const aliveCount = inquiries.filter(i => (ALIVE_STATUSES as readonly string[]).includes(i.status)).length;
 
   // A-02c/A-02d INVARIANT: every inquiry maps to exactly one funnel segment
@@ -373,123 +399,211 @@ function InquiriesListInner() {
 
   if (!adminReady) return null;
 
-  const renderRow = (inq: Inquiry, mode: 'queue' | 'flat' | 'closed') => {
+  // ── IC-3: the sheet. One <table>, fixed columns, every row. ──────────
+  // Column widths from the spec (px): course 200 · contact 190 · stage 104 ·
+  // next call 150 · still need 250 · in stage 86 · inquired 96 · action 72.
+  // Below xl the Still-need column hides; below lg In-stage and Inquired do.
+  type RowMode = 'queue' | 'flat' | 'closed';
+  const thCls = 'text-[10px] uppercase tracking-[0.06em] text-ink-muted font-medium text-left px-3 py-2 whitespace-nowrap';
+  const tdCls = 'px-3 py-2.5 align-top';
+  const now = new Date();
+
+  const renderNextCall = (inq: Inquiry, mode: RowMode) => {
+    const calls = inq.calls ?? [];
+    const upcoming = nextCall(calls, now);
+    const missed = overdueCall(calls, now);
+    const last = latestCall(calls.filter(c => c.outcome !== 'scheduled'));
+    const sub = 'text-[12px] text-ink-muted truncate';
+    if (upcoming) {
+      const today = isSameEasternDay(upcoming.scheduledAt, now);
+      return (
+        <>
+          <div className={today ? 'text-sm text-bad font-semibold truncate' : 'text-sm text-ink font-medium truncate'}>
+            {today ? 'Today' : fmtDay(upcoming.scheduledAt)} · {fmtCallClock(upcoming.scheduledAt)}
+          </div>
+          <div className={sub}>{upcoming.durationMin} min · {upcoming.direction === 'they_call' ? 'they call you' : 'you call them'}</div>
+        </>
+      );
+    }
+    if (missed) {
+      return (
+        <>
+          <div className="text-sm text-pine font-medium truncate hover:underline">Log the call</div>
+          <div className={sub}>was {fmtDay(missed.scheduledAt)}</div>
+        </>
+      );
+    }
+    if (last) {
+      const at = last.completedAt || last.scheduledAt;
+      const sheetAfter = last.outcome === 'talked' && inq.events.some(e => e.toStatus === 'details_requested' && new Date(e.createdAt).getTime() > new Date(at).getTime());
+      return (
+        <>
+          <div className="text-sm text-ink truncate">{last.outcome === 'talked' ? 'Done' : (OUTCOME_LABEL[last.outcome] || last.outcome)} · {fmtShort(at)}</div>
+          <div className={sub}>{sheetAfter ? 'sheet sent after call' : 'outcome logged'}</div>
+        </>
+      );
+    }
+    if (inq.callSkippedReason) {
+      return (
+        <>
+          <div className="text-sm text-ink-soft truncate">Skipped</div>
+          <div className={sub} title={inq.callSkippedReason}>{inq.callSkippedReason}</div>
+        </>
+      );
+    }
+    if (inq.snoozeUntil && new Date(inq.snoozeUntil).getTime() > now.getTime()) {
+      return (
+        <>
+          <div className="text-sm text-ink-soft truncate">Snoozed → {fmtShort(inq.snoozeUntil)}</div>
+          <div className={sub}>back on that date</div>
+        </>
+      );
+    }
+    if (mode !== 'closed' && SETUP_CALL_STATUSES.has(inq.status)) {
+      return (
+        <Link
+          href={detailHref(inq) + (detailHref(inq).includes('?') ? '&' : '?') + 'call=1'}
+          onClick={e => e.stopPropagation()}
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-pine border border-pine/30 hover:bg-pine/5 rounded-md px-2.5 py-1 transition-colors"
+        >
+          <Phone className="w-3 h-3" />Set up call
+        </Link>
+      );
+    }
+    return <span className="text-sm text-ink-faint">—</span>;
+  };
+
+  const renderStillNeed = (inq: Inquiry, mode: RowMode) => {
+    if (mode === 'closed' || inq.status === 'live') return <span className="text-sm text-ink-faint">—</span>;
+    const items = inq.stillNeed ?? [];
+    if (items.length === 0) {
+      const reviewed = inq.events.some(e => e.toStatus && e.toStatus !== 'pending');
+      if (inq.status === 'pending' && !reviewed) return <span className="text-sm italic text-ink-faint">Not reviewed yet</span>;
+      if (inq.status === 'details_submitted' || inq.status === 'building') return <span className="text-sm text-ok">Nothing — ready to build</span>;
+      return <span className="text-sm text-ink-faint">Nothing outstanding</span>;
+    }
+    const shown = items.slice(0, 3);
+    return (
+      <div className="flex flex-wrap gap-1">
+        {shown.map(n => (
+          <span key={n.key} className="text-[11px] text-ink-soft bg-paper border border-line rounded-md px-1.5 py-0.5 whitespace-nowrap">{n.label}</span>
+        ))}
+        {items.length > 3 && (
+          <span className="text-[11px] text-ink-muted px-1 py-0.5" title={items.slice(3).map(n => n.label).join(', ')}>+{items.length - 3}</span>
+        )}
+      </div>
+    );
+  };
+
+  const renderRow = (inq: Inquiry, mode: RowMode) => {
     const dot = (STATUS_DOT_MAP[inq.status] || 'neutral') as 'ok' | 'bad' | 'warn' | 'neutral';
     const s = sig(inq);
     const days = stageDays(inq);
     const overdue = mode === 'queue' && s.pressureDays > 0;
     const closed = mode === 'closed' ? whyArchived(inq) : null;
     const selectable = canBulkSelect && mode === 'queue';
-    // U-A (UI_REVISE_SPEC §3, §1b "attention"): the only two things a queue row
-    // has to say across the room — pine left edge = your move, faded = stalled.
-    // Both read off signals the row already computed; nothing new is fetched.
+    // U-A: pine left edge = your move, faded = stalled. Same signals as before.
     const yourMove = mode === 'queue' && s.yourMove;
     const stalled = mode === 'queue' && !s.yourMove && days >= STALLED_DAYS;
-    const rowCls =
-      'bg-white border border-line rounded-lg px-5 py-3.5 flex items-center gap-4 hover:border-pine/30 hover:bg-pine/[0.02] transition-colors'
-      + (yourMove ? ' border-l-[3px] border-l-pine' : '')
-      + (stalled ? ' opacity-60 hover:opacity-100' : '');
-
+    const href = detailHref(inq);
     return (
-      <Link
+      <tr
         key={inq.id}
-        href={detailHref(inq)}
-        className={rowCls}
+        onClick={() => router.push(href)}
+        className={'border-t border-line cursor-pointer hover:bg-pine/[0.02] transition-colors' + (stalled ? ' opacity-60 hover:opacity-100' : '')}
       >
-        {selectable && (
-          <input
-            type="checkbox"
-            checked={selected.has(inq.id)}
-            onClick={e => e.stopPropagation()}
-            onChange={() => toggleSelected(inq.id)}
-            className="shrink-0"
-          />
-        )}
-        <span title={STATUS_LABEL[inq.status] || inq.status}><StatusDot status={dot} /></span>
-
-        {/* Course name + location */}
-        <div className="w-48 shrink-0 min-w-0">
-          <div className="text-sm font-medium text-ink truncate flex items-center gap-1.5">
-            <span className="truncate">{inq.courseName}</span>
-            {s.resubmits > 0 && (
-              <span title="Submitted the interest form again while already in the pipeline" className="shrink-0">
-                <RotateCcw className="w-3 h-3 text-warn" />
-              </span>
+        {/* 1 · Course */}
+        <td className={tdCls + (yourMove ? ' border-l-[3px] border-l-pine' : ' border-l-[3px] border-l-transparent')}>
+          <div className="flex items-start gap-2.5 min-w-0">
+            {selectable && (
+              <input
+                type="checkbox"
+                checked={selected.has(inq.id)}
+                onClick={e => e.stopPropagation()}
+                onChange={() => toggleSelected(inq.id)}
+                className="shrink-0 mt-1"
+              />
             )}
-          </div>
-          <div className="text-xs text-ink-muted truncate">{inq.city}, {inq.state}</div>
-        </div>
-
-        {/* Why it is here (queue) or who it is (browse) */}
-        <div className="flex-1 min-w-0">
-          {mode === 'queue' && (
-            <div className="text-xs text-ink-soft truncate">{s.reason}</div>
-          )}
-          {mode !== 'queue' && (
-            <div className="text-xs text-ink-soft truncate">
-              {inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''}
+            <div className="min-w-0">
+              <div className="text-sm font-medium text-ink truncate flex items-center gap-1.5">
+                <span className="truncate">{inq.courseName}</span>
+                {s.resubmits > 0 && (
+                  <span title="Submitted the interest form again while already in the pipeline" className="shrink-0">
+                    <RotateCcw className="w-3 h-3 text-warn" />
+                  </span>
+                )}
+              </div>
+              <div className="text-[12px] text-ink-muted truncate">
+                {inq.city}, {inq.state}{inq.courseType ? ' · ' + (COURSE_TYPE_LABEL[inq.courseType] || inq.courseType) : ''}
+              </div>
             </div>
-          )}
-          <div className="text-[10px] text-ink-faint truncate flex items-center gap-1.5">
-            {inq.email}
-            {hasBadEmail(inq) && (
-              <span className="shrink-0 text-[9px] font-medium uppercase tracking-[0.1em] bg-warn/10 text-warn px-1.5 py-0.5">Bad email</span>
-            )}
           </div>
-        </div>
-
-        {/* Stage + days-in-stage, or why/how it closed */}
-        <div className="shrink-0 text-right hidden lg:block min-w-[110px]">
-          {closed && (
-            <>
-              <div className="text-xs text-ink-soft">{closed.reason}</div>
-              <div className="text-[10px] text-ink-faint">{fmtDate(closed.date)}</div>
-            </>
+        </td>
+        {/* 2 · Contact · phone */}
+        <td className={tdCls}>
+          <div className="text-sm text-ink truncate">{inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''}</div>
+          <div className="text-[12px] text-ink-muted truncate">{inq.phone || <span className="text-ink-faint">no phone</span>}</div>
+          {hasBadEmail(inq) && (
+            <span className="inline-block mt-0.5 text-[9px] font-medium uppercase tracking-[0.1em] bg-warn/10 text-warn px-1.5 py-0.5" title={inq.email}>Bad email</span>
           )}
-          {!closed && (
+        </td>
+        {/* 3 · Stage */}
+        <td className={tdCls}>
+          {closed ? (
             <>
-              <div className="text-xs text-ink-soft">{STATUS_LABEL[inq.status] || inq.status}</div>
-              <div className={'text-[10px] font-medium ' + (overdue ? 'text-bad' : 'text-ink-faint')}>{days}d in stage</div>
+              <div className="text-sm text-ink-soft truncate">{closed.reason}</div>
+              <div className="text-[12px] text-ink-faint">{fmtDate(closed.date)}</div>
             </>
+          ) : (
+            <StatusDot status={dot} label={STATUS_LABEL[inq.status] || inq.status} />
           )}
-        </div>
-
-        {/* Submitted date */}
-        <div className="shrink-0 text-xs text-ink-faint hidden xl:block w-24 text-right">
-          {fmtDate(inq.createdAt)}
-        </div>
-
-        {/* Closed view: Restore, and Permanently delete ONLY for inquiries that
-            never became a course (DELETION DOCTRINE) — built ones are
-            archive-only. */}
-        {mode === 'closed' && (
-          <div className="flex items-center gap-1 shrink-0">
-            <button
-              onClick={e => { e.preventDefault(); e.stopPropagation(); restoreInquiry(inq); }}
-              className="w-7 h-7 flex items-center justify-center rounded text-ink-faint hover:text-ok hover:bg-ok/5 transition-colors"
-              title="Restore"
-            >
-              <ArchiveRestore className="w-3.5 h-3.5" />
-            </button>
-            {!inq.builtCourseId && (
-              <button
-                onClick={e => { e.preventDefault(); e.stopPropagation(); setDeleteTarget({ id: inq.id, name: inq.courseName }); setDeleteConfirmText(''); }}
-                className="w-7 h-7 flex items-center justify-center rounded text-ink-faint hover:text-bad hover:bg-bad/5 transition-colors"
-                title="Delete permanently"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+          {mode === 'queue' && <div className="text-[12px] text-ink-muted truncate mt-0.5" title={s.reason}>{s.reason}</div>}
+        </td>
+        {/* 4 · Next call */}
+        <td className={tdCls}>{renderNextCall(inq, mode)}</td>
+        {/* 5 · Still need from them */}
+        <td className={tdCls + ' hidden xl:table-cell'}>{renderStillNeed(inq, mode)}</td>
+        {/* 6 · In stage */}
+        <td className={tdCls + ' hidden lg:table-cell text-right'}>
+          {closed ? <span className="text-sm text-ink-faint">—</span>
+            : <span className={'text-sm ' + (overdue ? 'text-bad font-medium' : 'text-ink-soft')}>{days}d</span>}
+        </td>
+        {/* 7 · Inquired */}
+        <td className={tdCls + ' hidden lg:table-cell text-right text-sm text-ink-soft whitespace-nowrap'}>{fmtDate(inq.createdAt)}</td>
+        {/* 8 · Action */}
+        <td className={tdCls + ' text-right whitespace-nowrap'}>
+          <div className="inline-flex items-center gap-1 justify-end">
+            {mode === 'closed' && (
+              <>
+                <button
+                  onClick={e => { e.preventDefault(); e.stopPropagation(); restoreInquiry(inq); }}
+                  className="w-7 h-7 flex items-center justify-center rounded-md text-ink-faint hover:text-ok hover:bg-ok/5 transition-colors"
+                  title="Restore"
+                >
+                  <ArchiveRestore className="w-3.5 h-3.5" />
+                </button>
+                {!inq.builtCourseId && (
+                  <button
+                    onClick={e => { e.preventDefault(); e.stopPropagation(); setDeleteTarget({ id: inq.id, name: inq.courseName }); setDeleteConfirmText(''); }}
+                    className="w-7 h-7 flex items-center justify-center rounded-md text-ink-faint hover:text-bad hover:bg-bad/5 transition-colors"
+                    title="Delete permanently"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </>
             )}
+            <Link href={href} onClick={e => e.stopPropagation()} className="text-xs font-medium text-pine hover:underline px-1">Open</Link>
           </div>
-        )}
-      </Link>
+        </td>
+      </tr>
     );
   };
 
-  const renderSection = (title: string, hint: string, rows: Inquiry[]) => {
-    if (rows.length === 0) return null;
-    const shown = rows.slice(0, SECTION_CAP);
-    const allShownSelected = shown.every(i => selected.has(i.id));
+  type Group = { key: string; title: string; hint: string; rows: Inquiry[]; mode: RowMode };
+
+  const renderGroupHeader = (g: Group, shown: Inquiry[]) => {
+    const allShownSelected = shown.length > 0 && shown.every(i => selected.has(i.id));
     const toggleSection = () => setSelected(prev => {
       const next = new Set(prev);
       if (allShownSelected) shown.forEach(i => next.delete(i.id));
@@ -497,22 +611,57 @@ function InquiriesListInner() {
       return next;
     });
     return (
-      <div key={title}>
-        <div className="flex items-baseline gap-2 mb-2">
-          <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">{title}</span>
-          <span className="text-[11px] text-ink-faint">{rows.length} · {hint}</span>
-          {canBulkSelect && (
-            <button onClick={toggleSection} className="ml-auto text-[11px] text-ink-faint hover:text-ink transition-colors">
-              {allShownSelected ? 'Clear' : 'Select all'}
-            </button>
-          )}
-        </div>
-        <div className="space-y-1.5">{shown.map(r => renderRow(r, 'queue'))}</div>
-        {rows.length > SECTION_CAP && (
-          <p className="mt-2 text-[11px] text-ink-faint">
-            Showing the top {SECTION_CAP} of {rows.length} — narrow it with search or a stage.
-          </p>
-        )}
+      <tr key={g.key + ':head'} className="border-t border-line">
+        <td colSpan={8} className="bg-paper px-3 py-1.5">
+          <div className="flex items-baseline gap-2">
+            <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">{g.title}</span>
+            <span className="text-[11px] text-ink-faint">{g.rows.length}{g.hint ? ' · ' + g.hint : ''}</span>
+            {canBulkSelect && g.mode === 'queue' && (
+              <button onClick={toggleSection} className="ml-auto text-[11px] text-ink-faint hover:text-ink transition-colors">
+                {allShownSelected ? 'Clear' : 'Select all'}
+              </button>
+            )}
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
+  const renderTable = (groups: Group[]) => {
+    const nonEmpty = groups.filter(g => g.rows.length > 0);
+    if (nonEmpty.length === 0) return null;
+    return (
+      <div className="bg-white border border-line rounded-lg overflow-x-auto">
+        <table className="w-full table-fixed min-w-[760px]">
+          <thead>
+            <tr className="bg-paper">
+              <th className={thCls + ' w-[200px]'}>Course</th>
+              <th className={thCls + ' w-[190px]'}>Contact · phone</th>
+              <th className={thCls + ' w-[104px]'}>Stage</th>
+              <th className={thCls + ' w-[150px]'}>Next call</th>
+              <th className={thCls + ' w-[250px] hidden xl:table-cell'}>Still need from them</th>
+              <th className={thCls + ' w-[86px] hidden lg:table-cell text-right'}>In stage</th>
+              <th className={thCls + ' w-[96px] hidden lg:table-cell text-right'}>Inquired</th>
+              <th className={thCls + ' w-[72px] text-right'}><span className="sr-only">Open</span></th>
+            </tr>
+          </thead>
+          {nonEmpty.map(g => {
+            const shown = g.rows.slice(0, SECTION_CAP);
+            return (
+              <tbody key={g.key}>
+                {g.title && renderGroupHeader(g, shown)}
+                {shown.map(r => renderRow(r, g.mode))}
+                {g.rows.length > SECTION_CAP && (
+                  <tr className="border-t border-line">
+                    <td colSpan={8} className="px-3 py-2 text-[11px] text-ink-faint">
+                      Showing the top {SECTION_CAP} of {g.rows.length} — narrow it with search or a stage.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            );
+          })}
+        </table>
       </div>
     );
   };
@@ -531,7 +680,7 @@ function InquiriesListInner() {
             <div>
               <h1 className="text-[30px] leading-none font-serif font-medium text-ink">Inquiries</h1>
               <p className="text-[13.5px] text-ink-soft mt-2">
-                {activeCount} active · {needsYouCount} needs you · {liveAllTimeCount} live all-time · {closedCount} closed
+                {activeCount} active · {needsYouCount} needs you · {callsThisWeek} call{callsThisWeek === 1 ? '' : 's'} this week · {liveAllTimeCount} live all-time · {closedCount} closed
               </p>
               {invariantBroken && (
                 <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-white bg-bad rounded-md px-2 py-1">
@@ -557,6 +706,14 @@ function InquiriesListInner() {
               >
                 <RefreshCw className="w-4 h-4" />Refresh
               </button>
+              {/* IC-3 §5: every alive + closed row as a CSV, same auth as the list. */}
+              <a
+                href="/api/admin/inquiries?format=csv"
+                download
+                className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-line transition-colors"
+              >
+                <Download className="w-4 h-4" />Export CSV
+              </a>
             </div>
           </div>
 
@@ -650,14 +807,17 @@ function InquiriesListInner() {
           )}
 
           {/* THE QUEUE — ranked, split by whose move it is. Every active
-              inquiry lands in exactly one of these three, so none can be
-              invisible the way waiting-on-them ones used to be. */}
+              inquiry lands in exactly one of these sections, so none can be
+              invisible the way waiting-on-them ones used to be. IC-3: the
+              sections are <tbody> groups of one fixed-column table. */}
           {!loading && !loadError && view === 'queue' && stage !== 'live' && (
-            <div className="space-y-6">
-              {renderSection('Your move', 'needs you now — most overdue first', secYours)}
-              {renderSection('Waiting on the course', 'sent, not answered yet', secThem)}
-              {renderSection('No action due yet', 'yours to work, still inside its window', secSoon)}
-              {renderSection('Snoozed', 'deliberately parked — they come back on their date', secSnoozed)}
+            <div>
+              {renderTable([
+                { key: 'yours', title: 'Your move', hint: 'needs you now — most overdue first', rows: secYours, mode: 'queue' },
+                { key: 'them', title: 'Waiting on the course', hint: 'sent, not answered yet', rows: secThem, mode: 'queue' },
+                { key: 'soon', title: 'No action due yet', hint: 'yours to work, still inside its window', rows: secSoon, mode: 'queue' },
+                { key: 'snoozed', title: 'Snoozed', hint: 'deliberately parked — they come back on their date', rows: secSnoozed, mode: 'queue' },
+              ])}
               {queueEmpty && (
                 <EmptyState message={q ? 'No results — clear your search' : stage ? `Nothing in ${stageLabel}.` : 'Queue is clear — nothing is waiting.'} />
               )}
@@ -666,16 +826,16 @@ function InquiriesListInner() {
 
           {/* Live is a destination, not work — no move to rank. */}
           {!loading && !loadError && view === 'queue' && stage === 'live' && (
-            <div className="space-y-1.5">
+            <div>
               {liveRows.length === 0 && <EmptyState message={q ? 'No results — clear your search' : 'No courses have gone live yet.'} />}
-              {liveRows.map(r => renderRow(r, 'flat'))}
+              {renderTable([{ key: 'live', title: '', hint: '', rows: liveRows, mode: 'flat' }])}
             </div>
           )}
 
           {!loading && !loadError && view === 'all' && (
-            <div className="space-y-1.5">
+            <div>
               {pagedFlat.length === 0 && <EmptyState message={q ? 'No results — clear your search' : 'No inquiries yet.'} />}
-              {pagedFlat.map(r => renderRow(r, 'flat'))}
+              {renderTable([{ key: 'all', title: '', hint: '', rows: pagedFlat, mode: 'flat' }])}
             </div>
           )}
 
@@ -688,22 +848,10 @@ function InquiriesListInner() {
             if (pagedFlat.length === 0) {
               return <EmptyState message={q ? 'No results — clear your search' : 'Nothing closed out yet.'} />;
             }
-            return (
-              <div className="space-y-5">
-                {rejectedRows.length > 0 && (
-                  <div>
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Rejected ({rejectedRows.length})</div>
-                    <div className="space-y-1.5">{rejectedRows.map(r => renderRow(r, 'closed'))}</div>
-                  </div>
-                )}
-                {archivedOnly.length > 0 && (
-                  <div>
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Archived ({archivedOnly.length})</div>
-                    <div className="space-y-1.5">{archivedOnly.map(r => renderRow(r, 'closed'))}</div>
-                  </div>
-                )}
-              </div>
-            );
+            return renderTable([
+              { key: 'rejected', title: 'Rejected', hint: '', rows: rejectedRows, mode: 'closed' },
+              { key: 'archived', title: 'Archived', hint: '', rows: archivedOnly, mode: 'closed' },
+            ]);
           })()}
 
           {/* Pagination — only the flat browse views paginate; the queue is

@@ -4,14 +4,15 @@ import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
 import {
   ACTIVE_STATUSES, ARCHIVED_STATUSES, ALIVE_STATUSES, INQUIRY_SOURCES, CLOSED_REASONS,
   RESUBMIT_PREFIX, RESUBMIT_REVIEWED_ACTOR, RESUBMIT_FIELDS, RESUBMIT_FIELD_LABEL,
-  decodeResubmit, type InquiryStatus,
+  decodeResubmit, stageEnteredAt, daysSince, STATUS_LABEL, type InquiryStatus,
 } from '@/lib/inquiry-status';
+import { stillNeed } from '@/lib/inquiry-needs';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail, sendDashboardAccessEmail, sendGoLiveSimpleEmail, sendInquiryDeclinedEmail } from '@/lib/email';
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 import { resolveAdminSession, requireRole, requireOwner, ownerGateError, MANAGER_PLUS, SUPPORT_PLUS, VIEWER_PLUS, type AdminSession } from '@/lib/admin-session';
-import { AGENDA, callGate, fmtCallTime } from '@/lib/inquiry-call';
+import { AGENDA, callGate, fmtCallTime, nextCall, latestCall, parseJson } from '@/lib/inquiry-call';
 import { sendCallScheduledEmail } from '@/lib/email';
 import { encodeChangeAddressed, encodeRequestReReview } from '@/lib/change-requests';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
@@ -49,14 +50,62 @@ export async function GET(req: NextRequest) {
     include: {
       events: { orderBy: { createdAt: 'desc' }, take: 25 },
       // IC-1: few per inquiry; newest first.
-      calls: { where: { kind: 'discovery' }, orderBy: { scheduledAt: 'desc' }, select: { id: true, scheduledAt: true, outcome: true, durationMin: true, direction: true, agendaJson: true, agendaExtra: true, phone: true, followUpAt: true, completedAt: true } },
+      calls: { where: { kind: 'discovery' }, orderBy: { scheduledAt: 'desc' }, select: { id: true, scheduledAt: true, outcome: true, durationMin: true, direction: true, agendaJson: true, agendaExtra: true, answersJson: true, phone: true, followUpAt: true, completedAt: true } },
     },
   });
-  return NextResponse.json(inquiries.map(inq => {
+  // IC-3: "Still need from them" is computed HERE, where the sheet and the
+  // needs blobs still are — the list never ships them (MP-10), and the column
+  // needs both. Building-stage rows also need to know whether the built course
+  // has a logo yet.
+  const builtIds = inquiries.filter(i => i.status === 'building' && i.builtCourseId).map(i => i.builtCourseId as string);
+  const logos = builtIds.length
+    ? new Map((await prisma.course.findMany({ where: { id: { in: builtIds } }, select: { id: true, logoUrl: true } })).map(c => [c.id, c.logoUrl]))
+    : new Map<string, string | null>();
+  const rows = inquiries.map(inq => {
+    const sheet = parseJson<Record<string, unknown> | null>(inq.detailsJson, null);
+    const needs = parseJson<Record<string, unknown> | null>(inq.needsJson, null);
+    const needsInput = {
+      ...inq,
+      events: inq.events,
+      builtCourseLogoUrl: inq.status === 'building' && inq.builtCourseId ? (logos.get(inq.builtCourseId) ?? null) : undefined,
+    };
+    const need = stillNeed(needsInput, sheet, needs, inq.calls);
     const { detailsJson: _detailsJson, needsJson: _needsJson, facilitiesNotes: _facilitiesNotes, events, ...rest } = stripSecrets(inq);
-    return { ...rest, events: events.slice().reverse() };
-  }));
+    return { ...rest, events: events.slice().reverse(), stillNeed: need };
+  });
+
+  // IC-3 §5: the one-time "organized excel sheet". Same auth as the JSON.
+  if (req.nextUrl.searchParams.get('format') === 'csv') {
+    const now = new Date();
+    const esc = (v: unknown) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+    const header = ['course', 'city', 'state', 'course type', 'contact', 'title', 'email', 'phone', 'stage', 'next call', 'last call outcome', 'still need', 'days in stage', 'inquired', 'source', 'closed reason'];
+    const lines = [header.map(esc).join(',')];
+    for (const r of rows) {
+      const upcoming = nextCall(r.calls);
+      const last = latestCall(r.calls.filter(c => c.outcome !== 'scheduled'));
+      lines.push([
+        r.courseName, r.city, r.state, r.courseType, r.contactName, r.contactTitle, r.email, r.phone,
+        STATUS_LABEL[r.status] || r.status,
+        upcoming ? new Date(upcoming.scheduledAt).toISOString() : '',
+        last ? last.outcome : '',
+        r.stillNeed.map(n => n.label).join('; '),
+        daysSince(stageEnteredAt(r.status, r.createdAt, r.events), now),
+        new Date(r.createdAt).toISOString(),
+        r.source ?? '', r.closedReason ?? '',
+      ].map(esc).join(','));
+    }
+    const stamp = now.toISOString().slice(0, 10);
+    return new NextResponse(lines.join(NL_CSV), {
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="inquiries-${stamp}.csv"`,
+        'Cache-Control': 'no-store',
+      },
+    });
+  }
+  return NextResponse.json(rows);
 }
+const NL_CSV = String.fromCharCode(13, 10);
 
 async function logEvent(
   inquiryId: string,
