@@ -131,8 +131,8 @@ export default function GettingStartedChecklist({
         <ChevronRight className="w-4 h-4 text-ink-faint"/>
       </button>
       <div className="px-5 pb-2">
-        <div className="h-1.5 bg-line-soft rounded-full overflow-hidden mb-4">
-          <div className="h-full bg-pine rounded-full transition-all" style={{ width: `${(doneCount / steps.length) * 100}%` }}/>
+        <div className="h-1.5 bg-line-soft overflow-hidden mb-4">
+          <div className="h-full bg-pine transition-all" style={{ width: `${(doneCount / steps.length) * 100}%` }}/>
         </div>
       </div>
       <div className="divide-y divide-line-soft border-t border-line-soft">

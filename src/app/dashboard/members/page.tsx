@@ -33,7 +33,7 @@ interface Member {
 /* ─── Helpers ──────────────────────────────────────────────────────────────── */
 const TIER_COLORS = ['#10b981','#3b82f6','#8b5cf6','#f59e0b','#f43f5e','#14b8a6','#94a3b8'];
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
-const lblCls = 'block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5';
+const lblCls = 'block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5';
 const fmtMoney = (n: number | null) => n == null ? '—' : `$${n.toFixed(2)}`;
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 const addMonthsISO = (months: number) => { const d = new Date(); d.setMonth(d.getMonth() + months); return d.toISOString().slice(0, 10); };
@@ -218,7 +218,7 @@ export default function MembersPage() {
                   )}>
                     {wizStep > s.n ? <Check className="w-3 h-3"/> : s.n}
                   </span>
-                  <span className={'text-xs font-medium uppercase tracking-[0.06em] ' + (wizStep >= s.n ? 'text-ink' : 'text-ink-faint')}>{s.label}</span>
+                  <span className={'text-xs font-medium uppercase tracking-[0.1em] ' + (wizStep >= s.n ? 'text-ink' : 'text-ink-faint')}>{s.label}</span>
                 </button>
                 {i < WIZARD_STEPS.length - 1 && <div className="w-4 h-px bg-line shrink-0"/>}
               </div>
@@ -377,7 +377,7 @@ export default function MembersPage() {
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="the members list" />
         <div className="max-w-lg mx-auto px-6 py-16 text-center">
-          <div className="w-14 h-14 rounded-full bg-ok/10 flex items-center justify-center mx-auto mb-5">
+          <div className="w-14 h-14 rounded-md bg-ok/10 flex items-center justify-center mx-auto mb-5">
             <CheckCircle2 className="w-7 h-7 text-ok"/>
           </div>
           <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Tier Created</h1>
@@ -439,16 +439,23 @@ export default function MembersPage() {
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="the members list" />
         <div className="bg-white border-b border-line sticky top-0 z-10">
-          <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-pine"/>
-              <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Member Management</h1>
-              <TabIntroButton onClick={intro.show}/>
+          {/* U-O (§1b): serif title + one sentence of this page's numbers;
+              the tiers/members switch becomes two square chips. */}
+          <div className="max-w-6xl mx-auto px-6 py-4 flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Members</h1>
+                <TabIntroButton onClick={intro.show}/>
+              </div>
+              <p className="text-[13.5px] text-ink-soft mt-2">
+                {tiers.length} tier{tiers.length !== 1 ? 's' : ''} · {members.filter(m => m.status === 'active').length} active member{members.filter(m => m.status === 'active').length !== 1 ? 's' : ''} of {members.length} on file
+              </p>
             </div>
-            <div className="ml-auto flex gap-1 bg-paper border border-line rounded-md p-1">
+            <div className="shrink-0 flex gap-1.5">
               {(['tiers', 'members'] as const).map(p => (
                 <button key={p} onClick={() => setPanel(p)}
-                  className={'px-4 py-1.5 rounded-md text-sm font-medium capitalize transition-colors ' + (panel === p ? 'bg-white text-ink border border-line shadow-sm' : 'text-ink-soft hover:text-ink')}>
+                  aria-pressed={panel === p}
+                  className={'px-4 py-1.5 rounded-md text-[12.5px] font-medium capitalize border transition-colors ' + (panel === p ? 'bg-pine text-white border-pine' : 'bg-white text-ink-soft border-line hover:border-line-strong hover:text-ink')}>
                   {p === 'tiers' ? `Tiers (${tiers.length})` : `Members (${members.filter(m => m.status === 'active').length})`}
                 </button>
               ))}
@@ -474,7 +481,7 @@ export default function MembersPage() {
           {panel === 'tiers' && (
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Your Tiers</div>
+                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Your Tiers</div>
                 <button onClick={() => openWizard()}
                   className="ml-auto bg-pine hover:bg-pine-hover text-white rounded-md text-[12.5px] font-medium transition-colors px-4 py-2 flex items-center gap-2">
                   <Plus className="w-4 h-4"/>New Membership Tier

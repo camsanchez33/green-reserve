@@ -71,11 +71,14 @@ function MessagesContent() {
 
       <main className="flex-1 flex flex-col md:overflow-hidden pb-24 md:pb-0">
         <div className="px-6 py-4 border-b border-line shrink-0 bg-white">
+          {/* U-O (§1b): serif title + one sentence of this thread's numbers. */}
           <div className="flex items-center gap-2">
-            <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink leading-none">Messages</h1>
+            <h1 className="text-[30px] font-serif font-medium tracking-tight text-ink leading-none">Messages</h1>
             <TabIntroButton onClick={intro.show}/>
           </div>
-          <div className="text-xs text-ink-muted mt-0.5">Your conversation with the GreenReserve team</div>
+          <div className="text-[13.5px] text-ink-soft mt-2">
+            Your conversation with the GreenReserve team · {messages.length} message{messages.length !== 1 ? 's' : ''}
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">

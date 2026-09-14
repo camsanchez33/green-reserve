@@ -8,6 +8,7 @@ import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-full';
@@ -120,12 +121,18 @@ export default function SchedulesPage() {
       <OperatorSidebar active="schedule"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="the schedule" />
-        <div className="bg-white border-b border-line px-6 py-4 flex items-center justify-between sticky top-0 z-10">
-          <div className="flex items-center gap-2">
-            <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Tee Sheet Schedules</h1>
-            <TabIntroButton onClick={intro.show}/>
+        <div className="bg-white border-b border-line px-6 py-4 flex flex-wrap items-start justify-between gap-3 sticky top-0 z-10">
+          {/* U-O (§1b): serif title + one sentence of this page's numbers. */}
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Schedule</h1>
+              <TabIntroButton onClick={intro.show}/>
+            </div>
+            <p className="text-[13.5px] text-ink-soft mt-2">
+              {schedules.length} schedule{schedules.length !== 1 ? 's' : ''} · {schedules.filter(s => s.active).length} running · {schedules.filter(s => !s.active).length} paused
+            </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button onClick={regenerate} disabled={regenerating} className="flex items-center gap-2 border border-line text-ink-soft px-3 py-2 rounded-md text-[12.5px] font-medium hover:border-line-strong hover:text-ink disabled:opacity-50 transition-colors">
               <RefreshCw className={'w-3.5 h-3.5 ' + (regenerating ? 'animate-spin' : '')}/>{regenerating ? 'Regenerating…' : 'Apply to Tee Sheet'}
             </button>
@@ -168,7 +175,8 @@ export default function SchedulesPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-ink capitalize">{s.tierName}</span>
-                    <span className={'text-[10px] font-medium px-2 py-0.5 rounded-full ' + (s.active ? 'text-ok bg-ok/10' : 'text-ink-muted bg-line')}>{s.active ? 'Active' : 'Paused'}</span>
+                    {/* U-O: tinted pill badges are banned — StatusDot instead. */}
+                    <StatusDot status={s.active ? 'ok' : 'neutral'} label={s.active ? 'Active' : 'Paused'}/>
                   </div>
                   <div className="text-sm text-ink-soft mt-0.5">
                     {s.daysOfWeek.map(d=>DAYS[d]).join(', ')} · {fmtTime(s.startTime)} – {fmtTime(s.endTime)} · every {s.intervalMinutes} min · {s.holes} holes
@@ -182,27 +190,27 @@ export default function SchedulesPage() {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
                 <div className="bg-paper rounded-md px-3 py-2">
-                  <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Weekday</div>
+                  <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-0.5">Weekday</div>
                   <div className="font-medium text-ink">${s.greenFeeWeekday} + ${s.cartFee} cart</div>
                 </div>
                 <div className="bg-paper rounded-md px-3 py-2">
-                  <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Weekend</div>
+                  <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-0.5">Weekend</div>
                   <div className="font-medium text-ink">${s.greenFeeWeekend} + ${s.cartFee} cart</div>
                 </div>
                 {s.memberRateWeekday != null && (
                   <div className="bg-ok/5 border border-ok/15 rounded-md px-3 py-2">
-                    <div className="text-[10px] uppercase tracking-[0.06em] text-ok mb-0.5">Member WD/WE</div>
+                    <div className="text-[10px] uppercase tracking-[0.1em] text-ok mb-0.5">Member WD/WE</div>
                     <div className="font-medium text-ok">${s.memberRateWeekday} / ${s.memberRateWeekend}</div>
                   </div>
                 )}
                 {s.residentRateWeekday != null && (
                   <div className="bg-pine/5 border border-pine/15 rounded-md px-3 py-2">
-                    <div className="text-[10px] uppercase tracking-[0.06em] text-pine mb-0.5">Resident WD/WE</div>
+                    <div className="text-[10px] uppercase tracking-[0.1em] text-pine mb-0.5">Resident WD/WE</div>
                     <div className="font-medium text-pine">${s.residentRateWeekday} / ${s.residentRateWeekend}</div>
                   </div>
                 )}
                 <div className="bg-paper rounded-md px-3 py-2">
-                  <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">Walking</div>
+                  <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-0.5">Walking</div>
                   <div className="font-medium text-ink">{s.walkingAllowed ? 'Allowed' : 'Cart required'}</div>
                 </div>
               </div>
@@ -219,7 +227,7 @@ export default function SchedulesPage() {
               </div>
               <div className="px-5 py-4 space-y-4">
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Tier Name</label>
+                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Tier Name</label>
                   <select value={form.tierName} onChange={e=>set('tierName',e.target.value)} className={iCls}>
                     <option value="standard">Standard</option>
                     <option value="twilight">Twilight</option>
@@ -229,11 +237,11 @@ export default function SchedulesPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Days of Week</label>
+                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Days of Week</label>
                   <div className="flex gap-1.5 flex-wrap">
                     {DAYS.map((d,i) => (
                       <button key={i} onClick={() => toggleDay(i)}
-                        className={'w-10 h-10 rounded-full text-sm font-medium border transition-colors ' + (form.daysOfWeek.includes(i) ? 'bg-pine text-white border-pine' : 'bg-paper text-ink-soft border-line hover:border-pine/40')}>
+                        className={'w-10 h-10 rounded-md text-[13.5px] font-medium border transition-colors ' + (form.daysOfWeek.includes(i) ? 'bg-pine text-white border-pine' : 'bg-paper text-ink-soft border-line hover:border-pine/40')}>
                         {d}
                       </button>
                     ))}
@@ -245,26 +253,26 @@ export default function SchedulesPage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div><label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Start Time</label><input type="time" value={form.startTime} onChange={e=>set('startTime',e.target.value)} className={iCls}/></div>
-                  <div><label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">End Time</label><input type="time" value={form.endTime} onChange={e=>set('endTime',e.target.value)} className={iCls}/></div>
+                  <div><label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Start Time</label><input type="time" value={form.startTime} onChange={e=>set('startTime',e.target.value)} className={iCls}/></div>
+                  <div><label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">End Time</label><input type="time" value={form.endTime} onChange={e=>set('endTime',e.target.value)} className={iCls}/></div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Interval (min)</label>
+                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Interval (min)</label>
                     <select value={form.intervalMinutes} onChange={e=>set('intervalMinutes',Number(e.target.value))} className={iCls}>
                       {[6,7,8,9,10,12,15,20].map(m=><option key={m} value={m}>{m} min</option>)}
                     </select>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div><label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Holes</label><select value={form.holes} onChange={e=>set('holes',Number(e.target.value))} className={iCls}><option value={9}>9 holes</option><option value={18}>18 holes</option></select></div>
-                  <div><label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Cart Fee ($)</label><input type="number" value={form.cartFee} onChange={e=>set('cartFee',Number(e.target.value))} className={iCls} min={0}/></div>
+                  <div><label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Holes</label><select value={form.holes} onChange={e=>set('holes',Number(e.target.value))} className={iCls}><option value={9}>9 holes</option><option value={18}>18 holes</option></select></div>
+                  <div><label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Cart Fee ($)</label><input type="number" value={form.cartFee} onChange={e=>set('cartFee',Number(e.target.value))} className={iCls} min={0}/></div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div><label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Green Fee — Weekday ($)</label><input type="number" value={form.greenFeeWeekday} onChange={e=>set('greenFeeWeekday',Number(e.target.value))} className={iCls} min={0}/></div>
-                  <div><label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Green Fee — Weekend ($)</label><input type="number" value={form.greenFeeWeekend} onChange={e=>set('greenFeeWeekend',Number(e.target.value))} className={iCls} min={0}/></div>
+                  <div><label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Green Fee — Weekday ($)</label><input type="number" value={form.greenFeeWeekday} onChange={e=>set('greenFeeWeekday',Number(e.target.value))} className={iCls} min={0}/></div>
+                  <div><label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Green Fee — Weekend ($)</label><input type="number" value={form.greenFeeWeekend} onChange={e=>set('greenFeeWeekend',Number(e.target.value))} className={iCls} min={0}/></div>
                 </div>
                 {hasMember && (
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.06em] text-ok block mb-1.5">Member Rate (optional)</label>
+                    <label className="text-[11px] uppercase tracking-[0.1em] text-ok block mb-1.5">Member Rate (optional)</label>
                     <div className="grid grid-cols-2 gap-3">
                       <input type="number" placeholder="Weekday $" value={form.memberRateWeekday} onChange={e=>set('memberRateWeekday',e.target.value)} className={iCls} min={0}/>
                       <input type="number" placeholder="Weekend $" value={form.memberRateWeekend} onChange={e=>set('memberRateWeekend',e.target.value)} className={iCls} min={0}/>
@@ -273,7 +281,7 @@ export default function SchedulesPage() {
                 )}
                 {hasResident && (
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.06em] text-pine block mb-1.5">Resident Rate (optional)</label>
+                    <label className="text-[11px] uppercase tracking-[0.1em] text-pine block mb-1.5">Resident Rate (optional)</label>
                     <div className="grid grid-cols-2 gap-3">
                       <input type="number" placeholder="Weekday $" value={form.residentRateWeekday} onChange={e=>set('residentRateWeekday',e.target.value)} className={iCls} min={0}/>
                       <input type="number" placeholder="Weekend $" value={form.residentRateWeekend} onChange={e=>set('residentRateWeekend',e.target.value)} className={iCls} min={0}/>

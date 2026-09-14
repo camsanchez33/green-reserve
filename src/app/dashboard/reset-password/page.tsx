@@ -66,10 +66,10 @@ function ResetPasswordContent() {
 
           {!checking && !validToken && (
             <div className="text-center py-4">
-              <div className="w-12 h-12 bg-bad/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-bad/10 rounded-md flex items-center justify-center mx-auto mb-4">
                 <XCircle className="w-6 h-6 text-bad"/>
               </div>
-              <h2 className="text-[18px] font-serif font-medium text-ink mb-2">Link invalid or expired</h2>
+              <h2 className="text-[24px] font-serif font-medium leading-none text-ink mb-2">Link invalid or expired</h2>
               <p className="text-ink-soft text-sm mb-6">Reset links expire after 1 hour. Request a new one below.</p>
               <a href="/dashboard/forgot-password" className="inline-block w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] transition-colors">
                 Request New Link
@@ -79,19 +79,19 @@ function ResetPasswordContent() {
 
           {!checking && validToken && !done && (
             <>
-              <h2 className="text-[20px] font-serif font-medium text-ink mb-1">Set a new password</h2>
+              <h2 className="text-[24px] font-serif font-medium leading-none text-ink mb-1">Set a new password</h2>
               <p className="text-sm text-ink-soft mb-6">For <span className="font-medium text-ink">{email}</span></p>
 
               {error && <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm mb-4">{error}</div>}
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">New Password</label>
+                  <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">New Password</label>
                   <input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} className={iCls}/>
                   <p className="text-xs text-ink-faint mt-1.5">{PASSWORD_REQUIREMENTS_HINT}</p>
                 </div>
                 <div>
-                  <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Confirm Password</label>
+                  <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Confirm Password</label>
                   <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} className={iCls}/>
                 </div>
               </div>
@@ -105,10 +105,10 @@ function ResetPasswordContent() {
 
           {done && (
             <div className="text-center py-4">
-              <div className="w-12 h-12 bg-ok/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-ok/10 rounded-md flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-6 h-6 text-ok"/>
               </div>
-              <h2 className="text-[18px] font-serif font-medium text-ink mb-2">Password updated</h2>
+              <h2 className="text-[24px] font-serif font-medium leading-none text-ink mb-2">Password updated</h2>
               <p className="text-ink-soft text-sm">Redirecting you to login...</p>
             </div>
           )}
