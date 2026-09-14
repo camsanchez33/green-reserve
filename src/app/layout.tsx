@@ -24,7 +24,8 @@ const fraunces = Fraunces({
 // child pages "Page — GreenReserve" for free; openGraph/twitter defaults mean
 // a shared link renders a card (src/app/opengraph-image.tsx) instead of a URL.
 const SITE_URL = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
-const DESCRIPTION = 'Free online booking platform for golf courses. Set up your tee sheet in minutes. Golfers book direct — you keep 100% of green fees.';
+// §0.6 (UI_REVISE_SPEC): the "keep 100%" claim is frozen behind LQ-2 — not in metadata either.
+const DESCRIPTION = 'Free online tee sheet for golf courses. Golfers book on a page that looks like your course; you run the sheet, check-ins and payments.';
 
 // env(safe-area-inset-*) only resolves with viewport-fit=cover — the dashboard's
 // bottom nav and toasts pad for the home indicator.

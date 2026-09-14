@@ -34,10 +34,13 @@
 
 /* HERO */
 .hero { position: relative; height: 100svh; min-height: 640px; max-height: 1000px; overflow: hidden; display: flex; align-items: center; color: #fff; }
-.heroPh { position: absolute; inset: -6% 0 0 0; height: 112%; transform: scale(1.06); will-change: transform; }
+.heroPh { position: absolute; inset: -6% 0 0 0; height: 112%; transform: translateY(var(--hy, 0px)) scale(1.06); will-change: transform; }
 .heroPh img { object-fit: cover; object-position: 62% 60%; }
+/* The settle animation keeps contributing after it ends (fill-mode both), which
+   would mask any inline transform — so the scroll parallax is a custom property
+   (--hy, set from JS) that the keyframes themselves read. */
 .js .heroPh { animation: kb 7s var(--ease) both; }
-@keyframes kb { from { transform: scale(1.12); } to { transform: scale(1.06); } }
+@keyframes kb { from { transform: translateY(var(--hy, 0px)) scale(1.12); } to { transform: translateY(var(--hy, 0px)) scale(1.06); } }
 .shade { position: absolute; inset: 0; pointer-events: none; }
 .heroShade { background: linear-gradient(90deg, rgba(0,0,0,.5) 0%, rgba(0,0,0,.22) 48%, rgba(0,0,0,.05) 100%), linear-gradient(0deg, rgba(0,0,0,.35), rgba(0,0,0,0) 40%); }
 .inWrap { position: relative; width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding-top: 40px; }
@@ -188,8 +191,11 @@
 .final .cta { justify-content: center; margin-top: 34px; }
 
 @media (max-width: 960px) {
-  .story { height: 260vh; }
-  .beats { left: 24px; bottom: 10vh; width: calc(100% - 48px); }
+  /* §5: below 960px the story unpins and the three beats stack over the photo. */
+  .story { height: auto; }
+  .pin { position: relative; height: auto; min-height: 100svh; }
+  .beats { position: relative; left: auto; bottom: auto; width: auto; padding: 96px 24px 72px; display: flex; flex-direction: column; gap: 56px; }
+  .beat { position: relative; opacity: 1; transform: none; }
   .prog { display: none; }
   .cards, .stepsRow { grid-template-columns: 1fr; }
   .priceWrap, .faqGrid { grid-template-columns: 1fr; gap: 40px; }
@@ -201,4 +207,5 @@
   .storyPh, .bandPh, .heroPh { transform: none !important; }
   .fade, .beat, .card, .img img, .detail, .chev, .a, .btn { transition: none; }
   .js .fade:not(.in) { opacity: 1; transform: none; }
+  .btn:hover, .card:hover, .sw:hover, .reserve:hover, .card:hover .img img { transform: none; }
 }
