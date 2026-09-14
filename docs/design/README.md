@@ -15,6 +15,7 @@ embedded photos: `{{HERO}}`, `{{BUNKER}}`, `{{BUNKERCARD}}`, `{{AERIAL}}`, `{{TE
 | TEE | 1532601224476-15c79f2f7a51 | "We set it up" band | 1600w, position center 40% |
 | IRON | 1593111774240-d529f12cf4bb | Stony Hollow card + demo device header | 1000w |
 | LOGO | public/brand/logo-lockup.png | nav + footer | 600w |
+| STORY (H-2a) | `public/home/story.mp4` + `story.webm` + `story-poster.jpg` | looping clip under the pinned story beats (desktop only) | supplied by Cam 2026-09-14 — source and licence: **Cam to record here** |
 
 URL pattern: `https://images.unsplash.com/photo-<id>?auto=format&fit=crop&w=1600&q=70`
 

@@ -133,11 +133,21 @@ export default function HomeContent() {
     const v = videoRef.current;
     const story = storyRef.current;
     if (!storyVideo || !v || !story) return;
+    let timer: number | null = null;
     const io = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) v.play().catch(() => {}); else v.pause(); });
-    }, { threshold: 0.05 });
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          v.play().catch(() => {});
+          // A clip that cannot play within 4s of being asked stays hidden
+          // behind the poster (slow network, unsupported codec, blocked autoplay).
+          if (timer === null) timer = window.setTimeout(() => { if (v.readyState < 3 || v.paused) setStoryVideo(false); }, 4000);
+        } else {
+          v.pause();
+        }
+      });
+    }, { threshold: 0.1 });
     io.observe(story);
-    return () => io.disconnect();
+    return () => { io.disconnect(); if (timer !== null) window.clearTimeout(timer); };
   }, [storyVideo]);
 
   return (
@@ -164,14 +174,14 @@ export default function HomeContent() {
       <section ref={storyRef} className={s.story} id="how">
         <div className={s.pin}>
           <div ref={storyPhRef} className={s.storyPh}>
-            <Image src="/home/bunker.jpg" alt="" fill sizes="100vw" loading="lazy" />
+            <Image src="/home/bunker.jpg" alt="" fill sizes="100vw" loading="lazy" className={storyVideo ? undefined : s.drift} />
             {storyVideo && (
               <video
                 ref={videoRef}
                 muted
                 loop
                 playsInline
-                preload="metadata"
+                preload="none"
                 poster="/home/story-poster.jpg"
                 aria-hidden="true"
                 onError={() => setStoryVideo(false)}

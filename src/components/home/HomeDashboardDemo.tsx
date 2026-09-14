@@ -22,18 +22,33 @@ const START: Slot[] = [
   { id: 'e', time: '7:50 AM', holes: 18, price: 62, capacity: 4, blocked: true, bookings: [] },
   { id: 'f', time: '8:00 AM', holes: 9, price: 38, capacity: 4, blocked: false, bookings: [{ id: 'f1', name: 'Park', players: 1, paid: false, checkedIn: false }] },
 ];
-const DAYS = ['Fri 4', 'Sat 5', 'Sun 6', 'Mon 7', 'Tue 8'];
+const DAYS = ['Fri 4', 'Sat 5', 'Sun 6', 'Mon 7', 'Tue 8', 'Wed 9', 'Thu 10'];
+// A second, quieter day so the strip is not decorative.
+const NEXT_DAY: Slot[] = [
+  { id: 'n1', time: '7:10 AM', holes: 18, price: 78, capacity: 4, blocked: false, bookings: [{ id: 'n1a', name: 'Bishop', players: 2, paid: false, checkedIn: false }] },
+  { id: 'n2', time: '7:20 AM', holes: 18, price: 78, capacity: 4, blocked: false, bookings: [] },
+  { id: 'n3', time: '7:30 AM', holes: 18, price: 78, capacity: 4, blocked: false, bookings: [] },
+  { id: 'n4', time: '7:40 AM', holes: 18, price: 78, capacity: 4, blocked: true, bookings: [] },
+  { id: 'n5', time: '7:50 AM', holes: 9, price: 44, capacity: 4, blocked: false, bookings: [{ id: 'n5a', name: 'Amari', players: 4, paid: true, checkedIn: false }] },
+  { id: 'n6', time: '8:00 AM', holes: 18, price: 78, capacity: 4, blocked: false, bookings: [] },
+];
+const DAY_TITLES = ['Friday, September 4', 'Saturday, September 5', 'Sunday, September 6', 'Monday, September 7', 'Tuesday, September 8', 'Wednesday, September 9', 'Thursday, September 10'];
 const HATCH: React.CSSProperties = { backgroundImage: 'repeating-linear-gradient(135deg, #E3E0D5 0 1px, transparent 1px 7px)' };
 
 export default function HomeDashboardDemo({ accent }: { accent: string }) {
-  const [slots, setSlots] = useState<Slot[]>(START);
+  const [days, setDays] = useState<Slot[][]>(() => [START, NEXT_DAY, NEXT_DAY, START, NEXT_DAY, START, NEXT_DAY]);
   const [open, setOpen] = useState<string | null>('a');
   const [day, setDay] = useState(0);
+  const slots = days[day];
+  const setSlots = (fn: (prev: Slot[]) => Slot[]) => setDays(prev => prev.map((d, i) => i === day ? fn(d) : d));
 
   const booked = slots.reduce((n, sl) => n + sl.bookings.reduce((m, b) => m + b.players, 0), 0);
   const forSale = slots.filter(sl => !sl.blocked).reduce((n, sl) => n + sl.capacity, 0);
   const checkedIn = slots.reduce((n, sl) => n + sl.bookings.filter(b => b.checkedIn).reduce((m, b) => m + b.players, 0), 0);
-  const collected = slots.reduce((n, sl) => n + sl.bookings.filter(b => b.checkedIn || b.paid).reduce((m, b) => m + b.players * (sl.price + 1.5), 0), 0);
+  // The course's own money: green fees. GreenReserve's $1.50/player is the
+  // golfer's line and is not shown as the course's take (LQ-2).
+  const collected = slots.reduce((n, sl) => n + sl.bookings.filter(b => b.checkedIn || b.paid).reduce((m, b) => m + b.players * sl.price, 0), 0);
+  const blocked = slots.filter(sl => sl.blocked).length;
 
   function checkIn(slotId: string, bookingId: string) {
     setSlots(prev => prev.map(sl => sl.id !== slotId ? sl : { ...sl, bookings: sl.bookings.map(b => b.id === bookingId ? { ...b, checkedIn: true, paid: true } : b) }));
@@ -41,12 +56,13 @@ export default function HomeDashboardDemo({ accent }: { accent: string }) {
   function toggleBlock(slotId: string) {
     setSlots(prev => prev.map(sl => sl.id !== slotId ? sl : { ...sl, blocked: !sl.blocked }));
   }
-  function reset() { setSlots(START); setOpen('a'); setDay(0); }
+  function reset() { setDays([START, NEXT_DAY, NEXT_DAY, START, NEXT_DAY, START, NEXT_DAY]); setOpen('a'); setDay(0); }
 
   const tiles = [
     { label: 'Booked', value: `${booked}`, note: `of ${forSale} spots for sale` },
     { label: 'Checked in', value: `${checkedIn}`, note: 'players on the course' },
-    { label: 'Collected', value: `$${collected.toFixed(2)}`, note: 'green fees + booking fee, so far' },
+    { label: 'Collected', value: `$${collected.toFixed(2)}`, note: 'green fees, so far' },
+    { label: 'Blocked', value: `${blocked}`, note: 'times off the sheet' },
   ];
 
   return (
@@ -54,9 +70,14 @@ export default function HomeDashboardDemo({ accent }: { accent: string }) {
       <div className={s.laptopScreen}>
         <div className={STAFF_LOOK_CLASS}>
           <div className={s.dash} style={{ '--course': accent } as React.CSSProperties}>
+            <div className={s.dashIdentity}>
+              <span className={s.dashCrest} style={{ color: accent }}>HC</span>
+              <span className={s.dashCourse}>Hollow Creek Golf Club</span>
+              <span className={s.dashNav}>Tee sheet · Schedule · Members · Payments · Settings</span>
+            </div>
             <div className={s.dashHead}>
               <div>
-                <div className={s.dashTitle}>Friday, September 4</div>
+                <div className={s.dashTitle}>{DAY_TITLES[day]}</div>
                 <div className={s.dashSub}><b>{booked} booked</b> of {forSale} spots for sale · {checkedIn} checked in · <b>${collected.toFixed(2)}</b> collected so far</div>
               </div>
               <button type="button" className={s.dashReset} onClick={reset}>Start over</button>
@@ -76,7 +97,7 @@ export default function HomeDashboardDemo({ accent }: { accent: string }) {
               {DAYS.map((d, i) => (
                 <button key={d} type="button" role="tab" aria-selected={day === i} className={`${s.dashDay} ${day === i ? s.on : ''}`}
                   style={day === i ? { backgroundColor: accent, borderColor: accent, color: '#fff' } : undefined}
-                  onClick={() => setDay(i)}>
+                  onClick={() => { setDay(i); setOpen(null); }}>
                   <span>{d.split(' ')[0]}</span><b>{d.split(' ')[1]}</b>
                 </button>
               ))}
@@ -91,7 +112,7 @@ export default function HomeDashboardDemo({ accent }: { accent: string }) {
                     <button type="button" className={s.dashRowHit} onClick={() => setOpen(isOpen ? null : sl.id)} aria-expanded={isOpen}>
                       <span className={s.dashTime}>{sl.time}</span>
                       <span className={s.dashMeta}>{sl.holes}h</span>
-                      <span className={s.dashMeta}>{sl.blocked ? 'Blocked' : `${players}/${sl.capacity}`}</span>
+                      <span className={s.dashMeta}>{sl.blocked ? 'Blocked · maintenance' : `${players}/${sl.capacity}`}</span>
                       <span className={s.dashMeta}>${sl.price}</span>
                       <span className={s.dashChips}>
                         {sl.bookings.map(b => <span key={b.id} className={s.dashChip}>{b.name} · {b.players}</span>)}

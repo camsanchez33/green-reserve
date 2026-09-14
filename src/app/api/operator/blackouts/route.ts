@@ -13,7 +13,12 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
   const { date, reason } = await req.json();
-  await prisma.teeTime.deleteMany({ where: { courseId: session.courseId, date } });
+  if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return NextResponse.json({ error: 'Pick a date.' }, { status: 400 });
+  // Review (B-7): a booked tee time cannot be deleted (Booking.teeTime is a
+  // required relation — the delete used to 500 on any day with a booking).
+  // Open times go; booked ones are blocked in place and their bookings stay.
+  await prisma.teeTime.deleteMany({ where: { courseId: session.courseId, date, bookings: { none: { status: { in: ['confirmed', 'completed'] } } } } });
+  await prisma.teeTime.updateMany({ where: { courseId: session.courseId, date }, data: { status: 'blocked' } });
   const blackout = await prisma.blackout.create({ data: { courseId: session.courseId, date, reason: reason || '' } });
   return NextResponse.json(blackout);
 }

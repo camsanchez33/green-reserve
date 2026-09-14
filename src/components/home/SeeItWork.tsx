@@ -1,7 +1,10 @@
 'use client';
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import HomeDemo from './HomeDemo';
-import HomeDashboardDemo from './HomeDashboardDemo';
+// The dashboard demo (and the staff fonts it mounts) load only when the tab
+// is opened — the homepage is a golfer page under a perf budget.
+const HomeDashboardDemo = dynamic(() => import('./HomeDashboardDemo'), { ssr: false, loading: () => <div style={{ minHeight: 420 }} /> });
 import s from '@/app/home.module.css';
 
 // H-2b: "See it work" has two tabs — what golfers see (the booking page demo)

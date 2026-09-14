@@ -64,6 +64,11 @@ export default function SchedulesPage() {
     setWindowsError('');
   }, []);
 
+  // Review (B-7): the cards showed a rate whenever a schedule had one; the
+  // table must not hide saved rates behind the course-level flag.
+  const showMember = hasMember || schedules.some(s => s.memberRateWeekday != null);
+  const showResident = hasResident || schedules.some(s => s.residentRateWeekday != null);
+
   const loadBlackouts = useCallback(async () => {
     const r = await dfetch<{ id: string; date: string; reason: string }[]>('/api/operator/blackouts');
     if (r.ok && Array.isArray(r.data)) { setBlackouts(r.data.slice().sort((a, b) => a.date.localeCompare(b.date))); setBlackoutError(''); }
@@ -230,8 +235,8 @@ export default function SchedulesPage() {
                       <th className="text-left font-medium px-4 py-2.5">Band</th>
                       <th className="text-right font-medium px-3 py-2.5">Weekday</th>
                       <th className="text-right font-medium px-3 py-2.5">Weekend</th>
-                      {hasMember && <th className="text-right font-medium px-3 py-2.5">Member WD / WE</th>}
-                      {hasResident && <th className="text-right font-medium px-3 py-2.5">Resident WD / WE</th>}
+                      {showMember && <th className="text-right font-medium px-3 py-2.5">Member WD / WE</th>}
+                      {showResident && <th className="text-right font-medium px-3 py-2.5">Resident WD / WE</th>}
                       <th className="text-right font-medium px-3 py-2.5">Cart</th>
                       <th className="text-left font-medium px-3 py-2.5">Status</th>
                       <th className="px-3 py-2.5"><span className="sr-only">Actions</span></th>
@@ -247,8 +252,8 @@ export default function SchedulesPage() {
                         </td>
                         <td className="px-3 py-3 text-right tabular-nums font-medium text-ink align-top">${s.greenFeeWeekday}</td>
                         <td className="px-3 py-3 text-right tabular-nums font-medium text-ink align-top">${s.greenFeeWeekend}</td>
-                        {hasMember && <td className="px-3 py-3 text-right tabular-nums text-ok align-top">{s.memberRateWeekday != null ? `$${s.memberRateWeekday} / $${s.memberRateWeekend ?? s.memberRateWeekday}` : <span className="text-ink-faint">—</span>}</td>}
-                        {hasResident && <td className="px-3 py-3 text-right tabular-nums text-pine align-top">{s.residentRateWeekday != null ? `$${s.residentRateWeekday} / $${s.residentRateWeekend ?? s.residentRateWeekday}` : <span className="text-ink-faint">—</span>}</td>}
+                        {showMember && <td className="px-3 py-3 text-right tabular-nums text-ok align-top">{s.memberRateWeekday != null ? `$${s.memberRateWeekday} / $${s.memberRateWeekend ?? s.memberRateWeekday}` : <span className="text-ink-faint">—</span>}</td>}
+                        {showResident && <td className="px-3 py-3 text-right tabular-nums text-pine align-top">{s.residentRateWeekday != null ? `$${s.residentRateWeekday} / $${s.residentRateWeekend ?? s.residentRateWeekday}` : <span className="text-ink-faint">—</span>}</td>}
                         <td className="px-3 py-3 text-right tabular-nums text-ink-soft align-top">${s.cartFee}</td>
                         <td className="px-3 py-3 align-top"><StatusDot status={s.active ? 'ok' : 'neutral'} label={s.active ? 'Running' : 'Paused'}/></td>
                         <td className="px-3 py-3 align-top">

@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import Image from 'next/image';
-import { Bell } from 'lucide-react';
 import s from '@/app/home.module.css';
 
 // H-1 §4 "See it work" — the golfer's booking page, in demo mode: no network,

@@ -64,6 +64,10 @@
 /* H-2a: the looping clip sits over the still inside the same scaled layer. It
    is only mounted on desktop, and only plays when the story is on screen. */
 .storyPh video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 70%; }
+/* Without the clip (phones, reduced data, a failed load) the still drifts
+   in slowly — H-2a §4b's minimum bar for the section. */
+.drift { animation: drift 28s var(--ease) both; transform-origin: 50% 60%; }
+@keyframes drift { from { transform: scale(1.02); } to { transform: scale(1.10); } }
 .storyShade { background: linear-gradient(90deg, rgba(0,0,0,.62) 0%, rgba(0,0,0,.28) 50%, rgba(0,0,0,.08) 100%), linear-gradient(0deg, rgba(0,0,0,.4), rgba(0,0,0,0) 40%); }
 .beats { position: absolute; left: max(36px, calc(50% - 590px)); bottom: 12vh; width: min(560px, calc(100% - 72px)); }
 .beat { position: absolute; left: 0; bottom: 0; width: 100%; opacity: 0; transform: translateY(18px); transition: opacity .9s var(--ease), transform .9s var(--ease); }
@@ -136,12 +140,16 @@
 .laptopScreen { background: #1d1f1a; border-radius: 14px 14px 4px 4px; padding: 12px 12px 0; box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 30px 50px -30px rgba(20,30,20,.35), 0 100px 140px -80px rgba(20,30,20,.4); }
 .laptopBase { height: 14px; margin: 0 -3%; background: linear-gradient(180deg, #2a2d28, #15171400); border-radius: 0 0 14px 14px; }
 .dash { background: #F7F5EF; color: #1D1F1A; padding: 20px 22px 14px; min-height: 420px; font-size: 13.5px; }
+.dashIdentity { display: flex; align-items: center; gap: 10px; margin: -6px -8px 14px; padding: 0 8px 12px; border-bottom: 1px solid #E3E0D5; font-size: 12px; color: #8A8B80; }
+.dashCrest { width: 26px; height: 26px; border: 1px solid #E3E0D5; background: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; font-size: 11px; }
+.dashCourse { font-family: var(--font-serif), Georgia, serif; font-size: 15px; color: #1D1F1A; }
+.dashNav { margin-left: auto; letter-spacing: .02em; }
+.dashTiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
 .dashHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
 .dashTitle { font-family: var(--font-serif), Georgia, serif; font-size: 26px; line-height: 1; font-weight: 500; }
 .dashSub { font-size: 13.5px; color: #5D5F56; margin-top: 8px; }
 .dashSub b { color: #1D1F1A; font-weight: 600; }
 .dashReset { background: none; border: 1px solid #E3E0D5; font: inherit; font-size: 12px; color: #5D5F56; padding: 6px 10px; cursor: pointer; white-space: nowrap; }
-.dashTiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
 .dashTile { background: #fff; border: 1px solid #E3E0D5; padding: 12px 14px; }
 .dashEyebrow { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #8A8B80; }
 .dashNum { font-family: var(--font-serif), Georgia, serif; font-size: 28px; line-height: 1; font-weight: 500; margin-top: 8px; font-variant-numeric: tabular-nums; }
@@ -164,7 +172,8 @@
 .dashCheckIn { border: 0; color: #fff; font: inherit; font-size: 12px; font-weight: 600; padding: 6px 10px; cursor: pointer; white-space: nowrap; }
 .dashFoot { font-size: 11px; color: #8A8B80; margin-top: 14px; text-align: center; }
 @media (max-width: 720px) {
-  .dashTiles { grid-template-columns: 1fr; }
+  .dashTiles { grid-template-columns: 1fr 1fr; }
+  .dashNav { display: none; }
   .dashChips { display: none; }
   .dashRowHit { flex-wrap: wrap; gap: 8px; }
 }
@@ -248,6 +257,7 @@
 @media (prefers-reduced-motion: reduce) {
   .js .heroPh, .js .inWrap > *, .cue::after { animation: none; }
   .storyPh, .bandPh, .heroPh { transform: none !important; }
+  .drift { animation: none; }
   .fade, .beat, .card, .img img, .detail, .chev, .a, .btn { transition: none; }
   .js .fade:not(.in) { opacity: 1; transform: none; }
   .btn:hover, .card:hover, .sw:hover, .reserve:hover, .card:hover .img img { transform: none; }
