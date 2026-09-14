@@ -187,7 +187,8 @@ export default function CourseDetailPage({
     return ['all', '9', '18'].includes(h ?? '') ? (h as 'all' | '9' | '18') : 'all';
   });
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [nextAvailable, setNextAvailable] = useState<string | null>(null);
+  // B-4: the nearest dates (up to two) with a slot that fits the party.
+  const [nearestDates, setNearestDates] = useState<string[]>([]);
   const [searchingNext, setSearchingNext] = useState(false);
   const didMount = useRef(false);
 
@@ -263,7 +264,7 @@ export default function CourseDetailPage({
     setLoadingTimes(true);
     setSelectedTime(null);
     setMaxPrice(null);
-    setNextAvailable(null);
+    setNearestDates([]);
     const url = previewMode
       ? `/api/preview/${previewMode.courseId}/tee-times?token=${previewMode.token}&date=${selectedDate}`
       : `/api/courses/${slug}/tee-times?date=${selectedDate}`;
@@ -321,13 +322,16 @@ export default function CourseDetailPage({
     router.replace(`/courses/${slug}${q ? '?' + q : ''}`, { scroll: false });
   }, [selectedDate, todFilter, players, holesFilter, slug, router, previewMode]);
 
-  // Find next date with availability when current date is empty
+  // B-4: when the day is sold out, find the nearest dates (up to two, within
+  // a week) that have a slot fitting the current party size — from the same
+  // tee-times API the sheet already reads.
   useEffect(() => {
     if (loadingTimes || teeTimes.length > 0 || !course || course.type === 'member' || course.type === 'private') return;
     let cancelled = false;
     setSearchingNext(true);
     const scan = async () => {
-      for (let i = 1; i <= 7; i++) {
+      const found: string[] = [];
+      for (let i = 1; i <= 7 && found.length < 2; i++) {
         if (cancelled) return;
         const d = new Date(selectedDate + 'T12:00:00');
         d.setDate(d.getDate() + i);
@@ -338,18 +342,14 @@ export default function CourseDetailPage({
             : `/api/courses/${slug}/tee-times?date=${ds}`;
           const res = await fetch(url);
           const times = await res.json();
-          if (!cancelled && Array.isArray(times) && times.length > 0) {
-            setNextAvailable(ds);
-            setSearchingNext(false);
-            return;
-          }
+          if (Array.isArray(times) && times.some((t: TeeTime) => t.players_available >= players)) found.push(ds);
         } catch { /* continue */ }
       }
-      if (!cancelled) setSearchingNext(false);
+      if (!cancelled) { setNearestDates(found); setSearchingNext(false); }
     };
     scan();
     return () => { cancelled = true; };
-  }, [teeTimes.length, loadingTimes, selectedDate, slug, course, previewMode]);
+  }, [teeTimes.length, loadingTimes, selectedDate, slug, course, previewMode, players]);
 
   const hasHolesData = useMemo(() => {
     const vals = new Set(teeTimes.map(t => holesOf(t)).filter(h => h !== undefined));
@@ -361,6 +361,14 @@ export default function CourseDetailPage({
     const fees = teeTimes.map(t => t.green_fee);
     return { min: Math.min(...fees), max: Math.max(...fees) };
   }, [teeTimes]);
+
+  // B-4: the day has seats, just not enough for this party — the largest
+  // party that does fit today.
+  const bestFewer = useMemo(() => {
+    const source: ActiveTeeTime[] = memberSession ? memberTeeTimes : teeTimes;
+    const c = source.filter(t => t.players_available > 0 && t.players_available < players).map(t => t.players_available);
+    return c.length ? Math.max(...c) : 0;
+  }, [memberSession, memberTeeTimes, teeTimes, players]);
 
   const filtered = useMemo(() => {
     const source: ActiveTeeTime[] = memberSession ? memberTeeTimes : teeTimes;
@@ -1111,17 +1119,25 @@ export default function CourseDetailPage({
                       <div>
                         <p className="font-serif font-medium text-ink text-xl mb-1.5">Nothing open on {displayDate(selectedDate)}</p>
                         <p className="text-ink-muted text-sm mb-5">Every slot for this date is taken.</p>
+                        {/* B-4: nearest fits — the two closest dates with room for this party. */}
                         {searchingNext ? (
-                          <p className="text-xs text-ink-faint">Looking for the next available date…</p>
-                        ) : nextAvailable ? (
-                          <button
-                            onClick={() => setSelectedDate(nextAvailable)}
-                            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-md text-sm font-medium text-white transition-colors"
-                            style={{ backgroundColor: accent }}
-                          >
-                            Next available: {displayDate(nextAvailable)} →
-                          </button>
-                        ) : null}
+                          <p className="text-xs text-ink-faint">Looking for the nearest open dates…</p>
+                        ) : nearestDates.length > 0 ? (
+                          <div className="flex flex-wrap justify-center gap-2">
+                            {nearestDates.map((ds, i) => (
+                              <button
+                                key={ds}
+                                onClick={() => setSelectedDate(ds)}
+                                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-md text-sm font-medium transition-colors"
+                                style={i === 0 ? { backgroundColor: accent, color: '#fff' } : { border: `1px solid ${accent}`, color: accent }}
+                              >
+                                {displayDate(ds)} for {players} →
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-ink-faint">Nothing with room for {players} in the next week.</p>
+                        )}
                         <div className="mt-5">
                           <button
                             onClick={() => openAlert()}
@@ -1135,6 +1151,16 @@ export default function CourseDetailPage({
                       <div>
                         <p className="font-serif font-medium text-ink text-xl mb-1.5">No times match your filters</p>
                         <p className="text-ink-muted text-sm mb-5">There are tee times on this date — your filters rule them all out.</p>
+                        {/* B-4: same day, smaller party. */}
+                        {bestFewer > 0 && (
+                          <button
+                            onClick={() => setPlayers(bestFewer)}
+                            className="inline-flex items-center px-4 py-2.5 rounded-md text-sm font-medium text-white transition-colors mr-2 mb-2"
+                            style={{ backgroundColor: accent }}
+                          >
+                            Same day for {bestFewer} player{bestFewer === 1 ? '' : 's'} →
+                          </button>
+                        )}
                         <button
                           onClick={resetFilters}
                           className="inline-flex items-center px-4 py-2.5 rounded-md text-sm font-medium border transition-colors"
