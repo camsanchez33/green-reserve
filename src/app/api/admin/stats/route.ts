@@ -96,7 +96,7 @@ export async function GET() {
     prisma.courseInquiry.count({ where: { status: 'pending' } }),
     prisma.courseInquiry.findFirst({ where: { status: 'pending' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } }),
 
-    prisma.booking.aggregate({ where: { status: { in: COMPLETED }, createdAt: { gte: startOfToday } }, _sum: { accessFeeTotal: true }, _count: true }),
+    prisma.booking.aggregate({ where: { status: { in: COMPLETED }, createdAt: { gte: startOfToday } }, _sum: { accessFeeTotal: true, players: true }, _count: true }),
     prisma.booking.count({ where: { checkedInAt: { gte: startOfToday } } }),
     prisma.booking.count({ where: { cancelledAt: { gte: startOfToday } } }),
 
@@ -167,6 +167,9 @@ export async function GET() {
   const topStrip = {
     feesToday: Number(feesTodayAgg._sum.accessFeeTotal ?? 0) / 100,
     bookingsToday: feesTodayAgg._count,
+    // U-A (reskin batch): the fee is per PLAYER, so the Overview tile says
+    // "N players · M bookings" — never derive players from the booking count.
+    playersToday: Number(feesTodayAgg._sum.players ?? 0),
     checkInsToday,
     cancellationsToday,
     unreadMessages,
