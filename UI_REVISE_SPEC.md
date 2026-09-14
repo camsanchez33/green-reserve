@@ -151,15 +151,19 @@ Ordered by value ÷ risk. Each is small unless marked.
 - [ ] **B-3 · Member view = the course page, signed in** — a signed-in member sees member rate in place, guest lines priced per player, no card step. Retires the separate member portal design (keeps `/courses/[slug]/member` as the membership/dues page). Depends on member auth staying per-course OTP (see project memory: member auth is separate per course).
   Open question for Cam before this runs: do all tiers cover rounds (show $0) or do some pay a member rate?
 - [ ] **B-4 · Sold-out day → nearest fits** — empty state offers tomorrow / next day / same day for fewer players, from data the tee-times API already returns.
+  → BUILT on `feat/b-1-course-page`. Empty state offers the two nearest dates (within a week) with a slot that fits the party, and "Same day for N players →" when the day has seats but not enough. Replaces the party-blind "Next available" button. Box open until review + walk.
 - [ ] **B-5 · Cart add-on at check-in** — "Add a cart today?" toggle on `/checkin` for bookings without one; adds cart fee to the check-in charge. Cam to confirm he wants this at all.
 - [ ] **B-6 · Settings: live golfer preview** — the "How you look" section renders a 380px live preview of the course page (hero photo / tint, crest, accent on Select/Reserve) that updates as fields change. Read-only component fed from the form state. This is the most persuasive screen in the operator product; treat as a feature.
   → BUILT on `feat/b-1-course-page` (src/components/dashboard/CoursePreview.tsx). 380px read-only picture of the course page (hero photo/tint, crest, serif name, meta, trust line, slot rows with Select in the accent) fed from the form state; sticky beside "How you look" on xl, below it otherwise. Fetches/saves nothing. Box open until review + walk.
 - [ ] **B-7 · Schedule as a time-band table** — rates by band × weekday/weekend × member/resident in one table, seasons as tabs, blocks + booking windows beside it. View-layer over the existing schedule objects; **no data model change** unless the restate step proves one is needed, in which case stop and split.
 - [ ] **B-8 · Tee sheet "needs attention" row** — late group (tee time passed, not checked in) surfaces above the sheet with Mark no-show / Still coming.
+  → BUILT (PARTIAL) on `feat/b-1-course-page`. Late groups (tee time 10+ min ago today, nobody checked in) surface above the sheet with "Check in now" (existing flow) and "Still coming" (session-only dismiss). NOT built: "Mark no-show" — nothing in the schema records a no-show; that half is attended (a noShowAt column + what it should do to the late fee). Box open until review + walk.
 - [ ] **B-9 · Frost delay action** — push every tee time before HH:MM back by 30/60/90 minutes and email affected golfers in one step. Attended run; touches bookings + email.
 - [ ] **B-10 · Members: overdue dues reminder** — one-click reminder email to all overdue members; "online booking paused until paid" only if that rule actually exists in code (verify first).
 - [ ] **B-11 · Getting-started checklist** — already specced as ONBOARDING_V2 V13; build it in the staff look. Not a new item, listed for order.
+  → COVERED: the checklist exists (src/components/dashboard/GettingStartedChecklist.tsx, ONBOARDING_V2 V13) and U-O retokened it to the staff look. Nothing further to build here.
 - [ ] **B-12 · Receipt rework** — itemize the $1.50, course header bar. Already on RUN_QUEUE as "booking receipt needs rework"; fold into U-G's confirmed/receipt restyle if the itemization is display-only.
+  → COVERED by U-G + the batch review fixes: /receipt itemises the $1.50 (serviceFeeLabel) and wears the course header bar in the course colour. Nothing further to build here.
 
 ---
 

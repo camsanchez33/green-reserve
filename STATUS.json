@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-14T02:30:12.103Z",
+  "generatedAt": "2026-09-14T02:34:30.988Z",
   "repo": {
-    "head": "ae5ff68",
+    "head": "da3feaa",
     "branch": "main",
     "dirtyCount": 2,
     "dirty": [
@@ -818,6 +818,11 @@
   },
   "recentCommits": [
     {
+      "h": "da3feaa",
+      "date": "2026-09-13",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "ae5ff68",
       "date": "2026-09-13",
       "subject": "queue/spec update"
@@ -871,11 +876,6 @@
       "h": "5eb48c5",
       "date": "2026-09-11",
       "subject": "Review fixes: fee reversal on cancellation refunds, double-charge guard, viewer shaping, hung buttons"
-    },
-    {
-      "h": "a3c1bea",
-      "date": "2026-09-11",
-      "subject": "U-0: the staff look — one CSS switch, two fonts, two sidebars"
     }
   ]
 }
