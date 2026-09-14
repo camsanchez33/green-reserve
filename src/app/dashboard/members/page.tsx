@@ -81,6 +81,7 @@ export default function MembersPage() {
     if (!d || d.overdue === 0) { toast('Nobody is overdue — every active member is paid up.', 'ok'); return; }
     const parts = [`Reminded ${d.sent} member${d.sent === 1 ? '' : 's'}`];
     if (d.skippedRecent) parts.push(`${d.skippedRecent} already reminded this week`);
+    if (d.skippedFree) parts.push(`${d.skippedFree} on a free tier (nothing owed)`);
     if (d.skippedNoEmail) parts.push(`${d.skippedNoEmail} with no email on file`);
     if (d.failed.length) parts.push(`${d.failed.length} FAILED (${d.failed.join(', ')})`);
     toast(parts.join(' · ') + '.', d.failed.length ? 'warn' : 'ok');
