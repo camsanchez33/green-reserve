@@ -2,7 +2,7 @@
 
 ## homepage-prototype.html
 The approved homepage prototype (2026-09-05). Same file as the published artifact, minus the
-embedded photos: `{{HERO}}`, `{{BUNKER}}`, `{{BUNKERCARD}}`, `{{AERIAL}}`, `{{TEE}}`, `{{IRON}}`,
+embedded photos: `{{HERO}}`, `{{BUNKER}}`, `{{BUNKERCARD}}`, `{{AERIAL}}`, `{{IRON}}`,
 `{{LOGO}}` are placeholders. The real build uses `next/image` with the assets below, never data URIs.
 
 ## Photos (Unsplash, free license)
@@ -12,7 +12,6 @@ embedded photos: `{{HERO}}`, `{{BUNKER}}`, `{{BUNKERCARD}}`, `{{AERIAL}}`, `{{TE
 | BUNKER | 1592919505780-303950717480 | pinned story photo | crop y 1400–2800 of the 1800×3200 original, 1600w |
 | BUNKERCARD | same | Sandpiper Links card | 1000w |
 | AERIAL | 1500932334442-8761ee4810a7 | Hollow Creek card | 1000w |
-| TEE | 1532601224476-15c79f2f7a51 | "We set it up" band | 1600w, position center 40% |
 | IRON | 1593111774240-d529f12cf4bb | Stony Hollow card + demo device header | 1000w |
 | LOGO | public/brand/logo-lockup.png | nav + footer | 600w |
 | STORY (H-2a) | `public/home/story.mp4` + `story.webm` + `story-poster.jpg` | looping clip under the pinned story beats (desktop only) | supplied by Cam 2026-09-14 — source and licence: **Cam to record here** |

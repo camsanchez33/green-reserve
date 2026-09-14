@@ -9,7 +9,7 @@ import s from './home.module.css';
 
 // H-1 (UI_REVISE_SPEC §5): the homepage from the approved prototype
 // (docs/design/homepage-prototype.html). Sections in the spec's order:
-// hero → pinned story → live demo → course cards → photo band → four steps →
+// hero → pinned story → live demo → course cards → four steps →
 // pricing on pine → FAQ → final CTA. Nav and Footer live in the root layout.
 //
 // Fee copy follows legal/LQ-2_FEE_COPY.md (decided 2026-09-14): the golfer
@@ -53,8 +53,6 @@ export default function HomeContent() {
   const storyPhRef = useRef<HTMLDivElement>(null);
   const beatsRef = useRef<HTMLDivElement>(null);
   const progRef = useRef<HTMLDivElement>(null);
-  const bandRef = useRef<HTMLElement>(null);
-  const bandPhRef = useRef<HTMLDivElement>(null);
   const [faqOpen, setFaqOpen] = useState(0);
   // H-2a: the story clip is mounted only when the page is wide enough (phones
   // never download it) and the user has not asked for reduced motion or data.
@@ -105,14 +103,6 @@ export default function HomeContent() {
           cur = i;
           beats.forEach((b, k) => b.classList.toggle(s.on, k === i));
           prog.forEach((b, k) => b.classList.toggle(s.on, k === i));
-        }
-      }
-      const band = bandRef.current;
-      if (band && bandPhRef.current) {
-        const br = band.getBoundingClientRect();
-        if (br.bottom > 0 && br.top < h) {
-          const bp = (br.top + br.height / 2 - h / 2) / h;
-          bandPhRef.current.style.setProperty('--py', `${(bp * -60).toFixed(1)}px`);
         }
       }
     }
@@ -239,23 +229,14 @@ export default function HomeContent() {
         </div>
       </section>
 
-      {/* 6. PHOTO BAND */}
-      <section ref={bandRef} className={s.band}>
-        <div ref={bandPhRef} className={s.bandPh}>
-          <Image src="/home/tee.jpg" alt="" fill sizes="100vw" loading="lazy" />
-        </div>
-        <div className={`${s.shade} ${s.bandShade}`} />
-        <div className={s.wrap}>
-          <h2 className={s.fade}>We set it up. You run it.</h2>
-          <p className={s.fade}>Tell us about your course and we build the sheet with you. You approve a private preview, connect your bank, and go live. Days, not months.</p>
-        </div>
-      </section>
+      {/* H-2c: the photo band that sat here is gone — every photo section is
+          now followed by a quiet one. Its line lives under the steps title. */}
 
-      {/* 7. FOUR STEPS */}
+      {/* 6. FOUR STEPS */}
       <section className={s.steps} id="list">
         <div className={s.wrap}>
           <h2 className={`${s.h2} ${s.fade}`}>Live in four steps.</h2>
-          <p className={`${s.sub} ${s.fade}`}>No technical knowledge needed. Most courses are live within a week.</p>
+          <p className={`${s.sub} ${s.fade}`}>We set it up. You run it. Tell us about your course and we build the sheet with you; you approve a private preview, connect your bank, and go live. Days, not months.</p>
           <div className={s.stepsRow}>
             {STEPS.map((st, i) => (
               <div key={st.n} className={`${s.s} ${s.fade}`} style={{ transitionDelay: `${i * 0.08}s` }}>
