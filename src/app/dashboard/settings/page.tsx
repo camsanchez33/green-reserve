@@ -13,14 +13,35 @@ import { downscaleImage } from '@/lib/image-resize';
 
 type Course = Record<string, unknown>;
 interface StaffMember { id: string; name: string; email: string; role: string; active: boolean; }
-const SECTIONS = ['Course Info', 'Course & Layout', 'Photos', 'Payments', 'Pricing Policy', 'Course Policy', 'Facilities', 'Staff', 'Account'] as const;
+// U-O (UI_REVISE_SPEC §3, "Settings: sub-nav on the left naming the existing
+// sections in this order"). The sections are the same forms and the same
+// fields as before — only their names, grouping and the nav's axis change.
+// Facilities and Account are not in the spec's list but still exist, so they
+// keep their places rather than disappearing.
+const SECTIONS = [
+  'How you look',
+  'Basic information',
+  'Course details',
+  'Photos',
+  'Booking rules',
+  'Cancellation',
+  'Member & resident pricing',
+  'Walking & carts',
+  'Facilities',
+  'Payouts (Stripe)',
+  'Staff',
+  'Account',
+] as const;
 type Section = typeof SECTIONS[number];
+// Sections whose contents save themselves (uploads, staff, password) — the
+// header Save button is hidden on these, exactly as before the reskin.
+const NO_SAVE_BUTTON: Section[] = ['Photos', 'Staff', 'Account'];
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="bg-white border border-line rounded-lg p-5">
-      <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-4">{title}</div>
+      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">{title}</div>
       <div className="space-y-4">{children}</div>
     </div>
   );
@@ -28,9 +49,9 @@ function SectionCard({ title, children }: { title: string; children: React.React
 function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
   return (
     <div>
-      <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">{label}</label>
+      <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">{label}</label>
       {children}
-      {hint && <p className="text-xs text-ink-faint mt-1">{hint}</p>}
+      {hint && <p className="text-[12.5px] text-ink-faint mt-1">{hint}</p>}
     </div>
   );
 }
@@ -79,7 +100,7 @@ function ImageUpload({ label, kind, value, onUploaded, hint }: { label: string; 
 
   return (
     <div>
-      <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">{label}</label>
+      <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">{label}</label>
       <div className="flex items-center gap-4">
         {value ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -107,7 +128,7 @@ function SettingsPageInner() {
   const searchParams = useSearchParams();
   const stripeParam = searchParams.get('stripe');
 
-  const [active, setActive] = useState<Section>(stripeParam ? 'Payments' : 'Course Info');
+  const [active, setActive] = useState<Section>(stripeParam ? 'Payouts (Stripe)' : 'How you look');
   const intro = useTabIntro('settings');
   const [form, setForm] = useState<Record<string,unknown>>({});
   const [saving, setSaving] = useState(false);
@@ -330,14 +351,21 @@ function SettingsPageInner() {
       <OperatorSidebar active="settings"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="these settings" />
-        <div className="bg-white border-b border-line px-6 py-4 flex items-center justify-between sticky top-0 z-10">
-          <div className="flex items-center gap-2">
-            <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Settings</h1>
-            <TabIntroButton onClick={intro.show}/>
+        {/* U-O (§1b): page header = serif title + one sentence carrying this
+            page's own numbers, read off state the page already loads. */}
+        <div className="bg-white border-b border-line px-6 py-4 flex flex-wrap items-start justify-between gap-3 sticky top-0 z-10">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Settings</h1>
+              <TabIntroButton onClick={intro.show}/>
+            </div>
+            <p className="text-[13.5px] text-ink-soft mt-2">
+              {(form.name as string) || 'Your course'} · {(form.liveStatus as string) === 'live' ? 'live to golfers' : 'not live yet'} · {form.stripeAccountActive ? 'Stripe connected' : 'Stripe not connected'} · {staff.length} staff account{staff.length !== 1 ? 's' : ''} · {photos.length} photo{photos.length !== 1 ? 's' : ''}
+            </p>
           </div>
-          {active !== 'Staff' && active !== 'Account' && active !== 'Photos' && (
+          {!NO_SAVE_BUTTON.includes(active) && (
             <button onClick={save} disabled={saving || (!dirty && !saved)}
-              className="flex items-center gap-2 bg-pine hover:bg-pine-hover text-white px-4 py-2 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
+              className="shrink-0 flex items-center gap-2 bg-pine hover:bg-pine-hover text-white px-4 py-2 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
               <Save className="w-4 h-4"/> {saved ? 'Saved' : saving ? 'Saving...' : dirty ? 'Save Changes' : 'No changes'}
             </button>
           )}
@@ -349,7 +377,7 @@ function SettingsPageInner() {
           </div>
         )}
 
-        <div className="max-w-3xl mx-auto px-6 py-6">
+        <div className="max-w-5xl mx-auto px-6 py-6">
           <TabIntroCard
             open={intro.open}
             onDismiss={intro.dismiss}
@@ -361,19 +389,46 @@ function SettingsPageInner() {
               'Add staff accounts so your team can check golfers in without sharing your login.',
             ]}
           />
-          <div className="flex gap-1 bg-white rounded-lg border border-line p-1 mb-6 overflow-x-auto">
-            {SECTIONS.map(s => (
-              <button key={s} onClick={() => setActive(s)}
-                className={'flex-1 py-2 px-3 rounded-md text-xs font-medium whitespace-nowrap transition-colors ' + (active===s ? 'bg-pine text-white' : 'text-ink-soft hover:text-ink')}>
-                {s}
-              </button>
-            ))}
-          </div>
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* U-O: the sub-nav moves to the left rail and names the sections
+                in plain English, in the spec's order. Active item = pine text,
+                3px left border, paper bg — the §1b active pattern. */}
+            <nav aria-label="Settings sections" className="md:w-52 shrink-0 flex md:flex-col gap-1 overflow-x-auto md:overflow-visible">
+              {SECTIONS.map(s => (
+                <button key={s} onClick={() => setActive(s)}
+                  aria-current={active===s ? 'page' : undefined}
+                  className={'text-left whitespace-nowrap px-3 py-2 text-[13.5px] font-medium border-l-[3px] transition-colors ' + (active===s ? 'border-pine bg-paper text-pine' : 'border-transparent text-ink-soft hover:text-ink hover:bg-line-soft/60')}>
+                  {s}
+                </button>
+              ))}
+            </nav>
 
-          {/* ── Course Info ── */}
-          {active==='Course Info' && (
+            <div className="flex-1 min-w-0">
+
+          {/* ── How you look ── */}
+          {active==='How you look' && (
             <div className="space-y-5">
-              <SectionCard title="Basic Information">
+              <SectionCard title="How you look">
+                <p className="text-sm text-ink-soft -mt-1">The three things golfers see first. Logo and photo save the moment you upload them; the colour saves with the button above.</p>
+                <ImageUpload label="Your logo" kind="logo" value={(form.logoUrl as string)||''} onUploaded={url=>setForm(f=>({...f,logoUrl:url}))} hint="Square works best (a PNG with a transparent background is ideal). Max 8MB — large photos are auto-resized."/>
+                <Field label="Your colour" hint="One accent colour. It tints your dashboard and the buttons on your booking page. Click the swatch to pick.">
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={(form.brandColor as string) || '#24513B'} onChange={e => set('brandColor', e.target.value)}
+                      className="w-10 h-10 rounded-full border border-line cursor-pointer p-0.5 bg-paper"/>
+                    <input type="text" value={(form.brandColor as string) || '#24513B'} onChange={e => set('brandColor', e.target.value)}
+                      placeholder="#24513B" maxLength={7}
+                      className="bg-paper border border-line rounded-md px-3 py-2.5 text-sm font-mono text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-32"/>
+                  </div>
+                </Field>
+                <ImageUpload label="Your course photo" kind="hero" value={(form.heroImageUrl as string)||''} onUploaded={url=>setForm(f=>({...f,heroImageUrl:url}))} hint="A wide landscape shot — it sits behind your course name as the banner. Max 8MB — large photos are auto-resized."/>
+              </SectionCard>
+            </div>
+          )}
+
+          {/* ── Basic information ── */}
+          {active==='Basic information' && (
+            <div className="space-y-5">
+              <SectionCard title="Basic information">
                 <Field label="Course Name"><FInput value={form.name as string} onChange={v=>set('name',v)}/></Field>
                 <Field label="Phone"><FInput value={form.phone as string} onChange={v=>set('phone',v)} type="tel"/></Field>
                 <Field label="Website"><FInput value={form.website as string} onChange={v=>set('website',v)} placeholder="https://"/></Field>
@@ -392,15 +447,6 @@ function SettingsPageInner() {
                   </select>
                 </Field>
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label="Brand Color" hint="Used to accent your dashboard. Click the swatch to pick.">
-                    <div className="flex items-center gap-2">
-                      <input type="color" value={(form.brandColor as string) || '#24513B'} onChange={e => set('brandColor', e.target.value)}
-                        className="w-10 h-10 rounded-md border border-line cursor-pointer p-0.5 bg-paper"/>
-                      <input type="text" value={(form.brandColor as string) || '#24513B'} onChange={e => set('brandColor', e.target.value)}
-                        placeholder="#24513B" maxLength={7}
-                        className="bg-paper border border-line rounded-md px-3 py-2.5 text-sm font-mono text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-32"/>
-                    </div>
-                  </Field>
                   <Field label="Established Year" hint="Optional — shown in your sidebar identity.">
                     <input type="number" value={(form.establishedYear as number) || ''} onChange={e => set('establishedYear', e.target.value ? Number(e.target.value) : null)}
                       placeholder="e.g. 1927" min={1850} max={new Date().getFullYear()} className={iCls}/>
@@ -413,18 +459,13 @@ function SettingsPageInner() {
                   <FInput value={(form.giftCardUrl as string)||''} onChange={v=>set('giftCardUrl',v)} placeholder="https://"/>
                 </Field>
               </SectionCard>
-              <SectionCard title="Branding">
-                <p className="text-sm text-ink-soft -mt-1">These appear on your public tee sheet. Uploads save immediately.</p>
-                <ImageUpload label="Course Logo" kind="logo" value={(form.logoUrl as string)||''} onUploaded={url=>setForm(f=>({...f,logoUrl:url}))} hint="Square works best (PNG with transparent background ideal). Max 8MB (large photos are auto-resized)."/>
-                <ImageUpload label="Course Photo" kind="hero" value={(form.heroImageUrl as string)||''} onUploaded={url=>setForm(f=>({...f,heroImageUrl:url}))} hint="Wide landscape shot of your course — shown as the banner behind your course name. Max 8MB (large photos are auto-resized)."/>
-              </SectionCard>
             </div>
           )}
 
-          {/* ── Course & Layout ── */}
-          {active==='Course & Layout' && (
+          {/* ── Course details ── */}
+          {active==='Course details' && (
             <div className="space-y-5">
-              <SectionCard title="Course Details">
+              <SectionCard title="Course details">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <Field label="Holes"><FInput value={form.holes as number} onChange={v=>set('holes',Number(v))} type="number"/></Field>
                   <Field label="Par"><FInput value={form.par as number} onChange={v=>set('par',Number(v))} type="number"/></Field>
@@ -481,10 +522,10 @@ function SettingsPageInner() {
             </div>
           )}
 
-          {/* ── Payments ── */}
-          {active==='Payments' && (
+          {/* ── Payouts (Stripe) ── */}
+          {active==='Payouts (Stripe)' && (
             <div className="space-y-5">
-              <SectionCard title="Stripe Payouts">
+              <SectionCard title="Payouts (Stripe)">
                 {stripeParam === 'pending' && (
                   <div className="flex items-start gap-2 bg-warn/5 border border-warn/20 rounded-md p-3 text-warn text-sm">
                     <AlertCircle className="w-4 h-4 mt-0.5 shrink-0"/>
@@ -536,14 +577,14 @@ function SettingsPageInner() {
             </div>
           )}
 
-          {/* ── Pricing Policy ── */}
-          {active==='Pricing Policy' && (
+          {/* ── Member & resident pricing ── */}
+          {active==='Member & resident pricing' && (
             <div className="space-y-5">
-              <SectionCard title="Member Pricing">
+              <SectionCard title="Member pricing">
                 <Toggle label="Enable member pricing" checked={!!form.hasMemberPricing} onChange={()=>tog('hasMemberPricing')}/>
-                <div className="text-xs text-pine bg-pine/5 border border-pine/20 rounded-md px-3 py-2">Member rates are set per-schedule in your Schedule setup page. Member advance booking is set below, in Booking Windows.</div>
+                <div className="text-[12.5px] text-pine bg-pine/5 border border-pine/20 rounded-md px-3 py-2">Member rates are set per-schedule in your Schedule setup page. Member advance booking is set under Booking rules.</div>
               </SectionCard>
-              <SectionCard title="Resident Pricing">
+              <SectionCard title="Resident pricing">
                 <Toggle label="Enable resident pricing" checked={!!form.hasResidentPricing} onChange={()=>tog('hasResidentPricing')}/>
                 {!!form.hasResidentPricing && (
                   <>
@@ -555,19 +596,44 @@ function SettingsPageInner() {
                   </>
                 )}
               </SectionCard>
-              <SectionCard title="Booking Windows">
+            </div>
+          )}
+
+          {/* ── Booking rules ── */}
+          {active==='Booking rules' && (
+            <div className="space-y-5">
+              <SectionCard title="How far ahead golfers can book">
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Public advance (days)"><FInput value={form.publicAdvanceDays as number} onChange={v=>set('publicAdvanceDays',Number(v))} type="number"/></Field>
                   {!!form.hasMemberPricing && <Field label="Member advance (days)"><FInput value={form.memberAdvanceDays as number} onChange={v=>set('memberAdvanceDays',Number(v))} type="number"/></Field>}
                 </div>
               </SectionCard>
+              <SectionCard title="Player limits">
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Min players per booking"><FInput value={form.minPlayers as number} onChange={v=>set('minPlayers',Number(v))} type="number"/></Field>
+                  <Field label="Max players per booking"><FInput value={form.maxPlayers as number} onChange={v=>set('maxPlayers',Number(v))} type="number"/></Field>
+                </div>
+              </SectionCard>
+              <SectionCard title="Dress code">
+                <div className="flex flex-wrap gap-2">
+                  {['Collared shirt required','No denim','Soft spikes only','Golf shoes required','No shorts','Proper golf attire'].map(rule => {
+                    const on = dresscodes.includes(rule);
+                    return (
+                      <button key={rule} onClick={() => set('dresscode', on ? dresscodes.filter(c=>c!==rule) : [...dresscodes,rule])}
+                        className={'px-3 py-1.5 rounded-md text-[13.5px] border transition-colors ' + (on ? 'bg-pine text-white border-pine' : 'bg-paper text-ink-soft border-line hover:border-pine/40')}>
+                        {rule}
+                      </button>
+                    );
+                  })}
+                </div>
+              </SectionCard>
             </div>
           )}
 
-          {/* ── Course Policy ── */}
-          {active==='Course Policy' && (
+          {/* ── Walking & carts ── */}
+          {active==='Walking & carts' && (
             <div className="space-y-5">
-              <SectionCard title="Walking & Cart">
+              <SectionCard title="Walking & carts">
                 <Field label="Walking policy">
                   <select value={form.walkingAllowed as string} onChange={e=>set('walkingAllowed',e.target.value)} className={iCls}>
                     <option value="always">Always allowed</option>
@@ -578,6 +644,12 @@ function SettingsPageInner() {
                 </Field>
                 <Field label="Walking note (optional)"><FInput value={form.walkingNote as string} onChange={v=>set('walkingNote',v)} placeholder="e.g. Walking allowed after 1pm weekends"/></Field>
               </SectionCard>
+            </div>
+          )}
+
+          {/* ── Cancellation ── */}
+          {active==='Cancellation' && (
+            <div className="space-y-5">
               <SectionCard title="Cancellation">
                 <Toggle label="Cancellation fee" checked={!!form.lateCancellationFee} onChange={() => set('lateCancellationFee', form.lateCancellationFee ? 0 : 10)}/>
                 {!!form.lateCancellationFee && (
@@ -597,25 +669,6 @@ function SettingsPageInner() {
                   <FInput value={form.checkInWindowHours as number} onChange={v=>set('checkInWindowHours',Number(v))} type="number"/>
                 </Field>
                 <Field label="Rain check policy"><FInput value={form.rainCheckPolicy as string} onChange={v=>set('rainCheckPolicy',v)} placeholder="e.g. Rain checks issued for 9+ holes of rain"/></Field>
-              </SectionCard>
-              <SectionCard title="Player Limits">
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Min players per booking"><FInput value={form.minPlayers as number} onChange={v=>set('minPlayers',Number(v))} type="number"/></Field>
-                  <Field label="Max players per booking"><FInput value={form.maxPlayers as number} onChange={v=>set('maxPlayers',Number(v))} type="number"/></Field>
-                </div>
-              </SectionCard>
-              <SectionCard title="Dress Code">
-                <div className="flex flex-wrap gap-2">
-                  {['Collared shirt required','No denim','Soft spikes only','Golf shoes required','No shorts','Proper golf attire'].map(rule => {
-                    const on = dresscodes.includes(rule);
-                    return (
-                      <button key={rule} onClick={() => set('dresscode', on ? dresscodes.filter(c=>c!==rule) : [...dresscodes,rule])}
-                        className={'px-3 py-1.5 rounded-md text-sm border transition-colors ' + (on ? 'bg-pine text-white border-pine' : 'bg-paper text-ink-soft border-line hover:border-pine/40')}>
-                        {rule}
-                      </button>
-                    );
-                  })}
-                </div>
               </SectionCard>
             </div>
           )}
@@ -836,6 +889,9 @@ function SettingsPageInner() {
               </SectionCard>
             </div>
           )}
+
+            </div>
+          </div>
         </div>
       </main>
     </div>
