@@ -7,7 +7,8 @@ import { COMPLETED_BOOKING_STATUSES, computeCourseHealth } from '@/lib/course-me
 import { closureImpact, cancelFutureBookingsForClosure, notifyOperatorOfClosure } from '@/lib/course-closure';
 import { sheetVsLive } from '@/lib/sheet-vs-live';
 import { computeOpenChanges, CATEGORY_LABEL } from '@/lib/change-requests';
-import { getCourseTimeline, isRemindersPaused, hasAcceptedAgreement, latestAgreementAcceptance } from '@/lib/course-timeline';
+import { getCourseTimeline, isRemindersPaused, latestAgreementAcceptance } from '@/lib/course-timeline';
+import { hasAcceptedAgreement } from '@/lib/agreement-gate';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 
 export async function GET(req: NextRequest) {

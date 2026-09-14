@@ -15,7 +15,7 @@ import { AGENDA, callGate, fmtCallTime } from '@/lib/inquiry-call';
 import { sendCallScheduledEmail } from '@/lib/email';
 import { encodeChangeAddressed, encodeRequestReReview } from '@/lib/change-requests';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
-import { hasAcceptedAgreement } from '@/lib/course-timeline';
+import { hasAcceptedAgreement } from '@/lib/agreement-gate';
 import { deleteInquiryOrPair } from '@/lib/lifecycle';
 
 // MP-2 (ADMIN_V4 V4-2 leak): this returned the whole CourseInquiry row, which

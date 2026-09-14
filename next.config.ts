@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // AG-1: the agreement Markdown is read from disk at request time by the
+  // acceptance route and the page; make sure the deployment bundles it.
+  outputFileTracingIncludes: { '/**': ['./legal/documents/**/*'] },
   // H-1 (UI_REVISE_SPEC §5 assets): WebP/AVIF and the 800/1200/1600 widths.
   images: {
     formats: ['image/avif', 'image/webp'],

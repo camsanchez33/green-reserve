@@ -28,6 +28,9 @@ export const NOTE_ADDED_PREFIX = 'NOTE_ADDED::';
 // (Booking-terms version lives in src/lib/terms.ts — CURRENT_TERMS_VERSION
 // is the real one, stamped on every booking record; it belongs there, not
 // duplicated here.)
+// AG-1: the current version is whatever is newest in legal/documents/ — see
+// lib/agreements.ts. This constant is kept only so the timeline payload type
+// stays readable; nothing should compare against it.
 export const CURRENT_AGREEMENT_VERSION = '2026-08';
 
 export interface SettingsChangedPayload { changes: { field: string; from: unknown; to: unknown }[]; by: string }
@@ -92,8 +95,8 @@ export async function logRemindersPaused(courseId: string, by: string, paused: b
   return log(courseId, encode(paused ? REMINDERS_PAUSED_PREFIX : REMINDERS_RESUMED_PREFIX, { by }), 'admin');
 }
 
-export async function logAgreementAccepted(courseId: string, acceptedBy: string): Promise<boolean> {
-  return log(courseId, encode(AGREEMENT_ACCEPTED_PREFIX, { version: CURRENT_AGREEMENT_VERSION, acceptedBy } as AgreementAcceptedPayload), 'system');
+export async function logAgreementAccepted(courseId: string, acceptedBy: string, version: string = CURRENT_AGREEMENT_VERSION): Promise<boolean> {
+  return log(courseId, encode(AGREEMENT_ACCEPTED_PREFIX, { version, acceptedBy } as AgreementAcceptedPayload), 'system');
 }
 
 export async function logDocumentUploaded(courseId: string, name: string, url: string, by: string): Promise<boolean> {
@@ -146,14 +149,6 @@ export function latestAgreementAcceptance(events: TimelineEvent[]): AgreementAcc
   return ev && ev.type === 'agreement_accepted' ? { ...ev.data, at: ev.at } : null;
 }
 
-// AGREEMENT = GO-LIVE GATE (RUN_QUEUE) — any acceptance record counts,
-// regardless of which version it was accepted at (item 4, VERSIONING:
-// "prior acceptances stay valid-as-of-version" — re-prompting on a version
-// bump is a future item, not built here). A course with no linked inquiry
-// can't be verified either way, so this returns false rather than assuming
-// yes — same "don't fabricate a pass" rule the rest of the doctrine uses.
-export async function hasAcceptedAgreement(courseId: string): Promise<boolean> {
-  const events = await getCourseTimeline(courseId);
-  if (!events) return false;
-  return !!latestAgreementAcceptance(events);
-}
+// AGREEMENT = GO-LIVE GATE — hasAcceptedAgreement moved to lib/agreement-gate.ts
+// (AG-1): it reads the AgreementAcceptance table and the documents on disk,
+// and this module is imported by client pages, which must not bundle fs.

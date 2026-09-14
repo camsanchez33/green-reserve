@@ -147,6 +147,10 @@ model Course {
   /// IC-1 / CS-1: when we next call the course; null = never scheduled.
   nextCheckInAt         DateTime?
   calls                 Call[]
+  /// AG-1: the name the signer binds ("Hollow Creek Golf Club LLC") — NOT
+  /// GreenReserve's entity name, which stays a placeholder per legal README.
+  legalName             String             @default("")
+  agreements            AgreementAcceptance[]
   courseProducts        CourseProduct[]
 
   @@index([operatorId])
@@ -785,4 +789,50 @@ model AdminAuditLog {
 
   @@index([adminId, createdAt])
   @@index([createdAt])
+}
+
+/// AG-1: one row per acceptance of one document version by one course. Never
+/// updated after insert, never deleted — a course that leaves keeps its history.
+model AgreementAcceptance {
+  id                String   @id @default(cuid())
+  courseId          String
+  course            Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  /// 'operator_agreement' | 'brand_license' | 'accuracy_attestation'
+  document          String
+  version           String
+  /// sha256 of the exact Markdown file rendered to the signer (lib/agreements.ts)
+  textHash          String
+  signerName        String
+  signerTitle       String
+  signerEmail       String
+  /// "I am authorized to enter into this agreement on behalf of <course name>"
+  authorityAttested Boolean  @default(false)
+  /// brand_license only: marketing use opt-out
+  marketingOptOut   Boolean  @default(false)
+  ip                String   @default("")
+  userAgent         String   @default("")
+  /// URL of the stored PDF (Vercel Blob); set after render, may lag by seconds
+  pdfUrl            String?
+  /// migrated from the old timeline line — no signer, no hash
+  legacy            Boolean  @default(false)
+  acceptedAt        DateTime @default(now())
+
+  @@index([courseId, document, acceptedAt])
+}
+
+/// AG-1: which version of each document is current, and since when. One row
+/// per (document, version). The re-acceptance clock reads `effectiveAt`.
+model AgreementVersion {
+  id           String    @id @default(cuid())
+  document     String
+  version      String
+  textHash     String
+  effectiveAt  DateTime
+  /// 30-day re-accept deadline for courses on an older version; null = no
+  /// re-acceptance required for this bump (attorney-blessed minor edit)
+  reacceptBy   DateTime?
+  noticeSentAt DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@unique([document, version])
 }

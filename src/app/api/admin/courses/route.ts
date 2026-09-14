@@ -5,7 +5,7 @@ import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 import { getApprovalState } from '@/lib/approval-state';
 import { latestPageDecision } from '@/lib/change-requests';
 import { COMPLETED_BOOKING_STATUSES, computeCourseHealth } from '@/lib/course-metrics';
-import { hasAcceptedAgreement } from '@/lib/course-timeline';
+import { hasAcceptedAgreement } from '@/lib/agreement-gate';
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
