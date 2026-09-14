@@ -802,7 +802,8 @@ export default function CourseDetailPage({
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={'px-5 py-3.5 text-sm font-medium border-b-2 transition-colors -mb-px ' + (tab === t.key ? 'border-pine text-pine' : 'border-transparent text-ink-muted hover:text-ink')}
+              className={'px-5 py-3.5 text-sm font-medium border-b-2 transition-colors -mb-px ' + (tab === t.key ? '' : 'border-transparent text-ink-muted hover:text-ink')}
+              style={tab === t.key ? { borderColor: accent, color: accent } : undefined}
             >
               {t.label}
             </button>
@@ -843,7 +844,7 @@ export default function CourseDetailPage({
                       <SlidersHorizontal size={14} /> Filters
                     </span>
                     {activeFilterCount > 0 && (
-                      <button onClick={resetFilters} className="text-xs font-medium text-pine hover:text-pine-hover transition-colors">
+                      <button onClick={resetFilters} className="text-xs font-medium transition-opacity hover:opacity-70" style={{ color: accent }}>
                         Reset all
                       </button>
                     )}
@@ -879,11 +880,12 @@ export default function CourseDetailPage({
                         const isSelected = ds === selectedDate;
                         const isToday = ds === todayStr;
                         const base = 'aspect-square flex items-center justify-center rounded-md text-xs font-medium transition-colors';
-                        let cls = 'text-ink hover:bg-pine/5';
+                        let cls = 'text-ink hover:bg-line-soft';
                         if (isPast) cls = 'text-ink-faint cursor-default';
-                        if (isToday && !isSelected) cls = 'text-pine ring-1 ring-pine/30 hover:bg-pine/5';
-                        const selStyle = isSelected ? { backgroundColor: accent, color: '#fff' } : {};
-                        if (isSelected) cls = '';
+                        // Today and the selected day both wear the course's colour.
+                        let selStyle: React.CSSProperties = {};
+                        if (isToday && !isSelected) { cls = ''; selStyle = { color: accent, boxShadow: `inset 0 0 0 1px ${accent}4d` }; }
+                        if (isSelected) { cls = ''; selStyle = { backgroundColor: accent, color: '#fff' }; }
                         return (
                           <button key={ds} disabled={isPast} onClick={() => setSelectedDate(ds)}
                             className={`${base} ${cls}`} style={selStyle}>
@@ -1369,7 +1371,8 @@ export default function CourseDetailPage({
                           href={directionsUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-xs font-medium text-pine hover:underline ml-7"
+                          className="inline-flex items-center gap-1.5 text-xs font-medium hover:underline ml-7"
+                          style={{ color: accent }}
                         >
                           <Navigation size={12} />
                           Get directions
@@ -1378,13 +1381,13 @@ export default function CourseDetailPage({
                     </div>
                   )}
                   {course.phone && (
-                    <a href={`tel:${course.phone}`} className="flex items-center gap-3 text-sm text-ink-soft hover:text-pine transition-colors">
+                    <a href={`tel:${course.phone}`} className="flex items-center gap-3 text-sm text-ink-soft hover:opacity-70 transition-opacity">
                       <Phone size={16} className="text-ink-muted" />
                       {course.phone}
                     </a>
                   )}
                   {course.website && (
-                    <a href={course.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-pine hover:underline">
+                    <a href={course.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm hover:underline" style={{ color: accent }}>
                       <Globe size={16} className="text-ink-muted" />
                       {course.website.replace(/^https?:\/\//, '')}
                     </a>
