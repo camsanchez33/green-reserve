@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { HOME_FAQ } from '@/lib/faq';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
 import SeeItWork from '@/components/home/SeeItWork';
+import HomeDemo from '@/components/home/HomeDemo';
 import s from './home.module.css';
 
 // H-1 (UI_REVISE_SPEC §5): the homepage from the approved prototype
@@ -48,7 +49,6 @@ const STEPS = [
 
 export default function HomeContent() {
   const rootRef = useRef<HTMLDivElement>(null);
-  const heroPhRef = useRef<HTMLDivElement>(null);
   const storyRef = useRef<HTMLElement>(null);
   const storyPhRef = useRef<HTMLDivElement>(null);
   const beatsRef = useRef<HTMLDivElement>(null);
@@ -91,13 +91,14 @@ export default function HomeContent() {
       if (reduce) return;
       const y = window.scrollY || window.pageYOffset;
       const h = window.innerHeight;
-      if (heroPhRef.current && y < h * 1.2) heroPhRef.current.style.setProperty('--hy', `${(y * 0.28).toFixed(1)}px`);
       const story = storyRef.current;
       if (story && storyPhRef.current) {
         const r = story.getBoundingClientRect();
         const total = story.offsetHeight - h;
         const p = total > 0 ? Math.min(1, Math.max(0, -r.top / total)) : 0;
-        storyPhRef.current.style.setProperty('--z', (1 + p * 0.14).toFixed(4));
+        // H-2d §2: the still gets the slow push; the clip already moves, and a
+        // second stepped zoom on top of it was the shimmer.
+        if (!storyPhRef.current.classList.contains(s.hasVideo)) storyPhRef.current.style.setProperty('--z', (1 + p * 0.14).toFixed(4));
         const i = p < 0.34 ? 0 : p < 0.67 ? 1 : 2;
         if (i !== cur) {
           cur = i;
@@ -142,28 +143,41 @@ export default function HomeContent() {
 
   return (
     <div ref={rootRef} className={s.root}>
-      {/* 2. HERO */}
+      {/* 2. HERO — H-2d direction A: paper + the product. No photo; the
+          booking page itself is the picture, live (the same HomeDemo the
+          "See it work" section runs, its own instance). */}
       <section className={s.hero} id="top">
-        <div ref={heroPhRef} className={s.heroPh}>
-          <Image src="/hero/ball-in-cup.jpg" alt="A golf ball resting at the edge of the cup" fill priority sizes="100vw" />
-        </div>
-        <div className={`${s.shade} ${s.heroShade}`} />
         <div className={s.inWrap}>
-          <h1>The tee sheet your course deserves.</h1>
-          <p>Golfers book on a page that looks like your course. You run the sheet, take check-ins and payments, and keep your members&apos; rules. We set it up with you in a few days.</p>
-          <div className={s.cta}>
-            <Link className={`${s.btn} ${s.btnLight}`} href="/for-courses">List your course <Arrow /></Link>
-            <a className={s.link} href="#how" style={{ color: '#fff' }}>See how it works <Down /></a>
+          <div className={s.heroGrid}>
+            <div className={s.heroText}>
+              <div className={s.heroEyebrow}>Free online tee sheet for golf courses</div>
+              <h1>The tee sheet your course deserves.</h1>
+              <p>Golfers book on a page that looks like your course. You run the sheet, take check-ins and payments, and keep your members&apos; rules. Live in days.</p>
+              <div className={s.cta}>
+                <Link className={s.btn} href="/for-courses">List your course <Arrow /></Link>
+                <a className={`${s.btn} ${s.btnOutline}`} href="#how">See how it works <Down /></a>
+              </div>
+              <div className={s.fine}>Free for courses. $0/month, no contract. We reply within one business day.</div>
+            </div>
+            <div className={s.heroStage}>
+              <div className={s.heroDevice}>
+                <HomeDemo accent="#24513B" photo compact />
+              </div>
+              <div className={s.heroSheet} aria-hidden="true">
+                <div className={s.hsHead}><span>Your tee sheet</span><b>Sat · 7 AM</b></div>
+                <div className={s.hsRow}><span className={s.hsT}>7:10</span><span className={s.hsWho}>Marino · 4 players</span><span className={`${s.hsSt} ${s.hsOk}`}>Checked in</span></div>
+                <div className={s.hsRow}><span className={s.hsT}>7:20</span><span className={s.hsWho}>Okafor · 2 players</span><span className={`${s.hsSt} ${s.hsDue}`}>Due $124</span></div>
+                <div className={s.hsRow}><span className={s.hsT}>7:30</span><span className={s.hsWho}>Open</span><span className={`${s.hsSt} ${s.hsOpen}`}>4 spots</span></div>
+              </div>
+            </div>
           </div>
-          <div className={s.fine}>Free for courses. $0/month, no contract. We reply within one business day.</div>
         </div>
-        <div className={s.cue} aria-hidden="true" />
       </section>
 
       {/* 3. STORY — pinned photo, three beats */}
       <section ref={storyRef} className={s.story} id="how">
         <div className={s.pin}>
-          <div ref={storyPhRef} className={s.storyPh}>
+          <div ref={storyPhRef} className={`${s.storyPh} ${storyVideo ? s.hasVideo : ''}`}>
             <Image src="/home/bunker.jpg" alt="" fill sizes="100vw" loading="lazy" className={storyVideo ? undefined : s.drift} />
             {storyVideo && (
               <video
@@ -182,6 +196,8 @@ export default function HomeContent() {
             )}
           </div>
           <div className={`${s.shade} ${s.storyShade}`} />
+          {/* H-2d §3: the cream hero dissolves into the moving green — no seam. */}
+          <div className={s.storyTop} aria-hidden="true" />
           <div ref={beatsRef} className={s.beats}>
             {BEATS.map((b, i) => (
               <div key={b.eyebrow} className={`${s.beat} ${i === 0 ? s.on : ''}`}>

@@ -23,7 +23,10 @@ const CART = 18;
 const FEE = 1.5;
 const money = (n: number) => `$${n.toFixed(2)}`;
 
-export default function HomeDemo({ accent, photo }: { accent: string; photo: boolean }) {
+// H-2d: `compact` is the hero variant — three rows, a shorter header, the
+// same live interaction. Its state is its own; the "See it work" instance is a
+// separate mount.
+export default function HomeDemo({ accent, photo, compact = false }: { accent: string; photo: boolean; compact?: boolean }) {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const [reservedIdx, setReservedIdx] = useState<number | null>(null);
   const [cart, setCart] = useState(false);
@@ -32,7 +35,7 @@ export default function HomeDemo({ accent, photo }: { accent: string; photo: boo
   function reset() { setOpenIdx(null); setReservedIdx(null); setCart(false); }
 
   return (
-    <div className={`${s.device} ${photo ? '' : s.nophoto}`} style={{ '--course': accent } as React.CSSProperties} aria-label="Example course booking page — try it">
+    <div className={`${s.device} ${photo ? '' : s.nophoto} ${compact ? s.compact : ''}`} style={{ '--course': accent } as React.CSSProperties} aria-label="Example course booking page — try it">
       <div className={s.dHd}>
         <Image src="/home/iron.jpg" alt="" fill sizes="390px" loading="lazy" />
         <div className={s.dTag}>Example course · Public · Est. 1962</div>
@@ -50,7 +53,7 @@ export default function HomeDemo({ accent, photo }: { accent: string; photo: boo
           : <><b>Nothing charged today.</b> Cancel free until the day before your tee time. ${FEE.toFixed(2)}/player booking fee.</>}
       </div>
       <div className={s.rows}>
-        {SLOTS.map((slot, i) => {
+        {(compact ? SLOTS.slice(0, 3) : SLOTS).map((slot, i) => {
           if (slot.open === 0) {
             return (
               <div key={slot.time} className={`${s.row} ${s.full}`}>

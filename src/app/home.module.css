@@ -33,33 +33,52 @@
 .js .fade:not(.in) { opacity: 0; transform: translateY(26px); }
 
 /* HERO */
-.hero { position: relative; height: 100svh; min-height: 640px; max-height: 1000px; overflow: hidden; display: flex; align-items: center; color: #fff; }
-.heroPh { position: absolute; inset: -6% 0 0 0; height: 112%; transform: translateY(var(--hy, 0px)) scale(1.06); will-change: transform; }
-.heroPh img { object-fit: cover; object-position: 62% 60%; }
-/* The settle animation keeps contributing after it ends (fill-mode both), which
-   would mask any inline transform — so the scroll parallax is a custom property
-   (--hy, set from JS) that the keyframes themselves read. */
-.js .heroPh { animation: kb 7s var(--ease) both; }
-@keyframes kb { from { transform: translateY(var(--hy, 0px)) scale(1.12); } to { transform: translateY(var(--hy, 0px)) scale(1.06); } }
+/* H-2d — direction A: cream + the product. No photo, no parallax; the text
+   is the LCP and the booking device is the picture. */
+.hero { position: relative; height: 100svh; min-height: 640px; max-height: 1000px; overflow: hidden; display: flex; align-items: center; color: var(--ink); background: var(--paper); }
+.heroGrid { display: grid; grid-template-columns: minmax(0, 620px) minmax(0, 1fr); gap: 48px; align-items: center; }
+.heroText > * { max-width: 620px; }
+.heroEyebrow { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--pine); margin-bottom: 18px; }
+.btnOutline { background: transparent; color: var(--pine); border: 1.5px solid rgba(36,81,59,.35); }
+.btnOutline:hover { background: rgba(36,81,59,.06); box-shadow: none; }
+.heroStage { position: relative; height: 620px; display: flex; align-items: center; justify-content: center; }
+.heroDevice { position: relative; width: 360px; max-width: 100%; transform: rotate(-2deg); z-index: 1; }
+.heroDevice .device { width: 360px; box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 30px 50px -30px rgba(20,30,20,.35), 0 80px 120px -60px rgba(20,30,20,.25); }
+.compact .dHd { height: 150px; }
+.heroSheet { position: absolute; right: 0; bottom: 44px; width: 320px; transform: rotate(1.5deg); background: #F7F5EF; color: #1d1f1a; border-radius: 14px; border: 1px solid rgba(0,0,0,.06); box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 30px 50px -30px rgba(20,30,20,.35); padding: 14px 16px 10px; z-index: 2; font-size: 12.5px; }
+.hsHead { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #87867C; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,.08); margin-bottom: 4px; }
+.hsHead b { font-weight: 600; letter-spacing: 0; text-transform: none; color: #1d1f1a; font-size: 12px; }
+.hsRow { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid rgba(0,0,0,.06); }
+.hsRow:last-child { border-bottom: 0; }
+.hsT { font-variant-numeric: tabular-nums; font-weight: 600; }
+.hsWho { color: #5d5f56; }
+.hsSt { font-size: 11px; font-weight: 600; }
+.hsOk { color: #3D6B4C; } .hsDue { color: #8A6116; } .hsOpen { color: #87867C; font-weight: 500; }
+/* Load motion: the device rises and fades in, the sheet follows 150ms later. */
+.js .heroDevice { animation: rise .6s var(--ease) both; }
+.js .heroSheet { animation: rise .6s var(--ease) both .15s; }
+@keyframes rise { from { opacity: 0; transform: translateY(16px) rotate(-2deg); } to { opacity: 1; transform: translateY(0) rotate(-2deg); } }
+.js .heroSheet { animation-name: riseSheet; }
+@keyframes riseSheet { from { opacity: 0; transform: translateY(16px) rotate(1.5deg); } to { opacity: 1; transform: translateY(0) rotate(1.5deg); } }
 .shade { position: absolute; inset: 0; pointer-events: none; }
-.heroShade { background: linear-gradient(90deg, rgba(0,0,0,.5) 0%, rgba(0,0,0,.22) 48%, rgba(0,0,0,.05) 100%), linear-gradient(0deg, rgba(0,0,0,.35), rgba(0,0,0,0) 40%); }
 .inWrap { position: relative; width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding-top: 40px; }
-.inWrap > * { max-width: 620px; }
-.hero h1 { font-family: var(--font-serif), Fraunces, Georgia, serif; font-size: clamp(46px, 6.4vw, 92px); line-height: .96; letter-spacing: -.02em; font-weight: 500; text-shadow: 0 2px 30px rgba(0,0,0,.25); }
-.hero p { font-size: clamp(17px, 1.5vw, 21px); line-height: 1.5; max-width: 540px; margin: 26px 0 34px; opacity: .95; text-wrap: pretty; }
+.hero h1 { font-family: var(--font-serif), Fraunces, Georgia, serif; font-size: clamp(46px, 6.4vw, 84px); line-height: .96; letter-spacing: -.02em; font-weight: 500; color: var(--ink); }
+.hero p { font-size: 19px; line-height: 1.5; max-width: 520px; margin: 26px 0 34px; color: var(--ink-2); text-wrap: pretty; }
 .cta { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-.fine { margin-top: 22px; font-size: 13.5px; opacity: .72; }
-.cue { position: absolute; bottom: 26px; left: 50%; width: 1px; height: 44px; margin-left: -.5px; background: rgba(255,255,255,.5); overflow: hidden; }
-.cue::after { content: ""; position: absolute; left: 0; top: -100%; width: 1px; height: 100%; background: #fff; animation: cue 2.2s var(--ease) infinite; }
-@keyframes cue { to { top: 100%; } }
-.js .inWrap > * { animation: up 1.2s var(--ease) both; }
-.js .inWrap > p { animation-delay: .12s; } .js .inWrap > .cta { animation-delay: .22s; } .js .inWrap > .fine { animation-delay: .3s; }
+.fine { margin-top: 22px; font-size: 13.5px; color: var(--ink-3); }
+.js .heroText > * { animation: up 1.2s var(--ease) both; }
+.js .heroText > h1 { animation-delay: .06s; } .js .heroText > p { animation-delay: .12s; } .js .heroText > .cta { animation-delay: .22s; } .js .heroText > .fine { animation-delay: .3s; }
 @keyframes up { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
 
 /* STORY — pinned photo, three beats */
 .story { position: relative; height: 340vh; background: var(--pine-deep); }
 .pin { position: sticky; top: 0; height: 100svh; overflow: hidden; color: #fff; }
 .storyPh { position: absolute; inset: 0; transform: scale(var(--z, 1)); will-change: transform; transition: transform .1s linear; }
+/* H-2d §2: when the clip is the active layer it is not zoomed — it already moves. */
+.storyPh.hasVideo { transform: none; will-change: auto; }
+.storyPh video { transform: none; }
+/* H-2d §3: the cream hero dissolves into the green. Above the clip, under the beats. */
+.storyTop { position: absolute; left: 0; right: 0; top: 0; height: 22vh; background: linear-gradient(180deg, #F6F4EC 0%, rgba(246,244,236,0) 100%); pointer-events: none; z-index: 1; }
 .storyPh img { object-fit: cover; object-position: center 70%; }
 /* H-2a: the looping clip sits over the still inside the same scaled layer. It
    is only mounted on desktop, and only plays when the story is on screen. */
@@ -236,6 +255,13 @@
 .final .cta { justify-content: center; margin-top: 34px; }
 
 @media (max-width: 960px) {
+  /* H-2d: the hero stacks — text, then the device at .9 centered; the tee-sheet card is absent. */
+  .hero { height: auto; min-height: 0; max-height: none; padding: 72px 0 56px; }
+  .heroGrid { grid-template-columns: 1fr; gap: 40px; }
+  .heroStage { height: auto; }
+  .heroDevice { transform: scale(.9) rotate(0deg); transform-origin: top center; }
+  .js .heroDevice { animation: none; opacity: 1; }
+  .heroSheet { display: none; }
   /* §5: below 960px the story unpins and the three beats stack over the photo. */
   .story { height: auto; }
   .pin { position: relative; height: auto; min-height: 100svh; }
@@ -247,8 +273,8 @@
   .head { flex-direction: column; align-items: flex-start; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .js .heroPh, .js .inWrap > *, .cue::after { animation: none; }
-  .storyPh, .heroPh { transform: none !important; }
+  .js .heroText > *, .js .heroDevice, .js .heroSheet { animation: none; }
+  .storyPh { transform: none !important; }
   .drift { animation: none; }
   .fade, .beat, .card, .img img, .detail, .chev, .a, .btn { transition: none; }
   .js .fade:not(.in) { opacity: 1; transform: none; }
