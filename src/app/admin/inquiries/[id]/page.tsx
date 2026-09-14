@@ -4,7 +4,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft, Mail, Wrench, Power, CheckCircle, Clock, Trash2,
   XCircle, ArrowUpRight, Copy, Archive, Pencil, Save, RefreshCw, Eye, MoreHorizontal, Check,
-  Globe, ArchiveRestore, RotateCcw,
+  Globe, ArchiveRestore, RotateCcw, Phone,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -19,6 +19,9 @@ import {
   CATEGORY_LABEL, latestPageDecision, computeOpenChanges,
   hasRequestedChangesThisRound, describeChangeEvent, decodeChangeAddressed,
 } from '@/lib/change-requests';
+// IC-2: the discovery call — cards, header chip, build gate, history.
+import InquiryCallCards, { describeCall, type CallRow, type CallFocus } from '@/components/admin/InquiryCallCards';
+import { AGENDA, callGate, fmtCallTime, nextCall, overdueCall, latestCall, parseJson } from '@/lib/inquiry-call';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -36,6 +39,9 @@ interface Inquiry {
   source?: string | null; closedReason?: string | null;
   snoozeUntil?: string | null; nextFollowUpAt?: string | null;
   detailsToken?: string | null; detailsJson?: string; needsJson?: string;
+  // IC-1: the discovery call(s) and the explicit skip.
+  callSkippedReason?: string | null;
+  calls?: CallRow[];
   events: InquiryStatusEvent[];
 }
 interface ApproveResult {
@@ -385,6 +391,10 @@ function InquiryDetailInner() {
   const [snoozeDate, setSnoozeDate] = useState('');
   const [rejectReason, setRejectReason] = useState('');
   const [rejectNotify, setRejectNotify] = useState(true);
+  // IC-2 §4: the build gate is never a dead end — the notice points at the
+  // card, and `callFocus` opens the right part of it.
+  const [callGateNotice, setCallGateNotice] = useState(false);
+  const [callFocus, setCallFocus] = useState<CallFocus>(null);
   // null means "everything in the diff" — the founder has not narrowed it yet.
   const [resubPicked, setResubPicked] = useState<Set<string> | null>(null);
   // The stage-aware default lands ONCE, on first load. Re-applying it after
@@ -488,6 +498,9 @@ function InquiryDetailInner() {
             + '. The inquiry is closed — email ' + (inq?.email || 'the contact') + ' yourself if they should hear it.');
         }
         await loadInquiry();
+      } else if (r.status === 409 && d.error === 'call_required') {
+        setPendingAction(null);
+        setCallGateNotice(true);
       } else {
         setActionError('Failed (' + r.status + '): ' + ((d.error as string) || text.slice(0, 200)));
       }
@@ -516,6 +529,9 @@ function InquiryDetailInner() {
           setNameConflict({ existingCourseId: d.existingCourseId, existingCourseName: d.existingCourseName, message: d.message });
           setProcessing(false);
           return;
+        }
+        if (r.status === 409 && d.error === 'call_required') {
+          setPendingAction(null); setCallGateNotice(true); setProcessing(false); return;
         }
         setActionError((d.error as string) || 'Failed to create draft'); setProcessing(false); return;
       }
@@ -764,6 +780,22 @@ function InquiryDetailInner() {
     contactEmail: inq.email || '', inquiryId: inq.id,
   });
 
+  // IC-2: the call, read once for the header chip, the gate and the tabs.
+  const calls = inq.calls ?? [];
+  const upcomingCall = nextCall(calls);
+  const missedCall = overdueCall(calls);
+  const talkedCall = latestCall(calls.filter(c => c.outcome === 'talked'));
+  const callAnswers = talkedCall ? parseJson<Record<string, string>>(talkedCall.answersJson, {}) : {};
+  const callAnswerRows = AGENDA.filter(a => callAnswers[a.key]).map(a => [a.short, callAnswers[a.key]] as [string, string]);
+  const gate = callGate(inq, calls);
+  // Build buttons stay enabled; the click opens the notice instead of the
+  // modal when the gate is not met. The API enforces it regardless.
+  const guardBuild = (next: 'create_draft' | 'build_without_sheet') => {
+    setMoreOpen(false);
+    if (gate.ok) { setPendingAction(next); return; }
+    setCallGateNotice(true);
+  };
+
   const btnP = 'bg-pine hover:bg-pine-hover disabled:opacity-50 text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
   const btnO = 'bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
   const btnD = 'bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
@@ -789,6 +821,16 @@ function InquiryDetailInner() {
                 <StatusDot status={dot} label={STATUS_LABEL[inq.status] || inq.status} />
                 <span className="text-sm text-ink-muted">{inq.city}, {inq.state}</span>
                 {!isArchived && <span className="text-sm text-ink-faint">{days}d in stage</span>}
+                {!isArchived && upcomingCall && (
+                  <span className="flex items-center gap-1.5 text-xs text-pine font-medium">
+                    <Phone className="w-3.5 h-3.5" />Call {fmtCallTime(upcomingCall.scheduledAt)}
+                  </span>
+                )}
+                {!isArchived && !upcomingCall && missedCall && (
+                  <span className="flex items-center gap-1.5 text-xs text-warn font-medium">
+                    <Phone className="w-3.5 h-3.5" />Log the call ({fmtCallTime(missedCall.scheduledAt)})
+                  </span>
+                )}
                 {isArchived && inq.status !== 'live' && inq.status !== 'rejected' && (() => {
                   const { reason, date } = whyArchived(inq);
                   return (
@@ -823,7 +865,7 @@ function InquiryDetailInner() {
                 </button>
               )}
               {inq.status === 'details_submitted' && (
-                <button onClick={() => setPendingAction('create_draft')} disabled={processing} className={btnP}>
+                <button onClick={() => guardBuild('create_draft')} disabled={processing} className={btnP}>
                   <CheckCircle className="w-3.5 h-3.5" />Create Draft Course
                 </button>
               )}
@@ -895,7 +937,7 @@ function InquiryDetailInner() {
                   </button>
                 )}
                 {inq.status === 'in_review' && (
-                  <button onClick={() => { setMoreOpen(false); setPendingAction('build_without_sheet'); }} disabled={processing}
+                  <button onClick={() => guardBuild('build_without_sheet')} disabled={processing}
                     className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
                     <Wrench className="w-3.5 h-3.5" />Build without sheet
                   </button>
@@ -1174,6 +1216,36 @@ function InquiryDetailInner() {
             </div>
           )}
 
+          {/* IC-2: the discovery call — set it up, or log it. */}
+          {!isArchived && inq.status !== 'rejected' && (
+            <InquiryCallCards
+              inquiry={inq}
+              processing={processing}
+              focus={callFocus}
+              onRefresh={loadInquiry}
+              onRequestSheet={() => action('request_details')}
+              onNotAFit={() => { setRejectReason('Not a fit'); setRejectNotify(true); setPendingAction('reject'); }}
+            />
+          )}
+          {callGateNotice && (
+            <div className="mt-3 max-w-3xl bg-warn/5 border border-warn/20 rounded-md px-4 py-3">
+              <p className="text-warn text-xs leading-relaxed mb-2">
+                No call logged yet. Log the call, or skip it with a reason — then build.
+              </p>
+              <div className="flex items-center gap-4">
+                <button onClick={() => { setCallGateNotice(false); setCallFocus({ what: (upcomingCall || missedCall) ? 'log' : 'setup', n: Date.now() }); }}
+                  className="text-xs font-medium text-pine hover:underline">
+                  {(upcomingCall || missedCall) ? 'Log the call' : 'Set up the call'}
+                </button>
+                <button onClick={() => { setCallGateNotice(false); setCallFocus({ what: 'skip', n: Date.now() }); }}
+                  className="text-xs font-medium text-pine hover:underline">
+                  Skip it with a reason
+                </button>
+                <button onClick={() => setCallGateNotice(false)} className="text-xs text-ink-faint hover:text-ink ml-auto">Dismiss</button>
+              </div>
+            </div>
+          )}
+
           {/* Approve result */}
           {approveResult && (() => {
             const isDetails = !!approveResult.detailsLink;
@@ -1417,6 +1489,29 @@ function InquiryDetailInner() {
                (!inq.needsJson || inq.needsJson === '{}' || inq.needsJson === '') && (
                 <p className="text-sm text-ink-faint text-center py-10">No inquiry answers on record.</p>
               )}
+            </div>
+          )}
+
+          {/* IC-2 §3: what the latest talked call gave us. */}
+          {activeTab === 'lead' && talkedCall && callAnswerRows.length > 0 && (
+            <div className="max-w-3xl space-y-3 mt-8">
+              <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">
+                From the call · {fmtCallTime(talkedCall.scheduledAt)}
+              </div>
+              <div className="bg-white border border-line rounded-lg divide-y divide-line">
+                {callAnswerRows.map(([label, val]) => (
+                  <div key={label} className="grid grid-cols-[180px_1fr] gap-3 px-4 py-2.5">
+                    <div className="text-xs text-ink-muted pt-0.5">{label}</div>
+                    <div className="text-sm text-ink whitespace-pre-wrap">{val}</div>
+                  </div>
+                ))}
+                {talkedCall.notes && (
+                  <div className="grid grid-cols-[180px_1fr] gap-3 px-4 py-2.5">
+                    <div className="text-xs text-ink-muted pt-0.5">Notes</div>
+                    <div className="text-sm text-ink whitespace-pre-wrap">{talkedCall.notes}</div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -1764,6 +1859,26 @@ function InquiryDetailInner() {
           {/* Activity tab */}
           {activeTab === 'activity' && (
             <div className="max-w-3xl space-y-6">
+              {calls.length > 0 && (
+                <div>
+                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Calls</div>
+                  <div className="bg-white border border-line rounded-lg divide-y divide-line">
+                    {calls.map(c => (
+                      <div key={c.id} className="px-4 py-3 flex items-start gap-3">
+                        <Phone className={'w-3.5 h-3.5 mt-0.5 shrink-0 ' + (c.outcome === 'talked' ? 'text-ok' : c.outcome === 'scheduled' ? 'text-pine' : 'text-ink-faint')} />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm text-ink">{describeCall(c)}</div>
+                          <div className="text-xs text-ink-faint mt-0.5">
+                            {c.direction === 'they_call' ? 'They call us' : 'We call them'}{c.phone ? ' · ' + c.phone : ''}
+                            {c.followUpAt ? ' · follow up ' + fmtDate(c.followUpAt) : ''}
+                          </div>
+                          {c.notes && <div className="text-xs text-ink-soft mt-1 whitespace-pre-wrap">{c.notes}</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               {inq.events && inq.events.length > 0 && (
                 <div>
                   <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">History</div>

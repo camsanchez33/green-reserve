@@ -191,6 +191,21 @@ function buildSections(courseType: string, needs: Needs): { id: SectionId; title
   return [...head, ...mid, ...tail];
 }
 
+// IC-2 §5: which discovery-call agenda answers belong above which section.
+// Keys are AGENDA keys from src/lib/inquiry-call.ts.
+const SECTION_CALL_KEYS: Record<string, string[]> = {
+  basics: ['season_hours'],
+  schedule: ['tee_times', 'season_hours'],
+  fees: ['green_fees', 'carts_caddies'],
+  public_fees: ['green_fees'],
+  passes: ['resident_member'],
+  member: ['booking_today', 'protected_times'],
+  member_rate: ['resident_member'],
+  outings: ['protected_times'],
+  cancellation: ['cancellation'],
+  about: ['assets'],
+};
+
 const inp = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 const sel = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
@@ -248,6 +263,7 @@ function DetailsForm() {
   const [courseName, setCourseName] = useState('');
   const [courseType, setCourseType] = useState('public');
   const [needs, setNeeds] = useState<Needs>({});
+  const [callAnswers, setCallAnswers] = useState<Record<string, string>>({});
   const [draft, setDraft] = useState<Draft>(initDraft);
   const [sections, setSections] = useState<{ id: SectionId; title: string }[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
@@ -295,6 +311,7 @@ function DetailsForm() {
         setCourseType(ct);
         const n = d.needs || {};
         setNeeds(n);
+        setCallAnswers(d.callAnswers && typeof d.callAnswers === 'object' ? d.callAnswers : {});
         setSections(buildSections(ct, n));
         const saved = d.details || {};
 
@@ -1692,6 +1709,11 @@ function DetailsForm() {
           <h2 className="text-[18px] font-serif font-medium tracking-tight text-ink mb-5">
             {section?.title}
           </h2>
+          {section && (SECTION_CALL_KEYS[section.id] || []).filter(k => callAnswers[k]).map(k => (
+            <p key={k} className="text-[12.5px] text-ink-muted leading-relaxed -mt-2 mb-4">
+              From your call with GreenReserve: <span className="text-ink-soft">{callAnswers[k]}</span>
+            </p>
+          ))}
           {section && renderSection(section.id)}
         </div>
 

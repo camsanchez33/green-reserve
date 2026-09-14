@@ -136,3 +136,32 @@ export function isSameEasternDay(a: string | Date, b: Date): boolean {
   const f = (d: string | Date) => new Date(d).toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
   return f(a) === f(b);
 }
+
+// IC-2: the cards take a date + a clock time typed in Eastern (the only
+// timezone Cam schedules in) and need the instant. Done with Intl so it is
+// right on either side of a DST change without a tz library.
+export function easternToIso(date: string, time: string): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) return null;
+  const guess = new Date(`${date}T${time}:00Z`);
+  if (Number.isNaN(guess.getTime())) return null;
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', hourCycle: 'h23',
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+  }).formatToParts(guess);
+  const get = (t: string) => Number(parts.find(p => p.type === t)?.value ?? 0);
+  const asEt = Date.UTC(get('year'), get('month') - 1, get('day'), get('hour') % 24, get('minute'));
+  return new Date(guess.getTime() - (asEt - guess.getTime())).toISOString();
+}
+
+/** The Eastern date (YYYY-MM-DD) and clock (HH:MM) of an instant — for prefilling the reschedule row. */
+export function easternParts(d: string | Date): { date: string; time: string } {
+  const dt = new Date(d);
+  const date = dt.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+  const time = dt.toLocaleTimeString('en-GB', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).slice(0, 5);
+  return { date, time };
+}
+
+export const OUTCOME_LABEL: Record<string, string> = {
+  scheduled: 'Scheduled', talked: 'Talked', no_answer: 'No answer', not_a_fit: 'Not a fit',
+};
+export const DIRECTION_LABEL: Record<string, string> = { we_call: 'We call them', they_call: 'They call us' };

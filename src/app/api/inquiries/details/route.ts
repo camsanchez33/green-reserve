@@ -36,6 +36,16 @@ export async function GET(req: NextRequest) {
   const gate = await gateSheetAccess(inquiry);
   if (gate) return NextResponse.json({ error: gate.error }, { status: gate.status });
 
+  // IC-2 §5: what the course told us on the discovery call, so the sheet can
+  // show "From your call with GreenReserve: …" above the matching section.
+  // Hints only — nothing is auto-filled into inputs.
+  const talked = await prisma.call.findFirst({
+    where: { inquiryId: inquiry.id, kind: 'discovery', outcome: 'talked' },
+    orderBy: { scheduledAt: 'desc' }, select: { answersJson: true },
+  });
+  let callAnswers: Record<string, string> = {};
+  try { callAnswers = talked?.answersJson ? JSON.parse(talked.answersJson) : {}; } catch { /* unreadable */ }
+
   let details = {};
   try { details = inquiry.detailsJson ? JSON.parse(inquiry.detailsJson) : {}; } catch { /* ignore */ }
   let needs = {};
@@ -50,6 +60,7 @@ export async function GET(req: NextRequest) {
     hasCaddies: inquiry.hasCaddies,
     needs,
     details,
+    callAnswers,
   });
 }
 
