@@ -83,6 +83,25 @@ Tailwind: keep the existing color tokens, add `--font-serif-staff`/`--font-sans-
 
 ## 3. Reskin runs — ZERO behavior change
 
+> **BATCH 2026-09-11 — REVIEWED, ready for Cam's preview walk.** Branch `batch/2026-09-11-reskin`
+> (local; Cam pushes). Four items merged (U-G, U-O, U-A, U-M), guard clean on every worker branch and
+> on the merged range (the only structural hit is the declared shared change: /api/receipt returns
+> brandColor). Combined review: admin-UX 0 blocking (Settings field inventory verified 1:1, ?stripe=
+> deep link intact); design 2 blocking + spec 2 missing, ALL FIXED on the branch (c023eeb, 99fa4a0):
+> receipt header now wears the course colour; /manage selected row + confirm buttons in the course
+> accent; staff modal/drawer shadows to the 0 1px 2px ceiling; toggle switches square; revenue
+> Archived/Not-live chips → StatusDot; the /book confirmation's free-cancel deadline is now computed
+> in COURSE time (it parsed the tee time as browser-local — a Denver golfer saw a Denver deadline for
+> a New York course); admin eyebrows moved to the §1b 0.1em the dashboard already used.
+> LEFT AS-IS, CAM'S CALL: (1) blocked tee-sheet rows use a hard-stop repeating-linear-gradient hatch
+> (BANNED says gradients); (2) the three legal "short version" boxes are new prose — the two operator-
+> agreement bullets restate the LQ-2 fee flow — read before merge; (3) /for-courses still carries the
+> unfrozen fee copy in four places (hero, stat tiles, pitch, FAQ) — pre-existing, not touched by U-M,
+> same claim H-1 froze on `/`; (4) account OTP screen not restyled (already on tokens); (5) cards are
+> rounded-lg (8px) not 14px — needs a radius token if 14px is wanted; (6) U-A's "stalled 7d+" fade is
+> the spec's own bullet, but it is a threshold — say if you want it gone. NOT VERIFIED: any board
+> side-by-side, phone walk, Lighthouse on /courses/[slug], real-data subtitles.
+
 Rule for every run in this section: no route changes, no API changes, no new state, no new copy that changes meaning, no schema. If a mockup element needs any of those, it is in §4, not here. `git diff` should be JSX/CSS only. The restate step must list every file it will touch.
 
 - [ ] **U-G · Golfer surface — public look, Clubhouse structure** (no migration, large; may split G1/G2)
@@ -179,6 +198,102 @@ Perf budget (mobile, Lighthouse): LCP ≤ 2.5s on the hero image, CLS < 0.05, to
 Acceptance: walk on iPhone Safari + Chrome desktop; hero ball visible at 1440 and 390 widths; reduced-motion renders static; no console errors; placeholders visible.
 
 ---
+
+## 5b. Homepage revisions — H-2 (Cam's live walk, 2026-09-14)
+
+Cam walked the live H-1 page. Two verdicts, decided via AskUserQuestion 2026-09-14:
+- The pinned story "looks a little odd" — a frozen still for 2.4 screens. "I don't mind
+  if the picture scrolls, but it almost needs to look like a video."
+- "See it work" should ALSO show the dashboard the course would actually get, not only
+  the golfer booking page. Decision: **both, two tabs**. Decision: **build the dashboard
+  demo after U-O lands** so it is built once, in the new operator look.
+
+Two runs. H-2a has no dependency and can run now; H-2b waits for U-O (O1).
+
+### H-2a · Story looks like a video (small/medium, no migration, no U-O dependency)
+
+Keep the pin, the 340vh, the three beats and the progress ticks — the STRUCTURE was
+approved and the copy is good. Replace the frozen still with motion:
+
+1. **Looping video under the beats.** `<video>` in `.storyPh` replacing the `<Image>`:
+   `autoplay muted loop playsinline preload="none"`, `poster="/home/bunker.jpg"`
+   (the current still, so nothing changes until the clip is ready). Sources: `.webm`
+   (VP9) then `.mp4` (H.264). Same `object-fit: cover; object-position: center 70%`.
+   Keep the scroll-driven `--z` scale on the wrapper — video + slow zoom reads as one
+   continuous shot.
+2. **Start/stop with visibility.** IntersectionObserver on the section: `play()` when
+   ≥10% visible, `pause()` when not. Never let it play under the fold.
+3. **Fallbacks, all three required:** `prefers-reduced-motion` → do not render the
+   `<video>` at all, the poster shows (the existing rule); `navigator.connection?.saveData`
+   → same; if the video errors or never reaches `canplay` within 4s → the poster stays,
+   no spinner, no console error.
+4. **The clip.** CAM SUPPLIES OR PICKS IT — the run does not fetch stock footage.
+   Requirements: slow drone or slider move over a course (no people close up, no
+   logos, no text), 8–15s, loops without a visible cut (either a true loop or a slow
+   crossfade at the seam done in the edit), no audio track. Encode 1920×1080 at ~2.5
+   Mbps: target ≤ 3.5 MB mp4 and ≤ 3 MB webm. Put both in `public/home/` as
+   `story.mp4` / `story.webm`. Free-license source (Pexels/Pixabay video are fine);
+   record the source id in `docs/design/README.md` like the photos.
+   Until the files exist the poster shows, so H-2a can merge before the clip is chosen.
+4b. **The poster is never a frozen still.** Until a clip exists (and whenever the
+   fallbacks fire), the still gets a CSS keyframe drift: `scale 1.02→1.10` with a
+   `translate` of ~2% over 28s, `alternate`, `ease-in-out`, on the same `.storyPh`
+   wrapper (compose with the scroll `--z` by putting the drift on the inner `<img>`).
+   This is Cam's minimum bar for the section — motion in the picture at all times —
+   and it costs nothing. Disabled by `prefers-reduced-motion` like everything else.
+5. **Mobile (<960px):** stays unpinned, and does NOT load the video (data) — the
+   stacked-beats-over-still layout remains as built.
+6. Perf: the video is below the fold and `preload="none"`, so LCP is untouched. Verify
+   the mobile Lighthouse numbers from §5 still hold and that `/` JS grew by < 2KB gz.
+
+Acceptance: at 1440 the story plays as a continuous moving shot with the three beats
+over it; pausing scroll does not stop the picture; reduced-motion shows the still;
+no request for `story.*` at 390px.
+
+### H-2b · "See it work" shows both sides (medium, no migration — AFTER U-O O1)
+
+Section 4 becomes a two-tab demo. Tabs sit under the `.h2`/`.sub`, segmented control
+in the public look (`.seg`): **What golfers see** · **What you see**. Default tab:
+"What golfers see" (the approved demo). Sub copy becomes: "Both halves are real: this
+is how the booking page works, and this is the tee sheet you run it from."
+
+1. **What golfers see** = today's `HomeDemo`, unchanged.
+2. **What you see** = new `HomeDashboardDemo` (`src/components/home/`), standalone like
+   `HomeDemo` — no fetch, no session, no import from `src/app/dashboard/`. It mirrors
+   the dashboard HOME tee sheet as it looks after U-O (canvas board "Operator · Tee
+   sheet" is the visual source; the current `dashboard/page.tsx` tee-sheet block is
+   the anatomy source):
+   - Stats row: Total slots · Booked · Expected · Blocked (four tiles, serif numbers).
+   - Date strip: 7 days, today selected; clicking another day swaps to a second fake
+     day (fewer bookings) so the strip is not dead.
+   - Tee sheet: ~8 rows from 7:00 to 12:30. States present at least once each: open,
+     partly booked (2 of 4, names shown as "M. Rivera +1"), full, blocked ("Course
+     maintenance"), checked in. Row anatomy = the real tee-sheet row (time, players,
+     names, price, status chip, right-side action).
+   - Interactions (all local state): tap a booked row → it expands → "Check in" →
+     row flips to checked-in and the Booked/Expected tiles update; tap an open row →
+     "Block time" → blocked state, Blocked tile +1. One "Undo" per action so a visitor
+     can play without reloading.
+   - Sidebar: the real operator sidebar's identity block (logo mark, course name,
+     "Hollow Creek Golf Club"), nav labels only, nothing clickable except the demo.
+   - Framed as a laptop, not a phone: the `.device` frame at ~980px wide, scaled with
+     `transform: scale()` to fit the wrap on smaller desktops; below 960px show the
+     tee sheet alone at full width without the sidebar.
+3. **Shared white-label state.** The accent swatch picked on "What golfers see" also
+   recolors "What you see" (course accent per §1b: status chips, selected date, the
+   sidebar identity block). The course name and photo the golfer demo shows are the
+   ones the dashboard demo shows. Lift the swatch state to a small parent
+   (`HomeDemoTabs`) so both children read it.
+4. Copy honesty: the tee sheet shows "$1.50/player service fee" nowhere on the
+   operator side (it is a golfer-side line) and no revenue claims beyond the fake
+   day's own arithmetic.
+5. Perf: `HomeDashboardDemo` is lazy-loaded (`next/dynamic`, ssr false) only when its
+   tab is first selected; the default tab's JS stays as today.
+
+Acceptance: tabs work with keyboard (arrow keys, role=tablist); switching tabs does
+not reset the picked accent; the four tiles change when a row is checked in or
+blocked; at 390px the dashboard tab shows the sheet without the sidebar and no
+horizontal scroll; Lighthouse mobile numbers from §5 still hold.
 
 ## 6. Verification, every run
 
