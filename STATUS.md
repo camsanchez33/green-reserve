@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-14 02:34 UTC · branch `main` · HEAD `da3feaa` · working tree **2 dirty file(s)**
+Generated 2026-09-14 02:37 UTC · branch `main` · HEAD `2385994` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -176,6 +176,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `2385994` 2026-09-13 — queue/spec update
 - `da3feaa` 2026-09-13 — queue/spec update
 - `ae5ff68` 2026-09-13 — queue/spec update
 - `73b57b1` 2026-09-13 — queue/spec update
@@ -187,7 +188,6 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `767d81c` 2026-09-13 — H-1: the homepage, from the approved prototype
 - `6bc1168` 2026-09-11 — queue/spec update
 - `7238dd9` 2026-09-11 — queue/spec update
-- `5eb48c5` 2026-09-11 — Review fixes: fee reversal on cancellation refunds, double-charge guard, viewer shaping, hung buttons
 
 ---
 

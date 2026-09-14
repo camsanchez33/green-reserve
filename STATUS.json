@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-14T02:34:30.988Z",
+  "generatedAt": "2026-09-14T02:37:36.296Z",
   "repo": {
-    "head": "da3feaa",
+    "head": "2385994",
     "branch": "main",
     "dirtyCount": 2,
     "dirty": [
@@ -818,6 +818,11 @@
   },
   "recentCommits": [
     {
+      "h": "2385994",
+      "date": "2026-09-13",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "da3feaa",
       "date": "2026-09-13",
       "subject": "queue/spec update"
@@ -871,11 +876,6 @@
       "h": "7238dd9",
       "date": "2026-09-11",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "5eb48c5",
-      "date": "2026-09-11",
-      "subject": "Review fixes: fee reversal on cancellation refunds, double-charge guard, viewer shaping, hung buttons"
     }
   ]
 }
