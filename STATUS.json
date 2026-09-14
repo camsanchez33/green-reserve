@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-14T23:53:16.125Z",
+  "generatedAt": "2026-09-14T23:56:50.773Z",
   "repo": {
-    "head": "49d3d7a",
+    "head": "cd67d82",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,22 +10,22 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-14T19:11:19-04:00",
+    "queueLastCommit": "2026-09-14T19:53:17-04:00",
     "unrecorded": [
       {
-        "h": "49d3d7a",
-        "date": "2026-09-14T19:53:14-04:00",
-        "subject": "H-2c: kill the photo band — the 'We set it up' section (a wind farm, wrong Unsplash id) is gone; its line lives under 'Live in four steps'",
+        "h": "cd67d82",
+        "date": "2026-09-14T19:56:48-04:00",
+        "subject": "H-2d: clean hero (direction A) — cream + the product, no photo; the story clip stops shimmering; hero dissolves into the story",
         "ids": [],
         "matches": []
       }
     ]
   },
   "counts": {
-    "runDone": 168,
+    "runDone": 169,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 25,
+    "runNotStarted": 24,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -230,11 +230,6 @@
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
       "line": 1474,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "UI_REVISE_SPEC H-2d — CLEAN HERO (direction A, chosen by Cam 2026-09-14): cream hero, no photo, headline left + live booking device (HomeDemo hero variant) + static tee-sheet card right, lockup nav un",
-      "line": 1980,
       "section": "Queue (run in this order)"
     }
   ],
@@ -800,6 +795,16 @@
   },
   "recentCommits": [
     {
+      "h": "cd67d82",
+      "date": "2026-09-14",
+      "subject": "H-2d: clean hero (direction A) — cream + the product, no photo; the story clip stops shimmering; hero dissolves into the story"
+    },
+    {
+      "h": "31ff509",
+      "date": "2026-09-14",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "49d3d7a",
       "date": "2026-09-14",
       "subject": "H-2c: kill the photo band — the 'We set it up' section (a wind farm, wrong Unsplash id) is gone; its line lives under 'Live in four steps'"
@@ -848,16 +853,6 @@
       "h": "a95fd27",
       "date": "2026-09-14",
       "subject": "CS-1: course setup steps, check-in call cadence + agenda, the API, the go-live hook, and check-ins in the Overview queue"
-    },
-    {
-      "h": "738a84d",
-      "date": "2026-09-14",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "c2f1fc0",
-      "date": "2026-09-14",
-      "subject": "IC-3: /admin/inquiries becomes the sheet — one fixed-column table, the Next-call cell, calls this week, Export CSV"
     }
   ]
 }

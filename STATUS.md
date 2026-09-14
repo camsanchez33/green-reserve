@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-14 23:53 UTC · branch `main` · HEAD `49d3d7a` · working tree **1 dirty file(s)**
+Generated 2026-09-14 23:56 UTC · branch `main` · HEAD `cd67d82` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,7 +12,7 @@ Generated 2026-09-14 23:53 UTC · branch `main` · HEAD `49d3d7a` · working tre
 
 | commit | date | subject |
 |---|---|---|
-| `49d3d7a` | 2026-09-14 | H-2c: kill the photo band — the 'We set it up' section (a wind farm, wrong Unsplash id) is gone; its line lives under 'Live in four steps' |
+| `cd67d82` | 2026-09-14 | H-2d: clean hero (direction A) — cream + the product, no photo; the story clip stops shimmering; hero dissolves into the story |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
@@ -77,7 +77,6 @@ This is the distinction a raw checkbox count gets wrong.
 22. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1366`
 23. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1395`
 24. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1474`
-25. UI_REVISE_SPEC H-2d — CLEAN HERO (direction A, chosen by Cam 2026-09-14): cream hero, no photo, headline left + live booking device (HomeDemo hero variant) + static tee-sheet card  — `RUN_QUEUE.md:1980`
 
 ## Waiting on you (not on a build)
 
@@ -176,6 +175,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `cd67d82` 2026-09-14 — H-2d: clean hero (direction A) — cream + the product, no photo; the story clip stops shimmering; hero dissolves into the story
+- `31ff509` 2026-09-14 — queue/spec update
 - `49d3d7a` 2026-09-14 — H-2c: kill the photo band — the 'We set it up' section (a wind farm, wrong Unsplash id) is gone; its line lives under 'Live in four steps'
 - `ca48eb4` 2026-09-14 — queue/spec update
 - `9b148ec` 2026-09-14 — AG-3: version bumps and re-acceptance — day-0 notice, banner then modal, 428 on configuration writes, admin chips and queue rows
@@ -186,9 +187,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `7ef3959` 2026-09-14 — CS-2: /admin/courses becomes the sheet — one table, Getting live above Live, eight fixed columns, Export CSV
 - `1ac0965` 2026-09-14 — queue/spec update
 - `a95fd27` 2026-09-14 — CS-1: course setup steps, check-in call cadence + agenda, the API, the go-live hook, and check-ins in the Overview queue
-- `738a84d` 2026-09-14 — queue/spec update
-- `c2f1fc0` 2026-09-14 — IC-3: /admin/inquiries becomes the sheet — one fixed-column table, the Next-call cell, calls this week, Export CSV
 
 ---
 
-**Totals:** 168 done · 9 awaiting review · 1 in flight · 25 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 169 done · 9 awaiting review · 1 in flight · 24 not started · 8 revise pages open · 15 ideas · 2 parked.
