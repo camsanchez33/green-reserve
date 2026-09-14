@@ -16,6 +16,8 @@ attempted. `⚖️` cannot be closed by a Claude session.
       *Two-line change. Removes a live misrepresentation. Do it today.*
       → Findings L-2 · Register PD-1/PD-2/PD-3
 
+- [ ] **LQ-0 — Make the signature a record (2026-09-14).** Today's acceptance is one log line (version + email). `AGREEMENT_SPEC.md` (AG-1..3) builds the real thing: signer name/title/authority, IP, hash of the exact text, PDF to both sides, versioned re-acceptance with a 30-day window. ⚖️ COUNSEL: the Operator Agreement text, the new brand-license and accuracy-attestation texts, and the re-acceptance policy all need an attorney read before AG-2 ships. → Register PD-3, CC-6
+
 - [ ] **LQ-2 — DECIDED 2026-09-14 (Cam): keep the payment structure, rewrite the words.** Exact copy for all five surfaces + the L-4 disclosure is in `LQ-2_FEE_COPY.md`; the build item is "LQ-2 copy run" in RUN_QUEUE.md. Open only until that run ships.
       Read `ENTITY_BRIEF.md` §"the fee question" and `FINDINGS_2026-09-02.md`
       L-1. Pick (A) rewrite the promise or (B) split the charge. Then change
