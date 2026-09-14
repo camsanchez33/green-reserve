@@ -162,7 +162,7 @@
 .priceWrap { display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 72px; align-items: center; }
 .price p { font-size: 18px; line-height: 1.55; opacity: .88; margin: 20px 0 0; max-width: 520px; }
 .note { margin-top: 26px; padding: 14px 16px; border-radius: 10px; background: rgba(255,255,255,.08); font-size: 13.5px; line-height: 1.5; opacity: .85; max-width: 520px; }
-.tile { padding: 36px; border-radius: 16px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); }
+.tile { padding: 36px; border-radius: 14px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); }
 .tile .eyebrow { opacity: .7; }
 .amt { display: flex; align-items: baseline; gap: 10px; margin: 12px 0 18px; }
 .amt .n { font-family: var(--font-serif), Fraunces, Georgia, serif; font-size: 88px; line-height: 1; letter-spacing: -.03em; font-weight: 500; }
