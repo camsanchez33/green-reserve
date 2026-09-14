@@ -1,10 +1,11 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import Image from 'next/image';
-import { Loader2, AlertCircle, Printer } from 'lucide-react';
+import { Loader2, AlertCircle, Printer, Check } from 'lucide-react';
 import { serviceFeeLabel } from '@/lib/booking-fees';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
+import { CourseHeaderBar } from '@/components/CourseHeaderBar';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 type ReceiptData = {
   bookingId: string; golferName: string; courseName: string; courseSlug: string; courseLocation: string;
@@ -104,25 +105,17 @@ function ReceiptPageInner() {
           </div>
 
           <div className="receipt-card bg-white rounded-lg border border-line overflow-hidden">
-            {/* Header */}
-            <div className="bg-[#0a0a0a] px-6 py-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Image src="/brand/birdie-head.png" alt="" width={22} height={19} loading="lazy" />
-                  <span className="text-white font-semibold text-base">
-                    Green<span className="text-[#34d399]">Reserve</span>
-                  </span>
-                </div>
-                <span className="text-zinc-400 text-sm font-medium">{isCompleted ? 'Receipt' : isCancelled ? 'Cancellation' : 'Booking Confirmation'}</span>
-              </div>
-            </div>
+            {/* The course's bar, not GreenReserve's — this document belongs to
+                the round the golfer played, not to the platform. */}
+            <CourseHeaderBar
+              courseName={data.courseName}
+              right={isCompleted ? 'Receipt' : isCancelled ? 'Cancellation' : 'Booking Confirmation'}
+            />
 
             <div className="px-6 py-6">
-              {/* Status badge + title */}
+              {/* Status + title */}
               <div className="mb-5">
-                <span className={`text-[11px] uppercase tracking-[0.06em] font-medium px-2 py-0.5 rounded ${isCompleted ? 'bg-ok/10 text-ok' : isCancelled ? 'bg-bad/10 text-bad' : 'bg-pine/10 text-pine'}`}>
-                  {statusLabel}
-                </span>
+                <StatusDot status={isCompleted ? 'ok' : isCancelled ? 'bad' : 'neutral'} label={statusLabel} />
                 <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mt-3 mb-1">{data.courseName}</h1>
                 {data.courseLocation && <p className="text-ink-muted text-sm">{data.courseLocation}</p>}
               </div>
@@ -164,16 +157,18 @@ function ReceiptPageInner() {
                     <span className="font-medium text-ink">{dollars(data.cancellationFeeTotal)}</span>
                   </div>
                 )}
-                <div className="flex justify-between px-4 py-3 bg-paper">
-                  <span className="font-semibold text-ink">{totalLabel}</span>
-                  <span className="font-semibold text-ink text-base">{dollars(data.totalAmount)}</span>
+                <div className="flex justify-between items-baseline px-4 py-3.5 bg-paper">
+                  <span className="font-medium text-ink">{totalLabel}</span>
+                  <span className="font-serif font-medium text-ink text-xl leading-none">{dollars(data.totalAmount)}</span>
                 </div>
               </div>
 
               {/* Payment line */}
               {isCompleted && (
-                <div className="text-sm text-ink-soft mb-5">
-                  <span className="font-medium text-ok">✓ Paid</span> at check-in · Booking #{data.bookingId.slice(0, 8).toUpperCase()}
+                <div className="text-sm text-ink-soft mb-5 flex items-center gap-1.5 flex-wrap">
+                  <Check size={14} className="text-ok shrink-0" />
+                  <span className="font-medium text-ok">Paid</span>
+                  <span>at check-in · Booking #{data.bookingId.slice(0, 8).toUpperCase()}</span>
                 </div>
               )}
               {!isCompleted && !isCancelled && (

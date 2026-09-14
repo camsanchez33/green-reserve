@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import Image from 'next/image';
 import { Loader2, AlertCircle, MapPin, Lock } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -34,8 +33,8 @@ function fmtDate(d: string) {
   return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
-function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, onResult, onError }: {
-  bookingId: string; token: string; totalAmount: number; golferName: string;
+function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, accent, onResult, onError }: {
+  bookingId: string; token: string; totalAmount: number; golferName: string; accent: string;
   onResult: (r: { totalCharged: number; feeRefunded: boolean; feeRefundFailed?: boolean; feeRefundAmount: number }) => void;
   onError: (msg: string) => void;
 }) {
@@ -82,10 +81,14 @@ function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, onResult
       <button
         onClick={handleSubmit}
         disabled={loading || !stripe}
-        className="w-full py-3.5 rounded-md font-medium text-white text-sm flex items-center justify-center gap-2 bg-pine hover:bg-pine-hover transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+        className="w-full py-3.5 rounded-md font-medium text-white text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-70 disabled:cursor-not-allowed"
+        style={{ backgroundColor: accent || '#24513B' }}
       >
-        {loading ? <><Loader2 size={16} className="animate-spin" /> Charging…</> : `Check In & Pay $${(totalAmount / 100).toFixed(2)}`}
+        {loading ? <><Loader2 size={16} className="animate-spin" /> Charging…</> : `Check in · pay $${(totalAmount / 100).toFixed(2)}`}
       </button>
+      <p className="text-center text-xs text-ink-muted leading-relaxed">
+        Prefer to pay in person? Skip this and check in at the pro shop.
+      </p>
       <div className="flex items-center justify-center gap-2 text-ink-muted text-xs">
         <Lock size={12} /><span>Secure checkout powered by Stripe</span>
       </div>
@@ -155,7 +158,6 @@ function CheckInPageInner() {
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
           <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
           <div className="p-8 text-center">
-            <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={140} height={26} className="mx-auto mb-5 w-[140px] h-auto" />
             <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">You&apos;re checked in!</h1>
             <p className="text-ink-soft mb-6 text-sm">${(charged / 100).toFixed(2)} was charged to your card. Enjoy your round.</p>
             {result?.feeRefunded && (
@@ -173,7 +175,8 @@ function CheckInPageInner() {
             <p className="text-xs text-ink-muted mb-4">A receipt has been emailed to you.</p>
             {token && (
               <a href={`/receipt/${bookingId}?token=${encodeURIComponent(token)}`}
-                className="text-sm text-pine font-medium hover:underline mb-6 block">
+                className="text-sm font-medium hover:underline mb-6 block"
+                style={{ color: info.brandColor || '#24513B' }}>
                 View receipt →
               </a>
             )}
@@ -196,8 +199,10 @@ function CheckInPageInner() {
         {info.cartFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart Fee</span><span>${(info.cartFeeTotal / 100).toFixed(2)}</span></div>}
         {info.rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range Balls</span><span>${(info.rangeBallsTotal / 100).toFixed(2)}</span></div>}
         <div className="flex justify-between text-ink-soft"><span>GreenReserve service fee ($1.50 × {info.players})</span><span>${(info.accessFeeTotal / 100).toFixed(2)}</span></div>
-        <div className="flex justify-between font-semibold text-ink text-base border-t border-line pt-2">
-          <span>Total</span><span>${(info.totalAmount / 100).toFixed(2)}</span>
+        {/* The number they're about to pay is the biggest thing on the card. */}
+        <div className="flex justify-between items-baseline border-t border-line pt-3">
+          <span className="font-medium text-ink">Total</span>
+          <span className="font-serif font-medium text-ink text-2xl leading-none">${(info.totalAmount / 100).toFixed(2)}</span>
         </div>
       </div>
     </div>
@@ -229,11 +234,16 @@ function CheckInPageInner() {
               <button
                 onClick={handleSavedCardCheckIn}
                 disabled={checkingIn}
-                className="w-full py-3.5 rounded-md font-medium text-white text-sm flex items-center justify-center gap-2 bg-pine hover:bg-pine-hover transition-colors disabled:opacity-70"
+                className="w-full py-3.5 rounded-md font-medium text-white text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-70"
+                style={{ backgroundColor: info.brandColor || '#24513B' }}
               >
-                {checkingIn ? <><Loader2 size={16} className="animate-spin" /> Charging your card…</> : `Check In & Pay $${(info.totalAmount / 100).toFixed(2)}`}
+                {checkingIn ? <><Loader2 size={16} className="animate-spin" /> Charging your card…</> : `Check in · pay $${(info.totalAmount / 100).toFixed(2)}`}
               </button>
-              <p className="text-center text-xs text-ink-muted mt-3">Charges the card you saved when you booked.</p>
+              {/* The other way to do this, as a sentence — not a second button
+                  competing with the one above. */}
+              <p className="text-center text-xs text-ink-muted mt-3 leading-relaxed">
+                This charges the card you saved when you booked. Prefer to pay in person? Skip this and check in at the pro shop.
+              </p>
             </>
           ) : (
             <Elements stripe={stripePromise}>
@@ -242,6 +252,7 @@ function CheckInPageInner() {
                 token={token}
                 totalAmount={info.totalAmount}
                 golferName={info.golferName}
+                accent={info.brandColor}
                 onResult={setResult}
                 onError={setError}
               />

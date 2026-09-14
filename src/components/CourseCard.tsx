@@ -2,14 +2,14 @@ import Link from 'next/link';
 import { MapPin, Star } from 'lucide-react';
 import type { Course } from '@/lib/courses-data';
 
-const TYPE_BADGES: Record<string, { label: string; className: string }> = {
-  public:         { label: 'Public',         className: 'bg-emerald-100 text-emerald-800' },
-  private:        { label: 'Private',        className: 'bg-gray-100 text-gray-700' },
-  'semi-private': { label: 'Semi-Private',   className: 'bg-amber-100 text-amber-800' },
-  member:         { label: 'Member / Guest', className: 'bg-violet-100 text-violet-800' },
-  resident:       { label: 'Resident',       className: 'bg-blue-100 text-blue-800' },
-  resort:         { label: 'Resort',         className: 'bg-pink-100 text-pink-800' },
-  municipal:      { label: 'Municipal',      className: 'bg-gray-100 text-gray-700' },
+const TYPE_LABELS: Record<string, string> = {
+  public:         'Public',
+  private:        'Private',
+  'semi-private': 'Semi-Private',
+  member:         'Member / Guest',
+  resident:       'Resident',
+  resort:         'Resort',
+  municipal:      'Municipal',
 };
 
 function getSpecialBadge(course: Course): string | null {
@@ -21,12 +21,13 @@ function getSpecialBadge(course: Course): string | null {
 }
 
 export default function CourseCard({ course }: { course: Course }) {
-  const badge = TYPE_BADGES[course.type] ?? TYPE_BADGES.public;
+  const typeLabel = TYPE_LABELS[course.type] ?? TYPE_LABELS.public;
   const specialBadge = getSpecialBadge(course);
+  const membersOnly = course.type === 'member' || course.type === 'private';
 
   return (
     <Link href={`/courses/${course.slug}`} className="block group">
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-xl group-hover:border-emerald-100">
+      <div className="bg-white rounded-lg border border-line overflow-hidden transition-all duration-300 group-hover:-translate-y-0.5 group-hover:border-line-strong">
 
         {/* Header image */}
         <div
@@ -45,29 +46,29 @@ export default function CourseCard({ course }: { course: Course }) {
           {/* Top row: special badge + holes */}
           <div className="relative flex items-center justify-between">
             {specialBadge ? (
-              <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#c9a84c] text-white shadow-sm">
+              <span className="text-[10px] font-medium uppercase tracking-[0.06em] px-2.5 py-1 rounded-full bg-white/90 text-ink">
                 {specialBadge}
               </span>
             ) : <span />}
-            <span className="text-white/50 text-xs font-medium bg-black/20 px-2 py-0.5 rounded-full">
+            <span className="text-white/70 text-xs font-medium bg-black/20 px-2 py-0.5 rounded-full">
               {course.holes}H · Par {course.par}
             </span>
           </div>
 
-          {/* Bottom row: type badge */}
+          {/* Bottom row: type label */}
           <div className="relative">
-            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${badge.className}`}>
-              {badge.label}
+            <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-white/80">
+              {typeLabel}
             </span>
           </div>
         </div>
 
         {/* Body */}
         <div className="p-5">
-          <h3 className="font-bold text-gray-900 text-base mb-1 group-hover:text-[#1b4332] transition-colors line-clamp-1">
+          <h3 className="font-serif font-medium text-ink text-lg leading-tight mb-1 line-clamp-1">
             {course.name}
           </h3>
-          <p className="text-gray-400 text-sm mb-3 flex items-center gap-1">
+          <p className="text-ink-muted text-sm mb-3 flex items-center gap-1">
             <MapPin size={12} className="flex-shrink-0" />
             {course.city}, {course.state}
           </p>
@@ -79,38 +80,37 @@ export default function CourseCard({ course }: { course: Course }) {
                 <Star
                   key={i}
                   size={12}
-                  className={i <= Math.round(course.rating) ? 'fill-[#c9a84c] text-[#c9a84c]' : 'fill-gray-200 text-gray-200'}
+                  className={i <= Math.round(course.rating) ? 'fill-[#c9a84c] text-[#c9a84c]' : 'fill-line text-line'}
                 />
               ))}
             </div>
-            <span className="text-gray-800 text-sm font-bold">{course.rating.toFixed(1)}</span>
-            <span className="text-gray-400 text-xs">({course.review_count.toLocaleString()} reviews)</span>
+            <span className="text-ink text-sm font-medium">{course.rating.toFixed(1)}</span>
+            <span className="text-ink-faint text-xs">({course.review_count.toLocaleString()} reviews)</span>
           </div>
 
           {/* Price + CTA */}
-          <div className="flex items-center justify-between pt-3 border-t border-gray-50">
-            {(course.type === 'member' || course.type === 'private') ? (
+          <div className="flex items-center justify-between pt-3 border-t border-line-soft">
+            {membersOnly ? (
               <div>
-                <span className="text-xs text-gray-400">Access</span>
-                <div className="font-bold text-gray-700 text-sm">Members only</div>
+                <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Access</span>
+                <div className="font-medium text-ink-soft text-sm">Members only</div>
               </div>
             ) : course.base_green_fee > 0 ? (
               <div>
-                <span className="text-xs text-gray-400">From</span>
-                <div className="font-black text-[#1b4332] text-lg leading-tight">
+                <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">From</span>
+                <div className="font-serif font-medium text-ink text-xl leading-tight">
                   ${course.base_green_fee}
-                  <span className="text-gray-400 font-normal text-xs ml-1">/ player</span>
+                  <span className="text-ink-muted font-sans font-normal text-xs ml-1">/ player</span>
                 </div>
               </div>
             ) : (
               <div>
-                <span className="text-xs text-gray-400">Rates</span>
-                <div className="font-bold text-gray-700 text-sm">On request</div>
+                <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Rates</span>
+                <div className="font-medium text-ink-soft text-sm">On request</div>
               </div>
             )}
-            <span className="text-xs font-bold text-white px-4 py-2 rounded-xl transition-all group-hover:shadow-md group-hover:-translate-y-0.5"
-              style={{ background: '#1b4332' }}>
-              {(course.type === 'member' || course.type === 'private') ? 'Members →' : 'Tee Times →'}
+            <span className="text-xs font-medium text-white px-4 py-2 rounded-md bg-pine transition-colors group-hover:bg-pine-hover">
+              {membersOnly ? 'Members →' : 'Tee Times →'}
             </span>
           </div>
         </div>
