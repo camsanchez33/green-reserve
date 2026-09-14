@@ -1,29 +1,24 @@
 {
-  "generatedAt": "2026-09-14T03:05:19.826Z",
+  "generatedAt": "2026-09-14T03:10:10.776Z",
   "repo": {
-    "head": "1896ce5",
+    "head": "a1e4125",
     "branch": "main",
-    "dirtyCount": 7,
+    "dirtyCount": 2,
     "dirty": [
-      "M INQUIRY_CALL_SPEC.md",
-      " M RUN_QUEUE.md",
-      " M UI_REVISE_SPEC.md",
-      "?? COURSES_SHEET_SPEC.md",
-      "?? public/home/story-poster.jpg",
-      "?? public/home/story.mp4",
+      "M UI_REVISE_SPEC.md",
       "?? public/home/story.webm"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-13T22:18:03-04:00",
+    "queueLastCommit": "2026-09-13T23:08:48-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 155,
+    "runDone": 156,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 32,
+    "runNotStarted": 31,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -246,11 +241,6 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "UI_REVISE_SPEC H-2a — homepage story looks like a video: looping muted <video> under the pinned beats (poster = current still, webm+mp4 in public/home/, play/pause on visibility, reduced-motion/saveDa",
-      "line": 1965,
-      "section": "Queue (run in this order)"
-    },
-    {
       "title": "UI_REVISE_SPEC H-2b — 'See it work' two tabs: What golfers see (today's HomeDemo) · What you see (new standalone HomeDashboardDemo: stats tiles, date strip, tee sheet rows with check-in + block intera",
       "line": 1966,
       "section": "Queue (run in this order)"
@@ -311,11 +301,6 @@
       "item": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
       "note": "CAM: confirm the state before this runs — e",
       "line": 1395
-    },
-    {
-      "item": "UI_REVISE_SPEC H-2a — homepage story looks like a video: looping muted <video> under the pinned beats (poster = current still, webm+mp4 in public/home/, play/pause on visibility, reduced-motion/saveDa",
-      "note": "CAM: pick/supply the clip (8–15s loop, free license, ≤3",
-      "line": 1965
     }
   ],
   "ideas": {
@@ -838,6 +823,26 @@
   },
   "recentCommits": [
     {
+      "h": "a1e4125",
+      "date": "2026-09-13",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "57b9150",
+      "date": "2026-09-13",
+      "subject": "H-2a: the homepage story loops a clip under the pinned beats"
+    },
+    {
+      "h": "6d56b8d",
+      "date": "2026-09-13",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "3951a93",
+      "date": "2026-09-13",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "1896ce5",
       "date": "2026-09-13",
       "subject": "queue/spec update"
@@ -876,26 +881,6 @@
       "h": "85b3922",
       "date": "2026-09-13",
       "subject": "H-1: pricing tile radius 16px → 14px (§1a card cap, from the design audit)"
-    },
-    {
-      "h": "4a16f01",
-      "date": "2026-09-13",
-      "subject": "stats: playersToday on the Overview top strip (shared change for the U-A reskin — the fee is per player)"
-    },
-    {
-      "h": "e8f91b4",
-      "date": "2026-09-13",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "767d81c",
-      "date": "2026-09-13",
-      "subject": "H-1: the homepage, from the approved prototype"
-    },
-    {
-      "h": "6bc1168",
-      "date": "2026-09-11",
-      "subject": "queue/spec update"
     }
   ]
 }
