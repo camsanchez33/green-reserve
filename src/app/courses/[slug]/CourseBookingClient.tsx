@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Check, Flag, SlidersHorizontal, ExternalLink, Navigation, Bell, ArrowRight, Eye, CheckCircle } from 'lucide-react';
 import type { Course, TeeTime } from '@/lib/courses-data';
 import { TrustNote } from '@/components/TrustNote';
+import { ACCESS_FEE_PER_PLAYER, hoursLabel } from '@/lib/booking-fees';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 
@@ -56,6 +57,20 @@ function formatTime(t: string) {
   return `${hour}:${m.toString().padStart(2, '0')} ${period}`;
 }
 
+// B-1: "Cancel free until <real date+time>" once a slot is picked. The tee
+// time is a wall-clock time at the course; the arithmetic runs on UTC
+// components and formats in UTC so the golfer's own timezone never shifts it.
+function deadlineLabel(dateStr: string, timeStr: string, hoursBefore: number) {
+  if (!dateStr || !timeStr) return '';
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const [hh, mm] = timeStr.slice(0, 5).split(':').map(Number);
+  if ([y, m, d, hh, mm].some(n => Number.isNaN(n))) return '';
+  const cutoff = new Date(Date.UTC(y, m - 1, d, hh, mm) - hoursBefore * 3600_000);
+  const day = cutoff.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
+  const clock = cutoff.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' });
+  return `${day}, ${clock}`;
+}
+
 function todOf(t: TeeTime): TimeOfDay {
   const h = parseInt(t.time.split(':')[0]);
   if (h < 12) return 'morning';
@@ -98,6 +113,10 @@ function buildMonthGrid(month: Date): (Date | null)[] {
 }
 
 type CourseWithBrand = Course & {
+  // B-1: the trust line reads the course's own policy. normalize-course.ts has
+  // always sent these; the type just never named them.
+  cancellation_hours?: number;
+  late_cancellation_fee?: number;
   brand_color?: string;
   gift_card_url?: string;
   photos?: { id: string; url: string; sortOrder: number }[];
@@ -168,7 +187,6 @@ export default function CourseDetailPage({
     return ['all', '9', '18'].includes(h ?? '') ? (h as 'all' | '9' | '18') : 'all';
   });
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [tab, setTab] = useState<'tee-times' | 'about' | 'photos'>('tee-times');
   const [nextAvailable, setNextAvailable] = useState<string | null>(null);
   const [searchingNext, setSearchingNext] = useState(false);
   const didMount = useRef(false);
@@ -573,11 +591,9 @@ export default function CourseDetailPage({
 
   const coursePhotos = course.photos ?? [];
   const hasPhotos = coursePhotos.length > 0;
-  const tabList: { key: 'tee-times' | 'about' | 'photos'; label: string }[] = [
-    { key: 'tee-times', label: 'Tee Times' },
-    { key: 'about', label: 'About' },
-    ...(hasPhotos ? [{ key: 'photos' as const, label: 'Photos' }] : []),
-  ];
+  // B-1: the trust line's policy facts, from the course itself.
+  const cancelHours = course.cancellation_hours ?? 24;
+  const hasLateFee = (course.late_cancellation_fee ?? 0) > 0;
   const directionsUrl = course.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(course.address)}` : '';
 
   // Public look: a real photo when the course has one, otherwise a flat tint
@@ -795,27 +811,15 @@ export default function CourseDetailPage({
         </div>
       )}
 
-      {/* Tab bar */}
-      <div className="border-b border-line bg-white sticky top-0 z-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex">
-          {tabList.map(t => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={'px-5 py-3.5 text-sm font-medium border-b-2 transition-colors -mb-px ' + (tab === t.key ? '' : 'border-transparent text-ink-muted hover:text-ink')}
-              style={tab === t.key ? { borderColor: accent, color: accent } : undefined}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* B-1: no tab bar. The sheet is the page; About and Photos are sections
+          below it (the framework's fixed section order: identity → book
+          controls → trust line → tee sheet → the place → GreenReserve line). */}
 
       {/* Main content */}
       <div className="bg-paper min-h-screen">
         <div className={`max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${selectedTime ? 'pb-48' : ''}`}>
 
-          {tab === 'tee-times' && (course.type === 'member' ? (
+          {(course.type === 'member' ? (
             <div className="max-w-md mx-auto bg-white rounded-lg border border-line p-8 text-center">
               <Phone size={28} className="mx-auto mb-4" style={{ color: accent }} />
               <h2 className="font-serif font-medium text-ink text-xl mb-2">Member-only club</h2>
@@ -1067,6 +1071,19 @@ export default function CourseDetailPage({
                   </div>
                 </div>
 
+                {/* B-1: the trust line, above the first slot, from the course's
+                    own policy — the same facts /book states after the golfer
+                    has already committed. */}
+                <p className="mb-3 text-[13px] leading-relaxed text-ink-soft">
+                  <b className="text-ink font-semibold">Nothing charged today.</b>{' '}
+                  {hasLateFee
+                    ? (selectedTime
+                        ? <>Cancel free until <b className="text-ink font-medium">{deadlineLabel(selectedDate, selectedTime.time, cancelHours)}</b> (course time).</>
+                        : <>Cancel free until {hoursLabel(cancelHours)} before your tee time.</>)
+                    : <>No card needed — cancel any time.</>}
+                  {' '}${ACCESS_FEE_PER_PLAYER.toFixed(2)}/player booking fee.
+                </p>
+
                 {/* List */}
                 {loadingTimes ? (
                   <div className="space-y-2">
@@ -1300,8 +1317,8 @@ export default function CourseDetailPage({
             </div>
           ))}
 
-          {/* About tab */}
-          {tab === 'about' && (
+          {/* About — a section under the sheet (B-1), not a tab */}
+          <section id="about" className="mt-14 scroll-mt-6">{(
             <div className="grid lg:grid-cols-3 gap-6 items-start">
               <div className="lg:col-span-2 space-y-6">
                 <div className="bg-white rounded-lg p-7 border border-line">
@@ -1395,11 +1412,12 @@ export default function CourseDetailPage({
                 </div>
               </div>
             </div>
-          )}
+          )}</section>
 
-          {/* Photos tab */}
-          {tab === 'photos' && hasPhotos && (
-            <div>
+          {/* Photos — a section under the sheet (B-1), not a tab */}
+          {hasPhotos && (
+            <section id="photos" className="mt-14 scroll-mt-6">
+              <h2 className="font-serif font-medium tracking-tight text-ink text-xl mb-4">Photos</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {coursePhotos.map(p => (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -1412,7 +1430,7 @@ export default function CourseDetailPage({
                   />
                 ))}
               </div>
-            </div>
+            </section>
           )}
 
           {/* Quiet GreenReserve credit — the page belongs to the course, so the
