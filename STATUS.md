@@ -4,11 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-13 23:59 UTC · branch `main` · HEAD `767d81c` · working tree **2 dirty file(s)**
+Generated 2026-09-14 01:02 UTC · branch `batch/2026-09-11-reskin` · HEAD `cb9be25` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
+`RUN_QUEUE.md` was last committed **2026-09-13**. 1 commit(s) since then are not mentioned anywhere in it:
+
+| commit | date | subject |
+|---|---|---|
+| `cb9be25` | 2026-09-13 | reskin batch: the two shared changes — receipt brandColor, Overview tile players line |
+
+**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
 ### Uncommitted working tree (2 file(s))
 
@@ -72,6 +78,9 @@ This is the distinction a raw checkbox count gets wrong.
 22. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1366`
 23. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1395`
 24. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1474`
+25. INQUIRY_CALL_SPEC Phase IC-1 — InquiryCall model + callSkippedReason (SCHEMA CHANGE, attended, additive), src/lib/inquiry-call.ts agenda catalog + src/lib/inquiry-needs.ts 'still n — `RUN_QUEUE.md:1961`
+26. INQUIRY_CALL_SPEC Phase IC-2 — inquiry detail: Set-up-call card (date/time/length/direction/number, agenda pre-checked from form gaps, confirmation email, skip-with-reason) + Log-t — `RUN_QUEUE.md:1962`
+27. INQUIRY_CALL_SPEC Phase IC-3 — /admin/inquiries becomes the sheet: fixed 7-column table (course, contact·phone, stage, next call, still need, in stage, inquired) inside the existin — `RUN_QUEUE.md:1963`
 
 ## Waiting on you (not on a build)
 
@@ -170,19 +179,19 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
-- `767d81c` 2026-09-13 — H-1: the homepage, from the approved prototype
-- `6bc1168` 2026-09-11 — queue/spec update
-- `7238dd9` 2026-09-11 — queue/spec update
-- `5eb48c5` 2026-09-11 — Review fixes: fee reversal on cancellation refunds, double-charge guard, viewer shaping, hung buttons
-- `a3c1bea` 2026-09-11 — U-0: the staff look — one CSS switch, two fonts, two sidebars
-- `961c637` 2026-09-11 — queue/spec update
-- `a954491` 2026-09-11 — MP-10: bound every admin list query instead of paging in memory
-- `ae32878` 2026-09-11 — queue/spec update
-- `b468723` 2026-09-11 — MP-6c: payouts that reached the bank, unit economics, and a ledger export
-- `9b51048` 2026-09-11 — queue/spec update
-- `b56bf5a` 2026-09-11 — queue/spec update
-- `af2fdf8` 2026-09-11 — COURSE_LAYOUT L3: admin sees the configured layout; isolation test covers products
+- `cb9be25` 2026-09-13 — reskin batch: the two shared changes — receipt brandColor, Overview tile players line
+- `9221f2b` 2026-09-13 — queue/spec update
+- `4ef0a18` 2026-09-13 — U-G: course page selected states and links wear the course accent, not pine
+- `55e3a38` 2026-09-13 — U-O: keep the stat-tile array lines untouched; tile notes move to a lookup
+- `85b3922` 2026-09-13 — H-1: pricing tile radius 16px → 14px (§1a card cap, from the design audit)
+- `4c3acb6` 2026-09-13 — U-O: dashboard page headers, stat tiles, tables, chips and the login/2FA boards on the staff scale
+- `e86fdbf` 2026-09-13 — U-G: account portal Upcoming/Played, receipt wears the course header bar not the GreenReserve black bar
+- `30d15db` 2026-09-13 — U-G: manage action cards, check-in total card + accent primary, drop the GreenReserve bar from course-branded terminal screens
+- `a092043` 2026-09-13 — U-G: reserve screen numbered steps; member portal onto public-look tokens
+- `69f7556` 2026-09-13 — U-O: Settings sub-nav moves left and names its sections in plain English (§3 order)
+- `4a16f01` 2026-09-13 — stats: playersToday on the Overview top strip (shared change for the U-A reskin — the fee is per player)
+- `ddf4595` 2026-09-13 — U-M: public pages other than the homepage — legal sub-nav, short-version boxes, numbered sections, two-column /for-courses
 
 ---
 
-**Totals:** 155 done · 9 awaiting review · 1 in flight · 24 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 155 done · 9 awaiting review · 1 in flight · 27 not started · 8 revise pages open · 15 ideas · 2 parked.

@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-09-13T23:59:25.430Z",
+  "generatedAt": "2026-09-14T01:02:25.018Z",
   "repo": {
-    "head": "767d81c",
-    "branch": "main",
+    "head": "cb9be25",
+    "branch": "batch/2026-09-11-reskin",
     "dirtyCount": 2,
     "dirty": [
       "M RUN_QUEUE.md",
@@ -11,14 +11,22 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-11T20:00:44-04:00",
-    "unrecorded": []
+    "queueLastCommit": "2026-09-13T21:00:36-04:00",
+    "unrecorded": [
+      {
+        "h": "cb9be25",
+        "date": "2026-09-13T21:02:23-04:00",
+        "subject": "reskin batch: the two shared changes — receipt brandColor, Overview tile players line",
+        "ids": [],
+        "matches": []
+      }
+    ]
   },
   "counts": {
     "runDone": 155,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 24,
+    "runNotStarted": 27,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -223,6 +231,21 @@
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
       "line": 1474,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "INQUIRY_CALL_SPEC Phase IC-1 — InquiryCall model + callSkippedReason (SCHEMA CHANGE, attended, additive), src/lib/inquiry-call.ts agenda catalog + src/lib/inquiry-needs.ts 'still need from them' + que",
+      "line": 1961,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "INQUIRY_CALL_SPEC Phase IC-2 — inquiry detail: Set-up-call card (date/time/length/direction/number, agenda pre-checked from form gaps, confirmation email, skip-with-reason) + Log-the-call card (outcom",
+      "line": 1962,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "INQUIRY_CALL_SPEC Phase IC-3 — /admin/inquiries becomes the sheet: fixed 7-column table (course, contact·phone, stage, next call, still need, in stage, inquired) inside the existing queue sections; Ne",
+      "line": 1963,
       "section": "Queue (run in this order)"
     }
   ],
@@ -788,64 +811,64 @@
   },
   "recentCommits": [
     {
-      "h": "767d81c",
+      "h": "cb9be25",
       "date": "2026-09-13",
-      "subject": "H-1: the homepage, from the approved prototype"
+      "subject": "reskin batch: the two shared changes — receipt brandColor, Overview tile players line"
     },
     {
-      "h": "6bc1168",
-      "date": "2026-09-11",
+      "h": "9221f2b",
+      "date": "2026-09-13",
       "subject": "queue/spec update"
     },
     {
-      "h": "7238dd9",
-      "date": "2026-09-11",
-      "subject": "queue/spec update"
+      "h": "4ef0a18",
+      "date": "2026-09-13",
+      "subject": "U-G: course page selected states and links wear the course accent, not pine"
     },
     {
-      "h": "5eb48c5",
-      "date": "2026-09-11",
-      "subject": "Review fixes: fee reversal on cancellation refunds, double-charge guard, viewer shaping, hung buttons"
+      "h": "55e3a38",
+      "date": "2026-09-13",
+      "subject": "U-O: keep the stat-tile array lines untouched; tile notes move to a lookup"
     },
     {
-      "h": "a3c1bea",
-      "date": "2026-09-11",
-      "subject": "U-0: the staff look — one CSS switch, two fonts, two sidebars"
+      "h": "85b3922",
+      "date": "2026-09-13",
+      "subject": "H-1: pricing tile radius 16px → 14px (§1a card cap, from the design audit)"
     },
     {
-      "h": "961c637",
-      "date": "2026-09-11",
-      "subject": "queue/spec update"
+      "h": "4c3acb6",
+      "date": "2026-09-13",
+      "subject": "U-O: dashboard page headers, stat tiles, tables, chips and the login/2FA boards on the staff scale"
     },
     {
-      "h": "a954491",
-      "date": "2026-09-11",
-      "subject": "MP-10: bound every admin list query instead of paging in memory"
+      "h": "e86fdbf",
+      "date": "2026-09-13",
+      "subject": "U-G: account portal Upcoming/Played, receipt wears the course header bar not the GreenReserve black bar"
     },
     {
-      "h": "ae32878",
-      "date": "2026-09-11",
-      "subject": "queue/spec update"
+      "h": "30d15db",
+      "date": "2026-09-13",
+      "subject": "U-G: manage action cards, check-in total card + accent primary, drop the GreenReserve bar from course-branded terminal screens"
     },
     {
-      "h": "b468723",
-      "date": "2026-09-11",
-      "subject": "MP-6c: payouts that reached the bank, unit economics, and a ledger export"
+      "h": "a092043",
+      "date": "2026-09-13",
+      "subject": "U-G: reserve screen numbered steps; member portal onto public-look tokens"
     },
     {
-      "h": "9b51048",
-      "date": "2026-09-11",
-      "subject": "queue/spec update"
+      "h": "69f7556",
+      "date": "2026-09-13",
+      "subject": "U-O: Settings sub-nav moves left and names its sections in plain English (§3 order)"
     },
     {
-      "h": "b56bf5a",
-      "date": "2026-09-11",
-      "subject": "queue/spec update"
+      "h": "4a16f01",
+      "date": "2026-09-13",
+      "subject": "stats: playersToday on the Overview top strip (shared change for the U-A reskin — the fee is per player)"
     },
     {
-      "h": "af2fdf8",
-      "date": "2026-09-11",
-      "subject": "COURSE_LAYOUT L3: admin sees the configured layout; isolation test covers products"
+      "h": "ddf4595",
+      "date": "2026-09-13",
+      "subject": "U-M: public pages other than the homepage — legal sub-nav, short-version boxes, numbered sections, two-column /for-courses"
     }
   ]
 }

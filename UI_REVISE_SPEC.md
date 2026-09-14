@@ -86,6 +86,7 @@ Tailwind: keep the existing color tokens, add `--font-serif-staff`/`--font-sans-
 Rule for every run in this section: no route changes, no API changes, no new state, no new copy that changes meaning, no schema. If a mockup element needs any of those, it is in §4, not here. `git diff` should be JSX/CSS only. The restate step must list every file it will touch.
 
 - [ ] **U-G · Golfer surface — public look, Clubhouse structure** (no migration, large; may split G1/G2)
+  → BUILT, awaiting review — on batch/2026-09-11-reskin (worker branch batch/U-G, 9 files, guard OK). Worker-declared: section order partly achievable ("the place" stays a tab until B-1); member portal accents pine not course accent (session API has no brandColor — B-item); member portal is a retoken, not board 7; CourseHeaderBar gained an optional `right` prop. Shared change applied: /api/receipt returns brandColor.
   Canvas boards: "1 · Course page", "1b · Course page, desktop", "2 · Reserve", "3 · Confirmed", "4 · Manage + cancel", "5 · Check in + paid", "6 · Golfer account", "7 · Member view", "8 · States", "Course page wearing three courses".
   Fonts/corners: PUBLIC look (Fraunces/Inter/rounded) — the boards are drawn in the staff look; **use their layout, not their type.**
   Routes: `/courses/[slug]` (+ CourseBookingClient), `/book`, `/receipt/[bookingId]`, `/manage/[bookingId]`, `/checkin/[bookingId]`, `/courses/[slug]/account`, `/courses/[slug]/member`, `/membership/[id]`.
@@ -103,6 +104,7 @@ Rule for every run in this section: no route changes, no API changes, no new sta
   Acceptance: walk inquiry→sheet→book→receipt→manage→checkin on a phone AND desktop; every dollar figure identical to before; Lighthouse mobile perf on `/courses/[slug]` not below current.
 
 - [ ] **U-O · Operator dashboard — staff look** (no migration, large; split O1 tee sheet+settings / O2 the rest)
+  → BUILT (PARTIAL), awaiting review — on batch/2026-09-11-reskin (worker branch batch/U-O, 18 files, guard OK). Worker-declared: blocked rows use a hard-stop repeating-linear-gradient hatch (pattern, but the BANNED list says gradients — Cam's call); Settings re-cut into the spec's ten sections + Facilities + Account, default tab now "How you look"; tee sheet still a card list not the board's grid; onboarding/verify/members wizard got type only.
   Canvas boards: "Operator · Tee sheet", "Settings with live golfer preview", "Members", "Sign in + 2FA", "Getting started", "Schedule", "Analytics", "Payments", "Cancellations", "Messages".
   Routes: `/dashboard` (+ analytics tab), `/dashboard/schedules`, `/cancellations`, `/members`, `/payments`, `/messages`, `/settings`, `/onboarding`, `/login`, `/2fa`, `/forgot-password`, `/reset-password`, `/verify`, `/outings`, `/tournaments` (placeholders — empty-state pattern only).
   Reskin-only items: shell + sidebar per §1b; page header = serif title + one-sentence subtitle with the page's numbers ("31 booked of 80 spots for sale · 9 checked in · $571.50 collected"); tables = 11px uppercase headers, 13.5px rows, faded past rows, hatched blocked rows, amber late rows; stat tiles = eyebrow / serif 30px / 12.5px note; filters as square chips; login + 2FA per board.
@@ -111,12 +113,14 @@ Rule for every run in this section: no route changes, no API changes, no new sta
   Acceptance: every existing button still does what it did; a GM can find every setting they could find before; tee sheet check-in flow unchanged.
 
 - [ ] **U-A · Admin console — staff look** (no migration, medium)
+  → BUILT, awaiting review — on batch/2026-09-11-reskin (worker branch batch/U-A, 10 files, guard OK). Worker-declared: course detail title kept at 22px (sticky dense bar); eyebrows at 0.06em because tracking-widest (0.1em) is banned — settle the number; auth pages untouched. Shared change applied: stats route playersToday + the tile's "N players · M bookings".
   Canvas boards: "Admin · Overview", "Inquiries board", "Courses", "Course detail", "Revenue", "Golfer lookup", "Employees + roles", "Activity", "System".
   Routes: all `/admin/*`.
   Reskin-only items: pine sidebar per §1b; Overview keeps the A-01 v2 section order exactly (pulse strip → your-move queue → ghost-bar trend → producers → systems line), only restyled; tile labels say whose money ("GreenReserve fees today" with "N players · M bookings" — fees are per PLAYER, never compute from booking count); inquiries = the 7-column sheet from INQUIRY_CALL_SPEC (NOT a kanban board — that canvas board is superseded, 2026-09-13); U-A only restyles the table, section headers and Next-call cell, behavior lives in IC-1..IC-3; course detail keeps its six tabs; revenue page is labeled "GreenReserve's money — not the courses'"; system page: green = tracked, grey = link-only (turning grey cards green is a schema item, out of scope).
   Must NOT change: any role gate, any action, the reconciliation logic.
 
 - [ ] **U-M · Public pages other than the homepage** (no migration, small)
+  → BUILT, awaiting review — on batch/2026-09-11-reskin (worker branch batch/U-M, 5 files, guard OK). Worker-declared: cards rounded-lg not 14px (BANNED cap wins — needs a token if 14px is wanted); the three legal "short version" boxes are NEW prose (summaries citing sections, with an orientation-only line) — read them before merge; /for-courses/details untouched.
   `/for-courses` (lead form per canvas "Marketing · /for-courses": two-column, sticky pitch left, form right, "No account is created" line), `/contact`, `/terms` `/privacy` `/operator-agreement` (left legal sub-nav, version line, plain-English short version box at top, sections numbered). Public look. Placeholders for LQ-1/LQ-2/LQ-3 stay visible in the rendered page until legal clears them.
 
 ---
