@@ -21,6 +21,7 @@ type CheckInInfo = {
   date: string; time: string; players: number; holes: number; status: string;
   totalAmount: number; greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number;
   hasCard: boolean;
+  cartAddOnCents?: number;
 };
 
 function fmtTime(t: string) {
@@ -33,8 +34,8 @@ function fmtDate(d: string) {
   return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
-function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, accent, onResult, onError }: {
-  bookingId: string; token: string; totalAmount: number; golferName: string; accent: string;
+function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, accent, addCart, onResult, onError }: {
+  bookingId: string; token: string; totalAmount: number; golferName: string; accent: string; addCart: boolean;
   onResult: (r: { totalCharged: number; feeRefunded: boolean; feeRefundFailed?: boolean; feeRefundAmount: number }) => void;
   onError: (msg: string) => void;
 }) {
@@ -59,7 +60,7 @@ function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, accent, 
       const res = await fetch(`/api/checkin/${bookingId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, paymentMethodId: paymentMethod.id }),
+        body: JSON.stringify({ token, paymentMethodId: paymentMethod.id, addCart }),
       });
       const data = await res.json();
       if (!res.ok) { onError(data.error || 'Check-in failed.'); setLoading(false); return; }
@@ -106,6 +107,8 @@ function CheckInPageInner() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [checkingIn, setCheckingIn] = useState(false);
+  // B-5: "Add a cart today?" — off by default; the total below follows it.
+  const [addCart, setAddCart] = useState(false);
   const [result, setResult] = useState<{ totalCharged: number; feeRefunded: boolean; feeRefundFailed?: boolean; feeRefundAmount: number } | null>(null);
 
   useEffect(() => {
@@ -122,7 +125,7 @@ function CheckInPageInner() {
     setError('');
     try {
       const res = await fetch(`/api/checkin/${bookingId}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, addCart }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Check-in failed.'); setCheckingIn(false); return; }
@@ -189,6 +192,9 @@ function CheckInPageInner() {
     );
   }
 
+  const cartAddOn = info.cartAddOnCents ?? 0;
+  const cartCents = info.cartFeeTotal + (addCart ? cartAddOn : 0);
+  const payTotal = info.totalAmount + (addCart ? cartAddOn : 0);
   const summary = (
     <div className="bg-paper rounded-md p-5 mb-6 space-y-2 text-sm border border-line">
       <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{fmtDate(info.date)}</span></div>
@@ -196,15 +202,25 @@ function CheckInPageInner() {
       <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{info.players} &middot; {info.holes} holes</span></div>
       <div className="border-t border-line mt-2 pt-2 space-y-1.5">
         <div className="flex justify-between text-ink-soft"><span>Green Fee</span><span>${(info.greenFeeTotal / 100).toFixed(2)}</span></div>
-        {info.cartFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart Fee</span><span>${(info.cartFeeTotal / 100).toFixed(2)}</span></div>}
+        {cartCents > 0 && <div className="flex justify-between text-ink-soft"><span>Cart Fee</span><span>${(cartCents / 100).toFixed(2)}</span></div>}
         {info.rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range Balls</span><span>${(info.rangeBallsTotal / 100).toFixed(2)}</span></div>}
         <div className="flex justify-between text-ink-soft"><span>GreenReserve service fee ($1.50 × {info.players})</span><span>${(info.accessFeeTotal / 100).toFixed(2)}</span></div>
         {/* The number they're about to pay is the biggest thing on the card. */}
         <div className="flex justify-between items-baseline border-t border-line pt-3">
           <span className="font-medium text-ink">Total</span>
-          <span className="font-serif font-medium text-ink text-2xl leading-none">${(info.totalAmount / 100).toFixed(2)}</span>
+          <span className="font-serif font-medium text-ink text-2xl leading-none">${(payTotal / 100).toFixed(2)}</span>
         </div>
       </div>
+      {/* B-5: a cart for a booking that has none, priced at the tee time's cart fee. */}
+      {cartAddOn > 0 && (
+        <label className="mt-3 flex items-center justify-between gap-3 bg-white border border-line rounded-md px-3.5 py-3 cursor-pointer">
+          <span className="text-sm text-ink">
+            <span className="font-medium">Add a cart today?</span>
+            <span className="text-ink-muted"> +${(cartAddOn / 100).toFixed(2)} for {info.players} player{info.players === 1 ? '' : 's'}</span>
+          </span>
+          <input type="checkbox" checked={addCart} onChange={e => setAddCart(e.target.checked)} className="w-5 h-5" style={{ accentColor: info.brandColor || '#24513B' }} disabled={checkingIn} />
+        </label>
+      )}
     </div>
   );
 
@@ -237,7 +253,7 @@ function CheckInPageInner() {
                 className="w-full py-3.5 rounded-md font-medium text-white text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-70"
                 style={{ backgroundColor: info.brandColor || '#24513B' }}
               >
-                {checkingIn ? <><Loader2 size={16} className="animate-spin" /> Charging your card…</> : `Check in · pay $${(info.totalAmount / 100).toFixed(2)}`}
+                {checkingIn ? <><Loader2 size={16} className="animate-spin" /> Charging your card…</> : `Check in · pay $${(payTotal / 100).toFixed(2)}`}
               </button>
               {/* The other way to do this, as a sentence — not a second button
                   competing with the one above. */}
@@ -250,9 +266,10 @@ function CheckInPageInner() {
               <WalkUpCheckInForm
                 bookingId={bookingId}
                 token={token}
-                totalAmount={info.totalAmount}
+                totalAmount={payTotal}
                 golferName={info.golferName}
                 accent={info.brandColor}
+                addCart={addCart}
                 onResult={setResult}
                 onError={setError}
               />

@@ -11,7 +11,7 @@ async function authorize(bookingId: string, token: string | null) {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
-      teeTime: { select: { date: true, time: true, holes: true } },
+      teeTime: { select: { date: true, time: true, holes: true, cartFeeCents: true } },
       course: { select: { name: true, slug: true, address: true, city: true, state: true, brandColor: true } },
     },
   });
@@ -42,16 +42,20 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     rangeBallsTotal: booking.rangeBallsTotal,
     accessFeeTotal: booking.accessFeeTotal,
     hasCard: !!booking.stripePaymentMethodId,
+    // B-5: a cart can be added at check-in when the booking has none and the
+    // tee time prices one. The add-on is the tee time's cart fee × players.
+    cartAddOnCents: !booking.cartSelected && booking.cartFeeTotal === 0 && booking.teeTime.cartFeeCents > 0
+      ? booking.teeTime.cartFeeCents * booking.players : 0,
   });
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
-  const { token, paymentMethodId } = await req.json().catch(() => ({ token: null, paymentMethodId: undefined }));
+  const { token, paymentMethodId, addCart } = await req.json().catch(() => ({ token: null, paymentMethodId: undefined, addCart: false }));
   const booking = await authorize(bookingId, token);
   if (!booking) return NextResponse.json({ error: 'Invalid or expired check-in link.' }, { status: 404 });
 
-  const result = await performCheckIn(bookingId, paymentMethodId ? { externalPaymentMethodId: paymentMethodId } : undefined);
+  const result = await performCheckIn(bookingId, { externalPaymentMethodId: paymentMethodId || undefined, addCart: addCart === true });
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status });
   return NextResponse.json(result);
 }

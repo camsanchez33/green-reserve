@@ -32,7 +32,12 @@ import { sendCheckInReceiptEmail } from './email';
  * The temporary platform Customer is created, attached, and then
  * cloned-and-charged on the connected account exactly like a saved card.
  */
-type ChargeOpts = { externalPaymentMethodId?: string };
+type ChargeOpts = {
+  externalPaymentMethodId?: string;
+  /** B-5: add a cart at check-in for a booking that has none — priced at the
+   *  tee time's cart fee × players, written to the booking before the charge. */
+  addCart?: boolean;
+};
 
 async function chargeBooking(
   bookingId: string,
@@ -42,7 +47,7 @@ async function chargeBooking(
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
-      teeTime: { select: { date: true, time: true } },
+      teeTime: { select: { date: true, time: true, cartFeeCents: true } },
       course: { select: { name: true, slug: true, address: true, city: true, state: true, stripeAccountId: true, stripeAccountActive: true } },
     },
   });
@@ -59,6 +64,22 @@ async function chargeBooking(
 
   if (!alreadyPaid && (!booking.course.stripeAccountActive || !booking.course.stripeAccountId)) {
     return { error: 'Stripe setup incomplete — the operator needs to finish Stripe onboarding in dashboard Settings before card payments can be accepted.', status: 422 } as const;
+  }
+
+  // B-5: "Add a cart today?" — only for a booking with no cart, only before
+  // money moves, only when the tee time actually prices a cart. The booking's
+  // own totals change first so the charge, the receipt and the ledger agree.
+  let cartAddedCents = 0;
+  if (opts?.addCart && !alreadyPaid && !booking.cartSelected && booking.cartFeeTotal === 0 && booking.teeTime.cartFeeCents > 0) {
+    cartAddedCents = booking.teeTime.cartFeeCents * booking.players;
+    await prisma.booking.update({
+      where: { id: bookingId },
+      data: { cartSelected: true, cartFeeTotal: cartAddedCents, totalAmount: booking.totalAmount + cartAddedCents },
+    });
+    booking.cartSelected = true;
+    booking.cartFeeTotal = cartAddedCents;
+    booking.totalAmount = booking.totalAmount + cartAddedCents;
+    console.log(JSON.stringify({ ev: 'checkin.cart_added', bookingId, cartAddedCents }));
   }
 
   const refundPendingFee = booking.paymentStatus === 'cancellation_fee_charged' && !!booking.cancellationFeeChargeId;
@@ -146,7 +167,10 @@ async function chargeBooking(
         // Unchanged on purpose: the key is the booking + payment method, NOT
         // the entry point, so a collect followed by a check-in (or a retry
         // after a timeout) can never become two charges.
-        idempotencyKey: `checkin-${booking.id}-${chargePaymentMethodId}`,
+        // The amount is part of the key: a retry at the same amount replays,
+        // a retry after "add a cart" is a different request (Stripe refuses a
+        // reused key with different params).
+        idempotencyKey: `checkin-${booking.id}-${chargePaymentMethodId}-${Math.round(booking.totalAmount)}`,
       });
       paymentIntentId = paymentIntent.id;
       console.log(JSON.stringify({ ev: `${ev}.charge.ok`, bookingId, paymentIntentId, amountCents: Math.round(booking.totalAmount) }));
@@ -219,6 +243,8 @@ async function chargeBooking(
     feeRefundError: refundPendingFee && !feeRefundOk ? feeRefundError : '',
     feeRefundAmount: refundPendingFee ? booking.cancellationFeeTotal : 0,
     alreadyPaid,
+    /** B-5: cents added for a cart at check-in (0 when none). */
+    cartAddedCents,
   } as const;
 }
 
