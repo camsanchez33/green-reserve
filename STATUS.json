@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-14T23:11:18.333Z",
+  "generatedAt": "2026-09-14T23:53:16.125Z",
   "repo": {
-    "head": "9b148ec",
+    "head": "49d3d7a",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,22 +10,22 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-14T19:06:47-04:00",
+    "queueLastCommit": "2026-09-14T19:11:19-04:00",
     "unrecorded": [
       {
-        "h": "9b148ec",
-        "date": "2026-09-14T19:11:16-04:00",
-        "subject": "AG-3: version bumps and re-acceptance — day-0 notice, banner then modal, 428 on configuration writes, admin chips and queue rows",
+        "h": "49d3d7a",
+        "date": "2026-09-14T19:53:14-04:00",
+        "subject": "H-2c: kill the photo band — the 'We set it up' section (a wind farm, wrong Unsplash id) is gone; its line lives under 'Live in four steps'",
         "ids": [],
         "matches": []
       }
     ]
   },
   "counts": {
-    "runDone": 167,
+    "runDone": 168,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 26,
+    "runNotStarted": 25,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -230,11 +230,6 @@
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
       "line": 1474,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "UI_REVISE_SPEC H-2c — KILL THE PHOTO BAND (small, no migration, RUN FIRST): the 'We set it up' band shows a WIND FARM (bad Unsplash id for TEE). Delete the section + tee.jpg + README row, move its hea",
-      "line": 1978,
       "section": "Queue (run in this order)"
     },
     {
@@ -805,6 +800,16 @@
   },
   "recentCommits": [
     {
+      "h": "49d3d7a",
+      "date": "2026-09-14",
+      "subject": "H-2c: kill the photo band — the 'We set it up' section (a wind farm, wrong Unsplash id) is gone; its line lives under 'Live in four steps'"
+    },
+    {
+      "h": "ca48eb4",
+      "date": "2026-09-14",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "9b148ec",
       "date": "2026-09-14",
       "subject": "AG-3: version bumps and re-acceptance — day-0 notice, banner then modal, 428 on configuration writes, admin chips and queue rows"
@@ -853,16 +858,6 @@
       "h": "c2f1fc0",
       "date": "2026-09-14",
       "subject": "IC-3: /admin/inquiries becomes the sheet — one fixed-column table, the Next-call cell, calls this week, Export CSV"
-    },
-    {
-      "h": "b3e26cd",
-      "date": "2026-09-14",
-      "subject": "H-2d §2: story video v2 files (Cam's re-render, 2026-09-14) — less frame-to-frame shimmer"
-    },
-    {
-      "h": "4af4399",
-      "date": "2026-09-14",
-      "subject": "IC-2: the discovery call on the inquiry page — set it up, log it, and the build gate that points at it"
     }
   ]
 }
