@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { put, del } from '@vercel/blob';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
@@ -22,6 +23,7 @@ export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
+  const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return NextResponse.json({ error: 'Image storage is not configured yet. Contact hello@greenreserve.app.' }, { status: 503 });
@@ -66,6 +68,7 @@ export async function DELETE(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
+  const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
 
   const kind = new URL(req.url).searchParams.get('kind') === 'logo' ? 'logo' : 'hero';
   const field = fieldFor(kind);

@@ -44,6 +44,8 @@ interface Course {
   setup?: SetupProgress;
   linkedInquiryId?: string | null;
   inquiryCalls?: CourseCall[];
+  /** AG-3: re-acceptance deadline for a course on an older Operator Agreement */
+  agreementDue?: { by: string; overdue: boolean } | null;
 }
 
 // Health is the only filter left besides type — its options are named after
@@ -208,6 +210,11 @@ function CoursesContent() {
       <>
         <div>{healthChip(c)}</div>
         <div className="text-[12px] text-ink-muted truncate" title={c.health.reason}>{c.health.reason}</div>
+        {c.agreementDue && (
+          <span className={'inline-block mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded-md ' + (c.agreementDue.overdue ? 'bg-bad/5 text-bad' : 'bg-warn/5 text-warn')}>
+            {c.agreementDue.overdue ? 'Agreement overdue' : `Agreement due ${fmtShort(c.agreementDue.by)}`}
+          </span>
+        )}
       </>
     );
   };

@@ -8,6 +8,7 @@ import { COMPLETED_BOOKING_STATUSES, computeCourseHealth } from '@/lib/course-me
 import { hasAcceptedAgreement } from '@/lib/agreement-gate';
 import { setupProgress } from '@/lib/course-setup';
 import { nextCheckIn, lastContact, scheduledCheckIn } from '@/lib/course-checkin';
+import { agreementDueByCourse } from '@/lib/agreement-required';
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -125,6 +126,8 @@ export async function GET(req: NextRequest) {
   const lastBookingMap = new Map(lastBookingAggs.map(b => [b.courseId, b._max.createdAt?.toISOString() ?? null]));
   const priorBookingMap = new Map(priorBookingAggs.map(b => [b.courseId, b._count.id]));
   const linkedCourseIds = new Set(linkedInquiries.map(i => i.builtCourseId));
+  // AG-3 §4: "Agreement due <date>" / "Agreement overdue" for the Status cell.
+  const agreementDue = await agreementDueByCourse(listedIds);
   const linkedByCourseId = new Map(linkedInquiries.map(i => [i.builtCourseId as string, i]));
 
   // Approval is course-level truth (item 1) — batched rather than N+1'd:
@@ -167,6 +170,7 @@ export async function GET(req: NextRequest) {
       setup: setupProgress({ ...c, approvalStatus }),
       linkedInquiryId: linked?.id ?? null,
       inquiryCalls: linked?.calls ?? [],
+      agreementDue: agreementDue.get(c.id) ?? null,
       bookings30d,
       revenue30d: bookingMap.get(c.id)?.revenue ?? 0,
       activeMemberCount: memberMap.get(c.id) ?? 0,

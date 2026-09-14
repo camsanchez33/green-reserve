@@ -17,11 +17,23 @@ async function main() {
         }
         unchanged++; continue;
       }
+      // AG-3 §1: a bump that requires re-acceptance is a legal event — it
+      // refuses to seed until counsel has reviewed it (front matter
+      // `counselReviewed: <date>`), and it takes effect NOW with a 30-day
+      // window, whatever the file's effectiveAt says.
+      if (doc.reacceptRequired && !doc.counselReviewed) {
+        throw new Error(`${document} ${version}: reacceptRequired is set but the front matter has no counselReviewed date — not seeding a re-acceptance bump counsel has not reviewed.`);
+      }
+      if (doc.reacceptRequired && doc.draft) {
+        throw new Error(`${document} ${version}: still marked as a draft — remove the draft marker before seeding a re-acceptance bump.`);
+      }
+      const now = new Date();
+      const effectiveAt = doc.reacceptRequired ? now : new Date(doc.effectiveAt + 'T00:00:00.000Z');
       await prisma.agreementVersion.create({
         data: {
           document, version, textHash: doc.hash,
-          effectiveAt: new Date(doc.effectiveAt + 'T00:00:00.000Z'),
-          reacceptBy: null, // AG-3 sets this on a bump that requires re-acceptance
+          effectiveAt,
+          reacceptBy: doc.reacceptRequired ? new Date(effectiveAt.getTime() + 30 * 86_400_000) : null,
         },
       });
       inserted++;

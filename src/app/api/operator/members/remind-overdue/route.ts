@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
@@ -19,6 +20,7 @@ export async function POST() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
+  const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
 
   const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { name: true, stripeAccountActive: true } });
   if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 });

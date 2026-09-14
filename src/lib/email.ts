@@ -1526,3 +1526,39 @@ export async function sendSignedAgreementsEmail(data: {
   });
   if (r.error) throw new Error(r.error.message);
 }
+
+// AG-3 §2: the day-0 notice of a version bump that requires re-acceptance.
+export async function sendAgreementBumpNoticeEmail(data: {
+  operatorName: string; operatorEmail: string; courseName: string;
+  title: string; version: string; effectiveAt: Date; reacceptBy: Date; changeSummary: string;
+}) {
+  const d = (x: Date) => x.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' });
+  const signUrl = `${process.env.NEXT_PUBLIC_URL}/dashboard/sign`;
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:22px;font-weight:700;">The ${data.title} has changed</h1>
+    <p style="margin:0 0 16px;color:#6b7280;font-size:15px;line-height:1.6;">
+      Hi ${data.operatorName} &mdash; a new version (v${data.version}) of the GreenReserve ${data.title} took effect on ${d(data.effectiveAt)} for <strong>${data.courseName}</strong>.
+      Please review and sign it by <strong>${d(data.reacceptBy)}</strong>.
+    </p>
+    ${data.changeSummary ? `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:16px;margin-bottom:20px;"><p style="margin:0 0 4px;color:#374151;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">What changed</p><p style="margin:0;color:#374151;font-size:14px;line-height:1.6;">${data.changeSummary}</p></div>` : ''}
+    <a href="${signUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:20px;">Review and sign &rarr;</a>
+    <p style="margin:0 0 12px;color:#6b7280;font-size:13px;line-height:1.6;">After ${d(data.reacceptBy)}, course settings in your dashboard become read-only until the new version is signed. Bookings and check-ins are never affected.</p>
+    <p style="margin:0;color:#9ca3af;font-size:12px;">Questions? Reply to this email &mdash; hello@greenreserve.app.</p>
+  `);
+  const r = await getResend().emails.send({
+    from: FROM, to: data.operatorEmail, replyTo: 'hello@greenreserve.app',
+    subject: `Action needed: the GreenReserve ${data.title} changed — sign by ${d(data.reacceptBy)}`,
+    html,
+  });
+  if (r.error) throw new Error(r.error.message);
+}
+
+export async function sendAgreementBumpAdminSummaryEmail(data: { title: string; version: string; reacceptBy: Date; notified: number; failures: string[] }) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:20px;font-weight:700;">${data.title} v${data.version}: day-0 notice sent</h1>
+    <p style="margin:0 0 12px;color:#6b7280;font-size:14px;line-height:1.6;">${data.notified} operator${data.notified === 1 ? '' : 's'} notified. Re-acceptance deadline ${data.reacceptBy.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' })}.</p>
+    ${data.failures.length ? `<p style="margin:0;color:#92400e;font-size:13px;">Failed to send to: ${data.failures.join(', ')} — contact them another way.</p>` : ''}
+  `);
+  const r = await getResend().emails.send({ from: FROM, to: 'hello@greenreserve.app', subject: `[GreenReserve] ${data.title} v${data.version} notice sent to ${data.notified}`, html });
+  if (r.error) throw new Error(r.error.message);
+}

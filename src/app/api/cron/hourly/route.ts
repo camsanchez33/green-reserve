@@ -9,6 +9,7 @@ import {
   sendCheckInAvailableEmail,
 } from '@/lib/email';
 import { retryMissingAgreementPdfs } from '@/lib/agreement-sign';
+import { sendAgreementBumpNotices } from '@/lib/agreement-required';
 
 /**
  * Runs every hour (Vercel Pro). Handles all time-sensitive booking actions:
@@ -158,5 +159,9 @@ export async function GET(req: NextRequest) {
   let agreementPdfs = { tried: 0, stored: 0 };
   try { agreementPdfs = await retryMissingAgreementPdfs(); } catch (err) { console.error('Agreement PDF retry failed:', err); }
 
-  return NextResponse.json({ success: true, ...results, agreementPdfs });
+  // ─── 5: Day-0 notice of an agreement bump (AG-3) — idempotent via noticeSentAt ───
+  let agreementNotices = { versions: 0, notified: 0, failed: 0 };
+  try { agreementNotices = await sendAgreementBumpNotices(now); } catch (err) { console.error('Agreement bump notices failed:', err); }
+
+  return NextResponse.json({ success: true, ...results, agreementPdfs, agreementNotices });
 }

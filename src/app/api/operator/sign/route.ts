@@ -5,6 +5,7 @@ import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 import { signableDocuments, type AgreementDocument } from '@/lib/agreements';
 import { agreementStatus } from '@/lib/agreement-gate';
 import { recordSigning, deliverAgreementPdfs } from '@/lib/agreement-sign';
+import { agreementReacceptance } from '@/lib/agreement-required';
 import { clientIp } from '@/lib/rate-limit';
 
 // AGREEMENT_SPEC AG-2 §1 — the signing step.
@@ -25,8 +26,12 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   // The dashboard checklist only needs the count — no document HTML.
   if (req.nextUrl.searchParams.get('status') === '1') {
-    const st = await agreementStatus(session.courseId);
-    return NextResponse.json({ status: { signed: st.signed, total: st.total, missing: st.missing } });
+    const [st, re] = await Promise.all([agreementStatus(session.courseId), agreementReacceptance(session.courseId)]);
+    return NextResponse.json({
+      status: { signed: st.signed, total: st.total, missing: st.missing },
+      // AG-3: the banner / modal state, null when nothing is due.
+      reaccept: re ? { ...re, effectiveAt: re.effectiveAt.toISOString(), reacceptBy: re.reacceptBy.toISOString() } : null,
+    });
   }
   const [course, status] = await Promise.all([
     prisma.course.findUnique({ where: { id: session.courseId }, select: { name: true, legalName: true, operator: { select: { name: true } } } }),

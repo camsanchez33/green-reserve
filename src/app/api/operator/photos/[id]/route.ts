@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { del } from '@vercel/blob';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
@@ -10,6 +11,7 @@ export async function DELETE(
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
+  const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
 
   const { id } = await params;
 

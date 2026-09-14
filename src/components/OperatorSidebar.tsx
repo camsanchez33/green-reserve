@@ -6,6 +6,7 @@ import {
   Trophy, PartyPopper, DollarSign, AlertTriangle, MessageSquare,
 } from 'lucide-react';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
+import AgreementNotice from '@/components/dashboard/AgreementNotice';
 import { recordTabVisit } from '@/lib/dashboard-visits';
 import { Toaster, toast } from '@/components/dashboard/Toast';
 
@@ -122,6 +123,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   return (
     <>
     <AnnouncementBanner />
+    <AgreementNotice />
     <Toaster />
 
     {/* SD-2: below md the 224px rail is gone. A slim strip carries identity,

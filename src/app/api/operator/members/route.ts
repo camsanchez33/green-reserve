@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
@@ -72,6 +73,7 @@ export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
+  const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
 
   const body = await req.json();
   const { email, name, phone, tierId, notes, expiresAt } = body;
@@ -177,6 +179,7 @@ export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
+  const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
 
   const body = await req.json();
   const { id, tierId, status, notes, expiresAt, action } = body;
@@ -249,6 +252,7 @@ export async function DELETE(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
+  const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');

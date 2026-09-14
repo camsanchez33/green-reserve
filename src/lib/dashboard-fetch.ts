@@ -19,6 +19,12 @@ export async function dfetch<T = unknown>(input: string, init?: RequestInit): Pr
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({} as { error?: unknown }));
+      // AG-3 §3: a configuration write refused until the new Operator
+      // Agreement is signed — open the sign modal, and say why here too.
+      if (res.status === 428 && body?.error === 'agreement_required') {
+        if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('gr:agreement-required'));
+        return { ok: false, status: 428, data: null, error: typeof body.message === 'string' ? body.message : 'Sign the updated Operator Agreement to keep editing your course.' };
+      }
       const server = typeof body?.error === 'string' && body.error.trim() ? body.error.trim() : '';
       const error = server
         || (res.status === 401 ? 'Your session ended — sign in again.'

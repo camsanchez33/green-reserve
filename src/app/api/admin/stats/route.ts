@@ -6,6 +6,7 @@ import { ACTIVE_STATUSES } from '@/lib/inquiry-status';
 import { threadSignal } from '@/lib/thread-signal';
 import { buildInquiryQueueRows } from '@/lib/inquiry-action-queue';
 import { buildCourseCheckInRows } from '@/lib/course-action-queue';
+import { agreementOverdueCourses } from '@/lib/agreement-required';
 import { COMPLETED_BOOKING_STATUSES, TREND_MIN_AGE_DAYS, TREND_DROP_PCT_THRESHOLD, computeCourseHealth } from '@/lib/course-metrics';
 
 const COMPLETED = COMPLETED_BOOKING_STATUSES;
@@ -272,17 +273,29 @@ export async function GET() {
   const alreadyQueued = new Set<string>([...noStripe.map(c => c.id), ...failedByCourse.keys()]);
   const checkInRows: Row[] = buildCourseCheckInRows(activeCoursesList, now).filter(r => !alreadyQueued.has(r.id.slice(3)));
 
+  // AG-3 §4: one row per course past its re-acceptance deadline.
+  const agreementRows: Row[] = (await agreementOverdueCourses(now)).map(c => ({
+    id: `ag-${c.id}`,
+    who: c.name,
+    why: `Operator Agreement re-acceptance overdue since ${c.by.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+    doThis: `Call ${c.operatorName || 'the operator'} — their course settings are read-only until they sign the new version from their dashboard.`,
+    ageDays: Math.max(0, Math.floor((now.getTime() - c.by.getTime()) / 86400000)),
+    actionLabel: 'Open',
+    href: `/admin/courses/${c.id}`,
+  }));
+
   const amber: Row[] = [
     ...pipelineRows,
     ...draftsAmberRows,
     ...threadAmber,
     ...checkInRows,
+    ...agreementRows,
   ].sort((a, b) => b.ageDays - a.ageDays).slice(0, 5);
 
   // One row per inquiry means this is finally a count of things to do rather
   // than a count of reasons — the badge used to add the same inquiry up to
   // three times.
-  const amberCount = pipelineRows.length + draftsAmberCount + threadAmber.length + checkInRows.length;
+  const amberCount = pipelineRows.length + draftsAmberCount + threadAmber.length + checkInRows.length + agreementRows.length;
 
   // ---- revenue: cumulative money ticker (A-01e — supersedes the A-01c bars) ----
   // Every point is inherently an honest "so far" comparison: both the current

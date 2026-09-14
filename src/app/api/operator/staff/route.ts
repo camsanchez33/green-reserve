@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 import bcrypt from 'bcryptjs';
@@ -19,6 +20,7 @@ export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
+  const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
   const { name, email: rawEmail, role } = await req.json();
   if (!name || !rawEmail) return NextResponse.json({ error: 'Name and email required' }, { status: 400 });
   const email = String(rawEmail).trim().toLowerCase();
@@ -38,6 +40,7 @@ export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
+  const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
   const { id, active } = await req.json();
   const staff = await prisma.courseStaff.findUnique({ where: { id } });
   if (!staff || staff.courseId !== session.courseId) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -49,6 +52,7 @@ export async function DELETE(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
+  const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
   const { id } = await req.json();
   const staff = await prisma.courseStaff.findUnique({ where: { id } });
   if (!staff || staff.courseId !== session.courseId) return NextResponse.json({ error: 'Not found' }, { status: 404 });
