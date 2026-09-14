@@ -6,6 +6,7 @@ import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { toast } from '@/components/dashboard/Toast';
 import CourseLayoutTab from '@/components/dashboard/CourseLayoutTab';
+import CoursePreview from '@/components/dashboard/CoursePreview';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
 import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
@@ -407,7 +408,7 @@ function SettingsPageInner() {
 
           {/* ── How you look ── */}
           {active==='How you look' && (
-            <div className="space-y-5">
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
               <SectionCard title="How you look">
                 <p className="text-sm text-ink-soft -mt-1">The three things golfers see first. Logo and photo save the moment you upload them; the colour saves with the button above.</p>
                 <ImageUpload label="Your logo" kind="logo" value={(form.logoUrl as string)||''} onUploaded={url=>setForm(f=>({...f,logoUrl:url}))} hint="Square works best (a PNG with a transparent background is ideal). Max 8MB — large photos are auto-resized."/>
@@ -422,6 +423,25 @@ function SettingsPageInner() {
                 </Field>
                 <ImageUpload label="Your course photo" kind="hero" value={(form.heroImageUrl as string)||''} onUploaded={url=>setForm(f=>({...f,heroImageUrl:url}))} hint="A wide landscape shot — it sits behind your course name as the banner. Max 8MB — large photos are auto-resized."/>
               </SectionCard>
+              {/* B-6: the live preview — the form state, drawn as the golfer's page.
+                  Read-only; it saves nothing. Sticky beside the fields on wide
+                  screens, below them otherwise. */}
+              <div className="xl:sticky xl:top-6">
+                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">What golfers see</div>
+                <CoursePreview
+                  name={(form.name as string) || ''}
+                  type={(form.type as string) || 'public'}
+                  city={(form.city as string) || ''}
+                  state={(form.state as string) || ''}
+                  holes={typeof form.holes === 'number' ? form.holes : null}
+                  par={typeof form.par === 'number' ? form.par : null}
+                  establishedYear={typeof form.establishedYear === 'number' ? form.establishedYear : null}
+                  accent={(form.brandColor as string) || '#24513B'}
+                  logoUrl={(form.logoUrl as string) || ''}
+                  heroImageUrl={(form.heroImageUrl as string) || ''}
+                />
+                <p className="text-[12px] text-ink-muted mt-2">Updates as you type. The real page shows your live tee times and prices.</p>
+              </div>
             </div>
           )}
 
