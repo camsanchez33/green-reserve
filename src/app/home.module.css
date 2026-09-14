@@ -129,6 +129,46 @@
 .seg button { height: 32px; padding: 0 14px; border: 0; background: none; font: inherit; font-size: 13px; color: var(--ink-3); cursor: pointer; transition: background .3s, color .3s; }
 .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
 
+/* H-2b — the operator demo in a laptop frame. The frame is PUBLIC look; the
+   screen inside mounts .staff-look, so the sheet wears the staff fonts and
+   square corners exactly as the real dashboard does. */
+.laptop { width: min(880px, 100%); text-align: left; }
+.laptopScreen { background: #1d1f1a; border-radius: 14px 14px 4px 4px; padding: 12px 12px 0; box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 30px 50px -30px rgba(20,30,20,.35), 0 100px 140px -80px rgba(20,30,20,.4); }
+.laptopBase { height: 14px; margin: 0 -3%; background: linear-gradient(180deg, #2a2d28, #15171400); border-radius: 0 0 14px 14px; }
+.dash { background: #F7F5EF; color: #1D1F1A; padding: 20px 22px 14px; min-height: 420px; font-size: 13.5px; }
+.dashHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.dashTitle { font-family: var(--font-serif), Georgia, serif; font-size: 26px; line-height: 1; font-weight: 500; }
+.dashSub { font-size: 13.5px; color: #5D5F56; margin-top: 8px; }
+.dashSub b { color: #1D1F1A; font-weight: 600; }
+.dashReset { background: none; border: 1px solid #E3E0D5; font: inherit; font-size: 12px; color: #5D5F56; padding: 6px 10px; cursor: pointer; white-space: nowrap; }
+.dashTiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.dashTile { background: #fff; border: 1px solid #E3E0D5; padding: 12px 14px; }
+.dashEyebrow { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #8A8B80; }
+.dashNum { font-family: var(--font-serif), Georgia, serif; font-size: 28px; line-height: 1; font-weight: 500; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.dashNote { font-size: 12px; color: #5D5F56; margin-top: 6px; }
+.dashDays { display: flex; gap: 6px; margin-bottom: 12px; }
+.dashDay { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; background: #fff; border: 1px solid #E3E0D5; font: inherit; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #5D5F56; cursor: pointer; }
+.dashDay b { font-size: 15px; font-weight: 500; letter-spacing: 0; text-transform: none; }
+.dashRows { display: flex; flex-direction: column; gap: 6px; }
+.dashRow { position: relative; background: #fff; border: 1px solid #E3E0D5; padding: 10px 12px; }
+.dashRow.blocked { opacity: .7; }
+.dashRowHit { display: flex; align-items: center; gap: 14px; width: 100%; background: none; border: 0; padding: 0; padding-right: 80px; font: inherit; color: inherit; text-align: left; cursor: pointer; min-height: 24px; }
+.dashTime { font-family: var(--font-serif), Georgia, serif; font-size: 17px; font-weight: 500; width: 76px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.dashMeta { font-size: 12.5px; color: #8A8B80; font-variant-numeric: tabular-nums; }
+.dashChips { display: flex; gap: 4px; flex-wrap: wrap; min-width: 0; }
+.dashChip { font-size: 11px; padding: 2px 8px; border: 1px solid #E3E0D5; background: #fff; color: #5D5F56; white-space: nowrap; }
+.dashBlock { position: absolute; top: 9px; right: 12px; background: none; border: 1px solid #E3E0D5; font: inherit; font-size: 12px; color: #5D5F56; padding: 4px 8px; cursor: pointer; }
+.dashBookings { margin-top: 10px; padding-top: 10px; border-top: 1px solid #F0EDE2; display: flex; flex-direction: column; gap: 6px; }
+.dashBooking { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #fff; border: 1px solid #E3E0D5; padding: 8px 10px; font-size: 13.5px; }
+.dashStatus { font-size: 12.5px; font-weight: 500; color: #8A6116; margin-left: auto; }
+.dashCheckIn { border: 0; color: #fff; font: inherit; font-size: 12px; font-weight: 600; padding: 6px 10px; cursor: pointer; white-space: nowrap; }
+.dashFoot { font-size: 11px; color: #8A8B80; margin-top: 14px; text-align: center; }
+@media (max-width: 720px) {
+  .dashTiles { grid-template-columns: 1fr; }
+  .dashChips { display: none; }
+  .dashRowHit { flex-wrap: wrap; gap: 8px; }
+}
+
 /* COURSES — Resy-style cards */
 .courses { background: var(--paper); padding: 120px 0; }
 .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; margin-bottom: 44px; }

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { HOME_FAQ } from '@/lib/faq';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
-import HomeDemo from '@/components/home/HomeDemo';
+import SeeItWork from '@/components/home/SeeItWork';
 import s from './home.module.css';
 
 // H-1 (UI_REVISE_SPEC §5): the homepage from the approved prototype
@@ -199,8 +199,8 @@ export default function HomeContent() {
       <section className={s.product} id="see">
         <div className={s.wrap}>
           <h2 className={`${s.h2} ${s.fade}`}>See it work.</h2>
-          <p className={`${s.sub} ${s.fade}`}>This is how the booking page works, not a picture of one. Tap a time. Reserve it. Then make it yours.</p>
-          <HomeDemo />
+          <p className={`${s.sub} ${s.fade}`}>This is how it works, not a picture of it. Tap a time. Reserve it. Then flip to the sheet your shop runs.</p>
+          <SeeItWork />
         </div>
       </section>
 
