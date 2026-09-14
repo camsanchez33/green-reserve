@@ -347,6 +347,66 @@ sections in a row (hero, story, band), which is what makes it read as busy.
 Acceptance: no `tee.jpg` request on `/`; the steps section reads as one block; Lighthouse
 mobile numbers from §5 still hold (they'll improve — one fewer 1600w image).
 
+### H-2d · Clean hero (direction A) + smooth story (medium, no migration — after H-2c)
+
+Cam, 2026-09-14, second live walk: "when you first go onto the website idk if the ball
+and the hole is the best thing to see — it should be a little more clean and sharp."
+Chose direction **A · Paper + product** from canvas "Homepage Hero Directions"
+(artifact L8wuB3eXgW2CnPbt7EP16j, board Main). Also: the story video "looks like it's
+vibrating" and the hero→story hand-off is a hard cut.
+
+**1. Hero = cream + the product. No photo.**
+- Section 2 (`.hero`) loses the ball-in-cup image, the Ken Burns animation, the
+  `--hy` parallax branch in the scroll handler and `.heroShade`. Background =
+  `--paper` (#F6F4EC). Height stays `100svh`, min 640, max 1000. Delete
+  `public/hero/ball-in-cup.jpg` only if nothing else references it (grep first;
+  HomeContent is the only known user).
+- Nav unchanged: the lockup (`/brand/logo-lockup-900.png`) top-left as today.
+- Two columns inside `.inWrap`, vertically centered. LEFT (max 620px): eyebrow
+  "Free online tee sheet for golf courses" (12px, tracking .14em, uppercase, pine,
+  600); h1 unchanged copy, clamp(46px, 6.4vw, 84px), Fraunces 500, line-height .96,
+  ink (no text-shadow now); sub in ink-2 at 19px, max 520px: "Golfers book on a page
+  that looks like your course. You run the sheet, take check-ins and payments, and
+  keep your members' rules. Live in days."; the two CTAs as today (pine primary
+  "List your course →", outlined "See how it works"); trust line 13px muted: "Free
+  for courses. $0/month, no contract. We reply within one business day."
+- RIGHT: the booking-page device — reuse `HomeDemo` in a new `hero` variant
+  (props: `compact`, no swatch row, no "make it yours" copy; the slot rows and the
+  Reserve interaction stay live — the hero IS the demo). Rotated −2°, 360px wide.
+  Overlapping its lower-right: a small static "Your tee sheet · Sat" card (three
+  rows: checked in / due / open) at +1.5°, 320px, same card styling as `.device`.
+  Sample names/numbers invented; no fee line anywhere in the hero.
+- Motion: on load the device rises 16px and fades in over 600ms with the page's
+  one easing; the tee-sheet card follows 150ms later. No scroll-driven movement in
+  the hero. `prefers-reduced-motion` renders both static.
+- Mobile (<960px): stack — text, then the device at 0.9 scale centered, tee-sheet
+  card hidden. Hero height auto.
+- LCP becomes the h1 (text), not an image — §5's budget gets easier; verify anyway.
+
+**2. Story video: stop the vibration.**
+- Swap in the re-rendered files (`public/home/story.mp4` 4.1 MB, `story.webm` 4.2 MB,
+  2026-09-14 v2: zoomed at 4K then downscaled, 8% push instead of 14%; measured
+  frame-to-frame difference down ~35%). Same poster.
+- Remove the scroll-driven `--z` scale from `.storyPh` when the `<video>` is the
+  active layer — the clip already moves; a second, stepped zoom on top of it is the
+  shimmer. Keep `--z` only for the poster/reduced-motion still (H-2a §4b drift).
+- `.storyPh video { transform: none; }` and `will-change` off the wrapper.
+
+**3. Hero → story hand-off: dissolve, not a cut.**
+- The story section's pin gets a top overlay: `linear-gradient(180deg, #F6F4EC 0%,
+  rgba(246,244,236,0) 22vh)` above the video, under the beats. As the cream hero
+  scrolls off, the video emerges from cream instead of arriving as a hard edge. No
+  JS. (The bottom edge into "See it work" is already dark→white and reads fine.)
+
+**4. Canvas hygiene:** on "Homepage Hero Directions", board Main is the chosen A;
+boards Split and Pine stay as record of the unchosen directions (do not delete).
+
+Acceptance: no `ball-in-cup` or `hero/` request on `/`; hero text is the LCP;
+device interaction works in the hero AND in "See it work" independently (two
+instances, separate state); at 1440 the scroll from hero into story shows cream
+dissolving into the moving green with no visible seam; at 390 the hero stacks and
+the tee-sheet card is absent; Lighthouse mobile ≥ H-1's numbers.
+
 ## 6. Verification, every run
 
 `/gr-review` as usual, plus: side-by-side with the canvas board named in the item; a phone walk of any golfer route touched; `git diff --stat` reviewed for files outside the restate list (that's the smuggling check). Reskin runs additionally: grep the diff for `fetch(`, `prisma`, `useState(` additions — any hit means the run drifted into §4 and must be split.

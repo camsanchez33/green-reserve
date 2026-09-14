@@ -1977,6 +1977,8 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 - [ ] UI_REVISE_SPEC H-2c — KILL THE PHOTO BAND (small, no migration, RUN FIRST): the 'We set it up' band shows a WIND FARM (bad Unsplash id for TEE). Delete the section + tee.jpg + README row, move its headline into the 'Live in four steps' sub line, verify every remaining image id is actually golf (no `tee.jpg` request on `/` afterwards).
 
+- [ ] UI_REVISE_SPEC H-2d — CLEAN HERO (direction A, chosen by Cam 2026-09-14): cream hero, no photo, headline left + live booking device (HomeDemo hero variant) + static tee-sheet card right, lockup nav unchanged; story video v2 files swapped in + scroll-zoom removed from the video (the 'vibration'); cream→video top dissolve on the story section (medium, no migration, AFTER H-2c). Canvas: 'Homepage Hero Directions' board Main.
+
 ## Ideas / not yet specced
 
 - OPERATOR STAFF ACCOUNTS rework (Cam, 2026-07-10: "whole thing is going to be reworked and better") — current section contradicts itself: copy says "full dashboard access", role dropdown says "tee sheet access". Rework needs: clear role tiers (e.g. owner / manager / tee-sheet-only), what each can see (money? settings? members?), invite email flow, deactivate/reset from the card, and the same no-silent-failure patterns as admin. Spec when Cam's ready to define the role tiers.
