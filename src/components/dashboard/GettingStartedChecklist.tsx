@@ -27,6 +27,9 @@ interface Props {
   agreementAccepted: boolean;
   onAcceptAgreement: () => void;
   acceptingAgreement: boolean;
+  /** AG-2: signed / total signable documents; undefined until loaded */
+  agreementsSigned?: number;
+  agreementsTotal?: number;
 }
 
 // Plain-English steps for a first-time, non-technical operator. Every step's
@@ -35,8 +38,9 @@ interface Props {
 export default function GettingStartedChecklist({
   emailVerified, onboardingStep, courseDraft, pageApprovalStatus, onApprovePage, approvingPage, approveError,
   onRequestChanges, stripeAccountActive, onConnectStripe, connectingStripe, onNavigate,
-  agreementAccepted, onAcceptAgreement, acceptingAgreement,
+  agreementAccepted, onAcceptAgreement, acceptingAgreement, agreementsSigned, agreementsTotal,
 }: Props) {
+  void onAcceptAgreement; // AG-2: acceptance moved to /dashboard/sign; prop kept for callers
   const [visited, setVisited] = useState<Set<string>>(new Set());
   // null = no manual override yet (defaults to collapsed once everything's
   // done); true/false once the operator has clicked to expand/collapse it
@@ -86,14 +90,17 @@ export default function GettingStartedChecklist({
       action: checkedSchedule ? undefined : { label: 'Review schedule', onClick: () => onNavigate('/dashboard/schedules') },
     },
     {
-      key: 'agreement', title: 'Accept the Operator Agreement',
-      // AGREEMENT = GO-LIVE GATE (RUN_QUEUE) — legal ground, required before
-      // going live, no exceptions. New operators satisfy this automatically
-      // at first login (the onboarding clickwrap); this step only ever needs
-      // an action here for legacy operators who predate it.
-      blurb: 'Required before you can go live — the terms every course on GreenReserve operates under.',
-      done: agreementAccepted,
-      action: agreementAccepted ? undefined : { label: 'Review & accept', onClick: onAcceptAgreement, loading: acceptingAgreement },
+      key: 'agreement',
+      // AG-2: the Sign step — every signable document, counted. The Operator
+      // Agreement remains the go-live absolute (AGREEMENT = GO-LIVE GATE);
+      // the count is what the checklist shows. New operators sign during
+      // onboarding; legacy operators are sent to /dashboard/sign.
+      title: agreementsTotal ? `Sign the agreements (${agreementsTotal})` : 'Sign the agreements',
+      blurb: 'Required before you can go live — the terms every course on GreenReserve operates under. Signed copies are emailed to you.',
+      done: agreementsTotal ? (agreementsSigned ?? 0) >= agreementsTotal : agreementAccepted,
+      action: (agreementsTotal ? (agreementsSigned ?? 0) >= agreementsTotal : agreementAccepted)
+        ? undefined
+        : { label: agreementsTotal && agreementsSigned ? `Sign (${agreementsSigned} of ${agreementsTotal} done)` : 'Review & sign', onClick: () => onNavigate('/dashboard/sign'), loading: acceptingAgreement },
     },
   ];
 

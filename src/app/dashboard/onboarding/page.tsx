@@ -2,9 +2,12 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { CheckCircle, ChevronRight, Loader2, CreditCard, Plus, Trash2, AlertCircle } from 'lucide-react';
+import { CheckCircle, ChevronRight, Loader2, CreditCard, Plus, Trash2, AlertCircle, PenLine } from 'lucide-react';
+import SignAgreements from '@/components/dashboard/SignAgreements';
 
-const STEPS = ['Course Details', 'Connect Payments', 'Go Live'];
+// AG-2: the single agreement checkbox became its own step — legal name,
+// signer, and each document read to the end before it can be ticked.
+const STEPS = ['Course Details', 'Sign', 'Connect Payments', 'Go Live'];
 
 type TeeSet = { id: string; name: string; yardage: string; rating: string; slope: string };
 const blankTeeSet = (): TeeSet => ({ id: Math.random().toString(36).slice(2), name: '', yardage: '', rating: '', slope: '' });
@@ -22,10 +25,10 @@ function OnboardingInner() {
   const [stripeActive, setStripeActive] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [stripeBanner, setStripeBanner] = useState('');
-  const [agreementAccepted, setAgreementAccepted] = useState(false);
-  // SD-9: the acceptance already on file. Re-entering step 1 used to POST the
-  // agreement again on every save — one GM, several timeline rows.
-  const [agreementOnFile, setAgreementOnFile] = useState(false);
+  // AG-2: which step to resume on depends on the profile AND whether the
+  // agreements are signed; both load before the page decides.
+  const [profileStep, setProfileStep] = useState<number | null>(null);
+  const [signedAll, setSignedAll] = useState<boolean | null>(null);
   const [saveError, setSaveError] = useState('');
   const [loadError, setLoadError] = useState('');
   const [finishError, setFinishError] = useState('');
@@ -46,17 +49,17 @@ function OnboardingInner() {
       if (!data) return;
       if (!data.emailVerified) { router.push('/dashboard/verify'); return; }
       if (data.onboardingStep >= 3) { router.push('/dashboard'); return; }
-      setStep(data.onboardingStep >= 2 ? 2 : 1);
-      setLoading(false);
+      setProfileStep(data.onboardingStep);
     }).catch(() => setLoadError('Network error loading your account.')); // SD-10: was a spinner forever
     fetch('/api/operator/courses').then(r => r.json()).then(c => {
       if (!c) return;
       setDetails(d => ({ ...d, description: c.description ?? '', holes: c.holes ?? 18, par: c.par ?? 72 }));
       setStripeActive(!!c.stripeAccountActive);
     });
-    fetch('/api/operator/agreement').then(r => r.json()).then(d => {
-      if (d?.agreement) { setAgreementAccepted(true); setAgreementOnFile(true); }
-    }).catch(() => {});
+    fetch('/api/operator/sign?status=1').then(r => r.ok ? r.json() : null).then(d => {
+      const st = d?.status;
+      setSignedAll(st ? st.total === 0 || st.signed === st.total : false);
+    }).catch(() => setSignedAll(false));
     fetch('/api/operator/tee-sets').then(r => r.json()).then(rows => {
       if (Array.isArray(rows) && rows.length > 0) {
         setTeeSets(rows.map((r: { id: string; name: string; yardage: number; rating: number; slope: number }) => ({
@@ -65,6 +68,12 @@ function OnboardingInner() {
       }
     });
   }, [router]);
+
+  useEffect(() => {
+    if (profileStep === null || signedAll === null) return;
+    setStep(profileStep >= 2 ? (signedAll ? 3 : 2) : 1);
+    setLoading(false);
+  }, [profileStep, signedAll]);
 
   const set = (k: keyof typeof details, v: string | number) => setDetails(d => ({ ...d, [k]: v }));
   const setTee = (id: string, k: keyof TeeSet, v: string) => setTeeSets(ts => ts.map(t => t.id === id ? { ...t, [k]: v } : t));
@@ -80,16 +89,11 @@ function OnboardingInner() {
       if (!r1.ok) await fail(r1, 'course details');
       const r2 = await fetch('/api/operator/tee-sets', { method: 'PUT', headers: J, body: JSON.stringify({ teeSets: teeSets.filter(t => t.name.trim()) }) });
       if (!r2.ok) await fail(r2, 'tee sets');
-      if (!agreementOnFile) {
-        const r3 = await fetch('/api/operator/agreement', { method: 'POST' });
-        if (!r3.ok) await fail(r3, 'the agreement');
-        setAgreementOnFile(true);
-      }
       // SD-9: the endpoint that bumps onboardingStep to 2 existed and was
       // called by nobody, so a GM who got pulled away re-landed on step 1.
       const r4 = await fetch('/api/operator/profile', { method: 'PATCH' });
       if (!r4.ok) await fail(r4, 'your progress');
-      setStep(2);
+      setStep(signedAll ? 3 : 2);
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Something went wrong — nothing was lost, try again.');
     } finally {
@@ -116,7 +120,7 @@ function OnboardingInner() {
     try {
       const r = await fetch('/api/operator/onboarding-complete', { method: 'POST' });
       if (!r.ok) { const d = await r.json().catch(() => ({})); setFinishError(d.error || `Could not finish setup (${r.status}) — try again.`); return; }
-      setStep(3);
+      setStep(4);
     } catch {
       setFinishError('Network error — try again.');
     } finally {
@@ -217,26 +221,27 @@ function OnboardingInner() {
               </div>
             </div>
 
-            <label className="flex items-start gap-2.5 mt-6 text-sm text-ink-soft cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={agreementAccepted}
-                onChange={e => setAgreementAccepted(e.target.checked)}
-                className="w-4 h-4 mt-0.5 accent-pine rounded shrink-0"
-              />
-              <span>I have read and agree to the <a href="/operator-agreement" target="_blank" className="text-pine hover:underline">GreenReserve Operator Agreement</a>.</span>
-            </label>
-
-            {saveError && <p className="text-sm text-bad mb-3">{saveError}</p>}
-            <button onClick={saveDetails} disabled={saving || !agreementAccepted}
+            {saveError && <p className="text-sm text-bad mb-3 mt-6">{saveError}</p>}
+            <button onClick={saveDetails} disabled={saving}
               className="w-full mt-3 bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 disabled:bg-line-strong transition-colors flex items-center justify-center gap-2">
               {saving ? <><Loader2 className="w-4 h-4 animate-spin"/>Saving...</> : <>Continue<ChevronRight className="w-4 h-4"/></>}
             </button>
           </div>
         )}
 
-        {/* Step 2 — Connect Payments */}
+        {/* Step 2 — Sign (AG-2) */}
         {step === 2 && (
+          <div className="bg-white border border-line rounded-lg p-6">
+            <h2 className="text-[24px] font-serif font-medium leading-none text-ink mb-1 flex items-center gap-2">
+              <PenLine className="w-5 h-5 text-pine"/>Sign the agreements
+            </h2>
+            <p className="text-sm text-ink-soft mb-6">The terms every course on GreenReserve operates under. Read each one to the end, then sign once — signed copies are emailed to you.</p>
+            <SignAgreements onSigned={() => { setSignedAll(true); setStep(3); }} />
+          </div>
+        )}
+
+        {/* Step 3 — Connect Payments */}
+        {step === 3 && (
           <div className="bg-white border border-line rounded-lg p-6">
             <h2 className="text-[24px] font-serif font-medium leading-none text-ink mb-1 flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-pine"/>Connect your payments
@@ -284,8 +289,8 @@ function OnboardingInner() {
           </div>
         )}
 
-        {/* Step 3 — Done */}
-        {step === 3 && (
+        {/* Step 4 — Done */}
+        {step === 4 && (
           <div className="bg-white border border-line rounded-lg p-10 text-center">
             <div className="w-14 h-14 rounded-md bg-ok/10 flex items-center justify-center mx-auto mb-5">
               <CheckCircle className="w-7 h-7 text-ok"/>

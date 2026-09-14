@@ -5,6 +5,8 @@ import { stripe } from '@/lib/stripe';
 import { getApprovalState } from '@/lib/approval-state';
 import { getCourseTimeline, latestAgreementAcceptance, logNoteAdded, CURRENT_AGREEMENT_VERSION } from '@/lib/course-timeline';
 import { CURRENT_TERMS_VERSION } from '@/lib/terms';
+import { agreementStatus } from '@/lib/agreement-gate';
+import { listVersions, loadDocument, type AgreementDocument } from '@/lib/agreements';
 
 // A-05 item 5 — Documents tab: auto records (operator agreement acceptance,
 // Stripe connected-account agreement date fetched live from Stripe — no
@@ -21,10 +23,19 @@ export async function GET(req: NextRequest) {
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { stripeAccountId: true, stripeAccountActive: true } });
   if (!course) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const [approval, timeline] = await Promise.all([
+  const [approval, timeline, agreements, acceptanceRows] = await Promise.all([
     getApprovalState(courseId),
     getCourseTimeline(courseId),
+    agreementStatus(courseId),
+    // AG-2 §3: one row per acceptance — the table replaces the decoded line.
+    prisma.agreementAcceptance.findMany({ where: { courseId }, orderBy: { acceptedAt: 'desc' } }),
   ]);
+  const titleOf = (document: string, version: string) => {
+    try {
+      const d = document as AgreementDocument;
+      return listVersions(d).includes(version) ? loadDocument(d, version).title : document;
+    } catch { return document; }
+  };
 
   let stripeAgreementDate: string | null = null;
   if (course.stripeAccountActive && course.stripeAccountId) {
@@ -47,6 +58,13 @@ export async function GET(req: NextRequest) {
     bookingTermsVersion: CURRENT_TERMS_VERSION,
     agreementVersion: CURRENT_AGREEMENT_VERSION,
     agreement: latestAgreementAcceptance(events),
+    agreements,
+    acceptances: acceptanceRows.map(r => ({
+      id: r.id, document: r.document, title: titleOf(r.document, r.version), version: r.version,
+      signerName: r.signerName, signerTitle: r.signerTitle, signerEmail: r.signerEmail,
+      acceptedAt: r.acceptedAt.toISOString(), ip: r.ip, legacy: r.legacy, pdfUrl: r.pdfUrl,
+      authorityAttested: r.authorityAttested, marketingOptOut: r.marketingOptOut,
+    })),
     documents: events.filter(e => e.type === 'document_uploaded').map(e => ({ ...(e.data as { name: string; url: string; by: string }), at: e.at })),
     notes: events.filter(e => e.type === 'note_added').map(e => ({ ...(e.data as { text: string; by: string }), at: e.at })),
   });

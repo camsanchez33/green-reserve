@@ -25,6 +25,14 @@ export type DocumentMeta = {
   reacceptRequired: boolean;
   title: string;
   summary: string[];
+  /** AG-2: a draft is never presented for signature. Front matter `draft: true`,
+   *  or the COUNSEL "not reviewed" marker in the body (AG-1's drafts carry that
+   *  comment rather than a front-matter flag, and their hashes are seeded). */
+  draft: boolean;
+  /** AG-3: the date counsel reviewed this version, from front matter; '' if absent. */
+  counselReviewed: string;
+  /** AG-3: what changed in this version, for the day-0 notice; '' if absent. */
+  changeSummary: string;
 };
 
 export type LoadedDocument = DocumentMeta & {
@@ -88,6 +96,9 @@ export function loadDocument(document: AgreementDocument, version: string = curr
     reacceptRequired: meta.reacceptRequired === true,
     title: String(meta.title ?? document),
     summary: Array.isArray(meta.summary) ? (meta.summary as string[]) : [],
+    draft: meta.draft === true || /<!--[^>]*COUNSEL:[^>]*not reviewed/i.test(body),
+    counselReviewed: typeof meta.counselReviewed === 'string' ? meta.counselReviewed : '',
+    changeSummary: typeof meta.changeSummary === 'string' ? meta.changeSummary : '',
     markdown: body,
     html,
     hash: createHash('sha256').update(bytes).digest('hex'),
@@ -97,4 +108,9 @@ export function loadDocument(document: AgreementDocument, version: string = curr
 /** Every document at its current version — what the seed writes and the signing flow shows. */
 export function currentDocuments(): LoadedDocument[] {
   return (Object.keys(DOCUMENT_DIR) as AgreementDocument[]).map(d => loadDocument(d));
+}
+
+/** AG-2: the documents an operator is asked to sign — every current version that is not a draft. */
+export function signableDocuments(): LoadedDocument[] {
+  return currentDocuments().filter(d => !d.draft);
 }

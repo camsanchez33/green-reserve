@@ -124,6 +124,8 @@ function DashboardPageInner() {
   const [agreementAccepted, setAgreementAccepted] = useState(true); // assume yes until loaded — never flash a false "not accepted" prompt
   const [acceptingAgreement, setAcceptingAgreement] = useState(false);
   const [agreementChecked, setAgreementChecked] = useState(false);
+  // AG-2: signed / total signable documents for the checklist count.
+  const [agreementsCount, setAgreementsCount] = useState<{ signed: number; total: number } | null>(null);
   const teesheetIntro = useTabIntro('teesheet');
   const analyticsIntro = useTabIntro('analytics');
 
@@ -336,6 +338,9 @@ function DashboardPageInner() {
       setAgreementAccepted(!!d?.agreement);
       setAgreementChecked(true);
     }).catch(() => setAgreementChecked(true));
+    fetch('/api/operator/sign?status=1').then(r => r.ok ? r.json() : null).then(d => {
+      if (d?.status) setAgreementsCount({ signed: d.status.signed, total: d.status.total });
+    }).catch(() => {});
     // Admin can flip a course live while this tab sits open in the
     // background — refresh live/draft status when the operator tabs back in
     // instead of showing whatever was true at page load.
@@ -504,6 +509,8 @@ function DashboardPageInner() {
               agreementAccepted={agreementAccepted}
               onAcceptAgreement={acceptAgreement}
               acceptingAgreement={acceptingAgreement}
+              agreementsSigned={agreementsCount?.signed}
+              agreementsTotal={agreementsCount?.total}
             />
           )}
 
@@ -516,18 +523,19 @@ function DashboardPageInner() {
           {agreementChecked && !agreementAccepted && !courseDraft && !courseArchived && (
             <div className="fixed inset-0 bg-ink/40 flex items-center justify-center z-50 px-4">
               <div className="bg-white rounded-lg border border-line max-w-md w-full p-6">
-                <h2 className="text-[18px] font-serif font-medium text-ink mb-2">Please accept the Operator Agreement</h2>
+                <h2 className="text-[18px] font-serif font-medium text-ink mb-2">Please sign the Operator Agreement</h2>
                 <p className="text-sm text-ink-soft mb-5">
                   We&apos;ve updated our terms since {courseName || 'your course'} went live. Please review and accept the Operator Agreement to keep your account in good standing — this doesn&apos;t affect your live status.
                 </p>
                 <div className="flex items-center gap-3">
                   <a href="/operator-agreement" target="_blank" className="text-sm text-pine hover:underline">Read the agreement</a>
+                  {/* AG-2: signing captures legal name, signer and the text
+                      read to the end — it lives on its own page now. */}
                   <button
-                    onClick={acceptAgreement}
-                    disabled={acceptingAgreement}
-                    className="ml-auto bg-pine hover:bg-pine-hover disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                    onClick={() => router.push('/dashboard/sign')}
+                    className="ml-auto bg-pine hover:bg-pine-hover text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                   >
-                    {acceptingAgreement ? 'Accepting…' : 'I accept'}
+                    Review and sign
                   </button>
                 </div>
               </div>

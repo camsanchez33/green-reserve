@@ -1492,3 +1492,37 @@ export async function sendRefundEmail(data: {
   const r = await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Refund: ${amount} from ${data.courseName}`, html });
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
+
+// AG-2 §2: "Your signed GreenReserve agreements" — the PDFs attached, a copy
+// to hello@. `pending` names any document whose PDF did not render; the
+// signing itself is on record regardless and the copy follows by email.
+export async function sendSignedAgreementsEmail(data: {
+  operatorName: string; operatorEmail: string; courseName: string; legalName: string;
+  signerName: string; signerEmail: string; acceptedAt: Date;
+  documents: { title: string; version: string }[];
+  pending: string[];
+  attachments: { filename: string; content: Buffer }[];
+}) {
+  const when = data.acceptedAt.toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'long', timeStyle: 'short' }) + ' ET';
+  const list = data.documents.map(d => `<li style="margin:0 0 4px;">${d.title} <span style="color:#6b7280;">v${d.version}</span></li>`).join('');
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:22px;font-weight:700;">Your signed GreenReserve agreements</h1>
+    <p style="margin:0 0 16px;color:#6b7280;font-size:15px;line-height:1.6;">
+      Hi ${data.operatorName} &mdash; ${data.signerName || 'you'} signed the following for <strong>${data.legalName || data.courseName}</strong> on ${when}.
+      ${data.attachments.length ? 'The signed copies are attached.' : ''}
+    </p>
+    <ul style="margin:0 0 16px;padding-left:20px;color:#111827;font-size:14px;">${list}</ul>
+    ${data.pending.length ? `<p style="margin:0 0 16px;color:#92400e;font-size:13px;">The PDF for ${data.pending.join(' and ')} is still being prepared and will follow.</p>` : ''}
+    <p style="margin:0;color:#9ca3af;font-size:12px;">Signed electronically from ${data.signerEmail}. Keep this email for your records. Questions? Reply to this email &mdash; hello@greenreserve.app.</p>
+  `);
+  const r = await getResend().emails.send({
+    from: FROM,
+    to: data.operatorEmail,
+    cc: 'hello@greenreserve.app',
+    replyTo: 'hello@greenreserve.app',
+    subject: `Your signed GreenReserve agreements — ${data.courseName}`,
+    html,
+    attachments: data.attachments.map(a => ({ filename: a.filename, content: a.content })),
+  });
+  if (r.error) throw new Error(r.error.message);
+}

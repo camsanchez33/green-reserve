@@ -8,6 +8,7 @@ import {
   sendCancellationFeeChargedEmail,
   sendCheckInAvailableEmail,
 } from '@/lib/email';
+import { retryMissingAgreementPdfs } from '@/lib/agreement-sign';
 
 /**
  * Runs every hour (Vercel Pro). Handles all time-sensitive booking actions:
@@ -22,6 +23,9 @@ import {
  * 3. CHECK-IN EMAIL — no-fee courses: fires ~3 hours before the tee time with
  *    the golfer's check-in link. Window: tee time is 165–195 min out.
  *    Sets paymentStatus = 'awaiting_checkin' as dedup.
+ *
+ * 4. AGREEMENT PDFS — AG-2: signed agreements whose courtesy PDF failed to
+ *    render or store get another go (the row is the record either way).
  */
 export async function GET(req: NextRequest) {
   const denied = cronAuthFailure(req);
@@ -150,5 +154,9 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ success: true, ...results });
+  // ─── 4: Agreement PDFs that never made it to storage ─────────────────────────
+  let agreementPdfs = { tried: 0, stored: 0 };
+  try { agreementPdfs = await retryMissingAgreementPdfs(); } catch (err) { console.error('Agreement PDF retry failed:', err); }
+
+  return NextResponse.json({ success: true, ...results, agreementPdfs });
 }

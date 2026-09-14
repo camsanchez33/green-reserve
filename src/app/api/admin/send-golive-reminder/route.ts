@@ -5,7 +5,7 @@ import { sendOnboardingChaseEmail } from '@/lib/email';
 import { logReminderSent } from '@/lib/course-timeline';
 
 const MISSING_STEP_LABEL: Record<string, string> = {
-  agreement: 'Accept the Operator Agreement',
+  agreement: 'Sign the agreements',
   stripe: 'Connect payments with Stripe',
 };
 

@@ -97,6 +97,8 @@ interface CourseDetail {
   origin: { inquiryId: string; acceptedAt: string } | null;
   // AGREEMENT = GO-LIVE GATE (RUN_QUEUE)
   agreementAccepted: boolean;
+  // AG-2: signed / total signable documents
+  agreements?: { signed: number; total: number; missing: string[] };
 }
 
 interface TeeSlot {
@@ -258,7 +260,9 @@ function onboardingSteps(d: CourseDetail): OnboardingStep[] {
     { key: 'stripe_connected', label: 'Stripe connected', done: c.stripeAccountActive, at: null },
     { key: 'schedule_confirmed', label: 'Schedule confirmed', done: d.openItems.hasSchedule, at: (c.schedules && c.schedules[0]) ? c.schedules[0].createdAt : null },
     {
-      key: 'agreement_accepted', label: 'Operator Agreement accepted', done: d.agreementAccepted,
+      key: 'agreement_accepted',
+      label: d.agreements && d.agreements.total > 0 ? `Sign the agreements (${d.agreements.signed}/${d.agreements.total})` : 'Operator Agreement accepted',
+      done: d.agreements && d.agreements.total > 0 ? d.agreements.signed >= d.agreements.total : d.agreementAccepted,
       at: d.timeline?.find(e => e.type === 'agreement_accepted')?.at ?? null,
     },
     { key: 'live', label: 'Live', done: c.active, at: c.welcomeEmailSentAt ?? null },
@@ -379,6 +383,8 @@ export default function CourseDetailPage() {
 
   // A-05 item 5: Records tab (was Documents)
   const [docsData, setDocsData] = useState<{
+    agreements?: { signed: number; total: number; missing: string[]; documents: { document: string; version: string; title: string; signed: boolean }[] };
+    acceptances?: { id: string; document: string; title: string; version: string; signerName: string; signerTitle: string; signerEmail: string; acceptedAt: string; ip: string; legacy: boolean; pdfUrl: string | null }[];
     approval: { status: string; approvedAt: string | null };
     stripeAgreementDate: string | null;
     bookingTermsVersion: string;
@@ -1661,17 +1667,39 @@ export default function CourseDetailPage() {
                   <div className="bg-white border border-line rounded-lg p-6">
                     <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">Auto Records</div>
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-ink-soft">Operator Agreement (v{docsData.agreementVersion})</span>
-                        {docsData.agreement ? (
-                          <span className="text-ink font-medium">Accepted {fmtDate(docsData.agreement.at)} · {docsData.agreement.acceptedBy}</span>
-                        ) : c.active ? (
-                          // AGREEMENT = GO-LIVE GATE item 3 — a LIVE course with
-                          // no acceptance predates the clickwrap. Flagged amber
-                          // until the operator accepts, never yanked offline.
-                          <span className="text-warn font-medium">Not accepted — legacy</span>
-                        ) : (
-                          <span className="text-ink-faint">Not yet accepted</span>
+                      {/* AG-2 §3: one row per acceptance, and a red "Not signed"
+                          per signable document still missing. */}
+                      <div className="text-sm">
+                        <div className="text-ink-soft mb-1.5">Signed agreements{docsData.agreements ? ` · ${docsData.agreements.signed} of ${docsData.agreements.total}` : ''}</div>
+                        {(docsData.agreements?.documents ?? []).filter(d2 => !d2.signed).map(d2 => (
+                          <div key={d2.document} className="flex items-center justify-between text-xs py-1">
+                            <span className="text-ink-soft">{d2.title} v{d2.version}</span>
+                            <span className="text-bad font-medium">Not signed</span>
+                          </div>
+                        ))}
+                        {(docsData.acceptances ?? []).length > 0 && (
+                          <div className="border border-line rounded-md divide-y divide-line-soft mt-1">
+                            {(docsData.acceptances ?? []).map(a => (
+                              <div key={a.id} className="grid grid-cols-[1.3fr_1.2fr_auto] gap-3 px-3 py-2 items-center">
+                                <div className="min-w-0">
+                                  <div className="text-xs text-ink truncate">{a.title} <span className="text-ink-faint">v{a.version}</span>{a.legacy && <span className="ml-1.5 text-[9px] font-medium uppercase tracking-[0.1em] bg-line-soft text-ink-muted px-1.5 py-0.5">Legacy</span>}</div>
+                                  <div className="text-[11px] text-ink-faint truncate">{a.signerName ? `${a.signerName}${a.signerTitle ? ', ' + a.signerTitle : ''}` : a.signerEmail || 'no signer recorded'}</div>
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="text-xs text-ink">{fmtDate(a.acceptedAt)}</div>
+                                  <div className="text-[11px] text-ink-faint truncate">{a.ip ? 'IP ' + a.ip : ''}</div>
+                                </div>
+                                <div className="text-right">
+                                  {a.pdfUrl
+                                    ? <a href={`/api/admin/course-documents/download?courseId=${c.id}&url=${encodeURIComponent(a.pdfUrl)}`} target="_blank" rel="noreferrer" className="text-xs font-medium text-pine hover:underline">PDF</a>
+                                    : <span className="text-[11px] text-ink-faint">{a.legacy ? '—' : 'PDF pending'}</span>}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {(docsData.acceptances ?? []).length === 0 && (docsData.agreements?.total ?? 0) === 0 && (
+                          <span className="text-ink-faint text-xs">No signable documents on disk.</span>
                         )}
                       </div>
                       <div className="flex items-center justify-between text-sm">

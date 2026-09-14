@@ -3,7 +3,8 @@ import { cronAuthFailure } from '@/lib/cron-auth';
 import { prisma } from '@/lib/prisma';
 import { sendOnboardingChaseEmail } from '@/lib/email';
 import { getApprovalState } from '@/lib/approval-state';
-import { getCourseTimeline, isRemindersPaused, lastReminderSentAt, reminderSentCount, logReminderSent, latestAgreementAcceptance } from '@/lib/course-timeline';
+import { getCourseTimeline, isRemindersPaused, lastReminderSentAt, reminderSentCount, logReminderSent } from '@/lib/course-timeline';
+import { agreementStatus } from '@/lib/agreement-gate';
 
 // A-05 item 4b — auto-chase reminders for courses that haven't finished
 // onboarding: 3d, 7d, 14d after the course record was created, then weekly.
@@ -61,7 +62,9 @@ export async function GET(req: NextRequest) {
     if (approval.status !== 'approved') remainingSteps.push('Approve your page (check your email for the preview)');
     if (!course.stripeAccountActive) remainingSteps.push('Connect payments with Stripe');
     if (course.schedules.length === 0) remainingSteps.push('Set your tee time schedule and pricing');
-    if (!events || !latestAgreementAcceptance(events)) remainingSteps.push('Accept the Operator Agreement');
+    // AG-2: every signable document, not just the Operator Agreement.
+    const agreements = await agreementStatus(course.id);
+    if (agreements.missing.length > 0) remainingSteps.push(`Sign the agreements (${agreements.missing.join(', ')})`);
     if (remainingSteps.length === 0) remainingSteps.push('Go live from your dashboard');
 
     try {
@@ -83,12 +86,14 @@ export async function GET(req: NextRequest) {
   for (const course of live) {
     if (!course.operator) continue;
     const events = await getCourseTimeline(course.id);
-    if (events && latestAgreementAcceptance(events)) continue; // already accepted — nothing to chase
+    // AG-2: the table is the record — legacy lines were migrated into it.
+    const agreements = await agreementStatus(course.id);
+    if (agreements.missing.length === 0) continue; // everything signed — nothing to chase
     const status = isDue(events, course.createdAt, now);
     if (!status.due) { results.push({ courseId: course.id, sent: false, reason: status.reason }); continue; }
 
     try {
-      await sendOnboardingChaseEmail({ operatorName: course.operator.name, operatorEmail: course.operator.email, courseName: course.name, remainingSteps: ['Accept the Operator Agreement'] });
+      await sendOnboardingChaseEmail({ operatorName: course.operator.name, operatorEmail: course.operator.email, courseName: course.name, remainingSteps: [`Sign the agreements (${agreements.missing.join(', ')})`] });
       await logReminderSent(course.id, `day${status.nextThreshold}`);
       results.push({ courseId: course.id, sent: true, reason: `day${status.nextThreshold} (legacy agreement)` });
     } catch (e) {

@@ -9,7 +9,7 @@ import { closureImpact, cancelFutureBookingsForClosure, notifyOperatorOfClosure 
 import { sheetVsLive } from '@/lib/sheet-vs-live';
 import { computeOpenChanges, CATEGORY_LABEL } from '@/lib/change-requests';
 import { getCourseTimeline, isRemindersPaused, latestAgreementAcceptance } from '@/lib/course-timeline';
-import { hasAcceptedAgreement } from '@/lib/agreement-gate';
+import { hasAcceptedAgreement, agreementStatus } from '@/lib/agreement-gate';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 
 export async function GET(req: NextRequest) {
@@ -55,10 +55,14 @@ export async function GET(req: NextRequest) {
 
   // CS-3: every call about this course — its own check-ins and the linked
   // inquiry's discovery calls (which count as contact). Few rows.
-  const calls = await prisma.call.findMany({
-    where: { OR: [{ courseId }, { inquiry: { builtCourseId: courseId } }] },
-    orderBy: { scheduledAt: 'desc' },
-  });
+  const [calls, agreements] = await Promise.all([
+    prisma.call.findMany({
+      where: { OR: [{ courseId }, { inquiry: { builtCourseId: courseId } }] },
+      orderBy: { scheduledAt: 'desc' },
+    }),
+    // AG-2 §3: the Setup checklist counts signed documents.
+    agreementStatus(courseId),
+  ]);
 
   const bookings30d = revenue._count.id;
   const health = computeCourseHealth({
@@ -156,6 +160,7 @@ export async function GET(req: NextRequest) {
     // AGREEMENT = GO-LIVE GATE (RUN_QUEUE) — feeds the Setup checklist step
     // and the Overview health block the same way Stripe/approval already do.
     agreementAccepted: timeline ? !!latestAgreementAcceptance(timeline) : false,
+    agreements: { signed: agreements.signed, total: agreements.total, missing: agreements.missing },
   });
 }
 

@@ -26,8 +26,10 @@ export async function GET(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Not a valid document URL' }, { status: 400 });
   }
-  const expectedPrefix = `/course-documents/${courseId}/`;
-  if (!pathname.startsWith(expectedPrefix)) {
+  // AG-2: signed agreements are private blobs too, under their own prefix.
+  const prefixes = [`/course-documents/${courseId}/`, `/agreements/${courseId}/`];
+  const expectedPrefix = prefixes.find(pf => pathname.startsWith(pf));
+  if (!expectedPrefix) {
     return NextResponse.json({ error: 'That document does not belong to this course' }, { status: 403 });
   }
 
