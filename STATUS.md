@@ -4,20 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-14 03:05 UTC · branch `main` · HEAD `1896ce5` · working tree **7 dirty file(s)**
+Generated 2026-09-14 03:08 UTC · branch `main` · HEAD `57b9150` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-### Uncommitted working tree (7 file(s))
+### Uncommitted working tree (2 file(s))
 
-- `M INQUIRY_CALL_SPEC.md`
 - `M RUN_QUEUE.md`
-- `M UI_REVISE_SPEC.md`
-- `?? COURSES_SHEET_SPEC.md`
-- `?? public/home/story-poster.jpg`
-- `?? public/home/story.mp4`
 - `?? public/home/story.webm`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
@@ -80,11 +75,10 @@ This is the distinction a raw checkbox count gets wrong.
 25. INQUIRY_CALL_SPEC Phase IC-1 — ONE `Call` model (kind discovery\|checkin; inquiryId OR courseId) + CourseInquiry.callSkippedReason + Course.nextCheckInAt (SCHEMA CHANGE, attended, a — `RUN_QUEUE.md:1961`
 26. INQUIRY_CALL_SPEC Phase IC-2 — inquiry detail: Set-up-call card (date/time/length/direction/number, agenda pre-checked from form gaps, confirmation email, skip-with-reason) + Log-t — `RUN_QUEUE.md:1962`
 27. INQUIRY_CALL_SPEC Phase IC-3 — /admin/inquiries becomes the sheet: fixed 7-column table (course, contact·phone, stage, next call, still need, in stage, inquired) inside the existin — `RUN_QUEUE.md:1963`
-28. UI_REVISE_SPEC H-2a — homepage story looks like a video: looping muted <video> under the pinned beats (poster = current still, webm+mp4 in public/home/, play/pause on visibility, r — `RUN_QUEUE.md:1965`
-29. UI_REVISE_SPEC H-2b — 'See it work' two tabs: What golfers see (today's HomeDemo) · What you see (new standalone HomeDashboardDemo: stats tiles, date strip, tee sheet rows with che — `RUN_QUEUE.md:1966`
-30. COURSES_SHEET_SPEC Phase CS-1 — course-setup.ts (5 setup steps from existing fields) + course-checkin.ts (14d-after-go-live then every 90d; agenda in code; checkInSignal) + courses — `RUN_QUEUE.md:1968`
-31. COURSES_SHEET_SPEC Phase CS-2 — /admin/courses becomes the sheet: one table, 'Getting live' + 'Live' sections, 8 fixed columns (course, operator, status = setup n-of-5 or health, a — `RUN_QUEUE.md:1969`
-32. COURSES_SHEET_SPEC Phase CS-3 — course page: Setup card (5 steps + the existing action that completes each) for getting-live courses; Next check-in schedule/log card (IC-2 cards wi — `RUN_QUEUE.md:1970`
+28. UI_REVISE_SPEC H-2b — 'See it work' two tabs: What golfers see (today's HomeDemo) · What you see (new standalone HomeDashboardDemo: stats tiles, date strip, tee sheet rows with che — `RUN_QUEUE.md:1966`
+29. COURSES_SHEET_SPEC Phase CS-1 — course-setup.ts (5 setup steps from existing fields) + course-checkin.ts (14d-after-go-live then every 90d; agenda in code; checkInSignal) + courses — `RUN_QUEUE.md:1968`
+30. COURSES_SHEET_SPEC Phase CS-2 — /admin/courses becomes the sheet: one table, 'Getting live' + 'Live' sections, 8 fixed columns (course, operator, status = setup n-of-5 or health, a — `RUN_QUEUE.md:1969`
+31. COURSES_SHEET_SPEC Phase CS-3 — course page: Setup card (5 steps + the existing action that completes each) for getting-live courses; Next check-in schedule/log card (IC-2 cards wi — `RUN_QUEUE.md:1970`
 
 ## Waiting on you (not on a build)
 
@@ -96,7 +90,6 @@ This is the distinction a raw checkbox count gets wrong.
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:740`
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:782`
 - CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1395`
-- CAM: pick/supply the clip (8–15s loop, free license, ≤3 — `RUN_QUEUE.md:1965`
 
 ## Revise campaign (page-by-page pass)
 
@@ -184,6 +177,9 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `57b9150` 2026-09-13 — H-2a: the homepage story loops a clip under the pinned beats
+- `6d56b8d` 2026-09-13 — queue/spec update
+- `3951a93` 2026-09-13 — queue/spec update
 - `1896ce5` 2026-09-13 — queue/spec update
 - `2385994` 2026-09-13 — queue/spec update
 - `da3feaa` 2026-09-13 — queue/spec update
@@ -193,10 +189,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `9221f2b` 2026-09-13 — queue/spec update
 - `85b3922` 2026-09-13 — H-1: pricing tile radius 16px → 14px (§1a card cap, from the design audit)
 - `4a16f01` 2026-09-13 — stats: playersToday on the Overview top strip (shared change for the U-A reskin — the fee is per player)
-- `e8f91b4` 2026-09-13 — queue/spec update
-- `767d81c` 2026-09-13 — H-1: the homepage, from the approved prototype
-- `6bc1168` 2026-09-11 — queue/spec update
 
 ---
 
-**Totals:** 155 done · 9 awaiting review · 1 in flight · 32 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 156 done · 9 awaiting review · 1 in flight · 31 not started · 8 revise pages open · 15 ideas · 2 parked.
