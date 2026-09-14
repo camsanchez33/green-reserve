@@ -35,6 +35,13 @@ export default function SchedulesPage() {
   const [regenerating, setRegenerating] = useState(false);
   const [hasMember, setHasMember] = useState(false);
   const [hasResident, setHasResident] = useState(false);
+  // B-7: blocks + booking windows sit beside the rate table. Blocks are the
+  // existing blackouts API; the windows are read from Settings (edited there).
+  const [blackouts, setBlackouts] = useState<{ id: string; date: string; reason: string }[]>([]);
+  const [blackoutForm, setBlackoutForm] = useState({ date: '', reason: '' });
+  const [blackoutBusy, setBlackoutBusy] = useState(false);
+  const [blackoutError, setBlackoutError] = useState('');
+  const [windows, setWindows] = useState<{ publicAdvanceDays: number | null; memberAdvanceDays: number | null }>({ publicAdvanceDays: null, memberAdvanceDays: null });
   const intro = useTabIntro('schedule');
 
   // SD-10: a 403 (staff by URL) or 500 here used to render "No schedules yet".
@@ -45,10 +52,42 @@ export default function SchedulesPage() {
     else { setSchedules([]); setLoadError(r.error); }
     setLoading(false);
   }, []);
+  const loadBlackouts = useCallback(async () => {
+    const r = await dfetch<{ id: string; date: string; reason: string }[]>('/api/operator/blackouts');
+    if (r.ok && Array.isArray(r.data)) { setBlackouts(r.data.slice().sort((a, b) => a.date.localeCompare(b.date))); setBlackoutError(''); }
+    else if (!r.ok) setBlackoutError(r.error);
+  }, []);
+
+  async function addBlackout() {
+    if (!blackoutForm.date) { toast('Pick a date to block.', 'warn'); return; }
+    if (!confirm(`Block ${blackoutForm.date}?\n\nEvery open tee time on that day comes off the sheet. Times that already have bookings are kept.`)) return;
+    setBlackoutBusy(true);
+    const r = await dfetch('/api/operator/blackouts', { method: 'POST', body: JSON.stringify(blackoutForm) });
+    setBlackoutBusy(false);
+    if (!r.ok) { toast(r.error); return; }
+    setBlackoutForm({ date: '', reason: '' });
+    await loadBlackouts();
+    toast('Day blocked — its open times are off the sheet.', 'ok');
+  }
+
+  async function removeBlackout(id: string) {
+    setBlackoutBusy(true);
+    const r = await dfetch('/api/operator/blackouts', { method: 'DELETE', body: JSON.stringify({ id }) });
+    setBlackoutBusy(false);
+    if (!r.ok) { toast(r.error); return; }
+    setBlackouts(prev => prev.filter(b => b.id !== id));
+    toast('Block removed — run "Apply to Tee Sheet" to put its times back.', 'ok');
+  }
+
   useEffect(() => {
     loadSchedules();
-    fetch('/api/operator/settings').then(r => r.ok ? r.json() : null).then(c => { if (!c) return; setHasMember(!!c.hasMemberPricing); setHasResident(!!c.hasResidentPricing); }).catch(() => {});
-  }, [loadSchedules]);
+    fetch('/api/operator/settings').then(r => r.ok ? r.json() : null).then(c => {
+      if (!c) return;
+      setHasMember(!!c.hasMemberPricing); setHasResident(!!c.hasResidentPricing);
+      setWindows({ publicAdvanceDays: typeof c.publicAdvanceDays === 'number' ? c.publicAdvanceDays : null, memberAdvanceDays: typeof c.memberAdvanceDays === 'number' ? c.memberAdvanceDays : null });
+    }).catch(() => {});
+    loadBlackouts();
+  }, [loadSchedules, loadBlackouts]);
 
   function openAdd() { setForm(emptyForm()); setEditId(null); setShowAdd(true); }
   function openEdit(s: Schedule) {
@@ -142,7 +181,7 @@ export default function SchedulesPage() {
           </div>
         </div>
 
-        <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
+        <div className="max-w-6xl mx-auto px-4 py-6 space-y-4">
           <TabIntroCard
             open={intro.open}
             onDismiss={intro.dismiss}
@@ -169,53 +208,93 @@ export default function SchedulesPage() {
             </div>
           )}
 
-          {schedules.map(s => (
-            <div key={s.id} className={'bg-white rounded-lg border p-5 ' + (s.active ? 'border-line' : 'border-line opacity-60')}>
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-ink capitalize">{s.tierName}</span>
-                    {/* U-O: tinted pill badges are banned — StatusDot instead. */}
-                    <StatusDot status={s.active ? 'ok' : 'neutral'} label={s.active ? 'Active' : 'Paused'}/>
-                  </div>
-                  <div className="text-sm text-ink-soft mt-0.5">
-                    {s.daysOfWeek.map(d=>DAYS[d]).join(', ')} · {fmtTime(s.startTime)} – {fmtTime(s.endTime)} · every {s.intervalMinutes} min · {s.holes} holes
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => toggleActive(s)} title={s.active?'Pause':'Activate'} className="p-1.5 rounded-md border border-line text-ink-muted hover:text-warn hover:border-warn/30 transition-colors"><Power className="w-4 h-4"/></button>
-                  <button onClick={() => openEdit(s)} className="p-1.5 rounded-md border border-line text-ink-muted hover:text-pine hover:border-pine/30 transition-colors"><Pencil className="w-4 h-4"/></button>
-                  <button onClick={() => del(s.id)} className="p-1.5 rounded-md border border-line text-ink-muted hover:text-bad hover:border-bad/30 transition-colors"><Trash2 className="w-4 h-4"/></button>
-                </div>
+          {/* B-7: rates by band × weekday/weekend × member/resident in ONE table,
+              blocks + booking windows beside it. A view over the same schedule
+              objects — every action here is the one the cards had. Seasons are
+              not tabs: a schedule has no date range, so seasons would be a
+              schema change (see UI_REVISE_SPEC B-7 note). */}
+          {!loading && schedules.length > 0 && (
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+              <div className="bg-white border border-line overflow-x-auto">
+                <table className="w-full text-[13.5px]">
+                  <thead>
+                    <tr className="text-[11px] uppercase tracking-[0.1em] text-ink-muted border-b border-line">
+                      <th className="text-left font-medium px-4 py-2.5">Band</th>
+                      <th className="text-right font-medium px-3 py-2.5">Weekday</th>
+                      <th className="text-right font-medium px-3 py-2.5">Weekend</th>
+                      {hasMember && <th className="text-right font-medium px-3 py-2.5">Member WD / WE</th>}
+                      {hasResident && <th className="text-right font-medium px-3 py-2.5">Resident WD / WE</th>}
+                      <th className="text-right font-medium px-3 py-2.5">Cart</th>
+                      <th className="text-left font-medium px-3 py-2.5">Status</th>
+                      <th className="px-3 py-2.5"><span className="sr-only">Actions</span></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-line-soft">
+                    {schedules.map(s => (
+                      <tr key={s.id} className={s.active ? '' : 'opacity-60'}>
+                        <td className="px-4 py-3 align-top">
+                          <div className="font-medium text-ink capitalize">{s.tierName}</div>
+                          <div className="text-[12.5px] text-ink-soft mt-0.5">{s.daysOfWeek.map(d=>DAYS[d]).join(', ')} · {fmtTime(s.startTime)} – {fmtTime(s.endTime)}</div>
+                          <div className="text-[12px] text-ink-muted">every {s.intervalMinutes} min · {s.holes} holes · {s.walkingAllowed ? 'walking ok' : 'cart required'}</div>
+                        </td>
+                        <td className="px-3 py-3 text-right tabular-nums font-medium text-ink align-top">${s.greenFeeWeekday}</td>
+                        <td className="px-3 py-3 text-right tabular-nums font-medium text-ink align-top">${s.greenFeeWeekend}</td>
+                        {hasMember && <td className="px-3 py-3 text-right tabular-nums text-ok align-top">{s.memberRateWeekday != null ? `$${s.memberRateWeekday} / $${s.memberRateWeekend ?? s.memberRateWeekday}` : <span className="text-ink-faint">—</span>}</td>}
+                        {hasResident && <td className="px-3 py-3 text-right tabular-nums text-pine align-top">{s.residentRateWeekday != null ? `$${s.residentRateWeekday} / $${s.residentRateWeekend ?? s.residentRateWeekday}` : <span className="text-ink-faint">—</span>}</td>}
+                        <td className="px-3 py-3 text-right tabular-nums text-ink-soft align-top">${s.cartFee}</td>
+                        <td className="px-3 py-3 align-top"><StatusDot status={s.active ? 'ok' : 'neutral'} label={s.active ? 'Running' : 'Paused'}/></td>
+                        <td className="px-3 py-3 align-top">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button onClick={() => toggleActive(s)} title={s.active?'Pause':'Resume'} className="p-1.5 border border-line text-ink-muted hover:text-warn hover:border-warn/30 transition-colors"><Power className="w-4 h-4"/></button>
+                            <button onClick={() => openEdit(s)} title="Edit" className="p-1.5 border border-line text-ink-muted hover:text-pine hover:border-pine/30 transition-colors"><Pencil className="w-4 h-4"/></button>
+                            <button onClick={() => del(s.id)} title="Delete" className="p-1.5 border border-line text-ink-muted hover:text-bad hover:border-bad/30 transition-colors"><Trash2 className="w-4 h-4"/></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
-                <div className="bg-paper rounded-md px-3 py-2">
-                  <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-0.5">Weekday</div>
-                  <div className="font-medium text-ink">${s.greenFeeWeekday} + ${s.cartFee} cart</div>
-                </div>
-                <div className="bg-paper rounded-md px-3 py-2">
-                  <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-0.5">Weekend</div>
-                  <div className="font-medium text-ink">${s.greenFeeWeekend} + ${s.cartFee} cart</div>
-                </div>
-                {s.memberRateWeekday != null && (
-                  <div className="bg-ok/5 border border-ok/15 rounded-md px-3 py-2">
-                    <div className="text-[10px] uppercase tracking-[0.1em] text-ok mb-0.5">Member WD/WE</div>
-                    <div className="font-medium text-ok">${s.memberRateWeekday} / ${s.memberRateWeekend}</div>
+
+              <div className="space-y-4">
+                {/* Blocks */}
+                <div className="bg-white border border-line p-4">
+                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Blocked days</div>
+                  {blackoutError && <p className="text-xs text-bad mb-2">{blackoutError}</p>}
+                  {blackouts.length === 0 ? (
+                    <p className="text-[12.5px] text-ink-muted mb-3">No days blocked.</p>
+                  ) : (
+                    <ul className="divide-y divide-line-soft mb-3">
+                      {blackouts.map(b => (
+                        <li key={b.id} className="py-2 flex items-center justify-between gap-2 text-[13px]">
+                          <div className="min-w-0">
+                            <div className="text-ink tabular-nums">{b.date}</div>
+                            {b.reason && <div className="text-[12px] text-ink-muted truncate">{b.reason}</div>}
+                          </div>
+                          <button onClick={() => removeBlackout(b.id)} disabled={blackoutBusy} title="Unblock" className="p-1 text-ink-faint hover:text-bad disabled:opacity-40 transition-colors"><X className="w-3.5 h-3.5"/></button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <div className="space-y-2">
+                    <input type="date" value={blackoutForm.date} onChange={e => setBlackoutForm(f => ({ ...f, date: e.target.value }))} className={iCls}/>
+                    <input type="text" value={blackoutForm.reason} onChange={e => setBlackoutForm(f => ({ ...f, reason: e.target.value }))} placeholder="Reason (outing, maintenance…)" className={iCls}/>
+                    <button onClick={addBlackout} disabled={blackoutBusy || !blackoutForm.date} className="w-full border border-ink text-ink py-2 text-[12.5px] font-medium hover:bg-paper disabled:opacity-40 transition-colors">{blackoutBusy ? 'Working…' : 'Block this day'}</button>
                   </div>
-                )}
-                {s.residentRateWeekday != null && (
-                  <div className="bg-pine/5 border border-pine/15 rounded-md px-3 py-2">
-                    <div className="text-[10px] uppercase tracking-[0.1em] text-pine mb-0.5">Resident WD/WE</div>
-                    <div className="font-medium text-pine">${s.residentRateWeekday} / ${s.residentRateWeekend}</div>
+                </div>
+
+                {/* Booking windows — read here, edited in Settings */}
+                <div className="bg-white border border-line p-4">
+                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Booking windows</div>
+                  <div className="text-[13px] text-ink space-y-1">
+                    <div className="flex justify-between"><span className="text-ink-soft">Public can book</span><span className="tabular-nums">{windows.publicAdvanceDays != null ? `${windows.publicAdvanceDays} days ahead` : '—'}</span></div>
+                    <div className="flex justify-between"><span className="text-ink-soft">Members can book</span><span className="tabular-nums">{windows.memberAdvanceDays != null ? `${windows.memberAdvanceDays} days ahead` : '—'}</span></div>
                   </div>
-                )}
-                <div className="bg-paper rounded-md px-3 py-2">
-                  <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-0.5">Walking</div>
-                  <div className="font-medium text-ink">{s.walkingAllowed ? 'Allowed' : 'Cart required'}</div>
+                  <a href="/dashboard/settings" className="inline-block mt-3 text-[12.5px] text-pine hover:text-pine-hover">Change under Settings → Booking rules →</a>
                 </div>
               </div>
             </div>
-          ))}
+          )}
         </div>
 
         {showAdd && (
