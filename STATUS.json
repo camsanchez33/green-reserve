@@ -1,24 +1,24 @@
 {
-  "generatedAt": "2026-09-14T03:10:10.776Z",
+  "generatedAt": "2026-09-14T03:15:01.758Z",
   "repo": {
-    "head": "a1e4125",
+    "head": "a4fd2b1",
     "branch": "main",
     "dirtyCount": 2,
     "dirty": [
-      "M UI_REVISE_SPEC.md",
-      "?? public/home/story.webm"
+      "M RUN_QUEUE.md",
+      " M UI_REVISE_SPEC.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-13T23:08:48-04:00",
+    "queueLastCommit": "2026-09-13T23:14:20-04:00",
     "unrecorded": []
   },
   "counts": {
     "runDone": 156,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 31,
+    "runNotStarted": 32,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -80,7 +80,7 @@
       "line": 692,
       "hash": "e5b5413",
       "shipDate": "2026-08-29",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "title": "MP-2d",
@@ -258,6 +258,11 @@
     {
       "title": "COURSES_SHEET_SPEC Phase CS-3 — course page: Setup card (5 steps + the existing action that completes each) for getting-live courses; Next check-in schedule/log card (IC-2 cards with the check-in agen",
       "line": 1970,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "LQ-2 COPY RUN (small, no migration) — fee-flow DECIDED 2026-09-14: keep the direct-charge + application-fee structure, rewrite every fee claim. Exact sentences per surface in legal/LQ-2_FEE_COPY.md (H",
+      "line": 1972,
       "section": "Queue (run in this order)"
     }
   ],
@@ -823,6 +828,26 @@
   },
   "recentCommits": [
     {
+      "h": "a4fd2b1",
+      "date": "2026-09-13",
+      "subject": "H-2a: webm variant of the story clip (Cam supplied) listed before the mp4"
+    },
+    {
+      "h": "46a3f22",
+      "date": "2026-09-13",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "afbd5b6",
+      "date": "2026-09-13",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "f061c0f",
+      "date": "2026-09-13",
+      "subject": "B-5: \"Add a cart today?\" at self check-in"
+    },
+    {
       "h": "a1e4125",
       "date": "2026-09-13",
       "subject": "queue/spec update"
@@ -843,44 +868,24 @@
       "subject": "queue/spec update"
     },
     {
+      "h": "aba3d73",
+      "date": "2026-09-13",
+      "subject": "Spec-review fixes: B-4 fires on a sold-out day; route-map generator keeps the MP-6b money-flow block"
+    },
+    {
+      "h": "15b408e",
+      "date": "2026-09-13",
+      "subject": "B-10: the reminder toast also counts members skipped for being on a free tier (admin-UX review)"
+    },
+    {
       "h": "1896ce5",
       "date": "2026-09-13",
       "subject": "queue/spec update"
     },
     {
-      "h": "2385994",
+      "h": "cbaadf1",
       "date": "2026-09-13",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "da3feaa",
-      "date": "2026-09-13",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "ae5ff68",
-      "date": "2026-09-13",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "73b57b1",
-      "date": "2026-09-13",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "1bc8033",
-      "date": "2026-09-13",
-      "subject": "H-1 fixes from /gr-review: live hero parallax, story unpins on phones, frozen claim out of metadata"
-    },
-    {
-      "h": "9221f2b",
-      "date": "2026-09-13",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "85b3922",
-      "date": "2026-09-13",
-      "subject": "H-1: pricing tile radius 16px → 14px (§1a card cap, from the design audit)"
+      "subject": "B-10: Members — one click reminds every overdue member"
     }
   ]
 }

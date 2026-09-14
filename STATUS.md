@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-14 03:10 UTC · branch `main` · HEAD `a1e4125` · working tree **2 dirty file(s)**
+Generated 2026-09-14 03:15 UTC · branch `main` · HEAD `a4fd2b1` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,8 +12,8 @@ None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
 ### Uncommitted working tree (2 file(s))
 
+- `M RUN_QUEUE.md`
 - `M UI_REVISE_SPEC.md`
-- `?? public/home/story.webm`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -41,7 +41,7 @@ This is the distinction a raw checkbox count gets wrong.
 | MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 15d | `4ef11dd` | `RUN_QUEUE.md:565` |
 | MP-2 | 2026-08-29 | 15d | `958f229` | `RUN_QUEUE.md:606` |
 | MP-2b | 2026-08-29 | 15d | `a134af5` | `RUN_QUEUE.md:643` |
-| MP-2c | 2026-08-29 | 14d | `e5b5413` | `RUN_QUEUE.md:692` |
+| MP-2c | 2026-08-29 | 15d | `e5b5413` | `RUN_QUEUE.md:692` |
 | MP-2d | 2026-08-29 | 14d | `22d0f68` | `RUN_QUEUE.md:740` |
 | MP-2e | 2026-08-30 | 14d | `bf3bcb2` | `RUN_QUEUE.md:782` |
 | UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | 2026-09-11 | 2d | `a3c1bea` | `RUN_QUEUE.md:1959` |
@@ -79,6 +79,7 @@ This is the distinction a raw checkbox count gets wrong.
 29. COURSES_SHEET_SPEC Phase CS-1 — course-setup.ts (5 setup steps from existing fields) + course-checkin.ts (14d-after-go-live then every 90d; agenda in code; checkInSignal) + courses — `RUN_QUEUE.md:1968`
 30. COURSES_SHEET_SPEC Phase CS-2 — /admin/courses becomes the sheet: one table, 'Getting live' + 'Live' sections, 8 fixed columns (course, operator, status = setup n-of-5 or health, a — `RUN_QUEUE.md:1969`
 31. COURSES_SHEET_SPEC Phase CS-3 — course page: Setup card (5 steps + the existing action that completes each) for getting-live courses; Next check-in schedule/log card (IC-2 cards wi — `RUN_QUEUE.md:1970`
+32. LQ-2 COPY RUN (small, no migration) — fee-flow DECIDED 2026-09-14: keep the direct-charge + application-fee structure, rewrite every fee claim. Exact sentences per surface in legal — `RUN_QUEUE.md:1972`
 
 ## Waiting on you (not on a build)
 
@@ -177,19 +178,19 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `a4fd2b1` 2026-09-13 — H-2a: webm variant of the story clip (Cam supplied) listed before the mp4
+- `46a3f22` 2026-09-13 — queue/spec update
+- `afbd5b6` 2026-09-13 — queue/spec update
+- `f061c0f` 2026-09-13 — B-5: "Add a cart today?" at self check-in
 - `a1e4125` 2026-09-13 — queue/spec update
 - `57b9150` 2026-09-13 — H-2a: the homepage story loops a clip under the pinned beats
 - `6d56b8d` 2026-09-13 — queue/spec update
 - `3951a93` 2026-09-13 — queue/spec update
+- `aba3d73` 2026-09-13 — Spec-review fixes: B-4 fires on a sold-out day; route-map generator keeps the MP-6b money-flow block
+- `15b408e` 2026-09-13 — B-10: the reminder toast also counts members skipped for being on a free tier (admin-UX review)
 - `1896ce5` 2026-09-13 — queue/spec update
-- `2385994` 2026-09-13 — queue/spec update
-- `da3feaa` 2026-09-13 — queue/spec update
-- `ae5ff68` 2026-09-13 — queue/spec update
-- `73b57b1` 2026-09-13 — queue/spec update
-- `1bc8033` 2026-09-13 — H-1 fixes from /gr-review: live hero parallax, story unpins on phones, frozen claim out of metadata
-- `9221f2b` 2026-09-13 — queue/spec update
-- `85b3922` 2026-09-13 — H-1: pricing tile radius 16px → 14px (§1a card cap, from the design audit)
+- `cbaadf1` 2026-09-13 — B-10: Members — one click reminds every overdue member
 
 ---
 
-**Totals:** 156 done · 9 awaiting review · 1 in flight · 31 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 156 done · 9 awaiting review · 1 in flight · 32 not started · 8 revise pages open · 15 ideas · 2 parked.
