@@ -1370,7 +1370,7 @@ export default function CourseDetailPage({
                                         <span>Total</span>
                                         <span>${slotTotal.toFixed(2)}</span>
                                       </div>
-                                      <TrustNote className="pt-1.5">Green fees go 100% to the course.</TrustNote>
+                                      <TrustNote className="pt-1.5">Your green fee goes to the course; the $1.50 per player is GreenReserve&apos;s.</TrustNote>
                                     </div>
 
                                     {/* Continue to Book */}

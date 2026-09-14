@@ -26,7 +26,7 @@ export default function OpenGraphImage() {
             The tee sheet your course deserves.
           </div>
           <div style={{ fontSize: 30, color: '#57574F', fontFamily: 'Helvetica, Arial, sans-serif', maxWidth: 900, lineHeight: 1.3 }}>
-            Golfers book online. You keep 100% of green fees. Free for courses.
+            Golfers book online. Free for courses — no monthly fee, no commission.
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'Helvetica, Arial, sans-serif', fontSize: 24, color: '#87867C' }}>

@@ -79,8 +79,9 @@ export default function OperatorAgreementPage() {
                   reserve tee times at your course, and we give you a tee sheet, booking management tools, and payment
                   routing. You set your own pricing, tee time schedule, and policies (cancellation window, late-cancel
                   fee, dress code, and so on) — GreenReserve enforces what you configure, but doesn&apos;t set it for you.
-                  Listing is free; GreenReserve&apos;s only fee is the $1.50 per-player service fee charged to the
-                  golfer, never deducted from what you receive.
+                  Listing is free. GreenReserve&apos;s fees are a $1.50 per-player service fee on each online booking
+                  and a $0.50 fee on each membership-dues payment collected through GreenReserve; both are added to what
+                  the golfer or member pays, not deducted from your listed prices.
                 </p>
               </section>
 
@@ -89,11 +90,14 @@ export default function OperatorAgreementPage() {
                   <span className="text-ink-faint font-normal mr-2">2.</span>Payments and Stripe Connect
                 </h2>
                 <p>
-                  Green fees and cart fees are routed directly to your Stripe Connect account. <strong className="text-ink">
-                  GreenReserve never holds, pools, or delays green-fee funds</strong> — they move from the golfer&apos;s
-                  payment method to your Stripe account, net of Stripe&apos;s standard processing fees. GreenReserve
-                  collects its own $1.50 per-player service fee as a separate charge to the golfer; it is not part of
-                  your payout and you are never responsible for it.
+                  Green fees, cart fees and GreenReserve&apos;s service fee are collected in one card payment on your
+                  Stripe Connect account; <strong className="text-ink">you are the merchant of record. GreenReserve never
+                  holds, pools, or delays green-fee funds</strong> — they settle to your Stripe account on Stripe&apos;s
+                  normal schedule. Stripe&apos;s standard processing fees apply to the full payment, including the
+                  service-fee portion, and are borne by you as they are for any card payment you accept; GreenReserve
+                  charges you no fees on top of Stripe&apos;s. GreenReserve&apos;s service fee is then transferred from that
+                  payment to GreenReserve as a Stripe application fee. When a booking is refunded in full, the service
+                  fee is refunded to the golfer together with the green fee.
                 </p>
                 <p className="mt-3">
                   <strong className="text-ink">Chargebacks and disputes:</strong> disputes over green fees, cart fees, or

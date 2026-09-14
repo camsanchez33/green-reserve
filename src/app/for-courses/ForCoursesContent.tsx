@@ -252,7 +252,7 @@ export default function ForCoursesContent() {
           <Image src="/brand/logo-lockup-cream-900.png" alt="GreenReserve" width={88} height={44} priority className="h-11 w-auto mx-auto" />
         </Link>
         <h1 className="text-white text-3xl sm:text-4xl font-serif font-medium mt-4 mb-2 tracking-tight">Get your course listed</h1>
-        <p className="text-white/50 text-sm">Free to list. $0 / month. We charge golfers $1.50 — not you.</p>
+        <p className="text-white/50 text-sm">Free to list. $0 / month. Golfers pay our $1.50 per player — added to their total, not taken from your green fee.</p>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 lg:py-14">
@@ -555,7 +555,7 @@ export default function ForCoursesContent() {
               <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium">Why list with us</p>
               <div className="bg-white border border-line rounded-lg divide-y divide-line-soft">
                 {[
-                  { stat: '$1.50', label: 'Per golfer, charged to them' },
+                  { stat: '$1.50', label: "Per player, added to the golfer's total" },
                   { stat: '0%', label: 'Commission on green fees' },
                   { stat: '1–2 days', label: 'Typical setup time' },
                 ].map(({ stat, label }) => (
@@ -566,7 +566,7 @@ export default function ForCoursesContent() {
                 ))}
               </div>
               <p className="text-ink-muted text-xs leading-relaxed">
-                Your course keeps 100% of green fees and cart fees. GreenReserve&apos;s only revenue is the $1.50 per-player service fee charged directly to golfers at checkout — it never touches your Stripe account.
+                You set your green fee; the golfer pays it plus our $1.50 per player in one card payment to your own Stripe account. Stripe&apos;s standard processing fee (currently 2.9% + 30¢ per payment) comes out of that payment, as with any card you take — GreenReserve charges you nothing on top of it. Our $1.50 per player is then passed to GreenReserve. That, plus 50¢ on each membership-dues payment collected through GreenReserve, is our only revenue: no setup fee, no monthly fee, no commission on your green fees.
               </p>
             </div>
           </aside>
@@ -579,8 +579,8 @@ export default function ForCoursesContent() {
           <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-5">Quick answers</p>
           <div className="space-y-5">
             {[
-              { q: 'What does it cost to list my course?', a: 'Nothing. $0 to set up, $0/month, no long-term contract. We charge golfers $1.50 per player at checkout.' },
-              { q: 'Who pays the $1.50?', a: 'The golfer pays it, not you. It shows as a service fee on their checkout. Your green fee is never reduced.' },
+              { q: 'What does it cost to list my course?', a: 'Nothing. $0 to set up, $0/month, no long-term contract. Golfers pay $1.50 per player at checkout, on top of your price.' },
+              { q: 'Who pays the $1.50?', a: "The golfer, as a line on their checkout above your green fee. It's collected in the same card payment as your green fee and passed to GreenReserve, so your listed price isn't reduced. Stripe's normal processing fee applies to the payment as a whole, like any card you take today." },
               { q: 'How long does it take to go live?', a: 'Usually 1–2 business days after you submit the details sheet. We handle setup and run a test before flipping you live.' },
               { q: 'Can I leave anytime?', a: 'Yes, with 30 days’ notice — the same either way, and there is no cancellation fee. We deactivate your page and your data is yours to keep.' },
             ].map(({ q, a }) => (

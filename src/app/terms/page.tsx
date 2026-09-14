@@ -76,9 +76,12 @@ export default function TermsOfServicePage() {
                 </h2>
                 <p>
                   GreenReserve charges a <strong className="text-ink">$1.50 per-player service fee</strong> on every
-                  booking, charged to the golfer at the time of booking or check-in depending on the course&apos;s payment
-                  flow. Courses keep 100% of their green fees and cart fees — our fee is never deducted from what the
-                  course receives.
+                  online booking, shown to the golfer and added to the course&apos;s price at the time of booking or
+                  check-in depending on the course&apos;s payment flow. The fee is collected within the same card payment
+                  as the green fee, on the course&apos;s Stripe account, and passed to GreenReserve. Where a course collects
+                  membership dues through GreenReserve, a <strong className="text-ink">$0.50 fee per dues payment</strong>{' '}
+                  applies in the same way. GreenReserve charges courses no listing, subscription, or commission fees.
+                  Stripe&apos;s processing fees apply to each payment under the course&apos;s own Stripe agreement.
                 </p>
               </section>
 

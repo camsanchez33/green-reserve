@@ -52,8 +52,8 @@ export default function Footer() {
 
   // H-1 (UI_REVISE_SPEC §5.10): the marketing footer from the approved
   // prototype — lockup, four links, the year. The fee lines that used to sit
-  // here ("no commission", "$1.50 … paid by the golfer") are FROZEN behind the
-  // LQ-2 placeholder on the homepage (§0.6) and do not come back here.
+  // here ("no commission", "$1.50 … paid by the golfer") were removed when the
+  // fee copy was frozen and do not return — the footer carries no fee line.
   return (
     <footer className="bg-white border-t border-line">
       <div className="w-[min(1180px,calc(100%-48px))] mx-auto py-8 flex flex-wrap justify-between items-center gap-x-6 gap-y-3.5 text-sm text-ink-muted max-md:justify-center max-md:text-center">

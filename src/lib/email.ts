@@ -1243,7 +1243,7 @@ export async function sendCourseLiveOrientationEmail(data: {
 
     <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:18px 20px;margin-bottom:8px;">
       <p style="margin:0 0 6px;color:#111827;font-size:13px;font-weight:700;">A few things worth knowing:</p>
-      <p style="margin:0 0 4px;color:#6b7280;font-size:13px;">• You keep 100% of green fees and cart fees — GreenReserve's $1.50 access fee is charged to the golfer, not deducted from you.</p>
+      <p style="margin:0 0 4px;color:#6b7280;font-size:13px;">• Golfers pay GreenReserve's $1.50 per player on top of your price, in the same card payment as your green fee; Stripe's normal processing fee applies to the payment, and GreenReserve charges you nothing on top of it.</p>
       <p style="margin:0 0 4px;color:#6b7280;font-size:13px;">• Need to close for a day (weather, maintenance, outing)? Block it from Schedule.</p>
       <p style="margin:0;color:#6b7280;font-size:13px;">• Payouts come from Stripe on its normal payout schedule for your account — check Settings → Payments for your payout status.</p>
     </div>

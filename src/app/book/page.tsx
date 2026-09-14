@@ -362,7 +362,7 @@ function BookPageInner() {
                     <span className="font-medium text-ink-soft">$0.00</span>
                   </div>
                 </div>
-                <TrustNote className="pt-1">Green fees go 100% to the course.</TrustNote>
+                <TrustNote className="pt-1">Your green fee goes to the course; the $1.50 per player is GreenReserve&apos;s.</TrustNote>
               </div>
             </div>
           </div>

@@ -2,4 +2,4 @@
 // honest record of which version the golfer actually agreed to.
 // LEGAL PAGES V2 (RUN_QUEUE) — /terms rewritten with card-authorization
 // language, communications consent, and governing law/arbitration.
-export const CURRENT_TERMS_VERSION = '2026-08-01';
+export const CURRENT_TERMS_VERSION = '2026-09-14';

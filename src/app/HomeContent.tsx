@@ -12,10 +12,10 @@ import s from './home.module.css';
 // hero → pinned story → live demo → course cards → photo band → four steps →
 // pricing on pine → FAQ → final CTA. Nav and Footer live in the root layout.
 //
-// Copy rules: the fee claims ("you keep 100%", "we charge golfers, not you")
-// are FROZEN behind the LQ-2 placeholder (§0.6) — the prototype's "You keep
-// every dollar of your green fees" beat is reworded below and the placeholder
-// note stays visible in the pricing section until legal clears it.
+// Fee copy follows legal/LQ-2_FEE_COPY.md (decided 2026-09-14): the golfer
+// pays $1.50 per player on top of the course's price, collected in the same
+// card payment to the course's Stripe account; Stripe's fee applies to the
+// whole payment. Never "keep 100%", never "never touches your Stripe account".
 
 const DEMO_SLUG = DEMO_COURSE_SLUGS[0] ?? null;
 
@@ -263,9 +263,7 @@ export default function HomeContent() {
         <div className={`${s.wrap} ${s.priceWrap}`}>
           <div>
             <h2 className={`${s.h2} ${s.fade}`}>Free for courses.</h2>
-            <p className={s.fade}>No setup fee, no monthly fee, no contract. There is one per-player booking fee on each online booking, and the golfer sees it before they book.</p>
-            {/* LQ-2 placeholder — stays visible until legal clears the fee sentence (§0.6). */}
-            <div className={`${s.note} ${s.fade}`}>Pending: the exact sentence about who pays the $1.50 and what the course nets is waiting on the fee-flow decision (legal queue LQ-2). The &ldquo;you keep 100%&rdquo; line doesn&apos;t ship until that&apos;s settled.</div>
+            <p className={s.fade}>No setup fee, no monthly fee, no contract. Golfers pay $1.50 per player on each online booking, added to your price — they see it before they book. Stripe&apos;s card-processing fee applies to the payment, the same as any card you take today.</p>
           </div>
           <div className={`${s.tile} ${s.fade}`}>
             <div className={s.eyebrow}>Per online booking</div>

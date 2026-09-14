@@ -51,7 +51,7 @@ not reached — carries a revisit trigger) · **WATCH** (no action, monitor)
 | PM-1 | Stay out of money transmission | **MET** | Direct charges, connected account is merchant of record, no custody of course funds. **Protect this** — see `README.md` escalation #5 |
 | PM-2 | PCI DSS scope | **MET** | SAQ-A posture: Stripe Elements, tokens only, no PAN touches GreenReserve |
 | PM-3 | Off-session (card-on-file) mandate disclosure | **MET** | `usage: 'off_session'` + matching `/terms` authorization language |
-| PM-4 | Fee disclosure matches actual money flow | **OPEN → copy run queued** | 🔴 L-1 decided 2026-09-14 (words change, structure stays) + 🟠 L-4 disclosed in the same pass — see `LQ-2_FEE_COPY.md`. MET once "LQ-2 copy run" ships |
+| PM-4 | Fee disclosure matches actual money flow | **MET** (copy run 2026-09-14) | 🔴 L-1 decided 2026-09-14 (words change, structure stays) + 🟠 L-4 disclosed in the same pass — see `LQ-2_FEE_COPY.md`. MET once "LQ-2 copy run" ships |
 | PM-5 | Refund mechanics match the contract | **MET** | L-3 fixed in code (`refund_application_fee: true`, 5eb48c5); verified 2026-09-14 |
 | PM-6 | Sales / amusement tax on the service fee | **OPEN** | ⚖️ Unexamined. Some states tax "admissions and amusements," some tax SaaS. NJ and SC both need a read before volume builds |
 | PM-7 | Income tax + Schedule C / entity return | **WATCH** | Cam works at a financial advising firm — this is the one area with in-house intuition. Still a CPA question at first real revenue |
@@ -66,7 +66,7 @@ not reached — carries a revisit trigger) · **WATCH** (no action, monitor)
 | CC-3 | `STOP` / `HELP` handling under GreenReserve's own control | **OPEN** | Do not rely solely on carrier/Twilio defaults |
 | CC-4 | No marketing SMS without separate express opt-in | **MET (policy)** | Written commitment in all three documents. Keep it — it is the thing keeping CC-1 defensible |
 | CC-5 | CAN-SPAM: unsubscribe in commercial email | **PARTIAL** | Tee-time alert emails have an unsubscribe token (`api/alerts/unsubscribe`). Transactional email is exempt. Verify no email sits in between |
-| CC-6 | Truth in advertising (FTC Act §5, NJ CFA) | **OPEN** | 🔴 L-1 — "keeps 100%" / "never touches your Stripe account" are the exposed claims |
+| CC-6 | Truth in advertising (FTC Act §5, NJ CFA) | **MET** (copy run 2026-09-14; ⚖️ COUNSEL still owes the Operator Agreement a read) | 🔴 L-1 — "keeps 100%" / "never touches your Stripe account" are the exposed claims |
 | CC-7 | Automatic-renewal disclosure laws | **N/A NOW** | Applies if course subscriptions or golfer memberships ever auto-renew on a card |
 
 ## 6 — Privacy & data

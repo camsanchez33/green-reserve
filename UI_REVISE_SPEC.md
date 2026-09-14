@@ -27,7 +27,7 @@ References (open these before any run in this file):
 3. White-label knobs a course controls: **logo, one accent color, one hero photo. Nothing else.** No typeface choice, no layout variants.
 4. Homepage: photography-led, Apple-style scroll storytelling, Resy-style course cards. **Live interactive booking demo stays.** Ship with the stock (Unsplash) photos now; swap in real course photography as courses go live.
 5. "Just looks" is NOT fully true. The mockups embed behavior changes. **Reskin runs change zero behavior.** Behavior changes are the separate items in §4, one run each.
-6. Marketing copy about the fee ("you keep 100%", "we charge golfers, not you") is FROZEN behind a visible placeholder until LQ-2 is decided. Reskin runs must not restore it.
+6. ~~Marketing copy about the fee is FROZEN until LQ-2 is decided.~~ **Lifted 2026-09-14** — the fee sentences now come from `legal/LQ-2_FEE_COPY.md` (allowed sentences + banned phrases). "You keep 100%" and "never touches your Stripe account" stay banned everywhere.
 
 ---
 
@@ -208,7 +208,7 @@ Build `/` from the approved prototype. Public look. Sections in order:
 5. Course cards (Resy-style, 3 across): photo, serif name, town · type · holes, "From $X / player", "See tee times →". Hover lifts card, photo scales 1.05.
 6. Photo band (tee shot) with parallax: "We set it up. You run it."
 7. Four steps on paper cards.
-8. Pricing on pine: "$1.50 per player" tile + copy; **LQ-2 placeholder note stays visible** until cleared.
+8. Pricing on pine: "$1.50 per player" tile + copy from `legal/LQ-2_FEE_COPY.md` (placeholder removed 2026-09-14).
 9. FAQ accordion: the six existing questions.
 10. Final CTA + footer with lockup.
 
