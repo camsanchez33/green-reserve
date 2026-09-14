@@ -115,9 +115,9 @@ function CoursesContent() {
           )}
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">All Courses</h1>
+              <h1 className="text-[30px] leading-none font-serif font-medium text-ink">All Courses</h1>
               {/* A-04 item 5: count line always reflects the active filter set */}
-              <p className="text-sm text-ink-soft mt-0.5">
+              <p className="text-[13.5px] text-ink-soft mt-2">
                 {loadError ? '—' : `${filteredCourses.length} course${filteredCourses.length === 1 ? '' : 's'}`}
                 {(filterHealth !== 'all' || filterType || q) ? ' matching filters' : ''}
               </p>

@@ -100,8 +100,8 @@ export default function ActivityPage() {
         <div className="px-8 py-7">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Activity</h1>
-              <p className="text-sm text-ink-soft mt-0.5">Cross-course event feed</p>
+              <h1 className="text-[30px] leading-none font-serif font-medium text-ink">Activity</h1>
+              <p className="text-[13.5px] text-ink-soft mt-2">Cross-course event feed</p>
             </div>
             <button onClick={() => doLoad(page, courseId, from, to)} className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors">
               <RefreshCw className="w-4 h-4"/>Refresh

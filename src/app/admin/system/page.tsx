@@ -36,13 +36,19 @@ function fmtDate(d: string) {
 }
 const fmtMoney = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-function SystemCard({ icon, title, right, children }: { icon: React.ReactNode; title: string; right?: React.ReactNode; children: React.ReactNode }) {
+// U-A (UI_REVISE_SPEC §3): one legible signal per card. Green = this page reads
+// the real state. Grey = link-only; we can only point you at where it lives.
+// Turning a grey card green is a schema item, not a reskin.
+function SystemCard({ icon, title, tracked = false, right, children }: { icon: React.ReactNode; title: string; tracked?: boolean; right?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="bg-white border border-line rounded-lg p-5">
       <div className="flex items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
           <span className="text-ink-muted">{icon}</span>
           <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{title}</div>
+          <span title={tracked ? 'Tracked here — this page reads the real state.' : 'Link-only — this page cannot see the real state; follow the link.'}>
+            <StatusDot status={tracked ? 'ok' : 'neutral'}/>
+          </span>
         </div>
         {right}
       </div>
@@ -198,15 +204,19 @@ export default function AdminSystemPage() {
             </div>
           )}
           <div className="mb-7">
-            <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">System</h1>
-            <p className="text-sm text-ink-soft mt-0.5">30-second health check — what is deployed, what runs on a schedule, where to look when something breaks.</p>
+            <h1 className="text-[30px] leading-none font-serif font-medium text-ink">System</h1>
+            <p className="text-[13.5px] text-ink-soft mt-2">30-second health check — what is deployed, what runs on a schedule, where to look when something breaks.</p>
+            <div className="flex items-center gap-4 mt-2.5">
+              <StatusDot status="ok" label="Tracked here" />
+              <StatusDot status="neutral" label="Link only — go look elsewhere" />
+            </div>
           </div>
 
           <div className="space-y-4">
             {/* MP-8a: the read-only Platform card. "What's live right now?" was
                 the one real argument for a Settings page; this answers it
                 without adding a write surface. */}
-            <SystemCard icon={<Landmark className="w-3.5 h-3.5"/>} title="Platform"
+            <SystemCard icon={<Landmark className="w-3.5 h-3.5"/>} title="Platform" tracked
               right={p && <StatusDot status={p.env === 'production' ? 'ok' : 'warn'} label={p.env} />}>
               {p ? (
                 <div className="space-y-3">
@@ -275,7 +285,7 @@ export default function AdminSystemPage() {
 
             {/* MP-8a: moved here from the Courses list. GET always dry-runs;
                 the cleanup and the force-delete are explicit owner clicks. */}
-            <SystemCard icon={<Link2 className="w-3.5 h-3.5"/>} title="Data integrity"
+            <SystemCard icon={<Link2 className="w-3.5 h-3.5"/>} title="Data integrity" tracked
               right={
                 <button
                   onClick={checkOrphans}
