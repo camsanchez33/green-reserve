@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-09-14T03:31:45.755Z",
+  "generatedAt": "2026-09-14T03:36:41.593Z",
   "repo": {
-    "head": "9df9f2f",
+    "head": "a8498fb",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
-      "M UI_REVISE_SPEC.md"
+      "M RUN_QUEUE.md"
     ],
     "looksLikeRunInProgress": false
   },
@@ -22,10 +22,10 @@
     ]
   },
   "counts": {
-    "runDone": 157,
+    "runDone": 158,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 34,
+    "runNotStarted": 33,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -245,11 +245,6 @@
     {
       "title": "INQUIRY_CALL_SPEC Phase IC-3 — /admin/inquiries becomes the sheet: fixed 7-column table (course, contact·phone, stage, next call, still need, in stage, inquired) inside the existing queue sections; Ne",
       "line": 1963,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "UI_REVISE_SPEC H-2b — 'See it work' two tabs: What golfers see (today's HomeDemo) · What you see (new standalone HomeDashboardDemo: stats tiles, date strip, tee sheet rows with check-in + block intera",
-      "line": 1966,
       "section": "Queue (run in this order)"
     },
     {
@@ -845,6 +840,16 @@
   },
   "recentCommits": [
     {
+      "h": "a8498fb",
+      "date": "2026-09-13",
+      "subject": "H-2b: \"See it work\" gets two tabs — what golfers see, what you see"
+    },
+    {
+      "h": "0ab0a37",
+      "date": "2026-09-13",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "9df9f2f",
       "date": "2026-09-13",
       "subject": "B-7: Schedule as a time-band table, blocks and booking windows beside it"
@@ -893,16 +898,6 @@
       "h": "f061c0f",
       "date": "2026-09-13",
       "subject": "B-5: \"Add a cart today?\" at self check-in"
-    },
-    {
-      "h": "a1e4125",
-      "date": "2026-09-13",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "57b9150",
-      "date": "2026-09-13",
-      "subject": "H-2a: the homepage story loops a clip under the pinned beats"
     }
   ]
 }
