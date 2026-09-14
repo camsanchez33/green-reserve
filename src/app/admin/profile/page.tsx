@@ -60,15 +60,15 @@ export default function ProfilePage() {
             </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between py-2 border-b border-line-soft">
-                <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Name</span>
+                <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Name</span>
                 <span className="text-sm text-ink font-medium">{session.name}</span>
               </div>
               <div className="flex items-center justify-between py-2 border-b border-line-soft">
-                <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Email</span>
+                <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Email</span>
                 <span className="text-sm text-ink">{session.email}</span>
               </div>
               <div className="flex items-center justify-between py-2">
-                <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Role</span>
+                <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Role</span>
                 <span className="text-sm text-ink font-medium">{ROLE_LABELS[session.role ?? ''] ?? session.role}</span>
               </div>
             </div>
@@ -95,15 +95,15 @@ export default function ProfilePage() {
             )}
             <form onSubmit={handleChangePassword} className="space-y-3">
               <div>
-                <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Current password</label>
+                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Current password</label>
                 <input type="password" value={cpCurrent} onChange={e => setCpCurrent(e.target.value)} required className={iCls} />
               </div>
               <div>
-                <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">New password</label>
+                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">New password</label>
                 <input type="password" value={cpNew} onChange={e => setCpNew(e.target.value)} required placeholder="Min 8 characters" className={iCls} />
               </div>
               <div>
-                <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Confirm new password</label>
+                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Confirm new password</label>
                 <input type="password" value={cpConfirm} onChange={e => setCpConfirm(e.target.value)} required className={iCls} />
               </div>
               <div className="pt-1">

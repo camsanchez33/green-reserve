@@ -1191,7 +1191,7 @@ export default function CourseDetailPage() {
               <div className="space-y-6 min-w-0">
                 {c.adminNotes && c.adminNotes.startsWith('[BUILD NOTES]') && (
                   <div className="bg-warn/5 border border-warn/20 rounded-lg px-5 py-4">
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-warn mb-2">Needs review</div>
+                    <div className="text-[11px] uppercase tracking-[0.1em] text-warn mb-2">Needs review</div>
                     <ul className="space-y-1">
                       {c.adminNotes.replace('[BUILD NOTES]\n', '').split('\n').filter(Boolean).map((line, i) => (
                         <li key={i} className="text-sm text-ink-soft">{line.replace(/^• /, '')}</li>
@@ -1210,7 +1210,7 @@ export default function CourseDetailPage() {
                 {detail.configDrift && detail.configDrift.length > 0 && (
                   <div className="bg-white border border-warn/30 rounded-lg p-5">
                     <div className="flex items-center justify-between mb-1">
-                      <div className="text-[11px] uppercase tracking-[0.06em] text-warn">
+                      <div className="text-[11px] uppercase tracking-[0.1em] text-warn">
                         Setup sheet disagrees with the live course
                       </div>
                       <span className="text-[11px] text-ink-faint">
@@ -1222,9 +1222,9 @@ export default function CourseDetailPage() {
                     </p>
                     <div className="border border-line rounded-md divide-y divide-line">
                       <div className="grid grid-cols-[1fr_1fr_1fr] gap-3 px-3 py-2 bg-paper">
-                        <span className="text-[10px] uppercase tracking-[0.06em] text-ink-muted">Field</span>
-                        <span className="text-[10px] uppercase tracking-[0.06em] text-ink-muted">They told us</span>
-                        <span className="text-[10px] uppercase tracking-[0.06em] text-ink-muted">Golfers see</span>
+                        <span className="text-[10px] uppercase tracking-[0.1em] text-ink-muted">Field</span>
+                        <span className="text-[10px] uppercase tracking-[0.1em] text-ink-muted">They told us</span>
+                        <span className="text-[10px] uppercase tracking-[0.1em] text-ink-muted">Golfers see</span>
                       </div>
                       {detail.configDrift.map(d2 => (
                         <div key={d2.field} className="grid grid-cols-[1fr_1fr_1fr] gap-3 px-3 py-2">
@@ -1251,7 +1251,7 @@ export default function CourseDetailPage() {
                 {/* Client health block (item 3, top) */}
                 <div className="bg-white border border-line rounded-lg p-5">
                   <div className="flex items-center justify-between mb-3">
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Client Health</div>
+                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Client Health</div>
                     <span title={detail.health.reason}><StatusDot status={detail.health.dot} label={detail.health.label} /></span>
                   </div>
                   <p className="text-sm text-ink-soft mb-4">{detail.health.reason}</p>
@@ -1263,7 +1263,7 @@ export default function CourseDetailPage() {
                   </div>
                   {openItemsList.length > 0 ? (
                     <div className="border-t border-line-soft pt-3">
-                      <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Open items</div>
+                      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Open items</div>
                       <ul className="space-y-1">
                         {openItemsList.map((item, i) => (
                           <li key={i} className="text-sm text-ink-soft flex items-center gap-2">
@@ -1286,7 +1286,7 @@ export default function CourseDetailPage() {
                     { label: 'All-time Bookings', value: String(detail.totalBookings), color: 'text-ink' },
                   ].map(({ label, value, color }) => (
                     <div key={label} className="bg-white border border-line rounded-lg p-5">
-                      <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">{label}</div>
+                      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">{label}</div>
                       <div className={'text-[28px] font-serif font-medium leading-none ' + color}>{value}</div>
                       {label === 'Bookings (30d)' && (
                         <div className={'text-xs font-medium mt-1.5 ' + (trend.direction === 'up' ? 'text-ok' : trend.direction === 'down' ? 'text-bad' : 'text-ink-muted')}>
@@ -1299,7 +1299,7 @@ export default function CourseDetailPage() {
 
                 {detail.recentBookings.length > 0 && (
                   <div>
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Recent Bookings</div>
+                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Recent Bookings</div>
                     <div className="bg-white border border-line rounded-lg divide-y divide-line-soft">
                       {detail.recentBookings.map(b => (
                         <div key={b.id} className="flex items-center gap-4 px-5 py-3">
@@ -1328,7 +1328,7 @@ export default function CourseDetailPage() {
                 {/* ORPHAN SWEEP item 2 (FUTURE-PROOF) — origin card. A broken
                     link says so loudly instead of pretending it's fine. */}
                 <div className={'bg-white border rounded-lg p-5 ' + (detail.origin ? 'border-line' : 'border-bad/30 bg-bad/5')}>
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Origin</div>
+                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Origin</div>
                   {detail.origin ? (
                     <Link href={'/admin/inquiries/' + detail.origin.inquiryId} className="text-sm text-pine hover:underline">
                       From inquiry · accepted {fmtDate(detail.origin.acceptedAt)}
@@ -1341,7 +1341,7 @@ export default function CourseDetailPage() {
                 </div>
                 {c.operator && (
                   <div className="bg-white border border-line rounded-lg p-5">
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Operator / Owner</div>
+                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Operator / Owner</div>
                     <div className="font-medium text-ink mb-2">{c.operator.name}</div>
                     <div className="space-y-1.5 mb-3">
                       <a href={'mailto:' + c.operator.email} className="flex items-center gap-2 text-sm text-ink-soft hover:text-pine transition-colors">
@@ -1366,7 +1366,7 @@ export default function CourseDetailPage() {
 
                 <div className="bg-white border border-line rounded-lg p-5">
                   <div className="flex items-center justify-between mb-3">
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Course Contact</div>
+                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Course Contact</div>
                   </div>
                   <div className="space-y-2.5">
                     <div className="flex gap-3 text-sm">
@@ -1403,7 +1403,7 @@ export default function CourseDetailPage() {
                     this rail already. */}
                 {detail.staff.length > 0 && (
                   <div className="bg-white border border-line rounded-lg p-5">
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Staff Contacts</div>
+                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Staff Contacts</div>
                     <div className="space-y-3">
                       {detail.staff.map(s => (
                         <div key={s.id} className="flex items-center gap-3">
@@ -1485,7 +1485,7 @@ export default function CourseDetailPage() {
 
               {!txLoading && txItems.length > 0 && (
                 <div className="bg-white border border-line rounded-lg overflow-hidden">
-                  <div className="px-5 py-2.5 border-b border-line-soft bg-paper/50 grid grid-cols-[1fr_1fr_90px_80px_100px_90px] gap-3 text-[10px] uppercase tracking-[0.06em] text-ink-muted">
+                  <div className="px-5 py-2.5 border-b border-line-soft bg-paper/50 grid grid-cols-[1fr_1fr_90px_80px_100px_90px] gap-3 text-[10px] uppercase tracking-[0.1em] text-ink-muted">
                     <span>Golfer</span>
                     <span>Detail</span>
                     <span>Amount</span>
@@ -1558,7 +1558,7 @@ export default function CourseDetailPage() {
               {!docsLoading && docsData && (
                 <>
                   <div className="bg-white border border-line rounded-lg p-6">
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-4">Auto Records</div>
+                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">Auto Records</div>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-ink-soft">Operator Agreement (v{docsData.agreementVersion})</span>
@@ -1590,7 +1590,7 @@ export default function CourseDetailPage() {
 
                   <div className="bg-white border border-line rounded-lg p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Uploaded Documents</div>
+                      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Uploaded Documents</div>
                       <label className="flex items-center gap-1.5 text-xs font-medium text-pine hover:text-pine-hover cursor-pointer transition-colors">
                         <Upload className="w-3.5 h-3.5" />{docUploading ? 'Uploading…' : 'Upload PDF'}
                         <input
@@ -1618,7 +1618,7 @@ export default function CourseDetailPage() {
                   </div>
 
                   <div className="bg-white border border-line rounded-lg p-6">
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-4">Client Notes</div>
+                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">Client Notes</div>
                     <div className="flex gap-2 mb-4">
                       <input
                         value={noteDraft}
@@ -1780,7 +1780,7 @@ export default function CourseDetailPage() {
                   rebuilt the whole sheet. */}
               <div className="bg-white border border-line rounded-lg p-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Tee Time Schedules</div>
+                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Tee Time Schedules</div>
                   {!showAddSched && !editSched && (
                     <button
                       onClick={() => { setSchedMsg(null); setShowAddSched(true); }}
@@ -1808,7 +1808,7 @@ export default function CourseDetailPage() {
                   <div className="space-y-2">
                     {schedules.map(s => editSched?.id === s.id ? (
                       <div key={s.id} className="bg-paper border border-pine/30 rounded-md p-4 space-y-3">
-                        <div className="text-[11px] uppercase tracking-[0.06em] text-pine">Editing schedule</div>
+                        <div className="text-[11px] uppercase tracking-[0.1em] text-pine">Editing schedule</div>
                         <ScheduleFields
                           value={editSched.form}
                           onChange={p => setEditSched(e => e ? { ...e, form: { ...e.form, ...p } } : e)}
@@ -1872,7 +1872,7 @@ export default function CourseDetailPage() {
 
                 {showAddSched && (
                   <div className="border-t border-line pt-4 space-y-3">
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Add Schedule</div>
+                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Add Schedule</div>
                     <ScheduleFields
                       value={newSchedule}
                       onChange={p => setNewSchedule(s => ({ ...s, ...p }))}
@@ -1901,7 +1901,7 @@ export default function CourseDetailPage() {
                   the dashboard; this is a window onto it, not a control. */}
               <div className="bg-white border border-line rounded-lg p-6">
                 <div className="flex items-center justify-between mb-1">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Members</div>
+                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Members</div>
                   <span className="text-[11px] text-ink-faint">Read-only — the course manages this</span>
                 </div>
                 {membersLoading && <div className="text-center text-ink-muted py-8 text-sm">Loading...</div>}
@@ -1930,7 +1930,7 @@ export default function CourseDetailPage() {
                         </div>
                       )}
                       <div>
-                        <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">
+                        <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">
                           {membersData.members.length} member{membersData.members.length === 1 ? '' : 's'}
                         </div>
                         {membersData.members.length === 0 ? (
@@ -2058,7 +2058,7 @@ export default function CourseDetailPage() {
 
               {/* 4a — onboarding checklist as named steps */}
               <div className="bg-white border border-line rounded-lg p-6">
-                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-4">Onboarding Checklist</div>
+                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">Onboarding Checklist</div>
                 <div className="space-y-3">
                   {steps.map(s => {
                     // AGREEMENT = GO-LIVE GATE item 3 — a live course missing
@@ -2082,7 +2082,7 @@ export default function CourseDetailPage() {
               {/* 4b — auto-chase reminders */}
               <div className="bg-white border border-line rounded-lg p-6">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Auto-Chase Reminders</div>
+                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Auto-Chase Reminders</div>
                   <button
                     onClick={() => toggleRemindersPaused(!detail.remindersPaused)}
                     disabled={remindersBusy || detail.timeline === null}
@@ -2117,10 +2117,10 @@ export default function CourseDetailPage() {
 
               {/* 4c — full mirror of operator settings, same endpoint/whitelist the operator's own Settings page uses */}
               <div className="bg-white border border-line rounded-lg p-6 space-y-4">
-                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Course Policy</div>
+                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Course Policy</div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Walking policy</label>
+                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Walking policy</label>
                     <select
                       value={String(setupForm.walkingAllowed ?? 'always')}
                       onChange={e => setSetupForm(f => ({ ...f, walkingAllowed: e.target.value }))}
@@ -2133,7 +2133,7 @@ export default function CourseDetailPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Cancellation window (hrs)</label>
+                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Cancellation window (hrs)</label>
                     <input
                       type="number"
                       value={Number(setupForm.cancellationHours ?? 24)}
@@ -2142,7 +2142,7 @@ export default function CourseDetailPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Min players</label>
+                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Min players</label>
                     <input
                       type="number"
                       value={Number(setupForm.minPlayers ?? 1)}
@@ -2151,7 +2151,7 @@ export default function CourseDetailPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Max players</label>
+                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Max players</label>
                     <input
                       type="number"
                       value={Number(setupForm.maxPlayers ?? 4)}
@@ -2160,7 +2160,7 @@ export default function CourseDetailPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Public booking window (days)</label>
+                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Public booking window (days)</label>
                     <input
                       type="number"
                       value={Number(setupForm.publicAdvanceDays ?? 7)}
@@ -2169,7 +2169,7 @@ export default function CourseDetailPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Member booking window (days)</label>
+                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Member booking window (days)</label>
                     <input
                       type="number"
                       value={Number(setupForm.memberAdvanceDays ?? 14)}
@@ -2179,7 +2179,7 @@ export default function CourseDetailPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Rain check policy</label>
+                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Rain check policy</label>
                   <input
                     value={String(setupForm.rainCheckPolicy ?? '')}
                     onChange={e => setSetupForm(f => ({ ...f, rainCheckPolicy: e.target.value }))}
@@ -2207,7 +2207,7 @@ export default function CourseDetailPage() {
                 {!!setupForm.hasResidentPricing && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Resident county</label>
+                      <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Resident county</label>
                       <input
                         value={String(setupForm.residentCounty ?? '')}
                         onChange={e => setSetupForm(f => ({ ...f, residentCounty: e.target.value }))}
@@ -2215,7 +2215,7 @@ export default function CourseDetailPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Resident state</label>
+                      <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Resident state</label>
                       <input
                         value={String(setupForm.residentState ?? '')}
                         maxLength={2}
@@ -2231,7 +2231,7 @@ export default function CourseDetailPage() {
                   here — the operator configures it on their Course & Layout tab. */}
               <div className="bg-white border border-line rounded-lg p-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Course layout</div>
+                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Course layout</div>
                   {detail.layout && <span className="text-[11px] text-ink-faint">{detail.layout.configured ? `${detail.layout.nines.length} nine${detail.layout.nines.length === 1 ? '' : 's'} · ${detail.layout.products.filter(x => x.active).length} bookable product${detail.layout.products.filter(x => x.active).length === 1 ? '' : 's'}` : 'simple layout'}</span>}
                 </div>
                 {!detail.layout || !detail.layout.configured ? (
@@ -2241,13 +2241,13 @@ export default function CourseDetailPage() {
                 ) : (
                   <div className="space-y-4">
                     <div>
-                      <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Nines</div>
+                      <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Nines</div>
                       <div className="flex flex-wrap gap-2">
                         {detail.layout.nines.map(n => <span key={n.id} className="text-xs text-ink bg-paper border border-line rounded-md px-2 py-1">{n.name} <span className="text-ink-muted">· par {n.par}</span></span>)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Products golfers can book</div>
+                      <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Products golfers can book</div>
                       <div className="border border-line rounded-md divide-y divide-line-soft">
                         {detail.layout.products.map(pr => (
                           <div key={pr.id} className={'px-3 py-2 ' + (pr.active ? '' : 'opacity-60')}>
@@ -2265,7 +2265,7 @@ export default function CourseDetailPage() {
                     </div>
                     {detail.layout.teeSets.length > 0 && (
                       <div>
-                        <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Tee sets</div>
+                        <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Tee sets</div>
                         <div className="text-xs text-ink-soft space-y-0.5">
                           {detail.layout.teeSets.map(t => (
                             <div key={t.id}>{t.name} — {t.yardage ? `${t.yardage}y` : 'no yardage'}{t.rating ? ` · ${t.rating}/${t.slope}` : ''}{t.perNine.length > 0 ? ` · ${t.perNine.map(y => `${y.nine} ${y.yardage}y`).join(', ')}` : ''}</div>
@@ -2278,7 +2278,7 @@ export default function CourseDetailPage() {
               </div>
 
               <div className="bg-white border border-line rounded-lg p-6 space-y-4">
-                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Facilities & Amenities</div>
+                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Facilities & Amenities</div>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
                   {([
                     ['hasDrivingRange', 'Driving range'],
@@ -2419,12 +2419,12 @@ export default function CourseDetailPage() {
             <p className="text-sm text-ink-soft mb-4">
               {fmtMoney(refundTarget.amount)} was charged for {fmtDate(refundTarget.date)}. The money goes back to the card they paid with; the course&apos;s payout and GreenReserve&apos;s fee are both reduced.
             </p>
-            <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Amount (blank = full refund)</label>
+            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Amount (blank = full refund)</label>
             <div className="relative mb-3">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
               <input type="number" step="0.01" min="0.01" max={refundTarget.amount} value={refundAmount} onChange={e => setRefundAmount(e.target.value)} placeholder={refundTarget.amount.toFixed(2)} className={iCls + ' pl-7'} />
             </div>
-            <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Reason — the golfer reads this</label>
+            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Reason — the golfer reads this</label>
             <textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} rows={3} placeholder="Course closed for weather on the day — refunding the round in full." className={iCls + ' resize-none mb-3'} />
             {refundError && <p className="text-xs text-bad mb-3">{refundError}</p>}
             <div className="flex gap-3">
@@ -2483,7 +2483,7 @@ export default function CourseDetailPage() {
             <div className="space-y-3">
               {([['Golfer Name *', 'name', 'text'], ['Email *', 'email', 'email'], ['Phone', 'phone', 'tel']] as [string, string, string][]).map(([label, field, type]) => (
                 <div key={field}>
-                  <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">{label}</label>
+                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">{label}</label>
                   <input
                     type={type}
                     value={(manualForm as Record<string, unknown>)[field] as string}
@@ -2493,7 +2493,7 @@ export default function CourseDetailPage() {
                 </div>
               ))}
               <div>
-                <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Players *</label>
+                <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Players *</label>
                 <select value={manualForm.players} onChange={e => setManualForm(f => ({ ...f, players: Number(e.target.value) }))} className={iCls}>
                   {[1, 2, 3, 4].map(n => <option key={n} value={n}>{n}</option>)}
                 </select>

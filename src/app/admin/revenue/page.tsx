@@ -301,7 +301,7 @@ export default function RevenuePage() {
   function SortHead({ col, label, right }: { col: SortKey; label: string; right?: boolean }) {
     const Icon = sortKey !== col ? ChevronUp : sortDir === 'asc' ? ChevronUp : ChevronDown;
     return (
-      <button onClick={() => toggleSort(col)} className={`flex items-center gap-1 text-[11px] uppercase tracking-[0.06em] text-ink-muted hover:text-ink transition-colors ${right ? 'ml-auto' : ''}`}>
+      <button onClick={() => toggleSort(col)} className={`flex items-center gap-1 text-[11px] uppercase tracking-[0.1em] text-ink-muted hover:text-ink transition-colors ${right ? 'ml-auto' : ''}`}>
         {label}<Icon className={'w-3 h-3 ' + (sortKey === col ? 'text-pine' : 'opacity-20')}/>
       </button>
     );
@@ -330,7 +330,7 @@ export default function RevenuePage() {
           {/* Header + one period picker that rules the whole page */}
           <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1">Admin</p>
+              <p className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">Admin</p>
               <h1 className="text-[30px] leading-none font-serif font-medium text-ink">Revenue</h1>
               {/* U-A (UI_REVISE_SPEC §3): say whose money this page counts. Courses
                   keep 100% of their green fees; none of that is on this page. */}
@@ -395,7 +395,7 @@ export default function RevenuePage() {
                     {hasProblems ? 'Money problems' : 'No money problems'}
                   </span>
                 </div>
-                <span className="text-[10px] uppercase tracking-[0.06em] text-ink-faint">All time · not filtered by period</span>
+                <span className="text-[10px] uppercase tracking-[0.1em] text-ink-faint">All time · not filtered by period</span>
               </div>
 
               {/* Reconciliation (owner): collected vs what Stripe shows. Same
@@ -538,7 +538,7 @@ export default function RevenuePage() {
             <div className="bg-white border border-line rounded-lg p-6 mb-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1">Fees collected · {data?.period.label}</div>
+                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">Fees collected · {data?.period.label}</div>
                   <div className="text-[34px] font-serif font-medium text-ink tabular-nums leading-none">{fmtMoney(pnl.feesCollected)}</div>
                   <div className="mt-2 flex items-center gap-3 flex-wrap">
                     <DeltaBadge delta={pnl.feesCollectedDelta}/>
@@ -588,8 +588,8 @@ export default function RevenuePage() {
           {data && (
             <div className="bg-white border border-line rounded-lg p-5 mb-6">
               <div className="flex items-center justify-between gap-3 mb-1">
-                <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Money in motion</span>
-                <span className="text-[10px] uppercase tracking-[0.06em] text-ink-faint">Expected · not booked revenue</span>
+                <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Money in motion</span>
+                <span className="text-[10px] uppercase tracking-[0.1em] text-ink-faint">Expected · not booked revenue</span>
               </div>
 
               {/* Upcoming check-ins with today/tomorrow toggle */}
@@ -630,7 +630,7 @@ export default function RevenuePage() {
                 <div className="mt-5 pt-4 border-t border-line-soft">
                   <div className="flex items-center justify-between gap-3 mb-2">
                     <span className="text-sm font-medium text-ink">Late-cancellation fees</span>
-                    <span className="text-[10px] uppercase tracking-[0.06em] text-ink-faint">Course revenue · GR takes $0</span>
+                    <span className="text-[10px] uppercase tracking-[0.1em] text-ink-faint">Course revenue · GR takes $0</span>
                   </div>
                   <div className="divide-y divide-line-soft">
                     {motion!.lateCancelFees.map(f => (
@@ -657,7 +657,7 @@ export default function RevenuePage() {
           {data && (
             <div className="bg-white border border-line rounded-lg overflow-hidden mb-6">
               <div className="px-5 py-4 border-b border-line-soft flex items-center justify-between gap-3 flex-wrap">
-                <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">By course · {data.period.label}</span>
+                <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">By course · {data.period.label}</span>
                 <div className="flex items-center gap-2 flex-wrap">
                   <label className="flex items-center gap-1.5 text-[12px] text-ink-soft cursor-pointer select-none">
                     <input type="checkbox" checked={showArchived} onChange={e => setShowArchived(e.target.checked)} className="accent-pine"/>
@@ -695,7 +695,7 @@ export default function RevenuePage() {
                         <th className="px-4 py-3 font-normal"><div className="flex justify-end"><SortHead col="serviceFees" label="Fees collected" right/></div></th>
                         <th className="px-4 py-3 font-normal"><div className="flex justify-end"><SortHead col="greenFeeVolume" label="Green fee vol." right/></div></th>
                         <th className="px-4 py-3 font-normal" title="All time — matches the problems list above, not the period"><div className="flex justify-end"><SortHead col="failedCharges" label="Failed · all time" right/></div></th>
-                        <th className="text-center px-4 py-3 font-normal"><span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Stripe</span></th>
+                        <th className="text-center px-4 py-3 font-normal"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Stripe</span></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-line-soft">
@@ -736,7 +736,7 @@ export default function RevenuePage() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Landmark className="w-4 h-4 text-pine"/>
-                  <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Platform Stripe account</span>
+                  <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Platform Stripe account</span>
                 </div>
                 <a href="https://dashboard.stripe.com/balance" target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-1 text-[11px] text-pine hover:text-pine-hover underline">Open Stripe dashboard<ExternalLink className="w-3 h-3"/></a>
@@ -769,7 +769,7 @@ export default function RevenuePage() {
                       that reached the bank" — the only number a bank statement agrees with. */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Payouts to the bank</div>
+                      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Payouts to the bank</div>
                       <span className="text-[11px] text-ink-faint">{fmtMoney(platform.paidOutRecent)} paid out, last {platform.payouts.length}</span>
                     </div>
                     {platform.payouts.length === 0 ? (
@@ -790,7 +790,7 @@ export default function RevenuePage() {
                       component — so a 1-player round and a 4-player round net very
                       differently. From Stripe's own balance transactions. */}
                   <div>
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Unit economics · last {platform.period}</div>
+                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Unit economics · last {platform.period}</div>
                     {platform.unitEconomics.charges === 0 ? (
                       <p className="text-sm text-ink-muted">No fees collected in this period yet.</p>
                     ) : (
@@ -824,7 +824,7 @@ export default function RevenuePage() {
             <div className="p-5 space-y-5">
               {/* Add / edit form */}
               <div className="bg-white border border-line rounded-lg p-4 space-y-3">
-                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{editing ? 'Edit expense' : 'Add expense'}</div>
+                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">{editing ? 'Edit expense' : 'Add expense'}</div>
                 <input placeholder="Name (e.g. Vercel Pro)" value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} className={iCls + ' w-full'}/>
                 <div className="grid grid-cols-2 gap-2">
                   <select value={draft.category} onChange={e => setDraft({ ...draft, category: e.target.value })} className={iCls}>

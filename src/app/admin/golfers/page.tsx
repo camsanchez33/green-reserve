@@ -183,7 +183,7 @@ function GolfersInner() {
       <div className="admin-content flex-1 min-h-screen">
         <div className="px-8 py-7 max-w-5xl">
           <div className="mb-6">
-            <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1">Support</p>
+            <p className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">Support</p>
             <h1 className="text-[30px] leading-none font-serif font-medium text-ink">{inRecord ? 'Golfer record' : 'Golfer lookup'}</h1>
           </div>
 
@@ -230,7 +230,7 @@ function GolfersInner() {
                       { label: 'Lifetime paid', value: fmtMoney(t.lifetimeCollected), tone: 'text-ok', sub: t.refunded > 0 ? `${fmtMoney(t.refunded)} refunded` : undefined },
                     ].map(c => (
                       <div key={c.label} className="bg-white border border-line rounded-lg p-4">
-                        <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1">{c.label}</div>
+                        <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">{c.label}</div>
                         <div className={'text-[22px] font-serif font-medium leading-none tabular-nums ' + c.tone}>{c.value}</div>
                         {c.sub && <div className="text-[11px] text-ink-faint mt-1">{c.sub}</div>}
                       </div>
@@ -245,7 +245,7 @@ function GolfersInner() {
                   )}
 
                   {/* Bookings + money, one timeline per booking */}
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Bookings ({detail.bookings.length})</div>
+                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Bookings ({detail.bookings.length})</div>
                   {detail.bookings.length === 0 ? (
                     <div className="bg-white border border-line rounded-lg py-12 text-center text-ink-muted text-sm">No bookings</div>
                   ) : (
@@ -349,7 +349,7 @@ function GolfersInner() {
                   <div className="space-y-5">
                     {golfers.length > 0 && (
                       <div>
-                        <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Golfer accounts ({golfers.length})</div>
+                        <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Golfer accounts ({golfers.length})</div>
                         <div className="bg-white border border-line rounded-lg divide-y divide-line-soft overflow-hidden">
                           {golfers.map(g => (
                             <button key={g.id} onClick={() => go({ id: g.id, guest: null, q: query })} className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-paper/60 transition-colors text-left">
@@ -370,7 +370,7 @@ function GolfersInner() {
                     )}
                     {guestPeople.length > 0 && (
                       <div>
-                        <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Guests — no account ({guestPeople.length})</div>
+                        <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Guests — no account ({guestPeople.length})</div>
                         <div className="bg-white border border-line rounded-lg divide-y divide-line-soft overflow-hidden">
                           {guestPeople.map(p => (
                             <button key={p.email} onClick={() => go({ guest: p.email, id: null, q: query })} className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-paper/60 transition-colors text-left">
@@ -416,7 +416,7 @@ function GolfersInner() {
                   ? 'Their late-cancellation fee was already charged and stays charged.'
                   : 'Nothing has been charged; their card is simply never billed.'} They are emailed with your reason.
             </p>
-            <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Reason — the golfer reads this</label>
+            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Reason — the golfer reads this</label>
             <textarea value={cancelReason} onChange={e => setCancelReason(e.target.value)} rows={3} placeholder="You called to say you can't make it and asked us to cancel." className={iCls + ' w-full resize-none mb-3'} />
             {modalError && <p className="text-xs text-bad mb-3">{modalError}</p>}
             <div className="flex gap-3">
@@ -435,12 +435,12 @@ function GolfersInner() {
             <p className="text-sm text-ink-soft mb-4">
               {fmtMoney(refundTarget.totalAmount)} was charged for {refundTarget.courseName}, {refundTarget.teeDate}{refundTarget.refundedTotal > 0 ? ` · ${fmtMoney(refundTarget.refundedTotal)} already refunded` : ''}. It goes back to the card they paid with; the course&apos;s payout and GreenReserve&apos;s fee are both reduced.
             </p>
-            <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Amount (blank = {fmtMoney(remaining)}, the rest)</label>
+            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Amount (blank = {fmtMoney(remaining)}, the rest)</label>
             <div className="relative mb-3">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
               <input type="number" step="0.01" min="0.01" max={remaining} value={refundAmount} onChange={e => setRefundAmount(e.target.value)} placeholder={remaining.toFixed(2)} className={iCls + ' w-full pl-7'} />
             </div>
-            <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Reason — the golfer reads this</label>
+            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Reason — the golfer reads this</label>
             <textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} rows={3} placeholder="Charged twice by mistake — refunding the duplicate." className={iCls + ' w-full resize-none mb-3'} />
             {modalError && <p className="text-xs text-bad mb-3">{modalError}</p>}
             <div className="flex gap-3">

@@ -112,7 +112,7 @@ export default function ActivityPage() {
           <div className="bg-white border border-line rounded-lg p-4 mb-5">
             <div className="flex items-center gap-2 mb-3">
               <Filter className="w-4 h-4 text-pine"/>
-              <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Filters</span>
+              <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Filters</span>
             </div>
             <div className="flex flex-wrap gap-3">
               <select value={courseId} onChange={e => setCourseId(e.target.value)} className={iCls + ' flex-1 min-w-44 cursor-pointer'}>
@@ -163,7 +163,7 @@ export default function ActivityPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                        <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{TYPE_LABEL[ev.type]}</span>
+                        <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">{TYPE_LABEL[ev.type]}</span>
                         <span className="text-[11px] text-ink-faint">·</span>
                         <span className="text-[11px] text-ink-muted">{ev.courseName}</span>
                       </div>

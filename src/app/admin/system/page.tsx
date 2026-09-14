@@ -45,7 +45,7 @@ function SystemCard({ icon, title, tracked = false, right, children }: { icon: R
       <div className="flex items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
           <span className="text-ink-muted">{icon}</span>
-          <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{title}</div>
+          <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">{title}</div>
           <span title={tracked ? 'Tracked here — this page reads the real state.' : 'Link-only — this page cannot see the real state; follow the link.'}>
             <StatusDot status={tracked ? 'ok' : 'neutral'}/>
           </span>
@@ -232,14 +232,14 @@ export default function AdminSystemPage() {
                     {p.publicUrl && <div><span className="text-ink-muted">Public URL</span><div className="text-ink font-medium truncate">{p.publicUrl}</div></div>}
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Integrations with keys set</div>
+                    <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Integrations with keys set</div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1.5">
                       {integrations.map(([name, ok]) => <StatusDot key={name} status={ok ? 'ok' : 'bad'} label={name} />)}
                     </div>
                   </div>
                   {isOwner && (
                     <div className="pt-3 border-t border-line-soft">
-                      <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Platform Stripe balance</div>
+                      <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Platform Stripe balance</div>
                       {stripe ? (
                         <div className="flex items-center gap-6 text-sm">
                           <div><span className="text-ink-muted">Available</span> <span className="text-ink font-medium tabular-nums">{fmtMoney(stripe.balance.available)}</span></div>
@@ -425,7 +425,7 @@ export default function AdminSystemPage() {
             {forceDeleteError && (
               <div className="text-xs text-bad mb-2">{forceDeleteError}</div>
             )}
-            <label className="block text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1">Type &quot;{forceDeleteTarget.name}&quot; to confirm</label>
+            <label className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Type &quot;{forceDeleteTarget.name}&quot; to confirm</label>
             <input
               value={forceDeleteConfirm}
               onChange={e => setForceDeleteConfirm(e.target.value)}

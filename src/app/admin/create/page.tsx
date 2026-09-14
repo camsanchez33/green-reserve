@@ -333,7 +333,7 @@ function WizardContent() {
               )}
               {result.notesItems && result.notesItems.length > 0 && (
                 <div className="bg-warn/5 border border-warn/20 rounded-md px-4 py-3 mb-4">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-warn mb-1.5">Stored as description notes</div>
+                  <div className="text-[11px] uppercase tracking-[0.1em] text-warn mb-1.5">Stored as description notes</div>
                   <ul className="text-xs text-ink-soft space-y-0.5">
                     {result.notesItems.map((n: string, i: number) => <li key={i}>• {n}</li>)}
                   </ul>
@@ -396,7 +396,7 @@ function WizardContent() {
           {step === 1 && (
             <div className="space-y-5">
               <div className="bg-white border border-line rounded-lg p-6">
-                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-4">What kind of course is this?</div>
+                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">What kind of course is this?</div>
                 <div className="grid grid-cols-2 gap-3">
                   {COURSE_TYPES.map(t => {
                     const IconComp = t.Icon;
@@ -428,13 +428,13 @@ function WizardContent() {
           {step === 2 && (
             <div className="space-y-5">
               <div className="bg-white border border-line rounded-lg p-6 space-y-4">
-                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Course Details</div>
+                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Course Details</div>
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Course Name *</label>
+                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Course Name *</label>
                   <input value={basics.name} onChange={e => setBasics(b => ({ ...b, name: e.target.value }))} className={iCls} placeholder="Pine Brook Golf Club" autoFocus/>
                 </div>
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">
+                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">
                     URL Slug *
                     {slugStatusLabel && <span className={'ml-2 text-[10px] font-medium ' + slugStatusCls}>{slugStatusLabel}</span>}
                   </label>
@@ -447,30 +447,30 @@ function WizardContent() {
                   <p className="text-[10px] text-ink-muted mt-1">greenreserve.app/courses/{basics.slug || '...'}</p>
                 </div>
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Address</label>
+                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Address</label>
                   <input value={basics.address} onChange={e => setBasics(b => ({ ...b, address: e.target.value }))} className={iCls} placeholder="123 Fairway Dr"/>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">City *</label>
+                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">City *</label>
                     <input value={basics.city} onChange={e => setBasics(b => ({ ...b, city: e.target.value }))} className={iCls}/>
                   </div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">State *</label>
+                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">State *</label>
                     <input value={basics.state} onChange={e => setBasics(b => ({ ...b, state: e.target.value.toUpperCase() }))} className={iCls} maxLength={2}/>
                   </div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Zip</label>
+                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Zip</label>
                     <input value={basics.zipCode} onChange={e => setBasics(b => ({ ...b, zipCode: e.target.value }))} className={iCls}/>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Phone</label>
+                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Phone</label>
                     <input value={basics.phone} onChange={e => setBasics(b => ({ ...b, phone: e.target.value }))} className={iCls} placeholder="(201) 555-0100"/>
                   </div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Website</label>
+                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Website</label>
                     <input value={basics.website} onChange={e => setBasics(b => ({ ...b, website: e.target.value }))} className={iCls} placeholder="https://"/>
                   </div>
                 </div>
@@ -503,26 +503,26 @@ function WizardContent() {
           {step === 3 && (
             <div className="space-y-5">
               <div className="bg-white border border-line rounded-lg p-6 space-y-5">
-                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">
+                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">
                   Pricing — {courseType === 'private' ? 'Private' : 'Public'}
                 </div>
 
                 {/* Common: weekday/weekend/cart/walking */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Weekday green fee *</label>
+                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Weekday green fee *</label>
                     <DollarInput value={fees.weekdayFee} onChange={v => setFees(f => ({ ...f, weekdayFee: v }))} hasError={step3Attempted && !fees.weekdayFee}/>
                     {step3Attempted && !fees.weekdayFee && <p className="text-bad text-[10px] mt-1">Required</p>}
                   </div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Weekend green fee *</label>
+                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Weekend green fee *</label>
                     <DollarInput value={fees.weekendFee} onChange={v => setFees(f => ({ ...f, weekendFee: v }))} hasError={step3Attempted && !fees.weekendFee}/>
                     {step3Attempted && !fees.weekendFee && <p className="text-bad text-[10px] mt-1">Required</p>}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 items-end">
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Cart fee per player</label>
+                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Cart fee per player</label>
                     <DollarInput value={fees.cartFee} onChange={v => setFees(f => ({ ...f, cartFee: v }))} placeholder="18.00"/>
                   </div>
                   <div className="pb-2">
@@ -546,7 +546,7 @@ function WizardContent() {
 
                 {/* Season */}
                 <div className="border-t border-line-soft pt-4 space-y-2">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Season <span className="normal-case tracking-normal font-normal text-ink-faint">(optional)</span></div>
+                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Season <span className="normal-case tracking-normal font-normal text-ink-faint">(optional)</span></div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] text-ink-muted block mb-1">Opens</label>
@@ -562,7 +562,7 @@ function WizardContent() {
                 {/* Public: optional resident rates */}
                 {courseType === 'public' && (
                   <div className="border-t border-line-soft pt-4 space-y-4">
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Resident pricing</div>
+                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Resident pricing</div>
                     <label className="flex items-center gap-2 text-sm text-ink cursor-pointer select-none">
                       <input type="checkbox" checked={fees.hasResidentRates} onChange={e => setFees(f => ({ ...f, hasResidentRates: e.target.checked }))} className="w-4 h-4 accent-pine rounded"/>
                       Enable resident rates
@@ -571,16 +571,16 @@ function WizardContent() {
                       <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Resident weekday</label>
+                            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Resident weekday</label>
                             <DollarInput value={fees.residentWeekday} onChange={v => setFees(f => ({ ...f, residentWeekday: v }))} placeholder="30.00"/>
                           </div>
                           <div>
-                            <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Resident weekend</label>
+                            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Resident weekend</label>
                             <DollarInput value={fees.residentWeekend} onChange={v => setFees(f => ({ ...f, residentWeekend: v }))} placeholder="40.00"/>
                           </div>
                         </div>
                         <div>
-                          <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Resident verification note</label>
+                          <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Resident verification note</label>
                           <input value={fees.residentNote} onChange={e => setFees(f => ({ ...f, residentNote: e.target.value }))} className={iCls} placeholder="County ID or utility bill required"/>
                         </div>
                       </div>
@@ -591,9 +591,9 @@ function WizardContent() {
                 {/* Private: member advance + starter tier */}
                 {courseType === 'private' && (
                   <div className="border-t border-line-soft pt-4 space-y-4">
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Member access</div>
+                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Member access</div>
                     <div>
-                      <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Member advance booking window</label>
+                      <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Member advance booking window</label>
                       <div className="flex items-center gap-2">
                         <input type="number" min="1" max="365" value={fees.memberAdvanceDays} onChange={e => setFees(f => ({ ...f, memberAdvanceDays: e.target.value }))} className={iCls + ' w-24'}/>
                         <span className="text-sm text-ink-soft">days</span>
@@ -608,11 +608,11 @@ function WizardContent() {
                       {fees.hasStarterTier && (
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Tier name</label>
+                            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Tier name</label>
                             <input value={fees.starterTierName} onChange={e => setFees(f => ({ ...f, starterTierName: e.target.value }))} className={iCls} placeholder="Full Member"/>
                           </div>
                           <div>
-                            <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Annual fee</label>
+                            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Annual fee</label>
                             <DollarInput value={fees.starterTierFee} onChange={v => setFees(f => ({ ...f, starterTierFee: v }))} placeholder="1200.00"/>
                           </div>
                         </div>
@@ -643,18 +643,18 @@ function WizardContent() {
           {step === 4 && (
             <div className="space-y-5">
               <div className="bg-white border border-line rounded-lg p-6 space-y-4">
-                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Operator Account</div>
+                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Operator Account</div>
                 <p className="text-xs text-ink-muted">Creates their dashboard login. They receive a welcome email with a temp password and setup link.</p>
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Full Name *</label>
+                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Full Name *</label>
                   <input value={op.contactName} onChange={e => setOp(f => ({ ...f, contactName: e.target.value }))} className={iCls} placeholder="John Smith" autoFocus/>
                 </div>
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Email *</label>
+                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Email *</label>
                   <input type="email" value={op.contactEmail} onChange={e => setOp(f => ({ ...f, contactEmail: e.target.value }))} className={iCls} placeholder="gm@pinecreek.com"/>
                 </div>
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Phone *</label>
+                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Phone *</label>
                   <input type="tel" value={op.contactPhone} onChange={e => setOp(f => ({ ...f, contactPhone: e.target.value }))} className={iCls} placeholder="(201) 555-0100"/>
                   <p className="text-[10px] text-ink-muted mt-1">Used for SMS two-factor login codes.</p>
                 </div>
@@ -683,23 +683,23 @@ function WizardContent() {
           {step === 5 && (
             <div className="space-y-5">
               <div className="bg-white border border-line rounded-lg p-6 space-y-5">
-                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Review before creating</div>
+                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Review before creating</div>
 
                 <div className="grid grid-cols-2 gap-x-8 gap-y-3">
                   {reviewCourseRows.map(([label, val]) => (
                     <div key={label}>
-                      <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">{label}</div>
+                      <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-0.5">{label}</div>
                       <div className="text-ink font-medium text-sm break-all">{val}</div>
                     </div>
                   ))}
                 </div>
 
                 <div className="border-t border-line pt-4">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Pricing</div>
+                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Pricing</div>
                   <div className="grid grid-cols-2 gap-x-8 gap-y-2">
                     {reviewFeeRows.map(([label, val]) => (
                       <div key={label}>
-                        <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">{label}</div>
+                        <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-0.5">{label}</div>
                         <div className="text-ink text-sm">{val}</div>
                       </div>
                     ))}
@@ -707,11 +707,11 @@ function WizardContent() {
                 </div>
 
                 <div className="border-t border-line pt-4">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Operator</div>
+                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Operator</div>
                   <div className="grid grid-cols-3 gap-4">
                     {([['Name', op.contactName], ['Email', op.contactEmail], ['Phone', op.contactPhone]] as [string, string][]).map(([label, val]) => (
                       <div key={label}>
-                        <div className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-0.5">{label}</div>
+                        <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-0.5">{label}</div>
                         <div className="text-ink font-medium text-sm break-all">{val}</div>
                       </div>
                     ))}

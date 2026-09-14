@@ -89,11 +89,11 @@ export default function OwnerLoginPage() {
           {step === 'credentials' ? (
             <form onSubmit={handleCredentials} className="space-y-4">
               <div>
-                <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Email</label>
+                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Email</label>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus className={iCls} />
               </div>
               <div>
-                <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Password</label>
+                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Password</label>
                 <input type="password" value={password} onChange={e => setPassword(e.target.value)} required className={iCls} />
               </div>
               <button type="submit" disabled={loading}
@@ -104,7 +104,7 @@ export default function OwnerLoginPage() {
           ) : (
             <form onSubmit={handleVerify} className="space-y-4">
               <div>
-                <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Verification code</label>
+                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Verification code</label>
                 <input
                   type="text"
                   value={code}

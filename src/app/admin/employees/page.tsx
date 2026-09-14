@@ -208,7 +208,7 @@ export default function EmployeesPage() {
 
           {/* Role reference */}
           <div className="bg-white border border-line rounded-lg p-4 mb-6">
-            <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2.5">Role permissions</div>
+            <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2.5">Role permissions</div>
             <div className="grid grid-cols-2 gap-2">
               {ROLES.map(r => (
                 <div key={r.value} className="flex items-start gap-2">
@@ -268,10 +268,10 @@ export default function EmployeesPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-line bg-paper">
-                  <th className="text-left text-[11px] uppercase tracking-[0.06em] text-ink-muted px-5 py-3">Name</th>
-                  <th className="text-left text-[11px] uppercase tracking-[0.06em] text-ink-muted px-5 py-3">Role</th>
-                  <th className="text-left text-[11px] uppercase tracking-[0.06em] text-ink-muted px-5 py-3">Last login</th>
-                  <th className="text-left text-[11px] uppercase tracking-[0.06em] text-ink-muted px-5 py-3">Status</th>
+                  <th className="text-left text-[11px] uppercase tracking-[0.1em] text-ink-muted px-5 py-3">Name</th>
+                  <th className="text-left text-[11px] uppercase tracking-[0.1em] text-ink-muted px-5 py-3">Role</th>
+                  <th className="text-left text-[11px] uppercase tracking-[0.1em] text-ink-muted px-5 py-3">Last login</th>
+                  <th className="text-left text-[11px] uppercase tracking-[0.1em] text-ink-muted px-5 py-3">Status</th>
                   {isOwner && <th className="px-5 py-3 w-56"/>}
                 </tr>
               </thead>
@@ -295,7 +295,7 @@ export default function EmployeesPage() {
                             {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                           </select>
                         ) : (
-                          <span className={`text-[11px] uppercase tracking-[0.06em] px-2 py-0.5 rounded ${roleBadgeClass(admin.role)}`}>
+                          <span className={`text-[11px] uppercase tracking-[0.1em] px-2 py-0.5 rounded ${roleBadgeClass(admin.role)}`}>
                             {ROLES.find(r => r.value === admin.role)?.label || admin.role}
                           </span>
                         )}
@@ -373,15 +373,15 @@ export default function EmployeesPage() {
             )}
             <form onSubmit={handleChangePassword} className="grid grid-cols-3 gap-3">
               <div>
-                <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Current password</label>
+                <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Current password</label>
                 <input type="password" value={cpCurrentPassword} onChange={e => setCpCurrentPassword(e.target.value)} required placeholder="Current password" className={iCls + ' w-full'}/>
               </div>
               <div>
-                <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">New password</label>
+                <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">New password</label>
                 <input type="password" value={cpNewPassword} onChange={e => setCpNewPassword(e.target.value)} required placeholder="Min 8 characters" className={iCls + ' w-full'}/>
               </div>
               <div>
-                <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Confirm new password</label>
+                <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Confirm new password</label>
                 <input type="password" value={cpConfirm} onChange={e => setCpConfirm(e.target.value)} required placeholder="Confirm password" className={iCls + ' w-full'}/>
               </div>
               <div className="col-span-3">

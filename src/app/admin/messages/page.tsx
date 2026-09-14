@@ -492,11 +492,11 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
             {!reviewing ? (
               <div className="space-y-4">
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Title</label>
+                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Title</label>
                   <input value={title} onChange={e => setTitle(e.target.value)} className={iCls} placeholder="Maintenance window this weekend"/>
                 </div>
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.06em] text-ink-muted block mb-1.5">Message</label>
+                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Message</label>
                   <textarea value={body} onChange={e => setBody(e.target.value)} rows={5} className={iCls + ' resize-none'} placeholder="Write your message here. Separate paragraphs with blank lines."/>
                 </div>
                 <div className="flex items-center justify-between flex-wrap gap-4">
@@ -523,7 +523,7 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
             ) : (
               <div className="space-y-4">
                 <div className="bg-paper border border-line rounded-lg p-4">
-                  <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Preview</div>
+                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Preview</div>
                   <div className="text-sm font-medium text-ink mb-2">{title}</div>
                   <div className="text-sm text-ink-soft whitespace-pre-line leading-relaxed">{body}</div>
                 </div>
@@ -558,7 +558,7 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
         )}
 
         <div>
-          <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">History</div>
+          <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">History</div>
           {loading && <div className="text-ink-muted text-sm py-8 text-center">Loading...</div>}
           {!loading && !loadError && broadcasts.length === 0 && (
             <div className="text-ink-muted text-sm py-12 text-center bg-white border border-line rounded-lg">

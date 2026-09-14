@@ -102,7 +102,7 @@ function SetPasswordForm() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Password</label>
+          <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Password</label>
           <input
             type="password"
             value={password}
@@ -116,7 +116,7 @@ function SetPasswordForm() {
           <p className="text-xs text-ink-faint mt-1.5">{PASSWORD_REQUIREMENTS_HINT}</p>
         </div>
         <div>
-          <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Confirm password</label>
+          <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Confirm password</label>
           <input
             type="password"
             value={confirm}

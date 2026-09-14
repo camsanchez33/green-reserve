@@ -58,14 +58,19 @@ function displayDate(dateStr: string) {
 }
 // Formatting only: turns the policy's "24 hours before" into the actual moment
 // the free-cancel window shuts, so nobody has to do date arithmetic in their head.
+// The tee time is a wall-clock time at the COURSE. The arithmetic runs on UTC
+// components and formats in UTC so the browser's own timezone never shifts the
+// answer — a golfer in Denver booking a New York course sees New York's deadline.
+// (Review fix: the first cut parsed the wall clock as browser-local time.)
 function deadlineLabel(dateStr: string, timeStr: string, hoursBefore: number) {
   if (!dateStr || !timeStr) return '';
-  const tee = new Date(`${dateStr}T${timeStr.length === 5 ? timeStr : timeStr.slice(0, 5)}:00`);
-  if (Number.isNaN(tee.getTime())) return '';
-  const cutoff = new Date(tee.getTime() - hoursBefore * 3600_000);
-  const day = cutoff.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  const clock = cutoff.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  return `${day} at ${clock}`;
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const [hh, mm] = timeStr.slice(0, 5).split(':').map(Number);
+  if ([y, m, d, hh, mm].some(n => Number.isNaN(n))) return '';
+  const cutoff = new Date(Date.UTC(y, m - 1, d, hh, mm) - hoursBefore * 3600_000);
+  const day = cutoff.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
+  const clock = cutoff.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' });
+  return `${day} at ${clock} (course time)`;
 }
 
 // Numbered step heading — the reserve screen is two steps, and says so.

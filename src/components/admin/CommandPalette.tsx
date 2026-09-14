@@ -206,7 +206,7 @@ export default function CommandPalette() {
             <>
               {!hasQuery && recents.length > 0 && (
                 <div className="px-4 pt-2.5 pb-1">
-                  <span className="text-[10px] uppercase tracking-[0.06em] text-ink-faint">Recent</span>
+                  <span className="text-[10px] uppercase tracking-[0.1em] text-ink-faint">Recent</span>
                 </div>
               )}
               {displayed.map((item, idx) => (

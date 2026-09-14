@@ -432,7 +432,7 @@ function InquiriesListInner() {
           <div className="text-[10px] text-ink-faint truncate flex items-center gap-1.5">
             {inq.email}
             {hasBadEmail(inq) && (
-              <span className="shrink-0 text-[9px] font-medium uppercase tracking-[0.06em] bg-warn/10 text-warn px-1.5 py-0.5">Bad email</span>
+              <span className="shrink-0 text-[9px] font-medium uppercase tracking-[0.1em] bg-warn/10 text-warn px-1.5 py-0.5">Bad email</span>
             )}
           </div>
         </div>
@@ -498,7 +498,7 @@ function InquiriesListInner() {
     return (
       <div key={title}>
         <div className="flex items-baseline gap-2 mb-2">
-          <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{title}</span>
+          <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">{title}</span>
           <span className="text-[11px] text-ink-faint">{rows.length} · {hint}</span>
           {canBulkSelect && (
             <button onClick={toggleSection} className="ml-auto text-[11px] text-ink-faint hover:text-ink transition-colors">
@@ -691,13 +691,13 @@ function InquiriesListInner() {
               <div className="space-y-5">
                 {rejectedRows.length > 0 && (
                   <div>
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Rejected ({rejectedRows.length})</div>
+                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Rejected ({rejectedRows.length})</div>
                     <div className="space-y-1.5">{rejectedRows.map(r => renderRow(r, 'closed'))}</div>
                   </div>
                 )}
                 {archivedOnly.length > 0 && (
                   <div>
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Archived ({archivedOnly.length})</div>
+                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Archived ({archivedOnly.length})</div>
                     <div className="space-y-1.5">{archivedOnly.map(r => renderRow(r, 'closed'))}</div>
                   </div>
                 )}
@@ -784,7 +784,7 @@ function InquiriesListInner() {
               </div>
               {isArchive && (
                 <div className="mb-4">
-                  <label className="block text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1">Type ARCHIVE to confirm</label>
+                  <label className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Type ARCHIVE to confirm</label>
                   <input
                     value={bulkConfirmText}
                     onChange={e => setBulkConfirmText(e.target.value)}
@@ -825,7 +825,7 @@ function InquiriesListInner() {
             <div className="bg-white rounded-lg border border-line max-w-md w-full p-5">
               <div className="text-sm font-medium text-ink mb-1">Permanently delete &quot;{deleteTarget.name}&quot;?</div>
               <p className="text-xs text-ink-muted mb-3">This cannot be undone — the inquiry and its history are gone for good.</p>
-              <label className="block text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-1">Type &quot;{deleteTarget.name}&quot; to confirm</label>
+              <label className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Type &quot;{deleteTarget.name}&quot; to confirm</label>
               <input
                 value={deleteConfirmText}
                 onChange={e => setDeleteConfirmText(e.target.value)}
