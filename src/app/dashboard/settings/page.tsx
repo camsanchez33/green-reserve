@@ -446,12 +446,10 @@ function SettingsPageInner() {
                     {(typeof form.type === 'string' && form.type && !['public','private'].includes(form.type) ? ['public','private', form.type] : ['public','private']).map(t=><option key={t} value={t}>{t.charAt(0).toUpperCase()+t.slice(1)}</option>)}
                   </select>
                 </Field>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Established Year" hint="Optional — shown in your sidebar identity.">
-                    <input type="number" value={(form.establishedYear as number) || ''} onChange={e => set('establishedYear', e.target.value ? Number(e.target.value) : null)}
-                      placeholder="e.g. 1927" min={1850} max={new Date().getFullYear()} className={iCls}/>
-                  </Field>
-                </div>
+                <Field label="Established Year" hint="Optional — shown in your sidebar identity.">
+                  <input type="number" value={(form.establishedYear as number) || ''} onChange={e => set('establishedYear', e.target.value ? Number(e.target.value) : null)}
+                    placeholder="e.g. 1927" min={1850} max={new Date().getFullYear()} className={iCls}/>
+                </Field>
                 <Field label="Description">
                   <textarea value={(form.description as string)||''} onChange={e=>set('description',e.target.value)} rows={4} className={iCls + ' resize-none'} placeholder="Tell golfers what makes your course special — history, signature holes, views, etc."/>
                 </Field>
