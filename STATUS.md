@@ -4,16 +4,21 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-14 20:03 UTC · branch `main` · HEAD `53b7b16` · working tree **2 dirty file(s)**
+Generated 2026-09-14 20:24 UTC · branch `main` · HEAD `c2f1fc0` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
+`RUN_QUEUE.md` was last committed **2026-09-14**. 1 commit(s) since then are not mentioned anywhere in it:
 
-### Uncommitted working tree (2 file(s))
+| commit | date | subject |
+|---|---|---|
+| `b3e26cd` | 2026-09-14 | H-2d §2: story video v2 files (Cam's re-render, 2026-09-14) — less frame-to-frame shimmer |
+
+**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (1 file(s))
 
 - `M RUN_QUEUE.md`
-- `M UI_REVISE_SPEC.md`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -72,14 +77,13 @@ This is the distinction a raw checkbox count gets wrong.
 22. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1366`
 23. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1395`
 24. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1474`
-25. INQUIRY_CALL_SPEC Phase IC-2 — inquiry detail: Set-up-call card (date/time/length/direction/number, agenda pre-checked from form gaps, confirmation email, skip-with-reason) + Log-t — `RUN_QUEUE.md:1962`
-26. INQUIRY_CALL_SPEC Phase IC-3 — /admin/inquiries becomes the sheet: fixed 7-column table (course, contact·phone, stage, next call, still need, in stage, inquired) inside the existin — `RUN_QUEUE.md:1963`
-27. COURSES_SHEET_SPEC Phase CS-1 — course-setup.ts (5 setup steps from existing fields) + course-checkin.ts (14d-after-go-live then every 90d; agenda in code; checkInSignal) + courses — `RUN_QUEUE.md:1968`
-28. COURSES_SHEET_SPEC Phase CS-2 — /admin/courses becomes the sheet: one table, 'Getting live' + 'Live' sections, 8 fixed columns (course, operator, status = setup n-of-5 or health, a — `RUN_QUEUE.md:1969`
-29. COURSES_SHEET_SPEC Phase CS-3 — course page: Setup card (5 steps + the existing action that completes each) for getting-live courses; Next check-in schedule/log card (IC-2 cards wi — `RUN_QUEUE.md:1970`
-30. AGREEMENT_SPEC Phase AG-2 — onboarding 'Sign' step: legal name, signer name/title, scroll-to-end panels, Operator Agreement + authority + brand license (marketing opt-out) + accura — `RUN_QUEUE.md:1975`
-31. AGREEMENT_SPEC Phase AG-3 — version bumps: seed refuses reacceptRequired bumps without counselReviewed; day-0 notice email; dashboard banner → modal after 30 days; operator writes  — `RUN_QUEUE.md:1976`
-32. UI_REVISE_SPEC H-2c — KILL THE PHOTO BAND (small, no migration, RUN FIRST): the 'We set it up' band shows a WIND FARM (bad Unsplash id for TEE). Delete the section + tee.jpg + READ — `RUN_QUEUE.md:1978`
+25. COURSES_SHEET_SPEC Phase CS-1 — course-setup.ts (5 setup steps from existing fields) + course-checkin.ts (14d-after-go-live then every 90d; agenda in code; checkInSignal) + courses — `RUN_QUEUE.md:1968`
+26. COURSES_SHEET_SPEC Phase CS-2 — /admin/courses becomes the sheet: one table, 'Getting live' + 'Live' sections, 8 fixed columns (course, operator, status = setup n-of-5 or health, a — `RUN_QUEUE.md:1969`
+27. COURSES_SHEET_SPEC Phase CS-3 — course page: Setup card (5 steps + the existing action that completes each) for getting-live courses; Next check-in schedule/log card (IC-2 cards wi — `RUN_QUEUE.md:1970`
+28. AGREEMENT_SPEC Phase AG-2 — onboarding 'Sign' step: legal name, signer name/title, scroll-to-end panels, Operator Agreement + authority + brand license (marketing opt-out) + accura — `RUN_QUEUE.md:1975`
+29. AGREEMENT_SPEC Phase AG-3 — version bumps: seed refuses reacceptRequired bumps without counselReviewed; day-0 notice email; dashboard banner → modal after 30 days; operator writes  — `RUN_QUEUE.md:1976`
+30. UI_REVISE_SPEC H-2c — KILL THE PHOTO BAND (small, no migration, RUN FIRST): the 'We set it up' band shows a WIND FARM (bad Unsplash id for TEE). Delete the section + tee.jpg + READ — `RUN_QUEUE.md:1978`
+31. UI_REVISE_SPEC H-2d — CLEAN HERO (direction A, chosen by Cam 2026-09-14): cream hero, no photo, headline left + live booking device (HomeDemo hero variant) + static tee-sheet card  — `RUN_QUEUE.md:1980`
 
 ## Waiting on you (not on a build)
 
@@ -178,6 +182,11 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `c2f1fc0` 2026-09-14 — IC-3: /admin/inquiries becomes the sheet — one fixed-column table, the Next-call cell, calls this week, Export CSV
+- `b3e26cd` 2026-09-14 — H-2d §2: story video v2 files (Cam's re-render, 2026-09-14) — less frame-to-frame shimmer
+- `4af4399` 2026-09-14 — IC-2: the discovery call on the inquiry page — set it up, log it, and the build gate that points at it
+- `de56fee` 2026-09-14 — queue/spec update
+- `2d1cae5` 2026-09-14 — queue/spec update
 - `53b7b16` 2026-09-14 — AG-1: the agreement is a record — versioned documents, acceptance rows, the gate
 - `77e15b4` 2026-09-14 — queue/spec update
 - `5bd0a85` 2026-09-14 — IC-1: the discovery call — schema, agenda catalog, needs, queue signal, API
@@ -185,12 +194,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `a42b895` 2026-09-13 — Review fixes for B-7, H-2a, H-2b
 - `e72802f` 2026-09-13 — fix: PaymentIntent has no amount_refunded in this SDK — refund state comes from our ledger (CI was red for one commit)
 - `072fa1b` 2026-09-13 — Second security hotfix for check-in charging, plus the last three fee claims
-- `7c4c863` 2026-09-13 — B-7 review fixes: settings load through dfetch with an inline error, side panels render without schedules, blackout error not beside the empty copy
-- `40c6d9b` 2026-09-13 — queue/spec update
-- `a8498fb` 2026-09-13 — H-2b: "See it work" gets two tabs — what golfers see, what you see
-- `0ab0a37` 2026-09-13 — queue/spec update
-- `9df9f2f` 2026-09-13 — B-7: Schedule as a time-band table, blocks and booking windows beside it
 
 ---
 
-**Totals:** 160 done · 9 awaiting review · 1 in flight · 32 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 162 done · 9 awaiting review · 1 in flight · 31 not started · 8 revise pages open · 15 ideas · 2 parked.

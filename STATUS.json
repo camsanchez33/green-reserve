@@ -1,24 +1,31 @@
 {
-  "generatedAt": "2026-09-14T20:03:18.735Z",
+  "generatedAt": "2026-09-14T20:24:05.301Z",
   "repo": {
-    "head": "53b7b16",
+    "head": "c2f1fc0",
     "branch": "main",
-    "dirtyCount": 2,
+    "dirtyCount": 1,
     "dirty": [
-      "M RUN_QUEUE.md",
-      " M UI_REVISE_SPEC.md"
+      "M RUN_QUEUE.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-14T15:11:18-04:00",
-    "unrecorded": []
+    "queueLastCommit": "2026-09-14T16:18:44-04:00",
+    "unrecorded": [
+      {
+        "h": "b3e26cd",
+        "date": "2026-09-14T16:18:46-04:00",
+        "subject": "H-2d §2: story video v2 files (Cam's re-render, 2026-09-14) — less frame-to-frame shimmer",
+        "ids": [],
+        "matches": []
+      }
+    ]
   },
   "counts": {
-    "runDone": 160,
+    "runDone": 162,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 32,
+    "runNotStarted": 31,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -226,16 +233,6 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "INQUIRY_CALL_SPEC Phase IC-2 — inquiry detail: Set-up-call card (date/time/length/direction/number, agenda pre-checked from form gaps, confirmation email, skip-with-reason) + Log-the-call card (outcom",
-      "line": 1962,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "INQUIRY_CALL_SPEC Phase IC-3 — /admin/inquiries becomes the sheet: fixed 7-column table (course, contact·phone, stage, next call, still need, in stage, inquired) inside the existing queue sections; Ne",
-      "line": 1963,
-      "section": "Queue (run in this order)"
-    },
-    {
       "title": "COURSES_SHEET_SPEC Phase CS-1 — course-setup.ts (5 setup steps from existing fields) + course-checkin.ts (14d-after-go-live then every 90d; agenda in code; checkInSignal) + courses API adds calls/setu",
       "line": 1968,
       "section": "Queue (run in this order)"
@@ -263,6 +260,11 @@
     {
       "title": "UI_REVISE_SPEC H-2c — KILL THE PHOTO BAND (small, no migration, RUN FIRST): the 'We set it up' band shows a WIND FARM (bad Unsplash id for TEE). Delete the section + tee.jpg + README row, move its hea",
       "line": 1978,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "UI_REVISE_SPEC H-2d — CLEAN HERO (direction A, chosen by Cam 2026-09-14): cream hero, no photo, headline left + live booking device (HomeDemo hero variant) + static tee-sheet card right, lockup nav un",
+      "line": 1980,
       "section": "Queue (run in this order)"
     }
   ],
@@ -828,6 +830,31 @@
   },
   "recentCommits": [
     {
+      "h": "c2f1fc0",
+      "date": "2026-09-14",
+      "subject": "IC-3: /admin/inquiries becomes the sheet — one fixed-column table, the Next-call cell, calls this week, Export CSV"
+    },
+    {
+      "h": "b3e26cd",
+      "date": "2026-09-14",
+      "subject": "H-2d §2: story video v2 files (Cam's re-render, 2026-09-14) — less frame-to-frame shimmer"
+    },
+    {
+      "h": "4af4399",
+      "date": "2026-09-14",
+      "subject": "IC-2: the discovery call on the inquiry page — set it up, log it, and the build gate that points at it"
+    },
+    {
+      "h": "de56fee",
+      "date": "2026-09-14",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "2d1cae5",
+      "date": "2026-09-14",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "53b7b16",
       "date": "2026-09-14",
       "subject": "AG-1: the agreement is a record — versioned documents, acceptance rows, the gate"
@@ -861,31 +888,6 @@
       "h": "072fa1b",
       "date": "2026-09-13",
       "subject": "Second security hotfix for check-in charging, plus the last three fee claims"
-    },
-    {
-      "h": "7c4c863",
-      "date": "2026-09-13",
-      "subject": "B-7 review fixes: settings load through dfetch with an inline error, side panels render without schedules, blackout error not beside the empty copy"
-    },
-    {
-      "h": "40c6d9b",
-      "date": "2026-09-13",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "a8498fb",
-      "date": "2026-09-13",
-      "subject": "H-2b: \"See it work\" gets two tabs — what golfers see, what you see"
-    },
-    {
-      "h": "0ab0a37",
-      "date": "2026-09-13",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "9df9f2f",
-      "date": "2026-09-13",
-      "subject": "B-7: Schedule as a time-band table, blocks and booking windows beside it"
     }
   ]
 }
