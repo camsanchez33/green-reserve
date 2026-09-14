@@ -194,7 +194,10 @@ async function chargeBooking(
           { stripeAccount: booking.course.stripeAccountId as string },
         );
         // A refunded charge is not "this charge" — the course may still collect.
-        const prior = found.data.find(pi => (pi.amount_refunded ?? 0) < pi.amount);
+        // Refund state lives in our ledger (refund-booking.ts sets paymentStatus
+        // 'refunded' and keeps the PI id); the PaymentIntent object carries no
+        // refunded amount in this SDK.
+        const prior = found.data.find(pi => !(booking.paymentStatus === 'refunded' && pi.id === booking.roundPaymentIntentId));
         if (prior) {
           console.warn(JSON.stringify({ ev: `${ev}.charge.already_succeeded`, bookingId, paymentIntentId: prior.id, amount: prior.amount }));
           // Reconcile the booking to what Stripe actually took, not to what
