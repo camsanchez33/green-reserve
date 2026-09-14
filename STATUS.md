@@ -4,15 +4,20 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-14 03:20 UTC · branch `main` · HEAD `b062574` · working tree **2 dirty file(s)**
+Generated 2026-09-14 03:31 UTC · branch `main` · HEAD `9df9f2f` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
+`RUN_QUEUE.md` was last committed **2026-09-13**. 1 commit(s) since then are not mentioned anywhere in it:
 
-### Uncommitted working tree (2 file(s))
+| commit | date | subject |
+|---|---|---|
+| `9df9f2f` | 2026-09-13 | B-7: Schedule as a time-band table, blocks and booking windows beside it |
 
-- `M RUN_QUEUE.md`
+**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (1 file(s))
+
 - `M UI_REVISE_SPEC.md`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
@@ -180,6 +185,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `9df9f2f` 2026-09-13 — B-7: Schedule as a time-band table, blocks and booking windows beside it
+- `54b8268` 2026-09-13 — queue/spec update
 - `b062574` 2026-09-13 — queue/spec update
 - `d801dac` 2026-09-13 — Security hotfix for B-5 / B-10 (from /gr-review)
 - `42b7f4d` 2026-09-13 — LQ-2 copy run: the fee sentences are now true everywhere
@@ -190,8 +197,6 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `f061c0f` 2026-09-13 — B-5: "Add a cart today?" at self check-in
 - `a1e4125` 2026-09-13 — queue/spec update
 - `57b9150` 2026-09-13 — H-2a: the homepage story loops a clip under the pinned beats
-- `6d56b8d` 2026-09-13 — queue/spec update
-- `3951a93` 2026-09-13 — queue/spec update
 
 ---
 

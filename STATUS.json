@@ -1,18 +1,25 @@
 {
-  "generatedAt": "2026-09-14T03:20:25.942Z",
+  "generatedAt": "2026-09-14T03:31:45.755Z",
   "repo": {
-    "head": "b062574",
+    "head": "9df9f2f",
     "branch": "main",
-    "dirtyCount": 2,
+    "dirtyCount": 1,
     "dirty": [
-      "M RUN_QUEUE.md",
-      " M UI_REVISE_SPEC.md"
+      "M UI_REVISE_SPEC.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-13T23:20:25-04:00",
-    "unrecorded": []
+    "queueLastCommit": "2026-09-13T23:20:26-04:00",
+    "unrecorded": [
+      {
+        "h": "9df9f2f",
+        "date": "2026-09-13T23:31:41-04:00",
+        "subject": "B-7: Schedule as a time-band table, blocks and booking windows beside it",
+        "ids": [],
+        "matches": []
+      }
+    ]
   },
   "counts": {
     "runDone": 157,
@@ -838,6 +845,16 @@
   },
   "recentCommits": [
     {
+      "h": "9df9f2f",
+      "date": "2026-09-13",
+      "subject": "B-7: Schedule as a time-band table, blocks and booking windows beside it"
+    },
+    {
+      "h": "54b8268",
+      "date": "2026-09-13",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "b062574",
       "date": "2026-09-13",
       "subject": "queue/spec update"
@@ -886,16 +903,6 @@
       "h": "57b9150",
       "date": "2026-09-13",
       "subject": "H-2a: the homepage story loops a clip under the pinned beats"
-    },
-    {
-      "h": "6d56b8d",
-      "date": "2026-09-13",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "3951a93",
-      "date": "2026-09-13",
-      "subject": "queue/spec update"
     }
   ]
 }
