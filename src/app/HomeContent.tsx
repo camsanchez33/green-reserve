@@ -56,11 +56,17 @@ export default function HomeContent() {
   const bandRef = useRef<HTMLElement>(null);
   const bandPhRef = useRef<HTMLDivElement>(null);
   const [faqOpen, setFaqOpen] = useState(0);
+  // H-2a: the story clip is mounted only when the page is wide enough (phones
+  // never download it) and the user has not asked for reduced motion or data.
+  const [storyVideo, setStoryVideo] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+    if (!reduce && !saveData && window.matchMedia('(min-width: 960px)').matches) setStoryVideo(true);
 
     // Reveals. Everything already in the viewport is marked before the
     // `js` class hides the rest, so the first paint never flashes.
@@ -121,6 +127,19 @@ export default function HomeContent() {
     };
   }, []);
 
+  // H-2a: play only while the pinned story is on screen; pause the moment it
+  // leaves. A clip that fails to load simply stays hidden behind the poster.
+  useEffect(() => {
+    const v = videoRef.current;
+    const story = storyRef.current;
+    if (!storyVideo || !v || !story) return;
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) v.play().catch(() => {}); else v.pause(); });
+    }, { threshold: 0.05 });
+    io.observe(story);
+    return () => io.disconnect();
+  }, [storyVideo]);
+
   return (
     <div ref={rootRef} className={s.root}>
       {/* 2. HERO */}
@@ -146,6 +165,20 @@ export default function HomeContent() {
         <div className={s.pin}>
           <div ref={storyPhRef} className={s.storyPh}>
             <Image src="/home/bunker.jpg" alt="" fill sizes="100vw" loading="lazy" />
+            {storyVideo && (
+              <video
+                ref={videoRef}
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                poster="/home/story-poster.jpg"
+                aria-hidden="true"
+                onError={() => setStoryVideo(false)}
+              >
+                <source src="/home/story.mp4" type="video/mp4" />
+              </video>
+            )}
           </div>
           <div className={`${s.shade} ${s.storyShade}`} />
           <div ref={beatsRef} className={s.beats}>
