@@ -326,7 +326,9 @@ export default function CourseDetailPage({
   // a week) that have a slot fitting the current party size — from the same
   // tee-times API the sheet already reads.
   useEffect(() => {
-    if (loadingTimes || teeTimes.length > 0 || !course || course.type === 'member' || course.type === 'private') return;
+    // A sold-out day still returns rows (full ones render greyed), so the
+    // trigger is "no row fits this party", not "no rows".
+    if (loadingTimes || teeTimes.some(t => t.players_available >= players) || !course || course.type === 'member' || course.type === 'private') return;
     let cancelled = false;
     setSearchingNext(true);
     const scan = async () => {
@@ -349,7 +351,7 @@ export default function CourseDetailPage({
     };
     scan();
     return () => { cancelled = true; };
-  }, [teeTimes.length, loadingTimes, selectedDate, slug, course, previewMode, players]);
+  }, [teeTimes, loadingTimes, selectedDate, slug, course, previewMode, players]);
 
   const hasHolesData = useMemo(() => {
     const vals = new Set(teeTimes.map(t => holesOf(t)).filter(h => h !== undefined));
@@ -1104,6 +1106,33 @@ export default function CourseDetailPage({
                     : <>No card needed — cancel any time.</>}
                   {' '}${ACCESS_FEE_PER_PLAYER.toFixed(2)}/player booking fee.
                 </p>
+
+                {/* B-4: the day is sold out for this party but the full rows still
+                    render below (each with "Tell me if it opens") — so the nearest
+                    fits sit here, above them, instead of in an empty state that
+                    never shows. */}
+                {!loadingTimes && teeTimes.length > 0 && !teeTimes.some(t => t.players_available >= players) && (
+                  <div className="mb-4 bg-white rounded-lg border border-line px-4 py-3.5 flex flex-wrap items-center gap-3">
+                    <div className="text-sm text-ink flex-1 min-w-[200px]">
+                      <b className="font-semibold">Nothing fits {players} on {displayDate(selectedDate)}.</b>{' '}
+                      {searchingNext ? 'Looking for the nearest open dates…' : nearestDates.length > 0 ? 'Nearest dates with room:' : bestFewer > 0 ? '' : 'Nothing with room in the next week either.'}
+                    </div>
+                    {!searchingNext && nearestDates.map((ds, i) => (
+                      <button key={ds} onClick={() => setSelectedDate(ds)}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-sm font-medium transition-colors"
+                        style={i === 0 ? { backgroundColor: accent, color: '#fff' } : { border: `1px solid ${accent}`, color: accent }}>
+                        {displayDate(ds)} →
+                      </button>
+                    ))}
+                    {bestFewer > 0 && (
+                      <button onClick={() => setPlayers(bestFewer)}
+                        className="inline-flex items-center px-3.5 py-2 rounded-md text-sm font-medium transition-colors"
+                        style={{ border: `1px solid ${accent}`, color: accent }}>
+                        Same day for {bestFewer} →
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {/* List */}
                 {loadingTimes ? (

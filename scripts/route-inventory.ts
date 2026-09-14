@@ -204,9 +204,18 @@ commits partly because of it.
    → Cancellation fee refunded if previously charged
    → Booking.status = 'completed'
 
-4. STRIPE WEBHOOKS  (src/app/api/stripe/webhook)
-   account.updated → sync Course.stripeAccountActive
-   (idempotent: updateMany with same value is safe to replay)
+4. STRIPE WEBHOOKS  (src/app/api/stripe/webhook) — registered as a CONNECT webhook
+   account.updated                 → sync Course.stripeAccountActive
+   charge.refunded                 → PaymentEvent 'refund' (deduped on refund id); full refund → paymentStatus 'refunded'
+   charge.dispute.created/updated/closed → PaymentEvent 'dispute' / 'dispute_closed' (one row per state, evidence due date in detail)
+   payment_intent.payment_failed   → PaymentEvent 'charge_failed'
+   (idempotent: every handler dedupes on a Stripe id or a composite marker)
+
+5. REFUNDS — two paths, one money rule
+   lib/refund-booking.ts (admin Refund, MANAGER_PLUS) and lib/stripe.ts
+   refundOnConnectedAccount (cancellations) both pass refund_application_fee:
+   true — GreenReserve's fee reverses pro rata on every refunded round.
+   PaymentEvent is the ledger; /api/admin/transactions/export is the CSV of it.
 \`\`\`
 
 ---
