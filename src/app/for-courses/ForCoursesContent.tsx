@@ -204,7 +204,7 @@ export default function ForCoursesContent() {
     <div className="min-h-screen bg-paper flex items-center justify-center p-6">
       <div className="bg-white rounded-lg p-10 max-w-lg w-full border border-line">
         <CheckCircle className="w-12 h-12 text-ok mx-auto mb-5" />
-        <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-1 text-center">Got it — we&apos;ll be in touch.</h1>
+        <h1 className="text-2xl sm:text-3xl font-serif font-medium tracking-tight text-ink mb-2 text-center">Got it — we&apos;ll be in touch.</h1>
         <p className="text-ink-soft text-center mb-8 text-sm">
           We received your inquiry for <span className="font-medium text-ink">{submittedName}</span>.
           Check your email for a confirmation.
@@ -251,7 +251,7 @@ export default function ForCoursesContent() {
         <Link href="/" className="inline-block">
           <Image src="/brand/logo-lockup-cream-900.png" alt="GreenReserve" width={88} height={44} priority className="h-11 w-auto mx-auto" />
         </Link>
-        <h1 className="text-white text-[22px] font-serif font-medium mt-4 mb-1 tracking-tight">Get your course listed</h1>
+        <h1 className="text-white text-3xl sm:text-4xl font-serif font-medium mt-4 mb-2 tracking-tight">Get your course listed</h1>
         <p className="text-white/50 text-sm">Free to list. $0 / month. We charge golfers $1.50 — not you.</p>
       </div>
 
@@ -543,6 +543,9 @@ export default function ForCoursesContent() {
           </button>
           <p className="text-center text-ink-muted text-xs">
             We review every submission and reply within 1 business day.
+          </p>
+          <p className="text-center text-ink-faint text-xs">
+            No account is created — this just sends us an inquiry.
           </p>
           </div>
 

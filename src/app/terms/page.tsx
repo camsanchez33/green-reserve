@@ -41,7 +41,7 @@ export default function TermsOfServicePage() {
                 {[
                   'GreenReserve is a booking platform, not a golf course — each course sets its own prices, policies and rules (section 1).',
                   'GreenReserve charges a $1.50 per-player service fee on every booking (section 2).',
-                  'If your course has a late-cancellation fee, saving a card authorizes that charge when you cancel late (section 3).',
+                  'If the course has a late-cancellation fee, saving a card authorizes that charge when you cancel late (section 3).',
                   'No-shows are not refunded (section 4).',
                   'Our liability is capped at the service fees you have paid us in the twelve months before a claim (section 6).',
                   'New Jersey law; disputes go to individual arbitration, or small-claims court instead (section 8).',
