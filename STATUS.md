@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-14 03:15 UTC · branch `main` · HEAD `a4fd2b1` · working tree **2 dirty file(s)**
+Generated 2026-09-14 03:20 UTC · branch `main` · HEAD `b062574` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -79,7 +79,9 @@ This is the distinction a raw checkbox count gets wrong.
 29. COURSES_SHEET_SPEC Phase CS-1 — course-setup.ts (5 setup steps from existing fields) + course-checkin.ts (14d-after-go-live then every 90d; agenda in code; checkInSignal) + courses — `RUN_QUEUE.md:1968`
 30. COURSES_SHEET_SPEC Phase CS-2 — /admin/courses becomes the sheet: one table, 'Getting live' + 'Live' sections, 8 fixed columns (course, operator, status = setup n-of-5 or health, a — `RUN_QUEUE.md:1969`
 31. COURSES_SHEET_SPEC Phase CS-3 — course page: Setup card (5 steps + the existing action that completes each) for getting-live courses; Next check-in schedule/log card (IC-2 cards wi — `RUN_QUEUE.md:1970`
-32. LQ-2 COPY RUN (small, no migration) — fee-flow DECIDED 2026-09-14: keep the direct-charge + application-fee structure, rewrite every fee claim. Exact sentences per surface in legal — `RUN_QUEUE.md:1972`
+32. AGREEMENT_SPEC Phase AG-1 — AgreementAcceptance + AgreementVersion tables, Course.legalName (SCHEMA CHANGE, attended, additive); agreement text moves to versioned Markdown in legal — `RUN_QUEUE.md:1974`
+33. AGREEMENT_SPEC Phase AG-2 — onboarding 'Sign' step: legal name, signer name/title, scroll-to-end panels, Operator Agreement + authority + brand license (marketing opt-out) + accura — `RUN_QUEUE.md:1975`
+34. AGREEMENT_SPEC Phase AG-3 — version bumps: seed refuses reacceptRequired bumps without counselReviewed; day-0 notice email; dashboard banner → modal after 30 days; operator writes  — `RUN_QUEUE.md:1976`
 
 ## Waiting on you (not on a build)
 
@@ -178,6 +180,10 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `b062574` 2026-09-13 — queue/spec update
+- `d801dac` 2026-09-13 — Security hotfix for B-5 / B-10 (from /gr-review)
+- `42b7f4d` 2026-09-13 — LQ-2 copy run: the fee sentences are now true everywhere
+- `7e57c32` 2026-09-13 — queue/spec update
 - `a4fd2b1` 2026-09-13 — H-2a: webm variant of the story clip (Cam supplied) listed before the mp4
 - `46a3f22` 2026-09-13 — queue/spec update
 - `afbd5b6` 2026-09-13 — queue/spec update
@@ -186,11 +192,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `57b9150` 2026-09-13 — H-2a: the homepage story loops a clip under the pinned beats
 - `6d56b8d` 2026-09-13 — queue/spec update
 - `3951a93` 2026-09-13 — queue/spec update
-- `aba3d73` 2026-09-13 — Spec-review fixes: B-4 fires on a sold-out day; route-map generator keeps the MP-6b money-flow block
-- `15b408e` 2026-09-13 — B-10: the reminder toast also counts members skipped for being on a free tier (admin-UX review)
-- `1896ce5` 2026-09-13 — queue/spec update
-- `cbaadf1` 2026-09-13 — B-10: Members — one click reminds every overdue member
 
 ---
 
-**Totals:** 156 done · 9 awaiting review · 1 in flight · 32 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 157 done · 9 awaiting review · 1 in flight · 34 not started · 8 revise pages open · 15 ideas · 2 parked.

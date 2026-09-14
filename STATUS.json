@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-14T03:15:01.758Z",
+  "generatedAt": "2026-09-14T03:20:25.942Z",
   "repo": {
-    "head": "a4fd2b1",
+    "head": "b062574",
     "branch": "main",
     "dirtyCount": 2,
     "dirty": [
@@ -11,14 +11,14 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-13T23:14:20-04:00",
+    "queueLastCommit": "2026-09-13T23:20:25-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 156,
+    "runDone": 157,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 32,
+    "runNotStarted": 34,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -261,8 +261,18 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "LQ-2 COPY RUN (small, no migration) — fee-flow DECIDED 2026-09-14: keep the direct-charge + application-fee structure, rewrite every fee claim. Exact sentences per surface in legal/LQ-2_FEE_COPY.md (H",
-      "line": 1972,
+      "title": "AGREEMENT_SPEC Phase AG-1 — AgreementAcceptance + AgreementVersion tables, Course.legalName (SCHEMA CHANGE, attended, additive); agreement text moves to versioned Markdown in legal/documents/ with sha",
+      "line": 1974,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "AGREEMENT_SPEC Phase AG-2 — onboarding 'Sign' step: legal name, signer name/title, scroll-to-end panels, Operator Agreement + authority + brand license (marketing opt-out) + accuracy attestation in on",
+      "line": 1975,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "AGREEMENT_SPEC Phase AG-3 — version bumps: seed refuses reacceptRequired bumps without counselReviewed; day-0 notice email; dashboard banner → modal after 30 days; operator writes 428 agreement_requir",
+      "line": 1976,
       "section": "Queue (run in this order)"
     }
   ],
@@ -828,6 +838,26 @@
   },
   "recentCommits": [
     {
+      "h": "b062574",
+      "date": "2026-09-13",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "d801dac",
+      "date": "2026-09-13",
+      "subject": "Security hotfix for B-5 / B-10 (from /gr-review)"
+    },
+    {
+      "h": "42b7f4d",
+      "date": "2026-09-13",
+      "subject": "LQ-2 copy run: the fee sentences are now true everywhere"
+    },
+    {
+      "h": "7e57c32",
+      "date": "2026-09-13",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "a4fd2b1",
       "date": "2026-09-13",
       "subject": "H-2a: webm variant of the story clip (Cam supplied) listed before the mp4"
@@ -866,26 +896,6 @@
       "h": "3951a93",
       "date": "2026-09-13",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "aba3d73",
-      "date": "2026-09-13",
-      "subject": "Spec-review fixes: B-4 fires on a sold-out day; route-map generator keeps the MP-6b money-flow block"
-    },
-    {
-      "h": "15b408e",
-      "date": "2026-09-13",
-      "subject": "B-10: the reminder toast also counts members skipped for being on a free tier (admin-UX review)"
-    },
-    {
-      "h": "1896ce5",
-      "date": "2026-09-13",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "cbaadf1",
-      "date": "2026-09-13",
-      "subject": "B-10: Members — one click reminds every overdue member"
     }
   ]
 }
