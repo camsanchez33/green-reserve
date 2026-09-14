@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-13T23:59:25.430Z",
+  "generatedAt": "2026-09-14T02:17:31.367Z",
   "repo": {
-    "head": "767d81c",
+    "head": "1bc8033",
     "branch": "main",
     "dirtyCount": 2,
     "dirty": [
@@ -11,14 +11,22 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-11T20:00:44-04:00",
-    "unrecorded": []
+    "queueLastCommit": "2026-09-13T21:00:36-04:00",
+    "unrecorded": [
+      {
+        "h": "1bc8033",
+        "date": "2026-09-13T21:52:22-04:00",
+        "subject": "H-1 fixes from /gr-review: live hero parallax, story unpins on phones, frozen claim out of metadata",
+        "ids": [],
+        "matches": []
+      }
+    ]
   },
   "counts": {
     "runDone": 155,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 24,
+    "runNotStarted": 29,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -45,21 +53,21 @@
       "line": 500,
       "hash": "7246a62",
       "shipDate": "2026-08-29",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "title": "MP-1",
       "line": 530,
       "hash": "41f5ea8",
       "shipDate": "2026-08-29",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
       "line": 565,
       "hash": "4ef11dd",
       "shipDate": "2026-08-29",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "title": "MP-2",
@@ -224,6 +232,31 @@
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
       "line": 1474,
       "section": "Queue (run in this order)"
+    },
+    {
+      "title": "INQUIRY_CALL_SPEC Phase IC-1 — InquiryCall model + callSkippedReason (SCHEMA CHANGE, attended, additive), src/lib/inquiry-call.ts agenda catalog + src/lib/inquiry-needs.ts 'still need from them' + que",
+      "line": 1961,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "INQUIRY_CALL_SPEC Phase IC-2 — inquiry detail: Set-up-call card (date/time/length/direction/number, agenda pre-checked from form gaps, confirmation email, skip-with-reason) + Log-the-call card (outcom",
+      "line": 1962,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "INQUIRY_CALL_SPEC Phase IC-3 — /admin/inquiries becomes the sheet: fixed 7-column table (course, contact·phone, stage, next call, still need, in stage, inquired) inside the existing queue sections; Ne",
+      "line": 1963,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "UI_REVISE_SPEC H-2a — homepage story looks like a video: looping muted <video> under the pinned beats (poster = current still, webm+mp4 in public/home/, play/pause on visibility, reduced-motion/saveDa",
+      "line": 1965,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "UI_REVISE_SPEC H-2b — 'See it work' two tabs: What golfers see (today's HomeDemo) · What you see (new standalone HomeDashboardDemo: stats tiles, date strip, tee sheet rows with check-in + block intera",
+      "line": 1966,
+      "section": "Queue (run in this order)"
     }
   ],
   "waitingOnCam": [
@@ -266,6 +299,11 @@
       "item": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
       "note": "CAM: confirm the state before this runs — e",
       "line": 1395
+    },
+    {
+      "item": "UI_REVISE_SPEC H-2a — homepage story looks like a video: looping muted <video> under the pinned beats (poster = current still, webm+mp4 in public/home/, play/pause on visibility, reduced-motion/saveDa",
+      "note": "CAM: pick/supply the clip (8–15s loop, free license, ≤3",
+      "line": 1965
     }
   ],
   "ideas": {
@@ -788,6 +826,31 @@
   },
   "recentCommits": [
     {
+      "h": "1bc8033",
+      "date": "2026-09-13",
+      "subject": "H-1 fixes from /gr-review: live hero parallax, story unpins on phones, frozen claim out of metadata"
+    },
+    {
+      "h": "9221f2b",
+      "date": "2026-09-13",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "85b3922",
+      "date": "2026-09-13",
+      "subject": "H-1: pricing tile radius 16px → 14px (§1a card cap, from the design audit)"
+    },
+    {
+      "h": "4a16f01",
+      "date": "2026-09-13",
+      "subject": "stats: playersToday on the Overview top strip (shared change for the U-A reskin — the fee is per player)"
+    },
+    {
+      "h": "e8f91b4",
+      "date": "2026-09-13",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "767d81c",
       "date": "2026-09-13",
       "subject": "H-1: the homepage, from the approved prototype"
@@ -821,31 +884,6 @@
       "h": "a954491",
       "date": "2026-09-11",
       "subject": "MP-10: bound every admin list query instead of paging in memory"
-    },
-    {
-      "h": "ae32878",
-      "date": "2026-09-11",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "b468723",
-      "date": "2026-09-11",
-      "subject": "MP-6c: payouts that reached the bank, unit economics, and a ledger export"
-    },
-    {
-      "h": "9b51048",
-      "date": "2026-09-11",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "b56bf5a",
-      "date": "2026-09-11",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "af2fdf8",
-      "date": "2026-09-11",
-      "subject": "COURSE_LAYOUT L3: admin sees the configured layout; isolation test covers products"
     }
   ]
 }

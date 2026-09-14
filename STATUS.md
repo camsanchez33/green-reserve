@@ -4,11 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-13 23:59 UTC · branch `main` · HEAD `767d81c` · working tree **2 dirty file(s)**
+Generated 2026-09-14 02:17 UTC · branch `main` · HEAD `1bc8033` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
+`RUN_QUEUE.md` was last committed **2026-09-13**. 1 commit(s) since then are not mentioned anywhere in it:
+
+| commit | date | subject |
+|---|---|---|
+| `1bc8033` | 2026-09-13 | H-1 fixes from /gr-review: live hero parallax, story unpins on phones, frozen claim out of metadata |
+
+**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
 ### Uncommitted working tree (2 file(s))
 
@@ -36,9 +42,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 14d | `7246a62` | `RUN_QUEUE.md:500` |
-| MP-1 | 2026-08-29 | 14d | `41f5ea8` | `RUN_QUEUE.md:530` |
-| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 14d | `4ef11dd` | `RUN_QUEUE.md:565` |
+| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 15d | `7246a62` | `RUN_QUEUE.md:500` |
+| MP-1 | 2026-08-29 | 15d | `41f5ea8` | `RUN_QUEUE.md:530` |
+| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 15d | `4ef11dd` | `RUN_QUEUE.md:565` |
 | MP-2 | 2026-08-29 | 14d | `958f229` | `RUN_QUEUE.md:606` |
 | MP-2b | 2026-08-29 | 14d | `a134af5` | `RUN_QUEUE.md:643` |
 | MP-2c | 2026-08-29 | 14d | `e5b5413` | `RUN_QUEUE.md:692` |
@@ -72,6 +78,11 @@ This is the distinction a raw checkbox count gets wrong.
 22. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1366`
 23. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1395`
 24. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1474`
+25. INQUIRY_CALL_SPEC Phase IC-1 — InquiryCall model + callSkippedReason (SCHEMA CHANGE, attended, additive), src/lib/inquiry-call.ts agenda catalog + src/lib/inquiry-needs.ts 'still n — `RUN_QUEUE.md:1961`
+26. INQUIRY_CALL_SPEC Phase IC-2 — inquiry detail: Set-up-call card (date/time/length/direction/number, agenda pre-checked from form gaps, confirmation email, skip-with-reason) + Log-t — `RUN_QUEUE.md:1962`
+27. INQUIRY_CALL_SPEC Phase IC-3 — /admin/inquiries becomes the sheet: fixed 7-column table (course, contact·phone, stage, next call, still need, in stage, inquired) inside the existin — `RUN_QUEUE.md:1963`
+28. UI_REVISE_SPEC H-2a — homepage story looks like a video: looping muted <video> under the pinned beats (poster = current still, webm+mp4 in public/home/, play/pause on visibility, r — `RUN_QUEUE.md:1965`
+29. UI_REVISE_SPEC H-2b — 'See it work' two tabs: What golfers see (today's HomeDemo) · What you see (new standalone HomeDashboardDemo: stats tiles, date strip, tee sheet rows with che — `RUN_QUEUE.md:1966`
 
 ## Waiting on you (not on a build)
 
@@ -83,6 +94,7 @@ This is the distinction a raw checkbox count gets wrong.
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:740`
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:782`
 - CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1395`
+- CAM: pick/supply the clip (8–15s loop, free license, ≤3 — `RUN_QUEUE.md:1965`
 
 ## Revise campaign (page-by-page pass)
 
@@ -170,6 +182,11 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `1bc8033` 2026-09-13 — H-1 fixes from /gr-review: live hero parallax, story unpins on phones, frozen claim out of metadata
+- `9221f2b` 2026-09-13 — queue/spec update
+- `85b3922` 2026-09-13 — H-1: pricing tile radius 16px → 14px (§1a card cap, from the design audit)
+- `4a16f01` 2026-09-13 — stats: playersToday on the Overview top strip (shared change for the U-A reskin — the fee is per player)
+- `e8f91b4` 2026-09-13 — queue/spec update
 - `767d81c` 2026-09-13 — H-1: the homepage, from the approved prototype
 - `6bc1168` 2026-09-11 — queue/spec update
 - `7238dd9` 2026-09-11 — queue/spec update
@@ -177,12 +194,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `a3c1bea` 2026-09-11 — U-0: the staff look — one CSS switch, two fonts, two sidebars
 - `961c637` 2026-09-11 — queue/spec update
 - `a954491` 2026-09-11 — MP-10: bound every admin list query instead of paging in memory
-- `ae32878` 2026-09-11 — queue/spec update
-- `b468723` 2026-09-11 — MP-6c: payouts that reached the bank, unit economics, and a ledger export
-- `9b51048` 2026-09-11 — queue/spec update
-- `b56bf5a` 2026-09-11 — queue/spec update
-- `af2fdf8` 2026-09-11 — COURSE_LAYOUT L3: admin sees the configured layout; isolation test covers products
 
 ---
 
-**Totals:** 155 done · 9 awaiting review · 1 in flight · 24 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 155 done · 9 awaiting review · 1 in flight · 29 not started · 8 revise pages open · 15 ideas · 2 parked.
