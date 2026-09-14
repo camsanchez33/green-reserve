@@ -196,6 +196,7 @@ export default function CourseDetailPage({
   const [alertName, setAlertName] = useState('');
   const [alertSubmitting, setAlertSubmitting] = useState(false);
   const [alertSent, setAlertSent] = useState(false);
+  const [alertError, setAlertError] = useState('');
 
   const [memberSession, setMemberSession] = useState<ActiveMemberSession | null>(null);
   const [golferProfile, setGolferProfile] = useState<GolferProfile | null>(null);
@@ -389,9 +390,13 @@ export default function CourseDetailPage({
 
   function openAlert(teeTimeId?: string) {
     if (!course) return;
+    // B-2: a full slot's alert lives inside its own row now; tapping the same
+    // row again folds it back up. The date-level alert (no slot) keeps the modal.
+    if (teeTimeId && alertModal?.teeTimeId === teeTimeId) { setAlertModal(null); return; }
     setAlertEmail('');
     setAlertName('');
     setAlertSent(false);
+    setAlertError('');
     setAlertModal({ teeTimeId, date: selectedDate, courseId: String(course.id) });
   }
 
@@ -405,8 +410,9 @@ export default function CourseDetailPage({
       twilight:  { windowStart: '16:00', windowEnd: '23:59' },
     };
     const windows = alertModal.teeTimeId ? { windowStart: '', windowEnd: '' } : todWindows[todFilter];
+    setAlertError('');
     try {
-      await fetch('/api/alerts', {
+      const r = await fetch('/api/alerts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -420,8 +426,15 @@ export default function CourseDetailPage({
           teeTimeId: alertModal.teeTimeId || null,
         }),
       });
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        setAlertError(d.error || 'That did not go through — try again.');
+        return;
+      }
       setAlertSent(true);
-    } catch { /* ignore */ } finally {
+    } catch {
+      setAlertError('Network error — the alert was not set. Check your connection and try again.');
+    } finally {
       setAlertSubmitting(false);
     }
   }
@@ -1157,8 +1170,8 @@ export default function CourseDetailPage({
                               <div key={t.id} className={`rounded-lg border overflow-hidden transition-all ${isFull ? 'opacity-60' : ''}`} style={slotBorder}>
                                 <div
                                   className="w-full flex items-center justify-between gap-4 px-4 sm:px-5 py-3.5"
-                                  style={{ backgroundColor: isSel ? `${accent}0a` : '#fff', cursor: isFull ? 'default' : 'pointer' }}
-                                  onClick={isFull ? undefined : () => {
+                                  style={{ backgroundColor: isSel ? `${accent}0a` : '#fff', cursor: 'pointer' }}
+                                  onClick={isFull ? () => openAlert(t.id) : () => {
                                     const next = isSel ? null : t;
                                     setSelectedTime(next);
                                     if (next && players > next.players_available) setPlayers(next.players_available);
@@ -1194,7 +1207,9 @@ export default function CourseDetailPage({
                                       )}
                                     </div>
                                     {isFull ? (
-                                      <span className="inline-flex px-3 sm:px-4 py-2 rounded-md text-xs font-medium border border-line text-ink-faint">Full</span>
+                                      <span className="inline-flex items-center gap-1 px-3 sm:px-4 py-2 rounded-md text-xs font-medium border border-line text-ink-soft">
+                                        <Bell size={11} /> Tell me if it opens
+                                      </span>
                                     ) : (
                                       <span
                                         className="inline-flex items-center gap-1 px-3 sm:px-4 py-2 rounded-md text-xs font-medium transition-colors"
@@ -1206,15 +1221,36 @@ export default function CourseDetailPage({
                                   </div>
                                 </div>
 
-                                {isFull && (
-                                  <div className="border-t border-line/60 px-4 sm:px-5 py-2.5 flex justify-end">
-                                    <button
-                                      onClick={() => openAlert(t.id)}
-                                      className="inline-flex items-center gap-1 text-[11px] font-medium transition-opacity hover:opacity-70"
-                                      style={{ color: accent }}
-                                    >
-                                      <Bell size={10} /> Alert me if this opens
-                                    </button>
+                                {/* B-2: the alert form opens inside the full row — no modal. Same API. */}
+                                {isFull && alertModal?.teeTimeId === t.id && (
+                                  <div className="border-t px-4 sm:px-5 py-4" style={{ borderColor: `${accent}25`, backgroundColor: `${accent}05` }} onClick={e => e.stopPropagation()}>
+                                    {alertSent ? (
+                                      <p className="text-sm text-ink"><b className="font-semibold">Alert set.</b> We&apos;ll email you the moment {formatTime(t.time)} opens up on {displayDate(selectedDate)}.</p>
+                                    ) : (
+                                      <>
+                                        <p className="text-sm text-ink-soft mb-3">We&apos;ll email you the moment this time opens up. One email, nothing else.</p>
+                                        <div className="flex flex-col sm:flex-row gap-2">
+                                          <input
+                                            type="email"
+                                            placeholder="Your email"
+                                            value={alertEmail}
+                                            onChange={e => setAlertEmail(e.target.value)}
+                                            onKeyDown={e => { if (e.key === 'Enter') submitAlert(); }}
+                                            className="flex-1 bg-white border border-line rounded-md px-3 py-2.5 text-ink placeholder-ink-faint text-sm outline-none focus:ring-2"
+                                            style={{ '--tw-ring-color': `${accent}33` } as React.CSSProperties}
+                                          />
+                                          <button
+                                            onClick={submitAlert}
+                                            disabled={!alertEmail.trim() || alertSubmitting}
+                                            className="px-4 py-2.5 rounded-md text-white text-sm font-medium disabled:opacity-50 transition-opacity"
+                                            style={{ backgroundColor: accent }}
+                                          >
+                                            {alertSubmitting ? 'Setting…' : 'Tell me'}
+                                          </button>
+                                        </div>
+                                        {alertError && <p className="text-xs text-bad mt-2">{alertError}</p>}
+                                      </>
+                                    )}
                                   </div>
                                 )}
 
@@ -1442,7 +1478,7 @@ export default function CourseDetailPage({
       </div>
 
       {/* Alert modal */}
-      {alertModal && (
+      {alertModal && !alertModal.teeTimeId && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
           onClick={() => { if (!alertSubmitting) { setAlertModal(null); setAlertSent(false); } }}
@@ -1489,6 +1525,7 @@ export default function CourseDetailPage({
                     className="w-full bg-paper border border-line rounded-md px-3 py-2.5 text-ink placeholder-ink-faint text-sm focus:border-pine/40 focus:ring-2 focus:ring-pine/10 outline-none"
                   />
                 </div>
+                {alertError && <p className="text-xs text-bad mt-3">{alertError}</p>}
                 <div className="flex gap-2 mt-5">
                   <button
                     onClick={() => setAlertModal(null)}
