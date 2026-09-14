@@ -53,6 +53,13 @@ export async function GET(req: NextRequest) {
 
   if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
 
+  // CS-3: every call about this course — its own check-ins and the linked
+  // inquiry's discovery calls (which count as contact). Few rows.
+  const calls = await prisma.call.findMany({
+    where: { OR: [{ courseId }, { inquiry: { builtCourseId: courseId } }] },
+    orderBy: { scheduledAt: 'desc' },
+  });
+
   const bookings30d = revenue._count.id;
   const health = computeCourseHealth({
     archivedAt: course.archivedAt,
@@ -144,6 +151,7 @@ export async function GET(req: NextRequest) {
     // agreement acceptance, uploaded docs, notes) — null if there's no
     // linked inquiry to log against.
     timeline,
+    calls,
     remindersPaused: timeline ? isRemindersPaused(timeline) : false,
     // AGREEMENT = GO-LIVE GATE (RUN_QUEUE) — feeds the Setup checklist step
     // and the Overview health block the same way Stripe/approval already do.

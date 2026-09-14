@@ -1,11 +1,15 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+// CS-3: the Setup card (getting live) and the Next check-in card (live).
+import CourseCheckInCard, { describeCheckIn, type CourseCallRow } from '@/components/admin/CourseCheckInCard';
+import { setupProgress } from '@/lib/course-setup';
+import { nextCall, overdueCall, fmtCallTime } from '@/lib/inquiry-call';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft, Power, Globe, ArchiveX, ArchiveRestore, Mail, Phone,
   Calendar, Ban, Plus, X, RefreshCw, Search, MessageSquare, Send, Trash2, Eye, CheckCircle,
-  FileText, Upload, StickyNote, AlertTriangle, MoreVertical, Pause, Play, Pencil,
+  FileText, Upload, StickyNote, AlertTriangle, MoreVertical, Pause, Play, Pencil, Check,
 } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -55,6 +59,8 @@ interface CourseDetail {
     archivedAt?: string | null; archivedBy?: string | null;
     adminNotes?: string | null; createdAt?: string;
     welcomeEmailSentAt?: string | null;
+    liveStatus?: string;
+    nextCheckInAt?: string | null;
     schedules?: { id: string; createdAt: string }[];
     operator: { id: string; name: string; email: string; phone?: string; emailVerified: boolean; onboardingStep: number } | null;
   };
@@ -83,6 +89,8 @@ interface CourseDetail {
   health: { status: CourseHealthStatus; label: string; dot: 'ok' | 'bad' | 'warn' | 'neutral'; reason: string };
   openItems: { unreadMessages: number; openChanges: string[]; hasSchedule: boolean };
   timeline: TimelineEventDTO[] | null;
+  /** CS-3: check-in calls + the linked inquiry's discovery calls, newest first. */
+  calls?: CourseCallRow[];
   remindersPaused: boolean;
   // ORPHAN SWEEP item 2 (FUTURE-PROOF) — null means no linked inquiry; the
   // origin card shows that loudly instead of pretending it doesn't matter.
@@ -267,6 +275,10 @@ export default function CourseDetailPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [tab, setTab] = useState<TabName>('overview');
+  // CS-3: ?checkin=1 (from the courses sheet's Schedule link) opens the card.
+  const [checkinFocus, setCheckinFocus] = useState<{ n: number } | null>(null);
+  const [verifyBusy, setVerifyBusy] = useState(false);
+  const [verifyMsg, setVerifyMsg] = useState('');
 
   // Setup / policy form
   const [setupForm, setSetupForm] = useState<Record<string, unknown>>({});
@@ -480,6 +492,24 @@ export default function CourseDetailPage() {
   useEffect(() => {
     if (adminReady) loadDetail();
   }, [adminReady, loadDetail]);
+
+  useEffect(() => {
+    if (!detail) return;
+    if (new URLSearchParams(window.location.search).get('checkin') === '1') setCheckinFocus({ n: Date.now() });
+  }, [detail?.course.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // CS-3 Setup card: the one action that completes the "verified" step —
+  // marks the operator verified (the existing verify-operator action).
+  async function markVerified() {
+    if (!detail?.course.operator?.email) return;
+    setVerifyBusy(true); setVerifyMsg('');
+    try {
+      const r = await fetch('/api/admin/verify-operator', { method: 'POST', headers: H(), body: JSON.stringify({ email: detail.course.operator.email }) });
+      if (r.ok) { setVerifyMsg('Marked verified.'); loadDetail(); }
+      else { const d = await r.json().catch(() => ({})); setVerifyMsg('Error: ' + (d.error || 'could not mark verified')); }
+    } catch { setVerifyMsg('Error: network — nothing was changed.'); }
+    setVerifyBusy(false);
+  }
 
   // A-05 item 2 — preflight-aware: server enforces the SAME two absolute
   // checks (go-live-preflight.ts / course-timeline.ts) the inquiries
@@ -1189,6 +1219,77 @@ export default function CourseDetailPage() {
             return (
             <div className="grid grid-cols-[1fr_320px] gap-6 max-w-6xl">
               <div className="space-y-6 min-w-0">
+                {/* CS-3 §1: getting live — the five setup steps and the one
+                    action that completes each; then the discovery call if
+                    one is on the books. */}
+                {(detail.health.status === 'setup_incomplete' || detail.health.status === 'orphaned') && (() => {
+                  const setup = setupProgress({ ...c, liveStatus: c.liveStatus ?? (c.active ? 'live' : 'draft'), approvalStatus: detail.approval.status });
+                  const discovery = (detail.calls ?? []).filter(x => x.kind === 'discovery');
+                  const dNext = nextCall(discovery);
+                  const dMissed = overdueCall(discovery);
+                  const stepAction = (key: string) => {
+                    if (key === 'approved') {
+                      if (detail.approval.status === 'changes_requested') {
+                        return <button onClick={requestReReview} disabled={requestingReReview} className="text-xs font-medium text-pine hover:underline disabled:opacity-50">{requestingReReview ? 'Requesting…' : 'Request re-review'}</button>;
+                      }
+                      return <button onClick={sendCoursePreview} disabled={sendingPreview || !c.operator?.email} className="text-xs font-medium text-pine hover:underline disabled:opacity-50">{sendingPreview ? 'Sending…' : 'Send preview'}</button>;
+                    }
+                    if (key === 'verified') {
+                      return <button onClick={markVerified} disabled={verifyBusy || !c.operator?.email} className="text-xs font-medium text-pine hover:underline disabled:opacity-50">{verifyBusy ? 'Working…' : 'Mark verified'}</button>;
+                    }
+                    if (key === 'stripe') {
+                      return <button onClick={() => sendGoLiveReminder('stripe')} disabled={reminderNudgeBusy || reminderNudgeSent} className="text-xs font-medium text-pine hover:underline disabled:opacity-50">{reminderNudgeBusy ? 'Sending…' : reminderNudgeSent ? 'Reminder sent' : 'Send Stripe reminder'}</button>;
+                    }
+                    if (key === 'live') {
+                      return <button onClick={() => toggleActive(true)} disabled={liveToggleBusy} className="text-xs font-medium text-pine hover:underline disabled:opacity-50">{liveToggleBusy ? 'Working…' : 'Set live'}</button>;
+                    }
+                    return null;
+                  };
+                  return (
+                    <div className="bg-white border border-line rounded-lg p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Setup</div>
+                        <span className="text-xs text-ink-soft">{setup.done} of {setup.total}{setup.next ? ` · next: ${setup.next.short}` : ' · ready to go live'}</span>
+                      </div>
+                      <div className="border border-line rounded-md divide-y divide-line-soft">
+                        {setup.steps.map(st => (
+                          <div key={st.key} className="flex items-center gap-3 px-3 py-2">
+                            <span className={'w-4 h-4 rounded-full flex items-center justify-center shrink-0 ' + (st.done ? 'bg-ok text-white' : 'border border-line bg-paper')}>
+                              {st.done && <Check className="w-3 h-3" />}
+                            </span>
+                            <span className={'text-sm flex-1 ' + (st.done ? 'text-ink' : 'text-ink-soft')}>{st.label}</span>
+                            {!st.done && stepAction(st.key)}
+                          </div>
+                        ))}
+                      </div>
+                      {verifyMsg && <p className={'text-xs mt-2 ' + (verifyMsg.startsWith('Error') ? 'text-bad' : 'text-ok')}>{verifyMsg}</p>}
+                      {reminderNudgeError && <p className="text-xs mt-2 text-bad">{reminderNudgeError}</p>}
+                      {(dNext || dMissed) && detail.origin && (
+                        <div className="mt-3 pt-3 border-t border-line-soft flex items-center gap-2 text-xs">
+                          <Phone className={'w-3.5 h-3.5 ' + (dMissed && !dNext ? 'text-warn' : 'text-pine')} />
+                          {dNext
+                            ? <span className="text-ink">Discovery call {fmtCallTime(dNext.scheduledAt)} · {dNext.durationMin} min</span>
+                            : <span className="text-warn">Discovery call went by {dMissed ? fmtCallTime(dMissed.scheduledAt) : ''} without a log</span>}
+                          <a href={`/admin/inquiries/${detail.origin.inquiryId}?call=1`} className="ml-auto font-medium text-pine hover:underline">Open on the inquiry</a>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* CS-3 §2: live — the next check-in. */}
+                {c.active && !c.archivedAt && (
+                  <CourseCheckInCard
+                    courseId={c.id}
+                    operatorName={c.operator?.name || ''}
+                    phone={c.phone || c.operator?.phone || ''}
+                    nextCheckInAt={c.nextCheckInAt ?? null}
+                    calls={detail.calls ?? []}
+                    onRefresh={loadDetail}
+                    focus={checkinFocus}
+                  />
+                )}
+
                 {c.adminNotes && c.adminNotes.startsWith('[BUILD NOTES]') && (
                   <div className="bg-warn/5 border border-warn/20 rounded-lg px-5 py-4">
                     <div className="text-[11px] uppercase tracking-[0.1em] text-warn mb-2">Needs review</div>
@@ -1587,6 +1688,24 @@ export default function CourseDetailPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* CS-3 §3: calls as human entries. */}
+                  {(detail.calls ?? []).length > 0 && (
+                    <div className="bg-white border border-line rounded-lg p-6">
+                      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">Calls</div>
+                      <div className="border border-line rounded-md divide-y divide-line">
+                        {(detail.calls ?? []).map(cl => (
+                          <div key={cl.id} className="px-3 py-2.5 flex items-start gap-3">
+                            <Phone className={'w-3.5 h-3.5 mt-0.5 shrink-0 ' + (cl.outcome === 'talked' ? 'text-ok' : cl.outcome === 'scheduled' ? 'text-pine' : 'text-ink-faint')} />
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm text-ink">{describeCheckIn(cl)}</div>
+                              {cl.notes && <div className="text-xs text-ink-soft mt-1 whitespace-pre-wrap">{cl.notes}</div>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="bg-white border border-line rounded-lg p-6">
                     <div className="flex items-center justify-between mb-4">
