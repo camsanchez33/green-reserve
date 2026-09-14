@@ -7,6 +7,11 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // H-1 (UI_REVISE_SPEC §5 assets): WebP/AVIF and the 800/1200/1600 widths.
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 800, 1080, 1200, 1600, 1920, 2048, 3840],
+  },
   async redirects() {
     return [
       { source: '/courses', destination: '/', permanent: true },

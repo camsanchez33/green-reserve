@@ -87,7 +87,7 @@ export default function HomeContent() {
       if (reduce) return;
       const y = window.scrollY || window.pageYOffset;
       const h = window.innerHeight;
-      if (heroPhRef.current && y < h * 1.2) heroPhRef.current.style.transform = `translateY(${y * 0.28}px) scale(1.06)`;
+      if (heroPhRef.current && y < h * 1.2) heroPhRef.current.style.setProperty('--hy', `${(y * 0.28).toFixed(1)}px`);
       const story = storyRef.current;
       if (story && storyPhRef.current) {
         const r = story.getBoundingClientRect();
