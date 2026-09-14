@@ -105,7 +105,6 @@ Tailwind: keep the existing color tokens, add `--font-serif-staff`/`--font-sans-
 Rule for every run in this section: no route changes, no API changes, no new state, no new copy that changes meaning, no schema. If a mockup element needs any of those, it is in §4, not here. `git diff` should be JSX/CSS only. The restate step must list every file it will touch.
 
 - [ ] **U-G · Golfer surface — public look, Clubhouse structure** (no migration, large; may split G1/G2)
-  → BUILT, awaiting review — on batch/2026-09-11-reskin (worker branch batch/U-G, 9 files, guard OK). Worker-declared: section order partly achievable ("the place" stays a tab until B-1); member portal accents pine not course accent (session API has no brandColor — B-item); member portal is a retoken, not board 7; CourseHeaderBar gained an optional `right` prop. Shared change applied: /api/receipt returns brandColor.
   Canvas boards: "1 · Course page", "1b · Course page, desktop", "2 · Reserve", "3 · Confirmed", "4 · Manage + cancel", "5 · Check in + paid", "6 · Golfer account", "7 · Member view", "8 · States", "Course page wearing three courses".
   Fonts/corners: PUBLIC look (Fraunces/Inter/rounded) — the boards are drawn in the staff look; **use their layout, not their type.**
   Routes: `/courses/[slug]` (+ CourseBookingClient), `/book`, `/receipt/[bookingId]`, `/manage/[bookingId]`, `/checkin/[bookingId]`, `/courses/[slug]/account`, `/courses/[slug]/member`, `/membership/[id]`.
@@ -123,7 +122,6 @@ Rule for every run in this section: no route changes, no API changes, no new sta
   Acceptance: walk inquiry→sheet→book→receipt→manage→checkin on a phone AND desktop; every dollar figure identical to before; Lighthouse mobile perf on `/courses/[slug]` not below current.
 
 - [ ] **U-O · Operator dashboard — staff look** (no migration, large; split O1 tee sheet+settings / O2 the rest)
-  → BUILT (PARTIAL), awaiting review — on batch/2026-09-11-reskin (worker branch batch/U-O, 18 files, guard OK). Worker-declared: blocked rows use a hard-stop repeating-linear-gradient hatch (pattern, but the BANNED list says gradients — Cam's call); Settings re-cut into the spec's ten sections + Facilities + Account, default tab now "How you look"; tee sheet still a card list not the board's grid; onboarding/verify/members wizard got type only.
   Canvas boards: "Operator · Tee sheet", "Settings with live golfer preview", "Members", "Sign in + 2FA", "Getting started", "Schedule", "Analytics", "Payments", "Cancellations", "Messages".
   Routes: `/dashboard` (+ analytics tab), `/dashboard/schedules`, `/cancellations`, `/members`, `/payments`, `/messages`, `/settings`, `/onboarding`, `/login`, `/2fa`, `/forgot-password`, `/reset-password`, `/verify`, `/outings`, `/tournaments` (placeholders — empty-state pattern only).
   Reskin-only items: shell + sidebar per §1b; page header = serif title + one-sentence subtitle with the page's numbers ("31 booked of 80 spots for sale · 9 checked in · $571.50 collected"); tables = 11px uppercase headers, 13.5px rows, faded past rows, hatched blocked rows, amber late rows; stat tiles = eyebrow / serif 30px / 12.5px note; filters as square chips; login + 2FA per board.
@@ -132,35 +130,60 @@ Rule for every run in this section: no route changes, no API changes, no new sta
   Acceptance: every existing button still does what it did; a GM can find every setting they could find before; tee sheet check-in flow unchanged.
 
 - [ ] **U-A · Admin console — staff look** (no migration, medium)
-  → BUILT, awaiting review — on batch/2026-09-11-reskin (worker branch batch/U-A, 10 files, guard OK). Worker-declared: course detail title kept at 22px (sticky dense bar); eyebrows at 0.06em because tracking-widest (0.1em) is banned — settle the number; auth pages untouched. Shared change applied: stats route playersToday + the tile's "N players · M bookings".
-  Canvas boards: "Admin · Overview", "Inquiries board", "Courses", "Course detail", "Revenue", "Golfer lookup", "Employees + roles", "Activity", "System".
+  Canvas boards: "Admin · Overview", "Inquiries board" (superseded — see INQUIRY_CALL_SPEC IC-3), "Courses" (superseded — see COURSES_SHEET_SPEC CS-2; U-A restyles the existing rows only), "Course detail", "Revenue", "Golfer lookup", "Employees + roles", "Activity", "System".
   Routes: all `/admin/*`.
   Reskin-only items: pine sidebar per §1b; Overview keeps the A-01 v2 section order exactly (pulse strip → your-move queue → ghost-bar trend → producers → systems line), only restyled; tile labels say whose money ("GreenReserve fees today" with "N players · M bookings" — fees are per PLAYER, never compute from booking count); inquiries = the 7-column sheet from INQUIRY_CALL_SPEC (NOT a kanban board — that canvas board is superseded, 2026-09-13); U-A only restyles the table, section headers and Next-call cell, behavior lives in IC-1..IC-3; course detail keeps its six tabs; revenue page is labeled "GreenReserve's money — not the courses'"; system page: green = tracked, grey = link-only (turning grey cards green is a schema item, out of scope).
   Must NOT change: any role gate, any action, the reconciliation logic.
 
 - [ ] **U-M · Public pages other than the homepage** (no migration, small)
-  → BUILT, awaiting review — on batch/2026-09-11-reskin (worker branch batch/U-M, 5 files, guard OK). Worker-declared: cards rounded-lg not 14px (BANNED cap wins — needs a token if 14px is wanted); the three legal "short version" boxes are NEW prose (summaries citing sections, with an orientation-only line) — read them before merge; /for-courses/details untouched.
   `/for-courses` (lead form per canvas "Marketing · /for-courses": two-column, sticky pitch left, form right, "No account is created" line), `/contact`, `/terms` `/privacy` `/operator-agreement` (left legal sub-nav, version line, plain-English short version box at top, sections numbered). Public look. Placeholders for LQ-1/LQ-2/LQ-3 stay visible in the rendered page until legal clears them.
 
 ---
 
 ## 4. Behavior items — one run each, never inside a reskin
 
+> **BRANCH `feat/b-1-course-page` (stacked on the reskin batch) — B-1, B-2, B-4, B-6, B-8, B-10 built and
+> reviewed 2026-09-13.** Admin-UX: clean (one toast wording fixed). Spec: 33 MET / 4 PARTIAL / 1 NOT MET
+> (B-8 "Mark no-show", declared — needs a schema column, attended); its two blockers FIXED on the branch:
+> B-4 now fires on a real sold-out day (full rows still render, so "no row fits this party" is the
+> trigger, offered as a panel above the rows), and scripts/route-inventory.ts now carries the MP-6b
+> money-flow text so regenerating ARCHITECTURE.md no longer reverts it. Security auditor was
+> rate-limited before starting; read by hand instead: the new remind-overdue route is owner/manager
+> only, scoped to the session's course, throttled 7 days per member, and reuses the existing payToken
+> link. CAM'S CALLS: (1) B-6's preview draws the PUBLIC look (14px radius, photo scrim) inside the
+> staff shell — deliberate, but a §1b exception; (2) the reused dues email says "keep your … booking
+> privileges" (pre-existing copy, src/lib/email.ts) — no such rule exists; (3) B-8 uses a 10-minute
+> grace and the browser clock (same as the sheet's own "now"); (4) B-1's deadline is course wall-clock
+> arithmetic — off by an hour if the window crosses a DST change. SHIP ORDER: reskin batch first
+> (ff), then this branch (ff).
+
 Ordered by value ÷ risk. Each is small unless marked.
 
 - [ ] **B-1 · Course page: kill the tab bar, trust line above the first slot** — About/Photos become sections below the sheet; the trust line ("Nothing charged today. Cancel free until <real date+time>. $1.50/player booking fee.") renders above the slot list from course policy fields. Cancel deadline becomes a real date+time once a slot is selected. (AUDIT_MASTER trust-gap finding.)
+  → BUILT 1258088 on `feat/b-1-course-page` (stacked on the reskin batch; Cam merges after it). Tabs gone; About/Photos are #about/#photos sections under the sheet; trust line from cancellation_hours / late_cancellation_fee ("No card needed — cancel any time" when there is no late fee); deadline becomes a real date+time in COURSE time once a slot is selected. NOT touched: the pre-existing `TrustNote "Green fees go 100% to the course"` inside the expanded slot — frozen copy, someone should decide. Box open until review + walk.
 - [ ] **B-2 · "Tell me if it opens" inline** — full slot expands in place with an email field + one-sentence promise; replaces the modal. Same API.
+  → BUILT d360fb1 on `feat/b-1-course-page`. Full row taps open in place (sentence + email + "Tell me"), same /api/alerts; tap again folds it. Date-level "Set alert" keeps the modal. Both paths now show an error when the POST fails (the old catch swallowed it). Box open until review + walk.
 - [ ] **B-3 · Member view = the course page, signed in** — a signed-in member sees member rate in place, guest lines priced per player, no card step. Retires the separate member portal design (keeps `/courses/[slug]/member` as the membership/dues page). Depends on member auth staying per-course OTP (see project memory: member auth is separate per course).
-  Open question for Cam before this runs: do all tiers cover rounds (show $0) or do some pay a member rate?
+  **ANSWERED (Cam, 2026-09-14): it depends on the tier, and the course adjusts it.** Read it off the
+  tier the member holds: `MembershipTier.greenFeeWeekdayCents/WeekendCents` = 0 or null → rounds
+  included, show $0 green fee (cart fee from the tier's cart cents if set); a positive value → that
+  is the member rate, show it; `discountPct` set and no fixed cents → guest price × (1 − pct). No new
+  schema; the course already edits tiers in Members settings. Guest lines always at the guest price.
 - [ ] **B-4 · Sold-out day → nearest fits** — empty state offers tomorrow / next day / same day for fewer players, from data the tee-times API already returns.
-- [ ] **B-5 · Cart add-on at check-in** — "Add a cart today?" toggle on `/checkin` for bookings without one; adds cart fee to the check-in charge. Cam to confirm he wants this at all.
+  → BUILT on `feat/b-1-course-page`. Empty state offers the two nearest dates (within a week) with a slot that fits the party, and "Same day for N players →" when the day has seats but not enough. Replaces the party-blind "Next available" button. Box open until review + walk. REVIEW FIX: now also fires when every row is full (panel above the rows).
+- [ ] **B-5 · Cart add-on at check-in** — "Add a cart today?" toggle on `/checkin` for bookings without one; adds cart fee to the check-in charge. **CONFIRMED by Cam 2026-09-14 — build it.** Uses the course's cart fee (tier cart cents for members).
 - [ ] **B-6 · Settings: live golfer preview** — the "How you look" section renders a 380px live preview of the course page (hero photo / tint, crest, accent on Select/Reserve) that updates as fields change. Read-only component fed from the form state. This is the most persuasive screen in the operator product; treat as a feature.
-- [ ] **B-7 · Schedule as a time-band table** — rates by band × weekday/weekend × member/resident in one table, seasons as tabs, blocks + booking windows beside it. View-layer over the existing schedule objects; **no data model change** unless the restate step proves one is needed, in which case stop and split.
+  → BUILT on `feat/b-1-course-page` (src/components/dashboard/CoursePreview.tsx). 380px read-only picture of the course page (hero photo/tint, crest, serif name, meta, trust line, slot rows with Select in the accent) fed from the form state; sticky beside "How you look" on xl, below it otherwise. Fetches/saves nothing. Box open until review + walk.
+- [ ] **B-7 · Schedule as a time-band table** (Cam 2026-09-14: GO — but after the reskin batch and feat/b-1-course-page both merge) — rates by band × weekday/weekend × member/resident in one table, seasons as tabs, blocks + booking windows beside it. View-layer over the existing schedule objects; **no data model change** unless the restate step proves one is needed, in which case stop and split.
 - [ ] **B-8 · Tee sheet "needs attention" row** — late group (tee time passed, not checked in) surfaces above the sheet with Mark no-show / Still coming.
+  → BUILT (PARTIAL) on `feat/b-1-course-page`. Late groups (tee time 10+ min ago today, nobody checked in) surface above the sheet with "Check in now" (existing flow) and "Still coming" (session-only dismiss). NOT built: "Mark no-show" — nothing in the schema records a no-show; that half is attended (a noShowAt column + what it should do to the late fee). Box open until review + walk.
 - [ ] **B-9 · Frost delay action** — push every tee time before HH:MM back by 30/60/90 minutes and email affected golfers in one step. Attended run; touches bookings + email.
 - [ ] **B-10 · Members: overdue dues reminder** — one-click reminder email to all overdue members; "online booking paused until paid" only if that rule actually exists in code (verify first).
+  → BUILT on `feat/b-1-course-page`. POST /api/operator/members/remind-overdue emails the existing dues-link email to every active member on a paid tier who is unpaid or past expiry, once per 7 days each (renewalRemindedAt), outcomes counted back by name; Members page button + result toast. VERIFIED FIRST as the spec asked: no "booking paused until paid" rule exists in the booking code, so nothing claims it. Box open until review + walk.
 - [ ] **B-11 · Getting-started checklist** — already specced as ONBOARDING_V2 V13; build it in the staff look. Not a new item, listed for order.
+  → COVERED: the checklist exists (src/components/dashboard/GettingStartedChecklist.tsx, ONBOARDING_V2 V13) and U-O retokened it to the staff look. Nothing further to build here.
 - [ ] **B-12 · Receipt rework** — itemize the $1.50, course header bar. Already on RUN_QUEUE as "booking receipt needs rework"; fold into U-G's confirmed/receipt restyle if the itemization is display-only.
+  → COVERED by U-G + the batch review fixes: /receipt itemises the $1.50 (serviceFeeLabel) and wears the course header bar in the course colour. Nothing further to build here.
 
 ---
 
@@ -234,7 +257,10 @@ approved and the copy is good. Replace the frozen still with motion:
    Mbps: target ≤ 3.5 MB mp4 and ≤ 3 MB webm. Put both in `public/home/` as
    `story.mp4` / `story.webm`. Free-license source (Pexels/Pixabay video are fine);
    record the source id in `docs/design/README.md` like the photos.
-   Until the files exist the poster shows, so H-2a can merge before the clip is chosen.
+   **2026-09-14: files are IN PLACE** — `public/home/story.mp4` (3.8 MB), `story.webm` (2.9 MB),
+   `story-poster.jpg` — a 24s ease-in/ease-out push on a top-down green photo Cam chose.
+   Use `story-poster.jpg` as the poster (not bunker.jpg). Photo source: [SOURCE — Cam to fill
+   in docs/design/README.md before this run ships; do not deploy with this placeholder].
 4b. **The poster is never a frozen still.** Until a clip exists (and whenever the
    fallbacks fire), the still gets a CSS keyframe drift: `scale 1.02→1.10` with a
    `translate` of ~2% over 28s, `alternate`, `ease-in-out`, on the same `.storyPh`
