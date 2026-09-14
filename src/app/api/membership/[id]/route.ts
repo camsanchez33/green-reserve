@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { stripe, chargeOnConnectedAccount, MEMBERSHIP_FEE_CENTS } from '@/lib/stripe';
 import { sendMembershipReceiptEmail } from '@/lib/email';
+import { rateLimit } from '@/lib/rate-limit';
 
 // Public, token-gated membership dues payment — the member pays from the
 // link in their email, no login required. The payToken is the proof of
@@ -55,6 +56,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  // Security review: the one token-gated, money-moving endpoint with no limit.
+  if (!(await rateLimit('membership:pay:' + id, 10, 300))) {
+    return NextResponse.json({ error: 'Too many attempts — wait a few minutes and try again.' }, { status: 429 });
+  }
   const { token, paymentMethodId } = await req.json();
   const m = await authorize(id, token);
   if (!m) return NextResponse.json({ error: 'Invalid or expired payment link.' }, { status: 404 });

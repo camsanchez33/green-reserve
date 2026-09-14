@@ -23,7 +23,9 @@ async function authorize(bookingId: string, token: string | null) {
 export async function GET(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
   // HARDENING_SPEC §B: token endpoints rate-limit repeated misses.
-  if (!(await rateLimit('checkin:get:' + clientIp(req), 30, 300))) {
+  // Keyed on the booking (plus a loose per-IP ceiling): a clubhouse wifi full
+  // of golfers must not lock each other out, and token guessing is per-booking.
+  if (!(await rateLimit('checkin:get:' + bookingId, 30, 300)) || !(await rateLimit('checkin:get:ip:' + clientIp(req), 300, 300))) {
     return NextResponse.json({ error: 'Too many requests — try again in a few minutes.' }, { status: 429 });
   }
   const token = req.nextUrl.searchParams.get('token');
@@ -56,7 +58,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
-  if (!(await rateLimit('checkin:post:' + clientIp(req), 10, 300))) {
+  if (!(await rateLimit('checkin:post:' + bookingId, 10, 300)) || !(await rateLimit('checkin:post:ip:' + clientIp(req), 100, 300))) {
     return NextResponse.json({ error: 'Too many attempts — wait a few minutes, or check in at the pro shop.' }, { status: 429 });
   }
   const { token, paymentMethodId, addCart } = await req.json().catch(() => ({ token: null, paymentMethodId: undefined, addCart: false }));

@@ -46,24 +46,39 @@ type ChargeOpts = {
  * both the quote (GET) and the charge, so they cannot disagree.
  */
 export async function cartAddOnCentsFor(booking: {
-  golferAccountId: string | null; courseId: string; players: number;
+  golferAccountId: string | null; golferEmail: string; courseId: string; players: number;
   cartSelected: boolean; cartFeeTotal: number; paymentStatus: string; roundPaymentIntentId: string;
   teeTime: { date: string; cartFeeCents: number };
 }): Promise<number> {
   if (booking.cartSelected || booking.cartFeeTotal > 0) return 0;
   if (booking.paymentStatus === 'paid' && booking.roundPaymentIntentId) return 0;
   let perPlayer = booking.teeTime.cartFeeCents;
-  if (booking.golferAccountId) {
-    const m = await prisma.courseMembership.findUnique({
-      where: { golferId_courseId: { golferId: booking.golferAccountId, courseId: booking.courseId } },
-      include: { tier: { select: { cartFeeWeekdayCents: true, cartFeeWeekendCents: true } } },
-    });
-    if (m && m.status === 'active' && m.tier && (m.tier.cartFeeWeekdayCents != null || m.tier.cartFeeWeekendCents != null)) {
-      const d = new Date(booking.teeTime.date + 'T12:00:00');
-      const weekend = d.getDay() === 0 || d.getDay() === 6;
+  // Membership resolves the way the booking route does (member-session.ts):
+  // by golfer account OR by the invite email, so an invite-only member who has
+  // not accepted yet still gets their rate. Scoped to THIS course.
+  const m = await prisma.courseMembership.findFirst({
+    where: {
+      courseId: booking.courseId,
+      status: 'active',
+      OR: [
+        ...(booking.golferAccountId ? [{ golferId: booking.golferAccountId }] : []),
+        ...(booking.golferEmail ? [{ inviteEmail: { equals: booking.golferEmail, mode: 'insensitive' as const } }] : []),
+      ],
+    },
+    include: { tier: { select: { greenFeeWeekdayCents: true, greenFeeWeekendCents: true, cartFeeWeekdayCents: true, cartFeeWeekendCents: true, discountPct: true } } },
+  });
+  if (m?.tier) {
+    const t = m.tier;
+    const d = new Date(booking.teeTime.date + 'T12:00:00');
+    const weekend = d.getDay() === 0 || d.getDay() === 6;
+    // Same order of precedence as applyTierRates in the booking route: flat
+    // overrides first, else a percentage off standard, else standard.
+    if (t.greenFeeWeekdayCents != null || t.greenFeeWeekendCents != null) {
       perPlayer = weekend
-        ? (m.tier.cartFeeWeekendCents ?? m.tier.cartFeeWeekdayCents ?? perPlayer)
-        : (m.tier.cartFeeWeekdayCents ?? perPlayer);
+        ? (t.cartFeeWeekendCents ?? t.cartFeeWeekdayCents ?? perPlayer)
+        : (t.cartFeeWeekdayCents ?? perPlayer);
+    } else if (t.discountPct != null) {
+      perPlayer = Math.round(perPlayer * (1 - t.discountPct / 100));
     }
   }
   if (perPlayer <= 0) return 0;
@@ -178,14 +193,20 @@ async function chargeBooking(
           { query: `metadata['bookingId']:'${booking.id}' AND status:'succeeded'`, limit: 1 },
           { stripeAccount: booking.course.stripeAccountId as string },
         );
-        const prior = found.data[0];
+        // A refunded charge is not "this charge" — the course may still collect.
+        const prior = found.data.find(pi => (pi.amount_refunded ?? 0) < pi.amount);
         if (prior) {
-          console.warn(JSON.stringify({ ev: `${ev}.charge.already_succeeded`, bookingId, paymentIntentId: prior.id }));
-          await prisma.booking.update({ where: { id: bookingId }, data: { roundPaymentIntentId: prior.id, paymentStatus: 'paid', checkInFailReason: '' } });
-          if (cartAddedCents > 0) {
-            // The cart was written for a charge that never happens — undo it.
-            await prisma.booking.update({ where: { id: bookingId }, data: preCart });
-          }
+          console.warn(JSON.stringify({ ev: `${ev}.charge.already_succeeded`, bookingId, paymentIntentId: prior.id, amount: prior.amount }));
+          // Reconcile the booking to what Stripe actually took, not to what
+          // this attempt assumed: base+cart if the earlier attempt had the
+          // cart, base if it did not, and the exact figure otherwise.
+          const base = preCart.totalAmount;
+          const money = prior.amount === base + cartAddedCents && cartAddedCents > 0
+            ? { cartSelected: true, cartFeeTotal: cartAddedCents, totalAmount: prior.amount }
+            : prior.amount === base
+              ? preCart
+              : { totalAmount: prior.amount };
+          await prisma.booking.update({ where: { id: bookingId }, data: { roundPaymentIntentId: prior.id, paymentStatus: 'paid', checkInFailReason: '', ...money } });
           return { error: 'This round was already charged on an earlier attempt (the confirmation was lost in transit). It is now recorded as paid — refresh and check in without a card.', status: 409 } as const;
         }
       } catch (err) {
@@ -207,20 +228,30 @@ async function chargeBooking(
         // Unchanged on purpose: the key is the booking + payment method, NOT
         // the entry point, so a collect followed by a check-in (or a retry
         // after a timeout) can never become two charges.
-        // The amount is part of the key: a retry at the same amount replays,
-        // a retry after "add a cart" is a different request (Stripe refuses a
-        // reused key with different params).
-        idempotencyKey: `checkin-${booking.id}-${chargePaymentMethodId}-${Math.round(booking.totalAmount)}`,
+        // Booking + card, and NOTHING else: a retry at the same amount replays
+        // the original result; a retry at a different amount (cart added after
+        // a timed-out attempt) makes Stripe refuse the reused key — an error
+        // the golfer sees, never a second charge. (Second security review:
+        // putting the amount in the key turned that refusal into a fresh
+        // request, and a search index that lags by a minute cannot stand in
+        // for idempotency.)
+        idempotencyKey: `checkin-${booking.id}-${chargePaymentMethodId}`,
       });
       paymentIntentId = paymentIntent.id;
       console.log(JSON.stringify({ ev: `${ev}.charge.ok`, bookingId, paymentIntentId, amountCents: Math.round(booking.totalAmount) }));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Card could not be charged.';
-      console.error(JSON.stringify({ ev: `${ev}.charge.fail`, bookingId, error: message }));
-      // B-5: the cart was written before the charge; a failed charge puts the
-      // booking back exactly as it was so the next attempt (or the counter)
-      // does not charge for a cart nobody bought.
-      await prisma.booking.update({ where: { id: bookingId }, data: { checkInFailReason: message, ...(cartAddedCents > 0 ? preCart : {}) } });
+      const errType = (err as { type?: string })?.type ?? '';
+      // Stripe told us, definitively, that no money moved: a card decline, or a
+      // reused idempotency key with different params (the total changed since
+      // the first attempt). Anything else — a timeout, a dropped connection —
+      // may have charged, so the cart stays on the booking for reconciliation.
+      const definite = errType === 'StripeCardError' || errType === 'StripeIdempotencyError' || /idempotent|idempotency/i.test(message);
+      console.error(JSON.stringify({ ev: `${ev}.charge.fail`, bookingId, errType, definite, error: message }));
+      await prisma.booking.update({ where: { id: bookingId }, data: { checkInFailReason: message, ...(cartAddedCents > 0 && definite ? preCart : {}) } });
+      if (/idempotent|idempotency/i.test(message)) {
+        return { error: 'The total changed since your first attempt (a cart was added or removed). Refresh the page and try once more.', status: 409 } as const;
+      }
       return { error: `Payment failed: ${message}. Collect payment in person and contact support.`, status: 402 } as const;
     }
 

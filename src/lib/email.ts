@@ -149,7 +149,7 @@ export async function sendOperatorBookingNotification(data: BookingEmailData & {
         ${data.cartFeeTotal > 0 ? `<tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Cart Fee</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</td></tr>` : ''}
         ${(data.rangeBallsTotal ?? 0) > 0 ? `<tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Range Balls</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.rangeBallsTotal! / 100).toFixed(2)}</td></tr>` : ''}
         <tr><td style="padding:8px 0 4px;color:#166534;font-size:14px;font-weight:800;">Expected Revenue</td><td style="padding:8px 0 4px;text-align:right;color:#166534;font-size:16px;font-weight:700;">$${yourRevenue.toFixed(2)}</td></tr>
-        <tr><td colspan="2" style="padding:6px 0 0;color:#9ca3af;font-size:11px;">Once they check in and pay. + $${(data.accessFeeTotal / 100).toFixed(2)} GreenReserve fee, charged to the golfer — not deducted from you.</td></tr>
+        <tr><td colspan="2" style="padding:6px 0 0;color:#9ca3af;font-size:11px;">Once they check in and pay. + $${(data.accessFeeTotal / 100).toFixed(2)} GreenReserve fee, paid by the golfer on top of your price.</td></tr>
       </table>
     </div>
     <a href="https://greenreserve.app/dashboard" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-top:20px;">View Tee Sheet &rarr;</a>

@@ -120,7 +120,7 @@ function PaymentsPageInner() {
             title="This is your Payments."
             bullets={[
               'See green fees, cart fees, and GreenReserve’s service fee, per booking.',
-              'Payments go straight to your bank account through Stripe — GreenReserve never touches your green fees.',
+              'Payments settle to your own Stripe account on its normal schedule. Stripe’s card fee applies to each payment, like any card you take; GreenReserve charges you nothing on top of it.',
               'Search by golfer name to find a specific transaction.',
             ]}
           />
@@ -141,7 +141,7 @@ function PaymentsPageInner() {
               sub={`${collected.length} round${collected.length!==1?'s':''} checked in & paid`}/>
             <StatCard icon={<CreditCard className="w-4 h-4"/>} label="GreenReserve Fees"
               value={`$${(collectedAccessFees / 100).toFixed(2)}`}
-              sub="Charged to golfers on top — not deducted from you"/>
+              sub="Paid by golfers on top of your price, passed to GreenReserve"/>
             <StatCard icon={<CheckCircle2 className="w-4 h-4"/>} label="Late Fees Kept"
               value={`$${(lateFeesKept / 100).toFixed(2)}`}
               sub={`${cancelledWithFee.length} late cancel${cancelledWithFee.length!==1?'s':''} — non-refundable`}/>
