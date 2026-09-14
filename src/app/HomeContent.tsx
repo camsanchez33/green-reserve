@@ -176,6 +176,7 @@ export default function HomeContent() {
                 aria-hidden="true"
                 onError={() => setStoryVideo(false)}
               >
+                <source src="/home/story.webm" type="video/webm" />
                 <source src="/home/story.mp4" type="video/mp4" />
               </video>
             )}
