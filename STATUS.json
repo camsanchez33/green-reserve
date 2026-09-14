@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2026-09-14T03:08:47.303Z",
+  "generatedAt": "2026-09-14T03:10:10.776Z",
   "repo": {
-    "head": "57b9150",
+    "head": "a1e4125",
     "branch": "main",
     "dirtyCount": 2,
     "dirty": [
-      "M RUN_QUEUE.md",
+      "M UI_REVISE_SPEC.md",
       "?? public/home/story.webm"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-13T23:06:34-04:00",
+    "queueLastCommit": "2026-09-13T23:08:48-04:00",
     "unrecorded": []
   },
   "counts": {
@@ -823,6 +823,11 @@
   },
   "recentCommits": [
     {
+      "h": "a1e4125",
+      "date": "2026-09-13",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "57b9150",
       "date": "2026-09-13",
       "subject": "H-2a: the homepage story loops a clip under the pinned beats"
@@ -876,11 +881,6 @@
       "h": "85b3922",
       "date": "2026-09-13",
       "subject": "H-1: pricing tile radius 16px → 14px (§1a card cap, from the design audit)"
-    },
-    {
-      "h": "4a16f01",
-      "date": "2026-09-13",
-      "subject": "stats: playersToday on the Overview top strip (shared change for the U-A reskin — the fee is per player)"
     }
   ]
 }

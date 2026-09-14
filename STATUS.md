@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-14 03:08 UTC · branch `main` · HEAD `57b9150` · working tree **2 dirty file(s)**
+Generated 2026-09-14 03:10 UTC · branch `main` · HEAD `a1e4125` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,7 +12,7 @@ None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
 ### Uncommitted working tree (2 file(s))
 
-- `M RUN_QUEUE.md`
+- `M UI_REVISE_SPEC.md`
 - `?? public/home/story.webm`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
@@ -177,6 +177,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `a1e4125` 2026-09-13 — queue/spec update
 - `57b9150` 2026-09-13 — H-2a: the homepage story loops a clip under the pinned beats
 - `6d56b8d` 2026-09-13 — queue/spec update
 - `3951a93` 2026-09-13 — queue/spec update
@@ -188,7 +189,6 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `1bc8033` 2026-09-13 — H-1 fixes from /gr-review: live hero parallax, story unpins on phones, frozen claim out of metadata
 - `9221f2b` 2026-09-13 — queue/spec update
 - `85b3922` 2026-09-13 — H-1: pricing tile radius 16px → 14px (§1a card cap, from the design audit)
-- `4a16f01` 2026-09-13 — stats: playersToday on the Overview top strip (shared change for the U-A reskin — the fee is per player)
 
 ---
 
