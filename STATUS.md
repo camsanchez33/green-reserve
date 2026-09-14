@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-14 19:11 UTC · branch `main` · HEAD `5bd0a85` · working tree **2 dirty file(s)**
+Generated 2026-09-14 20:03 UTC · branch `main` · HEAD `53b7b16` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -77,10 +77,9 @@ This is the distinction a raw checkbox count gets wrong.
 27. COURSES_SHEET_SPEC Phase CS-1 — course-setup.ts (5 setup steps from existing fields) + course-checkin.ts (14d-after-go-live then every 90d; agenda in code; checkInSignal) + courses — `RUN_QUEUE.md:1968`
 28. COURSES_SHEET_SPEC Phase CS-2 — /admin/courses becomes the sheet: one table, 'Getting live' + 'Live' sections, 8 fixed columns (course, operator, status = setup n-of-5 or health, a — `RUN_QUEUE.md:1969`
 29. COURSES_SHEET_SPEC Phase CS-3 — course page: Setup card (5 steps + the existing action that completes each) for getting-live courses; Next check-in schedule/log card (IC-2 cards wi — `RUN_QUEUE.md:1970`
-30. AGREEMENT_SPEC Phase AG-1 — AgreementAcceptance + AgreementVersion tables, Course.legalName (SCHEMA CHANGE, attended, additive); agreement text moves to versioned Markdown in legal — `RUN_QUEUE.md:1974`
-31. AGREEMENT_SPEC Phase AG-2 — onboarding 'Sign' step: legal name, signer name/title, scroll-to-end panels, Operator Agreement + authority + brand license (marketing opt-out) + accura — `RUN_QUEUE.md:1975`
-32. AGREEMENT_SPEC Phase AG-3 — version bumps: seed refuses reacceptRequired bumps without counselReviewed; day-0 notice email; dashboard banner → modal after 30 days; operator writes  — `RUN_QUEUE.md:1976`
-33. UI_REVISE_SPEC H-2c — KILL THE PHOTO BAND (small, no migration, RUN FIRST): the 'We set it up' band shows a WIND FARM (bad Unsplash id for TEE). Delete the section + tee.jpg + READ — `RUN_QUEUE.md:1978`
+30. AGREEMENT_SPEC Phase AG-2 — onboarding 'Sign' step: legal name, signer name/title, scroll-to-end panels, Operator Agreement + authority + brand license (marketing opt-out) + accura — `RUN_QUEUE.md:1975`
+31. AGREEMENT_SPEC Phase AG-3 — version bumps: seed refuses reacceptRequired bumps without counselReviewed; day-0 notice email; dashboard banner → modal after 30 days; operator writes  — `RUN_QUEUE.md:1976`
+32. UI_REVISE_SPEC H-2c — KILL THE PHOTO BAND (small, no migration, RUN FIRST): the 'We set it up' band shows a WIND FARM (bad Unsplash id for TEE). Delete the section + tee.jpg + READ — `RUN_QUEUE.md:1978`
 
 ## Waiting on you (not on a build)
 
@@ -179,6 +178,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `53b7b16` 2026-09-14 — AG-1: the agreement is a record — versioned documents, acceptance rows, the gate
+- `77e15b4` 2026-09-14 — queue/spec update
 - `5bd0a85` 2026-09-14 — IC-1: the discovery call — schema, agenda catalog, needs, queue signal, API
 - `bc5e2f0` 2026-09-13 — queue/spec update
 - `a42b895` 2026-09-13 — Review fixes for B-7, H-2a, H-2b
@@ -189,9 +190,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `a8498fb` 2026-09-13 — H-2b: "See it work" gets two tabs — what golfers see, what you see
 - `0ab0a37` 2026-09-13 — queue/spec update
 - `9df9f2f` 2026-09-13 — B-7: Schedule as a time-band table, blocks and booking windows beside it
-- `54b8268` 2026-09-13 — queue/spec update
-- `b062574` 2026-09-13 — queue/spec update
 
 ---
 
-**Totals:** 159 done · 9 awaiting review · 1 in flight · 33 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 160 done · 9 awaiting review · 1 in flight · 32 not started · 8 revise pages open · 15 ideas · 2 parked.

@@ -322,6 +322,31 @@ not reset the picked accent; the four tiles change when a row is checked in or
 blocked; at 390px the dashboard tab shows the sheet without the sidebar and no
 horizontal scroll; Lighthouse mobile numbers from §5 still hold.
 
+### H-2c · Kill the photo band (small, no migration — run FIRST, it's a live embarrassment)
+
+Cam, 2026-09-14, after a live walk: the "We set it up. You run it." band renders a
+**wind farm** — Unsplash id `1532601224476-15c79f2f7a51` (the README's "TEE") is not a
+tee shot. Separately, the page's top half is three full-bleed photo-with-white-text
+sections in a row (hero, story, band), which is what makes it read as busy.
+
+1. Delete section 6 (`.band`, `bandRef`, `bandPhRef`, the `--py` parallax branch in the
+   scroll handler, the `.band*` CSS rules) and `public/home/tee.jpg`. Remove the TEE row
+   from `docs/design/README.md`.
+2. Its headline moves into section 7: "Live in four steps." keeps its position as the
+   `.h2`; directly under it, one line in the section-sub style: "We set it up. You run
+   it. Tell us about your course and we build the sheet with you; you approve a private
+   preview, connect your bank, and go live. Days, not months." Replace the current sub
+   ("No technical knowledge needed…") with that — don't stack two subs.
+3. Nothing else changes. Resulting rhythm: photo hero → moving story → white demo →
+   course cards → white steps → pine pricing → FAQ → CTA — every photo section is
+   followed by a quiet one.
+4. While in there: grep `public/home/` and the README for every image id and open each
+   one in a browser; confirm each is a golf image. One wrong id got through H-1's
+   review; assume there could be another.
+
+Acceptance: no `tee.jpg` request on `/`; the steps section reads as one block; Lighthouse
+mobile numbers from §5 still hold (they'll improve — one fewer 1600w image).
+
 ## 6. Verification, every run
 
 `/gr-review` as usual, plus: side-by-side with the canvas board named in the item; a phone walk of any golfer route touched; `git diff --stat` reviewed for files outside the restate list (that's the smuggling check). Reskin runs additionally: grep the diff for `fetch(`, `prisma`, `useState(` additions — any hit means the run drifted into §4 and must be split.

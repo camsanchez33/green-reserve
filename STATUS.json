@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-14T19:11:16.711Z",
+  "generatedAt": "2026-09-14T20:03:18.735Z",
   "repo": {
-    "head": "5bd0a85",
+    "head": "53b7b16",
     "branch": "main",
     "dirtyCount": 2,
     "dirty": [
@@ -11,14 +11,14 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-13T23:49:13-04:00",
+    "queueLastCommit": "2026-09-14T15:11:18-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 159,
+    "runDone": 160,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 33,
+    "runNotStarted": 32,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -248,11 +248,6 @@
     {
       "title": "COURSES_SHEET_SPEC Phase CS-3 — course page: Setup card (5 steps + the existing action that completes each) for getting-live courses; Next check-in schedule/log card (IC-2 cards with the check-in agen",
       "line": 1970,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "AGREEMENT_SPEC Phase AG-1 — AgreementAcceptance + AgreementVersion tables, Course.legalName (SCHEMA CHANGE, attended, additive); agreement text moves to versioned Markdown in legal/documents/ with sha",
-      "line": 1974,
       "section": "Queue (run in this order)"
     },
     {
@@ -833,6 +828,16 @@
   },
   "recentCommits": [
     {
+      "h": "53b7b16",
+      "date": "2026-09-14",
+      "subject": "AG-1: the agreement is a record — versioned documents, acceptance rows, the gate"
+    },
+    {
+      "h": "77e15b4",
+      "date": "2026-09-14",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "5bd0a85",
       "date": "2026-09-14",
       "subject": "IC-1: the discovery call — schema, agenda catalog, needs, queue signal, API"
@@ -881,16 +886,6 @@
       "h": "9df9f2f",
       "date": "2026-09-13",
       "subject": "B-7: Schedule as a time-band table, blocks and booking windows beside it"
-    },
-    {
-      "h": "54b8268",
-      "date": "2026-09-13",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "b062574",
-      "date": "2026-09-13",
-      "subject": "queue/spec update"
     }
   ]
 }
