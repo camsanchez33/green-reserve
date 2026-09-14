@@ -42,6 +42,7 @@ export default function SchedulesPage() {
   const [blackoutBusy, setBlackoutBusy] = useState(false);
   const [blackoutError, setBlackoutError] = useState('');
   const [windows, setWindows] = useState<{ publicAdvanceDays: number | null; memberAdvanceDays: number | null }>({ publicAdvanceDays: null, memberAdvanceDays: null });
+  const [windowsError, setWindowsError] = useState('');
   const intro = useTabIntro('schedule');
 
   // SD-10: a 403 (staff by URL) or 500 here used to render "No schedules yet".
@@ -52,6 +53,17 @@ export default function SchedulesPage() {
     else { setSchedules([]); setLoadError(r.error); }
     setLoading(false);
   }, []);
+  // Review (no-silent-failures): this used to be fetch().catch(() => {}) — a
+  // failed settings load rendered as "not configured" and hid rate columns.
+  const loadWindows = useCallback(async () => {
+    const r = await dfetch<{ hasMemberPricing?: boolean; hasResidentPricing?: boolean; publicAdvanceDays?: number; memberAdvanceDays?: number }>('/api/operator/settings');
+    if (!r.ok || !r.data) { setWindowsError(r.ok ? 'Settings came back empty — refresh.' : r.error); return; }
+    const c = r.data;
+    setHasMember(!!c.hasMemberPricing); setHasResident(!!c.hasResidentPricing);
+    setWindows({ publicAdvanceDays: typeof c.publicAdvanceDays === 'number' ? c.publicAdvanceDays : null, memberAdvanceDays: typeof c.memberAdvanceDays === 'number' ? c.memberAdvanceDays : null });
+    setWindowsError('');
+  }, []);
+
   const loadBlackouts = useCallback(async () => {
     const r = await dfetch<{ id: string; date: string; reason: string }[]>('/api/operator/blackouts');
     if (r.ok && Array.isArray(r.data)) { setBlackouts(r.data.slice().sort((a, b) => a.date.localeCompare(b.date))); setBlackoutError(''); }
@@ -81,13 +93,9 @@ export default function SchedulesPage() {
 
   useEffect(() => {
     loadSchedules();
-    fetch('/api/operator/settings').then(r => r.ok ? r.json() : null).then(c => {
-      if (!c) return;
-      setHasMember(!!c.hasMemberPricing); setHasResident(!!c.hasResidentPricing);
-      setWindows({ publicAdvanceDays: typeof c.publicAdvanceDays === 'number' ? c.publicAdvanceDays : null, memberAdvanceDays: typeof c.memberAdvanceDays === 'number' ? c.memberAdvanceDays : null });
-    }).catch(() => {});
+    loadWindows();
     loadBlackouts();
-  }, [loadSchedules, loadBlackouts]);
+  }, [loadSchedules, loadBlackouts, loadWindows]);
 
   function openAdd() { setForm(emptyForm()); setEditId(null); setShowAdd(true); }
   function openEdit(s: Schedule) {
@@ -200,21 +208,21 @@ export default function SchedulesPage() {
           {loadError && <LoadError message={loadError} onRetry={loadSchedules} />}
 
           {loading && <div className="text-center py-12 text-ink-muted">Loading schedules...</div>}
-          {!loading && schedules.length === 0 && (
-            <div className="text-center py-16 bg-white rounded-lg border border-dashed border-line">
-              <div className="font-medium text-ink mb-1">No schedules yet</div>
-              <p className="text-sm text-ink-muted mb-4">Create a schedule to auto-generate tee times daily</p>
-              <button onClick={openAdd} className="bg-pine hover:bg-pine-hover text-white px-5 py-2.5 rounded-md text-[12.5px] font-medium transition-colors">Add Your First Schedule</button>
-            </div>
-          )}
 
           {/* B-7: rates by band × weekday/weekend × member/resident in ONE table,
               blocks + booking windows beside it. A view over the same schedule
               objects — every action here is the one the cards had. Seasons are
               not tabs: a schedule has no date range, so seasons would be a
               schema change (see UI_REVISE_SPEC B-7 note). */}
-          {!loading && schedules.length > 0 && (
+          {!loading && (
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+              {schedules.length === 0 ? (
+                <div className="text-center py-16 bg-white rounded-lg border border-dashed border-line">
+                  <div className="font-medium text-ink mb-1">No schedules yet</div>
+                  <p className="text-sm text-ink-muted mb-4">Create a schedule to auto-generate tee times daily</p>
+                  <button onClick={openAdd} className="bg-pine hover:bg-pine-hover text-white px-5 py-2.5 rounded-md text-[12.5px] font-medium transition-colors">Add Your First Schedule</button>
+                </div>
+              ) : (
               <div className="bg-white border border-line overflow-x-auto">
                 <table className="w-full text-[13.5px]">
                   <thead>
@@ -255,13 +263,14 @@ export default function SchedulesPage() {
                   </tbody>
                 </table>
               </div>
+              )}
 
               <div className="space-y-4">
                 {/* Blocks */}
                 <div className="bg-white border border-line p-4">
                   <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Blocked days</div>
-                  {blackoutError && <p className="text-xs text-bad mb-2">{blackoutError}</p>}
-                  {blackouts.length === 0 ? (
+                  {blackoutError && <p className="text-xs text-bad mb-2">{blackoutError} <button onClick={loadBlackouts} className="underline">Retry</button></p>}
+                  {blackoutError ? null : blackouts.length === 0 ? (
                     <p className="text-[12.5px] text-ink-muted mb-3">No days blocked.</p>
                   ) : (
                     <ul className="divide-y divide-line-soft mb-3">
@@ -286,6 +295,7 @@ export default function SchedulesPage() {
                 {/* Booking windows — read here, edited in Settings */}
                 <div className="bg-white border border-line p-4">
                   <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Booking windows</div>
+                  {windowsError && <p className="text-xs text-bad mb-2">{windowsError} <button onClick={loadWindows} className="underline">Retry</button></p>}
                   <div className="text-[13px] text-ink space-y-1">
                     <div className="flex justify-between"><span className="text-ink-soft">Public can book</span><span className="tabular-nums">{windows.publicAdvanceDays != null ? `${windows.publicAdvanceDays} days ahead` : '—'}</span></div>
                     <div className="flex justify-between"><span className="text-ink-soft">Members can book</span><span className="tabular-nums">{windows.memberAdvanceDays != null ? `${windows.memberAdvanceDays} days ahead` : '—'}</span></div>
