@@ -7,6 +7,7 @@ import { latestPageDecision } from '@/lib/change-requests';
 import { COMPLETED_BOOKING_STATUSES, computeCourseHealth } from '@/lib/course-metrics';
 import { hasAcceptedAgreement } from '@/lib/agreement-gate';
 import { setupProgress } from '@/lib/course-setup';
+import { nextCheckIn, lastContact, scheduledCheckIn } from '@/lib/course-checkin';
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -187,6 +188,37 @@ export async function GET(req: NextRequest) {
       }),
     };
   });
+
+  // CS-2 §1: the sheet as a CSV — same auth as the list, money and PII
+  // blanked below SUPPORT_PLUS exactly as the JSON is.
+  if (req.nextUrl.searchParams.get('format') === 'csv') {
+    const esc = (v: unknown) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+    const iso = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString() : '');
+    const header = ['course', 'city', 'state', 'type', 'operator', 'operator email', 'live', 'health', 'health reason', 'setup done', 'next step', 'bookings 30d', 'fees 30d', 'next touch', 'last talked', 'live since', 'archived'];
+    const lines = [header.map(esc).join(',')];
+    for (const c of result) {
+      const gettingLive = c.health.status === 'setup_incomplete' || c.health.status === 'orphaned';
+      const touch = gettingLive ? scheduledCheckIn(c.inquiryCalls.map(x => ({ ...x, kind: 'checkin' }))) : null;
+      const nextTouch = gettingLive ? (touch ? new Date(touch.scheduledAt) : null) : nextCheckIn(c, c.calls);
+      const talked = lastContact([...c.calls, ...c.inquiryCalls]);
+      lines.push([
+        c.name, c.city, c.state, c.type || 'public',
+        c.operator?.name ?? '', seesMoneyAndPii ? (c.operator?.email ?? '') : '',
+        c.active ? 'yes' : 'no', c.health.label, c.health.reason,
+        `${c.setup.done} of ${c.setup.total}`, c.setup.next?.short ?? '',
+        c.bookings30d, seesMoneyAndPii ? c.revenue30d.toFixed(2) : '',
+        iso(nextTouch), talked ? iso(talked.at) : '', iso(c.welcomeEmailSentAt), iso(c.archivedAt),
+      ].map(esc).join(','));
+    }
+    const stamp = new Date().toISOString().slice(0, 10);
+    return new NextResponse(lines.join(String.fromCharCode(13, 10)), {
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="courses-${stamp}.csv"`,
+        'Cache-Control': 'no-store',
+      },
+    });
+  }
 
   if (seesMoneyAndPii) return NextResponse.json(result);
   return NextResponse.json(result.map(c => {
