@@ -221,16 +221,17 @@ function PortalInner({ params }: { params: Promise<{ slug: string }> }) {
         )}
 
         <section>
-          <h2 className="text-[13px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-3">Upcoming tee times</h2>
+          <h2 className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-3">Upcoming</h2>
           {data.upcoming.length === 0 ? (
             <p className="text-sm text-ink-faint">No upcoming tee times at {data.course.name}.</p>
           ) : (
             <div className="space-y-3">
               {data.upcoming.map(b => (
-                <div key={b.id} className="bg-white border border-line rounded-lg p-4 flex items-center justify-between gap-4">
-                  <div>
-                    <div className="font-medium text-ink">{fmtDate(b.date)} &middot; {fmtTime(b.time)}</div>
-                    <div className="text-sm text-ink-muted">{b.players} player{b.players !== 1 ? 's' : ''} &middot; {dollars(b.totalAmount)} at check-in</div>
+                <div key={b.id} className="bg-white border border-line rounded-lg p-5 flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="font-serif font-medium text-ink text-xl leading-tight">{fmtTime(b.time)}</div>
+                    <div className="text-sm text-ink-soft mt-0.5">{fmtDate(b.date)}</div>
+                    <div className="text-xs text-ink-muted mt-1">{b.players} player{b.players !== 1 ? 's' : ''} &middot; {dollars(b.totalAmount)} at check-in</div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {!b.checkedInAt && b.checkInToken && (
@@ -249,19 +250,19 @@ function PortalInner({ params }: { params: Promise<{ slug: string }> }) {
         </section>
 
         <section>
-          <h2 className="text-[13px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-3">Past rounds</h2>
+          <h2 className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-3">Played</h2>
           {data.past.length === 0 ? (
             <p className="text-sm text-ink-faint">No past rounds at {data.course.name} yet.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="bg-white border border-line rounded-lg divide-y divide-line-soft">
               {data.past.map(b => (
-                <div key={b.id} className="bg-white border border-line rounded-lg px-4 py-3 flex items-center justify-between gap-4">
-                  <div>
+                <div key={b.id} className="px-4 py-3 flex items-center justify-between gap-4">
+                  <div className="min-w-0">
                     <div className="text-sm font-medium text-ink">{fmtDate(b.date)} &middot; {fmtTime(b.time)}</div>
                     <div className="text-xs text-ink-muted">{b.players} player{b.players !== 1 ? 's' : ''} &middot; {dollars(b.totalAmount)} &middot; <span className="capitalize">{b.status}</span></div>
                   </div>
                   {b.checkInToken && (
-                    <Link href={`/receipt/${b.id}?token=${b.checkInToken}`} className="flex items-center gap-1 text-xs text-pine hover:text-pine-hover shrink-0 transition-colors">
+                    <Link href={`/receipt/${b.id}?token=${b.checkInToken}`} className="flex items-center gap-1 text-xs shrink-0 transition-opacity hover:opacity-70" style={{ color: accent }}>
                       <Receipt size={13} /> Receipt
                     </Link>
                   )}
