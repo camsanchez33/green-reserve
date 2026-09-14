@@ -19,6 +19,8 @@ export const REMINDERS_RESUMED_PREFIX = 'REMINDERS_RESUMED::';
 export const AGREEMENT_ACCEPTED_PREFIX = 'OPERATOR_AGREEMENT_ACCEPTED::';
 export const DOCUMENT_UPLOADED_PREFIX = 'DOCUMENT_UPLOADED::';
 export const NOTE_ADDED_PREFIX = 'NOTE_ADDED::';
+/** CS-1: check-in call scheduled / moved / logged, and bare next-date sets. */
+export const CHECKIN_CALL_PREFIX = 'CHECKIN_CALL::';
 
 // LEGAL PAGES V2 (RUN_QUEUE) — bumped alongside the operator-agreement and
 // terms page rewrites. Existing acceptances are NOT invalidated by this —
@@ -38,6 +40,7 @@ export interface ReminderSentPayload { step: string }
 export interface AgreementAcceptedPayload { version: string; acceptedBy: string }
 export interface DocumentUploadedPayload { name: string; url: string; by: string }
 export interface NoteAddedPayload { text: string; by: string }
+export interface CheckInCallPayload { text: string; by: string }
 
 export type TimelineEvent =
   | { type: 'settings_changed'; at: string; data: SettingsChangedPayload }
@@ -46,7 +49,8 @@ export type TimelineEvent =
   | { type: 'reminders_resumed'; at: string; data: { by: string } }
   | { type: 'agreement_accepted'; at: string; data: AgreementAcceptedPayload }
   | { type: 'document_uploaded'; at: string; data: DocumentUploadedPayload }
-  | { type: 'note_added'; at: string; data: NoteAddedPayload };
+  | { type: 'note_added'; at: string; data: NoteAddedPayload }
+  | { type: 'checkin_call'; at: string; data: CheckInCallPayload };
 
 function encode(prefix: string, payload: unknown): string {
   return prefix + JSON.stringify(payload);
@@ -63,6 +67,7 @@ function decodeOne(actorName: string | null, createdAt: Date): TimelineEvent | n
     if (actorName.startsWith(AGREEMENT_ACCEPTED_PREFIX)) return { type: 'agreement_accepted', at, data: JSON.parse(actorName.slice(AGREEMENT_ACCEPTED_PREFIX.length)) };
     if (actorName.startsWith(DOCUMENT_UPLOADED_PREFIX)) return { type: 'document_uploaded', at, data: JSON.parse(actorName.slice(DOCUMENT_UPLOADED_PREFIX.length)) };
     if (actorName.startsWith(NOTE_ADDED_PREFIX)) return { type: 'note_added', at, data: JSON.parse(actorName.slice(NOTE_ADDED_PREFIX.length)) };
+    if (actorName.startsWith(CHECKIN_CALL_PREFIX)) return { type: 'checkin_call', at, data: JSON.parse(actorName.slice(CHECKIN_CALL_PREFIX.length)) };
   } catch { /* ignore malformed marker */ }
   return null;
 }
@@ -101,6 +106,10 @@ export async function logAgreementAccepted(courseId: string, acceptedBy: string,
 
 export async function logDocumentUploaded(courseId: string, name: string, url: string, by: string): Promise<boolean> {
   return log(courseId, encode(DOCUMENT_UPLOADED_PREFIX, { name, url, by } as DocumentUploadedPayload), 'admin');
+}
+
+export async function logCheckInCall(courseId: string, text: string, by: string): Promise<boolean> {
+  return log(courseId, encode(CHECKIN_CALL_PREFIX, { text, by } as CheckInCallPayload), 'admin');
 }
 
 export async function logNoteAdded(courseId: string, text: string, by: string): Promise<boolean> {

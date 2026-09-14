@@ -6,6 +6,7 @@ import { getApprovalState } from '@/lib/approval-state';
 import { latestPageDecision } from '@/lib/change-requests';
 import { COMPLETED_BOOKING_STATUSES, computeCourseHealth } from '@/lib/course-metrics';
 import { hasAcceptedAgreement } from '@/lib/agreement-gate';
+import { setupProgress } from '@/lib/course-setup';
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -66,7 +67,14 @@ export async function GET(req: NextRequest) {
   // — including the archived half that this response was about to drop.
   const courses = await prisma.course.findMany({
     where: showArchived ? { archivedAt: { not: null } } : { archivedAt: null },
-    include: { operator: { select: { email: true, name: true, onboardingStep: true, emailVerified: true } } },
+    include: {
+      operator: { select: { email: true, name: true, onboardingStep: true, emailVerified: true } },
+      // CS-1: check-in calls — few per course, newest first.
+      calls: {
+        where: { kind: 'checkin' }, orderBy: { scheduledAt: 'desc' },
+        select: { id: true, kind: true, scheduledAt: true, outcome: true, durationMin: true, direction: true, phone: true, completedAt: true, notes: true },
+      },
+    },
     orderBy: { createdAt: 'desc' },
   });
   const listedIds = courses.map(c => c.id);
@@ -100,7 +108,15 @@ export async function GET(req: NextRequest) {
     // ORPHAN SWEEP tripwire (RUN_QUEUE) — every course should have a linked
     // inquiry; this is the cheap batched check the health brain needs to
     // flag one that doesn't, instead of pretending it's just another draft.
-    prisma.courseInquiry.findMany({ where: { builtCourseId: { not: null } }, select: { builtCourseId: true } }),
+    // CS-1: the linked inquiry's id and its discovery calls ride along so a
+    // "Getting live" row can show a scheduled discovery call as its next touch.
+    prisma.courseInquiry.findMany({
+      where: { builtCourseId: { not: null } },
+      select: {
+        id: true, builtCourseId: true,
+        calls: { where: { kind: 'discovery' }, orderBy: { scheduledAt: 'desc' }, select: { id: true, kind: true, scheduledAt: true, outcome: true, durationMin: true, direction: true, completedAt: true } },
+      },
+    }),
   ]);
 
   const bookingMap = new Map(bookingAggs.map(b => [b.courseId, { count: b._count.id, revenue: (b._sum.accessFeeTotal ?? 0) / 100 }]));
@@ -108,6 +124,7 @@ export async function GET(req: NextRequest) {
   const lastBookingMap = new Map(lastBookingAggs.map(b => [b.courseId, b._max.createdAt?.toISOString() ?? null]));
   const priorBookingMap = new Map(priorBookingAggs.map(b => [b.courseId, b._count.id]));
   const linkedCourseIds = new Set(linkedInquiries.map(i => i.builtCourseId));
+  const linkedByCourseId = new Map(linkedInquiries.map(i => [i.builtCourseId as string, i]));
 
   // Approval is course-level truth (item 1) — batched rather than N+1'd:
   // one inquiry lookup + one events lookup for every draft course at once,
@@ -141,14 +158,20 @@ export async function GET(req: NextRequest) {
   const result = courses.map(c => {
     const bookings30d = bookingMap.get(c.id)?.count ?? 0;
     const bookingsPrior30d = priorBookingMap.get(c.id) ?? 0;
+    const approvalStatus = approvalByCourseId.get(c.id) ?? 'none';
+    const linked = linkedByCourseId.get(c.id);
     return {
       ...c,
+      // CS-1: the five setup steps, the linked inquiry and its discovery calls.
+      setup: setupProgress({ ...c, approvalStatus }),
+      linkedInquiryId: linked?.id ?? null,
+      inquiryCalls: linked?.calls ?? [],
       bookings30d,
       revenue30d: bookingMap.get(c.id)?.revenue ?? 0,
       activeMemberCount: memberMap.get(c.id) ?? 0,
       lastBookingAt: lastBookingMap.get(c.id) ?? null,
       bookingsPrior30d,
-      approvalStatus: approvalByCourseId.get(c.id) ?? 'none',
+      approvalStatus,
       // A-04 item 2: ONE worded status chip, worst truth wins — same brain
       // the course detail header uses (course-metrics.ts).
       health: computeCourseHealth({

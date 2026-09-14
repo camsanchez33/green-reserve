@@ -5,6 +5,7 @@ import { dayKey, platformHour, startOfPlatformDay, startOfPlatformWeek, startOfP
 import { ACTIVE_STATUSES } from '@/lib/inquiry-status';
 import { threadSignal } from '@/lib/thread-signal';
 import { buildInquiryQueueRows } from '@/lib/inquiry-action-queue';
+import { buildCourseCheckInRows } from '@/lib/course-action-queue';
 import { COMPLETED_BOOKING_STATUSES, TREND_MIN_AGE_DAYS, TREND_DROP_PCT_THRESHOLD, computeCourseHealth } from '@/lib/course-metrics';
 
 const COMPLETED = COMPLETED_BOOKING_STATUSES;
@@ -159,7 +160,8 @@ export async function GET() {
     prisma.inquiryStatusEvent.groupBy({ by: ['inquiryId'], where: { toStatus: 'building', createdAt: { gte: startOfMonth } } }),
     prisma.courseInquiry.count({ where: { wentLiveAt: { gte: startOfMonth } } }),
     prisma.booking.findMany({ where: { status: { in: COMPLETED }, teeTime: { date: todayDateStr } }, select: { checkedInAt: true, totalAmount: true, accessFeeTotal: true } }),
-    prisma.course.findMany({ where: { active: true, archivedAt: null }, select: { id: true, name: true, createdAt: true, stripeAccountActive: true, liveStatus: true, welcomeEmailSentAt: true, archivedAt: true } }),
+    // CS-1: nextCheckInAt + the scheduled check-in calls, for the queue rows.
+    prisma.course.findMany({ where: { active: true, archivedAt: null }, select: { id: true, name: true, createdAt: true, stripeAccountActive: true, liveStatus: true, welcomeEmailSentAt: true, archivedAt: true, nextCheckInAt: true, operator: { select: { name: true } }, calls: { where: { kind: 'checkin', outcome: 'scheduled' }, select: { kind: true, scheduledAt: true, outcome: true } } } }),
     prisma.booking.groupBy({ by: ['courseId'], where: { status: { in: COMPLETED }, createdAt: { gte: thirtyDaysAgo } }, _count: { id: true } }),
     prisma.booking.groupBy({ by: ['courseId'], where: { status: { in: COMPLETED }, createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } }, _count: { id: true } }),
   ]);
@@ -265,16 +267,22 @@ export async function GET() {
       fire: { kind: 'send_nudge', courseId: t.courseId },
     }));
 
+  // CS-1 §4: check-in calls due or overdue — one row per course, and never a
+  // second row for a course already in the queue for a worse reason.
+  const alreadyQueued = new Set<string>([...noStripe.map(c => c.id), ...failedByCourse.keys()]);
+  const checkInRows: Row[] = buildCourseCheckInRows(activeCoursesList, now).filter(r => !alreadyQueued.has(r.id.slice(3)));
+
   const amber: Row[] = [
     ...pipelineRows,
     ...draftsAmberRows,
     ...threadAmber,
+    ...checkInRows,
   ].sort((a, b) => b.ageDays - a.ageDays).slice(0, 5);
 
   // One row per inquiry means this is finally a count of things to do rather
   // than a count of reasons — the badge used to add the same inquiry up to
   // three times.
-  const amberCount = pipelineRows.length + draftsAmberCount + threadAmber.length;
+  const amberCount = pipelineRows.length + draftsAmberCount + threadAmber.length + checkInRows.length;
 
   // ---- revenue: cumulative money ticker (A-01e — supersedes the A-01c bars) ----
   // Every point is inherently an honest "so far" comparison: both the current

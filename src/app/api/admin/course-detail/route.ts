@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { firstCheckInAfterGoLive } from '@/lib/course-checkin';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS } from '@/lib/admin-session';
 import { sendCourseLiveOrientationEmail } from '@/lib/email';
@@ -225,6 +226,9 @@ export async function PATCH(req: NextRequest) {
 
   // Auto-advance linked inquiry from building → live when course is activated
   if (active === true) {
+    // CS-1 go-live hook: the first check-in call lands 14 days out, only when
+    // nothing is set — a re-activation never moves a planned date.
+    await prisma.course.updateMany({ where: { id: courseId, nextCheckInAt: null }, data: { nextCheckInAt: firstCheckInAfterGoLive() } });
     const linked = await prisma.courseInquiry.findFirst({
       where: { builtCourseId: courseId, status: 'building' },
     });

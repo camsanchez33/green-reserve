@@ -13,6 +13,7 @@ import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrient
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 import { resolveAdminSession, requireRole, requireOwner, ownerGateError, MANAGER_PLUS, SUPPORT_PLUS, VIEWER_PLUS, type AdminSession } from '@/lib/admin-session';
 import { AGENDA, callGate, fmtCallTime, nextCall, latestCall, parseJson } from '@/lib/inquiry-call';
+import { firstCheckInAfterGoLive } from '@/lib/course-checkin';
 import { sendCallScheduledEmail } from '@/lib/email';
 import { encodeChangeAddressed, encodeRequestReReview } from '@/lib/change-requests';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
@@ -477,6 +478,9 @@ async function handleAction(
 
       await prisma.course.update({ where: { id: inquiry.builtCourseId }, data: { active: true, liveStatus: 'live' } });
       const now = new Date();
+      // CS-1 go-live hook: the first check-in call lands 14 days out. Only
+      // when nothing is set — a re-activation never moves a planned date.
+      await prisma.course.updateMany({ where: { id: inquiry.builtCourseId, nextCheckInAt: null }, data: { nextCheckInAt: firstCheckInAfterGoLive(now) } });
       const from = inquiry.status;
       await prisma.courseInquiry.update({ where: { id: inquiryId }, data: { status: 'live', wentLiveAt: now } });
       await logEvent(inquiryId, from, 'live', 'admin', adminName);
