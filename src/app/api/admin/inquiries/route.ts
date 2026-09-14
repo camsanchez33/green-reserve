@@ -11,6 +11,8 @@ import bcrypt from 'bcryptjs';
 import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail, sendDashboardAccessEmail, sendGoLiveSimpleEmail, sendInquiryDeclinedEmail } from '@/lib/email';
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 import { resolveAdminSession, requireRole, requireOwner, ownerGateError, MANAGER_PLUS, SUPPORT_PLUS, VIEWER_PLUS, type AdminSession } from '@/lib/admin-session';
+import { AGENDA, callGate, fmtCallTime } from '@/lib/inquiry-call';
+import { sendCallScheduledEmail } from '@/lib/email';
 import { encodeChangeAddressed, encodeRequestReReview } from '@/lib/change-requests';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 import { hasAcceptedAgreement } from '@/lib/course-timeline';
@@ -32,7 +34,7 @@ export async function GET(req: NextRequest) {
   if (!requireRole(session, VIEWER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const id = req.nextUrl.searchParams.get('id');
   if (id) {
-    const inquiry = await prisma.courseInquiry.findUnique({ where: { id }, include: { events: { orderBy: { createdAt: 'asc' } } } });
+    const inquiry = await prisma.courseInquiry.findUnique({ where: { id }, include: { events: { orderBy: { createdAt: 'asc' } }, calls: { where: { kind: 'discovery' }, orderBy: { scheduledAt: 'desc' } } } });
     if (!inquiry) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json(stripSecrets(inquiry));
   }
@@ -44,7 +46,11 @@ export async function GET(req: NextRequest) {
   // current status) and "why closed" (the last event) — both live at the tail.
   const inquiries = await prisma.courseInquiry.findMany({
     orderBy: { createdAt: 'desc' },
-    include: { events: { orderBy: { createdAt: 'desc' }, take: 25 } },
+    include: {
+      events: { orderBy: { createdAt: 'desc' }, take: 25 },
+      // IC-1: few per inquiry; newest first.
+      calls: { where: { kind: 'discovery' }, orderBy: { scheduledAt: 'desc' }, select: { id: true, scheduledAt: true, outcome: true, durationMin: true, direction: true, agendaJson: true, agendaExtra: true, phone: true, followUpAt: true, completedAt: true } },
+    },
   });
   return NextResponse.json(inquiries.map(inq => {
     const { detailsJson: _detailsJson, needsJson: _needsJson, facilitiesNotes: _facilitiesNotes, events, ...rest } = stripSecrets(inq);
@@ -74,6 +80,88 @@ async function handleAction(
   if (!inquiry) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   const adminName = session?.name || 'Admin';
+
+  // ── IC-1: the discovery call ─────────────────────────────────────────
+  const CLOSED = ['rejected', 'archived', 'live'];
+  const parseDate = (v: unknown): Date | null => { const d = typeof v === 'string' || v instanceof Date ? new Date(v) : null; return d && !Number.isNaN(d.getTime()) ? d : null; };
+
+  if (action === 'schedule_call') {
+    if (CLOSED.includes(inquiry.status)) return NextResponse.json({ error: 'This inquiry is closed — reopen it before scheduling a call.' }, { status: 409 });
+    const scheduledAt = parseDate(payload?.scheduledAt);
+    if (!scheduledAt) return NextResponse.json({ error: 'Pick a date and time for the call.' }, { status: 400 });
+    const durationMin = Math.max(5, Math.min(240, Number(payload?.durationMin) || 30));
+    const direction = payload?.direction === 'they_call' ? 'they_call' : 'we_call';
+    const agenda = Array.isArray(payload?.agenda) ? (payload!.agenda as unknown[]).filter((k): k is string => typeof k === 'string' && AGENDA.some(a => a.key === k)) : [];
+    const call = await prisma.call.create({
+      data: {
+        kind: 'discovery', inquiryId, scheduledAt, durationMin, direction,
+        phone: String(payload?.phone ?? inquiry.phone ?? '').slice(0, 40),
+        agendaJson: JSON.stringify(agenda), agendaExtra: String(payload?.agendaExtra ?? '').slice(0, 2000),
+        createdBy: adminName,
+      },
+    });
+    await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `Call scheduled for ${fmtCallTime(scheduledAt)} by ${adminName}`);
+    let emailSent: boolean | null = null; let emailError: string | null = null;
+    if (payload?.emailContact === true && inquiry.email) {
+      try {
+        await sendCallScheduledEmail({
+          contactName: inquiry.contactName, email: inquiry.email, courseName: inquiry.courseName,
+          scheduledAt, durationMin, direction, phone: call.phone,
+          agendaLabels: AGENDA.filter(a => agenda.includes(a.key)).map(a => a.label).concat(call.agendaExtra ? [call.agendaExtra] : []),
+        });
+        emailSent = true;
+      } catch (err) { emailSent = false; emailError = err instanceof Error ? err.message : 'send failed'; }
+    }
+    return NextResponse.json({ success: true, call, emailSent, emailError });
+  }
+
+  if (action === 'reschedule_call') {
+    const call = await prisma.call.findUnique({ where: { id: String(payload?.callId ?? '') } });
+    if (!call || call.inquiryId !== inquiryId) return NextResponse.json({ error: 'Call not found' }, { status: 404 });
+    const scheduledAt = parseDate(payload?.scheduledAt);
+    if (!scheduledAt) return NextResponse.json({ error: 'Pick a date and time for the call.' }, { status: 400 });
+    const updated = await prisma.call.update({
+      where: { id: call.id },
+      data: {
+        scheduledAt, outcome: 'scheduled',
+        durationMin: payload?.durationMin != null ? Math.max(5, Math.min(240, Number(payload.durationMin) || call.durationMin)) : call.durationMin,
+        direction: payload?.direction === 'they_call' ? 'they_call' : payload?.direction === 'we_call' ? 'we_call' : call.direction,
+        phone: payload?.phone != null ? String(payload.phone).slice(0, 40) : call.phone,
+        ...(Array.isArray(payload?.agenda) ? { agendaJson: JSON.stringify((payload!.agenda as unknown[]).filter((k): k is string => typeof k === 'string')) } : {}),
+        ...(payload?.agendaExtra != null ? { agendaExtra: String(payload.agendaExtra).slice(0, 2000) } : {}),
+      },
+    });
+    await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `Call moved to ${fmtCallTime(scheduledAt)} by ${adminName}`);
+    return NextResponse.json({ success: true, call: updated });
+  }
+
+  if (action === 'log_call') {
+    const call = await prisma.call.findUnique({ where: { id: String(payload?.callId ?? '') } });
+    if (!call || call.inquiryId !== inquiryId) return NextResponse.json({ error: 'Call not found' }, { status: 404 });
+    const outcome = String(payload?.outcome ?? '');
+    if (!['talked', 'no_answer', 'not_a_fit'].includes(outcome)) return NextResponse.json({ error: 'Outcome must be talked, no_answer or not_a_fit.' }, { status: 400 });
+    const answersIn = payload?.answers && typeof payload.answers === 'object' ? payload.answers as Record<string, unknown> : {};
+    const answers: Record<string, string> = {};
+    for (const a of AGENDA) { const v = answersIn[a.key]; if (typeof v === 'string' && v.trim()) answers[a.key] = v.trim().slice(0, 4000); }
+    const followUpAt = parseDate(payload?.followUpAt);
+    const updated = await prisma.call.update({
+      where: { id: call.id },
+      data: { outcome, answersJson: JSON.stringify(answers), notes: String(payload?.notes ?? '').slice(0, 8000), followUpAt, completedAt: new Date() },
+    });
+    if (outcome === 'talked' && followUpAt) {
+      await prisma.courseInquiry.update({ where: { id: inquiryId }, data: { nextFollowUpAt: followUpAt } });
+    }
+    await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `Call logged — ${outcome.replace('_', ' ')} — by ${adminName}`);
+    return NextResponse.json({ success: true, call: updated, needsClose: outcome === 'not_a_fit' });
+  }
+
+  if (action === 'skip_call') {
+    const reason = String(payload?.reason ?? '').trim();
+    if (reason.length < 5) return NextResponse.json({ error: 'Give a reason for skipping the call (at least 5 characters).' }, { status: 400 });
+    await prisma.courseInquiry.update({ where: { id: inquiryId }, data: { callSkippedReason: reason.slice(0, 500) } });
+    await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `Call skipped — ${reason.slice(0, 200)} — by ${adminName}`);
+    return NextResponse.json({ success: true });
+  }
 
   // ── Simple status transitions ──────────────────────────────────────
   if (action === 'mark_in_review') {
@@ -451,6 +539,12 @@ async function handleAction(
   // build_course is exactly this plus the operator welcome email.
   if (action === 'create_draft_course' || action === 'build_course') {
     const buildAndEmail = action === 'build_course';
+    // IC-1 (A1): the one gate — a logged call, or an explicit skip with a reason.
+    {
+      const calls = await prisma.call.findMany({ where: { inquiryId, kind: 'discovery' }, select: { scheduledAt: true, outcome: true } });
+      const gate = callGate(inquiry, calls);
+      if (!gate.ok) return NextResponse.json({ error: 'call_required', why: gate.why }, { status: 409 });
+    }
     try {
       const operatorEmail = inquiry.email.trim().toLowerCase();
       const existingOp = await prisma.courseOperator.findUnique({ where: { email: operatorEmail } });

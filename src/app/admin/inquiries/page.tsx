@@ -29,6 +29,7 @@ interface Inquiry {
   snoozeUntil?: string | null; nextFollowUpAt?: string | null;
   detailsToken?: string | null; detailsJson?: string; needsJson?: string;
   events: InquiryStatusEvent[];
+  calls?: { id: string; scheduledAt: string; outcome: string; durationMin: number; direction: string }[];
 }
 
 // MP-4b: this page is a WORK QUEUE, not a CRM browser. It used to be three UIs

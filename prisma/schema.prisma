@@ -144,6 +144,9 @@ model Course {
   photos                CoursePhoto[]
   teeTimeAlerts         TeeTimeAlert[]
   nines                 Nine[]
+  /// IC-1 / CS-1: when we next call the course; null = never scheduled.
+  nextCheckInAt         DateTime?
+  calls                 Call[]
   courseProducts        CourseProduct[]
 
   @@index([operatorId])
@@ -534,9 +537,48 @@ model CourseInquiry {
   updatedAt            DateTime @updatedAt
   events               InquiryStatusEvent[]
   changeRequests       ChangeRequest[]
+  /// IC-1 (A1): build without a call, with a reason on record.
+  callSkippedReason    String?
+  calls                Call[]
 
   // MP-3: the orphan sweep and every lifecycle pairing filter on this.
   @@index([builtCourseId])
+}
+
+/// IC-1: one calls table for the whole relationship — discovery calls while it
+/// is an inquiry, check-in calls once it is a course. Exactly one of
+/// inquiryId / courseId is set (enforced in the API, not the DB).
+/// COURSES_SHEET_SPEC CS-1 reads the same rows — do NOT add a second model.
+model Call {
+  id           String         @id @default(cuid())
+  /// 'discovery' (inquiry) | 'checkin' (course)
+  kind         String
+  inquiryId    String?
+  inquiry      CourseInquiry? @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  courseId     String?
+  course       Course?        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  scheduledAt  DateTime
+  durationMin  Int            @default(30)
+  /// 'we_call' | 'they_call'
+  direction    String         @default("we_call")
+  phone        String         @default("")
+  /// JSON string: string[] of agenda item keys checked for this call
+  agendaJson   String         @default("[]")
+  /// free text the admin adds for this course ("Tuesday league")
+  agendaExtra  String         @default("")
+  /// 'scheduled' | 'talked' | 'no_answer' | 'not_a_fit' | 'cancelled'
+  outcome      String         @default("scheduled")
+  /// JSON string: Record<agendaKey, string> — what was said, per item
+  answersJson  String         @default("{}")
+  notes        String         @default("")
+  followUpAt   DateTime?
+  completedAt  DateTime?
+  createdBy    String         @default("")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([inquiryId, scheduledAt])
+  @@index([courseId, scheduledAt])
 }
 
 model InquiryStatusEvent {

@@ -1132,6 +1132,32 @@ export async function sendDetailsRequestEmail(data: {
 // that reads it back in an email learns something we did not choose to tell
 // them. It also leaves the door open, because at this stage most declines are
 // about our capacity and sequencing, not about the course.
+// IC-1 §5: the contact's confirmation when a discovery call is put on the books.
+export async function sendCallScheduledEmail(data: {
+  contactName: string; email: string; courseName: string;
+  scheduledAt: Date; durationMin: number; direction: string; phone: string; agendaLabels: string[];
+}) {
+  const when = data.scheduledAt.toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
+  const who = data.direction === 'they_call'
+    ? `You call us${data.phone ? ` at ${data.phone}` : ''}.`
+    : `We call you${data.phone ? ` at ${data.phone}` : ''}.`;
+  const agenda = data.agendaLabels.length
+    ? `<p style="margin:16px 0 6px;color:#111827;font-size:14px;font-weight:600;">What we'll go over</p><ul style="margin:0 0 16px;padding-left:20px;color:#6b7280;font-size:14px;line-height:1.6;">${data.agendaLabels.map(l => `<li>${l}</li>`).join('')}</ul>`
+    : '';
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:22px;font-weight:700;">Your call with GreenReserve</h1>
+    <p style="margin:0 0 16px;color:#6b7280;font-size:15px;line-height:1.6;">
+      Hi ${data.contactName} — here are the details for our call about <strong>${data.courseName}</strong>.
+    </p>
+    <p style="margin:0 0 4px;color:#111827;font-size:15px;line-height:1.6;"><strong>${when} ET</strong> · about ${data.durationMin} minutes</p>
+    <p style="margin:0 0 16px;color:#6b7280;font-size:15px;line-height:1.6;">${who}</p>
+    ${agenda}
+    <p style="margin:0;color:#6b7280;font-size:14px;line-height:1.6;">Reply to this email if the time doesn't work and we'll find another.</p>
+  `);
+  const r = await getResend().emails.send({ from: FROM, to: data.email, subject: `Your call with GreenReserve — ${when} ET`, html });
+  if (r.error) throw new Error(r.error.message);
+}
+
 export async function sendInquiryDeclinedEmail(data: {
   contactName: string; email: string; courseName: string;
 }) {

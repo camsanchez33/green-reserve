@@ -290,9 +290,12 @@ export type QueueInput = {
   events?: InquiryEventLike[] | null;
   snoozeUntil?: string | Date | null;
   nextFollowUpAt?: string | Date | null;
+  /** IC-1: discovery calls on the books. */
+  calls?: { scheduledAt: string | Date; outcome: string }[] | null;
 };
 
 const shortDate = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+import { overdueCall, nextCall, isSameEasternDay, fmtCallClock, fmtCallTime } from './inquiry-call';
 
 export function queueSignal(inq: QueueInput, now: Date = new Date()): QueueSignal {
   const { status, createdAt } = inq;
@@ -334,6 +337,25 @@ export function queueSignal(inq: QueueInput, now: Date = new Date()): QueueSigna
       // Ranked below everything live, furthest-out snooze last.
       pressureDays: -daysSince(now, snoozeUntil),
       reason: `Snoozed until ${shortDate(snoozeUntil)}` };
+  }
+
+  // IC-1 §4: calls, applied after snooze and before the stage-stall clocks.
+  // An overdue call is your move (log it); a call today is your move (make
+  // it); a call on the books suppresses the stage stall the way a snooze does
+  // — a lead with a call scheduled is not stalled.
+  const calls = inq.calls || [];
+  const overdue = overdueCall(calls, now);
+  if (overdue && resubmits === 0) {
+    return { ...base, waitingOn: 'us', yourMove: true, pressureDays: daysSince(new Date(overdue.scheduledAt), now),
+      reason: `Log the call from ${shortDate(new Date(overdue.scheduledAt))}` };
+  }
+  const upcoming = nextCall(calls, now);
+  if (upcoming && resubmits === 0) {
+    const at = new Date(upcoming.scheduledAt);
+    if (isSameEasternDay(at, now)) {
+      return { ...base, waitingOn: 'us', yourMove: true, pressureDays: 0, reason: `Call today · ${fmtCallClock(at)}` };
+    }
+    return { ...base, waitingOn: 'them', yourMove: false, pressureDays: -daysSince(now, at), reason: `Call ${fmtCallTime(at)}` };
   }
 
   const signal = ((): Omit<QueueSignal, 'status' | 'enteredAt' | 'resubmits'> => {

@@ -17,6 +17,7 @@
 // derivation the Inquiries list uses, producing exactly one row per inquiry.
 import { queueSignal, compareQueue, daysSince, type QueueInput } from './inquiry-status';
 import { computeOpenChanges, latestPageDecision, CATEGORY_LABEL } from './change-requests';
+import { overdueCall, nextCall, isSameEasternDay, fmtCallClock } from './inquiry-call';
 
 export type ActionQueueRow = {
   id: string;
@@ -51,9 +52,20 @@ export function buildInquiryQueueRows(inquiries: QueueInquiry[], now: Date = new
 
       let why = signal.reason;
       let doThis = 'Open the inquiry and take the next step.';
+      // IC-1 §4: calls outrank the stage copy below.
+      const overdue = overdueCall(inq.calls || [], now);
+      const today = !overdue ? nextCall(inq.calls || [], now) : null;
+      if (overdue) {
+        doThis = `Log the call — what happened on ${new Date(overdue.scheduledAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}?`;
+      } else if (today && isSameEasternDay(today.scheduledAt, now)) {
+        doThis = `Call ${inq.courseName} at ${fmtCallClock(today.scheduledAt)} — agenda is on the inquiry.`;
+      }
+      const callSet = !!overdue || (!!today && isSameEasternDay(today.scheduledAt, now));
       let fire: ActionQueueRow['fire'];
 
-      if (open.length > 0) {
+      if (callSet) {
+        // the call line above stands
+      } else if (open.length > 0) {
         why = `Changes requested — ${categories}`;
         doThis = `Address each item on the inquiry (${categories}), then send an updated preview.`;
       } else if (inq.status === 'details_requested') {

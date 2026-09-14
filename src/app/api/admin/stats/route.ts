@@ -146,6 +146,7 @@ export async function GET() {
       select: {
         id: true, courseName: true, status: true, createdAt: true,
         snoozeUntil: true, nextFollowUpAt: true,
+        calls: { select: { scheduledAt: true, outcome: true }, where: { kind: 'discovery' } },
         events: {
           select: { fromStatus: true, toStatus: true, actorName: true, createdAt: true },
           orderBy: { createdAt: 'asc' },
