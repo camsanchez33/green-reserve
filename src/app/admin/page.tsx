@@ -20,7 +20,7 @@ interface ActionRow {
 interface Stats {
   pendingInquiries: number;
   topStrip: {
-    feesToday: number | null; bookingsToday: number; checkInsToday: number; cancellationsToday: number;
+    feesToday: number | null; bookingsToday: number; playersToday?: number; checkInsToday: number; cancellationsToday: number;
     unreadMessages: number; unreadNewestSender: string | null;
     waitingNewInquiries: number; waitingOldestAgeDays: number | null;
     waitingDrafts: number; waitingDraftsList: { id: string; name: string }[];
@@ -326,6 +326,8 @@ export default function AdminOverviewPage() {
                 <div className="text-[30px] leading-none font-serif font-medium text-pine mb-1">{fmtMoney(stats.topStrip.feesToday)}</div>
                 <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">GreenReserve fees today</div>
                 <div className="flex items-center gap-3 mt-2 text-xs text-ink-faint">
+                  {/* U-A: the fee is per PLAYER — say players first, never derive them from bookings. */}
+                  {typeof stats.topStrip.playersToday === 'number' && <><span>{stats.topStrip.playersToday} player{stats.topStrip.playersToday === 1 ? '' : 's'}</span><span>·</span></>}
                   <span>{stats.topStrip.bookingsToday} booking{stats.topStrip.bookingsToday === 1 ? '' : 's'}</span>
                   <span>·</span>
                   <span>{stats.topStrip.checkInsToday} check-in{stats.topStrip.checkInsToday === 1 ? '' : 's'}</span>

@@ -25,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     where: { id: bookingId },
     include: {
       teeTime: { select: { date: true, time: true, holes: true } },
-      course: { select: { name: true, slug: true, city: true, state: true } },
+      course: { select: { name: true, slug: true, city: true, state: true, brandColor: true } },
     },
   });
 
@@ -38,6 +38,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     golferName: booking.golferName,
     courseName: booking.course.name,
     courseSlug: booking.course.slug,
+    // Reskin batch (U-G shared change): the receipt's CourseHeaderBar wears the course's own color.
+    brandColor: booking.course.brandColor,
     courseLocation: [booking.course.city, booking.course.state].filter(Boolean).join(', '),
     date: booking.teeTime.date,
     time: booking.teeTime.time,
