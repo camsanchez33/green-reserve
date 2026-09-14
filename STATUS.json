@@ -1,26 +1,18 @@
 {
-  "generatedAt": "2026-09-14T02:17:31.367Z",
+  "generatedAt": "2026-09-14T02:30:12.103Z",
   "repo": {
-    "head": "1bc8033",
+    "head": "ae5ff68",
     "branch": "main",
     "dirtyCount": 2,
     "dirty": [
-      "M RUN_QUEUE.md",
-      " M UI_REVISE_SPEC.md"
+      "M UI_REVISE_SPEC.md",
+      "?? \"Claude outputs/\""
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-13T21:00:36-04:00",
-    "unrecorded": [
-      {
-        "h": "1bc8033",
-        "date": "2026-09-13T21:52:22-04:00",
-        "subject": "H-1 fixes from /gr-review: live hero parallax, story unpins on phones, frozen claim out of metadata",
-        "ids": [],
-        "matches": []
-      }
-    ]
+    "queueLastCommit": "2026-09-13T22:18:03-04:00",
+    "unrecorded": []
   },
   "counts": {
     "runDone": 155,
@@ -74,7 +66,7 @@
       "line": 606,
       "hash": "958f229",
       "shipDate": "2026-08-29",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "title": "MP-2b",
@@ -826,6 +818,16 @@
   },
   "recentCommits": [
     {
+      "h": "ae5ff68",
+      "date": "2026-09-13",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "73b57b1",
+      "date": "2026-09-13",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "1bc8033",
       "date": "2026-09-13",
       "subject": "H-1 fixes from /gr-review: live hero parallax, story unpins on phones, frozen claim out of metadata"
@@ -874,16 +876,6 @@
       "h": "a3c1bea",
       "date": "2026-09-11",
       "subject": "U-0: the staff look — one CSS switch, two fonts, two sidebars"
-    },
-    {
-      "h": "961c637",
-      "date": "2026-09-11",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "a954491",
-      "date": "2026-09-11",
-      "subject": "MP-10: bound every admin list query instead of paging in memory"
     }
   ]
 }

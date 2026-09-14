@@ -4,22 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-14 02:17 UTC · branch `main` · HEAD `1bc8033` · working tree **2 dirty file(s)**
+Generated 2026-09-14 02:30 UTC · branch `main` · HEAD `ae5ff68` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-09-13**. 1 commit(s) since then are not mentioned anywhere in it:
-
-| commit | date | subject |
-|---|---|---|
-| `1bc8033` | 2026-09-13 | H-1 fixes from /gr-review: live hero parallax, story unpins on phones, frozen claim out of metadata |
-
-**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
 ### Uncommitted working tree (2 file(s))
 
-- `M RUN_QUEUE.md`
 - `M UI_REVISE_SPEC.md`
+- `?? "Claude outputs/"`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -45,7 +39,7 @@ This is the distinction a raw checkbox count gets wrong.
 | MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 15d | `7246a62` | `RUN_QUEUE.md:500` |
 | MP-1 | 2026-08-29 | 15d | `41f5ea8` | `RUN_QUEUE.md:530` |
 | MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 15d | `4ef11dd` | `RUN_QUEUE.md:565` |
-| MP-2 | 2026-08-29 | 14d | `958f229` | `RUN_QUEUE.md:606` |
+| MP-2 | 2026-08-29 | 15d | `958f229` | `RUN_QUEUE.md:606` |
 | MP-2b | 2026-08-29 | 14d | `a134af5` | `RUN_QUEUE.md:643` |
 | MP-2c | 2026-08-29 | 14d | `e5b5413` | `RUN_QUEUE.md:692` |
 | MP-2d | 2026-08-29 | 14d | `22d0f68` | `RUN_QUEUE.md:740` |
@@ -182,6 +176,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `ae5ff68` 2026-09-13 — queue/spec update
+- `73b57b1` 2026-09-13 — queue/spec update
 - `1bc8033` 2026-09-13 — H-1 fixes from /gr-review: live hero parallax, story unpins on phones, frozen claim out of metadata
 - `9221f2b` 2026-09-13 — queue/spec update
 - `85b3922` 2026-09-13 — H-1: pricing tile radius 16px → 14px (§1a card cap, from the design audit)
@@ -192,8 +188,6 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `7238dd9` 2026-09-11 — queue/spec update
 - `5eb48c5` 2026-09-11 — Review fixes: fee reversal on cancellation refunds, double-charge guard, viewer shaping, hung buttons
 - `a3c1bea` 2026-09-11 — U-0: the staff look — one CSS switch, two fonts, two sidebars
-- `961c637` 2026-09-11 — queue/spec update
-- `a954491` 2026-09-11 — MP-10: bound every admin list query instead of paging in memory
 
 ---
 
