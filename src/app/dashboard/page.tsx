@@ -106,6 +106,9 @@ function DashboardPageInner() {
   const [conditionsInput, setConditionsInput] = useState('');
   const [savingConditions, setSavingConditions] = useState(false);
   const [checkingInId, setCheckingInId] = useState<string | null>(null);
+  // B-8: late groups the counter has said are "still coming" — hidden from the
+  // attention row for this page load only; nothing is written anywhere.
+  const [stillComing, setStillComing] = useState<Set<string>>(new Set());
   const [cardModalBooking, setCardModalBooking] = useState<Booking | null>(null);
   const [cardModalReason, setCardModalReason] = useState('');
   // SD-10: failure is never emptiness, and no button stays stuck.
@@ -366,6 +369,19 @@ function DashboardPageInner() {
   }
 
   const nowHM = `${new Date().getHours().toString().padStart(2, '0')}:${new Date().getMinutes().toString().padStart(2, '0')}`;
+  // B-8: a group is late when its tee time went off 10+ minutes ago today and
+  // nobody in it is checked in. Read straight off the sheet already loaded.
+  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+  const lateGroups = selectedDate === today()
+    ? teeTimes.flatMap(tt => {
+        const [h, m] = tt.time.split(':').map(Number);
+        const ago = nowMin - (h * 60 + m);
+        if (tt.status === 'blocked' || ago < 10) return [];
+        return (tt.bookings ?? [])
+          .filter(b => b.status === 'confirmed' && !stillComing.has(b.id))
+          .map(b => ({ tt, b, ago }));
+      })
+    : [];
   const nextUpId = selectedDate === today()
     ? (teeTimes.find(t => t.time >= nowHM && t.status !== 'blocked')?.id ?? null)
     : null;
@@ -689,6 +705,32 @@ function DashboardPageInner() {
               </div>
 
               {sheetError && <LoadError message={sheetError} onRetry={() => loadTimes(selectedDate)} />}
+
+              {/* B-8: needs attention — late groups surface above the sheet. "Mark
+                  no-show" needs a place to record it (schema, attended); until then
+                  the two honest actions are the existing check-in and "Still coming". */}
+              {lateGroups.length > 0 && (
+                <div className="space-y-2 mb-4">
+                  {lateGroups.map(({ tt, b, ago }) => (
+                    <div key={b.id} className="bg-white border border-line border-l-[3px] border-l-warn px-4 py-3 flex flex-wrap items-center gap-3">
+                      <div className="flex-1 min-w-[220px] text-[13.5px] leading-snug text-ink">
+                        <b className="font-semibold">{fmtTime(tt.time)} group ({b.golferName}) hasn&apos;t checked in</b> — tee time was {ago} minute{ago === 1 ? '' : 's'} ago · {b.players} player{b.players === 1 ? '' : 's'}.
+                      </div>
+                      <button
+                        onClick={() => { if (b.checkInFailReason) { setCardModalReason(b.checkInFailReason); setCardModalBooking(b); } else checkInBooking(b); }}
+                        disabled={checkingInId === b.id}
+                        className="h-[34px] px-3 text-[12.5px] font-medium border border-ink text-ink hover:bg-paper disabled:opacity-50 transition-colors">
+                        {checkingInId === b.id ? 'Charging…' : b.checkInFailReason ? 'Retry with new card' : 'Check in now'}
+                      </button>
+                      <button
+                        onClick={() => setStillComing(prev => new Set(prev).add(b.id))}
+                        className="h-[34px] px-3 text-[12.5px] text-ink-soft hover:text-ink transition-colors">
+                        Still coming
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Legend */}
               <div className="flex flex-wrap gap-4 mb-3 text-[12.5px] text-ink-muted">
