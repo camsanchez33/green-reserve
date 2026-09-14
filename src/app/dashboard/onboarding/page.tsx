@@ -172,12 +172,12 @@ function OnboardingInner() {
         {/* Step 1 — Course Details */}
         {step === 1 && (
           <div className="bg-white border border-line rounded-lg p-6">
-            <h2 className="text-[20px] font-serif font-medium text-ink mb-1">A few details about the course</h2>
+            <h2 className="text-[24px] font-serif font-medium leading-none text-ink mb-1">A few details about the course</h2>
             <p className="text-sm text-ink-soft mb-6">Your contact info and address are already on file from your setup sheet. This is just the playing details.</p>
 
             <div className="space-y-5">
               <div>
-                <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Description <span className="normal-case text-ink-faint">(optional)</span></label>
+                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Description <span className="normal-case text-ink-faint">(optional)</span></label>
                 <textarea value={details.description} onChange={e => set('description', e.target.value)}
                   rows={3} placeholder="Tell golfers what makes your course special..."
                   className={iCls + ' resize-none'}/>
@@ -185,19 +185,19 @@ function OnboardingInner() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Holes</label>
+                  <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Holes</label>
                   <input type="number" value={details.holes} onChange={e => set('holes', Number(e.target.value))} placeholder="18" className={iCls}/>
                   <p className="text-xs text-ink-faint mt-1">9, 18, 27, 36, etc.</p>
                 </div>
                 <div>
-                  <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Par</label>
+                  <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Par</label>
                   <input type="number" value={details.par} onChange={e => set('par', Number(e.target.value))} className={iCls}/>
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted">Tee Sets <span className="normal-case text-ink-faint">(optional)</span></label>
+                  <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted">Tee Sets <span className="normal-case text-ink-faint">(optional)</span></label>
                   <button onClick={addTee} className="text-xs font-medium text-pine hover:text-pine-hover flex items-center gap-1 transition-colors">
                     <Plus className="w-3.5 h-3.5"/>Add tee
                   </button>
@@ -238,7 +238,7 @@ function OnboardingInner() {
         {/* Step 2 — Connect Payments */}
         {step === 2 && (
           <div className="bg-white border border-line rounded-lg p-6">
-            <h2 className="text-[20px] font-serif font-medium text-ink mb-1 flex items-center gap-2">
+            <h2 className="text-[24px] font-serif font-medium leading-none text-ink mb-1 flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-pine"/>Connect your payments
             </h2>
             <p className="text-sm text-ink-soft mb-6">
@@ -287,10 +287,10 @@ function OnboardingInner() {
         {/* Step 3 — Done */}
         {step === 3 && (
           <div className="bg-white border border-line rounded-lg p-10 text-center">
-            <div className="w-14 h-14 rounded-full bg-ok/10 flex items-center justify-center mx-auto mb-5">
+            <div className="w-14 h-14 rounded-md bg-ok/10 flex items-center justify-center mx-auto mb-5">
               <CheckCircle className="w-7 h-7 text-ok"/>
             </div>
-            <h2 className="text-[22px] font-serif font-medium text-ink mb-2">Setup complete</h2>
+            <h2 className="text-[30px] font-serif font-medium leading-none text-ink mb-2">Setup complete</h2>
             <p className="text-sm text-ink-soft mb-2">Your course details are saved and payments are connected. GreenReserve will review everything and take your course live — usually within 1 business day.</p>
             <p className="text-xs text-ink-muted mb-6">We&apos;ll email you a full walkthrough of your dashboard once you&apos;re live.</p>
             <button onClick={() => router.push('/dashboard')}

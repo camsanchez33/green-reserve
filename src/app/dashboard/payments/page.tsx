@@ -34,10 +34,11 @@ function StatCard({ icon, label, value, sub, accent = false }: {
   icon: React.ReactNode; label: string; value: string | number; sub: string; accent?: boolean;
 }) {
   return (
+    // U-O (§1b): stat tile = eyebrow / serif 30px / 12.5px note.
     <div className="bg-white rounded-lg border border-line p-4">
-      <div className={'flex items-center gap-1.5 text-xs font-medium mb-1 ' + (accent ? 'text-ok' : 'text-ink-muted')}>{icon}{label}</div>
-      <div className="text-xl font-serif font-medium text-ink">{value}</div>
-      <div className="text-xs text-ink-muted leading-relaxed mt-0.5">{sub}</div>
+      <div className={'flex items-center gap-1.5 text-[11px] uppercase tracking-[0.1em] mb-1.5 ' + (accent ? 'text-ok' : 'text-ink-muted')}>{icon}{label}</div>
+      <div className="text-[30px] leading-none font-serif font-medium text-ink tabular-nums">{value}</div>
+      <div className="text-[12.5px] text-ink-soft leading-snug mt-1.5">{sub}</div>
     </div>
   );
 }
@@ -96,15 +97,19 @@ function PaymentsPageInner() {
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="the payments ledger" />
         <div className="max-w-5xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <div>
-                <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Payments</h1>
-                <p className="text-xs text-ink-muted mt-0.5">Full booking ledger — actual charges, pending amounts, and held fees.</p>
+          {/* U-O (§1b): serif title + one sentence of this page's own numbers,
+              all counted off `bookings`, which the page already loads. */}
+          <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Payments</h1>
+                <TabIntroButton onClick={intro.show}/>
               </div>
-              <TabIntroButton onClick={intro.show}/>
+              <p className="text-[13.5px] text-ink-soft mt-2">
+                ${(collectedRevenue / 100).toFixed(2)} collected from {collected.length} round{collected.length!==1?'s':''} · {cardOnFile.length + awaitingNoFee.length + feesHeld.length} still to come · ${(feesHeldAmount / 100).toFixed(2)} in fees held
+              </p>
             </div>
-            <button onClick={load} className="flex items-center gap-1.5 text-xs text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
+            <button onClick={load} className="shrink-0 flex items-center gap-1.5 text-[12.5px] text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
               <RefreshCw className="w-3.5 h-3.5"/>Refresh
             </button>
           </div>
@@ -129,7 +134,7 @@ function PaymentsPageInner() {
             </div>
           )}
 
-          <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Collected</div>
+          <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Collected</div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
             <StatCard accent icon={<DollarSign className="w-4 h-4"/>} label="Revenue Collected"
               value={`$${(collectedRevenue / 100).toFixed(2)}`}
@@ -142,7 +147,7 @@ function PaymentsPageInner() {
               sub={`${cancelledWithFee.length} late cancel${cancelledWithFee.length!==1?'s':''} — non-refundable`}/>
           </div>
 
-          <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-2">Pending</div>
+          <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Pending</div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
             <StatCard icon={<Clock3 className="w-4 h-4"/>} label="Card on File"
               value={`${cardOnFile.length} booking${cardOnFile.length!==1?'s':''}`}
@@ -158,15 +163,17 @@ function PaymentsPageInner() {
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search golfer name or email..."
               className="w-64 bg-white border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:ring-2 focus:ring-pine/10 focus:border-pine/40 outline-none"/>
-            <div className="flex gap-1 bg-white rounded-md border border-line p-1">
+            {/* U-O: filters are square chips, one per filter, not a segmented pill. */}
+            <div className="flex flex-wrap gap-1.5">
               {([['all','All'],['paid','Paid'],['upcoming','Upcoming'],['fee','Fee Charged'],['cancelled','Cancelled']] as [string,string][]).map(([key, label]) => (
                 <button key={key} onClick={() => setStatusFilter(key)}
-                  className={'px-3 py-1.5 rounded text-xs font-medium transition-colors ' + (statusFilter === key ? 'bg-pine text-white' : 'text-ink-soft hover:text-ink')}>
+                  aria-pressed={statusFilter === key}
+                  className={'px-3 py-1.5 rounded-md text-[12.5px] font-medium border transition-colors ' + (statusFilter === key ? 'bg-pine text-white border-pine' : 'bg-white text-ink-soft border-line hover:border-line-strong hover:text-ink')}>
                   {label}
                 </button>
               ))}
             </div>
-            {(q || statusFilter !== 'all') && <span className="text-xs text-ink-muted">{allRows.length} of {bookings.length} bookings</span>}
+            {(q || statusFilter !== 'all') && <span className="text-[12.5px] text-ink-muted">{allRows.length} of {bookings.length} bookings</span>}
           </div>
 
           {loadError && <LoadError message={loadError} onRetry={load} />}
@@ -179,28 +186,30 @@ function PaymentsPageInner() {
             </div>
           ) : (
             <div className="bg-white rounded-lg border border-line overflow-hidden">
-              <table className="w-full text-sm">
+              <table className="w-full text-[13.5px]">
                 <thead>
                   <tr className="text-left border-b border-line">
-                    <th className="px-4 py-3 text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium">Golfer</th>
-                    <th className="px-4 py-3 text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium">Booked</th>
-                    <th className="px-4 py-3 text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium">Tee Time</th>
-                    <th className="px-4 py-3 text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium text-right">Green + Cart</th>
-                    <th className="px-4 py-3 text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium text-right">Fee Held</th>
-                    <th className="px-4 py-3 text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium text-right">Total</th>
-                    <th className="px-4 py-3 text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium">Status</th>
+                    <th className="px-4 py-3 text-[11px] uppercase tracking-[0.1em] text-ink-muted font-medium">Golfer</th>
+                    <th className="px-4 py-3 text-[11px] uppercase tracking-[0.1em] text-ink-muted font-medium">Booked</th>
+                    <th className="px-4 py-3 text-[11px] uppercase tracking-[0.1em] text-ink-muted font-medium">Tee Time</th>
+                    <th className="px-4 py-3 text-[11px] uppercase tracking-[0.1em] text-ink-muted font-medium text-right">Green + Cart</th>
+                    <th className="px-4 py-3 text-[11px] uppercase tracking-[0.1em] text-ink-muted font-medium text-right">Fee Held</th>
+                    <th className="px-4 py-3 text-[11px] uppercase tracking-[0.1em] text-ink-muted font-medium text-right">Total</th>
+                    <th className="px-4 py-3 text-[11px] uppercase tracking-[0.1em] text-ink-muted font-medium">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {allRows.map(b => {
                     const bStatus = getBookingStatus(b.status, b.paymentStatus);
                     return (
-                      <tr key={b.id} className={'border-b border-line-soft last:border-0 ' + (b.status==='cancelled'?'opacity-50':'')}>
+                      // U-O (§1b): cancelled rows fade back; a row carrying a late
+                      // fee keeps a 3px amber left edge so the money is findable.
+                      <tr key={b.id} className={'border-b border-line-soft last:border-0 ' + (b.paymentStatus === 'cancellation_fee_charged' ? 'border-l-[3px] border-l-warn ' : '') + (b.status==='cancelled'?'opacity-50':'')}>
                         <td className="px-4 py-3">
                           <div className="font-medium text-ink">{b.golferName}</div>
-                          <div className="text-xs text-ink-muted">{b.golferEmail} · {b.players} player{b.players!==1?'s':''}</div>
+                          <div className="text-[12.5px] text-ink-muted">{b.golferEmail} · {b.players} player{b.players!==1?'s':''}</div>
                         </td>
-                        <td className="px-4 py-3 text-ink-muted text-xs tabular-nums">
+                        <td className="px-4 py-3 text-ink-muted text-[12.5px] tabular-nums">
                           {new Date(b.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           <div>{new Date(b.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</div>
                         </td>

@@ -548,7 +548,7 @@ function DashboardPageInner() {
                       ].map(s => (
                         <button key={s.label} onClick={s.onClick} disabled={!s.onClick}
                           className={'pl-4 first:pl-0 text-left ' + (s.onClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : 'cursor-default')}>
-                          <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">{s.label}</div>
+                          <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">{s.label}</div>
                           <div className="text-[30px] leading-none font-serif font-medium text-ink tabular-nums">{s.value}</div>
                           <div className="text-[12.5px] text-ink-soft mt-1.5">{s.sub}</div>
                         </button>
@@ -556,7 +556,7 @@ function DashboardPageInner() {
                     </div>
                   </div>
                   <div className="bg-white border border-line rounded-lg p-5">
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-4">Daily Revenue</div>
+                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">Daily Revenue</div>
                     <div className="flex items-end gap-0.5 h-24">
                       {analytics.revenueByDay.map(d => {
                         const max = Math.max(...analytics.revenueByDay.map(x => x.revenue), 1);
@@ -575,7 +575,7 @@ function DashboardPageInner() {
                     </div>
                   </div>
                   <div className="bg-white border border-line rounded-lg p-5">
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-4">Utilization by Day</div>
+                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">Utilization by Day</div>
                     <div className="space-y-2">
                       {analytics.utilizationByDow.map(d => (
                         <div key={d.dow} className="flex items-center gap-3">
@@ -632,7 +632,7 @@ function DashboardPageInner() {
                   ].map(s => (
                     <button key={s.label} onClick={s.onClick} disabled={!s.onClick}
                       className={'pl-4 first:pl-0 text-left ' + (s.onClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : 'cursor-default')}>
-                      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">{s.icon}{s.label}</div>
+                      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">{s.icon}{s.label}</div>
                       <div className="text-[30px] leading-none font-serif font-medium text-ink tabular-nums">{s.value}</div>
                       <div className="text-[12.5px] text-ink-soft mt-1.5">{s.note}</div>
                     </button>
@@ -652,7 +652,7 @@ function DashboardPageInner() {
                     {dates.map(d => (
                       <button key={d} onClick={() => setSelectedDate(d)}
                         className={'flex-1 min-w-[70px] py-2 px-1 rounded-md text-center border transition-colors ' + (selectedDate===d ? 'bg-pine text-white border-pine' : 'border-line text-ink-soft hover:bg-paper')}>
-                        <div className="text-[11px] uppercase tracking-[0.06em]">{new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'})}</div>
+                        <div className="text-[11px] uppercase tracking-[0.1em]">{new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'})}</div>
                         <div className="text-[15px] font-medium tabular-nums">{new Date(d+'T12:00:00').getDate()}</div>
                       </button>
                     ))}
@@ -722,7 +722,7 @@ function DashboardPageInner() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 min-w-0 flex-wrap">
                           <span className="font-serif font-medium text-ink text-[17px] leading-none w-20 tabular-nums">{fmtTime(tt.time)}</span>
-                          {tt.id===nextUpId && <span className="text-[10px] font-medium uppercase tracking-[0.06em] text-pine">Next up</span>}
+                          {tt.id===nextUpId && <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-pine">Next up</span>}
                           <span className="text-[12.5px] text-ink-muted">{tt.holes}h</span>
                           {slotBadge(tt)}
                           <span className="text-[12.5px] text-ink-muted tabular-nums">{tt.playersBooked}/{tt.playersAvailable}</span>
@@ -873,13 +873,13 @@ function AddTeeTimeForm({ date, onSave, onCancel }: { date: string; onSave: ()=>
     <div className="space-y-3">
       {err && <p className="text-xs text-bad bg-bad/5 border border-bad/20 rounded-md px-3 py-2">{err}</p>}
       <div className="grid grid-cols-2 gap-3">
-        <div><label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Time</label><input type="time" value={time} onChange={e=>setTime(e.target.value)} className={inp}/></div>
-        <div><label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Holes</label><select value={holes} onChange={e=>setHoles(Number(e.target.value))} className={inp}><option value={9}>9</option><option value={18}>18</option></select></div>
+        <div><label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Time</label><input type="time" value={time} onChange={e=>setTime(e.target.value)} className={inp}/></div>
+        <div><label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Holes</label><select value={holes} onChange={e=>setHoles(Number(e.target.value))} className={inp}><option value={9}>9</option><option value={18}>18</option></select></div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div><label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Slots</label><input type="number" value={players} min={1} max={8} onChange={e=>setPlayers(Number(e.target.value))} className={inp}/></div>
-        <div><label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Green $</label><input type="number" value={greenFee} min={0} onChange={e=>setGreenFee(Number(e.target.value))} className={inp}/></div>
-        <div><label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Cart $</label><input type="number" value={cartFee} min={0} onChange={e=>setCartFee(Number(e.target.value))} className={inp}/></div>
+        <div><label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Slots</label><input type="number" value={players} min={1} max={8} onChange={e=>setPlayers(Number(e.target.value))} className={inp}/></div>
+        <div><label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Green $</label><input type="number" value={greenFee} min={0} onChange={e=>setGreenFee(Number(e.target.value))} className={inp}/></div>
+        <div><label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Cart $</label><input type="number" value={cartFee} min={0} onChange={e=>setCartFee(Number(e.target.value))} className={inp}/></div>
       </div>
       <div className="flex items-center justify-between py-1">
         <span className="text-sm text-ink">Walking allowed</span>
@@ -940,7 +940,7 @@ function CardCheckInModal({ booking, reason, onConfirm, onCancel }: {
         </div>
       )}
       <div className="mb-4">
-        <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Card Details</label>
+        <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Card Details</label>
         <div className="w-full px-4 py-3.5 rounded-md border border-line bg-paper focus-within:border-pine/40 transition-colors">
           <CardElement options={cardStyle}/>
         </div>

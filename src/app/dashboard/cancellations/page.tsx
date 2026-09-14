@@ -133,8 +133,8 @@ export default function CancellationsPage() {
               <div className="bg-white border border-line rounded-lg p-5">
                 <h2 className="text-[15px] font-medium text-ink mb-1">Cancellation Policy</h2>
                 <p className="text-[13.5px] text-ink-soft mb-4">Golfers can cancel free until this many hours before their tee time. After that, the fee below is automatically charged — and refunded if they still show up and check in.</p>
+                {/* §1b: attention = a 3px left border in the semantic colour on a white card. */}
                 {policy.lateCancellationFee > 0 && !stripeAccountActive && (
-                  // §1b: attention = a 3px left border in the semantic colour on a white card.
                   <div className="flex items-start gap-2 bg-white border border-line border-l-[3px] border-l-warn rounded-md px-3 py-2.5 mb-4 text-[12.5px] text-warn">
                     <span className="font-medium shrink-0">Paused —</span>
                     <span>your ${policy.lateCancellationFee.toFixed(2)} late-cancel fee can&apos;t be charged until you connect Stripe. Golfers can still book and cancel; no fee is being collected in the meantime.</span>
@@ -142,13 +142,13 @@ export default function CancellationsPage() {
                 )}
                 <div className="flex flex-wrap items-end gap-3">
                   <div>
-                    <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Free Cancel Window (hours)</label>
+                    <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Free Cancel Window (hours)</label>
                     <input type="number" min={0} value={policy.cancellationHours}
                       onChange={e => setPolicy(pol => ({ ...pol, cancellationHours: Number(e.target.value) }))}
                       className={iCls + ' w-32'}/>
                   </div>
                   <div>
-                    <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Late-Cancel Fee ($)</label>
+                    <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Late-Cancel Fee ($)</label>
                     <input type="number" min={0} step="0.01" value={policy.lateCancellationFee}
                       onChange={e => setPolicy(pol => ({ ...pol, lateCancellationFee: Number(e.target.value) }))}
                       className={iCls + ' w-32'}/>
@@ -162,7 +162,7 @@ export default function CancellationsPage() {
               </div>
 
               <div>
-                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Upcoming Bookings ({upcoming.length})</div>
+                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Upcoming Bookings ({upcoming.length})</div>
                 {upcoming.length === 0 ? (
                   <div className="text-center py-10 bg-white rounded-lg border border-dashed border-line text-ink-muted text-sm">No upcoming confirmed bookings.</div>
                 ) : (
@@ -184,7 +184,7 @@ export default function CancellationsPage() {
               </div>
 
               <div>
-                <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-3">Cancellation History ({cancelled.length})</div>
+                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Cancellation History ({cancelled.length})</div>
                 {cancelled.length === 0 ? (
                   <div className="text-center py-10 bg-white rounded-lg border border-dashed border-line text-ink-muted text-sm">No cancellations yet.</div>
                 ) : (

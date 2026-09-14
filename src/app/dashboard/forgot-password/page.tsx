@@ -31,10 +31,10 @@ export default function ForgotPasswordPage() {
         <div className="bg-white border border-line rounded-lg p-6">
           {sent ? (
             <div className="text-center py-2">
-              <div className="w-12 h-12 rounded-full bg-ok/10 flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 rounded-md bg-ok/10 flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-6 h-6 text-ok"/>
               </div>
-              <h2 className="text-[17px] font-serif font-medium text-ink mb-2">Check your email</h2>
+              <h2 className="text-[24px] font-serif font-medium leading-none text-ink mb-2">Check your email</h2>
               <p className="text-sm text-ink-soft">
                 If an account exists for <span className="font-medium text-ink">{email}</span>, a reset link is on its way. It expires in 1 hour.
               </p>
@@ -44,11 +44,11 @@ export default function ForgotPasswordPage() {
             <>
               <div className="flex items-center gap-2 mb-2">
                 <Mail className="w-5 h-5 text-pine"/>
-                <h2 className="text-[17px] font-serif font-medium text-ink">Forgot your password?</h2>
+                <h2 className="text-[24px] font-serif font-medium leading-none text-ink">Forgot your password?</h2>
               </div>
               <p className="text-sm text-ink-soft mb-5">Enter the email on your account and we&apos;ll send you a reset link.</p>
               {error && <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-3 py-2.5 text-sm mb-4">{error}</div>}
-              <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1.5">Email</label>
+              <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Email</label>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && submit()} className={iCls} autoFocus/>
               <button onClick={submit} disabled={loading || !email}

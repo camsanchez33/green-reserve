@@ -184,7 +184,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
           </div>
           <div className="min-w-0">
             <div className="font-serif text-[16px] text-ink leading-[1.1] truncate">{name || 'Your course'}</div>
-            {meta && <div className="text-[10.5px] text-ink-muted uppercase tracking-[0.08em] mt-1 truncate">{meta}</div>}
+            {meta && <div className="text-[10.5px] text-ink-muted uppercase tracking-[0.1em] mt-1 truncate">{meta}</div>}
           </div>
         </div>
         {myCourses.length > 1 && (
@@ -204,7 +204,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
       <nav className="flex-1 py-3 overflow-y-auto">
         {groups.map(g => (
           <div key={g.label} className="mb-1">
-            <div className="text-[10px] font-medium text-ink-faint uppercase tracking-[0.08em] px-4 py-1.5">{g.label}</div>
+            <div className="text-[10px] font-medium text-ink-faint uppercase tracking-[0.1em] px-4 py-1.5">{g.label}</div>
             {navItems.filter(n => g.keys.includes(n.key)).map(item => {
               const isActive = active === item.key;
               const base = 'w-full flex items-center gap-2.5 px-4 py-2.5 text-[13.5px] font-medium transition-colors text-left border-l-[3px]';
