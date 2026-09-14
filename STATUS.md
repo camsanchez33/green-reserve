@@ -4,21 +4,24 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-14 03:36 UTC · branch `main` · HEAD `a8498fb` · working tree **1 dirty file(s)**
+Generated 2026-09-14 03:49 UTC · branch `main` · HEAD `a42b895` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-09-13**. 1 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-09-13**. 3 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `9df9f2f` | 2026-09-13 | B-7: Schedule as a time-band table, blocks and booking windows beside it |
+| `a42b895` | 2026-09-13 | Review fixes for B-7, H-2a, H-2b |
+| `e72802f` | 2026-09-13 | fix: PaymentIntent has no amount_refunded in this SDK — refund state comes from our ledger (CI was red for one commit) |
+| `7c4c863` | 2026-09-13 | B-7 review fixes: settings load through dfetch with an inline error, side panels render without schedules, blackout error not beside the empty copy |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (1 file(s))
+### Uncommitted working tree (2 file(s))
 
 - `M RUN_QUEUE.md`
+- `M UI_REVISE_SPEC.md`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -184,6 +187,11 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `a42b895` 2026-09-13 — Review fixes for B-7, H-2a, H-2b
+- `e72802f` 2026-09-13 — fix: PaymentIntent has no amount_refunded in this SDK — refund state comes from our ledger (CI was red for one commit)
+- `072fa1b` 2026-09-13 — Second security hotfix for check-in charging, plus the last three fee claims
+- `7c4c863` 2026-09-13 — B-7 review fixes: settings load through dfetch with an inline error, side panels render without schedules, blackout error not beside the empty copy
+- `40c6d9b` 2026-09-13 — queue/spec update
 - `a8498fb` 2026-09-13 — H-2b: "See it work" gets two tabs — what golfers see, what you see
 - `0ab0a37` 2026-09-13 — queue/spec update
 - `9df9f2f` 2026-09-13 — B-7: Schedule as a time-band table, blocks and booking windows beside it
@@ -191,11 +199,6 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `b062574` 2026-09-13 — queue/spec update
 - `d801dac` 2026-09-13 — Security hotfix for B-5 / B-10 (from /gr-review)
 - `42b7f4d` 2026-09-13 — LQ-2 copy run: the fee sentences are now true everywhere
-- `7e57c32` 2026-09-13 — queue/spec update
-- `a4fd2b1` 2026-09-13 — H-2a: webm variant of the story clip (Cam supplied) listed before the mp4
-- `46a3f22` 2026-09-13 — queue/spec update
-- `afbd5b6` 2026-09-13 — queue/spec update
-- `f061c0f` 2026-09-13 — B-5: "Add a cart today?" at self check-in
 
 ---
 

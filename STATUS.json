@@ -1,21 +1,36 @@
 {
-  "generatedAt": "2026-09-14T03:36:41.593Z",
+  "generatedAt": "2026-09-14T03:49:11.968Z",
   "repo": {
-    "head": "a8498fb",
+    "head": "a42b895",
     "branch": "main",
-    "dirtyCount": 1,
+    "dirtyCount": 2,
     "dirty": [
-      "M RUN_QUEUE.md"
+      "M RUN_QUEUE.md",
+      " M UI_REVISE_SPEC.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-13T23:20:26-04:00",
+    "queueLastCommit": "2026-09-13T23:36:42-04:00",
     "unrecorded": [
       {
-        "h": "9df9f2f",
-        "date": "2026-09-13T23:31:41-04:00",
-        "subject": "B-7: Schedule as a time-band table, blocks and booking windows beside it",
+        "h": "a42b895",
+        "date": "2026-09-13T23:49:07-04:00",
+        "subject": "Review fixes for B-7, H-2a, H-2b",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "e72802f",
+        "date": "2026-09-13T23:49:07-04:00",
+        "subject": "fix: PaymentIntent has no amount_refunded in this SDK — refund state comes from our ledger (CI was red for one commit)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "7c4c863",
+        "date": "2026-09-13T23:41:50-04:00",
+        "subject": "B-7 review fixes: settings load through dfetch with an inline error, side panels render without schedules, blackout error not beside the empty copy",
         "ids": [],
         "matches": []
       }
@@ -840,6 +855,31 @@
   },
   "recentCommits": [
     {
+      "h": "a42b895",
+      "date": "2026-09-13",
+      "subject": "Review fixes for B-7, H-2a, H-2b"
+    },
+    {
+      "h": "e72802f",
+      "date": "2026-09-13",
+      "subject": "fix: PaymentIntent has no amount_refunded in this SDK — refund state comes from our ledger (CI was red for one commit)"
+    },
+    {
+      "h": "072fa1b",
+      "date": "2026-09-13",
+      "subject": "Second security hotfix for check-in charging, plus the last three fee claims"
+    },
+    {
+      "h": "7c4c863",
+      "date": "2026-09-13",
+      "subject": "B-7 review fixes: settings load through dfetch with an inline error, side panels render without schedules, blackout error not beside the empty copy"
+    },
+    {
+      "h": "40c6d9b",
+      "date": "2026-09-13",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "a8498fb",
       "date": "2026-09-13",
       "subject": "H-2b: \"See it work\" gets two tabs — what golfers see, what you see"
@@ -873,31 +913,6 @@
       "h": "42b7f4d",
       "date": "2026-09-13",
       "subject": "LQ-2 copy run: the fee sentences are now true everywhere"
-    },
-    {
-      "h": "7e57c32",
-      "date": "2026-09-13",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "a4fd2b1",
-      "date": "2026-09-13",
-      "subject": "H-2a: webm variant of the story clip (Cam supplied) listed before the mp4"
-    },
-    {
-      "h": "46a3f22",
-      "date": "2026-09-13",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "afbd5b6",
-      "date": "2026-09-13",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "f061c0f",
-      "date": "2026-09-13",
-      "subject": "B-5: \"Add a cart today?\" at self check-in"
     }
   ]
 }

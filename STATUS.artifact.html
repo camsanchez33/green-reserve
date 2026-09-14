@@ -117,15 +117,17 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-09-14 03:36 UTC</span><span>main @ a8498fb</span>
-    <span>1 uncommitted</span>
+    <span>2026-09-14 03:49 UTC</span><span>main @ a42b895</span>
+    <span>2 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">1 run has shipped that the queue doesn't know about</div>
+<div class="lede">3 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-09-13. These commits appear nowhere in it.</p>
 <ul>
-<li><span class="h">9df9f2f</span><span>B-7: Schedule as a time-band table, blocks and booking windows beside it</span></li>
+<li><span class="h">a42b895</span><span>Review fixes for B-7, H-2a, H-2b</span></li>
+<li><span class="h">e72802f</span><span>fix: PaymentIntent has no amount_refunded in this SDK — refund state comes from our ledger (CI was red for one commit)</span></li>
+<li><span class="h">7c4c863</span><span>B-7 review fixes: settings load through dfetch with an inline error, side panels render without schedules, blackout error not beside the empty copy</span></li>
 </ul></div>
 <div class="tiles">
   <div class="tile t-good"><span class="n">158</span><span class="l">Done</span></div>
@@ -138,7 +140,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card">
 <h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M RUN_QUEUE.md</code></li></ul>
+<ul class="plain"><li><code>M RUN_QUEUE.md</code></li><li><code>M UI_REVISE_SPEC.md</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -255,6 +257,11 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">a42b895</td><td class="num">2026-09-13</td><td>Review fixes for B-7, H-2a, H-2b</td></tr>
+<tr><td class="num">e72802f</td><td class="num">2026-09-13</td><td>fix: PaymentIntent has no amount_refunded in this SDK — refund state comes from our ledger (CI was red for one commit)</td></tr>
+<tr><td class="num">072fa1b</td><td class="num">2026-09-13</td><td>Second security hotfix for check-in charging, plus the last three fee claims</td></tr>
+<tr><td class="num">7c4c863</td><td class="num">2026-09-13</td><td>B-7 review fixes: settings load through dfetch with an inline error, side panels render without schedules, blackout error not beside the empty copy</td></tr>
+<tr><td class="num">40c6d9b</td><td class="num">2026-09-13</td><td>queue/spec update</td></tr>
 <tr><td class="num">a8498fb</td><td class="num">2026-09-13</td><td>H-2b: &quot;See it work&quot; gets two tabs — what golfers see, what you see</td></tr>
 <tr><td class="num">0ab0a37</td><td class="num">2026-09-13</td><td>queue/spec update</td></tr>
 <tr><td class="num">9df9f2f</td><td class="num">2026-09-13</td><td>B-7: Schedule as a time-band table, blocks and booking windows beside it</td></tr>
@@ -262,11 +269,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">b062574</td><td class="num">2026-09-13</td><td>queue/spec update</td></tr>
 <tr><td class="num">d801dac</td><td class="num">2026-09-13</td><td>Security hotfix for B-5 / B-10 (from /gr-review)</td></tr>
 <tr><td class="num">42b7f4d</td><td class="num">2026-09-13</td><td>LQ-2 copy run: the fee sentences are now true everywhere</td></tr>
-<tr><td class="num">7e57c32</td><td class="num">2026-09-13</td><td>queue/spec update</td></tr>
-<tr><td class="num">a4fd2b1</td><td class="num">2026-09-13</td><td>H-2a: webm variant of the story clip (Cam supplied) listed before the mp4</td></tr>
-<tr><td class="num">46a3f22</td><td class="num">2026-09-13</td><td>queue/spec update</td></tr>
-<tr><td class="num">afbd5b6</td><td class="num">2026-09-13</td><td>queue/spec update</td></tr>
-<tr><td class="num">f061c0f</td><td class="num">2026-09-13</td><td>B-5: &quot;Add a cart today?&quot; at self check-in</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
