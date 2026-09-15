@@ -27,12 +27,17 @@ export default function Nav() {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const onScroll = () => {
       const y = window.scrollY || window.pageYOffset;
-      setSolid(y > 40);
-      if (!isHome || reduced) { setPast(true); return; }
-      const hero = document.getElementById('top');
-      const navH = navRef.current?.offsetHeight ?? 64;
-      const threshold = (hero?.offsetHeight ?? window.innerHeight) - navH;
-      setPast(y > threshold);
+      let p = true;
+      if (isHome && !reduced) {
+        const hero = document.getElementById('top');
+        const navH = navRef.current?.offsetHeight ?? 64;
+        const threshold = (hero?.offsetHeight ?? window.innerHeight) - navH;
+        p = y > threshold;
+      }
+      setPast(p);
+      // H-2e review: the H-1 shrink only once the bar is visible — over the
+      // hero the lockup would otherwise step 8px against bare cream.
+      setSolid(y > 40 && p);
     };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -42,6 +47,10 @@ export default function Nav() {
       window.removeEventListener('resize', onScroll);
     };
   }, [isHome]);
+
+  // H-2e review: the mobile menu unmounts while the bar is hidden; clear it so
+  // it does not reappear on its own when the bar comes back.
+  useEffect(() => { if (!past) setOpen(false); }, [past]);
 
   if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard')) return null;
   // /for-courses + /for-courses/details have their own pine hero (with a
@@ -68,7 +77,7 @@ export default function Nav() {
   return (
     <nav
       ref={navRef}
-      className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-500 ${EASE} ${past ? 'bg-white/85 backdrop-blur-lg border-b border-black/5' : 'bg-transparent border-b border-transparent motion-reduce:bg-white/85 motion-reduce:backdrop-blur-lg motion-reduce:border-black/5'}`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,border-color,backdrop-filter] duration-500 ${EASE} ${past ? 'bg-white/85 backdrop-blur-lg border-b border-black/5' : 'bg-transparent border-b border-transparent motion-reduce:bg-white/85 motion-reduce:backdrop-blur-lg motion-reduce:border-black/5'}`}
     >
       <div className={`px-6 flex items-center justify-between transition-[height] duration-500 ${EASE} ${solid ? 'h-14' : 'h-16'}`}>
         <Link href="/" className="flex items-center shrink-0" aria-label="GreenReserve">
