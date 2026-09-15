@@ -56,6 +56,27 @@ No data is on the laptop. The database is on Neon (cloud). Backups are GitHub Ac
 
 ---
 
+## Owner 2FA recovery
+
+The owner login (`/admin/owner-login`) asks for a second factor. Once the
+owner has enrolled an authenticator app on `/admin/profile`, the app's
+6-digit code (or a single-use recovery code) is required; before enrolment,
+the emailed 6-digit code is used instead. Columns on `AdminUser`:
+`twoFactorSecret` (the app secret), `twoFactorEnrolledAt`,
+`twoFactorRecoveryCodes` (bcrypt hashes of the ten codes; a used one is
+removed).
+
+- **Phone lost, recovery codes at hand:** sign in with a recovery code (format
+  `xxxx-xxxx`) in place of the app code, then on `/admin/profile` choose
+  "Set up a new device" and "Regenerate recovery codes".
+- **Phone and recovery codes both gone:** drop the account back to the email
+  path so the owner can get in and re-enrol. In the Neon SQL editor, against
+  the production database, for the owner's row only:
+  `UPDATE "AdminUser" SET "twoFactorSecret" = NULL, "twoFactorEnrolledAt" = NULL, "twoFactorRecoveryCodes" = ARRAY[]::TEXT[] WHERE email = '<owner email>' AND role = 'owner';`
+  The next owner login emails a code as before. Re-enrol immediately after.
+- Never paste a secret, a code, or a hash anywhere — this file records
+  procedure and column names only.
+
 ## Secret Rotation (one line per provider)
 
 - **JWT_SECRET / NEXTAUTH_SECRET:** Generate `openssl rand -hex 32` → update in Vercel → all active sessions are immediately invalidated (users must log in again).

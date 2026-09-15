@@ -622,6 +622,12 @@ model AdminUser {
   twoFactorCode          String?
   twoFactorCodeExpiry    DateTime?
   twoFactorAttempts      Int       @default(0)
+  /// OWNER TOTP 2FA: base32 secret for the authenticator app; null = not
+  /// enrolled, the email-code path stays in force (lockout safety).
+  twoFactorSecret        String?
+  twoFactorEnrolledAt    DateTime?
+  /// bcrypt hashes of the ten single-use recovery codes; a used one is removed
+  twoFactorRecoveryCodes String[]  @default([])
   failedLoginAttempts    Int       @default(0)
   lockoutUntil           DateTime?
   // MP-3. NOTE: the spec justified this as the fix for "deactivating an admin

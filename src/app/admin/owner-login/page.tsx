@@ -10,6 +10,8 @@ const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm 
 export default function OwnerLoginPage() {
   const router = useRouter();
   const [step, setStep] = useState<'credentials' | 'verify'>('credentials');
+  // OWNER TOTP 2FA: which second factor the server asked for.
+  const [method, setMethod] = useState<'email' | 'totp'>('email');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
@@ -33,6 +35,7 @@ export default function OwnerLoginPage() {
         return;
       }
       if (data.requires2FA) {
+        setMethod(data.method === 'totp' ? 'totp' : 'email');
         setStep('verify');
         return;
       }
@@ -77,7 +80,7 @@ export default function OwnerLoginPage() {
             <h1 className="text-[22px] font-serif font-medium text-ink">Owner sign in</h1>
           </div>
           <p className="text-sm text-ink-soft mb-6">
-            {step === 'credentials' ? 'Secure access with email verification' : `Check ${email} for a 6-digit code`}
+            {step === 'credentials' ? 'Secure access with a second factor' : method === 'totp' ? 'Enter the 6-digit code from your authenticator app — or a recovery code' : `Check ${email} for a 6-digit code`}
           </p>
 
           {error && (
@@ -104,17 +107,19 @@ export default function OwnerLoginPage() {
           ) : (
             <form onSubmit={handleVerify} className="space-y-4">
               <div>
-                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Verification code</label>
+                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">{method === 'totp' ? 'Authenticator or recovery code' : 'Verification code'}</label>
                 <input
                   type="text"
                   value={code}
-                  onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onChange={e => setCode(method === 'totp' ? e.target.value.replace(/[^0-9a-zA-Z-]/g, '').slice(0, 9) : e.target.value.replace(/\D/g, '').slice(0, 6))}
                   required
                   autoFocus
-                  maxLength={6}
-                  placeholder="000000"
+                  maxLength={method === 'totp' ? 9 : 6}
+                  placeholder={method === 'totp' ? '000000' : '000000'}
+                  autoComplete="one-time-code"
                   className={iCls + ' text-center text-xl font-mono tracking-[0.25em]'}
                 />
+                {method === 'totp' && <p className="text-[11px] text-ink-faint mt-1.5">Lost the phone? A recovery code (xxxx-xxxx) works once.</p>}
               </div>
               <button type="submit" disabled={loading || code.length < 6}
                 className="w-full bg-pine hover:bg-pine-hover disabled:opacity-50 text-white text-[12.5px] font-medium py-2.5 rounded-md transition-colors">

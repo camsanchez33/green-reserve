@@ -6,6 +6,7 @@ import { rateLimit, clientIp } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
 import { randomInt } from 'crypto';
 import { cookies } from 'next/headers';
+import { totpMatchStep, matchRecoveryCode, looksLikeRecoveryCode, TOTP_PENDING, TOTP_USED_PREFIX, TOTP_STEP_SECONDS } from '@/lib/owner-totp';
 
 const MAX_2FA_ATTEMPTS = 5;
 const MAX_LOGIN_ATTEMPTS = 5;
@@ -47,6 +48,48 @@ export async function POST(req: NextRequest) {
     if (admin.twoFactorAttempts >= MAX_2FA_ATTEMPTS) {
       await prisma.adminUser.update({ where: { id: admin.id }, data: { twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0 } });
       return NextResponse.json({ error: 'Too many incorrect attempts. Please start over.' }, { status: 400 });
+    }
+
+    // OWNER TOTP 2FA: once enrolled, the second factor is the authenticator
+    // app (or a single-use recovery code). The pending marker written at step
+    // 1 proves the password was just verified; the used marker rejects a
+    // replayed code inside its step. Same attempt counter and lockout as the
+    // email path below, which stays untouched for an un-enrolled owner.
+    if (admin.twoFactorSecret) {
+      if (!admin.twoFactorCode.startsWith('totp')) {
+        return NextResponse.json({ error: 'No pending verification — please start over' }, { status: 400 });
+      }
+      const raw = String(code).trim();
+      let ok = false;
+      let data: Record<string, unknown> = {};
+      if (looksLikeRecoveryCode(raw)) {
+        const idx = await matchRecoveryCode(raw, admin.twoFactorRecoveryCodes);
+        if (idx >= 0) {
+          ok = true;
+          data = { twoFactorRecoveryCodes: admin.twoFactorRecoveryCodes.filter((_, i) => i !== idx), twoFactorCode: null, twoFactorCodeExpiry: null };
+        }
+      } else {
+        const step = totpMatchStep(raw, admin.twoFactorSecret);
+        if (step !== null && admin.twoFactorCode !== TOTP_USED_PREFIX + step) {
+          ok = true;
+          // Keep the used-step marker for two steps so the same code cannot be replayed.
+          data = { twoFactorCode: TOTP_USED_PREFIX + step, twoFactorCodeExpiry: new Date(Date.now() + 2 * TOTP_STEP_SECONDS * 1000) };
+        }
+      }
+      if (!ok) {
+        const attempts = admin.twoFactorAttempts + 1;
+        const clear = attempts >= MAX_2FA_ATTEMPTS;
+        await prisma.adminUser.update({
+          where: { id: admin.id },
+          data: { twoFactorAttempts: clear ? 0 : attempts, ...(clear ? { twoFactorCode: null, twoFactorCodeExpiry: null } : {}) },
+        });
+        return NextResponse.json({ error: clear ? 'Too many incorrect attempts. Please start over.' : 'Incorrect code' }, { status: 400 });
+      }
+      await prisma.adminUser.update({ where: { id: admin.id }, data: { ...data, twoFactorAttempts: 0, lastLoginAt: new Date() } });
+      const token = await signAdminToken({ adminId: admin.id, email: admin.email, name: admin.name, role: admin.role, mfa: true });
+      const cookieStore = await cookies();
+      cookieStore.set('admin_session', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: 60 * 60 * 12 });
+      return NextResponse.json({ success: true });
     }
 
     const valid = await bcrypt.compare(String(code).trim(), admin.twoFactorCode);
@@ -124,6 +167,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ mustChangePassword: true, setPasswordToken: token });
   }
 
+  // OWNER TOTP 2FA: enrolled → no email; the app has the code. The pending
+  // marker is what the verify step checks for.
+  if (admin.twoFactorSecret) {
+    await prisma.adminUser.update({
+      where: { id: admin.id },
+      data: { twoFactorCode: TOTP_PENDING, twoFactorCodeExpiry: new Date(Date.now() + 10 * 60 * 1000), twoFactorAttempts: 0 },
+    });
+    return NextResponse.json({ requires2FA: true, method: 'totp' });
+  }
+
   const code = gen6DigitCode();
   const hashedCode = await bcrypt.hash(code, 10);
   const expiry = new Date(Date.now() + 10 * 60 * 1000);
@@ -134,5 +187,5 @@ export async function POST(req: NextRequest) {
 
   await sendAdminTwoFactorCode({ email: admin.email, name: admin.name, code });
 
-  return NextResponse.json({ requires2FA: true });
+  return NextResponse.json({ requires2FA: true, method: 'email' });
 }

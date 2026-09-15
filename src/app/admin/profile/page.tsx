@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Lock, User } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
+import OwnerTwoFactorCard from '@/components/admin/OwnerTwoFactorCard';
 
 const ROLE_LABELS: Record<string, string> = {
   owner: 'Owner', manager: 'Manager', support: 'Support', viewer: 'Viewer',
@@ -80,6 +81,9 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
+
+          {/* OWNER TOTP 2FA — enrolment lives here, owner only. */}
+          {session.role === 'owner' && <OwnerTwoFactorCard mfaSession={session.mfa === true} />}
 
           {/* Change password */}
           <div className="bg-white border border-line rounded-lg p-5">
