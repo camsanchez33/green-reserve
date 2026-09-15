@@ -355,6 +355,127 @@ banner must not fire); `?tab=building` deep-link still narrows.
 
 ---
 
+## Phase IC-5 — Structured call answers (no migration)
+
+Source: the RUN_QUEUE entry, Cam 2026-09-15: "the call captures STRUCTURED
+answers, not prose" — overrules assumption A3. Spec block written by the run
+(2026-09-15) from that entry and the code as it stands; the field catalog in §1
+is the first thing to review.
+
+**Governing rule.** A call answer is a PROPOSAL. It pre-fills the course's own
+setup sheet; what the course submits always wins; nothing is ever written
+straight onto a live Course. The build reads the sheet, and falls back to the
+call only for keys the sheet never touched.
+
+### 1. `src/lib/call-answers.ts` — the field catalog
+
+One entry per AGENDA key. Field types: `money` (INTEGER CENTS), `time`
+(HH:MM), `date` (YYYY-MM-DD), `days` (number[] 0–6, Sunday = 0), `bool`,
+`enum` (fixed options), `text` (≤ 2000 chars). `rows` (pass tiers with
+name/fee/period) is declared in the type union but no field uses it this phase
+— the resident/member item captures bools + a note; tiers stay on the sheet.
+
+Each field names the setup-sheet key it pre-fills (`sheetKey`), or none. Money
+pre-fills as the sheet's dollars string (`"45.00"`). `branch.*` keys feed the
+sheet's IF-1 branch questions.
+
+| agenda key | fields (type → sheetKey) |
+|---|---|
+| green_fees | weekday money→greenFeeWeekday · weekend money→greenFeeWeekend · twilight money→twilightFee |
+| tee_times | first time→firstTeeTime · last time→lastTeeTime · interval enum[8,9,10,12,15]→intervalMinutes |
+| booking_today | method enum[the form's five options] · software text |
+| resident_member | residentRates bool→branch.passes · memberships bool→branch.passes · memberPerRound bool→branch.member_rate · memberRate money→memberRate · residentWho text |
+| cancellation | hasPolicy bool→cancellationPolicy (yes/no) · hours enum[24,48,72]→cancellationHours · lateFee money→lateFee |
+| carts_caddies | cartFee money→cartFee · walking enum[yes,no,restricted]→walkingAllowed · caddies bool |
+| season_hours | seasonOpen date→seasonOpen · seasonClose date→seasonClose · daysOpen days→daysOpen |
+| protected_times | protectedTimes text→protectedTimes · outings bool→branch.outings · outingsVolume enum[weekly,monthly,seasonally,rarely]→outingsVolume |
+| assets | logo enum[they_send,pull_from_site,none_yet] · photos enum[same] · by date |
+| people | signer text · dayToDay text |
+| fee_model | walkedThrough bool · questions text |
+
+Every item also has one `note` (text). Fields marked `need: true` are the ones
+"Still need from them" names when missing: green_fees weekday + weekend,
+tee_times first + last + interval, cancellation hasPolicy, season_hours
+seasonOpen + seasonClose.
+
+### 2. `answersJson` becomes structured; every reader tolerates the old shape
+
+v2: `{ "v": 2, "items": { "<agendaKey>": { "fields": { ... }, "note": "" } } }`.
+`parseCallAnswers(raw)` returns v2 for any input: the old flat
+`{ "<agendaKey>": "prose" }` becomes `items[key] = { fields: {}, note: prose }`.
+`summarize(key, item)` renders one line ("Weekday $45 · Weekend $60 · Twilight
+$30 — note") and `flatSummaries(raw)` gives `Record<agendaKey, string>` so the
+existing prose consumers keep working unchanged: `agendaStatus().fromCall`, the
+admin "From the call" block, the sheet's "From your call with GreenReserve"
+hint, the check-in card. Check-in calls (kind `checkin`, `/api/admin/course-calls`)
+keep writing the flat shape — they have their own agenda.
+
+`toSheetPrefill(answers)` → `{ <sheetKey>: value, branch: { passes, member_rate,
+outings } }` for every captured field that has a `sheetKey`. `validateAnswers(input)`
+checks each field by type (money: integer 0–10,000,000; enum: in options; days:
+0–6 ints; text ≤ 2000; note ≤ 4000) and drops anything else.
+
+### 3. API — `PATCH /api/admin/inquiries`
+
+- `log_call` accepts `answers` in v2 (or v1 for old clients), validates via
+  `validateAnswers`, stores v2. New: `emailRecap === true` on a `talked` log
+  sends `sendCallRecapEmail` (contact; what was captured, per item summary;
+  "reply if anything is off"); response carries `emailSent` / `emailError`
+  exactly like `schedule_call`.
+- New `save_call_draft` — `callId`, `answers`, `notes`: writes `answersJson`
+  and `notes` on a call whose outcome is still `scheduled`, changes nothing
+  else, no timeline event. Manager+. Returns `{ success, savedAt }`.
+- `create_draft_course` / `build_course`: the sheet object becomes
+  `{ ...toSheetPrefill(latestTalkedAnswers), ...detailsJson }` — the sheet wins
+  key by key; the call fills only what the sheet never touched. The `branch`
+  key is not read by the build.
+
+### 4. The sheet — `GET /api/inquiries/details` + `/for-courses/details`
+
+- GET adds `prefill: toSheetPrefill(latestTalkedAnswers)` beside the existing
+  `callAnswers` (which becomes `flatSummaries`, same shape as today).
+- On load, for every prefill key whose saved value is empty or absent, the sheet
+  uses the prefill value (money as dollars string, `daysOpen` as the array,
+  `cancellationPolicy` yes/no). `prefill.branch` is handed to `deriveBranch` as
+  the call source (it already outranks the old form answers after IF-1's review).
+- When at least one value was applied, the section card shows one line under
+  its title: "Pre-filled from your call — change anything that's off." The
+  existing per-section hint stays.
+- Nothing is applied on top of a value the course already typed.
+
+### 5. Log-the-call card — real inputs, collapsed per item, autosaved
+
+- Each agenda item on the call is a collapsed row: `short` + its summary (or
+  "Not captured") + a chevron. Expanding shows the item's fields and its note.
+  Input per type: money = `$` input storing cents; time = `<input type=time>`;
+  date = `<input type=date>`; days = seven toggles; bool = Yes / No segmented;
+  enum = select; text = input.
+- Autosave: any change debounces 800 ms then calls `save_call_draft`. A status
+  line beside "What you got" reads "Saved · 2:31 PM" or "Not saved — retry"
+  with a retry button (no-silent-failures). On mount the card hydrates from
+  `call.answersJson`, so a half-logged call survives a reload.
+- "Save + send pre-filled sheet" / "Save, don't send yet" unchanged in
+  behaviour, now posting v2 answers. New checkbox beside them, default on:
+  "Email {first} a recap of what we captured".
+
+### 6. "Still need from them" names fields
+
+`stillNeed` keeps the topic-level row when nothing at all was captured for an
+open item. When an item has some fields but a `need: true` field is missing, the
+row reads `"<short>: <missing field labels>"` (e.g. "Green fees: weekend").
+The sheet's column and the queue signal read the same function, so both change.
+
+### 7. Verify (IC-5)
+
+`scripts/call-answers-test.ts`: v1 → v2 parse; `validateAnswers` drops a
+string where money is expected and a value outside an enum; `summarize`
+formats cents as dollars; `toSheetPrefill` maps cents → "45.00", bools →
+`branch`, days → array; `stillNeed` names "Green fees: weekend" when weekday
+is captured and weekend is not. Manual walk: log a call capturing three
+fields, reload mid-way (autosave held), Save + send sheet, open the sheet →
+values pre-filled and editable, submit with one change → build → the sheet's
+value landed, not the call's; recap email received.
+
 ## Not in this spec (deliberately)
 - Google Calendar sync (Cam: not now).
 - Per-column sorting (A4).
