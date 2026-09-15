@@ -190,8 +190,9 @@ export default function HomeContent() {
                 aria-hidden="true"
                 onError={() => setStoryVideo(false)}
               >
-                <source src="/home/story.webm" type="video/webm" />
+                {/* H-2d-R2: mp4 first — the v2 webm is the larger file, and browsers take the first source they can play. */}
                 <source src="/home/story.mp4" type="video/mp4" />
+                <source src="/home/story.webm" type="video/webm" />
               </video>
             )}
           </div>
