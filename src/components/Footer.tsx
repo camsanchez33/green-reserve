@@ -55,7 +55,7 @@ export default function Footer() {
   // here ("no commission", "$1.50 … paid by the golfer") were removed when the
   // fee copy was frozen and do not return — the footer carries no fee line.
   return (
-    <footer className="bg-white border-t border-line">
+    <footer className="bg-paper border-t border-line">
       <div className="w-[min(1180px,calc(100%-48px))] mx-auto py-8 flex flex-wrap justify-between items-center gap-x-6 gap-y-3.5 text-sm text-ink-muted max-md:justify-center max-md:text-center">
         <Link href="/" className="inline-flex items-center hover:opacity-80 transition-opacity" aria-label="GreenReserve">
           <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={130} height={25} loading="lazy" className="w-[130px] h-auto" />
@@ -65,6 +65,8 @@ export default function Footer() {
           <Link href="/privacy" className="hover:text-ink transition-colors">Privacy</Link>
           <Link href="/operator-agreement" className="hover:text-ink transition-colors">Operator agreement</Link>
           <Link href="/contact" className="hover:text-ink transition-colors">Contact</Link>
+          {/* H-2e §8: the durable route to the dashboard, independent of scroll position. */}
+          <Link href="/dashboard/login" className="hover:text-ink transition-colors">Operator login</Link>
           <a href="mailto:hello@greenreserve.app" className="hover:text-ink transition-colors">hello@greenreserve.app</a>
         </nav>
         <span>© {new Date().getFullYear()} GreenReserve</span>

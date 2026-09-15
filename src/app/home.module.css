@@ -10,7 +10,8 @@
   --paper: #F6F4EC; --ink: #1C1C18; --ink-2: #57574F; --ink-3: #87867C; --line: #E6E3D7;
   --ok: #3D6B4C; --warn: #8A6116;
   --course: #24513B;
-  background: #fff; color: var(--ink);
+  /* H-2e: one ground — cream from the nav to the copyright line, broken only by the story and the pricing slab. */
+  background: var(--paper); color: var(--ink);
   font-family: var(--font-sans), Inter, system-ui, sans-serif;
   font-size: 17px; line-height: 1.5;
   overflow-x: clip;
@@ -34,7 +35,7 @@
 /* HERO */
 /* H-2d — direction A: cream + the product. No photo, no parallax; the text
    is the LCP and the booking device is the picture. */
-.hero { position: relative; height: 100svh; min-height: 640px; max-height: 1000px; overflow: hidden; display: flex; align-items: center; color: var(--ink); background: var(--paper); }
+.hero { position: relative; height: 100svh; min-height: 640px; max-height: 1000px; overflow: hidden; display: flex; align-items: center; color: var(--ink); }
 .heroGrid { display: grid; grid-template-columns: minmax(0, 620px) minmax(0, 1fr); gap: 48px; align-items: center; }
 .heroText > * { max-width: 620px; }
 .heroEyebrow { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--pine); margin-bottom: 18px; }
@@ -77,6 +78,7 @@
 .storyPh video { transform: none; }
 /* H-2d §3: the cream hero dissolves into the green. Above the clip, under the beats. */
 .storyTop { position: absolute; left: 0; right: 0; top: 0; height: 22vh; background: linear-gradient(180deg, #F6F4EC 0%, rgba(246,244,236,0) 100%); pointer-events: none; z-index: 1; }
+.storyBottom { position: absolute; left: 0; right: 0; bottom: 0; height: 18vh; background: linear-gradient(0deg, #F6F4EC 0%, rgba(246,244,236,0) 100%); pointer-events: none; z-index: 1; }
 .storyPh img { object-fit: cover; object-position: center 70%; }
 /* H-2a: the looping clip sits over the still inside the same scaled layer. It
    is only mounted on desktop, and only plays when the story is on screen. */
@@ -196,7 +198,7 @@
 }
 
 /* COURSES — Resy-style cards */
-.courses { background: var(--paper); padding: 120px 0; }
+.courses { padding: 120px 0; }
 .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; margin-bottom: 44px; }
 .head .sub { margin: 14px 0 0; }
 .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
@@ -215,7 +217,7 @@
 /* STEPS */
 .steps { padding: 120px 0; text-align: center; }
 .stepsRow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px; margin-top: 56px; text-align: left; }
-.s { padding: 26px 24px; background: var(--paper); border-radius: 14px; }
+.s { padding: 26px 24px; background: #fff; border: 1px solid var(--line); border-radius: 14px; }
 .s .n { font-family: var(--font-serif), Fraunces, Georgia, serif; font-size: 34px; color: var(--pine); line-height: 1; margin-bottom: 14px; }
 .s h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
 .s p { margin: 0; font-size: 15.5px; line-height: 1.5; color: var(--ink-2); }
@@ -247,7 +249,7 @@
 .a p { margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: var(--ink-2); max-width: 560px; }
 
 /* FINAL CTA */
-.final { background: var(--paper); padding: 120px 0; text-align: center; }
+.final { padding: 120px 0; text-align: center; }
 .final .cta { justify-content: center; margin-top: 34px; }
 
 @media (max-width: 960px) {

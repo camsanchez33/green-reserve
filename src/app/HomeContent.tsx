@@ -199,6 +199,8 @@ export default function HomeContent() {
           <div className={`${s.shade} ${s.storyShade}`} />
           {/* H-2d §3: the cream hero dissolves into the moving green — no seam. */}
           <div className={s.storyTop} aria-hidden="true" />
+          {/* H-2e §5: and fades back into cream at the bottom. */}
+          <div className={s.storyBottom} aria-hidden="true" />
           <div ref={beatsRef} className={s.beats}>
             {BEATS.map((b, i) => (
               <div key={b.eyebrow} className={`${s.beat} ${i === 0 ? s.on : ''}`}>
