@@ -6,6 +6,20 @@ import { rateLimit, clientIp } from '@/lib/rate-limit';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
+// INQUIRY_FORM_SPEC IF-1: the form asks ten things; the eight branch questions
+// moved to the discovery call. What still lands in needsJson is only the
+// optional call-time preference, whitelisted here — this endpoint is public.
+const COURSE_TYPES = new Set(['public', 'semi-private', 'private']);
+const CALL_TIMES = new Set(['Mornings', 'Afternoons', 'Evenings']);
+const CALL_DAYS = new Set(['Weekdays', 'Weekends']);
+function callPreferenceFrom(raw: unknown): { times: string[]; days: string[] } | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as { times?: unknown; days?: unknown };
+  const times = Array.isArray(r.times) ? r.times.filter((x): x is string => typeof x === 'string' && CALL_TIMES.has(x)) : [];
+  const days = Array.isArray(r.days) ? r.days.filter((x): x is string => typeof x === 'string' && CALL_DAYS.has(x)) : [];
+  return times.length || days.length ? { times, days } : null;
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
@@ -18,10 +32,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Too many submissions from this connection — try again in an hour, or email hello@greenreserve.app.' }, { status: 429 });
   }
 
-  const required = ['firstName', 'lastName', 'contactTitle', 'email', 'phone', 'courseName', 'city', 'state', 'courseType'];
+  const required = ['firstName', 'lastName', 'contactTitle', 'email', 'phone', 'courseName', 'city', 'state', 'courseType', 'currentBookingMethod'];
   for (const field of required) {
     if (!body[field]) return NextResponse.json({ error: `Missing: ${field}` }, { status: 400 });
   }
+  if (!COURSE_TYPES.has(String(body.courseType))) return NextResponse.json({ error: 'Invalid: courseType' }, { status: 400 });
+  const currentBookingMethod = String(body.currentBookingMethod).trim().slice(0, 80);
+  const callPreference = callPreferenceFrom(body.callPreference);
+  const needsJson = callPreference ? JSON.stringify({ callPreference }) : '';
 
   const email = String(body.email).trim().toLowerCase();
   if (!EMAIL_RE.test(email)) {
@@ -92,7 +110,7 @@ export async function POST(req: NextRequest) {
     // a "duplicate" flag would turn this public endpoint into an oracle for
     // which courses are already in the pipeline. No admin new-lead notification
     // fires, because this is not a new lead.
-    sendInquiryConfirmation({ firstName: body.firstName, contactName, email, courseName: body.courseName, needs: body.needs || null })
+    sendInquiryConfirmation({ firstName: body.firstName, contactName, email, courseName: body.courseName })
       .catch(err => console.error('Inquiry confirmation email failed:', err));
 
     return NextResponse.json({ success: true, id: existing.id });
@@ -112,6 +130,7 @@ export async function POST(req: NextRequest) {
       zipCode: body.zipCode || '',
       website: body.website || '',
       courseType: body.courseType,
+      currentBookingMethod,
       teeTimesPerDay: body.teeTimesPerDay || null,
       greenFeeRange: body.greenFeeRange || '',
       hasResidentPricing: body.hasResidentPricing || false,
@@ -121,11 +140,11 @@ export async function POST(req: NextRequest) {
       facilitiesNotes: body.facilitiesNotes || '',
       lookingFor: body.lookingFor || [],
       additionalNotes: body.additionalNotes || '',
-      needsJson: body.needs ? JSON.stringify(body.needs) : '',
+      needsJson,
     },
   });
 
-  const emailData = { firstName: body.firstName, contactName, email, courseName: body.courseName, needs: body.needs || null };
+  const emailData = { firstName: body.firstName, contactName, email, courseName: body.courseName };
   sendInquiryNotification({
     contactName,
     contactTitle: body.contactTitle,
@@ -135,7 +154,7 @@ export async function POST(req: NextRequest) {
     city: body.city,
     state: body.state,
     courseType: body.courseType,
-    currentBookingMethod: '',
+    currentBookingMethod,
     greenFeeRange: body.greenFeeRange || '',
     additionalNotes: body.additionalNotes || '',
   }).catch(err => console.error('Inquiry notification email failed:', err));

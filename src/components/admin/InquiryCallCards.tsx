@@ -275,7 +275,8 @@ function SetupCard({ inquiry, sheet, needs, calls, disabled, busy, setBusy, setE
         <div className="border border-line rounded-md divide-y divide-line-soft">
           {status.map(row => {
             const item = AGENDA.find(a => a.key === row.key)!;
-            const hint = item.always ? 'always' : row.answered ? `answered: ${row.answered}` : 'not on form';
+            // IF-1 §4a: an always-on item with a form answer reads as "confirm and dig", not "ask".
+            const hint = item.always ? (row.answered ? `They said: ${row.answered}` : 'always') : row.answered ? `answered: ${row.answered}` : 'not on form';
             return (
               <label key={row.key} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-paper">
                 <input type="checkbox" checked={agenda.has(row.key)} onChange={() => toggle(row.key)} disabled={disabled} className="shrink-0" />

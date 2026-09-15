@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { CheckCircle, Calendar, Globe, Lock, ArrowLeft } from 'lucide-react';
+import { CheckCircle, Calendar, Globe, Lock, Users, ArrowLeft } from 'lucide-react';
 
 const STATES = [
   'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
@@ -12,7 +12,13 @@ const STATES = [
   'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC',
   'SD','TN','TX','UT','VT','VA','WA','WV','WI','WY',
 ];
-const TITLE_OPTIONS = ['Owner / Operator', 'General Manager', 'Director of Golf', 'Head Golf Professional', 'Course Superintendent', 'Assistant Pro / Manager', 'Other'];
+// INQUIRY_FORM_SPEC IF-1: the form asks only what the discovery call can't.
+const TITLE_OPTIONS = ['General Manager', 'Head Professional', 'Owner', 'Superintendent', 'Other'];
+const BOOKING_TODAY_OPTIONS = ['Phone and a paper sheet', 'Phone and a spreadsheet', 'GolfNow or a similar site', 'Our own website', 'Something else'];
+const CALL_TIMES = ['Mornings', 'Afternoons', 'Evenings'];
+const CALL_DAYS = ['Weekdays', 'Weekends'];
+type CourseType = 'public' | 'semi-private' | 'private';
+const COURSE_TYPES: CourseType[] = ['public', 'semi-private', 'private'];
 
 const CALENDLY_URL = 'https://calendly.com/greenreserve';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -22,16 +28,10 @@ type FormData = {
   contactTitle: string; contactTitleOther: string;
   email: string; phone: string;
   courseName: string; city: string; state: string;
-  courseType: 'public' | 'private';
+  courseType: CourseType;
+  bookingToday: string;
+  callTimes: string[]; callDays: string[];
   notes: string;
-  residentRates: string;
-  hasMemberships: string;
-  roundsPerMonth: string;
-  publicTeeTimes: string;
-  memberCount: string;
-  outsideOutings: string;
-  memberBookingToday: string;
-  chargesMembersPerRound: string;
 };
 
 const init: FormData = {
@@ -40,9 +40,9 @@ const init: FormData = {
   email: '', phone: '',
   courseName: '', city: '', state: '',
   courseType: 'public',
+  bookingToday: '',
+  callTimes: [], callDays: [],
   notes: '',
-  residentRates: '', hasMemberships: '', roundsPerMonth: '',
-  publicTeeTimes: '', memberCount: '', outsideOutings: '', memberBookingToday: '', chargesMembersPerRound: '',
 };
 
 // Base input/select classes (no error state)
@@ -64,32 +64,32 @@ function FieldError({ msg }: { msg?: string }) {
   return <p className="mt-1 text-xs text-bad">{msg}</p>;
 }
 
-function RadioGroup({ label, options, value, onChange }: {
-  label: string;
-  options: { value: string; label: string }[];
-  value: string;
-  onChange: (v: string) => void;
+// Multi-select chip row (the call-time preference). Toggles, never required.
+function ChipRow({ options, value, onChange, ariaLabel }: {
+  options: string[];
+  value: string[];
+  onChange: (v: string[]) => void;
+  ariaLabel: string;
 }) {
   return (
-    <div>
-      <Label text={label} />
-      <div className="flex flex-wrap gap-2">
-        {options.map(opt => (
+    <div className="flex flex-wrap gap-2" role="group" aria-label={ariaLabel}>
+      {options.map(opt => {
+        const on = value.includes(opt);
+        return (
           <button
-            key={opt.value}
+            key={opt}
             type="button"
-            onClick={() => onChange(opt.value)}
+            aria-pressed={on}
+            onClick={() => onChange(on ? value.filter(v => v !== opt) : [...value, opt])}
             className={
               'px-3 py-2 rounded-md border text-sm transition-colors ' +
-              (value === opt.value
-                ? 'border-pine bg-pine/5 text-pine font-medium'
-                : 'border-line bg-paper text-ink hover:border-pine/40')
+              (on ? 'border-pine bg-pine/5 text-pine font-medium' : 'border-line bg-paper text-ink hover:border-pine/40')
             }
           >
-            {opt.label}
+            {opt}
           </button>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }
@@ -103,22 +103,20 @@ export default function ForCoursesContent() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submittedName, setSubmittedName] = useState('');
+  const [submittedEmail, setSubmittedEmail] = useState('');
   const [serverError, setServerError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const t = searchParams.get('type');
-    if (t === 'public' || t === 'private') setType(t);
+    if (t && (COURSE_TYPES as string[]).includes(t)) setType(t as CourseType);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const set = (k: keyof FormData, v: string) => setForm(f => ({ ...f, [k]: v }));
-  const setType = (t: 'public' | 'private') => setForm(f => ({
-    ...f, courseType: t,
-    residentRates: '', hasMemberships: '', roundsPerMonth: '',
-    publicTeeTimes: '', memberCount: '', outsideOutings: '', memberBookingToday: '', chargesMembersPerRound: '',
-  }));
+  const setType = (t: CourseType) => setForm(f => ({ ...f, courseType: t }));
+  const setList = (k: 'callTimes' | 'callDays', v: string[]) => setForm(f => ({ ...f, [k]: v }));
 
   const validateAll = (): Record<string, string> => {
     const errs: Record<string, string> = {};
@@ -132,6 +130,7 @@ export default function ForCoursesContent() {
     if (!form.courseName.trim()) errs.courseName = 'Course name is required';
     if (!form.city.trim()) errs.city = 'City is required';
     if (!form.state) errs.state = 'State is required';
+    if (!form.bookingToday) errs.bookingToday = 'Tell us how you take tee times today';
     return errs;
   };
 
@@ -157,19 +156,6 @@ export default function ForCoursesContent() {
     setSubmitting(true); setServerError('');
     const contactTitle = form.contactTitle === 'Other' ? form.contactTitleOther.trim() : form.contactTitle;
 
-    const needs: Record<string, string> = {};
-    if (form.courseType === 'public') {
-      if (form.residentRates) needs.residentRates = form.residentRates;
-      if (form.hasMemberships) needs.hasMemberships = form.hasMemberships;
-      if (form.roundsPerMonth) needs.roundsPerMonth = form.roundsPerMonth;
-    } else {
-      if (form.publicTeeTimes) needs.publicTeeTimes = form.publicTeeTimes;
-      if (form.memberCount) needs.memberCount = form.memberCount;
-      if (form.outsideOutings) needs.outsideOutings = form.outsideOutings;
-      if (form.memberBookingToday) needs.memberBookingToday = form.memberBookingToday;
-      if (form.chargesMembersPerRound) needs.chargesMembersPerRound = form.chargesMembersPerRound;
-    }
-
     const res = await fetch('/api/inquiries', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -179,8 +165,10 @@ export default function ForCoursesContent() {
         email: form.email, phone: form.phone,
         courseName: form.courseName, city: form.city, state: form.state,
         courseType: form.courseType,
+        currentBookingMethod: form.bookingToday,
+        // Optional. Sent only when something was picked; lands in needsJson.callPreference.
+        callPreference: form.callTimes.length || form.callDays.length ? { times: form.callTimes, days: form.callDays } : null,
         additionalNotes: form.notes,
-        needs,
         // honeypot (always empty for real users; bots fill it)
         _website: honeypotRef.current?.value ?? '',
       }),
@@ -188,6 +176,7 @@ export default function ForCoursesContent() {
     setSubmitting(false);
     if (res.ok) {
       setSubmittedName(form.courseName);
+      setSubmittedEmail(form.email.trim());
       setSubmitted(true);
     } else {
       const d = await res.json();
@@ -204,29 +193,15 @@ export default function ForCoursesContent() {
     <div className="min-h-screen bg-paper flex items-center justify-center p-6">
       <div className="bg-white rounded-lg p-10 max-w-lg w-full border border-line">
         <CheckCircle className="w-12 h-12 text-ok mx-auto mb-5" />
-        <h1 className="text-2xl sm:text-3xl font-serif font-medium tracking-tight text-ink mb-2 text-center">Got it — we&apos;ll be in touch.</h1>
-        <p className="text-ink-soft text-center mb-8 text-sm">
-          We received your inquiry for <span className="font-medium text-ink">{submittedName}</span>.
-          Check your email for a confirmation.
+        {/* IF-1 §3: the next step is a call, not a wait. The booking link in
+            the email arrives with CALL_SCHEDULING_SPEC SC-2; until then the
+            button below is the way to pick a time. */}
+        <h1 className="text-2xl sm:text-3xl font-serif font-medium tracking-tight text-ink mb-2 text-center">Thanks — check your email.</h1>
+        <p className="text-ink-soft text-center mb-3 text-sm">
+          We&apos;ve sent <span className="font-medium text-ink">{submittedEmail}</span> a confirmation for <span className="font-medium text-ink">{submittedName}</span>.
+          Next is a 20-minute call — pick a time below. On it we&apos;ll go through your green fees, your tee sheet, and what going live looks like.
         </p>
-
-        <div className="space-y-0 mb-8 border border-line rounded-md overflow-hidden">
-          {[
-            ['We review your submission', "We'll reply within 1 business day. As long as you run a real golf course, you're in — we review to prevent spam, not to reject courses."],
-            ['You fill out a details sheet', 'Pricing, policies, facilities — about 10–15 minutes. Saves as you go, so you can come back.'],
-            ['We build your page', 'You review, approve, and go live. Golfers can book the same day.'],
-          ].map(([title, desc], i) => (
-            <div key={i} className={`px-5 py-4 ${i < 2 ? 'border-b border-line' : ''}`}>
-              <div className="flex gap-3">
-                <span className="text-pine font-medium text-sm shrink-0">{i + 1}.</span>
-                <div>
-                  <p className="text-sm font-medium text-ink mb-0.5">{title}</p>
-                  <p className="text-sm text-ink-muted">{desc}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <p className="text-ink-muted text-center mb-8 text-sm">Most courses are live within a week of that call.</p>
 
         <a
           href={CALENDLY_URL}
@@ -235,9 +210,9 @@ export default function ForCoursesContent() {
           className="flex items-center justify-center gap-2 w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-sm transition-colors mb-3"
         >
           <Calendar className="w-4 h-4" />
-          Don&apos;t want to wait? Pick a time
+          Pick a call time
         </a>
-        <p className="text-center text-xs text-ink-muted">Book a 15-min call at a time that works for you.</p>
+        <p className="text-center text-xs text-ink-muted">20 minutes, at a time that works for you.</p>
       </div>
     </div>
   );
@@ -410,19 +385,21 @@ export default function ForCoursesContent() {
                 </div>
               </div>
 
-              {/* Course type — two radio cards */}
-              <div>
+              {/* Course type — three cards */}
+              <div id="fld-courseType">
                 <Label text="Course type" required />
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3 max-sm:grid-cols-1">
                   {([
-                    { value: 'public' as const, label: 'Public', Icon: Globe, desc: 'Open to all golfers. Standard weekday/weekend pricing.' },
-                    { value: 'private' as const, label: 'Private', Icon: Lock, desc: 'Member-controlled access. Restricted or limited public tee times.' },
+                    { value: 'public' as const, label: 'Public', Icon: Globe, desc: 'Open to all golfers.' },
+                    { value: 'semi-private' as const, label: 'Semi-private', Icon: Users, desc: 'Members plus public tee times.' },
+                    { value: 'private' as const, label: 'Private', Icon: Lock, desc: 'Member-controlled access.' },
                   ] as const).map(({ value, label, Icon, desc }) => {
                     const active = form.courseType === value;
                     return (
                       <button
                         key={value}
                         type="button"
+                        aria-pressed={active}
                         onClick={() => setType(value)}
                         className={
                           'text-left p-4 rounded-lg border-2 transition-colors ' +
@@ -440,87 +417,34 @@ export default function ForCoursesContent() {
                 </div>
               </div>
 
-              {/* Public branch */}
-              {form.courseType === 'public' && (
-                <div className="space-y-4 border-l-2 border-pine/20 pl-4">
-                  <RadioGroup
-                    label="Discounted rates for town/county residents?"
-                    value={form.residentRates}
-                    onChange={v => set('residentRates', v)}
-                    options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]}
-                  />
-                  <RadioGroup
-                    label="Memberships or season passes?"
-                    value={form.hasMemberships}
-                    onChange={v => set('hasMemberships', v)}
-                    options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]}
-                  />
-                  <RadioGroup
-                    label="Average rounds per month"
-                    value={form.roundsPerMonth}
-                    onChange={v => set('roundsPerMonth', v)}
-                    options={[
-                      { value: 'under_500', label: 'Under 500' },
-                      { value: '500_1500', label: '500–1,500' },
-                      { value: '1500_3000', label: '1,500–3,000' },
-                      { value: '3000_plus', label: '3,000+' },
-                    ]}
-                  />
-                </div>
-              )}
-
-              {/* Private branch */}
-              {form.courseType === 'private' && (
-                <div className="space-y-4 border-l-2 border-pine/20 pl-4">
-                  <RadioGroup
-                    label="Do you allow non-member tee times?"
-                    value={form.publicTeeTimes}
-                    onChange={v => set('publicTeeTimes', v)}
-                    options={[
-                      { value: 'yes_regularly', label: 'Yes, regularly' },
-                      { value: 'limited', label: 'Limited windows' },
-                      { value: 'no', label: 'No, members only' },
-                    ]}
-                  />
-                  <RadioGroup
-                    label="Roughly how many members?"
-                    value={form.memberCount}
-                    onChange={v => set('memberCount', v)}
-                    options={[
-                      { value: 'under_100', label: 'Under 100' },
-                      { value: '100_300', label: '100–300' },
-                      { value: '300_plus', label: '300+' },
-                    ]}
-                  />
-                  <RadioGroup
-                    label="Outside outings or tournaments?"
-                    value={form.outsideOutings}
-                    onChange={v => set('outsideOutings', v)}
-                    options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]}
-                  />
-                  <RadioGroup
-                    label="How do members book today?"
-                    value={form.memberBookingToday}
-                    onChange={v => set('memberBookingToday', v)}
-                    options={[
-                      { value: 'pro_shop_phone', label: 'Pro shop / phone' },
-                      { value: 'signup_sheet', label: 'Sign-up sheet' },
-                      { value: 'booking_software', label: 'Booking software' },
-                      { value: 'other', label: 'Other' },
-                    ]}
-                  />
-                  <RadioGroup
-                    label="Do you charge members per round?"
-                    value={form.chargesMembersPerRound}
-                    onChange={v => set('chargesMembersPerRound', v)}
-                    options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]}
-                  />
-                </div>
-              )}
+              {/* The one fact that changes how the call opens. Lands in CourseInquiry.currentBookingMethod. */}
+              <div id="fld-bookingToday">
+                <Label text="How do you take tee times today?" required />
+                <select
+                  className={fieldErrors.bookingToday ? selErr : sel}
+                  value={form.bookingToday}
+                  onChange={e => set('bookingToday', e.target.value)}
+                  onBlur={() => blurField('bookingToday')}
+                >
+                  <option value="">Select...</option>
+                  {BOOKING_TODAY_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+                <FieldError msg={fieldErrors.bookingToday}/>
+              </div>
             </div>
           </div>
 
-          {/* Section 3: Optional notes */}
+          {/* Section 3: the call */}
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-1">When&apos;s good for a 20-minute call? <span className="normal-case tracking-normal font-normal text-ink-faint">(optional)</span></p>
+            <p className="text-xs text-ink-muted mb-4">We&apos;ll go through your green fees, your tee sheet, and what going live looks like.</p>
+            <div className="space-y-3">
+              <ChipRow options={CALL_TIMES} value={form.callTimes} onChange={v => setList('callTimes', v)} ariaLabel="Time of day" />
+              <ChipRow options={CALL_DAYS} value={form.callDays} onChange={v => setList('callDays', v)} ariaLabel="Days" />
+            </div>
+          </div>
+
+          {/* Section 4: Optional notes */}
           <div>
             <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">Anything we should know? <span className="normal-case tracking-normal font-normal text-ink-faint">(optional)</span></p>
             <textarea

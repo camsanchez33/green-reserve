@@ -325,7 +325,19 @@ const NEEDS_LABELS: Record<string, string> = {
   roundsPerMonth: 'Rounds per month', publicTeeTimes: 'Non-member tee times',
   memberCount: 'Member count', outsideOutings: 'Outside outings',
   memberBookingToday: 'Current booking method', chargesMembersPerRound: 'Charges per round',
+  // IF-1: the only key the form writes now. The eight above survive on old records.
+  callPreference: 'Good times for the call',
 };
+// IF-1 §4c: needsJson.callPreference is an object ({ times, days }); everything
+// older is a string. Render both without ever printing [object Object].
+function fmtNeedValue(v: unknown, values: Record<string, string>): string {
+  if (v && typeof v === 'object') {
+    const o = v as { times?: unknown; days?: unknown };
+    const parts = [...(Array.isArray(o.times) ? o.times : []), ...(Array.isArray(o.days) ? o.days : [])].map(String);
+    return parts.length ? parts.join(', ') : '—';
+  }
+  return values[String(v)] || String(v);
+}
 const NEEDS_VALUES: Record<string, string> = {
   yes: 'Yes', no: 'No', yes_regularly: 'Yes, regularly', limited: 'Limited windows',
   no_members_only: 'No, members only', under_100: 'Under 100', '100_300': '100–300',
@@ -1480,16 +1492,16 @@ function InquiryDetailInner() {
               {inq.needsJson && (() => {
                 let n: Record<string, unknown> = {};
                 try { n = JSON.parse(inq.needsJson || ''); } catch { /* ignore */ }
-                const entries = Object.entries(n).filter(([, v]) => v !== '' && v !== null);
+                const entries = Object.entries(n).filter(([, v]) => v !== '' && v !== null && v !== undefined);
                 if (entries.length === 0) return null;
                 return (
                   <div>
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-warn mb-2">Branch Answers</div>
+                    <div className="text-[11px] uppercase tracking-[0.1em] text-warn mb-2">Form answers</div>
                     <div className="grid grid-cols-2 gap-3">
                       {entries.map(([k, v]) => (
                         <div key={k} className="bg-warn/5 border border-warn/20 rounded-lg px-4 py-3">
                           <div className="text-[10px] text-warn/80 mb-0.5">{NEEDS_LABELS[k] || k}</div>
-                          <div className="text-warn font-medium">{NEEDS_VALUES[String(v)] || String(v)}</div>
+                          <div className="text-warn font-medium">{fmtNeedValue(v, NEEDS_VALUES)}</div>
                         </div>
                       ))}
                     </div>

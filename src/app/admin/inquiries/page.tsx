@@ -71,7 +71,7 @@ const fmtDay = (d: string) => new Date(d).toLocaleDateString('en-US', { weekday:
 const fmtShort = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' });
 // Stages where a discovery call is still ahead of us.
 const SETUP_CALL_STATUSES = new Set(['pending', 'in_review', 'details_requested', 'details_submitted']);
-const COURSE_TYPE_LABEL: Record<string, string> = { public: 'public', private: 'private', semi_private: 'semi-private', municipal: 'municipal', resort: 'resort' };
+const COURSE_TYPE_LABEL: Record<string, string> = { public: 'public', private: 'private', 'semi-private': 'semi-private', semi_private: 'semi-private', municipal: 'municipal', resort: 'resort' };
 // MP-4a: time in the CURRENT stage, derived from the event ledger. This used
 // to read updatedAt, which any write bumps — saving an admin note on a
 // three-week-old stalled inquiry made it read "0d" and dropped it out of the

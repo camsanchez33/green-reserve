@@ -55,7 +55,10 @@ export const AGENDA: AgendaItem[] = [
     answered: (inq, sheet) => nonEmpty(inq.greenFeeRange, sheet?.greenFeeWeekday, sheet?.greenFeeWeekend, sheet?.twilightFee, sheet?.publicGreenFee) },
   { key: 'tee_times', label: 'Tee times per day and interval', short: 'Tee times / day', always: false,
     answered: (inq, sheet) => nonEmpty(inq.teeTimesPerDay, sheet?.firstTeeTime, sheet?.lastTeeTime, sheet?.intervalMinutes) },
-  { key: 'booking_today', label: 'How they take bookings today (phone, GolfNow, own site)', short: 'Booking method today', always: false,
+  // IF-1 §4a: always on the agenda — the form's one-line answer is the opener
+  // ("They said: GolfNow"), the call confirms and digs. `answered` still reads
+  // the form so the row can show it as context.
+  { key: 'booking_today', label: 'How they take bookings today (phone, GolfNow, own site)', short: 'Booking method today', always: true,
     answered: (inq, _sheet, needs) => nonEmpty(inq.currentBookingMethod, needs?.memberBookingToday) },
   { key: 'resident_member', label: "Resident / member pricing — who qualifies, how it's proven", short: 'Resident pricing', always: false,
     answered: (inq, sheet, needs) => nonEmpty(needs?.residentRates, needs?.hasMemberships, inq.hasResidentPricing ? 'resident pricing' : '', inq.hasMemberPricing ? 'member pricing' : '', sheet?.memberRate) },

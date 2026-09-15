@@ -75,6 +75,7 @@ type Draft = {
   facilities: string[]; facilitiesNotes: Record<string, string>; restaurantType: string;
   website: string; description: string; photos: string[];
   additionalNotes: string;
+  branch: BranchAnswers;
 };
 
 type BucketRow = { label: string; price: string; balls: string; };
@@ -155,11 +156,16 @@ const initDraft: Draft = {
   facilities: [], facilitiesNotes: {}, restaurantType: 'none',
   website: '', description: '', photos: [],
   additionalNotes: '',
+  branch: { passes: '', public_fees: '', member_rate: '', outings: '' },
 };
 
 type SectionId = 'basics' | 'playability' | 'tee_sets' | 'schedule' | 'fees' | 'passes' | 'member' | 'public_fees' | 'member_rate' | 'outings' | 'cancellation' | 'facilities' | 'about' | 'notes';
 
-function buildSections(courseType: string, needs: Needs): { id: SectionId; title: string }[] {
+// IF-1 §4b: the sections no longer branch off the inquiry form (those
+// questions moved to the discovery call). Every conditional section is always
+// in the list and asks its own question at the top — see BRANCH_Q. Nothing is
+// hidden because an answer is missing.
+function buildSections(courseType: string): { id: SectionId; title: string }[] {
   const head: { id: SectionId; title: string }[] = [
     { id: 'basics', title: 'Course basics' },
     { id: 'playability', title: 'Playability' },
@@ -172,25 +178,62 @@ function buildSections(courseType: string, needs: Needs): { id: SectionId; title
     { id: 'about', title: 'About your course' },
     { id: 'notes', title: 'Anything else' },
   ];
-
-  if (courseType === 'private') {
-    const mid: { id: SectionId; title: string }[] = [
-      { id: 'fees', title: 'Green fees' },
-      { id: 'member', title: 'Member booking' },
-    ];
-    if (needs.publicTeeTimes === 'yes_regularly' || needs.publicTeeTimes === 'limited') {
-      mid.push({ id: 'public_fees', title: 'Public tee times' });
-    }
-    if (needs.chargesMembersPerRound === 'yes') mid.push({ id: 'member_rate', title: 'Member rate' });
-    if (needs.outsideOutings === 'yes') mid.push({ id: 'outings', title: 'Outside outings' });
-    return [...head, ...mid, ...tail];
-  }
-
-  const mid: { id: SectionId; title: string }[] = [{ id: 'fees', title: 'Green fees' }];
-  if (needs.residentRates === 'yes' || needs.hasMemberships === 'yes') {
-    mid.push({ id: 'passes', title: 'Memberships & passes' });
-  }
+  const mid: { id: SectionId; title: string }[] = courseType === 'private'
+    ? [
+        { id: 'fees', title: 'Green fees' },
+        { id: 'member', title: 'Member booking' },
+        { id: 'public_fees', title: 'Public tee times' },
+        { id: 'member_rate', title: 'Member rate' },
+        { id: 'outings', title: 'Outside outings' },
+      ]
+    : [
+        { id: 'fees', title: 'Green fees' },
+        { id: 'passes', title: 'Memberships & passes' },
+      ];
   return [...head, ...mid, ...tail];
+}
+
+// The branching questions, asked inline at the top of their section.
+type BranchKey = 'passes' | 'public_fees' | 'member_rate' | 'outings';
+type BranchAnswers = Record<BranchKey, string>; // '' | 'yes' | 'no'
+const BRANCH_KEYS: BranchKey[] = ['passes', 'public_fees', 'member_rate', 'outings'];
+const BRANCH_Q: Record<BranchKey, string> = {
+  passes: 'Do you offer memberships, season passes, or resident rates?',
+  public_fees: 'Do you allow non-member tee times?',
+  member_rate: 'Do you charge members per round?',
+  outings: 'Do you host outside outings or tournaments?',
+};
+const isBranchKey = (id: string): id is BranchKey => (BRANCH_KEYS as string[]).includes(id);
+const emptyBranch = (): BranchAnswers => ({ passes: '', public_fees: '', member_rate: '', outings: '' });
+
+// Where a branch's default comes from, in order: what this sheet already saved,
+// then the old inquiry-form answers (records from before IF-1), then the
+// discovery call. Call answers are prose today (IC-5 makes them structured),
+// so an answer that exists defaults the branch to Yes unless it starts with
+// "no" — and the question is still shown, so the course can override.
+const BRANCH_CALL_KEY: Partial<Record<BranchKey, string>> = { passes: 'resident_member', member_rate: 'resident_member', outings: 'protected_times' };
+function fromCallAnswer(v: unknown): string {
+  const s = typeof v === 'string' ? v.trim() : '';
+  if (!s) return '';
+  return /^(no|none|n\/a|not)\b/i.test(s) ? 'no' : 'yes';
+}
+function deriveBranch(saved: unknown, needs: Needs, callAnswers: Record<string, string>): BranchAnswers {
+  const out = emptyBranch();
+  const sv = (saved && typeof saved === 'object') ? saved as Record<string, unknown> : {};
+  const legacy: Record<BranchKey, string> = {
+    passes: needs.residentRates === 'yes' || needs.hasMemberships === 'yes' ? 'yes' : (needs.residentRates === 'no' && needs.hasMemberships === 'no') ? 'no' : '',
+    public_fees: needs.publicTeeTimes === 'yes_regularly' || needs.publicTeeTimes === 'limited' ? 'yes' : needs.publicTeeTimes === 'no' ? 'no' : '',
+    member_rate: needs.chargesMembersPerRound === 'yes' ? 'yes' : needs.chargesMembersPerRound === 'no' ? 'no' : '',
+    outings: needs.outsideOutings === 'yes' ? 'yes' : needs.outsideOutings === 'no' ? 'no' : '',
+  };
+  for (const k of BRANCH_KEYS) {
+    const s = sv[k];
+    if (s === 'yes' || s === 'no') { out[k] = s; continue; }
+    if (legacy[k]) { out[k] = legacy[k]; continue; }
+    const ck = BRANCH_CALL_KEY[k];
+    if (ck) out[k] = fromCallAnswer(callAnswers[ck]);
+  }
+  return out;
 }
 
 // IC-2 §5: which discovery-call agenda answers belong above which section.
@@ -264,7 +307,6 @@ function DetailsForm() {
   const [loadError, setLoadError] = useState('');
   const [courseName, setCourseName] = useState('');
   const [courseType, setCourseType] = useState('public');
-  const [needs, setNeeds] = useState<Needs>({});
   const [callAnswers, setCallAnswers] = useState<Record<string, string>>({});
   const [draft, setDraft] = useState<Draft>(initDraft);
   const [sections, setSections] = useState<{ id: SectionId; title: string }[]>([]);
@@ -311,10 +353,10 @@ function DetailsForm() {
         setCourseName(d.courseName);
         const ct = d.courseType || 'public';
         setCourseType(ct);
-        const n = d.needs || {};
-        setNeeds(n);
-        setCallAnswers(d.callAnswers && typeof d.callAnswers === 'object' ? d.callAnswers : {});
-        setSections(buildSections(ct, n));
+        const n: Needs = d.needs && typeof d.needs === 'object' ? d.needs : {};
+        const ca: Record<string, string> = d.callAnswers && typeof d.callAnswers === 'object' ? d.callAnswers : {};
+        setCallAnswers(ca);
+        setSections(buildSections(ct));
         const saved = d.details || {};
 
         // Migrate old teeSets
@@ -382,6 +424,7 @@ function DetailsForm() {
           nine27ComboNotes: (saved.nine27ComboNotes && typeof saved.nine27ComboNotes === 'object') ? saved.nine27ComboNotes : {},
           nine27ParsPerNine: (saved.nine27ParsPerNine && typeof saved.nine27ParsPerNine === 'object') ? saved.nine27ParsPerNine : {},
           course36ParsPerCourse: (saved.course36ParsPerCourse && typeof saved.course36ParsPerCourse === 'object') ? saved.course36ParsPerCourse : {},
+          branch: deriveBranch(saved.branch, n, ca),
         }));
       })
       .catch(e => setLoadError(e.message))
@@ -391,12 +434,13 @@ function DetailsForm() {
   const filled = (v: unknown) => v !== '' && v !== null && v !== undefined;
 
   const validateSection = (id: SectionId): string => {
+    if (isBranchKey(id) && !draft.branch[id]) return 'Answer the question at the top of this section to continue.';
     if (id === 'fees') {
       if (!filled(draft.greenFeeWeekday)) return 'Please enter weekday green fee.';
       if (!filled(draft.greenFeeWeekend)) return 'Please enter weekend green fee.';
     }
-    if (id === 'public_fees' && !filled(draft.publicGreenFee)) return 'Please enter the public green fee.';
-    if (id === 'member_rate' && !filled(draft.memberRate)) return 'Please enter the member rate.';
+    if (id === 'public_fees' && draft.branch.public_fees === 'yes' && !filled(draft.publicGreenFee)) return 'Please enter the public green fee.';
+    if (id === 'member_rate' && draft.branch.member_rate === 'yes' && !filled(draft.memberRate)) return 'Please enter the member rate.';
     if (id === 'about' && !draft.description) return 'Please enter a short course description.';
     return '';
   };
@@ -1063,7 +1107,7 @@ function DetailsForm() {
                 </div>
                 <p className="text-[11px] text-ink-faint mt-1">Most public courses open 7 to 14 days out.</p>
               </div>
-              {(courseType === 'private' || needs.hasMemberships === 'yes') && (
+              {(courseType === 'private' || draft.branch.passes === 'yes') && (
                 <div>
                   <Label text="…and members?" />
                   <div className="flex items-center gap-2">
@@ -1729,7 +1773,28 @@ function DetailsForm() {
               From your call with GreenReserve: <span className="text-ink-soft">{callAnswers[k]}</span>
             </p>
           ))}
-          {section && renderSection(section.id)}
+          {section && isBranchKey(section.id) && (
+            <div className="mb-5">
+              <p className="text-sm font-medium text-ink mb-2">{BRANCH_Q[section.id]}</p>
+              <div className="flex gap-2" role="group" aria-label={BRANCH_Q[section.id]}>
+                {(['yes', 'no'] as const).map(v => {
+                  const on = draft.branch[section.id as BranchKey] === v;
+                  const key = section.id as BranchKey;
+                  return (
+                    <button key={v} type="button" aria-pressed={on}
+                      onClick={() => setDraft(d => ({ ...d, branch: { ...d.branch, [key]: v } }))}
+                      className={'px-4 py-2 rounded-md border text-sm transition-colors ' + (on ? 'border-pine bg-pine/5 text-pine font-medium' : 'border-line bg-paper text-ink hover:border-pine/40')}>
+                      {v === 'yes' ? 'Yes' : 'No'}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {section && isBranchKey(section.id) && draft.branch[section.id] === 'no' && (
+            <p className="text-sm text-ink-muted">Nothing to set up here — press Next.</p>
+          )}
+          {section && (!isBranchKey(section.id) || draft.branch[section.id] === 'yes') && renderSection(section.id)}
         </div>
 
         {error && <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm mb-4">{error}</div>}
