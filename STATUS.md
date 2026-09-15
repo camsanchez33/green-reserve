@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-15 21:12 UTC · branch `main` · HEAD `111959f` · working tree **1 dirty file(s)**
+Generated 2026-09-15 21:15 UTC · branch `main` · HEAD `07cf78e` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -68,13 +68,12 @@ This is the distinction a raw checkbox count gets wrong.
 19. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1393`
 20. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1472`
 21. UI_REVISE_SPEC H-2d-R1 — DESIGN DECISION, Cam: device-mockup shadows vs the CLAUDE.md ceiling. src/app/home.module.css:46 (.heroDevice .device), :48 (.heroSheet), :108 (.device), : — `RUN_QUEUE.md:1982`
-22. UI_REVISE_SPEC H-2d-R3 — H-2c/H-2d hygiene: delete dead `.btnLight` (home.module.css:23-24), the orphan `/* BAND */` comment (:217), collapse the two `.js .heroSheet` animation rul — `RUN_QUEUE.md:1984`
-23. INQUIRY_FORM_SPEC Phase IF-1 — the inquiry form asks only what the call can't (Cam 2026-09-15). Ten inputs: name, title, email, phone, course, town/state, course type, HOW THEY TAK — `RUN_QUEUE.md:1986`
-24. CALL_SCHEDULING_SPEC Phase SC-1 — availability engine + Google (SCHEMA CHANGE, attended): CourseInquiry.callInviteToken/SentAt/ExpiresAt + Call.bookedByCourse/gcalEventId (migratio — `RUN_QUEUE.md:1987`
-25. CALL_SCHEDULING_SPEC Phase SC-2 — the invite + the public booking page (no migration): sendCallInviteEmail auto-sent on inquiry submit (AUTO_SEND_CALL_INVITE flag); /call/[token] p — `RUN_QUEUE.md:1988`
-26. CALL_SCHEDULING_SPEC Phase SC-3 — admin side (no migration): 'Send a booking link' beside Set up call / Skip, with sent-not-booked state + resend; sheet's Next-call cell learns 'In — `RUN_QUEUE.md:1989`
-27. UI_REVISE_SPEC H-2e — ONE GROUND, ONE LOGO (small, no migration). BUG: `.root` is WHITE while body/hero/courses/final are cream #F6F4EC, so every background-less section (See it wo — `RUN_QUEUE.md:1991`
-28. INQUIRY_CALL_SPEC Phase IC-5 — the call captures STRUCTURED answers, not prose (Cam 2026-09-15, overrules assumption A3). New src/lib/call-answers.ts field spec per agenda item (mo — `RUN_QUEUE.md:1993`
+22. INQUIRY_FORM_SPEC Phase IF-1 — the inquiry form asks only what the call can't (Cam 2026-09-15). Ten inputs: name, title, email, phone, course, town/state, course type, HOW THEY TAK — `RUN_QUEUE.md:1986`
+23. CALL_SCHEDULING_SPEC Phase SC-1 — availability engine + Google (SCHEMA CHANGE, attended): CourseInquiry.callInviteToken/SentAt/ExpiresAt + Call.bookedByCourse/gcalEventId (migratio — `RUN_QUEUE.md:1987`
+24. CALL_SCHEDULING_SPEC Phase SC-2 — the invite + the public booking page (no migration): sendCallInviteEmail auto-sent on inquiry submit (AUTO_SEND_CALL_INVITE flag); /call/[token] p — `RUN_QUEUE.md:1988`
+25. CALL_SCHEDULING_SPEC Phase SC-3 — admin side (no migration): 'Send a booking link' beside Set up call / Skip, with sent-not-booked state + resend; sheet's Next-call cell learns 'In — `RUN_QUEUE.md:1989`
+26. UI_REVISE_SPEC H-2e — ONE GROUND, ONE LOGO (small, no migration). BUG: `.root` is WHITE while body/hero/courses/final are cream #F6F4EC, so every background-less section (See it wo — `RUN_QUEUE.md:1991`
+27. INQUIRY_CALL_SPEC Phase IC-5 — the call captures STRUCTURED answers, not prose (Cam 2026-09-15, overrules assumption A3). New src/lib/call-answers.ts field spec per agenda item (mo — `RUN_QUEUE.md:1993`
 
 ## Waiting on you (not on a build)
 
@@ -174,6 +173,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `07cf78e` 2026-09-15 — H-2d-R3: homepage hygiene — dead .btnLight and the orphan BAND comment gone, one heroSheet animation rule, tee-sheet card colors read --ok/--warn/--ink-3, stale HERO row out of the design README
+- `780ac67` 2026-09-15 — queue/spec update
 - `111959f` 2026-09-15 — H-2d-R2: hero perf — the device header image loads eagerly in the hero (it is above the fold); story mp4 listed before the larger v2 webm
 - `107e176` 2026-09-15 — queue/spec update (merge: Cowork's IC-5 + the H-2c/H-2d review notes and H-2d-R1..R3 that a stale save dropped)
 - `a75fa84` 2026-09-15 — queue/spec update
@@ -184,9 +185,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `2cf4fee` 2026-09-14 — MP-6c + MP-10 schema halves: Booking.paidAt (stamped when the charge succeeds or the counter takes payment; Revenue windows read it) and the three missing indexes
 - `9f0308d` 2026-09-14 — queue/spec update
 - `f0a4e4b` 2026-09-14 — SD-5 (part 2): partial-party check-in, close-a-day weather flow, operator session versioning
-- `72e715d` 2026-09-14 — queue/spec update
-- `8f646d0` 2026-09-14 — SD-5 (part 1): walk-in and phone bookings from the tee sheet, no-show, paid at the counter — the booking lifecycle gets columns and the counter gets its actions
 
 ---
 
-**Totals:** 175 done · 9 awaiting review · 1 in flight · 28 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 176 done · 9 awaiting review · 1 in flight · 27 not started · 8 revise pages open · 15 ideas · 2 parked.

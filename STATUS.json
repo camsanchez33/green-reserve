@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-15T21:12:42.462Z",
+  "generatedAt": "2026-09-15T21:15:09.466Z",
   "repo": {
-    "head": "111959f",
+    "head": "07cf78e",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,14 +10,14 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-15T17:11:53-04:00",
+    "queueLastCommit": "2026-09-15T17:12:42-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 175,
+    "runDone": 176,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 28,
+    "runNotStarted": 27,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -207,11 +207,6 @@
     {
       "title": "UI_REVISE_SPEC H-2d-R1 — DESIGN DECISION, Cam: device-mockup shadows vs the CLAUDE.md ceiling. src/app/home.module.css:46 (.heroDevice .device), :48 (.heroSheet), :108 (.device), :159 (.laptopScreen) ",
       "line": 1982,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "UI_REVISE_SPEC H-2d-R3 — H-2c/H-2d hygiene: delete dead `.btnLight` (home.module.css:23-24), the orphan `/* BAND */` comment (:217), collapse the two `.js .heroSheet` animation rules (:59-61) into one",
-      "line": 1984,
       "section": "Queue (run in this order)"
     },
     {
@@ -812,6 +807,16 @@
   },
   "recentCommits": [
     {
+      "h": "07cf78e",
+      "date": "2026-09-15",
+      "subject": "H-2d-R3: homepage hygiene — dead .btnLight and the orphan BAND comment gone, one heroSheet animation rule, tee-sheet card colors read --ok/--warn/--ink-3, stale HERO row out of the design README"
+    },
+    {
+      "h": "780ac67",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "111959f",
       "date": "2026-09-15",
       "subject": "H-2d-R2: hero perf — the device header image loads eagerly in the hero (it is above the fold); story mp4 listed before the larger v2 webm"
@@ -860,16 +865,6 @@
       "h": "f0a4e4b",
       "date": "2026-09-14",
       "subject": "SD-5 (part 2): partial-party check-in, close-a-day weather flow, operator session versioning"
-    },
-    {
-      "h": "72e715d",
-      "date": "2026-09-14",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "8f646d0",
-      "date": "2026-09-14",
-      "subject": "SD-5 (part 1): walk-in and phone bookings from the tee sheet, no-show, paid at the counter — the booking lifecycle gets columns and the counter gets its actions"
     }
   ]
 }
