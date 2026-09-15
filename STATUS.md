@@ -4,22 +4,20 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-15 00:13 UTC · branch `main` · HEAD `cfff2d3` · working tree **2 dirty file(s)**
+Generated 2026-09-15 00:16 UTC · branch `main` · HEAD `8660e4e` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-09-14**. 2 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-09-14**. 1 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `cfff2d3` | 2026-09-14 | OWNER TOTP 2FA: an authenticator-app second factor for the owner login — enrolment on the profile, recovery codes, replay-safe verify, the email path kept until enrolled |
-| `d93e51e` | 2026-09-14 | BOOKING WINDOWS: how far ahead each audience can see and book — enforced server-side, greyed in the picker, generation derived (no migration: the columns already existed) |
+| `8660e4e` | 2026-09-14 | IC-4: drop the funnel strip above the inquiries sheet — the Stage column already says it; ?tab= deep links narrow the table with one 'Showing: <stage> · Clear' pill |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (2 file(s))
+### Uncommitted working tree (1 file(s))
 
-- `M INQUIRY_CALL_SPEC.md`
 - `M RUN_QUEUE.md`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
@@ -77,7 +75,7 @@ This is the distinction a raw checkbox count gets wrong.
 20. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1366`
 21. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1395`
 22. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1474`
-23. INQUIRY_CALL_SPEC Phase IC-4 — drop the funnel strip on /admin/inquiries (Cam 2026-09-15: redundant with the Stage column); keep ?tab= deep links from the Overview working as an in — `RUN_QUEUE.md:1982`
+23. INQUIRY_CALL_SPEC Phase IC-4 — drop the funnel strip on /admin/inquiries (Cam 2026-09-15: redundant with the Stage column); keep ?tab= deep links from the Overview working as an in — `RUN_QUEUE.md:1983`
 
 ## Waiting on you (not on a build)
 
@@ -176,6 +174,9 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `8660e4e` 2026-09-14 — IC-4: drop the funnel strip above the inquiries sheet — the Stage column already says it; ?tab= deep links narrow the table with one 'Showing: <stage> · Clear' pill
+- `dcdbfe6` 2026-09-14 — queue/spec update
+- `84c0296` 2026-09-14 — queue/spec update
 - `cfff2d3` 2026-09-14 — OWNER TOTP 2FA: an authenticator-app second factor for the owner login — enrolment on the profile, recovery codes, replay-safe verify, the email path kept until enrolled
 - `d93e51e` 2026-09-14 — BOOKING WINDOWS: how far ahead each audience can see and book — enforced server-side, greyed in the picker, generation derived (no migration: the columns already existed)
 - `222114b` 2026-09-14 — queue/spec update
@@ -185,10 +186,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `ca48eb4` 2026-09-14 — queue/spec update
 - `9b148ec` 2026-09-14 — AG-3: version bumps and re-acceptance — day-0 notice, banner then modal, 428 on configuration writes, admin chips and queue rows
 - `d2fbb9b` 2026-09-14 — queue/spec update
-- `054b149` 2026-09-14 — AG-2: the signing flow — legal name, signer, read-to-the-end panels, one POST, PDFs to private Blob, courtesy copies by email, admin records
-- `f377780` 2026-09-14 — queue/spec update
-- `d41ce1a` 2026-09-14 — CS-3: course page — the Setup card for getting-live courses, the Next check-in card for live ones, calls in Records
 
 ---
 
-**Totals:** 171 done · 9 awaiting review · 1 in flight · 23 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 172 done · 9 awaiting review · 1 in flight · 23 not started · 8 revise pages open · 15 ideas · 2 parked.
