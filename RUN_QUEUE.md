@@ -362,7 +362,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     SD-8's); no per-page touch sweep beyond the tee-sheet row buttons. CAM MUST
     CHECK ON A PHONE: /dashboard at 390px — bottom nav visible, sheet uses the
     full width, check a golfer in and see a toast not a popup. NEEDS REVIEW.
-  - [ ] SD-3 — course-local time: Course.timezone column, every dashboard and
+  - [x] SD-3 (see git log) — SHIPPED, NO MIGRATION NEEDED (Course.timezone existed): lib/course-time.ts, Settings time-zone select, dashboard today/now/back-nav on the course clock, generation + regenerate + analytics per course, and the golfer-side past-slot/already-passed tests fixed (they compared course-local HH:MM to UTC). 12/12 checks. NEEDS REVIEW. ORIGINAL: course-local time: Course.timezone column, every dashboard and
     cron "today" derives from it (crons already have a timezone to copy),
     backward date nav unclamped. At 5pm Pacific the sheet flips to tomorrow and
     today becomes unreachable (SCHEMA CHANGE, ATTENDED)

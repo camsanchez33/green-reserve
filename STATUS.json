@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-15T00:16:22.781Z",
+  "generatedAt": "2026-09-15T00:29:27.224Z",
   "repo": {
-    "head": "8660e4e",
+    "head": "bca583a",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,22 +10,38 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-14T20:13:41-04:00",
+    "queueLastCommit": "2026-09-14T20:16:24-04:00",
     "unrecorded": [
       {
-        "h": "8660e4e",
-        "date": "2026-09-14T20:16:20-04:00",
-        "subject": "IC-4: drop the funnel strip above the inquiries sheet — the Stage column already says it; ?tab= deep links narrow the table with one 'Showing: <stage> · Clear' pill",
+        "h": "bca583a",
+        "date": "2026-09-14T20:29:25-04:00",
+        "subject": "SD-3: course-local time — every \"today\" and \"now\" on the tee sheet reads Course.timezone (no migration: the column existed; it just had no UI and no readers outside the crons)",
+        "ids": [
+          "SD-3"
+        ],
+        "matches": []
+      },
+      {
+        "h": "ac8cc95",
+        "date": "2026-09-14T20:25:03-04:00",
+        "subject": "Security review fixes (audit of today's diff): player count validated on the public booking endpoint; tier windows bounded; TOTP pending/used markers separated; CSV formula guard; unique acceptance per document version; evidentiary IP on signings",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "edf2198",
+        "date": "2026-09-14T20:21:20-04:00",
+        "subject": "Review fixes (design + admin-ux audits of today's diff): agreement-due chip is a StatusDot; three course-page actions no longer hang on a dropped connection; inquiry confirm modals wait for their action (Working… shows) before closing; onboarding prefetches and the course-link fetch report failure",
         "ids": [],
         "matches": []
       }
     ]
   },
   "counts": {
-    "runDone": 172,
+    "runDone": 173,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 23,
+    "runNotStarted": 22,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -112,11 +128,6 @@
     }
   ],
   "next": [
-    {
-      "title": "SD-3 — course-local time: Course.timezone column, every dashboard and",
-      "line": 365,
-      "section": "Queue (run in this order)"
-    },
     {
       "title": "SD-5 — lifecycle states: walk-in/phone booking POST (the biggest",
       "line": 387,
@@ -790,6 +801,26 @@
   },
   "recentCommits": [
     {
+      "h": "bca583a",
+      "date": "2026-09-14",
+      "subject": "SD-3: course-local time — every \"today\" and \"now\" on the tee sheet reads Course.timezone (no migration: the column existed; it just had no UI and no readers outside the crons)"
+    },
+    {
+      "h": "ac8cc95",
+      "date": "2026-09-14",
+      "subject": "Security review fixes (audit of today's diff): player count validated on the public booking endpoint; tier windows bounded; TOTP pending/used markers separated; CSV formula guard; unique acceptance per document version; evidentiary IP on signings"
+    },
+    {
+      "h": "edf2198",
+      "date": "2026-09-14",
+      "subject": "Review fixes (design + admin-ux audits of today's diff): agreement-due chip is a StatusDot; three course-page actions no longer hang on a dropped connection; inquiry confirm modals wait for their action (Working… shows) before closing; onboarding prefetches and the course-link fetch report failure"
+    },
+    {
+      "h": "b7250c0",
+      "date": "2026-09-14",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "8660e4e",
       "date": "2026-09-14",
       "subject": "IC-4: drop the funnel strip above the inquiries sheet — the Stage column already says it; ?tab= deep links narrow the table with one 'Showing: <stage> · Clear' pill"
@@ -826,26 +857,6 @@
     },
     {
       "h": "31ff509",
-      "date": "2026-09-14",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "49d3d7a",
-      "date": "2026-09-14",
-      "subject": "H-2c: kill the photo band — the 'We set it up' section (a wind farm, wrong Unsplash id) is gone; its line lives under 'Live in four steps'"
-    },
-    {
-      "h": "ca48eb4",
-      "date": "2026-09-14",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "9b148ec",
-      "date": "2026-09-14",
-      "subject": "AG-3: version bumps and re-acceptance — day-0 notice, banner then modal, 428 on configuration writes, admin chips and queue rows"
-    },
-    {
-      "h": "d2fbb9b",
       "date": "2026-09-14",
       "subject": "queue/spec update"
     }

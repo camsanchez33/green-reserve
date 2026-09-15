@@ -4,15 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-15 00:16 UTC · branch `main` · HEAD `8660e4e` · working tree **1 dirty file(s)**
+Generated 2026-09-15 00:29 UTC · branch `main` · HEAD `bca583a` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-09-14**. 1 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-09-14**. 3 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `8660e4e` | 2026-09-14 | IC-4: drop the funnel strip above the inquiries sheet — the Stage column already says it; ?tab= deep links narrow the table with one 'Showing: <stage> · Clear' pill |
+| `bca583a` | 2026-09-14 | SD-3: course-local time — every "today" and "now" on the tee sheet reads Course.timezone (no migration: the column existed; it just had no UI and no readers outside the crons) |
+| `ac8cc95` | 2026-09-14 | Security review fixes (audit of today's diff): player count validated on the public booking endpoint; tier windows bounded; TOTP pending/used markers separated; CSV formula guard; unique acceptance per document version; evidentiary IP on signings |
+| `edf2198` | 2026-09-14 | Review fixes (design + admin-ux audits of today's diff): agreement-due chip is a StatusDot; three course-page actions no longer hang on a dropped connection; inquiry confirm modals wait for their action (Working… shows) before closing; onboarding prefetches and the course-link fetch report failure |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
@@ -53,29 +55,28 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Not started — the actual queue
 
-1. SD-3 — course-local time: Course.timezone column, every dashboard and — `RUN_QUEUE.md:365`
-2. SD-5 — lifecycle states: walk-in/phone booking POST (the biggest — `RUN_QUEUE.md:387`
-3. SD-7b — assets, BLOCKED ON CAM: three real dashboard screenshots into — `RUN_QUEUE.md:423`
-4. SD-8 — merge + split: Payments + Cancellations → one Money page with — `RUN_QUEUE.md:474`
-5. SD-9 — funnel + auth polish: split the details sheet into a required core — `RUN_QUEUE.md:480`
-6. MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) — — `RUN_QUEUE.md:900`
-7. MP-4 — pipeline reshape (split into 4a/4b/4c) — `RUN_QUEUE.md:907`
-8. MP-4f — retire the JSON-in-actorName pattern. Three separate things — `RUN_QUEUE.md:990`
-9. MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong — `RUN_QUEUE.md:1012`
-10. Golfer course directory (`/courses`) — NOT scheduled. If Cam wants — `RUN_QUEUE.md:1091`
-11. MP-5e part 3 — the Overview relationship feed (notes + settings — `RUN_QUEUE.md:1095`
-12. MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today) — `RUN_QUEUE.md:1121`
-13. MP-7 — comms merge (split into 7a–7b) — `RUN_QUEUE.md:1195`
-14. MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE, — `RUN_QUEUE.md:1213`
-15. MP-8 — chrome + System (split into 8a–8b) — `RUN_QUEUE.md:1220`
-16. MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table — `RUN_QUEUE.md:1237`
-17. MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in — `RUN_QUEUE.md:1244`
-18. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1291`
-19. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1340`
-20. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1366`
-21. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1395`
-22. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1474`
-23. INQUIRY_CALL_SPEC Phase IC-4 — drop the funnel strip on /admin/inquiries (Cam 2026-09-15: redundant with the Stage column); keep ?tab= deep links from the Overview working as an in — `RUN_QUEUE.md:1983`
+1. SD-5 — lifecycle states: walk-in/phone booking POST (the biggest — `RUN_QUEUE.md:387`
+2. SD-7b — assets, BLOCKED ON CAM: three real dashboard screenshots into — `RUN_QUEUE.md:423`
+3. SD-8 — merge + split: Payments + Cancellations → one Money page with — `RUN_QUEUE.md:474`
+4. SD-9 — funnel + auth polish: split the details sheet into a required core — `RUN_QUEUE.md:480`
+5. MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) — — `RUN_QUEUE.md:900`
+6. MP-4 — pipeline reshape (split into 4a/4b/4c) — `RUN_QUEUE.md:907`
+7. MP-4f — retire the JSON-in-actorName pattern. Three separate things — `RUN_QUEUE.md:990`
+8. MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong — `RUN_QUEUE.md:1012`
+9. Golfer course directory (`/courses`) — NOT scheduled. If Cam wants — `RUN_QUEUE.md:1091`
+10. MP-5e part 3 — the Overview relationship feed (notes + settings — `RUN_QUEUE.md:1095`
+11. MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today) — `RUN_QUEUE.md:1121`
+12. MP-7 — comms merge (split into 7a–7b) — `RUN_QUEUE.md:1195`
+13. MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE, — `RUN_QUEUE.md:1213`
+14. MP-8 — chrome + System (split into 8a–8b) — `RUN_QUEUE.md:1220`
+15. MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table — `RUN_QUEUE.md:1237`
+16. MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in — `RUN_QUEUE.md:1244`
+17. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1291`
+18. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1340`
+19. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1366`
+20. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1395`
+21. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1474`
+22. INQUIRY_CALL_SPEC Phase IC-4 — drop the funnel strip on /admin/inquiries (Cam 2026-09-15: redundant with the Stage column); keep ?tab= deep links from the Overview working as an in — `RUN_QUEUE.md:1983`
 
 ## Waiting on you (not on a build)
 
@@ -174,6 +175,10 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `bca583a` 2026-09-14 — SD-3: course-local time — every "today" and "now" on the tee sheet reads Course.timezone (no migration: the column existed; it just had no UI and no readers outside the crons)
+- `ac8cc95` 2026-09-14 — Security review fixes (audit of today's diff): player count validated on the public booking endpoint; tier windows bounded; TOTP pending/used markers separated; CSV formula guard; unique acceptance per document version; evidentiary IP on signings
+- `edf2198` 2026-09-14 — Review fixes (design + admin-ux audits of today's diff): agreement-due chip is a StatusDot; three course-page actions no longer hang on a dropped connection; inquiry confirm modals wait for their action (Working… shows) before closing; onboarding prefetches and the course-link fetch report failure
+- `b7250c0` 2026-09-14 — queue/spec update
 - `8660e4e` 2026-09-14 — IC-4: drop the funnel strip above the inquiries sheet — the Stage column already says it; ?tab= deep links narrow the table with one 'Showing: <stage> · Clear' pill
 - `dcdbfe6` 2026-09-14 — queue/spec update
 - `84c0296` 2026-09-14 — queue/spec update
@@ -182,11 +187,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `222114b` 2026-09-14 — queue/spec update
 - `cd67d82` 2026-09-14 — H-2d: clean hero (direction A) — cream + the product, no photo; the story clip stops shimmering; hero dissolves into the story
 - `31ff509` 2026-09-14 — queue/spec update
-- `49d3d7a` 2026-09-14 — H-2c: kill the photo band — the 'We set it up' section (a wind farm, wrong Unsplash id) is gone; its line lives under 'Live in four steps'
-- `ca48eb4` 2026-09-14 — queue/spec update
-- `9b148ec` 2026-09-14 — AG-3: version bumps and re-acceptance — day-0 notice, banner then modal, 428 on configuration writes, admin chips and queue rows
-- `d2fbb9b` 2026-09-14 — queue/spec update
 
 ---
 
-**Totals:** 172 done · 9 awaiting review · 1 in flight · 23 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 173 done · 9 awaiting review · 1 in flight · 22 not started · 8 revise pages open · 15 ideas · 2 parked.

@@ -117,21 +117,23 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-09-15 00:16 UTC</span><span>main @ 8660e4e</span>
+    <span>2026-09-15 00:29 UTC</span><span>main @ bca583a</span>
     <span>1 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">1 run has shipped that the queue doesn't know about</div>
+<div class="lede">3 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-09-14. These commits appear nowhere in it.</p>
 <ul>
-<li><span class="h">8660e4e</span><span>IC-4: drop the funnel strip above the inquiries sheet — the Stage column already says it; ?tab= deep links narrow the table with one 'Showing: &lt;stage&gt; · Clear' pill</span></li>
+<li><span class="h">bca583a</span><span>SD-3: course-local time — every &quot;today&quot; and &quot;now&quot; on the tee sheet reads Course.timezone (no migration: the column existed; it just had no UI and no readers outside the crons)</span></li>
+<li><span class="h">ac8cc95</span><span>Security review fixes (audit of today's diff): player count validated on the public booking endpoint; tier windows bounded; TOTP pending/used markers separated; CSV formula guard; unique acceptance per document version; evidentiary IP on signings</span></li>
+<li><span class="h">edf2198</span><span>Review fixes (design + admin-ux audits of today's diff): agreement-due chip is a StatusDot; three course-page actions no longer hang on a dropped connection; inquiry confirm modals wait for their action (Working… shows) before closing; onboarding prefetches and the course-link fetch report failure</span></li>
 </ul></div>
 <div class="tiles">
-  <div class="tile t-good"><span class="n">172</span><span class="l">Done</span></div>
+  <div class="tile t-good"><span class="n">173</span><span class="l">Done</span></div>
   <div class="tile t-warn"><span class="n">9</span><span class="l">Awaiting review</span></div>
   <div class="tile t-alarm"><span class="n">1</span><span class="l">In flight</span></div>
-  <div class="tile t-idle"><span class="n">23</span><span class="l">Not started</span></div>
+  <div class="tile t-idle"><span class="n">22</span><span class="l">Not started</span></div>
   <div class="tile t-idle"><span class="n">8</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">15</span><span class="l">Ideas parked</span></div>
 </div>
@@ -142,29 +144,28 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
-<div class="row"><span class="idx">1</span><span class="t">SD-3 — course-local time: Course.timezone column, every dashboard and</span><span class="where">:365</span></div>
-<div class="row"><span class="idx">2</span><span class="t">SD-5 — lifecycle states: walk-in/phone booking POST (the biggest</span><span class="where">:387</span></div>
-<div class="row"><span class="idx">3</span><span class="t">SD-7b — assets, BLOCKED ON CAM: three real dashboard screenshots into</span><span class="where">:423</span></div>
-<div class="row"><span class="idx">4</span><span class="t">SD-8 — merge + split: Payments + Cancellations → one Money page with</span><span class="where">:474</span></div>
-<div class="row"><span class="idx">5</span><span class="t">SD-9 — funnel + auth polish: split the details sheet into a required core</span><span class="where">:480</span></div>
-<div class="row"><span class="idx">6</span><span class="t">MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) —</span><span class="where">:900</span></div>
-<div class="row"><span class="idx">7</span><span class="t">MP-4 — pipeline reshape (split into 4a/4b/4c)</span><span class="where">:907</span></div>
-<div class="row"><span class="idx">8</span><span class="t">MP-4f — retire the JSON-in-actorName pattern. Three separate things</span><span class="where">:990</span></div>
-<div class="row"><span class="idx">9</span><span class="t">MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong</span><span class="where">:1012</span></div>
-<div class="row"><span class="idx">10</span><span class="t">Golfer course directory (`/courses`) — NOT scheduled. If Cam wants</span><span class="where">:1091</span></div>
-<div class="row"><span class="idx">11</span><span class="t">MP-5e part 3 — the Overview relationship feed (notes + settings</span><span class="where">:1095</span></div>
-<div class="row"><span class="idx">12</span><span class="t">MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today)</span><span class="where">:1121</span></div>
-<div class="row"><span class="idx">13</span><span class="t">MP-7 — comms merge (split into 7a–7b)</span><span class="where">:1195</span></div>
-<div class="row"><span class="idx">14</span><span class="t">MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE,</span><span class="where">:1213</span></div>
-<div class="row"><span class="idx">15</span><span class="t">MP-8 — chrome + System (split into 8a–8b)</span><span class="where">:1220</span></div>
-<div class="row"><span class="idx">16</span><span class="t">MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table</span><span class="where">:1237</span></div>
-<div class="row"><span class="idx">17</span><span class="t">MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in</span><span class="where">:1244</span></div>
-<div class="row"><span class="idx">18</span><span class="t">MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)</span><span class="where">:1291</span></div>
-<div class="row"><span class="idx">19</span><span class="t">MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState</span><span class="where">:1340</span></div>
-<div class="row"><span class="idx">20</span><span class="t">COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)</span><span class="where">:1366</span></div>
-<div class="row"><span class="idx">21</span><span class="t">Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with &quot;TheGreenReserve LLC&quot; + formation state (CAM: confirm the state before thi</span><span class="where">:1395</span></div>
-<div class="row"><span class="idx">22</span><span class="t">BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as</span><span class="where">:1474</span></div>
-<div class="row"><span class="idx">23</span><span class="t">INQUIRY_CALL_SPEC Phase IC-4 — drop the funnel strip on /admin/inquiries (Cam 2026-09-15: redundant with the Stage column); keep ?tab= deep links from the Overview working as an invisible filter with </span><span class="where">:1983</span></div>
+<div class="row"><span class="idx">1</span><span class="t">SD-5 — lifecycle states: walk-in/phone booking POST (the biggest</span><span class="where">:387</span></div>
+<div class="row"><span class="idx">2</span><span class="t">SD-7b — assets, BLOCKED ON CAM: three real dashboard screenshots into</span><span class="where">:423</span></div>
+<div class="row"><span class="idx">3</span><span class="t">SD-8 — merge + split: Payments + Cancellations → one Money page with</span><span class="where">:474</span></div>
+<div class="row"><span class="idx">4</span><span class="t">SD-9 — funnel + auth polish: split the details sheet into a required core</span><span class="where">:480</span></div>
+<div class="row"><span class="idx">5</span><span class="t">MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) —</span><span class="where">:900</span></div>
+<div class="row"><span class="idx">6</span><span class="t">MP-4 — pipeline reshape (split into 4a/4b/4c)</span><span class="where">:907</span></div>
+<div class="row"><span class="idx">7</span><span class="t">MP-4f — retire the JSON-in-actorName pattern. Three separate things</span><span class="where">:990</span></div>
+<div class="row"><span class="idx">8</span><span class="t">MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong</span><span class="where">:1012</span></div>
+<div class="row"><span class="idx">9</span><span class="t">Golfer course directory (`/courses`) — NOT scheduled. If Cam wants</span><span class="where">:1091</span></div>
+<div class="row"><span class="idx">10</span><span class="t">MP-5e part 3 — the Overview relationship feed (notes + settings</span><span class="where">:1095</span></div>
+<div class="row"><span class="idx">11</span><span class="t">MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today)</span><span class="where">:1121</span></div>
+<div class="row"><span class="idx">12</span><span class="t">MP-7 — comms merge (split into 7a–7b)</span><span class="where">:1195</span></div>
+<div class="row"><span class="idx">13</span><span class="t">MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE,</span><span class="where">:1213</span></div>
+<div class="row"><span class="idx">14</span><span class="t">MP-8 — chrome + System (split into 8a–8b)</span><span class="where">:1220</span></div>
+<div class="row"><span class="idx">15</span><span class="t">MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table</span><span class="where">:1237</span></div>
+<div class="row"><span class="idx">16</span><span class="t">MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in</span><span class="where">:1244</span></div>
+<div class="row"><span class="idx">17</span><span class="t">MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)</span><span class="where">:1291</span></div>
+<div class="row"><span class="idx">18</span><span class="t">MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState</span><span class="where">:1340</span></div>
+<div class="row"><span class="idx">19</span><span class="t">COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)</span><span class="where">:1366</span></div>
+<div class="row"><span class="idx">20</span><span class="t">Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with &quot;TheGreenReserve LLC&quot; + formation state (CAM: confirm the state before thi</span><span class="where">:1395</span></div>
+<div class="row"><span class="idx">21</span><span class="t">BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as</span><span class="where">:1474</span></div>
+<div class="row"><span class="idx">22</span><span class="t">INQUIRY_CALL_SPEC Phase IC-4 — drop the funnel strip on /admin/inquiries (Cam 2026-09-15: redundant with the Stage column); keep ?tab= deep links from the Overview working as an invisible filter with </span><span class="where">:1983</span></div>
 </div></section>
 <section><h2>Revise campaign &mdash; page by page</h2>
 <p class="note">14 pages closed, 8 open. One page in flight at a time.</p>
@@ -245,6 +246,10 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">bca583a</td><td class="num">2026-09-14</td><td>SD-3: course-local time — every &quot;today&quot; and &quot;now&quot; on the tee sheet reads Course.timezone (no migration: the column existed; it just had no UI and no readers outside the crons)</td></tr>
+<tr><td class="num">ac8cc95</td><td class="num">2026-09-14</td><td>Security review fixes (audit of today's diff): player count validated on the public booking endpoint; tier windows bounded; TOTP pending/used markers separated; CSV formula guard; unique acceptance per document version; evidentiary IP on signings</td></tr>
+<tr><td class="num">edf2198</td><td class="num">2026-09-14</td><td>Review fixes (design + admin-ux audits of today's diff): agreement-due chip is a StatusDot; three course-page actions no longer hang on a dropped connection; inquiry confirm modals wait for their action (Working… shows) before closing; onboarding prefetches and the course-link fetch report failure</td></tr>
+<tr><td class="num">b7250c0</td><td class="num">2026-09-14</td><td>queue/spec update</td></tr>
 <tr><td class="num">8660e4e</td><td class="num">2026-09-14</td><td>IC-4: drop the funnel strip above the inquiries sheet — the Stage column already says it; ?tab= deep links narrow the table with one 'Showing: &lt;stage&gt; · Clear' pill</td></tr>
 <tr><td class="num">dcdbfe6</td><td class="num">2026-09-14</td><td>queue/spec update</td></tr>
 <tr><td class="num">84c0296</td><td class="num">2026-09-14</td><td>queue/spec update</td></tr>
@@ -253,10 +258,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">222114b</td><td class="num">2026-09-14</td><td>queue/spec update</td></tr>
 <tr><td class="num">cd67d82</td><td class="num">2026-09-14</td><td>H-2d: clean hero (direction A) — cream + the product, no photo; the story clip stops shimmering; hero dissolves into the story</td></tr>
 <tr><td class="num">31ff509</td><td class="num">2026-09-14</td><td>queue/spec update</td></tr>
-<tr><td class="num">49d3d7a</td><td class="num">2026-09-14</td><td>H-2c: kill the photo band — the 'We set it up' section (a wind farm, wrong Unsplash id) is gone; its line lives under 'Live in four steps'</td></tr>
-<tr><td class="num">ca48eb4</td><td class="num">2026-09-14</td><td>queue/spec update</td></tr>
-<tr><td class="num">9b148ec</td><td class="num">2026-09-14</td><td>AG-3: version bumps and re-acceptance — day-0 notice, banner then modal, 428 on configuration writes, admin chips and queue rows</td></tr>
-<tr><td class="num">d2fbb9b</td><td class="num">2026-09-14</td><td>queue/spec update</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
