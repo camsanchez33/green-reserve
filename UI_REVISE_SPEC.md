@@ -407,6 +407,65 @@ instances, separate state); at 1440 the scroll from hero into story shows cream
 dissolving into the moving green with no visible seam; at 390 the hero stacks and
 the tee-sheet card is absent; Lighthouse mobile ≥ H-1's numbers.
 
+### H-2e · One ground, one logo (small, no migration)
+
+Cam, 2026-09-15, with screenshots of four hard horizontal seams: "it should flow
+more", and "what do you think about getting rid of that top bar — just keeping the
+logo across the top."
+
+**The seams are a bug, not a design choice.** Measured on the live page:
+
+| element | background |
+|---|---|
+| `body` | `#F6F4EC` cream |
+| `.root` (the page wrapper, 8586px tall) | **`#FFFFFF` white** |
+| `.hero`, `.courses`, `.final` | `#F6F4EC` cream |
+| `.story` / `.price` | `#12271C` / `#24513B` — deliberate |
+| "See it work", "Live in four steps", "Questions courses ask" | none — so they show the **white** root |
+
+So the light half of the page alternates white → cream → white → cream, with a
+hard edge at every change. Two light grounds are fighting; nobody chose that.
+
+1. `.root` background becomes the cream ground. Delete the now-redundant
+   `background` from `.hero`, `.courses` and `.final` — they equal the ground.
+2. **Ships in the same commit or it breaks the page:** `.s` (the four step cards)
+   are cream and are only visible today because they sit on the white root. On a
+   cream ground they vanish. Flip them to `#fff` with the existing `--line`
+   border, matching `.card`. Before committing, grep the module for every
+   `#F6F4EC` / `#F7F5EF` / `var(--paper)` and check each one still reads.
+3. The footer is `bg-white`; make it the cream ground, keeping `border-t
+   border-line`. A white slab under a cream page is one more band.
+4. Result: cream from the nav to the copyright line, broken exactly twice — the
+   story video and the pine pricing slab — and both of those are meant to be seen
+   as breaks.
+5. Give the story's BOTTOM edge the dissolve H-2d gave its top:
+   `linear-gradient(0deg, #F6F4EC 0%, rgba(246,244,236,0) 18vh)` over the video,
+   under the beats, so it fades into cream at both ends.
+
+**The nav.** Cam is right that the bar is the least considered thing on the page,
+but logo-only everywhere strands real customers: the footer carries Terms,
+Privacy, Operator agreement, Contact and an email address — and **no operator
+login**. A course with a live tee sheet would have no way from the homepage to
+their own dashboard.
+
+6. **Over the hero: no bar.** Transparent background, no blur, no border — just
+   the lockup at the left, on cream. Delete "How it works", "Pricing" and "FAQ"
+   for good: on a page this length they jump one screen, and they are most of what
+   makes the top look templated.
+7. **Past the hero** (`scrollY` beyond the hero's height minus the nav's), the nav
+   fades in its existing white/blur background and reveals two items at the right:
+   **Operator login** (muted text link) and **List your course** (pine button).
+   One easing curve, opacity + background only, no layout shift. Reduced motion:
+   render the scrolled state from the start.
+8. Add **Operator login** to the footer link row as well — the durable fallback,
+   independent of scroll position.
+
+Acceptance: at the top of `/` there is no bar, only the lockup; scrolling past the
+hero brings in the bar with exactly two items; no white/cream seam anywhere except
+the story and the pricing slab; the four step cards are still visible; the story
+fades at both ends; at 390px nothing overlaps and the nav still reaches Operator
+login.
+
 ## 6. Verification, every run
 
 `/gr-review` as usual, plus: side-by-side with the canvas board named in the item; a phone walk of any golfer route touched; `git diff --stat` reviewed for files outside the restate list (that's the smuggling check). Reskin runs additionally: grep the diff for `fetch(`, `prisma`, `useState(` additions — any hit means the run drifted into §4 and must be split.
