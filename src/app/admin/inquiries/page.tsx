@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { RefreshCw, Search, Trash2, ChevronRight, ArchiveRestore, RotateCcw, Download, Phone } from 'lucide-react';
+import { RefreshCw, Search, Trash2, ArchiveRestore, RotateCcw, Download, Phone } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
@@ -55,14 +55,8 @@ const SEGMENT_KEYS = FUNNEL_SEGMENTS.map(s => s.key) as string[];
 const VIEW_ALL = 'all';
 const VIEW_CLOSED = 'archived';
 
-const SEGMENT_HINT: Record<string, string> = {
-  'new': 'Just submitted — not yet reviewed.',
-  'in-review': "You're evaluating these.",
-  'sheet-sent': 'Setup sheet sent — waiting on the course.',
-  'sheet-in': 'Sheet is back — review and build.',
-  'building': 'Draft created — being built and reviewed before go-live.',
-  'live': 'Converted wins — successfully launched.',
-};
+// IC-4: the funnel strip is gone (the sheet's Stage column already says it);
+// `?tab=<segment>` still narrows the table, shown as one small pill.
 
 const PAGE_SIZE = 50;
 // A section that runs longer than this is a signal in itself — show the top
@@ -717,45 +711,6 @@ function InquiriesListInner() {
             </div>
           </div>
 
-          {/* Funnel strip — a filter, not a tab bar. The body below is always
-              the queue; clicking a stage narrows it, clicking it again clears. */}
-          <div className="flex items-center gap-0.5 flex-wrap border-b border-line pb-3 mb-4">
-            {SEGMENT_KEYS.map((key, i) => {
-              const seg = FUNNEL_SEGMENTS.find(s => s.key === key)!;
-              const count = countForSegment(key);
-              const active = key === stage;
-              const idle = count === 0 ? 'border-transparent text-ink-faint/60 hover:text-ink-muted' : 'border-transparent text-ink-muted hover:text-ink';
-              return (
-                <div key={key} className="flex items-center">
-                  <button
-                    onClick={() => goTo(active ? '' : key)}
-                    title={SEGMENT_HINT[key]}
-                    className={
-                      'flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ' +
-                      (active ? 'border-pine text-pine' : idle)
-                    }
-                  >
-                    {seg.label}
-                    <span className={
-                      'text-[10px] font-medium px-1.5 py-0.5 min-w-[18px] text-center ' + (
-                        active ? 'bg-pine/15 text-pine'
-                        : count > 0 ? 'bg-line-strong text-ink-muted' : 'text-ink-faint'
-                      )
-                    }>
-                      {count}
-                    </span>
-                  </button>
-                  {i < SEGMENT_KEYS.length - 1 && <ChevronRight className="w-3.5 h-3.5 text-ink-faint shrink-0"/>}
-                </div>
-              );
-            })}
-            {stage && (
-              <button onClick={() => goTo('')} className="ml-3 text-xs text-ink-faint hover:text-ink transition-colors">
-                Clear stage
-              </button>
-            )}
-          </div>
-
           {/* Bulk action bar */}
           {canBulkSelect && selected.size > 0 && (
             <div className="flex items-center gap-3 bg-pine/5 border border-pine/20 rounded-lg px-4 py-2.5 mb-3 text-sm">
@@ -803,6 +758,15 @@ function InquiriesListInner() {
             <div className="rounded-lg border border-bad/20 bg-bad/5 px-5 py-6 text-center">
               <p className="text-sm text-bad mb-3">{loadError}</p>
               <button onClick={() => loadInquiries()} className="text-xs font-medium text-ink-soft hover:text-ink px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">Retry</button>
+            </div>
+          )}
+
+          {/* IC-4: a deep link (Overview tiles, bookmarks) narrowed the sheet — say so, once. */}
+          {!loading && !loadError && view === 'queue' && stage && (
+            <div className="mb-3 inline-flex items-center gap-2 bg-white border border-line rounded-md px-3 py-1.5 text-xs">
+              <span className="text-ink-muted">Showing:</span>
+              <span className="font-medium text-ink">{stageLabel}</span>
+              <button onClick={() => goTo('')} className="text-ink-faint hover:text-ink transition-colors">· Clear</button>
             </div>
           )}
 
