@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-15T21:15:09.466Z",
+  "generatedAt": "2026-09-15T22:46:38.818Z",
   "repo": {
-    "head": "07cf78e",
+    "head": "01481f9",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,11 +10,11 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-15T17:12:42-04:00",
+    "queueLastCommit": "2026-09-15T17:15:09-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 176,
+    "runDone": 177,
     "runAwaiting": 9,
     "runInFlight": 1,
     "runNotStarted": 27,
@@ -230,13 +230,13 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "UI_REVISE_SPEC H-2e — ONE GROUND, ONE LOGO (small, no migration). BUG: `.root` is WHITE while body/hero/courses/final are cream #F6F4EC, so every background-less section (See it work, Live in four ste",
-      "line": 1991,
+      "title": "UI_REVISE_SPEC H-2f — CAM TO CONFIRM before running (2026-09-15, 'i like having the fade from slide to slide'): after H-2e the only hard section edges left on / are the two around the pine pricing sla",
+      "line": 1993,
       "section": "Queue (run in this order)"
     },
     {
       "title": "INQUIRY_CALL_SPEC Phase IC-5 — the call captures STRUCTURED answers, not prose (Cam 2026-09-15, overrules assumption A3). New src/lib/call-answers.ts field spec per agenda item (money in INTEGER CENTS",
-      "line": 1993,
+      "line": 1995,
       "section": "Queue (run in this order)"
     }
   ],
@@ -807,6 +807,16 @@
   },
   "recentCommits": [
     {
+      "h": "01481f9",
+      "date": "2026-09-15",
+      "subject": "H-2e: one ground, one logo — cream root (the white/cream banding was a bug), white step cards, cream footer, the story fades into cream at both ends; over the hero the nav is just the lockup, past it the bar fades in with Operator login + List your course; How it works/Pricing/FAQ links gone; Operator login in the footer"
+    },
+    {
+      "h": "9c6f379",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "07cf78e",
       "date": "2026-09-15",
       "subject": "H-2d-R3: homepage hygiene — dead .btnLight and the orphan BAND comment gone, one heroSheet animation rule, tee-sheet card colors read --ok/--warn/--ink-3, stale HERO row out of the design README"
@@ -855,16 +865,6 @@
       "h": "2cf4fee",
       "date": "2026-09-14",
       "subject": "MP-6c + MP-10 schema halves: Booking.paidAt (stamped when the charge succeeds or the counter takes payment; Revenue windows read it) and the three missing indexes"
-    },
-    {
-      "h": "9f0308d",
-      "date": "2026-09-14",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "f0a4e4b",
-      "date": "2026-09-14",
-      "subject": "SD-5 (part 2): partial-party check-in, close-a-day weather flow, operator session versioning"
     }
   ]
 }

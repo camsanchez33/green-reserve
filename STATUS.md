@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-15 21:15 UTC · branch `main` · HEAD `07cf78e` · working tree **1 dirty file(s)**
+Generated 2026-09-15 22:46 UTC · branch `main` · HEAD `01481f9` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -72,8 +72,8 @@ This is the distinction a raw checkbox count gets wrong.
 23. CALL_SCHEDULING_SPEC Phase SC-1 — availability engine + Google (SCHEMA CHANGE, attended): CourseInquiry.callInviteToken/SentAt/ExpiresAt + Call.bookedByCourse/gcalEventId (migratio — `RUN_QUEUE.md:1987`
 24. CALL_SCHEDULING_SPEC Phase SC-2 — the invite + the public booking page (no migration): sendCallInviteEmail auto-sent on inquiry submit (AUTO_SEND_CALL_INVITE flag); /call/[token] p — `RUN_QUEUE.md:1988`
 25. CALL_SCHEDULING_SPEC Phase SC-3 — admin side (no migration): 'Send a booking link' beside Set up call / Skip, with sent-not-booked state + resend; sheet's Next-call cell learns 'In — `RUN_QUEUE.md:1989`
-26. UI_REVISE_SPEC H-2e — ONE GROUND, ONE LOGO (small, no migration). BUG: `.root` is WHITE while body/hero/courses/final are cream #F6F4EC, so every background-less section (See it wo — `RUN_QUEUE.md:1991`
-27. INQUIRY_CALL_SPEC Phase IC-5 — the call captures STRUCTURED answers, not prose (Cam 2026-09-15, overrules assumption A3). New src/lib/call-answers.ts field spec per agenda item (mo — `RUN_QUEUE.md:1993`
+26. UI_REVISE_SPEC H-2f — CAM TO CONFIRM before running (2026-09-15, 'i like having the fade from slide to slide'): after H-2e the only hard section edges left on / are the two around  — `RUN_QUEUE.md:1993`
+27. INQUIRY_CALL_SPEC Phase IC-5 — the call captures STRUCTURED answers, not prose (Cam 2026-09-15, overrules assumption A3). New src/lib/call-answers.ts field spec per agenda item (mo — `RUN_QUEUE.md:1995`
 
 ## Waiting on you (not on a build)
 
@@ -173,6 +173,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `01481f9` 2026-09-15 — H-2e: one ground, one logo — cream root (the white/cream banding was a bug), white step cards, cream footer, the story fades into cream at both ends; over the hero the nav is just the lockup, past it the bar fades in with Operator login + List your course; How it works/Pricing/FAQ links gone; Operator login in the footer
+- `9c6f379` 2026-09-15 — queue/spec update
 - `07cf78e` 2026-09-15 — H-2d-R3: homepage hygiene — dead .btnLight and the orphan BAND comment gone, one heroSheet animation rule, tee-sheet card colors read --ok/--warn/--ink-3, stale HERO row out of the design README
 - `780ac67` 2026-09-15 — queue/spec update
 - `111959f` 2026-09-15 — H-2d-R2: hero perf — the device header image loads eagerly in the hero (it is above the fold); story mp4 listed before the larger v2 webm
@@ -183,9 +185,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `6e4907e` 2026-09-15 — queue/spec update
 - `2ea1864` 2026-09-14 — queue/spec update
 - `2cf4fee` 2026-09-14 — MP-6c + MP-10 schema halves: Booking.paidAt (stamped when the charge succeeds or the counter takes payment; Revenue windows read it) and the three missing indexes
-- `9f0308d` 2026-09-14 — queue/spec update
-- `f0a4e4b` 2026-09-14 — SD-5 (part 2): partial-party check-in, close-a-day weather flow, operator session versioning
 
 ---
 
-**Totals:** 176 done · 9 awaiting review · 1 in flight · 27 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 177 done · 9 awaiting review · 1 in flight · 27 not started · 8 revise pages open · 15 ideas · 2 parked.
