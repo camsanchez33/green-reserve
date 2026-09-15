@@ -344,6 +344,9 @@ model CourseMembership {
   createdAt      DateTime        @default(now())
 
   @@unique([golferId, courseId])
+
+  // MP-10 schema half: the overdue-dues surfaces filter by course + last payment.
+  @@index([courseId, lastPaidAt])
 }
 
 model TeeTime {
@@ -444,6 +447,10 @@ model Booking {
   paidOffline              Boolean        @default(false)
   /// SD-5: the course's cancellation window at the moment of booking, so a later policy change never moves this golfer's deadline
   cancellationHoursAtBooking Int?
+  /// MP-6c schema half: when the round was actually paid (the charge
+  /// succeeded, or the counter took it) — the Revenue window reads this,
+  /// not checkedInAt, so a collect-then-check-in lands on the day the money moved.
+  paidAt                   DateTime?
   createdAt                DateTime       @default(now())
   paymentEvents            PaymentEvent[]
 
@@ -452,6 +459,9 @@ model Booking {
   @@index([status, createdAt])
   @@index([teeTimeId])
   @@index([golferAccountId])
+  // MP-10 schema half: the surfaces that filter by check-in / payment time.
+  @@index([courseId, checkedInAt])
+  @@index([courseId, paidAt])
 }
 
 model TeeTimeSchedule {

@@ -231,7 +231,7 @@ async function chargeBooking(
             : prior.amount === base
               ? preCart
               : { totalAmount: prior.amount };
-          await prisma.booking.update({ where: { id: bookingId }, data: { roundPaymentIntentId: prior.id, paymentStatus: 'paid', checkInFailReason: '', ...money } });
+          await prisma.booking.update({ where: { id: bookingId }, data: { roundPaymentIntentId: prior.id, paymentStatus: 'paid', paidAt: new Date(prior.created * 1000), checkInFailReason: '', ...money } });
           return { error: 'This round was already charged on an earlier attempt (the confirmation was lost in transit). It is now recorded as paid — refresh and check in without a card.', status: 409 } as const;
         }
       } catch (err) {
@@ -303,6 +303,7 @@ async function chargeBooking(
     where: { id: bookingId },
     data: {
       paymentStatus: 'paid',
+      ...(alreadyPaid ? {} : { paidAt: new Date() }),
       roundPaymentIntentId: paymentIntentId,
       checkInFailReason: '',
       // Only a real check-in completes the booking and stamps the arrival.

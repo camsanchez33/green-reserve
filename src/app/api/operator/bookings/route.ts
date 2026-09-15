@@ -73,7 +73,7 @@ export async function PATCH(req: NextRequest) {
     if (booking.status === 'completed') return NextResponse.json({ error: 'Already checked in.' }, { status: 409 });
     await prisma.booking.update({
       where: { id },
-      data: { status: 'completed', checkedInAt: new Date(), paidOffline: true, paymentStatus: 'paid_offline', noShowAt: null, checkInFailReason: '', ...(cip !== undefined ? { checkedInPlayers: cip } : {}) },
+      data: { status: 'completed', checkedInAt: new Date(), paidAt: new Date(), paidOffline: true, paymentStatus: 'paid_offline', noShowAt: null, checkInFailReason: '', ...(cip !== undefined ? { checkedInPlayers: cip } : {}) },
     });
     return NextResponse.json({ success: true });
   }
@@ -130,6 +130,7 @@ export async function POST(req: NextRequest) {
       paymentStatus: checkInNow ? 'paid_offline' : 'manual',
       status: checkInNow ? 'completed' : 'confirmed',
       checkedInAt: checkInNow ? new Date() : null,
+      paidAt: checkInNow ? new Date() : null,
       paidOffline: checkInNow,
       source,
       cancellationHoursAtBooking: teeTime.course.cancellationHours,

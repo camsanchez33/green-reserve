@@ -20,9 +20,8 @@ import { FAILED_CHARGE_WHERE, missedCheckInWhere, openDisputes } from '@/lib/mon
 // STRUCTURALLY whenever a booking was created in one window and checked in
 // during another — a false-alarm generator. "Collected" here means the round
 // charge succeeded (paymentStatus 'paid' with a roundPaymentIntentId), placed
-// in time by checkedInAt. There is no paidAt column; the only path where the
-// two differ is a retry-charge followed by a later check-in, by hours. A real
-// paidAt is a schema slice.
+// in time by paidAt (MP-6c schema half — stamped when the charge succeeds;
+// older rows were backfilled from checkedInAt in the migration).
 
 type PeriodKind = 'day' | 'week' | 'mtd' | 'custom';
 interface Win { start: Date; end: Date; }
@@ -110,14 +109,14 @@ export async function GET(req: NextRequest) {
     disputesRaw,
   ] = await Promise.all([
     // Collected: fee exists, placed by the check-in that produced it.
-    prisma.booking.aggregate({ where: { ...PAID, checkedInAt: inCurrent }, _sum: { accessFeeTotal: true }, _count: { id: true } }),
-    prisma.booking.aggregate({ where: { ...PAID, checkedInAt: inPrior }, _sum: { accessFeeTotal: true } }),
+    prisma.booking.aggregate({ where: { ...PAID, paidAt: inCurrent }, _sum: { accessFeeTotal: true }, _count: { id: true } }),
+    prisma.booking.aggregate({ where: { ...PAID, paidAt: inPrior }, _sum: { accessFeeTotal: true } }),
     // Booked in the period and still ahead of us — pipeline, not revenue.
     prisma.booking.aggregate({
       where: { status: 'confirmed', paymentStatus: { not: 'paid' }, createdAt: inCurrent, teeTime: { date: { gte: todayStr } } },
       _sum: { accessFeeTotal: true }, _count: { id: true },
     }),
-    prisma.booking.groupBy({ by: ['courseId'], where: { ...PAID, checkedInAt: inCurrent }, _count: { id: true }, _sum: { accessFeeTotal: true, greenFeeTotal: true, cartFeeTotal: true } }),
+    prisma.booking.groupBy({ by: ['courseId'], where: { ...PAID, paidAt: inCurrent }, _count: { id: true }, _sum: { accessFeeTotal: true, greenFeeTotal: true, cartFeeTotal: true } }),
     prisma.booking.groupBy({ by: ['courseId'], where: { status: { in: ['confirmed', 'completed'] }, createdAt: inCurrent }, _count: { id: true } }),
     prisma.course.findMany({ select: { id: true, name: true, active: true, archivedAt: true, stripeAccountActive: true }, orderBy: { name: 'asc' } }),
     // ALL-TIME, to agree with the problems list. It was period-filtered while
