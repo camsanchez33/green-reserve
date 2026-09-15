@@ -371,6 +371,29 @@ banner must not fire); `?tab=building` deep-link still narrows.
 
 ---
 
+## Phase IC-4 — Drop the funnel strip (small, no migration)
+
+Cam, 2026-09-15, after IC-3 shipped: the row of stages with counts above the sheet
+("New › In review › Sheet sent › …") — "get rid of that header thing, it's stupid."
+He's right on the facts: the sheet now has a Stage column on every row, so the strip
+repeats what the table already shows, and at today's volume a stage filter earns
+nothing.
+
+1. Remove the funnel strip UI from `src/app/admin/inquiries/page.tsx` and its
+   `SEGMENT_HINT` / count-per-segment plumbing. `FUNNEL_SEGMENTS` in
+   `inquiry-status.ts` STAYS — the Overview strip, `statusToSegmentKey`, `stageDepth`
+   and the A-02c completeness check all read it.
+2. Keep the `?tab=` URL contract working, invisibly: the Overview's four pipeline
+   tiles link to `/admin/inquiries?tab=new|sheet-sent|building|live` (admin/page.tsx
+   ~484–487) and any bookmark may too. When `?tab=` names a segment, narrow the table
+   to it and show ONE small pill above the table: "Showing: Building · Clear". No
+   `?tab=` → the whole queue, no pill. `?tab=all` / `?tab=archived` keep their
+   footer-link behaviour.
+3. The header line keeps its counts (`N active · N need you · N calls this week · N
+   live all-time · N closed`); the A-02d invariant banner stays.
+4. Verify: Overview tile → narrowed sheet with the pill → Clear → full queue; no
+   segment counts rendered anywhere on the page; `tsc` clean.
+
 ## Not in this spec (deliberately)
 - Google Calendar sync (Cam: not now).
 - Per-column sorting (A4).
