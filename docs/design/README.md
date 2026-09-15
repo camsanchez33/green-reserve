@@ -2,13 +2,12 @@
 
 ## homepage-prototype.html
 The approved homepage prototype (2026-09-05). Same file as the published artifact, minus the
-embedded photos: `{{HERO}}`, `{{BUNKER}}`, `{{BUNKERCARD}}`, `{{AERIAL}}`, `{{IRON}}`,
+embedded photos: `{{BUNKER}}`, `{{BUNKERCARD}}`, `{{AERIAL}}`, `{{IRON}}`,
 `{{LOGO}}` are placeholders. The real build uses `next/image` with the assets below, never data URIs.
 
 ## Photos (Unsplash, free license)
 | placeholder | Unsplash photo id | used for | crop / size in prototype |
 |---|---|---|---|
-| HERO | 1587174486073-ae5e5cff23aa | hero (ball at the cup) — already the live site's hero | 1600w, position 62% 60% |
 | BUNKER | 1592919505780-303950717480 | pinned story photo | crop y 1400–2800 of the 1800×3200 original, 1600w |
 | BUNKERCARD | same | Sandpiper Links card | 1000w |
 | AERIAL | 1500932334442-8761ee4810a7 | Hollow Creek card | 1000w |

@@ -8,6 +8,7 @@
   --ease: cubic-bezier(.16, 1, .3, 1);
   --pine: #24513B; --pine-2: #2E6349; --pine-deep: #12271C;
   --paper: #F6F4EC; --ink: #1C1C18; --ink-2: #57574F; --ink-3: #87867C; --line: #E6E3D7;
+  --ok: #3D6B4C; --warn: #8A6116;
   --course: #24513B;
   background: #fff; color: var(--ink);
   font-family: var(--font-sans), Inter, system-ui, sans-serif;
@@ -20,8 +21,6 @@
 
 .btn { display: inline-flex; align-items: center; gap: 10px; height: 54px; padding: 0 26px; border-radius: 8px; font-size: 16px; font-weight: 600; text-decoration: none; background: var(--pine); color: #fff; transition: background .4s var(--ease), transform .5s var(--ease), box-shadow .5s var(--ease); }
 .btn:hover { background: var(--pine-2); transform: translateY(-1px); box-shadow: 0 12px 30px -14px rgba(36,81,59,.7); }
-.btnLight { background: #fff; color: var(--pine); }
-.btnLight:hover { background: #fff; box-shadow: 0 14px 34px -14px rgba(0,0,0,.6); }
 .link { font-size: 16px; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; color: inherit; }
 .link svg { transition: transform .5s var(--ease); }
 .link:hover svg { transform: translateX(3px); }
@@ -46,19 +45,18 @@
 .heroDevice .device { width: 360px; box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 30px 50px -30px rgba(20,30,20,.35), 0 80px 120px -60px rgba(20,30,20,.25); }
 .compact .dHd { height: 150px; }
 .heroSheet { position: absolute; right: 0; bottom: 44px; width: 320px; transform: rotate(1.5deg); background: #F7F5EF; color: #1d1f1a; border-radius: 14px; border: 1px solid rgba(0,0,0,.06); box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 30px 50px -30px rgba(20,30,20,.35); padding: 14px 16px 10px; z-index: 2; font-size: 12.5px; }
-.hsHead { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #87867C; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,.08); margin-bottom: 4px; }
+.hsHead { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,.08); margin-bottom: 4px; }
 .hsHead b { font-weight: 600; letter-spacing: 0; text-transform: none; color: #1d1f1a; font-size: 12px; }
 .hsRow { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid rgba(0,0,0,.06); }
 .hsRow:last-child { border-bottom: 0; }
 .hsT { font-variant-numeric: tabular-nums; font-weight: 600; }
 .hsWho { color: #5d5f56; }
 .hsSt { font-size: 11px; font-weight: 600; }
-.hsOk { color: #3D6B4C; } .hsDue { color: #8A6116; } .hsOpen { color: #87867C; font-weight: 500; }
+.hsOk { color: var(--ok); } .hsDue { color: var(--warn); } .hsOpen { color: var(--ink-3); font-weight: 500; }
 /* Load motion: the device rises and fades in, the sheet follows 150ms later. */
 .js .heroDevice { animation: rise .6s var(--ease) both; }
-.js .heroSheet { animation: rise .6s var(--ease) both .15s; }
+.js .heroSheet { animation: riseSheet .6s var(--ease) both .15s; }
 @keyframes rise { from { opacity: 0; transform: translateY(16px) rotate(-2deg); } to { opacity: 1; transform: translateY(0) rotate(-2deg); } }
-.js .heroSheet { animation-name: riseSheet; }
 @keyframes riseSheet { from { opacity: 0; transform: translateY(16px) rotate(1.5deg); } to { opacity: 1; transform: translateY(0) rotate(1.5deg); } }
 .shade { position: absolute; inset: 0; pointer-events: none; }
 .inWrap { position: relative; width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding-top: 40px; }
@@ -213,8 +211,6 @@
 .row2 { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 14.5px; }
 .row2 b { font-weight: 600; }
 .row2 span { color: var(--pine); font-weight: 600; }
-
-/* BAND — full-bleed photo with one sentence */
 
 /* STEPS */
 .steps { padding: 120px 0; text-align: center; }
