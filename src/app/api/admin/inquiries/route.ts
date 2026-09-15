@@ -13,8 +13,9 @@ import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrient
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 import { resolveAdminSession, requireRole, requireOwner, ownerGateError, MANAGER_PLUS, SUPPORT_PLUS, VIEWER_PLUS, type AdminSession } from '@/lib/admin-session';
 import { AGENDA, callGate, fmtCallTime, nextCall, latestCall, parseJson } from '@/lib/inquiry-call';
+import { validateAnswers, flatSummaries, parseCallAnswers, toSheetPrefill } from '@/lib/call-answers';
 import { firstCheckInAfterGoLive } from '@/lib/course-checkin';
-import { sendCallScheduledEmail } from '@/lib/email';
+import { sendCallScheduledEmail, sendCallRecapEmail } from '@/lib/email';
 import { encodeChangeAddressed, encodeRequestReReview } from '@/lib/change-requests';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 import { hasAcceptedAgreement } from '@/lib/agreement-gate';
@@ -188,14 +189,28 @@ async function handleAction(
     return NextResponse.json({ success: true, call: updated });
   }
 
+  // IC-5 §5: the Log card autosaves while Cam types. Answers only; the call
+  // stays `scheduled`, nothing else moves, no timeline event.
+  if (action === 'save_call_draft') {
+    const call = await prisma.call.findUnique({ where: { id: String(payload?.callId ?? '') } });
+    if (!call || call.inquiryId !== inquiryId) return NextResponse.json({ error: 'Call not found' }, { status: 404 });
+    if (call.outcome !== 'scheduled') return NextResponse.json({ error: 'This call is already logged — edit it from the call history.' }, { status: 409 });
+    const answers = validateAnswers(payload?.answers);
+    await prisma.call.update({
+      where: { id: call.id },
+      data: { answersJson: JSON.stringify(answers), notes: String(payload?.notes ?? '').slice(0, 8000) },
+    });
+    return NextResponse.json({ success: true, savedAt: new Date().toISOString() });
+  }
+
   if (action === 'log_call') {
     const call = await prisma.call.findUnique({ where: { id: String(payload?.callId ?? '') } });
     if (!call || call.inquiryId !== inquiryId) return NextResponse.json({ error: 'Call not found' }, { status: 404 });
     const outcome = String(payload?.outcome ?? '');
     if (!['talked', 'no_answer', 'not_a_fit'].includes(outcome)) return NextResponse.json({ error: 'Outcome must be talked, no_answer or not_a_fit.' }, { status: 400 });
-    const answersIn = payload?.answers && typeof payload.answers === 'object' ? payload.answers as Record<string, unknown> : {};
-    const answers: Record<string, string> = {};
-    for (const a of AGENDA) { const v = answersIn[a.key]; if (typeof v === 'string' && v.trim()) answers[a.key] = v.trim().slice(0, 4000); }
+    // IC-5 §3: structured (v2) answers, validated field by field; the old flat
+    // prose shape from pre-IC-5 clients still parses (as each item's note).
+    const answers = validateAnswers(payload?.answers);
     const followUpAt = parseDate(payload?.followUpAt);
     const updated = await prisma.call.update({
       where: { id: call.id },
@@ -205,7 +220,19 @@ async function handleAction(
       await prisma.courseInquiry.update({ where: { id: inquiryId }, data: { nextFollowUpAt: followUpAt } });
     }
     await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `Call logged — ${outcome.replace('_', ' ')} — by ${adminName}`);
-    return NextResponse.json({ success: true, call: updated, needsClose: outcome === 'not_a_fit' });
+    // IC-5 §3: the recap — what we captured, so the course can correct us.
+    let emailSent: boolean | null = null; let emailError: string | null = null;
+    if (outcome === 'talked' && payload?.emailRecap === true && inquiry.email) {
+      const summaries = flatSummaries(JSON.stringify(answers));
+      const items = AGENDA.filter(a => summaries[a.key]).map(a => [a.short, summaries[a.key]] as [string, string]);
+      if (items.length) {
+        try {
+          await sendCallRecapEmail({ contactName: inquiry.contactName, email: inquiry.email, courseName: inquiry.courseName, scheduledAt: call.scheduledAt, items });
+          emailSent = true;
+        } catch (err) { emailSent = false; emailError = err instanceof Error ? err.message : 'send failed'; }
+      }
+    }
+    return NextResponse.json({ success: true, call: updated, needsClose: outcome === 'not_a_fit', emailSent, emailError });
   }
 
   if (action === 'skip_call') {
@@ -616,6 +643,17 @@ async function handleAction(
 
       let d: Record<string, unknown> = {};
       try { d = inquiry.detailsJson ? JSON.parse(inquiry.detailsJson) : {}; } catch { /* ignore */ }
+      // IC-5 governing rule: the call is a PROPOSAL. It fills only the keys the
+      // sheet never touched; anything the course submitted wins, key by key.
+      {
+        const talkedCall = await prisma.call.findFirst({ where: { inquiryId, kind: 'discovery', outcome: 'talked' }, orderBy: { scheduledAt: 'desc' }, select: { answersJson: true } });
+        if (talkedCall?.answersJson) {
+          const { branch: _branch, ...fromCall } = toSheetPrefill(parseCallAnswers(talkedCall.answersJson));
+          for (const [k, v] of Object.entries(fromCall)) {
+            if (d[k] === undefined || d[k] === null || d[k] === '') d[k] = v;
+          }
+        }
+      }
 
       const str = (v: unknown, fallback = '') => (typeof v === 'string' && v ? v : fallback);
       const num = (v: unknown, fallback: number) => (typeof v === 'number' && !Number.isNaN(v) ? v : fallback);

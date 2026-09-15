@@ -1106,6 +1106,37 @@ export async function sendDetailsRequestEmail(data: {
 // that reads it back in an email learns something we did not choose to tell
 // them. It also leaves the door open, because at this stage most declines are
 // about our capacity and sequencing, not about the course.
+// IC-5 §3: after a logged call — what we captured, so the course can correct
+// us before it lands on their setup sheet. Values are user text: escaped.
+export async function sendCallRecapEmail(data: {
+  contactName: string; email: string; courseName: string; scheduledAt: Date; items: [string, string][];
+}) {
+  const when = data.scheduledAt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'America/New_York' });
+  const rows = data.items.map(([label, val]) => `
+        <tr>
+          <td style="padding:8px 0;border-bottom:1px solid #E6E3D7;color:#6b7280;font-size:13px;width:38%;vertical-align:top;">${escHtml(label)}</td>
+          <td style="padding:8px 0;border-bottom:1px solid #E6E3D7;color:#111827;font-size:13px;">${escHtml(val)}</td>
+        </tr>`).join('');
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:22px;font-weight:700;">Thanks for the call, ${escHtml(data.contactName.split(' ')[0] || data.contactName)}.</h1>
+    <p style="margin:0 0 20px;color:#6b7280;font-size:15px;line-height:1.6;">
+      Here is what we wrote down about <strong>${escHtml(data.courseName)}</strong> on ${when}. It will show up
+      pre-filled on your setup sheet, where you can change any of it — and if something below is off, just reply to this email.
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">${rows}
+    </table>
+    <p style="margin:0;color:#98968B;font-size:12px;">
+      Questions? Reply to this email — hello@greenreserve.app.
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.email,
+    subject: `What we captured on our call — ${data.courseName}`,
+    html,
+  });
+}
+
 // IC-1 §5: the contact's confirmation when a discovery call is put on the books.
 export async function sendCallScheduledEmail(data: {
   contactName: string; email: string; courseName: string;

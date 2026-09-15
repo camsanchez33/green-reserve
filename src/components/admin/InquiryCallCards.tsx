@@ -11,13 +11,17 @@
 // two things only it can do: run `request_details` (so the Setup-sheet result
 // box shows) and open the Reject drawer.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Phone, PhoneOff, CalendarClock, Check, AlertTriangle } from 'lucide-react';
+import { Phone, PhoneOff, CalendarClock, Check, AlertTriangle, ChevronDown, ChevronRight, RotateCw } from 'lucide-react';
 import {
   AGENDA, agendaStatus, defaultAgenda, nextCall, overdueCall, latestCall, parseJson,
   fmtCallTime, easternToIso, easternParts, OUTCOME_LABEL, DIRECTION_LABEL,
   type CallLike, type InquiryLike,
 } from '@/lib/inquiry-call';
 import { stillNeed } from '@/lib/inquiry-needs';
+import {
+  CALL_FIELDS, DAY_SHORT, parseCallAnswers, summarize, hasAnyCapture,
+  type CallAnswers, type ItemAnswers, type FieldSpec,
+} from '@/lib/call-answers';
 
 export type CallRow = CallLike & {
   id: string; scheduledAt: string; outcome: string; durationMin: number; direction: string; phone: string;
@@ -324,8 +328,39 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
   const open = forceOpen || now >= at - THIRTY_MIN;
 
   const [outcome, setOutcome] = useState<'talked' | 'no_answer' | 'not_a_fit'>('talked');
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [notes, setNotes] = useState('');
+  // IC-5: structured answers, hydrated from the call so a half-logged call
+  // survives a reload (the card autosaves as Cam types — see below).
+  const [answers, setAnswers] = useState<CallAnswers>(() => parseCallAnswers(call.answersJson));
+  const [notes, setNotes] = useState(call.notes || '');
+  const [openKeys, setOpenKeys] = useState<Set<string>>(() => new Set());
+  const [emailRecap, setEmailRecap] = useState(true);
+  const setItem = (key: string, item: ItemAnswers) => {
+    dirty.current = true;
+    setAnswers(a => ({ v: 2, items: { ...a.items, [key]: item } }));
+  };
+  const setNotesDirty = (v: string) => { dirty.current = true; setNotes(v); };
+  const toggleOpen = (key: string) => setOpenKeys(s => { const n = new Set(s); if (n.has(key)) n.delete(key); else n.add(key); return n; });
+
+  // Autosave: 800 ms after the last change → save_call_draft. The status line
+  // says so, and a failure is shown with a retry (no-silent-failures).
+  const dirty = useRef(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [draftState, setDraftState] = useState<{ status: 'idle' | 'saving' | 'saved' | 'failed'; at?: string; err?: string }>({ status: 'idle' });
+  const saveDraftNow = async () => {
+    setDraftState({ status: 'saving' });
+    try {
+      const r = await patch(inquiry.id, 'save_call_draft', { callId: call.id, answers, notes });
+      if (!r.ok) { setDraftState({ status: 'failed', err: errText(r) }); return; }
+      dirty.current = false;
+      setDraftState({ status: 'saved', at: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) });
+    } catch (e) { setDraftState({ status: 'failed', err: String(e) }); }
+  };
+  useEffect(() => {
+    if (!dirty.current) return;
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(saveDraftNow, 800);
+    return () => { if (timer.current) clearTimeout(timer.current); };
+  }, [answers, notes]); // eslint-disable-line react-hooks/exhaustive-deps
   const [followUp, setFollowUp] = useState(() => easternParts(new Date(at + 3 * 86_400_000)).date);
   const [moving, setMoving] = useState(false);
   const [reDate, setReDate] = useState(() => easternParts(call.scheduledAt).date);
@@ -369,10 +404,13 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
   const saveTalked = async (sendSheet: boolean) => {
     setBusy(true); setError(''); setNotice(null);
     try {
-      const r = await patch(inquiry.id, 'log_call', { callId: call.id, outcome: 'talked', answers, notes, followUpAt: followUpIso });
+      if (timer.current) clearTimeout(timer.current);
+      const r = await patch(inquiry.id, 'log_call', { callId: call.id, outcome: 'talked', answers, notes, followUpAt: followUpIso, emailRecap });
       if (!r.ok) { setError(errText(r)); return; }
-      if (sendSheet) { await onRequestSheet(); return; }
-      setNotice({ tone: 'ok', text: 'Call logged.' });
+      const recap = r.data.emailSent === true ? ` Recap emailed to ${inquiry.email}.`
+        : r.data.emailSent === false ? ` The recap email did not send (${String(r.data.emailError || 'unknown')}).` : '';
+      if (sendSheet) { if (recap) setNotice({ tone: r.data.emailSent === false ? 'warn' : 'ok', text: 'Call logged.' + recap }); await onRequestSheet(); return; }
+      setNotice({ tone: r.data.emailSent === false ? 'warn' : 'ok', text: 'Call logged.' + recap });
       await onRefresh();
     } catch (e) { setError('Error: ' + e); }
     finally { setBusy(false); }
@@ -453,7 +491,7 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
                   Email {contactFirst} the new time
                 </label>
               </div>
-              <textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notes (optional) — left a voicemail, wrong number…" className={iCls + ' mb-3'} disabled={disabled} />
+              <textarea rows={2} value={notes} onChange={e => setNotesDirty(e.target.value)} placeholder="Notes (optional) — left a voicemail, wrong number…" className={iCls + ' mb-3'} disabled={disabled} />
               <div className="flex items-center gap-2">
                 <button onClick={noAnswerReschedule} disabled={disabled || !easternToIso(reDate, reTime)} className={btnP}>
                   <CalendarClock className="w-3.5 h-3.5" />{busy ? 'Saving…' : 'Reschedule'}
@@ -462,30 +500,25 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
             </div>
           ) : (
             <div>
-              <label className={lbl}>What you got <span className="normal-case tracking-normal text-ink-faint">— the course sees these on their setup sheet; notes below stay private</span></label>
+              <div className="flex items-center justify-between gap-3 mb-1">
+                <label className={lbl + ' mb-0'}>What you got <span className="normal-case tracking-normal text-ink-faint">— the course sees these on their setup sheet; notes below stay private</span></label>
+                <DraftStatus state={draftState} onRetry={saveDraftNow} />
+              </div>
               <div className="border border-line rounded-md divide-y divide-line-soft mb-3">
-                {agendaKeys.map(item => {
-                  const prior = status.find(s => s.key === item.key)?.answered;
-                  const v = answers[item.key] ?? '';
-                  return (
-                    <div key={item.key} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-3 items-center px-3 py-2">
-                      <div className="min-w-0">
-                        <div className="text-sm text-ink">{item.short}</div>
-                        {!v && !prior && <div className="text-[11px] italic text-ink-faint">Didn’t get to it — still needed</div>}
-                        {!v && prior && <div className="text-[11px] text-ink-faint truncate" title={prior}>on file: {prior}</div>}
-                      </div>
-                      <input value={v} onChange={e => setAnswers(a => ({ ...a, [item.key]: e.target.value }))}
-                        placeholder={prior ? `confirm: ${prior}` : item.label} className={iCls} disabled={disabled} />
-                    </div>
-                  );
-                })}
+                {agendaKeys.map(item => (
+                  <AnswerRow key={item.key} agendaKey={item.key} short={item.short} label={item.label}
+                    prior={status.find(s => s.key === item.key)?.answered ?? null}
+                    value={answers.items[item.key] ?? { fields: {}, note: '' }}
+                    open={openKeys.has(item.key)} onToggle={() => toggleOpen(item.key)}
+                    onChange={it => setItem(item.key, it)} disabled={disabled} />
+                ))}
                 {call.agendaExtra && (
                   <div className="px-3 py-2 text-xs text-ink-soft"><span className="text-ink-muted">Also on the agenda:</span> {call.agendaExtra}</div>
                 )}
               </div>
 
               <label className={lbl}>Notes</label>
-              <textarea rows={3} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Anything else from the call" className={iCls + ' mb-3'} disabled={disabled} />
+              <textarea rows={3} value={notes} onChange={e => setNotesDirty(e.target.value)} placeholder="Anything else from the call" className={iCls + ' mb-3'} disabled={disabled} />
 
               <div className="flex items-start gap-6 flex-wrap mb-4">
                 <div className="flex-1 min-w-[240px]">
@@ -503,6 +536,12 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
                   <input type="date" value={followUp} onChange={e => setFollowUp(e.target.value)} className={iCls} disabled={disabled} />
                 </div>
               </div>
+              {outcome === 'talked' && (
+                <label className="flex items-center gap-2 text-xs text-ink-soft cursor-pointer mb-4">
+                  <input type="checkbox" checked={emailRecap} onChange={e => setEmailRecap(e.target.checked)} disabled={disabled} />
+                  Email {contactFirst} a recap of what we captured
+                </label>
+              )}
 
               <div className="flex items-center gap-2 flex-wrap pt-3 border-t border-line-soft">
                 {outcome === 'talked' && !sheetAlreadySent && (
@@ -532,6 +571,135 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── IC-5: structured answer rows ──────────────────────────────────────
+function DraftStatus({ state, onRetry }: { state: { status: 'idle' | 'saving' | 'saved' | 'failed'; at?: string; err?: string }; onRetry: () => void }) {
+  if (state.status === 'idle') return null;
+  if (state.status === 'saving') return <span className="text-[11px] text-ink-faint shrink-0">Saving…</span>;
+  if (state.status === 'saved') return <span className="text-[11px] text-ink-faint shrink-0">Saved · {state.at}</span>;
+  return (
+    <span className="text-[11px] text-bad shrink-0 flex items-center gap-1.5" title={state.err}>
+      Not saved
+      <button type="button" onClick={onRetry} className="inline-flex items-center gap-1 font-medium hover:underline"><RotateCw className="w-3 h-3" />retry</button>
+    </span>
+  );
+}
+
+function AnswerRow({ agendaKey, short, label, prior, value, open, onToggle, onChange, disabled }: {
+  agendaKey: string; short: string; label: string; prior: string | null; value: ItemAnswers;
+  open: boolean; onToggle: () => void; onChange: (v: ItemAnswers) => void; disabled: boolean;
+}) {
+  const specs = CALL_FIELDS[agendaKey] ?? [];
+  const summary = summarize(agendaKey, value);
+  const captured = hasAnyCapture(value);
+  const setField = (k: string, v: unknown) => {
+    const fields = { ...value.fields };
+    if (v === undefined || v === '' || v === null || (Array.isArray(v) && v.length === 0)) delete fields[k]; else fields[k] = v;
+    onChange({ ...value, fields });
+  };
+  return (
+    <div>
+      <button type="button" onClick={onToggle} aria-expanded={open} className="w-full grid grid-cols-[16px_minmax(0,1fr)] gap-2 items-start px-3 py-2 text-left hover:bg-paper transition-colors">
+        {open ? <ChevronDown className="w-4 h-4 text-ink-muted mt-0.5" /> : <ChevronRight className="w-4 h-4 text-ink-muted mt-0.5" />}
+        <div className="min-w-0">
+          <div className="text-sm text-ink">{short}</div>
+          {captured
+            ? <div className="text-[11px] text-ink-soft truncate" title={summary}>{summary}</div>
+            : prior
+              ? <div className="text-[11px] text-ink-faint truncate" title={prior}>Not captured · on file: {prior}</div>
+              : <div className="text-[11px] italic text-ink-faint">Not captured — still needed</div>}
+        </div>
+      </button>
+      {open && (
+        <div className="px-3 pb-3 pl-9">
+          <div className="text-[11px] text-ink-muted mb-2">{label}</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2.5">
+            {specs.map(spec => (
+              <div key={spec.key} className={spec.type === 'days' || spec.type === 'text' ? 'sm:col-span-2' : ''}>
+                <label className={lbl}>{spec.label}</label>
+                <FieldInput spec={spec} value={value.fields[spec.key]} onChange={v => setField(spec.key, v)} disabled={disabled} />
+              </div>
+            ))}
+            <div className="sm:col-span-2">
+              <label className={lbl}>Note</label>
+              <input value={value.note} onChange={e => onChange({ ...value, note: e.target.value })} placeholder="Anything else on this" className={iCls} disabled={disabled} />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FieldInput({ spec, value, onChange, disabled }: { spec: FieldSpec; value: unknown; onChange: (v: unknown) => void; disabled: boolean }) {
+  switch (spec.type) {
+    case 'money': return <MoneyInput cents={typeof value === 'number' ? value : undefined} onChange={onChange} disabled={disabled} />;
+    case 'time': return <input type="time" value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value)} className={iCls} disabled={disabled} />;
+    case 'date': return <input type="date" value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value)} className={iCls} disabled={disabled} />;
+    case 'days': {
+      const days = Array.isArray(value) ? (value as number[]) : [];
+      return (
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label={spec.label}>
+          {DAY_SHORT.map((d, i) => {
+            const on = days.includes(i);
+            return (
+              <button key={d} type="button" aria-pressed={on} disabled={disabled}
+                onClick={() => onChange(on ? days.filter(x => x !== i) : [...days, i].sort())}
+                className={'px-2.5 py-1 rounded-md border text-xs transition-colors ' + (on ? 'border-pine bg-pine/5 text-pine font-medium' : 'border-line bg-paper text-ink hover:border-pine/40')}>
+                {d}
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+    case 'bool':
+      return (
+        <div className="flex gap-1.5" role="group" aria-label={spec.label}>
+          {([true, false] as const).map(b => {
+            const on = value === b;
+            return (
+              <button key={String(b)} type="button" aria-pressed={on} disabled={disabled}
+                onClick={() => onChange(on ? undefined : b)}
+                className={'px-3 py-1 rounded-md border text-xs transition-colors ' + (on ? 'border-pine bg-pine/5 text-pine font-medium' : 'border-line bg-paper text-ink hover:border-pine/40')}>
+                {b ? 'Yes' : 'No'}
+              </button>
+            );
+          })}
+        </div>
+      );
+    case 'enum':
+      return (
+        <select value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value)} className={iCls} disabled={disabled}>
+          <option value="">—</option>
+          {(spec.options ?? []).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+        </select>
+      );
+    default:
+      return <input value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value)} className={iCls} disabled={disabled} />;
+  }
+}
+
+/** Dollars in the box, integer cents in the record. Local text so "45.50" can be typed. */
+function MoneyInput({ cents, onChange, disabled }: { cents: number | undefined; onChange: (cents: number | undefined) => void; disabled: boolean }) {
+  const [text, setText] = useState(() => (cents === undefined ? '' : (cents / 100).toFixed(2).replace(/\.00$/, '')));
+  useEffect(() => {
+    // Hydration / external reset only — never fight the keystroke.
+    if (cents === undefined && text !== '' && Number.isNaN(Number(text))) setText('');
+  }, [cents]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <div className="relative">
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-ink-faint">$</span>
+      <input inputMode="decimal" value={text} disabled={disabled} className={iCls + ' pl-6'} placeholder="0"
+        onChange={e => {
+          const v = e.target.value;
+          setText(v);
+          const n = Number(v);
+          onChange(v.trim() === '' || !Number.isFinite(n) || n < 0 ? undefined : Math.round(n * 100));
+        }} />
     </div>
   );
 }

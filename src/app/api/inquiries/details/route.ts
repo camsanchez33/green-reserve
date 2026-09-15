@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendDetailsSubmittedNotification, sendDetailsSheetConfirmationEmail } from '@/lib/email';
 import { gateSheetAccess } from '@/lib/sheet-token';
+import { flatSummaries, parseCallAnswers, toSheetPrefill } from '@/lib/call-answers';
 
 // MP-2b: the gate that used to live here now lives in src/lib/sheet-token.ts so
 // api/inquiries/upload shares it — it had been left on the old status list.
@@ -43,8 +44,14 @@ export async function GET(req: NextRequest) {
     where: { inquiryId: inquiry.id, kind: 'discovery', outcome: 'talked' },
     orderBy: { scheduledAt: 'desc' }, select: { answersJson: true },
   });
+  // IC-5 §4: one-line summaries for the hints (same shape as before), plus the
+  // structured values as a prefill the sheet applies only where it is empty.
   let callAnswers: Record<string, string> = {};
-  try { callAnswers = talked?.answersJson ? JSON.parse(talked.answersJson) : {}; } catch { /* unreadable */ }
+  let prefill: Record<string, unknown> = { branch: {} };
+  if (talked?.answersJson) {
+    callAnswers = flatSummaries(talked.answersJson);
+    prefill = toSheetPrefill(parseCallAnswers(talked.answersJson));
+  }
 
   let details = {};
   try { details = inquiry.detailsJson ? JSON.parse(inquiry.detailsJson) : {}; } catch { /* ignore */ }
@@ -61,6 +68,7 @@ export async function GET(req: NextRequest) {
     needs,
     details,
     callAnswers,
+    prefill,
   });
 }
 

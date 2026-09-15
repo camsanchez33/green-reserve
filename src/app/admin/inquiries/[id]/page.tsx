@@ -21,6 +21,7 @@ import {
 } from '@/lib/change-requests';
 // IC-2: the discovery call — cards, header chip, build gate, history.
 import InquiryCallCards, { describeCall, type CallRow, type CallFocus } from '@/components/admin/InquiryCallCards';
+import { flatSummaries } from '@/lib/call-answers';
 import { AGENDA, callGate, fmtCallTime, nextCall, overdueCall, latestCall, parseJson } from '@/lib/inquiry-call';
 
 interface InquiryStatusEvent {
@@ -808,7 +809,8 @@ function InquiryDetailInner() {
   const upcomingCall = nextCall(calls);
   const missedCall = overdueCall(calls);
   const talkedCall = latestCall(calls.filter(c => c.outcome === 'talked'));
-  const callAnswers = talkedCall ? parseJson<Record<string, string>>(talkedCall.answersJson, {}) : {};
+  // IC-5: answers are structured; the block shows one line per item.
+  const callAnswers = talkedCall ? flatSummaries(talkedCall.answersJson) : {};
   const callAnswerRows = AGENDA.filter(a => callAnswers[a.key]).map(a => [a.short, callAnswers[a.key]] as [string, string]);
   const gate = callGate(inq, calls);
   // Build buttons stay enabled; the click opens the notice instead of the

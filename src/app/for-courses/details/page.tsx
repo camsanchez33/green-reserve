@@ -226,7 +226,7 @@ function fromCallAnswer(v: unknown): string {
   if (!s) return '';
   return /^(no|none|n\/a|not)\b/i.test(s) ? 'no' : 'yes';
 }
-function deriveBranch(saved: unknown, needs: Needs, callAnswers: Record<string, string>): BranchAnswers {
+function deriveBranch(saved: unknown, needs: Needs, callAnswers: Record<string, string>, callBranch: Record<string, unknown> = {}): BranchAnswers {
   const out = emptyBranch();
   const sv = (saved && typeof saved === 'object') ? saved as Record<string, unknown> : {};
   const legacy: Record<BranchKey, string> = {
@@ -238,12 +238,39 @@ function deriveBranch(saved: unknown, needs: Needs, callAnswers: Record<string, 
   for (const k of BRANCH_KEYS) {
     const s = sv[k];
     if (s === 'yes' || s === 'no') { out[k] = s; continue; }
-    // The call is fresher than a form radio from before IF-1, so it wins.
+    // The call is fresher than a form radio from before IF-1, so it wins. A
+    // structured call answer (IC-5) beats the prose heuristic.
+    const structured = callBranch[k] === 'yes' || callBranch[k] === 'no' ? String(callBranch[k]) : '';
     const ck = BRANCH_CALL_KEY[k];
-    const fromCall = ck ? fromCallAnswer(callAnswers[ck]) : '';
+    const fromCall = structured || (ck ? fromCallAnswer(callAnswers[ck]) : '');
     out[k] = fromCall || legacy[k] || '';
   }
   return out;
+}
+
+// IC-5 §4: which sheet keys the call can pre-fill, by section — so the section
+// can say "pre-filled from your call" only where that actually happened.
+const SECTION_PREFILL_KEYS: Record<string, string[]> = {
+  basics: ['seasonOpen', 'seasonClose'],
+  schedule: ['firstTeeTime', 'lastTeeTime', 'intervalMinutes', 'daysOpen'],
+  fees: ['greenFeeWeekday', 'greenFeeWeekend', 'twilightFee', 'cartFee', 'walkingAllowed'],
+  member: ['protectedTimes'],
+  member_rate: ['memberRate'],
+  outings: ['outingsVolume'],
+  cancellation: ['cancellationPolicy', 'cancellationHours', 'lateFee'],
+};
+const PREFILLABLE = new Set(Object.values(SECTION_PREFILL_KEYS).flat());
+/** Copies call values onto the saved sheet ONLY where the sheet is empty. Returns the keys it filled. */
+function applyPrefill(saved: Record<string, unknown>, prefill: Record<string, unknown>): { merged: Record<string, unknown>; applied: string[] } {
+  const merged = { ...saved };
+  const applied: string[] = [];
+  for (const [k, v] of Object.entries(prefill)) {
+    if (k === 'branch' || !PREFILLABLE.has(k)) continue;
+    const cur = merged[k];
+    const empty = cur === undefined || cur === null || cur === '' || (Array.isArray(cur) && cur.length === 0);
+    if (empty && v !== undefined && v !== null && v !== '') { merged[k] = v; applied.push(k); }
+  }
+  return { merged, applied };
 }
 
 // IC-2 §5: which discovery-call agenda answers belong above which section.
@@ -318,6 +345,7 @@ function DetailsForm() {
   const [courseName, setCourseName] = useState('');
   const [courseType, setCourseType] = useState('public');
   const [callAnswers, setCallAnswers] = useState<Record<string, string>>({});
+  const [prefilled, setPrefilled] = useState<string[]>([]);
   const [draft, setDraft] = useState<Draft>(initDraft);
   const [sections, setSections] = useState<{ id: SectionId; title: string }[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
@@ -367,7 +395,14 @@ function DetailsForm() {
         const ca: Record<string, string> = d.callAnswers && typeof d.callAnswers === 'object' ? d.callAnswers : {};
         setCallAnswers(ca);
         setSections(buildSections(ct));
-        const saved = d.details || {};
+        // IC-5 §4: the call's structured answers fill empty keys only.
+        const pre: Record<string, unknown> = d.prefill && typeof d.prefill === 'object' ? d.prefill : {};
+        const preBranch: Record<string, unknown> = pre.branch && typeof pre.branch === 'object' ? pre.branch as Record<string, unknown> : {};
+        const { merged, applied } = applyPrefill((d.details && typeof d.details === 'object' ? d.details : {}) as Record<string, unknown>, pre);
+        setPrefilled(applied);
+        // The saved sheet was always read loosely below (it predates any typing here).
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const saved: Record<string, any> = merged;
 
         // Migrate old teeSets
         const teeSetsLoaded = (Array.isArray(saved.teeSets) && saved.teeSets.length > 0
@@ -434,7 +469,7 @@ function DetailsForm() {
           nine27ComboNotes: (saved.nine27ComboNotes && typeof saved.nine27ComboNotes === 'object') ? saved.nine27ComboNotes : {},
           nine27ParsPerNine: (saved.nine27ParsPerNine && typeof saved.nine27ParsPerNine === 'object') ? saved.nine27ParsPerNine : {},
           course36ParsPerCourse: (saved.course36ParsPerCourse && typeof saved.course36ParsPerCourse === 'object') ? saved.course36ParsPerCourse : {},
-          branch: deriveBranch(saved.branch, n, ca),
+          branch: deriveBranch(saved.branch, n, ca, preBranch),
         }));
       })
       .catch(e => setLoadError(e.message))
@@ -1778,6 +1813,9 @@ function DetailsForm() {
           <h2 className="text-[18px] font-serif font-medium tracking-tight text-ink mb-5">
             {section?.title}
           </h2>
+          {section && (SECTION_PREFILL_KEYS[section.id] || []).some(k => prefilled.includes(k)) && (
+            <p className="text-[12.5px] text-ink-muted leading-relaxed -mt-2 mb-3">Pre-filled from your call — change anything that&apos;s off.</p>
+          )}
           {section && (SECTION_CALL_KEYS[section.id] || []).filter(k => callAnswers[k]).map(k => (
             <p key={k} className="text-[12.5px] text-ink-muted leading-relaxed -mt-2 mb-4">
               From your call with GreenReserve: <span className="text-ink-soft">{callAnswers[k]}</span>

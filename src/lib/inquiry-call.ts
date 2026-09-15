@@ -3,6 +3,7 @@
 //
 // The catalog lives in code on purpose (assumption A2): changing what we ask
 // a course is a one-line commit, and nobody but Cam runs calls today.
+import { parseCallAnswers, summarize, type ItemAnswers } from './call-answers';
 
 export type CallLike = {
   id?: string;
@@ -86,16 +87,18 @@ export function defaultAgenda(inq: InquiryLike, sheet: SheetLike, needs: NeedsLi
   return AGENDA.filter(a => a.always || a.answered(inq, sheet, needs) === null).map(a => a.key);
 }
 
-export type AgendaStatusRow = { key: string; label: string; short: string; answered: string | null; fromCall: string | null };
+export type AgendaStatusRow = { key: string; label: string; short: string; answered: string | null; fromCall: string | null; callItem: ItemAnswers | null };
 
 /** One row per catalog item. An item is OPEN when both `answered` and `fromCall` are null. */
 export function agendaStatus(inq: InquiryLike, sheet: SheetLike, needs: NeedsLike, calls: CallLike[]): AgendaStatusRow[] {
   const talked = calls.filter(c => c.outcome === 'talked').sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime())[0];
-  const answers = talked ? parseJson<Record<string, string>>(talked.answersJson, {}) : {};
+  // IC-5: answers are structured (v2) — the old flat prose shape still parses.
+  const answers = talked ? parseCallAnswers(talked.answersJson) : { v: 2 as const, items: {} };
   return AGENDA.map(a => ({
     key: a.key, label: a.label, short: a.short,
     answered: a.answered(inq, sheet, needs),
-    fromCall: str(answers[a.key]) || null,
+    fromCall: summarize(a.key, answers.items[a.key]) || null,
+    callItem: answers.items[a.key] ?? null,
   }));
 }
 
