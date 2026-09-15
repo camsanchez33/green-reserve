@@ -1,31 +1,39 @@
 {
-  "generatedAt": "2026-09-14T23:56:50.773Z",
+  "generatedAt": "2026-09-15T00:13:40.376Z",
   "repo": {
-    "head": "cd67d82",
+    "head": "cfff2d3",
     "branch": "main",
-    "dirtyCount": 1,
+    "dirtyCount": 2,
     "dirty": [
-      "M RUN_QUEUE.md"
+      "M INQUIRY_CALL_SPEC.md",
+      " M RUN_QUEUE.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-14T19:53:17-04:00",
+    "queueLastCommit": "2026-09-14T19:56:52-04:00",
     "unrecorded": [
       {
-        "h": "cd67d82",
-        "date": "2026-09-14T19:56:48-04:00",
-        "subject": "H-2d: clean hero (direction A) — cream + the product, no photo; the story clip stops shimmering; hero dissolves into the story",
+        "h": "cfff2d3",
+        "date": "2026-09-14T20:13:38-04:00",
+        "subject": "OWNER TOTP 2FA: an authenticator-app second factor for the owner login — enrolment on the profile, recovery codes, replay-safe verify, the email path kept until enrolled",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "d93e51e",
+        "date": "2026-09-14T20:13:38-04:00",
+        "subject": "BOOKING WINDOWS: how far ahead each audience can see and book — enforced server-side, greyed in the picker, generation derived (no migration: the columns already existed)",
         "ids": [],
         "matches": []
       }
     ]
   },
   "counts": {
-    "runDone": 169,
+    "runDone": 171,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 24,
+    "runNotStarted": 23,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -108,15 +116,10 @@
       "line": 1959,
       "hash": "a3c1bea",
       "shipDate": "2026-09-11",
-      "ageDays": 2
+      "ageDays": 3
     }
   ],
   "next": [
-    {
-      "title": "OWNER TOTP 2FA (SCHEMA CHANGE, ATTENDED — run second, right after ADMIN",
-      "line": 236,
-      "section": "Queue (run in this order)"
-    },
     {
       "title": "SD-3 — course-local time: Course.timezone column, every dashboard and",
       "line": 365,
@@ -213,11 +216,6 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:",
-      "line": 1345,
-      "section": "Queue (run in this order)"
-    },
-    {
       "title": "COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)",
       "line": 1366,
       "section": "Queue (run in this order)"
@@ -230,6 +228,11 @@
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
       "line": 1474,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "INQUIRY_CALL_SPEC Phase IC-4 — drop the funnel strip on /admin/inquiries (Cam 2026-09-15: redundant with the Stage column); keep ?tab= deep links from the Overview working as an invisible filter with ",
+      "line": 1982,
       "section": "Queue (run in this order)"
     }
   ],
@@ -795,6 +798,21 @@
   },
   "recentCommits": [
     {
+      "h": "cfff2d3",
+      "date": "2026-09-14",
+      "subject": "OWNER TOTP 2FA: an authenticator-app second factor for the owner login — enrolment on the profile, recovery codes, replay-safe verify, the email path kept until enrolled"
+    },
+    {
+      "h": "d93e51e",
+      "date": "2026-09-14",
+      "subject": "BOOKING WINDOWS: how far ahead each audience can see and book — enforced server-side, greyed in the picker, generation derived (no migration: the columns already existed)"
+    },
+    {
+      "h": "222114b",
+      "date": "2026-09-14",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "cd67d82",
       "date": "2026-09-14",
       "subject": "H-2d: clean hero (direction A) — cream + the product, no photo; the story clip stops shimmering; hero dissolves into the story"
@@ -838,21 +856,6 @@
       "h": "d41ce1a",
       "date": "2026-09-14",
       "subject": "CS-3: course page — the Setup card for getting-live courses, the Next check-in card for live ones, calls in Records"
-    },
-    {
-      "h": "7ef3959",
-      "date": "2026-09-14",
-      "subject": "CS-2: /admin/courses becomes the sheet — one table, Getting live above Live, eight fixed columns, Export CSV"
-    },
-    {
-      "h": "1ac0965",
-      "date": "2026-09-14",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "a95fd27",
-      "date": "2026-09-14",
-      "subject": "CS-1: course setup steps, check-in call cadence + agenda, the API, the go-live hook, and check-ins in the Overview queue"
     }
   ]
 }

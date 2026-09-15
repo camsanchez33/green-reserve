@@ -233,7 +233,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   DELETE and orphan-sweep POST until re-authenticated at /admin/owner-login.
   No grace period, no backfill — that was the spec's explicit instruction.
 
-- [ ] OWNER TOTP 2FA (SCHEMA CHANGE, ATTENDED — run second, right after ADMIN
+- [x] OWNER TOTP 2FA (see git log) — SHIPPED via migration owner_totp (additive; applied by the prod build). lib/owner-totp.ts, /api/admin/two-factor, profile card, owner-login TOTP/recovery verify with the email path intact until enrolled, RUNBOOK recovery section. 14/14 lib checks. CAM: enrol on /admin/profile (owner login first), save the ten codes in KeePassXC, then sign out and back in with the app. NEEDS REVIEW. ORIGINAL: (SCHEMA CHANGE, ATTENDED — run second, right after ADMIN
   AUTH BOUNDARY) — replace the owner's email-delivered 6-digit code with a real
   authenticator-app second factor, so that holding the owner inbox is no longer
   sufficient to take the platform. Decision with Cam 2026-08-26: TOTP over SMS —
@@ -1342,7 +1342,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     components; overlaps MP-5's tab reshape, so run MP-5 first and let this
     finish it (big)
 
-- [ ] BOOKING WINDOWS (schema change, attended) — how far ahead each audience can see/book the tee sheet:
+- [x] BOOKING WINDOWS (see git log) — SHIPPED, NO MIGRATION NEEDED (Course.publicAdvanceDays / memberAdvanceDays and MembershipTier.advanceBookingDays already existed): lib/booking-window.ts, 403 outside_window on both tee-times APIs + booking create, picker greys days beyond the window with the members hint, generation horizon derived per course, sheet asks both windows, settings/tier labels in plain words. 12/12 unit checks. NEEDS REVIEW + a live walk (public 7 → day 8 greyed; member sees more). ORIGINAL: (schema change, attended) — how far ahead each audience can see/book the tee sheet:
   - Course.publicBookingWindowDays (Int, default 7) — operator sets in dashboard Settings ("How far ahead can golfers book?") with plain explainer
   - MembershipTier.bookingWindowDays (Int?, null = course default) — per-tier member perk, set in the tier editor ("Members of this tier can book N days ahead")
   - Enforcement SERVER-side on the tee-times API + booking create (not just UI): public/anonymous sessions see + book only within the public window; recognized members (gr_member OR G5b golfer-session match) get their tier's window; date picker greys out days beyond the viewer's window with "Members can book earlier — sign in" hint (soft upsell, course-appropriate copy)
@@ -1978,6 +1978,8 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] UI_REVISE_SPEC H-2c (see git log) — SHIPPED: band + tee.jpg + README row gone, line moved under the steps title, all five remaining images opened and confirmed golf. Verify live: no tee.jpg request on /. ORIGINAL: KILL THE PHOTO BAND (small, no migration, RUN FIRST): the 'We set it up' band shows a WIND FARM (bad Unsplash id for TEE). Delete the section + tee.jpg + README row, move its headline into the 'Live in four steps' sub line, verify every remaining image id is actually golf (no `tee.jpg` request on `/` afterwards).
 
 - [x] UI_REVISE_SPEC H-2d (see git log) — SHIPPED: cream hero with the live booking device (HomeDemo compact) + tee-sheet card, ball-in-cup gone, story clip un-zoomed, cream→green dissolve; v2 story files committed b3e26cd. NEEDS REVIEW + the acceptance walk at 1440 and 390 + Lighthouse mobile vs H-1. ORIGINAL: CLEAN HERO (direction A, chosen by Cam 2026-09-14): cream hero, no photo, headline left + live booking device (HomeDemo hero variant) + static tee-sheet card right, lockup nav unchanged; story video v2 files swapped in + scroll-zoom removed from the video (the 'vibration'); cream→video top dissolve on the story section (medium, no migration, AFTER H-2c). Canvas: 'Homepage Hero Directions' board Main.
+
+- [ ] INQUIRY_CALL_SPEC Phase IC-4 — drop the funnel strip on /admin/inquiries (Cam 2026-09-15: redundant with the Stage column); keep ?tab= deep links from the Overview working as an invisible filter with a 'Showing: X · Clear' pill; FUNNEL_SEGMENTS stays in lib (small, no migration).
 
 ## Ideas / not yet specced
 
