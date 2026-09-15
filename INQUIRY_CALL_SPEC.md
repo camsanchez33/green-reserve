@@ -51,40 +51,31 @@ Constraints:
 ### 1. Prisma
 
 ```prisma
-/// One calls table for the whole relationship: discovery calls while it is an
-/// inquiry, check-in calls once it is a course. Exactly one of inquiryId /
-/// courseId is set (enforced in the API, not the DB). COURSES_SHEET_SPEC CS-1
-/// reads the same rows — do NOT create a second calls model for courses.
-model Call {
-  id           String         @id @default(cuid())
-  /// 'discovery' (inquiry) | 'checkin' (course)
-  kind         String
-  inquiryId    String?
-  inquiry      CourseInquiry? @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
-  courseId     String?
-  course       Course?        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+model InquiryCall {
+  id           String        @id @default(cuid())
+  inquiryId    String
+  inquiry      CourseInquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
   scheduledAt  DateTime
-  durationMin  Int            @default(30)
+  durationMin  Int           @default(30)
   /// 'we_call' | 'they_call'
-  direction    String         @default("we_call")
-  phone        String         @default("")
+  direction    String        @default("we_call")
+  phone        String        @default("")
   /// JSON string: string[] of agenda item keys checked for this call
-  agendaJson   String         @default("[]")
+  agendaJson   String        @default("[]")
   /// free text the admin adds for this course ("Tuesday league")
-  agendaExtra  String         @default("")
+  agendaExtra  String        @default("")
   /// 'scheduled' | 'talked' | 'no_answer' | 'not_a_fit' | 'cancelled'
-  outcome      String         @default("scheduled")
+  outcome      String        @default("scheduled")
   /// JSON string: Record<agendaKey, string> — what was said, per item
-  answersJson  String         @default("{}")
-  notes        String         @default("")
+  answersJson  String        @default("{}")
+  notes        String        @default("")
   followUpAt   DateTime?
   completedAt  DateTime?
-  createdBy    String         @default("")
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  createdBy    String        @default("")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   @@index([inquiryId, scheduledAt])
-  @@index([courseId, scheduledAt])
 }
 ```
 
@@ -92,17 +83,10 @@ On `CourseInquiry` add:
 
 ```prisma
   callSkippedReason String?        // A1: build without a call, with a reason
-  calls             Call[]
+  calls             InquiryCall[]
 ```
 
-On `Course` add (used by COURSES_SHEET_SPEC — cheap to add in the same migration):
-
-```prisma
-  nextCheckInAt DateTime?   // CS-1: when we next call the course; null = never scheduled
-  calls         Call[]
-```
-
-Migration name: `calls`. Additive only. Check `migration.sql` before
+Migration name: `inquiry_call`. Additive only. Check `migration.sql` before
 merging (M4 pattern).
 
 ### 2. `src/lib/inquiry-call.ts` — the agenda catalog
@@ -200,7 +184,7 @@ call today → "Call <name> at <time> — agenda is on the inquiry."
   event "Call skipped — <reason> — by <admin>". Reason required, min 5 chars.
 - `create_draft_course` / `build_course` → call `callGate` first; 409
   `{ error: 'call_required', why }` if not ok. Existing behavior otherwise.
-- `GET /api/admin/inquiries` includes `calls` (kind 'discovery', newest first) on every row.
+- `GET /api/admin/inquiries` includes `calls` (all, newest first) on every row.
   Keep it inside the MP-10 bounds — calls are few per inquiry.
 
 Role gating as today: viewer role cannot schedule/log/skip.
@@ -370,29 +354,6 @@ three fakes; counts in the header line still add up (the A-02d invariant
 banner must not fire); `?tab=building` deep-link still narrows.
 
 ---
-
-## Phase IC-4 — Drop the funnel strip (small, no migration)
-
-Cam, 2026-09-15, after IC-3 shipped: the row of stages with counts above the sheet
-("New › In review › Sheet sent › …") — "get rid of that header thing, it's stupid."
-He's right on the facts: the sheet now has a Stage column on every row, so the strip
-repeats what the table already shows, and at today's volume a stage filter earns
-nothing.
-
-1. Remove the funnel strip UI from `src/app/admin/inquiries/page.tsx` and its
-   `SEGMENT_HINT` / count-per-segment plumbing. `FUNNEL_SEGMENTS` in
-   `inquiry-status.ts` STAYS — the Overview strip, `statusToSegmentKey`, `stageDepth`
-   and the A-02c completeness check all read it.
-2. Keep the `?tab=` URL contract working, invisibly: the Overview's four pipeline
-   tiles link to `/admin/inquiries?tab=new|sheet-sent|building|live` (admin/page.tsx
-   ~484–487) and any bookmark may too. When `?tab=` names a segment, narrow the table
-   to it and show ONE small pill above the table: "Showing: Building · Clear". No
-   `?tab=` → the whole queue, no pill. `?tab=all` / `?tab=archived` keep their
-   footer-link behaviour.
-3. The header line keeps its counts (`N active · N need you · N calls this week · N
-   live all-time · N closed`); the A-02d invariant banner stays.
-4. Verify: Overview tile → narrowed sheet with the pill → Clear → full queue; no
-   segment counts rendered anywhere on the page; `tsc` clean.
 
 ## Not in this spec (deliberately)
 - Google Calendar sync (Cam: not now).
