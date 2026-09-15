@@ -346,14 +346,20 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
   const dirty = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [draftState, setDraftState] = useState<{ status: 'idle' | 'saving' | 'saved' | 'failed'; at?: string; err?: string }>({ status: 'idle' });
+  // Each draft request carries a sequence number; a response that comes back
+  // after a newer request (or after the final Save) is ignored, so a slow
+  // autosave can never repaint over what was logged.
+  const draftSeq = useRef(0);
   const saveDraftNow = async () => {
+    const seq = ++draftSeq.current;
     setDraftState({ status: 'saving' });
     try {
       const r = await patch(inquiry.id, 'save_call_draft', { callId: call.id, answers, notes });
+      if (seq !== draftSeq.current) return;
       if (!r.ok) { setDraftState({ status: 'failed', err: errText(r) }); return; }
       dirty.current = false;
       setDraftState({ status: 'saved', at: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) });
-    } catch (e) { setDraftState({ status: 'failed', err: String(e) }); }
+    } catch (e) { if (seq === draftSeq.current) setDraftState({ status: 'failed', err: String(e) }); }
   };
   useEffect(() => {
     if (!dirty.current) return;
@@ -405,10 +411,13 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
     setBusy(true); setError(''); setNotice(null);
     try {
       if (timer.current) clearTimeout(timer.current);
+      draftSeq.current++; // any autosave still in flight is now stale
       const r = await patch(inquiry.id, 'log_call', { callId: call.id, outcome: 'talked', answers, notes, followUpAt: followUpIso, emailRecap });
       if (!r.ok) { setError(errText(r)); return; }
+      setDraftState({ status: 'idle' });
       const recap = r.data.emailSent === true ? ` Recap emailed to ${inquiry.email}.`
-        : r.data.emailSent === false ? ` The recap email did not send (${String(r.data.emailError || 'unknown')}).` : '';
+        : r.data.emailSent === false ? ` The recap email did not send (${String(r.data.emailError || 'unknown')}).`
+        : emailRecap ? ' No recap was sent — nothing was captured to send.' : '';
       if (sendSheet) { if (recap) setNotice({ tone: r.data.emailSent === false ? 'warn' : 'ok', text: 'Call logged.' + recap }); await onRequestSheet(); return; }
       setNotice({ tone: r.data.emailSent === false ? 'warn' : 'ok', text: 'Call logged.' + recap });
       await onRefresh();
@@ -684,22 +693,26 @@ function FieldInput({ spec, value, onChange, disabled }: { spec: FieldSpec; valu
 }
 
 /** Dollars in the box, integer cents in the record. Local text so "45.50" can be typed. */
+const parseDollars = (v: string): number | undefined => {
+  const s = v.trim().replace(/^\$/, '').replace(/,/g, '');
+  if (s === '') return undefined;
+  const n = Number(s);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : undefined;
+};
+
 function MoneyInput({ cents, onChange, disabled }: { cents: number | undefined; onChange: (cents: number | undefined) => void; disabled: boolean }) {
   const [text, setText] = useState(() => (cents === undefined ? '' : (cents / 100).toFixed(2).replace(/\.00$/, '')));
-  useEffect(() => {
-    // Hydration / external reset only — never fight the keystroke.
-    if (cents === undefined && text !== '' && Number.isNaN(Number(text))) setText('');
-  }, [cents]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Typed but not a usable amount → say so, rather than quietly saving nothing.
+  const invalid = text.trim() !== '' && parseDollars(text) === undefined;
   return (
-    <div className="relative">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-ink-faint">$</span>
-      <input inputMode="decimal" value={text} disabled={disabled} className={iCls + ' pl-6'} placeholder="0"
-        onChange={e => {
-          const v = e.target.value;
-          setText(v);
-          const n = Number(v);
-          onChange(v.trim() === '' || !Number.isFinite(n) || n < 0 ? undefined : Math.round(n * 100));
-        }} />
+    <div>
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-ink-faint">$</span>
+        <input inputMode="decimal" value={text} disabled={disabled} aria-invalid={invalid || undefined}
+          className={iCls + ' pl-6' + (invalid ? ' border-bad focus:border-bad/60 focus:ring-bad/10' : '')} placeholder="0"
+          onChange={e => { const v = e.target.value; setText(v); onChange(parseDollars(v)); }} />
+      </div>
+      {invalid && <p className="mt-1 text-[11px] text-bad">Not a valid amount — nothing saved for this field.</p>}
     </div>
   );
 }

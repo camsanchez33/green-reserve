@@ -386,8 +386,8 @@ sheet's IF-1 branch questions.
 | booking_today | method enum[the form's five options] · software text |
 | resident_member | residentRates bool→branch.passes · memberships bool→branch.passes · memberPerRound bool→branch.member_rate · memberRate money→memberRate · residentWho text |
 | cancellation | hasPolicy bool→cancellationPolicy (yes/no) · hours enum[24,48,72]→cancellationHours · lateFee money→lateFee |
-| carts_caddies | cartFee money→cartFee · walking enum[yes,no,restricted]→walkingAllowed · caddies bool |
-| season_hours | seasonOpen date→seasonOpen · seasonClose date→seasonClose · daysOpen days→daysOpen |
+| carts_caddies | cartFee money→cartFee · walking enum[yes,weekdays,no] (the sheet's own options)→walkingAllowed · caddies bool |
+| season_hours | seasonOpen enum[month names]→seasonOpen · seasonClose enum[month names]→seasonClose · daysOpen days→daysOpen (the sheet's season controls are month selects, review 2026-09-15) |
 | protected_times | protectedTimes text→protectedTimes · outings bool→branch.outings · outingsVolume enum[weekly,monthly,seasonally,rarely]→outingsVolume |
 | assets | logo enum[they_send,pull_from_site,none_yet] · photos enum[same] · by date |
 | people | signer text · dayToDay text |

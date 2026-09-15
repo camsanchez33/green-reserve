@@ -195,11 +195,17 @@ async function handleAction(
     const call = await prisma.call.findUnique({ where: { id: String(payload?.callId ?? '') } });
     if (!call || call.inquiryId !== inquiryId) return NextResponse.json({ error: 'Call not found' }, { status: 404 });
     if (call.outcome !== 'scheduled') return NextResponse.json({ error: 'This call is already logged — edit it from the call history.' }, { status: 409 });
-    const answers = validateAnswers(payload?.answers);
-    await prisma.call.update({
-      where: { id: call.id },
-      data: { answersJson: JSON.stringify(answers), notes: String(payload?.notes ?? '').slice(0, 8000) },
+    // Only the fields that were sent — a save that omits notes must not blank
+    // them. The outcome check is part of the write itself, so a draft that
+    // arrives after log_call committed cannot revert what was logged.
+    const { count } = await prisma.call.updateMany({
+      where: { id: call.id, outcome: 'scheduled' },
+      data: {
+        ...(payload?.answers !== undefined ? { answersJson: JSON.stringify(validateAnswers(payload.answers)) } : {}),
+        ...(typeof payload?.notes === 'string' ? { notes: payload.notes.slice(0, 8000) } : {}),
+      },
     });
+    if (count !== 1) return NextResponse.json({ error: 'This call was logged while you were typing — reload to see it.' }, { status: 409 });
     return NextResponse.json({ success: true, savedAt: new Date().toISOString() });
   }
 
@@ -210,11 +216,15 @@ async function handleAction(
     if (!['talked', 'no_answer', 'not_a_fit'].includes(outcome)) return NextResponse.json({ error: 'Outcome must be talked, no_answer or not_a_fit.' }, { status: 400 });
     // IC-5 §3: structured (v2) answers, validated field by field; the old flat
     // prose shape from pre-IC-5 clients still parses (as each item's note).
-    const answers = validateAnswers(payload?.answers);
+    // A no-answer log sends no answers; keep whatever the draft autosave holds.
+    const answers = payload?.answers !== undefined ? validateAnswers(payload.answers) : parseCallAnswers(call.answersJson);
     const followUpAt = parseDate(payload?.followUpAt);
     const updated = await prisma.call.update({
       where: { id: call.id },
-      data: { outcome, answersJson: JSON.stringify(answers), notes: String(payload?.notes ?? '').slice(0, 8000), followUpAt, completedAt: new Date() },
+      data: {
+        outcome, answersJson: JSON.stringify(answers), followUpAt, completedAt: new Date(),
+        ...(typeof payload?.notes === 'string' ? { notes: payload.notes.slice(0, 8000) } : {}),
+      },
     });
     if (outcome === 'talked' && followUpAt) {
       await prisma.courseInquiry.update({ where: { id: inquiryId }, data: { nextFollowUpAt: followUpAt } });
@@ -643,6 +653,7 @@ async function handleAction(
 
       let d: Record<string, unknown> = {};
       try { d = inquiry.detailsJson ? JSON.parse(inquiry.detailsJson) : {}; } catch { /* ignore */ }
+      const keysFromCall: string[] = [];
       // IC-5 governing rule: the call is a PROPOSAL. It fills only the keys the
       // sheet never touched; anything the course submitted wins, key by key.
       {
@@ -650,7 +661,7 @@ async function handleAction(
         if (talkedCall?.answersJson) {
           const { branch: _branch, ...fromCall } = toSheetPrefill(parseCallAnswers(talkedCall.answersJson));
           for (const [k, v] of Object.entries(fromCall)) {
-            if (d[k] === undefined || d[k] === null || d[k] === '') d[k] = v;
+            if (d[k] === undefined || d[k] === null || d[k] === '') { d[k] = v; keysFromCall.push(k); }
           }
         }
       }
@@ -733,6 +744,9 @@ async function handleAction(
       const needsReview: string[] = [];
       if (!firstTeeTime || !lastTeeTime) needsReview.push('No tee time schedule — add via Schedule tab');
       if (!greenFeeWeekday && !greenFeeWeekend) needsReview.push('No green fees in sheet — set rates in Schedule tab');
+      // IC-5 review: a fee the course never confirmed on its sheet still needs a human before go-live.
+      if (keysFromCall.some(k => k === 'greenFeeWeekday' || k === 'greenFeeWeekend')) needsReview.push('Green fees came from the call, not the sheet — confirm before go-live');
+      if (keysFromCall.some(k => k === 'firstTeeTime' || k === 'lastTeeTime' || k === 'intervalMinutes')) needsReview.push('Tee time schedule came from the call, not the sheet — confirm before go-live');
       if (!str(d.description)) needsReview.push('No course description — add in Setup tab');
       if (!d.cancellationPolicy) needsReview.push('Cancellation policy not answered in sheet');
       if (holes === 27) needsReview.push('27-hole course: verify which 9-hole combos to set up as booking sheets');

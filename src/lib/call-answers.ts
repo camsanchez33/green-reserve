@@ -39,6 +39,9 @@ export const BOOKING_METHOD_OPTIONS: [string, string][] = [
   ['Something else', 'Something else'],
 ];
 
+// The sheet's season selects are month names, so the call captures the same.
+export const MONTH_OPTIONS: [string, string][] = [['January', 'January'], ['February', 'February'], ['March', 'March'], ['April', 'April'], ['May', 'May'], ['June', 'June'], ['July', 'July'], ['August', 'August'], ['September', 'September'], ['October', 'October'], ['November', 'November'], ['December', 'December']];
+
 export const CALL_FIELDS: Record<string, FieldSpec[]> = {
   green_fees: [
     { key: 'weekday', label: 'Weekday', type: 'money', sheetKey: 'greenFeeWeekday', need: true },
@@ -70,13 +73,14 @@ export const CALL_FIELDS: Record<string, FieldSpec[]> = {
   ],
   carts_caddies: [
     { key: 'cartFee', label: 'Cart fee', type: 'money', sheetKey: 'cartFee' },
+    // The sheet's own three options, so the value always lands in the control.
     { key: 'walking', label: 'Walking', type: 'enum', sheetKey: 'walkingAllowed',
-      options: [['yes', 'Allowed'], ['no', 'Not allowed'], ['restricted', 'Restricted']] },
+      options: [['yes', 'Yes, always'], ['weekdays', 'Weekdays only'], ['no', 'No — cart required']] },
     { key: 'caddies', label: 'Caddies', type: 'bool' },
   ],
   season_hours: [
-    { key: 'seasonOpen', label: 'Season opens', type: 'date', sheetKey: 'seasonOpen', need: true },
-    { key: 'seasonClose', label: 'Season closes', type: 'date', sheetKey: 'seasonClose', need: true },
+    { key: 'seasonOpen', label: 'Season opens', type: 'enum', sheetKey: 'seasonOpen', need: true, options: MONTH_OPTIONS },
+    { key: 'seasonClose', label: 'Season closes', type: 'enum', sheetKey: 'seasonClose', need: true, options: MONTH_OPTIONS },
     { key: 'daysOpen', label: 'Days open', type: 'days', sheetKey: 'daysOpen' },
   ],
   protected_times: [

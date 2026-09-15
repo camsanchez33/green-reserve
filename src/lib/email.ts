@@ -899,6 +899,8 @@ export async function sendMemberLinkedNotification(data: {
 // The lead form is public: every field below is attacker-controlled text that
 // is interpolated into HTML delivered to hello@. Escape it.
 const escHtml = (s: string) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+// Subject lines are plain text but still user text: one line, bounded.
+const subj = (s: string) => String(s ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, 120);
 
 export async function sendInquiryNotification(data: {
   contactName: string;
@@ -1129,12 +1131,13 @@ export async function sendCallRecapEmail(data: {
       Questions? Reply to this email — hello@greenreserve.app.
     </p>
   `);
-  await getResend().emails.send({
+  const r = await getResend().emails.send({
     from: FROM,
     to: data.email,
-    subject: `What we captured on our call — ${data.courseName}`,
+    subject: `What we captured on our call — ${subj(data.courseName)}`,
     html,
   });
+  if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
 
 // IC-1 §5: the contact's confirmation when a discovery call is put on the books.
