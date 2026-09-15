@@ -243,6 +243,9 @@ export async function POST(req: NextRequest) {
       checkInToken:     randomUUID(),
       paymentStatus:    savedPaymentMethodId ? 'card_on_file' : 'no_payment_method',
       status:           'confirmed',
+      // SD-5: the window this golfer agreed to, whatever the course changes later.
+      source:           'online',
+      cancellationHoursAtBooking: teeTimeFull.course.cancellationHours,
       termsAcceptedAt:  new Date(),
       termsVersion:     CURRENT_TERMS_VERSION,
     });

@@ -34,6 +34,12 @@ type Booking = {
   status: string; paymentStatus: string; totalAmount: number;
   // SD-4: set by a failed check-in charge; cleared when a charge goes through.
   checkInFailReason?: string;
+  // SD-5 lifecycle
+  golferPhone?: string;
+  source?: string;
+  noShowAt?: string | null;
+  paidOffline?: boolean;
+  checkedInPlayers?: number | null;
 };
 interface AnalyticsData {
   basis?: string;
@@ -115,6 +121,9 @@ function DashboardPageInner() {
   // B-8: late groups the counter has said are "still coming" — hidden from the
   // attention row for this page load only; nothing is written anywhere.
   const [stillComing, setStillComing] = useState<Set<string>>(new Set());
+  // SD-5: the walk-in form is opened on a slot; row actions carry their own busy id.
+  const [walkInSlot, setWalkInSlot] = useState<TeeTime | null>(null);
+  const [rowBusy, setRowBusy] = useState<string | null>(null);
   const [cardModalBooking, setCardModalBooking] = useState<Booking | null>(null);
   const [cardModalReason, setCardModalReason] = useState('');
   // SD-10: failure is never emptiness, and no button stays stuck.
@@ -145,6 +154,21 @@ function DashboardPageInner() {
       toast(`${charged}, and refunded the $${((data.feeRefundAmount ?? 0) / 100).toFixed(2)} late-cancellation fee.`, 'ok');
     } else {
       toast(`${charged}.`, 'ok');
+    }
+  }
+
+  // SD-5: no-show / still coming / paid at the counter — recorded on the
+  // booking, each with a pending state and an explicit failure.
+  async function bookingLifecycle(b: Booking, action: 'no_show' | 'still_coming' | 'paid_offline') {
+    if (action === 'paid_offline' && !confirm(`Mark ${b.golferName} checked in and paid at the counter ($${(b.totalAmount / 100).toFixed(2)})? No card will be charged.`)) return;
+    setRowBusy(b.id);
+    try {
+      const r = await dfetch('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action }) });
+      if (!r.ok) { toast(r.error, 'warn'); return; }
+      toast(action === 'no_show' ? `${b.golferName} marked as a no-show.` : action === 'still_coming' ? `${b.golferName} is still coming.` : `${b.golferName} checked in — paid at the counter.`, 'ok');
+      await loadTimes(selectedDate);
+    } finally {
+      setRowBusy(null);
     }
   }
 
@@ -394,7 +418,7 @@ function DashboardPageInner() {
         const ago = nowMin - (h * 60 + m);
         if (tt.status === 'blocked' || ago < 10) return [];
         return (tt.bookings ?? [])
-          .filter(b => b.status === 'confirmed' && !stillComing.has(b.id))
+          .filter(b => b.status === 'confirmed' && !stillComing.has(b.id) && !b.noShowAt)
           .map(b => ({ tt, b, ago }));
       })
     : [];
@@ -736,16 +760,32 @@ function DashboardPageInner() {
                       <div className="flex-1 min-w-[220px] text-[13.5px] leading-snug text-ink">
                         <b className="font-semibold">{fmtTime(tt.time)} group ({b.golferName}) hasn&apos;t checked in</b> — tee time was {ago} minute{ago === 1 ? '' : 's'} ago · {b.players} player{b.players === 1 ? '' : 's'}.
                       </div>
-                      <button
-                        onClick={() => { if (b.checkInFailReason) { setCardModalReason(b.checkInFailReason); setCardModalBooking(b); } else checkInBooking(b); }}
-                        disabled={checkingInId === b.id}
-                        className="h-[34px] px-3 text-[12.5px] font-medium border border-ink text-ink hover:bg-paper disabled:opacity-50 transition-colors">
-                        {checkingInId === b.id ? 'Charging…' : b.checkInFailReason ? 'Retry with new card' : 'Check in now'}
-                      </button>
+                      {b.paymentStatus === 'manual' ? (
+                        <button
+                          onClick={() => bookingLifecycle(b, 'paid_offline')}
+                          disabled={rowBusy === b.id}
+                          className="h-[34px] px-3 text-[12.5px] font-medium border border-ink text-ink hover:bg-paper disabled:opacity-50 transition-colors">
+                          {rowBusy === b.id ? 'Saving…' : 'Paid at counter'}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => { if (b.checkInFailReason) { setCardModalReason(b.checkInFailReason); setCardModalBooking(b); } else checkInBooking(b); }}
+                          disabled={checkingInId === b.id}
+                          className="h-[34px] px-3 text-[12.5px] font-medium border border-ink text-ink hover:bg-paper disabled:opacity-50 transition-colors">
+                          {checkingInId === b.id ? 'Charging…' : b.checkInFailReason ? 'Retry with new card' : 'Check in now'}
+                        </button>
+                      )}
                       <button
                         onClick={() => setStillComing(prev => new Set(prev).add(b.id))}
                         className="h-[34px] px-3 text-[12.5px] text-ink-soft hover:text-ink transition-colors">
                         Still coming
+                      </button>
+                      {/* SD-5: recorded on the booking; the fee cron treats the booking as before. */}
+                      <button
+                        onClick={() => bookingLifecycle(b, 'no_show')}
+                        disabled={rowBusy === b.id}
+                        className="h-[34px] px-3 text-[12.5px] text-bad hover:bg-bad/5 disabled:opacity-50 transition-colors">
+                        {rowBusy === b.id ? 'Saving…' : 'Mark no-show'}
                       </button>
                     </div>
                   ))}
@@ -809,6 +849,13 @@ function DashboardPageInner() {
                           )}
                         </div>
                         <div className="flex items-center gap-2">
+                          {/* SD-5: a walk-in or phone booking straight onto the slot. */}
+                          {!isBlocked && tt.playersBooked < tt.playersAvailable && (
+                            <button onClick={e => { e.stopPropagation(); setWalkInSlot(tt); }}
+                              className="text-xs px-3 md:px-2 min-h-[40px] md:min-h-0 py-1 rounded-md bg-pine text-white hover:bg-pine-hover transition-colors">
+                              Walk-in
+                            </button>
+                          )}
                           <button onClick={e => { e.stopPropagation(); toggleBlock(tt); }} disabled={slotBusy === tt.id}
                             className="text-xs px-3 md:px-2 min-h-[40px] md:min-h-0 py-1 rounded-md border border-line text-ink-soft hover:text-ink hover:border-line-strong transition-colors disabled:opacity-50">
                             {slotBusy === tt.id ? '…' : tt.status==='blocked'?'Unblock':'Block'}
@@ -828,14 +875,30 @@ function DashboardPageInner() {
                                 <div className="flex-1 min-w-0">
                                   <span className="font-medium text-ink">{b.golferName}</span>
                                   <span className="text-ink-muted ml-2">{b.players} player{b.players!==1?'s':''}</span>
-                                  <div className="text-[12.5px] text-ink-muted truncate">{b.golferEmail}</div>
+                                  {(b.source === 'walk_in' || b.source === 'phone') && (
+                                    <span className="ml-2 text-[10px] font-medium uppercase tracking-[0.1em] text-ink-muted">{b.source === 'phone' ? 'Phone' : 'Walk-in'}</span>
+                                  )}
+                                  {b.noShowAt && b.status === 'confirmed' && (
+                                    <span className="ml-2 text-[10px] font-medium uppercase tracking-[0.1em] text-bad">No-show</span>
+                                  )}
+                                  <div className="text-[12.5px] text-ink-muted truncate">{b.golferEmail.endsWith('@noemail.greenreserve.app') ? (b.golferPhone || 'no contact on file') : b.golferEmail}</div>
                                 </div>
                                 {b.status === 'confirmed' && b.checkInFailReason ? (
                                   <span className="shrink-0 text-[12.5px] font-medium text-bad" title={b.checkInFailReason}>Card declined</span>
                                 ) : (
                                   <span className={'shrink-0 text-[12.5px] font-medium ' + toneText(bStatus.tone)}>{bStatus.label}</span>
                                 )}
-                                {b.status !== 'completed' && b.status !== 'cancelled' && (
+                                {b.status === 'confirmed' && b.noShowAt && (
+                                  <button onClick={e => { e.stopPropagation(); bookingLifecycle(b, 'still_coming'); }} disabled={rowBusy === b.id}
+                                    className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1 disabled:opacity-50">{rowBusy === b.id ? '…' : 'Still coming'}</button>
+                                )}
+                                {b.status === 'confirmed' && b.paymentStatus === 'manual' && (
+                                  <button onClick={e => { e.stopPropagation(); bookingLifecycle(b, 'paid_offline'); }} disabled={rowBusy === b.id}
+                                    className="shrink-0 text-white px-2.5 min-h-[36px] md:min-h-0 py-1 rounded-md text-xs font-medium disabled:opacity-50 transition-colors bg-pine hover:bg-pine-hover">
+                                    {rowBusy === b.id ? 'Saving…' : 'Paid at counter'}
+                                  </button>
+                                )}
+                                {b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && (
                                   <button
                                     onClick={e => { e.stopPropagation(); if (b.checkInFailReason) { setCardModalReason(b.checkInFailReason); setCardModalBooking(b); } else checkInBooking(b); }}
                                     disabled={checkingInId===b.id}
@@ -870,6 +933,19 @@ function DashboardPageInner() {
               <button onClick={() => setShowAddModal(false)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
             </div>
             <AddTeeTimeForm date={selectedDate} onSave={()=>{setShowAddModal(false);loadTimes(selectedDate);}} onCancel={()=>setShowAddModal(false)}/>
+          </div>
+        </div>
+      )}
+
+      {/* ── SD-5: Walk-in / phone booking ── */}
+      {walkInSlot && (
+        <div className="fixed inset-0 bg-ink/20 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white border border-line w-full sm:max-w-sm rounded-t-lg sm:rounded-lg p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-serif font-medium text-ink text-[17px]">Walk-in — {fmtTime(walkInSlot.time)}</h3>
+              <button onClick={() => setWalkInSlot(null)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
+            </div>
+            <WalkInForm slot={walkInSlot} onSave={(msg) => { setWalkInSlot(null); toast(msg, 'ok'); loadTimes(selectedDate); }} onCancel={() => setWalkInSlot(null)} />
           </div>
         </div>
       )}
@@ -914,6 +990,81 @@ export default function DashboardPage() {
     <Suspense fallback={<div className="min-h-screen bg-paper"/>}>
       <DashboardPageInner/>
     </Suspense>
+  );
+}
+
+/* ─── SD-5: Walk-in / phone booking form ───────────────────────────────── */
+function WalkInForm({ slot, onSave, onCancel }: { slot: TeeTime; onSave: (msg: string) => void; onCancel: () => void }) {
+  const spots = Math.max(0, slot.playersAvailable - slot.playersBooked);
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [players, setPlayers] = useState(Math.min(2, spots) || 1);
+  const [cart, setCart] = useState(slot.cartFee > 0);
+  const [source, setSource] = useState<'walk_in' | 'phone'>('walk_in');
+  const [checkInNow, setCheckInNow] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState('');
+  const inp = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-full';
+  const total = (slot.greenFee + (cart ? slot.cartFee : 0)) * players;
+
+  async function save() {
+    setSaving(true); setErr('');
+    const r = await dfetch<{ emailSent: boolean | null }>('/api/operator/bookings', {
+      method: 'POST', body: JSON.stringify({ teeTimeId: slot.id, golferName: name, golferPhone: phone, golferEmail: email, players, cartSelected: cart, source, checkInNow: source === 'walk_in' && checkInNow }),
+    });
+    setSaving(false);
+    if (!r.ok) { setErr(r.error); return; }
+    const sent = r.data?.emailSent;
+    onSave(`${name} added${source === 'walk_in' && checkInNow ? ' and checked in' : ''}${sent === true ? ' — confirmation emailed' : sent === false ? ' — the confirmation email did not send' : ''}.`);
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-1 bg-paper border border-line rounded-md p-1">
+        {([['walk_in', 'Walk-in'], ['phone', 'Phone booking']] as const).map(([k, label]) => (
+          <button key={k} type="button" onClick={() => setSource(k)}
+            className={'flex-1 py-1.5 rounded-md text-[12.5px] font-medium transition-colors ' + (source === k ? 'bg-white text-ink border border-line' : 'text-ink-muted hover:text-ink')}>{label}</button>
+        ))}
+      </div>
+      <div>
+        <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">Name</label>
+        <input value={name} onChange={e => setName(e.target.value)} placeholder="Golfer’s name" autoFocus className={inp} />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">Phone <span className="normal-case tracking-normal text-ink-faint">(optional)</span></label>
+          <input value={phone} onChange={e => setPhone(e.target.value)} className={inp} />
+        </div>
+        <div>
+          <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">Players <span className="normal-case tracking-normal text-ink-faint">({spots} open)</span></label>
+          <input type="number" min={1} max={Math.max(1, spots)} value={players} onChange={e => setPlayers(Math.max(1, Math.min(Math.max(1, spots), Number(e.target.value) || 1)))} className={inp} />
+        </div>
+      </div>
+      <div>
+        <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">Email <span className="normal-case tracking-normal text-ink-faint">(optional — sends a confirmation with a check-in link)</span></label>
+        <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inp} />
+      </div>
+      {slot.cartFee > 0 && (
+        <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
+          <input type="checkbox" checked={cart} onChange={e => setCart(e.target.checked)} className="accent-pine" />Cart (${slot.cartFee} / player)
+        </label>
+      )}
+      {source === 'walk_in' && (
+        <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
+          <input type="checkbox" checked={checkInNow} onChange={e => setCheckInNow(e.target.checked)} className="accent-pine" />Check in and mark paid at the counter now
+        </label>
+      )}
+      <div className="text-[12.5px] text-ink-muted">Pays at the counter: <b className="text-ink">${total.toFixed(2)}</b> — no card, no booking fee.</div>
+      {err && <p className="text-sm text-bad">{err}</p>}
+      <div className="flex gap-2 pt-1">
+        <button onClick={onCancel} disabled={saving} className="flex-1 px-4 py-2.5 border border-line text-ink-soft hover:text-ink rounded-md text-[12.5px] font-medium transition-colors">Cancel</button>
+        <button onClick={save} disabled={saving || name.trim().length < 2 || spots === 0}
+          className="flex-1 px-4 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-50 text-white rounded-md text-[12.5px] font-medium transition-colors">
+          {saving ? 'Adding…' : source === 'walk_in' && checkInNow ? 'Add + check in' : 'Add booking'}
+        </button>
+      </div>
+    </div>
   );
 }
 

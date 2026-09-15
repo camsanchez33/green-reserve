@@ -43,6 +43,13 @@ export interface BookingEmailData {
   noCard?: boolean; // true for no-fee-policy courses where no card was collected
 }
 
+// SD-5: a walk-in entered without an email gets a placeholder address so the
+// Booking row (email required) can exist; nothing is ever sent to it.
+export const PLACEHOLDER_EMAIL_DOMAIN = '@noemail.greenreserve.app';
+export function isPlaceholderEmail(email: string | null | undefined): boolean {
+  return !!email && email.toLowerCase().endsWith(PLACEHOLDER_EMAIL_DOMAIN);
+}
+
 export async function sendBookingConfirmation(data: BookingEmailData) {
   const cancellationHours = data.cancellationHours ?? 24;
   const cancellationFee = data.cancellationFeeTotal ?? 0;
@@ -166,6 +173,7 @@ export async function sendCancellationEmail(data: {
   // cancellation with no explanation reads as a mistake or a bait-and-switch.
   reason?: string;
 }) {
+  if (isPlaceholderEmail(data.golferEmail)) return; // SD-5: walk-in without an email
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#fee2e2;color:#991b1b;font-size:13px;font-weight:600;padding:4px 12px;border-radius:3px;">Booking Cancelled</span></div>
     <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">Your booking has been cancelled.</h1>
@@ -336,6 +344,7 @@ export async function sendCheckInReceiptEmail(data: {
   feeRefundFailed?: boolean;
   bookingId: string; checkInToken?: string | null;
 }) {
+  if (isPlaceholderEmail(data.golferEmail)) return; // SD-5: walk-in without an email
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 12px;border-radius:3px;">&#10003; Checked in</span></div>
     <h1 style="margin:16px 0 4px;color:#111827;font-size:24px;font-weight:700;">You're checked in — enjoy your round!</h1>

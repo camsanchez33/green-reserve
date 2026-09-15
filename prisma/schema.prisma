@@ -430,6 +430,17 @@ model Booking {
   // free" — MP-1 #6 clears the amount on a free cancel, which fixed the
   // symptom; this records the state instead of inferring it from a zero.
   cancellationFeeApplies   Boolean        @default(false)
+  /// SD-5 lifecycle: 'online' | 'walk_in' | 'phone' — walk-ins and phone
+  /// bookings are entered at the counter and pay there (paymentStatus 'manual').
+  source                   String         @default("online")
+  /// SD-5: how many of `players` actually showed (partial-party check-in); null = all
+  checkedInPlayers         Int?
+  /// SD-5: the counter marked the group a no-show (booking stays confirmed for the fee cron)
+  noShowAt                 DateTime?
+  /// SD-5: paid at the counter, not through Stripe — never counted as platform-collected
+  paidOffline              Boolean        @default(false)
+  /// SD-5: the course's cancellation window at the moment of booking, so a later policy change never moves this golfer's deadline
+  cancellationHoursAtBooking Int?
   createdAt                DateTime       @default(now())
   paymentEvents            PaymentEvent[]
 

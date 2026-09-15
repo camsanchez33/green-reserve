@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     // and Stripe ids, on every staff terminal. The sheet renders these fields.
     include: withBookings ? { bookings: {
       where: { status: { in: ['confirmed', 'completed'] } }, orderBy: { createdAt: 'asc' },
-      select: { id: true, golferName: true, golferEmail: true, players: true, createdAt: true, status: true, paymentStatus: true, totalAmount: true, checkInFailReason: true },
+      select: { id: true, golferName: true, golferEmail: true, golferPhone: true, players: true, createdAt: true, status: true, paymentStatus: true, totalAmount: true, checkInFailReason: true, source: true, noShowAt: true, paidOffline: true, checkedInPlayers: true },
     } } : undefined,
   });
 
