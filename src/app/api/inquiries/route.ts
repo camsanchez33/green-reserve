@@ -86,10 +86,15 @@ export async function POST(req: NextRequest) {
       state: { equals: state, mode: 'insensitive' },
     },
     orderBy: { createdAt: 'desc' },
-    select: { id: true, status: true },
+    select: { id: true, status: true, email: true },
   });
 
   if (existing) {
+    // Security (IF-1 review): the match is on public facts (name + town), so
+    // anyone can land here. Only a submitter using the email on file may put
+    // new contact details in front of the admin; everyone else's email/phone
+    // is dropped and the diff is labelled unverified.
+    const verified = existing.email.trim().toLowerCase() === email;
     // A self-loop event: it shows up on the timeline without changing status or
     // restarting the stage clock (see inquiry-status.stageEnteredAt, which
     // ignores fromStatus === toStatus for exactly this reason).
@@ -105,8 +110,10 @@ export async function POST(req: NextRequest) {
         // admin gets a diff against what is on file and decides; nothing is
         // overwritten behind their back.
         actorName: encodeResubmit({
-          contactName, contactTitle: optStr(body.contactTitle), email,
-          phone: optStr(body.phone), courseName, address: optStr(body.address),
+          verified,
+          contactName, contactTitle: optStr(body.contactTitle),
+          ...(verified ? { email, phone: optStr(body.phone) } : {}),
+          courseName, address: optStr(body.address),
           city, state, zipCode: optStr(body.zipCode), website: optStr(body.website),
           courseType: optStr(body.courseType), currentBookingMethod,
           teeTimesPerDay: typeof body.teeTimesPerDay === 'number' ? body.teeTimesPerDay : null,

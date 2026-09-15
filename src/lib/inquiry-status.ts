@@ -159,6 +159,10 @@ export const RESUBMIT_REVIEWED_ACTOR = 'Re-submission reviewed';
 // allow-list the apply action writes through — a payload cannot reach status,
 // adminNotes, or anything else it has no business touching.
 export type ResubmitPayload = {
+  /** Security (IF-1 review): true only when the re-submission came from the email on file.
+   *  Unverified payloads carry no email/phone, so a stranger who knows a course's
+   *  name + town cannot steer outreach to themselves through the admin's diff. */
+  verified?: boolean;
   contactName?: string; contactTitle?: string; email?: string; phone?: string;
   courseName?: string; address?: string; city?: string; state?: string; zipCode?: string;
   website?: string; courseType?: string; currentBookingMethod?: string; teeTimesPerDay?: number | null;

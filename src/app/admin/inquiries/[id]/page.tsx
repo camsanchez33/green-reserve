@@ -1118,6 +1118,12 @@ function InquiryDetailInner() {
                   This one predates us storing what was sent, so there is nothing to compare.
                 </p>
               )}
+              {resubmit.payload && resubmit.payload.verified === false && (
+                <p className="text-xs text-warn mb-2">
+                  Sent from the public form under a different email than the one on file, so it may not be the course.
+                  No new email or phone was recorded; treat the rest as unverified before applying anything.
+                </p>
+              )}
               {resubmit.payload && resubDiff.length === 0 && (
                 <p className="text-xs text-ink-soft">
                   Nothing they sent differs from what is on file — most likely an impatient second submit.
