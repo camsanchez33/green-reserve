@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getOperatorSession } from '@/lib/auth';
+import { getOperatorSession, signToken } from '@/lib/auth';
 import { validatePasswordStrength } from '@/lib/password';
 import { sendPasswordChangedNotification } from '@/lib/email';
 import bcrypt from 'bcryptjs';
@@ -25,10 +25,15 @@ export async function POST(req: NextRequest) {
   if (passwordError) return NextResponse.json({ error: passwordError }, { status: 400 });
 
   const hashed = await bcrypt.hash(newPassword, 12);
-  await prisma.courseOperator.update({ where: { id: operator.id }, data: { password: hashed } });
+  // SD-5: every other device's session dies with the old password; this one
+  // gets a fresh token with the new version so the operator is not bounced.
+  const updated = await prisma.courseOperator.update({ where: { id: operator.id }, data: { password: hashed, sessionVersion: { increment: 1 } }, select: { sessionVersion: true } });
 
   sendPasswordChangedNotification({ operatorName: operator.name, operatorEmail: operator.email })
     .catch(err => console.error('Password-changed notification failed:', err));
 
-  return NextResponse.json({ success: true });
+  const token = await signToken({ operatorId: operator.id, email: operator.email, sv: updated.sessionVersion });
+  const res = NextResponse.json({ success: true, signedOutElsewhere: true });
+  res.cookies.set('gr_operator', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 60 * 60 * 24 * 7, path: '/' });
+  return res;
 }

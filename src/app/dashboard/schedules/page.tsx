@@ -38,7 +38,7 @@ export default function SchedulesPage() {
   // B-7: blocks + booking windows sit beside the rate table. Blocks are the
   // existing blackouts API; the windows are read from Settings (edited there).
   const [blackouts, setBlackouts] = useState<{ id: string; date: string; reason: string }[]>([]);
-  const [blackoutForm, setBlackoutForm] = useState({ date: '', reason: '' });
+  const [blackoutForm, setBlackoutForm] = useState({ date: '', reason: '', closeDay: false });
   const [blackoutBusy, setBlackoutBusy] = useState(false);
   const [blackoutError, setBlackoutError] = useState('');
   const [windows, setWindows] = useState<{ publicAdvanceDays: number | null; memberAdvanceDays: number | null }>({ publicAdvanceDays: null, memberAdvanceDays: null });
@@ -77,14 +77,25 @@ export default function SchedulesPage() {
 
   async function addBlackout() {
     if (!blackoutForm.date) { toast('Pick a date to block.', 'warn'); return; }
-    if (!confirm(`Block ${blackoutForm.date}?\n\nEvery open tee time on that day comes off the sheet. Times that already have bookings are kept.`)) return;
+    const msg = blackoutForm.closeDay
+      ? `Close ${blackoutForm.date}?\n\nEvery tee time on that day comes off the sheet, EVERY booking on it is cancelled, each golfer gets an email saying why, and no cancellation fee is kept. This cannot be undone.`
+      : `Block ${blackoutForm.date}?\n\nEvery open tee time on that day comes off the sheet. Times that already have bookings are kept.`;
+    if (!confirm(msg)) return;
     setBlackoutBusy(true);
-    const r = await dfetch('/api/operator/blackouts', { method: 'POST', body: JSON.stringify(blackoutForm) });
+    const r = await dfetch<{ closed: { cancelled: number; feeRefundsFailed: number; failed: { golferName: string; error: string }[] } | null }>('/api/operator/blackouts', { method: 'POST', body: JSON.stringify(blackoutForm) });
     setBlackoutBusy(false);
     if (!r.ok) { toast(r.error); return; }
-    setBlackoutForm({ date: '', reason: '' });
+    setBlackoutForm({ date: '', reason: '', closeDay: false });
     await loadBlackouts();
-    toast('Day blocked — its open times are off the sheet.', 'ok');
+    const c = r.data?.closed;
+    if (c) {
+      const parts = [`Day closed — ${c.cancelled} booking${c.cancelled === 1 ? '' : 's'} cancelled and emailed.`];
+      if (c.feeRefundsFailed > 0) parts.push(`${c.feeRefundsFailed} fee refund${c.feeRefundsFailed === 1 ? '' : 's'} failed — issue them in Stripe.`);
+      if (c.failed.length > 0) parts.push(`${c.failed.length} could not be cancelled: ${c.failed.map(f => f.golferName + ' (' + f.error + ')').join('; ')}`);
+      toast(parts.join(' '), c.feeRefundsFailed > 0 || c.failed.length > 0 ? 'warn' : 'ok');
+    } else {
+      toast('Day blocked — its open times are off the sheet.', 'ok');
+    }
   }
 
   async function removeBlackout(id: string) {
@@ -293,6 +304,11 @@ export default function SchedulesPage() {
                   <div className="space-y-2">
                     <input type="date" value={blackoutForm.date} onChange={e => setBlackoutForm(f => ({ ...f, date: e.target.value }))} className={iCls}/>
                     <input type="text" value={blackoutForm.reason} onChange={e => setBlackoutForm(f => ({ ...f, reason: e.target.value }))} placeholder="Reason (outing, maintenance…)" className={iCls}/>
+                    {/* SD-5 close-a-day: weather. Cancels the day's bookings and tells the golfers. */}
+                    <label className="flex items-start gap-2 text-[12.5px] text-ink-soft cursor-pointer sm:col-span-2">
+                      <input type="checkbox" checked={blackoutForm.closeDay} onChange={e => setBlackoutForm(f => ({ ...f, closeDay: e.target.checked }))} className="mt-0.5 accent-pine" />
+                      <span>Close the day — also cancel every booking on it and email the golfers (weather, course closed). No cancellation fee is kept.</span>
+                    </label>
                     <button onClick={addBlackout} disabled={blackoutBusy || !blackoutForm.date} className="w-full border border-ink text-ink py-2 text-[12.5px] font-medium hover:bg-paper disabled:opacity-40 transition-colors">{blackoutBusy ? 'Working…' : 'Block this day'}</button>
                   </div>
                 </div>

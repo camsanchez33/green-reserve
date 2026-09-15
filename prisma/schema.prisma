@@ -25,6 +25,9 @@ model CourseOperator {
   twoFactorCode       String?
   twoFactorCodeExpiry DateTime?
   twoFactorAttempts   Int       @default(0)
+  /// SD-5: bumped on a password change or reset — every outstanding operator
+  /// token carries the version it was minted with and dies on mismatch.
+  sessionVersion      Int       @default(0)
   phone               String    @default("")
   // MP-3: AdminUser has had this; CourseOperator never did, which is why
   // A-07's operator-last-login column renders "—" everywhere.

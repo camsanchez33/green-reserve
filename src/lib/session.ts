@@ -50,11 +50,16 @@ export async function resolveDashboardSession(): Promise<ResolvedSession | null>
     };
   }
 
-  const courses = await prisma.course.findMany({
-    where: { operatorId: session.operatorId },
-    select: { id: true },
-    orderBy: { createdAt: 'asc' },
+  // SD-5 session versioning: a token minted before the last password change
+  // or reset is dead, whatever its expiry. Tokens from before this shipped
+  // carry no version and count as 0.
+  const operator = await prisma.courseOperator.findUnique({
+    where: { id: session.operatorId },
+    select: { sessionVersion: true, course: { select: { id: true }, orderBy: { createdAt: 'asc' } } },
   });
+  if (!operator) return null;
+  if ((session.sv ?? 0) !== operator.sessionVersion) return null;
+  const courses = operator.course;
   if (courses.length === 0) return null;
 
   let courseId = courses[0].id;

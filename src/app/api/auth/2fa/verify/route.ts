@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     data: { twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0, lastLoginAt: new Date() },
   });
 
-  const token = await signToken({ operatorId: operator.id, email: operator.email });
+  const token = await signToken({ operatorId: operator.id, email: operator.email, sv: operator.sessionVersion });
   let redirect = '/dashboard';
   if (!operator.emailVerified) redirect = '/dashboard/verify';
   else if (operator.onboardingStep < 3) redirect = '/dashboard/onboarding';

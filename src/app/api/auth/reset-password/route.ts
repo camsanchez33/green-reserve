@@ -30,7 +30,8 @@ export async function POST(req: NextRequest) {
   const hashed = await bcrypt.hash(password, 12);
   await prisma.courseOperator.update({
     where: { id: operator.id },
-    data: { password: hashed, resetToken: null, resetTokenExpiry: null },
+    // SD-5: a reset signs every existing session out.
+    data: { password: hashed, resetToken: null, resetTokenExpiry: null, sessionVersion: { increment: 1 } },
   });
 
   sendPasswordChangedNotification({ operatorName: operator.name, operatorEmail: operator.email })

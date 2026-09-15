@@ -34,6 +34,9 @@ import { sendCheckInReceiptEmail } from './email';
  */
 type ChargeOpts = {
   externalPaymentMethodId?: string;
+  /** SD-5: only this many of the party showed — the charge and the receipt
+   *  are prorated per player and the count is recorded on the booking. */
+  checkedInPlayers?: number;
   /** B-5: add a cart at check-in for a booking that has none — priced at the
    *  tee time's cart fee × players, written to the booking before the charge. */
   addCart?: boolean;
@@ -129,6 +132,25 @@ async function chargeBooking(
       booking.totalAmount = booking.totalAmount + cartAddedCents;
       console.log(JSON.stringify({ ev: 'checkin.cart_added', bookingId, cartAddedCents }));
     }
+  }
+
+  // SD-5: partial party. Per-player lines (green, cart, booking fee) scale to
+  // the headcount that showed; range balls are one bucket and stay whole. The
+  // booking's own totals change first so the charge, the receipt and the
+  // ledger agree — and are rolled back with the cart on a definite non-charge.
+  const prePartial = { greenFeeTotal: booking.greenFeeTotal, cartFeeTotal: booking.cartFeeTotal, accessFeeTotal: booking.accessFeeTotal, totalAmount: booking.totalAmount };
+  let partialApplied = false;
+  const showed = opts?.checkedInPlayers;
+  if (showed != null && Number.isInteger(showed) && showed >= 1 && showed < booking.players && !alreadyPaid) {
+    const f = showed / booking.players;
+    const greenFeeTotal = Math.round(booking.greenFeeTotal * f);
+    const cartFeeTotal = Math.round(booking.cartFeeTotal * f);
+    const accessFeeTotal = Math.round(booking.accessFeeTotal * f);
+    const totalAmount = greenFeeTotal + cartFeeTotal + accessFeeTotal + booking.rangeBallsTotal;
+    await prisma.booking.update({ where: { id: bookingId }, data: { greenFeeTotal, cartFeeTotal, accessFeeTotal, totalAmount, checkedInPlayers: showed } });
+    booking.greenFeeTotal = greenFeeTotal; booking.cartFeeTotal = cartFeeTotal; booking.accessFeeTotal = accessFeeTotal; booking.totalAmount = totalAmount;
+    partialApplied = true;
+    console.log(JSON.stringify({ ev: 'checkin.partial_party', bookingId, players: booking.players, showed, totalAmount }));
   }
 
   const refundPendingFee = booking.paymentStatus === 'cancellation_fee_charged' && !!booking.cancellationFeeChargeId;
@@ -251,7 +273,7 @@ async function chargeBooking(
       // may have charged, so the cart stays on the booking for reconciliation.
       const definite = errType === 'StripeCardError' || errType === 'StripeIdempotencyError' || /idempotent|idempotency/i.test(message);
       console.error(JSON.stringify({ ev: `${ev}.charge.fail`, bookingId, errType, definite, error: message }));
-      await prisma.booking.update({ where: { id: bookingId }, data: { checkInFailReason: message, ...(cartAddedCents > 0 && definite ? preCart : {}) } });
+      await prisma.booking.update({ where: { id: bookingId }, data: { checkInFailReason: message, ...(cartAddedCents > 0 && definite ? preCart : {}), ...(partialApplied && definite ? { ...prePartial, checkedInPlayers: null } : {}) } });
       if (/idempotent|idempotency/i.test(message)) {
         return { error: 'The total changed since your first attempt (a cart was added or removed). Refresh the page and try once more.', status: 409 } as const;
       }
@@ -284,7 +306,7 @@ async function chargeBooking(
       roundPaymentIntentId: paymentIntentId,
       checkInFailReason: '',
       // Only a real check-in completes the booking and stamps the arrival.
-      ...(mode.recordCheckIn ? { status: 'completed', checkedInAt: new Date() } : {}),
+      ...(mode.recordCheckIn ? { status: 'completed', checkedInAt: new Date(), ...(partialApplied ? { checkedInPlayers: showed } : {}) } : {}),
     },
   });
 
@@ -296,7 +318,7 @@ async function chargeBooking(
       courseSlug: booking.course.slug,
       date: booking.teeTime.date,
       time: booking.teeTime.time,
-      players: booking.players,
+      players: partialApplied ? (showed as number) : booking.players,
       greenFeeTotal: booking.greenFeeTotal,
       cartFeeTotal: booking.cartFeeTotal,
       rangeBallsTotal: booking.rangeBallsTotal,

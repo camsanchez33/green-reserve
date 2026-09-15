@@ -13,10 +13,13 @@ export type CancellationOptions = {
   notifySlotAlerts?: boolean;
   /** Shown to the golfer so a cancellation they did not ask for is explained. */
   reason?: string;
+  /** SD-5 close-a-day: the COURSE cancelled — refund a late-cancel fee already
+   *  taken (best effort; a failed refund is reported, never blocks the cancel). */
+  waiveFee?: boolean;
 };
 
 export async function performCancellation(bookingId: string, opts: CancellationOptions = {}) {
-  const { notifySlotAlerts = true, reason } = opts;
+  const { notifySlotAlerts = true, reason, waiveFee = false } = opts;
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -57,7 +60,18 @@ export async function performCancellation(bookingId: string, opts: CancellationO
     }
   }
 
-  const feeAlreadyCharged = booking.paymentStatus === 'cancellation_fee_charged';
+  let feeAlreadyCharged = booking.paymentStatus === 'cancellation_fee_charged';
+  let feeRefundFailed = '';
+  if (feeAlreadyCharged && waiveFee && booking.cancellationFeeChargeId && booking.course.stripeAccountId) {
+    try {
+      await refundOnConnectedAccount({ paymentIntentId: booking.cancellationFeeChargeId, connectedAccountId: booking.course.stripeAccountId });
+      feeAlreadyCharged = false;
+      console.log(JSON.stringify({ ev: 'cancel.fee_waived.ok', bookingId, paymentIntentId: booking.cancellationFeeChargeId }));
+    } catch (err) {
+      feeRefundFailed = err instanceof Error ? err.message : String(err);
+      console.error(JSON.stringify({ ev: 'cancel.fee_waived.fail', bookingId, error: feeRefundFailed }));
+    }
+  }
 
   // MP-1 fix-now #6: a free cancel must not leave a stamped fee behind.
   // Every booking at a fee-policy course carries cancellationFeeTotal from
@@ -78,6 +92,7 @@ export async function performCancellation(bookingId: string, opts: CancellationO
         cancelledAt: new Date(),
         ...(clearPhantomFee ? { cancellationFeeTotal: 0 } : {}),
         ...(roundRefunded ? { paymentStatus: 'refunded', roundPaymentIntentId: '' } : {}),
+        ...(waiveFee && !feeAlreadyCharged && booking.paymentStatus === 'cancellation_fee_charged' ? { paymentStatus: 'refunded', cancellationFeeApplies: false } : {}),
       },
     }),
     prisma.teeTime.update({
@@ -141,5 +156,5 @@ export async function performCancellation(bookingId: string, opts: CancellationO
     reason,
   }).catch(console.error);
 
-  return { success: true, feeCharged: feeAlreadyCharged, roundRefunded } as const;
+  return { success: true, feeCharged: feeAlreadyCharged, roundRefunded, feeRefundFailed } as const;
 }

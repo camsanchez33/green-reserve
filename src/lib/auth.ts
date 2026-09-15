@@ -17,7 +17,7 @@ const GOLFER_TTL = '90d';
 const GOLFER_MAX_AGE = 60 * 60 * 24 * 90;
 
 // ── Operator auth ─────────────────────────────────────────────────────────────
-export async function signToken(payload: { operatorId: string; email: string }) {
+export async function signToken(payload: { operatorId: string; email: string; sv?: number }) {
   return new SignJWT({ ...payload, type: 'operator' })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -54,7 +54,7 @@ export async function signPendingTwoFactorToken(payload: { operatorId: string })
 
 // Returns session for both operators and staff — unified shape
 export type DashboardSession =
-  | { kind: 'operator'; operatorId: string; email: string }
+  | { kind: 'operator'; operatorId: string; email: string; sv?: number }
   | { kind: 'staff'; staffId: string; courseId: string; email: string };
 
 export async function getOperatorSession(): Promise<DashboardSession | null> {
@@ -65,10 +65,10 @@ export async function getOperatorSession(): Promise<DashboardSession | null> {
   if (!payload) return null;
 
   if (payload.type === 'operator') {
-    const p = payload as { operatorId: string; email: string; iat?: number; exp?: number };
+    const p = payload as { operatorId: string; email: string; sv?: number; iat?: number; exp?: number };
     // Sliding renewal: reissue token when >50% of TTL has elapsed
     await maybeRefreshOperatorToken(p, cookieStore);
-    return { kind: 'operator', operatorId: p.operatorId, email: p.email };
+    return { kind: 'operator', operatorId: p.operatorId, email: p.email, sv: p.sv };
   }
   if (payload.type === 'staff') {
     const p = payload as { staffId: string; courseId: string; email: string; iat?: number; exp?: number };
@@ -79,7 +79,7 @@ export async function getOperatorSession(): Promise<DashboardSession | null> {
 }
 
 async function maybeRefreshOperatorToken(
-  p: { operatorId: string; email: string; iat?: number; exp?: number },
+  p: { operatorId: string; email: string; sv?: number; iat?: number; exp?: number },
   cookieStore: Awaited<ReturnType<typeof cookies>>
 ) {
   if (!p.iat || !p.exp) return;
@@ -87,7 +87,7 @@ async function maybeRefreshOperatorToken(
   const total = p.exp - p.iat;
   if (elapsed / total < 0.5) return;
   try {
-    const newToken = await signToken({ operatorId: p.operatorId, email: p.email });
+    const newToken = await signToken({ operatorId: p.operatorId, email: p.email, sv: p.sv });
     cookieStore.set('gr_operator', newToken, {
       httpOnly: true, secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax', maxAge: OPERATOR_MAX_AGE, path: '/',

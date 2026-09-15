@@ -38,7 +38,10 @@ export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id, action, paymentMethodId } = await req.json();
+  const { id, action, paymentMethodId, checkedInPlayers: cipRaw } = await req.json();
+  // SD-5: partial party — how many actually showed (1 .. players-1); absent = all.
+  const cip = cipRaw == null ? undefined : Number(cipRaw);
+  if (cip !== undefined && (!Number.isInteger(cip) || cip < 1)) return NextResponse.json({ error: 'Invalid headcount.' }, { status: 400 });
   const ACTIONS = ['cancel', 'checkin', 'no_show', 'still_coming', 'paid_offline'];
   if (!id || !ACTIONS.includes(action)) {
     return NextResponse.json({ error: 'Missing id or unsupported action' }, { status: 400 });
@@ -70,14 +73,14 @@ export async function PATCH(req: NextRequest) {
     if (booking.status === 'completed') return NextResponse.json({ error: 'Already checked in.' }, { status: 409 });
     await prisma.booking.update({
       where: { id },
-      data: { status: 'completed', checkedInAt: new Date(), paidOffline: true, paymentStatus: 'paid_offline', noShowAt: null, checkInFailReason: '' },
+      data: { status: 'completed', checkedInAt: new Date(), paidOffline: true, paymentStatus: 'paid_offline', noShowAt: null, checkInFailReason: '', ...(cip !== undefined ? { checkedInPlayers: cip } : {}) },
     });
     return NextResponse.json({ success: true });
   }
 
   const result = action === 'cancel'
     ? await performCancellation(id)
-    : await performCheckIn(id, paymentMethodId ? { externalPaymentMethodId: paymentMethodId } : undefined);
+    : await performCheckIn(id, { ...(paymentMethodId ? { externalPaymentMethodId: paymentMethodId } : {}), ...(cip !== undefined ? { checkedInPlayers: cip } : {}) });
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status });
   return NextResponse.json(result);
 }

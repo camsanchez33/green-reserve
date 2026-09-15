@@ -159,11 +159,29 @@ function DashboardPageInner() {
 
   // SD-5: no-show / still coming / paid at the counter — recorded on the
   // booking, each with a pending state and an explicit failure.
+  // SD-5: partial party — ask how many showed before a check-in or a counter
+  // payment; null = the counter cancelled the prompt.
+  function askHeadcount(b: Booking): number | null {
+    if (b.players <= 1) return b.players;
+    const raw = window.prompt(`How many of ${b.golferName}'s ${b.players} players are here?`, String(b.players));
+    if (raw === null) return null;
+    const n = Number(raw);
+    if (!Number.isInteger(n) || n < 1 || n > b.players) { toast(`Enter a number between 1 and ${b.players}.`, 'warn'); return null; }
+    return n;
+  }
+
   async function bookingLifecycle(b: Booking, action: 'no_show' | 'still_coming' | 'paid_offline') {
-    if (action === 'paid_offline' && !confirm(`Mark ${b.golferName} checked in and paid at the counter ($${(b.totalAmount / 100).toFixed(2)})? No card will be charged.`)) return;
+    let checkedInPlayers: number | undefined;
+    if (action === 'paid_offline') {
+      const n = askHeadcount(b);
+      if (n === null) return;
+      checkedInPlayers = n < b.players ? n : undefined;
+      const owed = Math.round(b.totalAmount * (checkedInPlayers ?? b.players) / b.players);
+      if (!confirm(`Mark ${b.golferName} checked in — ${checkedInPlayers ?? b.players} of ${b.players} players, paid $${(owed / 100).toFixed(2)} at the counter? No card will be charged.`)) return;
+    }
     setRowBusy(b.id);
     try {
-      const r = await dfetch('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action }) });
+      const r = await dfetch('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action, ...(checkedInPlayers ? { checkedInPlayers } : {}) }) });
       if (!r.ok) { toast(r.error, 'warn'); return; }
       toast(action === 'no_show' ? `${b.golferName} marked as a no-show.` : action === 'still_coming' ? `${b.golferName} is still coming.` : `${b.golferName} checked in — paid at the counter.`, 'ok');
       await loadTimes(selectedDate);
@@ -174,11 +192,16 @@ function DashboardPageInner() {
 
   async function checkInBooking(b: Booking) {
     if (b.paymentStatus === 'no_payment_method') { setCardModalReason(''); setCardModalBooking(b); return; }
-    if (!confirm(`Check in ${b.golferName} and charge their card $${(b.totalAmount / 100).toFixed(2)} for the round?`)) return;
+    // SD-5: partial party — the charge is prorated to who showed.
+    const showed = askHeadcount(b);
+    if (showed === null) return;
+    const partial = showed < b.players ? showed : undefined;
+    const amount = partial ? Math.round(b.totalAmount * partial / b.players) : b.totalAmount;
+    if (!confirm(`Check in ${b.golferName}${partial ? ` (${partial} of ${b.players} players)` : ''} and charge their card $${(amount / 100).toFixed(2)} for the round?`)) return;
     setCheckingInId(b.id);
     let res: Response; let data: Record<string, unknown> & { error?: string; totalCharged: number };
     try {
-      res = await fetch('/api/operator/bookings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: b.id, action: 'checkin' }) });
+      res = await fetch('/api/operator/bookings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: b.id, action: 'checkin', ...(partial ? { checkedInPlayers: partial } : {}) }) });
       data = await res.json().catch(() => ({}));
     } catch {
       setCheckingInId(null);
