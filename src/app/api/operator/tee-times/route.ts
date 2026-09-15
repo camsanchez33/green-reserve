@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { todayIn } from '@/lib/course-time';
 import { prisma } from '@/lib/prisma';
 import { dollarsToCentsOr0 } from '@/lib/money';
 import { teeTimeToWire } from '@/lib/schedule-wire';
@@ -10,7 +11,12 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { searchParams } = req.nextUrl;
-  const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
+  // SD-3: the default day is the course's today, not the server's.
+  let date = searchParams.get('date') || '';
+  if (!date) {
+    const c = await prisma.course.findUnique({ where: { id: session.courseId }, select: { timezone: true } });
+    date = todayIn(c?.timezone);
+  }
   const withBookings = searchParams.get('withBookings') === '1';
 
   const teeTimes = await prisma.teeTime.findMany({

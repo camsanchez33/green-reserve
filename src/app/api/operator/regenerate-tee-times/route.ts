@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { todayIn, addDaysStr } from '@/lib/course-time';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
@@ -13,14 +14,12 @@ export async function POST() {
   const course = await prisma.course.findUnique({ where: { id: session.courseId } });
   if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
 
-  const today = new Date();
+  const today = todayIn(course.timezone); // SD-3: the course's today
   let created = 0;
   const errors: string[] = [];
 
   for (let i = 0; i < 8; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() + i);
-    const dateStr = d.toISOString().split('T')[0];
+    const dateStr = addDaysStr(today, i);
     try {
       created += await generateTeeTimes(course.id, dateStr);
     } catch (err) {

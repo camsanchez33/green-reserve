@@ -1,4 +1,5 @@
 import { prisma } from './prisma';
+import { todayIn, addDaysStr } from './course-time';
 import { generationHorizonDays } from './booking-window';
 
 function timeToMinutes(t: string): number {
@@ -34,11 +35,11 @@ function minutesToTime(m: number): string {
  * the window is the whole fix.
  */
 export async function regenerateUpcoming(courseId: string, days = 8): Promise<void> {
-  const today = new Date();
+  // SD-3: "today" is the course's today, not the server's UTC day.
+  const course = await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } });
+  const today = todayIn(course?.timezone);
   for (let i = 0; i < days; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() + i);
-    await generateTeeTimes(courseId, d.toISOString().split('T')[0]);
+    await generateTeeTimes(courseId, addDaysStr(today, i));
   }
 }
 
@@ -140,18 +141,18 @@ export async function generateForAllCourses(minDaysAhead = 8): Promise<{ courseI
   // never hardcoded, and never below the old 8.
   const windows = await prisma.course.findMany({
     where: { id: { in: schedules.map(s => s.courseId) } },
-    select: { id: true, publicAdvanceDays: true, memberAdvanceDays: true, membershipTiers: { select: { advanceBookingDays: true } } },
+    select: { id: true, timezone: true, publicAdvanceDays: true, memberAdvanceDays: true, membershipTiers: { select: { advanceBookingDays: true } } },
   });
   const horizon = new Map(windows.map(c => [c.id, Math.max(minDaysAhead, generationHorizonDays(c, c.membershipTiers))]));
-  const today = new Date();
+  const tzOf = new Map(windows.map(c => [c.id, c.timezone]));
   const errors: { courseId: string; date: string; error: string }[] = [];
 
   for (const { courseId } of schedules) {
     const daysAhead = horizon.get(courseId) ?? minDaysAhead;
+    // SD-3: each course's window starts on ITS today.
+    const today = todayIn(tzOf.get(courseId));
     for (let i = 0; i < daysAhead; i++) {
-      const d = new Date(today);
-      d.setDate(d.getDate() + i);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = addDaysStr(today, i);
       try {
         await generateTeeTimes(courseId, dateStr);
       } catch (err) {

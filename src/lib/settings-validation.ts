@@ -39,6 +39,8 @@ const URL_FIELDS = new Set(['website', 'giftCardUrl']);
 const ENUMS: Record<string, string[]> = {
   type: ['public', 'private', 'semi-private', 'municipal', 'resort'],
   walkingAllowed: ['always', 'weekdays', 'after12', 'never'],
+  // SD-3: the course's clock — one of the US zones the settings page offers.
+  timezone: ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Phoenix', 'America/Los_Angeles', 'America/Anchorage', 'Pacific/Honolulu'],
 };
 const BOOLEANS = new Set([
   'hasMemberPricing', 'hasResidentPricing', 'residentProofRequired', 'cartRequired',

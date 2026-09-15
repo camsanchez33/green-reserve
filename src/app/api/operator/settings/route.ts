@@ -43,7 +43,7 @@ export async function PATCH(req: NextRequest) {
     'hasMemberPricing','memberAdvanceDays',
     'hasResidentPricing','residentCounty','residentState','residentProofRequired',
     'walkingAllowed','walkingNote','cartRequired',
-    'cancellationHours','checkInWindowHours','rainCheckPolicy','publicAdvanceDays',
+    'cancellationHours','checkInWindowHours','rainCheckPolicy','publicAdvanceDays','timezone',
     'dresscode','minPlayers','maxPlayers',
     'hasDrivingRange','drivingRangeType','rangeBallsFree','hasPuttingGreen','hasShortGameArea',
     'hasProShop','proShopPhone','restaurantType','hasCartGirl','hasLessons','hasClubRental',

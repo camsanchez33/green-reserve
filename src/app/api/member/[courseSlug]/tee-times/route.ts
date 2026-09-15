@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { todayIn, clockIn } from '@/lib/course-time';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { getMemberSession, getGolferMembership } from '@/lib/member-session';
@@ -45,12 +46,11 @@ export async function GET(
     orderBy: { time: 'asc' },
   });
 
-  // Strip past slots on today
-  const nowUtc = new Date();
-  const todayUtc = nowUtc.toISOString().split('T')[0];
-  const currentTimeStr = `${nowUtc.getUTCHours().toString().padStart(2, '0')}:${nowUtc.getUTCMinutes().toString().padStart(2, '0')}`;
-  const visible = date === todayUtc
-    ? teeTimes.filter(t => t.time > currentTimeStr)
+  // Strip past slots on today — on the course's clock (SD-3).
+  const todayLocal = todayIn(course.timezone);
+  const nowLocal = clockIn(course.timezone);
+  const visible = date === todayLocal
+    ? teeTimes.filter(t => t.time > nowLocal)
     : teeTimes;
 
   const d = new Date(date + 'T12:00:00');

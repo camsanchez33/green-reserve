@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isPastIn } from '@/lib/course-time';
 import Stripe from 'stripe';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
@@ -111,11 +112,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Bookings are disabled on demo courses.' }, { status: 403 });
   }
 
-  // Reject bookings for tee times that have already started
-  const nowUtc = new Date();
-  const todayUtc = nowUtc.toISOString().split('T')[0];
-  const currentTimeStr = `${nowUtc.getUTCHours().toString().padStart(2, '0')}:${nowUtc.getUTCMinutes().toString().padStart(2, '0')}`;
-  if (teeTimeFull.date < todayUtc || (teeTimeFull.date === todayUtc && teeTimeFull.time <= currentTimeStr)) {
+  // Reject bookings for tee times that have already started — on the course's clock (SD-3).
+  if (isPastIn(teeTimeFull.course.timezone, teeTimeFull.date, teeTimeFull.time)) {
     return NextResponse.json({ error: 'This tee time has already passed.' }, { status: 409 });
   }
 

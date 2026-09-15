@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { todayIn, clockIn } from '@/lib/course-time';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { windowFor, withinWindow, outsideWindowBody } from '@/lib/booking-window';
@@ -57,14 +58,13 @@ export async function GET(
     orderBy: { time: 'asc' },
   });
 
-  // If the requested date is today, strip out tee times that have already passed.
-  // Use UTC+0 time from the server — consistent regardless of server timezone.
-  const nowUtc = new Date();
-  const todayUtc = nowUtc.toISOString().split('T')[0];
-  const currentTimeStr = `${nowUtc.getUTCHours().toString().padStart(2, '0')}:${nowUtc.getUTCMinutes().toString().padStart(2, '0')}`;
-
-  const visible = date === todayUtc
-    ? teeTimes.filter(t => t.time > currentTimeStr)
+  // SD-3: strip slots that have passed on the COURSE's clock. TeeTime.time is
+  // course-local, so comparing it against a UTC clock hid or showed the
+  // wrong hours for any course outside UTC.
+  const todayLocal = todayIn(dbCourse.timezone);
+  const nowLocal = clockIn(dbCourse.timezone);
+  const visible = date === todayLocal
+    ? teeTimes.filter(t => t.time > nowLocal)
     : teeTimes;
 
   return NextResponse.json(visible.map(normalizeDbTeeTime));

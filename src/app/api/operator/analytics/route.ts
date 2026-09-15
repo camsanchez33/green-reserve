@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { todayIn, addDaysStr } from '@/lib/course-time';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession } from '@/lib/session';
 
@@ -23,9 +24,10 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const courseId = session.courseId;
-  const now = new Date();
-  const todayStr = dayStr(now);
-  const thirtyDaysAgoStr = dayStr(new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000));
+  // SD-3: the 30-day window ends on the course's today.
+  const tzRow = await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } });
+  const todayStr = todayIn(tzRow?.timezone);
+  const thirtyDaysAgoStr = addDaysStr(todayStr, -29);
 
   const [completed, upcoming, teeTimes] = await Promise.all([
     prisma.booking.findMany({
@@ -45,7 +47,7 @@ export async function GET() {
   // Revenue by PLAY day (last 30, today last)
   const revenueByDay: Record<string, { revenue: number; bookings: number; players: number }> = {};
   for (let i = 29; i >= 0; i--) {
-    revenueByDay[dayStr(new Date(now.getTime() - i * 24 * 60 * 60 * 1000))] = { revenue: 0, bookings: 0, players: 0 };
+    revenueByDay[addDaysStr(todayStr, -i)] = { revenue: 0, bookings: 0, players: 0 };
   }
   for (const b of completed) {
     const day = revenueByDay[b.teeTime.date];

@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef, Suspense } from 'react';
+import { US_TIMEZONES } from '@/lib/course-time';
 import { useSearchParams } from 'next/navigation';
 import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff, CreditCard, CheckCircle2, AlertCircle, Loader2, KeyRound, Mail, Smartphone, Image as ImageIcon, X } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
@@ -621,6 +622,14 @@ function SettingsPageInner() {
           {active==='Booking rules' && (
             <div className="space-y-5">
               <SectionCard title="How far ahead golfers can book">
+                {/* SD-3: the course's clock — every "today" on the sheet and in the crons reads it. */}
+                <div className="mb-3">
+                  <Field label="Course time zone" hint="Your tee sheet's today and the check-in and cancellation clocks all run on this.">
+                    <select value={String(form.timezone ?? 'America/New_York')} onChange={e=>set('timezone',e.target.value)} className={iCls}>
+                      {US_TIMEZONES.map(z => <option key={z.id} value={z.id}>{z.label} — {z.id}</option>)}
+                    </select>
+                  </Field>
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="How far ahead can golfers book?" hint="Days ahead the public can see and book tee times. 7 means today plus the next seven days. Enforced on the booking page, not just shown."><FInput value={form.publicAdvanceDays as number} onChange={v=>set('publicAdvanceDays',Number(v))} type="number"/></Field>
                   {!!form.hasMemberPricing && <Field label="How far ahead can members book?" hint="The default for members. Each membership tier can set its own window in Members → tiers."><FInput value={form.memberAdvanceDays as number} onChange={v=>set('memberAdvanceDays',Number(v))} type="number"/></Field>}

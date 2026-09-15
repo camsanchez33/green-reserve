@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback, Suspense } from 'react';
+import { todayIn, clockIn, DEFAULT_TZ } from '@/lib/course-time';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Calendar, Users, DollarSign, Ban,
@@ -42,7 +43,9 @@ interface AnalyticsData {
 }
 
 /* ─── Helpers ──────────────────────────────────────────────────────────── */
-const today  = () => new Date().toISOString().split('T')[0];
+// SD-3: "today" is the COURSE's today (see courseTz inside the component) —
+// this module-level fallback only seeds state before the course has loaded.
+const todayFallback = () => todayIn(DEFAULT_TZ);
 const addDays = (d: string, n: number) => { const dt = new Date(d + 'T12:00:00'); dt.setDate(dt.getDate() + n); return dt.toISOString().split('T')[0]; };
 const fmtDate = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 const fmtTime = (t: string) => { const [h, m] = t.split(':').map(Number); return `${h % 12 || 12}:${m.toString().padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`; };
@@ -81,7 +84,10 @@ function DashboardPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [tab, setTab] = useState<'teesheet' | 'analytics'>(searchParams.get('tab') === 'analytics' ? 'analytics' : 'teesheet');
-  const [selectedDate, setSelectedDate] = useState(today());
+  // SD-3: the course's timezone drives "today" and "now" on this page.
+  const [courseTz, setCourseTz] = useState(DEFAULT_TZ);
+  const today = () => todayIn(courseTz);
+  const [selectedDate, setSelectedDate] = useState(todayFallback());
   const [dateOffset, setDateOffset]     = useState(0);
   const [teeTimes, setTeeTimes]   = useState<TeeTime[]>([]);
   const [loading, setLoading]     = useState(true);
@@ -230,6 +236,11 @@ function DashboardPageInner() {
     fetch('/api/operator/courses').then(r => r.ok ? r.json() : null).then(c => {
       if (!c) return;
       if (c?.name) setCourseName(c.name);
+      if (c?.timezone && c.timezone !== DEFAULT_TZ) {
+        // SD-3: re-seed the selected day on the course's clock (once, on load).
+        setCourseTz(c.timezone);
+        setSelectedDate(prev => prev === todayFallback() ? todayIn(c.timezone) : prev);
+      }
       setCourseArchived(!!c?.archivedAt);
       setCourseDraft(!c?.active || c?.liveStatus !== 'live');
       setPageApprovalStatus(c?.pageApprovalStatus === 'approved' || c?.pageApprovalStatus === 'changes_requested' ? c.pageApprovalStatus : 'none');
@@ -373,7 +384,7 @@ function DashboardPageInner() {
     toast(conditionsInput.trim() ? 'Course alert saved — golfers see it on your page.' : 'Course alert cleared.', 'ok');
   }
 
-  const nowHM = `${new Date().getHours().toString().padStart(2, '0')}:${new Date().getMinutes().toString().padStart(2, '0')}`;
+  const nowHM = clockIn(courseTz); // SD-3: the course's clock, not the browser's
   // B-8: a group is late when its tee time went off 10+ minutes ago today and
   // nobody in it is checked in. Read straight off the sheet already loaded.
   const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
@@ -675,7 +686,8 @@ function DashboardPageInner() {
               {/* Date strip */}
               <div className="bg-white border border-line rounded-lg mb-4 p-3">
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setDateOffset(o => Math.max(0,o-7))} disabled={dateOffset===0}
+                  {/* SD-3: back is never clamped — yesterday's sheet must stay reachable. */}
+                  <button onClick={() => setDateOffset(o => o-7)}
                     className="p-1.5 rounded-md hover:bg-paper disabled:opacity-30 transition-colors">
                     <ChevronLeft className="w-4 h-4 text-ink-muted"/>
                   </button>
