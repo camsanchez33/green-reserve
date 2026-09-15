@@ -55,7 +55,7 @@ function OnboardingInner() {
       if (!c) return;
       setDetails(d => ({ ...d, description: c.description ?? '', holes: c.holes ?? 18, par: c.par ?? 72 }));
       setStripeActive(!!c.stripeAccountActive);
-    });
+    }).catch(() => setLoadError('Network error loading your course — reload the page.'));
     fetch('/api/operator/sign?status=1').then(r => r.ok ? r.json() : null).then(d => {
       const st = d?.status;
       setSignedAll(st ? st.total === 0 || st.signed === st.total : false);
@@ -66,7 +66,7 @@ function OnboardingInner() {
           id: r.id, name: r.name, yardage: String(r.yardage || ''), rating: String(r.rating || ''), slope: String(r.slope || ''),
         })));
       }
-    });
+    }).catch(() => setLoadError('Network error loading your tee sets — reload the page.'));
   }, [router]);
 
   useEffect(() => {

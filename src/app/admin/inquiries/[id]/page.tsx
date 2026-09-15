@@ -383,6 +383,8 @@ function InquiryDetailInner() {
   const [courseBookings30d, setCourseBookings30d] = useState<number | null>(null);
   const [deleteCourseConfirm, setDeleteCourseConfirm] = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
+  // Review: when the course link cannot be loaded, the menu says so instead of quietly missing items.
+  const [courseExtrasFailed, setCourseExtrasFailed] = useState(false);
   const [goLiveChecks, setGoLiveChecks] = useState<{ key: string; label: string; ok: boolean; absolute: boolean }[] | null>(null);
   const [goLiveOverride, setGoLiveOverride] = useState('');
   const [reminderSending, setReminderSending] = useState<string | null>(null);
@@ -448,7 +450,7 @@ function InquiryDetailInner() {
         if (d?.course?.slug) setCourseSlug(d.course.slug);
         setCourseBookings30d(typeof d?.bookings30d === 'number' ? d.bookings30d : null);
       })
-      .catch(() => setCourseBookings30d(null));
+      .catch(() => { setCourseBookings30d(null); setCourseExtrasFailed(true); });
   }, [inq?.builtCourseId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -1018,6 +1020,9 @@ function InquiryDetailInner() {
                         className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
                         <Wrench className="w-3.5 h-3.5" />Manage Course
                       </button>
+                    )}
+                    {!courseSlug && courseExtrasFailed && (
+                      <p className="px-2 py-2 text-[11px] text-bad leading-relaxed">Could not load the public link — refresh the page.</p>
                     )}
                     {courseSlug && (
                       <a href={'/courses/' + courseSlug} target="_blank" rel="noopener noreferrer" onClick={() => setMoreOpen(false)}
@@ -1989,7 +1994,10 @@ function InquiryDetailInner() {
           gets emailed before firing. */}
       {pendingAction && (() => {
         const close = () => { setPendingAction(null); setGoLiveOverride(''); setBuildConfirmText(''); setGoLiveChecks(null); setDeleteCourseConfirm(''); setReminderSent(new Set()); setSnoozeDate(''); setRejectReason(''); setRejectNotify(true); };
-        const fire = (fn: () => void) => { fn(); close(); };
+        // Review (no-silent-failures): the modal used to close before the
+        // action resolved, so "Working…" never showed. Await it, then close.
+        const fire = async (fn: () => void | Promise<void>) => { await fn(); close(); };
+        const working = processing || sendingPreview;
 
         if (pendingAction === 'delete') {
           // DELETION DOCTRINE (RUN_QUEUE): only reachable for UNBUILT
@@ -2009,7 +2017,7 @@ function InquiryDetailInner() {
               <label className="block text-[10px] uppercase tracking-[0.1em] text-bad mb-1">Type &quot;{expected}&quot; to confirm</label>
               <input value={deleteCourseConfirm} onChange={e => setDeleteCourseConfirm(e.target.value)}
                 className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-1"/>
-              <ModalActions onCancel={close} onConfirm={() => fire(deleteInquiry)} confirmLabel="Delete permanently" danger
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(deleteInquiry)} confirmLabel="Delete permanently" danger
                 disabled={!matches}/>
             </ModalShell>
           );
@@ -2023,7 +2031,7 @@ function InquiryDetailInner() {
           return (
             <ModalShell title={`Archive "${inq.courseName}"?`} onClose={close}>
               <p className="text-sm text-ink-soft">The course disappears from the public site but data is retained. You can restore it later.{activityWarn}</p>
-              <ModalActions onCancel={close} onConfirm={() => fire(archiveLiveCourse)} confirmLabel="Archive" disabled={processing}/>
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(archiveLiveCourse)} confirmLabel="Archive" disabled={processing}/>
             </ModalShell>
           );
         }
@@ -2035,7 +2043,7 @@ function InquiryDetailInner() {
                   ? 'Un-archives the course and returns this inquiry to live.'
                   : 'Returns this inquiry to its stage before it was archived/rejected.'}
               </p>
-              <ModalActions onCancel={close} onConfirm={() => fire(restoreArchivedInquiry)} confirmLabel="Restore" disabled={processing}/>
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(restoreArchivedInquiry)} confirmLabel="Restore" disabled={processing}/>
             </ModalShell>
           );
         }
@@ -2066,7 +2074,7 @@ function InquiryDetailInner() {
                   they have been turned down while we are still onboarding them.
                 </p>
               )}
-              <ModalActions onCancel={close} onConfirm={() => fire(() => action('reject', { closedReason: rejectReason, sendEmail: rejectNotify }))}
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(() => action('reject', { closedReason: rejectReason, sendEmail: rejectNotify }))}
                 confirmLabel="Reject" danger disabled={!rejectReason || processing}/>
             </ModalShell>
           );
@@ -2091,7 +2099,7 @@ function InquiryDetailInner() {
                   </button>
                 ))}
               </div>
-              <ModalActions onCancel={close}
+              <ModalActions working={working} onCancel={close}
                 onConfirm={() => fire(() => action('snooze', { until: (chosen as Date).toISOString() }))}
                 confirmLabel="Snooze" disabled={!valid || processing}/>
             </ModalShell>
@@ -2101,7 +2109,7 @@ function InquiryDetailInner() {
           return (
             <ModalShell title="Create draft course?" onClose={close}>
               <p className="text-sm text-ink-soft">Builds a draft course for <strong>{inq.courseName}</strong> from their submitted sheet. No email is sent — you'll review it before anything goes live.</p>
-              <ModalActions onCancel={close} onConfirm={() => fire(() => createDraftCourse())} confirmLabel="Create Draft Course" disabled={processing}/>
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(() => createDraftCourse())} confirmLabel="Create Draft Course" disabled={processing}/>
             </ModalShell>
           );
         }
@@ -2112,7 +2120,7 @@ function InquiryDetailInner() {
               <p className="text-sm text-ink-soft">
                 Sends the setup-sheet link to <strong>{inq.contactName}</strong> at <strong>{inq.email}</strong>. They'll fill in course details, pricing, and policies for us to build from.
               </p>
-              <ModalActions onCancel={close} onConfirm={() => fire(() => action(isResend ? 'resend_details' : 'request_details'))} confirmLabel={isResend ? 'Resend Sheet' : 'Send Sheet'} disabled={processing}/>
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(() => action(isResend ? 'resend_details' : 'request_details'))} confirmLabel={isResend ? 'Resend Sheet' : 'Send Sheet'} disabled={processing}/>
             </ModalShell>
           );
         }
@@ -2122,7 +2130,7 @@ function InquiryDetailInner() {
               <p className="text-sm text-ink-soft">
                 Emails <strong>{inq.contactName}</strong> at <strong>{inq.email}</strong> a temporary password and login link to their operator dashboard, so they can start reviewing/editing their course before it's live.
               </p>
-              <ModalActions onCancel={close} onConfirm={() => fire(() => action('send_dashboard_access'))} confirmLabel="Send Access" disabled={processing}/>
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(() => action('send_dashboard_access'))} confirmLabel="Send Access" disabled={processing}/>
             </ModalShell>
           );
         }
@@ -2136,7 +2144,7 @@ function InquiryDetailInner() {
                 <li>A link to preview their built course page, so they can approve it or request changes before going live</li>
                 <li>Dashboard login access (a fresh temporary password) so they can explore their Getting Started checklist</li>
               </ul>
-              <ModalActions onCancel={close} onConfirm={() => fire(sendPreview)} confirmLabel="Send Preview" disabled={sendingPreview}/>
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(sendPreview)} confirmLabel="Send Preview" disabled={sendingPreview}/>
             </ModalShell>
           );
         }
@@ -2154,7 +2162,7 @@ function InquiryDetailInner() {
               <label className="block text-[10px] uppercase tracking-[0.1em] text-bad mb-1">Type BUILD to confirm</label>
               <input value={buildConfirmText} onChange={e => setBuildConfirmText(e.target.value)}
                 className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50" placeholder="BUILD"/>
-              <ModalActions onCancel={close} onConfirm={() => fire(() => action('build_course'))} confirmLabel="Build & Email" danger disabled={!canConfirm || processing}/>
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(() => action('build_course'))} confirmLabel="Build & Email" danger disabled={!canConfirm || processing}/>
             </ModalShell>
           );
         }
@@ -2212,6 +2220,7 @@ function InquiryDetailInner() {
                 </div>
               )}
               <ModalActions
+                working={working}
                 onCancel={close}
                 onConfirm={() => fire(() => action('mark_live'))}
                 confirmLabel={blocked ? 'Blocked' : allOk ? 'Go Live' : 'Override & Go Live'}

@@ -211,9 +211,9 @@ function CoursesContent() {
         <div>{healthChip(c)}</div>
         <div className="text-[12px] text-ink-muted truncate" title={c.health.reason}>{c.health.reason}</div>
         {c.agreementDue && (
-          <span className={'inline-block mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded-md ' + (c.agreementDue.overdue ? 'bg-bad/5 text-bad' : 'bg-warn/5 text-warn')}>
-            {c.agreementDue.overdue ? 'Agreement overdue' : `Agreement due ${fmtShort(c.agreementDue.by)}`}
-          </span>
+          <div className="mt-1 text-[11px]">
+            <StatusDot status={c.agreementDue.overdue ? 'bad' : 'warn'} label={c.agreementDue.overdue ? 'Agreement overdue' : `Agreement due ${fmtShort(c.agreementDue.by)}`} />
+          </div>
         )}
       </>
     );

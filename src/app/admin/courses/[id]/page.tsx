@@ -897,36 +897,53 @@ export default function CourseDetailPage() {
     }
   }
 
+  // Review (no-silent-failures): these three used to fetch without a
+  // try/catch, so a dropped connection left the button on "Sending…" forever.
   async function resendSetup(staffId: string, staffName: string) {
     setResendingId(staffId); setResendMsg('');
+    try {
     const r = await fetch('/api/admin/resend-staff-setup', {
       method: 'POST', headers: H(), body: JSON.stringify({ staffId }),
     });
-    setResendingId(null);
     setResendMsg(r.ok ? `Login email sent to ${staffName}` : 'Error sending email');
+    } catch {
+      setResendMsg('Error: network — the email was not sent. Try again.');
+    } finally {
+      setResendingId(null);
+    }
   }
 
   async function sendCoursePreview() {
     if (!detail?.course.operator?.email) return;
     setSendingPreview(true); setPreviewMsg('');
-    const r = await fetch('/api/preview/send', {
-      method: 'POST', headers: H(), body: JSON.stringify({ courseId }),
-    });
-    const d = await r.json();
-    setSendingPreview(false);
-    setPreviewMsg(r.ok ? `Preview + dashboard access sent to ${detail.course.operator.email}` : ('Error: ' + (d.error || 'Failed')));
-    if (r.ok) loadDetail();
+    try {
+      const r = await fetch('/api/preview/send', {
+        method: 'POST', headers: H(), body: JSON.stringify({ courseId }),
+      });
+      const d = await r.json().catch(() => ({}));
+      setPreviewMsg(r.ok ? `Preview + dashboard access sent to ${detail.course.operator.email}` : ('Error: ' + (d.error || `Failed (${r.status})`)));
+      if (r.ok) loadDetail();
+    } catch {
+      setPreviewMsg('Error: network — nothing was sent. Try again.');
+    } finally {
+      setSendingPreview(false);
+    }
   }
 
   async function requestReReview() {
     setRequestingReReview(true); setPreviewMsg('');
-    const r = await fetch('/api/admin/request-re-review', {
-      method: 'POST', headers: H(), body: JSON.stringify({ courseId }),
-    });
-    const d = await r.json();
-    setRequestingReReview(false);
-    setPreviewMsg(r.ok ? 'Re-review requested — Send Preview is available again.' : ('Error: ' + (d.error || 'Failed')));
-    if (r.ok) loadDetail();
+    try {
+      const r = await fetch('/api/admin/request-re-review', {
+        method: 'POST', headers: H(), body: JSON.stringify({ courseId }),
+      });
+      const d = await r.json().catch(() => ({}));
+      setPreviewMsg(r.ok ? 'Re-review requested — Send Preview is available again.' : ('Error: ' + (d.error || `Failed (${r.status})`)));
+      if (r.ok) loadDetail();
+    } catch {
+      setPreviewMsg('Error: network — nothing was changed. Try again.');
+    } finally {
+      setRequestingReReview(false);
+    }
   }
 
   const c = detail?.course;
