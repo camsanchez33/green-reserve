@@ -117,12 +117,12 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-09-15 21:08 UTC</span><span>main @ ce5e7e5</span>
+    <span>2026-09-15 21:12 UTC</span><span>main @ 111959f</span>
     <span>1 uncommitted</span>
   </div>
 </header>
 <div class="tiles">
-  <div class="tile t-good"><span class="n">174</span><span class="l">Done</span></div>
+  <div class="tile t-good"><span class="n">175</span><span class="l">Done</span></div>
   <div class="tile t-warn"><span class="n">9</span><span class="l">Awaiting review</span></div>
   <div class="tile t-alarm"><span class="n">1</span><span class="l">In flight</span></div>
   <div class="tile t-idle"><span class="n">28</span><span class="l">Not started</span></div>
@@ -157,13 +157,13 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="row"><span class="idx">19</span><span class="t">Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with &quot;TheGreenReserve LLC&quot; + formation state (CAM: confirm the state before thi</span><span class="where">:1393</span></div>
 <div class="row"><span class="idx">20</span><span class="t">BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as</span><span class="where">:1472</span></div>
 <div class="row"><span class="idx">21</span><span class="t">UI_REVISE_SPEC H-2d-R1 — DESIGN DECISION, Cam: device-mockup shadows vs the CLAUDE.md ceiling. src/app/home.module.css:46 (.heroDevice .device), :48 (.heroSheet), :108 (.device), :159 (.laptopScreen) </span><span class="where">:1982</span></div>
-<div class="row"><span class="idx">22</span><span class="t">UI_REVISE_SPEC H-2d-R2 — hero perf follow-up: (a) src/components/home/HomeDemo.tsx:40 the device header image is `loading=&quot;lazy&quot;` but above the fold in the hero — when `compact`, load it eagerly (`pri</span><span class="where">:1983</span></div>
-<div class="row"><span class="idx">23</span><span class="t">UI_REVISE_SPEC H-2d-R3 — H-2c/H-2d hygiene: delete dead `.btnLight` (home.module.css:23-24), the orphan `/* BAND */` comment (:217), collapse the two `.js .heroSheet` animation rules (:59-61) into one</span><span class="where">:1984</span></div>
-<div class="row"><span class="idx">24</span><span class="t">INQUIRY_FORM_SPEC Phase IF-1 — the inquiry form asks only what the call can't (Cam 2026-09-15). Ten inputs: name, title, email, phone, course, town/state, course type, HOW THEY TAKE TEE TIMES TODAY (→</span><span class="where">:1986</span></div>
-<div class="row"><span class="idx">25</span><span class="t">CALL_SCHEDULING_SPEC Phase SC-1 — availability engine + Google (SCHEMA CHANGE, attended): CourseInquiry.callInviteToken/SentAt/ExpiresAt + Call.bookedByCourse/gcalEventId (migration `call_invites`, ad</span><span class="where">:1987</span></div>
-<div class="row"><span class="idx">26</span><span class="t">CALL_SCHEDULING_SPEC Phase SC-2 — the invite + the public booking page (no migration): sendCallInviteEmail auto-sent on inquiry submit (AUTO_SEND_CALL_INVITE flag); /call/[token] public page, noindex,</span><span class="where">:1988</span></div>
-<div class="row"><span class="idx">27</span><span class="t">CALL_SCHEDULING_SPEC Phase SC-3 — admin side (no migration): 'Send a booking link' beside Set up call / Skip, with sent-not-booked state + resend; sheet's Next-call cell learns 'Invite sent · Nd'; an </span><span class="where">:1989</span></div>
-<div class="row"><span class="idx">28</span><span class="t">UI_REVISE_SPEC H-2e — ONE GROUND, ONE LOGO (small, no migration). BUG: `.root` is WHITE while body/hero/courses/final are cream #F6F4EC, so every background-less section (See it work, Live in four ste</span><span class="where">:1991</span></div>
+<div class="row"><span class="idx">22</span><span class="t">UI_REVISE_SPEC H-2d-R3 — H-2c/H-2d hygiene: delete dead `.btnLight` (home.module.css:23-24), the orphan `/* BAND */` comment (:217), collapse the two `.js .heroSheet` animation rules (:59-61) into one</span><span class="where">:1984</span></div>
+<div class="row"><span class="idx">23</span><span class="t">INQUIRY_FORM_SPEC Phase IF-1 — the inquiry form asks only what the call can't (Cam 2026-09-15). Ten inputs: name, title, email, phone, course, town/state, course type, HOW THEY TAKE TEE TIMES TODAY (→</span><span class="where">:1986</span></div>
+<div class="row"><span class="idx">24</span><span class="t">CALL_SCHEDULING_SPEC Phase SC-1 — availability engine + Google (SCHEMA CHANGE, attended): CourseInquiry.callInviteToken/SentAt/ExpiresAt + Call.bookedByCourse/gcalEventId (migration `call_invites`, ad</span><span class="where">:1987</span></div>
+<div class="row"><span class="idx">25</span><span class="t">CALL_SCHEDULING_SPEC Phase SC-2 — the invite + the public booking page (no migration): sendCallInviteEmail auto-sent on inquiry submit (AUTO_SEND_CALL_INVITE flag); /call/[token] public page, noindex,</span><span class="where">:1988</span></div>
+<div class="row"><span class="idx">26</span><span class="t">CALL_SCHEDULING_SPEC Phase SC-3 — admin side (no migration): 'Send a booking link' beside Set up call / Skip, with sent-not-booked state + resend; sheet's Next-call cell learns 'Invite sent · Nd'; an </span><span class="where">:1989</span></div>
+<div class="row"><span class="idx">27</span><span class="t">UI_REVISE_SPEC H-2e — ONE GROUND, ONE LOGO (small, no migration). BUG: `.root` is WHITE while body/hero/courses/final are cream #F6F4EC, so every background-less section (See it work, Live in four ste</span><span class="where">:1991</span></div>
+<div class="row"><span class="idx">28</span><span class="t">INQUIRY_CALL_SPEC Phase IC-5 — the call captures STRUCTURED answers, not prose (Cam 2026-09-15, overrules assumption A3). New src/lib/call-answers.ts field spec per agenda item (money in INTEGER CENTS</span><span class="where">:1993</span></div>
 </div></section>
 <section><h2>Revise campaign &mdash; page by page</h2>
 <p class="note">14 pages closed, 8 open. One page in flight at a time.</p>
@@ -244,6 +244,10 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">111959f</td><td class="num">2026-09-15</td><td>H-2d-R2: hero perf — the device header image loads eagerly in the hero (it is above the fold); story mp4 listed before the larger v2 webm</td></tr>
+<tr><td class="num">107e176</td><td class="num">2026-09-15</td><td>queue/spec update (merge: Cowork's IC-5 + the H-2c/H-2d review notes and H-2d-R1..R3 that a stale save dropped)</td></tr>
+<tr><td class="num">a75fa84</td><td class="num">2026-09-15</td><td>queue/spec update</td></tr>
+<tr><td class="num">677f083</td><td class="num">2026-09-15</td><td>queue/spec update</td></tr>
 <tr><td class="num">ce5e7e5</td><td class="num">2026-09-15</td><td>H-2d review FIX-1: no fee line in the hero device — the compact HomeDemo drops the fee clause, the fee row and the fee from its total; beats/prog above the cream overlay; trust line 13px</td></tr>
 <tr><td class="num">6e4907e</td><td class="num">2026-09-15</td><td>queue/spec update</td></tr>
 <tr><td class="num">2ea1864</td><td class="num">2026-09-14</td><td>queue/spec update</td></tr>
@@ -252,10 +256,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">f0a4e4b</td><td class="num">2026-09-14</td><td>SD-5 (part 2): partial-party check-in, close-a-day weather flow, operator session versioning</td></tr>
 <tr><td class="num">72e715d</td><td class="num">2026-09-14</td><td>queue/spec update</td></tr>
 <tr><td class="num">8f646d0</td><td class="num">2026-09-14</td><td>SD-5 (part 1): walk-in and phone bookings from the tee sheet, no-show, paid at the counter — the booking lifecycle gets columns and the counter gets its actions</td></tr>
-<tr><td class="num">d78ef7e</td><td class="num">2026-09-14</td><td>queue/spec update</td></tr>
-<tr><td class="num">bca583a</td><td class="num">2026-09-14</td><td>SD-3: course-local time — every &quot;today&quot; and &quot;now&quot; on the tee sheet reads Course.timezone (no migration: the column existed; it just had no UI and no readers outside the crons)</td></tr>
-<tr><td class="num">ac8cc95</td><td class="num">2026-09-14</td><td>Security review fixes (audit of today's diff): player count validated on the public booking endpoint; tier windows bounded; TOTP pending/used markers separated; CSV formula guard; unique acceptance per document version; evidentiary IP on signings</td></tr>
-<tr><td class="num">edf2198</td><td class="num">2026-09-14</td><td>Review fixes (design + admin-ux audits of today's diff): agreement-due chip is a StatusDot; three course-page actions no longer hang on a dropped connection; inquiry confirm modals wait for their action (Working… shows) before closing; onboarding prefetches and the course-link fetch report failure</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

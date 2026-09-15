@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-15T21:08:44.706Z",
+  "generatedAt": "2026-09-15T21:12:42.462Z",
   "repo": {
-    "head": "ce5e7e5",
+    "head": "111959f",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,11 +10,11 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-15T17:07:31-04:00",
+    "queueLastCommit": "2026-09-15T17:11:53-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 174,
+    "runDone": 175,
     "runAwaiting": 9,
     "runInFlight": 1,
     "runNotStarted": 28,
@@ -210,11 +210,6 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "UI_REVISE_SPEC H-2d-R2 — hero perf follow-up: (a) src/components/home/HomeDemo.tsx:40 the device header image is `loading=\"lazy\"` but above the fold in the hero — when `compact`, load it eagerly (`pri",
-      "line": 1983,
-      "section": "Queue (run in this order)"
-    },
-    {
       "title": "UI_REVISE_SPEC H-2d-R3 — H-2c/H-2d hygiene: delete dead `.btnLight` (home.module.css:23-24), the orphan `/* BAND */` comment (:217), collapse the two `.js .heroSheet` animation rules (:59-61) into one",
       "line": 1984,
       "section": "Queue (run in this order)"
@@ -242,6 +237,11 @@
     {
       "title": "UI_REVISE_SPEC H-2e — ONE GROUND, ONE LOGO (small, no migration). BUG: `.root` is WHITE while body/hero/courses/final are cream #F6F4EC, so every background-less section (See it work, Live in four ste",
       "line": 1991,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "INQUIRY_CALL_SPEC Phase IC-5 — the call captures STRUCTURED answers, not prose (Cam 2026-09-15, overrules assumption A3). New src/lib/call-answers.ts field spec per agenda item (money in INTEGER CENTS",
+      "line": 1993,
       "section": "Queue (run in this order)"
     }
   ],
@@ -812,6 +812,26 @@
   },
   "recentCommits": [
     {
+      "h": "111959f",
+      "date": "2026-09-15",
+      "subject": "H-2d-R2: hero perf — the device header image loads eagerly in the hero (it is above the fold); story mp4 listed before the larger v2 webm"
+    },
+    {
+      "h": "107e176",
+      "date": "2026-09-15",
+      "subject": "queue/spec update (merge: Cowork's IC-5 + the H-2c/H-2d review notes and H-2d-R1..R3 that a stale save dropped)"
+    },
+    {
+      "h": "a75fa84",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "677f083",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "ce5e7e5",
       "date": "2026-09-15",
       "subject": "H-2d review FIX-1: no fee line in the hero device — the compact HomeDemo drops the fee clause, the fee row and the fee from its total; beats/prog above the cream overlay; trust line 13px"
@@ -850,26 +870,6 @@
       "h": "8f646d0",
       "date": "2026-09-14",
       "subject": "SD-5 (part 1): walk-in and phone bookings from the tee sheet, no-show, paid at the counter — the booking lifecycle gets columns and the counter gets its actions"
-    },
-    {
-      "h": "d78ef7e",
-      "date": "2026-09-14",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "bca583a",
-      "date": "2026-09-14",
-      "subject": "SD-3: course-local time — every \"today\" and \"now\" on the tee sheet reads Course.timezone (no migration: the column existed; it just had no UI and no readers outside the crons)"
-    },
-    {
-      "h": "ac8cc95",
-      "date": "2026-09-14",
-      "subject": "Security review fixes (audit of today's diff): player count validated on the public booking endpoint; tier windows bounded; TOTP pending/used markers separated; CSV formula guard; unique acceptance per document version; evidentiary IP on signings"
-    },
-    {
-      "h": "edf2198",
-      "date": "2026-09-14",
-      "subject": "Review fixes (design + admin-ux audits of today's diff): agreement-due chip is a StatusDot; three course-page actions no longer hang on a dropped connection; inquiry confirm modals wait for their action (Working… shows) before closing; onboarding prefetches and the course-link fetch report failure"
     }
   ]
 }
