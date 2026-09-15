@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-15T23:27:37.547Z",
+  "generatedAt": "2026-09-15T23:45:26.178Z",
   "repo": {
-    "head": "206969b",
+    "head": "21c8d25",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,14 +10,14 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-15T19:04:19-04:00",
+    "queueLastCommit": "2026-09-15T19:27:38-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 178,
+    "runDone": 180,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 27,
+    "runNotStarted": 25,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -210,11 +210,6 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "SECURITY (from the IF-1 review, pre-existing MP-4a): the duplicate-intake path on POST /api/inquiries lets an unauthenticated stranger who knows a course's name + city + state write a contact 'correct",
-      "line": 1987,
-      "section": "Queue (run in this order)"
-    },
-    {
       "title": "CALL_SCHEDULING_SPEC Phase SC-1 — availability engine + Google (SCHEMA CHANGE, attended): CourseInquiry.callInviteToken/SentAt/ExpiresAt + Call.bookedByCourse/gcalEventId (migration `call_invites`, ad",
       "line": 1989,
       "section": "Queue (run in this order)"
@@ -232,11 +227,6 @@
     {
       "title": "UI_REVISE_SPEC H-2f — CAM TO CONFIRM before running (2026-09-15, 'i like having the fade from slide to slide'): after H-2e the only hard section edges left on / are the two around the pine pricing sla",
       "line": 1995,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "INQUIRY_CALL_SPEC Phase IC-5 — the call captures STRUCTURED answers, not prose (Cam 2026-09-15, overrules assumption A3). New src/lib/call-answers.ts field spec per agenda item (money in INTEGER CENTS",
-      "line": 1997,
       "section": "Queue (run in this order)"
     }
   ],
@@ -807,6 +797,31 @@
   },
   "recentCommits": [
     {
+      "h": "21c8d25",
+      "date": "2026-09-15",
+      "subject": "Security (IF-1 review): a re-submission of the lead form only carries new email/phone when it comes from the email on file; otherwise the admin's resubmit diff is labelled unverified and no contact change is recorded — a stranger who knows a course's name and town can no longer steer outreach to themselves"
+    },
+    {
+      "h": "189f23b",
+      "date": "2026-09-15",
+      "subject": "IC-5 review fixes: draft autosave is an atomic write on outcome=scheduled and stale responses are ignored client-side (a late autosave can no longer revert a logged call); recap email throws on a Resend rejection so 'emailed' is never false; MoneyInput shows an invalid state instead of silently saving nothing; draft/log writes only the fields sent; build flags fees and tee times that came from the call, not the sheet; recap subject bounded; season fields are months and walking uses the sheet's own options (spec table updated); recap notice covers 'nothing captured'"
+    },
+    {
+      "h": "25baf6b",
+      "date": "2026-09-15",
+      "subject": "IC-5: the call captures structured answers — lib/call-answers.ts (field catalog per agenda item, money in integer cents, v2 answersJson with the old prose shape still readable, one-line summaries, sheet prefill); Log-the-call card has real inputs per item, collapsed rows, autosave via save_call_draft with a visible status; log_call validates v2 and can email a recap; the setup sheet pre-fills empty keys from the call and says so; the build reads the call only for keys the sheet never touched; Still-need names missing fields; scripts/call-answers-test.ts 34/34"
+    },
+    {
+      "h": "598d2f7",
+      "date": "2026-09-15",
+      "subject": "queue/spec update (IC-5 phase block written from the queue entry + the code; §1 field catalog is the thing to review)"
+    },
+    {
+      "h": "6f45772",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "206969b",
       "date": "2026-09-15",
       "subject": "IF-1 review fixes: confirmation email now says pick a call time (same Calendly page as the success screen, until SC-2's invite link exists); the lead form's fields are HTML-escaped in both emails; call-preference arrays de-duped and capped; limiter keyed on the platform IP; JSON body and field types guarded; resubmit diff carries the booking method; semi-private gets a sheet path (passes + member booking + member rate); call answers outrank stale form answers for the sheet's branch defaults; the sheet's branch question reuses YesNo; dead needs block dropped from the confirmation email"
@@ -840,31 +855,6 @@
       "h": "01481f9",
       "date": "2026-09-15",
       "subject": "H-2e: one ground, one logo — cream root (the white/cream banding was a bug), white step cards, cream footer, the story fades into cream at both ends; over the hero the nav is just the lockup, past it the bar fades in with Operator login + List your course; How it works/Pricing/FAQ links gone; Operator login in the footer"
-    },
-    {
-      "h": "9c6f379",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "07cf78e",
-      "date": "2026-09-15",
-      "subject": "H-2d-R3: homepage hygiene — dead .btnLight and the orphan BAND comment gone, one heroSheet animation rule, tee-sheet card colors read --ok/--warn/--ink-3, stale HERO row out of the design README"
-    },
-    {
-      "h": "780ac67",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "111959f",
-      "date": "2026-09-15",
-      "subject": "H-2d-R2: hero perf — the device header image loads eagerly in the hero (it is above the fold); story mp4 listed before the larger v2 webm"
-    },
-    {
-      "h": "107e176",
-      "date": "2026-09-15",
-      "subject": "queue/spec update (merge: Cowork's IC-5 + the H-2c/H-2d review notes and H-2d-R1..R3 that a stale save dropped)"
     }
   ]
 }
