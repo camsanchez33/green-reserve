@@ -65,7 +65,7 @@
 .hero h1 { font-family: var(--font-serif), Fraunces, Georgia, serif; font-size: clamp(46px, 6.4vw, 84px); line-height: .96; letter-spacing: -.02em; font-weight: 500; color: var(--ink); }
 .hero p { font-size: 19px; line-height: 1.5; max-width: 520px; margin: 26px 0 34px; color: var(--ink-2); text-wrap: pretty; }
 .cta { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-.fine { margin-top: 22px; font-size: 13.5px; color: var(--ink-3); }
+.fine { margin-top: 22px; font-size: 13px; color: var(--ink-3); }
 .js .heroText > * { animation: up 1.2s var(--ease) both; }
 .js .heroText > h1 { animation-delay: .06s; } .js .heroText > p { animation-delay: .12s; } .js .heroText > .cta { animation-delay: .22s; } .js .heroText > .fine { animation-delay: .3s; }
 @keyframes up { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
@@ -88,13 +88,13 @@
 .drift { animation: drift 28s var(--ease) both; transform-origin: 50% 60%; }
 @keyframes drift { from { transform: scale(1.02); } to { transform: scale(1.10); } }
 .storyShade { background: linear-gradient(90deg, rgba(0,0,0,.62) 0%, rgba(0,0,0,.28) 50%, rgba(0,0,0,.08) 100%), linear-gradient(0deg, rgba(0,0,0,.4), rgba(0,0,0,0) 40%); }
-.beats { position: absolute; left: max(36px, calc(50% - 590px)); bottom: 12vh; width: min(560px, calc(100% - 72px)); }
+.beats { position: absolute; left: max(36px, calc(50% - 590px)); bottom: 12vh; width: min(560px, calc(100% - 72px)); z-index: 2; }
 .beat { position: absolute; left: 0; bottom: 0; width: 100%; opacity: 0; transform: translateY(18px); transition: opacity .9s var(--ease), transform .9s var(--ease); }
 .beat.on { opacity: 1; transform: none; }
 .beat .eyebrow { opacity: .75; }
 .beat h2 { font-family: var(--font-serif), Fraunces, Georgia, serif; font-size: clamp(38px, 4.6vw, 64px); line-height: 1; letter-spacing: -.02em; margin: 14px 0 16px; font-weight: 500; }
 .beat p { margin: 0; font-size: 18px; line-height: 1.55; opacity: .92; max-width: 480px; }
-.prog { position: absolute; right: max(36px, calc(50% - 590px)); bottom: 12vh; display: flex; flex-direction: column; gap: 10px; }
+.prog { position: absolute; right: max(36px, calc(50% - 590px)); bottom: 12vh; display: flex; flex-direction: column; gap: 10px; z-index: 2; }
 .prog i { width: 2px; height: 34px; background: rgba(255,255,255,.3); transition: background .5s; }
 .prog i.on { background: #fff; }
 

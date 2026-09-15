@@ -50,7 +50,9 @@ export default function HomeDemo({ accent, photo, compact = false }: { accent: s
       <div className={s.trust} aria-live="polite">
         {done
           ? <><b>See you out there.</b> Card saved, nothing charged. Cancel free until the day before your tee time.</>
-          : <><b>Nothing charged today.</b> Cancel free until the day before your tee time. ${FEE.toFixed(2)}/player booking fee.</>}
+          : compact
+            ? <><b>Nothing charged today.</b> Cancel free until the day before your tee time.</>
+            : <><b>Nothing charged today.</b> Cancel free until the day before your tee time. ${FEE.toFixed(2)}/player booking fee.</>}
       </div>
       <div className={s.rows}>
         {(compact ? SLOTS.slice(0, 3) : SLOTS).map((slot, i) => {
@@ -85,8 +87,9 @@ export default function HomeDemo({ accent, photo, compact = false }: { accent: s
                   <div className={s.lines}>
                     <div><span>{PLAYERS} green fees</span><span>{money(green)}</span></div>
                     {cart && <div><span>Cart ({PLAYERS} × ${CART})</span><span>{money(cartTotal)}</span></div>}
-                    <div><span>Booking fee ({PLAYERS} × ${FEE.toFixed(2)})</span><span>{money(fee)}</span></div>
-                    <div className={s.tot}><span>Pay at check-in</span><span>{money(green + cartTotal + fee)}</span></div>
+                    {/* H-2d review FIX-1: the hero (compact) shows no fee line, so its total excludes the fee too. */}
+                    {!compact && <div><span>Booking fee ({PLAYERS} × ${FEE.toFixed(2)})</span><span>{money(fee)}</span></div>}
+                    <div className={s.tot}><span>Pay at check-in</span><span>{money(green + cartTotal + (compact ? 0 : fee))}</span></div>
                   </div>
                   <button type="button" className={s.reserve} onClick={() => setReservedIdx(i)}>
                     {isReserved ? `Reserved ${slot.time} AM · $0 charged today` : 'Reserve this tee time'}
