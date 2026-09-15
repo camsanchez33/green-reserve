@@ -1176,9 +1176,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       rata); "Export transactions" button beside the summary CSV on Revenue.
       LIVE CHECK (owner): /admin/revenue → Platform card shows payouts +
       unit economics (5-min cache; period=30d); Export transactions
-      downloads a CSV whose row count matches the period. SCHEMA HALF STILL
-      OPEN: real paidAt column on Booking (attended) — makes the checkedInAt
-      approximation exact. NEEDS REVIEW.
+      downloads a CSV whose row count matches the period. SCHEMA HALF DONE (see git log, migration paid_at_and_indexes): Booking.paidAt stamped on every paid path, backfilled, Revenue reads it. NEEDS REVIEW.
     - [x] MP-6d (3d6dd5e) — Golfers record page. Identity (account OR guest by
       email — `?guest=`), trust strip (rounds, upcoming, no-shows, late
       cancels, failed charges, lifetime paid net of refunds), every booking
@@ -1258,8 +1256,8 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     Inquiries list: drops detailsJson/needsJson (unused by the list) and
     bounds events to the newest 25 per inquiry (still oldest-first). Also
     fixed while there: course Money-tab transactions loader swallowed every
-    failure — inline error + Retry now. NOT DONE (schema): indexes on
-    Booking(courseId, checkedInAt) / CourseMembership(courseId, lastPaidAt)
+    failure — inline error + Retry now. DONE (schema, migration paid_at_and_indexes): indexes on
+    Booking(courseId, checkedInAt) / Booking(courseId, paidAt) / CourseMembership(courseId, lastPaidAt)
     would make the bounded queries index-only — attended. NEEDS REVIEW.
   - [x] REVIEW FIXES 2026-09-11 (5eb48c5; range 17e68c9..a954491; security / admin-UX /
     design / spec-conformance auditors). Design: clean. Spec: 56 MET, SD-10
