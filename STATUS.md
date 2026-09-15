@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-15 00:39 UTC · branch `main` · HEAD `8f646d0` · working tree **1 dirty file(s)**
+Generated 2026-09-15 00:49 UTC · branch `main` · HEAD `f0a4e4b` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,13 +12,9 @@ Generated 2026-09-15 00:39 UTC · branch `main` · HEAD `8f646d0` · working tre
 
 | commit | date | subject |
 |---|---|---|
-| `8f646d0` | 2026-09-14 | SD-5 (part 1): walk-in and phone bookings from the tee sheet, no-show, paid at the counter — the booking lifecycle gets columns and the counter gets its actions |
+| `f0a4e4b` | 2026-09-14 | SD-5 (part 2): partial-party check-in, close-a-day weather flow, operator session versioning |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-Matched back to the queue items they belong to:
-
-- `8f646d0` **SD-5 (part 1): walk-in and phone bookings from the tee sheet, no-show, paid at t** → item still reads *shipped-unverified*: SD-5 — PART 1 SHIPPED (see git log: migration booking_lifecycle; walk-in/phone POST + tee- — `RUN_QUEUE.md:387`
 
 ### Uncommitted working tree (1 file(s))
 
@@ -54,7 +50,6 @@ This is the distinction a raw checkbox count gets wrong.
 | MP-2d | 2026-08-29 | 15d | `22d0f68` | `RUN_QUEUE.md:740` |
 | MP-2e | 2026-08-30 | 15d | `bf3bcb2` | `RUN_QUEUE.md:782` |
 | UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | 2026-09-11 | 3d | `a3c1bea` | `RUN_QUEUE.md:1959` |
-| SD-5 — PART 1 SHIPPED (see git log: migration booking_lifecycle; walk-in/phone POST + tee-sheet form, no-show  | — | — | — | `RUN_QUEUE.md:387` |
 
 ## Not started — the actual queue
 
@@ -177,6 +172,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `f0a4e4b` 2026-09-14 — SD-5 (part 2): partial-party check-in, close-a-day weather flow, operator session versioning
+- `72e715d` 2026-09-14 — queue/spec update
 - `8f646d0` 2026-09-14 — SD-5 (part 1): walk-in and phone bookings from the tee sheet, no-show, paid at the counter — the booking lifecycle gets columns and the counter gets its actions
 - `d78ef7e` 2026-09-14 — queue/spec update
 - `bca583a` 2026-09-14 — SD-3: course-local time — every "today" and "now" on the tee sheet reads Course.timezone (no migration: the column existed; it just had no UI and no readers outside the crons)
@@ -187,9 +184,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `dcdbfe6` 2026-09-14 — queue/spec update
 - `84c0296` 2026-09-14 — queue/spec update
 - `cfff2d3` 2026-09-14 — OWNER TOTP 2FA: an authenticator-app second factor for the owner login — enrolment on the profile, recovery codes, replay-safe verify, the email path kept until enrolled
-- `d93e51e` 2026-09-14 — BOOKING WINDOWS: how far ahead each audience can see and book — enforced server-side, greyed in the picker, generation derived (no migration: the columns already existed)
-- `222114b` 2026-09-14 — queue/spec update
 
 ---
 
-**Totals:** 173 done · 10 awaiting review · 1 in flight · 21 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 174 done · 9 awaiting review · 1 in flight · 21 not started · 8 revise pages open · 15 ideas · 2 parked.

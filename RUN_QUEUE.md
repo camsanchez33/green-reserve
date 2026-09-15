@@ -384,7 +384,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     against the Payments page's filters. CAM MUST CHECK: Analytics tab numbers
     make sense against Payments; decline a test card at check-in and see the
     retry modal. NEEDS REVIEW.
-  - [ ] SD-5 — PART 1 SHIPPED (see git log: migration booking_lifecycle; walk-in/phone POST + tee-sheet form, no-show / still coming / paid at counter). PART 2 (partial-party check-in, close-a-day weather flow, operator session versioning) in progress. ORIGINAL: lifecycle states: walk-in/phone booking POST (the biggest
+  - [x] SD-5 (see git log; migrations booking_lifecycle + operator_session_version) — SHIPPED: walk-in/phone POST + tee-sheet Walk-in form, no-show / still coming / paid at counter, partial-party check-in (prorated charge + receipt), close-a-day (cancel + email + fee waived, per-booking failures reported), operator session versioning. NEEDS REVIEW + a counter walk (walk-in → check in; partial headcount; close a day on a test date). ORIGINAL: lifecycle states: walk-in/phone booking POST (the biggest
     functional gap AND the site already promises it), checkedInPlayers,
     noShowAt, paidOffline, cancellationHoursAtBooking snapshot, session
     versioning; then walk-in entry, partial-party check-in, no-show, close-a-day
