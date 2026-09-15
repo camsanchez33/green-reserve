@@ -117,12 +117,12 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-09-15 22:46 UTC</span><span>main @ 01481f9</span>
+    <span>2026-09-15 23:27 UTC</span><span>main @ 206969b</span>
     <span>1 uncommitted</span>
   </div>
 </header>
 <div class="tiles">
-  <div class="tile t-good"><span class="n">177</span><span class="l">Done</span></div>
+  <div class="tile t-good"><span class="n">178</span><span class="l">Done</span></div>
   <div class="tile t-warn"><span class="n">9</span><span class="l">Awaiting review</span></div>
   <div class="tile t-alarm"><span class="n">1</span><span class="l">In flight</span></div>
   <div class="tile t-idle"><span class="n">27</span><span class="l">Not started</span></div>
@@ -157,12 +157,12 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="row"><span class="idx">19</span><span class="t">Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with &quot;TheGreenReserve LLC&quot; + formation state (CAM: confirm the state before thi</span><span class="where">:1393</span></div>
 <div class="row"><span class="idx">20</span><span class="t">BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as</span><span class="where">:1472</span></div>
 <div class="row"><span class="idx">21</span><span class="t">UI_REVISE_SPEC H-2d-R1 — DESIGN DECISION, Cam: device-mockup shadows vs the CLAUDE.md ceiling. src/app/home.module.css:46 (.heroDevice .device), :48 (.heroSheet), :108 (.device), :159 (.laptopScreen) </span><span class="where">:1982</span></div>
-<div class="row"><span class="idx">22</span><span class="t">INQUIRY_FORM_SPEC Phase IF-1 — the inquiry form asks only what the call can't (Cam 2026-09-15). Ten inputs: name, title, email, phone, course, town/state, course type, HOW THEY TAKE TEE TIMES TODAY (→</span><span class="where">:1986</span></div>
-<div class="row"><span class="idx">23</span><span class="t">CALL_SCHEDULING_SPEC Phase SC-1 — availability engine + Google (SCHEMA CHANGE, attended): CourseInquiry.callInviteToken/SentAt/ExpiresAt + Call.bookedByCourse/gcalEventId (migration `call_invites`, ad</span><span class="where">:1987</span></div>
-<div class="row"><span class="idx">24</span><span class="t">CALL_SCHEDULING_SPEC Phase SC-2 — the invite + the public booking page (no migration): sendCallInviteEmail auto-sent on inquiry submit (AUTO_SEND_CALL_INVITE flag); /call/[token] public page, noindex,</span><span class="where">:1988</span></div>
-<div class="row"><span class="idx">25</span><span class="t">CALL_SCHEDULING_SPEC Phase SC-3 — admin side (no migration): 'Send a booking link' beside Set up call / Skip, with sent-not-booked state + resend; sheet's Next-call cell learns 'Invite sent · Nd'; an </span><span class="where">:1989</span></div>
-<div class="row"><span class="idx">26</span><span class="t">UI_REVISE_SPEC H-2f — CAM TO CONFIRM before running (2026-09-15, 'i like having the fade from slide to slide'): after H-2e the only hard section edges left on / are the two around the pine pricing sla</span><span class="where">:1993</span></div>
-<div class="row"><span class="idx">27</span><span class="t">INQUIRY_CALL_SPEC Phase IC-5 — the call captures STRUCTURED answers, not prose (Cam 2026-09-15, overrules assumption A3). New src/lib/call-answers.ts field spec per agenda item (money in INTEGER CENTS</span><span class="where">:1995</span></div>
+<div class="row"><span class="idx">22</span><span class="t">SECURITY (from the IF-1 review, pre-existing MP-4a): the duplicate-intake path on POST /api/inquiries lets an unauthenticated stranger who knows a course's name + city + state write a contact 'correct</span><span class="where">:1987</span></div>
+<div class="row"><span class="idx">23</span><span class="t">CALL_SCHEDULING_SPEC Phase SC-1 — availability engine + Google (SCHEMA CHANGE, attended): CourseInquiry.callInviteToken/SentAt/ExpiresAt + Call.bookedByCourse/gcalEventId (migration `call_invites`, ad</span><span class="where">:1989</span></div>
+<div class="row"><span class="idx">24</span><span class="t">CALL_SCHEDULING_SPEC Phase SC-2 — the invite + the public booking page (no migration): sendCallInviteEmail auto-sent on inquiry submit (AUTO_SEND_CALL_INVITE flag); /call/[token] public page, noindex,</span><span class="where">:1990</span></div>
+<div class="row"><span class="idx">25</span><span class="t">CALL_SCHEDULING_SPEC Phase SC-3 — admin side (no migration): 'Send a booking link' beside Set up call / Skip, with sent-not-booked state + resend; sheet's Next-call cell learns 'Invite sent · Nd'; an </span><span class="where">:1991</span></div>
+<div class="row"><span class="idx">26</span><span class="t">UI_REVISE_SPEC H-2f — CAM TO CONFIRM before running (2026-09-15, 'i like having the fade from slide to slide'): after H-2e the only hard section edges left on / are the two around the pine pricing sla</span><span class="where">:1995</span></div>
+<div class="row"><span class="idx">27</span><span class="t">INQUIRY_CALL_SPEC Phase IC-5 — the call captures STRUCTURED answers, not prose (Cam 2026-09-15, overrules assumption A3). New src/lib/call-answers.ts field spec per agenda item (money in INTEGER CENTS</span><span class="where">:1997</span></div>
 </div></section>
 <section><h2>Revise campaign &mdash; page by page</h2>
 <p class="note">14 pages closed, 8 open. One page in flight at a time.</p>
@@ -243,18 +243,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">206969b</td><td class="num">2026-09-15</td><td>IF-1 review fixes: confirmation email now says pick a call time (same Calendly page as the success screen, until SC-2's invite link exists); the lead form's fields are HTML-escaped in both emails; call-preference arrays de-duped and capped; limiter keyed on the platform IP; JSON body and field types guarded; resubmit diff carries the booking method; semi-private gets a sheet path (passes + member booking + member rate); call answers outrank stale form answers for the sheet's branch defaults; the sheet's branch question reuses YesNo; dead needs block dropped from the confirmation email</td></tr>
+<tr><td class="num">52f7bc3</td><td class="num">2026-09-15</td><td>IF-1: the inquiry form asks only what the call can't — ten inputs, the eight branch questions gone; booking method lands in currentBookingMethod, call-time chips in needsJson.callPreference; success screen points at picking a call; booking_today always on the agenda with the form's answer as context; the setup sheet asks its branching questions inline (saved → old form answers → call answers → ask) and never hides a section; admin Answers tab renders the new shape</td></tr>
+<tr><td class="num">47d9bb6</td><td class="num">2026-09-15</td><td>H-2e review fixes: the nav blur fades with the white (transition covers backdrop-filter); the mobile menu closes when the bar hides; the H-1 shrink waits for the bar; the story's bottom wash moves to the story's end (outside the pin) and is off on phones; .device's near-cream fill recorded as deliberate</td></tr>
+<tr><td class="num">1a4d726</td><td class="num">2026-09-15</td><td>queue/spec update (restore: a stale Cowork save reverted the H-2d-R2/R3/H-2e check-offs and dropped the H-2f draft; nothing new was in it)</td></tr>
+<tr><td class="num">c31b956</td><td class="num">2026-09-15</td><td>queue/spec update</td></tr>
+<tr><td class="num">b0d3a14</td><td class="num">2026-09-15</td><td>queue/spec update</td></tr>
 <tr><td class="num">01481f9</td><td class="num">2026-09-15</td><td>H-2e: one ground, one logo — cream root (the white/cream banding was a bug), white step cards, cream footer, the story fades into cream at both ends; over the hero the nav is just the lockup, past it the bar fades in with Operator login + List your course; How it works/Pricing/FAQ links gone; Operator login in the footer</td></tr>
 <tr><td class="num">9c6f379</td><td class="num">2026-09-15</td><td>queue/spec update</td></tr>
 <tr><td class="num">07cf78e</td><td class="num">2026-09-15</td><td>H-2d-R3: homepage hygiene — dead .btnLight and the orphan BAND comment gone, one heroSheet animation rule, tee-sheet card colors read --ok/--warn/--ink-3, stale HERO row out of the design README</td></tr>
 <tr><td class="num">780ac67</td><td class="num">2026-09-15</td><td>queue/spec update</td></tr>
 <tr><td class="num">111959f</td><td class="num">2026-09-15</td><td>H-2d-R2: hero perf — the device header image loads eagerly in the hero (it is above the fold); story mp4 listed before the larger v2 webm</td></tr>
 <tr><td class="num">107e176</td><td class="num">2026-09-15</td><td>queue/spec update (merge: Cowork's IC-5 + the H-2c/H-2d review notes and H-2d-R1..R3 that a stale save dropped)</td></tr>
-<tr><td class="num">a75fa84</td><td class="num">2026-09-15</td><td>queue/spec update</td></tr>
-<tr><td class="num">677f083</td><td class="num">2026-09-15</td><td>queue/spec update</td></tr>
-<tr><td class="num">ce5e7e5</td><td class="num">2026-09-15</td><td>H-2d review FIX-1: no fee line in the hero device — the compact HomeDemo drops the fee clause, the fee row and the fee from its total; beats/prog above the cream overlay; trust line 13px</td></tr>
-<tr><td class="num">6e4907e</td><td class="num">2026-09-15</td><td>queue/spec update</td></tr>
-<tr><td class="num">2ea1864</td><td class="num">2026-09-14</td><td>queue/spec update</td></tr>
-<tr><td class="num">2cf4fee</td><td class="num">2026-09-14</td><td>MP-6c + MP-10 schema halves: Booking.paidAt (stamped when the charge succeeds or the counter takes payment; Revenue windows read it) and the three missing indexes</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-15T22:46:38.818Z",
+  "generatedAt": "2026-09-15T23:27:37.547Z",
   "repo": {
-    "head": "01481f9",
+    "head": "206969b",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,11 +10,11 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-15T17:15:09-04:00",
+    "queueLastCommit": "2026-09-15T19:04:19-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 177,
+    "runDone": 178,
     "runAwaiting": 9,
     "runInFlight": 1,
     "runNotStarted": 27,
@@ -210,33 +210,33 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "INQUIRY_FORM_SPEC Phase IF-1 — the inquiry form asks only what the call can't (Cam 2026-09-15). Ten inputs: name, title, email, phone, course, town/state, course type, HOW THEY TAKE TEE TIMES TODAY (→",
-      "line": 1986,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "CALL_SCHEDULING_SPEC Phase SC-1 — availability engine + Google (SCHEMA CHANGE, attended): CourseInquiry.callInviteToken/SentAt/ExpiresAt + Call.bookedByCourse/gcalEventId (migration `call_invites`, ad",
+      "title": "SECURITY (from the IF-1 review, pre-existing MP-4a): the duplicate-intake path on POST /api/inquiries lets an unauthenticated stranger who knows a course's name + city + state write a contact 'correct",
       "line": 1987,
       "section": "Queue (run in this order)"
     },
     {
-      "title": "CALL_SCHEDULING_SPEC Phase SC-2 — the invite + the public booking page (no migration): sendCallInviteEmail auto-sent on inquiry submit (AUTO_SEND_CALL_INVITE flag); /call/[token] public page, noindex,",
-      "line": 1988,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "CALL_SCHEDULING_SPEC Phase SC-3 — admin side (no migration): 'Send a booking link' beside Set up call / Skip, with sent-not-booked state + resend; sheet's Next-call cell learns 'Invite sent · Nd'; an ",
+      "title": "CALL_SCHEDULING_SPEC Phase SC-1 — availability engine + Google (SCHEMA CHANGE, attended): CourseInquiry.callInviteToken/SentAt/ExpiresAt + Call.bookedByCourse/gcalEventId (migration `call_invites`, ad",
       "line": 1989,
       "section": "Queue (run in this order)"
     },
     {
+      "title": "CALL_SCHEDULING_SPEC Phase SC-2 — the invite + the public booking page (no migration): sendCallInviteEmail auto-sent on inquiry submit (AUTO_SEND_CALL_INVITE flag); /call/[token] public page, noindex,",
+      "line": 1990,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "CALL_SCHEDULING_SPEC Phase SC-3 — admin side (no migration): 'Send a booking link' beside Set up call / Skip, with sent-not-booked state + resend; sheet's Next-call cell learns 'Invite sent · Nd'; an ",
+      "line": 1991,
+      "section": "Queue (run in this order)"
+    },
+    {
       "title": "UI_REVISE_SPEC H-2f — CAM TO CONFIRM before running (2026-09-15, 'i like having the fade from slide to slide'): after H-2e the only hard section edges left on / are the two around the pine pricing sla",
-      "line": 1993,
+      "line": 1995,
       "section": "Queue (run in this order)"
     },
     {
       "title": "INQUIRY_CALL_SPEC Phase IC-5 — the call captures STRUCTURED answers, not prose (Cam 2026-09-15, overrules assumption A3). New src/lib/call-answers.ts field spec per agenda item (money in INTEGER CENTS",
-      "line": 1995,
+      "line": 1997,
       "section": "Queue (run in this order)"
     }
   ],
@@ -807,6 +807,36 @@
   },
   "recentCommits": [
     {
+      "h": "206969b",
+      "date": "2026-09-15",
+      "subject": "IF-1 review fixes: confirmation email now says pick a call time (same Calendly page as the success screen, until SC-2's invite link exists); the lead form's fields are HTML-escaped in both emails; call-preference arrays de-duped and capped; limiter keyed on the platform IP; JSON body and field types guarded; resubmit diff carries the booking method; semi-private gets a sheet path (passes + member booking + member rate); call answers outrank stale form answers for the sheet's branch defaults; the sheet's branch question reuses YesNo; dead needs block dropped from the confirmation email"
+    },
+    {
+      "h": "52f7bc3",
+      "date": "2026-09-15",
+      "subject": "IF-1: the inquiry form asks only what the call can't — ten inputs, the eight branch questions gone; booking method lands in currentBookingMethod, call-time chips in needsJson.callPreference; success screen points at picking a call; booking_today always on the agenda with the form's answer as context; the setup sheet asks its branching questions inline (saved → old form answers → call answers → ask) and never hides a section; admin Answers tab renders the new shape"
+    },
+    {
+      "h": "47d9bb6",
+      "date": "2026-09-15",
+      "subject": "H-2e review fixes: the nav blur fades with the white (transition covers backdrop-filter); the mobile menu closes when the bar hides; the H-1 shrink waits for the bar; the story's bottom wash moves to the story's end (outside the pin) and is off on phones; .device's near-cream fill recorded as deliberate"
+    },
+    {
+      "h": "1a4d726",
+      "date": "2026-09-15",
+      "subject": "queue/spec update (restore: a stale Cowork save reverted the H-2d-R2/R3/H-2e check-offs and dropped the H-2f draft; nothing new was in it)"
+    },
+    {
+      "h": "c31b956",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "b0d3a14",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "01481f9",
       "date": "2026-09-15",
       "subject": "H-2e: one ground, one logo — cream root (the white/cream banding was a bug), white step cards, cream footer, the story fades into cream at both ends; over the hero the nav is just the lockup, past it the bar fades in with Operator login + List your course; How it works/Pricing/FAQ links gone; Operator login in the footer"
@@ -835,36 +865,6 @@
       "h": "107e176",
       "date": "2026-09-15",
       "subject": "queue/spec update (merge: Cowork's IC-5 + the H-2c/H-2d review notes and H-2d-R1..R3 that a stale save dropped)"
-    },
-    {
-      "h": "a75fa84",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "677f083",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "ce5e7e5",
-      "date": "2026-09-15",
-      "subject": "H-2d review FIX-1: no fee line in the hero device — the compact HomeDemo drops the fee clause, the fee row and the fee from its total; beats/prog above the cream overlay; trust line 13px"
-    },
-    {
-      "h": "6e4907e",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "2ea1864",
-      "date": "2026-09-14",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "2cf4fee",
-      "date": "2026-09-14",
-      "subject": "MP-6c + MP-10 schema halves: Booking.paidAt (stamped when the charge succeeds or the counter takes payment; Revenue windows read it) and the three missing indexes"
     }
   ]
 }
