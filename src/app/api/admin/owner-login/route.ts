@@ -56,9 +56,16 @@ export async function POST(req: NextRequest) {
     // replayed code inside its step. Same attempt counter and lockout as the
     // email path below, which stays untouched for an un-enrolled owner.
     if (admin.twoFactorSecret) {
-      if (!admin.twoFactorCode.startsWith('totp')) {
+      // Only the PENDING marker (written when the password was just verified)
+      // admits a second factor. The used-step marker written after a success
+      // does not — a recovery code alone must never open a session (review).
+      if (!admin.twoFactorCode.startsWith(TOTP_PENDING)) {
         return NextResponse.json({ error: 'No pending verification — please start over' }, { status: 400 });
       }
+      // A step used by the previous login rides along on the pending marker
+      // ("totp-pending:<step>") so the same code cannot be replayed into a
+      // fresh login inside its window.
+      const carriedStep = admin.twoFactorCode.slice(TOTP_PENDING.length + 1);
       const raw = String(code).trim();
       let ok = false;
       let data: Record<string, unknown> = {};
@@ -70,7 +77,7 @@ export async function POST(req: NextRequest) {
         }
       } else {
         const step = totpMatchStep(raw, admin.twoFactorSecret);
-        if (step !== null && admin.twoFactorCode !== TOTP_USED_PREFIX + step) {
+        if (step !== null && String(step) !== carriedStep) {
           ok = true;
           // Keep the used-step marker for two steps so the same code cannot be replayed.
           data = { twoFactorCode: TOTP_USED_PREFIX + step, twoFactorCodeExpiry: new Date(Date.now() + 2 * TOTP_STEP_SECONDS * 1000) };
@@ -170,9 +177,12 @@ export async function POST(req: NextRequest) {
   // OWNER TOTP 2FA: enrolled → no email; the app has the code. The pending
   // marker is what the verify step checks for.
   if (admin.twoFactorSecret) {
+    // Carry a still-live used step onto the pending marker (replay guard).
+    const carried = admin.twoFactorCode?.startsWith(TOTP_USED_PREFIX) && admin.twoFactorCodeExpiry && admin.twoFactorCodeExpiry > new Date()
+      ? ':' + admin.twoFactorCode.slice(TOTP_USED_PREFIX.length) : '';
     await prisma.adminUser.update({
       where: { id: admin.id },
-      data: { twoFactorCode: TOTP_PENDING, twoFactorCodeExpiry: new Date(Date.now() + 10 * 60 * 1000), twoFactorAttempts: 0 },
+      data: { twoFactorCode: TOTP_PENDING + carried, twoFactorCodeExpiry: new Date(Date.now() + 10 * 60 * 1000), twoFactorAttempts: 0 },
     });
     return NextResponse.json({ requires2FA: true, method: 'totp' });
   }

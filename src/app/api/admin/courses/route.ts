@@ -196,7 +196,10 @@ export async function GET(req: NextRequest) {
   // CS-2 §1: the sheet as a CSV — same auth as the list, money and PII
   // blanked below SUPPORT_PLUS exactly as the JSON is.
   if (req.nextUrl.searchParams.get('format') === 'csv') {
-    const esc = (v: unknown) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+    // Security review: a value that starts with a formula trigger is prefixed
+    // with an apostrophe so a spreadsheet shows it as text — public forms feed
+    // these columns.
+    const esc = (v: unknown) => { const str = String(v ?? ''); const safe = /^[=+\-@\t\r]/.test(str) ? "'" + str : str; return '"' + safe.replace(/"/g, '""') + '"'; };
     const iso = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString() : '');
     const header = ['course', 'city', 'state', 'type', 'operator', 'operator email', 'live', 'health', 'health reason', 'setup done', 'next step', 'bookings 30d', 'fees 30d', 'next touch', 'last talked', 'live since', 'archived'];
     const lines = [header.map(esc).join(',')];

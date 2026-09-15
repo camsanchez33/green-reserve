@@ -48,7 +48,8 @@ export async function POST(req: NextRequest) {
       cartFeeWeekdayCents:  dollarsToCents(cartFeeWeekday),
       cartFeeWeekendCents:  dollarsToCents(cartFeeWeekend),
       discountPct:        discountPct        != null ? Number(discountPct)        : null,
-      advanceBookingDays: advanceBookingDays != null ? Number(advanceBookingDays) : 14,
+      // Security review: this now sizes the tee-time generation loop — bounded like the course windows.
+      advanceBookingDays: advanceBookingDays != null ? Math.min(365, Math.max(1, Number(advanceBookingDays) || 14)) : 14,
       guestPassesPerYear: guestPassesPerYear != null ? Number(guestPassesPerYear) : 0,
       annualFeeCents:     dollarsToCentsOr0(annualFee),
       initiationFeeCents: dollarsToCentsOr0(initiationFee),
@@ -82,7 +83,7 @@ export async function PATCH(req: NextRequest) {
       cartFeeWeekdayCents:  updates.cartFeeWeekday  !== undefined ? dollarsToCents(updates.cartFeeWeekday)  : tier.cartFeeWeekdayCents,
       cartFeeWeekendCents:  updates.cartFeeWeekend  !== undefined ? dollarsToCents(updates.cartFeeWeekend)  : tier.cartFeeWeekendCents,
       discountPct:        updates.discountPct        !== undefined ? (updates.discountPct     != null ? Number(updates.discountPct)     : null) : tier.discountPct,
-      advanceBookingDays: updates.advanceBookingDays != null ? Number(updates.advanceBookingDays) : tier.advanceBookingDays,
+      advanceBookingDays: updates.advanceBookingDays != null ? Math.min(365, Math.max(1, Number(updates.advanceBookingDays) || tier.advanceBookingDays)) : tier.advanceBookingDays,
       guestPassesPerYear: updates.guestPassesPerYear != null ? Number(updates.guestPassesPerYear) : tier.guestPassesPerYear,
       annualFeeCents:     updates.annualFee     != null ? dollarsToCentsOr0(updates.annualFee)     : tier.annualFeeCents,
       initiationFeeCents: updates.initiationFee != null ? dollarsToCentsOr0(updates.initiationFee) : tier.initiationFeeCents,

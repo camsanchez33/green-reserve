@@ -1,7 +1,7 @@
 # GreenReserve — Architecture Reference
 
 > **Auto-generated** by `scripts/route-inventory.ts`. Re-run after adding routes.
-> Last generated: 2026-09-14
+> Last generated: 2026-09-15
 
 ---
 
@@ -15,6 +15,7 @@
 | `/api/admin/bootstrap` | POST | admin | — |
 | `/api/admin/broadcasts` | GET, POST | admin | MP-7a: ONE recipient filter. Thread-insert, email and the preview count |
 | `/api/admin/change-password` | POST | admin | — |
+| `/api/admin/course-calls` | POST | admin | COURSES_SHEET_SPEC CS-1 §3 — check-in calls with a live course. Courses |
 | `/api/admin/course-detail` | GET, PATCH | admin | — |
 | `/api/admin/course-documents` | GET, POST | admin | A-05 item 5 — Documents tab: auto records (operator agreement acceptance, |
 | `/api/admin/course-documents/download` | GET | admin | MP-5a. Signed contracts used to be uploaded as `access: 'public'` Vercel |
@@ -53,6 +54,7 @@
 | `/api/admin/tee-sheet` | GET, POST, PATCH | admin | GET /api/admin/tee-sheet?courseId=X&date=Y |
 | `/api/admin/transactions` | GET | admin | MP-10: same shape as /api/admin/activity — two sources merged by date, each |
 | `/api/admin/transactions/export` | GET | admin | MP-6c: a transaction-level export for an accountant. One row per money |
+| `/api/admin/two-factor` | GET, POST | admin | OWNER TOTP 2FA — enrolment and recovery codes, on /admin/profile. |
 | `/api/admin/verify-operator` | POST | admin | GET deliberately removed (MP-2, ADMIN_V4 V4-2 leak). It returned EVERY |
 | `/api/alerts` | POST | public | — |
 | `/api/alerts/unsubscribe/[token]` | GET | public | — |
@@ -127,6 +129,7 @@
 | `/api/operator/request-changes` | POST | operator | Logged-in-operator counterpart to /api/preview/[courseId]/request-changes |
 | `/api/operator/schedule` | GET, POST, PATCH, DELETE | operator | MP-5d: thin caller of the shared schedule service (see lib/schedule-service). |
 | `/api/operator/settings` | GET, PATCH | operator | Never cache — the dashboard's live/draft status must reflect the DB the |
+| `/api/operator/sign` | GET, POST | operator | AGREEMENT_SPEC AG-2 §1 — the signing step. |
 | `/api/operator/staff` | GET, POST, PATCH, DELETE | operator | — |
 | `/api/operator/stripe/callback` | GET | operator | SD-11 (from the SD review): this was unauthenticated and un-try/caught — any |
 | `/api/operator/stripe/connect` | GET | operator | — |
@@ -188,6 +191,7 @@
 | `/dashboard/reset-password` | operator | yes |
 | `/dashboard/schedules` | operator | yes |
 | `/dashboard/settings` | operator | yes |
+| `/dashboard/sign` | operator | yes |
 | `/dashboard/tournaments` | operator | yes |
 | `/dashboard/verify` | operator | yes |
 | `/for-courses` | public | no |
@@ -299,18 +303,27 @@ Key models:
 | `src/lib/admin-roles.ts` | Viewer: read-only, and only the surfaces with no golfer PII and no led |
 | `src/lib/admin-session-context.tsx` | MP-11a (ADMIN_V4 V4-7, LAW rule 2): the admin session is resolved ONCE |
 | `src/lib/admin-session.ts` | Defined in admin-roles.ts (client-safe) and re-exported here so existi |
+| `src/lib/agreement-gate.ts` | AG-1: the go-live gate. Server only (reads legal/documents/ via |
+| `src/lib/agreement-pdf.tsx` | AGREEMENT_SPEC AG-2 §2 — the signed-agreement PDF. Server only. |
+| `src/lib/agreement-required.ts` | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. Server only. |
+| `src/lib/agreement-sign.ts` | AGREEMENT_SPEC AG-2 — the signing service. Server only. |
+| `src/lib/agreements.ts` | AGREEMENT_SPEC AG-1 §2 — versioned agreement documents. |
 | `src/lib/api-response.ts` | Common JSON response helpers to reduce boilerplate in API routes. |
 | `src/lib/approval-state.ts` | DB-backed counterpart to the pure functions in change-requests.ts — fo |
 | `src/lib/auth.ts` | Fail closed: in production a missing JWT_SECRET must never silently fa |
 | `src/lib/booking-fees.ts` | — |
 | `src/lib/booking-mode.ts` | Course-world pages: the course page itself, its member portal, and its |
 | `src/lib/booking-status.ts` | Single source of truth for what to show a user (operator, staff, or go |
+| `src/lib/booking-window.ts` | BOOKING WINDOWS (RUN_QUEUE) — how far ahead each audience can see and  |
 | `src/lib/cancel-booking.ts` | MP-5b. Cancelling normally frees a slot, so anyone watching for that t |
 | `src/lib/change-requests.ts` | Single source of truth for structured "request changes" data (V13b). |
 | `src/lib/checkin-booking.ts` | Charging a round, and checking a golfer in, are two different things. |
 | `src/lib/claim-tee-time.ts` | Atomically creates a booking and updates tee-time capacity. |
+| `src/lib/course-action-queue.ts` | COURSES_SHEET_SPEC CS-1 §4 — the Overview action queue's course rows f |
+| `src/lib/course-checkin.ts` | COURSES_SHEET_SPEC CS-1 §2 — check-in calls with live courses. |
 | `src/lib/course-closure.ts` | MP-5b. Taking a course offline or archiving it used to ignore the golf |
 | `src/lib/course-metrics.ts` | THE shared metrics brain (REVISE_QUEUE A-04 item 0) — bookings/gross/ |
+| `src/lib/course-setup.ts` | COURSES_SHEET_SPEC CS-1 §1 — the five setup steps a built course goes |
 | `src/lib/course-timeline.ts` | A-05 items 4/5: a per-course event log with NO schema change — rides o |
 | `src/lib/course-wire.ts` | Course money: cents at rest, dollars on the wire. |
 | `src/lib/courses-data.ts` | Deterministic tee time generation — same output for same course+date e |
@@ -327,12 +340,15 @@ Key models:
 | `src/lib/golfer-otp.ts` | Passwordless golfer sign-in (GOLFER_SPEC G5). No schema change was all |
 | `src/lib/image-resize.ts` | Client-side downscale so a 12MB phone photo never has to travel over t |
 | `src/lib/inquiry-action-queue.ts` | The Overview action queue's inquiry rows. |
+| `src/lib/inquiry-call.ts` | INQUIRY_CALL_SPEC IC-1 §2 — the discovery-call agenda catalog, and the |
+| `src/lib/inquiry-needs.ts` | INQUIRY_CALL_SPEC IC-1 §3 — "Still need from them", the sheet's column |
 | `src/lib/inquiry-status.ts` | Single source of truth for what every inquiry status means and which p |
 | `src/lib/lifecycle.ts` | LIFECYCLE PARITY LAW (RUN_QUEUE) — a linked pair (CourseInquiry.builtC |
 | `src/lib/member-session.ts` | 15-minute magic link token — sent in email |
 | `src/lib/money-problems.ts` | MP-8a. The two "money that should exist and does not" predicates, shar |
 | `src/lib/money.ts` | Money conversions, in one place. |
 | `src/lib/normalize-course.ts` | eslint-disable-next-line @typescript-eslint/no-explicit-any |
+| `src/lib/owner-totp.ts` | OWNER TOTP 2FA (RUN_QUEUE) — the authenticator-app second factor for t |
 | `src/lib/password.ts` | Shared password strength rule — used on registration, reset, and in-da |
 | `src/lib/platform-stripe.ts` | EXPENSE TRACKER (RUN_QUEUE) — the AUTOMATIC half of the P&L: what Stri |
 | `src/lib/preview-token.ts` | — |

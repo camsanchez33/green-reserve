@@ -57,7 +57,8 @@ export function generationHorizonDays(course: WindowCourse, tiers: { advanceBook
     course.memberAdvanceDays ?? DEFAULT_MEMBER_WINDOW_DAYS,
     ...tiers.map(t => t.advanceBookingDays ?? 0),
   );
-  return Math.max(MIN_GENERATION_DAYS, widest + 1);
+  // Hard cap so no future writer can turn one course's window into a runaway cron loop.
+  return Math.min(366, Math.max(MIN_GENERATION_DAYS, widest + 1));
 }
 
 /** The 403 body the tee-times APIs return for a date past the viewer's window. */

@@ -823,6 +823,8 @@ model AgreementAcceptance {
   legacy            Boolean  @default(false)
   acceptedAt        DateTime @default(now())
 
+  /// Security review: two simultaneous signings can never produce two rows for one act.
+  @@unique([courseId, document, version])
   @@index([courseId, document, acceptedAt])
 }
 

@@ -78,7 +78,10 @@ export async function GET(req: NextRequest) {
   // IC-3 §5: the one-time "organized excel sheet". Same auth as the JSON.
   if (req.nextUrl.searchParams.get('format') === 'csv') {
     const now = new Date();
-    const esc = (v: unknown) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+    // Security review: a value that starts with a formula trigger is prefixed
+    // with an apostrophe so a spreadsheet shows it as text — public forms feed
+    // these columns.
+    const esc = (v: unknown) => { const str = String(v ?? ''); const safe = /^[=+\-@\t\r]/.test(str) ? "'" + str : str; return '"' + safe.replace(/"/g, '""') + '"'; };
     const header = ['course', 'city', 'state', 'course type', 'contact', 'title', 'email', 'phone', 'stage', 'next call', 'last call outcome', 'still need', 'days in stage', 'inquired', 'source', 'closed reason'];
     const lines = [header.map(esc).join(',')];
     for (const r of rows) {

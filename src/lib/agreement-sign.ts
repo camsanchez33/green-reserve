@@ -72,7 +72,9 @@ export async function recordSigning(input: SignInput): Promise<SignResult> {
     return { ok: true, signed: [], alreadyCurrent };
   }
 
-  const rows = await prisma.$transaction(async tx => {
+  let rows: { id: string; document: AgreementDocument; version: string }[];
+  try {
+  rows = await prisma.$transaction(async tx => {
     const created: { id: string; document: AgreementDocument; version: string }[] = [];
     for (const d of toSign) {
       const row = await tx.agreementAcceptance.create({
@@ -90,6 +92,12 @@ export async function recordSigning(input: SignInput): Promise<SignResult> {
     await tx.course.update({ where: { id: input.courseId }, data: { legalName } });
     return created;
   });
+  } catch (e) {
+    // A concurrent signing got there first (unique on course+document+version):
+    // that one is the record; this one is a no-op, never a duplicate.
+    if ((e as { code?: string }).code === 'P2002') return { ok: true, signed: [], alreadyCurrent: docs.map(d => d.document) };
+    throw e;
+  }
 
   // The timeline line stays as history for the admin Documents tab.
   const oa = rows.find(r => r.document === 'operator_agreement');

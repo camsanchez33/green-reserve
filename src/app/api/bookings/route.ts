@@ -72,10 +72,16 @@ function applyTierRates(
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { teeTimeId, players, golferName, golferEmail, golferPhone, paymentMethodId, customerId, cartSelected, rangeBallsSize, termsAccepted } = body;
+  const { teeTimeId, players: playersRaw, golferName, golferEmail, golferPhone, paymentMethodId, customerId, cartSelected, rangeBallsSize, termsAccepted } = body;
 
-  if (!teeTimeId || !players || !golferName || !golferEmail)
+  if (!teeTimeId || !playersRaw || !golferName || !golferEmail)
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  // Security review: `players` was only truthiness-checked, so a negative
+  // count passed the capacity test and REWOUND playersBooked (a full slot
+  // resold), and wrote negative totals. An integer between 1 and 8, or nothing.
+  const players = Number(playersRaw);
+  if (!Number.isInteger(players) || players < 1 || players > 8)
+    return NextResponse.json({ error: 'Invalid player count.' }, { status: 400 });
 
   if (termsAccepted !== true) {
     return NextResponse.json({ error: 'You must agree to the Terms of Service to book.' }, { status: 400 });

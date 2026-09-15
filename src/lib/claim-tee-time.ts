@@ -37,6 +37,9 @@ export async function claimTeeTime(
         if (teeTime.status === 'blocked') throw new TeeTimeClaimError('BLOCKED');
 
         const spotsLeft = teeTime.playersAvailable - teeTime.playersBooked;
+        // Belt and braces (security review): a non-positive count must never
+        // reach the capacity arithmetic below, whatever the caller validated.
+        if (!Number.isInteger(players) || players < 1) throw new TeeTimeClaimError('SPOTS', spotsLeft);
         if (players > spotsLeft) {
           throw new TeeTimeClaimError(spotsLeft <= 0 ? 'FULL' : 'SPOTS', spotsLeft);
         }

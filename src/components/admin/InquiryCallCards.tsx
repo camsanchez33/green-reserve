@@ -461,7 +461,7 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
             </div>
           ) : (
             <div>
-              <label className={lbl}>What you got</label>
+              <label className={lbl}>What you got <span className="normal-case tracking-normal text-ink-faint">— the course sees these on their setup sheet; notes below stay private</span></label>
               <div className="border border-line rounded-md divide-y divide-line-soft mb-3">
                 {agendaKeys.map(item => {
                   const prior = status.find(s => s.key === item.key)?.answered;

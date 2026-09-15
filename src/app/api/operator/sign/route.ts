@@ -6,7 +6,7 @@ import { signableDocuments, type AgreementDocument } from '@/lib/agreements';
 import { agreementStatus } from '@/lib/agreement-gate';
 import { recordSigning, deliverAgreementPdfs } from '@/lib/agreement-sign';
 import { agreementReacceptance } from '@/lib/agreement-required';
-import { clientIp } from '@/lib/rate-limit';
+import { evidentiaryIp } from '@/lib/rate-limit';
 
 // AGREEMENT_SPEC AG-2 §1 — the signing step.
 //
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
   const result = await recordSigning({
     courseId: session.courseId,
     signerEmail: session.email,
-    ip: clientIp(req),
+    ip: evidentiaryIp(req),
     userAgent: req.headers.get('user-agent') ?? '',
     legalName: String(body.legalName ?? ''),
     signerName: String(body.signerName ?? ''),
