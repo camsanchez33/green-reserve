@@ -161,14 +161,14 @@ export const RESUBMIT_REVIEWED_ACTOR = 'Re-submission reviewed';
 export type ResubmitPayload = {
   contactName?: string; contactTitle?: string; email?: string; phone?: string;
   courseName?: string; address?: string; city?: string; state?: string; zipCode?: string;
-  website?: string; courseType?: string; teeTimesPerDay?: number | null;
+  website?: string; courseType?: string; currentBookingMethod?: string; teeTimesPerDay?: number | null;
   greenFeeRange?: string; pricingNotes?: string; additionalNotes?: string;
   lookingFor?: string[];
 };
 
 export const RESUBMIT_FIELDS: (keyof ResubmitPayload)[] = [
   'courseName', 'contactName', 'contactTitle', 'email', 'phone', 'website',
-  'address', 'city', 'state', 'zipCode', 'courseType', 'teeTimesPerDay',
+  'address', 'city', 'state', 'zipCode', 'courseType', 'currentBookingMethod', 'teeTimesPerDay',
   'greenFeeRange', 'lookingFor', 'pricingNotes', 'additionalNotes',
 ];
 
@@ -176,6 +176,7 @@ export const RESUBMIT_FIELD_LABEL: Record<string, string> = {
   courseName: 'Course name', contactName: 'Contact name', contactTitle: 'Title',
   email: 'Email', phone: 'Phone', website: 'Website', address: 'Address',
   city: 'City', state: 'State', zipCode: 'ZIP', courseType: 'Course type',
+  currentBookingMethod: 'Booking method today',
   teeTimesPerDay: 'Tee times per day', greenFeeRange: 'Green fees',
   lookingFor: 'Looking for', pricingNotes: 'Pricing notes', additionalNotes: 'Additional notes',
 };

@@ -896,6 +896,10 @@ export async function sendMemberLinkedNotification(data: {
   });
 }
 
+// The lead form is public: every field below is attacker-controlled text that
+// is interpolated into HTML delivered to hello@. Escape it.
+const escHtml = (s: string) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
 export async function sendInquiryNotification(data: {
   contactName: string;
   contactTitle: string;
@@ -913,14 +917,14 @@ export async function sendInquiryNotification(data: {
     <h2 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:700;">New Course Inquiry ⛳</h2>
     <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">A new course has submitted interest on GreenReserve.</p>
     <div style="background:#f9fafb;border-radius:4px;padding:20px;margin-bottom:20px;">
-      <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#111827;">${data.courseName}</p>
-      <p style="margin:0 0 4px;color:#6b7280;font-size:14px;">${data.city}, ${data.state} · ${data.courseType}</p>
-      <p style="margin:0 0 12px;color:#6b7280;font-size:14px;">Current booking: ${data.currentBookingMethod}</p>
-      <p style="margin:0 0 4px;color:#374151;font-size:14px;"><strong>Contact:</strong> ${data.contactName} — ${data.contactTitle}</p>
-      <p style="margin:0 0 4px;color:#374151;font-size:14px;"><strong>Email:</strong> ${data.email}</p>
-      <p style="margin:0 0 4px;color:#374151;font-size:14px;"><strong>Phone:</strong> ${data.phone}</p>
-      ${data.greenFeeRange ? `<p style="margin:8px 0 0;color:#374151;font-size:14px;"><strong>Fee range:</strong> ${data.greenFeeRange}</p>` : ''}
-      ${data.additionalNotes ? `<p style="margin:8px 0 0;color:#374151;font-size:14px;"><strong>Notes:</strong> ${data.additionalNotes}</p>` : ''}
+      <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#111827;">${escHtml(data.courseName)}</p>
+      <p style="margin:0 0 4px;color:#6b7280;font-size:14px;">${escHtml(data.city)}, ${escHtml(data.state)} · ${escHtml(data.courseType)}</p>
+      <p style="margin:0 0 12px;color:#6b7280;font-size:14px;">Current booking: ${escHtml(data.currentBookingMethod)}</p>
+      <p style="margin:0 0 4px;color:#374151;font-size:14px;"><strong>Contact:</strong> ${escHtml(data.contactName)} — ${escHtml(data.contactTitle)}</p>
+      <p style="margin:0 0 4px;color:#374151;font-size:14px;"><strong>Email:</strong> ${escHtml(data.email)}</p>
+      <p style="margin:0 0 4px;color:#374151;font-size:14px;"><strong>Phone:</strong> ${escHtml(data.phone)}</p>
+      ${data.greenFeeRange ? `<p style="margin:8px 0 0;color:#374151;font-size:14px;"><strong>Fee range:</strong> ${escHtml(data.greenFeeRange)}</p>` : ''}
+      ${data.additionalNotes ? `<p style="margin:8px 0 0;color:#374151;font-size:14px;"><strong>Notes:</strong> ${escHtml(data.additionalNotes)}</p>` : ''}
     </div>
     <a href="${process.env.NEXT_PUBLIC_URL}/admin" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;">
       Review in Admin →
@@ -935,66 +939,27 @@ export async function sendInquiryNotification(data: {
   });
 }
 
+// IF-1 §3: the confirmation points at picking a call. CALL_SCHEDULING_SPEC SC-2
+// replaces this with the per-inquiry invite link; until then it is the same
+// Calendly page the success screen uses.
+const INQUIRY_CALL_URL = 'https://calendly.com/greenreserve';
+
 export async function sendInquiryConfirmation(data: {
   firstName: string; contactName: string; email: string; courseName: string;
-  needs?: Record<string, string> | null;
 }) {
-  const NEEDS_LABELS: Record<string, string> = {
-    residentRates: 'Resident rates', hasMemberships: 'Memberships / season passes',
-    roundsPerMonth: 'Rounds per month', publicTeeTimes: 'Non-member tee times',
-    memberCount: 'Member count', outsideOutings: 'Outside outings',
-    memberBookingToday: 'Current booking method', chargesMembersPerRound: 'Charges per round',
-  };
-  const NEEDS_VALUES: Record<string, string> = {
-    yes: 'Yes', no: 'No', yes_regularly: 'Yes, regularly', limited: 'Limited windows',
-    no_members_only: 'No, members only', under_100: 'Under 100', '100_300': '100–300',
-    '300_plus': '300+', under_500: 'Under 500', '500_1500': '500–1,500',
-    '1500_3000': '1,500–3,000', '3000_plus': '3,000+',
-    pro_shop_phone: 'Pro shop / phone', signup_sheet: 'Sign-up sheet',
-    booking_software: 'Booking software', other: 'Other',
-  };
-  const needsEntries = data.needs
-    ? Object.entries(data.needs).filter(([, v]) => v && v !== '')
-    : [];
-  const needsSection = needsEntries.length > 0 ? `
-    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:18px 20px;margin-top:24px;margin-bottom:4px;">
-      <p style="margin:0 0 12px;color:#111827;font-size:13px;font-weight:700;">What you told us</p>
-      <table width="100%" cellpadding="0" cellspacing="0">
-        ${needsEntries.map(([k, v]) => `
-        <tr>
-          <td style="padding:5px 0;color:#6b7280;font-size:13px;width:48%;vertical-align:top;">${NEEDS_LABELS[k] || k}</td>
-          <td style="padding:5px 0;color:#111827;font-size:13px;font-weight:500;">${NEEDS_VALUES[v] || v}</td>
-        </tr>`).join('')}
-      </table>
-    </div>
-  ` : '';
+  // IF-1: the "What you told us" table went with the branch questions — the
+  // form no longer collects anything worth echoing back.
   const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">Got it, ${data.firstName}.</h1>
-    <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
-      Thanks for reaching out about <strong>${data.courseName}</strong>. We'll be in touch within 1–2 business days.
-      Here's what to expect:
+    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">Got it, ${escHtml(data.firstName)}.</h1>
+    <p style="margin:0 0 20px;color:#6b7280;font-size:15px;">
+      Thanks for reaching out about <strong>${escHtml(data.courseName)}</strong>. The next step is a 20-minute call:
+      we'll go through your green fees, your tee sheet, and what going live looks like. Most courses are live
+      within a week of that call.
     </p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
-      <tr>
-        <td style="padding:14px 0;border-bottom:1px solid #f3f4f6;">
-          <p style="margin:0 0 2px;color:#111827;font-size:14px;font-weight:700;">1. We review your submission</p>
-          <p style="margin:0;color:#6b7280;font-size:13px;">If it's a good fit, we'll follow up within 1–2 business days and send you a details sheet.</p>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:14px 0;border-bottom:1px solid #f3f4f6;">
-          <p style="margin:0 0 2px;color:#111827;font-size:14px;font-weight:700;">2. You fill out a details sheet</p>
-          <p style="margin:0;color:#6b7280;font-size:13px;">Pricing, policies, and facilities — takes 10–15 minutes. Saves as you go, so you can come back to it.</p>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:14px 0;">
-          <p style="margin:0 0 2px;color:#111827;font-size:14px;font-weight:700;">3. We build your page</p>
-          <p style="margin:0;color:#6b7280;font-size:13px;">You review, approve, and go live. Golfers can book the same day.</p>
-        </td>
-      </tr>
-    </table>
-    ${needsSection}
+    <a href="${INQUIRY_CALL_URL}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:12px;">
+      Pick a call time
+    </a>
+    <p style="margin:0 0 24px;color:#9ca3af;font-size:12px;text-align:center;">20 minutes, at a time that works for you.</p>
     <p style="margin:16px 0 0;color:#9ca3af;font-size:12px;text-align:center;">
       Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>.
     </p>

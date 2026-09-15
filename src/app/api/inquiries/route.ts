@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendInquiryNotification, sendInquiryConfirmation } from '@/lib/email';
 import { ALIVE_STATUSES, encodeResubmit } from '@/lib/inquiry-status';
-import { rateLimit, clientIp } from '@/lib/rate-limit';
+import { rateLimit, evidentiaryIp } from '@/lib/rate-limit';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -15,27 +15,38 @@ const CALL_DAYS = new Set(['Weekdays', 'Weekends']);
 function callPreferenceFrom(raw: unknown): { times: string[]; days: string[] } | null {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as { times?: unknown; days?: unknown };
-  const times = Array.isArray(r.times) ? r.times.filter((x): x is string => typeof x === 'string' && CALL_TIMES.has(x)) : [];
-  const days = Array.isArray(r.days) ? r.days.filter((x): x is string => typeof x === 'string' && CALL_DAYS.has(x)) : [];
+  // De-duped and capped at the whitelist's size — membership alone would let a
+  // public POST store an unbounded array.
+  const times = Array.isArray(r.times) ? [...new Set(r.times.filter((x): x is string => typeof x === 'string' && CALL_TIMES.has(x)))].slice(0, CALL_TIMES.size) : [];
+  const days = Array.isArray(r.days) ? [...new Set(r.days.filter((x): x is string => typeof x === 'string' && CALL_DAYS.has(x)))].slice(0, CALL_DAYS.size) : [];
   return times.length || days.length ? { times, days } : null;
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  let body: Record<string, unknown>;
+  try {
+    const parsed: unknown = await req.json();
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('not an object');
+    body = parsed as Record<string, unknown>;
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
+  }
 
   // Honeypot: bots fill hidden fields, humans leave them blank. Silently accept but discard.
   if (body._website) return NextResponse.json({ success: true });
 
   // SD-1: the intake sends two emails per submission and creates a row; it had
   // no limit at all. Five an hour per connection is generous for a human.
-  if (!(await rateLimit(`inquiry:${clientIp(req)}`, 5, 3600))) {
+  // Keyed on the platform-set hop, not the client-writable leftmost x-forwarded-for.
+  if (!(await rateLimit(`inquiry:${evidentiaryIp(req)}`, 5, 3600))) {
     return NextResponse.json({ error: 'Too many submissions from this connection — try again in an hour, or email hello@greenreserve.app.' }, { status: 429 });
   }
 
   const required = ['firstName', 'lastName', 'contactTitle', 'email', 'phone', 'courseName', 'city', 'state', 'courseType', 'currentBookingMethod'];
   for (const field of required) {
-    if (!body[field]) return NextResponse.json({ error: `Missing: ${field}` }, { status: 400 });
+    if (typeof body[field] !== 'string' || !(body[field] as string).trim()) return NextResponse.json({ error: `Missing: ${field}` }, { status: 400 });
   }
+  const optStr = (v: unknown, max = 4000) => (typeof v === 'string' ? v.slice(0, max) : '');
   if (!COURSE_TYPES.has(String(body.courseType))) return NextResponse.json({ error: 'Invalid: courseType' }, { status: 400 });
   const currentBookingMethod = String(body.currentBookingMethod).trim().slice(0, 80);
   const callPreference = callPreferenceFrom(body.callPreference);
@@ -94,13 +105,14 @@ export async function POST(req: NextRequest) {
         // admin gets a diff against what is on file and decides; nothing is
         // overwritten behind their back.
         actorName: encodeResubmit({
-          contactName, contactTitle: body.contactTitle || '', email,
-          phone: body.phone || '', courseName, address: body.address || '',
-          city, state, zipCode: body.zipCode || '', website: body.website || '',
-          courseType: body.courseType || '', teeTimesPerDay: body.teeTimesPerDay || null,
-          greenFeeRange: body.greenFeeRange || '', pricingNotes: body.pricingNotes || '',
-          additionalNotes: body.additionalNotes || '',
-          lookingFor: Array.isArray(body.lookingFor) ? body.lookingFor : [],
+          contactName, contactTitle: optStr(body.contactTitle), email,
+          phone: optStr(body.phone), courseName, address: optStr(body.address),
+          city, state, zipCode: optStr(body.zipCode), website: optStr(body.website),
+          courseType: optStr(body.courseType), currentBookingMethod,
+          teeTimesPerDay: typeof body.teeTimesPerDay === 'number' ? body.teeTimesPerDay : null,
+          greenFeeRange: optStr(body.greenFeeRange), pricingNotes: optStr(body.pricingNotes),
+          additionalNotes: optStr(body.additionalNotes),
+          lookingFor: Array.isArray(body.lookingFor) ? body.lookingFor.filter((x): x is string => typeof x === 'string') : [],
         }),
       },
     }).catch(err => console.error('Duplicate-intake event failed:', err));
@@ -110,53 +122,58 @@ export async function POST(req: NextRequest) {
     // a "duplicate" flag would turn this public endpoint into an oracle for
     // which courses are already in the pipeline. No admin new-lead notification
     // fires, because this is not a new lead.
-    sendInquiryConfirmation({ firstName: body.firstName, contactName, email, courseName: body.courseName })
+    sendInquiryConfirmation({ firstName: body.firstName as string, contactName, email, courseName })
       .catch(err => console.error('Inquiry confirmation email failed:', err));
 
     return NextResponse.json({ success: true, id: existing.id });
   }
+  const firstName = (body.firstName as string).trim();
+  const contactTitle = (body.contactTitle as string).trim().slice(0, 120);
+  const phone = (body.phone as string).trim().slice(0, 40);
+  const courseType = body.courseType as string;
+  const additionalNotes = optStr(body.additionalNotes);
   const inquiry = await prisma.courseInquiry.create({
     data: {
-      firstName: body.firstName,
-      lastName: body.lastName,
+      firstName,
+      lastName: (body.lastName as string).trim(),
       contactName,
-      contactTitle: body.contactTitle,
+      contactTitle,
       email,
-      phone: body.phone,
-      courseName: body.courseName,
-      address: body.address || '',
-      city: body.city,
-      state: body.state,
-      zipCode: body.zipCode || '',
-      website: body.website || '',
-      courseType: body.courseType,
+      phone,
+      courseName,
+      address: optStr(body.address, 200),
+      city,
+      state,
+      zipCode: optStr(body.zipCode, 20),
+      website: optStr(body.website, 200),
+      courseType,
       currentBookingMethod,
-      teeTimesPerDay: body.teeTimesPerDay || null,
-      greenFeeRange: body.greenFeeRange || '',
-      hasResidentPricing: body.hasResidentPricing || false,
-      hasMemberPricing: body.hasMemberPricing || false,
-      hasCaddies: body.hasCaddies || false,
-      pricingNotes: body.pricingNotes || '',
-      facilitiesNotes: body.facilitiesNotes || '',
-      lookingFor: body.lookingFor || [],
-      additionalNotes: body.additionalNotes || '',
+      teeTimesPerDay: typeof body.teeTimesPerDay === 'number' ? body.teeTimesPerDay : null,
+      greenFeeRange: optStr(body.greenFeeRange, 120),
+      hasResidentPricing: body.hasResidentPricing === true,
+      hasMemberPricing: body.hasMemberPricing === true,
+      hasCaddies: body.hasCaddies === true,
+      pricingNotes: optStr(body.pricingNotes),
+      facilitiesNotes: optStr(body.facilitiesNotes),
+      lookingFor: Array.isArray(body.lookingFor) ? body.lookingFor.filter((x): x is string => typeof x === 'string') : [],
+      additionalNotes,
       needsJson,
     },
   });
 
-  const emailData = { firstName: body.firstName, contactName, email, courseName: body.courseName };
+  const emailData = { firstName, contactName, email, courseName };
   sendInquiryNotification({
     contactName,
-    contactTitle: body.contactTitle,
+    contactTitle,
     email,
-    phone: body.phone,
-    courseName: body.courseName,
-    city: body.city,
-    state: body.state,
-    courseType: body.courseType,
+    phone,
+    courseName,
+    city,
+    state,
+    courseType,
     currentBookingMethod,
-    greenFeeRange: body.greenFeeRange || '',
-    additionalNotes: body.additionalNotes || '',
+    greenFeeRange: optStr(body.greenFeeRange, 120),
+    additionalNotes,
   }).catch(err => console.error('Inquiry notification email failed:', err));
 
   sendInquiryConfirmation(emailData)

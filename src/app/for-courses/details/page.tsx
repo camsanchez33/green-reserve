@@ -178,6 +178,8 @@ function buildSections(courseType: string): { id: SectionId; title: string }[] {
     { id: 'about', title: 'About your course' },
     { id: 'notes', title: 'Anything else' },
   ];
+  // Semi-private (an IF-1 option) sells public tee times AND has members: the
+  // public list plus the member-booking window and the per-round member rate.
   const mid: { id: SectionId; title: string }[] = courseType === 'private'
     ? [
         { id: 'fees', title: 'Green fees' },
@@ -185,6 +187,13 @@ function buildSections(courseType: string): { id: SectionId; title: string }[] {
         { id: 'public_fees', title: 'Public tee times' },
         { id: 'member_rate', title: 'Member rate' },
         { id: 'outings', title: 'Outside outings' },
+      ]
+    : courseType === 'semi-private'
+    ? [
+        { id: 'fees', title: 'Green fees' },
+        { id: 'passes', title: 'Memberships & passes' },
+        { id: 'member', title: 'Member booking' },
+        { id: 'member_rate', title: 'Member rate' },
       ]
     : [
         { id: 'fees', title: 'Green fees' },
@@ -207,8 +216,8 @@ const isBranchKey = (id: string): id is BranchKey => (BRANCH_KEYS as string[]).i
 const emptyBranch = (): BranchAnswers => ({ passes: '', public_fees: '', member_rate: '', outings: '' });
 
 // Where a branch's default comes from, in order: what this sheet already saved,
-// then the old inquiry-form answers (records from before IF-1), then the
-// discovery call. Call answers are prose today (IC-5 makes them structured),
+// then the discovery call, then the old inquiry-form answers (records from
+// before IF-1). Call answers are prose today (IC-5 makes them structured),
 // so an answer that exists defaults the branch to Yes unless it starts with
 // "no" — and the question is still shown, so the course can override.
 const BRANCH_CALL_KEY: Partial<Record<BranchKey, string>> = { passes: 'resident_member', member_rate: 'resident_member', outings: 'protected_times' };
@@ -229,9 +238,10 @@ function deriveBranch(saved: unknown, needs: Needs, callAnswers: Record<string, 
   for (const k of BRANCH_KEYS) {
     const s = sv[k];
     if (s === 'yes' || s === 'no') { out[k] = s; continue; }
-    if (legacy[k]) { out[k] = legacy[k]; continue; }
+    // The call is fresher than a form radio from before IF-1, so it wins.
     const ck = BRANCH_CALL_KEY[k];
-    if (ck) out[k] = fromCallAnswer(callAnswers[ck]);
+    const fromCall = ck ? fromCallAnswer(callAnswers[ck]) : '';
+    out[k] = fromCall || legacy[k] || '';
   }
   return out;
 }
@@ -1776,19 +1786,7 @@ function DetailsForm() {
           {section && isBranchKey(section.id) && (
             <div className="mb-5">
               <p className="text-sm font-medium text-ink mb-2">{BRANCH_Q[section.id]}</p>
-              <div className="flex gap-2" role="group" aria-label={BRANCH_Q[section.id]}>
-                {(['yes', 'no'] as const).map(v => {
-                  const on = draft.branch[section.id as BranchKey] === v;
-                  const key = section.id as BranchKey;
-                  return (
-                    <button key={v} type="button" aria-pressed={on}
-                      onClick={() => setDraft(d => ({ ...d, branch: { ...d.branch, [key]: v } }))}
-                      className={'px-4 py-2 rounded-md border text-sm transition-colors ' + (on ? 'border-pine bg-pine/5 text-pine font-medium' : 'border-line bg-paper text-ink hover:border-pine/40')}>
-                      {v === 'yes' ? 'Yes' : 'No'}
-                    </button>
-                  );
-                })}
-              </div>
+              <YesNo value={draft.branch[section.id]} onChange={v => { const key = section.id as BranchKey; setDraft(d => ({ ...d, branch: { ...d.branch, [key]: v } })); }} />
             </div>
           )}
           {section && isBranchKey(section.id) && draft.branch[section.id] === 'no' && (
