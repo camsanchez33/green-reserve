@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-15T00:49:39.533Z",
+  "generatedAt": "2026-09-15T21:08:44.706Z",
   "repo": {
-    "head": "f0a4e4b",
+    "head": "ce5e7e5",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,24 +10,14 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-14T20:39:06-04:00",
-    "unrecorded": [
-      {
-        "h": "f0a4e4b",
-        "date": "2026-09-14T20:49:37-04:00",
-        "subject": "SD-5 (part 2): partial-party check-in, close-a-day weather flow, operator session versioning",
-        "ids": [
-          "SD-5"
-        ],
-        "matches": []
-      }
-    ]
+    "queueLastCommit": "2026-09-15T17:07:31-04:00",
+    "unrecorded": []
   },
   "counts": {
     "runDone": 174,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 21,
+    "runNotStarted": 28,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -36,7 +26,7 @@
   "inFlight": [
     {
       "title": "BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET",
-      "line": 1798,
+      "line": 1796,
       "body": [
         "FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because \"no linked inquiry\" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding them outright. FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() + a \"Force delete permanently\" button per acknowledged orphan — owner-only, typed name confirm, server re-verifies the course is still an orphan before touching anything (refuses if it turns out to have a real inquiry link — this can never be used to route around the doctrine for a real course). This is the mechanism for Cam's DaisyLinks exception, but I have NOT executed it against DaisyLinks yet:",
         "- Last session's raw Prisma script (a read-only check confirming Fake",
@@ -54,60 +44,60 @@
       "line": 500,
       "hash": "7246a62",
       "shipDate": "2026-08-29",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "title": "MP-1",
       "line": 530,
       "hash": "41f5ea8",
       "shipDate": "2026-08-29",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
       "line": 565,
       "hash": "4ef11dd",
       "shipDate": "2026-08-29",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "title": "MP-2",
       "line": 606,
       "hash": "958f229",
       "shipDate": "2026-08-29",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "title": "MP-2b",
       "line": 643,
       "hash": "a134af5",
       "shipDate": "2026-08-29",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "title": "MP-2c",
       "line": 692,
       "hash": "e5b5413",
       "shipDate": "2026-08-29",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "title": "MP-2d",
       "line": 740,
       "hash": "22d0f68",
       "shipDate": "2026-08-29",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "title": "MP-2e",
       "line": 782,
       "hash": "bf3bcb2",
       "shipDate": "2026-08-30",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "title": "UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until r",
-      "line": 1959,
+      "line": 1957,
       "hash": "a3c1bea",
       "shipDate": "2026-09-11",
       "ageDays": 3
@@ -166,57 +156,92 @@
     },
     {
       "title": "MP-7 — comms merge (split into 7a–7b)",
-      "line": 1195,
+      "line": 1193,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE,",
-      "line": 1213,
+      "line": 1211,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-8 — chrome + System (split into 8a–8b)",
-      "line": 1220,
+      "line": 1218,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table",
-      "line": 1237,
+      "line": 1235,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in",
-      "line": 1244,
+      "line": 1242,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)",
-      "line": 1291,
+      "line": 1289,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState",
-      "line": 1340,
+      "line": 1338,
       "section": "Queue (run in this order)"
     },
     {
       "title": "COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)",
-      "line": 1366,
+      "line": 1364,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
-      "line": 1395,
+      "line": 1393,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
-      "line": 1474,
+      "line": 1472,
       "section": "Queue (run in this order)"
     },
     {
-      "title": "INQUIRY_CALL_SPEC Phase IC-4 — drop the funnel strip on /admin/inquiries (Cam 2026-09-15: redundant with the Stage column); keep ?tab= deep links from the Overview working as an invisible filter with ",
+      "title": "UI_REVISE_SPEC H-2d-R1 — DESIGN DECISION, Cam: device-mockup shadows vs the CLAUDE.md ceiling. src/app/home.module.css:46 (.heroDevice .device), :48 (.heroSheet), :108 (.device), :159 (.laptopScreen) ",
+      "line": 1982,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "UI_REVISE_SPEC H-2d-R2 — hero perf follow-up: (a) src/components/home/HomeDemo.tsx:40 the device header image is `loading=\"lazy\"` but above the fold in the hero — when `compact`, load it eagerly (`pri",
       "line": 1983,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "UI_REVISE_SPEC H-2d-R3 — H-2c/H-2d hygiene: delete dead `.btnLight` (home.module.css:23-24), the orphan `/* BAND */` comment (:217), collapse the two `.js .heroSheet` animation rules (:59-61) into one",
+      "line": 1984,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "INQUIRY_FORM_SPEC Phase IF-1 — the inquiry form asks only what the call can't (Cam 2026-09-15). Ten inputs: name, title, email, phone, course, town/state, course type, HOW THEY TAKE TEE TIMES TODAY (→",
+      "line": 1986,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "CALL_SCHEDULING_SPEC Phase SC-1 — availability engine + Google (SCHEMA CHANGE, attended): CourseInquiry.callInviteToken/SentAt/ExpiresAt + Call.bookedByCourse/gcalEventId (migration `call_invites`, ad",
+      "line": 1987,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "CALL_SCHEDULING_SPEC Phase SC-2 — the invite + the public booking page (no migration): sendCallInviteEmail auto-sent on inquiry submit (AUTO_SEND_CALL_INVITE flag); /call/[token] public page, noindex,",
+      "line": 1988,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "CALL_SCHEDULING_SPEC Phase SC-3 — admin side (no migration): 'Send a booking link' beside Set up call / Skip, with sent-not-booked state + resend; sheet's Next-call cell learns 'Invite sent · Nd'; an ",
+      "line": 1989,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "UI_REVISE_SPEC H-2e — ONE GROUND, ONE LOGO (small, no migration). BUG: `.root` is WHITE while body/hero/courses/final are cream #F6F4EC, so every background-less section (See it work, Live in four ste",
+      "line": 1991,
       "section": "Queue (run in this order)"
     }
   ],
@@ -259,7 +284,12 @@
     {
       "item": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
       "note": "CAM: confirm the state before this runs — e",
-      "line": 1395
+      "line": 1393
+    },
+    {
+      "item": "UI_REVISE_SPEC H-2d-R1 — DESIGN DECISION, Cam: device-mockup shadows vs the CLAUDE.md ceiling. src/app/home.module.css:46 (.heroDevice .device), :48 (.heroSheet), :108 (.device), :159 (.laptopScreen) ",
+      "note": "Cam: device-mockup shadows vs the CLAUDE",
+      "line": 1982
     }
   ],
   "ideas": {
@@ -782,6 +812,31 @@
   },
   "recentCommits": [
     {
+      "h": "ce5e7e5",
+      "date": "2026-09-15",
+      "subject": "H-2d review FIX-1: no fee line in the hero device — the compact HomeDemo drops the fee clause, the fee row and the fee from its total; beats/prog above the cream overlay; trust line 13px"
+    },
+    {
+      "h": "6e4907e",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "2ea1864",
+      "date": "2026-09-14",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "2cf4fee",
+      "date": "2026-09-14",
+      "subject": "MP-6c + MP-10 schema halves: Booking.paidAt (stamped when the charge succeeds or the counter takes payment; Revenue windows read it) and the three missing indexes"
+    },
+    {
+      "h": "9f0308d",
+      "date": "2026-09-14",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "f0a4e4b",
       "date": "2026-09-14",
       "subject": "SD-5 (part 2): partial-party check-in, close-a-day weather flow, operator session versioning"
@@ -815,31 +870,6 @@
       "h": "edf2198",
       "date": "2026-09-14",
       "subject": "Review fixes (design + admin-ux audits of today's diff): agreement-due chip is a StatusDot; three course-page actions no longer hang on a dropped connection; inquiry confirm modals wait for their action (Working… shows) before closing; onboarding prefetches and the course-link fetch report failure"
-    },
-    {
-      "h": "b7250c0",
-      "date": "2026-09-14",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "8660e4e",
-      "date": "2026-09-14",
-      "subject": "IC-4: drop the funnel strip above the inquiries sheet — the Stage column already says it; ?tab= deep links narrow the table with one 'Showing: <stage> · Clear' pill"
-    },
-    {
-      "h": "dcdbfe6",
-      "date": "2026-09-14",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "84c0296",
-      "date": "2026-09-14",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "cfff2d3",
-      "date": "2026-09-14",
-      "subject": "OWNER TOTP 2FA: an authenticator-app second factor for the owner login — enrolment on the profile, recovery codes, replay-safe verify, the email path kept until enrolled"
     }
   ]
 }

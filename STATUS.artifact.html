@@ -117,21 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-09-15 00:49 UTC</span><span>main @ f0a4e4b</span>
+    <span>2026-09-15 21:08 UTC</span><span>main @ ce5e7e5</span>
     <span>1 uncommitted</span>
   </div>
 </header>
-<div class="alarm">
-<div class="lede">1 run has shipped that the queue doesn't know about</div>
-<p class="note">RUN_QUEUE.md was last committed 2026-09-14. These commits appear nowhere in it.</p>
-<ul>
-<li><span class="h">f0a4e4b</span><span>SD-5 (part 2): partial-party check-in, close-a-day weather flow, operator session versioning</span></li>
-</ul></div>
 <div class="tiles">
   <div class="tile t-good"><span class="n">174</span><span class="l">Done</span></div>
   <div class="tile t-warn"><span class="n">9</span><span class="l">Awaiting review</span></div>
   <div class="tile t-alarm"><span class="n">1</span><span class="l">In flight</span></div>
-  <div class="tile t-idle"><span class="n">21</span><span class="l">Not started</span></div>
+  <div class="tile t-idle"><span class="n">28</span><span class="l">Not started</span></div>
   <div class="tile t-idle"><span class="n">8</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">15</span><span class="l">Ideas parked</span></div>
 </div>
@@ -152,17 +146,24 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="row"><span class="idx">8</span><span class="t">Golfer course directory (`/courses`) — NOT scheduled. If Cam wants</span><span class="where">:1091</span></div>
 <div class="row"><span class="idx">9</span><span class="t">MP-5e part 3 — the Overview relationship feed (notes + settings</span><span class="where">:1095</span></div>
 <div class="row"><span class="idx">10</span><span class="t">MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today)</span><span class="where">:1121</span></div>
-<div class="row"><span class="idx">11</span><span class="t">MP-7 — comms merge (split into 7a–7b)</span><span class="where">:1195</span></div>
-<div class="row"><span class="idx">12</span><span class="t">MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE,</span><span class="where">:1213</span></div>
-<div class="row"><span class="idx">13</span><span class="t">MP-8 — chrome + System (split into 8a–8b)</span><span class="where">:1220</span></div>
-<div class="row"><span class="idx">14</span><span class="t">MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table</span><span class="where">:1237</span></div>
-<div class="row"><span class="idx">15</span><span class="t">MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in</span><span class="where">:1244</span></div>
-<div class="row"><span class="idx">16</span><span class="t">MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)</span><span class="where">:1291</span></div>
-<div class="row"><span class="idx">17</span><span class="t">MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState</span><span class="where">:1340</span></div>
-<div class="row"><span class="idx">18</span><span class="t">COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)</span><span class="where">:1366</span></div>
-<div class="row"><span class="idx">19</span><span class="t">Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with &quot;TheGreenReserve LLC&quot; + formation state (CAM: confirm the state before thi</span><span class="where">:1395</span></div>
-<div class="row"><span class="idx">20</span><span class="t">BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as</span><span class="where">:1474</span></div>
-<div class="row"><span class="idx">21</span><span class="t">INQUIRY_CALL_SPEC Phase IC-4 — drop the funnel strip on /admin/inquiries (Cam 2026-09-15: redundant with the Stage column); keep ?tab= deep links from the Overview working as an invisible filter with </span><span class="where">:1983</span></div>
+<div class="row"><span class="idx">11</span><span class="t">MP-7 — comms merge (split into 7a–7b)</span><span class="where">:1193</span></div>
+<div class="row"><span class="idx">12</span><span class="t">MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE,</span><span class="where">:1211</span></div>
+<div class="row"><span class="idx">13</span><span class="t">MP-8 — chrome + System (split into 8a–8b)</span><span class="where">:1218</span></div>
+<div class="row"><span class="idx">14</span><span class="t">MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table</span><span class="where">:1235</span></div>
+<div class="row"><span class="idx">15</span><span class="t">MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in</span><span class="where">:1242</span></div>
+<div class="row"><span class="idx">16</span><span class="t">MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)</span><span class="where">:1289</span></div>
+<div class="row"><span class="idx">17</span><span class="t">MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState</span><span class="where">:1338</span></div>
+<div class="row"><span class="idx">18</span><span class="t">COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)</span><span class="where">:1364</span></div>
+<div class="row"><span class="idx">19</span><span class="t">Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with &quot;TheGreenReserve LLC&quot; + formation state (CAM: confirm the state before thi</span><span class="where">:1393</span></div>
+<div class="row"><span class="idx">20</span><span class="t">BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as</span><span class="where">:1472</span></div>
+<div class="row"><span class="idx">21</span><span class="t">UI_REVISE_SPEC H-2d-R1 — DESIGN DECISION, Cam: device-mockup shadows vs the CLAUDE.md ceiling. src/app/home.module.css:46 (.heroDevice .device), :48 (.heroSheet), :108 (.device), :159 (.laptopScreen) </span><span class="where">:1982</span></div>
+<div class="row"><span class="idx">22</span><span class="t">UI_REVISE_SPEC H-2d-R2 — hero perf follow-up: (a) src/components/home/HomeDemo.tsx:40 the device header image is `loading=&quot;lazy&quot;` but above the fold in the hero — when `compact`, load it eagerly (`pri</span><span class="where">:1983</span></div>
+<div class="row"><span class="idx">23</span><span class="t">UI_REVISE_SPEC H-2d-R3 — H-2c/H-2d hygiene: delete dead `.btnLight` (home.module.css:23-24), the orphan `/* BAND */` comment (:217), collapse the two `.js .heroSheet` animation rules (:59-61) into one</span><span class="where">:1984</span></div>
+<div class="row"><span class="idx">24</span><span class="t">INQUIRY_FORM_SPEC Phase IF-1 — the inquiry form asks only what the call can't (Cam 2026-09-15). Ten inputs: name, title, email, phone, course, town/state, course type, HOW THEY TAKE TEE TIMES TODAY (→</span><span class="where">:1986</span></div>
+<div class="row"><span class="idx">25</span><span class="t">CALL_SCHEDULING_SPEC Phase SC-1 — availability engine + Google (SCHEMA CHANGE, attended): CourseInquiry.callInviteToken/SentAt/ExpiresAt + Call.bookedByCourse/gcalEventId (migration `call_invites`, ad</span><span class="where">:1987</span></div>
+<div class="row"><span class="idx">26</span><span class="t">CALL_SCHEDULING_SPEC Phase SC-2 — the invite + the public booking page (no migration): sendCallInviteEmail auto-sent on inquiry submit (AUTO_SEND_CALL_INVITE flag); /call/[token] public page, noindex,</span><span class="where">:1988</span></div>
+<div class="row"><span class="idx">27</span><span class="t">CALL_SCHEDULING_SPEC Phase SC-3 — admin side (no migration): 'Send a booking link' beside Set up call / Skip, with sent-not-booked state + resend; sheet's Next-call cell learns 'Invite sent · Nd'; an </span><span class="where">:1989</span></div>
+<div class="row"><span class="idx">28</span><span class="t">UI_REVISE_SPEC H-2e — ONE GROUND, ONE LOGO (small, no migration). BUG: `.root` is WHITE while body/hero/courses/final are cream #F6F4EC, so every background-less section (See it work, Live in four ste</span><span class="where">:1991</span></div>
 </div></section>
 <section><h2>Revise campaign &mdash; page by page</h2>
 <p class="note">14 pages closed, 8 open. One page in flight at a time.</p>
@@ -182,23 +183,23 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <p>FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because &quot;no linked inquiry&quot; never becomes false on its own. New listAcknowledgedOrphans() surfaces alrea&hellip;</p>
 <p>- Last session's raw Prisma script (a read-only check confirming Fake</p>
 <p>Fairways existed) got blocked by this sandbox's auto-mode classifier as a potential production-database access outside the app's own authenticated API. That block is almost certainly the intended, correct behavior — a raw script has no place touching real course/booking/ operator data, authorized or not — so I did NOT &hellip;</p>
-<p class="note"><code>RUN_QUEUE.md:1798</code></p></div>
+<p class="note"><code>RUN_QUEUE.md:1796</code></p></div>
 </section>
 <section><h2>Built, not signed off</h2>
 <p class="note">The box is open because <code>/gr-review</code> hasn't run &mdash; not because the code is missing.</p>
 <div class="ledger">
-<div class="row"><span class="t">MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin</span><span class="age">15d</span><span class="where">7246a62</span></div>
-<div class="row"><span class="t">MP-1</span><span class="age">15d</span><span class="where">41f5ea8</span></div>
-<div class="row"><span class="t">MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until</span><span class="age">15d</span><span class="where">4ef11dd</span></div>
-<div class="row"><span class="t">MP-2</span><span class="age">15d</span><span class="where">958f229</span></div>
-<div class="row"><span class="t">MP-2b</span><span class="age">15d</span><span class="where">a134af5</span></div>
-<div class="row"><span class="t">MP-2c</span><span class="age">15d</span><span class="where">e5b5413</span></div>
-<div class="row"><span class="t">MP-2d</span><span class="age">15d</span><span class="where">22d0f68</span></div>
-<div class="row"><span class="t">MP-2e</span><span class="age">15d</span><span class="where">bf3bcb2</span></div>
+<div class="row"><span class="t">MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin</span><span class="age">16d</span><span class="where">7246a62</span></div>
+<div class="row"><span class="t">MP-1</span><span class="age">16d</span><span class="where">41f5ea8</span></div>
+<div class="row"><span class="t">MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until</span><span class="age">16d</span><span class="where">4ef11dd</span></div>
+<div class="row"><span class="t">MP-2</span><span class="age">16d</span><span class="where">958f229</span></div>
+<div class="row"><span class="t">MP-2b</span><span class="age">16d</span><span class="where">a134af5</span></div>
+<div class="row"><span class="t">MP-2c</span><span class="age">16d</span><span class="where">e5b5413</span></div>
+<div class="row"><span class="t">MP-2d</span><span class="age">16d</span><span class="where">22d0f68</span></div>
+<div class="row"><span class="t">MP-2e</span><span class="age">16d</span><span class="where">bf3bcb2</span></div>
 <div class="row"><span class="t">UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until r</span><span class="age">3d</span><span class="where">a3c1bea</span></div>
 </div></section>
 <section><h2>Waiting on you, not on a build</h2>
-<ul class="plain"><li>CAM: three real dashboard screenshots into public/screenshots/ (empty, so the homepage shows three grey placeholder boxes) and a seeded demo course slug for DEMO_COURSE_SLUGS (empt <span class="where">:423</span></li><li>pending Cam's approval for a prod write <span class="where">:565</span></li><li>Cam's approval for a prod backfill <span class="where">:606</span></li><li>pending Cam's approval for a prod write <span class="where">:643</span></li><li>pending Cam's approval for a prod write <span class="where">:692</span></li><li>pending Cam's approval for a prod write <span class="where">:740</span></li><li>pending Cam's approval for a prod write <span class="where">:782</span></li><li>CAM: confirm the state before this runs — e <span class="where">:1395</span></li></ul>
+<ul class="plain"><li>CAM: three real dashboard screenshots into public/screenshots/ (empty, so the homepage shows three grey placeholder boxes) and a seeded demo course slug for DEMO_COURSE_SLUGS (empt <span class="where">:423</span></li><li>pending Cam's approval for a prod write <span class="where">:565</span></li><li>Cam's approval for a prod backfill <span class="where">:606</span></li><li>pending Cam's approval for a prod write <span class="where">:643</span></li><li>pending Cam's approval for a prod write <span class="where">:692</span></li><li>pending Cam's approval for a prod write <span class="where">:740</span></li><li>pending Cam's approval for a prod write <span class="where">:782</span></li><li>CAM: confirm the state before this runs — e <span class="where">:1393</span></li><li>Cam: device-mockup shadows vs the CLAUDE <span class="where">:1982</span></li></ul>
 </section>
 <section><h2>Parked, with triggers</h2><ul class="plain"><li>Role-shaped admin (parked 2026-08-26 — TRIGGER: first employee account provisioned)</li><li>Future admin tabs (from brainstorm 2026-07-09 — each has a TRIGGER, don't build early)</li></ul></section>
 </div></div>
@@ -243,6 +244,11 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">ce5e7e5</td><td class="num">2026-09-15</td><td>H-2d review FIX-1: no fee line in the hero device — the compact HomeDemo drops the fee clause, the fee row and the fee from its total; beats/prog above the cream overlay; trust line 13px</td></tr>
+<tr><td class="num">6e4907e</td><td class="num">2026-09-15</td><td>queue/spec update</td></tr>
+<tr><td class="num">2ea1864</td><td class="num">2026-09-14</td><td>queue/spec update</td></tr>
+<tr><td class="num">2cf4fee</td><td class="num">2026-09-14</td><td>MP-6c + MP-10 schema halves: Booking.paidAt (stamped when the charge succeeds or the counter takes payment; Revenue windows read it) and the three missing indexes</td></tr>
+<tr><td class="num">9f0308d</td><td class="num">2026-09-14</td><td>queue/spec update</td></tr>
 <tr><td class="num">f0a4e4b</td><td class="num">2026-09-14</td><td>SD-5 (part 2): partial-party check-in, close-a-day weather flow, operator session versioning</td></tr>
 <tr><td class="num">72e715d</td><td class="num">2026-09-14</td><td>queue/spec update</td></tr>
 <tr><td class="num">8f646d0</td><td class="num">2026-09-14</td><td>SD-5 (part 1): walk-in and phone bookings from the tee sheet, no-show, paid at the counter — the booking lifecycle gets columns and the counter gets its actions</td></tr>
@@ -250,11 +256,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">bca583a</td><td class="num">2026-09-14</td><td>SD-3: course-local time — every &quot;today&quot; and &quot;now&quot; on the tee sheet reads Course.timezone (no migration: the column existed; it just had no UI and no readers outside the crons)</td></tr>
 <tr><td class="num">ac8cc95</td><td class="num">2026-09-14</td><td>Security review fixes (audit of today's diff): player count validated on the public booking endpoint; tier windows bounded; TOTP pending/used markers separated; CSV formula guard; unique acceptance per document version; evidentiary IP on signings</td></tr>
 <tr><td class="num">edf2198</td><td class="num">2026-09-14</td><td>Review fixes (design + admin-ux audits of today's diff): agreement-due chip is a StatusDot; three course-page actions no longer hang on a dropped connection; inquiry confirm modals wait for their action (Working… shows) before closing; onboarding prefetches and the course-link fetch report failure</td></tr>
-<tr><td class="num">b7250c0</td><td class="num">2026-09-14</td><td>queue/spec update</td></tr>
-<tr><td class="num">8660e4e</td><td class="num">2026-09-14</td><td>IC-4: drop the funnel strip above the inquiries sheet — the Stage column already says it; ?tab= deep links narrow the table with one 'Showing: &lt;stage&gt; · Clear' pill</td></tr>
-<tr><td class="num">dcdbfe6</td><td class="num">2026-09-14</td><td>queue/spec update</td></tr>
-<tr><td class="num">84c0296</td><td class="num">2026-09-14</td><td>queue/spec update</td></tr>
-<tr><td class="num">cfff2d3</td><td class="num">2026-09-14</td><td>OWNER TOTP 2FA: an authenticator-app second factor for the owner login — enrolment on the profile, recovery codes, replay-safe verify, the email path kept until enrolled</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

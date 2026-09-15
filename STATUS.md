@@ -4,17 +4,11 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-15 00:49 UTC · branch `main` · HEAD `f0a4e4b` · working tree **1 dirty file(s)**
+Generated 2026-09-15 21:08 UTC · branch `main` · HEAD `ce5e7e5` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-09-14**. 1 commit(s) since then are not mentioned anywhere in it:
-
-| commit | date | subject |
-|---|---|---|
-| `f0a4e4b` | 2026-09-14 | SD-5 (part 2): partial-party check-in, close-a-day weather flow, operator session versioning |
-
-**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
 ### Uncommitted working tree (1 file(s))
 
@@ -25,7 +19,7 @@ these actually are first.
 
 ## In flight
 
-- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:1798`
+- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:1796`
   - FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because "no linked inquiry" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding the
   - Last session's raw Prisma script (a read-only check confirming Fake
   - Fairways existed) got blocked by this sandbox's auto-mode classifier as a potential production-database access outside the app's own authenticated API. That block is almost certainly the intended, correct behavior — a raw script has no place touching real course/booking/ operator data, authorized or not — so I did NOT retry it, and built the override into the sanctioned admin API instead, per the 
@@ -41,15 +35,15 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 15d | `7246a62` | `RUN_QUEUE.md:500` |
-| MP-1 | 2026-08-29 | 15d | `41f5ea8` | `RUN_QUEUE.md:530` |
-| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 15d | `4ef11dd` | `RUN_QUEUE.md:565` |
-| MP-2 | 2026-08-29 | 15d | `958f229` | `RUN_QUEUE.md:606` |
-| MP-2b | 2026-08-29 | 15d | `a134af5` | `RUN_QUEUE.md:643` |
-| MP-2c | 2026-08-29 | 15d | `e5b5413` | `RUN_QUEUE.md:692` |
-| MP-2d | 2026-08-29 | 15d | `22d0f68` | `RUN_QUEUE.md:740` |
-| MP-2e | 2026-08-30 | 15d | `bf3bcb2` | `RUN_QUEUE.md:782` |
-| UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | 2026-09-11 | 3d | `a3c1bea` | `RUN_QUEUE.md:1959` |
+| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 16d | `7246a62` | `RUN_QUEUE.md:500` |
+| MP-1 | 2026-08-29 | 16d | `41f5ea8` | `RUN_QUEUE.md:530` |
+| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 16d | `4ef11dd` | `RUN_QUEUE.md:565` |
+| MP-2 | 2026-08-29 | 16d | `958f229` | `RUN_QUEUE.md:606` |
+| MP-2b | 2026-08-29 | 16d | `a134af5` | `RUN_QUEUE.md:643` |
+| MP-2c | 2026-08-29 | 16d | `e5b5413` | `RUN_QUEUE.md:692` |
+| MP-2d | 2026-08-29 | 16d | `22d0f68` | `RUN_QUEUE.md:740` |
+| MP-2e | 2026-08-30 | 16d | `bf3bcb2` | `RUN_QUEUE.md:782` |
+| UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | 2026-09-11 | 3d | `a3c1bea` | `RUN_QUEUE.md:1957` |
 
 ## Not started — the actual queue
 
@@ -63,17 +57,24 @@ This is the distinction a raw checkbox count gets wrong.
 8. Golfer course directory (`/courses`) — NOT scheduled. If Cam wants — `RUN_QUEUE.md:1091`
 9. MP-5e part 3 — the Overview relationship feed (notes + settings — `RUN_QUEUE.md:1095`
 10. MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today) — `RUN_QUEUE.md:1121`
-11. MP-7 — comms merge (split into 7a–7b) — `RUN_QUEUE.md:1195`
-12. MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE, — `RUN_QUEUE.md:1213`
-13. MP-8 — chrome + System (split into 8a–8b) — `RUN_QUEUE.md:1220`
-14. MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table — `RUN_QUEUE.md:1237`
-15. MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in — `RUN_QUEUE.md:1244`
-16. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1291`
-17. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1340`
-18. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1366`
-19. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1395`
-20. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1474`
-21. INQUIRY_CALL_SPEC Phase IC-4 — drop the funnel strip on /admin/inquiries (Cam 2026-09-15: redundant with the Stage column); keep ?tab= deep links from the Overview working as an in — `RUN_QUEUE.md:1983`
+11. MP-7 — comms merge (split into 7a–7b) — `RUN_QUEUE.md:1193`
+12. MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE, — `RUN_QUEUE.md:1211`
+13. MP-8 — chrome + System (split into 8a–8b) — `RUN_QUEUE.md:1218`
+14. MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table — `RUN_QUEUE.md:1235`
+15. MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in — `RUN_QUEUE.md:1242`
+16. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1289`
+17. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1338`
+18. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1364`
+19. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1393`
+20. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1472`
+21. UI_REVISE_SPEC H-2d-R1 — DESIGN DECISION, Cam: device-mockup shadows vs the CLAUDE.md ceiling. src/app/home.module.css:46 (.heroDevice .device), :48 (.heroSheet), :108 (.device), : — `RUN_QUEUE.md:1982`
+22. UI_REVISE_SPEC H-2d-R2 — hero perf follow-up: (a) src/components/home/HomeDemo.tsx:40 the device header image is `loading="lazy"` but above the fold in the hero — when `compact`, l — `RUN_QUEUE.md:1983`
+23. UI_REVISE_SPEC H-2d-R3 — H-2c/H-2d hygiene: delete dead `.btnLight` (home.module.css:23-24), the orphan `/* BAND */` comment (:217), collapse the two `.js .heroSheet` animation rul — `RUN_QUEUE.md:1984`
+24. INQUIRY_FORM_SPEC Phase IF-1 — the inquiry form asks only what the call can't (Cam 2026-09-15). Ten inputs: name, title, email, phone, course, town/state, course type, HOW THEY TAK — `RUN_QUEUE.md:1986`
+25. CALL_SCHEDULING_SPEC Phase SC-1 — availability engine + Google (SCHEMA CHANGE, attended): CourseInquiry.callInviteToken/SentAt/ExpiresAt + Call.bookedByCourse/gcalEventId (migratio — `RUN_QUEUE.md:1987`
+26. CALL_SCHEDULING_SPEC Phase SC-2 — the invite + the public booking page (no migration): sendCallInviteEmail auto-sent on inquiry submit (AUTO_SEND_CALL_INVITE flag); /call/[token] p — `RUN_QUEUE.md:1988`
+27. CALL_SCHEDULING_SPEC Phase SC-3 — admin side (no migration): 'Send a booking link' beside Set up call / Skip, with sent-not-booked state + resend; sheet's Next-call cell learns 'In — `RUN_QUEUE.md:1989`
+28. UI_REVISE_SPEC H-2e — ONE GROUND, ONE LOGO (small, no migration). BUG: `.root` is WHITE while body/hero/courses/final are cream #F6F4EC, so every background-less section (See it wo — `RUN_QUEUE.md:1991`
 
 ## Waiting on you (not on a build)
 
@@ -84,7 +85,8 @@ This is the distinction a raw checkbox count gets wrong.
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:692`
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:740`
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:782`
-- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1395`
+- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1393`
+- Cam: device-mockup shadows vs the CLAUDE — `RUN_QUEUE.md:1982`
 
 ## Revise campaign (page-by-page pass)
 
@@ -172,6 +174,11 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `ce5e7e5` 2026-09-15 — H-2d review FIX-1: no fee line in the hero device — the compact HomeDemo drops the fee clause, the fee row and the fee from its total; beats/prog above the cream overlay; trust line 13px
+- `6e4907e` 2026-09-15 — queue/spec update
+- `2ea1864` 2026-09-14 — queue/spec update
+- `2cf4fee` 2026-09-14 — MP-6c + MP-10 schema halves: Booking.paidAt (stamped when the charge succeeds or the counter takes payment; Revenue windows read it) and the three missing indexes
+- `9f0308d` 2026-09-14 — queue/spec update
 - `f0a4e4b` 2026-09-14 — SD-5 (part 2): partial-party check-in, close-a-day weather flow, operator session versioning
 - `72e715d` 2026-09-14 — queue/spec update
 - `8f646d0` 2026-09-14 — SD-5 (part 1): walk-in and phone bookings from the tee sheet, no-show, paid at the counter — the booking lifecycle gets columns and the counter gets its actions
@@ -179,12 +186,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `bca583a` 2026-09-14 — SD-3: course-local time — every "today" and "now" on the tee sheet reads Course.timezone (no migration: the column existed; it just had no UI and no readers outside the crons)
 - `ac8cc95` 2026-09-14 — Security review fixes (audit of today's diff): player count validated on the public booking endpoint; tier windows bounded; TOTP pending/used markers separated; CSV formula guard; unique acceptance per document version; evidentiary IP on signings
 - `edf2198` 2026-09-14 — Review fixes (design + admin-ux audits of today's diff): agreement-due chip is a StatusDot; three course-page actions no longer hang on a dropped connection; inquiry confirm modals wait for their action (Working… shows) before closing; onboarding prefetches and the course-link fetch report failure
-- `b7250c0` 2026-09-14 — queue/spec update
-- `8660e4e` 2026-09-14 — IC-4: drop the funnel strip above the inquiries sheet — the Stage column already says it; ?tab= deep links narrow the table with one 'Showing: <stage> · Clear' pill
-- `dcdbfe6` 2026-09-14 — queue/spec update
-- `84c0296` 2026-09-14 — queue/spec update
-- `cfff2d3` 2026-09-14 — OWNER TOTP 2FA: an authenticator-app second factor for the owner login — enrolment on the profile, recovery codes, replay-safe verify, the email path kept until enrolled
 
 ---
 
-**Totals:** 174 done · 9 awaiting review · 1 in flight · 21 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 174 done · 9 awaiting review · 1 in flight · 28 not started · 8 revise pages open · 15 ideas · 2 parked.
