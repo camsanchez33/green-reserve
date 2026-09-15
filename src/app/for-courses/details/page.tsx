@@ -64,6 +64,7 @@ type Draft = {
   memberships: { name: string; fee: string; includes: string; perRound: string; perRoundFee: string; }[];
   starterTierName: string; starterTierFee: string;
   memberAdvanceDays: string; protectedTimes: string;
+  publicAdvanceDays: string;
   publicGreenFee: string; publicWindow: string;
   memberRate: string;
   outingsVolume: string;
@@ -145,6 +146,7 @@ const initDraft: Draft = {
   memberships: [],
   starterTierName: '', starterTierFee: '',
   memberAdvanceDays: '14', protectedTimes: '',
+  publicAdvanceDays: '7',
   publicGreenFee: '', publicWindow: '',
   memberRate: '',
   outingsVolume: '',
@@ -1051,6 +1053,27 @@ function DetailsForm() {
       case 'schedule':
         return (
           <div className="space-y-4">
+            {/* BOOKING WINDOWS: asked here, mapped into the draft build. */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label text="How far ahead can golfers book?" />
+                <div className="flex items-center gap-2">
+                  <input type="number" min="1" max="365" className={inp + ' w-24'} value={draft.publicAdvanceDays} onChange={e => set('publicAdvanceDays', e.target.value)} />
+                  <span className="text-sm text-ink-soft">days</span>
+                </div>
+                <p className="text-[11px] text-ink-faint mt-1">Most public courses open 7 to 14 days out.</p>
+              </div>
+              {(courseType === 'private' || needs.hasMemberships === 'yes') && (
+                <div>
+                  <Label text="…and members?" />
+                  <div className="flex items-center gap-2">
+                    <input type="number" min="1" max="365" className={inp + ' w-24'} value={draft.memberAdvanceDays} onChange={e => set('memberAdvanceDays', e.target.value)} />
+                    <span className="text-sm text-ink-soft">days</span>
+                  </div>
+                  <p className="text-[11px] text-ink-faint mt-1">Members usually get a head start. You can set this per tier later.</p>
+                </div>
+              )}
+            </div>
             <div>
               <Label text="Days open" sub="(leave all unselected if open every day)" />
               <div className="flex gap-1.5 flex-wrap">
@@ -1312,14 +1335,6 @@ function DetailsForm() {
       case 'member':
         return (
           <div className="space-y-4">
-            <div>
-              <Label text="Member advance booking window" />
-              <div className="flex items-center gap-2">
-                <input type="number" min="1" max="365" className={inp + ' w-24'} value={draft.memberAdvanceDays} onChange={e => set('memberAdvanceDays', e.target.value)} />
-                <span className="text-sm text-ink-soft">days ahead</span>
-              </div>
-              <p className="text-[11px] text-ink-faint mt-1">Public booking window defaults to 7 days.</p>
-            </div>
             <div>
               <Label text="Protected tee time windows" sub="(optional)" />
               <textarea rows={2} className={inp} value={draft.protectedTimes} onChange={e => set('protectedTimes', e.target.value)} placeholder="e.g. Weekday mornings before 10am are reserved for members" />

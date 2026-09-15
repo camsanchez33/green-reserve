@@ -325,7 +325,7 @@ export default function MembersPage() {
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className={lblCls}>Advance booking (days)</label>
+                    <label className={lblCls}>Members of this tier can book this many days ahead</label>
                     <input type="number" min="0" className={iCls} value={tierForm.advanceBookingDays ?? 14} onChange={e => setTF('advanceBookingDays', Number(e.target.value))}/>
                   </div>
                   <div>

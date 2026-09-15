@@ -1,4 +1,5 @@
 import { prisma } from './prisma';
+import { generationHorizonDays } from './booking-window';
 
 function timeToMinutes(t: string): number {
   const [h, m] = t.split(':').map(Number);
@@ -128,16 +129,25 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
   return created;
 }
 
-export async function generateForAllCourses(daysAhead = 8): Promise<{ courseId: string; date: string; error: string }[]> {
+export async function generateForAllCourses(minDaysAhead = 8): Promise<{ courseId: string; date: string; error: string }[]> {
   const schedules = await prisma.teeTimeSchedule.findMany({
     where: { active: true },
     select: { courseId: true },
     distinct: ['courseId'],
   });
+  // BOOKING WINDOWS: every course is generated at least as far ahead as its
+  // widest window (public, member default, any tier) plus one day — derived,
+  // never hardcoded, and never below the old 8.
+  const windows = await prisma.course.findMany({
+    where: { id: { in: schedules.map(s => s.courseId) } },
+    select: { id: true, publicAdvanceDays: true, memberAdvanceDays: true, membershipTiers: { select: { advanceBookingDays: true } } },
+  });
+  const horizon = new Map(windows.map(c => [c.id, Math.max(minDaysAhead, generationHorizonDays(c, c.membershipTiers))]));
   const today = new Date();
   const errors: { courseId: string; date: string; error: string }[] = [];
 
   for (const { courseId } of schedules) {
+    const daysAhead = horizon.get(courseId) ?? minDaysAhead;
     for (let i = 0; i < daysAhead; i++) {
       const d = new Date(today);
       d.setDate(d.getDate() + i);

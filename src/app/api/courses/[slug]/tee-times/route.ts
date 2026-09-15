@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
+import { windowFor, withinWindow, outsideWindowBody } from '@/lib/booking-window';
 
 /**
  * Maps a Prisma TeeTime row (camelCase, real availability counts) onto the
@@ -42,6 +43,13 @@ export async function GET(
   const dbCourse = await prisma.course.findUnique({ where: { slug } });
   if (!dbCourse || !dbCourse.active || dbCourse.liveStatus !== 'live') {
     return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+  }
+
+  // BOOKING WINDOWS: the public sees the sheet only as far ahead as the course
+  // allows. Enforced here, not just in the picker — the picker reads this.
+  const win = windowFor(dbCourse, null);
+  if (!withinWindow(date, win.days)) {
+    return NextResponse.json(outsideWindowBody(win.days, win.scope, dbCourse), { status: 403 });
   }
 
   const teeTimes = await prisma.teeTime.findMany({

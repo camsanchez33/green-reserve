@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { getMemberSession, getGolferMembership } from '@/lib/member-session';
+import { windowFor, withinWindow, outsideWindowBody } from '@/lib/booking-window';
 
 export async function GET(
   req: NextRequest,
@@ -31,6 +32,13 @@ export async function GET(
     include: { tier: true },
   });
   const tier = membership && membership.courseId === course.id ? membership.tier : null;
+
+  // BOOKING WINDOWS: a member sees as far ahead as their tier allows (the
+  // course's member default when the tier does not say).
+  const win = windowFor(course, { tier });
+  if (!withinWindow(date, win.days)) {
+    return NextResponse.json(outsideWindowBody(win.days, win.scope, course), { status: 403 });
+  }
 
   const teeTimes = await prisma.teeTime.findMany({
     where: { courseId: course.id, date, status: { not: 'blocked' } },

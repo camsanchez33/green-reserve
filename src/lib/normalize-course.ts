@@ -49,6 +49,10 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     range_balls_medium_price: centsToDollarsOr0(c.rangeBallsMediumPriceCents),
     range_balls_large_price: centsToDollarsOr0(c.rangeBallsLargePriceCents),
     cancellation_hours:      c.cancellationHours ?? 24,
+    // BOOKING WINDOWS: the picker greys out days the viewer cannot book.
+    public_advance_days:     c.publicAdvanceDays ?? 7,
+    member_advance_days:     c.memberAdvanceDays ?? 14,
+    has_member_pricing:      !!c.hasMemberPricing,
     late_cancellation_fee:   c.lateCancellationFeeCents != null ? centsToDollarsOr0(c.lateCancellationFeeCents) : 10,
     brand_color:             c.brandColor ?? '#24513B',
     gift_card_url:           c.giftCardUrl ?? '',

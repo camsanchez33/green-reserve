@@ -9,6 +9,7 @@ import { stripe, ACCESS_FEE_CENTS } from '@/lib/stripe';
 import { sendBookingConfirmation, sendOperatorBookingNotification, sendCancellationWarningEmail, sendCheckInAvailableEmail } from '@/lib/email';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
+import { windowFor, withinWindow } from '@/lib/booking-window';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
 import { CURRENT_TERMS_VERSION } from '@/lib/terms';
 
@@ -115,6 +116,9 @@ export async function POST(req: NextRequest) {
   // Membership tier lookup — check golfer session first, then member session
   let resolvedGreenFeeOverride: number | null = null;
   let resolvedCartFeeOverride: number | null = null;
+  // BOOKING WINDOWS: the recognized membership (tier or tierless) decides how
+  // far ahead this booking may reach; null = the public window.
+  let viewerMembership: { tier: { advanceBookingDays: number } | null } | null = null;
   if (golferSession) {
     // G5b: matches by direct golferId link OR the golfer's OTP-verified email
     // against an invite-only membership — same recognition as the course page.
@@ -122,6 +126,7 @@ export async function POST(req: NextRequest) {
     const membership = golferMembership
       ? await prisma.courseMembership.findUnique({ where: { id: golferMembership.membershipId }, include: { tier: true } })
       : null;
+    if (membership) viewerMembership = { tier: membership.tier };
     if (membership?.tier) {
       const rates = applyTierRates(teeTimeFull, membership.tier);
       resolvedGreenFeeOverride = rates.greenFeeCents;
@@ -137,6 +142,7 @@ export async function POST(req: NextRequest) {
         where: { id: memberSession.membershipId },
         include: { tier: true },
       });
+      if (membership && membership.status === 'active' && !viewerMembership) viewerMembership = { tier: membership.tier };
       if (membership?.tier && membership.status === 'active') {
         const rates = applyTierRates(teeTimeFull, membership.tier);
         resolvedGreenFeeOverride = rates.greenFeeCents;
@@ -145,6 +151,18 @@ export async function POST(req: NextRequest) {
         appliedRate     = membership.tier.name;
       }
     }
+  }
+
+  // BOOKING WINDOWS: enforced at creation, not only in the picker — a crafted
+  // request for a date past the viewer's window is refused like a past one.
+  const bookingWindow = windowFor(teeTimeFull.course, viewerMembership);
+  if (!withinWindow(teeTimeFull.date, bookingWindow.days)) {
+    return NextResponse.json({
+      error: bookingWindow.scope === 'member'
+        ? `That date isn’t open yet — your membership lets you book up to ${bookingWindow.days} days ahead.`
+        : `That date isn’t open for booking yet — golfers can book up to ${bookingWindow.days} days ahead${teeTimeFull.course.hasMemberPricing ? '; members can book earlier' : ''}.`,
+      code: 'outside_window', windowDays: bookingWindow.days,
+    }, { status: 403 });
   }
 
   // Compute fees

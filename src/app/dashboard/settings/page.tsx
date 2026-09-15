@@ -622,8 +622,8 @@ function SettingsPageInner() {
             <div className="space-y-5">
               <SectionCard title="How far ahead golfers can book">
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label="Public advance (days)"><FInput value={form.publicAdvanceDays as number} onChange={v=>set('publicAdvanceDays',Number(v))} type="number"/></Field>
-                  {!!form.hasMemberPricing && <Field label="Member advance (days)"><FInput value={form.memberAdvanceDays as number} onChange={v=>set('memberAdvanceDays',Number(v))} type="number"/></Field>}
+                  <Field label="How far ahead can golfers book?" hint="Days ahead the public can see and book tee times. 7 means today plus the next seven days. Enforced on the booking page, not just shown."><FInput value={form.publicAdvanceDays as number} onChange={v=>set('publicAdvanceDays',Number(v))} type="number"/></Field>
+                  {!!form.hasMemberPricing && <Field label="How far ahead can members book?" hint="The default for members. Each membership tier can set its own window in Members → tiers."><FInput value={form.memberAdvanceDays as number} onChange={v=>set('memberAdvanceDays',Number(v))} type="number"/></Field>}
                 </div>
               </SectionCard>
               <SectionCard title="Player limits">

@@ -122,7 +122,12 @@ type CourseWithBrand = Course & {
   photos?: { id: string; url: string; sortOrder: number }[];
   page_approval_status?: 'none' | 'approved' | 'changes_requested';
   is_live?: boolean;
+  // BOOKING WINDOWS
+  public_advance_days?: number;
+  member_advance_days?: number;
+  has_member_pricing?: boolean;
 };
+type WindowNotice = { windowDays: number; scope: 'public' | 'member'; lastDate: string; memberWindowDays: number; membersBookEarlier: boolean };
 
 type ActiveTeeTime = TeeTime & { member_green_fee?: number; has_member_rate?: boolean };
 type ActiveMemberSession = {
@@ -130,6 +135,8 @@ type ActiveMemberSession = {
   name: string;
   tier: { name: string; color?: string } | null;
   source?: 'member' | 'golfer';
+  /** BOOKING WINDOWS: how far ahead this member can book */
+  windowDays?: number;
 };
 type GolferProfile = { firstName: string; lastName: string; email: string };
 
@@ -202,6 +209,8 @@ export default function CourseDetailPage({
   const [memberSession, setMemberSession] = useState<ActiveMemberSession | null>(null);
   const [golferProfile, setGolferProfile] = useState<GolferProfile | null>(null);
   const [memberTeeTimes, setMemberTeeTimes] = useState<ActiveTeeTime[]>([]);
+  // BOOKING WINDOWS: the API said this date is past the viewer's window.
+  const [windowNotice, setWindowNotice] = useState<WindowNotice | null>(null);
 
   useEffect(() => {
     const url = previewMode
@@ -270,7 +279,11 @@ export default function CourseDetailPage({
       : `/api/courses/${slug}/tee-times?date=${selectedDate}`;
     fetch(url)
       .then(r => r.json())
-      .then(setTeeTimes)
+      .then(data => {
+        if (Array.isArray(data)) { setTeeTimes(data); setWindowNotice(null); return; }
+        setTeeTimes([]);
+        setWindowNotice(data && data.error === 'outside_window' ? data as WindowNotice : null);
+      })
       .catch(() => setTeeTimes([]))
       .finally(() => setLoadingTimes(false));
   }, [slug, selectedDate, course, previewMode]);
@@ -333,10 +346,14 @@ export default function CourseDetailPage({
     setSearchingNext(true);
     const scan = async () => {
       const found: string[] = [];
+      // BOOKING WINDOWS: never suggest a date the viewer cannot book.
+      const winDays = memberSession?.windowDays ?? course.public_advance_days ?? 7;
+      const limit = startOfToday(); limit.setDate(limit.getDate() + winDays);
       for (let i = 1; i <= 7 && found.length < 2; i++) {
         if (cancelled) return;
         const d = new Date(selectedDate + 'T12:00:00');
         d.setDate(d.getDate() + i);
+        if (d > limit) break;
         const ds = formatDate(d);
         try {
           const url = previewMode
@@ -581,6 +598,13 @@ export default function CourseDetailPage({
   const amenities = course.amenities ? course.amenities.filter((s: string) => s.trim()) : [];
   const strip = buildDateStrip();
   const todayStr = formatDate(startOfToday());
+  // BOOKING WINDOWS: the viewer's horizon — a member's tier window, else the
+  // course's public window. Days beyond it are shown but not bookable.
+  const viewerWindowDays = memberSession?.windowDays ?? course.public_advance_days ?? 7;
+  const lastBookable = (() => { const d = startOfToday(); d.setDate(d.getDate() + viewerWindowDays); d.setHours(23, 59, 59, 999); return d; })();
+  const beyondWindow = (d: Date) => d > lastBookable;
+  const memberWindowDays = course.member_advance_days ?? 14;
+  const membersBookEarlier = !memberSession && !!course.has_member_pricing && memberWindowDays > viewerWindowDays;
 
   const morningItems = filtered.filter(t => todOf(t) === 'morning');
   const afternoonItems = filtered.filter(t => todOf(t) === 'afternoon');
@@ -904,17 +928,19 @@ export default function CourseDetailPage({
                         if (!d) return <div key={`e${i}`} />;
                         const ds = formatDate(d);
                         const isPast = d < startOfToday();
+                        const isBeyond = !isPast && beyondWindow(d);
                         const isSelected = ds === selectedDate;
                         const isToday = ds === todayStr;
                         const base = 'aspect-square flex items-center justify-center rounded-md text-xs font-medium transition-colors';
                         let cls = 'text-ink hover:bg-line-soft';
-                        if (isPast) cls = 'text-ink-faint cursor-default';
+                        if (isPast || isBeyond) cls = 'text-ink-faint cursor-default';
                         // Today and the selected day both wear the course's colour.
                         let selStyle: React.CSSProperties = {};
                         if (isToday && !isSelected) { cls = ''; selStyle = { color: accent, boxShadow: `inset 0 0 0 1px ${accent}4d` }; }
                         if (isSelected) { cls = ''; selStyle = { backgroundColor: accent, color: '#fff' }; }
                         return (
-                          <button key={ds} disabled={isPast} onClick={() => setSelectedDate(ds)}
+                          <button key={ds} disabled={isPast || isBeyond} onClick={() => setSelectedDate(ds)}
+                            title={isBeyond ? (membersBookEarlier ? 'Members can book earlier — sign in' : `Opens ${viewerWindowDays} days ahead`) : undefined}
                             className={`${base} ${cls}`} style={selStyle}>
                             {d.getDate()}
                           </button>
@@ -1048,14 +1074,19 @@ export default function CourseDetailPage({
                       const ds = formatDate(d);
                       const isSelected = ds === selectedDate;
                       const isToday = ds === todayStr;
+                      const isBeyond = beyondWindow(d);
                       return (
                         <button
                           key={ds}
+                          disabled={isBeyond}
+                          title={isBeyond ? (membersBookEarlier ? 'Members can book earlier — sign in' : `Opens ${viewerWindowDays} days ahead`) : undefined}
                           onClick={() => setSelectedDate(ds)}
-                          className="flex flex-col items-center px-3 py-2 rounded-md text-xs font-medium min-w-[3.25rem] transition-all"
+                          className="flex flex-col items-center px-3 py-2 rounded-md text-xs font-medium min-w-[3.25rem] transition-all disabled:cursor-not-allowed"
                           style={isSelected
                             ? { backgroundColor: accent, color: '#fff' }
-                            : { backgroundColor: '#fff', border: '1px solid #E6E3D7', color: '#1C1C18' }}
+                            : isBeyond
+                              ? { backgroundColor: '#fff', border: '1px dashed #E6E3D7', color: '#98968B' }
+                              : { backgroundColor: '#fff', border: '1px solid #E6E3D7', color: '#1C1C18' }}
                         >
                           <span className="text-[10px] font-medium opacity-70">
                             {isToday ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' })}
@@ -1111,6 +1142,23 @@ export default function CourseDetailPage({
                     render below (each with "Tell me if it opens") — so the nearest
                     fits sit here, above them, instead of in an empty state that
                     never shows. */}
+                {/* BOOKING WINDOWS: the soft line under the picker, and the
+                    honest state when a chosen date is past the window. */}
+                {(membersBookEarlier || windowNotice) && !loadingTimes && (
+                  <div className="mb-4 bg-white rounded-lg border border-line px-4 py-3 text-sm text-ink-soft flex flex-wrap items-center gap-x-3 gap-y-1">
+                    {windowNotice ? (
+                      <span>
+                        <b className="font-semibold text-ink">{displayDate(selectedDate)} isn&rsquo;t open for booking yet.</b>{' '}
+                        {windowNotice.scope === 'member' ? 'Your membership lets you' : 'Golfers can'} book up to {windowNotice.windowDays} days ahead.
+                      </span>
+                    ) : (
+                      <span>Golfers can book up to {viewerWindowDays} days ahead.</span>
+                    )}
+                    {membersBookEarlier && !previewMode && (
+                      <a href={`/courses/${slug}/member`} className="font-medium hover:underline" style={{ color: accent }}>Members can book earlier — sign in →</a>
+                    )}
+                  </div>
+                )}
                 {!loadingTimes && teeTimes.length > 0 && !teeTimes.some(t => t.players_available >= players) && (
                   <div className="mb-4 bg-white rounded-lg border border-line px-4 py-3.5 flex flex-wrap items-center gap-3">
                     <div className="text-sm text-ink flex-1 min-w-[200px]">

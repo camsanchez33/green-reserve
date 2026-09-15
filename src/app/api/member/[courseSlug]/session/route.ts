@@ -11,7 +11,7 @@ export async function GET(
 
   const course = await prisma.course.findUnique({
     where: { slug: courseSlug },
-    select: { id: true },
+    select: { id: true, memberAdvanceDays: true },
   });
   if (!course) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -46,6 +46,8 @@ export async function GET(
 
   return NextResponse.json({
     source,
+    // BOOKING WINDOWS: how far ahead this member can book (tier, else course default).
+    windowDays: membership.tier?.advanceBookingDays ?? course.memberAdvanceDays,
     email: fallbackEmail ?? membership.golfer?.email ?? membership.inviteEmail,
     name: membership.golfer
       ? `${membership.golfer.firstName} ${membership.golfer.lastName}`
