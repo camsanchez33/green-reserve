@@ -1,28 +1,23 @@
 {
-  "generatedAt": "2026-09-16T02:07:51.735Z",
+  "generatedAt": "2026-09-16T02:10:18.473Z",
   "repo": {
-    "head": "7473180",
+    "head": "f023d05",
     "branch": "main",
-    "dirtyCount": 6,
+    "dirtyCount": 1,
     "dirty": [
-      "M RUN_QUEUE.md",
-      " M package-lock.json",
-      " M package.json",
-      "?? src/app/api/birdie/",
-      "?? src/components/birdie/",
-      "?? src/lib/birdie/"
+      "M RUN_QUEUE.md"
     ],
-    "looksLikeRunInProgress": true
+    "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-15T21:57:00-04:00",
+    "queueLastCommit": "2026-09-15T22:07:53-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 186,
+    "runDone": 187,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 19,
+    "runNotStarted": 18,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -197,11 +192,6 @@
     {
       "title": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
       "line": 1393,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "BIRDIE_AI_SPEC Phase B1 (Cam 2026-09-15: BUILD IT behind BIRDIE_ENABLED=false; ANTHROPIC_API_KEY to be added to Vercel later) — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthrop",
-      "line": 1472,
       "section": "Queue (run in this order)"
     }
   ],
@@ -767,6 +757,16 @@
   },
   "recentCommits": [
     {
+      "h": "f023d05",
+      "date": "2026-09-15",
+      "subject": "BIRDIE B1: the operator helper, shipped OFF — POST /api/birdie/chat (operator session only; persona, knowledge and course facts derived server-side; claude-haiku-4-5 via the official SDK, streamed; 600-token replies, 20 per course per hour, 600 per day platform-wide, BIRDIE_ENABLED kill switch; conversations logged as birdie.reply), lib/birdie (operator knowledge pack seeded from the tab intros with deep links, read-only course context scoped by session, guardrails), the floating Birdie widget on every dashboard page (streams, turns dashboard links into buttons, remembers closed, renders nothing while Birdie is off), a Birdie card on /admin/system (switch state + today's replies against the cap), env names in SHIPPING + PASSWORD_CHECKLIST Phase 7c, scripts/birdie-isolation-test.ts 14/14"
+    },
+    {
+      "h": "f0d8ed7",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "7473180",
       "date": "2026-09-15",
       "subject": "L2 review fixes: the draft build's per-round default schedules start PAUSED (identical windows would have sold one first tee several times over); a whole-course schedule on a course with rounds now conflicts with every round; a course with active rounds refuses an unscoped schedule server-side; deactivating or re-sizing a round rebuilds the sheet, deleting one is refused while it has schedules, and changing its nines re-checks every running schedule; the engine adopts a booked pre-L2 row instead of doubling it and never tries to delete a slot that still has booking rows; the round label reaches the member sheet, the member portal, the checkout page, the reminder and modified emails, the per-course account and the swap picker; the product's rating/slope shows on slot cards; the admin schedule form gets a round picker; a failed products load is visible on the Schedules page; the selector's unselected pill uses the ink-muted token"
@@ -815,16 +815,6 @@
       "h": "88242e2",
       "date": "2026-09-15",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "fffb2cc",
-      "date": "2026-09-15",
-      "subject": "SC-2: the invite, the page, the emails — sendCallInvite issues a 21-day token and emails 'Set up your call' straight from the inquiry POST (a send failure never fails the submission; the confirmation's button uses the same link; the admin alert says when the invite did not go); /call/[token] shows Cam's open 30-minute slots (preference first, all times Eastern), confirms with an editable phone and a they-call toggle, then becomes the manage view with Reschedule and Cancel; the API re-verifies the slot and writes the Call inside a transaction (409 slot_taken), creates/moves/deletes the Google event, logs the timeline, and sends the course a confirmation with a .ics plus Cam a heads-up; Google unreachable → honest fallback + alert to hello@; noindex, rate-limited"
-    },
-    {
-      "h": "5ea6455",
-      "date": "2026-09-15",
-      "subject": "SC-1 review fixes: free/busy cache keyed on 5-minute buckets and evicted (it could never hit before); 8s timeouts on every Google fetch; error strings name the operation, not the path with the calendar id; scope narrowed to events + readonly; openSlots steps the Eastern calendar date so DST never skips or doubles a day (tests added, 26/26); the check script's run line loads .env.local and retries the delete"
     }
   ]
 }
