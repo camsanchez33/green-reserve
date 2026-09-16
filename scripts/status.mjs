@@ -93,15 +93,43 @@ function classify(item) {
   // Ship evidence is DELIBERATELY narrow. A bare hash somewhere in the body is
   // not proof — RUN_QUEUE.md body text cites other items' commits as context,
   // and at least one open item cites a commit precisely to say "this is NOT built".
-  // Evidence counts only when it is: a hash in the title line, or a hash that
-  // directly follows the word SHIPPED.
+  //
+  // 2026-09-16: "a hash anywhere in the title line" was still too wide. The
+  // SECURITY follow-on item opens by citing the commit that closed a DIFFERENT
+  // hole — "21c8d25 fixed the unverified-contact-change hole; this closes the
+  // remaining case" — and the board read that as the item's own ship sha, filing
+  // work that had never been built under "built but not signed off". That is the
+  // one failure this board exists to prevent, and it is now also the input
+  // /gr-next trusts to decide what to work on next. Two narrower tests replace it.
   const pick = (re, text) => { const out = []; let m; const r = new RegExp(re, 'gi'); while ((m = r.exec(text))) out.push(m[1]); return out }
-  const shippedHashes = pick('\\bSHIPPED\\s+([0-9a-f]{7,40})\\b', blob)
-  const titleHashes = (titleLine.match(/\b[0-9a-f]{7,40}\b/g) || [])
-  const ordered = [...shippedHashes, ...titleHashes]
+
+  // (1) POSITION. A hash counts only where this project actually writes ship
+  // evidence: straight after SHIPPED/BUILT, or inside a parenthetical near the
+  // start of the title — "SD-8e (abc1234; review fix def5678) — ...". A hash in
+  // running prose is a citation.
+  const shippedHashes = pick('\\b(?:SHIPPED|BUILT)\\s+([0-9a-f]{7,40})\\b', blob)
+  const parenHashes = []
+  for (const m of titleLine.slice(0, 240).matchAll(/\(([^)]*)\)/g)) {
+    for (const h of (m[1].match(/\b[0-9a-f]{7,40}\b/g) || [])) parenHashes.push(h)
+  }
+  const ordered = [...shippedHashes, ...parenHashes]
+
+  // (2) SUBJECT. /gr-run's own rule is that a commit message names the queue
+  // item it ran, so when a title carries an id like MP-2b or H-2g, a commit
+  // whose subject never mentions that id is being cited, not claimed. Items
+  // with no id — campaign umbrellas, prose titles — skip this rather than guess,
+  // and a title that says SHIPPED still reads as shipped even when every hash is
+  // rejected, so the extra strictness can never invent a "not started".
+  const idMatch = titleLine.slice(0, 80).match(/\b[A-Z][A-Za-z]{0,3}-\d+[a-z]?\b/)
+  const itemId = idMatch ? idMatch[0] : null
 
   const hashes = []
-  for (const c of ordered) { const h = isRealHash(c); if (h && !hashes.includes(h)) hashes.push(h) }
+  for (const c of ordered) {
+    const h = isRealHash(c)
+    if (!h || hashes.includes(h)) continue
+    if (itemId && !(hashDate[h]?.subject || '').includes(itemId)) continue
+    hashes.push(h)
+  }
   const newest = hashes[0] || null
 
   const saysShipped = /\bSHIPPED\b/.test(blob)

@@ -1,23 +1,26 @@
 {
-  "generatedAt": "2026-09-16T12:14:02.651Z",
+  "generatedAt": "2026-09-16T12:32:49.864Z",
   "repo": {
-    "head": "30385cd",
+    "head": "f9ffa23",
     "branch": "main",
-    "dirtyCount": 1,
+    "dirtyCount": 4,
     "dirty": [
-      "M RUN_QUEUE.md"
+      "M RUN_QUEUE.md",
+      " M STATUS.json",
+      " M STATUS.md",
+      " M scripts/status.mjs"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-16T00:06:20-04:00",
+    "queueLastCommit": "2026-09-16T08:14:04-04:00",
     "unrecorded": []
   },
   "counts": {
     "runDone": 191,
     "runAwaiting": 11,
     "runInFlight": 1,
-    "runNotStarted": 20,
+    "runNotStarted": 21,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -214,8 +217,13 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates",
+      "title": "SD-11 — \"are you trying to sign in?\" + a code, instead of a sign-in button",
       "line": 2198,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates",
+      "line": 2238,
       "section": "Queue (run in this order)"
     }
   ],
@@ -295,7 +303,7 @@
       {
         "title": "A-03 /admin/inquiries/[id] — DETAIL — items 1-7 BUILT (item 1 cbbf1e0,",
         "line": 292,
-        "state": "shipped-unverified"
+        "state": "not-started"
       },
       {
         "title": "A-07 /admin/golfers — support lookup",
@@ -786,6 +794,11 @@
   },
   "recentCommits": [
     {
+      "h": "f9ffa23",
+      "date": "2026-09-16",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "30385cd",
       "date": "2026-09-16",
       "subject": "SECURITY follow-on review fixes: gate the already-built email, close the id oracle, stop the screen contradicting the email"
@@ -839,11 +852,6 @@
       "h": "d51fbbf",
       "date": "2026-09-15",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "80cc2a0",
-      "date": "2026-09-15",
-      "subject": "SD-8b review fix + the Stripe return detour"
     }
   ]
 }

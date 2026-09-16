@@ -4,15 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-16 12:14 UTC · branch `main` · HEAD `30385cd` · working tree **1 dirty file(s)**
+Generated 2026-09-16 12:32 UTC · branch `main` · HEAD `f9ffa23` · working tree **4 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-### Uncommitted working tree (1 file(s))
+### Uncommitted working tree (4 file(s))
 
 - `M RUN_QUEUE.md`
+- `M STATUS.json`
+- `M STATUS.md`
+- `M scripts/status.mjs`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -68,7 +71,8 @@ This is the distinction a raw checkbox count gets wrong.
 17. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1388`
 18. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1437`
 19. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1492`
-20. CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates — `RUN_QUEUE.md:2198`
+20. SD-11 — "are you trying to sign in?" + a code, instead of a sign-in button — `RUN_QUEUE.md:2198`
+21. CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates — `RUN_QUEUE.md:2238`
 
 ## Waiting on you (not on a build)
 
@@ -168,6 +172,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `f9ffa23` 2026-09-16 — queue/spec update
 - `30385cd` 2026-09-16 — SECURITY follow-on review fixes: gate the already-built email, close the id oracle, stop the screen contradicting the email
 - `951433d` 2026-09-16 — SECURITY follow-on: a built course's resubmit points at the dashboard, not at an admin diff
 - `063afa1` 2026-09-16 — queue/spec update
@@ -179,8 +184,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `4f78ea6` 2026-09-15 — queue/spec update
 - `76968ff` 2026-09-15 — H-2g §1 (revised): every box-shadow deleted from the homepage, hairlines instead
 - `d51fbbf` 2026-09-15 — queue/spec update
-- `80cc2a0` 2026-09-15 — SD-8b review fix + the Stripe return detour
 
 ---
 
-**Totals:** 191 done · 11 awaiting review · 1 in flight · 20 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 191 done · 11 awaiting review · 1 in flight · 21 not started · 8 revise pages open · 15 ideas · 2 parked.

@@ -2195,6 +2195,46 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   5. Lighthouse mobile on `/` — CLS no worse than H-1's recorded number (§5's
      own bar). The lockup moved near the top of the fold, which is the risk.
 
+- [ ] SD-11 — "are you trying to sign in?" + a code, instead of a sign-in button
+  (Cam 2026-09-16, answering the review question on the SECURITY follow-on):
+  "the response to the sign up should be are you trying to sign in at x course?
+  ... there should be a litte activity log listing that cause it has to be
+  secure just cause an email got put in doesnt send them stright to sign in but
+  they should be asked and then if they answer yes they have to enter a
+  verification code via that email or a phone number on file".
+  This REPLACES what 30385cd shipped. Today a built course's resubmit from the
+  on-file address lands on "You're already set up" with a sign-in button. Cam's
+  point is that typing an email address is not proof of anything, so the screen
+  must ask before it offers, and the offer must be earned with a code.
+  BUILD:
+  1. The built-course success screen becomes a question, not a destination:
+     "Are you trying to sign in to <Course>?" with Yes / No.
+  2. On Yes: send a 6-digit code and show a code entry. The code goes to the
+     address ON FILE, never to the address typed in the form — otherwise the
+     whole check is circular and anyone who names a course walks straight in.
+     Phone on file is the second channel if one exists; decide whether it is
+     offered as a choice or only as a fallback when email bounces.
+  3. On correct code: sign them in (or hand them a one-time link into
+     /dashboard). On wrong: the usual attempt cap, and the same generic wording
+     whether the code was wrong or there was never a code to match.
+  4. Activity-ledger entry either way — asked, answered, verified or failed.
+     That is also the passive admin trace the security audit asked for, so this
+     item closes finding 3 from 30385cd's review.
+  OPEN, needs a decision in the build:
+  - Does this reuse the existing operator login code path or get its own? An
+    operator who can already sign in normally does not need this door at all,
+    and two ways in is two things to keep secure.
+  - A `building`-stage operator may never have completed /dashboard/verify, so
+    there may be no account to sign into yet. If so, Yes should route to "we'll
+    email you" rather than to a code that leads nowhere.
+  SECURITY NOTE for whoever builds it: naming the course in the question is
+  safe ONLY while the screen stays gated behind the verified check 30385cd
+  added (the submitted email matches the one on file). Ungate it and the
+  question itself becomes a lookup for which courses are on GreenReserve —
+  that is exactly the hole that review closed. Small/medium, no migration
+  unless the code needs its own table (check whether an existing verification
+  model fits before adding one).
+
 - [ ] CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates
   `docs/CODEMAP.md` + `codemap.json`: routes with their auth level, lib exports
   with usedBy, schema models with their writers, and orphans. `@brain` tags are
