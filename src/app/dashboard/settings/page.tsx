@@ -11,6 +11,7 @@ import CoursePreview from '@/components/dashboard/CoursePreview';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
 import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
+import { setLeaveGuard } from '@/lib/unsaved-guard';
 import { downscaleImage } from '@/lib/image-resize';
 
 type Course = Record<string, unknown>;
@@ -294,13 +295,27 @@ function SettingsPageInner() {
   const set = (k:string, v:unknown) => { markDirty(k); setForm(f=>({...f,[k]:v})); };
   const tog = (k:string) => { markDirty(k); setForm(f=>({...f,[k]:!f[k]})); };
 
-  // Leaving with unsaved edits asks first — the browser's own prompt.
+  // Leaving with unsaved edits asks first — the browser's own prompt. This
+  // only covers a real document unload (tab close, refresh, cross-origin nav).
   useEffect(() => {
     if (!anyDirty) return;
     const guard = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
     window.addEventListener('beforeunload', guard);
     return () => window.removeEventListener('beforeunload', guard);
   }, [anyDirty]);
+
+  // SD-8b: the sidebar navigates with router.push, which fires no unload event
+  // — the most common way anyone leaves this page was also the one way the
+  // guard above never saw. Name the sections so the prompt is worth reading.
+  useEffect(() => {
+    if (!anyDirty) { setLeaveGuard(null); return; }
+    setLeaveGuard(() => {
+      const pending = SECTIONS.filter(s => SECTION_FIELDS[s].some(k => dirtyFields.has(k)));
+      const which = pending.length ? pending.join(' and ') : 'this page';
+      return confirm(`You have unsaved changes in ${which}. Leave without saving?`);
+    });
+    return () => setLeaveGuard(null);
+  }, [anyDirty, dirtyFields]);
 
   async function save() {
     setSaving(true); setSaveError('');

@@ -16,7 +16,7 @@ import { toast } from '@/components/dashboard/Toast';
 import GettingStartedChecklist from '@/components/dashboard/GettingStartedChecklist';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
-import { getBookingStatus } from '@/lib/booking-status';
+import { getBookingStatus, statusToneText } from '@/lib/booking-status';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
@@ -78,13 +78,6 @@ function slotBadge(tt: TeeTime) {
   if (avail === 0) return <span className="text-xs font-medium text-bad">Full</span>;
   if (booked > 0)  return <span className="text-xs font-medium text-warn">{avail} left</span>;
   return <span className="text-xs font-medium text-ok">{avail} open</span>;
-}
-
-function toneText(tone: string) {
-  if (tone === 'emerald') return 'text-ok';
-  if (tone === 'amber') return 'text-warn';
-  if (tone === 'red') return 'text-bad';
-  return 'text-ink-muted';
 }
 
 /* ─── Main Page ─────────────────────────────────────────────────────────── */
@@ -911,7 +904,7 @@ function DashboardPageInner() {
                                 {b.status === 'confirmed' && b.checkInFailReason ? (
                                   <span className="shrink-0 text-[12.5px] font-medium text-bad" title={b.checkInFailReason}>Card declined</span>
                                 ) : (
-                                  <span className={'shrink-0 text-[12.5px] font-medium ' + toneText(bStatus.tone)}>{bStatus.label}</span>
+                                  <span className={'shrink-0 text-[12.5px] font-medium ' + statusToneText(bStatus.tone)}>{bStatus.label}</span>
                                 )}
                                 {b.status === 'confirmed' && b.noShowAt && (
                                   <button onClick={e => { e.stopPropagation(); bookingLifecycle(b, 'still_coming'); }} disabled={rowBusy === b.id}

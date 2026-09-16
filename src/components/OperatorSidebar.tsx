@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
 import BirdieWidget from '@/components/birdie/BirdieWidget';
+import { confirmLeave } from '@/lib/unsaved-guard';
 import AgreementNotice from '@/components/dashboard/AgreementNotice';
 import { recordTabVisit } from '@/lib/dashboard-visits';
 import { Toaster, toast } from '@/components/dashboard/Toast';
@@ -164,7 +165,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
         return (
           <button
             key={item.key}
-            onClick={() => router.push(item.href)}
+            onClick={() => { if (confirmLeave()) router.push(item.href); }}
             className={'flex-1 min-h-[56px] flex flex-col items-center justify-center gap-1 text-[10.5px] font-medium transition-colors relative ' + (isActive ? 'text-ink' : 'text-ink-muted')}
             style={isActive ? { color: brandColor } : undefined}
             aria-current={isActive ? 'page' : undefined}
@@ -224,7 +225,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
                 </div>
               );
               if (isActive) return (
-                <button key={item.key} onClick={() => router.push(item.href)} className={base} style={accentActive(brandColor)}>
+                <button key={item.key} onClick={() => { if (confirmLeave()) router.push(item.href); }} className={base} style={accentActive(brandColor)}>
                   {item.icon}<span className="flex-1">{item.label}</span>
                   {item.key === 'messages' && unreadMessages > 0 && (
                     <span className="text-[10px] font-medium leading-none" style={{ color: brandColor }}>{unreadMessages > 99 ? '99+' : unreadMessages}</span>
@@ -232,7 +233,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
                 </button>
               );
               return (
-                <button key={item.key} onClick={() => router.push(item.href)} className={base + ' border-transparent text-ink-soft hover:text-ink hover:bg-line-soft/60'}>
+                <button key={item.key} onClick={() => { if (confirmLeave()) router.push(item.href); }} className={base + ' border-transparent text-ink-soft hover:text-ink hover:bg-line-soft/60'}>
                   {item.icon}<span className="flex-1">{item.label}</span>
                   {item.key === 'messages' && unreadMessages > 0 && (
                     <span className="text-[10px] font-medium text-ok leading-none">{unreadMessages > 99 ? '99+' : unreadMessages}</span>

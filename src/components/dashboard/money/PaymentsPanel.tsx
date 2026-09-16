@@ -4,19 +4,9 @@
 // prop because Money loads them once for all three tabs.
 import { useState } from 'react';
 import { DollarSign, CreditCard, Clock3, X, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { getBookingStatus } from '@/lib/booking-status';
+import { getBookingStatus, statusToneText } from '@/lib/booking-status';
 import { ACCESS_FEE_PER_PLAYER } from '@/lib/booking-fees';
 import type { MoneyBooking } from './types';
-
-const STATUS_TONE: Record<string, string> = {
-  ok: 'text-ok', warn: 'text-warn', bad: 'text-bad', neutral: 'text-ink-muted',
-};
-function toneClass(tone: string) {
-  if (tone === 'emerald') return STATUS_TONE.ok;
-  if (tone === 'amber') return STATUS_TONE.warn;
-  if (tone === 'red') return STATUS_TONE.bad;
-  return STATUS_TONE.neutral;
-}
 
 function fmtTime(t: string) { const [h, m] = t.split(':').map(Number); return `${h % 12 || 12}:${m.toString().padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`; }
 function fmtDate(d: string) { return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
@@ -156,7 +146,7 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate }: {
                       {new Date(b.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       <div>{new Date(b.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</div>
                     </td>
-                    <td className="px-4 py-3 text-ink-soft text-xs tabular-nums">
+                    <td className="px-4 py-3 text-ink-soft text-[13.5px] tabular-nums">
                       <div>{fmtDate(b.teeTime.date)}</div>
                       <div>{fmtTime(b.teeTime.time)}</div>
                     </td>
@@ -164,7 +154,7 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate }: {
                       ${((b.greenFeeTotal + b.cartFeeTotal) / 100).toFixed(2)}
                       {b.paymentStatus !== 'paid' && b.status !== 'cancelled' && <span className="text-ink-faint text-xs"> est.</span>}
                     </td>
-                    <td className="px-4 py-3 text-right text-xs tabular-nums">
+                    <td className="px-4 py-3 text-right text-[13.5px] tabular-nums">
                       {b.cancellationFeeTotal > 0
                         ? <span className={'font-medium ' + (b.paymentStatus === 'cancellation_fee_charged' ? 'text-warn' : 'text-ink-muted')}>${(b.cancellationFeeTotal / 100).toFixed(2)}</span>
                         : <span className="text-ink-faint">—</span>}
@@ -174,7 +164,7 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate }: {
                       {b.paymentStatus !== 'paid' && b.status !== 'cancelled' && <span className="text-ink-faint text-xs"> est.</span>}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={'text-xs font-medium ' + toneClass(bStatus.tone)}>{bStatus.label}</span>
+                      <span className={'text-[13.5px] font-medium ' + statusToneText(bStatus.tone)}>{bStatus.label}</span>
                     </td>
                   </tr>
                 );
