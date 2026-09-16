@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-15 23:45 UTC · branch `main` · HEAD `21c8d25` · working tree **1 dirty file(s)**
+Generated 2026-09-16 01:15 UTC · branch `main` · HEAD `bab429b` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -35,7 +35,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 16d | `7246a62` | `RUN_QUEUE.md:500` |
+| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 17d | `7246a62` | `RUN_QUEUE.md:500` |
 | MP-1 | 2026-08-29 | 16d | `41f5ea8` | `RUN_QUEUE.md:530` |
 | MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 16d | `4ef11dd` | `RUN_QUEUE.md:565` |
 | MP-2 | 2026-08-29 | 16d | `958f229` | `RUN_QUEUE.md:606` |
@@ -43,7 +43,7 @@ This is the distinction a raw checkbox count gets wrong.
 | MP-2c | 2026-08-29 | 16d | `e5b5413` | `RUN_QUEUE.md:692` |
 | MP-2d | 2026-08-29 | 16d | `22d0f68` | `RUN_QUEUE.md:740` |
 | MP-2e | 2026-08-30 | 16d | `bf3bcb2` | `RUN_QUEUE.md:782` |
-| UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | 2026-09-11 | 3d | `a3c1bea` | `RUN_QUEUE.md:1957` |
+| UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | 2026-09-11 | 4d | `a3c1bea` | `RUN_QUEUE.md:1957` |
 
 ## Not started — the actual queue
 
@@ -65,13 +65,10 @@ This is the distinction a raw checkbox count gets wrong.
 16. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1289`
 17. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1338`
 18. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1364`
-19. Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm  — `RUN_QUEUE.md:1393`
+19. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1393`
 20. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1472`
-21. UI_REVISE_SPEC H-2d-R1 — DESIGN DECISION, Cam: device-mockup shadows vs the CLAUDE.md ceiling. src/app/home.module.css:46 (.heroDevice .device), :48 (.heroSheet), :108 (.device), : — `RUN_QUEUE.md:1982`
-22. CALL_SCHEDULING_SPEC Phase SC-1 — availability engine + Google (SCHEMA CHANGE, attended): CourseInquiry.callInviteToken/SentAt/ExpiresAt + Call.bookedByCourse/gcalEventId (migratio — `RUN_QUEUE.md:1989`
-23. CALL_SCHEDULING_SPEC Phase SC-2 — the invite + the public booking page (no migration): sendCallInviteEmail auto-sent on inquiry submit (AUTO_SEND_CALL_INVITE flag); /call/[token] p — `RUN_QUEUE.md:1990`
-24. CALL_SCHEDULING_SPEC Phase SC-3 — admin side (no migration): 'Send a booking link' beside Set up call / Skip, with sent-not-booked state + resend; sheet's Next-call cell learns 'In — `RUN_QUEUE.md:1991`
-25. UI_REVISE_SPEC H-2f — CAM TO CONFIRM before running (2026-09-15, 'i like having the fade from slide to slide'): after H-2e the only hard section edges left on / are the two around  — `RUN_QUEUE.md:1995`
+21. CALL_SCHEDULING_SPEC Phase SC-2 — the invite + the public booking page (no migration): sendCallInviteEmail auto-sent on inquiry submit (AUTO_SEND_CALL_INVITE flag); /call/[token] p — `RUN_QUEUE.md:1990`
+22. CALL_SCHEDULING_SPEC Phase SC-3 — admin side (no migration): 'Send a booking link' beside Set up call / Skip, with sent-not-booked state + resend; sheet's Next-call cell learns 'In — `RUN_QUEUE.md:1991`
 
 ## Waiting on you (not on a build)
 
@@ -83,7 +80,6 @@ This is the distinction a raw checkbox count gets wrong.
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:740`
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:782`
 - CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1393`
-- Cam: device-mockup shadows vs the CLAUDE — `RUN_QUEUE.md:1982`
 
 ## Revise campaign (page-by-page pass)
 
@@ -171,6 +167,9 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `bab429b` 2026-09-15 — H-2d-R1 + H-2f (Cam 2026-09-15): the homepage device mockups keep their soft shadows and the cream hand-off dissolves are the only allowed gradients — CLAUDE.md BANNED line amended; the pricing slab now dissolves from and into cream at both edges (18vh, under the content, off on phones) like the story
+- `32d985e` 2026-09-15 — SC-1: call invites + availability — migration call_invites (CourseInquiry.callInviteToken/SentAt/ExpiresAt, Call.bookedByCourse/gcalEventId, additive); lib/call-availability.ts (30-min slots in Cam's windows minus busy blocks and scheduled calls, preference orders never removes; 22/22 tests); lib/google-calendar.ts (service-account JWT via jose, freebusy cached 5 min and throwing, create/move/delete events never throwing into a booking); scripts/google-calendar-check.ts for the live round trip once GOOGLE_* env is set; env names recorded in SHIPPING + PASSWORD_CHECKLIST
+- `236096e` 2026-09-15 — queue/spec update
 - `21c8d25` 2026-09-15 — Security (IF-1 review): a re-submission of the lead form only carries new email/phone when it comes from the email on file; otherwise the admin's resubmit diff is labelled unverified and no contact change is recorded — a stranger who knows a course's name and town can no longer steer outreach to themselves
 - `189f23b` 2026-09-15 — IC-5 review fixes: draft autosave is an atomic write on outcome=scheduled and stale responses are ignored client-side (a late autosave can no longer revert a logged call); recap email throws on a Resend rejection so 'emailed' is never false; MoneyInput shows an invalid state instead of silently saving nothing; draft/log writes only the fields sent; build flags fees and tee times that came from the call, not the sheet; recap subject bounded; season fields are months and walking uses the sheet's own options (spec table updated); recap notice covers 'nothing captured'
 - `25baf6b` 2026-09-15 — IC-5: the call captures structured answers — lib/call-answers.ts (field catalog per agenda item, money in integer cents, v2 answersJson with the old prose shape still readable, one-line summaries, sheet prefill); Log-the-call card has real inputs per item, collapsed rows, autosave via save_call_draft with a visible status; log_call validates v2 and can email a recap; the setup sheet pre-fills empty keys from the call and says so; the build reads the call only for keys the sheet never touched; Still-need names missing fields; scripts/call-answers-test.ts 34/34
@@ -180,10 +179,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `52f7bc3` 2026-09-15 — IF-1: the inquiry form asks only what the call can't — ten inputs, the eight branch questions gone; booking method lands in currentBookingMethod, call-time chips in needsJson.callPreference; success screen points at picking a call; booking_today always on the agenda with the form's answer as context; the setup sheet asks its branching questions inline (saved → old form answers → call answers → ask) and never hides a section; admin Answers tab renders the new shape
 - `47d9bb6` 2026-09-15 — H-2e review fixes: the nav blur fades with the white (transition covers backdrop-filter); the mobile menu closes when the bar hides; the H-1 shrink waits for the bar; the story's bottom wash moves to the story's end (outside the pin) and is off on phones; .device's near-cream fill recorded as deliberate
 - `1a4d726` 2026-09-15 — queue/spec update (restore: a stale Cowork save reverted the H-2d-R2/R3/H-2e check-offs and dropped the H-2f draft; nothing new was in it)
-- `c31b956` 2026-09-15 — queue/spec update
-- `b0d3a14` 2026-09-15 — queue/spec update
-- `01481f9` 2026-09-15 — H-2e: one ground, one logo — cream root (the white/cream banding was a bug), white step cards, cream footer, the story fades into cream at both ends; over the hero the nav is just the lockup, past it the bar fades in with Operator login + List your course; How it works/Pricing/FAQ links gone; Operator login in the footer
 
 ---
 
-**Totals:** 180 done · 9 awaiting review · 1 in flight · 25 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 183 done · 9 awaiting review · 1 in flight · 22 not started · 8 revise pages open · 15 ideas · 2 parked.

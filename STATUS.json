@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-15T23:45:26.178Z",
+  "generatedAt": "2026-09-16T01:15:02.932Z",
   "repo": {
-    "head": "21c8d25",
+    "head": "bab429b",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,14 +10,14 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-15T19:27:38-04:00",
+    "queueLastCommit": "2026-09-15T19:45:26-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 180,
+    "runDone": 183,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 25,
+    "runNotStarted": 22,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -44,7 +44,7 @@
       "line": 500,
       "hash": "7246a62",
       "shipDate": "2026-08-29",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "title": "MP-1",
@@ -100,7 +100,7 @@
       "line": 1957,
       "hash": "a3c1bea",
       "shipDate": "2026-09-11",
-      "ageDays": 3
+      "ageDays": 4
     }
   ],
   "next": [
@@ -195,23 +195,13 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
+      "title": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
       "line": 1393,
       "section": "Queue (run in this order)"
     },
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
       "line": 1472,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "UI_REVISE_SPEC H-2d-R1 — DESIGN DECISION, Cam: device-mockup shadows vs the CLAUDE.md ceiling. src/app/home.module.css:46 (.heroDevice .device), :48 (.heroSheet), :108 (.device), :159 (.laptopScreen) ",
-      "line": 1982,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "CALL_SCHEDULING_SPEC Phase SC-1 — availability engine + Google (SCHEMA CHANGE, attended): CourseInquiry.callInviteToken/SentAt/ExpiresAt + Call.bookedByCourse/gcalEventId (migration `call_invites`, ad",
-      "line": 1989,
       "section": "Queue (run in this order)"
     },
     {
@@ -222,11 +212,6 @@
     {
       "title": "CALL_SCHEDULING_SPEC Phase SC-3 — admin side (no migration): 'Send a booking link' beside Set up call / Skip, with sent-not-booked state + resend; sheet's Next-call cell learns 'Invite sent · Nd'; an ",
       "line": 1991,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "UI_REVISE_SPEC H-2f — CAM TO CONFIRM before running (2026-09-15, 'i like having the fade from slide to slide'): after H-2e the only hard section edges left on / are the two around the pine pricing sla",
-      "line": 1995,
       "section": "Queue (run in this order)"
     }
   ],
@@ -267,14 +252,9 @@
       "line": 782
     },
     {
-      "item": "Tiny run: legal entity name fill-in (no migration) — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGreenReserve LLC\" + formation state (CAM: confirm the state before thi",
+      "item": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
       "note": "CAM: confirm the state before this runs — e",
       "line": 1393
-    },
-    {
-      "item": "UI_REVISE_SPEC H-2d-R1 — DESIGN DECISION, Cam: device-mockup shadows vs the CLAUDE.md ceiling. src/app/home.module.css:46 (.heroDevice .device), :48 (.heroSheet), :108 (.device), :159 (.laptopScreen) ",
-      "note": "Cam: device-mockup shadows vs the CLAUDE",
-      "line": 1982
     }
   ],
   "ideas": {
@@ -797,6 +777,21 @@
   },
   "recentCommits": [
     {
+      "h": "bab429b",
+      "date": "2026-09-15",
+      "subject": "H-2d-R1 + H-2f (Cam 2026-09-15): the homepage device mockups keep their soft shadows and the cream hand-off dissolves are the only allowed gradients — CLAUDE.md BANNED line amended; the pricing slab now dissolves from and into cream at both edges (18vh, under the content, off on phones) like the story"
+    },
+    {
+      "h": "32d985e",
+      "date": "2026-09-15",
+      "subject": "SC-1: call invites + availability — migration call_invites (CourseInquiry.callInviteToken/SentAt/ExpiresAt, Call.bookedByCourse/gcalEventId, additive); lib/call-availability.ts (30-min slots in Cam's windows minus busy blocks and scheduled calls, preference orders never removes; 22/22 tests); lib/google-calendar.ts (service-account JWT via jose, freebusy cached 5 min and throwing, create/move/delete events never throwing into a booking); scripts/google-calendar-check.ts for the live round trip once GOOGLE_* env is set; env names recorded in SHIPPING + PASSWORD_CHECKLIST"
+    },
+    {
+      "h": "236096e",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "21c8d25",
       "date": "2026-09-15",
       "subject": "Security (IF-1 review): a re-submission of the lead form only carries new email/phone when it comes from the email on file; otherwise the admin's resubmit diff is labelled unverified and no contact change is recorded — a stranger who knows a course's name and town can no longer steer outreach to themselves"
@@ -840,21 +835,6 @@
       "h": "1a4d726",
       "date": "2026-09-15",
       "subject": "queue/spec update (restore: a stale Cowork save reverted the H-2d-R2/R3/H-2e check-offs and dropped the H-2f draft; nothing new was in it)"
-    },
-    {
-      "h": "c31b956",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "b0d3a14",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "01481f9",
-      "date": "2026-09-15",
-      "subject": "H-2e: one ground, one logo — cream root (the white/cream banding was a bug), white step cards, cream footer, the story fades into cream at both ends; over the hero the nav is just the lockup, past it the bar fades in with Operator login + List your course; How it works/Pricing/FAQ links gone; Operator login in the footer"
     }
   ]
 }
