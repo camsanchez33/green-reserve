@@ -2357,7 +2357,7 @@
     },
     {
       "path": "src/app/api/bookings/setup-intent/route.ts",
-      "lines": 46,
+      "lines": 72,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2376,6 +2376,7 @@
       "imports": [
         "@/lib/auth",
         "@/lib/prisma",
+        "@/lib/rate-limit",
         "@/lib/stripe",
         "next/server"
       ],
@@ -10778,6 +10779,7 @@
         "src/app/api/auth/login/route.ts",
         "src/app/api/auth/resend-verification/route.ts",
         "src/app/api/bookings/cancel/route.ts",
+        "src/app/api/bookings/setup-intent/route.ts",
         "src/app/api/call/[token]/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
         "src/app/api/golfer/auth/otp/request/route.ts",

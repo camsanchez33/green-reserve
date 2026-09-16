@@ -158,15 +158,22 @@ const md = `# GreenReserve — Architecture Reference
 
 ---
 
-## API Routes
+## Routes — see \`docs/CODEMAP.md\`
 
-${apiTable}
+Cam, 2026-09-16: this file's route tables are **deleted**, not moved. They had
+drifted from \`docs/CODEMAP.md\` on 21 API rows — two generated maps disagreeing
+about who each route is for, with a CI drift check on only one of them. Two
+trusted maps that disagree are worse than one, because the reader just picks.
 
----
+\`docs/CODEMAP.md\` is the route map now. It carries every URL, its methods, who
+it is for, **and where that is actually enforced** — in the route, in a layout,
+in middleware, by a capability token, or nowhere. That last column is the thing
+the deleted tables could never express, which is exactly why they were trusted
+further than they deserved.
 
-## Pages
-
-${pageTable}
+What stays in this file is what the map cannot generate: the money flow, the
+session-policy table, the model relationships, and the notes explaining why the
+system is shaped the way it is.
 
 **Public pages** (no auth required):
 \`/\`, \`/for-courses\`, \`/for-courses/details\` (token-gated), \`/courses\`, \`/courses/[slug]\`, \`/contact\`, \`/privacy\`, \`/terms\`, login pages (\`/account/login\`, \`/account/register\`, \`/api/auth/login\`)
