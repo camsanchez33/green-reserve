@@ -27,10 +27,14 @@ this script with a non-zero exit — that is the point of the tag.
 
 **auth** is who the route is for. **guard** is where that is enforced:
 
-- `file` — the route imports a session helper itself. Strongest.
-- `layout` / `middleware` — enforced above it. The file alone will not show it.
-- `client-side` — the page fetches a session endpoint and redirects itself.
-  Fine for a page, never sufficient for an API route.
+- `file` — the route calls a session helper AND refuses on a falsy result.
+  Presence is not enough: `/api/bookings` calls two session helpers purely for
+  member pricing and refuses nobody, and it used to carry this label.
+- `X for POST` — split route. The named verbs are NOT covered; the rest are.
+- `layout` — an ancestor layout resolves a session AND `redirect()`s on failure.
+- `middleware` — inside the matcher and not in its exempt list.
+- `client-side` — the guard is a client redirect, so the server renders it
+  either way. Fine for a page shell, never sufficient for an API route.
 - `entry` — an auth entry point (login, logout, otp, set-password). You cannot
   require a session to create one, and logout must work when it is already dead.
 - `token` — session-free by design; a capability token in the URL is the guard.
@@ -40,27 +44,29 @@ this script with a non-zero exit — that is the point of the tag.
 - **`NONE FOUND`** — none of the above on a route whose URL says it should have
   one. A finding, not a label. Read the file before believing the map or the route.
 
+> ⚠ 3 route(s) below are marked `NONE FOUND`.
+
 | url | auth | guard | methods | file | lines |
 |---|---|---|---|---|---|
 | `/` | public | public | page | `src/app/page.tsx` | 21 |
-| `/admin` | admin | layout (src/app/admin/layout.tsx) | page | `src/app/admin/page.tsx` | 548 |
-| `/admin/activity` | admin | layout (src/app/admin/layout.tsx) | page | `src/app/admin/activity/page.tsx` | 210 |
-| `/admin/broadcasts` | admin | layout (src/app/admin/layout.tsx) | page | `src/app/admin/broadcasts/page.tsx` | 13 |
-| `/admin/courses` | admin | layout (src/app/admin/layout.tsx) | page | `src/app/admin/courses/page.tsx` | 522 |
-| `/admin/courses/[id]` | admin | layout (src/app/admin/layout.tsx) | page | `src/app/admin/courses/[id]/page.tsx` | 2704 |
-| `/admin/create` | admin | layout (src/app/admin/layout.tsx) | page | `src/app/admin/create/page.tsx` | 757 |
-| `/admin/employees` | admin | layout (src/app/admin/layout.tsx) | page | `src/app/admin/employees/page.tsx` | 401 |
-| `/admin/forgot-password` | admin | layout (src/app/admin/layout.tsx) | page | `src/app/admin/forgot-password/page.tsx` | 67 |
-| `/admin/golfers` | admin | layout (src/app/admin/layout.tsx) | page | `src/app/admin/golfers/page.tsx` | 464 |
-| `/admin/inquiries` | admin | layout (src/app/admin/layout.tsx) | page | `src/app/admin/inquiries/page.tsx` | 991 |
-| `/admin/inquiries/[id]` | admin | layout (src/app/admin/layout.tsx) | page | `src/app/admin/inquiries/[id]/page.tsx` | 2266 |
-| `/admin/login` | admin | layout (src/app/admin/layout.tsx) | page | `src/app/admin/login/page.tsx` | 151 |
-| `/admin/messages` | admin | layout (src/app/admin/layout.tsx) | page | `src/app/admin/messages/page.tsx` | 600 |
-| `/admin/owner-login` | admin | layout (src/app/admin/layout.tsx) | page | `src/app/admin/owner-login/page.tsx` | 144 |
-| `/admin/profile` | admin | layout (src/app/admin/layout.tsx) | page | `src/app/admin/profile/page.tsx` | 127 |
-| `/admin/revenue` | admin | layout (src/app/admin/layout.tsx) | page | `src/app/admin/revenue/page.tsx` | 902 |
-| `/admin/set-password` | admin | layout (src/app/admin/layout.tsx) | page | `src/app/admin/set-password/page.tsx` | 156 |
-| `/admin/system` | admin | file | page | `src/app/admin/system/page.tsx` | 523 |
+| `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 548 |
+| `/admin/activity` | admin | client-side | page | `src/app/admin/activity/page.tsx` | 210 |
+| `/admin/broadcasts` | admin | client-side | page | `src/app/admin/broadcasts/page.tsx` | 13 |
+| `/admin/courses` | admin | client-side | page | `src/app/admin/courses/page.tsx` | 522 |
+| `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 2704 |
+| `/admin/create` | admin | client-side | page | `src/app/admin/create/page.tsx` | 757 |
+| `/admin/employees` | admin | client-side | page | `src/app/admin/employees/page.tsx` | 401 |
+| `/admin/forgot-password` | admin | client-side | page | `src/app/admin/forgot-password/page.tsx` | 67 |
+| `/admin/golfers` | admin | client-side | page | `src/app/admin/golfers/page.tsx` | 464 |
+| `/admin/inquiries` | admin | client-side | page | `src/app/admin/inquiries/page.tsx` | 991 |
+| `/admin/inquiries/[id]` | admin | client-side | page | `src/app/admin/inquiries/[id]/page.tsx` | 2266 |
+| `/admin/login` | admin | client-side | page | `src/app/admin/login/page.tsx` | 151 |
+| `/admin/messages` | admin | client-side | page | `src/app/admin/messages/page.tsx` | 600 |
+| `/admin/owner-login` | admin | client-side | page | `src/app/admin/owner-login/page.tsx` | 144 |
+| `/admin/profile` | admin | client-side | page | `src/app/admin/profile/page.tsx` | 127 |
+| `/admin/revenue` | admin | client-side | page | `src/app/admin/revenue/page.tsx` | 902 |
+| `/admin/set-password` | admin | client-side | page | `src/app/admin/set-password/page.tsx` | 156 |
+| `/admin/system` | admin | client-side | page | `src/app/admin/system/page.tsx` | 523 |
 | `/api/admin/activity` | admin | file | GET | `src/app/api/admin/activity/route.ts` | 145 |
 | `/api/admin/archive-course` | admin | file | POST | `src/app/api/admin/archive-course/route.ts` | 71 |
 | `/api/admin/backfill-orphaned-inquiries` | admin | file | POST | `src/app/api/admin/backfill-orphaned-inquiries/route.ts` | 42 |
@@ -109,21 +115,21 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/two-factor` | admin | file | GET POST | `src/app/api/admin/two-factor/route.ts` | 92 |
 | `/api/admin/verify-operator` | admin | file | POST | `src/app/api/admin/verify-operator/route.ts` | 38 |
 | `/api/alerts` | public | public | POST | `src/app/api/alerts/route.ts` | 52 |
-| `/api/alerts/unsubscribe/[token]` | public | token | GET | `src/app/api/alerts/unsubscribe/[token]/route.ts` | 53 |
-| `/api/auth/2fa/resend` | public | entry | POST | `src/app/api/auth/2fa/resend/route.ts` | 32 |
-| `/api/auth/2fa/status` | public | entry | GET | `src/app/api/auth/2fa/status/route.ts` | 21 |
-| `/api/auth/2fa/verify` | public | entry | POST | `src/app/api/auth/2fa/verify/route.ts` | 69 |
+| `/api/alerts/unsubscribe/[token]` | public | public | GET | `src/app/api/alerts/unsubscribe/[token]/route.ts` | 53 |
+| `/api/auth/2fa/resend` | public | token | POST | `src/app/api/auth/2fa/resend/route.ts` | 32 |
+| `/api/auth/2fa/status` | public | token | GET | `src/app/api/auth/2fa/status/route.ts` | 21 |
+| `/api/auth/2fa/verify` | public | token | POST | `src/app/api/auth/2fa/verify/route.ts` | 69 |
 | `/api/auth/forgot-password` | public | entry | POST | `src/app/api/auth/forgot-password/route.ts` | 42 |
 | `/api/auth/login` | public | entry | POST | `src/app/api/auth/login/route.ts` | 81 |
 | `/api/auth/logout` | public | entry | POST | `src/app/api/auth/logout/route.ts` | 8 |
 | `/api/auth/resend-verification` | operator | file | POST | `src/app/api/auth/resend-verification/route.ts` | 37 |
 | `/api/auth/reset-password` | public | entry | GET POST | `src/app/api/auth/reset-password/route.ts` | 42 |
-| `/api/auth/verify` | public | entry | POST | `src/app/api/auth/verify/route.ts` | 36 |
+| `/api/auth/verify` | public | public | POST | `src/app/api/auth/verify/route.ts` | 36 |
 | `/api/birdie/chat` | operator | file | GET POST | `src/app/api/birdie/chat/route.ts` | 146 |
-| `/api/bookings` | member | file | GET POST | `src/app/api/bookings/route.ts` | 368 |
+| `/api/bookings` | golfer | public for POST | GET POST | `src/app/api/bookings/route.ts` | 368 |
 | `/api/bookings/cancel` | golfer | file | POST | `src/app/api/bookings/cancel/route.ts` | 45 |
-| `/api/bookings/setup-intent` | golfer | file | POST | `src/app/api/bookings/setup-intent/route.ts` | 46 |
-| `/api/call/[token]` | public | token | GET POST | `src/app/api/call/[token]/route.ts` | 256 |
+| `/api/bookings/setup-intent` | public | public | POST | `src/app/api/bookings/setup-intent/route.ts` | 46 |
+| `/api/call/[token]` | public | public | GET POST | `src/app/api/call/[token]/route.ts` | 256 |
 | `/api/checkin/[bookingId]` | public | token | GET POST | `src/app/api/checkin/[bookingId]/route.ts` | 78 |
 | `/api/courses` | public | public | GET | `src/app/api/courses/route.ts` | 44 |
 | `/api/courses/[slug]` | public | public | GET | `src/app/api/courses/[slug]/route.ts` | 31 |
@@ -142,7 +148,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/golfer/memberships` | golfer | file | GET POST | `src/app/api/golfer/memberships/route.ts` | 29 |
 | `/api/golfer/profile` | golfer | file | GET | `src/app/api/golfer/profile/route.ts` | 14 |
 | `/api/health` | public | public | GET | `src/app/api/health/route.ts` | 21 |
-| `/api/inquiries` | public | token | POST | `src/app/api/inquiries/route.ts` | 268 |
+| `/api/inquiries` | public | public | POST | `src/app/api/inquiries/route.ts` | 268 |
 | `/api/inquiries/details` | public | token | GET PATCH POST | `src/app/api/inquiries/details/route.ts` | 130 |
 | `/api/inquiries/upload` | public | token | POST | `src/app/api/inquiries/upload/route.ts` | 48 |
 | `/api/manage/[bookingId]` | golfer | file | GET | `src/app/api/manage/[bookingId]/route.ts` | 77 |
@@ -205,26 +211,26 @@ this script with a non-zero exit — that is the point of the tag.
 | `/checkin/[bookingId]` | golfer | token | page | `src/app/checkin/[bookingId]/page.tsx` | 291 |
 | `/contact` | public | public | page | `src/app/contact/page.tsx` | 42 |
 | `/courses/[slug]` | public | public | page | `src/app/courses/[slug]/page.tsx` | 39 |
-| `/courses/[slug]/account` | public | public | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
-| `/courses/[slug]/account/accept-invite` | public | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 150 |
-| `/courses/[slug]/member` | public | public | page | `src/app/courses/[slug]/member/page.tsx` | 853 |
+| `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
+| `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 150 |
+| `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 853 |
 | `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1198 |
-| `/dashboard/2fa` | operator | middleware | page | `src/app/dashboard/2fa/page.tsx` | 102 |
+| `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 102 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
-| `/dashboard/forgot-password` | operator | middleware | page | `src/app/dashboard/forgot-password/page.tsx` | 68 |
-| `/dashboard/login` | operator | middleware | page | `src/app/dashboard/login/page.tsx` | 79 |
+| `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 68 |
+| `/dashboard/login` | operator | entry | page | `src/app/dashboard/login/page.tsx` | 79 |
 | `/dashboard/members` | operator | middleware | page | `src/app/dashboard/members/page.tsx` | 728 |
 | `/dashboard/messages` | operator | middleware | page | `src/app/dashboard/messages/page.tsx` | 159 |
 | `/dashboard/money` | operator | middleware | page | `src/app/dashboard/money/page.tsx` | 205 |
-| `/dashboard/onboarding` | operator | middleware | page | `src/app/dashboard/onboarding/page.tsx` | 319 |
+| `/dashboard/onboarding` | operator | **NONE FOUND** | page | `src/app/dashboard/onboarding/page.tsx` | 319 |
 | `/dashboard/outings` | operator | middleware | page | `src/app/dashboard/outings/page.tsx` | 28 |
 | `/dashboard/payments` | operator | middleware | page | `src/app/dashboard/payments/page.tsx` | 18 |
-| `/dashboard/reset-password` | operator | middleware | page | `src/app/dashboard/reset-password/page.tsx` | 124 |
+| `/dashboard/reset-password` | operator | entry | page | `src/app/dashboard/reset-password/page.tsx` | 124 |
 | `/dashboard/schedules` | operator | middleware | page | `src/app/dashboard/schedules/page.tsx` | 476 |
 | `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 996 |
 | `/dashboard/sign` | operator | middleware | page | `src/app/dashboard/sign/page.tsx` | 26 |
 | `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 28 |
-| `/dashboard/verify` | operator | middleware | page | `src/app/dashboard/verify/page.tsx` | 157 |
+| `/dashboard/verify` | operator | token | page | `src/app/dashboard/verify/page.tsx` | 157 |
 | `/for-courses` | public | public | page | `src/app/for-courses/page.tsx` | 17 |
 | `/for-courses/details` | public | token | page | `src/app/for-courses/details/page.tsx` | 1869 |
 | `/manage/[bookingId]` | golfer | token | page | `src/app/manage/[bookingId]/page.tsx` | 558 |
@@ -321,13 +327,13 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/birdie/knowledge-operator.ts` | 1 | 59 | BIRDIE_AI_SPEC B1 — the operator knowledge pack. | `DASHBOARD_PAGES`, `DashboardPage`, `OPERATOR_KNOWLEDGE` |
 | `src/lib/course-action-queue.ts` | 1 | 37 | COURSES_SHEET_SPEC CS-1 §4 — the Overview action queue's course rows for check-in calls. | `buildCourseCheckInRows`, `QueueCourse` |
 | `src/lib/google-calendar.ts` | 1 | 174 | CALL_SCHEDULING_SPEC SC-1 §2 — Google Calendar, the smallest honest version. | `BusyBlock`, `busyBlocks`, `calendarConfigured`, `CallForEvent`, `clearBusyCache`, `createCallEvent`, `deleteCallEvent`, `InquiryForEvent` +1 more |
+| `src/lib/ics.ts` | 1 | 45 | SC-2 §3 — a minimal iCalendar file so a booked call lands in the course's own calendar with no integration on their side. | `buildIcs` |
 | `src/lib/sheet-vs-live.ts` | 1 | 108 | MP-5e. | `ConfigDrift`, `InquirySide`, `LiveSide`, `sheetVsLive` |
 | `src/lib/tier-wire.ts` | 1 | 43 |  | `tierToWire` |
 | `src/lib/use-resource.ts` | 1 | 40 | MP-11b (ADMIN_V4 V4-7 item 4). | `ResourceError`, `useResource` |
 | `src/lib/api-response.ts` | 0 | 22 | Common JSON response helpers to reduce boilerplate in API routes. | `badRequest`, `conflict`, `forbidden`, `notFound`, `serverError`, `unauthorized` |
 | `src/lib/data.ts` | 0 | 3 | Deprecated — use @/lib/courses-data instead |  |
 | `src/lib/db.ts` | 0 | 2 |  |  |
-| `src/lib/ics.ts` | 0 | 45 | SC-2 §3 — a minimal iCalendar file so a booked call lands in the course's own calendar with no integration on their side. | `buildIcs` |
 | `src/lib/seed.ts` | 0 | 2 |  |  |
 
 ## Components
@@ -365,12 +371,12 @@ Sorted the same way.
 | `src/components/dashboard/money/PaymentsPanel.tsx` | 1 | 179 | SD-8 — the Payments half of the Money page. | `PaymentsPanel` |
 | `src/components/dashboard/money/PayoutsPanel.tsx` | 1 | 125 | SD-8 — the Stripe card, moved here out of Settings. | `PayoutsPanel` |
 | `src/components/Footer.tsx` | 1 | 77 |  | `default (Footer)` |
+| `src/components/home/HomeDashboardDemo.tsx` | 1 | 149 |  | `default (HomeDashboardDemo)` |
 | `src/components/home/SeeItWork.tsx` | 1 | 55 |  | `default (SeeItWork)` |
 | `src/components/MainOffset.tsx` | 1 | 32 |  | `default (MainOffset)` |
 | `src/components/Nav.tsx` | 1 | 126 |  | `default (Nav)` |
 | `src/components/ui/Btn.tsx` | 1 | 27 |  | `Btn` |
 | `src/components/CourseCard.tsx` | 0 | 121 |  | `default (CourseCard)` |
-| `src/components/home/HomeDashboardDemo.tsx` | 0 | 149 |  | `default (HomeDashboardDemo)` |
 | `src/components/ui/Card.tsx` | 0 | 19 |  | `Card` |
 | `src/components/ui/Eyebrow.tsx` | 0 | 10 |  | `Eyebrow` |
 | `src/components/ui/PageHeader.tsx` | 0 | 18 |  | `PageHeader` |
@@ -389,6 +395,7 @@ without opening anything.
 
 - fields: `id`, `adminId`, `admin`, `action`, `targetType`, `targetId`, `detail`, `createdAt`
 - writers: **none** — nothing in `src/` writes this model
+- readers: **none**
 
 ### AdminUser
 
@@ -396,6 +403,7 @@ without opening anything.
 
 - fields: `id`, `email`, `name`, `passwordHash`, `role`, `active`, `mustChangePassword`, `lastLoginAt`, `createdAt`, `setPasswordToken`, `setPasswordTokenExpiry`, `twoFactorCode`, `twoFactorCodeExpiry`, `twoFactorAttempts`, `twoFactorSecret`, `twoFactorEnrolledAt`, `twoFactorRecoveryCodes`, `failedLoginAttempts`, `lockoutUntil`, `sessionVersion`, `auditLogs`
 - writers: `src/app/api/admin/bootstrap/route.ts`, `src/app/api/admin/change-password/route.ts`, `src/app/api/admin/employees/route.ts`, `src/app/api/admin/forgot-password/route.ts`, `src/app/api/admin/login/route.ts`, `src/app/api/admin/owner-login/route.ts`, `src/app/api/admin/set-password/route.ts`, `src/app/api/admin/two-factor/route.ts`
+- readers: `src/app/api/admin/bootstrap/route.ts`, `src/app/api/admin/broadcasts/route.ts`, `src/app/api/admin/change-password/route.ts`, `src/app/api/admin/employees/route.ts`, `src/app/api/admin/forgot-password/route.ts`, `src/app/api/admin/login/route.ts`, `src/app/api/admin/owner-login/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/admin/set-password/route.ts`, `src/app/api/admin/two-factor/route.ts`, `src/lib/admin-session.ts`
 
 ### AgreementAcceptance
 
@@ -403,6 +411,7 @@ without opening anything.
 
 - fields: `id`, `courseId`, `course`, `document`, `version`, `textHash`, `signerName`, `signerTitle`, `signerEmail`, `authorityAttested`, `marketingOptOut`, `ip`, `userAgent`, `pdfUrl`, `legacy`, `acceptedAt`
 - writers: `src/app/api/operator/agreement/route.ts`, `src/lib/agreement-sign.ts`
+- readers: `src/app/api/admin/course-documents/route.ts`, `src/lib/agreement-gate.ts`, `src/lib/agreement-required.ts`, `src/lib/agreement-sign.ts`
 
 ### AgreementVersion
 
@@ -410,6 +419,7 @@ without opening anything.
 
 - fields: `id`, `document`, `version`, `textHash`, `effectiveAt`, `reacceptBy`, `noticeSentAt`, `createdAt`
 - writers: `src/lib/agreement-required.ts`
+- readers: `src/lib/agreement-gate.ts`, `src/lib/agreement-required.ts`
 
 ### Announcement
 
@@ -417,6 +427,7 @@ without opening anything.
 
 - fields: `id`, `title`, `body`, `emailSent`, `sentById`, `createdAt`, `dismissals`
 - writers: `src/app/api/admin/broadcasts/route.ts`
+- readers: `src/app/api/admin/broadcasts/route.ts`, `src/app/api/operator/announcements/route.ts`
 
 ### AnnouncementDismissal
 
@@ -424,6 +435,7 @@ without opening anything.
 
 - fields: `id`, `announcementId`, `operatorId`, `createdAt`, `announcement`
 - writers: `src/app/api/operator/announcements/dismiss/route.ts`
+- readers: **none**
 
 ### Blackout
 
@@ -431,6 +443,7 @@ without opening anything.
 
 - fields: `id`, `courseId`, `course`, `date`, `reason`
 - writers: `src/app/api/operator/blackouts/route.ts`, `src/lib/lifecycle.ts`
+- readers: `src/app/api/operator/blackouts/route.ts`, `src/lib/tee-sheet-engine.ts`
 
 ### Booking
 
@@ -438,6 +451,7 @@ without opening anything.
 
 - fields: `id`, `teeTimeId`, `teeTime`, `courseId`, `course`, `golferAccountId`, `golferAccount`, `golferName`, `golferEmail`, `golferPhone`, `players`, `appliedRate`, `greenFeeTotal`, `cartFeeTotal`, `cartSelected`, `rangeBallsSize`, `rangeBallsTotal`, `accessFeeTotal`, `totalAmount`, `stripeCustomerId`, `stripePaymentMethodId`, `stripePaymentIntentId`, `cancellationFeeTotal`, `cancellationFeeChargeId`, `cancellationFeeChargedAt`, `cancelledAt`, `checkInToken`, `checkedInAt`, `roundPaymentIntentId`, `checkInFailReason`, `paymentStatus`, `status`, `termsAcceptedAt`, `termsVersion`, `cancellationFeeApplies`, `source`, `checkedInPlayers`, `noShowAt`, `paidOffline`, `cancellationHoursAtBooking`, `paidAt`, `createdAt`, `paymentEvents`
 - writers: `src/app/api/cron/cancellation-cutoff/route.ts`, `src/app/api/cron/hourly/route.ts`, `src/app/api/golfer/auth/otp/verify/route.ts`, `src/app/api/operator/bookings/route.ts`, `src/app/api/stripe/webhook/route.ts`, `src/lib/cancel-booking.ts`, `src/lib/checkin-booking.ts`, `src/lib/lifecycle.ts`, `src/lib/refund-booking.ts`
+- readers: `src/app/api/admin/activity/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/golfers/route.ts`, `src/app/api/admin/nav-badges/route.ts`, `src/app/api/admin/platform-stripe/route.ts`, `src/app/api/admin/revenue/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/admin/stats/route.ts`, `src/app/api/admin/transactions/export/route.ts`, `src/app/api/admin/transactions/route.ts`, `src/app/api/bookings/cancel/route.ts` +21 more (see `docs/codemap.json`)
 
 ### Call
 
@@ -445,6 +459,7 @@ without opening anything.
 
 - fields: `id`, `kind`, `inquiryId`, `inquiry`, `courseId`, `course`, `scheduledAt`, `durationMin`, `direction`, `phone`, `agendaJson`, `agendaExtra`, `outcome`, `answersJson`, `notes`, `followUpAt`, `completedAt`, `createdBy`, `createdAt`, `updatedAt`, `bookedByCourse`, `gcalEventId`
 - writers: `src/app/api/admin/course-calls/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/call/[token]/route.ts`
+- readers: `src/app/api/admin/course-calls/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/call/[token]/route.ts`, `src/app/api/inquiries/details/route.ts`, `src/lib/call-invite.ts`
 
 ### ChangeRequest
 
@@ -452,6 +467,7 @@ without opening anything.
 
 - fields: `id`, `inquiryId`, `inquiry`, `category`, `body`, `status`, `raisedBy`, `addressedBy`, `addressedAt`, `createdAt`
 - writers: **none** — nothing in `src/` writes this model
+- readers: **none**
 
 ### Course
 
@@ -459,6 +475,7 @@ without opening anything.
 
 - fields: `id`, `slug`, `name`, `type`, `city`, `state`, `zipCode`, `address`, `phone`, `website`, `bookingUrl`, `holes`, `par`, `yardage`, `slope`, `courseRating`, `description`, `amenities`, `walkingAllowed`, `walkingNote`, `cartRequired`, `dresscode`, `minPlayers`, `maxPlayers`, `cancellationHours`, `checkInWindowHours`, `lateCancellationFeeCents`, `timezone`, `rainCheckPolicy`, `publicAdvanceDays`, `memberAdvanceDays`, `hasMemberPricing`, `hasResidentPricing`, `residentCounty`, `residentState`, `residentProofRequired`, `hasCaddies`, `caddieType`, `caddieLooperRateCents`, `caddieForeRateCents`, `caddieNote`, `hasDrivingRange`, `drivingRangeType`, `rangeBallsFree`, `rangeBallsSmallPriceCents`, `rangeBallsMediumPriceCents`, `rangeBallsLargePriceCents`, `hasPuttingGreen`, `hasShortGameArea`, `hasProShop`, `proShopPhone`, `restaurantType`, `hasCartGirl`, `tournamentFrequency`, `hasLessons`, `hasClubRental`, `clubRentalRateCents`, `hasPushCartRental`, `pushCartRateCents`, `hasBagStorage`, `hasLockerRoom`, `hasGpsCarts`, `hasTournaments`, `stripeAccountId`, `stripeAccountActive`, `rating`, `reviewCount`, `imageGradient`, `brandColor`, `establishedYear`, `logoUrl`, `heroImageUrl`, `featured`, `active`, `liveStatus`, `firstWentLiveAt`, `offlineAt`, `welcomeEmailSentAt`, `adminNotes`, `archivedAt`, `archivedBy`, `createdAt`, `updatedAt`, `operatorId`, `operator`, `conditions`, `conditionsUpdatedAt`, `giftCardUrl`, `heroPhotoUrl`, `teeTimes`, `bookings`, `schedules`, `blackouts`, `memberships`, `membershipTiers`, `staff`, `teeSets`, `thread`, `photos`, `teeTimeAlerts`, `nines`, `nextCheckInAt`, `calls`, `legalName`, `agreements`, `courseProducts`
 - writers: `src/app/api/admin/course-calls/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/course-settings/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/operator/conditions/route.ts`, `src/app/api/operator/courses/route.ts`, `src/app/api/operator/settings/route.ts`, `src/app/api/operator/stripe/callback/route.ts`, `src/app/api/operator/stripe/connect/route.ts`, `src/app/api/operator/upload/route.ts`, `src/app/api/stripe/webhook/route.ts`, `src/lib/agreement-sign.ts`, `src/lib/lifecycle.ts`
+- readers: `src/app/api/admin/activity/route.ts`, `src/app/api/admin/broadcasts/route.ts`, `src/app/api/admin/course-calls/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/course-documents/route.ts`, `src/app/api/admin/course-settings/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/messages/route.ts`, `src/app/api/admin/revenue/route.ts`, `src/app/api/admin/search/route.ts` +46 more (see `docs/codemap.json`)
 
 ### CourseInquiry
 
@@ -466,6 +483,7 @@ without opening anything.
 
 - fields: `id`, `firstName`, `lastName`, `contactName`, `contactTitle`, `email`, `phone`, `courseName`, `address`, `city`, `state`, `zipCode`, `website`, `courseType`, `currentBookingMethod`, `teeTimesPerDay`, `greenFeeRange`, `hasResidentPricing`, `hasMemberPricing`, `hasCaddies`, `pricingNotes`, `facilitiesNotes`, `lookingFor`, `additionalNotes`, `needsJson`, `status`, `adminNotes`, `builtCourseId`, `detailsToken`, `detailsJson`, `reviewStartedAt`, `wentLiveAt`, `source`, `closedReason`, `snoozeUntil`, `nextFollowUpAt`, `createdAt`, `updatedAt`, `events`, `changeRequests`, `callSkippedReason`, `calls`, `callInviteToken`, `callInviteSentAt`, `callInviteExpiresAt`
 - writers: `src/app/api/admin/backfill-orphaned-inquiries/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/inquiries/details/route.ts`, `src/app/api/inquiries/route.ts`, `src/lib/call-invite.ts`, `src/lib/lifecycle.ts`
+- readers: `src/app/api/admin/backfill-orphaned-inquiries/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/messages/route.ts`, `src/app/api/admin/nav-badges/route.ts`, `src/app/api/admin/request-re-review/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/admin/stats/route.ts`, `src/app/api/call/[token]/route.ts`, `src/app/api/inquiries/details/route.ts`, `src/app/api/inquiries/route.ts` +10 more (see `docs/codemap.json`)
 
 ### CourseMembership
 
@@ -473,6 +491,7 @@ without opening anything.
 
 - fields: `id`, `golferId`, `golfer`, `courseId`, `course`, `tierId`, `tier`, `membershipType`, `inviteEmail`, `inviteName`, `invitePhone`, `inviteAccepted`, `status`, `addedBy`, `expiresAt`, `startedAt`, `paymentStatus`, `payToken`, `lastPaidAt`, `lastPaymentIntentId`, `renewalRemindedAt`, `notes`, `createdAt`
 - writers: `src/app/api/cron/send-reminders/route.ts`, `src/app/api/golfer/auth/accept-invite/route.ts`, `src/app/api/golfer/memberships/route.ts`, `src/app/api/membership/[id]/route.ts`, `src/app/api/operator/members/remind-overdue/route.ts`, `src/app/api/operator/members/route.ts`, `src/lib/lifecycle.ts`
+- readers: `src/app/api/admin/activity/route.ts`, `src/app/api/admin/course-members/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/transactions/route.ts`, `src/app/api/bookings/route.ts`, `src/app/api/cron/send-reminders/route.ts`, `src/app/api/golfer/auth/accept-invite/route.ts`, `src/app/api/golfer/memberships/route.ts`, `src/app/api/member/[courseSlug]/payments/route.ts`, `src/app/api/member/[courseSlug]/send-code/route.ts`, `src/app/api/member/[courseSlug]/session/route.ts`, `src/app/api/member/[courseSlug]/tee-times/route.ts` +8 more (see `docs/codemap.json`)
 
 ### CourseOperator
 
@@ -480,6 +499,7 @@ without opening anything.
 
 - fields: `id`, `email`, `password`, `name`, `emailVerified`, `verificationToken`, `resetToken`, `resetTokenExpiry`, `onboardingStep`, `failedLoginAttempts`, `lockoutUntil`, `twoFactorEnabled`, `twoFactorMethod`, `twoFactorCode`, `twoFactorCodeExpiry`, `twoFactorAttempts`, `sessionVersion`, `phone`, `lastLoginAt`, `createdAt`, `course`
 - writers: `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/verify-operator/route.ts`, `src/app/api/auth/2fa/verify/route.ts`, `src/app/api/auth/forgot-password/route.ts`, `src/app/api/auth/login/route.ts`, `src/app/api/auth/resend-verification/route.ts`, `src/app/api/auth/reset-password/route.ts`, `src/app/api/auth/verify/route.ts`, `src/app/api/operator/change-password/route.ts`, `src/app/api/operator/onboarding-complete/route.ts`, `src/app/api/operator/profile/route.ts`, `src/app/api/operator/settings/route.ts`, `src/app/api/preview/send/route.ts`, `src/lib/lifecycle.ts`, `src/lib/two-factor.ts`
+- readers: `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/verify-operator/route.ts`, `src/app/api/auth/2fa/resend/route.ts`, `src/app/api/auth/2fa/status/route.ts`, `src/app/api/auth/2fa/verify/route.ts`, `src/app/api/auth/forgot-password/route.ts`, `src/app/api/auth/login/route.ts`, `src/app/api/auth/resend-verification/route.ts`, `src/app/api/auth/reset-password/route.ts`, `src/app/api/auth/verify/route.ts`, `src/app/api/operator/change-password/route.ts` +5 more (see `docs/codemap.json`)
 
 ### CoursePhoto
 
@@ -487,6 +507,7 @@ without opening anything.
 
 - fields: `id`, `courseId`, `course`, `url`, `sortOrder`, `createdAt`
 - writers: `src/app/api/operator/photos/[id]/route.ts`, `src/app/api/operator/photos/route.ts`
+- readers: `src/app/api/operator/photos/[id]/route.ts`, `src/app/api/operator/photos/route.ts`
 
 ### CourseProduct
 
@@ -494,6 +515,7 @@ without opening anything.
 
 - fields: `id`, `courseId`, `course`, `label`, `holes`, `nineIds`, `active`, `sortOrder`, `createdAt`, `teeSetRatings`, `schedules`, `teeTimes`
 - writers: `src/app/api/admin/inquiries/route.ts`, `src/app/api/operator/course-products/route.ts`
+- readers: `src/app/api/admin/course-detail/route.ts`, `src/app/api/operator/course-products/route.ts`, `src/app/api/operator/nines/route.ts`, `src/app/api/operator/tee-sets/route.ts`, `src/lib/birdie/course-context.ts`, `src/lib/schedule-service.ts`, `src/lib/tee-sheet-engine.ts`
 
 ### CourseProductTeeSet
 
@@ -501,6 +523,7 @@ without opening anything.
 
 - fields: `id`, `courseProductId`, `courseProduct`, `teeSetId`, `teeSet`, `rating`, `slope`
 - writers: `src/app/api/admin/inquiries/route.ts`, `src/app/api/operator/tee-sets/route.ts`
+- readers: **none**
 
 ### CourseStaff
 
@@ -508,6 +531,7 @@ without opening anything.
 
 - fields: `id`, `courseId`, `course`, `email`, `password`, `name`, `role`, `active`, `failedLoginAttempts`, `lockoutUntil`, `createdAt`
 - writers: `src/app/api/auth/login/route.ts`, `src/app/api/operator/staff/route.ts`, `src/lib/lifecycle.ts`
+- readers: `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/resend-staff-setup/route.ts`, `src/app/api/auth/login/route.ts`, `src/app/api/operator/messages/route.ts`, `src/app/api/operator/staff/route.ts`, `src/lib/lifecycle.ts`, `src/lib/session.ts`
 
 ### CronRunLog
 
@@ -515,6 +539,7 @@ without opening anything.
 
 - fields: `id`, `job`, `startedAt`, `finishedAt`, `outcome`, `detail`, `error`
 - writers: **none** — nothing in `src/` writes this model
+- readers: **none**
 
 ### Expense
 
@@ -522,6 +547,7 @@ without opening anything.
 
 - fields: `id`, `name`, `category`, `amountCents`, `cadence`, `startedAt`, `endedAt`, `createdAt`, `updatedAt`
 - writers: `src/app/api/admin/expenses/[id]/route.ts`, `src/app/api/admin/expenses/route.ts`
+- readers: `src/app/api/admin/expenses/[id]/route.ts`, `src/app/api/admin/expenses/route.ts`, `src/app/api/admin/revenue/route.ts`
 
 ### GolferAccount
 
@@ -529,6 +555,7 @@ without opening anything.
 
 - fields: `id`, `email`, `password`, `firstName`, `lastName`, `phone`, `stripeCustomerId`, `resetToken`, `resetTokenExpiry`, `failedLoginAttempts`, `lockoutUntil`, `createdAt`, `bookings`, `memberships`
 - writers: `src/app/api/bookings/setup-intent/route.ts`, `src/app/api/golfer/auth/accept-invite/route.ts`, `src/app/api/golfer/auth/otp/verify/route.ts`
+- readers: `src/app/api/admin/golfers/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/bookings/setup-intent/route.ts`, `src/app/api/courses/[slug]/account/route.ts`, `src/app/api/golfer/auth/accept-invite/route.ts`, `src/app/api/golfer/auth/me/route.ts`, `src/app/api/golfer/auth/otp/verify/route.ts`, `src/app/api/golfer/profile/route.ts`, `src/app/api/operator/members/route.ts`, `src/lib/member-session.ts`
 
 ### InquiryStatusEvent
 
@@ -536,6 +563,7 @@ without opening anything.
 
 - fields: `id`, `inquiryId`, `fromStatus`, `toStatus`, `trigger`, `actorName`, `createdAt`, `inquiry`
 - writers: `src/app/api/admin/backfill-orphaned-inquiries/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/request-re-review/route.ts`, `src/app/api/call/[token]/route.ts`, `src/app/api/inquiries/details/route.ts`, `src/app/api/inquiries/route.ts`, `src/app/api/operator/approve-page/route.ts`, `src/app/api/preview/[courseId]/approve/route.ts`, `src/app/api/preview/send/route.ts`, `src/lib/course-timeline.ts`, `src/lib/lifecycle.ts`, `src/lib/submit-change-request.ts`
+- readers: `src/app/api/admin/courses/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/stats/route.ts`, `src/app/api/operator/approve-page/route.ts`, `src/app/api/operator/courses/route.ts`, `src/app/api/preview/[courseId]/approve/route.ts`, `src/app/api/preview/[courseId]/route.ts`, `src/lib/approval-state.ts`, `src/lib/course-timeline.ts`, `src/lib/sheet-token.ts`
 
 ### MembershipTier
 
@@ -543,6 +571,7 @@ without opening anything.
 
 - fields: `id`, `courseId`, `course`, `name`, `color`, `greenFeeWeekdayCents`, `greenFeeWeekendCents`, `cartFeeWeekdayCents`, `cartFeeWeekendCents`, `discountPct`, `advanceBookingDays`, `guestPassesPerYear`, `annualFeeCents`, `initiationFeeCents`, `termMonths`, `notes`, `active`, `createdAt`, `memberships`
 - writers: `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/operator/tiers/route.ts`, `src/lib/lifecycle.ts`
+- readers: `src/app/api/admin/course-members/route.ts`, `src/app/api/operator/members/route.ts`, `src/app/api/operator/tiers/route.ts`
 
 ### Message
 
@@ -550,6 +579,7 @@ without opening anything.
 
 - fields: `id`, `threadId`, `senderType`, `senderId`, `senderName`, `body`, `readAt`, `isBroadcast`, `createdAt`, `thread`
 - writers: `src/app/api/admin/broadcasts/route.ts`, `src/app/api/admin/messages/route.ts`, `src/app/api/operator/messages/route.ts`, `src/lib/submit-change-request.ts`
+- readers: `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/messages/route.ts`, `src/app/api/admin/nav-badges/route.ts`, `src/app/api/admin/stats/route.ts`, `src/app/api/operator/messages/route.ts`
 
 ### MessageThread
 
@@ -557,6 +587,7 @@ without opening anything.
 
 - fields: `id`, `courseId`, `adminLastEmailAt`, `operatorLastEmailAt`, `updatedAt`, `createdAt`, `course`, `messages`
 - writers: `src/app/api/admin/broadcasts/route.ts`, `src/app/api/admin/messages/route.ts`, `src/app/api/operator/messages/route.ts`, `src/lib/submit-change-request.ts`
+- readers: `src/app/api/admin/messages/route.ts`, `src/app/api/admin/stats/route.ts`, `src/app/api/operator/messages/route.ts`, `src/lib/submit-change-request.ts`
 
 ### Nine
 
@@ -564,6 +595,7 @@ without opening anything.
 
 - fields: `id`, `courseId`, `course`, `name`, `par`, `sortOrder`, `createdAt`, `teeSetYardages`
 - writers: `src/app/api/admin/inquiries/route.ts`, `src/app/api/operator/nines/route.ts`
+- readers: `src/app/api/admin/course-detail/route.ts`, `src/app/api/operator/course-products/route.ts`, `src/app/api/operator/nines/route.ts`, `src/app/api/operator/tee-sets/route.ts`, `src/lib/schedule-service.ts`
 
 ### PaymentEvent
 
@@ -571,6 +603,7 @@ without opening anything.
 
 - fields: `id`, `bookingId`, `booking`, `kind`, `amountCents`, `stripeId`, `actor`, `actorName`, `detail`, `createdAt`
 - writers: `src/lib/refund-booking.ts`
+- readers: `src/app/api/admin/transactions/export/route.ts`, `src/app/api/stripe/webhook/route.ts`, `src/lib/money-problems.ts`
 
 ### RateLimit
 
@@ -578,6 +611,7 @@ without opening anything.
 
 - fields: `key`, `count`, `windowStart`
 - writers: **none** — nothing in `src/` writes this model
+- readers: **none**
 
 ### TeeSet
 
@@ -585,6 +619,7 @@ without opening anything.
 
 - fields: `id`, `courseId`, `course`, `name`, `yardage`, `rating`, `slope`, `sortOrder`, `createdAt`, `nineYardages`, `productRatings`
 - writers: `src/app/api/admin/inquiries/route.ts`, `src/app/api/operator/tee-sets/route.ts`, `src/lib/lifecycle.ts`
+- readers: `src/app/api/admin/course-detail/route.ts`, `src/app/api/operator/tee-sets/route.ts`
 
 ### TeeSetNine
 
@@ -592,6 +627,7 @@ without opening anything.
 
 - fields: `id`, `teeSetId`, `teeSet`, `nineId`, `nine`, `yardage`
 - writers: `src/app/api/admin/inquiries/route.ts`, `src/app/api/operator/tee-sets/route.ts`
+- readers: **none**
 
 ### TeeTime
 
@@ -599,6 +635,7 @@ without opening anything.
 
 - fields: `id`, `courseId`, `course`, `date`, `time`, `holes`, `playersAvailable`, `playersBooked`, `greenFeeCents`, `memberRateCents`, `residentRateCents`, `cartFeeCents`, `walkingAllowed`, `tierName`, `status`, `createdAt`, `bookings`, `teeTimeAlerts`, `productId`, `product`
 - writers: `src/app/api/operator/blackouts/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/lib/cancel-booking.ts`, `src/lib/lifecycle.ts`, `src/lib/schedule-service.ts`, `src/lib/tee-sheet-engine.ts`
+- readers: `src/app/api/admin/tee-sheet/route.ts`, `src/app/api/bookings/route.ts`, `src/app/api/courses/[slug]/tee-times/route.ts`, `src/app/api/manage/[bookingId]/available-times/route.ts`, `src/app/api/member/[courseSlug]/tee-times/route.ts`, `src/app/api/operator/analytics/route.ts`, `src/app/api/operator/bookings/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/app/api/preview/[courseId]/route.ts`, `src/app/api/preview/[courseId]/tee-times/route.ts`, `src/lib/schedule-service.ts`, `src/lib/tee-sheet-engine.ts`
 
 ### TeeTimeAlert
 
@@ -606,6 +643,7 @@ without opening anything.
 
 - fields: `id`, `courseId`, `course`, `email`, `name`, `date`, `windowStart`, `windowEnd`, `players`, `teeTimeId`, `teeTime`, `token`, `notifiedAt`, `createdAt`
 - writers: `src/app/api/alerts/route.ts`, `src/app/api/alerts/unsubscribe/[token]/route.ts`, `src/lib/cancel-booking.ts`, `src/lib/lifecycle.ts`
+- readers: `src/app/api/alerts/route.ts`, `src/app/api/alerts/unsubscribe/[token]/route.ts`, `src/lib/cancel-booking.ts`
 
 ### TeeTimeSchedule
 
@@ -613,6 +651,7 @@ without opening anything.
 
 - fields: `id`, `courseId`, `course`, `tierName`, `daysOfWeek`, `startTime`, `endTime`, `intervalMinutes`, `holes`, `greenFeeWeekdayCents`, `greenFeeWeekendCents`, `memberRateWeekdayCents`, `memberRateWeekendCents`, `residentRateWeekdayCents`, `residentRateWeekendCents`, `cartFeeCents`, `walkingAllowed`, `active`, `createdAt`, `productId`, `product`
 - writers: `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/lib/lifecycle.ts`, `src/lib/schedule-service.ts`
+- readers: `src/app/api/operator/course-products/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/lib/birdie/course-context.ts`, `src/lib/schedule-service.ts`, `src/lib/tee-sheet-engine.ts`
 
 ## Orphans
 
@@ -621,7 +660,6 @@ Nothing imports these and no route serves them. Framework-owned filenames
 Next.js, not imported, so "nothing imports it" proves nothing about them.
 
 - `src/components/CourseCard.tsx` (121 lines)
-- `src/components/home/HomeDashboardDemo.tsx` (149 lines)
 - `src/components/ui/Card.tsx` (19 lines)
 - `src/components/ui/Eyebrow.tsx` (10 lines)
 - `src/components/ui/PageHeader.tsx` (18 lines)
@@ -630,6 +668,5 @@ Next.js, not imported, so "nothing imports it" proves nothing about them.
 - `src/lib/api-response.ts` (22 lines)
 - `src/lib/data.ts` (3 lines)
 - `src/lib/db.ts` (2 lines)
-- `src/lib/ics.ts` (45 lines)
 - `src/lib/seed.ts` (2 lines)
 

@@ -68,10 +68,17 @@ exists.
 
 ## 5. Ship and record
 
-- Regenerate the code map: `node scripts/codemap.mjs`. It is generated output
-  with a CI drift check, so a run that changed a route, an export or a `@brain`
-  tag and did not regenerate it fails the build. It also fails on the spot if two
-  files now claim the same `@brain` concept — which is the point of it.
+- Regenerate both generated artifacts, together, because they rot the same way:
+
+  ```bash
+  node scripts/codemap.mjs && node scripts/status.mjs && node scripts/status-html.mjs
+  ```
+
+  The code map has a CI drift check, so a run that changed a route, an export or
+  a `@brain` tag and did not regenerate it fails the build. It also fails on the
+  spot if two files now claim the same `@brain` concept — which is the point of
+  it. The status board has no such gate, which is exactly why it belongs on the
+  same line as the one that does.
 - Commit with a message naming the queue item.
 - Push. Vercel auto-deploys `main`.
 - Update the item in the queue file: append the commit sha, and **leave the box
