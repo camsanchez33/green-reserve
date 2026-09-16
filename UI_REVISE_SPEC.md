@@ -392,6 +392,10 @@ vibrating" and the hero→story hand-off is a hard cut.
   shimmer. Keep `--z` only for the poster/reduced-motion still (H-2a §4b drift).
 - `.storyPh video { transform: none; }` and `will-change` off the wrapper.
 
+> **SUPERSEDED by H-2h (Cam 2026-09-16).** The dissolve described here was deleted on
+2026-09-16; the hero → story hand-off is a hard cut now, deliberately. Kept for
+the reasoning, not as an instruction.
+
 **3. Hero → story hand-off: dissolve, not a cut.**
 - The story section's pin gets a top overlay: `linear-gradient(180deg, #F6F4EC 0%,
   rgba(246,244,236,0) 22vh)` above the video, under the beats. As the cream hero
@@ -438,7 +442,8 @@ hard edge at every change. Two light grounds are fighting; nobody chose that.
 4. Result: cream from the nav to the copyright line, broken exactly twice — the
    story video and the pine pricing slab — and both of those are meant to be seen
    as breaks.
-5. Give the story's BOTTOM edge the dissolve H-2d gave its top:
+5. **SUPERSEDED by H-2h — this dissolve was deleted 2026-09-16.**
+   Give the story's BOTTOM edge the dissolve H-2d gave its top:
    `linear-gradient(0deg, #F6F4EC 0%, rgba(246,244,236,0) 18vh)` over the video,
    under the beats, so it fades into cream at both ends.
 
@@ -462,9 +467,12 @@ their own dashboard.
 
 Acceptance: at the top of `/` there is no bar, only the lockup; scrolling past the
 hero brings in the bar with exactly two items; no white/cream seam anywhere except
-the story and the pricing slab; the four step cards are still visible; the story
-fades at both ends; at 390px nothing overlaps and the nav still reaches Operator
-login.
+the story and the pricing slab; the four step cards are still visible; ~~the story
+fades at both ends~~ (**STRUCK by H-2h**: it cuts at both ends now); at 390px
+nothing overlaps and the nav still reaches Operator login.
+Note also that H-2g §2 replaced this section's scrolling bar with a lockup that
+never returns, so "scrolling past the hero brings in the bar" no longer applies
+on `/` either.
 
 ### H-2g · Quiet shadows, no scrolling header, logo centered (small, no migration)
 
@@ -587,8 +595,11 @@ removing the sticky bar is safe.
 #### 5. Verify
 
 At the top of `/`: a centred 280px lockup, one muted link at the right, no bar,
-no border. Scroll: nothing re-appears, ever — check at 1440 and at 390. No
-element on the page carries a `box-shadow` at all (see §1, revised).
+no border. Scroll: nothing re-appears, ever — check at 1440 and at 390.
+~~No element on the page carries a `box-shadow` at all.~~ **STRUCK by H-2h
+(Cam 2026-09-16): the page carries nine box-shadows again and that is correct.
+Do not tick this line — it was §1's criterion, and §1 is superseded.** What
+replaces it is H-2h §4: nine shadows present, zero cream dissolves.
 The hero still measures exactly one viewport tall. Lighthouse mobile CLS is no
 worse than H-1's recorded number. Every other public page still has its normal
 fixed nav.
@@ -633,15 +644,22 @@ it is to decide whether the pine slab wants a different treatment entirely.
 #### 3. The BANNED line
 
 `CLAUDE.md` now exempts the `home.module.css` mockup shadows and exempts no
-page-background gradient at all. The scrim clarification stands unchanged:
+page-background gradient at all. The scrim clarification is unchanged in
+substance (two words only: "the previous wording" became "an earlier wording",
+because there are two prior wordings now):
 `.storyShade`, `.dHd::after` and `.laptopBase` were never background gradients
 and were never in scope.
 
 #### 4. Verify
 
 `grep box-shadow src/app/home.module.css` returns the nine restored
-declarations. `grep 'linear-gradient(180deg, #F6F4EC' src/app/home.module.css`
-returns nothing. At 1440 and 390: the cards and the phone mockup lift off the
+declarations (seven `box-shadow` properties and two entries inside `transition`
+lists). For the dissolves the pattern has to be `grep 'linear-gradient(.*#F6F4EC'
+src/app/home.module.css` — **not** the `180deg` one this section first shipped
+with, which would have passed unchanged while `.storyBottom` and `.priceBottom`
+were both still alive, because those two are `0deg`. A guard that cannot fail is
+not a guard. It returns nothing; the only `linear-gradient`s left in the file are
+`.storyShade`, `.dHd::after` and `.laptopBase`, all three out of scope. At 1440 and 390: the cards and the phone mockup lift off the
 cream again, and the two section edges are clean rather than muddy.
 
 ## 6. Verification, every run

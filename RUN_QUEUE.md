@@ -2138,6 +2138,11 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 - [x] UI_REVISE_SPEC H-2g §1 ONLY (76968ff; review fix fb7263b) — SHIPPED +
   REVIEWED 2026-09-16, design audit 2 findings, 0 blocking, both closed.
+  >> REVERSED THE SAME DAY BY H-2h (8e0b692). Two sentences below are now FALSE:
+  >> `grep box-shadow src/app/home.module.css` is NOT empty (nine, restored), and
+  >> CLAUDE.md's BANNED line no longer says it is. Left standing rather than
+  >> edited: this item is the record that the deletion happened and was reviewed,
+  >> and the reversal is a decision, not a correction of it.
   Cam 2026-09-16 revised the spec's own answer: DELETE every box-shadow in
   home.module.css, do not lighten it; cards get a 1px var(--line) hairline.
   `grep box-shadow src/app/home.module.css` is now empty and CLAUDE.md's BANNED
@@ -2234,6 +2239,50 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   that is exactly the hole that review closed. Small/medium, no migration
   unless the code needs its own table (check whether an existing verification
   model fits before adding one).
+
+- [ ] UI_REVISE_SPEC H-2h (8e0b692) — BUILT + REVIEWED 2026-09-16, box OPEN
+  pending Cam's walk. Shadows back, cream dissolves out.
+  Cam, asked which of the two BANNED-list exemptions to revoke after H-2g §1
+  shipped: "other way around get rid of cream fades and keep the shadows" —
+  restated back to him (spelling out that it reversed the same morning's work)
+  and confirmed. The two exemptions trade places, deliberately, same day.
+  BUILT: nine shadows restored byte-identical to their pre-76968ff values —
+  spec-conformance proved it by diffing 76968ff^ against HEAD and finding zero
+  hunks on any shadow-carrying declaration. `--line-strong` and fb7263b's white
+  `.heroSheet` removed with them (both existed only to stand in for a shadow).
+  Four dissolves deleted: rules, their ≤960px `display:none` overrides, and the
+  four divs. CLAUDE.md's BANNED line now exempts the mockup shadows and exempts
+  no page-background gradient at all.
+  REVIEW: design audit CLEAN, 0 findings. Spec conformance 11 MET / 3 PARTIAL /
+  0 MISSING. All three partials were stale DOCS, not code, and all are fixed in
+  the same run:
+  1. H-2g §5 — the verify list Cam is about to walk — still told him to confirm
+     ZERO box-shadow on a page that now has nine. Struck, with a pointer to what
+     replaces it. This was the blocker.
+  2. H-2d §3 and H-2e §5 still gave build instructions for the deleted
+     dissolves, and H-2e's acceptance line still asserted "the story fades at
+     both ends". All three annotated.
+  3. The verify grep did not guard: `linear-gradient(180deg, #F6F4EC` misses
+     `.storyBottom` and `.priceBottom`, which are `0deg` — it would have passed
+     with both still live. Widened to match on the colour, in the spec AND in
+     CLAUDE.md, which had inherited the same weak pattern as its enforcement
+     recipe.
+  KNOWN VESTIGIAL, not fixed (say the word): `.price { position: relative }` and
+  `.price > .wrap { z-index: 1 }` now stack content above gradients that no
+  longer exist. Harmless, and removing them is unasked scope.
+  CAM TO WALK:
+  1. `/` at 1440 — the floating tee-sheet card must read as sitting ON the phone
+     mockup. This is the check H-2g left open and could not close; the shadow's
+     return is what is supposed to close it.
+  2. `/` at 1440 — cream meets the story photo at a hard cut now. The dark wash
+     over that photo only covers its bottom 40%, so the TOP edge has nothing
+     buffering it. This is the seam most likely to need work.
+  3. `/` at 1440 — cream meets the pine pricing slab, top and bottom. Flat
+     colour against flat colour, so it should read as a deliberate edge. If it
+     does not, the fix is NOT the same gradient under a new name.
+  4. `/` at 390 — both edges. The dissolves were `display:none` below 960px
+     anyway, so this should look unchanged; confirm it does.
+  5. Hover a course card — the bloom is back instead of the hairline darkening.
 
 - [ ] CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates
   `docs/CODEMAP.md` + `codemap.json`: routes with their auth level, lib exports

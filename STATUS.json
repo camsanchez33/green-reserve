@@ -1,24 +1,23 @@
 {
-  "generatedAt": "2026-09-16T12:32:49.864Z",
+  "generatedAt": "2026-09-16T13:04:34.665Z",
   "repo": {
-    "head": "f9ffa23",
+    "head": "8e0b692",
     "branch": "main",
-    "dirtyCount": 4,
+    "dirtyCount": 3,
     "dirty": [
-      "M RUN_QUEUE.md",
-      " M STATUS.json",
-      " M STATUS.md",
-      " M scripts/status.mjs"
+      "M CLAUDE.md",
+      " M RUN_QUEUE.md",
+      " M UI_REVISE_SPEC.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-16T08:14:04-04:00",
+    "queueLastCommit": "2026-09-16T08:32:51-04:00",
     "unrecorded": []
   },
   "counts": {
     "runDone": 191,
-    "runAwaiting": 11,
+    "runAwaiting": 12,
     "runInFlight": 1,
     "runNotStarted": 21,
     "reviseDone": 14,
@@ -114,9 +113,16 @@
     },
     {
       "title": "UI_REVISE_SPEC H-2g §2 + §3 (01822b0; review fixes 2de3268) — BUILT +",
-      "line": 2160,
+      "line": 2165,
       "hash": "01822b0",
       "shipDate": "2026-09-15",
+      "ageDays": 0
+    },
+    {
+      "title": "UI_REVISE_SPEC H-2h (8e0b692) — BUILT + REVIEWED 2026-09-16, box OPEN",
+      "line": 2243,
+      "hash": "8e0b692",
+      "shipDate": "2026-09-16",
       "ageDays": 0
     }
   ],
@@ -218,12 +224,12 @@
     },
     {
       "title": "SD-11 — \"are you trying to sign in?\" + a code, instead of a sign-in button",
-      "line": 2198,
+      "line": 2203,
       "section": "Queue (run in this order)"
     },
     {
       "title": "CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates",
-      "line": 2238,
+      "line": 2287,
       "section": "Queue (run in this order)"
     }
   ],
@@ -272,6 +278,11 @@
       "item": "SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED 2026-09-16, box OPEN pending Cam's mailbox walk below: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09",
       "note": "pending Cam's mailbox walk below: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09-16: \"if a course is already created it can't be created again — they'd",
       "line": 2098
+    },
+    {
+      "item": "UI_REVISE_SPEC H-2h (8e0b692) — BUILT + REVIEWED 2026-09-16, box OPEN",
+      "note": "pending Cam's walk",
+      "line": 2243
     }
   ],
   "ideas": {
@@ -794,6 +805,16 @@
   },
   "recentCommits": [
     {
+      "h": "8e0b692",
+      "date": "2026-09-16",
+      "subject": "H-2h: the shadows come back, the cream dissolves go"
+    },
+    {
+      "h": "7d5b1e6",
+      "date": "2026-09-16",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "f9ffa23",
       "date": "2026-09-16",
       "subject": "queue/spec update"
@@ -840,16 +861,6 @@
     },
     {
       "h": "4f78ea6",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "76968ff",
-      "date": "2026-09-15",
-      "subject": "H-2g §1 (revised): every box-shadow deleted from the homepage, hairlines instead"
-    },
-    {
-      "h": "d51fbbf",
       "date": "2026-09-15",
       "subject": "queue/spec update"
     }
