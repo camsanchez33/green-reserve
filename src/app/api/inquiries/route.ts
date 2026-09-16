@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { sendInquiryNotification, sendInquiryConfirmation } from '@/lib/email';
 import { ALIVE_STATUSES, encodeResubmit } from '@/lib/inquiry-status';
 import { rateLimit, evidentiaryIp } from '@/lib/rate-limit';
+import { sendCallInvite } from '@/lib/call-invite';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -168,7 +169,14 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  const emailData = { firstName, contactName, email, courseName };
+  // SC-2 §1: the invite goes out right away; a send failure never fails the
+  // submission — the token still exists for the confirmation's button, and
+  // the admin alert says the invite did not go.
+  let invite: { sent: boolean; url: string; error?: string } = { sent: false, url: '', error: 'not attempted' };
+  try { invite = await sendCallInvite({ id: inquiry.id, firstName, contactName, email, courseName }); }
+  catch (err) { invite = { sent: false, url: '', error: err instanceof Error ? err.message : String(err) }; console.error('Call invite failed:', err); }
+
+  const emailData = { firstName, contactName, email, courseName, callUrl: invite.url || null };
   sendInquiryNotification({
     contactName,
     contactTitle,
@@ -181,6 +189,7 @@ export async function POST(req: NextRequest) {
     currentBookingMethod,
     greenFeeRange: optStr(body.greenFeeRange, 120),
     additionalNotes,
+    inviteNote: invite.sent ? null : (invite.error || 'unknown'),
   }).catch(err => console.error('Inquiry notification email failed:', err));
 
   sendInquiryConfirmation(emailData)
