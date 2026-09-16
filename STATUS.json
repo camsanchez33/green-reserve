@@ -1,25 +1,23 @@
 {
-  "generatedAt": "2026-09-16T13:04:34.665Z",
+  "generatedAt": "2026-09-16T20:29:02.351Z",
   "repo": {
-    "head": "8e0b692",
+    "head": "063507f",
     "branch": "main",
-    "dirtyCount": 3,
+    "dirtyCount": 1,
     "dirty": [
-      "M CLAUDE.md",
-      " M RUN_QUEUE.md",
-      " M UI_REVISE_SPEC.md"
+      "M RUN_QUEUE.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-16T08:32:51-04:00",
+    "queueLastCommit": "2026-09-16T09:04:53-04:00",
     "unrecorded": []
   },
   "counts": {
     "runDone": 191,
-    "runAwaiting": 12,
+    "runAwaiting": 13,
     "runInFlight": 1,
-    "runNotStarted": 21,
+    "runNotStarted": 20,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -95,7 +93,7 @@
       "line": 881,
       "hash": "bf3bcb2",
       "shipDate": "2026-08-30",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "title": "UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until r",
@@ -122,6 +120,13 @@
       "title": "UI_REVISE_SPEC H-2h (8e0b692) — BUILT + REVIEWED 2026-09-16, box OPEN",
       "line": 2243,
       "hash": "8e0b692",
+      "shipDate": "2026-09-16",
+      "ageDays": 0
+    },
+    {
+      "title": "CODEMAP_SPEC Phase CM-1 (f924e07; review fixes 063507f) — BUILT + REVIEWED",
+      "line": 2287,
+      "hash": "f924e07",
       "shipDate": "2026-09-16",
       "ageDays": 0
     }
@@ -225,11 +230,6 @@
     {
       "title": "SD-11 — \"are you trying to sign in?\" + a code, instead of a sign-in button",
       "line": 2203,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates",
-      "line": 2287,
       "section": "Queue (run in this order)"
     }
   ],
@@ -805,6 +805,21 @@
   },
   "recentCommits": [
     {
+      "h": "063507f",
+      "date": "2026-09-16",
+      "subject": "CODEMAP review fixes: a guard is enforcement, not a mention"
+    },
+    {
+      "h": "f924e07",
+      "date": "2026-09-16",
+      "subject": "CODEMAP_SPEC CM-1: a generated map of the code, so agents stop reading files to find things"
+    },
+    {
+      "h": "2e3e1fa",
+      "date": "2026-09-16",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "8e0b692",
       "date": "2026-09-16",
       "subject": "H-2h: the shadows come back, the cream dissolves go"
@@ -846,21 +861,6 @@
     },
     {
       "h": "16106fc",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "3001626",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "fb7263b",
-      "date": "2026-09-15",
-      "subject": "H-2g review fix: the floating hero sheet separates by fill now the shadow is gone"
-    },
-    {
-      "h": "4f78ea6",
       "date": "2026-09-15",
       "subject": "queue/spec update"
     }

@@ -2284,13 +2284,62 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
      anyway, so this should look unchanged; confirm it does.
   5. Hover a course card — the bloom is back instead of the hairline darkening.
 
-- [ ] CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates
+- [ ] CODEMAP_SPEC Phase CM-1 (f924e07; review fixes 063507f) — BUILT + REVIEWED
+  2026-09-16, box OPEN until the first CI run goes green. `scripts/codemap.mjs` generates
   `docs/CODEMAP.md` + `codemap.json`: routes with their auth level, lib exports
   with usedBy, schema models with their writers, and orphans. `@brain` tags are
   collected into a single-sources-of-truth table, and a DUPLICATE CONCEPT is a
   HARD ERROR (non-zero exit), not a warning. Runs in /gr-run beside status.mjs,
   plus a CI drift check. CLAUDE.md gains "read CODEMAP before grepping" and
   loses the stale tech-stack tree it carries today. Small/medium, no migration.
+  BUILT: 335 files, 192 routes, 33 models, 9 @brain concepts, 10 orphans.
+  Deterministic (no timestamp), so the CI drift check is meaningful. Duplicate
+  @brain concept = exit 1 naming both files; verified by doing it.
+  ONE DEPARTURE FROM THE SPEC, and the review says it was right: §3 says derive a
+  route's auth from the session helper the file imports. Done literally that
+  reports /dashboard/money as PUBLIC — it is a client component guarded by
+  middleware. So every route carries `auth` (who it is for) AND `guard` (where
+  that is enforced).
+  REVIEW: spec conformance 29 MET / 5 PARTIAL / 1 DEVIATED, "check the box".
+  Security audit 12 findings, 2 HIGH — both about the map lying, not about a
+  route. All fixed in 063507f:
+  1. HIGH — `guard: file` fired on a session helper being MENTIONED. /api/bookings
+     (POST creates every booking, claims capacity, attaches a saved card) and
+     /api/bookings/setup-intent (mints a live Stripe SetupIntent, unauthenticated
+     AND unrate-limited) both read as session-gated. Both are public by design;
+     the map was the defect, on the column an auditor filters by to decide what
+     not to read — and CLAUDE.md now tells every agent to trust it. Enforcement is
+     checked on the AST now, per HTTP method, because a guarded GET was laundering
+     an ungated POST. /api/bookings reads `golfer | public for POST`.
+  2. `layout` meant "an ancestor layout mentions a helper". The admin layout
+     renders children regardless — its redirect is a client useEffect — so 17
+     /admin/* pages claimed server-side enforcement they do not have. Now requires
+     redirect()/notFound(); those rows say `client-side`.
+  3. `middleware` read the matcher and not the body, so /dashboard/onboarding and
+     /dashboard/verify claimed a guard middleware deliberately turns off.
+  4. `secret header`, `entry`, `token` and the helper test itself all matched more
+     than they knew — including bare `auth` excusing everything under /api/auth/**
+     forever, and `import type { AdminSession }` counting as a guard.
+  SEPARATE FINDING, NOT THE MAP'S FAULT — QUEUE CANDIDATE: /api/bookings/setup-intent
+  is unauthenticated with NO rate limit, so anyone can create unbounded Stripe
+  Customers and SetupIntents. Pre-existing, outside this commit. Say the word and
+  it becomes an item.
+  ALSO QUEUE-WORTHY: ARCHITECTURE.md and docs/CODEMAP.md now disagree on 21 API
+  rows (both generated, only one gated by CI). Two trusted maps that disagree
+  means the reader picks one. Pick: either generate ARCHITECTURE.md's route table
+  from codemap.json, or delete it and link to the map.
+  STILL OPEN in the generator (small, not worth reopening the phase): `guard` is
+  single-valued, so a dual-auth route like /api/receipt/[bookingId] shows `file`
+  and hides its token path; and modelUsage is a substring scan that misses
+  dynamic prisma accessors.
+  CAM TO WALK:
+  1. Watch the first PR after this lands — .github/workflows/codemap.yml has
+     never executed on a runner. Determinism, LF normalisation and @babel/parser
+     surviving `npm ci` were all checked by hand, but a green run is the proof.
+  2. The 3 flagged routes are real: /dashboard/onboarding and the two
+     /courses/[slug] portals have no page-level guard. They are client shells fed
+     by guarded APIs today, so nothing is exposed — but nothing stops a future
+     edit from putting real data in them either.
 
 ## Ideas / not yet specced
 

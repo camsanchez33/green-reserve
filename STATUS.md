@@ -4,17 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-16 13:04 UTC · branch `main` · HEAD `8e0b692` · working tree **3 dirty file(s)**
+Generated 2026-09-16 20:29 UTC · branch `main` · HEAD `063507f` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-### Uncommitted working tree (3 file(s))
+### Uncommitted working tree (1 file(s))
 
-- `M CLAUDE.md`
 - `M RUN_QUEUE.md`
-- `M UI_REVISE_SPEC.md`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -44,11 +42,12 @@ This is the distinction a raw checkbox count gets wrong.
 | MP-2b | 2026-08-29 | 17d | `a134af5` | `RUN_QUEUE.md:742` |
 | MP-2c | 2026-08-29 | 17d | `e5b5413` | `RUN_QUEUE.md:791` |
 | MP-2d | 2026-08-29 | 17d | `22d0f68` | `RUN_QUEUE.md:839` |
-| MP-2e | 2026-08-30 | 16d | `bf3bcb2` | `RUN_QUEUE.md:881` |
+| MP-2e | 2026-08-30 | 17d | `bf3bcb2` | `RUN_QUEUE.md:881` |
 | UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | 2026-09-11 | 4d | `a3c1bea` | `RUN_QUEUE.md:2056` |
 | SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED 2026-09-16, box OPEN pending Cam's mailb | 2026-09-16 | 0d | `951433d` | `RUN_QUEUE.md:2098` |
 | UI_REVISE_SPEC H-2g §2 + §3 (01822b0; review fixes 2de3268) — BUILT + | 2026-09-15 | 0d | `01822b0` | `RUN_QUEUE.md:2165` |
 | UI_REVISE_SPEC H-2h (8e0b692) — BUILT + REVIEWED 2026-09-16, box OPEN | 2026-09-16 | 0d | `8e0b692` | `RUN_QUEUE.md:2243` |
+| CODEMAP_SPEC Phase CM-1 (f924e07; review fixes 063507f) — BUILT + REVIEWED | 2026-09-16 | 0d | `f924e07` | `RUN_QUEUE.md:2287` |
 
 ## Not started — the actual queue
 
@@ -72,7 +71,6 @@ This is the distinction a raw checkbox count gets wrong.
 18. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1437`
 19. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1492`
 20. SD-11 — "are you trying to sign in?" + a code, instead of a sign-in button — `RUN_QUEUE.md:2203`
-21. CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates — `RUN_QUEUE.md:2287`
 
 ## Waiting on you (not on a build)
 
@@ -173,6 +171,9 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `063507f` 2026-09-16 — CODEMAP review fixes: a guard is enforcement, not a mention
+- `f924e07` 2026-09-16 — CODEMAP_SPEC CM-1: a generated map of the code, so agents stop reading files to find things
+- `2e3e1fa` 2026-09-16 — queue/spec update
 - `8e0b692` 2026-09-16 — H-2h: the shadows come back, the cream dissolves go
 - `7d5b1e6` 2026-09-16 — queue/spec update
 - `f9ffa23` 2026-09-16 — queue/spec update
@@ -182,10 +183,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `2de3268` 2026-09-16 — H-2g review fixes: the operator link passes contrast, and the tablet range stops over-reserving
 - `01822b0` 2026-09-15 — H-2g §2 + §3: the homepage header stops following, the lockup gets bigger and centred
 - `16106fc` 2026-09-15 — queue/spec update
-- `3001626` 2026-09-15 — queue/spec update
-- `fb7263b` 2026-09-15 — H-2g review fix: the floating hero sheet separates by fill now the shadow is gone
-- `4f78ea6` 2026-09-15 — queue/spec update
 
 ---
 
-**Totals:** 191 done · 12 awaiting review · 1 in flight · 21 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 191 done · 13 awaiting review · 1 in flight · 20 not started · 8 revise pages open · 15 ideas · 2 parked.
