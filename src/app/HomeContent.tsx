@@ -197,8 +197,6 @@ export default function HomeContent() {
             )}
           </div>
           <div className={`${s.shade} ${s.storyShade}`} />
-          {/* H-2d §3: the cream hero dissolves into the moving green — no seam. */}
-          <div className={s.storyTop} aria-hidden="true" />
           <div ref={beatsRef} className={s.beats}>
             {BEATS.map((b, i) => (
               <div key={b.eyebrow} className={`${s.beat} ${i === 0 ? s.on : ''}`}>
@@ -210,8 +208,6 @@ export default function HomeContent() {
           </div>
           <div ref={progRef} className={s.prog} aria-hidden="true"><i className={s.on} /><i /><i /></div>
         </div>
-        {/* H-2e §5: fades back into cream at the bottom — at the story's end, outside the pin. */}
-        <div className={s.storyBottom} aria-hidden="true" />
       </section>
 
       {/* 4. SEE IT WORK — the live demo */}
@@ -270,9 +266,6 @@ export default function HomeContent() {
 
       {/* 8. PRICING on pine */}
       <section className={s.price} id="pricing">
-        {/* H-2f: cream dissolves at both edges, under the content. */}
-        <div className={s.priceTop} aria-hidden="true" />
-        <div className={s.priceBottom} aria-hidden="true" />
         <div className={`${s.wrap} ${s.priceWrap}`}>
           <div>
             <h2 className={`${s.h2} ${s.fade}`}>Free for courses.</h2>

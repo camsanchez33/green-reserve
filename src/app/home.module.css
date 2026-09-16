@@ -7,7 +7,7 @@
 .root {
   --ease: cubic-bezier(.16, 1, .3, 1);
   --pine: #24513B; --pine-2: #2E6349; --pine-deep: #12271C;
-  --paper: #F6F4EC; --ink: #1C1C18; --ink-2: #57574F; --ink-3: #87867C; --line: #E6E3D7; --line-strong: #D9D6C8;
+  --paper: #F6F4EC; --ink: #1C1C18; --ink-2: #57574F; --ink-3: #87867C; --line: #E6E3D7;
   --ok: #3D6B4C; --warn: #8A6116;
   --course: #24513B;
   /* H-2e: one ground — cream from the nav to the copyright line, broken only by the story and the pricing slab. */
@@ -20,8 +20,15 @@
 .wrap { width: min(1180px, calc(100% - 48px)); margin: 0 auto; }
 .serif { font-family: var(--font-serif), Fraunces, Georgia, serif; }
 
-.btn { display: inline-flex; align-items: center; gap: 10px; height: 54px; padding: 0 26px; border-radius: 8px; font-size: 16px; font-weight: 600; text-decoration: none; background: var(--pine); color: #fff; transition: background .4s var(--ease), transform .5s var(--ease); }
-.btn:hover { background: var(--pine-2); transform: translateY(-1px); }
+/* H-2h (Cam 2026-09-16): the shadows are BACK and the cream dissolves are GONE.
+   H-2g §1 deleted all nine shadows this morning on Cam's instruction; asked
+   which of the two BANNED-list exemptions he wanted revoked, he answered "other
+   way around — get rid of cream fades and keep the shadows", and confirmed it
+   against a restate that spelled out it reversed the same day's work. So the
+   poster shadows on the mockups are restored exactly as they were before
+   76968ff, and the four section hand-off gradients are deleted instead. */
+.btn { display: inline-flex; align-items: center; gap: 10px; height: 54px; padding: 0 26px; border-radius: 8px; font-size: 16px; font-weight: 600; text-decoration: none; background: var(--pine); color: #fff; transition: background .4s var(--ease), transform .5s var(--ease), box-shadow .5s var(--ease); }
+.btn:hover { background: var(--pine-2); transform: translateY(-1px); box-shadow: 0 12px 30px -14px rgba(36,81,59,.7); }
 .link { font-size: 16px; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; color: inherit; }
 .link svg { transition: transform .5s var(--ease); }
 .link:hover svg { transform: translateX(3px); }
@@ -47,17 +54,12 @@
 .heroText > * { max-width: 620px; }
 .heroEyebrow { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--pine); margin-bottom: 18px; }
 .btnOutline { background: transparent; color: var(--pine); border: 1.5px solid rgba(36,81,59,.35); }
-.btnOutline:hover { background: rgba(36,81,59,.06); }
+.btnOutline:hover { background: rgba(36,81,59,.06); box-shadow: none; }
 .heroStage { position: relative; height: 620px; display: flex; align-items: center; justify-content: center; }
 .heroDevice { position: relative; width: 360px; max-width: 100%; transform: rotate(-2deg); z-index: 1; }
-.heroDevice .device { width: 360px; }
+.heroDevice .device { width: 360px; box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 30px 50px -30px rgba(20,30,20,.35), 0 80px 120px -60px rgba(20,30,20,.25); }
 .compact .dHd { height: 150px; }
-/* H-2g review: white, not near-cream. It overlaps .device and with no shadow
-   to lift it, the fill is the only thing left that can say "separate card" —
-   a --line hairline between two #F7F5EF panels is ~1.18:1 and reads as one
-   surface. White is also truer: this mocks the operator's tee sheet, which is
-   a white card on paper, while .device mocks the booking page's own paper. */
-.heroSheet { position: absolute; right: 0; bottom: 44px; width: 320px; transform: rotate(1.5deg); background: #FFFFFF; color: #1d1f1a; border-radius: 14px; border: 1px solid var(--line-strong); padding: 14px 16px 10px; z-index: 2; font-size: 12.5px; }
+.heroSheet { position: absolute; right: 0; bottom: 44px; width: 320px; transform: rotate(1.5deg); background: #F7F5EF; color: #1d1f1a; border-radius: 14px; border: 1px solid rgba(0,0,0,.06); box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 30px 50px -30px rgba(20,30,20,.35); padding: 14px 16px 10px; z-index: 2; font-size: 12.5px; }
 .hsHead { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,.08); margin-bottom: 4px; }
 .hsHead b { font-weight: 600; letter-spacing: 0; text-transform: none; color: #1d1f1a; font-size: 12px; }
 .hsRow { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid rgba(0,0,0,.06); }
@@ -88,10 +90,8 @@
 /* H-2d §2: when the clip is the active layer it is not zoomed — it already moves. */
 .storyPh.hasVideo { transform: none; will-change: auto; }
 .storyPh video { transform: none; }
-/* H-2d §3: the cream hero dissolves into the green. Above the clip, under the beats. */
-.storyTop { position: absolute; left: 0; right: 0; top: 0; height: 22vh; background: linear-gradient(180deg, #F6F4EC 0%, rgba(246,244,236,0) 100%); pointer-events: none; z-index: 1; }
-/* H-2e review: sits at the END of the 340vh story (a sibling of the pin, not inside it) so the wash only appears as the pinned scroll runs out, not under the beats for the whole story. */
-.storyBottom { position: absolute; left: 0; right: 0; bottom: 0; height: 18vh; background: linear-gradient(0deg, #F6F4EC 0%, rgba(246,244,236,0) 100%); pointer-events: none; z-index: 1; }
+/* H-2h: .storyTop and .storyBottom deleted — the cream now meets the story
+   photo at a hard edge, and the story's own dark ground is the transition. */
 .storyPh img { object-fit: cover; object-position: center 70%; }
 /* H-2a: the looping clip sits over the still inside the same scaled layer. It
    is only mounted on desktop, and only plays when the story is on screen. */
@@ -118,10 +118,8 @@
 /* PRODUCT — the live demo */
 .product { padding: 140px 0 120px; text-align: center; }
 .stage { display: flex; flex-direction: column; align-items: center; gap: 26px; margin-top: 60px; }
-/* H-2e/H-2g: stays near-cream on the cream ground on purpose — it is a mockup
-   of the booking page's own paper. H-2g removed the shadow, so the hairline and
-   the photo header are the only things separating it now. */
-.device { width: 390px; max-width: 100%; text-align: left; background: #F7F5EF; color: #1d1f1a; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); }
+/* H-2e: stays near-cream on the cream ground on purpose — it is a mockup of the booking page's own paper; the border, photo header and shadow carry it. */
+.device { width: 390px; max-width: 100%; text-align: left; background: #F7F5EF; color: #1d1f1a; border-radius: 14px; overflow: hidden; border: 1px solid rgba(0,0,0,.06); box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 30px 50px -30px rgba(20,30,20,.35), 0 100px 140px -80px rgba(20,30,20,.4); }
 .dHd { position: relative; height: 190px; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 20px 16px; color: #fff; overflow: hidden; background: color-mix(in srgb, var(--course) 84%, black); transition: background .8s var(--ease); }
 .dHd img { object-fit: cover; transition: opacity .8s var(--ease); }
 .dHd::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,.5)); pointer-events: none; }
@@ -172,7 +170,7 @@
    screen inside mounts .staff-look, so the sheet wears the staff fonts and
    square corners exactly as the real dashboard does. */
 .laptop { width: min(880px, 100%); text-align: left; }
-.laptopScreen { background: #1d1f1a; border-radius: 14px 14px 4px 4px; padding: 12px 12px 0; }
+.laptopScreen { background: #1d1f1a; border-radius: 14px 14px 4px 4px; padding: 12px 12px 0; box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 30px 50px -30px rgba(20,30,20,.35), 0 100px 140px -80px rgba(20,30,20,.4); }
 .laptopBase { height: 14px; margin: 0 -3%; background: linear-gradient(180deg, #2a2d28, #15171400); border-radius: 0 0 14px 14px; }
 .dash { background: #F7F5EF; color: #1D1F1A; padding: 20px 22px 14px; min-height: 420px; font-size: 13.5px; }
 .dashIdentity { display: flex; align-items: center; gap: 10px; margin: -6px -8px 14px; padding: 0 8px 12px; border-bottom: 1px solid #E3E0D5; font-size: 12px; color: #8A8B80; }
@@ -218,9 +216,8 @@
 .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; margin-bottom: 44px; }
 .head .sub { margin: 14px 0 0; }
 .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
-.card { display: block; text-decoration: none; color: inherit; background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); transition: transform .6s var(--ease), border-color .6s var(--ease); }
-/* H-2g: the lift is the whole hover now — the hairline darkens instead of a shadow blooming. */
-.card:hover { transform: translateY(-6px); border-color: var(--line-strong); }
+.card { display: block; text-decoration: none; color: inherit; background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); transition: transform .6s var(--ease), box-shadow .6s var(--ease); }
+.card:hover { transform: translateY(-6px); box-shadow: 0 30px 50px -30px rgba(20,30,20,.35); }
 .img { position: relative; aspect-ratio: 4 / 3; overflow: hidden; }
 .img img { object-fit: cover; transition: transform 1.2s var(--ease); }
 .card:hover .img img { transform: scale(1.05); }
@@ -240,10 +237,9 @@
 .s p { margin: 0; font-size: 15.5px; line-height: 1.5; color: var(--ink-2); }
 
 /* PRICING */
-/* H-2f: the pricing slab dissolves from and into the cream ground like the story does — one hand-off language. */
+/* H-2h: .priceTop and .priceBottom deleted with the story pair — the pine slab
+   starts and ends on a clean edge. */
 .price { position: relative; background: var(--pine); color: #fff; padding: 120px 0; }
-.priceTop { position: absolute; left: 0; right: 0; top: 0; height: 18vh; background: linear-gradient(180deg, #F6F4EC 0%, rgba(246,244,236,0) 100%); pointer-events: none; }
-.priceBottom { position: absolute; left: 0; right: 0; bottom: 0; height: 18vh; background: linear-gradient(0deg, #F6F4EC 0%, rgba(246,244,236,0) 100%); pointer-events: none; }
 .price > .wrap { position: relative; z-index: 1; }
 .priceWrap { display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 72px; align-items: center; }
 .price p { font-size: 18px; line-height: 1.55; opacity: .88; margin: 20px 0 0; max-width: 520px; }
@@ -290,8 +286,6 @@
   .beats { position: relative; left: auto; bottom: auto; width: auto; padding: 96px 24px 72px; display: flex; flex-direction: column; gap: 56px; }
   .beat { position: relative; opacity: 1; transform: none; }
   .prog { display: none; }
-  .storyBottom { display: none; }
-  .priceTop, .priceBottom { display: none; }
   .cards, .stepsRow { grid-template-columns: 1fr; }
   .priceWrap, .faqGrid { grid-template-columns: 1fr; gap: 40px; }
   .head { flex-direction: column; align-items: flex-start; }

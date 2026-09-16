@@ -472,7 +472,14 @@ Cam, 2026-09-15, on the shipped H-2e hero: "make that shadow less and look more
 professional · make the scrolling header go away · get the logo bigger and in the
 center for the beginning."
 
-#### 1. No shadow at all
+#### 1. No shadow at all — **SUPERSEDED the same day, see H-2h below**
+
+> **This section shipped (76968ff, fb7263b) and was then REVERSED (H-2h,
+> 2026-09-16).** Every shadow described here as deleted is back. It is kept
+> because the reasoning still holds if the question is ever reopened — in
+> particular the finding that `.heroSheet` and `.device` are both `#F7F5EF` and
+> overlap, so without a shadow they need different fills to read as two cards.
+> Do not build from this section. Build from H-2h.
 
 **REVISED by Cam, 2026-09-16** — this section previously prescribed two shadow
 tokens (`--shadow-card`, `--shadow-card-lift`) to replace the three-layer poster
@@ -585,6 +592,57 @@ element on the page carries a `box-shadow` at all (see §1, revised).
 The hero still measures exactly one viewport tall. Lighthouse mobile CLS is no
 worse than H-1's recorded number. Every other public page still has its normal
 fixed nav.
+
+### H-2h · Shadows back, cream dissolves out (small, no migration)
+
+Cam, 2026-09-16, asked which of the two BANNED-list exemptions he wanted revoked
+after H-2g §1 shipped: "other way around get rid of cream fades and keep the
+shadows." Restated back to him — spelling out that the shadows were already
+deleted that morning and that this reverses the same day's work — and confirmed.
+
+So the trade is explicit: **the homepage keeps its poster shadows and loses its
+section dissolves.** H-2g §1 is superseded in full; H-2f's four gradients are
+deleted.
+
+#### 1. The shadows come back exactly as they were
+
+Every declaration restored to its pre-76968ff value, not reinvented:
+`.btn:hover` (the pine glow and its transition entry), `.btnOutline:hover`
+(`box-shadow: none`), `.heroDevice .device`, `.heroSheet`, `.device`,
+`.laptopScreen`, `.card` (transition) and `.card:hover` (the bloom).
+
+Two things introduced by H-2g §1 go with them, because they existed only to
+stand in for a shadow: `--line-strong` on `.root` (added so `.card:hover` could
+darken its hairline instead of blooming) and the white `.heroSheet` from
+fb7263b (white only because, with no shadow, two overlapping `#F7F5EF` panels
+gave a 1.18:1 hairline and read as one surface — the shadow separates them
+again, so it returns to cream).
+
+#### 2. The four dissolves are deleted
+
+`.storyTop`, `.storyBottom`, `.priceTop`, `.priceBottom` — the rules, their
+`display: none` overrides in the ≤960px block, and the four `<div>`s in
+`HomeContent.tsx`. The cream now meets the story photo and the pine pricing slab
+at a hard edge.
+
+**This is the visible cost, and it is the thing to look at:** H-2f existed
+because those two hand-offs were seams. They are seams again. If the edge reads
+badly at 1440, the fix is not to put the gradients back under a different name —
+it is to decide whether the pine slab wants a different treatment entirely.
+
+#### 3. The BANNED line
+
+`CLAUDE.md` now exempts the `home.module.css` mockup shadows and exempts no
+page-background gradient at all. The scrim clarification stands unchanged:
+`.storyShade`, `.dHd::after` and `.laptopBase` were never background gradients
+and were never in scope.
+
+#### 4. Verify
+
+`grep box-shadow src/app/home.module.css` returns the nine restored
+declarations. `grep 'linear-gradient(180deg, #F6F4EC' src/app/home.module.css`
+returns nothing. At 1440 and 390: the cards and the phone mockup lift off the
+cream again, and the two section edges are clean rather than muddy.
 
 ## 6. Verification, every run
 
