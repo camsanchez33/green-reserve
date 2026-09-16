@@ -52,10 +52,11 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const refreshPage = from === 'onboarding' ? '/dashboard/onboarding' : '/dashboard/settings';
+    // SD-8: as above — an abandoned onboarding returns to Money, not Settings.
+    const refreshPage = from === 'onboarding' ? '/dashboard/onboarding' : '/dashboard/money?tab=payouts';
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: `${process.env.NEXT_PUBLIC_URL}${refreshPage}?stripe=refresh`,
+      refresh_url: `${process.env.NEXT_PUBLIC_URL}${refreshPage}${refreshPage.includes('?') ? '&' : '?'}stripe=refresh`,
       return_url: `${process.env.NEXT_PUBLIC_URL}/api/operator/stripe/callback?accountId=${accountId}&from=${from}`,
       type: 'account_onboarding',
     });

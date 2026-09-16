@@ -9,7 +9,7 @@ import type { MoneyCourse } from './types';
 
 export function PayoutsPanel({ course, stripeParam, onConnected }: {
   course: MoneyCourse;
-  /** ?stripe=pending|error, set by the Connect return URL. */
+  /** ?stripe=success|pending|refresh|error, set by the Stripe return URL. */
   stripeParam: string | null;
   onConnected: () => void;
 }) {
@@ -45,10 +45,26 @@ export function PayoutsPanel({ course, stripeParam, onConnected }: {
       <div className="bg-white border border-line rounded-lg p-5">
         <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">Payouts (Stripe)</div>
         <div className="space-y-4">
+          {/* SD-8 review: Stripe returns four states and only two were spoken
+              for — someone who abandoned onboarding mid-flow ('refresh') or
+              finished it ('success') landed here with no acknowledgement at
+              all, which reads as "nothing happened". */}
+          {stripeParam === 'success' && (
+            <div className="flex items-start gap-2 bg-ok/5 border border-ok/20 rounded-md p-3 text-ok text-sm">
+              <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0"/>
+              Stripe is connected. Payouts are enabled — green fees go straight to your bank account.
+            </div>
+          )}
           {stripeParam === 'pending' && (
             <div className="flex items-start gap-2 bg-warn/5 border border-warn/20 rounded-md p-3 text-warn text-sm">
               <AlertCircle className="w-4 h-4 mt-0.5 shrink-0"/>
               Stripe says your account isn&apos;t fully verified yet. Finish any remaining steps on Stripe, or click Connect again to pick back up.
+            </div>
+          )}
+          {stripeParam === 'refresh' && (
+            <div className="flex items-start gap-2 bg-warn/5 border border-warn/20 rounded-md p-3 text-warn text-sm">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0"/>
+              That Stripe link expired before you finished. Nothing was lost — click Connect to pick up where you left off.
             </div>
           )}
           {stripeParam === 'error' && (

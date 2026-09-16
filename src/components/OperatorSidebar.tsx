@@ -244,7 +244,11 @@ export default function OperatorSidebar({ active, onAlertClick }: {
           </div>
         ))}
         <div className="px-4 pt-1">
-          <button onClick={onAlertClick || (() => router.push('/dashboard'))}
+          {/* SD-8b review: this is the FOURTH router.push in this file and the
+              first fix missed it. Settings passes no onAlertClick, so on the one
+              page that holds unsaved edits this button always took the
+              navigating branch. */}
+          <button onClick={() => { if (onAlertClick) { onAlertClick(); return; } if (confirmLeave()) router.push('/dashboard'); }}
             className="w-full flex items-center gap-2.5 py-2 text-[12px] text-warn hover:text-ink transition-colors text-left">
             <AlertTriangle className="w-3.5 h-3.5"/><span>Course alert</span>
           </button>

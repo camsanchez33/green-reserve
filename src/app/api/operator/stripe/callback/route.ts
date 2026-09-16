@@ -12,15 +12,20 @@ import { resolveDashboardSession } from '@/lib/session';
 export async function GET(req: NextRequest) {
   const base = process.env.NEXT_PUBLIC_URL || '';
   const accountId = req.nextUrl.searchParams.get('accountId');
-  const page = req.nextUrl.searchParams.get('from') === 'onboarding' ? '/dashboard/onboarding' : '/dashboard/settings';
-  if (!accountId) return NextResponse.redirect(`${base}${page}?stripe=error`);
+  // SD-8: Payouts moved to /dashboard/money, so a settled operator returns
+  // there instead of to Settings (which only bounced them on again, costing a
+  // second page load and a flash of the settings form). Onboarding still owns
+  // its own Stripe step. `page` can now carry a query, so join with & not ?.
+  const page = req.nextUrl.searchParams.get('from') === 'onboarding' ? '/dashboard/onboarding' : '/dashboard/money?tab=payouts';
+  const back = (state: string) => `${base}${page}${page.includes('?') ? '&' : '?'}stripe=${state}`;
+  if (!accountId) return NextResponse.redirect(back('error'));
 
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.redirect(`${base}/dashboard/login`);
   if (session.isStaff) return NextResponse.redirect(`${base}/dashboard?stripe=error`);
 
   const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { id: true, stripeAccountId: true } });
-  if (!course || course.stripeAccountId !== accountId) return NextResponse.redirect(`${base}${page}?stripe=error`);
+  if (!course || course.stripeAccountId !== accountId) return NextResponse.redirect(back('error'));
 
   try {
     const account = await stripe.accounts.retrieve(accountId);
@@ -28,9 +33,9 @@ export async function GET(req: NextRequest) {
     // is not sufficient; without card_payments the account cannot accept card charges.
     const isActive = !!(account.charges_enabled && account.payouts_enabled && account.capabilities?.card_payments === 'active');
     await prisma.course.update({ where: { id: course.id }, data: { stripeAccountActive: isActive } });
-    return NextResponse.redirect(`${base}${page}?stripe=${isActive ? 'success' : 'pending'}`);
+    return NextResponse.redirect(back(isActive ? 'success' : 'pending'));
   } catch (err) {
     console.error('Stripe callback error:', err);
-    return NextResponse.redirect(`${base}${page}?stripe=error`);
+    return NextResponse.redirect(back('error'));
   }
 }
