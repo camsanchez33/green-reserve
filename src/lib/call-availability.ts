@@ -82,9 +82,11 @@ export function openSlots(
   const blocks = [...busy, ...booked];
 
   const out: DaySlots[] = [];
+  // Step the Eastern CALENDAR date, not the epoch: adding 24h to an instant
+  // skips or doubles a day across a DST change.
+  const day0 = easternParts(now).date;
   for (let d = 0; d <= HORIZON_DAYS; d++) {
-    const probe = new Date(now.getTime() + d * 24 * 60 * MS);
-    const date = easternParts(probe).date;
+    const date = new Date(new Date(day0 + 'T00:00:00Z').getTime() + d * 24 * 60 * MS).toISOString().slice(0, 10);
     const noonIso = easternToIso(date, '12:00');
     if (!noonIso) continue;
     const wd = easternWeekday(new Date(noonIso));

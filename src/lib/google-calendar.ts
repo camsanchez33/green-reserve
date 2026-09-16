@@ -16,11 +16,14 @@ import * as Sentry from '@sentry/nextjs';
 
 type ServiceAccount = { client_email: string; private_key: string; token_uri?: string };
 
-const SCOPE = 'https://www.googleapis.com/auth/calendar';
+// Events read/write + free/busy read — not full calendar admin.
+const SCOPE = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.readonly';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const API = 'https://www.googleapis.com/calendar/v3';
 const TZ = 'America/New_York';
 const BUSY_TTL_MS = 5 * 60_000;
+const FETCH_TIMEOUT_MS = 8_000;
+const BUSY_CACHE_MAX = 50;
 
 export function calendarConfigured(): boolean {
   return !!(process.env.GOOGLE_SERVICE_ACCOUNT_JSON && process.env.GOOGLE_CALENDAR_ID);
@@ -61,6 +64,7 @@ async function accessToken(): Promise<string> {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion }),
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`Google token exchange failed (${res.status}): ${(await res.text()).slice(0, 200)}`);
   const data = await res.json() as { access_token?: string; expires_in?: number };
@@ -69,15 +73,17 @@ async function accessToken(): Promise<string> {
   return tokenCache.token;
 }
 
-async function gapi<T>(method: string, path: string, body?: unknown): Promise<T> {
+// `op` is what gets into error strings — never the path, which carries the calendar id.
+async function gapi<T>(method: string, path: string, op: string, body?: unknown): Promise<T> {
   const token = await accessToken();
   const res = await fetch(`${API}${path}`, {
     method,
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
   if (res.status === 204) return undefined as T;
-  if (!res.ok) throw new Error(`Google Calendar ${method} ${path} failed (${res.status}): ${(await res.text()).slice(0, 300)}`);
+  if (!res.ok) throw new Error(`Google Calendar ${op} failed (${res.status}): ${(await res.text()).slice(0, 300)}`);
   return await res.json() as T;
 }
 
@@ -87,12 +93,19 @@ const busyCache = new Map<string, { at: number; blocks: BusyBlock[] }>();
 
 /** One freebusy.query for GOOGLE_CALENDAR_ID, cached 5 minutes. Throws on failure. */
 export async function busyBlocks(from: Date, to: Date): Promise<BusyBlock[]> {
-  const key = `${from.toISOString()}|${to.toISOString()}`;
+  // Bucket the window to 5 minutes so a live `now` still hits the cache, and
+  // evict stale entries so the map cannot grow for the life of the instance.
+  const bucket = BUSY_TTL_MS;
+  const f = new Date(Math.floor(from.getTime() / bucket) * bucket);
+  const t = new Date(Math.ceil(to.getTime() / bucket) * bucket);
+  const key = `${f.toISOString()}|${t.toISOString()}`;
   const hit = busyCache.get(key);
   if (hit && Date.now() - hit.at < BUSY_TTL_MS) return hit.blocks;
+  for (const [k, v] of busyCache) if (Date.now() - v.at >= BUSY_TTL_MS) busyCache.delete(k);
+  if (busyCache.size >= BUSY_CACHE_MAX) busyCache.clear();
   const id = calendarId();
   const data = await gapi<{ calendars?: Record<string, { busy?: { start: string; end: string }[]; errors?: unknown[] }> }>(
-    'POST', '/freeBusy', { timeMin: from.toISOString(), timeMax: to.toISOString(), timeZone: TZ, items: [{ id }] },
+    'POST', '/freeBusy', 'freebusy', { timeMin: f.toISOString(), timeMax: t.toISOString(), timeZone: TZ, items: [{ id }] },
   );
   const cal = data.calendars?.[id];
   if (!cal) throw new Error('Google freebusy returned nothing for the configured calendar — is it shared with the service account?');
@@ -127,7 +140,7 @@ export async function createCallEvent(call: CallForEvent, inquiry: InquiryForEve
       '',
       `${base}/admin/inquiries/${inquiry.id}`,
     ];
-    const ev = await gapi<{ id?: string }>('POST', `/calendars/${encodeURIComponent(calendarId())}/events`, {
+    const ev = await gapi<{ id?: string }>('POST', `/calendars/${encodeURIComponent(calendarId())}/events`, 'events.insert', {
       summary: `Call — ${inquiry.courseName}`,
       description: lines.join('\n'),
       start: { dateTime: start.toISOString(), timeZone: TZ },
@@ -142,7 +155,7 @@ export async function createCallEvent(call: CallForEvent, inquiry: InquiryForEve
 export async function moveCallEvent(eventId: string, newStart: Date, durationMin = 30): Promise<boolean> {
   try {
     const end = new Date(newStart.getTime() + durationMin * 60_000);
-    await gapi('PATCH', `/calendars/${encodeURIComponent(calendarId())}/events/${encodeURIComponent(eventId)}`, {
+    await gapi('PATCH', `/calendars/${encodeURIComponent(calendarId())}/events/${encodeURIComponent(eventId)}`, 'events.patch', {
       start: { dateTime: newStart.toISOString(), timeZone: TZ },
       end: { dateTime: end.toISOString(), timeZone: TZ },
     });
@@ -153,7 +166,7 @@ export async function moveCallEvent(eventId: string, newStart: Date, durationMin
 
 export async function deleteCallEvent(eventId: string): Promise<boolean> {
   try {
-    await gapi('DELETE', `/calendars/${encodeURIComponent(calendarId())}/events/${encodeURIComponent(eventId)}`);
+    await gapi('DELETE', `/calendars/${encodeURIComponent(calendarId())}/events/${encodeURIComponent(eventId)}`, 'events.delete');
     busyCache.clear();
     return true;
   } catch (err) { report('deleteCallEvent', err); return false; }

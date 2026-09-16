@@ -1,7 +1,7 @@
 // SC-1 §4 — prove the service account can read Cam's calendar and write to it.
 // Needs GOOGLE_SERVICE_ACCOUNT_JSON + GOOGLE_CALENDAR_ID in the environment
 // (vercel env pull, or export them for one shell). Prints nothing secret.
-// Run: npx tsx scripts/google-calendar-check.ts
+// Run: npx dotenv -e .env.local -- npx tsx scripts/google-calendar-check.ts
 import { calendarConfigured, busyBlocks, createCallEvent, deleteCallEvent } from '../src/lib/google-calendar';
 
 async function main() {
@@ -23,8 +23,9 @@ async function main() {
   );
   if (!id) { console.log('FAIL  createCallEvent returned null — see the error above'); process.exit(1); }
   console.log(`PASS  createCallEvent: event ${id}`);
-  const gone = await deleteCallEvent(id);
-  console.log(`${gone ? 'PASS' : 'FAIL'}  deleteCallEvent`);
+  let gone = await deleteCallEvent(id);
+  if (!gone) gone = await deleteCallEvent(id);
+  console.log(gone ? 'PASS  deleteCallEvent' : `FAIL  deleteCallEvent — delete event ${id} ("SC-1 check (delete me)") from the calendar by hand, it is occupying a bookable slot`);
   process.exit(gone ? 0 : 1);
 }
 main().catch(err => { console.error('FAIL ', err instanceof Error ? err.message : err); process.exit(1); });

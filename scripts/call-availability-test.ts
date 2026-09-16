@@ -68,5 +68,15 @@ check('preference: Saturday is all "other" for weekdays-only', withPref.find(d =
 check('matchesPreference: 13:00 is an afternoon', matchesPreference(et('2026-09-15', '13:00'), { times: ['Afternoons'] }));
 check('matchesPreference: empty preference matches all', matchesPreference(et('2026-09-15', '13:00'), { times: [], days: [] }));
 
+// 8. DST: stepping the calendar date never skips or doubles a day
+const spring = openSlots(et('2027-03-13', '23:30'), [], []);
+const springDates = spring.map(d => d.date);
+check('DST spring: dates unique', new Set(springDates).size === springDates.length, springDates.slice(0, 4).join(','));
+check('DST spring: every date inside the 15-day window', springDates.every(x => x >= '2027-03-13' && x <= '2027-03-27'), springDates.at(-1));
+check('DST spring: Monday Mar 15 offered', springDates.includes('2027-03-15'));
+const fall = openSlots(et('2027-11-06', '00:30'), [], []);
+const fallDates = fall.map(d => d.date);
+check('DST fall: no duplicate day', new Set(fallDates).size === fallDates.length, fallDates.slice(0, 4).join(','));
+
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);
