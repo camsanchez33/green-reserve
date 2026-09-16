@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-16 03:41 UTC · branch `main` · HEAD `fb7263b` · working tree **1 dirty file(s)**
+Generated 2026-09-16 04:06 UTC · branch `main` · HEAD `2de3268` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -41,10 +41,11 @@ This is the distinction a raw checkbox count gets wrong.
 | MP-2 | 2026-08-29 | 17d | `958f229` | `RUN_QUEUE.md:705` |
 | MP-2b | 2026-08-29 | 17d | `a134af5` | `RUN_QUEUE.md:742` |
 | MP-2c | 2026-08-29 | 17d | `e5b5413` | `RUN_QUEUE.md:791` |
-| MP-2d | 2026-08-29 | 16d | `22d0f68` | `RUN_QUEUE.md:839` |
+| MP-2d | 2026-08-29 | 17d | `22d0f68` | `RUN_QUEUE.md:839` |
 | MP-2e | 2026-08-30 | 16d | `bf3bcb2` | `RUN_QUEUE.md:881` |
 | UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | 2026-09-11 | 4d | `a3c1bea` | `RUN_QUEUE.md:2056` |
 | SECURITY follow-on: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09-16: "if a cour | 2026-09-15 | 0d | `21c8d25` | `RUN_QUEUE.md:2098` |
+| UI_REVISE_SPEC H-2g §2 + §3 (01822b0; review fixes 2de3268) — BUILT + | 2026-09-15 | 0d | `01822b0` | `RUN_QUEUE.md:2121` |
 
 ## Not started — the actual queue
 
@@ -67,7 +68,7 @@ This is the distinction a raw checkbox count gets wrong.
 17. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1388`
 18. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1437`
 19. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1492`
-20. CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates — `RUN_QUEUE.md:2124`
+20. CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates — `RUN_QUEUE.md:2159`
 
 ## Waiting on you (not on a build)
 
@@ -166,6 +167,10 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `2de3268` 2026-09-16 — H-2g review fixes: the operator link passes contrast, and the tablet range stops over-reserving
+- `01822b0` 2026-09-15 — H-2g §2 + §3: the homepage header stops following, the lockup gets bigger and centred
+- `16106fc` 2026-09-15 — queue/spec update
+- `3001626` 2026-09-15 — queue/spec update
 - `fb7263b` 2026-09-15 — H-2g review fix: the floating hero sheet separates by fill now the shadow is gone
 - `4f78ea6` 2026-09-15 — queue/spec update
 - `76968ff` 2026-09-15 — H-2g §1 (revised): every box-shadow deleted from the homepage, hairlines instead
@@ -174,11 +179,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `fa3d7bf` 2026-09-15 — SD-8b + SD-8c: unsaved Settings edits survive sidebar navigation, and the booking status tone stops being wrong in three places
 - `12815b0` 2026-09-15 — queue/spec update
 - `211d924` 2026-09-15 — SD-8 review fixes: the identity lock made real, the date filter stops lying, and the change-request channel gets the caps its commit message claimed
-- `6ee83a6` 2026-09-15 — queue/spec update
-- `597a67c` 2026-09-15 — SD-8: Payments + Cancellations + Payouts become one Money page; Settings twelve sections become five, each saving itself
-- `c260597` 2026-09-15 — queue/spec update
-- `ae8371c` 2026-09-15 — queue/spec update
 
 ---
 
-**Totals:** 191 done · 10 awaiting review · 1 in flight · 20 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 191 done · 11 awaiting review · 1 in flight · 20 not started · 8 revise pages open · 15 ideas · 2 parked.

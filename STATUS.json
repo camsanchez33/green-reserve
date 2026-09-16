@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-16T03:41:05.673Z",
+  "generatedAt": "2026-09-16T04:06:11.118Z",
   "repo": {
-    "head": "fb7263b",
+    "head": "2de3268",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,12 +10,12 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-15T23:34:55-04:00",
+    "queueLastCommit": "2026-09-15T23:41:06-04:00",
     "unrecorded": []
   },
   "counts": {
     "runDone": 191,
-    "runAwaiting": 10,
+    "runAwaiting": 11,
     "runInFlight": 1,
     "runNotStarted": 20,
     "reviseDone": 14,
@@ -86,7 +86,7 @@
       "line": 839,
       "hash": "22d0f68",
       "shipDate": "2026-08-29",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "title": "MP-2e",
@@ -106,6 +106,13 @@
       "title": "SECURITY follow-on: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09-16: \"if a course is already created it can't be created again — they'd have to log in to change informat",
       "line": 2098,
       "hash": "21c8d25",
+      "shipDate": "2026-09-15",
+      "ageDays": 0
+    },
+    {
+      "title": "UI_REVISE_SPEC H-2g §2 + §3 (01822b0; review fixes 2de3268) — BUILT +",
+      "line": 2121,
+      "hash": "01822b0",
       "shipDate": "2026-09-15",
       "ageDays": 0
     }
@@ -208,7 +215,7 @@
     },
     {
       "title": "CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates",
-      "line": 2124,
+      "line": 2159,
       "section": "Queue (run in this order)"
     }
   ],
@@ -774,6 +781,26 @@
   },
   "recentCommits": [
     {
+      "h": "2de3268",
+      "date": "2026-09-16",
+      "subject": "H-2g review fixes: the operator link passes contrast, and the tablet range stops over-reserving"
+    },
+    {
+      "h": "01822b0",
+      "date": "2026-09-15",
+      "subject": "H-2g §2 + §3: the homepage header stops following, the lockup gets bigger and centred"
+    },
+    {
+      "h": "16106fc",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "3001626",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "fb7263b",
       "date": "2026-09-15",
       "subject": "H-2g review fix: the floating hero sheet separates by fill now the shadow is gone"
@@ -812,26 +839,6 @@
       "h": "211d924",
       "date": "2026-09-15",
       "subject": "SD-8 review fixes: the identity lock made real, the date filter stops lying, and the change-request channel gets the caps its commit message claimed"
-    },
-    {
-      "h": "6ee83a6",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "597a67c",
-      "date": "2026-09-15",
-      "subject": "SD-8: Payments + Cancellations + Payouts become one Money page; Settings twelve sections become five, each saving itself"
-    },
-    {
-      "h": "c260597",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "ae8371c",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
     }
   ]
 }

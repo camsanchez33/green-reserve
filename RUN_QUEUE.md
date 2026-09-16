@@ -2113,13 +2113,48 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   gradients go too. Also corrected a false absolute in the same line that
   predates this run (it claimed four gradients were "the only allowed" while
   three scrims/bezels were already live and always out of scope).
-  STILL UNBUILT: H-2g §2 (the non-scrolling homepage header) and §3 (the
-  centred 280px lockup, Operator login only at the right). Those are the other
-  two thirds of the item and are NOT done.
   CAM TO WALK: `/` at 1440 — the floating tee-sheet card must still read as
   sitting ON the phone mockup, not merged into it. That is the one thing the
   shadow was carrying and the one thing I could not check (the browser window
   would not resize past 613px, where that card is hidden).
+
+- [ ] UI_REVISE_SPEC H-2g §2 + §3 (01822b0; review fixes 2de3268) — BUILT +
+  REVIEWED 2026-09-16. Box stays OPEN: both auditors passed the code, but five
+  of their verdicts are visual and only Cam's walk can close them.
+  §2: on `/` the nav is `position: absolute` with no background, blur, border
+  or scroll listener — it scrolls away with the hero and never returns. The
+  handler is deleted, not disabled. Every other public page keeps the fixed
+  white/blur bar; spec-conformance proved that byte-for-byte (off `/`, every
+  deleted conditional already resolved to the branch that is now hardcoded).
+  §3: top row is empty · 280px lockup (200px ≤960px) · Operator login. "List
+  your course" is out of the top row. Stacks below 640px.
+  §4: the footer Operator login link was already there (Footer.tsx:69) — the
+  only reason dropping the sticky bar is safe.
+  REVIEW FIXES (2de3268): the link was `ink-muted`, 3.3:1 on paper, under the
+  4.5:1 floor — now `ink-soft`, with the same hit padding as its twin on the
+  shared bar. And 132px of top padding was reserved across the whole sub-960px
+  range on the stated grounds that the row stacks there; it only stacks below
+  640, so that was ~55px of dead space at tablet widths. Now 92 / 110 / 132.
+  TWO SPEC CORRECTIONS, both recorded in UI_REVISE_SPEC rather than quietly
+  fixed: §2 ordered the deletion of "the `--nav-*` scrolled-state CSS", which
+  has never existed in this repo (the only commit containing that string is the
+  one that wrote the spec); and §2 says the nav sits inside `.hero`, which it
+  does not — it stays in the root layout and is absolute against the initial
+  containing block. Same pixels today, but only because `.hero` is the first
+  in-flow box and `/` takes no nav offset. Anything added above `<main>` moves
+  the lockup silently. Named in the spec so the next person inherits the risk
+  rather than the illusion.
+  CAM TO WALK (five things no auditor could settle):
+  1. `/` at 1440 and 390 — centred lockup, one muted link right, no bar, no
+     border; scroll to the footer at both and confirm nothing slides back in.
+  2. `/` at a SHORT desktop viewport (~1440x700). The hero is 100svh with a
+     620px device stage inside it, so the content overflows and centres into
+     the padding. Static analysis cannot settle whether the eyebrow clears the
+     lockup there. This is the one with real risk.
+  3. 390px: lockup over a 13px centred Operator login, no collision.
+  4. `/terms` and `/courses`: normal fixed white/blur nav, unchanged.
+  5. Lighthouse mobile on `/` — CLS no worse than H-1's recorded number (§5's
+     own bar). The lockup moved near the top of the fold, which is the risk.
 
 - [ ] CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates
   `docs/CODEMAP.md` + `codemap.json`: routes with their auth level, lib exports
