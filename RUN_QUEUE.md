@@ -471,12 +471,72 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     for staff arriving by URL; ARCHITECTURE.md regenerated. NOT done (design
     nits, parked with the UI revise): opengraph font, Toast border tints,
     retry-button colour, 360px labels. NEEDS REVIEW.
-  - [ ] SD-8 — merge + split: Payments + Cancellations → one Money page with
-    tabs (they already query the same endpoint) + the Stripe payout card moved
-    here from Settings + the literal $1.50/player figure; Settings 9 tabs → 5
-    with per-section save, res.ok checks and a dirty-guard (focus-refetch
-    currently clobbers in-progress edits); course active/name/address become
-    read-only "request a change" rows (medium)
+  - [x] SD-8 (build 597a67c; review fixes 211d924) — SHIPPED + REVIEWED
+    2026-09-16. Design CLEAN. Spec 9 MET / 2 PARTIAL, both closed by the fixes.
+    Security 8 findings, 0 critical, 1 high — all closed. Admin-UX 5 findings,
+    3 blocking — all closed but the sidebar nav guard, filed below.
+    SHIPPED: /dashboard/money with three tabs (Payments · Cancellations ·
+    Payouts) sharing one load; /dashboard/payments and /dashboard/cancellations
+    are redirects that keep the query string, so bookmarks, the operator email
+    and both tee-sheet deep links still land right; the $1.50/player figure is
+    written down on Payouts and on the fees tile. Staff permissions unchanged
+    by the merge: tabs role-filtered to Cancellations, their sidebar item keeps
+    that name, policy form disabled with a reason. Settings twelve sub-tabs →
+    five (Your course · Booking rules · Pricing & cancellation · Facilities ·
+    Staff & account), nothing deleted; Save sends only the active section and
+    dirty is tracked per FIELD, so saving one section cannot clear another's
+    unsaved state. Course name/address read-only with Request a change, routed
+    through the V13b change-request channel (message thread + activity ledger +
+    throttled email).
+    NOTE — the spec said "9 tabs → 5"; the page actually had TWELVE. Target met.
+    NOTE — "res.ok checks" and the dirty-guard were already in the tree before
+    this run (they carry SD-8 comments from the SD-7b run); this run refined the
+    guard from one boolean to a per-field set.
+    REVIEW FIXES (211d924): the identity lock was decoration — /api/operator/
+    courses still wrote name/city/state/address from the RAW body; those and
+    `active` are gone from it (an operator flipping active:false took the course
+    off the public site while confirmed bookings stood with cards on file,
+    bypassing lib/course-closure.ts). The change-request path had no rate limit
+    and no server-side size cap though the commit claimed otherwise; it now has
+    the same caps as its token-gated twin plus a category whitelist. A failed
+    ?date= fetch fell back to the unfiltered list under a banner claiming it was
+    that day. A failed settings load rendered blank, indistinguishable from a
+    new course, and Save could write it over a real one. The leave-page guard's
+    dep array broke on the section with no savable fields. The staff probe
+    failed open. dresscode is a String[] in the validator's STRING map, so EVERY
+    Booking rules save 400'd — the amenities hotfix, one field later. Plus four
+    pre-existing leaks closed while there: bookings shipped whole rows including
+    checkInToken and the Stripe ids, courses/settings shipped adminNotes and
+    stripeAccountId, operator free text reached the admin email unescaped, and
+    seven of the eight wire money fields had no bounds.
+    CAM TO WALK: (1) a /dashboard/payments?date=… bookmark lands on the right
+    tab with the filter intact; (2) Connect Stripe end-to-end — the callback
+    bounces through Settings to Money → Payouts with the right banner; (3) a
+    staff login shows "Cancellations" and never flashes Payments; (4) edit
+    Booking rules, switch to Facilities, save Facilities — the Booking rules
+    edit survives and its button still reads "Save Booking rules"; (5) switch
+    browser tab and back mid-edit — the edit survives.
+
+  - [ ] SD-8b — unsaved Settings edits still vanish on sidebar navigation
+    (from the SD-8 admin-UX review, 2026-09-16). The only loss-prevention on
+    /dashboard/settings is a `beforeunload` listener, which fires on a real
+    document unload — tab close, refresh, cross-origin nav. OperatorSidebar
+    navigates with `router.push`, a client-side App Router transition, so no
+    unload event fires and an in-progress edit is unmounted with no prompt.
+    That is the most common way anyone leaves this page. Needs a router-level
+    guard or unsaved-aware sidebar links, which is a shared-nav change rather
+    than a Settings one — hence its own item. NOT a regression: the guard has
+    always had this gap. (small, no migration)
+
+  - [ ] SD-8c — two pre-existing nits the SD-8 design audit surfaced in the
+    payments table, both lifted verbatim from the old page and confirmed
+    byte-identical to it: PaymentsPanel's local STATUS_TONE/toneClass never
+    handles the 'blue' tone, so "Card on File", "No Card Required" and "Pay at
+    counter" render ink-muted instead of ok — and it reimplements a mapping
+    lib/booking-status.ts already exports (dashboard/page.tsx carries a third
+    copy of the same bug). Three <td> cells use text-xs inside a table whose
+    base is the §1b 13.5px. Fix: import statusToneText, delete both local
+    copies, size the cells. (tiny, no migration)
   - [ ] SD-9 — funnel + auth polish: split the details sheet into a required core
     that finishes the lead and a deferrable polish pass (scorecard photo upload
     replaces the tee-sets grid for most courses), "prefer to do this on a call?"

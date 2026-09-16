@@ -4,15 +4,22 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-16 02:20 UTC · branch `main` · HEAD `ae8371c` · working tree clean
+Generated 2026-09-16 02:58 UTC · branch `main` · HEAD `211d924` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
+### Uncommitted working tree (1 file(s))
+
+- `M RUN_QUEUE.md`
+
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
+
 ## In flight
 
-- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:1796`
+- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:1856`
   - FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because "no linked inquiry" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding the
   - Last session's raw Prisma script (a read-only check confirming Fake
   - Fairways existed) got blocked by this sandbox's auto-mode classifier as a potential production-database access outside the app's own authenticated API. That block is almost certainly the intended, correct behavior — a raw script has no place touching real course/booking/ operator data, authorized or not — so I did NOT retry it, and built the override into the sanctioned admin API instead, per the 
@@ -28,47 +35,49 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 17d | `7246a62` | `RUN_QUEUE.md:500` |
-| MP-1 | 2026-08-29 | 17d | `41f5ea8` | `RUN_QUEUE.md:530` |
-| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 17d | `4ef11dd` | `RUN_QUEUE.md:565` |
-| MP-2 | 2026-08-29 | 16d | `958f229` | `RUN_QUEUE.md:606` |
-| MP-2b | 2026-08-29 | 16d | `a134af5` | `RUN_QUEUE.md:643` |
-| MP-2c | 2026-08-29 | 16d | `e5b5413` | `RUN_QUEUE.md:692` |
-| MP-2d | 2026-08-29 | 16d | `22d0f68` | `RUN_QUEUE.md:740` |
-| MP-2e | 2026-08-30 | 16d | `bf3bcb2` | `RUN_QUEUE.md:782` |
-| UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | 2026-09-11 | 4d | `a3c1bea` | `RUN_QUEUE.md:1957` |
+| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 17d | `7246a62` | `RUN_QUEUE.md:560` |
+| MP-1 | 2026-08-29 | 17d | `41f5ea8` | `RUN_QUEUE.md:590` |
+| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 17d | `4ef11dd` | `RUN_QUEUE.md:625` |
+| MP-2 | 2026-08-29 | 17d | `958f229` | `RUN_QUEUE.md:666` |
+| MP-2b | 2026-08-29 | 17d | `a134af5` | `RUN_QUEUE.md:703` |
+| MP-2c | 2026-08-29 | 16d | `e5b5413` | `RUN_QUEUE.md:752` |
+| MP-2d | 2026-08-29 | 16d | `22d0f68` | `RUN_QUEUE.md:800` |
+| MP-2e | 2026-08-30 | 16d | `bf3bcb2` | `RUN_QUEUE.md:842` |
+| UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | 2026-09-11 | 4d | `a3c1bea` | `RUN_QUEUE.md:2017` |
+| SECURITY follow-on: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09-16: "if a cour | 2026-09-15 | 0d | `21c8d25` | `RUN_QUEUE.md:2059` |
 
 ## Not started — the actual queue
 
 1. SD-7b — assets, BLOCKED ON CAM: three real dashboard screenshots into — `RUN_QUEUE.md:423`
-2. SD-8 — merge + split: Payments + Cancellations → one Money page with — `RUN_QUEUE.md:474`
-3. SD-9 — funnel + auth polish: split the details sheet into a required core — `RUN_QUEUE.md:480`
-4. MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) — — `RUN_QUEUE.md:900`
-5. MP-4 — pipeline reshape (split into 4a/4b/4c) — `RUN_QUEUE.md:907`
-6. MP-4f — retire the JSON-in-actorName pattern. Three separate things — `RUN_QUEUE.md:990`
-7. MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong — `RUN_QUEUE.md:1012`
-8. Golfer course directory (`/courses`) — NOT scheduled. If Cam wants — `RUN_QUEUE.md:1091`
-9. MP-5e part 3 — the Overview relationship feed (notes + settings — `RUN_QUEUE.md:1095`
-10. MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today) — `RUN_QUEUE.md:1121`
-11. MP-7 — comms merge (split into 7a–7b) — `RUN_QUEUE.md:1193`
-12. MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE, — `RUN_QUEUE.md:1211`
-13. MP-8 — chrome + System (split into 8a–8b) — `RUN_QUEUE.md:1218`
-14. MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table — `RUN_QUEUE.md:1235`
-15. MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in — `RUN_QUEUE.md:1242`
-16. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1289`
-17. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1338`
-18. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1393`
+2. SD-8b — unsaved Settings edits still vanish on sidebar navigation — `RUN_QUEUE.md:520`
+3. SD-8c — two pre-existing nits the SD-8 design audit surfaced in the — `RUN_QUEUE.md:531`
+4. SD-9 — funnel + auth polish: split the details sheet into a required core — `RUN_QUEUE.md:540`
+5. MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) — — `RUN_QUEUE.md:960`
+6. MP-4 — pipeline reshape (split into 4a/4b/4c) — `RUN_QUEUE.md:967`
+7. MP-4f — retire the JSON-in-actorName pattern. Three separate things — `RUN_QUEUE.md:1050`
+8. MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong — `RUN_QUEUE.md:1072`
+9. Golfer course directory (`/courses`) — NOT scheduled. If Cam wants — `RUN_QUEUE.md:1151`
+10. MP-5e part 3 — the Overview relationship feed (notes + settings — `RUN_QUEUE.md:1155`
+11. MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today) — `RUN_QUEUE.md:1181`
+12. MP-7 — comms merge (split into 7a–7b) — `RUN_QUEUE.md:1253`
+13. MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE, — `RUN_QUEUE.md:1271`
+14. MP-8 — chrome + System (split into 8a–8b) — `RUN_QUEUE.md:1278`
+15. MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table — `RUN_QUEUE.md:1295`
+16. MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in — `RUN_QUEUE.md:1302`
+17. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1349`
+18. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1398`
+19. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1453`
 
 ## Waiting on you (not on a build)
 
 - CAM: three real dashboard screenshots into public/screenshots/ (empty, so the homepage shows three grey placeholder boxes) and a seeded demo course slug for DEMO_COURSE_SLUGS (empt — `RUN_QUEUE.md:423`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:565`
-- Cam's approval for a prod backfill — `RUN_QUEUE.md:606`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:643`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:692`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:740`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:782`
-- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1393`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:625`
+- Cam's approval for a prod backfill — `RUN_QUEUE.md:666`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:703`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:752`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:800`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:842`
+- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1453`
 
 ## Revise campaign (page-by-page pass)
 
@@ -156,6 +165,10 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `211d924` 2026-09-15 — SD-8 review fixes: the identity lock made real, the date filter stops lying, and the change-request channel gets the caps its commit message claimed
+- `6ee83a6` 2026-09-15 — queue/spec update
+- `597a67c` 2026-09-15 — SD-8: Payments + Cancellations + Payouts become one Money page; Settings twelve sections become five, each saving itself
+- `c260597` 2026-09-15 — queue/spec update
 - `ae8371c` 2026-09-15 — queue/spec update
 - `7d684c2` 2026-09-15 — BIRDIE B1 review fixes: the rate limiter fails CLOSED for birdie: keys (a DB error must not uncap paid API spend; login and forms still fail open), the hourly cap is keyed on the course so staff and owner really share 20/h instead of getting 20 each, the cap is taken before the request body is parsed, a missing or rejected API key now reaches a real message (client construction moved inside the try; an auth failure mid-stream says so in-band), the widget remembers OPEN rather than closed so a dashboard navigation no longer shuts Birdie mid-conversation, Escape closes and opening focuses the input and the reply list is aria-live, the conversation log stops truncating, ARCHITECTURE lists /api/birdie/chat as operator-only, and the isolation test gains five cross-tenant checks (20/20)
 - `d622aed` 2026-09-15 — queue/spec update
@@ -164,11 +177,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `7473180` 2026-09-15 — L2 review fixes: the draft build's per-round default schedules start PAUSED (identical windows would have sold one first tee several times over); a whole-course schedule on a course with rounds now conflicts with every round; a course with active rounds refuses an unscoped schedule server-side; deactivating or re-sizing a round rebuilds the sheet, deleting one is refused while it has schedules, and changing its nines re-checks every running schedule; the engine adopts a booked pre-L2 row instead of doubling it and never tries to delete a slot that still has booking rows; the round label reaches the member sheet, the member portal, the checkout page, the reminder and modified emails, the per-course account and the swap picker; the product's rating/slope shows on slot cards; the admin schedule form gets a round picker; a failed products load is visible on the Schedules page; the selector's unselected pill uses the ink-muted token
 - `eb67527` 2026-09-15 — queue/spec update
 - `fd59547` 2026-09-15 — L2: the booking page sells products — the tee-sheet engine generates one slot per product per time (product-scoped schedules; inactive products generate nothing; simple courses unchanged); schedule-service scopes each schedule to one product and refuses a save that would put a nine in two places at once (lib/schedule-conflict.ts, 12/12 tests; 409 with the plain-English reason on both routes); the schedules editor picks the round, groups schedules under their product and shows the conflict; the Course & Layout tab nudges toward a schedule per round; the draft build creates one default schedule per active product; the course page shows a 'Which round' selector when a day sells more than one product and labels every slot; the product label reaches booking emails, receipt, manage, check-in, the operator tee sheet, the admin sheet and the golfer account
-- `dacf315` 2026-09-15 — L2 schema (attended with Cam 2026-09-15): TeeTimeSchedule.productId and TeeTime.productId, nullable, SET NULL on product delete, indexed — migration product_scoping, additive; null means the simple one-product course and changes nothing
-- `8066aa9` 2026-09-15 — queue/spec update
-- `0348a9e` 2026-09-15 — SC-3 review fixes: a live booking link outranks a cancelled call on the sheet (and 'cancelled' has a label); the Overview queue now receives callInviteSentAt so the cold-invite signal can fire there; the reminder's once-only key carries the call time (a moved call gets its reminder), skips declined/archived inquiries, states the call's real length, and mints a token when an admin-scheduled call has none so the reschedule link always works; send_call_invite metered five a day per inquiry; a failed resend says the old link is dead; the System card distinguishes loading and error from 'not configured', needs both Google env vars for a green dot, and derives the no-call days from CALL_WINDOWS; 'they picked it' also on an overdue course-booked call
-- `56dfe85` 2026-09-15 — queue/spec update
 
 ---
 
-**Totals:** 187 done · 9 awaiting review · 1 in flight · 18 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 188 done · 10 awaiting review · 1 in flight · 19 not started · 8 revise pages open · 15 ideas · 2 parked.
