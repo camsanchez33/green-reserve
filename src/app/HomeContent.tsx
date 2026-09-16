@@ -270,6 +270,9 @@ export default function HomeContent() {
 
       {/* 8. PRICING on pine */}
       <section className={s.price} id="pricing">
+        {/* H-2f: cream dissolves at both edges, under the content. */}
+        <div className={s.priceTop} aria-hidden="true" />
+        <div className={s.priceBottom} aria-hidden="true" />
         <div className={`${s.wrap} ${s.priceWrap}`}>
           <div>
             <h2 className={`${s.h2} ${s.fade}`}>Free for courses.</h2>

@@ -199,7 +199,7 @@ outside it. Do not hardcode radii or font-families to force either look.
 
 ### BANNED
 - `font-black`, `tracking-widest` — use `font-medium`/`font-semibold` and `tracking-[0.06em]` (public) / `tracking-[0.1em]` (staff eyebrows)
-- Dark backgrounds (`bg-gray-950`, `bg-gray-900`) on admin/dashboard; gradients; drop shadows heavier than `0 1px 2px`
+- Dark backgrounds (`bg-gray-950`, `bg-gray-900`) on admin/dashboard; gradients; drop shadows heavier than `0 1px 2px`. Two homepage exemptions (Cam 2026-09-15, H-2d-R1 / H-2f): the `/` device mockups (`.device`, `.heroDevice`, `.heroSheet`, `.laptopScreen` in `home.module.css`) keep their soft multi-layer shadows, and the cream section hand-off dissolves on `/` (`.storyTop`, `.storyBottom`, `.priceTop`, `.priceBottom`) are the only allowed gradients
 - Tinted colored pill badges — use `<StatusDot>` instead
 - `emerald-600` as accent — use `pine` / `ok` tokens
 - `rounded-xl/2xl/3xl` anywhere; any rounded corner on a staff surface that isn't an avatar/dot/swatch

@@ -225,7 +225,11 @@
 .s p { margin: 0; font-size: 15.5px; line-height: 1.5; color: var(--ink-2); }
 
 /* PRICING */
-.price { background: var(--pine); color: #fff; padding: 120px 0; }
+/* H-2f: the pricing slab dissolves from and into the cream ground like the story does — one hand-off language. */
+.price { position: relative; background: var(--pine); color: #fff; padding: 120px 0; }
+.priceTop { position: absolute; left: 0; right: 0; top: 0; height: 18vh; background: linear-gradient(180deg, #F6F4EC 0%, rgba(246,244,236,0) 100%); pointer-events: none; }
+.priceBottom { position: absolute; left: 0; right: 0; bottom: 0; height: 18vh; background: linear-gradient(0deg, #F6F4EC 0%, rgba(246,244,236,0) 100%); pointer-events: none; }
+.price > .wrap { position: relative; z-index: 1; }
 .priceWrap { display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 72px; align-items: center; }
 .price p { font-size: 18px; line-height: 1.55; opacity: .88; margin: 20px 0 0; max-width: 520px; }
 .note { margin-top: 26px; padding: 14px 16px; border-radius: 10px; background: rgba(255,255,255,.08); font-size: 13.5px; line-height: 1.5; opacity: .85; max-width: 520px; }
@@ -269,6 +273,7 @@
   .beat { position: relative; opacity: 1; transform: none; }
   .prog { display: none; }
   .storyBottom { display: none; }
+  .priceTop, .priceBottom { display: none; }
   .cards, .stepsRow { grid-template-columns: 1fr; }
   .priceWrap, .faqGrid { grid-template-columns: 1fr; gap: 40px; }
   .head { flex-direction: column; align-items: flex-start; }
