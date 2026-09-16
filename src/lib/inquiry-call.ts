@@ -1,3 +1,4 @@
+// @brain call-agenda
 // INQUIRY_CALL_SPEC IC-1 §2 — the discovery-call agenda catalog, and the
 // small derivations the sheet, the detail page and the queue share.
 //

@@ -35,32 +35,19 @@ Admin page manages all stages. Operators get dashboard access when approved.
 
 ---
 
-## Tech stack details
+## Where things are
 
-```
-src/app/                  Next.js App Router pages
-src/app/api/             API routes
-src/app/admin/           Internal admin console (light — Clubhouse)
-src/app/dashboard/       Operator dashboard (light — Clubhouse)
-src/app/book/            Golfer booking flow
-src/app/account/         Golfer account + booking history
-src/app/checkin/         Golfer self check-in page
-src/app/for-courses/     Lead-gen interest form
-src/app/courses/         Course listing/search
-src/components/          Nav, Footer, CourseCard, OperatorSidebar
-src/lib/
-  email.ts               All Resend email functions (baseTemplate + per-event fns)
-  stripe.ts              Stripe helpers (direct charge, refund, setup intent)
-  checkin-booking.ts     Shared performCheckIn() logic
-  cancel-booking.ts      Shared cancellation logic
-  booking-status.ts      Status label/badge helpers
-  tee-sheet-engine.ts    Tee time generation engine
-  tee-time-utils.ts      Timezone-aware tee time utilities
-  session.ts             JWT session management (jose)
-  auth.ts                Auth helpers
-  prisma.ts              Prisma client singleton
-prisma/schema.prisma     Database schema
-```
+**Read `docs/CODEMAP.md` before grepping or reading source.** It names every
+route with its auth level and where that auth is actually enforced, every
+library and component with its exports and how many files import it, every
+schema model with the files that write to it, and the one file that owns each
+concept. Read a file only after the map tells you which one.
+
+It is generated (`node scripts/codemap.mjs`) and CI fails when it drifts, so it
+cannot go stale the way a hand-written tree does — the tree that used to live
+here listed `src/app/account/`, which has never existed.
+
+`docs/codemap.json` is the same data for a script to read.
 
 ### Key models
 - `Course` — slug, operator, pricing, policies, facilities

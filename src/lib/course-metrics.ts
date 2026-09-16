@@ -1,3 +1,4 @@
+// @brain course-health
 // THE shared metrics brain (REVISE_QUEUE A-04 item 0) — bookings/gross/
 // GR-fees/period math defined ONCE. The audit found 4 surfaces (courses
 // list, course detail, Revenue, Overview) computing 4 different numbers for

@@ -1,3 +1,4 @@
+// @brain when-cam-is-free
 // CALL_SCHEDULING_SPEC SC-1 §3 — which 30-minute call slots are open.
 //
 // Broad "would I ever take a call then" windows. NOT a schedule — the real

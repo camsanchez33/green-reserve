@@ -1,3 +1,5 @@
+// @brain money-movement
+// Every charge, refund and SetupIntent GreenReserve makes goes through here.
 import Stripe from 'stripe';
 
 if (!process.env.STRIPE_SECRET_KEY) {

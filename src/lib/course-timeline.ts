@@ -1,3 +1,4 @@
+// @brain course-events
 import { prisma } from '@/lib/prisma';
 
 // A-05 items 4/5: a per-course event log with NO schema change — rides on

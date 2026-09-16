@@ -1,0 +1,44 @@
+name: codemap
+
+# CODEMAP_SPEC CM-1 §4. docs/CODEMAP.md is generated, so the only thing keeping it
+# honest is a check that fails when the committed copy and the regenerated one
+# disagree — the same contract as a lockfile.
+#
+# This is the whole reason the map is worth having. ARCHITECTURE.md was accurate
+# the day it was written and wrong within a month, because nothing failed when it
+# drifted. A map that can lie is worse than no map: it gets trusted.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      # Exits non-zero on its own if two files claim the same @brain concept, so
+      # a duplicate source of truth fails CI before the drift check even runs.
+      - name: Regenerate the code map
+        run: node scripts/codemap.mjs
+
+      - name: Fail if the committed map is stale
+        run: |
+          if ! git diff --quiet -- docs/CODEMAP.md docs/codemap.json; then
+            echo "::error::docs/CODEMAP.md is out of date. Run 'node scripts/codemap.mjs' and commit the result."
+            echo
+            echo "--- what changed ---"
+            git --no-pager diff --stat -- docs/CODEMAP.md docs/codemap.json
+            git --no-pager diff -- docs/CODEMAP.md | head -200
+            exit 1
+          fi
+          echo "Code map is current."

@@ -1,3 +1,5 @@
+// @brain inquiry-statuses
+// @brain whose-move-is-it
 // Single source of truth for what every inquiry status means and which pipeline
 // segment it belongs to. Used by /admin/inquiries (list + funnel), the inquiry
 // detail page, the Overview strip, and the action queue — so counts can never

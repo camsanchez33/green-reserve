@@ -1,3 +1,4 @@
+// @brain agreement-versions
 // AGREEMENT_SPEC AG-1 §2 — versioned agreement documents.
 //
 // The agreement text lives in the repo as Markdown under legal/documents/

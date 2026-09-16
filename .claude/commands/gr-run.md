@@ -68,6 +68,10 @@ exists.
 
 ## 5. Ship and record
 
+- Regenerate the code map: `node scripts/codemap.mjs`. It is generated output
+  with a CI drift check, so a run that changed a route, an export or a `@brain`
+  tag and did not regenerate it fails the build. It also fails on the spot if two
+  files now claim the same `@brain` concept — which is the point of it.
 - Commit with a message naming the queue item.
 - Push. Vercel auto-deploys `main`.
 - Update the item in the queue file: append the commit sha, and **leave the box
