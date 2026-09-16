@@ -275,9 +275,10 @@
 
 @media (max-width: 960px) {
   /* H-2d: the hero stacks — text, then the device at .9 centered; the tee-sheet card is absent. */
-  /* H-2g §3: below 960px the lockup is 200px, and below 640px it stacks over a
-     centred Operator login — 132px clears the tallest of the two. */
-  .hero { height: auto; min-height: 0; max-height: none; padding: 132px 0 56px; }
+  /* H-2g §3: below 960px the lockup is 200px but the row is still one line
+     (~77px; 92px at the 960px boundary itself, where the lockup is still
+     280px) — 110px clears it. The stacked case is its own query below. */
+  .hero { height: auto; min-height: 0; max-height: none; padding: 110px 0 56px; }
   .heroGrid { grid-template-columns: 1fr; gap: 40px; }
   .heroStage { height: auto; }
   .heroDevice { transform: scale(.9) rotate(0deg); transform-origin: top center; }
@@ -294,6 +295,11 @@
   .cards, .stepsRow { grid-template-columns: 1fr; }
   .priceWrap, .faqGrid { grid-template-columns: 1fr; gap: 40px; }
   .head { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 640px) {
+  /* H-2g §3: here the row stacks — 200px lockup over a centred 13px link with
+     its own hit padding, ~121px all told. */
+  .hero { padding-top: 132px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .js .heroText > *, .js .heroDevice, .js .heroSheet { animation: none; }

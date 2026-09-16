@@ -520,14 +520,31 @@ everything below the hero. Cam wants it gone once you start reading.
   (which is already `position: relative`). Absolute rather than static so it does
   not add to the hero's height — `.hero` stays `100svh` and the first screen still
   fills exactly one viewport.
+  **BUILT (01822b0) with one deliberate departure:** the nav stays in the root
+  layout as a sibling of `<main>`, so it is absolute against the *initial
+  containing block*, not against `.hero`. It lands in the same place because
+  `.hero` is the first in-flow box and `/` takes no nav offset — and it is safer
+  there, because `.hero` is `overflow: hidden` and would have been free to clip a
+  real child. The cost is honest: that is a positional coincidence, not a
+  structural guarantee. Anything ever added above `<main>`, or a nav offset on
+  `/`, moves the lockup silently. `.hero` reserves the row's height with
+  `padding-top` instead (92px desktop / 110px ≤960px / 132px ≤640px, where the
+  row stacks); `box-sizing: border-box` keeps that inside the `100svh`.
 - No background, no blur, no border, no scroll listener, no scrolled state. It
   scrolls away with the hero and never returns.
 - Every other public page keeps the shared `Nav` exactly as it is today
   (fixed, white/blur). This is a homepage variant, not a global change — pass a
   prop or branch on the pathname, and leave the default path untouched.
-- Delete the scroll handler branch that toggled the nav's background, and the
-  `--nav-*` scrolled-state CSS with it. Dead code here is how the next person
-  reintroduces the bar by accident.
+- Delete the scroll handler branch that toggled the nav's background. Dead code
+  here is how the next person reintroduces the bar by accident.
+  **CORRECTION (01822b0):** this bullet also said "and the `--nav-*`
+  scrolled-state CSS with it." No such CSS has ever existed — the only commit in
+  this repo's history containing the string `--nav-` is the one that wrote this
+  spec. The scrolled state lived entirely in `Nav.tsx` as the `past` React state,
+  and that is what was deleted (with `navRef`, the resize listener, the opacity
+  fade and the tab-order juggling). Left corrected rather than removed: a spec
+  that invents a token and then orders its deletion trains the next reader to
+  skip instructions that turn out to be real.
 
 #### 3. The logo, bigger and centred
 
@@ -537,7 +554,13 @@ The top row of the hero becomes a three-column grid: empty · lockup · link.
   (currently 180), **200px** below 960px. `priority`, and give it explicit
   width/height so it reserves its space — it is now near the top of the fold and
   a reflow here is a CLS hit against §5's budget.
-- **Right:** **Operator login** only, as a muted text link. "List your course"
+- **Right:** **Operator login** only, as a muted text link. **BUILT with a
+  review fix:** `ink-soft`, not `ink-muted`. `ink-muted` on `paper` is 3.3:1,
+  under the 4.5:1 floor for normal-weight text at 13/15px — and §4 justifies
+  deleting the sticky bar precisely on the grounds that this link is the first
+  thing on screen. A load-bearing link is the one place that token cannot be
+  spent. It also carries the same `px-3 py-2` hit padding as its twin on the
+  shared bar. "List your course"
   leaves the top row for good — the hero's own primary button sits 200px below it
   and two of the same call to action on one screen is one too many.
 - **Left:** empty, so the lockup is genuinely centred rather than optically

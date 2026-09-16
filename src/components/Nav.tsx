@@ -62,7 +62,13 @@ export default function Nav() {
                 the reserved box is what keeps §5's CLS budget. */}
             <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={280} height={52} priority className="w-[200px] min-[960px]:w-[280px] h-auto" />
           </Link>
-          <Link href="/dashboard/login" className="text-ink-muted hover:text-ink text-[13px] sm:text-[15px] font-medium transition-colors sm:justify-self-end">
+          {/* H-2g review: ink-soft, not ink-muted. §4 justifies deleting the
+              sticky bar on the grounds that this is the first link on screen —
+              but ink-muted on paper is 3.3:1, under the 4.5:1 floor for normal
+              text at 13/15px. A load-bearing link that fails contrast is the
+              one place the muted token cannot be spent. Hit padding matches
+              the same link on the fixed bar below. */}
+          <Link href="/dashboard/login" className="text-ink-soft hover:text-ink text-[13px] sm:text-[15px] font-medium px-3 py-2 -mx-3 transition-colors sm:justify-self-end">
             Operator login
           </Link>
         </div>
