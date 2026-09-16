@@ -15,6 +15,7 @@ import { resolveAdminSession, requireRole, requireOwner, ownerGateError, MANAGER
 import { AGENDA, callGate, fmtCallTime, nextCall, latestCall, parseJson } from '@/lib/inquiry-call';
 import { validateAnswers, flatSummaries, parseCallAnswers, toSheetPrefill } from '@/lib/call-answers';
 import { sendCallInvite } from '@/lib/call-invite';
+import { rateLimit } from '@/lib/rate-limit';
 import { firstCheckInAfterGoLive } from '@/lib/course-checkin';
 import { sendCallScheduledEmail, sendCallRecapEmail } from '@/lib/email';
 import { encodeChangeAddressed, encodeRequestReReview } from '@/lib/change-requests';
@@ -146,6 +147,7 @@ async function handleAction(
   if (action === 'send_call_invite') {
     if (CLOSED.includes(inquiry.status)) return NextResponse.json({ error: 'This inquiry is closed — reopen it before sending a booking link.' }, { status: 409 });
     if (!inquiry.email) return NextResponse.json({ error: 'This inquiry has no email address on file.' }, { status: 400 });
+    if (!(await rateLimit(`callinvite:${inquiryId}`, 5, 86_400))) return NextResponse.json({ error: 'Five booking links have gone to this course today — give them a day.' }, { status: 429 });
     const r = await sendCallInvite({ id: inquiryId, firstName: inquiry.firstName, contactName: inquiry.contactName, email: inquiry.email, courseName: inquiry.courseName });
     await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin',
       r.sent ? `Booking link sent to ${inquiry.email} by ${adminName}` : `Booking link NOT sent to ${inquiry.email} (${r.error || 'unknown'}) — by ${adminName}`);

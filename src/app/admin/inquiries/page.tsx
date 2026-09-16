@@ -408,6 +408,18 @@ function InquiriesListInner() {
     const calls = inq.calls ?? [];
     const upcoming = nextCall(calls, now);
     const missed = overdueCall(calls, now);
+    // SC-3 review: a booking link that is still open outranks a cancelled
+    // call — the course can reopen the same link and pick again.
+    const inviteLive = !!inq.callInviteSentAt && mode !== 'closed' && calls.every(c => c.outcome === 'cancelled');
+    if (inviteLive && !upcoming && !missed) {
+      const d = Math.max(0, Math.floor((now.getTime() - new Date(inq.callInviteSentAt!).getTime()) / 86_400_000));
+      return (
+        <>
+          <div className={'text-sm truncate ' + (d >= 5 ? 'text-warn font-medium' : 'text-ink-muted')}>Invite sent · {d}d ago</div>
+          <div className="text-[12px] text-ink-muted truncate">{calls.length ? 'they cancelled once — link still open' : 'no time picked yet'}</div>
+        </>
+      );
+    }
     const last = latestCall(calls.filter(c => c.outcome !== 'scheduled'));
     const sub = 'text-[12px] text-ink-muted truncate';
     if (upcoming) {
@@ -425,7 +437,7 @@ function InquiriesListInner() {
       return (
         <>
           <div className="text-sm text-pine font-medium truncate hover:underline">Log the call</div>
-          <div className={sub}>was {fmtDay(missed.scheduledAt)}</div>
+          <div className={sub}>was {fmtDay(missed.scheduledAt)}{missed.bookedByCourse ? ' · they picked it' : ''}</div>
         </>
       );
     }
@@ -452,16 +464,6 @@ function InquiriesListInner() {
         <>
           <div className="text-sm text-ink-soft truncate">Snoozed → {fmtShort(inq.snoozeUntil)}</div>
           <div className={sub}>back on that date</div>
-        </>
-      );
-    }
-    // SC-3 §2: a booking link is out and nothing has been picked yet.
-    if (inq.callInviteSentAt && calls.length === 0 && mode !== 'closed') {
-      const d = Math.max(0, Math.floor((now.getTime() - new Date(inq.callInviteSentAt).getTime()) / 86_400_000));
-      return (
-        <>
-          <div className={'text-sm truncate ' + (d >= 5 ? 'text-warn font-medium' : 'text-ink-muted')}>Invite sent · {d}d ago</div>
-          <div className={sub}>no time picked yet</div>
         </>
       );
     }

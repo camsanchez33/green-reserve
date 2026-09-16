@@ -19,6 +19,7 @@ interface SystemData {
   };
   crons: { path: string; schedule: string; human: string }[];
   googleCalendarId?: string | null;
+  googleCalendarConfigured?: boolean;
   platform: {
     accessFeeCents: number; env: string; commitSha: string; commitMessage: string; branch: string; publicUrl: string;
     integrations: { stripe: boolean; stripeWebhook: boolean; resend: boolean; twilio: boolean; sentry: boolean; blob: boolean };
@@ -289,25 +290,35 @@ export default function AdminSystemPage() {
             <SystemCard icon={<Phone className="w-3.5 h-3.5"/>} title="Call booking" tracked
               right={<span className="text-[11px] text-ink-faint">{SLOT_MINUTES}-min slots · {LEAD_HOURS} h notice · {HORIZON_DAYS} days out</span>}>
               <div className="border border-line rounded-md divide-y divide-line-soft mb-3">
-                {CALL_WINDOWS.map(w => (
-                  <div key={w.day} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
-                    <span className="text-ink">{['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][w.day]}</span>
-                    <span className="text-xs text-ink-soft">{w.from}–{w.to} ET</span>
-                  </div>
-                ))}
-                <div className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
-                  <span className="text-ink">Sunday</span><span className="text-xs text-ink-faint">no calls</span>
+                {[1, 2, 3, 4, 5, 6, 0].map(day => {
+                  const ws = CALL_WINDOWS.filter(w => w.day === day);
+                  return (
+                    <div key={day} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                      <span className="text-ink">{['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][day]}</span>
+                      {ws.length
+                        ? <span className="text-xs text-ink-soft">{ws.map(w => `${w.from}–${w.to}`).join(', ')} ET</span>
+                        : <span className="text-xs text-ink-faint">no calls</span>}
+                    </div>
+                  );
+                })}
+              </div>
+              {data ? (
+                <div className="flex items-start gap-2">
+                  <span className="mt-1"><StatusDot status={data.googleCalendarConfigured ? 'ok' : 'warn'}/></span>
+                  <span className="text-sm text-ink-soft">
+                    These are the widest windows the booking page will ever offer. The real filter is the linked Google Calendar
+                    {data.googleCalendarConfigured
+                      ? <>: <code className="font-mono text-xs text-ink">{data.googleCalendarId}</code>. Anything busy there is removed.</>
+                      : data.googleCalendarId
+                        ? <>: <code className="font-mono text-xs text-ink">{data.googleCalendarId}</code> — but the <span className="text-warn">service-account key is missing</span> (PASSWORD_CHECKLIST Phase 7b), so the page shows its &ldquo;reply with a couple of times&rdquo; fallback instead of a grid.</>
+                        : <> — <span className="text-warn">not configured</span> (PASSWORD_CHECKLIST Phase 7b), so the page shows its &ldquo;reply with a couple of times&rdquo; fallback instead of a grid.</>}
+                  </span>
                 </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="mt-1"><StatusDot status={data?.googleCalendarId ? 'ok' : 'warn'}/></span>
-                <span className="text-sm text-ink-soft">
-                  These are the widest windows the booking page will ever offer. The real filter is the linked Google Calendar
-                  {data?.googleCalendarId
-                    ? <>: <code className="font-mono text-xs text-ink">{data.googleCalendarId}</code>. Anything busy there is removed.</>
-                    : <> — <span className="text-warn">not configured</span> (PASSWORD_CHECKLIST Phase 7b), so the page shows its &ldquo;reply with a couple of times&rdquo; fallback instead of a grid.</>}
-                </span>
-              </div>
+              ) : loadError ? (
+                <p className="text-sm text-ink-muted">Could not read which calendar is linked — the system status above says why.</p>
+              ) : (
+                <p className="text-sm text-ink-muted">Loading…</p>
+              )}
             </SystemCard>
 
             {/* MP-8a: moved here from the Courses list. GET always dry-runs;

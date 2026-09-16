@@ -168,6 +168,6 @@ export function easternParts(d: string | Date): { date: string; time: string } {
 }
 
 export const OUTCOME_LABEL: Record<string, string> = {
-  scheduled: 'Scheduled', talked: 'Talked', no_answer: 'No answer', not_a_fit: 'Not a fit',
+  scheduled: 'Scheduled', talked: 'Talked', no_answer: 'No answer', not_a_fit: 'Not a fit', cancelled: 'Cancelled',
 };
 export const DIRECTION_LABEL: Record<string, string> = { we_call: 'We call them', they_call: 'They call us' };

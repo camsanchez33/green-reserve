@@ -234,7 +234,7 @@ function SetupCard({ inquiry, sheet, needs, calls, disabled, busy, setBusy, setE
       const r = await patch(inquiry.id, 'send_call_invite', {});
       if (!r.ok) { setError(errText(r)); return; }
       if (r.data.sent !== true) {
-        setError(`The booking link did not send (${String(r.data.error || 'unknown')}). Try Resend in a minute, or set the call up by hand below.`);
+        setError(`The booking link did not send (${String(r.data.error || 'unknown')}). ${inviteDay ? 'The old link is no longer valid — ' : ''}Try Resend in a minute, or set the call up by hand below.`);
         await onRefresh();
         return;
       }
@@ -276,7 +276,7 @@ function SetupCard({ inquiry, sheet, needs, calls, disabled, busy, setBusy, setE
       <div className="flex items-center justify-between gap-3 flex-wrap mb-4 px-3 py-2 border border-line rounded-md bg-paper">
         <div className="text-xs text-ink-soft min-w-0">
           {inviteDay
-            ? <><span className="font-medium text-ink">Booking link sent {inviteDay}</span> · not booked yet</>
+            ? <><span className="font-medium text-ink">Booking link sent {inviteDay}</span> · {calls.some(c => c.outcome === 'cancelled') ? 'they cancelled once — link still open' : calls.length ? 'used; link still open' : 'not booked yet'}</>
             : <>Or let {contactFirst} pick a time from your calendar.</>}
         </div>
         <button type="button" onClick={sendLink} disabled={disabled} className={btnO}>

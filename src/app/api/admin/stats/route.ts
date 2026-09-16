@@ -147,7 +147,7 @@ export async function GET() {
       where: { status: { in: ACTIVE_STATUSES } },
       select: {
         id: true, courseName: true, status: true, createdAt: true,
-        snoozeUntil: true, nextFollowUpAt: true,
+        snoozeUntil: true, nextFollowUpAt: true, callInviteSentAt: true,
         calls: { select: { scheduledAt: true, outcome: true }, where: { kind: 'discovery' } },
         events: {
           select: { fromStatus: true, toStatus: true, actorName: true, createdAt: true },

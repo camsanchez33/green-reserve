@@ -1178,7 +1178,7 @@ export async function sendCallBookedEmail(data: {
 
 // SC-3 §3: 24 hours before a scheduled call — "Talking tomorrow at 2:00".
 export async function sendCallReminderEmail(data: {
-  contactName: string; email: string; courseName: string; scheduledAt: Date; direction: string; phone: string; manageUrl: string | null;
+  contactName: string; email: string; courseName: string; scheduledAt: Date; durationMin?: number; direction: string; phone: string; manageUrl: string | null;
 }) {
   const clock = data.scheduledAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
   const when = data.scheduledAt.toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
@@ -1187,7 +1187,7 @@ export async function sendCallReminderEmail(data: {
   const html = baseTemplate(`
     <h1 style="margin:0 0 8px;color:#111827;font-size:22px;font-weight:700;">Talking tomorrow at ${clock}</h1>
     <p style="margin:0 0 12px;color:#6b7280;font-size:15px;line-height:1.6;">Hi ${first} — a quick reminder about our call about <strong>${escHtml(data.courseName)}</strong>.</p>
-    <p style="margin:0 0 4px;color:#111827;font-size:15px;line-height:1.6;"><strong>${when} ET</strong> · about 30 minutes</p>
+    <p style="margin:0 0 4px;color:#111827;font-size:15px;line-height:1.6;"><strong>${when} ET</strong> · about ${data.durationMin || 30} minutes</p>
     <p style="margin:0 0 16px;color:#6b7280;font-size:15px;line-height:1.6;">${who}</p>
     ${data.manageUrl ? `<p style="margin:0 0 16px;color:#6b7280;font-size:14px;line-height:1.6;">Need to move it? <a href="${data.manageUrl}" style="color:#1b4332;">Reschedule or cancel</a>.</p>` : `<p style="margin:0 0 16px;color:#6b7280;font-size:14px;line-height:1.6;">Need to move it? Just reply to this email.</p>`}
     <p style="margin:0;color:#98968B;font-size:12px;">Questions? Reply to this email — hello@greenreserve.app.</p>

@@ -9,6 +9,7 @@ import { prisma } from './prisma';
 import { sendCallInviteEmail, sendCallReminderEmail } from './email';
 import { rateLimit } from './rate-limit';
 import { AGENDA } from './inquiry-call';
+import { ALIVE_STATUSES } from './inquiry-status';
 
 export const INVITE_DAYS = 21;
 
@@ -46,19 +47,26 @@ export async function sendCallReminders(now: Date = new Date()): Promise<{ due: 
   const calls = await prisma.call.findMany({
     where: { kind: 'discovery', outcome: 'scheduled', scheduledAt: { gte: from, lt: to }, inquiryId: { not: null } },
     select: {
-      id: true, scheduledAt: true, direction: true, phone: true,
+      id: true, scheduledAt: true, direction: true, phone: true, durationMin: true, inquiryId: true,
       inquiry: { select: { contactName: true, email: true, courseName: true, callInviteToken: true, status: true } },
     },
   });
   const out = { due: calls.length, sent: 0, failed: 0, skipped: 0 };
   for (const c of calls) {
     if (!c.inquiry?.email) { out.skipped++; continue; }
-    if (!(await rateLimit(`callreminder:${c.id}`, 1, 7 * 86_400))) { out.skipped++; continue; }
+    // A declined or archived lead keeps its scheduled row; do not remind it.
+    if (!(ALIVE_STATUSES as readonly string[]).includes(c.inquiry.status)) { out.skipped++; continue; }
+    // The key carries the time it guards: a moved call is a new key (it gets
+    // its reminder), a second run over the same hour is not.
+    if (!(await rateLimit(`callreminder:${c.id}:${c.scheduledAt.toISOString()}`, 1, 7 * 86_400))) { out.skipped++; continue; }
     try {
+      // An admin-scheduled call has no token yet; mint one so the reschedule
+      // link works (a booked call keeps the link alive regardless of expiry).
+      const token = c.inquiry.callInviteToken || (c.inquiryId ? (await issueCallInvite(c.inquiryId)).token : null);
       await sendCallReminderEmail({
         contactName: c.inquiry.contactName, email: c.inquiry.email, courseName: c.inquiry.courseName,
-        scheduledAt: c.scheduledAt, direction: c.direction, phone: c.phone,
-        manageUrl: c.inquiry.callInviteToken ? inviteUrl(c.inquiry.callInviteToken) : null,
+        scheduledAt: c.scheduledAt, durationMin: c.durationMin, direction: c.direction, phone: c.phone,
+        manageUrl: token ? inviteUrl(token) : null,
       });
       out.sent++;
     } catch (err) { out.failed++; console.error(`[call-reminder] ${c.id} failed:`, err); }

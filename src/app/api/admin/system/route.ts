@@ -57,8 +57,11 @@ export async function GET() {
   const vercelProjectUrl = env.ADMIN_VERCEL_PROJECT_URL || '';
 
   return NextResponse.json({
-    // SC-3 §4: which calendar the public booking page reads free/busy from (null = not configured).
+    // SC-3 §4: which calendar the public booking page reads free/busy from
+    // (an identifier, not a secret — the credential is the service-account
+    // JSON, which is never returned). `configured` needs both env vars.
     googleCalendarId: process.env.GOOGLE_CALENDAR_ID || null,
+    googleCalendarConfigured: !!(process.env.GOOGLE_CALENDAR_ID && process.env.GOOGLE_SERVICE_ACCOUNT_JSON),
     lastStripeTouch: lastStripeTouch
       ? { courseName: lastStripeTouch.name, updatedAt: lastStripeTouch.updatedAt.toISOString() }
       : null,
