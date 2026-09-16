@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-16T03:34:54.389Z",
+  "generatedAt": "2026-09-16T03:41:05.673Z",
   "repo": {
-    "head": "76968ff",
+    "head": "fb7263b",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,19 +10,11 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-15T23:31:47-04:00",
-    "unrecorded": [
-      {
-        "h": "76968ff",
-        "date": "2026-09-15T23:34:38-04:00",
-        "subject": "H-2g §1 (revised): every box-shadow deleted from the homepage, hairlines instead",
-        "ids": [],
-        "matches": []
-      }
-    ]
+    "queueLastCommit": "2026-09-15T23:34:55-04:00",
+    "unrecorded": []
   },
   "counts": {
-    "runDone": 190,
+    "runDone": 191,
     "runAwaiting": 10,
     "runInFlight": 1,
     "runNotStarted": 20,
@@ -216,7 +208,7 @@
     },
     {
       "title": "CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates",
-      "line": 2100,
+      "line": 2124,
       "section": "Queue (run in this order)"
     }
   ],
@@ -782,6 +774,16 @@
   },
   "recentCommits": [
     {
+      "h": "fb7263b",
+      "date": "2026-09-15",
+      "subject": "H-2g review fix: the floating hero sheet separates by fill now the shadow is gone"
+    },
+    {
+      "h": "4f78ea6",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "76968ff",
       "date": "2026-09-15",
       "subject": "H-2g §1 (revised): every box-shadow deleted from the homepage, hairlines instead"
@@ -828,16 +830,6 @@
     },
     {
       "h": "ae8371c",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "7d684c2",
-      "date": "2026-09-15",
-      "subject": "BIRDIE B1 review fixes: the rate limiter fails CLOSED for birdie: keys (a DB error must not uncap paid API spend; login and forms still fail open), the hourly cap is keyed on the course so staff and owner really share 20/h instead of getting 20 each, the cap is taken before the request body is parsed, a missing or rejected API key now reaches a real message (client construction moved inside the try; an auth failure mid-stream says so in-band), the widget remembers OPEN rather than closed so a dashboard navigation no longer shuts Birdie mid-conversation, Escape closes and opening focuses the input and the reply list is aria-live, the conversation log stops truncating, ARCHITECTURE lists /api/birdie/chat as operator-only, and the isolation test gains five cross-tenant checks (20/20)"
-    },
-    {
-      "h": "d622aed",
       "date": "2026-09-15",
       "subject": "queue/spec update"
     }

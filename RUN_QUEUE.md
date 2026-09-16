@@ -2097,6 +2097,30 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 - [ ] SECURITY follow-on: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09-16: "if a course is already created it can't be created again — they'd have to log in to change information"). 21c8d25 fixed the unverified-contact-change hole; this closes the remaining case. In the POST /api/inquiries dedupe block, when the matched inquiry has a `builtCourseId` (i.e. the course exists), do NOT record a resubmit event at all: respond with the normal success shape (keep the response identical/blind — do not leak that the course exists) and have the success screen + confirmation email say "<Course> already has a GreenReserve page — sign in at /dashboard to update your details, or email hello@greenreserve.app". Contact details for a built course change in ONE place: the operator dashboard. Deliberately NOT extended to not-yet-built inquiries — there the 21c8d25 rule (email must match the one on file) is the right level, because blocking outright would also block a GM fixing their own typo'd phone. Small, no migration.
 
+- [x] UI_REVISE_SPEC H-2g §1 ONLY (76968ff; review fix fb7263b) — SHIPPED +
+  REVIEWED 2026-09-16, design audit 2 findings, 0 blocking, both closed.
+  Cam 2026-09-16 revised the spec's own answer: DELETE every box-shadow in
+  home.module.css, do not lighten it; cards get a 1px var(--line) hairline.
+  `grep box-shadow src/app/home.module.css` is now empty and CLAUDE.md's BANNED
+  line says so, revoking the H-2d-R1 exemption. New --line-strong token matches
+  globals.css. REVIEW FIX: .heroSheet overlaps .device and both were #F7F5EF —
+  a hairline between them is ~1.18:1, so the float would have read as flat. The
+  sheet is white now; separation moved to fill, not back to shadow.
+  DELIBERATE PARTIAL on Cam's "restore the BANNED line to its unexempted
+  wording": that line carried TWO exemptions and the second is H-2f's cream
+  dissolves, which are live and Cam-approved — revoking it would make shipped
+  work a violation, so only the shadow half is revoked. Say the word and the
+  gradients go too. Also corrected a false absolute in the same line that
+  predates this run (it claimed four gradients were "the only allowed" while
+  three scrims/bezels were already live and always out of scope).
+  STILL UNBUILT: H-2g §2 (the non-scrolling homepage header) and §3 (the
+  centred 280px lockup, Operator login only at the right). Those are the other
+  two thirds of the item and are NOT done.
+  CAM TO WALK: `/` at 1440 — the floating tee-sheet card must still read as
+  sitting ON the phone mockup, not merged into it. That is the one thing the
+  shadow was carrying and the one thing I could not check (the browser window
+  would not resize past 613px, where that card is hidden).
+
 - [ ] CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates
   `docs/CODEMAP.md` + `codemap.json`: routes with their auth level, lib exports
   with usedBy, schema models with their writers, and orphans. `@brain` tags are

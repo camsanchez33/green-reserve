@@ -4,17 +4,11 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-16 03:34 UTC · branch `main` · HEAD `76968ff` · working tree **1 dirty file(s)**
+Generated 2026-09-16 03:41 UTC · branch `main` · HEAD `fb7263b` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-09-15**. 1 commit(s) since then are not mentioned anywhere in it:
-
-| commit | date | subject |
-|---|---|---|
-| `76968ff` | 2026-09-15 | H-2g §1 (revised): every box-shadow deleted from the homepage, hairlines instead |
-
-**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
 ### Uncommitted working tree (1 file(s))
 
@@ -73,7 +67,7 @@ This is the distinction a raw checkbox count gets wrong.
 17. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1388`
 18. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1437`
 19. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1492`
-20. CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates — `RUN_QUEUE.md:2100`
+20. CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates — `RUN_QUEUE.md:2124`
 
 ## Waiting on you (not on a build)
 
@@ -172,6 +166,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `fb7263b` 2026-09-15 — H-2g review fix: the floating hero sheet separates by fill now the shadow is gone
+- `4f78ea6` 2026-09-15 — queue/spec update
 - `76968ff` 2026-09-15 — H-2g §1 (revised): every box-shadow deleted from the homepage, hairlines instead
 - `d51fbbf` 2026-09-15 — queue/spec update
 - `80cc2a0` 2026-09-15 — SD-8b review fix + the Stripe return detour
@@ -182,9 +178,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `597a67c` 2026-09-15 — SD-8: Payments + Cancellations + Payouts become one Money page; Settings twelve sections become five, each saving itself
 - `c260597` 2026-09-15 — queue/spec update
 - `ae8371c` 2026-09-15 — queue/spec update
-- `7d684c2` 2026-09-15 — BIRDIE B1 review fixes: the rate limiter fails CLOSED for birdie: keys (a DB error must not uncap paid API spend; login and forms still fail open), the hourly cap is keyed on the course so staff and owner really share 20/h instead of getting 20 each, the cap is taken before the request body is parsed, a missing or rejected API key now reaches a real message (client construction moved inside the try; an auth failure mid-stream says so in-band), the widget remembers OPEN rather than closed so a dashboard navigation no longer shuts Birdie mid-conversation, Escape closes and opening focuses the input and the reply list is aria-live, the conversation log stops truncating, ARCHITECTURE lists /api/birdie/chat as operator-only, and the isolation test gains five cross-tenant checks (20/20)
-- `d622aed` 2026-09-15 — queue/spec update
 
 ---
 
-**Totals:** 190 done · 10 awaiting review · 1 in flight · 20 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 191 done · 10 awaiting review · 1 in flight · 20 not started · 8 revise pages open · 15 ideas · 2 parked.
