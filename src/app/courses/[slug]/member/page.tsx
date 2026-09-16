@@ -39,8 +39,7 @@ type MemberTeeTime = {
   id: string;
   date: string;
   time: string;
-  holes: number;
-  players_available: number;
+  holes: number; product_id?: string | null; product_label?: string | null; players_available: number;
   green_fee: number;
   member_green_fee: number;
   cart_fee: number;
@@ -609,7 +608,7 @@ function MemberDashboard({
                                     {STATUS_LABEL[t.status] || 'Available'}
                                   </span>
                                   <span className="text-ink-muted">· {t.players_available} spots</span>
-                                  <span className="text-ink-muted">· {t.holes} holes</span>
+                                  <span className="text-ink-muted">· {t.product_label ? `${t.product_label} · ` : ''}{t.holes} holes</span>
                                 </div>
                               </div>
                               <div className="flex items-center gap-3 sm:gap-5 flex-shrink-0">

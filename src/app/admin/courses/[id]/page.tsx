@@ -137,17 +137,21 @@ interface ScheduleRow {
   intervalMinutes: number; greenFeeWeekday: number; greenFeeWeekend: number;
   memberRateWeekday: number | null; memberRateWeekend: number | null;
   cartFee: number; walkingAllowed: boolean; active: boolean;
+  productId?: string | null; productLabel?: string | null;
 }
 
 // What the schedule editor holds. Member rates are strings so an empty field
 // can mean "no member rate" — the wire gets null, never 0.
 interface ScheduleFormState {
+  /** L2: the round this schedule sells (required on a course with bookable rounds). */
+  productId?: string;
   daysOfWeek: number[]; startTime: string; endTime: string; intervalMinutes: number;
   greenFeeWeekday: number; greenFeeWeekend: number;
   memberRateWeekday: string; memberRateWeekend: string;
   cartFee: number; walkingAllowed: boolean;
 }
 const EMPTY_SCHEDULE: ScheduleFormState = {
+  productId: '',
   daysOfWeek: [], startTime: '06:00', endTime: '18:00',
   intervalMinutes: 8, greenFeeWeekday: 65, greenFeeWeekend: 85,
   memberRateWeekday: '', memberRateWeekend: '', cartFee: 18, walkingAllowed: true,
@@ -155,16 +159,27 @@ const EMPTY_SCHEDULE: ScheduleFormState = {
 
 // MP-5d: ONE set of fields for add and edit. Before this only "add" had a
 // form; the PATCH endpoint existed with no UI caller.
-function ScheduleFields({ value, onChange, showMemberRates }: {
+function ScheduleFields({ value, onChange, showMemberRates, products = [] }: {
   value: ScheduleFormState;
   onChange: (patch: Partial<ScheduleFormState>) => void;
   showMemberRates: boolean;
+  /** L2: the course's active rounds; when there are any, every schedule belongs to one. */
+  products?: { id: string; label: string; holes: number }[];
 }) {
   const toggleDay = (d: number) => onChange({
     daysOfWeek: value.daysOfWeek.includes(d) ? value.daysOfWeek.filter(x => x !== d) : [...value.daysOfWeek, d],
   });
   return (
     <>
+      {products.length > 0 && (
+        <div>
+          <label className="text-xs text-ink-muted block mb-1">Which round</label>
+          <select value={value.productId ?? ''} onChange={e => onChange({ productId: e.target.value })} className={iCls}>
+            <option value="">Select…</option>
+            {products.map(p => <option key={p.id} value={p.id}>{p.label} · {p.holes} holes</option>)}
+          </select>
+        </div>
+      )}
       <div>
         <label className="text-xs text-ink-muted block mb-1.5">Days <span className="text-ink-faint">(none = every day)</span></label>
         <div className="flex gap-1.5">
@@ -711,7 +726,7 @@ export default function CourseDetailPage() {
 
   // '' in a member-rate field means "no member rate" — the wire wants null.
   function schedulePayload(f: ScheduleFormState) {
-    return { ...f, memberRateWeekday: f.memberRateWeekday || null, memberRateWeekend: f.memberRateWeekend || null };
+    return { ...f, productId: f.productId || null, memberRateWeekday: f.memberRateWeekday || null, memberRateWeekend: f.memberRateWeekend || null };
   }
 
   async function addSchedule() {
@@ -740,6 +755,7 @@ export default function CourseDetailPage() {
     setEditSched({
       id: sch.id,
       form: {
+        productId: sch.productId ?? '',
         daysOfWeek: sch.daysOfWeek, startTime: sch.startTime, endTime: sch.endTime,
         intervalMinutes: sch.intervalMinutes, greenFeeWeekday: sch.greenFeeWeekday, greenFeeWeekend: sch.greenFeeWeekend,
         memberRateWeekday: sch.memberRateWeekday != null ? String(sch.memberRateWeekday) : '',
@@ -1973,7 +1989,7 @@ export default function CourseDetailPage() {
                     {schedules.map(s => editSched?.id === s.id ? (
                       <div key={s.id} className="bg-paper border border-pine/30 rounded-md p-4 space-y-3">
                         <div className="text-[11px] uppercase tracking-[0.1em] text-pine">Editing schedule</div>
-                        <ScheduleFields
+                        <ScheduleFields products={(detail?.layout?.products ?? []).filter(p => p.active)}
                           value={editSched.form}
                           onChange={p => setEditSched(e => e ? { ...e, form: { ...e.form, ...p } } : e)}
                           showMemberRates={!!setupForm.hasMemberPricing}
@@ -2037,7 +2053,7 @@ export default function CourseDetailPage() {
                 {showAddSched && (
                   <div className="border-t border-line pt-4 space-y-3">
                     <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Add Schedule</div>
-                    <ScheduleFields
+                    <ScheduleFields products={(detail?.layout?.products ?? []).filter(p => p.active)}
                       value={newSchedule}
                       onChange={p => setNewSchedule(s => ({ ...s, ...p }))}
                       showMemberRates={!!setupForm.hasMemberPricing}

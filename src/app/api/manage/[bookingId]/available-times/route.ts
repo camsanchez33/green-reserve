@@ -33,6 +33,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
       id: { not: booking.teeTimeId },
     },
     orderBy: { time: 'asc' },
+    include: { product: { select: { label: true } } },
   });
 
   const available = teeTimes
@@ -41,6 +42,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
       id: t.id,
       time: t.time,
       holes: t.holes,
+      productLabel: t.product?.label ?? null,
       spotsLeft: t.playersAvailable - t.playersBooked,
       // MP-3 B2c: cents at rest, dollars on the wire — the manage page renders
       // these with a dollars() formatter and was not changed.

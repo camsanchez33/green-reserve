@@ -44,6 +44,7 @@ export async function GET(
   const teeTimes = await prisma.teeTime.findMany({
     where: { courseId: course.id, date, status: { not: 'blocked' } },
     orderBy: { time: 'asc' },
+    include: { product: { select: { label: true } } },
   });
 
   // Strip past slots on today — on the course's clock (SD-3).
@@ -86,6 +87,8 @@ export async function GET(
         date: t.date,
         time: t.time,
         holes: t.holes,
+        product_id: t.productId ?? null,
+        product_label: t.product?.label ?? null,
         players_available: spotsLeft,
         // cents at rest, dollars on the wire — the course page renders these.
         green_fee: centsToDollarsOr0(t.greenFeeCents),

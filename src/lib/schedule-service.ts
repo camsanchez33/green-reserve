@@ -48,7 +48,13 @@ export async function listSchedules(courseId: string) {
 
 /** L2: resolve + validate the product a schedule is scoped to. Returns null for the simple (unscoped) case. */
 async function resolveProduct(courseId: string, productId: unknown) {
-  if (productId === undefined || productId === null || productId === '') return null;
+  if (productId === undefined || productId === null || productId === '') {
+    // On a course that sells rounds, an unscoped schedule would generate an
+    // unlabelled slot on top of every round's — refuse it here, not just in the editor.
+    const rounds = await prisma.courseProduct.count({ where: { courseId, active: true } });
+    if (rounds > 0) throw new ScheduleProductError('This course sells more than one round — pick which one this schedule is for.');
+    return null;
+  }
   const product = await prisma.courseProduct.findFirst({ where: { id: String(productId), courseId }, select: { id: true, holes: true } });
   if (!product) throw new ScheduleProductError('That product does not belong to this course.');
   return product;
@@ -108,8 +114,10 @@ export async function updateSchedule(id: string, data: Record<string, unknown>, 
   if (!existing) return null;
 
   // L2: `productId` may be set, changed, or cleared (null) on an edit.
-  const productTouched = data.productId !== undefined;
-  const product = productTouched ? await resolveProduct(existing.courseId, data.productId) : null;
+  // An edit that leaves productId alone on an unscoped schedule is re-checked
+  // too: once rounds exist, every saved schedule must belong to one.
+  const productTouched = data.productId !== undefined || !existing.productId;
+  const product = productTouched ? await resolveProduct(existing.courseId, data.productId !== undefined ? data.productId : existing.productId) : null;
   const nextProductId = productTouched ? (product?.id ?? null) : existing.productId;
   const next = {
     active: data.active !== undefined ? Boolean(data.active) : existing.active,

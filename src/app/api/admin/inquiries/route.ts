@@ -967,10 +967,14 @@ async function handleAction(
           cartFeeCents: dollarsToCentsOr0(cartFee), walkingAllowed: walkingSchedule,
         };
         if (createdProducts.length > 0) {
+          // Every combo shares a nine, so identical windows would put one first
+          // tee on sale several times over. The defaults are created PAUSED:
+          // the operator sets each round's window in Schedules, and the
+          // conflict check runs when they resume them.
           for (const p of createdProducts) {
-            await prisma.teeTimeSchedule.create({ data: { ...base, productId: p.id, holes: p.holes } });
+            await prisma.teeTimeSchedule.create({ data: { ...base, productId: p.id, holes: p.holes, active: false } });
           }
-          needsReview.push('Multi-nine course: one default schedule was created per product from the sheet — set the rotation windows in Schedules before go-live');
+          needsReview.push('Multi-nine course: a PAUSED default schedule was created per round from the sheet — set each round\'s rotation window in Schedules and resume them before go-live (nothing is on sale until then)');
         } else {
           await prisma.teeTimeSchedule.create({ data: { ...base, holes: scheduleHoles } });
         }

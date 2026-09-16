@@ -16,6 +16,11 @@ function normalizeDbTeeTime(t: any) {
     // L2: which bookable product this slot sells (null on a simple course).
     product_id: t.productId ?? null,
     product_label: t.product?.label ?? null,
+    // the round's rating/slope on the course's first tee set, when it was set
+    ...(() => {
+      const r = (t.product?.teeSetRatings ?? []).slice().sort((a: { teeSet: { sortOrder: number } }, b: { teeSet: { sortOrder: number } }) => a.teeSet.sortOrder - b.teeSet.sortOrder)[0];
+      return r && r.rating > 0 ? { product_rating: r.rating, product_slope: r.slope } : {};
+    })(),
     players_available: spotsLeft,
     // MP-3 B2c — THE `any` HOLE AGAIN. This mapper takes `t: any` (with an
     // explicit eslint-disable), so the renamed columns produced NO compile
@@ -47,7 +52,7 @@ export async function GET(
   const teeTimes = await prisma.teeTime.findMany({
     where: { courseId, date, status: { not: 'blocked' } },
     orderBy: { time: 'asc' },
-    include: { product: { select: { label: true } } },
+    include: { product: { select: { label: true, teeSetRatings: { select: { rating: true, slope: true, teeSet: { select: { sortOrder: true } } } } } } },
   });
 
   const nowUtc = new Date();

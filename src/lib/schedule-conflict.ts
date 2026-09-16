@@ -61,7 +61,12 @@ export function findScheduleConflict(
       const label = mine ? `"${mine.label}"` : 'the course';
       return `This overlaps another schedule for ${label} on ${sharedDays.map(d => DAY[d]).join(', ')} (${clock(o.startTime)} – ${clock(o.endTime)}). Two schedules can't cover the same time on the same day.`;
     }
-    if (!mine || !theirs) continue; // a product schedule and an unscoped one do not share nines we can check
+    // One side scoped, the other whole-course: the whole-course schedule covers
+    // every nine, so on a course with rounds this is always a double-booking.
+    if (!mine || !theirs) {
+      const scoped = (mine ?? theirs)!;
+      return `A whole-course schedule overlaps "${scoped.label}" on ${sharedDays.map(d => DAY[d]).join(', ')} (${clock(o.startTime)} – ${clock(o.endTime)}). On a course with bookable rounds every schedule must belong to one round.`;
+    }
     const shared = mine.nineIds.filter(id => theirs.nineIds.includes(id));
     if (!shared.length) continue;
     const until = clock(o.endTime);

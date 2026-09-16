@@ -1066,7 +1066,7 @@ export default function CourseDetailPage({
                           <button key={p.id} type="button" aria-pressed={isSel}
                             onClick={() => { setProductFilter(p.id); setSelectedTime(null); }}
                             className="px-3.5 py-2 rounded-md border text-sm font-medium transition-colors"
-                            style={isSel ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: '#E6E3D7', color: '#57574F', backgroundColor: '#fff' }}>
+                            style={isSel ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: '#E6E3D7', color: '#87867C', backgroundColor: '#fff' }}>
                             {p.label}{p.holes ? <span className="font-normal opacity-70"> · {p.holes}</span> : null}
                           </button>
                         );
@@ -1328,7 +1328,7 @@ export default function CourseDetailPage({
                                           <span className="text-ink-muted">· {t.players_available} {t.players_available === 1 ? 'spot' : 'spots'} open</span>
                                         </>
                                       )}
-                                      {h !== undefined && <span className="text-ink-muted">· {t.product_label ? `${t.product_label} · ` : ''}{h} holes</span>}
+                                      {h !== undefined && <span className="text-ink-muted">· {t.product_label ? `${t.product_label} · ` : ''}{h} holes{t.product_rating ? ` · ${t.product_rating.toFixed(1)} / ${t.product_slope}` : ''}</span>}
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-3 sm:gap-5 flex-shrink-0">

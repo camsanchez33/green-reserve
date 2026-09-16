@@ -20,7 +20,7 @@ function getStripePromise() {
 }
 
 type LiveTeeTime = {
-  id: string; date: string; time: string; holes: number;
+  id: string; date: string; time: string; holes: number; product_label?: string | null;
   players_available: number; green_fee: number; cart_fee: number; status: string;
 };
 type CourseInfo = {
@@ -292,6 +292,7 @@ function BookPageInner() {
             <div className="p-6 space-y-3 text-sm">
               <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{displayDate(date)}</span></div>
               <div className="flex justify-between"><span className="text-ink-muted">Tee Time</span><span className="font-medium text-ink">{formatTime(teeTime.time)}</span></div>
+              <div className="flex justify-between"><span className="text-ink-muted">Round</span><span className="font-medium text-ink">{teeTime.product_label ? `${teeTime.product_label} · ` : ''}{teeTime.holes} holes</span></div>
               <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{players}</span></div>
 
               {teeTime.cart_fee > 0 && (

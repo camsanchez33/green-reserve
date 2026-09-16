@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   const tomorrowBookings = await prisma.booking.findMany({
     where: { status: 'confirmed', teeTime: { date: tomorrowStr } },
     include: {
-      teeTime: { select: { date: true, time: true, holes: true } },
+      teeTime: { select: { date: true, time: true, holes: true, product: { select: { label: true } } } },
       course: { select: { name: true, slug: true, address: true, city: true, state: true } },
     },
   });
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
         courseSlug: booking.course.slug,
         courseAddress: `${booking.course.address}, ${booking.course.city}, ${booking.course.state}`,
         date: booking.teeTime.date, time: booking.teeTime.time,
-        players: booking.players, holes: booking.teeTime.holes, bookingId: booking.id,
+        players: booking.players, holes: booking.teeTime.holes, productLabel: booking.teeTime.product?.label ?? null, bookingId: booking.id,
         checkInToken: booking.checkInToken,
       });
       sent++;

@@ -36,7 +36,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
         status: 'confirmed',
         teeTime: { date: { gte: today } },
       },
-      include: { teeTime: { select: { date: true, time: true, holes: true } } },
+      include: { teeTime: { select: { date: true, time: true, holes: true, product: { select: { label: true } } } } },
       orderBy: { teeTime: { date: 'asc' } },
     }),
     prisma.booking.findMany({
@@ -48,7 +48,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
           { teeTime: { date: { lt: today } } },
         ],
       },
-      include: { teeTime: { select: { date: true, time: true, holes: true } } },
+      include: { teeTime: { select: { date: true, time: true, holes: true, product: { select: { label: true } } } } },
       orderBy: { createdAt: 'desc' },
       take: 20,
     }),

@@ -32,7 +32,7 @@ type BookingInfo = {
 };
 
 type AvailableSlot = {
-  id: string; time: string; holes: number; spotsLeft: number;
+  id: string; time: string; holes: number; productLabel?: string | null; spotsLeft: number;
   greenFee: number; cartFee: number;
 };
 
@@ -345,7 +345,7 @@ function ManagePageInner() {
                     >
                       <div className="text-left">
                         <span className="font-medium text-ink">{fmtTime(slot.time)}</span>
-                        <span className="text-ink-muted ml-2">{slot.holes} holes &middot; {slot.spotsLeft} spot{slot.spotsLeft !== 1 ? 's' : ''} left</span>
+                        <span className="text-ink-muted ml-2">{slot.productLabel ? `${slot.productLabel} · ` : ''}{slot.holes} holes &middot; {slot.spotsLeft} spot{slot.spotsLeft !== 1 ? 's' : ''} left</span>
                       </div>
                       <div className="text-right">
                         <span className="font-medium text-ink" style={isSelected ? { color: info.brandColor } : undefined}>{dollars(slot.greenFee * info.players)}</span>

@@ -49,8 +49,11 @@ const c8 = findScheduleConflict({ daysOfWeek: [3], startTime: '09:00', endTime: 
 check('simple course overlap: blocked', !!c8 && /the course/.test(c8), c8 ?? '');
 check('simple course, different window: allowed', findScheduleConflict({ daysOfWeek: [3], startTime: '17:30', endTime: '19:00' }, [plain], [], []) === null);
 
-// 9. a product schedule vs an unscoped one is not judged (nothing to compare)
-check('product vs unscoped: not judged', findScheduleConflict({ productId: 'NS', daysOfWeek: all, startTime: '07:00', endTime: '12:00' }, [plain], products, nines) === null);
+// 9. a product schedule vs a whole-course one on a course with rounds: the whole-course one owns every nine
+const c9 = findScheduleConflict({ productId: 'NS', daysOfWeek: all, startTime: '07:00', endTime: '12:00' }, [plain], products, nines);
+check('product vs whole-course: blocked', !!c9 && /whole-course schedule overlaps "North \+ South"/.test(c9), c9 ?? '');
+const c9b = findScheduleConflict({ daysOfWeek: all, startTime: '07:00', endTime: '12:00' }, [ns], products, nines);
+check('whole-course vs product: blocked too', !!c9b && /whole-course/.test(c9b), c9b ?? '');
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

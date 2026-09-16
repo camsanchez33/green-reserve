@@ -251,6 +251,11 @@ export default function SchedulesPage() {
           </div>
 
           {loadError && <LoadError message={loadError} onRetry={loadSchedules} />}
+          {productsError && !loadError && (
+            <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm">
+              Couldn&apos;t load your bookable rounds ({productsError}) — the schedule editor can&apos;t tell which round a schedule is for until it can. <button onClick={loadProducts} className="underline font-medium">Retry</button>
+            </div>
+          )}
 
           {loading && <div className="text-center py-12 text-ink-muted">Loading schedules...</div>}
 

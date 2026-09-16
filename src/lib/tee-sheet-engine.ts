@@ -100,26 +100,47 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
     }
   }
 
-  const existing = await prisma.teeTime.findMany({ where: { courseId, date: dateStr } });
+  const existing = await prisma.teeTime.findMany({
+    where: { courseId, date: dateStr },
+    include: { _count: { select: { bookings: true } } },
+  });
   const existingByKey = new Map(existing.map(t => [slotKey(t.productId ?? null, t.time), t]));
+  // Pre-L2 rows (productId null) that hold a booking or a block: when a
+  // schedule is later scoped to a round, the round's slot at that time ADOPTS
+  // the row instead of sitting beside it — one physical tee, one row.
+  const legacyKeptByTime = new Map(
+    existing.filter(t => !t.productId && (t.playersBooked > 0 || t.status === 'blocked')).map(t => [t.time, t]),
+  );
 
   let created = 0;
 
   // Remove empty slots that either changed or are no longer in the schedule.
   // Booked slots (playersBooked > 0) are never deleted, even if the schedule
   // dropped that time — the golfer already paid for it.
-  const toDelete = existing.filter(t => t.playersBooked === 0 && t.status !== 'blocked').map(t => t.id);
+  // A slot whose only bookings are cancelled still has Booking rows pointing
+  // at it (RESTRICT): deleting it would abort the whole date. Keep it.
+  const toDelete = existing.filter(t => t.playersBooked === 0 && t.status !== 'blocked' && t._count.bookings === 0).map(t => t.id);
   // Operator-blocked slots are also left alone — that's a manual override, not generated data.
   if (toDelete.length > 0) {
     await prisma.teeTime.deleteMany({ where: { id: { in: toDelete } } });
   }
 
+  const adopted = new Set<string>();
   for (const [key, slot] of desired) {
     const existingSlot = existingByKey.get(key);
-    if (existingSlot && (existingSlot.playersBooked > 0 || existingSlot.status === 'blocked')) {
-      // Already booked or manually blocked — leave it exactly as is.
+    if (existingSlot && (existingSlot.playersBooked > 0 || existingSlot.status === 'blocked' || existingSlot._count.bookings > 0)) {
+      // Already booked, manually blocked, or carrying cancelled bookings — leave it exactly as is.
       continue;
     }
+    if (slot.productId) {
+      const legacy = legacyKeptByTime.get(slot.time);
+      if (legacy && !adopted.has(legacy.id)) {
+        adopted.add(legacy.id);
+        await prisma.teeTime.update({ where: { id: legacy.id }, data: { productId: slot.productId, holes: slot.holes } });
+        continue;
+      }
+    }
+    if (existingSlot) continue; // an empty row that survived deletion (has cancelled bookings) — keep, don't double
     await prisma.teeTime.create({
       data: {
         courseId,
