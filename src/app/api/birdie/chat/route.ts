@@ -57,25 +57,30 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Sign in to talk to Birdie.' }, { status: 401 });
   if (!birdieEnabled()) return NextResponse.json({ error: 'Birdie is switched off right now.' }, { status: 503 });
 
+  // Caps BEFORE the body is read: a course that is over its budget must not be
+  // able to make the server parse anything at all.
+  const capped = await checkCaps(session.courseId);
+  if (capped) return NextResponse.json({ error: capped }, { status: 429 });
+  // Who asked, for the log line only — the hourly budget belongs to the course.
+  const sessionKey = `${session.courseId}:${session.isStaff ? 'staff' : 'op'}`;
+
   let body: { messages?: unknown };
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request.' }, { status: 400 }); }
   const history = sanitizeHistory(body?.messages);
   if (!history.length) return NextResponse.json({ error: 'Ask something first.' }, { status: 400 });
 
-  // The session key is the course + who is asking — staff and owner share the course's hourly budget.
-  const sessionKey = `${session.courseId}:${session.isStaff ? 'staff' : 'op'}`;
-  const capped = await checkCaps(sessionKey);
-  if (capped) return NextResponse.json({ error: capped }, { status: 429 });
-
   const ctx = await operatorCourseContext(session.courseId);
   if (!ctx) return NextResponse.json({ error: 'Course not found.' }, { status: 404 });
 
-  const client = new Anthropic();
   const started = Date.now();
   const question = history[history.length - 1].content;
 
-  let stream: ReturnType<typeof client.messages.stream>;
+  // `new Anthropic()` throws when the key is missing or malformed, so it belongs
+  // inside the try — that is the branch apiError's key message is written for.
+  let client: Anthropic;
+  let stream: ReturnType<Anthropic['messages']['stream']>;
   try {
+    client = new Anthropic();
     stream = client.messages.stream({
       model: BIRDIE_MODEL,
       max_tokens: MAX_REPLY_TOKENS,
@@ -114,9 +119,15 @@ export async function POST(req: NextRequest) {
           cacheRead: final.usage.cache_read_input_tokens ?? 0, stopReason: final.stop_reason, ms: Date.now() - started,
         });
       } catch (err) {
-        // Mid-stream failure: the client has a partial reply; say so in-band.
+        // Mid-stream failure: the headers are already sent, so the only honest
+        // channel left is the stream itself. A bad key surfaces HERE, not at
+        // construction, so it gets its own line.
         console.error('[birdie] stream failed:', err);
-        controller.enqueue(encoder.encode(reply ? '\n\n(Lost the connection there — ask again.)' : 'Birdie could not answer just now — try again in a moment.'));
+        const authFailed = err instanceof Anthropic.AuthenticationError || err instanceof Anthropic.PermissionDeniedError;
+        const line = authFailed
+          ? 'Birdie is not configured correctly (its API key was rejected) — tell GreenReserve and we will fix it.'
+          : reply ? '\n\n(Lost the connection there — ask again.)' : 'Birdie could not answer just now — try again in a moment.';
+        controller.enqueue(encoder.encode(line));
       } finally {
         controller.close();
       }

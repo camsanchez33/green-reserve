@@ -2,6 +2,7 @@
 // history sanitising, the context the model sees carries one course only,
 // and the knowledge pack links only into the dashboard.
 // Run: npx tsx scripts/birdie-isolation-test.ts
+import { readFileSync } from 'node:fs';
 import { sanitizeHistory, MAX_HISTORY_TURNS, MAX_USER_CHARS } from '../src/lib/birdie/guardrails';
 import { describeCourseContext } from '../src/lib/birdie/course-context';
 import { DASHBOARD_PAGES, OPERATOR_KNOWLEDGE } from '../src/lib/birdie/knowledge-operator';
@@ -48,6 +49,26 @@ const links = [...OPERATOR_KNOWLEDGE.matchAll(/\(([^)]+)\)/g)].map(m => m[1]).fi
 check('knowledge: every link is a dashboard path', links.every(l => l.startsWith('/dashboard')), links.filter(l => !l.startsWith('/dashboard')).join(','));
 check('pages: every deep link is a dashboard path', DASHBOARD_PAGES.every(p => p.href.startsWith('/dashboard')));
 check('knowledge: no fee claim beyond the golfer-side $1.50', !/commission|free forever|no fees/i.test(OPERATOR_KNOWLEDGE));
+
+// 4. cross-tenant: the course a reply is built from can only ever be the session's.
+// Two things make that true and both are checkable without a database:
+// every read in course-context is filtered by the courseId it was handed, and
+// the route takes that id from the session, never from the request.
+const ctxSrc = readFileSync(new URL('../src/lib/birdie/course-context.ts', import.meta.url), 'utf8');
+const routeSrc = readFileSync(new URL('../src/app/api/birdie/chat/route.ts', import.meta.url), 'utf8');
+const reads = [...ctxSrc.matchAll(/prisma\.(\w+)\.(findUnique|findFirst|findMany|count|aggregate)\(\{([\s\S]*?)\n  \}\)|prisma\.(\w+)\.(count)\(\{([^}]*\}[^)]*)\)/g)].map(m => m[0]);
+check('context: every read is scoped', reads.length > 0 && reads.every(r => /courseId|where: \{ id: courseId/.test(r)), `${reads.length} reads`);
+check('context: no unscoped findMany', !/prisma\.\w+\.findMany\(\s*\)/.test(ctxSrc));
+check('route: the course id comes from the session', /operatorCourseContext\(session\.courseId\)/.test(routeSrc));
+check('route: the request body is only ever read for messages', !/body[?]?\.(courseId|course)\b/.test(routeSrc));
+check('route: the cap is taken before the body is parsed', routeSrc.indexOf('checkCaps(') < routeSrc.indexOf('req.json()'));
+
+const other = describeCourseContext({
+  courseName: 'Rival Links', liveStatus: 'live', timezone: 'America/Chicago', cancellationHours: 48, lateCancellationFee: 25,
+  checkInWindowHours: 2, walkingAllowed: 'never', publicAdvanceDays: 14, memberAdvanceDays: 30, hasMemberPricing: false,
+  hasResidentPricing: true, stripeConnected: true, schedules: { total: 9, active: 9, products: 3 }, membershipTiers: 0,
+});
+check('facts: one course per block — no leakage between two contexts', !facts.includes('Rival Links') && !other.includes('Hollow Creek'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

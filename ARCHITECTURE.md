@@ -67,7 +67,7 @@
 | `/api/auth/resend-verification` | POST | operator-auth | Real verification email for operators who have a session but aren't yet |
 | `/api/auth/reset-password` | GET, POST | operator-auth | — |
 | `/api/auth/verify` | POST | operator-auth | — |
-| `/api/birdie/chat` | GET, POST | public | BIRDIE_AI_SPEC B1 — the one endpoint. Persona and knowledge come from WHERE |
+| `/api/birdie/chat` | GET, POST | operator | BIRDIE_AI_SPEC B1 — the one endpoint. Persona and knowledge come from WHERE |
 | `/api/bookings` | GET, POST | golfer | Resolves the green fee and cart fee for a golfer based on their membership tier. |
 | `/api/bookings/cancel` | POST | golfer | — |
 | `/api/bookings/setup-intent` | POST | golfer | Creates (or reuses) a Stripe Customer and a SetupIntent so the booking page |

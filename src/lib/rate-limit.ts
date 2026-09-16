@@ -4,6 +4,9 @@ import { prisma } from './prisma';
 // correctly across all serverless instances (in-memory counters do not).
 // Returns true if the request is allowed.
 export async function rateLimit(key: string, limit: number, windowSeconds: number): Promise<boolean> {
+  // Keys that gate money (BIRDIE B1) fail CLOSED — a broken counter must not
+  // uncap paid API spend. Everything else (login, forms) still fails open.
+  const failClosed = key.startsWith('birdie:');
   try {
     const rows = await prisma.$queryRaw<{ count: number }[]>`
       INSERT INTO "RateLimit" ("key", "count", "windowStart")
@@ -22,7 +25,7 @@ export async function rateLimit(key: string, limit: number, windowSeconds: numbe
     // Fail open: a broken rate limiter must never take down login itself.
     // Per-account lockout still protects individual accounts.
     console.error('rateLimit error:', err);
-    return true;
+    return !failClosed;
   }
 }
 

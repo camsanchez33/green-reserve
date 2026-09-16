@@ -46,6 +46,7 @@ function relPage(filePath: string, fromDir: string): string {
 function surfaceOf(route: string): string {
   if (route.startsWith('/api/admin')) return 'admin';
   if (route.startsWith('/api/operator')) return 'operator';
+  if (route.startsWith('/api/birdie')) return 'operator';
   if (route.startsWith('/api/golfer')) return 'golfer';
   if (route.startsWith('/api/member')) return 'member';
   if (route.startsWith('/api/auth')) return 'operator-auth';

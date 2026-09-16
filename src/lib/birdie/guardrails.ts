@@ -39,9 +39,13 @@ export function sanitizeHistory(raw: unknown): BirdieTurn[] {
 
 const dayKey = () => new Date().toISOString().slice(0, 10);
 
-/** Both caps in one place. Returns the reason to refuse, or null. */
-export async function checkCaps(sessionKey: string): Promise<string | null> {
-  if (!(await rateLimit(`birdie:session:${sessionKey}`, PER_SESSION_PER_HOUR, 3600))) {
+/**
+ * Both caps in one place. Returns the reason to refuse, or null.
+ * `courseKey` is the COURSE, not the person: staff and owner share one hourly
+ * budget, which is what PER_SESSION_PER_HOUR has always claimed.
+ */
+export async function checkCaps(courseKey: string): Promise<string | null> {
+  if (!(await rateLimit(`birdie:course:${courseKey}`, PER_SESSION_PER_HOUR, 3600))) {
     return 'Birdie has answered a lot in the last hour — give it a little while, or write to us on Messages.';
   }
   if (!(await rateLimit(`birdie:day:${dayKey()}`, PLATFORM_PER_DAY, 86_400))) {
@@ -63,5 +67,7 @@ export function logConversation(entry: {
   persona: string; courseId: string; sessionKey: string; question: string; reply: string;
   inputTokens?: number; outputTokens?: number; cacheRead?: number; stopReason?: string | null; ms: number;
 }) {
-  console.log(JSON.stringify({ ev: 'birdie.reply', ...entry, question: entry.question.slice(0, 500), reply: entry.reply.slice(0, 1500) }));
+  // The spec logs the conversation, minus nothing: a question is already capped
+  // at MAX_USER_CHARS and a reply at MAX_REPLY_TOKENS, so neither is unbounded.
+  console.log(JSON.stringify({ ev: 'birdie.reply', ...entry }));
 }
