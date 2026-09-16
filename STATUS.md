@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-16 01:15 UTC · branch `main` · HEAD `bab429b` · working tree **1 dirty file(s)**
+Generated 2026-09-16 01:24 UTC · branch `main` · HEAD `fffb2cc` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -67,8 +67,7 @@ This is the distinction a raw checkbox count gets wrong.
 18. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1364`
 19. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1393`
 20. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1472`
-21. CALL_SCHEDULING_SPEC Phase SC-2 — the invite + the public booking page (no migration): sendCallInviteEmail auto-sent on inquiry submit (AUTO_SEND_CALL_INVITE flag); /call/[token] p — `RUN_QUEUE.md:1990`
-22. CALL_SCHEDULING_SPEC Phase SC-3 — admin side (no migration): 'Send a booking link' beside Set up call / Skip, with sent-not-booked state + resend; sheet's Next-call cell learns 'In — `RUN_QUEUE.md:1991`
+21. CALL_SCHEDULING_SPEC Phase SC-3 — admin side (no migration): 'Send a booking link' beside Set up call / Skip, with sent-not-booked state + resend; sheet's Next-call cell learns 'In — `RUN_QUEUE.md:1991`
 
 ## Waiting on you (not on a build)
 
@@ -167,6 +166,9 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `fffb2cc` 2026-09-15 — SC-2: the invite, the page, the emails — sendCallInvite issues a 21-day token and emails 'Set up your call' straight from the inquiry POST (a send failure never fails the submission; the confirmation's button uses the same link; the admin alert says when the invite did not go); /call/[token] shows Cam's open 30-minute slots (preference first, all times Eastern), confirms with an editable phone and a they-call toggle, then becomes the manage view with Reschedule and Cancel; the API re-verifies the slot and writes the Call inside a transaction (409 slot_taken), creates/moves/deletes the Google event, logs the timeline, and sends the course a confirmation with a .ics plus Cam a heads-up; Google unreachable → honest fallback + alert to hello@; noindex, rate-limited
+- `5ea6455` 2026-09-15 — SC-1 review fixes: free/busy cache keyed on 5-minute buckets and evicted (it could never hit before); 8s timeouts on every Google fetch; error strings name the operation, not the path with the calendar id; scope narrowed to events + readonly; openSlots steps the Eastern calendar date so DST never skips or doubles a day (tests added, 26/26); the check script's run line loads .env.local and retries the delete
+- `d66bc69` 2026-09-15 — queue/spec update
 - `bab429b` 2026-09-15 — H-2d-R1 + H-2f (Cam 2026-09-15): the homepage device mockups keep their soft shadows and the cream hand-off dissolves are the only allowed gradients — CLAUDE.md BANNED line amended; the pricing slab now dissolves from and into cream at both edges (18vh, under the content, off on phones) like the story
 - `32d985e` 2026-09-15 — SC-1: call invites + availability — migration call_invites (CourseInquiry.callInviteToken/SentAt/ExpiresAt, Call.bookedByCourse/gcalEventId, additive); lib/call-availability.ts (30-min slots in Cam's windows minus busy blocks and scheduled calls, preference orders never removes; 22/22 tests); lib/google-calendar.ts (service-account JWT via jose, freebusy cached 5 min and throwing, create/move/delete events never throwing into a booking); scripts/google-calendar-check.ts for the live round trip once GOOGLE_* env is set; env names recorded in SHIPPING + PASSWORD_CHECKLIST
 - `236096e` 2026-09-15 — queue/spec update
@@ -176,10 +178,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `598d2f7` 2026-09-15 — queue/spec update (IC-5 phase block written from the queue entry + the code; §1 field catalog is the thing to review)
 - `6f45772` 2026-09-15 — queue/spec update
 - `206969b` 2026-09-15 — IF-1 review fixes: confirmation email now says pick a call time (same Calendly page as the success screen, until SC-2's invite link exists); the lead form's fields are HTML-escaped in both emails; call-preference arrays de-duped and capped; limiter keyed on the platform IP; JSON body and field types guarded; resubmit diff carries the booking method; semi-private gets a sheet path (passes + member booking + member rate); call answers outrank stale form answers for the sheet's branch defaults; the sheet's branch question reuses YesNo; dead needs block dropped from the confirmation email
-- `52f7bc3` 2026-09-15 — IF-1: the inquiry form asks only what the call can't — ten inputs, the eight branch questions gone; booking method lands in currentBookingMethod, call-time chips in needsJson.callPreference; success screen points at picking a call; booking_today always on the agenda with the form's answer as context; the setup sheet asks its branching questions inline (saved → old form answers → call answers → ask) and never hides a section; admin Answers tab renders the new shape
-- `47d9bb6` 2026-09-15 — H-2e review fixes: the nav blur fades with the white (transition covers backdrop-filter); the mobile menu closes when the bar hides; the H-1 shrink waits for the bar; the story's bottom wash moves to the story's end (outside the pin) and is off on phones; .device's near-cream fill recorded as deliberate
-- `1a4d726` 2026-09-15 — queue/spec update (restore: a stale Cowork save reverted the H-2d-R2/R3/H-2e check-offs and dropped the H-2f draft; nothing new was in it)
 
 ---
 
-**Totals:** 183 done · 9 awaiting review · 1 in flight · 22 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 184 done · 9 awaiting review · 1 in flight · 21 not started · 8 revise pages open · 15 ideas · 2 parked.
