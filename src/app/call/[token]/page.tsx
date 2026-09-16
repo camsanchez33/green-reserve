@@ -55,6 +55,7 @@ export default function CallPage() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState<{ tone: 'ok' | 'warn'; text: string } | null>(null);
   const [mode, setMode] = useState<'pick' | 'manage' | 'reschedule' | 'cancelled'>('pick');
+  const [editingPhone, setEditingPhone] = useState(false);
 
   const load = useCallback(async () => {
     setLoadState('loading'); setLoadError('');
@@ -66,6 +67,7 @@ export default function CallPage() {
       if (!r.ok) { setLoadState('error'); setLoadError(d.error || `Could not load (${r.status}).`); return; }
       setInfo(d);
       setPhone(d.phone || '');
+      setTheyCall(d.booked?.direction === 'they_call');
       setMode(d.booked ? 'manage' : 'pick');
       setLoadState('ok');
     } catch { setLoadState('error'); setLoadError('Network error — check your connection and try again.'); }
@@ -132,8 +134,21 @@ export default function CallPage() {
     <div className="mb-8">
       <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2">{info.courseName}</p>
       <h1 className="text-2xl sm:text-3xl font-serif font-medium tracking-tight text-ink mb-2">Book a call with GreenReserve</h1>
-      <p className="text-sm text-ink-soft">{info.durationMin} minutes · we&apos;ll go through:</p>
-      <ul className="mt-2 space-y-1 text-sm text-ink-soft list-disc pl-5">
+      {mode !== 'manage' && (
+        <p className="text-sm text-ink-soft flex items-center gap-1.5 flex-wrap">
+          {info.durationMin} minutes ·
+          {theyCall ? <span>you&apos;ll call us</span> : editingPhone ? (
+            <span className="inline-flex items-center gap-1.5">
+              we&apos;ll call you at
+              <input type="tel" className={inp + ' !w-44 !py-1'} value={phone} autoFocus onChange={e => setPhone(e.target.value)} onBlur={() => setEditingPhone(false)} onKeyDown={e => { if (e.key === 'Enter') setEditingPhone(false); }} autoComplete="tel" aria-label="Phone number" />
+            </span>
+          ) : (
+            <span>we&apos;ll call you at <button type="button" onClick={() => setEditingPhone(true)} className="text-pine underline decoration-pine/40 underline-offset-2 hover:decoration-pine" title="Wrong number? Change it">{phone || 'add a number'}</button></span>
+          )}
+        </p>
+      )}
+      <p className="text-sm text-ink-soft mt-2">We&apos;ll go through:</p>
+      <ul className="mt-1 space-y-1 text-sm text-ink-soft list-disc pl-5">
         {info.agendaLines.map(l => <li key={l}>{l}</li>)}
       </ul>
     </div>

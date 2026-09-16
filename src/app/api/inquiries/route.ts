@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { sendInquiryNotification, sendInquiryConfirmation } from '@/lib/email';
 import { ALIVE_STATUSES, encodeResubmit } from '@/lib/inquiry-status';
 import { rateLimit, evidentiaryIp } from '@/lib/rate-limit';
-import { sendCallInvite } from '@/lib/call-invite';
+import { issueCallInvite, deliverCallInvite, inviteUrl } from '@/lib/call-invite';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
       state: { equals: state, mode: 'insensitive' },
     },
     orderBy: { createdAt: 'desc' },
-    select: { id: true, status: true, email: true },
+    select: { id: true, status: true, email: true, callInviteToken: true, callInviteExpiresAt: true },
   });
 
   if (existing) {
@@ -130,7 +130,11 @@ export async function POST(req: NextRequest) {
     // a "duplicate" flag would turn this public endpoint into an oracle for
     // which courses are already in the pipeline. No admin new-lead notification
     // fires, because this is not a new lead.
-    sendInquiryConfirmation({ firstName: body.firstName as string, contactName, email, courseName })
+    // SC-2 review: the confirmation's button reuses the live invite when there is
+    // one; no new token is minted from this unauthenticated path.
+    const liveInvite = existing.callInviteToken && existing.callInviteExpiresAt && existing.callInviteExpiresAt.getTime() > Date.now()
+      ? inviteUrl(existing.callInviteToken) : null;
+    sendInquiryConfirmation({ firstName: body.firstName as string, contactName, email, courseName, callUrl: liveInvite })
       .catch(err => console.error('Inquiry confirmation email failed:', err));
 
     return NextResponse.json({ success: true, id: existing.id });
@@ -169,15 +173,21 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // SC-2 §1: the invite goes out right away; a send failure never fails the
-  // submission — the token still exists for the confirmation's button, and
-  // the admin alert says the invite did not go.
-  let invite: { sent: boolean; url: string; error?: string } = { sent: false, url: '', error: 'not attempted' };
-  try { invite = await sendCallInvite({ id: inquiry.id, firstName, contactName, email, courseName }); }
-  catch (err) { invite = { sent: false, url: '', error: err instanceof Error ? err.message : String(err) }; console.error('Call invite failed:', err); }
+  // SC-2 §1: the invite goes out right away. The token is minted here (one
+  // fast DB write, so the confirmation's button has the link); the email itself
+  // is delivered in the background like every other send on this endpoint, so
+  // a slow or failing Resend never delays or fails the submission. The admin
+  // alert follows the delivery and says when the invite did not go.
+  let inviteUrlForEmails: string | null = null;
+  try { inviteUrlForEmails = (await issueCallInvite(inquiry.id)).url; }
+  catch (err) { console.error('Call invite token failed:', err); }
+  const inviteFor = { id: inquiry.id, firstName, contactName, email, courseName };
+  const inviteDelivery: Promise<{ sent: boolean; error?: string }> = inviteUrlForEmails
+    ? deliverCallInvite(inviteFor, inviteUrlForEmails).catch(err => ({ sent: false, error: err instanceof Error ? err.message : String(err) }))
+    : Promise.resolve({ sent: false, error: 'token not issued' });
 
-  const emailData = { firstName, contactName, email, courseName, callUrl: invite.url || null };
-  sendInquiryNotification({
+  const emailData = { firstName, contactName, email, courseName, callUrl: inviteUrlForEmails };
+  inviteDelivery.then(invite => sendInquiryNotification({
     contactName,
     contactTitle,
     email,
@@ -190,7 +200,7 @@ export async function POST(req: NextRequest) {
     greenFeeRange: optStr(body.greenFeeRange, 120),
     additionalNotes,
     inviteNote: invite.sent ? null : (invite.error || 'unknown'),
-  }).catch(err => console.error('Inquiry notification email failed:', err));
+  })).catch(err => console.error('Inquiry notification email failed:', err));
 
   sendInquiryConfirmation(emailData)
     .catch(err => console.error('Inquiry confirmation email failed:', err));

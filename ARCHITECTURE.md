@@ -1,7 +1,7 @@
 # GreenReserve — Architecture Reference
 
 > **Auto-generated** by `scripts/route-inventory.ts`. Re-run after adding routes.
-> Last generated: 2026-09-15
+> Last generated: 2026-09-16
 
 ---
 
@@ -70,6 +70,7 @@
 | `/api/bookings` | GET, POST | golfer | Resolves the green fee and cart fee for a golfer based on their membership tier. |
 | `/api/bookings/cancel` | POST | golfer | — |
 | `/api/bookings/setup-intent` | POST | golfer | Creates (or reuses) a Stripe Customer and a SetupIntent so the booking page |
+| `/api/call/[token]` | GET, POST | public | CALL_SCHEDULING_SPEC SC-2 §2 — the public "pick a call time" endpoint. |
 | `/api/checkin/[bookingId]` | GET, POST | token-gated | Public, token-gated check-in endpoint — the golfer doesn't need to be |
 | `/api/courses` | GET | public | — |
 | `/api/courses/[slug]` | GET | public | — |
@@ -88,7 +89,7 @@
 | `/api/golfer/memberships` | GET, POST | golfer | Golfer requests membership at a course |
 | `/api/golfer/profile` | GET | golfer | — |
 | `/api/health` | GET | public | — |
-| `/api/inquiries` | POST | public | GET deliberately removed (MP-1b). It was PUBLIC — no session check behind a |
+| `/api/inquiries` | POST | public | INQUIRY_FORM_SPEC IF-1: the form asks ten things; the eight branch questions |
 | `/api/inquiries/details` | GET, POST, PATCH | public | MP-2b: the gate that used to live here now lives in src/lib/sheet-token.ts so |
 | `/api/inquiries/upload` | POST | public | — |
 | `/api/manage/[bookingId]` | GET | public | — |
@@ -110,7 +111,7 @@
 | `/api/operator/announcements/dismiss` | POST | operator | — |
 | `/api/operator/approve-page` | POST | operator | Approval is advisory, not automatic — going live stays an admin action. |
 | `/api/operator/blackouts` | GET, POST, DELETE | operator | — |
-| `/api/operator/bookings` | GET, PATCH | operator | Used by both the Payments tab (all bookings, transaction ledger) and the |
+| `/api/operator/bookings` | GET, POST, PATCH | operator | Used by both the Payments tab (all bookings, transaction ledger) and the |
 | `/api/operator/change-password` | POST | operator | — |
 | `/api/operator/conditions` | PATCH | operator | — |
 | `/api/operator/course-products` | GET, POST, PATCH, DELETE | operator | Every nineId a product claims must actually belong to this operator's course — |
@@ -172,6 +173,7 @@
 | `/admin/set-password` | admin | yes |
 | `/admin/system` | admin | yes |
 | `/book` | golfer | yes |
+| `/call/[token]` | public | yes |
 | `/checkin/[bookingId]` | token-gated | yes |
 | `/contact` | public | no |
 | `/courses/[slug]` | public | no |
@@ -315,6 +317,9 @@ Key models:
 | `src/lib/booking-mode.ts` | Course-world pages: the course page itself, its member portal, and its |
 | `src/lib/booking-status.ts` | Single source of truth for what to show a user (operator, staff, or go |
 | `src/lib/booking-window.ts` | BOOKING WINDOWS (RUN_QUEUE) — how far ahead each audience can see and  |
+| `src/lib/call-answers.ts` | INQUIRY_CALL_SPEC IC-5 — structured discovery-call answers. |
+| `src/lib/call-availability.ts` | CALL_SCHEDULING_SPEC SC-1 §3 — which 30-minute call slots are open. |
+| `src/lib/call-invite.ts` | CALL_SCHEDULING_SPEC SC-2 §1 — the "pick a call time" invite. |
 | `src/lib/cancel-booking.ts` | MP-5b. Cancelling normally frees a slot, so anyone watching for that t |
 | `src/lib/change-requests.ts` | Single source of truth for structured "request changes" data (V13b). |
 | `src/lib/checkin-booking.ts` | Charging a round, and checking a golfer in, are two different things. |
@@ -324,6 +329,7 @@ Key models:
 | `src/lib/course-closure.ts` | MP-5b. Taking a course offline or archiving it used to ignore the golf |
 | `src/lib/course-metrics.ts` | THE shared metrics brain (REVISE_QUEUE A-04 item 0) — bookings/gross/ |
 | `src/lib/course-setup.ts` | COURSES_SHEET_SPEC CS-1 §1 — the five setup steps a built course goes |
+| `src/lib/course-time.ts` | SD-3 — course-local time. Tee times are stored as the course's local |
 | `src/lib/course-timeline.ts` | A-05 items 4/5: a per-course event log with NO schema change — rides o |
 | `src/lib/course-wire.ts` | Course money: cents at rest, dollars on the wire. |
 | `src/lib/courses-data.ts` | Deterministic tee time generation — same output for same course+date e |
@@ -333,11 +339,13 @@ Key models:
 | `src/lib/data.ts` | Deprecated — use @/lib/courses-data instead |
 | `src/lib/db.ts` | — |
 | `src/lib/demo-courses.ts` | Cam: replace '' with the real demo course slug once the course is poli |
-| `src/lib/email.ts` | Fired by the cancellation-fee cron the moment it successfully auto-cha |
+| `src/lib/email.ts` | SD-5: a walk-in entered without an email gets a placeholder address so |
 | `src/lib/expenses.ts` | EXPENSE TRACKER (RUN_QUEUE "EXPENSE TRACKER / real P&L") — the manual  |
 | `src/lib/faq.ts` | SD-7: the homepage FAQ, in one place, so the rendered accordion and th |
 | `src/lib/go-live-preflight.ts` | ONE function, used by BOTH the preflight-check GET (modal display) and |
 | `src/lib/golfer-otp.ts` | Passwordless golfer sign-in (GOLFER_SPEC G5). No schema change was all |
+| `src/lib/google-calendar.ts` | CALL_SCHEDULING_SPEC SC-1 §2 — Google Calendar, the smallest honest ve |
+| `src/lib/ics.ts` | SC-2 §3 — a minimal iCalendar file so a booked call lands in the cours |
 | `src/lib/image-resize.ts` | Client-side downscale so a 12MB phone photo never has to travel over t |
 | `src/lib/inquiry-action-queue.ts` | The Overview action queue's inquiry rows. |
 | `src/lib/inquiry-call.ts` | INQUIRY_CALL_SPEC IC-1 §2 — the discovery-call agenda catalog, and the |

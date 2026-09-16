@@ -5,6 +5,7 @@
 // is re-verified server-side before a Call is written — a slot that has gone
 // answers 409 slot_taken and the page reloads its grid.
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, evidentiaryIp } from '@/lib/rate-limit';
 import { openSlots, HORIZON_DAYS, SLOT_MINUTES, fmtSlotDay, type CallPreference } from '@/lib/call-availability';
@@ -72,7 +73,9 @@ async function grid(inq: Inq, now: Date, excludeCallId?: string) {
 }
 
 function inviteState(inq: Inq, booked: { id: string } | null) {
-  if (!ALIVE_STATUSES.includes(inq.status as (typeof ALIVE_STATUSES)[number])) return 'closed';
+  // A declined or archived inquiry reads as an expired link — the decline
+  // email is written on the same principle: nothing is revealed by this page.
+  if (!ALIVE_STATUSES.includes(inq.status as (typeof ALIVE_STATUSES)[number])) return 'expired';
   if (booked) return 'ok';
   if (!inq.callInviteExpiresAt || inq.callInviteExpiresAt.getTime() < Date.now()) return 'expired';
   return 'ok';
@@ -128,13 +131,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
 
   const inq = await loadInquiry(token);
   if (!inq) return NextResponse.json({ error: 'invalid' }, { status: 404 });
+  // Per-inquiry cap as well as per-IP: one link cannot churn book/cancel to
+  // mail hello@ and write Google on every cycle.
+  if (!(await rateLimit(`callbook:inq:${inq.id}`, 8, 86_400))) {
+    return NextResponse.json({ error: 'That link has been used a lot today — reply to the email and we will sort it by hand.' }, { status: 429 });
+  }
   const booked = await scheduledCall(inq.id);
   const state = inviteState(inq, booked);
   if (state !== 'ok') return NextResponse.json({ error: state }, { status: 410 });
 
   const action = String(body.action ?? '');
   const now = new Date();
-  const phone = typeof body.phone === 'string' ? body.phone.trim().slice(0, 40) : (booked?.phone || inq.phone);
+  const phone = typeof body.phone === 'string'
+    ? body.phone.replace(/[^0-9+()\-. x]/g, '').trim().slice(0, 40)
+    : (booked?.phone || inq.phone);
   const direction = body.direction === 'they_call' ? 'they_call' : 'we_call';
   const agendaKeys = defaultAgenda(inq, parseJson(inq.detailsJson, null), parseJson(inq.needsJson, null));
   const agendaLabels = AGENDA.filter(a => agendaKeys.includes(a.key)).map(a => a.label);
@@ -162,32 +172,48 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
   if (!open) return NextResponse.json({ error: 'slot_taken' }, { status: 409 });
 
   let callId: string; let gcalEventId: string | null = null;
-  if (action === 'book') {
-    // The write re-checks for a colliding scheduled call inside the transaction,
-    // so two tabs confirming the same slot cannot both land.
-    const created = await prisma.$transaction(async tx => {
-      const end = new Date(startsAt.getTime() + SLOT_MINUTES * 60_000);
-      const clash = await tx.call.findFirst({
-        where: { outcome: 'scheduled', scheduledAt: { lt: end, gte: new Date(startsAt.getTime() - 4 * 3600_000) } },
+  // Book and reschedule share one guarded write: a SERIALIZABLE transaction
+  // that re-reads every scheduled call in the window and tests overlap against
+  // each, so two confirmations of the same slot cannot both land (a
+  // serialization failure is answered as slot_taken, like a plain clash).
+  const durationForWrite = action === 'book' ? SLOT_MINUTES : booked!.durationMin;
+  let written: { id: string } | null;
+  try {
+    written = await prisma.$transaction(async tx => {
+      const end = new Date(startsAt.getTime() + durationForWrite * 60_000);
+      const nearby = await tx.call.findMany({
+        where: {
+          outcome: 'scheduled',
+          scheduledAt: { lt: end, gte: new Date(startsAt.getTime() - 4 * 3600_000) },
+          ...(action === 'reschedule' ? { id: { not: booked!.id } } : {}),
+        },
         select: { id: true, scheduledAt: true, durationMin: true },
       });
-      if (clash && new Date(clash.scheduledAt).getTime() + (clash.durationMin || SLOT_MINUTES) * 60_000 > startsAt.getTime()) return null;
-      return tx.call.create({
-        data: {
-          kind: 'discovery', inquiryId: inq.id, scheduledAt: startsAt, durationMin: SLOT_MINUTES, direction, phone,
-          agendaJson: JSON.stringify(agendaKeys), bookedByCourse: true, createdBy: 'course',
-        },
-        select: { id: true },
-      });
-    });
-    if (!created) return NextResponse.json({ error: 'slot_taken' }, { status: 409 });
-    callId = created.id;
+      const clash = nearby.some(c => new Date(c.scheduledAt).getTime() + (c.durationMin || SLOT_MINUTES) * 60_000 > startsAt.getTime());
+      if (clash) return null;
+      if (action === 'book') {
+        return tx.call.create({
+          data: {
+            kind: 'discovery', inquiryId: inq.id, scheduledAt: startsAt, durationMin: SLOT_MINUTES, direction, phone,
+            agendaJson: JSON.stringify(agendaKeys), bookedByCourse: true, createdBy: 'course',
+          },
+          select: { id: true },
+        });
+      }
+      return tx.call.update({ where: { id: booked!.id }, data: { scheduledAt: startsAt, phone, direction }, select: { id: true } });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  } catch (err) {
+    // P2034: the database refused to serialize two writes racing for the slot.
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2034') written = null;
+    else throw err;
+  }
+  if (!written) return NextResponse.json({ error: 'slot_taken' }, { status: 409 });
+  callId = written.id;
+  if (action === 'book') {
     await timeline(inq.id, inq.status, `Course booked a call for ${fmtWhen(startsAt)}`);
     gcalEventId = await createCallEvent({ id: callId, scheduledAt: startsAt, durationMin: SLOT_MINUTES, direction, phone, agendaLabels }, inq);
     if (gcalEventId) await prisma.call.update({ where: { id: callId }, data: { gcalEventId } });
   } else {
-    callId = booked!.id;
-    await prisma.call.update({ where: { id: callId }, data: { scheduledAt: startsAt, phone, direction } });
     await timeline(inq.id, inq.status, `Course moved the call to ${fmtWhen(startsAt)}`);
     if (booked!.gcalEventId) {
       const moved = await moveCallEvent(booked!.gcalEventId, startsAt, booked!.durationMin);
@@ -198,10 +224,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     }
   }
 
-  const emails = await notify(action === 'book' ? 'booked' : 'moved', inq, { id: callId, scheduledAt: startsAt, durationMin: SLOT_MINUTES, direction, phone }, agendaLabels, manageUrl);
+  // A reschedule keeps the call's real length (an admin may have booked 45 or 60).
+  const durationMin = action === 'book' ? SLOT_MINUTES : booked!.durationMin;
+  const emails = await notify(action === 'book' ? 'booked' : 'moved', inq, { id: callId, scheduledAt: startsAt, durationMin, direction, phone }, agendaLabels, manageUrl);
   return NextResponse.json({
     success: true,
-    booked: { scheduledAt: startsAt.toISOString(), durationMin: SLOT_MINUTES, direction, phone },
+    booked: { scheduledAt: startsAt.toISOString(), durationMin, direction, phone },
     calendarEvent: !!gcalEventId,
     ...emails,
   });
