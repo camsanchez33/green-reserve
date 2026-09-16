@@ -1,16 +1,14 @@
 {
-  "generatedAt": "2026-09-16T04:06:11.118Z",
+  "generatedAt": "2026-09-16T12:02:47.090Z",
   "repo": {
-    "head": "2de3268",
+    "head": "063afa1",
     "branch": "main",
-    "dirtyCount": 1,
-    "dirty": [
-      "M RUN_QUEUE.md"
-    ],
+    "dirtyCount": 0,
+    "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-15T23:41:06-04:00",
+    "queueLastCommit": "2026-09-16T00:06:20-04:00",
     "unrecorded": []
   },
   "counts": {
@@ -781,6 +779,11 @@
   },
   "recentCommits": [
     {
+      "h": "063afa1",
+      "date": "2026-09-16",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "2de3268",
       "date": "2026-09-16",
       "subject": "H-2g review fixes: the operator link passes contrast, and the tablet range stops over-reserving"
@@ -834,11 +837,6 @@
       "h": "12815b0",
       "date": "2026-09-15",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "211d924",
-      "date": "2026-09-15",
-      "subject": "SD-8 review fixes: the identity lock made real, the date filter stops lying, and the change-request channel gets the caps its commit message claimed"
     }
   ]
 }

@@ -213,6 +213,17 @@ export default function ForCoursesContent() {
           Pick a call time
         </a>
         <p className="text-center text-xs text-ink-muted">20 minutes, at a time that works for you.</p>
+        {/* Cam 2026-09-16: a course that already has a page can't be created
+            again — its details change in the dashboard. This line is shown to
+            EVERY submitter, not only to the ones whose course is already
+            built: the API answers identically either way on purpose, because a
+            success screen that only appeared for existing courses would turn a
+            public form into a "is this course on GreenReserve yet" lookup. The
+            operator who needs it reads it; nobody else learns anything. */}
+        <p className="text-center text-xs text-ink-muted mt-5 pt-5 border-t border-line">
+          Already have a GreenReserve page? Your course details change in one place —{' '}
+          <Link href="/dashboard/login" className="text-ink-soft underline hover:text-ink">sign in to your dashboard</Link>.
+        </p>
       </div>
     </div>
   );

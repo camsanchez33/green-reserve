@@ -4,18 +4,11 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-16 04:06 UTC · branch `main` · HEAD `2de3268` · working tree **1 dirty file(s)**
+Generated 2026-09-16 12:02 UTC · branch `main` · HEAD `063afa1` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
-
-### Uncommitted working tree (1 file(s))
-
-- `M RUN_QUEUE.md`
-
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
 
 ## In flight
 
@@ -167,6 +160,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `063afa1` 2026-09-16 — queue/spec update
 - `2de3268` 2026-09-16 — H-2g review fixes: the operator link passes contrast, and the tablet range stops over-reserving
 - `01822b0` 2026-09-15 — H-2g §2 + §3: the homepage header stops following, the lockup gets bigger and centred
 - `16106fc` 2026-09-15 — queue/spec update
@@ -178,7 +172,6 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `80cc2a0` 2026-09-15 — SD-8b review fix + the Stripe return detour
 - `fa3d7bf` 2026-09-15 — SD-8b + SD-8c: unsaved Settings edits survive sidebar navigation, and the booking status tone stops being wrong in three places
 - `12815b0` 2026-09-15 — queue/spec update
-- `211d924` 2026-09-15 — SD-8 review fixes: the identity lock made real, the date filter stops lying, and the change-request channel gets the caps its commit message claimed
 
 ---
 

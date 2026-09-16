@@ -977,6 +977,38 @@ export async function sendInquiryConfirmation(data: {
   });
 }
 
+// Cam 2026-09-16: a course that already has a page cannot be created again, so
+// the intake form stops being the right door and this email says where the
+// right one is. It replaces the ordinary "we got it, pick a call time"
+// confirmation for built courses only — sending that one would have promised a
+// discovery call for a course that is already built.
+export async function sendInquiryAlreadyBuilt(data: {
+  firstName: string; email: string; courseName: string;
+}) {
+  const dashboardUrl = `${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/dashboard`;
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">You&apos;re already set up, ${escHtml(data.firstName)}.</h1>
+    <p style="margin:0 0 20px;color:#6b7280;font-size:15px;">
+      <strong>${escHtml(data.courseName)}</strong> already has a GreenReserve page, so there&apos;s nothing to set up again.
+      To change your contact details, your rates or anything else on the page, sign in to your dashboard — that&apos;s the
+      one place those live, and changes there go out straight away.
+    </p>
+    <a href="${dashboardUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:12px;">
+      Sign in to your dashboard
+    </a>
+    <p style="margin:0 0 24px;color:#9ca3af;font-size:12px;text-align:center;">Use the email address your course is registered under.</p>
+    <p style="margin:16px 0 0;color:#9ca3af;font-size:12px;text-align:center;">
+      Can&apos;t get in, or think this isn&apos;t your course? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>.
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.email,
+    subject: `${data.courseName} already has a GreenReserve page`,
+    html,
+  });
+}
+
 export async function sendDetailsSheetConfirmationEmail(data: {
   firstName: string; contactName: string; email: string; courseName: string;
   details: Record<string, unknown>;

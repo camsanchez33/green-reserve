@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendInquiryNotification, sendInquiryConfirmation } from '@/lib/email';
+import { sendInquiryNotification, sendInquiryConfirmation, sendInquiryAlreadyBuilt } from '@/lib/email';
 import { ALIVE_STATUSES, encodeResubmit } from '@/lib/inquiry-status';
 import { rateLimit, evidentiaryIp } from '@/lib/rate-limit';
 import { issueCallInvite, deliverCallInvite, inviteUrl } from '@/lib/call-invite';
@@ -87,10 +87,29 @@ export async function POST(req: NextRequest) {
       state: { equals: state, mode: 'insensitive' },
     },
     orderBy: { createdAt: 'desc' },
-    select: { id: true, status: true, email: true, callInviteToken: true, callInviteExpiresAt: true },
+    select: { id: true, status: true, email: true, builtCourseId: true, callInviteToken: true, callInviteExpiresAt: true },
   });
 
   if (existing) {
+    // Cam 2026-09-16: "if a course is already created it can't be created
+    // again — they'd have to log in to change information." Once the course
+    // EXISTS, the intake form is the wrong door entirely: contact details for
+    // a built course change in exactly one place, the operator dashboard.
+    // So no resubmit event is recorded at all here — an admin diff against a
+    // course that is already built is a decision nobody should be asked to
+    // make, and 21c8d25's verified/unverified split only governs which details
+    // reach that diff. The response shape below is unchanged, so the endpoint
+    // still answers identically whether or not the course exists.
+    //
+    // Deliberately NOT extended to not-yet-built inquiries: there the 21c8d25
+    // rule (the email must match the one on file) is the right level, because
+    // refusing outright would also refuse a GM fixing their own typo'd phone.
+    if (existing.builtCourseId) {
+      sendInquiryAlreadyBuilt({ firstName: body.firstName as string, email, courseName })
+        .catch(err => console.error('Already-built inquiry email failed:', err));
+      return NextResponse.json({ success: true, id: existing.id });
+    }
+
     // Security (IF-1 review): the match is on public facts (name + town), so
     // anyone can land here. Only a submitter using the email on file may put
     // new contact details in front of the admin; everyone else's email/phone
