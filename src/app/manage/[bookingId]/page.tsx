@@ -16,6 +16,7 @@ type BookingInfo = {
   date: string;
   time: string;
   holes: number;
+  productLabel?: string | null;
   players: number;
   greenFeeTotal: number;
   cartFeeTotal: number;
@@ -36,7 +37,7 @@ type AvailableSlot = {
 };
 
 type ModifyResult = {
-  date: string; time: string; holes: number; players: number;
+  date: string; time: string; holes: number; productLabel?: string | null; players: number;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number;
   accessFeeTotal: number; totalAmount: number;
 };
@@ -473,7 +474,7 @@ function ManagePageInner() {
           {/* Details */}
           <div className="bg-paper rounded-md border border-line p-5 mb-5 space-y-3">
             <div className="flex items-center gap-2.5 text-sm"><Calendar size={15} className="text-ink-muted shrink-0" /><span className="text-ink font-medium">{fmtDate(info.date)}</span></div>
-            <div className="flex items-center gap-2.5 text-sm"><Clock size={15} className="text-ink-muted shrink-0" /><span className="text-ink font-medium">{fmtTime(info.time)} &middot; {info.holes} holes</span></div>
+            <div className="flex items-center gap-2.5 text-sm"><Clock size={15} className="text-ink-muted shrink-0" /><span className="text-ink font-medium">{fmtTime(info.time)} &middot; {info.productLabel ? `${info.productLabel} · ` : ''}{info.holes} holes</span></div>
             <div className="flex items-center gap-2.5 text-sm"><Users size={15} className="text-ink-muted shrink-0" /><span className="text-ink font-medium">{info.players} player{info.players !== 1 ? 's' : ''}</span></div>
             <div className="flex items-start gap-2.5 text-sm"><MapPin size={15} className="text-ink-muted shrink-0 mt-0.5" /><span className="text-ink-soft">{info.courseAddress}</span></div>
             <div className="border-t border-line pt-3">

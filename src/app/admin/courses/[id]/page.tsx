@@ -102,7 +102,7 @@ interface CourseDetail {
 }
 
 interface TeeSlot {
-  id: string; time: string; holes: number; playersAvailable: number; playersBooked: number;
+  id: string; time: string; holes: number; product?: { label: string } | null; playersAvailable: number; playersBooked: number;
   greenFee: number; cartFee: number; status: string; tierName: string;
   bookings: {
     id: string; golferName: string; golferEmail: string; golferPhone: string;
@@ -1879,7 +1879,7 @@ export default function CourseDetailPage() {
                     >
                       <div className="px-4 py-3 flex items-center gap-3">
                         <span className="font-mono font-medium text-ink text-sm w-14 shrink-0">{slot.time}</span>
-                        <span className="text-xs text-ink-muted">{slot.holes}h · ${slot.greenFee}</span>
+                        <span className="text-xs text-ink-muted">{slot.product?.label ? `${slot.product.label} · ` : ''}{slot.holes}h · ${slot.greenFee}</span>
                         <span className={'text-xs px-2 py-0.5 rounded font-medium ' + (slot.status === 'blocked' ? 'bg-bad/10 text-bad' : slot.bookings.length > 0 ? 'bg-ok/10 text-ok' : 'bg-paper text-ink-muted border border-line')}>
                           {slot.status === 'blocked' ? 'Blocked' : slot.bookings.length > 0 ? `${slot.bookings.length} booked` : `${slot.playersAvailable} open`}
                         </span>

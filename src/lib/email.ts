@@ -35,7 +35,7 @@ function baseTemplate(content: string) {
 
 export interface BookingEmailData {
   golferName: string; golferEmail: string; courseName: string; courseAddress: string; courseSlug?: string;
-  date: string; time: string; players: number; holes: number;
+  date: string; time: string; players: number; holes: number; productLabel?: string | null;
   greenFeeTotal: number; cartFeeTotal: number; accessFeeTotal: number; totalAmount: number;
   bookingId: string; appliedRate: string;
   rangeBallsTotal?: number; cancellationFeeTotal?: number; cancellationHours?: number;
@@ -65,7 +65,7 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
   const breakdownRows = `
     <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Course</span><br><span style="color:#111827;font-size:15px;font-weight:600;">${data.courseName}</span></td></tr>
     <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Date &amp; Time</span><br><span style="color:#111827;font-size:15px;font-weight:600;">${data.date} at ${data.time}</span></td></tr>
-    <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Players</span><br><span style="color:#111827;font-size:15px;font-weight:600;">${data.players} player${data.players > 1 ? 's' : ''} &middot; ${data.holes} holes</span></td></tr>
+    <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Players</span><br><span style="color:#111827;font-size:15px;font-weight:600;">${data.players} player${data.players > 1 ? 's' : ''} &middot; ${data.productLabel ? escHtml(data.productLabel) + ' &middot; ' : ''}${data.holes} holes</span></td></tr>
     ${data.appliedRate !== 'standard' ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Rate</span><br><span style="color:#166534;font-size:15px;font-weight:600;text-transform:capitalize;">${data.appliedRate}</span></td></tr>` : ''}
     <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Green Fee</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</span></td></tr>
     ${data.cartFeeTotal > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Cart Fee</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</span></td></tr>` : ''}
@@ -150,7 +150,7 @@ export async function sendOperatorBookingNotification(data: BookingEmailData & {
     <div style="background:#f9fafb;border-radius:4px;padding:20px;">
       <p style="margin:0 0 8px;"><strong>Golfer:</strong> ${data.golferName} (${data.golferEmail})</p>
       <p style="margin:0 0 8px;"><strong>Date:</strong> ${data.date} at ${data.time}</p>
-      <p style="margin:0 0 12px;"><strong>Players:</strong> ${data.players} &middot; ${data.holes} holes</p>
+      <p style="margin:0 0 12px;"><strong>Players:</strong> ${data.players} &middot; ${data.productLabel ? escHtml(data.productLabel) + ' &middot; ' : ''}${data.holes} holes</p>
       <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e5e7eb;padding-top:10px;">
         <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Green Fee</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</td></tr>
         ${data.cartFeeTotal > 0 ? `<tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Cart Fee</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</td></tr>` : ''}
@@ -301,7 +301,7 @@ export async function sendCheckInAvailableEmail(data: {
 
 export async function sendBookingModifiedEmail(data: {
   golferName: string; golferEmail: string; courseName: string; courseSlug?: string;
-  date: string; time: string; players: number; holes: number;
+  date: string; time: string; players: number; holes: number; productLabel?: string | null;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number;
   accessFeeTotal: number; totalAmount: number; bookingId: string; checkInToken: string | null;
 }) {
@@ -317,7 +317,7 @@ export async function sendBookingModifiedEmail(data: {
     <div style="background:#f9fafb;border-radius:4px;padding:24px;margin-bottom:20px;">
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Date &amp; Time</span><br><span style="color:#111827;font-size:15px;font-weight:600;">${data.date} at ${data.time}</span></td></tr>
-        <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Players</span><br><span style="color:#111827;font-size:15px;font-weight:600;">${data.players} player${data.players > 1 ? 's' : ''} &middot; ${data.holes} holes</span></td></tr>
+        <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Players</span><br><span style="color:#111827;font-size:15px;font-weight:600;">${data.players} player${data.players > 1 ? 's' : ''} &middot; ${data.productLabel ? escHtml(data.productLabel) + ' &middot; ' : ''}${data.holes} holes</span></td></tr>
         <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Green Fee</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</span></td></tr>
         ${data.cartFeeTotal > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Cart Fee</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</span></td></tr>` : ''}
         ${data.rangeBallsTotal > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Range Balls</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.rangeBallsTotal / 100).toFixed(2)}</span></td></tr>` : ''}
@@ -390,7 +390,7 @@ export async function sendTeeTimeAlertEmail(data: {
 
 export async function sendReminderEmail(data: {
   golferName: string; golferEmail: string; courseName: string; courseAddress: string; courseSlug?: string;
-  date: string; time: string; players: number; holes: number; bookingId: string; checkInToken?: string | null;
+  date: string; time: string; players: number; holes: number; productLabel?: string | null; bookingId: string; checkInToken?: string | null;
 }) {
   const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
   const portalUrl = data.courseSlug
@@ -404,7 +404,7 @@ export async function sendReminderEmail(data: {
       <p style="margin:0 0 8px;color:#111827;font-size:22px;font-weight:700;">${data.time}</p>
       <p style="margin:0 0 4px;color:#374151;font-weight:600;">${data.courseName}</p>
       <p style="margin:0 0 12px;color:#6b7280;font-size:14px;">&#128205; ${data.courseAddress}</p>
-      <p style="margin:0;color:#6b7280;font-size:14px;">${data.players} player${data.players > 1 ? 's' : ''} &middot; ${data.holes} holes</p>
+      <p style="margin:0;color:#6b7280;font-size:14px;">${data.players} player${data.players > 1 ? 's' : ''} &middot; ${data.productLabel ? escHtml(data.productLabel) + ' &middot; ' : ''}${data.holes} holes</p>
     </div>
     <div style="background:#fefce8;border:1px solid #fde68a;border-radius:4px;padding:14px;margin-bottom:20px;">
       <p style="margin:0;color:#92400e;font-size:13px;">&#128336; ${checkInUrl ? 'Check in and pay below before you head out, or do it at the pro shop when you arrive.' : 'Arrive 15 minutes early and check in at the pro shop.'}</p>

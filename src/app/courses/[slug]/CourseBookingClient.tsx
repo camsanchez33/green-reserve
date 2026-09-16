@@ -193,6 +193,9 @@ export default function CourseDetailPage({
     const h = searchParams.get('holes');
     return ['all', '9', '18'].includes(h ?? '') ? (h as 'all' | '9' | '18') : 'all';
   });
+  // L2: which bookable product the golfer is looking at ('all' until they pick;
+  // the selector only shows when the day has more than one product).
+  const [productFilter, setProductFilter] = useState<string>(() => searchParams.get('product') || 'all');
   const [filtersOpen, setFiltersOpen] = useState(false);
   // B-4: the nearest dates (up to two) with a slot that fits the party.
   const [nearestDates, setNearestDates] = useState<string[]>([]);
@@ -331,9 +334,10 @@ export default function CourseDetailPage({
     if (todFilter !== 'all') p.set('tod', todFilter);
     if (players !== 2) p.set('players', String(players));
     if (holesFilter !== 'all') p.set('holes', holesFilter);
+    if (productFilter !== 'all') p.set('product', productFilter);
     const q = p.toString();
     router.replace(`/courses/${slug}${q ? '?' + q : ''}`, { scroll: false });
-  }, [selectedDate, todFilter, players, holesFilter, slug, router, previewMode]);
+  }, [selectedDate, todFilter, players, holesFilter, productFilter, slug, router, previewMode]);
 
   // B-4: when the day is sold out, find the nearest dates (up to two, within
   // a week) that have a slot fitting the current party size — from the same
@@ -375,6 +379,16 @@ export default function CourseDetailPage({
     return vals.size > 1;
   }, [teeTimes]);
 
+  // L2: the day's bookable products, in first-seen order. One product = no selector.
+  const dayProducts = useMemo(() => {
+    const seen = new Map<string, { id: string; label: string; holes?: number }>();
+    for (const t of teeTimes) {
+      if (t.product_id && t.product_label && !seen.has(t.product_id)) seen.set(t.product_id, { id: t.product_id, label: t.product_label, holes: holesOf(t) });
+    }
+    return Array.from(seen.values());
+  }, [teeTimes]);
+  const productActive = dayProducts.length > 1 && productFilter !== 'all' && dayProducts.some(p => p.id === productFilter) ? productFilter : 'all';
+
   const priceBounds = useMemo(() => {
     if (teeTimes.length === 0) return null;
     const fees = teeTimes.map(t => t.green_fee);
@@ -400,9 +414,10 @@ export default function CourseDetailPage({
         const h = holesOf(t);
         if (h !== undefined && String(h) !== holesFilter) return false;
       }
+      if (productActive !== 'all' && t.product_id !== productActive) return false;
       return true;
     });
-  }, [memberSession, memberTeeTimes, teeTimes, players, todFilter, maxPrice, holesFilter]);
+  }, [memberSession, memberTeeTimes, teeTimes, players, todFilter, maxPrice, holesFilter, productActive]);
 
   const activeFilterCount =
     (todFilter !== 'all' ? 1 : 0) +
@@ -1040,6 +1055,26 @@ export default function CourseDetailPage({
               {/* RIGHT: Tee sheet */}
               <section className="min-w-0">
 
+                {/* L2: product selector — only when the day sells more than one product. */}
+                {dayProducts.length > 1 && (
+                  <div className="mb-4">
+                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2">Which round</div>
+                    <div className="flex flex-wrap gap-2" role="group" aria-label="Which round">
+                      {[{ id: 'all', label: 'All', holes: undefined as number | undefined }, ...dayProducts].map(p => {
+                        const isSel = productActive === p.id;
+                        return (
+                          <button key={p.id} type="button" aria-pressed={isSel}
+                            onClick={() => { setProductFilter(p.id); setSelectedTime(null); }}
+                            className="px-3.5 py-2 rounded-md border text-sm font-medium transition-colors"
+                            style={isSel ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: '#E6E3D7', color: '#57574F', backgroundColor: '#fff' }}>
+                            {p.label}{p.holes ? <span className="font-normal opacity-70"> · {p.holes}</span> : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Mobile controls */}
                 <div className="lg:hidden mb-4 space-y-3">
                   <div className="flex items-center gap-2">
@@ -1293,7 +1328,7 @@ export default function CourseDetailPage({
                                           <span className="text-ink-muted">· {t.players_available} {t.players_available === 1 ? 'spot' : 'spots'} open</span>
                                         </>
                                       )}
-                                      {h !== undefined && <span className="text-ink-muted">· {h} holes</span>}
+                                      {h !== undefined && <span className="text-ink-muted">· {t.product_label ? `${t.product_label} · ` : ''}{h} holes</span>}
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-3 sm:gap-5 flex-shrink-0">

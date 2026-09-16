@@ -20,6 +20,8 @@ export async function GET(req: NextRequest) {
     where: { courseId, date },
     orderBy: { time: 'asc' },
     include: {
+      // L2: the product label rides along so the admin sheet can say which round a slot sells.
+      product: { select: { label: true } },
       bookings: {
         // MP-5a: 'confirmed' only meant a booking vanished from the admin day
         // view the moment it was checked in — the sheet emptied as the day

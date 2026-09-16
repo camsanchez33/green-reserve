@@ -925,34 +925,9 @@ async function handleAction(
       });
       await logEvent(inquiryId, from, 'building', 'admin', adminName);
 
-      if (builtCourseId && firstTeeTime && lastTeeTime) {
-        const effectiveDays = daysOpen.length > 0 ? daysOpen : [0, 1, 2, 3, 4, 5, 6];
-        await prisma.teeTimeSchedule.create({
-          data: {
-            courseId: builtCourseId, tierName: 'standard',
-            daysOfWeek: effectiveDays,
-            startTime: firstTeeTime, endTime: lastTeeTime,
-            intervalMinutes: num(intervalMins, 10), holes: scheduleHoles,
-            // MP-3 B2d: sheet answers are dollars; the columns are cents.
-            greenFeeWeekdayCents: dollarsToCentsOr0(greenFeeWeekday),
-            greenFeeWeekendCents: dollarsToCentsOr0(greenFeeWeekend),
-            memberRateWeekdayCents: dollarsToCents(memberPerRoundFee),
-            memberRateWeekendCents: dollarsToCents(memberPerRoundFee),
-            residentRateWeekdayCents: dollarsToCents(residentWeekdayFee),
-            residentRateWeekendCents: dollarsToCents(residentWeekendFee),
-            cartFeeCents: dollarsToCentsOr0(cartFee), walkingAllowed: walkingSchedule,
-          },
-        });
-        const today = new Date();
-        for (let i = 0; i < 8; i++) {
-          const dt = new Date(today);
-          dt.setDate(dt.getDate() + i);
-          await generateTeeTimes(builtCourseId, dt.toISOString().split('T')[0]);
-        }
-      }
-
       const nineNameToId = new Map<string, string>();
       const comboKeyToProductId = new Map<string, string>();
+      const createdProducts: { id: string; holes: number }[] = [];
       if (builtCourseId && (nineSpecs.length > 0 || productSpecs.length > 0)) {
         for (let i = 0; i < nineSpecs.length; i++) {
           const spec = nineSpecs[i];
@@ -968,6 +943,42 @@ async function handleAction(
             data: { courseId: builtCourseId, label: spec.label, holes: spec.holes, nineIds, active: true, sortOrder: i },
           });
           if (spec.comboKey) comboKeyToProductId.set(spec.comboKey, product.id);
+          createdProducts.push({ id: product.id, holes: product.holes });
+        }
+      }
+
+      // L2: one default schedule per active product from the sheet's tee-sheet
+      // answers, so a multi-nine course starts from working defaults; a simple
+      // course gets the one unscoped schedule it always did.
+      if (builtCourseId && firstTeeTime && lastTeeTime) {
+        const effectiveDays = daysOpen.length > 0 ? daysOpen : [0, 1, 2, 3, 4, 5, 6];
+        const base = {
+          courseId: builtCourseId, tierName: 'standard',
+          daysOfWeek: effectiveDays,
+          startTime: firstTeeTime, endTime: lastTeeTime,
+          intervalMinutes: num(intervalMins, 10),
+          // MP-3 B2d: sheet answers are dollars; the columns are cents.
+          greenFeeWeekdayCents: dollarsToCentsOr0(greenFeeWeekday),
+          greenFeeWeekendCents: dollarsToCentsOr0(greenFeeWeekend),
+          memberRateWeekdayCents: dollarsToCents(memberPerRoundFee),
+          memberRateWeekendCents: dollarsToCents(memberPerRoundFee),
+          residentRateWeekdayCents: dollarsToCents(residentWeekdayFee),
+          residentRateWeekendCents: dollarsToCents(residentWeekendFee),
+          cartFeeCents: dollarsToCentsOr0(cartFee), walkingAllowed: walkingSchedule,
+        };
+        if (createdProducts.length > 0) {
+          for (const p of createdProducts) {
+            await prisma.teeTimeSchedule.create({ data: { ...base, productId: p.id, holes: p.holes } });
+          }
+          needsReview.push('Multi-nine course: one default schedule was created per product from the sheet — set the rotation windows in Schedules before go-live');
+        } else {
+          await prisma.teeTimeSchedule.create({ data: { ...base, holes: scheduleHoles } });
+        }
+        const today = new Date();
+        for (let i = 0; i < 8; i++) {
+          const dt = new Date(today);
+          dt.setDate(dt.getDate() + i);
+          await generateTeeTimes(builtCourseId, dt.toISOString().split('T')[0]);
         }
       }
 

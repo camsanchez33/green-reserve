@@ -18,7 +18,7 @@ const cardStyle = {
 
 type CheckInInfo = {
   golferName: string; courseName: string; courseSlug: string; courseAddress: string; brandColor: string;
-  date: string; time: string; players: number; holes: number; status: string;
+  date: string; time: string; players: number; holes: number; productLabel?: string | null; status: string;
   totalAmount: number; greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number;
   hasCard: boolean;
   cartAddOnCents?: number;
@@ -199,7 +199,7 @@ function CheckInPageInner() {
     <div className="bg-paper rounded-md p-5 mb-6 space-y-2 text-sm border border-line">
       <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{fmtDate(info.date)}</span></div>
       <div className="flex justify-between"><span className="text-ink-muted">Tee Time</span><span className="font-medium text-ink">{fmtTime(info.time)}</span></div>
-      <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{info.players} &middot; {info.holes} holes</span></div>
+      <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{info.players} &middot; {info.productLabel ? `${info.productLabel} · ` : ''}{info.holes} holes</span></div>
       <div className="border-t border-line mt-2 pt-2 space-y-1.5">
         <div className="flex justify-between text-ink-soft"><span>Green Fee</span><span>${(info.greenFeeTotal / 100).toFixed(2)}</span></div>
         {cartCents > 0 && <div className="flex justify-between text-ink-soft"><span>Cart Fee</span><span>${(cartCents / 100).toFixed(2)}</span></div>}

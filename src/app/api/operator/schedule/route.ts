@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
-import { listSchedules, createSchedule, updateSchedule, deleteSchedule } from '@/lib/schedule-service';
+import { listSchedules, createSchedule, updateSchedule, deleteSchedule, ScheduleConflictError, ScheduleProductError } from '@/lib/schedule-service';
+
+// L2: the service refuses a save that would double-book a nine (409) or names a
+// product this course does not own (400); everything else is unchanged.
+function scheduleError(err: unknown) {
+  if (err instanceof ScheduleConflictError) return NextResponse.json({ error: err.message, conflict: true }, { status: 409 });
+  if (err instanceof ScheduleProductError) return NextResponse.json({ error: err.message }, { status: 400 });
+  return null;
+}
 
 // MP-5d: thin caller of the shared schedule service (see lib/schedule-service).
 // Before this, PATCH and DELETE here did NOT rebuild the tee-sheet window, so
@@ -26,7 +34,8 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   if (!body.startTime || !body.endTime) return NextResponse.json({ error: 'First and last tee are required' }, { status: 400 });
-  return NextResponse.json(await createSchedule(session.courseId, body));
+  try { return NextResponse.json(await createSchedule(session.courseId, body)); }
+  catch (err) { const r = scheduleError(err); if (r) return r; throw err; }
 }
 
 export async function PATCH(req: NextRequest) {
@@ -39,9 +48,11 @@ export async function PATCH(req: NextRequest) {
   void _ignored;
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
-  const updated = await updateSchedule(id, data, { scopeCourseId: session.courseId });
-  if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  return NextResponse.json(updated);
+  try {
+    const updated = await updateSchedule(id, data, { scopeCourseId: session.courseId });
+    if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json(updated);
+  } catch (err) { const r = scheduleError(err); if (r) return r; throw err; }
 }
 
 export async function DELETE(req: NextRequest) {

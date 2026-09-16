@@ -20,25 +20,66 @@ import { scheduleMoneyFromWire, scheduleMoneyForCreate, scheduleToWire, teeTimeT
 import { centsToDollarsOr0, dollarsToCentsOr0 } from './money';
 import { regenerateUpcoming } from './tee-sheet-engine';
 import { logSettingsChanged } from './course-timeline';
+import { findScheduleConflict } from './schedule-conflict';
 
 export type ScheduleScope = { scopeCourseId?: string; actor?: string };
 
+/** L2: the save was refused because two active schedules would put one nine in two places at once. */
+export class ScheduleConflictError extends Error {
+  constructor(message: string) { super(message); this.name = 'ScheduleConflictError'; }
+}
+
+/** L2: a productId that is not one of this course's products. */
+export class ScheduleProductError extends Error {
+  constructor(message: string) { super(message); this.name = 'ScheduleProductError'; }
+}
+
 /** Wire shape (dollars) — what every caller sends to a browser. */
 export async function listSchedules(courseId: string) {
-  const rows = await prisma.teeTimeSchedule.findMany({ where: { courseId }, orderBy: { createdAt: 'asc' } });
-  return rows.map(scheduleToWire);
+  const rows = await prisma.teeTimeSchedule.findMany({
+    where: { courseId }, orderBy: { createdAt: 'asc' },
+    include: { product: { select: { label: true, holes: true } } },
+  });
+  return rows.map(r => {
+    const { product, ...rest } = r;
+    return { ...scheduleToWire(rest), productLabel: product?.label ?? null, productHoles: product?.holes ?? null };
+  });
+}
+
+/** L2: resolve + validate the product a schedule is scoped to. Returns null for the simple (unscoped) case. */
+async function resolveProduct(courseId: string, productId: unknown) {
+  if (productId === undefined || productId === null || productId === '') return null;
+  const product = await prisma.courseProduct.findFirst({ where: { id: String(productId), courseId }, select: { id: true, holes: true } });
+  if (!product) throw new ScheduleProductError('That product does not belong to this course.');
+  return product;
+}
+
+/** L2: refuse a save that would put one nine in two places at once. */
+async function assertNoConflict(courseId: string, candidate: { id?: string | null; productId: string | null; daysOfWeek: number[]; startTime: string; endTime: string; active: boolean }) {
+  const [others, products, nines] = await Promise.all([
+    prisma.teeTimeSchedule.findMany({ where: { courseId }, select: { id: true, productId: true, daysOfWeek: true, startTime: true, endTime: true, active: true } }),
+    prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, label: true, nineIds: true } }),
+    prisma.nine.findMany({ where: { courseId }, select: { id: true, name: true } }),
+  ]);
+  const why = findScheduleConflict(candidate, others, products, nines);
+  if (why) throw new ScheduleConflictError(why);
 }
 
 export async function createSchedule(courseId: string, body: Record<string, unknown>, opts: ScheduleScope = {}) {
+  const product = await resolveProduct(courseId, body.productId);
+  const daysOfWeek = (body.daysOfWeek as number[]) ?? [];
+  await assertNoConflict(courseId, { productId: product?.id ?? null, daysOfWeek, startTime: body.startTime as string, endTime: body.endTime as string, active: true });
   const schedule = await prisma.teeTimeSchedule.create({
     data: {
       courseId,
+      productId: product?.id ?? null,
       tierName: (body.tierName as string) || 'standard',
-      daysOfWeek: (body.daysOfWeek as number[]) ?? [],
+      daysOfWeek,
       startTime: body.startTime as string,
       endTime: body.endTime as string,
       intervalMinutes: Number(body.intervalMinutes) || 8,
-      holes: Number(body.holes) || 18,
+      // A product-scoped schedule sells the product's round, whatever the form said.
+      holes: product ? product.holes : (Number(body.holes) || 18),
       // The editor sends dollars; the columns are cents.
       ...scheduleMoneyForCreate(body),
       walkingAllowed: body.walkingAllowed !== false,
@@ -66,16 +107,32 @@ export async function updateSchedule(id: string, data: Record<string, unknown>, 
   });
   if (!existing) return null;
 
+  // L2: `productId` may be set, changed, or cleared (null) on an edit.
+  const productTouched = data.productId !== undefined;
+  const product = productTouched ? await resolveProduct(existing.courseId, data.productId) : null;
+  const nextProductId = productTouched ? (product?.id ?? null) : existing.productId;
+  const next = {
+    active: data.active !== undefined ? Boolean(data.active) : existing.active,
+    daysOfWeek: (data.daysOfWeek as number[] | undefined) ?? existing.daysOfWeek,
+    startTime: (data.startTime as string | undefined) ?? existing.startTime,
+    endTime: (data.endTime as string | undefined) ?? existing.endTime,
+  };
+  await assertNoConflict(existing.courseId, { id: existing.id, productId: nextProductId, ...next });
+  const nextHoles = nextProductId
+    ? (product?.holes ?? (await prisma.courseProduct.findUnique({ where: { id: nextProductId }, select: { holes: true } }))?.holes ?? existing.holes)
+    : (data.holes !== undefined ? Number(data.holes) : existing.holes);
+
   const updated = await prisma.teeTimeSchedule.update({
     where: { id: existing.id },
     data: {
-      active: data.active !== undefined ? Boolean(data.active) : existing.active,
+      active: next.active,
+      productId: nextProductId,
       tierName: (data.tierName as string | undefined) ?? existing.tierName,
-      daysOfWeek: (data.daysOfWeek as number[] | undefined) ?? existing.daysOfWeek,
-      startTime: (data.startTime as string | undefined) ?? existing.startTime,
-      endTime: (data.endTime as string | undefined) ?? existing.endTime,
+      daysOfWeek: next.daysOfWeek,
+      startTime: next.startTime,
+      endTime: next.endTime,
       intervalMinutes: data.intervalMinutes !== undefined ? Number(data.intervalMinutes) : existing.intervalMinutes,
-      holes: data.holes !== undefined ? Number(data.holes) : existing.holes,
+      holes: nextHoles,
       // Only the money keys present in the body are converted; the rest keep
       // their existing cents values (Prisma leaves omitted fields alone).
       ...scheduleMoneyFromWire(data),

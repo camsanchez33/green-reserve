@@ -19,6 +19,9 @@ function normalizeDbTeeTime(t: any) {
     date: t.date,
     time: t.time,
     holes: t.holes,
+    // L2: which bookable product this slot sells (null on a simple course).
+    product_id: t.productId ?? null,
+    product_label: t.product?.label ?? null,
     players_available: spotsLeft,
     // MP-3 B2c — THE `any` HOLE AGAIN. This mapper takes `t: any` (with an
     // explicit eslint-disable), so the renamed columns produced NO compile
@@ -56,6 +59,7 @@ export async function GET(
   const teeTimes = await prisma.teeTime.findMany({
     where: { courseId: dbCourse.id, date, status: { not: 'blocked' } },
     orderBy: { time: 'asc' },
+    include: { product: { select: { label: true } } },
   });
 
   // SD-3: strip slots that have passed on the COURSE's clock. TeeTime.time is

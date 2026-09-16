@@ -21,7 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
-      teeTime: { select: { date: true, time: true, holes: true } },
+      teeTime: { select: { date: true, time: true, holes: true, product: { select: { label: true } } } },
       course: {
         select: {
           name: true, slug: true, address: true, city: true, state: true,
@@ -59,6 +59,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     date: booking.teeTime.date,
     time: booking.teeTime.time,
     holes: booking.teeTime.holes,
+    productLabel: booking.teeTime.product?.label ?? null,
     players: booking.players,
     greenFeeTotal: booking.greenFeeTotal,
     cartFeeTotal: booking.cartFeeTotal,

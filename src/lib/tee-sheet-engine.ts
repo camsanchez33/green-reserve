@@ -52,17 +52,26 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
   if (blackout) return 0;
 
   const schedules = await prisma.teeTimeSchedule.findMany({ where: { courseId, active: true } });
+  // L2: a schedule scoped to a product generates that product's slots (with
+  // the product's hole count); a schedule scoped to an INACTIVE product
+  // generates nothing. Unscoped schedules are the simple course, as before.
+  const products = await prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, holes: true, active: true } });
+  const productById = new Map(products.map(p => [p.id, p]));
   const applicable = schedules.filter(
-    s => s.daysOfWeek.length === 0 || s.daysOfWeek.includes(dayOfWeek)
+    s => (s.daysOfWeek.length === 0 || s.daysOfWeek.includes(dayOfWeek))
+      && (!s.productId || productById.get(s.productId)?.active === true)
   );
 
-  // Build the desired slot map (time -> data) from schedules. If two active
-  // schedules overlap on the same time, the later one in the list wins —
-  // same single-row-per-time guarantee the old code lacked.
+  // Build the desired slot map (product|time -> data) from schedules. Two
+  // schedules for the SAME scope overlapping on a time: the later one wins —
+  // one row per product per time. Two products may share a start time (their
+  // nines do not overlap; the schedule editor refuses the case where they do).
   // MP-3 B2c+B2d: cents throughout. Because TeeTimeSchedule and TeeTime were
   // converted in the SAME migration, this copy stays a straight pass-through —
   // no x100 anywhere in the generation path.
+  const slotKey = (productId: string | null, time: string) => `${productId ?? ''}|${time}`;
   const desired = new Map<string, {
+    productId: string | null; time: string;
     holes: number; greenFeeCents: number; memberRateCents: number | null; residentRateCents: number | null;
     cartFeeCents: number; walkingAllowed: boolean; tierName: string;
   }>();
@@ -70,12 +79,16 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
     const greenFeeCents     = isWeekend ? schedule.greenFeeWeekendCents     : schedule.greenFeeWeekdayCents;
     const memberRateCents   = isWeekend ? schedule.memberRateWeekendCents   : schedule.memberRateWeekdayCents;
     const residentRateCents = isWeekend ? schedule.residentRateWeekendCents : schedule.residentRateWeekdayCents;
+    const productId = schedule.productId ?? null;
+    const holes = productId ? (productById.get(productId)?.holes ?? schedule.holes) : schedule.holes;
 
     let current = timeToMinutes(schedule.startTime);
     const end = timeToMinutes(schedule.endTime);
     while (current < end) {
-      desired.set(minutesToTime(current), {
-        holes: schedule.holes,
+      const time = minutesToTime(current);
+      desired.set(slotKey(productId, time), {
+        productId, time,
+        holes,
         greenFeeCents,
         memberRateCents: memberRateCents ?? null,
         residentRateCents: residentRateCents ?? null,
@@ -88,7 +101,7 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
   }
 
   const existing = await prisma.teeTime.findMany({ where: { courseId, date: dateStr } });
-  const existingByTime = new Map(existing.map(t => [t.time, t]));
+  const existingByKey = new Map(existing.map(t => [slotKey(t.productId ?? null, t.time), t]));
 
   let created = 0;
 
@@ -101,8 +114,8 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
     await prisma.teeTime.deleteMany({ where: { id: { in: toDelete } } });
   }
 
-  for (const [time, slot] of desired) {
-    const existingSlot = existingByTime.get(time);
+  for (const [key, slot] of desired) {
+    const existingSlot = existingByKey.get(key);
     if (existingSlot && (existingSlot.playersBooked > 0 || existingSlot.status === 'blocked')) {
       // Already booked or manually blocked — leave it exactly as is.
       continue;
@@ -111,7 +124,8 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
       data: {
         courseId,
         date: dateStr,
-        time,
+        time: slot.time,
+        productId: slot.productId,
         holes: slot.holes,
         playersAvailable: 4,
         playersBooked: 0,

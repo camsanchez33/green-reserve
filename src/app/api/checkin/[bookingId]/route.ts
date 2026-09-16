@@ -12,7 +12,7 @@ async function authorize(bookingId: string, token: string | null) {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
-      teeTime: { select: { date: true, time: true, holes: true, cartFeeCents: true } },
+      teeTime: { select: { date: true, time: true, holes: true, cartFeeCents: true, product: { select: { label: true } } } },
       course: { select: { name: true, slug: true, address: true, city: true, state: true, brandColor: true } },
     },
   });
@@ -42,6 +42,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     time: booking.teeTime.time,
     players: booking.players,
     holes: booking.teeTime.holes,
+    productLabel: booking.teeTime.product?.label ?? null,
     status: booking.status,
     totalAmount: booking.totalAmount,
     greenFeeTotal: booking.greenFeeTotal,

@@ -36,6 +36,9 @@ export type TeeTime = {
   date: string;
   time: string;
   holes: number;
+  /** L2: the bookable product (e.g. "North + South"); null/absent on a simple course. */
+  product_id?: string | null;
+  product_label?: string | null;
   players_available: number;
   green_fee: number;
   cart_fee: number;

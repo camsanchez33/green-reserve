@@ -25,6 +25,8 @@ const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink 
 /* ─── Types ────────────────────────────────────────────────────────────── */
 type TeeTime = {
   id: string; date: string; time: string; holes: number;
+  /** L2: the bookable product this slot sells (null on a simple course). */
+  product?: { label: string } | null;
   playersAvailable: number; playersBooked: number;
   greenFee: number; cartFee: number; walkingAllowed: boolean;
   status: string; bookings?: Booking[];
@@ -856,7 +858,7 @@ function DashboardPageInner() {
                         <div className="flex items-center gap-3 min-w-0 flex-wrap">
                           <span className="font-serif font-medium text-ink text-[17px] leading-none w-20 tabular-nums">{fmtTime(tt.time)}</span>
                           {tt.id===nextUpId && <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-pine">Next up</span>}
-                          <span className="text-[12.5px] text-ink-muted">{tt.holes}h</span>
+                          <span className="text-[12.5px] text-ink-muted">{tt.product?.label ? `${tt.product.label} · ` : ''}{tt.holes}h</span>
                           {slotBadge(tt)}
                           <span className="text-[12.5px] text-ink-muted tabular-nums">{tt.playersBooked}/{tt.playersAvailable}</span>
                           <span className="text-[12.5px] font-medium text-ink-soft tabular-nums">${tt.greenFee}{tt.cartFee>0?` +$${tt.cartFee}`:''}</span>

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import Link from 'next/link';
+import { Plus, Trash2, AlertCircle, CheckCircle2, CalendarClock } from 'lucide-react';
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
@@ -25,7 +26,7 @@ function RowStatus({ saving, saved, error }: { saving: boolean; saved: boolean; 
 }
 
 type Nine = { id: string; name: string; par: number; sortOrder: number };
-type CourseProduct = { id: string; label: string; holes: number; nineIds: string[]; active: boolean; sortOrder: number };
+type CourseProduct = { id: string; label: string; holes: number; nineIds: string[]; active: boolean; sortOrder: number; scheduleCount?: number };
 type TeeSetNineRow = { id: string; teeSetId: string; nineId: string; yardage: number };
 type ProductRatingRow = { id: string; teeSetId: string; courseProductId: string; rating: number; slope: number };
 type TeeSet = { id: string; name: string; yardage: number; rating: number; slope: number; sortOrder: number; nineYardages: TeeSetNineRow[]; productRatings: ProductRatingRow[] };
@@ -258,6 +259,23 @@ function ProductsSection({ products, setProducts, nines }: { products: CoursePro
               </div>
             </div>
           ))}
+          {/* L2: a product with no schedule generates no tee times — say so, and point at Schedules. */}
+          {products.some(p => p.active) && (
+            (() => {
+              const missing = products.filter(p => p.active && !(p.scheduleCount && p.scheduleCount > 0));
+              return missing.length > 0 ? (
+                <div className="border border-warn/20 bg-warn/5 rounded-md px-3 py-2.5 text-sm text-ink-soft flex items-start gap-2">
+                  <CalendarClock className="w-4 h-4 text-warn shrink-0 mt-0.5" />
+                  <span>
+                    Now build a schedule for each round golfers can book — {missing.map(p => `"${p.label}"`).join(', ')} {missing.length === 1 ? 'has' : 'have'} none yet, so {missing.length === 1 ? 'it generates' : 'they generate'} no tee times.{' '}
+                    <Link href="/dashboard/schedules" className="text-pine font-medium hover:underline">Open Schedules →</Link>
+                  </span>
+                </div>
+              ) : (
+                <p className="text-xs text-ink-faint">Every active round has a schedule. Change hours and rotation in <Link href="/dashboard/schedules" className="text-pine hover:underline">Schedules</Link>.</p>
+              );
+            })()
+          )}
           {draft ? (
             <div className="border border-line-soft rounded-md p-3 space-y-2">
               <div className="flex items-center gap-3">

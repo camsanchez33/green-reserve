@@ -9,7 +9,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 
 type ReceiptData = {
   bookingId: string; golferName: string; courseName: string; courseSlug: string; courseLocation: string; brandColor?: string;
-  date: string; time: string; holes: number; players: number; cartSelected: boolean;
+  date: string; time: string; holes: number; productLabel?: string | null; players: number; cartSelected: boolean;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number;
   accessFeeTotal: number; totalAmount: number; status: string;
   cancellationFeeTotal: number; cancellationFeeCharged: boolean; createdAt: string;
@@ -126,7 +126,7 @@ function ReceiptPageInner() {
                 <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{fmtDate(data.date)}</span></div>
                 <div className="flex justify-between"><span className="text-ink-muted">Tee Time</span><span className="font-medium text-ink">{fmtTime(data.time)}</span></div>
                 <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{data.players}</span></div>
-                <div className="flex justify-between"><span className="text-ink-muted">Holes</span><span className="font-medium text-ink">{data.holes}</span></div>
+                <div className="flex justify-between"><span className="text-ink-muted">{data.productLabel ? 'Round' : 'Holes'}</span><span className="font-medium text-ink">{data.productLabel ? `${data.productLabel} · ${data.holes} holes` : data.holes}</span></div>
                 {data.cartSelected && <div className="flex justify-between"><span className="text-ink-muted">Cart</span><span className="font-medium text-ink">Yes</span></div>}
               </div>
 

@@ -98,6 +98,7 @@ export async function POST(req: NextRequest) {
     where: { id: teeTimeId },
     include: {
       course: { include: { operator: { select: { email: true } } } },
+      product: { select: { label: true } },
     },
   });
   if (!teeTimeFull) return NextResponse.json({ error: 'Tee time not found.' }, { status: 404 });
@@ -278,6 +279,7 @@ export async function POST(req: NextRequest) {
       date:          teeTimeFull.date,
       time:          teeTimeFull.time,
       holes:         teeTimeFull.holes,
+      productLabel:  teeTimeFull.product?.label ?? null,
       players,
       appliedRate,
       greenFeeTotal,
@@ -356,7 +358,7 @@ export async function GET() {
   const bookings = await prisma.booking.findMany({
     where: { golferAccountId: golferSession.golferId },
     include: {
-      teeTime: { select: { date: true, time: true, holes: true } },
+      teeTime: { select: { date: true, time: true, holes: true, product: { select: { label: true } } } },
       course:  { select: { name: true, city: true, state: true, slug: true } },
     },
     orderBy: { createdAt: 'desc' },

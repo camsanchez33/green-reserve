@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, Pencil, Check, X, Power, RefreshCw } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
@@ -15,6 +15,8 @@ const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink 
 
 type Schedule = {
   id: string; tierName: string; daysOfWeek: number[]; startTime: string; endTime: string;
+  /** L2: the bookable product this schedule generates slots for (null = the course as a whole). */
+  productId?: string | null; productLabel?: string | null;
   intervalMinutes: number; holes: number; greenFeeWeekday: number; greenFeeWeekend: number;
   memberRateWeekday: number|null; memberRateWeekend: number|null;
   residentRateWeekday: number|null; residentRateWeekend: number|null;
@@ -22,7 +24,8 @@ type Schedule = {
 };
 
 function fmtTime(t: string) { const [h,m]=t.split(':').map(Number); return `${h%12||12}:${m.toString().padStart(2,'0')} ${h>=12?'PM':'AM'}`; }
-const emptyForm = () => ({ tierName:'standard', daysOfWeek:[0,1,2,3,4,5,6] as number[], startTime:'06:30', endTime:'17:30', intervalMinutes:8, holes:18, greenFeeWeekday:65, greenFeeWeekend:85, memberRateWeekday:'', memberRateWeekend:'', residentRateWeekday:'', residentRateWeekend:'', cartFee:18, walkingAllowed:true });
+type ProductOpt = { id: string; label: string; holes: number; active: boolean; scheduleCount?: number };
+const emptyForm = () => ({ productId: '' as string, tierName:'standard', daysOfWeek:[0,1,2,3,4,5,6] as number[], startTime:'06:30', endTime:'17:30', intervalMinutes:8, holes:18, greenFeeWeekday:65, greenFeeWeekend:85, memberRateWeekday:'', memberRateWeekend:'', residentRateWeekday:'', residentRateWeekend:'', cartFee:18, walkingAllowed:true });
 
 export default function SchedulesPage() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
@@ -34,6 +37,9 @@ export default function SchedulesPage() {
   const [saving, setSaving] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [hasMember, setHasMember] = useState(false);
+  // L2: the course's bookable products (empty on a simple course — no selector, no grouping).
+  const [products, setProducts] = useState<ProductOpt[]>([]);
+  const [productsError, setProductsError] = useState('');
   const [hasResident, setHasResident] = useState(false);
   // B-7: blocks + booking windows sit beside the rate table. Blocks are the
   // existing blackouts API; the windows are read from Settings (edited there).
@@ -66,8 +72,23 @@ export default function SchedulesPage() {
 
   // Review (B-7): the cards showed a rate whenever a schedule had one; the
   // table must not hide saved rates behind the course-level flag.
+  // L2: group under the product; an unscoped schedule on a multi-product course is
+  // shown under "Whole course" so it is never invisible.
+  const scheduleGroups = (() => {
+    if (!products.some(p => p.active) && !schedules.some(s => s.productId)) return [{ key: 'all', title: 'Schedules', holes: 0, rows: schedules }];
+    const groups = products.map(p => ({ key: p.id, title: p.label, holes: p.holes, rows: schedules.filter(s => s.productId === p.id) }));
+    const rest = schedules.filter(s => !s.productId || !products.some(p => p.id === s.productId));
+    if (rest.length) groups.push({ key: 'none', title: 'Whole course (no product)', holes: 0, rows: rest });
+    return groups;
+  })();
   const showMember = hasMember || schedules.some(s => s.memberRateWeekday != null);
   const showResident = hasResident || schedules.some(s => s.residentRateWeekday != null);
+
+  const loadProducts = useCallback(async () => {
+    const r = await dfetch<ProductOpt[]>('/api/operator/course-products');
+    if (r.ok && Array.isArray(r.data)) { setProducts(r.data); setProductsError(''); }
+    else if (!r.ok) setProductsError(r.error);
+  }, []);
 
   const loadBlackouts = useCallback(async () => {
     const r = await dfetch<{ id: string; date: string; reason: string }[]>('/api/operator/blackouts');
@@ -108,25 +129,32 @@ export default function SchedulesPage() {
   }
 
   useEffect(() => {
-    loadSchedules();
+    loadSchedules(); loadProducts();
     loadWindows();
     loadBlackouts();
-  }, [loadSchedules, loadBlackouts, loadWindows]);
+  }, [loadProducts, loadSchedules, loadBlackouts, loadWindows]);
 
   function openAdd() { setForm(emptyForm()); setEditId(null); setShowAdd(true); }
   function openEdit(s: Schedule) {
-    setForm({ tierName:s.tierName, daysOfWeek:s.daysOfWeek, startTime:s.startTime, endTime:s.endTime, intervalMinutes:s.intervalMinutes, holes:s.holes, greenFeeWeekday:s.greenFeeWeekday, greenFeeWeekend:s.greenFeeWeekend, memberRateWeekday:s.memberRateWeekday?.toString()??'', memberRateWeekend:s.memberRateWeekend?.toString()??'', residentRateWeekday:s.residentRateWeekday?.toString()??'', residentRateWeekend:s.residentRateWeekend?.toString()??'', cartFee:s.cartFee, walkingAllowed:s.walkingAllowed });
+    setForm({ productId: s.productId ?? '', tierName:s.tierName, daysOfWeek:s.daysOfWeek, startTime:s.startTime, endTime:s.endTime, intervalMinutes:s.intervalMinutes, holes:s.holes, greenFeeWeekday:s.greenFeeWeekday, greenFeeWeekend:s.greenFeeWeekend, memberRateWeekday:s.memberRateWeekday?.toString()??'', memberRateWeekend:s.memberRateWeekend?.toString()??'', residentRateWeekday:s.residentRateWeekday?.toString()??'', residentRateWeekend:s.residentRateWeekend?.toString()??'', cartFee:s.cartFee, walkingAllowed:s.walkingAllowed });
     setEditId(s.id); setShowAdd(true);
   }
 
   const toggleDay = (d: number) => setForm(f=>({ ...f, daysOfWeek: f.daysOfWeek.includes(d)?f.daysOfWeek.filter(x=>x!==d):[...f.daysOfWeek,d].sort() }));
   const set = (k: string, v: unknown) => setForm(f=>({...f,[k]:v}));
 
+  const activeProducts = products.filter(p => p.active);
+  const productFor = (id: string | null | undefined) => products.find(p => p.id === id);
+
   async function save() {
     if (!form.daysOfWeek.length) return toast('Select at least one day.', 'warn');
+    // L2: on a multi-product course every schedule belongs to one product.
+    if (activeProducts.length > 0 && !form.productId) return toast('Pick which round this schedule is for.', 'warn');
     const clash = schedules.find(s => {
       if (editId && s.id === editId) return false;
       if (!s.active) return false;
+      // Different products are judged by the server (they may share a nine or not).
+      if ((s.productId ?? '') !== (form.productId ?? '')) return false;
       const sharesDay = s.daysOfWeek.some(d => form.daysOfWeek.includes(d));
       if (!sharesDay) return false;
       return form.startTime < s.endTime && s.startTime < form.endTime;
@@ -138,13 +166,14 @@ export default function SchedulesPage() {
     }
     if (form.startTime >= form.endTime) { toast('End time must be after start time.', 'warn'); return; }
     setSaving(true);
-    const payload = { ...form, memberRateWeekday:form.memberRateWeekday||null, memberRateWeekend:form.memberRateWeekend||null, residentRateWeekday:form.residentRateWeekday||null, residentRateWeekend:form.residentRateWeekend||null };
+    const payload = { ...form, productId: form.productId || null, memberRateWeekday:form.memberRateWeekday||null, memberRateWeekend:form.memberRateWeekend||null, residentRateWeekday:form.residentRateWeekday||null, residentRateWeekend:form.residentRateWeekend||null };
     // SD-10: the `{error}` body used to be written into schedules[] as a row and
     // the page went blank on `daysOfWeek.map`. Check first; keep the modal open.
     const r = editId
       ? await dfetch<Schedule>('/api/operator/schedule', { method: 'PATCH', body: JSON.stringify({ id: editId, ...payload }) })
       : await dfetch<Schedule>('/api/operator/schedule', { method: 'POST', body: JSON.stringify(payload) });
     setSaving(false);
+    // A 409 carries the plain-English reason ("South is in use by North + South until 12:00 PM …").
     if (!r.ok || !r.data) { toast(r.ok ? 'The schedule came back empty — refresh and check.' : r.error); return; }
     const row = r.data;
     setSchedules(s => editId ? s.map(x => x.id === editId ? row : x) : [...s, row]);
@@ -254,12 +283,21 @@ export default function SchedulesPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-line-soft">
-                    {schedules.map(s => (
+                    {scheduleGroups.map(g => (
+                      <React.Fragment key={g.key}>
+                        {scheduleGroups.length > 1 && (
+                          <tr className="bg-paper">
+                            <td colSpan={99} className="px-4 py-2 text-[11px] uppercase tracking-[0.1em] text-ink-muted">
+                              {g.title}{g.holes ? ` · ${g.holes} holes` : ''}{g.rows.length === 0 ? ' · no schedule yet — it generates no tee times' : ''}
+                            </td>
+                          </tr>
+                        )}
+                        {g.rows.map(s => (
                       <tr key={s.id} className={s.active ? '' : 'opacity-60'}>
                         <td className="px-4 py-3 align-top">
                           <div className="font-medium text-ink capitalize">{s.tierName}</div>
                           <div className="text-[12.5px] text-ink-soft mt-0.5">{s.daysOfWeek.map(d=>DAYS[d]).join(', ')} · {fmtTime(s.startTime)} – {fmtTime(s.endTime)}</div>
-                          <div className="text-[12px] text-ink-muted">every {s.intervalMinutes} min · {s.holes} holes · {s.walkingAllowed ? 'walking ok' : 'cart required'}</div>
+                          <div className="text-[12px] text-ink-muted">{scheduleGroups.length === 1 && s.productLabel ? `${s.productLabel} · ` : ''}every {s.intervalMinutes} min · {s.holes} holes · {s.walkingAllowed ? 'walking ok' : 'cart required'}</div>
                         </td>
                         <td className="px-3 py-3 text-right tabular-nums font-medium text-ink align-top">${s.greenFeeWeekday}</td>
                         <td className="px-3 py-3 text-right tabular-nums font-medium text-ink align-top">${s.greenFeeWeekend}</td>
@@ -275,6 +313,8 @@ export default function SchedulesPage() {
                           </div>
                         </td>
                       </tr>
+                        ))}
+                      </React.Fragment>
                     ))}
                   </tbody>
                 </table>
@@ -336,6 +376,17 @@ export default function SchedulesPage() {
                 <button onClick={() => { setShowAdd(false); setEditId(null); }} className="text-ink-muted hover:text-ink transition-colors"><X className="w-5 h-5"/></button>
               </div>
               <div className="px-5 py-4 space-y-4">
+                {productsError && <p className="text-xs text-bad">{productsError} <button onClick={loadProducts} className="underline">Retry</button></p>}
+                {activeProducts.length > 0 && (
+                  <div>
+                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Which round</label>
+                    <select value={form.productId} onChange={e=>set('productId',e.target.value)} className={iCls}>
+                      <option value="">Select…</option>
+                      {activeProducts.map(p => <option key={p.id} value={p.id}>{p.label} · {p.holes} holes</option>)}
+                    </select>
+                    <p className="text-[11px] text-ink-faint mt-1">Each schedule sells one round. Two rounds that share a nine can&apos;t run at the same time — the save will say so.</p>
+                  </div>
+                )}
                 <div>
                   <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Tier Name</label>
                   <select value={form.tierName} onChange={e=>set('tierName',e.target.value)} className={iCls}>
@@ -373,7 +424,7 @@ export default function SchedulesPage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div><label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Holes</label><select value={form.holes} onChange={e=>set('holes',Number(e.target.value))} className={iCls}><option value={9}>9 holes</option><option value={18}>18 holes</option></select></div>
+                  <div className={form.productId ? 'hidden' : ''}><label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Holes</label><select value={form.holes} onChange={e=>set('holes',Number(e.target.value))} className={iCls}><option value={9}>9 holes</option><option value={18}>18 holes</option></select></div>
                   <div><label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Cart Fee ($)</label><input type="number" value={form.cartFee} onChange={e=>set('cartFee',Number(e.target.value))} className={iCls} min={0}/></div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">

@@ -6,9 +6,13 @@ import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 export async function GET() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  return NextResponse.json(
-    await prisma.courseProduct.findMany({ where: { courseId: session.courseId }, orderBy: { sortOrder: 'asc' } })
-  );
+  // L2: `scheduleCount` lets the Course & Layout tab say which products still
+  // have no schedule (and so generate no tee times).
+  const rows = await prisma.courseProduct.findMany({
+    where: { courseId: session.courseId }, orderBy: { sortOrder: 'asc' },
+    include: { _count: { select: { schedules: true } } },
+  });
+  return NextResponse.json(rows.map(({ _count, ...p }) => ({ ...p, scheduleCount: _count.schedules })));
 }
 
 // Every nineId a product claims must actually belong to this operator's course —

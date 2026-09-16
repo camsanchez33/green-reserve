@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS } from '@/lib/admin-session';
-import { listSchedules, createSchedule, updateSchedule, deleteSchedule } from '@/lib/schedule-service';
+import { listSchedules, createSchedule, updateSchedule, deleteSchedule, ScheduleConflictError, ScheduleProductError } from '@/lib/schedule-service';
+
+// L2: the service refuses a save that would double-book a nine (409) or names a
+// product this course does not own (400); everything else is unchanged.
+function scheduleError(err: unknown) {
+  if (err instanceof ScheduleConflictError) return NextResponse.json({ error: err.message, conflict: true }, { status: 409 });
+  if (err instanceof ScheduleProductError) return NextResponse.json({ error: err.message }, { status: 400 });
+  return null;
+}
 
 // MP-5d: this route and /api/operator/schedule are thin callers of ONE
 // schedule service. The rebuild-the-window rule, the cents conversion and the
@@ -26,7 +34,8 @@ export async function POST(req: NextRequest) {
   if (!courseId) return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });
   if (!body.startTime || !body.endTime) return NextResponse.json({ error: 'First and last tee are required' }, { status: 400 });
 
-  return NextResponse.json(await createSchedule(courseId, body, { actor: session.name }));
+  try { return NextResponse.json(await createSchedule(courseId, body, { actor: session.name })); }
+  catch (err) { const r = scheduleError(err); if (r) return r; throw err; }
 }
 
 export async function PATCH(req: NextRequest) {
@@ -37,9 +46,11 @@ export async function PATCH(req: NextRequest) {
   void _ignored;
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
-  const updated = await updateSchedule(id, data, { actor: session.name });
-  if (!updated) return NextResponse.json({ error: 'Schedule not found' }, { status: 404 });
-  return NextResponse.json(updated);
+  try {
+    const updated = await updateSchedule(id, data, { actor: session.name });
+    if (!updated) return NextResponse.json({ error: 'Schedule not found' }, { status: 404 });
+    return NextResponse.json(updated);
+  } catch (err) { const r = scheduleError(err); if (r) return r; throw err; }
 }
 
 export async function DELETE(req: NextRequest) {
