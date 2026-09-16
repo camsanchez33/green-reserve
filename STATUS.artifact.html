@@ -117,15 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-09-16 01:42 UTC</span><span>main @ 0348a9e</span>
+    <span>2026-09-16 01:56 UTC</span><span>main @ fd59547</span>
     <span>1 uncommitted</span>
   </div>
 </header>
 <div class="tiles">
-  <div class="tile t-good"><span class="n">185</span><span class="l">Done</span></div>
+  <div class="tile t-good"><span class="n">186</span><span class="l">Done</span></div>
   <div class="tile t-warn"><span class="n">9</span><span class="l">Awaiting review</span></div>
   <div class="tile t-alarm"><span class="n">1</span><span class="l">In flight</span></div>
-  <div class="tile t-idle"><span class="n">20</span><span class="l">Not started</span></div>
+  <div class="tile t-idle"><span class="n">19</span><span class="l">Not started</span></div>
   <div class="tile t-idle"><span class="n">8</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">15</span><span class="l">Ideas parked</span></div>
 </div>
@@ -153,9 +153,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="row"><span class="idx">15</span><span class="t">MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in</span><span class="where">:1242</span></div>
 <div class="row"><span class="idx">16</span><span class="t">MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)</span><span class="where">:1289</span></div>
 <div class="row"><span class="idx">17</span><span class="t">MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState</span><span class="where">:1338</span></div>
-<div class="row"><span class="idx">18</span><span class="t">COURSE_LAYOUT_SPEC Phase L2 (Cam 2026-09-15: RUN NEXT; the spec's open question was answered 2026-07-16) — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels </span><span class="where">:1364</span></div>
-<div class="row"><span class="idx">19</span><span class="t">Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with &quot;TheGre</span><span class="where">:1393</span></div>
-<div class="row"><span class="idx">20</span><span class="t">BIRDIE_AI_SPEC Phase B1 (Cam 2026-09-15: BUILD IT behind BIRDIE_ENABLED=false; ANTHROPIC_API_KEY to be added to Vercel later) — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthrop</span><span class="where">:1472</span></div>
+<div class="row"><span class="idx">18</span><span class="t">Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with &quot;TheGre</span><span class="where">:1393</span></div>
+<div class="row"><span class="idx">19</span><span class="t">BIRDIE_AI_SPEC Phase B1 (Cam 2026-09-15: BUILD IT behind BIRDIE_ENABLED=false; ANTHROPIC_API_KEY to be added to Vercel later) — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthrop</span><span class="where">:1472</span></div>
 </div></section>
 <section><h2>Revise campaign &mdash; page by page</h2>
 <p class="note">14 pages closed, 8 open. One page in flight at a time.</p>
@@ -181,7 +180,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <p class="note">The box is open because <code>/gr-review</code> hasn't run &mdash; not because the code is missing.</p>
 <div class="ledger">
 <div class="row"><span class="t">MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin</span><span class="age">17d</span><span class="where">7246a62</span></div>
-<div class="row"><span class="t">MP-1</span><span class="age">16d</span><span class="where">41f5ea8</span></div>
+<div class="row"><span class="t">MP-1</span><span class="age">17d</span><span class="where">41f5ea8</span></div>
 <div class="row"><span class="t">MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until</span><span class="age">16d</span><span class="where">4ef11dd</span></div>
 <div class="row"><span class="t">MP-2</span><span class="age">16d</span><span class="where">958f229</span></div>
 <div class="row"><span class="t">MP-2b</span><span class="age">16d</span><span class="where">a134af5</span></div>
@@ -236,6 +235,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">fd59547</td><td class="num">2026-09-15</td><td>L2: the booking page sells products — the tee-sheet engine generates one slot per product per time (product-scoped schedules; inactive products generate nothing; simple courses unchanged); schedule-service scopes each schedule to one product and refuses a save that would put a nine in two places at once (lib/schedule-conflict.ts, 12/12 tests; 409 with the plain-English reason on both routes); the schedules editor picks the round, groups schedules under their product and shows the conflict; the Course &amp; Layout tab nudges toward a schedule per round; the draft build creates one default schedule per active product; the course page shows a 'Which round' selector when a day sells more than one product and labels every slot; the product label reaches booking emails, receipt, manage, check-in, the operator tee sheet, the admin sheet and the golfer account</td></tr>
+<tr><td class="num">dacf315</td><td class="num">2026-09-15</td><td>L2 schema (attended with Cam 2026-09-15): TeeTimeSchedule.productId and TeeTime.productId, nullable, SET NULL on product delete, indexed — migration product_scoping, additive; null means the simple one-product course and changes nothing</td></tr>
+<tr><td class="num">8066aa9</td><td class="num">2026-09-15</td><td>queue/spec update</td></tr>
 <tr><td class="num">0348a9e</td><td class="num">2026-09-15</td><td>SC-3 review fixes: a live booking link outranks a cancelled call on the sheet (and 'cancelled' has a label); the Overview queue now receives callInviteSentAt so the cold-invite signal can fire there; the reminder's once-only key carries the call time (a moved call gets its reminder), skips declined/archived inquiries, states the call's real length, and mints a token when an admin-scheduled call has none so the reschedule link always works; send_call_invite metered five a day per inquiry; a failed resend says the old link is dead; the System card distinguishes loading and error from 'not configured', needs both Google env vars for a green dot, and derives the no-call days from CALL_WINDOWS; 'they picked it' also on an overdue course-booked call</td></tr>
 <tr><td class="num">56dfe85</td><td class="num">2026-09-15</td><td>queue/spec update</td></tr>
 <tr><td class="num">07a8952</td><td class="num">2026-09-15</td><td>SC-3: the admin side — 'Send a booking link' on the set-up-call card (send/resend via send_call_invite, 'Booking link sent &lt;date&gt; · not booked yet'); the sheet's Next-call cell shows 'Invite sent · Nd ago' and marks a course-picked call 'they picked it'; an invite unanswered 5+ days is a yourMove signal ('Invite sent 6 days ago, no time picked'); 'Talking tomorrow' reminder 24h before each scheduled call on the hourly cron, once per call; the System page shows CALL_WINDOWS and which Google calendar is the real filter; callInviteToken stripped from admin responses</td></tr>
@@ -245,9 +247,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">5ea6455</td><td class="num">2026-09-15</td><td>SC-1 review fixes: free/busy cache keyed on 5-minute buckets and evicted (it could never hit before); 8s timeouts on every Google fetch; error strings name the operation, not the path with the calendar id; scope narrowed to events + readonly; openSlots steps the Eastern calendar date so DST never skips or doubles a day (tests added, 26/26); the check script's run line loads .env.local and retries the delete</td></tr>
 <tr><td class="num">d66bc69</td><td class="num">2026-09-15</td><td>queue/spec update</td></tr>
 <tr><td class="num">bab429b</td><td class="num">2026-09-15</td><td>H-2d-R1 + H-2f (Cam 2026-09-15): the homepage device mockups keep their soft shadows and the cream hand-off dissolves are the only allowed gradients — CLAUDE.md BANNED line amended; the pricing slab now dissolves from and into cream at both edges (18vh, under the content, off on phones) like the story</td></tr>
-<tr><td class="num">32d985e</td><td class="num">2026-09-15</td><td>SC-1: call invites + availability — migration call_invites (CourseInquiry.callInviteToken/SentAt/ExpiresAt, Call.bookedByCourse/gcalEventId, additive); lib/call-availability.ts (30-min slots in Cam's windows minus busy blocks and scheduled calls, preference orders never removes; 22/22 tests); lib/google-calendar.ts (service-account JWT via jose, freebusy cached 5 min and throwing, create/move/delete events never throwing into a booking); scripts/google-calendar-check.ts for the live round trip once GOOGLE_* env is set; env names recorded in SHIPPING + PASSWORD_CHECKLIST</td></tr>
-<tr><td class="num">236096e</td><td class="num">2026-09-15</td><td>queue/spec update</td></tr>
-<tr><td class="num">21c8d25</td><td class="num">2026-09-15</td><td>Security (IF-1 review): a re-submission of the lead form only carries new email/phone when it comes from the email on file; otherwise the admin's resubmit diff is labelled unverified and no contact change is recorded — a stranger who knows a course's name and town can no longer steer outreach to themselves</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

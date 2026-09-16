@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-16T01:42:19.322Z",
+  "generatedAt": "2026-09-16T01:56:59.343Z",
   "repo": {
-    "head": "0348a9e",
+    "head": "fd59547",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,14 +10,14 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-15T21:33:11-04:00",
+    "queueLastCommit": "2026-09-15T21:42:20-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 185,
+    "runDone": 186,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 20,
+    "runNotStarted": 19,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -51,7 +51,7 @@
       "line": 530,
       "hash": "41f5ea8",
       "shipDate": "2026-08-29",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
@@ -187,11 +187,6 @@
     {
       "title": "MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState",
       "line": 1338,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "COURSE_LAYOUT_SPEC Phase L2 (Cam 2026-09-15: RUN NEXT; the spec's open question was answered 2026-07-16) — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels ",
-      "line": 1364,
       "section": "Queue (run in this order)"
     },
     {
@@ -767,6 +762,21 @@
   },
   "recentCommits": [
     {
+      "h": "fd59547",
+      "date": "2026-09-15",
+      "subject": "L2: the booking page sells products — the tee-sheet engine generates one slot per product per time (product-scoped schedules; inactive products generate nothing; simple courses unchanged); schedule-service scopes each schedule to one product and refuses a save that would put a nine in two places at once (lib/schedule-conflict.ts, 12/12 tests; 409 with the plain-English reason on both routes); the schedules editor picks the round, groups schedules under their product and shows the conflict; the Course & Layout tab nudges toward a schedule per round; the draft build creates one default schedule per active product; the course page shows a 'Which round' selector when a day sells more than one product and labels every slot; the product label reaches booking emails, receipt, manage, check-in, the operator tee sheet, the admin sheet and the golfer account"
+    },
+    {
+      "h": "dacf315",
+      "date": "2026-09-15",
+      "subject": "L2 schema (attended with Cam 2026-09-15): TeeTimeSchedule.productId and TeeTime.productId, nullable, SET NULL on product delete, indexed — migration product_scoping, additive; null means the simple one-product course and changes nothing"
+    },
+    {
+      "h": "8066aa9",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "0348a9e",
       "date": "2026-09-15",
       "subject": "SC-3 review fixes: a live booking link outranks a cancelled call on the sheet (and 'cancelled' has a label); the Overview queue now receives callInviteSentAt so the cold-invite signal can fire there; the reminder's once-only key carries the call time (a moved call gets its reminder), skips declined/archived inquiries, states the call's real length, and mints a token when an admin-scheduled call has none so the reschedule link always works; send_call_invite metered five a day per inquiry; a failed resend says the old link is dead; the System card distinguishes loading and error from 'not configured', needs both Google env vars for a green dot, and derives the no-call days from CALL_WINDOWS; 'they picked it' also on an overdue course-booked call"
@@ -810,21 +820,6 @@
       "h": "bab429b",
       "date": "2026-09-15",
       "subject": "H-2d-R1 + H-2f (Cam 2026-09-15): the homepage device mockups keep their soft shadows and the cream hand-off dissolves are the only allowed gradients — CLAUDE.md BANNED line amended; the pricing slab now dissolves from and into cream at both edges (18vh, under the content, off on phones) like the story"
-    },
-    {
-      "h": "32d985e",
-      "date": "2026-09-15",
-      "subject": "SC-1: call invites + availability — migration call_invites (CourseInquiry.callInviteToken/SentAt/ExpiresAt, Call.bookedByCourse/gcalEventId, additive); lib/call-availability.ts (30-min slots in Cam's windows minus busy blocks and scheduled calls, preference orders never removes; 22/22 tests); lib/google-calendar.ts (service-account JWT via jose, freebusy cached 5 min and throwing, create/move/delete events never throwing into a booking); scripts/google-calendar-check.ts for the live round trip once GOOGLE_* env is set; env names recorded in SHIPPING + PASSWORD_CHECKLIST"
-    },
-    {
-      "h": "236096e",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "21c8d25",
-      "date": "2026-09-15",
-      "subject": "Security (IF-1 review): a re-submission of the lead form only carries new email/phone when it comes from the email on file; otherwise the admin's resubmit diff is labelled unverified and no contact change is recorded — a stranger who knows a course's name and town can no longer steer outreach to themselves"
     }
   ]
 }
