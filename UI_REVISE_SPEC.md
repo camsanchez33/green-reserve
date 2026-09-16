@@ -472,32 +472,35 @@ Cam, 2026-09-15, on the shipped H-2e hero: "make that shadow less and look more
 professional · make the scrolling header go away · get the logo bigger and in the
 center for the beginning."
 
-#### 1. One shadow, and it is quiet
+#### 1. No shadow at all
 
-Both `.device` instances carry a three-layer shadow whose far layers are at 35%
-and 40% black — measured live:
+**REVISED by Cam, 2026-09-16** — this section previously prescribed two shadow
+tokens (`--shadow-card`, `--shadow-card-lift`) to replace the three-layer poster
+shadow. Cam's call after seeing it live: delete them, do not lighten them.
 
-```
-0 1px 2px rgba(0,0,0,.05), 0 30px 50px -30px rgba(20,30,20,.35), 0 100px 140px -80px rgba(20,30,20,.4)
-```
+> "DELETE every box-shadow in home.module.css (not lighten) — cards get a 1px
+> var(--line) hairline instead."
 
-That is a poster shadow on a product screenshot, and it is most of what reads as
-unprofessional. Replace it with **one token used by every card on the page** —
-`.device`, `.card`, the tee-sheet card, the step cards:
+So: **`home.module.css` carries zero `box-shadow`.** Separation on this page is
+a 1px `var(--line)` hairline and nothing else.
 
-```css
---shadow-card: 0 1px 2px rgba(20,30,20,.04),
-               0 8px 16px -8px rgba(20,30,20,.10),
-               0 24px 40px -24px rgba(20,30,20,.12);
---shadow-card-lift: 0 2px 4px rgba(20,30,20,.05),
-                    0 16px 28px -12px rgba(20,30,20,.13),
-                    0 40px 64px -32px rgba(20,30,20,.15);
-```
+- `.device`, `.heroDevice .device`, `.heroSheet` — shadow deleted; the two that
+  had a `rgba(0,0,0,.06)` border now use `var(--line)` so every edge on the page
+  is the same one token.
+- `.laptopScreen` is a dark bezel (`#1d1f1a`), where a cream hairline would be
+  invisible. It loses its shadow and takes no border — its own dark edge against
+  the cream ground is the separation.
+- `.btn:hover` loses its pine glow; the 1px `translateY` is the whole hover.
+- `.card:hover` loses its bloom; the 6px lift stays and the hairline darkens to
+  `var(--line-strong)` instead. New token `--line-strong: #D9D6C8` on `.root`,
+  matching the shared `line-strong` in `globals.css`.
 
-`--shadow-card-lift` is the hover state for `.card` only. Nothing on the page
-defines its own `box-shadow` afterwards — grep `box-shadow` in
-`home.module.css` and confirm every remaining use is one of these two variables.
-Elevation is now one decision, not six.
+This **reverses the H-2d-R1 exemption**, so `CLAUDE.md`'s BANNED line is restored
+to forbidding shadows on the homepage in the same commit. The H-2f gradient
+exemption (the cream section hand-off dissolves) is untouched and still stands.
+
+**Verify:** `grep box-shadow src/app/home.module.css` returns nothing. Not one
+match, not a lighter one.
 
 #### 2. The header stops following
 
@@ -546,7 +549,7 @@ removing the sticky bar is safe.
 
 At the top of `/`: a centred 280px lockup, one muted link at the right, no bar,
 no border. Scroll: nothing re-appears, ever — check at 1440 and at 390. No
-element on the page carries a `box-shadow` that is not one of the two variables.
+element on the page carries a `box-shadow` at all (see §1, revised).
 The hero still measures exactly one viewport tall. Lighthouse mobile CLS is no
 worse than H-1's recorded number. Every other public page still has its normal
 fixed nav.
