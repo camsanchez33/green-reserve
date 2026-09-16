@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-16 01:33 UTC · branch `main` · HEAD `07a8952` · working tree **1 dirty file(s)**
+Generated 2026-09-16 01:42 UTC · branch `main` · HEAD `0348a9e` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -64,9 +64,9 @@ This is the distinction a raw checkbox count gets wrong.
 15. MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in — `RUN_QUEUE.md:1242`
 16. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1289`
 17. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1338`
-18. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1364`
+18. COURSE_LAYOUT_SPEC Phase L2 (Cam 2026-09-15: RUN NEXT; the spec's open question was answered 2026-07-16) — booking page sells products: product selector on tee sheet, per-product s — `RUN_QUEUE.md:1364`
 19. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1393`
-20. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1472`
+20. BIRDIE_AI_SPEC Phase B1 (Cam 2026-09-15: BUILD IT behind BIRDIE_ENABLED=false; ANTHROPIC_API_KEY to be added to Vercel later) — Birdie assistant foundation + operator helper: /api/ — `RUN_QUEUE.md:1472`
 
 ## Waiting on you (not on a build)
 
@@ -165,6 +165,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `0348a9e` 2026-09-15 — SC-3 review fixes: a live booking link outranks a cancelled call on the sheet (and 'cancelled' has a label); the Overview queue now receives callInviteSentAt so the cold-invite signal can fire there; the reminder's once-only key carries the call time (a moved call gets its reminder), skips declined/archived inquiries, states the call's real length, and mints a token when an admin-scheduled call has none so the reschedule link always works; send_call_invite metered five a day per inquiry; a failed resend says the old link is dead; the System card distinguishes loading and error from 'not configured', needs both Google env vars for a green dot, and derives the no-call days from CALL_WINDOWS; 'they picked it' also on an overdue course-booked call
+- `56dfe85` 2026-09-15 — queue/spec update
 - `07a8952` 2026-09-15 — SC-3: the admin side — 'Send a booking link' on the set-up-call card (send/resend via send_call_invite, 'Booking link sent <date> · not booked yet'); the sheet's Next-call cell shows 'Invite sent · Nd ago' and marks a course-picked call 'they picked it'; an invite unanswered 5+ days is a yourMove signal ('Invite sent 6 days ago, no time picked'); 'Talking tomorrow' reminder 24h before each scheduled call on the hourly cron, once per call; the System page shows CALL_WINDOWS and which Google calendar is the real filter; callInviteToken stripped from admin responses
 - `722934f` 2026-09-15 — SC-2 review fixes: book and reschedule share one SERIALIZABLE guarded write that tests overlap against every scheduled call in the window (a serialization failure answers slot_taken); per-inquiry cap on the booking POST; phone sanitised; a lone CR is a line break in the .ics; closed inquiries read as an expired link; the lead form mints the token synchronously but delivers the invite in the background so Resend can never delay or fail a submission; the resubmit path's confirmation reuses a live invite link; the header carries the editable phone; a reschedule keeps the call's real length; the they-call toggle seeds from the booked call; ARCHITECTURE.md regenerated for the new route
 - `88242e2` 2026-09-15 — queue/spec update
@@ -175,8 +177,6 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `32d985e` 2026-09-15 — SC-1: call invites + availability — migration call_invites (CourseInquiry.callInviteToken/SentAt/ExpiresAt, Call.bookedByCourse/gcalEventId, additive); lib/call-availability.ts (30-min slots in Cam's windows minus busy blocks and scheduled calls, preference orders never removes; 22/22 tests); lib/google-calendar.ts (service-account JWT via jose, freebusy cached 5 min and throwing, create/move/delete events never throwing into a booking); scripts/google-calendar-check.ts for the live round trip once GOOGLE_* env is set; env names recorded in SHIPPING + PASSWORD_CHECKLIST
 - `236096e` 2026-09-15 — queue/spec update
 - `21c8d25` 2026-09-15 — Security (IF-1 review): a re-submission of the lead form only carries new email/phone when it comes from the email on file; otherwise the admin's resubmit diff is labelled unverified and no contact change is recorded — a stranger who knows a course's name and town can no longer steer outreach to themselves
-- `189f23b` 2026-09-15 — IC-5 review fixes: draft autosave is an atomic write on outcome=scheduled and stale responses are ignored client-side (a late autosave can no longer revert a logged call); recap email throws on a Resend rejection so 'emailed' is never false; MoneyInput shows an invalid state instead of silently saving nothing; draft/log writes only the fields sent; build flags fees and tee times that came from the call, not the sheet; recap subject bounded; season fields are months and walking uses the sheet's own options (spec table updated); recap notice covers 'nothing captured'
-- `25baf6b` 2026-09-15 — IC-5: the call captures structured answers — lib/call-answers.ts (field catalog per agenda item, money in integer cents, v2 answersJson with the old prose shape still readable, one-line summaries, sheet prefill); Log-the-call card has real inputs per item, collapsed rows, autosave via save_call_draft with a visible status; log_call validates v2 and can email a recap; the setup sheet pre-fills empty keys from the call and says so; the build reads the call only for keys the sheet never touched; Still-need names missing fields; scripts/call-answers-test.ts 34/34
 
 ---
 

@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-16T01:33:10.357Z",
+  "generatedAt": "2026-09-16T01:42:19.322Z",
   "repo": {
-    "head": "07a8952",
+    "head": "0348a9e",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,7 +10,7 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-15T21:24:19-04:00",
+    "queueLastCommit": "2026-09-15T21:33:11-04:00",
     "unrecorded": []
   },
   "counts": {
@@ -190,7 +190,7 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first)",
+      "title": "COURSE_LAYOUT_SPEC Phase L2 (Cam 2026-09-15: RUN NEXT; the spec's open question was answered 2026-07-16) — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels ",
       "line": 1364,
       "section": "Queue (run in this order)"
     },
@@ -200,7 +200,7 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
+      "title": "BIRDIE_AI_SPEC Phase B1 (Cam 2026-09-15: BUILD IT behind BIRDIE_ENABLED=false; ANTHROPIC_API_KEY to be added to Vercel later) — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthrop",
       "line": 1472,
       "section": "Queue (run in this order)"
     }
@@ -767,6 +767,16 @@
   },
   "recentCommits": [
     {
+      "h": "0348a9e",
+      "date": "2026-09-15",
+      "subject": "SC-3 review fixes: a live booking link outranks a cancelled call on the sheet (and 'cancelled' has a label); the Overview queue now receives callInviteSentAt so the cold-invite signal can fire there; the reminder's once-only key carries the call time (a moved call gets its reminder), skips declined/archived inquiries, states the call's real length, and mints a token when an admin-scheduled call has none so the reschedule link always works; send_call_invite metered five a day per inquiry; a failed resend says the old link is dead; the System card distinguishes loading and error from 'not configured', needs both Google env vars for a green dot, and derives the no-call days from CALL_WINDOWS; 'they picked it' also on an overdue course-booked call"
+    },
+    {
+      "h": "56dfe85",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "07a8952",
       "date": "2026-09-15",
       "subject": "SC-3: the admin side — 'Send a booking link' on the set-up-call card (send/resend via send_call_invite, 'Booking link sent <date> · not booked yet'); the sheet's Next-call cell shows 'Invite sent · Nd ago' and marks a course-picked call 'they picked it'; an invite unanswered 5+ days is a yourMove signal ('Invite sent 6 days ago, no time picked'); 'Talking tomorrow' reminder 24h before each scheduled call on the hourly cron, once per call; the System page shows CALL_WINDOWS and which Google calendar is the real filter; callInviteToken stripped from admin responses"
@@ -815,16 +825,6 @@
       "h": "21c8d25",
       "date": "2026-09-15",
       "subject": "Security (IF-1 review): a re-submission of the lead form only carries new email/phone when it comes from the email on file; otherwise the admin's resubmit diff is labelled unverified and no contact change is recorded — a stranger who knows a course's name and town can no longer steer outreach to themselves"
-    },
-    {
-      "h": "189f23b",
-      "date": "2026-09-15",
-      "subject": "IC-5 review fixes: draft autosave is an atomic write on outcome=scheduled and stale responses are ignored client-side (a late autosave can no longer revert a logged call); recap email throws on a Resend rejection so 'emailed' is never false; MoneyInput shows an invalid state instead of silently saving nothing; draft/log writes only the fields sent; build flags fees and tee times that came from the call, not the sheet; recap subject bounded; season fields are months and walking uses the sheet's own options (spec table updated); recap notice covers 'nothing captured'"
-    },
-    {
-      "h": "25baf6b",
-      "date": "2026-09-15",
-      "subject": "IC-5: the call captures structured answers — lib/call-answers.ts (field catalog per agenda item, money in integer cents, v2 answersJson with the old prose shape still readable, one-line summaries, sheet prefill); Log-the-call card has real inputs per item, collapsed rows, autosave via save_call_draft with a visible status; log_call validates v2 and can email a recap; the setup sheet pre-fills empty keys from the call and says so; the build reads the call only for keys the sheet never touched; Still-need names missing fields; scripts/call-answers-test.ts 34/34"
     }
   ]
 }
