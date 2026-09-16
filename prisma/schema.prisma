@@ -217,6 +217,9 @@ model CourseProduct {
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   teeSetRatings CourseProductTeeSet[]
+  /// L2: schedules and generated slots scoped to this product.
+  schedules TeeTimeSchedule[]
+  teeTimes  TeeTime[]
 
   @@index([courseId])
 }
@@ -374,7 +377,13 @@ model TeeTime {
   createdAt        DateTime   @default(now())
   bookings         Booking[]
   teeTimeAlerts    TeeTimeAlert[]
+  /// L2: the product this slot sells (null on simple courses). One row per
+  /// product per time — two products may share a start time when their nines
+  /// do not overlap.
+  productId        String?
+  product          CourseProduct? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
+  @@index([productId])
   @@index([courseId, date])
   // MP-3: the tee-sheet and generation paths filter on date alone across courses.
   @@index([date])
@@ -487,6 +496,12 @@ model TeeTimeSchedule {
   walkingAllowed      Boolean  @default(true)
   active              Boolean  @default(true)
   createdAt           DateTime @default(now())
+  /// L2: which bookable product this schedule generates slots for. Null = the
+  /// simple case (one product, the course as a whole) — unchanged behaviour.
+  productId           String?
+  product             CourseProduct? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
 }
 
 model Blackout {
