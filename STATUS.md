@@ -4,18 +4,11 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-16 02:19 UTC · branch `main` · HEAD `7d684c2` · working tree **1 dirty file(s)**
+Generated 2026-09-16 02:20 UTC · branch `main` · HEAD `ae8371c` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
-
-### Uncommitted working tree (1 file(s))
-
-- `M RUN_QUEUE.md`
-
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
 
 ## In flight
 
@@ -163,6 +156,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `ae8371c` 2026-09-15 — queue/spec update
 - `7d684c2` 2026-09-15 — BIRDIE B1 review fixes: the rate limiter fails CLOSED for birdie: keys (a DB error must not uncap paid API spend; login and forms still fail open), the hourly cap is keyed on the course so staff and owner really share 20/h instead of getting 20 each, the cap is taken before the request body is parsed, a missing or rejected API key now reaches a real message (client construction moved inside the try; an auth failure mid-stream says so in-band), the widget remembers OPEN rather than closed so a dashboard navigation no longer shuts Birdie mid-conversation, Escape closes and opening focuses the input and the reply list is aria-live, the conversation log stops truncating, ARCHITECTURE lists /api/birdie/chat as operator-only, and the isolation test gains five cross-tenant checks (20/20)
 - `d622aed` 2026-09-15 — queue/spec update
 - `f023d05` 2026-09-15 — BIRDIE B1: the operator helper, shipped OFF — POST /api/birdie/chat (operator session only; persona, knowledge and course facts derived server-side; claude-haiku-4-5 via the official SDK, streamed; 600-token replies, 20 per course per hour, 600 per day platform-wide, BIRDIE_ENABLED kill switch; conversations logged as birdie.reply), lib/birdie (operator knowledge pack seeded from the tab intros with deep links, read-only course context scoped by session, guardrails), the floating Birdie widget on every dashboard page (streams, turns dashboard links into buttons, remembers closed, renders nothing while Birdie is off), a Birdie card on /admin/system (switch state + today's replies against the cap), env names in SHIPPING + PASSWORD_CHECKLIST Phase 7c, scripts/birdie-isolation-test.ts 14/14
@@ -174,7 +168,6 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `8066aa9` 2026-09-15 — queue/spec update
 - `0348a9e` 2026-09-15 — SC-3 review fixes: a live booking link outranks a cancelled call on the sheet (and 'cancelled' has a label); the Overview queue now receives callInviteSentAt so the cold-invite signal can fire there; the reminder's once-only key carries the call time (a moved call gets its reminder), skips declined/archived inquiries, states the call's real length, and mints a token when an admin-scheduled call has none so the reschedule link always works; send_call_invite metered five a day per inquiry; a failed resend says the old link is dead; the System card distinguishes loading and error from 'not configured', needs both Google env vars for a green dot, and derives the no-call days from CALL_WINDOWS; 'they picked it' also on an overdue course-booked call
 - `56dfe85` 2026-09-15 — queue/spec update
-- `07a8952` 2026-09-15 — SC-3: the admin side — 'Send a booking link' on the set-up-call card (send/resend via send_call_invite, 'Booking link sent <date> · not booked yet'); the sheet's Next-call cell shows 'Invite sent · Nd ago' and marks a course-picked call 'they picked it'; an invite unanswered 5+ days is a yourMove signal ('Invite sent 6 days ago, no time picked'); 'Talking tomorrow' reminder 24h before each scheduled call on the hourly cron, once per call; the System page shows CALL_WINDOWS and which Google calendar is the real filter; callInviteToken stripped from admin responses
 
 ---
 

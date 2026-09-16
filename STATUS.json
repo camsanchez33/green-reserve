@@ -1,16 +1,14 @@
 {
-  "generatedAt": "2026-09-16T02:19:34.015Z",
+  "generatedAt": "2026-09-16T02:20:01.350Z",
   "repo": {
-    "head": "7d684c2",
+    "head": "ae8371c",
     "branch": "main",
-    "dirtyCount": 1,
-    "dirty": [
-      "M RUN_QUEUE.md"
-    ],
+    "dirtyCount": 0,
+    "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-15T22:10:19-04:00",
+    "queueLastCommit": "2026-09-15T22:19:35-04:00",
     "unrecorded": []
   },
   "counts": {
@@ -757,6 +755,11 @@
   },
   "recentCommits": [
     {
+      "h": "ae8371c",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "7d684c2",
       "date": "2026-09-15",
       "subject": "BIRDIE B1 review fixes: the rate limiter fails CLOSED for birdie: keys (a DB error must not uncap paid API spend; login and forms still fail open), the hourly cap is keyed on the course so staff and owner really share 20/h instead of getting 20 each, the cap is taken before the request body is parsed, a missing or rejected API key now reaches a real message (client construction moved inside the try; an auth failure mid-stream says so in-band), the widget remembers OPEN rather than closed so a dashboard navigation no longer shuts Birdie mid-conversation, Escape closes and opening focuses the input and the reply list is aria-live, the conversation log stops truncating, ARCHITECTURE lists /api/birdie/chat as operator-only, and the isolation test gains five cross-tenant checks (20/20)"
@@ -810,11 +813,6 @@
       "h": "56dfe85",
       "date": "2026-09-15",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "07a8952",
-      "date": "2026-09-15",
-      "subject": "SC-3: the admin side — 'Send a booking link' on the set-up-call card (send/resend via send_call_invite, 'Booking link sent <date> · not booked yet'); the sheet's Next-call cell shows 'Invite sent · Nd ago' and marks a course-picked call 'they picked it'; an invite unanswered 5+ days is a yourMove signal ('Invite sent 6 days ago, no time picked'); 'Talking tomorrow' reminder 24h before each scheduled call on the hourly cron, once per call; the System page shows CALL_WINDOWS and which Google calendar is the real filter; callInviteToken stripped from admin responses"
     }
   ]
 }
