@@ -31,7 +31,7 @@ const FLOAT_RANGES: Record<string, [number, number]> = {
 const STRING_MAX: Record<string, number> = {
   name: 120, phone: 40, proShopPhone: 40, website: 300, giftCardUrl: 500,
   address: 200, city: 100, state: 40, zipCode: 20,
-  description: 5000, walkingNote: 500, rainCheckPolicy: 1000, dresscode: 1000,
+  description: 5000, walkingNote: 500, rainCheckPolicy: 1000,
   residentCounty: 100, residentState: 40, drivingRangeType: 60, restaurantType: 60,
   tournamentFrequency: 60, caddieType: 60, caddieNote: 500,
 };
@@ -87,9 +87,11 @@ export function validateSettingsPatch(body: Record<string, unknown>, allowed: st
     // HOTFIX after the SD review: amenities is a String[] column. The first
     // cut listed it under STRING_MAX, whose branch refuses arrays — and the
     // Settings page sends the whole course row, so EVERY save returned 400.
-    if (key === 'amenities') {
-      if (!Array.isArray(v)) return { ok: false, error: 'amenities must be a list.' };
-      data[key] = v.map(x => String(x).trim()).filter(Boolean).slice(0, 50);
+    // SD-8 review: `dresscode` is the same String[] shape and was missed by
+    // that hotfix — it sat in STRING_MAX, so every Booking rules save 400'd.
+    if (key === 'amenities' || key === 'dresscode') {
+      if (!Array.isArray(v)) return { ok: false, error: `${key} must be a list.` };
+      data[key] = v.map(x => String(x).trim().slice(0, 120)).filter(Boolean).slice(0, 50);
       continue;
     }
     if (key in ENUMS) {

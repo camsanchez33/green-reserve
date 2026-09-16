@@ -27,7 +27,7 @@ export async function GET() {
 
   // MP-3 B2b: cents at rest, dollars on the wire — the settings form was not
   // changed and still sends/receives dollar field names.
-  return NextResponse.json({ ...courseToWire(course), twoFactorMethod, twoFactorPhone });
+  return NextResponse.json({ ...operatorSafe(courseToWire(course)), twoFactorMethod, twoFactorPhone });
 }
 
 export async function PATCH(req: NextRequest) {
@@ -69,10 +69,20 @@ export async function PATCH(req: NextRequest) {
   // SD review: the dollar→cents conversion accepts any magnitude and sign.
   // Bound the one that becomes a card charge without a person in the loop.
   const money = courseMoneyFromWire(body);
-  if ('lateCancellationFeeCents' in money) {
-    const c = money.lateCancellationFeeCents;
-    if (!Number.isFinite(c) || c < 0 || c > 50000) {
-      return NextResponse.json({ error: 'Late-cancellation fee must be between $0 and $500.' }, { status: 400 });
+  // SD-8 review (LOW): only the fee that becomes a card charge was bounded.
+  // The other seven accepted negatives and any magnitude — they are only shown
+  // to golfers, never charged, but a -$5,000 club rental is still nonsense on
+  // a public page. dollarsToCentsOr0 coerces anything finite, sign included.
+  for (const [k, c] of Object.entries(money)) {
+    // The cancellation fee becomes an automatic card charge, so it keeps the
+    // tight ceiling. The rest are ancillary rates shown to golfers and never
+    // charged here — a caddie at a top club can legitimately exceed $500, so
+    // they get a loose ceiling that still rules out nonsense.
+    const isCharge = k === 'lateCancellationFeeCents';
+    const max = isCharge ? 50000 : 500000;
+    if (!Number.isFinite(c) || c < 0 || c > max) {
+      const label = isCharge ? 'Late-cancellation fee' : 'That rate';
+      return NextResponse.json({ error: `${label} must be between $0 and $${(max / 100).toLocaleString()}.` }, { status: 400 });
     }
   }
   Object.assign(data, money);
@@ -87,4 +97,16 @@ export async function PATCH(req: NextRequest) {
   }
 
   return NextResponse.json(updated);
+}
+
+// SD-8 review (MEDIUM): courseToWire spreads the whole Course row. Two columns
+// on it are internal: `adminNotes` is GreenReserve's own build commentary (the
+// admin console renders it as [BUILD NOTES]) and `stripeAccountId` is the
+// connected account id. The admin API already strips both for lower-role
+// admins; the operator API was shipping them to every dashboard session,
+// staff included. Stripped here rather than in courseToWire, because the admin
+// routes that share that helper legitimately render them.
+function operatorSafe(wire: Record<string, unknown>) {
+  const { adminNotes: _adminNotes, stripeAccountId: _stripeAccountId, ...rest } = wire;
+  return rest;
 }

@@ -23,7 +23,19 @@ export async function GET(req: NextRequest) {
       ...(status ? { status } : {}),
       ...(date ? { teeTime: { date } } : {}),
     },
-    include: { teeTime: { select: { date: true, time: true, holes: true } } },
+    // SD-8 review (MEDIUM): this used to ship WHOLE booking rows to the
+    // browser — up to 200 of them — including `checkInToken`, the bearer token
+    // behind /checkin/[id]?token=... that triggers a real card charge, plus the
+    // Stripe customer/payment-method/intent ids. None of it was rendered. The
+    // relation was already select-ed; the booking itself never was.
+    select: {
+      id: true, golferName: true, golferEmail: true, golferPhone: true, players: true,
+      appliedRate: true, greenFeeTotal: true, cartFeeTotal: true, cartSelected: true,
+      rangeBallsTotal: true, accessFeeTotal: true, totalAmount: true,
+      cancellationFeeTotal: true, cancellationFeeChargedAt: true, cancelledAt: true,
+      checkedInAt: true, paymentStatus: true, status: true, createdAt: true,
+      teeTime: { select: { date: true, time: true, holes: true } },
+    },
     orderBy: { createdAt: 'desc' },
     take: date ? undefined : 200,
   });

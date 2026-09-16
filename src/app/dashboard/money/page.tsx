@@ -38,15 +38,23 @@ function MoneyPageInner() {
 
   const [bookings, setBookings] = useState<MoneyBooking[]>([]);
   const [dated, setDated] = useState<MoneyBooking[] | null>(null);
+  const [datedError, setDatedError] = useState('');
   const [course, setCourse] = useState<MoneyCourse>(EMPTY_COURSE);
   const [courseLoaded, setCourseLoaded] = useState(false);
   const [courseError, setCourseError] = useState('');
-  const [isStaff, setIsStaff] = useState(false);
+  // SD-8 review: null = not yet known. The tab list assumes STAFF until the
+  // probe says otherwise, so a slow or failed probe cannot flash the Payments
+  // ledger and the revenue tiles at a staff login. (Those tabs are a UI
+  // control, not a boundary — every action behind them is refused server-side
+  // — but they still must not widen what staff are shown.)
+  const [isStaff, setIsStaff] = useState<boolean | null>(null);
+  const [roleUnknown, setRoleUnknown] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const intro = useTabIntro('money');
 
-  const tabs = TABS.filter(t => !isStaff || STAFF_TABS.includes(t.key));
+  const treatAsStaff = isStaff !== false;
+  const tabs = TABS.filter(t => !treatAsStaff || STAFF_TABS.includes(t.key));
   const requested = (tabParam && TABS.some(t => t.key === tabParam) ? tabParam : (stripeParam ? 'payouts' : 'payments')) as TabKey;
   const active: TabKey = tabs.some(t => t.key === requested) ? requested : (tabs[0]?.key ?? 'cancellations');
 
@@ -68,7 +76,13 @@ function MoneyPageInner() {
     if (all.status === 401) { router.push('/dashboard/login'); return; }
     if (!all.ok) { setBookings([]); setLoadError(all.error); }
     else { setBookings(Array.isArray(all.data) ? all.data : []); setLoadError(''); }
-    setDated(day && day.ok && Array.isArray(day.data) ? day.data : null);
+    // SD-8 review (BLOCKING): this used to discard a failed day fetch and fall
+    // back to the unfiltered list while the panel still announced "Showing
+    // bookings for <date>" — the wrong rows under a banner asserting they were
+    // the right ones. A failed day fetch is now its own visible error.
+    if (!day) { setDated(null); setDatedError(''); }
+    else if (day.ok && Array.isArray(day.data)) { setDated(day.data); setDatedError(''); }
+    else { setDated(null); setDatedError(day.ok ? 'That day came back in a shape we could not read.' : day.error); }
     setLoading(false);
   }, [router, dateFilter]);
 
@@ -92,15 +106,18 @@ function MoneyPageInner() {
   useEffect(() => { loadCourse(); }, [loadCourse]);
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/operator/my-courses').then(r => r.ok ? r.json() : null)
-      .then(d => { if (!cancelled && d?.isStaff) setIsStaff(true); })
-      .catch(() => { /* the tab list just stays as it is */ });
+    fetch('/api/operator/my-courses')
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(String(r.status))))
+      .then(d => { if (!cancelled) { setIsStaff(!!d?.isStaff); setRoleUnknown(false); } })
+      .catch(() => { if (!cancelled) setRoleUnknown(true); });
     return () => { cancelled = true; };
   }, []);
 
   const refresh = () => { loadBookings(); loadCourse(); };
 
-  const paymentRows = dateFilter && dated ? dated : bookings;
+  // With a date asked for but not loaded, show nothing rather than the
+  // unfiltered list — the error above says why.
+  const paymentRows = dateFilter ? (dated ?? []) : bookings;
   const nonCancelled = bookings.filter(b => b.status !== 'cancelled');
   const collectedRevenue = nonCancelled.filter(b => b.paymentStatus === 'paid').reduce((s, b) => s + b.greenFeeTotal + b.cartFeeTotal, 0);
   const stillToCome = nonCancelled.filter(b => b.paymentStatus !== 'paid').length;
@@ -148,7 +165,15 @@ function MoneyPageInner() {
             ))}
           </div>
 
+          {roleUnknown && (
+            <div className="bg-white border border-line border-l-[3px] border-l-warn rounded-md px-4 py-3 text-[13.5px] text-ink-soft mb-4">
+              We couldn&apos;t confirm your access level, so this is the limited view. If you own this course, reload to see Payments and Payouts.
+            </div>
+          )}
           {loadError && <LoadError message={loadError} onRetry={loadBookings} />}
+          {datedError && active === 'payments' && (
+            <LoadError message={`Couldn't load that day's bookings — ${datedError}`} onRetry={loadBookings} />
+          )}
           {courseError && active !== 'payments' && (
             <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm mb-4">
               Couldn&apos;t load your course settings ({courseError}) — the cancellation policy and Stripe state below are not trustworthy until it loads. <button onClick={loadCourse} className="underline font-medium">Retry</button>
@@ -158,9 +183,9 @@ function MoneyPageInner() {
           {loading ? (
             <div className="flex items-center justify-center py-16 text-ink-muted gap-2"><Loader2 className="w-5 h-5 animate-spin"/>Loading...</div>
           ) : active === 'payments' ? (
-            <PaymentsPanel bookings={paymentRows} dateFilter={dateFilter} onClearDate={() => router.push('/dashboard/money?tab=payments')}/>
+            <PaymentsPanel bookings={paymentRows} dateFilter={datedError ? '' : dateFilter} onClearDate={() => router.push('/dashboard/money?tab=payments')}/>
           ) : active === 'cancellations' ? (
-            <CancellationsPanel bookings={bookings} course={course} courseLoaded={courseLoaded} isStaff={isStaff} onChanged={refresh}/>
+            <CancellationsPanel bookings={bookings} course={course} courseLoaded={courseLoaded} isStaff={treatAsStaff} onChanged={refresh}/>
           ) : (
             <PayoutsPanel course={course} stripeParam={stripeParam} onConnected={loadCourse}/>
           )}

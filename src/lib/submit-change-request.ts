@@ -1,15 +1,23 @@
 import { prisma } from '@/lib/prisma';
 import { sendMessageNotificationEmail } from '@/lib/email';
-import { CATEGORY_LABEL, encodeChangesRequested, type ChangeItem } from '@/lib/change-requests';
+import { CATEGORY_LABEL, CHANGE_CATEGORIES, encodeChangesRequested, type ChangeItem } from '@/lib/change-requests';
+
+const VALID_CATEGORIES = new Set<string>(CHANGE_CATEGORIES.map(c => c.key));
+const MAX_ITEMS = 6;
+const MAX_DETAIL = 2000;
 
 const ADMIN_EMAIL = 'hello@greenreserve.app';
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
 export function cleanChangeItems(items: unknown): ChangeItem[] {
+  // SD-8 review: `category` used to be accepted as arbitrary free text and
+  // `detail` had no server-side length at all — the client's maxLength was the
+  // only cap, and both strings end up on the admin activity ledger.
   return Array.isArray(items)
     ? items
-        .filter((it: unknown): it is ChangeItem => !!it && typeof (it as ChangeItem).category === 'string')
-        .map((it: ChangeItem) => ({ category: it.category, detail: String(it.detail || '').trim() }))
+        .filter((it: unknown): it is ChangeItem => !!it && VALID_CATEGORIES.has((it as ChangeItem)?.category))
+        .map((it: ChangeItem) => ({ category: it.category, detail: String(it.detail || '').trim().slice(0, MAX_DETAIL) }))
+        .slice(0, MAX_ITEMS)
     : [];
 }
 

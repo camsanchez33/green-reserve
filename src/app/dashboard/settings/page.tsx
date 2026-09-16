@@ -183,6 +183,9 @@ function SettingsPageInner() {
   // rules. Track which FIELDS changed; the section's button reads its own.
   const [dirtyFields, setDirtyFields] = useState<Set<string>>(new Set());
   const [saveError, setSaveError] = useState('');
+  // SD-8 review: blank fields and a failed load used to look identical.
+  const [formLoaded, setFormLoaded] = useState(false);
+  const [formError, setFormError] = useState('');
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [newStaff, setNewStaff] = useState({ name:'', email:'', role:'staff' });
   const [addingStaff, setAddingStaff] = useState(false);
@@ -210,7 +213,10 @@ function SettingsPageInner() {
   const dirty = SECTION_FIELDS[active].some(k => dirtyFields.has(k));
   const dirtyRef = useRef(false);
   useEffect(() => { dirtyRef.current = anyDirty; }, [anyDirty]);
-  const refreshForm = () => fetch('/api/operator/settings').then(r => r.ok ? r.json() : null).then(d => { if (d && !dirtyRef.current) setForm(d); }).catch(() => {});
+  const refreshForm = () => fetch('/api/operator/settings')
+    .then(r => r.ok ? r.json() : Promise.reject(new Error(`Could not load your settings (${r.status}).`)))
+    .then(d => { if (d && !dirtyRef.current) setForm(d); setFormLoaded(true); setFormError(''); })
+    .catch((e: Error) => { setFormError(e.message || 'Network error loading your settings.'); });
 
   // SD-10: `{error}` into setPhotos crashed the Photos tab on `.map`.
   const refreshPhotos = () => fetch('/api/operator/photos').then(r => r.ok ? r.json() : null).then(d => { if (Array.isArray(d)) setPhotos(d); else setPhotoErr('Could not load your photos — reload to try again.'); }).catch(() => setPhotoErr('Network error loading photos.'));
@@ -294,7 +300,7 @@ function SettingsPageInner() {
     const guard = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
     window.addEventListener('beforeunload', guard);
     return () => window.removeEventListener('beforeunload', guard);
-  }, [dirty]);
+  }, [anyDirty]);
 
   async function save() {
     setSaving(true); setSaveError('');
@@ -418,12 +424,18 @@ function SettingsPageInner() {
             </p>
           </div>
           {!NO_SAVE_BUTTON.includes(active) && (
-            <button onClick={save} disabled={saving || (!dirty && !saved)}
+            <button onClick={save} disabled={saving || !formLoaded || (!dirty && !saved)}
               className="shrink-0 flex items-center gap-2 bg-pine hover:bg-pine-hover text-white px-4 py-2 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
               <Save className="w-4 h-4"/> {saved ? 'Saved' : saving ? 'Saving...' : dirty ? `Save ${active}` : 'No changes'}
             </button>
           )}
         </div>
+        {formError && (
+          <div className="mx-6 mt-4 bg-bad/5 border border-bad/20 rounded-lg px-4 py-3 text-sm text-bad flex items-center justify-between gap-3" role="alert">
+            <span>{formError} Nothing below is your course&apos;s real settings until this loads — don&apos;t save over it.</span>
+            <button onClick={() => { setFormError(''); refreshForm(); }} className="text-xs font-medium underline shrink-0">Retry</button>
+          </div>
+        )}
         {saveError && (
           <div className="mx-6 mt-4 bg-bad/5 border border-bad/20 rounded-lg px-4 py-3 text-sm text-bad flex items-center justify-between gap-3" role="alert">
             <span>{saveError}</span>
@@ -443,6 +455,12 @@ function SettingsPageInner() {
               'Stripe and your payouts moved to Money.',
             ]}
           />
+          {/* SD-8 review: Payouts was a first-class sub-tab before this run, so
+              where it went is said once, above the rail, on every section. */}
+          <div className="bg-white border border-line border-l-[3px] border-l-pine rounded-lg px-4 py-3 mb-5 text-[13.5px] text-ink-soft">
+            Getting paid moved. Stripe, your payouts and what GreenReserve takes are on <a href="/dashboard/money?tab=payouts" className="text-pine font-medium underline">Money → Payouts</a>.
+          </div>
+
           <div className="flex flex-col md:flex-row gap-6">
             {/* U-O: the sub-nav moves to the left rail and names the sections
                 in plain English, in the spec's order. Active item = pine text,
@@ -627,13 +645,6 @@ function SettingsPageInner() {
           )}
 
 
-          {/* SD-8: Payouts moved to /dashboard/money. Say where it went rather
-              than leaving operators hunting for the Stripe button. */}
-          {active==='Pricing & cancellation' && (
-            <div className="bg-white border border-line border-l-[3px] border-l-pine rounded-lg px-4 py-3 mb-5 text-[13.5px] text-ink-soft">
-              Getting paid moved. Stripe, your payouts and what GreenReserve takes are on <a href="/dashboard/money?tab=payouts" className="text-pine font-medium underline">Money → Payouts</a>.
-            </div>
-          )}
 
           {/* ── Member & resident pricing ── */}
           {active==='Pricing & cancellation' && (
