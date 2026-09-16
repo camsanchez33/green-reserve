@@ -14,6 +14,7 @@ import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 import { resolveAdminSession, requireRole, requireOwner, ownerGateError, MANAGER_PLUS, SUPPORT_PLUS, VIEWER_PLUS, type AdminSession } from '@/lib/admin-session';
 import { AGENDA, callGate, fmtCallTime, nextCall, latestCall, parseJson } from '@/lib/inquiry-call';
 import { validateAnswers, flatSummaries, parseCallAnswers, toSheetPrefill } from '@/lib/call-answers';
+import { sendCallInvite } from '@/lib/call-invite';
 import { firstCheckInAfterGoLive } from '@/lib/course-checkin';
 import { sendCallScheduledEmail, sendCallRecapEmail } from '@/lib/email';
 import { encodeChangeAddressed, encodeRequestReReview } from '@/lib/change-requests';
@@ -26,8 +27,9 @@ import { deleteInquiryOrPair } from '@/lib/lifecycle';
 // Any admin session could read every lead's token and then read or overwrite
 // their sheet. The token never leaves the server now; it is only ever used to
 // build the emailed link in request_details/resend_details below.
-function stripSecrets<T extends { detailsToken?: string | null }>(inquiry: T) {
-  const { detailsToken: _detailsToken, ...safe } = inquiry;
+function stripSecrets<T extends { detailsToken?: string | null; callInviteToken?: string | null }>(inquiry: T) {
+  // SC-2: callInviteToken is the same kind of credential (the public booking page).
+  const { detailsToken: _detailsToken, callInviteToken: _callInviteToken, ...safe } = inquiry;
   return safe;
 }
 
@@ -52,7 +54,7 @@ export async function GET(req: NextRequest) {
     include: {
       events: { orderBy: { createdAt: 'desc' }, take: 25 },
       // IC-1: few per inquiry; newest first.
-      calls: { where: { kind: 'discovery' }, orderBy: { scheduledAt: 'desc' }, select: { id: true, scheduledAt: true, outcome: true, durationMin: true, direction: true, agendaJson: true, agendaExtra: true, answersJson: true, phone: true, followUpAt: true, completedAt: true } },
+      calls: { where: { kind: 'discovery' }, orderBy: { scheduledAt: 'desc' }, select: { id: true, scheduledAt: true, outcome: true, durationMin: true, direction: true, agendaJson: true, agendaExtra: true, answersJson: true, phone: true, followUpAt: true, bookedByCourse: true, completedAt: true } },
     },
   });
   // IC-3: "Still need from them" is computed HERE, where the sheet and the
@@ -138,6 +140,17 @@ async function handleAction(
   // ── IC-1: the discovery call ─────────────────────────────────────────
   const CLOSED = ['rejected', 'archived', 'live'];
   const parseDate = (v: unknown): Date | null => { const d = typeof v === 'string' || v instanceof Date ? new Date(v) : null; return d && !Number.isNaN(d.getTime()) ? d : null; };
+
+  // SC-3 §1: the third route beside "Set up call" and "Skip" — send the
+  // "pick a call time" link (or resend it: a resend mints a fresh token).
+  if (action === 'send_call_invite') {
+    if (CLOSED.includes(inquiry.status)) return NextResponse.json({ error: 'This inquiry is closed — reopen it before sending a booking link.' }, { status: 409 });
+    if (!inquiry.email) return NextResponse.json({ error: 'This inquiry has no email address on file.' }, { status: 400 });
+    const r = await sendCallInvite({ id: inquiryId, firstName: inquiry.firstName, contactName: inquiry.contactName, email: inquiry.email, courseName: inquiry.courseName });
+    await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin',
+      r.sent ? `Booking link sent to ${inquiry.email} by ${adminName}` : `Booking link NOT sent to ${inquiry.email} (${r.error || 'unknown'}) — by ${adminName}`);
+    return NextResponse.json({ success: r.sent, sent: r.sent, error: r.sent ? null : (r.error || 'send failed') });
+  }
 
   if (action === 'schedule_call') {
     if (CLOSED.includes(inquiry.status)) return NextResponse.json({ error: 'This inquiry is closed — reopen it before scheduling a call.' }, { status: 409 });

@@ -296,7 +296,9 @@ export type QueueInput = {
   snoozeUntil?: string | Date | null;
   nextFollowUpAt?: string | Date | null;
   /** IC-1: discovery calls on the books. */
-  calls?: { scheduledAt: string | Date; outcome: string }[] | null;
+  calls?: { scheduledAt: string | Date; outcome: string; bookedByCourse?: boolean }[] | null;
+  /** SC-3 §2: when the "pick a call time" link went out (null = never). */
+  callInviteSentAt?: string | Date | null;
 };
 
 const shortDate = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -361,6 +363,16 @@ export function queueSignal(inq: QueueInput, now: Date = new Date()): QueueSigna
       return { ...base, waitingOn: 'us', yourMove: true, pressureDays: 0, reason: `Call today · ${fmtCallClock(at)}` };
     }
     return { ...base, waitingOn: 'them', yourMove: false, pressureDays: -daysSince(now, at), reason: `Call ${fmtCallTime(at)}` };
+  }
+
+  // SC-3 §2: a booking link sent and unanswered for 5+ days is a lead going
+  // cold, not a lead waiting on us — so it is your move.
+  if (inq.callInviteSentAt && resubmits === 0 && (status === 'pending' || status === 'in_review')
+      && !calls.some(c => c.outcome === 'scheduled' || c.outcome === 'talked')) {
+    const sentDays = daysSince(new Date(inq.callInviteSentAt), now);
+    if (sentDays >= 5) {
+      return { ...base, waitingOn: 'us', yourMove: true, pressureDays: sentDays, reason: `Invite sent ${sentDays} days ago, no time picked` };
+    }
   }
 
   const signal = ((): Omit<QueueSignal, 'status' | 'enteredAt' | 'resubmits'> => {

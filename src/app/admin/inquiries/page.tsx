@@ -32,8 +32,10 @@ interface Inquiry {
   snoozeUntil?: string | null; nextFollowUpAt?: string | null;
   detailsToken?: string | null; detailsJson?: string; needsJson?: string;
   events: InquiryStatusEvent[];
-  calls?: { id: string; scheduledAt: string; outcome: string; durationMin: number; direction: string; completedAt?: string | null }[];
+  calls?: { id: string; scheduledAt: string; outcome: string; durationMin: number; direction: string; completedAt?: string | null; bookedByCourse?: boolean }[];
   callSkippedReason?: string | null;
+  /** SC-3: when the "pick a call time" link went out. */
+  callInviteSentAt?: string | null;
   /** IC-3: computed by the list API (the sheet blobs never ship). */
   stillNeed?: NeedItem[];
 }
@@ -415,7 +417,7 @@ function InquiriesListInner() {
           <div className={today ? 'text-sm text-bad font-semibold truncate' : 'text-sm text-ink font-medium truncate'}>
             {today ? 'Today' : fmtDay(upcoming.scheduledAt)} · {fmtCallClock(upcoming.scheduledAt)}
           </div>
-          <div className={sub}>{upcoming.durationMin} min · {upcoming.direction === 'they_call' ? 'they call you' : 'you call them'}</div>
+          <div className={sub}>{upcoming.durationMin} min · {upcoming.direction === 'they_call' ? 'they call you' : 'you call them'}{upcoming.bookedByCourse ? ' · they picked it' : ''}</div>
         </>
       );
     }
@@ -450,6 +452,16 @@ function InquiriesListInner() {
         <>
           <div className="text-sm text-ink-soft truncate">Snoozed → {fmtShort(inq.snoozeUntil)}</div>
           <div className={sub}>back on that date</div>
+        </>
+      );
+    }
+    // SC-3 §2: a booking link is out and nothing has been picked yet.
+    if (inq.callInviteSentAt && calls.length === 0 && mode !== 'closed') {
+      const d = Math.max(0, Math.floor((now.getTime() - new Date(inq.callInviteSentAt).getTime()) / 86_400_000));
+      return (
+        <>
+          <div className={'text-sm truncate ' + (d >= 5 ? 'text-warn font-medium' : 'text-ink-muted')}>Invite sent · {d}d ago</div>
+          <div className={sub}>no time picked yet</div>
         </>
       );
     }

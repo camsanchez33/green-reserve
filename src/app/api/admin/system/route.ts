@@ -57,6 +57,8 @@ export async function GET() {
   const vercelProjectUrl = env.ADMIN_VERCEL_PROJECT_URL || '';
 
   return NextResponse.json({
+    // SC-3 §4: which calendar the public booking page reads free/busy from (null = not configured).
+    googleCalendarId: process.env.GOOGLE_CALENDAR_ID || null,
     lastStripeTouch: lastStripeTouch
       ? { courseName: lastStripeTouch.name, updatedAt: lastStripeTouch.updatedAt.toISOString() }
       : null,

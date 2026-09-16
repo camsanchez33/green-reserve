@@ -11,7 +11,7 @@
 // two things only it can do: run `request_details` (so the Setup-sheet result
 // box shows) and open the Reject drawer.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Phone, PhoneOff, CalendarClock, Check, AlertTriangle, ChevronDown, ChevronRight, RotateCw } from 'lucide-react';
+import { Phone, PhoneOff, CalendarClock, Check, AlertTriangle, ChevronDown, ChevronRight, RotateCw, Send } from 'lucide-react';
 import {
   AGENDA, agendaStatus, defaultAgenda, nextCall, overdueCall, latestCall, parseJson,
   fmtCallTime, easternToIso, easternParts, OUTCOME_LABEL, DIRECTION_LABEL,
@@ -31,6 +31,8 @@ export type CallRow = CallLike & {
 
 type InquiryForCards = InquiryLike & {
   id: string; contactName: string; email: string; phone: string;
+  /** SC-3: when the "pick a call time" link went out. */
+  callInviteSentAt?: string | null;
   detailsJson?: string | null; needsJson?: string | null;
   events?: { toStatus?: string; fromStatus?: string }[] | null;
   calls?: CallRow[] | null;
@@ -225,6 +227,26 @@ function SetupCard({ inquiry, sheet, needs, calls, disabled, busy, setBusy, setE
   const iso = easternToIso(date, time);
   const toggle = (k: string) => setAgenda(prev => { const n = new Set(prev); if (n.has(k)) n.delete(k); else n.add(k); return n; });
 
+  // SC-3 §1: let them pick from Cam's calendar instead.
+  const sendLink = async () => {
+    setBusy(true); setError(''); setNotice(null);
+    try {
+      const r = await patch(inquiry.id, 'send_call_invite', {});
+      if (!r.ok) { setError(errText(r)); return; }
+      if (r.data.sent !== true) {
+        setError(`The booking link did not send (${String(r.data.error || 'unknown')}). Try Resend in a minute, or set the call up by hand below.`);
+        await onRefresh();
+        return;
+      }
+      setNotice({ tone: 'ok', text: `Booking link emailed to ${inquiry.email}. It is good for 21 days — the time shows here once ${contactFirst} picks one.` });
+      await onRefresh();
+    } catch (e) { setError('Error: ' + e); }
+    finally { setBusy(false); }
+  };
+  const inviteDay = inquiry.callInviteSentAt
+    ? new Date(inquiry.callInviteSentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' })
+    : null;
+
   const submit = async () => {
     if (!iso) { setError('Pick a date and a time for the call.'); return; }
     setBusy(true); setError(''); setNotice(null);
@@ -249,6 +271,17 @@ function SetupCard({ inquiry, sheet, needs, calls, disabled, busy, setBusy, setE
           <div className="flex items-center gap-2 text-sm font-medium text-ink"><Phone className="w-4 h-4 text-pine" />Set up the call</div>
           <p className="text-xs text-ink-muted mt-0.5">Required before the draft course is built — you can send the setup sheet before or after.</p>
         </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 flex-wrap mb-4 px-3 py-2 border border-line rounded-md bg-paper">
+        <div className="text-xs text-ink-soft min-w-0">
+          {inviteDay
+            ? <><span className="font-medium text-ink">Booking link sent {inviteDay}</span> · not booked yet</>
+            : <>Or let {contactFirst} pick a time from your calendar.</>}
+        </div>
+        <button type="button" onClick={sendLink} disabled={disabled} className={btnO}>
+          <Send className="w-3.5 h-3.5" />{busy ? 'Sending…' : inviteDay ? 'Resend the link' : 'Send a booking link'}
+        </button>
       </div>
 
       <div className="grid grid-cols-[1fr_1fr_120px] gap-3 mb-4">

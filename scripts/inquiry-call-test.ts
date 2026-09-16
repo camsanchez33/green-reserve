@@ -46,5 +46,15 @@ const logged = [{ scheduledAt: new Date(now.getTime() - day), outcome: 'talked',
 const n5 = stillNeed(asked, null, null, logged);
 check('talked call: answered items drop out of needs', !n5.some(n => n.key === 'green_fees' || n.key === 'cancellation'), JSON.stringify(n5.map(n => n.key)));
 
+// 6. SC-3: an invite sent 6 days ago with nothing picked is your move
+const cold = { ...base, status: 'in_review', events: [{ fromStatus: 'pending', toStatus: 'in_review', actorName: 'Admin', createdAt: new Date(now.getTime() - 7 * day) }], calls: [], callInviteSentAt: new Date(now.getTime() - 6 * day) };
+const s6 = queueSignal(cold, now);
+check('cold invite: your move', s6.yourMove === true, `${s6.yourMove}`);
+check('cold invite: reason names the days', /^Invite sent 6 days ago, no time picked$/.test(s6.reason), s6.reason);
+const fresh = { ...cold, callInviteSentAt: new Date(now.getTime() - 2 * day) };
+check('fresh invite (2d): not your move by the invite', !/Invite sent/.test(queueSignal(fresh, now).reason), queueSignal(fresh, now).reason);
+const picked = { ...cold, calls: [{ scheduledAt: new Date(now.getTime() + 2 * day), outcome: 'scheduled' }] };
+check('invite answered (call booked): the call wins', /^Call /.test(queueSignal(picked, now).reason), queueSignal(picked, now).reason);
+
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

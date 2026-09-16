@@ -1176,6 +1176,26 @@ export async function sendCallBookedEmail(data: {
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
 
+// SC-3 §3: 24 hours before a scheduled call — "Talking tomorrow at 2:00".
+export async function sendCallReminderEmail(data: {
+  contactName: string; email: string; courseName: string; scheduledAt: Date; direction: string; phone: string; manageUrl: string | null;
+}) {
+  const clock = data.scheduledAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
+  const when = data.scheduledAt.toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
+  const first = escHtml(data.contactName.split(' ')[0] || data.contactName);
+  const who = data.direction === 'they_call' ? 'You call us — the number is in your confirmation email.' : `We\u2019ll call you at ${escHtml(data.phone)}.`;
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:22px;font-weight:700;">Talking tomorrow at ${clock}</h1>
+    <p style="margin:0 0 12px;color:#6b7280;font-size:15px;line-height:1.6;">Hi ${first} — a quick reminder about our call about <strong>${escHtml(data.courseName)}</strong>.</p>
+    <p style="margin:0 0 4px;color:#111827;font-size:15px;line-height:1.6;"><strong>${when} ET</strong> · about 30 minutes</p>
+    <p style="margin:0 0 16px;color:#6b7280;font-size:15px;line-height:1.6;">${who}</p>
+    ${data.manageUrl ? `<p style="margin:0 0 16px;color:#6b7280;font-size:14px;line-height:1.6;">Need to move it? <a href="${data.manageUrl}" style="color:#1b4332;">Reschedule or cancel</a>.</p>` : `<p style="margin:0 0 16px;color:#6b7280;font-size:14px;line-height:1.6;">Need to move it? Just reply to this email.</p>`}
+    <p style="margin:0;color:#98968B;font-size:12px;">Questions? Reply to this email — hello@greenreserve.app.</p>
+  `);
+  const r = await getResend().emails.send({ from: FROM, to: data.email, subject: `Talking tomorrow at ${clock} — GreenReserve`, html });
+  if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
+}
+
 // SC-2 §3: to hello@ — course, contact, phone, time, link to the inquiry.
 export async function sendCallBookedAdminEmail(data: {
   kind: 'booked' | 'moved' | 'cancelled'; contactName: string; phone: string; courseName: string; inquiryId: string; scheduledAt: Date; direction: string;

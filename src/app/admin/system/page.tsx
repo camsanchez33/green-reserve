@@ -3,7 +3,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { LoadFailure } from '@/components/ui/ErrorState';
-import { HardDrive, Clock3, Zap, GitBranch, Bug, ExternalLink, Landmark, Link2 } from 'lucide-react';
+import { HardDrive, Clock3, Zap, GitBranch, Bug, ExternalLink, Landmark, Link2, Phone } from 'lucide-react';
+import { CALL_WINDOWS, SLOT_MINUTES, LEAD_HOURS, HORIZON_DAYS } from '@/lib/call-availability';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -17,6 +18,7 @@ interface SystemData {
     stripeWebhooks: string;
   };
   crons: { path: string; schedule: string; human: string }[];
+  googleCalendarId?: string | null;
   platform: {
     accessFeeCents: number; env: string; commitSha: string; commitMessage: string; branch: string; publicUrl: string;
     integrations: { stripe: boolean; stripeWebhook: boolean; resend: boolean; twilio: boolean; sentry: boolean; blob: boolean };
@@ -281,6 +283,31 @@ export default function AdminSystemPage() {
                 <span className="text-sm text-ink-soft">Schedules are read from <code className="font-mono text-xs">vercel.json</code>; whether each run succeeded is not tracked in-app yet — that needs a CronRunLog table (schema change). Check the Vercel logs.</span>
               </div>
               {data && <OutLink href={data.links.vercel} deep={data.links.vercelIsDeep}>Open Vercel</OutLink>}
+            </SystemCard>
+
+            {/* SC-3 §4: what the public booking page believes, without reading code. */}
+            <SystemCard icon={<Phone className="w-3.5 h-3.5"/>} title="Call booking" tracked
+              right={<span className="text-[11px] text-ink-faint">{SLOT_MINUTES}-min slots · {LEAD_HOURS} h notice · {HORIZON_DAYS} days out</span>}>
+              <div className="border border-line rounded-md divide-y divide-line-soft mb-3">
+                {CALL_WINDOWS.map(w => (
+                  <div key={w.day} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                    <span className="text-ink">{['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][w.day]}</span>
+                    <span className="text-xs text-ink-soft">{w.from}–{w.to} ET</span>
+                  </div>
+                ))}
+                <div className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                  <span className="text-ink">Sunday</span><span className="text-xs text-ink-faint">no calls</span>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="mt-1"><StatusDot status={data?.googleCalendarId ? 'ok' : 'warn'}/></span>
+                <span className="text-sm text-ink-soft">
+                  These are the widest windows the booking page will ever offer. The real filter is the linked Google Calendar
+                  {data?.googleCalendarId
+                    ? <>: <code className="font-mono text-xs text-ink">{data.googleCalendarId}</code>. Anything busy there is removed.</>
+                    : <> — <span className="text-warn">not configured</span> (PASSWORD_CHECKLIST Phase 7b), so the page shows its &ldquo;reply with a couple of times&rdquo; fallback instead of a grid.</>}
+                </span>
+              </div>
             </SystemCard>
 
             {/* MP-8a: moved here from the Courses list. GET always dry-runs;

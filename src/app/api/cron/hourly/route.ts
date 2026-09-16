@@ -10,6 +10,7 @@ import {
 } from '@/lib/email';
 import { retryMissingAgreementPdfs } from '@/lib/agreement-sign';
 import { sendAgreementBumpNotices } from '@/lib/agreement-required';
+import { sendCallReminders } from '@/lib/call-invite';
 
 /**
  * Runs every hour (Vercel Pro). Handles all time-sensitive booking actions:
@@ -27,6 +28,9 @@ import { sendAgreementBumpNotices } from '@/lib/agreement-required';
  *
  * 4. AGREEMENT PDFS — AG-2: signed agreements whose courtesy PDF failed to
  *    render or store get another go (the row is the record either way).
+ *
+ * 6. CALL REMINDERS — SC-3: "Talking tomorrow" to the course 24 h before each
+ *    scheduled discovery call, once per call (RateLimit key as the belt).
  */
 export async function GET(req: NextRequest) {
   const denied = cronAuthFailure(req);
@@ -163,5 +167,9 @@ export async function GET(req: NextRequest) {
   let agreementNotices = { versions: 0, notified: 0, failed: 0 };
   try { agreementNotices = await sendAgreementBumpNotices(now); } catch (err) { console.error('Agreement bump notices failed:', err); }
 
-  return NextResponse.json({ success: true, ...results, agreementPdfs, agreementNotices });
+  // ─── 6: SC-3 §3 — call reminders, 24 h out, once per call ─────────────────────
+  let callReminders = { due: 0, sent: 0, failed: 0, skipped: 0 };
+  try { callReminders = await sendCallReminders(now); } catch (err) { console.error('Call reminders failed:', err); }
+
+  return NextResponse.json({ success: true, ...results, agreementPdfs, agreementNotices, callReminders });
 }
