@@ -12,8 +12,8 @@ import { recordTabVisit } from '@/lib/dashboard-visits';
 import { Toaster, toast } from '@/components/dashboard/Toast';
 
 export type OperatorNavKey =
-  | 'teesheet' | 'analytics' | 'cancellations' | 'tournaments' | 'outings'
-  | 'schedule' | 'members' | 'payments' | 'settings' | 'messages';
+  | 'teesheet' | 'analytics' | 'money' | 'tournaments' | 'outings'
+  | 'schedule' | 'members' | 'settings' | 'messages';
 
 interface CourseIdentity {
   id?: string; name: string; type: string; brandColor: string; establishedYear?: number | null;
@@ -97,28 +97,32 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   const navItems: { key: OperatorNavKey; label: string; href: string; icon: React.ReactNode; soon?: boolean }[] = [
     { key: 'teesheet',      label: 'Tee Sheet',    href: '/dashboard',               icon: <Calendar className="w-4 h-4"/> },
     { key: 'analytics',     label: 'Analytics',    href: '/dashboard?tab=analytics', icon: <BarChart2 className="w-4 h-4"/> },
-    { key: 'cancellations', label: 'Cancellations',href: '/dashboard/cancellations', icon: <XCircle className="w-4 h-4"/> },
     { key: 'tournaments',   label: 'Tournaments',  href: '/dashboard/tournaments',   icon: <Trophy className="w-4 h-4"/>,    soon: true },
     { key: 'outings',       label: 'Outings',      href: '/dashboard/outings',       icon: <PartyPopper className="w-4 h-4"/>, soon: true },
     { key: 'schedule',      label: 'Schedule',     href: '/dashboard/schedules',     icon: <Clock className="w-4 h-4"/> },
     { key: 'members',       label: 'Members',      href: '/dashboard/members',       icon: <Users className="w-4 h-4"/> },
-    { key: 'payments',      label: 'Payments',     href: '/dashboard/payments',      icon: <DollarSign className="w-4 h-4"/> },
+    // SD-8: Payments + Cancellations + Payouts are one page now. Staff can
+    // only use the Cancellations tab, so that is what their sidebar calls it.
+    { key: 'money',         label: isStaff ? 'Cancellations' : 'Money',
+      href: isStaff ? '/dashboard/money?tab=cancellations' : '/dashboard/money',
+      icon: isStaff ? <XCircle className="w-4 h-4"/> : <DollarSign className="w-4 h-4"/> },
     { key: 'messages',      label: 'Messages',     href: '/dashboard/messages',      icon: <MessageSquare className="w-4 h-4"/> },
     { key: 'settings',      label: 'Settings',     href: '/dashboard/settings',      icon: <Settings className="w-4 h-4"/> },
   ];
 
-  const STAFF_HIDDEN: OperatorNavKey[] = ['schedule', 'members', 'payments', 'settings'];
+  const STAFF_HIDDEN: OperatorNavKey[] = ['schedule', 'members', 'settings'];
   const groups = [
     { label: 'Dashboard', keys: ['teesheet', 'analytics'] as OperatorNavKey[] },
-    { label: 'Bookings',  keys: ['cancellations', 'tournaments', 'outings'] as OperatorNavKey[] },
-    { label: 'Manage',    keys: (['schedule', 'members', 'payments', 'messages', 'settings'] as OperatorNavKey[]).filter(k => !isStaff || !STAFF_HIDDEN.includes(k)) },
+    // Staff see the money item under Bookings, where Cancellations used to sit.
+    { label: 'Bookings',  keys: ((isStaff ? ['money', 'tournaments', 'outings'] : ['tournaments', 'outings']) as OperatorNavKey[]) },
+    { label: 'Manage',    keys: ((isStaff ? ['messages'] : ['schedule', 'members', 'money', 'messages', 'settings']) as OperatorNavKey[]).filter(k => !isStaff || !STAFF_HIDDEN.includes(k)) },
   ];
 
   // SD-2: what fits in a thumb row. Staff never see the configuration tabs
   // (SD-1), so their row ends at Messages.
   const mobileKeys: OperatorNavKey[] = isStaff
-    ? ['teesheet', 'cancellations', 'analytics', 'messages']
-    : ['teesheet', 'cancellations', 'schedule', 'messages', 'settings'];
+    ? ['teesheet', 'money', 'analytics', 'messages']
+    : ['teesheet', 'money', 'schedule', 'messages', 'settings'];
   const mobileItems = navItems.filter(n => mobileKeys.includes(n.key) && !n.soon);
 
   return (

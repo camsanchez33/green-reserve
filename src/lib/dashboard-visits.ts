@@ -10,7 +10,9 @@ const INTRO_SEEN_PREFIX = 'gr_operator_intro_seen_';
 // The tabs "Look around your dashboard" counts toward — excludes "Soon"
 // placeholders (Tournaments/Outings) since operators can't actually visit them.
 export const CORE_TABS: OperatorNavKey[] = [
-  'teesheet', 'analytics', 'schedule', 'members', 'payments', 'cancellations', 'messages', 'settings',
+  // SD-8: Payments and Cancellations are one Money tab now, so the threshold
+  // counts seven surfaces instead of eight.
+  'teesheet', 'analytics', 'schedule', 'members', 'money', 'messages', 'settings',
 ];
 export const LOOK_AROUND_THRESHOLD = 3;
 

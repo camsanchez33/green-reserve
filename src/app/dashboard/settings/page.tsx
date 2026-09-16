@@ -1,8 +1,8 @@
 'use client';
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { US_TIMEZONES } from '@/lib/course-time';
-import { useSearchParams } from 'next/navigation';
-import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff, CreditCard, CheckCircle2, AlertCircle, Loader2, KeyRound, Mail, Smartphone, Image as ImageIcon, X } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff, CheckCircle2, AlertCircle, Loader2, KeyRound, Mail, Smartphone, Image as ImageIcon, X } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { toast } from '@/components/dashboard/Toast';
@@ -20,24 +20,58 @@ interface StaffMember { id: string; name: string; email: string; role: string; a
 // fields as before — only their names, grouping and the nav's axis change.
 // Facilities and Account are not in the spec's list but still exist, so they
 // keep their places rather than disappearing.
+// SD-8: twelve sub-tabs became five. Nothing was deleted — the same forms are
+// grouped by the question an operator is actually asking. Payouts left
+// entirely: getting paid is money, and it lives on /dashboard/money now.
 const SECTIONS = [
-  'How you look',
-  'Basic information',
-  'Course details',
-  'Photos',
+  'Your course',
   'Booking rules',
-  'Cancellation',
-  'Member & resident pricing',
-  'Walking & carts',
+  'Pricing & cancellation',
   'Facilities',
-  'Payouts (Stripe)',
-  'Staff',
-  'Account',
+  'Staff & account',
 ] as const;
 type Section = typeof SECTIONS[number];
-// Sections whose contents save themselves (uploads, staff, password) — the
-// header Save button is hidden on these, exactly as before the reskin.
-const NO_SAVE_BUTTON: Section[] = ['Photos', 'Staff', 'Account'];
+// Sections whose contents save themselves (staff, password, 2FA) — the
+// header Save button is hidden on these.
+const NO_SAVE_BUTTON: Section[] = ['Staff & account'];
+
+// SD-8: Save used to PATCH the WHOLE form, so saving a dress-code chip also
+// re-sent every facility toggle and every price — two people editing different
+// sections overwrote each other, and one stale field travelled with every save.
+// Each section now sends only its own fields.
+const SECTION_FIELDS: Record<Section, string[]> = {
+  'Your course': [
+    'brandColor', 'phone', 'website', 'type', 'establishedYear', 'description', 'giftCardUrl',
+    'holes', 'par', 'yardage', 'slope', 'courseRating',
+  ],
+  'Booking rules': [
+    'timezone', 'publicAdvanceDays', 'memberAdvanceDays', 'minPlayers', 'maxPlayers', 'dresscode',
+    'walkingAllowed', 'walkingNote', 'cartRequired',
+  ],
+  'Pricing & cancellation': [
+    'hasMemberPricing', 'hasResidentPricing', 'residentCounty', 'residentState', 'residentProofRequired',
+    'cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy',
+  ],
+  'Facilities': [
+    'hasDrivingRange', 'drivingRangeType', 'rangeBallsFree', 'hasPuttingGreen', 'hasShortGameArea',
+    'hasProShop', 'proShopPhone', 'hasLessons', 'hasClubRental', 'clubRentalRate',
+    'hasPushCartRental', 'pushCartRate', 'hasBagStorage', 'hasLockerRoom', 'hasGpsCarts',
+    'hasTournaments', 'tournamentFrequency', 'restaurantType', 'hasCartGirl',
+    'hasCaddies', 'caddieType', 'caddieLooperRate', 'caddieForeRate', 'caddieNote', 'amenities',
+  ],
+  'Staff & account': [],
+};
+
+// SD-8: the course's identity is what GreenReserve listed and what golfers
+// searched for. It is read-only here and changed by asking us — the row shows
+// the value and opens a prefilled message.
+const IDENTITY_ROWS: { key: string; label: string }[] = [
+  { key: 'name', label: 'Course name' },
+  { key: 'address', label: 'Address' },
+  { key: 'city', label: 'City' },
+  { key: 'state', label: 'State' },
+  { key: 'zipCode', label: 'ZIP' },
+];
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
@@ -128,9 +162,14 @@ function ImageUpload({ label, kind, value, onUploaded, hint }: { label: string; 
 
 function SettingsPageInner() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  // SD-8: Stripe's return URL used to land here. Send it where Stripe lives now.
   const stripeParam = searchParams.get('stripe');
+  useEffect(() => {
+    if (stripeParam) router.replace(`/dashboard/money?tab=payouts&stripe=${encodeURIComponent(stripeParam)}`);
+  }, [stripeParam, router]);
 
-  const [active, setActive] = useState<Section>(stripeParam ? 'Payouts (Stripe)' : 'How you look');
+  const [active, setActive] = useState<Section>('Your course');
   const intro = useTabIntro('settings');
   const [form, setForm] = useState<Record<string,unknown>>({});
   const [saving, setSaving] = useState(false);
@@ -139,16 +178,16 @@ function SettingsPageInner() {
   // below used to replace the whole form with the server copy on every
   // window focus — switching to a calendar tab and back wiped an in-progress
   // edit. While dirty, nothing overwrites the form.
-  const [dirty, setDirty] = useState(false);
+  // SD-8: now that Save is per-section, ONE dirty flag would let saving
+  // Facilities clear the "unsaved" state on an edit still sitting in Booking
+  // rules. Track which FIELDS changed; the section's button reads its own.
+  const [dirtyFields, setDirtyFields] = useState<Set<string>>(new Set());
   const [saveError, setSaveError] = useState('');
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [newStaff, setNewStaff] = useState({ name:'', email:'', role:'staff' });
   const [addingStaff, setAddingStaff] = useState(false);
   const [staffResult, setStaffResult] = useState<{tempPassword:string;name:string}|null>(null);
   const [showPass, setShowPass] = useState(false);
-  const [connecting, setConnecting] = useState(false);
-  const [stripeError, setStripeError] = useState('');
-  const [openingStripeDashboard, setOpeningStripeDashboard] = useState(false);
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState('');
@@ -159,12 +198,18 @@ function SettingsPageInner() {
   const [saving2FA, setSaving2FA] = useState(false);
   const [saved2FA, setSaved2FA] = useState(false);
   const [error2FA, setError2FA] = useState('');
+  const [changeOpen, setChangeOpen] = useState(false);
+  const [changeText, setChangeText] = useState('');
+  const [changeSending, setChangeSending] = useState(false);
+  const [changeSent, setChangeSent] = useState(false);
   const [photos, setPhotos] = useState<{ id: string; url: string; sortOrder: number }[]>([]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoErr, setPhotoErr] = useState('');
 
+  const anyDirty = dirtyFields.size > 0;
+  const dirty = SECTION_FIELDS[active].some(k => dirtyFields.has(k));
   const dirtyRef = useRef(false);
-  useEffect(() => { dirtyRef.current = dirty; }, [dirty]);
+  useEffect(() => { dirtyRef.current = anyDirty; }, [anyDirty]);
   const refreshForm = () => fetch('/api/operator/settings').then(r => r.ok ? r.json() : null).then(d => { if (d && !dirtyRef.current) setForm(d); }).catch(() => {});
 
   // SD-10: `{error}` into setPhotos crashed the Photos tab on `.map`.
@@ -217,35 +262,35 @@ function SettingsPageInner() {
     finally { setEmailingReset(false); }
   }
 
-  async function connectStripe() {
-    setConnecting(true); setStripeError('');
+  // SD-8: the identity rows go through the change-request channel that
+  // already exists (V13b) - it mirrors to the course's message thread, records
+  // a structured event on the admin activity ledger, and emails us, all
+  // rate-limited. A raw message would have done only the first of those.
+  async function requestChange() {
+    const note = changeText.trim();
+    if (!note) return;
+    setChangeSending(true);
     try {
-      const res = await fetch('/api/operator/stripe/connect');
-      const data = await res.json();
-      if (!res.ok) { setStripeError(data.error || 'Could not start Stripe Connect.'); setConnecting(false); return; }
-      if (data.url) { window.location.href = data.url; return; }
-      if (data.connected) { await refreshForm(); }
-    } catch { setStripeError('Could not reach Stripe. Try again.'); }
-    setConnecting(false);
+      const res = await fetch('/api/operator/request-changes', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: [{ category: 'course_details', detail: note }] }),
+      });
+      if (!res.ok) { const d = await res.json().catch(() => ({})); toast(d.error || 'Could not send that request — try again.'); return; }
+      setChangeSent(true); setChangeText(''); setChangeOpen(false);
+    } catch {
+      toast('Network error — your change request was not sent. Check your connection and try again.');
+    } finally {
+      setChangeSending(false);
+    }
   }
 
-  async function openStripeDashboard() {
-    setOpeningStripeDashboard(true); setStripeError('');
-    try {
-      const res = await fetch('/api/operator/stripe/dashboard-link', { method: 'POST' });
-      const data = await res.json();
-      if (res.ok && data.url) { window.open(data.url, '_blank', 'noopener'); }
-      else { setStripeError(data.error || 'Could not open the Stripe dashboard.'); }
-    } catch { setStripeError('Could not reach Stripe. Try again.'); }
-    setOpeningStripeDashboard(false);
-  }
-
-  const set = (k:string, v:unknown) => { setDirty(true); setForm(f=>({...f,[k]:v})); };
-  const tog = (k:string) => { setDirty(true); setForm(f=>({...f,[k]:!f[k]})); };
+  const markDirty = (k: string) => setDirtyFields(s => { const next = new Set(s); next.add(k); return next; });
+  const set = (k:string, v:unknown) => { markDirty(k); setForm(f=>({...f,[k]:v})); };
+  const tog = (k:string) => { markDirty(k); setForm(f=>({...f,[k]:!f[k]})); };
 
   // Leaving with unsaved edits asks first — the browser's own prompt.
   useEffect(() => {
-    if (!dirty) return;
+    if (!anyDirty) return;
     const guard = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
     window.addEventListener('beforeunload', guard);
     return () => window.removeEventListener('beforeunload', guard);
@@ -253,8 +298,12 @@ function SettingsPageInner() {
 
   async function save() {
     setSaving(true); setSaveError('');
+    // Only this section's fields travel. A key the operator never saw on
+    // screen cannot be re-sent by a save they did not mean to make.
+    const patch: Record<string, unknown> = {};
+    for (const k of SECTION_FIELDS[active]) if (k in form) patch[k] = form[k];
     try {
-      const res = await fetch('/api/operator/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(form)});
+      const res = await fetch('/api/operator/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(patch)});
       if (!res.ok) {
         // SD-8: this never checked res.ok, so "Saved" showed on a 400 (the
         // validation SD-1 added) and on a 500 alike. Say what was refused.
@@ -263,7 +312,10 @@ function SettingsPageInner() {
         toast(d.error || 'Settings were not saved.');
         return;
       }
-      setDirty(false); setSaved(true); setTimeout(()=>setSaved(false),2000);
+      // Only this section stops being dirty. An edit waiting in another
+      // section still guards the tab and still lights its own button.
+      setDirtyFields(s => { const next = new Set(s); for (const k of SECTION_FIELDS[active]) next.delete(k); return next; });
+      setSaved(true); setTimeout(()=>setSaved(false),2000);
       refreshForm();
     } catch {
       setSaveError('Network error — nothing was saved. Check your connection and try again.');
@@ -315,7 +367,7 @@ function SettingsPageInner() {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ twoFactorMethod: method, twoFactorPhone: phone }),
       });
-      if (res.ok) { setSaved2FA(true); setDirty(false); setTimeout(() => setSaved2FA(false), 2000); }
+      if (res.ok) { setSaved2FA(true); setDirtyFields(s => { const next = new Set(s); next.delete('twoFactorMethod'); next.delete('twoFactorPhone'); return next; }); setTimeout(() => setSaved2FA(false), 2000); }
       else { const d = await res.json().catch(() => ({})); setError2FA(d.error || 'Could not save. Try again.'); }
     } catch {
       setError2FA('Network error — nothing was saved. Check your connection and try again.');
@@ -368,7 +420,7 @@ function SettingsPageInner() {
           {!NO_SAVE_BUTTON.includes(active) && (
             <button onClick={save} disabled={saving || (!dirty && !saved)}
               className="shrink-0 flex items-center gap-2 bg-pine hover:bg-pine-hover text-white px-4 py-2 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
-              <Save className="w-4 h-4"/> {saved ? 'Saved' : saving ? 'Saving...' : dirty ? 'Save Changes' : 'No changes'}
+              <Save className="w-4 h-4"/> {saved ? 'Saved' : saving ? 'Saving...' : dirty ? `Save ${active}` : 'No changes'}
             </button>
           )}
         </div>
@@ -385,10 +437,10 @@ function SettingsPageInner() {
             onDismiss={intro.dismiss}
             title="This is your Settings."
             bullets={[
-              'Update your course info, photos, and green fees anytime.',
-              'Connect or manage your Stripe account under Payments.',
-              'Set your cancellation policy here — or turn it off if you don’t charge fees.',
-              'Add staff accounts so your team can check golfers in without sharing your login.',
+              'Five sections: your course, booking rules, pricing & cancellation, facilities, and staff & account.',
+              'Each section saves on its own — the Save button only sends the section you are looking at.',
+              'Your course name and address are read-only; ask us and we change them with you.',
+              'Stripe and your payouts moved to Money.',
             ]}
           />
           <div className="flex flex-col md:flex-row gap-6">
@@ -408,7 +460,7 @@ function SettingsPageInner() {
             <div className="flex-1 min-w-0">
 
           {/* ── How you look ── */}
-          {active==='How you look' && (
+          {active==='Your course' && (
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
               <SectionCard title="How you look">
                 <p className="text-sm text-ink-soft -mt-1">The three things golfers see first. Logo and photo save the moment you upload them; the colour saves with the button above.</p>
@@ -447,18 +499,51 @@ function SettingsPageInner() {
           )}
 
           {/* ── Basic information ── */}
-          {active==='Basic information' && (
+          {active==='Your course' && (
             <div className="space-y-5">
-              <SectionCard title="Basic information">
-                <Field label="Course Name"><FInput value={form.name as string} onChange={v=>set('name',v)}/></Field>
+              <SectionCard title="Course identity">
+                <p className="text-sm text-ink-soft -mt-1">Your name and address are what GreenReserve listed and what golfers search for, so we change them with you rather than silently. Everything else on this page you edit yourself.</p>
+                <dl className="divide-y divide-line-soft border border-line rounded-md">
+                  {IDENTITY_ROWS.map(r => (
+                    <div key={r.key} className="flex items-baseline gap-3 px-3 py-2.5">
+                      <dt className="w-28 shrink-0 text-[11px] uppercase tracking-[0.1em] text-ink-muted">{r.label}</dt>
+                      <dd className="text-sm text-ink min-w-0 break-words">{(form[r.key] as string) || <span className="text-ink-faint">Not set</span>}</dd>
+                    </div>
+                  ))}
+                  <div className="flex items-baseline gap-3 px-3 py-2.5">
+                    <dt className="w-28 shrink-0 text-[11px] uppercase tracking-[0.1em] text-ink-muted">Status</dt>
+                    <dd className="text-sm text-ink capitalize">{(form.liveStatus as string) === 'live' ? 'Live to golfers' : `${(form.liveStatus as string) || 'draft'} — not live yet`}</dd>
+                  </div>
+                </dl>
+                {changeSent ? (
+                  <div className="flex items-center gap-2 bg-ok/5 border border-ok/20 text-ok rounded-md px-3 py-2.5 text-[13.5px]">
+                    <CheckCircle2 className="w-4 h-4 shrink-0"/>
+                    Sent. We&apos;ll reply on <a href="/dashboard/messages" className="underline font-medium">Messages</a>.
+                  </div>
+                ) : changeOpen ? (
+                  <div className="space-y-2">
+                    <textarea value={changeText} onChange={e => setChangeText(e.target.value)} rows={3} maxLength={2000}
+                      placeholder="e.g. We rebranded to Hollow Creek Golf Club — please update the name and our new address."
+                      className={iCls + ' resize-none'} aria-label="What should we change?"/>
+                    <div className="flex items-center gap-2">
+                      <button onClick={requestChange} disabled={changeSending || !changeText.trim()}
+                        className="bg-pine hover:bg-pine-hover text-white text-[12.5px] font-medium px-4 py-2 rounded-md disabled:opacity-50 transition-colors">
+                        {changeSending ? 'Sending…' : 'Send request'}
+                      </button>
+                      <button onClick={() => { setChangeOpen(false); setChangeText(''); }} className="text-[12.5px] text-ink-muted hover:text-ink px-2 py-2">Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  <button onClick={() => setChangeOpen(true)}
+                    className="text-[12.5px] font-medium text-pine border border-pine/30 hover:bg-pine/5 rounded-md px-3 py-1.5 transition-colors w-fit">
+                    Request a change
+                  </button>
+                )}
+              </SectionCard>
+
+              <SectionCard title="Contact">
                 <Field label="Phone"><FInput value={form.phone as string} onChange={v=>set('phone',v)} type="tel"/></Field>
                 <Field label="Website"><FInput value={form.website as string} onChange={v=>set('website',v)} placeholder="https://"/></Field>
-                <Field label="Address"><FInput value={form.address as string} onChange={v=>set('address',v)}/></Field>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <Field label="City"><FInput value={form.city as string} onChange={v=>set('city',v)}/></Field>
-                  <Field label="State"><FInput value={form.state as string} onChange={v=>set('state',v)} maxLength={2}/></Field>
-                  <Field label="ZIP"><FInput value={form.zipCode as string} onChange={v=>set('zipCode',v)}/></Field>
-                </div>
                 <Field label="Course Type">
                   <select value={form.type as string} onChange={e=>set('type',e.target.value)} className={iCls}>
                     {/* A-04b: new selections are Public/Private only — a legacy
@@ -482,7 +567,7 @@ function SettingsPageInner() {
           )}
 
           {/* ── Course details ── */}
-          {active==='Course details' && (
+          {active==='Your course' && (
             <div className="space-y-5">
               <SectionCard title="Course details">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -499,7 +584,7 @@ function SettingsPageInner() {
           )}
 
           {/* ── Photos ── */}
-          {active==='Photos' && (
+          {active==='Your course' && (
             <div className="space-y-5">
               <SectionCard title="Gallery Photos">
                 <p className="text-sm text-ink-soft -mt-1">Add up to 8 photos of your course. These appear in the Photos tab on your booking page. Uploads save immediately.</p>
@@ -541,63 +626,17 @@ function SettingsPageInner() {
             </div>
           )}
 
-          {/* ── Payouts (Stripe) ── */}
-          {active==='Payouts (Stripe)' && (
-            <div className="space-y-5">
-              <SectionCard title="Payouts (Stripe)">
-                {stripeParam === 'pending' && (
-                  <div className="flex items-start gap-2 bg-warn/5 border border-warn/20 rounded-md p-3 text-warn text-sm">
-                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0"/>
-                    Stripe says your account isn&apos;t fully verified yet. Finish any remaining steps on Stripe, or click Connect again to pick back up.
-                  </div>
-                )}
-                {stripeParam === 'error' && (
-                  <div className="flex items-start gap-2 bg-bad/5 border border-bad/20 rounded-md p-3 text-bad text-sm">
-                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0"/>
-                    Something went wrong connecting to Stripe. Try again below.
-                  </div>
-                )}
-                {stripeError && (
-                  <div className="flex items-start gap-2 bg-bad/5 border border-bad/20 rounded-md p-3 text-bad text-sm">
-                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0"/>
-                    {stripeError}
-                  </div>
-                )}
 
-                {form.stripeAccountActive ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 bg-ok/5 border border-ok/20 rounded-md p-4">
-                      <CheckCircle2 className="w-6 h-6 text-ok shrink-0"/>
-                      <div>
-                        <div className="font-medium text-ok text-sm">Stripe connected</div>
-                        <div className="text-xs text-ink-soft mt-0.5">Charges and payouts are enabled. Green fees go straight to your bank account.</div>
-                      </div>
-                    </div>
-                    <button onClick={openStripeDashboard} disabled={openingStripeDashboard}
-                      className="flex items-center justify-center gap-2 w-full bg-paper border border-line hover:border-line-strong text-ink-soft py-2.5 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
-                      {openingStripeDashboard ? <><Loader2 className="w-4 h-4 animate-spin"/>Opening...</> : 'View payouts & balance →'}
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <p className="text-sm text-ink-soft">Connect your bank account through Stripe so you can get paid for bookings. This takes about 5 minutes — you&apos;ll need your business/bank details. GreenReserve can&apos;t take your course live until this is connected.</p>
-                    <button onClick={connectStripe} disabled={connecting}
-                      className="flex items-center justify-center gap-2 w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
-                      {connecting ? <><Loader2 className="w-4 h-4 animate-spin"/>Connecting...</> : <><CreditCard className="w-4 h-4"/>Connect with Stripe</>}
-                    </button>
-                  </div>
-                )}
-
-                <div className="text-xs text-ink-faint pt-2 border-t border-line-soft">
-                  Status: <span className="font-medium text-ink-muted capitalize">{(form.liveStatus as string) || 'draft'}</span>
-                  {form.liveStatus !== 'live' && form.stripeAccountActive ? ' — Stripe is connected. GreenReserve will review and take you live shortly.' : ''}
-                </div>
-              </SectionCard>
+          {/* SD-8: Payouts moved to /dashboard/money. Say where it went rather
+              than leaving operators hunting for the Stripe button. */}
+          {active==='Pricing & cancellation' && (
+            <div className="bg-white border border-line border-l-[3px] border-l-pine rounded-lg px-4 py-3 mb-5 text-[13.5px] text-ink-soft">
+              Getting paid moved. Stripe, your payouts and what GreenReserve takes are on <a href="/dashboard/money?tab=payouts" className="text-pine font-medium underline">Money → Payouts</a>.
             </div>
           )}
 
           {/* ── Member & resident pricing ── */}
-          {active==='Member & resident pricing' && (
+          {active==='Pricing & cancellation' && (
             <div className="space-y-5">
               <SectionCard title="Member pricing">
                 <Toggle label="Enable member pricing" checked={!!form.hasMemberPricing} onChange={()=>tog('hasMemberPricing')}/>
@@ -658,7 +697,7 @@ function SettingsPageInner() {
           )}
 
           {/* ── Walking & carts ── */}
-          {active==='Walking & carts' && (
+          {active==='Booking rules' && (
             <div className="space-y-5">
               <SectionCard title="Walking & carts">
                 <Field label="Walking policy">
@@ -675,7 +714,7 @@ function SettingsPageInner() {
           )}
 
           {/* ── Cancellation ── */}
-          {active==='Cancellation' && (
+          {active==='Pricing & cancellation' && (
             <div className="space-y-5">
               <SectionCard title="Cancellation">
                 <Toggle label="Cancellation fee" checked={!!form.lateCancellationFee} onChange={() => set('lateCancellationFee', form.lateCancellationFee ? 0 : 10)}/>
@@ -783,7 +822,7 @@ function SettingsPageInner() {
           )}
 
           {/* ── Staff ── */}
-          {active==='Staff' && (
+          {active==='Staff & account' && (
             <div className="space-y-5">
               <SectionCard title="Staff Accounts">
                 <p className="text-sm text-ink-soft">Staff members get their own login credentials and full dashboard access for your course.</p>
@@ -850,7 +889,7 @@ function SettingsPageInner() {
           )}
 
           {/* ── Account ── */}
-          {active==='Account' && (
+          {active==='Staff & account' && (
             <div className="space-y-5">
               <SectionCard title="Two-Factor Authentication">
                 <p className="text-sm text-ink-soft">Required on every login. Choose how you&apos;d like to receive your 6-digit code.</p>

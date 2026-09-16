@@ -160,7 +160,7 @@ export async function sendOperatorBookingNotification(data: BookingEmailData & {
       </table>
     </div>
     <a href="https://greenreserve.app/dashboard" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-top:20px;">View Tee Sheet &rarr;</a>
-    <a href="https://greenreserve.app/dashboard/payments" style="display:block;color:#1b4332;text-decoration:none;text-align:center;padding:8px;font-weight:600;font-size:13px;">See it in Payments &rarr;</a>
+    <a href="https://greenreserve.app/dashboard/money?tab=payments" style="display:block;color:#1b4332;text-decoration:none;text-align:center;padding:8px;font-weight:600;font-size:13px;">See it in Payments &rarr;</a>
   `);
   await getResend().emails.send({ from: FROM, to: data.operatorEmail, subject: `New booking: ${data.players} player${data.players > 1 ? 's' : ''} — ${data.date} at ${data.time}`, html });
 }

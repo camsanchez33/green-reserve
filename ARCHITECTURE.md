@@ -188,6 +188,7 @@
 | `/dashboard/login` | operator | yes |
 | `/dashboard/members` | operator | yes |
 | `/dashboard/messages` | operator | yes |
+| `/dashboard/money` | operator | yes |
 | `/dashboard/onboarding` | operator | yes |
 | `/dashboard/outings` | operator | yes |
 | `/dashboard/payments` | operator | yes |

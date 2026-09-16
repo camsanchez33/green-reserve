@@ -38,7 +38,12 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json();
   // Whitelist what can be updated
   const allowed = [
-    'name','phone','website','description','address','city','state','zipCode',
+    // SD-8: name/address/city/state/zipCode are NOT here. They are what
+    // GreenReserve listed and what golfers search for, so an operator asks us
+    // (Settings shows them read-only with a Request a change button) and admin
+    // makes the change through /api/admin/courses. Without this the read-only
+    // row would be decoration a crafted request walks straight past.
+    'phone','website','description',
     'holes','par','yardage','slope','courseRating','type',
     'hasMemberPricing','memberAdvanceDays',
     'hasResidentPricing','residentCounty','residentState','residentProofRequired',

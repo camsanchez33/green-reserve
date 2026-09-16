@@ -633,7 +633,7 @@ function DashboardPageInner() {
                   <div className="bg-white border border-line rounded-lg p-5">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 divide-x divide-line-soft">
                       {[
-                        { label:'Revenue',     value:`$${analytics.summary.totalRevenue.toFixed(0)}`, sub:'collected · green + cart', onClick:()=>router.push('/dashboard/payments') },
+                        { label:'Revenue',     value:`$${analytics.summary.totalRevenue.toFixed(0)}`, sub:'collected · green + cart', onClick:()=>router.push('/dashboard/money?tab=payments') },
                         { label:'Rounds',      value:analytics.summary.totalBookings,                 sub:'checked in',      onClick:undefined },
                         { label:'Players',     value:analytics.summary.totalPlayers,                  sub:'total rounds',    onClick:undefined },
                         { label:'Utilization', value:`${analytics.summary.utilization}%`,             sub:'open slots filled, last 30 days', onClick:undefined },
@@ -719,7 +719,7 @@ function DashboardPageInner() {
                   {[
                     { label:'Total Slots', value:totalSlots,               icon:<Users className="w-4 h-4"/>,     onClick:undefined },
                     { label:'Booked',      value:bookedSlots,              icon:<Calendar className="w-4 h-4"/>,  onClick:undefined },
-                    { label:'Expected',    value:`$${revenue.toFixed(0)}`, icon:<DollarSign className="w-4 h-4"/>, onClick:()=>router.push(`/dashboard/payments?date=${selectedDate}`) },
+                    { label:'Expected',    value:`$${revenue.toFixed(0)}`, icon:<DollarSign className="w-4 h-4"/>, onClick:()=>router.push(`/dashboard/money?tab=payments&date=${selectedDate}`) },
                     { label:'Blocked',     value:blocked,                  icon:<Ban className="w-4 h-4"/>,       onClick:undefined },
                   ].map(s => (
                     <button key={s.label} onClick={s.onClick} disabled={!s.onClick}

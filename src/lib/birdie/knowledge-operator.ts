@@ -8,10 +8,10 @@ export type DashboardPage = { key: string; label: string; href: string; does: st
 export const DASHBOARD_PAGES: DashboardPage[] = [
   { key: 'teesheet', label: 'Tee Sheet', href: '/dashboard', does: "today's and upcoming tee times, check-ins, walk-ins, blocking a time, closing a day" },
   { key: 'analytics', label: 'Analytics', href: '/dashboard?tab=analytics', does: 'rounds, revenue and booking trends' },
-  { key: 'cancellations', label: 'Cancellations', href: '/dashboard/cancellations', does: 'cancelled bookings and late-cancellation fees' },
+  { key: 'cancellations', label: 'Cancellations', href: '/dashboard/money?tab=cancellations', does: 'cancelled bookings, late-cancellation fees and the cancellation policy' },
   { key: 'schedule', label: 'Schedule', href: '/dashboard/schedules', does: 'the templates that generate tee times: days, hours, interval, green fees, member and resident rates, cart fee, blocked days, booking windows, and which round each schedule sells' },
   { key: 'members', label: 'Members', href: '/dashboard/members', does: 'membership tiers, member accounts, dues' },
-  { key: 'payments', label: 'Payments', href: '/dashboard/payments', does: 'Stripe connection, payouts, what was collected' },
+  { key: 'payments', label: 'Money', href: '/dashboard/money', does: 'what was collected, cancellations, and the Stripe connection and payouts' },
   { key: 'messages', label: 'Messages', href: '/dashboard/messages', does: 'messages with GreenReserve' },
   { key: 'settings', label: 'Settings', href: '/dashboard/settings', does: 'course info, cancellation policy and fee, check-in window, walking policy, brand colour, photos, staff logins, course and layout (nines, products, tee sets)' },
 ];
@@ -42,7 +42,7 @@ export const OPERATOR_KNOWLEDGE = `
 - Nothing is charged at booking. Golfers save a card; the green fee is charged at check-in (staff check-in on the Tee Sheet, or the golfer's own check-in link from their confirmation email). Counter payments can be marked "paid at the counter".
 - The check-in window (how early a golfer can self check in) is in Settings.
 
-## Stripe (/dashboard/payments)
+## Stripe (/dashboard/money?tab=payouts)
 - Payments shows whether Stripe is connected and lets you connect or finish onboarding. Green fees go to the course's own Stripe account; GreenReserve's $1.50 per player service fee is paid by the golfer.
 - Payouts follow Stripe's schedule; the Payments page lists what was collected.
 
