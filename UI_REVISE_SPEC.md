@@ -466,6 +466,91 @@ the story and the pricing slab; the four step cards are still visible; the story
 fades at both ends; at 390px nothing overlaps and the nav still reaches Operator
 login.
 
+### H-2g · Quiet shadows, no scrolling header, logo centered (small, no migration)
+
+Cam, 2026-09-15, on the shipped H-2e hero: "make that shadow less and look more
+professional · make the scrolling header go away · get the logo bigger and in the
+center for the beginning."
+
+#### 1. One shadow, and it is quiet
+
+Both `.device` instances carry a three-layer shadow whose far layers are at 35%
+and 40% black — measured live:
+
+```
+0 1px 2px rgba(0,0,0,.05), 0 30px 50px -30px rgba(20,30,20,.35), 0 100px 140px -80px rgba(20,30,20,.4)
+```
+
+That is a poster shadow on a product screenshot, and it is most of what reads as
+unprofessional. Replace it with **one token used by every card on the page** —
+`.device`, `.card`, the tee-sheet card, the step cards:
+
+```css
+--shadow-card: 0 1px 2px rgba(20,30,20,.04),
+               0 8px 16px -8px rgba(20,30,20,.10),
+               0 24px 40px -24px rgba(20,30,20,.12);
+--shadow-card-lift: 0 2px 4px rgba(20,30,20,.05),
+                    0 16px 28px -12px rgba(20,30,20,.13),
+                    0 40px 64px -32px rgba(20,30,20,.15);
+```
+
+`--shadow-card-lift` is the hover state for `.card` only. Nothing on the page
+defines its own `box-shadow` afterwards — grep `box-shadow` in
+`home.module.css` and confirm every remaining use is one of these two variables.
+Elevation is now one decision, not six.
+
+#### 2. The header stops following
+
+On `/` the nav is `position: fixed` today, so it re-appears as a blurred bar over
+everything below the hero. Cam wants it gone once you start reading.
+
+- On `/` only, the nav becomes `position: absolute; top: 0` **inside `.hero`**
+  (which is already `position: relative`). Absolute rather than static so it does
+  not add to the hero's height — `.hero` stays `100svh` and the first screen still
+  fills exactly one viewport.
+- No background, no blur, no border, no scroll listener, no scrolled state. It
+  scrolls away with the hero and never returns.
+- Every other public page keeps the shared `Nav` exactly as it is today
+  (fixed, white/blur). This is a homepage variant, not a global change — pass a
+  prop or branch on the pathname, and leave the default path untouched.
+- Delete the scroll handler branch that toggled the nav's background, and the
+  `--nav-*` scrolled-state CSS with it. Dead code here is how the next person
+  reintroduces the bar by accident.
+
+#### 3. The logo, bigger and centred
+
+The top row of the hero becomes a three-column grid: empty · lockup · link.
+
+- **Centre:** `/brand/logo-lockup-900.png` at **280px** wide on desktop
+  (currently 180), **200px** below 960px. `priority`, and give it explicit
+  width/height so it reserves its space — it is now near the top of the fold and
+  a reflow here is a CLS hit against §5's budget.
+- **Right:** **Operator login** only, as a muted text link. "List your course"
+  leaves the top row for good — the hero's own primary button sits 200px below it
+  and two of the same call to action on one screen is one too many.
+- **Left:** empty, so the lockup is genuinely centred rather than optically
+  shoved by the link.
+- Below 640px the row stacks: lockup centred, Operator login centred under it at
+  13px. Never let them collide.
+
+#### 4. The consequence, and why it is acceptable
+
+With no fixed bar, **Operator login is visible only at the top of the page.** That
+is fine for the person it serves: an operator types greenreserve.app, lands, and
+it is the first link on screen. What it must not do is disappear entirely — so
+confirm H-2e's footer "Operator login" link is present, and if it is not, add it
+in this run. That footer link is the durable path, and it is the only reason
+removing the sticky bar is safe.
+
+#### 5. Verify
+
+At the top of `/`: a centred 280px lockup, one muted link at the right, no bar,
+no border. Scroll: nothing re-appears, ever — check at 1440 and at 390. No
+element on the page carries a `box-shadow` that is not one of the two variables.
+The hero still measures exactly one viewport tall. Lighthouse mobile CLS is no
+worse than H-1's recorded number. Every other public page still has its normal
+fixed nav.
+
 ## 6. Verification, every run
 
 `/gr-review` as usual, plus: side-by-side with the canvas board named in the item; a phone walk of any golfer route touched; `git diff --stat` reviewed for files outside the restate list (that's the smuggling check). Reskin runs additionally: grep the diff for `fetch(`, `prisma`, `useState(` additions — any hit means the run drifted into §4 and must be split.
