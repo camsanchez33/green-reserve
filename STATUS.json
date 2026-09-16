@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-16T02:58:13.439Z",
+  "generatedAt": "2026-09-16T03:31:46.166Z",
   "repo": {
-    "head": "211d924",
+    "head": "80cc2a0",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,11 +10,11 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-15T22:57:36-04:00",
+    "queueLastCommit": "2026-09-15T22:58:21-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 188,
+    "runDone": 190,
     "runAwaiting": 10,
     "runInFlight": 1,
     "runNotStarted": 19,
@@ -26,7 +26,7 @@
   "inFlight": [
     {
       "title": "BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET",
-      "line": 1856,
+      "line": 1895,
       "body": [
         "FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because \"no linked inquiry\" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding them outright. FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() + a \"Force delete permanently\" button per acknowledged orphan — owner-only, typed name confirm, server re-verifies the course is still an orphan before touching anything (refuses if it turns out to have a real inquiry link — this can never be used to route around the doctrine for a real course). This is the mechanism for Cam's DaisyLinks exception, but I have NOT executed it against DaisyLinks yet:",
         "- Last session's raw Prisma script (a read-only check confirming Fake",
@@ -41,70 +41,70 @@
   "awaiting": [
     {
       "title": "MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin",
-      "line": 560,
+      "line": 599,
       "hash": "7246a62",
       "shipDate": "2026-08-29",
       "ageDays": 17
     },
     {
       "title": "MP-1",
-      "line": 590,
+      "line": 629,
       "hash": "41f5ea8",
       "shipDate": "2026-08-29",
       "ageDays": 17
     },
     {
       "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
-      "line": 625,
+      "line": 664,
       "hash": "4ef11dd",
       "shipDate": "2026-08-29",
       "ageDays": 17
     },
     {
       "title": "MP-2",
-      "line": 666,
+      "line": 705,
       "hash": "958f229",
       "shipDate": "2026-08-29",
       "ageDays": 17
     },
     {
       "title": "MP-2b",
-      "line": 703,
+      "line": 742,
       "hash": "a134af5",
       "shipDate": "2026-08-29",
       "ageDays": 17
     },
     {
       "title": "MP-2c",
-      "line": 752,
+      "line": 791,
       "hash": "e5b5413",
       "shipDate": "2026-08-29",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "title": "MP-2d",
-      "line": 800,
+      "line": 839,
       "hash": "22d0f68",
       "shipDate": "2026-08-29",
       "ageDays": 16
     },
     {
       "title": "MP-2e",
-      "line": 842,
+      "line": 881,
       "hash": "bf3bcb2",
       "shipDate": "2026-08-30",
       "ageDays": 16
     },
     {
       "title": "UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until r",
-      "line": 2017,
+      "line": 2056,
       "hash": "a3c1bea",
       "shipDate": "2026-09-11",
       "ageDays": 4
     },
     {
       "title": "SECURITY follow-on: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09-16: \"if a course is already created it can't be created again — they'd have to log in to change informat",
-      "line": 2059,
+      "line": 2098,
       "hash": "21c8d25",
       "shipDate": "2026-09-15",
       "ageDays": 0
@@ -117,93 +117,93 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "SD-8b — unsaved Settings edits still vanish on sidebar navigation",
-      "line": 520,
+      "title": "SD-8d — browser Back still discards unsaved Settings edits (from the",
+      "line": 536,
       "section": "Queue (run in this order)"
     },
     {
-      "title": "SD-8c — two pre-existing nits the SD-8 design audit surfaced in the",
-      "line": 531,
+      "title": "SD-8e — status is rendered as bare coloured text where the design",
+      "line": 544,
       "section": "Queue (run in this order)"
     },
     {
       "title": "SD-9 — funnel + auth polish: split the details sheet into a required core",
-      "line": 540,
+      "line": 579,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) —",
-      "line": 960,
+      "line": 999,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-4 — pipeline reshape (split into 4a/4b/4c)",
-      "line": 967,
+      "line": 1006,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-4f — retire the JSON-in-actorName pattern. Three separate things",
-      "line": 1050,
+      "line": 1089,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong",
-      "line": 1072,
+      "line": 1111,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Golfer course directory (`/courses`) — NOT scheduled. If Cam wants",
-      "line": 1151,
+      "line": 1190,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-5e part 3 — the Overview relationship feed (notes + settings",
-      "line": 1155,
+      "line": 1194,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today)",
-      "line": 1181,
+      "line": 1220,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-7 — comms merge (split into 7a–7b)",
-      "line": 1253,
+      "line": 1292,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE,",
-      "line": 1271,
+      "line": 1310,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-8 — chrome + System (split into 8a–8b)",
-      "line": 1278,
+      "line": 1317,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table",
-      "line": 1295,
+      "line": 1334,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in",
-      "line": 1302,
+      "line": 1341,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)",
-      "line": 1349,
+      "line": 1388,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState",
-      "line": 1398,
+      "line": 1437,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
-      "line": 1453,
+      "line": 1492,
       "section": "Queue (run in this order)"
     }
   ],
@@ -216,37 +216,37 @@
     {
       "item": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
       "note": "pending Cam's approval for a prod write",
-      "line": 625
+      "line": 664
     },
     {
       "item": "MP-2",
       "note": "Cam's approval for a prod backfill",
-      "line": 666
+      "line": 705
     },
     {
       "item": "MP-2b",
       "note": "pending Cam's approval for a prod write",
-      "line": 703
+      "line": 742
     },
     {
       "item": "MP-2c",
       "note": "pending Cam's approval for a prod write",
-      "line": 752
+      "line": 791
     },
     {
       "item": "MP-2d",
       "note": "pending Cam's approval for a prod write",
-      "line": 800
+      "line": 839
     },
     {
       "item": "MP-2e",
       "note": "pending Cam's approval for a prod write",
-      "line": 842
+      "line": 881
     },
     {
       "item": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
       "note": "CAM: confirm the state before this runs — e",
-      "line": 1453
+      "line": 1492
     }
   ],
   "ideas": {
@@ -769,6 +769,21 @@
   },
   "recentCommits": [
     {
+      "h": "80cc2a0",
+      "date": "2026-09-15",
+      "subject": "SD-8b review fix + the Stripe return detour"
+    },
+    {
+      "h": "fa3d7bf",
+      "date": "2026-09-15",
+      "subject": "SD-8b + SD-8c: unsaved Settings edits survive sidebar navigation, and the booking status tone stops being wrong in three places"
+    },
+    {
+      "h": "12815b0",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "211d924",
       "date": "2026-09-15",
       "subject": "SD-8 review fixes: the identity lock made real, the date filter stops lying, and the change-request channel gets the caps its commit message claimed"
@@ -812,21 +827,6 @@
       "h": "f0d8ed7",
       "date": "2026-09-15",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "7473180",
-      "date": "2026-09-15",
-      "subject": "L2 review fixes: the draft build's per-round default schedules start PAUSED (identical windows would have sold one first tee several times over); a whole-course schedule on a course with rounds now conflicts with every round; a course with active rounds refuses an unscoped schedule server-side; deactivating or re-sizing a round rebuilds the sheet, deleting one is refused while it has schedules, and changing its nines re-checks every running schedule; the engine adopts a booked pre-L2 row instead of doubling it and never tries to delete a slot that still has booking rows; the round label reaches the member sheet, the member portal, the checkout page, the reminder and modified emails, the per-course account and the swap picker; the product's rating/slope shows on slot cards; the admin schedule form gets a round picker; a failed products load is visible on the Schedules page; the selector's unselected pill uses the ink-muted token"
-    },
-    {
-      "h": "eb67527",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "fd59547",
-      "date": "2026-09-15",
-      "subject": "L2: the booking page sells products — the tee-sheet engine generates one slot per product per time (product-scoped schedules; inactive products generate nothing; simple courses unchanged); schedule-service scopes each schedule to one product and refuses a save that would put a nine in two places at once (lib/schedule-conflict.ts, 12/12 tests; 409 with the plain-English reason on both routes); the schedules editor picks the round, groups schedules under their product and shows the conflict; the Course & Layout tab nudges toward a schedule per round; the draft build creates one default schedule per active product; the course page shows a 'Which round' selector when a day sells more than one product and labels every slot; the product label reaches booking emails, receipt, manage, check-in, the operator tee sheet, the admin sheet and the golfer account"
     }
   ]
 }

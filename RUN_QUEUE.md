@@ -517,18 +517,57 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     edit survives and its button still reads "Save Booking rules"; (5) switch
     browser tab and back mid-edit — the edit survives.
 
-  - [ ] SD-8b — unsaved Settings edits still vanish on sidebar navigation
-    (from the SD-8 admin-UX review, 2026-09-16). The only loss-prevention on
-    /dashboard/settings is a `beforeunload` listener, which fires on a real
-    document unload — tab close, refresh, cross-origin nav. OperatorSidebar
-    navigates with `router.push`, a client-side App Router transition, so no
-    unload event fires and an in-progress edit is unmounted with no prompt.
-    That is the most common way anyone leaves this page. Needs a router-level
-    guard or unsaved-aware sidebar links, which is a shared-nav change rather
-    than a Settings one — hence its own item. NOT a regression: the guard has
-    always had this gap. (small, no migration)
+  - [x] SD-8b (fa3d7bf; review fix 80cc2a0) — SHIPPED + REVIEWED 2026-09-16.
+    Spec 4 MET / 1 PARTIAL, the partial closed by 80cc2a0. Admin-UX 1 blocking,
+    closed. New lib/unsaved-guard.ts holds one guard a page registers while it
+    has unsaved work; the sidebar asks before navigating. Settings names the
+    dirty sections in the prompt. REVIEW FIX: the sidebar has FOUR router.push
+    sites, not three — "Course alert" was missed, and Settings passes no
+    onAlertClick, so on the one page this item is about it always navigated.
+    STILL UNGUARDED, deliberately: browser back/forward (App Router pops
+    without firing beforeunload and without consulting the guard) — see SD-8d.
+    Hard navigations (course switcher, sign out) are covered by beforeunload,
+    which is correct: the native prompt for a real unload, the named one for
+    the SPA transition the native prompt cannot see.
+    CAM TO WALK: edit a Settings field, click another sidebar item — the prompt
+    should name the section; Cancel keeps you put. Repeat on mobile, on the
+    active Settings item itself, and on "Course alert".
 
-  - [ ] SD-8c — two pre-existing nits the SD-8 design audit surfaced in the
+  - [ ] SD-8d — browser Back still discards unsaved Settings edits (from the
+    SD-8b review, 2026-09-16). SD-8b closed the sidebar; the App Router pops
+    on back/forward without firing beforeunload and without consulting
+    setLeaveGuard, so Back is now the only silent loss path left on Settings.
+    Needs a popstate/history interception, which is a different mechanism from
+    the click guard — hence its own item. Also unguarded for the same reason:
+    Birdie answer links, which are client-side <Link>s. (small, no migration)
+
+  - [ ] SD-8e — status is rendered as bare coloured text where the design
+    system says StatusDot (from the SD-8c design audit, 2026-09-16). Both live
+    callers of getBookingStatus — the payments table and the tee sheet — render
+    `<span className={statusToneText(tone)}>`, but CLAUDE.md's rule for both
+    looks is `<StatusDot status=... label=.../>`, 5px dot, no coloured text
+    carrying the meaning. Pre-existing; SD-8c only corrected the tone map.
+    TWO THINGS FOR CAM TO DECIDE FIRST, so don't just swap the component:
+    (a) the palette has four semantic tones (ok/warn/bad/neutral) and
+    booking-status has five, so 'blue' (card on file — nothing due yet,
+    nothing wrong) and 'emerald' (checked in and PAID) both collapse to
+    text-ok. On a money page that is a real loss: you cannot tell collected
+    from not-yet-due by colour. Does the system want a fifth informational
+    tone, or should the dot carry it some other way (outline vs filled)?
+    (b) `statusBadgeClass` in lib/booking-status.ts returns raw
+    `bg-emerald-50 text-emerald-700` Tailwind families — exactly what the
+    BANNED list targets. It has ZERO importers today, so it is a landmine a
+    future page could import and ship a banned pill with. Delete it as part
+    of this. (small once (a) is decided, no migration)
+
+  - [x] SD-8c (fa3d7bf) — SHIPPED + REVIEWED 2026-09-16, 7/7 spec claims MET,
+    no scope creep. Both local tone maps deleted for lib/booking-status.ts's
+    statusToneText; "Card on File", "No Card Required" and "Pay at counter"
+    stop rendering inert grey and read as ok. Three payments cells moved from
+    text-xs to the §1b table 13.5px. Design audit confirmed every tone
+    getBookingStatus can return is covered and nothing else regressed; its two
+    remaining findings are about the rendering APPROACH, filed as SD-8e.
+    SUPERSEDED-ORIGINAL — two pre-existing nits the SD-8 design audit surfaced in the
     payments table, both lifted verbatim from the old page and confirmed
     byte-identical to it: PaymentsPanel's local STATUS_TONE/toneClass never
     handles the 'blue' tone, so "Card on File", "No Card Required" and "Pay at
