@@ -104,6 +104,9 @@ export default function ForCoursesContent() {
   const [submitted, setSubmitted] = useState(false);
   const [submittedName, setSubmittedName] = useState('');
   const [submittedEmail, setSubmittedEmail] = useState('');
+  // Set only when the API says the course already has a page, which it only
+  // says to a submitter using the email on file. See the route's comment.
+  const [alreadyBuilt, setAlreadyBuilt] = useState(false);
   const [serverError, setServerError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const formRef = useRef<HTMLDivElement>(null);
@@ -175,8 +178,10 @@ export default function ForCoursesContent() {
     });
     setSubmitting(false);
     if (res.ok) {
+      const d = await res.json().catch(() => ({}));
       setSubmittedName(form.courseName);
       setSubmittedEmail(form.email.trim());
+      setAlreadyBuilt(!!d.alreadyBuilt);
       setSubmitted(true);
     } else {
       const d = await res.json();
@@ -188,6 +193,35 @@ export default function ForCoursesContent() {
       }
     }
   };
+
+  // SPEC REVIEW (951433d): a built course used to land on the ordinary screen —
+  // "Next is a 20-minute call — pick a time below", Calendly button and all —
+  // while the email it triggered said there is nothing to set up and no call is
+  // coming. Two opposite instructions, with the correct one as a footnote under
+  // the wrong one's CTA. This screen replaces it rather than annotating it.
+  if (submitted && alreadyBuilt) return (
+    <div className="min-h-screen bg-paper flex items-center justify-center p-6">
+      <div className="bg-white rounded-lg p-10 max-w-lg w-full border border-line">
+        <CheckCircle className="w-12 h-12 text-ok mx-auto mb-5" />
+        <h1 className="text-2xl sm:text-3xl font-serif font-medium tracking-tight text-ink mb-2 text-center">You&apos;re already set up.</h1>
+        <p className="text-ink-soft text-center mb-8 text-sm">
+          <span className="font-medium text-ink">{submittedName}</span> already has a GreenReserve page, so there&apos;s nothing to set up again.
+          Your contact details, your rates and everything else on the page change in one place — your dashboard.
+        </p>
+
+        <Link
+          href="/dashboard/login"
+          className="flex items-center justify-center gap-2 w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-sm transition-colors mb-3"
+        >
+          Sign in to your dashboard
+        </Link>
+        <p className="text-center text-xs text-ink-muted">
+          Use the email address your course is registered under. Can&apos;t get in, or think this isn&apos;t your course?{' '}
+          <a href="mailto:hello@greenreserve.app" className="text-ink-soft underline hover:text-ink">hello@greenreserve.app</a>.
+        </p>
+      </div>
+    </div>
+  );
 
   if (submitted) return (
     <div className="min-h-screen bg-paper flex items-center justify-center p-6">

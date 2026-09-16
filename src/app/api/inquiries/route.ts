@@ -69,7 +69,11 @@ export async function POST(req: NextRequest) {
   //
   // Only ALIVE inquiries dedupe. A course rejected or archived months ago that
   // applies again is a genuine new lead, not a duplicate.
-  const courseName = String(body.courseName).trim();
+  // SECURITY REVIEW: courseName lands in two mail subject headers (the admin
+  // new-lead subject and the already-built one) where escHtml does not apply.
+  // Every neighbouring field is capped; this one never was. Strip newlines and
+  // cap at intake so neither subject can carry a header break.
+  const courseName = String(body.courseName).trim().replace(/[\r\n]+/g, ' ').slice(0, 200);
   const city = String(body.city).trim();
   const state = String(body.state).trim();
 
@@ -104,17 +108,46 @@ export async function POST(req: NextRequest) {
     // Deliberately NOT extended to not-yet-built inquiries: there the 21c8d25
     // rule (the email must match the one on file) is the right level, because
     // refusing outright would also refuse a GM fixing their own typo'd phone.
-    if (existing.builtCourseId) {
-      sendInquiryAlreadyBuilt({ firstName: body.firstName as string, email, courseName })
-        .catch(err => console.error('Already-built inquiry email failed:', err));
-      return NextResponse.json({ success: true, id: existing.id });
-    }
-
     // Security (IF-1 review): the match is on public facts (name + town), so
     // anyone can land here. Only a submitter using the email on file may put
     // new contact details in front of the admin; everyone else's email/phone
-    // is dropped and the diff is labelled unverified.
+    // is dropped and the diff is labelled unverified. Hoisted above the
+    // built-course branch because that branch needs the same distinction.
     const verified = existing.email.trim().toLowerCase() === email;
+    // SC-2 review: the confirmation's button reuses the live invite when there
+    // is one; no new token is minted from this unauthenticated path.
+    const liveInvite = existing.callInviteToken && existing.callInviteExpiresAt && existing.callInviteExpiresAt.getTime() > Date.now()
+      ? inviteUrl(existing.callInviteToken) : null;
+
+    if (existing.builtCourseId) {
+      // SECURITY REVIEW (951433d): the first cut sent the "already has a
+      // GreenReserve page" email to whoever submitted. A `building` course is
+      // NOT public — admin/create-course writes it `active: false` — so that
+      // told an unverified stranger, who needs only a course name and a town,
+      // which courses have signed up and not yet launched: competitor-usable
+      // pipeline intelligence, and a ready-made phishing pretext sent from our
+      // own domain with our own SPF/DKIM. 21c8d25's rule already settles this:
+      // an unverified submitter gets nothing privileged. So only the address on
+      // file is told the course exists; everyone else gets the ordinary
+      // confirmation, byte for byte what they got before this branch existed.
+      if (verified) {
+        sendInquiryAlreadyBuilt({ firstName: body.firstName as string, email, courseName })
+          .catch(err => console.error('Already-built inquiry email failed:', err));
+      } else {
+        sendInquiryConfirmation({ firstName: body.firstName as string, contactName, email, courseName, callUrl: liveInvite })
+          .catch(err => console.error('Inquiry confirmation email failed:', err));
+      }
+      // No InquiryStatusEvent, per the item: an admin diff against a course
+      // that is already built is a decision nobody should be asked to make.
+      // But "no diff" is not "no trace" — without this line a built course's
+      // resubmit, including someone probing the pipeline, left no application
+      // record anywhere except an opaque rate-limit counter.
+      console.warn(`[inquiries] resubmit for built course, no event recorded: inquiry=${existing.id} verified=${verified}`);
+      // `alreadyBuilt` only ever reaches someone who already proved they know
+      // the address on file, so it tells them nothing they did not have. The
+      // unverified response stays identical to every other path.
+      return NextResponse.json({ success: true, ...(verified ? { alreadyBuilt: true } : {}) });
+    }
     // A self-loop event: it shows up on the timeline without changing status or
     // restarting the stage clock (see inquiry-status.stageEnteredAt, which
     // ignores fromStatus === toStatus for exactly this reason).
@@ -149,14 +182,10 @@ export async function POST(req: NextRequest) {
     // a "duplicate" flag would turn this public endpoint into an oracle for
     // which courses are already in the pipeline. No admin new-lead notification
     // fires, because this is not a new lead.
-    // SC-2 review: the confirmation's button reuses the live invite when there is
-    // one; no new token is minted from this unauthenticated path.
-    const liveInvite = existing.callInviteToken && existing.callInviteExpiresAt && existing.callInviteExpiresAt.getTime() > Date.now()
-      ? inviteUrl(existing.callInviteToken) : null;
     sendInquiryConfirmation({ firstName: body.firstName as string, contactName, email, courseName, callUrl: liveInvite })
       .catch(err => console.error('Inquiry confirmation email failed:', err));
 
-    return NextResponse.json({ success: true, id: existing.id });
+    return NextResponse.json({ success: true });
   }
   const firstName = (body.firstName as string).trim();
   const contactTitle = (body.contactTitle as string).trim().slice(0, 120);
@@ -224,7 +253,7 @@ export async function POST(req: NextRequest) {
   sendInquiryConfirmation(emailData)
     .catch(err => console.error('Inquiry confirmation email failed:', err));
 
-  return NextResponse.json({ success: true, id: inquiry.id });
+  return NextResponse.json({ success: true });
 }
 
 // GET deliberately removed (MP-1b). It was PUBLIC — no session check behind a
