@@ -1,10 +1,12 @@
 {
-  "generatedAt": "2026-09-16T12:02:47.090Z",
+  "generatedAt": "2026-09-16T12:14:02.651Z",
   "repo": {
-    "head": "063afa1",
+    "head": "30385cd",
     "branch": "main",
-    "dirtyCount": 0,
-    "dirty": [],
+    "dirtyCount": 1,
+    "dirty": [
+      "M RUN_QUEUE.md"
+    ],
     "looksLikeRunInProgress": false
   },
   "drift": {
@@ -101,15 +103,15 @@
       "ageDays": 4
     },
     {
-      "title": "SECURITY follow-on: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09-16: \"if a course is already created it can't be created again — they'd have to log in to change informat",
+      "title": "SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED 2026-09-16, box OPEN pending Cam's mailbox walk below: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09",
       "line": 2098,
-      "hash": "21c8d25",
-      "shipDate": "2026-09-15",
+      "hash": "951433d",
+      "shipDate": "2026-09-16",
       "ageDays": 0
     },
     {
       "title": "UI_REVISE_SPEC H-2g §2 + §3 (01822b0; review fixes 2de3268) — BUILT +",
-      "line": 2121,
+      "line": 2160,
       "hash": "01822b0",
       "shipDate": "2026-09-15",
       "ageDays": 0
@@ -213,7 +215,7 @@
     },
     {
       "title": "CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates",
-      "line": 2159,
+      "line": 2198,
       "section": "Queue (run in this order)"
     }
   ],
@@ -257,6 +259,11 @@
       "item": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
       "note": "CAM: confirm the state before this runs — e",
       "line": 1492
+    },
+    {
+      "item": "SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED 2026-09-16, box OPEN pending Cam's mailbox walk below: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09",
+      "note": "pending Cam's mailbox walk below: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09-16: \"if a course is already created it can't be created again — they'd",
+      "line": 2098
     }
   ],
   "ideas": {
@@ -779,6 +786,16 @@
   },
   "recentCommits": [
     {
+      "h": "30385cd",
+      "date": "2026-09-16",
+      "subject": "SECURITY follow-on review fixes: gate the already-built email, close the id oracle, stop the screen contradicting the email"
+    },
+    {
+      "h": "951433d",
+      "date": "2026-09-16",
+      "subject": "SECURITY follow-on: a built course's resubmit points at the dashboard, not at an admin diff"
+    },
+    {
       "h": "063afa1",
       "date": "2026-09-16",
       "subject": "queue/spec update"
@@ -827,16 +844,6 @@
       "h": "80cc2a0",
       "date": "2026-09-15",
       "subject": "SD-8b review fix + the Stripe return detour"
-    },
-    {
-      "h": "fa3d7bf",
-      "date": "2026-09-15",
-      "subject": "SD-8b + SD-8c: unsaved Settings edits survive sidebar navigation, and the booking status tone stops being wrong in three places"
-    },
-    {
-      "h": "12815b0",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
     }
   ]
 }

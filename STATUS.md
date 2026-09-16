@@ -4,11 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-16 12:02 UTC · branch `main` · HEAD `063afa1` · working tree clean
+Generated 2026-09-16 12:14 UTC · branch `main` · HEAD `30385cd` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
+
+### Uncommitted working tree (1 file(s))
+
+- `M RUN_QUEUE.md`
+
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -37,8 +44,8 @@ This is the distinction a raw checkbox count gets wrong.
 | MP-2d | 2026-08-29 | 17d | `22d0f68` | `RUN_QUEUE.md:839` |
 | MP-2e | 2026-08-30 | 16d | `bf3bcb2` | `RUN_QUEUE.md:881` |
 | UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | 2026-09-11 | 4d | `a3c1bea` | `RUN_QUEUE.md:2056` |
-| SECURITY follow-on: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09-16: "if a cour | 2026-09-15 | 0d | `21c8d25` | `RUN_QUEUE.md:2098` |
-| UI_REVISE_SPEC H-2g §2 + §3 (01822b0; review fixes 2de3268) — BUILT + | 2026-09-15 | 0d | `01822b0` | `RUN_QUEUE.md:2121` |
+| SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED 2026-09-16, box OPEN pending Cam's mailb | 2026-09-16 | 0d | `951433d` | `RUN_QUEUE.md:2098` |
+| UI_REVISE_SPEC H-2g §2 + §3 (01822b0; review fixes 2de3268) — BUILT + | 2026-09-15 | 0d | `01822b0` | `RUN_QUEUE.md:2160` |
 
 ## Not started — the actual queue
 
@@ -61,7 +68,7 @@ This is the distinction a raw checkbox count gets wrong.
 17. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1388`
 18. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1437`
 19. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1492`
-20. CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates — `RUN_QUEUE.md:2159`
+20. CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates — `RUN_QUEUE.md:2198`
 
 ## Waiting on you (not on a build)
 
@@ -73,6 +80,7 @@ This is the distinction a raw checkbox count gets wrong.
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:839`
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:881`
 - CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1492`
+- pending Cam's mailbox walk below: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09-16: "if a course is already created it can't be created again — they'd — `RUN_QUEUE.md:2098`
 
 ## Revise campaign (page-by-page pass)
 
@@ -160,6 +168,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `30385cd` 2026-09-16 — SECURITY follow-on review fixes: gate the already-built email, close the id oracle, stop the screen contradicting the email
+- `951433d` 2026-09-16 — SECURITY follow-on: a built course's resubmit points at the dashboard, not at an admin diff
 - `063afa1` 2026-09-16 — queue/spec update
 - `2de3268` 2026-09-16 — H-2g review fixes: the operator link passes contrast, and the tablet range stops over-reserving
 - `01822b0` 2026-09-15 — H-2g §2 + §3: the homepage header stops following, the lockup gets bigger and centred
@@ -170,8 +180,6 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `76968ff` 2026-09-15 — H-2g §1 (revised): every box-shadow deleted from the homepage, hairlines instead
 - `d51fbbf` 2026-09-15 — queue/spec update
 - `80cc2a0` 2026-09-15 — SD-8b review fix + the Stripe return detour
-- `fa3d7bf` 2026-09-15 — SD-8b + SD-8c: unsaved Settings edits survive sidebar navigation, and the booking status tone stops being wrong in three places
-- `12815b0` 2026-09-15 — queue/spec update
 
 ---
 

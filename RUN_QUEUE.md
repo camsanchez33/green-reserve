@@ -2095,7 +2095,46 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 - [x] INQUIRY_CALL_SPEC Phase IC-5 (spec block 598d2f7 written by the run — REVIEW §1 FIELD CATALOG; build 25baf6b; review fixes 189f23b; REVIEWED 2026-09-15: spec 35/37 → all met after fixes; security 0 crit/0 high, 3 low fixed; admin-ux 2 high fixed (autosave race, recap false-positive) + 1 medium fixed; design clean; scripts/call-answers-test.ts 34/34) — SHIPPED: lib/call-answers.ts field catalog (money in integer cents; season = months, walking = the sheet's options), v2 answersJson with the old prose readable, Log card real inputs collapsed per item + autosave with status/retry, log_call validates + optional recap email, sheet pre-fills empty keys only and says so, build reads the call only for keys the sheet never touched and flags them for review, Still-need names missing fields. Cam to walk: log a call with 3 fields, reload (held), Save + send sheet → prefilled + editable, submit one change → build → sheet wins; recap email. ORIGINAL: the call captures STRUCTURED answers, not prose (Cam 2026-09-15, overrules assumption A3). New src/lib/call-answers.ts field spec per agenda item (money in INTEGER CENTS, time, date, days, bool, enum, rows) each naming the setup-sheet key it pre-fills; Log-the-call card renders real inputs, collapsed per item, one note box each, autosaved; answersJson becomes structured (no migration — JSON column, but the reader must tolerate the old flat shape). Buys: stillNeed names missing FIELDS not topics; 'Save + send pre-filled sheet' sends VALUES not hints; the draft course build becomes mechanical; a recap email of what was captured. GOVERNING RULE: a call answer is a PROPOSAL — what the course submits always wins, nothing is written straight onto a live Course. RUN ADJACENT TO IF-1 (both touch the sheet's pre-fill + branching).
 
-- [ ] SECURITY follow-on: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09-16: "if a course is already created it can't be created again — they'd have to log in to change information"). 21c8d25 fixed the unverified-contact-change hole; this closes the remaining case. In the POST /api/inquiries dedupe block, when the matched inquiry has a `builtCourseId` (i.e. the course exists), do NOT record a resubmit event at all: respond with the normal success shape (keep the response identical/blind — do not leak that the course exists) and have the success screen + confirmation email say "<Course> already has a GreenReserve page — sign in at /dashboard to update your details, or email hello@greenreserve.app". Contact details for a built course change in ONE place: the operator dashboard. Deliberately NOT extended to not-yet-built inquiries — there the 21c8d25 rule (email must match the one on file) is the right level, because blocking outright would also block a GM fixing their own typo'd phone. Small, no migration.
+- [ ] SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED 2026-09-16, box OPEN pending Cam's mailbox walk below: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09-16: "if a course is already created it can't be created again — they'd have to log in to change information"). 21c8d25 fixed the unverified-contact-change hole; this closes the remaining case. In the POST /api/inquiries dedupe block, when the matched inquiry has a `builtCourseId` (i.e. the course exists), do NOT record a resubmit event at all: respond with the normal success shape (keep the response identical/blind — do not leak that the course exists) and have the success screen + confirmation email say "<Course> already has a GreenReserve page — sign in at /dashboard to update your details, or email hello@greenreserve.app". Contact details for a built course change in ONE place: the operator dashboard. Deliberately NOT extended to not-yet-built inquiries — there the 21c8d25 rule (email must match the one on file) is the right level, because blocking outright would also block a GM fixing their own typo'd phone. Small, no migration.
+  BUILT: POST /api/inquiries selects builtCourseId and records NO resubmit event
+  when it is set. New sendInquiryAlreadyBuilt email; a separate /for-courses
+  success screen naming the course, with the dashboard button and the hello@
+  fallback. Not extended to not-yet-built inquiries, per the entry.
+  REVIEW FIXES (30385cd), all four from the auditors, none cosmetic:
+  1. The already-built email went to whatever address was typed. A `building`
+     course is NOT public (admin/create-course writes it active:false), so that
+     told an unverified stranger — who needs only a course name and a town —
+     which courses have signed up and not yet launched. Now gated on 21c8d25's
+     existing verified check; everyone else gets the ordinary confirmation.
+  2. Both dedupe paths returned the MATCHED inquiry's id. CourseInquiry.id is a
+     cuid v1, a base36 ms timestamp, so one request dated the existing row and
+     proved the course was already in the pipeline — the exact oracle the
+     identical response shape existed to prevent. No path returns an id now;
+     the client only ever read res.ok. PRE-EXISTING since MP-4a.
+  3. A built-course resubmit left no application record at all. No-diff stands;
+     the path now logs the inquiry id and whether the email matched.
+  4. courseName reached two mail SUBJECT headers uncapped and newline-bearing,
+     where escHtml does not apply. Stripped and capped at intake.
+  MY OWN ERROR, corrected in the same run: the first cut kept the response blind
+  and left the ordinary screen in place, so a built course read "Next is a
+  20-minute call — pick a time below" under a Calendly button while the email
+  said there is no call. Two opposite instructions, correct one as a footnote.
+  The blindness I was protecting was already spent by the email naming the
+  course, so it bought nothing and cost coherence.
+  CAM TO WALK (mailbox, not code):
+  1. Submit /for-courses for a course that already has a page, using the email
+     ON FILE — expect the "You're already set up" screen and the matching
+     email. Then submit the same course from a DIFFERENT address — expect the
+     ordinary screen and the ordinary confirmation, with no mention that the
+     course exists.
+  2. Check the already-built email renders in Gmail and Apple Mail.
+  3. DECIDE: a `building`-stage operator may never have completed
+     /dashboard/verify, in which case that email's sign-in button cannot let
+     them in and they are relying on the reply-to fallback. Worth confirming.
+  4. DECIDE: the admin console now gets zero trace of a built course's resubmit
+     beyond a server log line. A locked-out GM who uses the form instead of
+     replying vanishes silently. Say the word and a passive activity-ledger
+     event (no diff to apply) becomes a queue item.
 
 - [x] UI_REVISE_SPEC H-2g §1 ONLY (76968ff; review fix fb7263b) — SHIPPED +
   REVIEWED 2026-09-16, design audit 2 findings, 0 blocking, both closed.
