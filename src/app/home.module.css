@@ -45,7 +45,12 @@
 .heroDevice { position: relative; width: 360px; max-width: 100%; transform: rotate(-2deg); z-index: 1; }
 .heroDevice .device { width: 360px; }
 .compact .dHd { height: 150px; }
-.heroSheet { position: absolute; right: 0; bottom: 44px; width: 320px; transform: rotate(1.5deg); background: #F7F5EF; color: #1d1f1a; border-radius: 14px; border: 1px solid var(--line); padding: 14px 16px 10px; z-index: 2; font-size: 12.5px; }
+/* H-2g review: white, not near-cream. It overlaps .device and with no shadow
+   to lift it, the fill is the only thing left that can say "separate card" —
+   a --line hairline between two #F7F5EF panels is ~1.18:1 and reads as one
+   surface. White is also truer: this mocks the operator's tee sheet, which is
+   a white card on paper, while .device mocks the booking page's own paper. */
+.heroSheet { position: absolute; right: 0; bottom: 44px; width: 320px; transform: rotate(1.5deg); background: #FFFFFF; color: #1d1f1a; border-radius: 14px; border: 1px solid var(--line-strong); padding: 14px 16px 10px; z-index: 2; font-size: 12.5px; }
 .hsHead { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,.08); margin-bottom: 4px; }
 .hsHead b { font-weight: 600; letter-spacing: 0; text-transform: none; color: #1d1f1a; font-size: 12px; }
 .hsRow { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid rgba(0,0,0,.06); }

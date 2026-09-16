@@ -499,8 +499,17 @@ This **reverses the H-2d-R1 exemption**, so `CLAUDE.md`'s BANNED line is restore
 to forbidding shadows on the homepage in the same commit. The H-2f gradient
 exemption (the cream section hand-off dissolves) is untouched and still stands.
 
+One consequence the shadow was hiding: `.heroSheet` overlaps `.device` and both
+were `#F7F5EF`, so with the lift gone a `--line` hairline between them is about
+1.18:1 — two panels reading as one surface. The floating sheet is therefore
+**white** (`#FFFFFF`) with a `--line-strong` edge. Separation moves to fill,
+not back to shadow. It is also the truer mockup: that card is the operator's
+tee sheet, which is a white card on paper in the staff look, while `.device`
+stays near-cream because it mocks the booking page's own paper.
+
 **Verify:** `grep box-shadow src/app/home.module.css` returns nothing. Not one
-match, not a lighter one.
+match, not a lighter one. And at desktop width the floating sheet still reads
+as sitting ON the device, not merged into it.
 
 #### 2. The header stops following
 
