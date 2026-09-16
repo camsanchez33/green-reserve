@@ -35,7 +35,14 @@
 /* HERO */
 /* H-2d — direction A: cream + the product. No photo, no parallax; the text
    is the LCP and the booking device is the picture. */
-.hero { position: relative; height: 100svh; min-height: 640px; max-height: 1000px; overflow: hidden; display: flex; align-items: center; color: var(--ink); }
+/* H-2g §2/§3: the lockup row is absolutely positioned at top: 0 of this
+   section, so it adds no height; padding-top reserves its space inside the
+   100svh instead, which keeps the hero exactly one viewport tall while the
+   centred content clears the 280px lockup. 92px is the row's exact height
+   (52px lockup + 2x20px), and .inWrap's own 40px padding-top sits under it as
+   slack, so the eyebrow still clears the lockup on short viewports where the
+   620px stage makes the content overflow. */
+.hero { position: relative; height: 100svh; min-height: 640px; max-height: 1000px; overflow: hidden; display: flex; align-items: center; padding-top: 92px; color: var(--ink); }
 .heroGrid { display: grid; grid-template-columns: minmax(0, 620px) minmax(0, 1fr); gap: 48px; align-items: center; }
 .heroText > * { max-width: 620px; }
 .heroEyebrow { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--pine); margin-bottom: 18px; }
@@ -268,7 +275,9 @@
 
 @media (max-width: 960px) {
   /* H-2d: the hero stacks — text, then the device at .9 centered; the tee-sheet card is absent. */
-  .hero { height: auto; min-height: 0; max-height: none; padding: 72px 0 56px; }
+  /* H-2g §3: below 960px the lockup is 200px, and below 640px it stacks over a
+     centred Operator login — 132px clears the tallest of the two. */
+  .hero { height: auto; min-height: 0; max-height: none; padding: 132px 0 56px; }
   .heroGrid { grid-template-columns: 1fr; gap: 40px; }
   .heroStage { height: auto; }
   .heroDevice { transform: scale(.9) rotate(0deg); transform-origin: top center; }

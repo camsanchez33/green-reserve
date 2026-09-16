@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import { isBookingMode, isCourseWorld } from '@/lib/booking-mode';
@@ -13,44 +13,21 @@ export default function Nav() {
   // H-1: white/blur bar that shrinks once the page has scrolled (prototype
   // nav.solid). Passive listener; no layout work.
   const [solid, setSolid] = useState(false);
-  // H-2e: over the homepage hero there is no bar — just the lockup on cream.
-  // Once scrolled past the hero (its height minus the nav's) the white/blur
-  // background and the two right-hand items fade in. Every other page has no
-  // hero, so it renders the scrolled state from the start; so does
-  // prefers-reduced-motion.
-  const navRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
   const isHome = pathname === '/';
-  const [past, setPast] = useState(!isHome);
 
+  // H-2g §2: the homepage lockup is painted once, at the top of the hero, and
+  // scrolls away with it — it has no scrolled state to listen for. Every other
+  // page keeps the H-1 shrink. The listener is not registered at all on `/`,
+  // rather than registered and ignored: the reason the bar used to come back
+  // was a handler nobody remembered was running.
   useEffect(() => {
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const onScroll = () => {
-      const y = window.scrollY || window.pageYOffset;
-      let p = true;
-      if (isHome && !reduced) {
-        const hero = document.getElementById('top');
-        const navH = navRef.current?.offsetHeight ?? 64;
-        const threshold = (hero?.offsetHeight ?? window.innerHeight) - navH;
-        p = y > threshold;
-      }
-      setPast(p);
-      // H-2e review: the H-1 shrink only once the bar is visible — over the
-      // hero the lockup would otherwise step 8px against bare cream.
-      setSolid(y > 40 && p);
-    };
+    if (isHome) return;
+    const onScroll = () => setSolid((window.scrollY || window.pageYOffset) > 40);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-    };
+    return () => window.removeEventListener('scroll', onScroll);
   }, [isHome]);
-
-  // H-2e review: the mobile menu unmounts while the bar is hidden; clear it so
-  // it does not reappear on its own when the bar comes back.
-  useEffect(() => { if (!past) setOpen(false); }, [past]);
 
   if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard')) return null;
   // /for-courses + /for-courses/details have their own pine hero (with a
@@ -66,50 +43,68 @@ export default function Nav() {
   // on top of it. GreenReserve presence there shrinks to the footer.
   if (isCourseWorld(pathname) || isBookingMode(pathname)) return null;
 
+  // H-2g §2 + §3: on `/` there is no bar at all. The lockup sits absolutely at
+  // the top of the hero (`.hero` is `position: relative`, and nothing above it
+  // is positioned, so `top: 0` lands on the hero either way) — out of flow, so
+  // the hero still measures exactly one viewport, and it scrolls away with the
+  // hero and never returns. Three columns: empty · lockup · one link, so the
+  // lockup is genuinely centred rather than optically shoved by the link.
+  // "List your course" is deliberately absent: the hero's own primary button
+  // sits ~200px below it, and two of the same call to action on one screen is
+  // one too many. Operator login's durable home is the footer (§4).
+  if (isHome) {
+    return (
+      <nav className="absolute top-0 left-0 right-0 z-50">
+        <div className="w-[min(1180px,calc(100%-48px))] mx-auto py-5 flex flex-col items-center gap-2 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:gap-4">
+          <div aria-hidden="true" className="hidden sm:block" />
+          <Link href="/" className="flex items-center sm:justify-self-center" aria-label="GreenReserve">
+            {/* Explicit width/height: this is near the top of the fold now, so
+                the reserved box is what keeps §5's CLS budget. */}
+            <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={280} height={52} priority className="w-[200px] min-[960px]:w-[280px] h-auto" />
+          </Link>
+          <Link href="/dashboard/login" className="text-ink-muted hover:text-ink text-[13px] sm:text-[15px] font-medium transition-colors sm:justify-self-end">
+            Operator login
+          </Link>
+        </div>
+      </nav>
+    );
+  }
+
   // H-2e §6: How it works / Pricing / FAQ are gone for good — on a page this
   // length they jumped one screen and made the top look templated.
   const links = [
     { href: '/dashboard/login', label: 'Operator login' },
   ];
 
-  // Opacity + background only — no layout shift. Items that are faded out are
-  // also removed from the tab order and pointer.
-  const itemsClass = `transition-opacity duration-500 ${EASE} ${past ? 'opacity-100' : 'opacity-0 pointer-events-none motion-reduce:opacity-100 motion-reduce:pointer-events-auto'}`;
-
   return (
-    <nav
-      ref={navRef}
-      className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,border-color,backdrop-filter] duration-500 ${EASE} ${past ? 'bg-white/85 backdrop-blur-lg border-b border-black/5' : 'bg-transparent border-b border-transparent motion-reduce:bg-white/85 motion-reduce:backdrop-blur-lg motion-reduce:border-black/5'}`}
-    >
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/85 backdrop-blur-lg border-b border-black/5">
       <div className={`px-6 flex items-center justify-between transition-[height] duration-500 ${EASE} ${solid ? 'h-14' : 'h-16'}`}>
         <Link href="/" className="flex items-center shrink-0" aria-label="GreenReserve">
           <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={200} height={38} priority className="w-[180px] md:w-[200px] h-auto" />
         </Link>
 
-        <div className={`hidden md:flex items-center gap-1 ${itemsClass}`} aria-hidden={!past}>
+        <div className="hidden md:flex items-center gap-1">
           {links.map(l => (
-            <Link key={l.href} href={l.href} tabIndex={past ? undefined : -1} className="text-ink-muted hover:text-ink text-[15px] font-medium px-3 py-2 rounded-md transition-colors">
+            <Link key={l.href} href={l.href} className="text-ink-muted hover:text-ink text-[15px] font-medium px-3 py-2 rounded-md transition-colors">
               {l.label}
             </Link>
           ))}
-          <Link href="/for-courses" tabIndex={past ? undefined : -1} className="ml-3 bg-pine hover:bg-pine-hover text-white text-[14.5px] font-semibold px-[18px] h-[42px] inline-flex items-center rounded-lg transition-colors">
+          <Link href="/for-courses" className="ml-3 bg-pine hover:bg-pine-hover text-white text-[14.5px] font-semibold px-[18px] h-[42px] inline-flex items-center rounded-lg transition-colors">
             List your course
           </Link>
         </div>
 
         <button
-          className={`md:hidden text-ink-soft hover:text-ink p-2 ${itemsClass}`}
+          className="md:hidden text-ink-soft hover:text-ink p-2"
           onClick={() => setOpen(!open)}
           aria-expanded={open}
-          aria-hidden={!past}
-          tabIndex={past ? undefined : -1}
           aria-label={open ? 'Close menu' : 'Open menu'}
         >
           {open ? <X size={18} /> : <Menu size={18} />}
         </button>
       </div>
 
-      {open && past && (
+      {open && (
         <div className="md:hidden bg-white border-t border-line">
           <div className="px-6 py-4 flex flex-col gap-1">
             {links.map(l => (
