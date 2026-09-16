@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-16T03:31:46.166Z",
+  "generatedAt": "2026-09-16T03:34:54.389Z",
   "repo": {
-    "head": "80cc2a0",
+    "head": "76968ff",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,14 +10,22 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-15T22:58:21-04:00",
-    "unrecorded": []
+    "queueLastCommit": "2026-09-15T23:31:47-04:00",
+    "unrecorded": [
+      {
+        "h": "76968ff",
+        "date": "2026-09-15T23:34:38-04:00",
+        "subject": "H-2g §1 (revised): every box-shadow deleted from the homepage, hairlines instead",
+        "ids": [],
+        "matches": []
+      }
+    ]
   },
   "counts": {
     "runDone": 190,
     "runAwaiting": 10,
     "runInFlight": 1,
-    "runNotStarted": 19,
+    "runNotStarted": 20,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -204,6 +212,11 @@
     {
       "title": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
       "line": 1492,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "CODEMAP_SPEC Phase CM-1 (Cam 2026-09-16) — `scripts/codemap.mjs` generates",
+      "line": 2100,
       "section": "Queue (run in this order)"
     }
   ],
@@ -769,6 +782,16 @@
   },
   "recentCommits": [
     {
+      "h": "76968ff",
+      "date": "2026-09-15",
+      "subject": "H-2g §1 (revised): every box-shadow deleted from the homepage, hairlines instead"
+    },
+    {
+      "h": "d51fbbf",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "80cc2a0",
       "date": "2026-09-15",
       "subject": "SD-8b review fix + the Stripe return detour"
@@ -815,16 +838,6 @@
     },
     {
       "h": "d622aed",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "f023d05",
-      "date": "2026-09-15",
-      "subject": "BIRDIE B1: the operator helper, shipped OFF — POST /api/birdie/chat (operator session only; persona, knowledge and course facts derived server-side; claude-haiku-4-5 via the official SDK, streamed; 600-token replies, 20 per course per hour, 600 per day platform-wide, BIRDIE_ENABLED kill switch; conversations logged as birdie.reply), lib/birdie (operator knowledge pack seeded from the tab intros with deep links, read-only course context scoped by session, guardrails), the floating Birdie widget on every dashboard page (streams, turns dashboard links into buttons, remembers closed, renders nothing while Birdie is off), a Birdie card on /admin/system (switch state + today's replies against the cap), env names in SHIPPING + PASSWORD_CHECKLIST Phase 7c, scripts/birdie-isolation-test.ts 14/14"
-    },
-    {
-      "h": "f0d8ed7",
       "date": "2026-09-15",
       "subject": "queue/spec update"
     }
