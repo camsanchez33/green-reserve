@@ -6,6 +6,7 @@ import {
   Trophy, PartyPopper, DollarSign, AlertTriangle, MessageSquare,
 } from 'lucide-react';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
+import BirdieWidget from '@/components/birdie/BirdieWidget';
 import AgreementNotice from '@/components/dashboard/AgreementNotice';
 import { recordTabVisit } from '@/lib/dashboard-visits';
 import { Toaster, toast } from '@/components/dashboard/Toast';
@@ -123,6 +124,8 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   return (
     <>
     <AnnouncementBanner />
+    {/* BIRDIE_AI_SPEC B1: renders nothing until /api/birdie/chat says it is on. */}
+    <BirdieWidget />
     <AgreementNotice />
     <Toaster />
 

@@ -44,7 +44,7 @@
 | `/api/admin/resend-staff-setup` | POST | admin | — |
 | `/api/admin/retry-charge/[bookingId]` | POST | admin | REVISE_QUEUE A-06 item 4 — retry a failed check-in charge from the revenue |
 | `/api/admin/revenue` | GET | admin | REVISE_QUEUE A-06 — /admin/revenue rebuilt as a real P&L. ONE period picker |
-| `/api/admin/schedule` | GET, POST, PATCH, DELETE | admin | MP-5d: this route and /api/operator/schedule are thin callers of ONE |
+| `/api/admin/schedule` | GET, POST, PATCH, DELETE | admin | L2: the service refuses a save that would double-book a nine (409) or names a |
 | `/api/admin/search` | GET | admin | — |
 | `/api/admin/send-golive-reminder` | POST | admin | AGREEMENT = GO-LIVE GATE / STRIPE RULE FINAL (RUN_QUEUE) — the one-click |
 | `/api/admin/session` | GET | admin | — |
@@ -67,6 +67,7 @@
 | `/api/auth/resend-verification` | POST | operator-auth | Real verification email for operators who have a session but aren't yet |
 | `/api/auth/reset-password` | GET, POST | operator-auth | — |
 | `/api/auth/verify` | POST | operator-auth | — |
+| `/api/birdie/chat` | GET, POST | public | BIRDIE_AI_SPEC B1 — the one endpoint. Persona and knowledge come from WHERE |
 | `/api/bookings` | GET, POST | golfer | Resolves the green fee and cart fee for a golfer based on their membership tier. |
 | `/api/bookings/cancel` | POST | golfer | — |
 | `/api/bookings/setup-intent` | POST | golfer | Creates (or reuses) a Stripe Customer and a SetupIntent so the booking page |
@@ -128,7 +129,7 @@
 | `/api/operator/profile` | GET, PATCH | operator | — |
 | `/api/operator/regenerate-tee-times` | POST | operator | — |
 | `/api/operator/request-changes` | POST | operator | Logged-in-operator counterpart to /api/preview/[courseId]/request-changes |
-| `/api/operator/schedule` | GET, POST, PATCH, DELETE | operator | MP-5d: thin caller of the shared schedule service (see lib/schedule-service). |
+| `/api/operator/schedule` | GET, POST, PATCH, DELETE | operator | L2: the service refuses a save that would double-book a nine (409) or names a |
 | `/api/operator/settings` | GET, PATCH | operator | Never cache — the dashboard's live/draft status must reflect the DB the |
 | `/api/operator/sign` | GET, POST | operator | AGREEMENT_SPEC AG-2 §1 — the signing step. |
 | `/api/operator/staff` | GET, POST, PATCH, DELETE | operator | — |
@@ -363,6 +364,7 @@ Key models:
 | `src/lib/prisma.ts` | Cache on globalThis in ALL environments — in serverless (Vercel) each  |
 | `src/lib/rate-limit.ts` | DB-backed fixed-window rate limiter. A single atomic upsert means it c |
 | `src/lib/refund-booking.ts` | MP-6b. The refund primitive, and the PaymentEvent ledger it writes to. |
+| `src/lib/schedule-conflict.ts` | COURSE_LAYOUT_SPEC L2 — conflict detection for product-scoped schedule |
 | `src/lib/schedule-service.ts` | MP-5d. The one place a tee-time schedule is created, changed or remove |
 | `src/lib/schedule-wire.ts` | TeeTimeSchedule and TeeTime money: cents at rest, dollars on the wire. |
 | `src/lib/seed.ts` | — |

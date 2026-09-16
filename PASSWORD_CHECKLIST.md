@@ -113,6 +113,15 @@ Just put your existing passwords into KeePassXC so they exist somewhere safe.
 
 ---
 
+## PHASE 7c — Birdie (the dashboard assistant; off until you do this)
+
+- [ ] 7c.1 https://console.anthropic.com → API Keys → create a key named `greenreserve-birdie`. KeePassXC: Title `Anthropic API key (Birdie)`. Set a monthly spend limit on the Anthropic console while you are there.
+- [ ] 7c.2 Vercel → Environment Variables: `ANTHROPIC_API_KEY` = the key; `BIRDIE_ENABLED` = `true` (set it to anything else to switch Birdie off instantly — that is the kill switch).
+- [ ] 7c.3 Redeploy, open /dashboard: the Birdie button appears bottom-right. Ask "what's my cancellation window?" — it should answer from your course settings with a link to Settings. Ask it for the capital of France — it should decline in one line.
+- [ ] 7c.4 /admin/system → the Birdie card shows On and counts today's replies.
+
+---
+
 ## PHASE 8 — Deploy + verify (do this LAST, after all the above)
 
 - [ ] 8.1 `vercel --prod`

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { birdieEnabled, birdieUsageToday, PLATFORM_PER_DAY, BIRDIE_MODEL } from '@/lib/birdie/guardrails';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
 import { ACCESS_FEE_CENTS } from '@/lib/booking-fees';
@@ -62,6 +63,8 @@ export async function GET() {
     // JSON, which is never returned). `configured` needs both env vars.
     googleCalendarId: process.env.GOOGLE_CALENDAR_ID || null,
     googleCalendarConfigured: !!(process.env.GOOGLE_CALENDAR_ID && process.env.GOOGLE_SERVICE_ACCOUNT_JSON),
+    // BIRDIE_AI_SPEC B1: the kill switch and today's platform-wide reply count (the daily cap reads the same counter).
+    birdie: { enabled: birdieEnabled(), keySet: !!process.env.ANTHROPIC_API_KEY, flag: process.env.BIRDIE_ENABLED === 'true', todayReplies: await birdieUsageToday(), dailyCap: PLATFORM_PER_DAY, model: BIRDIE_MODEL },
     lastStripeTouch: lastStripeTouch
       ? { courseName: lastStripeTouch.name, updatedAt: lastStripeTouch.updatedAt.toISOString() }
       : null,

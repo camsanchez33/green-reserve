@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { LoadFailure } from '@/components/ui/ErrorState';
-import { HardDrive, Clock3, Zap, GitBranch, Bug, ExternalLink, Landmark, Link2, Phone } from 'lucide-react';
+import { HardDrive, Clock3, Zap, GitBranch, Bug, ExternalLink, Landmark, Link2, Phone, MessageCircle } from 'lucide-react';
 import { CALL_WINDOWS, SLOT_MINUTES, LEAD_HOURS, HORIZON_DAYS } from '@/lib/call-availability';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
@@ -20,6 +20,7 @@ interface SystemData {
   crons: { path: string; schedule: string; human: string }[];
   googleCalendarId?: string | null;
   googleCalendarConfigured?: boolean;
+  birdie?: { enabled: boolean; keySet: boolean; flag: boolean; todayReplies: number; dailyCap: number; model: string };
   platform: {
     accessFeeCents: number; env: string; commitSha: string; commitMessage: string; branch: string; publicUrl: string;
     integrations: { stripe: boolean; stripeWebhook: boolean; resend: boolean; twilio: boolean; sentry: boolean; blob: boolean };
@@ -316,6 +317,35 @@ export default function AdminSystemPage() {
                 </div>
               ) : loadError ? (
                 <p className="text-sm text-ink-muted">Could not read which calendar is linked — the system status above says why.</p>
+              ) : (
+                <p className="text-sm text-ink-muted">Loading…</p>
+              )}
+            </SystemCard>
+
+            {/* BIRDIE_AI_SPEC B1: the assistant's switch and today's spend, in replies. */}
+            <SystemCard icon={<MessageCircle className="w-3.5 h-3.5"/>} title="Birdie" tracked
+              right={data?.birdie ? <span className="text-[11px] text-ink-faint">{data.birdie.model}</span> : undefined}>
+              {data?.birdie ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <StatusDot status={data.birdie.enabled ? 'ok' : 'neutral'}/>
+                    <span className="text-sm text-ink-soft">
+                      {data.birdie.enabled
+                        ? <>On for operators — the floating Birdie on every dashboard page.</>
+                        : !data.birdie.keySet
+                          ? <>Off — <code className="font-mono text-xs">ANTHROPIC_API_KEY</code> is not set in Vercel (PASSWORD_CHECKLIST Phase 7c).</>
+                          : !data.birdie.flag
+                            ? <>Off — the key is set; flip <code className="font-mono text-xs">BIRDIE_ENABLED=true</code> in Vercel to switch it on.</>
+                            : <>Off.</>}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <StatusDot status={data.birdie.todayReplies >= data.birdie.dailyCap ? 'warn' : 'neutral'}/>
+                    <span className="text-sm text-ink-soft">{data.birdie.todayReplies} of {data.birdie.dailyCap} replies today (the platform-wide daily cap; 20 per course per hour on top). Conversations are in the Vercel logs as <code className="font-mono text-xs">birdie.reply</code>.</span>
+                  </div>
+                </div>
+              ) : loadError ? (
+                <p className="text-sm text-ink-muted">Could not read Birdie's state — the system status above says why.</p>
               ) : (
                 <p className="text-sm text-ink-muted">Loading…</p>
               )}
