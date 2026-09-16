@@ -115,6 +115,8 @@ ADMIN_TOKEN
 TWILIO_ACCOUNT_SID
 TWILIO_AUTH_TOKEN
 TWILIO_FROM_NUMBER
+GOOGLE_SERVICE_ACCOUNT_JSON   # SC-1: the whole service-account key file, one line
+GOOGLE_CALENDAR_ID            # SC-1: the calendar the booking page reads free/busy from
 ```
 
 

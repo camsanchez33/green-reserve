@@ -568,6 +568,11 @@ model CourseInquiry {
   /// IC-1 (A1): build without a call, with a reason on record.
   callSkippedReason    String?
   calls                Call[]
+  /// SC-1: token for the public "pick a call time" page. Same pattern as
+  /// detailsToken — unique, generated in app code, regenerated on resend.
+  callInviteToken      String?   @unique
+  callInviteSentAt     DateTime?
+  callInviteExpiresAt  DateTime?
 
   // MP-3: the orphan sweep and every lifecycle pairing filter on this.
   @@index([builtCourseId])
@@ -604,6 +609,12 @@ model Call {
   createdBy    String         @default("")
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+  /// SC-2: set when the COURSE booked this slot itself, rather than an admin
+  /// scheduling it. Distinguishes "they chose this" from "we told them".
+  bookedByCourse Boolean      @default(false)
+  /// Google Calendar event id, so reschedule/cancel can move or delete it.
+  /// Null when the calendar write failed — the call still stands.
+  gcalEventId  String?
 
   @@index([inquiryId, scheduledAt])
   @@index([courseId, scheduledAt])

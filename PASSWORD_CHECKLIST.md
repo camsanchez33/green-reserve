@@ -103,6 +103,16 @@ Just put your existing passwords into KeePassXC so they exist somewhere safe.
       Make it a NEW strong one (KeePassXC can generate: the dice icon in the entry editor).
 - [ ] 7.2 KeePassXC — Title: `GreenReserve admin (owner)`, URL: https://greenreserve.app/admin
 
+## PHASE 7b — Google Calendar for call booking (SC-1; before the "pick a call time" page goes live)
+
+- [ ] 7b.1 https://console.cloud.google.com → new project → APIs & Services → enable **Google Calendar API**
+- [ ] 7b.2 IAM & Admin → Service Accounts → create one → Keys → **Add key → JSON** → download. KeePassXC: Title `Google service account (calendar)`, attach the file.
+- [ ] 7b.3 In Google Calendar, open the calendar that is the source of truth → Settings → **Share with specific people** → add the service account's email (`…@….iam.gserviceaccount.com`) with **Make changes to events**
+- [ ] 7b.4 Vercel → Environment Variables: `GOOGLE_SERVICE_ACCOUNT_JSON` = the key file's contents on one line; `GOOGLE_CALENDAR_ID` = the calendar's id (Settings → Integrate calendar; often the Gmail address)
+- [ ] 7b.5 `vercel env pull .env.local` then `npx tsx scripts/google-calendar-check.ts` — must print PASS for freebusy, create and delete. Then delete the local copy of the key from any scratch location.
+
+---
+
 ## PHASE 8 — Deploy + verify (do this LAST, after all the above)
 
 - [ ] 8.1 `vercel --prod`
