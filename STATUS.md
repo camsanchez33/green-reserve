@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-16 01:24 UTC · branch `main` · HEAD `fffb2cc` · working tree **1 dirty file(s)**
+Generated 2026-09-16 01:33 UTC · branch `main` · HEAD `07a8952` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -67,7 +67,6 @@ This is the distinction a raw checkbox count gets wrong.
 18. COURSE_LAYOUT_SPEC Phase L2 — booking page sells products: product selector on tee sheet, per-product slots/pricing/labels everywhere (big; answer the spec's OPEN QUESTION first) — `RUN_QUEUE.md:1364`
 19. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1393`
 20. BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, — `RUN_QUEUE.md:1472`
-21. CALL_SCHEDULING_SPEC Phase SC-3 — admin side (no migration): 'Send a booking link' beside Set up call / Skip, with sent-not-booked state + resend; sheet's Next-call cell learns 'In — `RUN_QUEUE.md:1991`
 
 ## Waiting on you (not on a build)
 
@@ -166,6 +165,9 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `07a8952` 2026-09-15 — SC-3: the admin side — 'Send a booking link' on the set-up-call card (send/resend via send_call_invite, 'Booking link sent <date> · not booked yet'); the sheet's Next-call cell shows 'Invite sent · Nd ago' and marks a course-picked call 'they picked it'; an invite unanswered 5+ days is a yourMove signal ('Invite sent 6 days ago, no time picked'); 'Talking tomorrow' reminder 24h before each scheduled call on the hourly cron, once per call; the System page shows CALL_WINDOWS and which Google calendar is the real filter; callInviteToken stripped from admin responses
+- `722934f` 2026-09-15 — SC-2 review fixes: book and reschedule share one SERIALIZABLE guarded write that tests overlap against every scheduled call in the window (a serialization failure answers slot_taken); per-inquiry cap on the booking POST; phone sanitised; a lone CR is a line break in the .ics; closed inquiries read as an expired link; the lead form mints the token synchronously but delivers the invite in the background so Resend can never delay or fail a submission; the resubmit path's confirmation reuses a live invite link; the header carries the editable phone; a reschedule keeps the call's real length; the they-call toggle seeds from the booked call; ARCHITECTURE.md regenerated for the new route
+- `88242e2` 2026-09-15 — queue/spec update
 - `fffb2cc` 2026-09-15 — SC-2: the invite, the page, the emails — sendCallInvite issues a 21-day token and emails 'Set up your call' straight from the inquiry POST (a send failure never fails the submission; the confirmation's button uses the same link; the admin alert says when the invite did not go); /call/[token] shows Cam's open 30-minute slots (preference first, all times Eastern), confirms with an editable phone and a they-call toggle, then becomes the manage view with Reschedule and Cancel; the API re-verifies the slot and writes the Call inside a transaction (409 slot_taken), creates/moves/deletes the Google event, logs the timeline, and sends the course a confirmation with a .ics plus Cam a heads-up; Google unreachable → honest fallback + alert to hello@; noindex, rate-limited
 - `5ea6455` 2026-09-15 — SC-1 review fixes: free/busy cache keyed on 5-minute buckets and evicted (it could never hit before); 8s timeouts on every Google fetch; error strings name the operation, not the path with the calendar id; scope narrowed to events + readonly; openSlots steps the Eastern calendar date so DST never skips or doubles a day (tests added, 26/26); the check script's run line loads .env.local and retries the delete
 - `d66bc69` 2026-09-15 — queue/spec update
@@ -175,10 +177,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `21c8d25` 2026-09-15 — Security (IF-1 review): a re-submission of the lead form only carries new email/phone when it comes from the email on file; otherwise the admin's resubmit diff is labelled unverified and no contact change is recorded — a stranger who knows a course's name and town can no longer steer outreach to themselves
 - `189f23b` 2026-09-15 — IC-5 review fixes: draft autosave is an atomic write on outcome=scheduled and stale responses are ignored client-side (a late autosave can no longer revert a logged call); recap email throws on a Resend rejection so 'emailed' is never false; MoneyInput shows an invalid state instead of silently saving nothing; draft/log writes only the fields sent; build flags fees and tee times that came from the call, not the sheet; recap subject bounded; season fields are months and walking uses the sheet's own options (spec table updated); recap notice covers 'nothing captured'
 - `25baf6b` 2026-09-15 — IC-5: the call captures structured answers — lib/call-answers.ts (field catalog per agenda item, money in integer cents, v2 answersJson with the old prose shape still readable, one-line summaries, sheet prefill); Log-the-call card has real inputs per item, collapsed rows, autosave via save_call_draft with a visible status; log_call validates v2 and can email a recap; the setup sheet pre-fills empty keys from the call and says so; the build reads the call only for keys the sheet never touched; Still-need names missing fields; scripts/call-answers-test.ts 34/34
-- `598d2f7` 2026-09-15 — queue/spec update (IC-5 phase block written from the queue entry + the code; §1 field catalog is the thing to review)
-- `6f45772` 2026-09-15 — queue/spec update
-- `206969b` 2026-09-15 — IF-1 review fixes: confirmation email now says pick a call time (same Calendly page as the success screen, until SC-2's invite link exists); the lead form's fields are HTML-escaped in both emails; call-preference arrays de-duped and capped; limiter keyed on the platform IP; JSON body and field types guarded; resubmit diff carries the booking method; semi-private gets a sheet path (passes + member booking + member rate); call answers outrank stale form answers for the sheet's branch defaults; the sheet's branch question reuses YesNo; dead needs block dropped from the confirmation email
 
 ---
 
-**Totals:** 184 done · 9 awaiting review · 1 in flight · 21 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 185 done · 9 awaiting review · 1 in flight · 20 not started · 8 revise pages open · 15 ideas · 2 parked.

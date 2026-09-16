@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-16T01:24:18.462Z",
+  "generatedAt": "2026-09-16T01:33:10.357Z",
   "repo": {
-    "head": "fffb2cc",
+    "head": "07a8952",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,14 +10,14 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-15T21:15:04-04:00",
+    "queueLastCommit": "2026-09-15T21:24:19-04:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 184,
+    "runDone": 185,
     "runAwaiting": 9,
     "runInFlight": 1,
-    "runNotStarted": 21,
+    "runNotStarted": 20,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -202,11 +202,6 @@
     {
       "title": "BIRDIE_AI_SPEC Phase B1 — Birdie assistant foundation + operator helper: /api/birdie/chat (Anthropic API, Haiku, streaming), persona/tools derived server-side from surface+session, tenant isolation as",
       "line": 1472,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "CALL_SCHEDULING_SPEC Phase SC-3 — admin side (no migration): 'Send a booking link' beside Set up call / Skip, with sent-not-booked state + resend; sheet's Next-call cell learns 'Invite sent · Nd'; an ",
-      "line": 1991,
       "section": "Queue (run in this order)"
     }
   ],
@@ -772,6 +767,21 @@
   },
   "recentCommits": [
     {
+      "h": "07a8952",
+      "date": "2026-09-15",
+      "subject": "SC-3: the admin side — 'Send a booking link' on the set-up-call card (send/resend via send_call_invite, 'Booking link sent <date> · not booked yet'); the sheet's Next-call cell shows 'Invite sent · Nd ago' and marks a course-picked call 'they picked it'; an invite unanswered 5+ days is a yourMove signal ('Invite sent 6 days ago, no time picked'); 'Talking tomorrow' reminder 24h before each scheduled call on the hourly cron, once per call; the System page shows CALL_WINDOWS and which Google calendar is the real filter; callInviteToken stripped from admin responses"
+    },
+    {
+      "h": "722934f",
+      "date": "2026-09-15",
+      "subject": "SC-2 review fixes: book and reschedule share one SERIALIZABLE guarded write that tests overlap against every scheduled call in the window (a serialization failure answers slot_taken); per-inquiry cap on the booking POST; phone sanitised; a lone CR is a line break in the .ics; closed inquiries read as an expired link; the lead form mints the token synchronously but delivers the invite in the background so Resend can never delay or fail a submission; the resubmit path's confirmation reuses a live invite link; the header carries the editable phone; a reschedule keeps the call's real length; the they-call toggle seeds from the booked call; ARCHITECTURE.md regenerated for the new route"
+    },
+    {
+      "h": "88242e2",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "fffb2cc",
       "date": "2026-09-15",
       "subject": "SC-2: the invite, the page, the emails — sendCallInvite issues a 21-day token and emails 'Set up your call' straight from the inquiry POST (a send failure never fails the submission; the confirmation's button uses the same link; the admin alert says when the invite did not go); /call/[token] shows Cam's open 30-minute slots (preference first, all times Eastern), confirms with an editable phone and a they-call toggle, then becomes the manage view with Reschedule and Cancel; the API re-verifies the slot and writes the Call inside a transaction (409 slot_taken), creates/moves/deletes the Google event, logs the timeline, and sends the course a confirmation with a .ics plus Cam a heads-up; Google unreachable → honest fallback + alert to hello@; noindex, rate-limited"
@@ -815,21 +825,6 @@
       "h": "25baf6b",
       "date": "2026-09-15",
       "subject": "IC-5: the call captures structured answers — lib/call-answers.ts (field catalog per agenda item, money in integer cents, v2 answersJson with the old prose shape still readable, one-line summaries, sheet prefill); Log-the-call card has real inputs per item, collapsed rows, autosave via save_call_draft with a visible status; log_call validates v2 and can email a recap; the setup sheet pre-fills empty keys from the call and says so; the build reads the call only for keys the sheet never touched; Still-need names missing fields; scripts/call-answers-test.ts 34/34"
-    },
-    {
-      "h": "598d2f7",
-      "date": "2026-09-15",
-      "subject": "queue/spec update (IC-5 phase block written from the queue entry + the code; §1 field catalog is the thing to review)"
-    },
-    {
-      "h": "6f45772",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "206969b",
-      "date": "2026-09-15",
-      "subject": "IF-1 review fixes: confirmation email now says pick a call time (same Calendly page as the success screen, until SC-2's invite link exists); the lead form's fields are HTML-escaped in both emails; call-preference arrays de-duped and capped; limiter keyed on the platform IP; JSON body and field types guarded; resubmit diff carries the booking method; semi-private gets a sheet path (passes + member booking + member rate); call answers outrank stale form answers for the sheet's branch defaults; the sheet's branch question reuses YesNo; dead needs block dropped from the confirmation email"
     }
   ]
 }
