@@ -56,4 +56,9 @@ Produce exactly three lists:
 
 Then state plainly: **check the box, or don't.**
 
-Do not fix anything. Do not edit the queue files. Cam decides what becomes work.
+Do not fix anything. Cam decides what becomes work.
+
+The one queue edit this command makes: **if the verdict is "check the box," check it.**
+`/gr-run` ships the item and records the sha but deliberately leaves the box open,
+because passing review is what makes an item done. Nothing else in the queue files
+gets touched here — findings become items only when Cam says so.

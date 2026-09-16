@@ -36,6 +36,13 @@ violate the project's own design system. Copies rot. Pointers don't.
 | `/gr-run <item>` | Execute one queue item end to end: commit dirty docs, restate the plan for veto, build, validate, push, update the queue. |
 | `/gr-review <item>` | Fan the auditors out over the run's diff, collate, and produce blockers / queue candidates / manual checks. Never fixes. |
 | `/gr-debug <bug>` | Fix one bug, smallest change, nothing else. |
+| `/gr-next` | Read the regenerated board and nothing else; report what is in flight, what shipped unreviewed, and the next three; recommend one; wait for Cam's pick. |
+
+`/gr-next` is the only command that deliberately reads less than it could. It exists
+because "what's next" was costing a full queue read — thousands of lines — before any
+work started, and the board already answers it. The checkbox split belongs to the same
+idea: `/gr-run` records the sha and leaves the box open, `/gr-review` checks it. A box
+that gets checked at ship time cannot tell you which shipped work was never audited.
 
 Builds stay in the main thread on purpose. A builder subagent hands back a summary
 and takes away the ability to steer mid-run — and the summary is exactly the thing

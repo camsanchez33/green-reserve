@@ -70,8 +70,10 @@ exists.
 
 - Commit with a message naming the queue item.
 - Push. Vercel auto-deploys `main`.
-- Update the item in the queue file: check the box and append the commit sha. Commit
-  that as `queue/spec update`.
+- Update the item in the queue file: append the commit sha, and **leave the box
+  unchecked**. A shipped-but-unreviewed item is not a done item, and a checked box
+  is the only signal anyone reads. `/gr-review` checks it off when the review passes.
+  Commit that as `queue/spec update`.
 
 ## 6. Hand off
 
