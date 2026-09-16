@@ -4,18 +4,23 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-16 01:56 UTC · branch `main` · HEAD `fd59547` · working tree **1 dirty file(s)**
+Generated 2026-09-16 02:07 UTC · branch `main` · HEAD `7473180` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-### Uncommitted working tree (1 file(s))
+### Uncommitted working tree (6 file(s))
 
 - `M RUN_QUEUE.md`
+- `M package-lock.json`
+- `M package.json`
+- `?? src/app/api/birdie/`
+- `?? src/components/birdie/`
+- `?? src/lib/birdie/`
 
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -164,6 +169,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `7473180` 2026-09-15 — L2 review fixes: the draft build's per-round default schedules start PAUSED (identical windows would have sold one first tee several times over); a whole-course schedule on a course with rounds now conflicts with every round; a course with active rounds refuses an unscoped schedule server-side; deactivating or re-sizing a round rebuilds the sheet, deleting one is refused while it has schedules, and changing its nines re-checks every running schedule; the engine adopts a booked pre-L2 row instead of doubling it and never tries to delete a slot that still has booking rows; the round label reaches the member sheet, the member portal, the checkout page, the reminder and modified emails, the per-course account and the swap picker; the product's rating/slope shows on slot cards; the admin schedule form gets a round picker; a failed products load is visible on the Schedules page; the selector's unselected pill uses the ink-muted token
+- `eb67527` 2026-09-15 — queue/spec update
 - `fd59547` 2026-09-15 — L2: the booking page sells products — the tee-sheet engine generates one slot per product per time (product-scoped schedules; inactive products generate nothing; simple courses unchanged); schedule-service scopes each schedule to one product and refuses a save that would put a nine in two places at once (lib/schedule-conflict.ts, 12/12 tests; 409 with the plain-English reason on both routes); the schedules editor picks the round, groups schedules under their product and shows the conflict; the Course & Layout tab nudges toward a schedule per round; the draft build creates one default schedule per active product; the course page shows a 'Which round' selector when a day sells more than one product and labels every slot; the product label reaches booking emails, receipt, manage, check-in, the operator tee sheet, the admin sheet and the golfer account
 - `dacf315` 2026-09-15 — L2 schema (attended with Cam 2026-09-15): TeeTimeSchedule.productId and TeeTime.productId, nullable, SET NULL on product delete, indexed — migration product_scoping, additive; null means the simple one-product course and changes nothing
 - `8066aa9` 2026-09-15 — queue/spec update
@@ -174,8 +181,6 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `88242e2` 2026-09-15 — queue/spec update
 - `fffb2cc` 2026-09-15 — SC-2: the invite, the page, the emails — sendCallInvite issues a 21-day token and emails 'Set up your call' straight from the inquiry POST (a send failure never fails the submission; the confirmation's button uses the same link; the admin alert says when the invite did not go); /call/[token] shows Cam's open 30-minute slots (preference first, all times Eastern), confirms with an editable phone and a they-call toggle, then becomes the manage view with Reschedule and Cancel; the API re-verifies the slot and writes the Call inside a transaction (409 slot_taken), creates/moves/deletes the Google event, logs the timeline, and sends the course a confirmation with a .ics plus Cam a heads-up; Google unreachable → honest fallback + alert to hello@; noindex, rate-limited
 - `5ea6455` 2026-09-15 — SC-1 review fixes: free/busy cache keyed on 5-minute buckets and evicted (it could never hit before); 8s timeouts on every Google fetch; error strings name the operation, not the path with the calendar id; scope narrowed to events + readonly; openSlots steps the Eastern calendar date so DST never skips or doubles a day (tests added, 26/26); the check script's run line loads .env.local and retries the delete
-- `d66bc69` 2026-09-15 — queue/spec update
-- `bab429b` 2026-09-15 — H-2d-R1 + H-2f (Cam 2026-09-15): the homepage device mockups keep their soft shadows and the cream hand-off dissolves are the only allowed gradients — CLAUDE.md BANNED line amended; the pricing slab now dissolves from and into cream at both edges (18vh, under the content, off on phones) like the story
 
 ---
 

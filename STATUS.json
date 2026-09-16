@@ -1,16 +1,21 @@
 {
-  "generatedAt": "2026-09-16T01:56:59.343Z",
+  "generatedAt": "2026-09-16T02:07:51.735Z",
   "repo": {
-    "head": "fd59547",
+    "head": "7473180",
     "branch": "main",
-    "dirtyCount": 1,
+    "dirtyCount": 6,
     "dirty": [
-      "M RUN_QUEUE.md"
+      "M RUN_QUEUE.md",
+      " M package-lock.json",
+      " M package.json",
+      "?? src/app/api/birdie/",
+      "?? src/components/birdie/",
+      "?? src/lib/birdie/"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
-    "queueLastCommit": "2026-09-15T21:42:20-04:00",
+    "queueLastCommit": "2026-09-15T21:57:00-04:00",
     "unrecorded": []
   },
   "counts": {
@@ -762,6 +767,16 @@
   },
   "recentCommits": [
     {
+      "h": "7473180",
+      "date": "2026-09-15",
+      "subject": "L2 review fixes: the draft build's per-round default schedules start PAUSED (identical windows would have sold one first tee several times over); a whole-course schedule on a course with rounds now conflicts with every round; a course with active rounds refuses an unscoped schedule server-side; deactivating or re-sizing a round rebuilds the sheet, deleting one is refused while it has schedules, and changing its nines re-checks every running schedule; the engine adopts a booked pre-L2 row instead of doubling it and never tries to delete a slot that still has booking rows; the round label reaches the member sheet, the member portal, the checkout page, the reminder and modified emails, the per-course account and the swap picker; the product's rating/slope shows on slot cards; the admin schedule form gets a round picker; a failed products load is visible on the Schedules page; the selector's unselected pill uses the ink-muted token"
+    },
+    {
+      "h": "eb67527",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "fd59547",
       "date": "2026-09-15",
       "subject": "L2: the booking page sells products — the tee-sheet engine generates one slot per product per time (product-scoped schedules; inactive products generate nothing; simple courses unchanged); schedule-service scopes each schedule to one product and refuses a save that would put a nine in two places at once (lib/schedule-conflict.ts, 12/12 tests; 409 with the plain-English reason on both routes); the schedules editor picks the round, groups schedules under their product and shows the conflict; the Course & Layout tab nudges toward a schedule per round; the draft build creates one default schedule per active product; the course page shows a 'Which round' selector when a day sells more than one product and labels every slot; the product label reaches booking emails, receipt, manage, check-in, the operator tee sheet, the admin sheet and the golfer account"
@@ -810,16 +825,6 @@
       "h": "5ea6455",
       "date": "2026-09-15",
       "subject": "SC-1 review fixes: free/busy cache keyed on 5-minute buckets and evicted (it could never hit before); 8s timeouts on every Google fetch; error strings name the operation, not the path with the calendar id; scope narrowed to events + readonly; openSlots steps the Eastern calendar date so DST never skips or doubles a day (tests added, 26/26); the check script's run line loads .env.local and retries the delete"
-    },
-    {
-      "h": "d66bc69",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "bab429b",
-      "date": "2026-09-15",
-      "subject": "H-2d-R1 + H-2f (Cam 2026-09-15): the homepage device mockups keep their soft shadows and the cream hand-off dissolves are the only allowed gradients — CLAUDE.md BANNED line amended; the pricing slab now dissolves from and into cream at both edges (18vh, under the content, off on phones) like the story"
     }
   ]
 }

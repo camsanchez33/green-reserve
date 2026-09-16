@@ -117,8 +117,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-09-16 01:56 UTC</span><span>main @ fd59547</span>
-    <span>1 uncommitted</span>
+    <span>2026-09-16 02:07 UTC</span><span>main @ 7473180</span>
+    <span>6 uncommitted</span>
   </div>
 </header>
 <div class="tiles">
@@ -130,9 +130,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">15</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card">
-<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M RUN_QUEUE.md</code></li></ul>
+<div class="card flag">
+<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
+<ul class="plain"><li><code>M RUN_QUEUE.md</code></li><li><code>M package-lock.json</code></li><li><code>M package.json</code></li><li><code>?? src/app/api/birdie/</code></li><li><code>?? src/components/birdie/</code></li><li><code>?? src/lib/birdie/</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -235,6 +235,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">7473180</td><td class="num">2026-09-15</td><td>L2 review fixes: the draft build's per-round default schedules start PAUSED (identical windows would have sold one first tee several times over); a whole-course schedule on a course with rounds now conflicts with every round; a course with active rounds refuses an unscoped schedule server-side; deactivating or re-sizing a round rebuilds the sheet, deleting one is refused while it has schedules, and changing its nines re-checks every running schedule; the engine adopts a booked pre-L2 row instead of doubling it and never tries to delete a slot that still has booking rows; the round label reaches the member sheet, the member portal, the checkout page, the reminder and modified emails, the per-course account and the swap picker; the product's rating/slope shows on slot cards; the admin schedule form gets a round picker; a failed products load is visible on the Schedules page; the selector's unselected pill uses the ink-muted token</td></tr>
+<tr><td class="num">eb67527</td><td class="num">2026-09-15</td><td>queue/spec update</td></tr>
 <tr><td class="num">fd59547</td><td class="num">2026-09-15</td><td>L2: the booking page sells products — the tee-sheet engine generates one slot per product per time (product-scoped schedules; inactive products generate nothing; simple courses unchanged); schedule-service scopes each schedule to one product and refuses a save that would put a nine in two places at once (lib/schedule-conflict.ts, 12/12 tests; 409 with the plain-English reason on both routes); the schedules editor picks the round, groups schedules under their product and shows the conflict; the Course &amp; Layout tab nudges toward a schedule per round; the draft build creates one default schedule per active product; the course page shows a 'Which round' selector when a day sells more than one product and labels every slot; the product label reaches booking emails, receipt, manage, check-in, the operator tee sheet, the admin sheet and the golfer account</td></tr>
 <tr><td class="num">dacf315</td><td class="num">2026-09-15</td><td>L2 schema (attended with Cam 2026-09-15): TeeTimeSchedule.productId and TeeTime.productId, nullable, SET NULL on product delete, indexed — migration product_scoping, additive; null means the simple one-product course and changes nothing</td></tr>
 <tr><td class="num">8066aa9</td><td class="num">2026-09-15</td><td>queue/spec update</td></tr>
@@ -245,8 +247,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">88242e2</td><td class="num">2026-09-15</td><td>queue/spec update</td></tr>
 <tr><td class="num">fffb2cc</td><td class="num">2026-09-15</td><td>SC-2: the invite, the page, the emails — sendCallInvite issues a 21-day token and emails 'Set up your call' straight from the inquiry POST (a send failure never fails the submission; the confirmation's button uses the same link; the admin alert says when the invite did not go); /call/[token] shows Cam's open 30-minute slots (preference first, all times Eastern), confirms with an editable phone and a they-call toggle, then becomes the manage view with Reschedule and Cancel; the API re-verifies the slot and writes the Call inside a transaction (409 slot_taken), creates/moves/deletes the Google event, logs the timeline, and sends the course a confirmation with a .ics plus Cam a heads-up; Google unreachable → honest fallback + alert to hello@; noindex, rate-limited</td></tr>
 <tr><td class="num">5ea6455</td><td class="num">2026-09-15</td><td>SC-1 review fixes: free/busy cache keyed on 5-minute buckets and evicted (it could never hit before); 8s timeouts on every Google fetch; error strings name the operation, not the path with the calendar id; scope narrowed to events + readonly; openSlots steps the Eastern calendar date so DST never skips or doubles a day (tests added, 26/26); the check script's run line loads .env.local and retries the delete</td></tr>
-<tr><td class="num">d66bc69</td><td class="num">2026-09-15</td><td>queue/spec update</td></tr>
-<tr><td class="num">bab429b</td><td class="num">2026-09-15</td><td>H-2d-R1 + H-2f (Cam 2026-09-15): the homepage device mockups keep their soft shadows and the cream hand-off dissolves are the only allowed gradients — CLAUDE.md BANNED line amended; the pricing slab now dissolves from and into cream at both edges (18vh, under the content, off on phones) like the story</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
