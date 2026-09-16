@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-16T02:10:18.473Z",
+  "generatedAt": "2026-09-16T02:19:34.015Z",
   "repo": {
-    "head": "f023d05",
+    "head": "7d684c2",
     "branch": "main",
     "dirtyCount": 1,
     "dirty": [
@@ -10,7 +10,7 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-15T22:07:53-04:00",
+    "queueLastCommit": "2026-09-15T22:10:19-04:00",
     "unrecorded": []
   },
   "counts": {
@@ -58,7 +58,7 @@
       "line": 565,
       "hash": "4ef11dd",
       "shipDate": "2026-08-29",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "title": "MP-2",
@@ -757,6 +757,16 @@
   },
   "recentCommits": [
     {
+      "h": "7d684c2",
+      "date": "2026-09-15",
+      "subject": "BIRDIE B1 review fixes: the rate limiter fails CLOSED for birdie: keys (a DB error must not uncap paid API spend; login and forms still fail open), the hourly cap is keyed on the course so staff and owner really share 20/h instead of getting 20 each, the cap is taken before the request body is parsed, a missing or rejected API key now reaches a real message (client construction moved inside the try; an auth failure mid-stream says so in-band), the widget remembers OPEN rather than closed so a dashboard navigation no longer shuts Birdie mid-conversation, Escape closes and opening focuses the input and the reply list is aria-live, the conversation log stops truncating, ARCHITECTURE lists /api/birdie/chat as operator-only, and the isolation test gains five cross-tenant checks (20/20)"
+    },
+    {
+      "h": "d622aed",
+      "date": "2026-09-15",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "f023d05",
       "date": "2026-09-15",
       "subject": "BIRDIE B1: the operator helper, shipped OFF — POST /api/birdie/chat (operator session only; persona, knowledge and course facts derived server-side; claude-haiku-4-5 via the official SDK, streamed; 600-token replies, 20 per course per hour, 600 per day platform-wide, BIRDIE_ENABLED kill switch; conversations logged as birdie.reply), lib/birdie (operator knowledge pack seeded from the tab intros with deep links, read-only course context scoped by session, guardrails), the floating Birdie widget on every dashboard page (streams, turns dashboard links into buttons, remembers closed, renders nothing while Birdie is off), a Birdie card on /admin/system (switch state + today's replies against the cap), env names in SHIPPING + PASSWORD_CHECKLIST Phase 7c, scripts/birdie-isolation-test.ts 14/14"
@@ -805,16 +815,6 @@
       "h": "07a8952",
       "date": "2026-09-15",
       "subject": "SC-3: the admin side — 'Send a booking link' on the set-up-call card (send/resend via send_call_invite, 'Booking link sent <date> · not booked yet'); the sheet's Next-call cell shows 'Invite sent · Nd ago' and marks a course-picked call 'they picked it'; an invite unanswered 5+ days is a yourMove signal ('Invite sent 6 days ago, no time picked'); 'Talking tomorrow' reminder 24h before each scheduled call on the hourly cron, once per call; the System page shows CALL_WINDOWS and which Google calendar is the real filter; callInviteToken stripped from admin responses"
-    },
-    {
-      "h": "722934f",
-      "date": "2026-09-15",
-      "subject": "SC-2 review fixes: book and reschedule share one SERIALIZABLE guarded write that tests overlap against every scheduled call in the window (a serialization failure answers slot_taken); per-inquiry cap on the booking POST; phone sanitised; a lone CR is a line break in the .ics; closed inquiries read as an expired link; the lead form mints the token synchronously but delivers the invite in the background so Resend can never delay or fail a submission; the resubmit path's confirmation reuses a live invite link; the header carries the editable phone; a reschedule keeps the call's real length; the they-call toggle seeds from the booked call; ARCHITECTURE.md regenerated for the new route"
-    },
-    {
-      "h": "88242e2",
-      "date": "2026-09-15",
-      "subject": "queue/spec update"
     }
   ]
 }

@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-16 02:10 UTC · branch `main` · HEAD `f023d05` · working tree **1 dirty file(s)**
+Generated 2026-09-16 02:19 UTC · branch `main` · HEAD `7d684c2` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -37,7 +37,7 @@ This is the distinction a raw checkbox count gets wrong.
 |---|---|---|---|---|
 | MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 17d | `7246a62` | `RUN_QUEUE.md:500` |
 | MP-1 | 2026-08-29 | 17d | `41f5ea8` | `RUN_QUEUE.md:530` |
-| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 16d | `4ef11dd` | `RUN_QUEUE.md:565` |
+| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 17d | `4ef11dd` | `RUN_QUEUE.md:565` |
 | MP-2 | 2026-08-29 | 16d | `958f229` | `RUN_QUEUE.md:606` |
 | MP-2b | 2026-08-29 | 16d | `a134af5` | `RUN_QUEUE.md:643` |
 | MP-2c | 2026-08-29 | 16d | `e5b5413` | `RUN_QUEUE.md:692` |
@@ -163,6 +163,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `7d684c2` 2026-09-15 — BIRDIE B1 review fixes: the rate limiter fails CLOSED for birdie: keys (a DB error must not uncap paid API spend; login and forms still fail open), the hourly cap is keyed on the course so staff and owner really share 20/h instead of getting 20 each, the cap is taken before the request body is parsed, a missing or rejected API key now reaches a real message (client construction moved inside the try; an auth failure mid-stream says so in-band), the widget remembers OPEN rather than closed so a dashboard navigation no longer shuts Birdie mid-conversation, Escape closes and opening focuses the input and the reply list is aria-live, the conversation log stops truncating, ARCHITECTURE lists /api/birdie/chat as operator-only, and the isolation test gains five cross-tenant checks (20/20)
+- `d622aed` 2026-09-15 — queue/spec update
 - `f023d05` 2026-09-15 — BIRDIE B1: the operator helper, shipped OFF — POST /api/birdie/chat (operator session only; persona, knowledge and course facts derived server-side; claude-haiku-4-5 via the official SDK, streamed; 600-token replies, 20 per course per hour, 600 per day platform-wide, BIRDIE_ENABLED kill switch; conversations logged as birdie.reply), lib/birdie (operator knowledge pack seeded from the tab intros with deep links, read-only course context scoped by session, guardrails), the floating Birdie widget on every dashboard page (streams, turns dashboard links into buttons, remembers closed, renders nothing while Birdie is off), a Birdie card on /admin/system (switch state + today's replies against the cap), env names in SHIPPING + PASSWORD_CHECKLIST Phase 7c, scripts/birdie-isolation-test.ts 14/14
 - `f0d8ed7` 2026-09-15 — queue/spec update
 - `7473180` 2026-09-15 — L2 review fixes: the draft build's per-round default schedules start PAUSED (identical windows would have sold one first tee several times over); a whole-course schedule on a course with rounds now conflicts with every round; a course with active rounds refuses an unscoped schedule server-side; deactivating or re-sizing a round rebuilds the sheet, deleting one is refused while it has schedules, and changing its nines re-checks every running schedule; the engine adopts a booked pre-L2 row instead of doubling it and never tries to delete a slot that still has booking rows; the round label reaches the member sheet, the member portal, the checkout page, the reminder and modified emails, the per-course account and the swap picker; the product's rating/slope shows on slot cards; the admin schedule form gets a round picker; a failed products load is visible on the Schedules page; the selector's unselected pill uses the ink-muted token
@@ -173,8 +175,6 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `0348a9e` 2026-09-15 — SC-3 review fixes: a live booking link outranks a cancelled call on the sheet (and 'cancelled' has a label); the Overview queue now receives callInviteSentAt so the cold-invite signal can fire there; the reminder's once-only key carries the call time (a moved call gets its reminder), skips declined/archived inquiries, states the call's real length, and mints a token when an admin-scheduled call has none so the reschedule link always works; send_call_invite metered five a day per inquiry; a failed resend says the old link is dead; the System card distinguishes loading and error from 'not configured', needs both Google env vars for a green dot, and derives the no-call days from CALL_WINDOWS; 'they picked it' also on an overdue course-booked call
 - `56dfe85` 2026-09-15 — queue/spec update
 - `07a8952` 2026-09-15 — SC-3: the admin side — 'Send a booking link' on the set-up-call card (send/resend via send_call_invite, 'Booking link sent <date> · not booked yet'); the sheet's Next-call cell shows 'Invite sent · Nd ago' and marks a course-picked call 'they picked it'; an invite unanswered 5+ days is a yourMove signal ('Invite sent 6 days ago, no time picked'); 'Talking tomorrow' reminder 24h before each scheduled call on the hourly cron, once per call; the System page shows CALL_WINDOWS and which Google calendar is the real filter; callInviteToken stripped from admin responses
-- `722934f` 2026-09-15 — SC-2 review fixes: book and reschedule share one SERIALIZABLE guarded write that tests overlap against every scheduled call in the window (a serialization failure answers slot_taken); per-inquiry cap on the booking POST; phone sanitised; a lone CR is a line break in the .ics; closed inquiries read as an expired link; the lead form mints the token synchronously but delivers the invite in the background so Resend can never delay or fail a submission; the resubmit path's confirmation reuses a live invite link; the header carries the editable phone; a reschedule keeps the call's real length; the they-call toggle seeds from the booked call; ARCHITECTURE.md regenerated for the new route
-- `88242e2` 2026-09-15 — queue/spec update
 
 ---
 
