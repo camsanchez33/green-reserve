@@ -4,15 +4,23 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-16 20:29 UTC · branch `main` · HEAD `063507f` · working tree **1 dirty file(s)**
+Generated 2026-09-17 14:02 UTC · branch `main` · HEAD `cfeb2e1` · working tree **3 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
+`RUN_QUEUE.md` was last committed **2026-09-16**. 1 commit(s) since then are not mentioned anywhere in it:
 
-### Uncommitted working tree (1 file(s))
+| commit | date | subject |
+|---|---|---|
+| `5bf7e4b` | 2026-09-16 | Rate-limit setup-intent, and delete ARCHITECTURE.md's route tables |
+
+**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (3 file(s))
 
 - `M RUN_QUEUE.md`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -35,19 +43,17 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 17d | `7246a62` | `RUN_QUEUE.md:599` |
-| MP-1 | 2026-08-29 | 17d | `41f5ea8` | `RUN_QUEUE.md:629` |
-| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 17d | `4ef11dd` | `RUN_QUEUE.md:664` |
-| MP-2 | 2026-08-29 | 17d | `958f229` | `RUN_QUEUE.md:705` |
-| MP-2b | 2026-08-29 | 17d | `a134af5` | `RUN_QUEUE.md:742` |
-| MP-2c | 2026-08-29 | 17d | `e5b5413` | `RUN_QUEUE.md:791` |
-| MP-2d | 2026-08-29 | 17d | `22d0f68` | `RUN_QUEUE.md:839` |
+| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 18d | `7246a62` | `RUN_QUEUE.md:599` |
+| MP-1 | 2026-08-29 | 18d | `41f5ea8` | `RUN_QUEUE.md:629` |
+| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 18d | `4ef11dd` | `RUN_QUEUE.md:664` |
+| MP-2 | 2026-08-29 | 18d | `958f229` | `RUN_QUEUE.md:705` |
+| MP-2b | 2026-08-29 | 18d | `a134af5` | `RUN_QUEUE.md:742` |
+| MP-2c | 2026-08-29 | 18d | `e5b5413` | `RUN_QUEUE.md:791` |
+| MP-2d | 2026-08-29 | 18d | `22d0f68` | `RUN_QUEUE.md:839` |
 | MP-2e | 2026-08-30 | 17d | `bf3bcb2` | `RUN_QUEUE.md:881` |
-| UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | 2026-09-11 | 4d | `a3c1bea` | `RUN_QUEUE.md:2056` |
-| SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED 2026-09-16, box OPEN pending Cam's mailb | 2026-09-16 | 0d | `951433d` | `RUN_QUEUE.md:2098` |
-| UI_REVISE_SPEC H-2g §2 + §3 (01822b0; review fixes 2de3268) — BUILT + | 2026-09-15 | 0d | `01822b0` | `RUN_QUEUE.md:2165` |
-| UI_REVISE_SPEC H-2h (8e0b692) — BUILT + REVIEWED 2026-09-16, box OPEN | 2026-09-16 | 0d | `8e0b692` | `RUN_QUEUE.md:2243` |
-| CODEMAP_SPEC Phase CM-1 (f924e07; review fixes 063507f) — BUILT + REVIEWED | 2026-09-16 | 0d | `f924e07` | `RUN_QUEUE.md:2287` |
+| UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | 2026-09-11 | 5d | `a3c1bea` | `RUN_QUEUE.md:2056` |
+| SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED | 2026-09-16 | 1d | `951433d` | `RUN_QUEUE.md:2098` |
+| SD-11 (cfeb2e1) — BUILT 2026-09-17, review running. "Are you trying to sign in?" + a code, instead of a sign-i | 2026-09-17 | 0d | `cfeb2e1` | `RUN_QUEUE.md:2211` |
 
 ## Not started — the actual queue
 
@@ -70,7 +76,6 @@ This is the distinction a raw checkbox count gets wrong.
 17. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1388`
 18. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1437`
 19. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1492`
-20. SD-11 — "are you trying to sign in?" + a code, instead of a sign-in button — `RUN_QUEUE.md:2203`
 
 ## Waiting on you (not on a build)
 
@@ -82,8 +87,6 @@ This is the distinction a raw checkbox count gets wrong.
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:839`
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:881`
 - CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1492`
-- pending Cam's mailbox walk below: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09-16: "if a course is already created it can't be created again — they'd — `RUN_QUEUE.md:2098`
-- pending Cam's walk — `RUN_QUEUE.md:2243`
 
 ## Revise campaign (page-by-page pass)
 
@@ -171,6 +174,9 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `cfeb2e1` 2026-09-17 — SD-11: ask before offering sign-in, and make them prove the inbox
+- `5bf7e4b` 2026-09-16 — Rate-limit setup-intent, and delete ARCHITECTURE.md's route tables
+- `f5c5a5b` 2026-09-16 — queue/spec update
 - `063507f` 2026-09-16 — CODEMAP review fixes: a guard is enforcement, not a mention
 - `f924e07` 2026-09-16 — CODEMAP_SPEC CM-1: a generated map of the code, so agents stop reading files to find things
 - `2e3e1fa` 2026-09-16 — queue/spec update
@@ -180,10 +186,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `30385cd` 2026-09-16 — SECURITY follow-on review fixes: gate the already-built email, close the id oracle, stop the screen contradicting the email
 - `951433d` 2026-09-16 — SECURITY follow-on: a built course's resubmit points at the dashboard, not at an admin diff
 - `063afa1` 2026-09-16 — queue/spec update
-- `2de3268` 2026-09-16 — H-2g review fixes: the operator link passes contrast, and the tablet range stops over-reserving
-- `01822b0` 2026-09-15 — H-2g §2 + §3: the homepage header stops following, the lockup gets bigger and centred
-- `16106fc` 2026-09-15 — queue/spec update
 
 ---
 
-**Totals:** 191 done · 13 awaiting review · 1 in flight · 20 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 194 done · 11 awaiting review · 1 in flight · 19 not started · 8 revise pages open · 15 ideas · 2 parked.

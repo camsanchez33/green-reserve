@@ -2095,7 +2095,13 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 - [x] INQUIRY_CALL_SPEC Phase IC-5 (spec block 598d2f7 written by the run — REVIEW §1 FIELD CATALOG; build 25baf6b; review fixes 189f23b; REVIEWED 2026-09-15: spec 35/37 → all met after fixes; security 0 crit/0 high, 3 low fixed; admin-ux 2 high fixed (autosave race, recap false-positive) + 1 medium fixed; design clean; scripts/call-answers-test.ts 34/34) — SHIPPED: lib/call-answers.ts field catalog (money in integer cents; season = months, walking = the sheet's options), v2 answersJson with the old prose readable, Log card real inputs collapsed per item + autosave with status/retry, log_call validates + optional recap email, sheet pre-fills empty keys only and says so, build reads the call only for keys the sheet never touched and flags them for review, Still-need names missing fields. Cam to walk: log a call with 3 fields, reload (held), Save + send sheet → prefilled + editable, submit one change → build → sheet wins; recap email. ORIGINAL: the call captures STRUCTURED answers, not prose (Cam 2026-09-15, overrules assumption A3). New src/lib/call-answers.ts field spec per agenda item (money in INTEGER CENTS, time, date, days, bool, enum, rows) each naming the setup-sheet key it pre-fills; Log-the-call card renders real inputs, collapsed per item, one note box each, autosaved; answersJson becomes structured (no migration — JSON column, but the reader must tolerate the old flat shape). Buys: stillNeed names missing FIELDS not topics; 'Save + send pre-filled sheet' sends VALUES not hints; the draft course build becomes mechanical; a recap email of what was captured. GOVERNING RULE: a call answer is a PROPOSAL — what the course submits always wins, nothing is written straight onto a live Course. RUN ADJACENT TO IF-1 (both touch the sheet's pre-fill + branching).
 
-- [ ] SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED 2026-09-16, box OPEN pending Cam's mailbox walk below: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09-16: "if a course is already created it can't be created again — they'd have to log in to change information"). 21c8d25 fixed the unverified-contact-change hole; this closes the remaining case. In the POST /api/inquiries dedupe block, when the matched inquiry has a `builtCourseId` (i.e. the course exists), do NOT record a resubmit event at all: respond with the normal success shape (keep the response identical/blind — do not leak that the course exists) and have the success screen + confirmation email say "<Course> already has a GreenReserve page — sign in at /dashboard to update your details, or email hello@greenreserve.app". Contact details for a built course change in ONE place: the operator dashboard. Deliberately NOT extended to not-yet-built inquiries — there the 21c8d25 rule (email must match the one on file) is the right level, because blocking outright would also block a GM fixing their own typo'd phone. Small, no migration.
+- [ ] SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED
+  2026-09-16. STILL OPEN, and its remaining walk MOVED TO SD-11: checks 11-14
+  of the sign-off walk test the built-course resubmit screen, and SD-11
+  (cfeb2e1) replaces that screen with the ask-then-code flow. Walking the old
+  one would be testing something already gone. The API half of this item —
+  no resubmit event, blind response, gated email — is unchanged by SD-11 and
+  stands reviewed. Close this when SD-11's walk passes. a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09-16: "if a course is already created it can't be created again — they'd have to log in to change information"). 21c8d25 fixed the unverified-contact-change hole; this closes the remaining case. In the POST /api/inquiries dedupe block, when the matched inquiry has a `builtCourseId` (i.e. the course exists), do NOT record a resubmit event at all: respond with the normal success shape (keep the response identical/blind — do not leak that the course exists) and have the success screen + confirmation email say "<Course> already has a GreenReserve page — sign in at /dashboard to update your details, or email hello@greenreserve.app". Contact details for a built course change in ONE place: the operator dashboard. Deliberately NOT extended to not-yet-built inquiries — there the 21c8d25 rule (email must match the one on file) is the right level, because blocking outright would also block a GM fixing their own typo'd phone. Small, no migration.
   BUILT: POST /api/inquiries selects builtCourseId and records NO resubmit event
   when it is set. New sendInquiryAlreadyBuilt email; a separate /for-courses
   success screen naming the course, with the dashboard button and the hello@
@@ -2162,9 +2168,11 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   shadow was carrying and the one thing I could not check (the browser window
   would not resize past 613px, where that card is hidden).
 
-- [ ] UI_REVISE_SPEC H-2g §2 + §3 (01822b0; review fixes 2de3268) — BUILT +
-  REVIEWED 2026-09-16. Box stays OPEN: both auditors passed the code, but five
-  of their verdicts are visual and only Cam's walk can close them.
+- [x] UI_REVISE_SPEC H-2g §2 + §3 (01822b0; review fixes 2de3268) — SHIPPED,
+  REVIEWED and WALKED. Both auditors passed the code; Cam walked the five
+  visual verdicts on 2026-09-17 and all passed, including the short-viewport
+  case (hero exactly one screen, eyebrow clear of the 280px lockup) and the
+  Lighthouse CLS check the bigger lockup put at risk.
   §2: on `/` the nav is `position: absolute` with no background, blur, border
   or scroll listener — it scrolls away with the hero and never returns. The
   handler is deleted, not disabled. Every other public page keeps the fixed
@@ -2200,7 +2208,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   5. Lighthouse mobile on `/` — CLS no worse than H-1's recorded number (§5's
      own bar). The lockup moved near the top of the fold, which is the risk.
 
-- [ ] SD-11 — "are you trying to sign in?" + a code, instead of a sign-in button
+- [ ] SD-11 (cfeb2e1) — BUILT 2026-09-17, review running. "Are you trying to sign in?" + a code, instead of a sign-in button
   (Cam 2026-09-16, answering the review question on the SECURITY follow-on):
   "the response to the sign up should be are you trying to sign in at x course?
   ... there should be a litte activity log listing that cause it has to be
@@ -2232,6 +2240,37 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   - A `building`-stage operator may never have completed /dashboard/verify, so
     there may be no account to sign into yet. If so, Yes should route to "we'll
     email you" rather than to a code that leads nowhere.
+  BUILT (cfeb2e1). Decisions made in the build, both stated rather than assumed:
+  1. THE CODE DOES NOT SIGN ANYONE IN. Operators log in with a password and then
+     a 2FA code; a second door trading both for "can read this inbox" would be a
+     downgrade dressed as a convenience, on a dashboard that moves money. A
+     correct code buys the pointer: which address the account uses, and a link to
+     the real login. Cam's wording could also be read as "then log them in" —
+     that reading is the one NOT built. Say the word if it was the intended one.
+  2. NO SCHEMA CHANGE, so this did not need an attended run. The challenge is a
+     signed short-lived httpOnly cookie, not new columns: the code is useless
+     after ten minutes and belongs to one browser. The attempt counter rides in
+     the same cookie, re-signed on every miss so it cannot be edited down, with a
+     per-IP limit in front for anyone who deletes the cookie to reset it.
+  3. The dead-end question answered itself rather than waiting: after a correct
+     code the route looks for a real operator account, and the screen either
+     points at the login or says the login is not ready and the team has been
+     told. Both outcomes, and a code requested from an email NOT on file, write
+     to the activity ledger — which also closes the missing-admin-trace finding
+     from the 30385cd audit.
+  STILL CAM'S CALL: phone-on-file as a second channel is NOT built (email only).
+  The operator 2FA code already falls back email→SMS, so the plumbing exists.
+  CAM TO WALK (this replaces checks 11-14 of the 2026-09-17 sign-off walk):
+  1. Submit /for-courses for a built course using the email ON FILE → expect
+     "Are you trying to sign in?", not a sign-in button.
+  2. Say yes → a six-digit code arrives at the on-file address. Enter it →
+     expect the login pointer naming that address.
+  3. Enter a wrong code five times → expect a clear "start again", not a stuck
+     screen.
+  4. Submit the same course from a DIFFERENT email → expect the ordinary
+     "thanks, check your email" screen, with no hint the course exists.
+  5. Check the code email renders in Gmail and Apple Mail.
+
   SECURITY NOTE for whoever builds it: naming the course in the question is
   safe ONLY while the screen stays gated behind the verified check 30385cd
   added (the submitted email matches the one on file). Ungate it and the
@@ -2240,8 +2279,13 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   unless the code needs its own table (check whether an existing verification
   model fits before adding one).
 
-- [ ] UI_REVISE_SPEC H-2h (8e0b692) — BUILT + REVIEWED 2026-09-16, box OPEN
-  pending Cam's walk. Shadows back, cream dissolves out.
+- [x] UI_REVISE_SPEC H-2h (8e0b692) — SHIPPED, REVIEWED and WALKED
+  2026-09-17: shadows back, cream dissolves out, all five checks passed.
+  Notably the two that carried real risk both came back clean: the floating
+  tee-sheet card reads as sitting ON the phone mockup (the one thing H-2g
+  could not close, and the whole reason the shadow came back), and the hard
+  cut where cream now meets the story photo reads as deliberate rather than
+  muddy — so the deleted dissolves do not need replacing.
   Cam, asked which of the two BANNED-list exemptions to revoke after H-2g §1
   shipped: "other way around get rid of cream fades and keep the shadows" —
   restated back to him (spelling out that it reversed the same morning's work)
@@ -2284,8 +2328,11 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
      anyway, so this should look unchanged; confirm it does.
   5. Hover a course card — the bloom is back instead of the hairline darkening.
 
-- [ ] CODEMAP_SPEC Phase CM-1 (f924e07; review fixes 063507f) — BUILT + REVIEWED
-  2026-09-16, box OPEN until the first CI run goes green. `scripts/codemap.mjs` generates
+- [x] CODEMAP_SPEC Phase CM-1 (f924e07; review fixes 063507f) — SHIPPED,
+  REVIEWED and CONFIRMED GREEN 2026-09-17. The codemap CI job ran on a real
+  runner and passed, which was the one thing hand-checking could not prove:
+  the determinism, the LF normalisation and @babel/parser surviving `npm ci`
+  all held. `scripts/codemap.mjs` generates
   `docs/CODEMAP.md` + `codemap.json`: routes with their auth level, lib exports
   with usedBy, schema models with their writers, and orphans. `@brain` tags are
   collected into a single-sources-of-truth table, and a DUPLICATE CONCEPT is a

@@ -1,23 +1,33 @@
 {
-  "generatedAt": "2026-09-16T20:29:02.351Z",
+  "generatedAt": "2026-09-17T14:02:47.472Z",
   "repo": {
-    "head": "063507f",
+    "head": "cfeb2e1",
     "branch": "main",
-    "dirtyCount": 1,
+    "dirtyCount": 3,
     "dirty": [
-      "M RUN_QUEUE.md"
+      "M RUN_QUEUE.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-16T09:04:53-04:00",
-    "unrecorded": []
+    "queueLastCommit": "2026-09-16T16:29:04-04:00",
+    "unrecorded": [
+      {
+        "h": "5bf7e4b",
+        "date": "2026-09-16T17:40:57-04:00",
+        "subject": "Rate-limit setup-intent, and delete ARCHITECTURE.md's route tables",
+        "ids": [],
+        "matches": []
+      }
+    ]
   },
   "counts": {
-    "runDone": 191,
-    "runAwaiting": 13,
+    "runDone": 194,
+    "runAwaiting": 11,
     "runInFlight": 1,
-    "runNotStarted": 20,
+    "runNotStarted": 19,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -44,49 +54,49 @@
       "line": 599,
       "hash": "7246a62",
       "shipDate": "2026-08-29",
-      "ageDays": 17
+      "ageDays": 18
     },
     {
       "title": "MP-1",
       "line": 629,
       "hash": "41f5ea8",
       "shipDate": "2026-08-29",
-      "ageDays": 17
+      "ageDays": 18
     },
     {
       "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
       "line": 664,
       "hash": "4ef11dd",
       "shipDate": "2026-08-29",
-      "ageDays": 17
+      "ageDays": 18
     },
     {
       "title": "MP-2",
       "line": 705,
       "hash": "958f229",
       "shipDate": "2026-08-29",
-      "ageDays": 17
+      "ageDays": 18
     },
     {
       "title": "MP-2b",
       "line": 742,
       "hash": "a134af5",
       "shipDate": "2026-08-29",
-      "ageDays": 17
+      "ageDays": 18
     },
     {
       "title": "MP-2c",
       "line": 791,
       "hash": "e5b5413",
       "shipDate": "2026-08-29",
-      "ageDays": 17
+      "ageDays": 18
     },
     {
       "title": "MP-2d",
       "line": 839,
       "hash": "22d0f68",
       "shipDate": "2026-08-29",
-      "ageDays": 17
+      "ageDays": 18
     },
     {
       "title": "MP-2e",
@@ -100,34 +110,20 @@
       "line": 2056,
       "hash": "a3c1bea",
       "shipDate": "2026-09-11",
-      "ageDays": 4
+      "ageDays": 5
     },
     {
-      "title": "SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED 2026-09-16, box OPEN pending Cam's mailbox walk below: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09",
+      "title": "SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED",
       "line": 2098,
       "hash": "951433d",
       "shipDate": "2026-09-16",
-      "ageDays": 0
+      "ageDays": 1
     },
     {
-      "title": "UI_REVISE_SPEC H-2g §2 + §3 (01822b0; review fixes 2de3268) — BUILT +",
-      "line": 2165,
-      "hash": "01822b0",
-      "shipDate": "2026-09-15",
-      "ageDays": 0
-    },
-    {
-      "title": "UI_REVISE_SPEC H-2h (8e0b692) — BUILT + REVIEWED 2026-09-16, box OPEN",
-      "line": 2243,
-      "hash": "8e0b692",
-      "shipDate": "2026-09-16",
-      "ageDays": 0
-    },
-    {
-      "title": "CODEMAP_SPEC Phase CM-1 (f924e07; review fixes 063507f) — BUILT + REVIEWED",
-      "line": 2287,
-      "hash": "f924e07",
-      "shipDate": "2026-09-16",
+      "title": "SD-11 (cfeb2e1) — BUILT 2026-09-17, review running. \"Are you trying to sign in?\" + a code, instead of a sign-in button",
+      "line": 2211,
+      "hash": "cfeb2e1",
+      "shipDate": "2026-09-17",
       "ageDays": 0
     }
   ],
@@ -226,11 +222,6 @@
       "title": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
       "line": 1492,
       "section": "Queue (run in this order)"
-    },
-    {
-      "title": "SD-11 — \"are you trying to sign in?\" + a code, instead of a sign-in button",
-      "line": 2203,
-      "section": "Queue (run in this order)"
     }
   ],
   "waitingOnCam": [
@@ -273,16 +264,6 @@
       "item": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
       "note": "CAM: confirm the state before this runs — e",
       "line": 1492
-    },
-    {
-      "item": "SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED 2026-09-16, box OPEN pending Cam's mailbox walk below: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09",
-      "note": "pending Cam's mailbox walk below: a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09-16: \"if a course is already created it can't be created again — they'd",
-      "line": 2098
-    },
-    {
-      "item": "UI_REVISE_SPEC H-2h (8e0b692) — BUILT + REVIEWED 2026-09-16, box OPEN",
-      "note": "pending Cam's walk",
-      "line": 2243
     }
   ],
   "ideas": {
@@ -805,6 +786,21 @@
   },
   "recentCommits": [
     {
+      "h": "cfeb2e1",
+      "date": "2026-09-17",
+      "subject": "SD-11: ask before offering sign-in, and make them prove the inbox"
+    },
+    {
+      "h": "5bf7e4b",
+      "date": "2026-09-16",
+      "subject": "Rate-limit setup-intent, and delete ARCHITECTURE.md's route tables"
+    },
+    {
+      "h": "f5c5a5b",
+      "date": "2026-09-16",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "063507f",
       "date": "2026-09-16",
       "subject": "CODEMAP review fixes: a guard is enforcement, not a mention"
@@ -847,21 +843,6 @@
     {
       "h": "063afa1",
       "date": "2026-09-16",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "2de3268",
-      "date": "2026-09-16",
-      "subject": "H-2g review fixes: the operator link passes contrast, and the tablet range stops over-reserving"
-    },
-    {
-      "h": "01822b0",
-      "date": "2026-09-15",
-      "subject": "H-2g §2 + §3: the homepage header stops following, the lockup gets bigger and centred"
-    },
-    {
-      "h": "16106fc",
-      "date": "2026-09-15",
       "subject": "queue/spec update"
     }
   ]

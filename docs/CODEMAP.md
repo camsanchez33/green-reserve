@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-335 source files · 192 routes · 88 libraries · 33 models
+338 source files · 194 routes · 89 libraries · 33 models
 
 ## Single sources of truth
 
@@ -17,6 +17,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `call-agenda` | `src/lib/inquiry-call.ts` | `AGENDA`, `AgendaItem`, `agendaStatus`, `AgendaStatusRow`, `callGate`, `CallLike` +15 more |
 | `course-events` | `src/lib/course-timeline.ts` | `AGREEMENT_ACCEPTED_PREFIX`, `AgreementAcceptedPayload`, `CHECKIN_CALL_PREFIX`, `CheckInCallPayload`, `CURRENT_AGREEMENT_VERSION`, `DOCUMENT_UPLOADED_PREFIX` +22 more |
 | `course-health` | `src/lib/course-metrics.ts` | `COMPLETED_BOOKING_STATUSES`, `computeCourseHealth`, `computeNetPnL`, `CourseHealth`, `CourseHealthInput`, `CourseHealthStatus` +11 more |
+| `inquiry-signin-challenge` | `src/lib/inquiry-signin.ts` | `checkCode`, `CODE_TTL_SECONDS`, `cookieOptions`, `generateCode`, `hashCode`, `MAX_CODE_ATTEMPTS` +4 more |
 | `inquiry-statuses` | `src/lib/inquiry-status.ts` | `ACTIVE_STATUSES`, `ALIVE_STATUSES`, `ARCHIVED_STATUSES`, `CLOSED_REASONS`, `compareQueue`, `daysSince` +23 more |
 | `money-movement` | `src/lib/stripe.ts` | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `MEMBERSHIP_FEE_CENTS`, `refundOnConnectedAccount`, `stripe` |
 | `still-need-from-them` | `src/lib/inquiry-needs.ts` | `NeedItem`, `stillNeed` |
@@ -150,6 +151,8 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/health` | public | public | GET | `src/app/api/health/route.ts` | 21 |
 | `/api/inquiries` | public | public | POST | `src/app/api/inquiries/route.ts` | 268 |
 | `/api/inquiries/details` | public | token | GET PATCH POST | `src/app/api/inquiries/details/route.ts` | 130 |
+| `/api/inquiries/signin-code` | public | public | POST | `src/app/api/inquiries/signin-code/route.ts` | 93 |
+| `/api/inquiries/signin-verify` | public | public | POST | `src/app/api/inquiries/signin-verify/route.ts` | 85 |
 | `/api/inquiries/upload` | public | token | POST | `src/app/api/inquiries/upload/route.ts` | 48 |
 | `/api/manage/[bookingId]` | golfer | file | GET | `src/app/api/manage/[bookingId]/route.ts` | 77 |
 | `/api/manage/[bookingId]/available-times` | golfer | file | GET | `src/app/api/manage/[bookingId]/available-times/route.ts` | 55 |
@@ -247,11 +250,11 @@ Sorted by how many files import them, so the load-bearing ones are first.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/lib/prisma.ts` | 146 | 15 |  | `prisma` |
+| `src/lib/prisma.ts` | 148 | 15 |  | `prisma` |
 | `src/lib/admin-session.ts` | 48 | 149 |  | `AdminSession`, `AdminSessionUnavailable`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole`, `resolveAdminSession` +5 more |
-| `src/lib/email.ts` | 42 | 1736 |  | `BookingEmailData`, `escapeHtml`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail`, `sendAdminSetPasswordEmail`, `sendAdminTwoFactorCode` +50 more |
+| `src/lib/email.ts` | 43 | 1769 |  | `BookingEmailData`, `escapeHtml`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail`, `sendAdminSetPasswordEmail`, `sendAdminTwoFactorCode` +51 more |
 | `src/lib/session.ts` | 34 | 80 |  | `ACTIVE_COURSE_COOKIE`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN` |
-| `src/lib/rate-limit.ts` | 30 | 49 |  | `clientIp`, `evidentiaryIp`, `rateLimit` |
+| `src/lib/rate-limit.ts` | 32 | 49 |  | `clientIp`, `evidentiaryIp`, `rateLimit` |
 | `src/lib/money.ts` | 27 | 50 | Money conversions, in one place. | `centsToDollars`, `centsToDollarsOr0`, `dollarsToCents`, `dollarsToCentsOr0`, `fmtCents` |
 | `src/lib/auth.ts` | 26 | 169 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffToken`, `signToken` +2 more |
 | `src/lib/agreement-required.ts` | 19 | 122 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
@@ -261,7 +264,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/course-timeline.ts` | 12 | 165 |  | `AGREEMENT_ACCEPTED_PREFIX`, `AgreementAcceptedPayload`, `CHECKIN_CALL_PREFIX`, `CheckInCallPayload`, `CURRENT_AGREEMENT_VERSION`, `DOCUMENT_UPLOADED_PREFIX`, `DocumentUploadedPayload`, `getCourseTimeline` +20 more |
 | `src/lib/admin-fetch.ts` | 10 | 150 | One place that decides what an admin fetch failure MEANS. | `adminErrorMessage`, `adminFetch`, `AdminFetchAction`, `AdminFetchFailure`, `AdminFetchResult`, `LOGIN_SESSION_ENDED` |
 | `src/lib/course-time.ts` | 10 | 46 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `todayIn`, `US_TIMEZONES` |
-| `src/lib/inquiry-status.ts` | 9 | 464 | Single source of truth for what every inquiry status means and which pipeline segment it belongs to. | `ACTIVE_STATUSES`, `ALIVE_STATUSES`, `ARCHIVED_STATUSES`, `CLOSED_REASONS`, `compareQueue`, `daysSince`, `decodeResubmit`, `diffResubmit` +21 more |
+| `src/lib/inquiry-status.ts` | 10 | 464 | Single source of truth for what every inquiry status means and which pipeline segment it belongs to. | `ACTIVE_STATUSES`, `ALIVE_STATUSES`, `ARCHIVED_STATUSES`, `CLOSED_REASONS`, `compareQueue`, `daysSince`, `decodeResubmit`, `diffResubmit` +21 more |
 | `src/lib/admin-session-context.tsx` | 8 | 77 | MP-11a (ADMIN_V4 V4-7, LAW rule 2): | `AdminSessionProvider`, `AdminSessionView`, `isAdminAuthPath`, `useAdminSession` |
 | `src/lib/agreements.ts` | 8 | 118 | AGREEMENT_SPEC AG-1 §2 — versioned agreement documents. | `AgreementDocument`, `currentDocuments`, `currentVersion`, `DOCUMENT_DIR`, `DocumentMeta`, `listVersions`, `loadDocument`, `LoadedDocument` +1 more |
 | `src/lib/agreement-gate.ts` | 7 | 91 | AG-1: | `AgreementDocStatus`, `agreementStatus`, `AgreementStatus`, `hasAcceptedAgreement` |
@@ -308,6 +311,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/golfer-otp.ts` | 2 | 70 |  | `classifyIdentifier`, `EMAIL_RE`, `generateOtpCode`, `hashOtpCode`, `normalizePhone`, `OtpIdentifierType`, `signOtpChallenge`, `verifyOtpChallenge` +1 more |
 | `src/lib/image-resize.ts` | 2 | 33 | Client-side downscale so a 12MB phone photo never has to travel over the wire or blow the perf budget on the page that eventually renders it. | `downscaleImage` |
 | `src/lib/inquiry-action-queue.ts` | 2 | 105 | The Overview action queue's inquiry rows. | `ActionQueueRow`, `buildInquiryQueueRows`, `QueueInquiry` |
+| `src/lib/inquiry-signin.ts` | 2 | 83 | SD-11 — the "are you trying to sign in?" challenge that sits between the public sign-up form and a course that already exists. | `checkCode`, `CODE_TTL_SECONDS`, `cookieOptions`, `generateCode`, `hashCode`, `MAX_CODE_ATTEMPTS`, `readChallenge`, `signChallenge` +2 more |
 | `src/lib/money-problems.ts` | 2 | 43 |  | `FAILED_CHARGE_WHERE`, `missedCheckInWhere`, `openDisputes` |
 | `src/lib/owner-totp.ts` | 2 | 100 | OWNER TOTP 2FA (RUN_QUEUE) — the authenticator-app second factor for the owner account. | `generateRecoveryCodes`, `generateTotpSecret`, `looksLikeRecoveryCode`, `matchRecoveryCode`, `normalizeRecoveryCode`, `RECOVERY_CODE_COUNT`, `signEnrolToken`, `TOTP_ISSUER` +8 more |
 | `src/lib/platform-stripe.ts` | 2 | 58 |  | `fetchStripeFeeWindow`, `fetchStripeProcessingCostCents`, `StripeFeeWindow` |
@@ -479,11 +483,11 @@ without opening anything.
 
 ### CourseInquiry
 
-45 fields · 8 writer(s) · 22 reader(s)
+45 fields · 8 writer(s) · 24 reader(s)
 
 - fields: `id`, `firstName`, `lastName`, `contactName`, `contactTitle`, `email`, `phone`, `courseName`, `address`, `city`, `state`, `zipCode`, `website`, `courseType`, `currentBookingMethod`, `teeTimesPerDay`, `greenFeeRange`, `hasResidentPricing`, `hasMemberPricing`, `hasCaddies`, `pricingNotes`, `facilitiesNotes`, `lookingFor`, `additionalNotes`, `needsJson`, `status`, `adminNotes`, `builtCourseId`, `detailsToken`, `detailsJson`, `reviewStartedAt`, `wentLiveAt`, `source`, `closedReason`, `snoozeUntil`, `nextFollowUpAt`, `createdAt`, `updatedAt`, `events`, `changeRequests`, `callSkippedReason`, `calls`, `callInviteToken`, `callInviteSentAt`, `callInviteExpiresAt`
 - writers: `src/app/api/admin/backfill-orphaned-inquiries/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/inquiries/details/route.ts`, `src/app/api/inquiries/route.ts`, `src/lib/call-invite.ts`, `src/lib/lifecycle.ts`
-- readers: `src/app/api/admin/backfill-orphaned-inquiries/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/messages/route.ts`, `src/app/api/admin/nav-badges/route.ts`, `src/app/api/admin/request-re-review/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/admin/stats/route.ts`, `src/app/api/call/[token]/route.ts`, `src/app/api/inquiries/details/route.ts`, `src/app/api/inquiries/route.ts` +10 more (see `docs/codemap.json`)
+- readers: `src/app/api/admin/backfill-orphaned-inquiries/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/messages/route.ts`, `src/app/api/admin/nav-badges/route.ts`, `src/app/api/admin/request-re-review/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/admin/stats/route.ts`, `src/app/api/call/[token]/route.ts`, `src/app/api/inquiries/details/route.ts`, `src/app/api/inquiries/route.ts` +12 more (see `docs/codemap.json`)
 
 ### CourseMembership
 
@@ -495,11 +499,11 @@ without opening anything.
 
 ### CourseOperator
 
-21 fields · 16 writer(s) · 17 reader(s)
+21 fields · 16 writer(s) · 18 reader(s)
 
 - fields: `id`, `email`, `password`, `name`, `emailVerified`, `verificationToken`, `resetToken`, `resetTokenExpiry`, `onboardingStep`, `failedLoginAttempts`, `lockoutUntil`, `twoFactorEnabled`, `twoFactorMethod`, `twoFactorCode`, `twoFactorCodeExpiry`, `twoFactorAttempts`, `sessionVersion`, `phone`, `lastLoginAt`, `createdAt`, `course`
 - writers: `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/verify-operator/route.ts`, `src/app/api/auth/2fa/verify/route.ts`, `src/app/api/auth/forgot-password/route.ts`, `src/app/api/auth/login/route.ts`, `src/app/api/auth/resend-verification/route.ts`, `src/app/api/auth/reset-password/route.ts`, `src/app/api/auth/verify/route.ts`, `src/app/api/operator/change-password/route.ts`, `src/app/api/operator/onboarding-complete/route.ts`, `src/app/api/operator/profile/route.ts`, `src/app/api/operator/settings/route.ts`, `src/app/api/preview/send/route.ts`, `src/lib/lifecycle.ts`, `src/lib/two-factor.ts`
-- readers: `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/verify-operator/route.ts`, `src/app/api/auth/2fa/resend/route.ts`, `src/app/api/auth/2fa/status/route.ts`, `src/app/api/auth/2fa/verify/route.ts`, `src/app/api/auth/forgot-password/route.ts`, `src/app/api/auth/login/route.ts`, `src/app/api/auth/resend-verification/route.ts`, `src/app/api/auth/reset-password/route.ts`, `src/app/api/auth/verify/route.ts`, `src/app/api/operator/change-password/route.ts` +5 more (see `docs/codemap.json`)
+- readers: `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/verify-operator/route.ts`, `src/app/api/auth/2fa/resend/route.ts`, `src/app/api/auth/2fa/status/route.ts`, `src/app/api/auth/2fa/verify/route.ts`, `src/app/api/auth/forgot-password/route.ts`, `src/app/api/auth/login/route.ts`, `src/app/api/auth/resend-verification/route.ts`, `src/app/api/auth/reset-password/route.ts`, `src/app/api/auth/verify/route.ts`, `src/app/api/inquiries/signin-verify/route.ts` +6 more (see `docs/codemap.json`)
 
 ### CoursePhoto
 
@@ -559,10 +563,10 @@ without opening anything.
 
 ### InquiryStatusEvent
 
-8 fields · 13 writer(s) · 10 reader(s)
+8 fields · 15 writer(s) · 10 reader(s)
 
 - fields: `id`, `inquiryId`, `fromStatus`, `toStatus`, `trigger`, `actorName`, `createdAt`, `inquiry`
-- writers: `src/app/api/admin/backfill-orphaned-inquiries/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/request-re-review/route.ts`, `src/app/api/call/[token]/route.ts`, `src/app/api/inquiries/details/route.ts`, `src/app/api/inquiries/route.ts`, `src/app/api/operator/approve-page/route.ts`, `src/app/api/preview/[courseId]/approve/route.ts`, `src/app/api/preview/send/route.ts`, `src/lib/course-timeline.ts`, `src/lib/lifecycle.ts`, `src/lib/submit-change-request.ts`
+- writers: `src/app/api/admin/backfill-orphaned-inquiries/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/request-re-review/route.ts`, `src/app/api/call/[token]/route.ts`, `src/app/api/inquiries/details/route.ts`, `src/app/api/inquiries/route.ts`, `src/app/api/inquiries/signin-code/route.ts`, `src/app/api/inquiries/signin-verify/route.ts`, `src/app/api/operator/approve-page/route.ts`, `src/app/api/preview/[courseId]/approve/route.ts`, `src/app/api/preview/send/route.ts`, `src/lib/course-timeline.ts`, `src/lib/lifecycle.ts`, `src/lib/submit-change-request.ts`
 - readers: `src/app/api/admin/courses/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/stats/route.ts`, `src/app/api/operator/approve-page/route.ts`, `src/app/api/operator/courses/route.ts`, `src/app/api/preview/[courseId]/approve/route.ts`, `src/app/api/preview/[courseId]/route.ts`, `src/lib/approval-state.ts`, `src/lib/course-timeline.ts`, `src/lib/sheet-token.ts`
 
 ### MembershipTier

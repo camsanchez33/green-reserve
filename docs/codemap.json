@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 335,
-    "routes": 192,
-    "libs": 88,
+    "files": 338,
+    "routes": 194,
+    "libs": 89,
     "models": 33,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -13,6 +13,7 @@
     "call-agenda": "src/lib/inquiry-call.ts",
     "course-events": "src/lib/course-timeline.ts",
     "course-health": "src/lib/course-metrics.ts",
+    "inquiry-signin-challenge": "src/lib/inquiry-signin.ts",
     "inquiry-statuses": "src/lib/inquiry-status.ts",
     "money-movement": "src/lib/stripe.ts",
     "still-need-from-them": "src/lib/inquiry-needs.ts",
@@ -2979,6 +2980,60 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/inquiries/signin-code/route.ts",
+      "lines": 93,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/inquiries/signin-code",
+      "kind": "api",
+      "methods": [
+        "POST"
+      ],
+      "auth": "public",
+      "guard": "public",
+      "imports": [
+        "@/lib/email",
+        "@/lib/inquiry-signin",
+        "@/lib/inquiry-status",
+        "@/lib/prisma",
+        "@/lib/rate-limit",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/inquiries/signin-verify/route.ts",
+      "lines": 85,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/inquiries/signin-verify",
+      "kind": "api",
+      "methods": [
+        "POST"
+      ],
+      "auth": "public",
+      "guard": "public",
+      "imports": [
+        "@/lib/inquiry-signin",
+        "@/lib/prisma",
+        "@/lib/rate-limit",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/inquiries/upload/route.ts",
       "lines": 48,
       "purpose": "",
@@ -5475,7 +5530,7 @@
     },
     {
       "path": "src/app/for-courses/ForCoursesContent.tsx",
-      "lines": 567,
+      "lines": 730,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9243,7 +9298,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1736,
+      "lines": 1769,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9404,6 +9459,10 @@
           "kind": "fn"
         },
         {
+          "name": "sendInquirySigninCode",
+          "kind": "fn"
+        },
+        {
           "name": "sendMemberInviteEmail",
           "kind": "fn"
         },
@@ -9513,6 +9572,7 @@
         "src/app/api/golfer/auth/otp/request/route.ts",
         "src/app/api/inquiries/details/route.ts",
         "src/app/api/inquiries/route.ts",
+        "src/app/api/inquiries/signin-code/route.ts",
         "src/app/api/manage/[bookingId]/send-modified-email/route.ts",
         "src/app/api/member/[courseSlug]/send-code/route.ts",
         "src/app/api/membership/[id]/route.ts",
@@ -9997,6 +10057,70 @@
       ]
     },
     {
+      "path": "src/lib/inquiry-signin.ts",
+      "lines": 83,
+      "purpose": "SD-11 — the \"are you trying to sign in?\" challenge that sits between the public sign-up form and a course that already exists.",
+      "brain": [
+        "inquiry-signin-challenge"
+      ],
+      "exports": [
+        {
+          "name": "checkCode",
+          "kind": "fn"
+        },
+        {
+          "name": "CODE_TTL_SECONDS",
+          "kind": "const"
+        },
+        {
+          "name": "cookieOptions",
+          "kind": "const"
+        },
+        {
+          "name": "generateCode",
+          "kind": "fn"
+        },
+        {
+          "name": "hashCode",
+          "kind": "fn"
+        },
+        {
+          "name": "MAX_CODE_ATTEMPTS",
+          "kind": "const"
+        },
+        {
+          "name": "readChallenge",
+          "kind": "fn"
+        },
+        {
+          "name": "signChallenge",
+          "kind": "fn"
+        },
+        {
+          "name": "SIGNIN_COOKIE",
+          "kind": "const"
+        },
+        {
+          "name": "SigninChallenge",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "bcryptjs",
+        "crypto",
+        "jose"
+      ],
+      "usedBy": [
+        "src/app/api/inquiries/signin-code/route.ts",
+        "src/app/api/inquiries/signin-verify/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/inquiry-status.ts",
       "lines": 464,
       "purpose": "Single source of truth for what every inquiry status means and which pipeline segment it belongs to.",
@@ -10138,6 +10262,7 @@
         "src/app/api/admin/stats/route.ts",
         "src/app/api/call/[token]/route.ts",
         "src/app/api/inquiries/route.ts",
+        "src/app/api/inquiries/signin-code/route.ts",
         "src/lib/call-invite.ts",
         "src/lib/course-checkin.ts",
         "src/lib/inquiry-action-queue.ts"
@@ -10660,6 +10785,8 @@
         "src/app/api/health/route.ts",
         "src/app/api/inquiries/details/route.ts",
         "src/app/api/inquiries/route.ts",
+        "src/app/api/inquiries/signin-code/route.ts",
+        "src/app/api/inquiries/signin-verify/route.ts",
         "src/app/api/inquiries/upload/route.ts",
         "src/app/api/manage/[bookingId]/available-times/route.ts",
         "src/app/api/manage/[bookingId]/change-players/route.ts",
@@ -10785,6 +10912,8 @@
         "src/app/api/golfer/auth/otp/request/route.ts",
         "src/app/api/golfer/auth/otp/verify/route.ts",
         "src/app/api/inquiries/route.ts",
+        "src/app/api/inquiries/signin-code/route.ts",
+        "src/app/api/inquiries/signin-verify/route.ts",
         "src/app/api/inquiries/upload/route.ts",
         "src/app/api/manage/[bookingId]/available-times/route.ts",
         "src/app/api/manage/[bookingId]/change-players/route.ts",
@@ -13070,6 +13199,8 @@
         "src/app/api/call/[token]/route.ts",
         "src/app/api/inquiries/details/route.ts",
         "src/app/api/inquiries/route.ts",
+        "src/app/api/inquiries/signin-code/route.ts",
+        "src/app/api/inquiries/signin-verify/route.ts",
         "src/app/api/inquiries/upload/route.ts",
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/courses/route.ts",
@@ -13328,6 +13459,7 @@
         "src/app/api/auth/resend-verification/route.ts",
         "src/app/api/auth/reset-password/route.ts",
         "src/app/api/auth/verify/route.ts",
+        "src/app/api/inquiries/signin-verify/route.ts",
         "src/app/api/operator/change-password/route.ts",
         "src/app/api/operator/messages/route.ts",
         "src/app/api/operator/profile/route.ts",
@@ -13747,6 +13879,8 @@
         "src/app/api/call/[token]/route.ts",
         "src/app/api/inquiries/details/route.ts",
         "src/app/api/inquiries/route.ts",
+        "src/app/api/inquiries/signin-code/route.ts",
+        "src/app/api/inquiries/signin-verify/route.ts",
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/send/route.ts",
