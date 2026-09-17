@@ -1009,6 +1009,39 @@ export async function sendInquiryAlreadyBuilt(data: {
   });
 }
 
+// SD-11: the code that proves someone reads the address on file, sent when a
+// built course answers "yes, I am trying to sign in" on the public form. It is
+// NOT a way in — see lib/inquiry-signin.ts. The copy says so, because a code
+// email that implies it logs you in trains people to expect that.
+export async function sendInquirySigninCode(data: {
+  email: string; firstName: string; courseName: string; code: string;
+}) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">Your code is ${escHtml(data.code)}</h1>
+    <p style="margin:0 0 20px;color:#6b7280;font-size:15px;">
+      Someone just asked to get back into <strong>${escHtml(data.courseName)}</strong> from the GreenReserve
+      sign-up form. Enter this code on that page to confirm it&apos;s you, and we&apos;ll show you where to sign in.
+    </p>
+    <div style="text-align:center;margin:0 0 20px;padding:18px;background:#f4f4f5;border:1px solid #e4e4e7;border-radius:4px;">
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:32px;font-weight:700;letter-spacing:8px;color:#1b4332;">${escHtml(data.code)}</div>
+      <div style="margin-top:8px;color:#9ca3af;font-size:12px;">Expires in 10 minutes</div>
+    </div>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:13px;">
+      This code does not sign you in on its own &mdash; you&apos;ll still use your normal password.
+      <strong>If you didn&apos;t ask for it, ignore this email</strong>; nothing has changed and nobody has been let in.
+    </p>
+    <p style="margin:16px 0 0;color:#9ca3af;font-size:12px;text-align:center;">
+      Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>.
+    </p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.email,
+    subject: `${data.code} is your GreenReserve code`,
+    html,
+  });
+}
+
 export async function sendDetailsSheetConfirmationEmail(data: {
   firstName: string; contactName: string; email: string; courseName: string;
   details: Record<string, unknown>;
