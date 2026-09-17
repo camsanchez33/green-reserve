@@ -1,27 +1,17 @@
 {
-  "generatedAt": "2026-09-17T14:02:47.472Z",
+  "generatedAt": "2026-09-17T14:13:02.381Z",
   "repo": {
-    "head": "cfeb2e1",
+    "head": "2432aa8",
     "branch": "main",
-    "dirtyCount": 3,
+    "dirtyCount": 1,
     "dirty": [
-      "M RUN_QUEUE.md",
-      " M docs/CODEMAP.md",
-      " M docs/codemap.json"
+      "M RUN_QUEUE.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-16T16:29:04-04:00",
-    "unrecorded": [
-      {
-        "h": "5bf7e4b",
-        "date": "2026-09-16T17:40:57-04:00",
-        "subject": "Rate-limit setup-intent, and delete ARCHITECTURE.md's route tables",
-        "ids": [],
-        "matches": []
-      }
-    ]
+    "queueLastCommit": "2026-09-17T10:03:01-04:00",
+    "unrecorded": []
   },
   "counts": {
     "runDone": 194,
@@ -120,7 +110,7 @@
       "ageDays": 1
     },
     {
-      "title": "SD-11 (cfeb2e1) — BUILT 2026-09-17, review running. \"Are you trying to sign in?\" + a code, instead of a sign-in button",
+      "title": "SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box",
       "line": 2211,
       "hash": "cfeb2e1",
       "shipDate": "2026-09-17",
@@ -264,6 +254,11 @@
       "item": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
       "note": "CAM: confirm the state before this runs — e",
       "line": 1492
+    },
+    {
+      "item": "SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box",
+      "note": "pending Cam's walk below",
+      "line": 2211
     }
   ],
   "ideas": {
@@ -786,6 +781,16 @@
   },
   "recentCommits": [
     {
+      "h": "2432aa8",
+      "date": "2026-09-17",
+      "subject": "SD-11 review fixes: a cap that exists, a verifier the client cannot crack, and a way out of the dead end"
+    },
+    {
+      "h": "7970047",
+      "date": "2026-09-17",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "cfeb2e1",
       "date": "2026-09-17",
       "subject": "SD-11: ask before offering sign-in, and make them prove the inbox"
@@ -834,16 +839,6 @@
       "h": "30385cd",
       "date": "2026-09-16",
       "subject": "SECURITY follow-on review fixes: gate the already-built email, close the id oracle, stop the screen contradicting the email"
-    },
-    {
-      "h": "951433d",
-      "date": "2026-09-16",
-      "subject": "SECURITY follow-on: a built course's resubmit points at the dashboard, not at an admin diff"
-    },
-    {
-      "h": "063afa1",
-      "date": "2026-09-16",
-      "subject": "queue/spec update"
     }
   ]
 }

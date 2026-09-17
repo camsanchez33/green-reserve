@@ -2208,7 +2208,8 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   5. Lighthouse mobile on `/` — CLS no worse than H-1's recorded number (§5's
      own bar). The lockup moved near the top of the fold, which is the risk.
 
-- [ ] SD-11 (cfeb2e1) — BUILT 2026-09-17, review running. "Are you trying to sign in?" + a code, instead of a sign-in button
+- [ ] SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box
+  OPEN pending Cam's walk below. "Are you trying to sign in?" + a code, instead of a sign-in button
   (Cam 2026-09-16, answering the review question on the SECURITY follow-on):
   "the response to the sign up should be are you trying to sign in at x course?
   ... there should be a litte activity log listing that cause it has to be
@@ -2258,6 +2259,28 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
      told. Both outcomes, and a code requested from an email NOT on file, write
      to the activity ledger — which also closes the missing-admin-trace finding
      from the 30385cd audit.
+  REVIEW (2432aa8): security audit 8 findings, UX audit 4 (one blocking). All
+  fixed. The three that mattered:
+  1. The 5-attempt cap did not exist. The counter lived in the token and was
+     re-signed on each miss — which stops editing and does nothing about replay:
+     resending the ORIGINAL cookie reset it to zero on every guess. Now keyed on
+     a random challenge id server-side, in the RateLimit table, so an old cookie
+     lands on the same counter. Still no schema change.
+  2. The code's verifier was in the attacker's hands. httpOnly stops other sites
+     reading a cookie, not its owner, and a JWT claim is signed rather than
+     encrypted — so a bcrypt hash of a six-digit code was a verifier over a
+     10^6 keyspace, crackable offline in under a minute. Now an HMAC under a key
+     the client does not have.
+  3. BLOCKING UX: the code step said "start again" and offered no way to. After
+     the fifth miss the challenge is retired server-side, so every further
+     Confirm hit the same failure forever and the only escape was reloading and
+     re-filling a ten-field form. There is a "Send a new code" button now.
+  Also: every declining exit sets a cookie (Set-Cookie presence was an existence
+  oracle over public facts); a per-inquiry limit so a rotating IP pool cannot
+  bury a real timeline or mail a real operator thousands of times; mail fired
+  rather than awaited; lookups wrapped so a DB fault cannot turn the blind 200
+  into a 500; JWT_SECRET fails closed in production; attemptsLeft shown rather
+  than discarded; role="alert" on both banners.
   STILL CAM'S CALL: phone-on-file as a second channel is NOT built (email only).
   The operator 2FA code already falls back email→SMS, so the plumbing exists.
   CAM TO WALK (this replaces checks 11-14 of the 2026-09-17 sign-off walk):

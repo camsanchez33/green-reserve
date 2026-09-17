@@ -117,16 +117,10 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-09-17 14:02 UTC</span><span>main @ cfeb2e1</span>
-    <span>3 uncommitted</span>
+    <span>2026-09-17 14:13 UTC</span><span>main @ 2432aa8</span>
+    <span>1 uncommitted</span>
   </div>
 </header>
-<div class="alarm">
-<div class="lede">1 run has shipped that the queue doesn't know about</div>
-<p class="note">RUN_QUEUE.md was last committed 2026-09-16. These commits appear nowhere in it.</p>
-<ul>
-<li><span class="h">5bf7e4b</span><span>Rate-limit setup-intent, and delete ARCHITECTURE.md's route tables</span></li>
-</ul></div>
 <div class="tiles">
   <div class="tile t-good"><span class="n">194</span><span class="l">Done</span></div>
   <div class="tile t-warn"><span class="n">11</span><span class="l">Awaiting review</span></div>
@@ -138,7 +132,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card">
 <h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M RUN_QUEUE.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
+<ul class="plain"><li><code>M RUN_QUEUE.md</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -195,10 +189,10 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="row"><span class="t">MP-2e</span><span class="age">17d</span><span class="where">bf3bcb2</span></div>
 <div class="row"><span class="t">UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until r</span><span class="age">5d</span><span class="where">a3c1bea</span></div>
 <div class="row"><span class="t">SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED</span><span class="age">1d</span><span class="where">951433d</span></div>
-<div class="row"><span class="t">SD-11 (cfeb2e1) — BUILT 2026-09-17, review running. &quot;Are you trying to sign in?&quot; + a code, instead of a sign-in button</span><span class="age">0d</span><span class="where">cfeb2e1</span></div>
+<div class="row"><span class="t">SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box</span><span class="age">0d</span><span class="where">cfeb2e1</span></div>
 </div></section>
 <section><h2>Waiting on you, not on a build</h2>
-<ul class="plain"><li>CAM: three real dashboard screenshots into public/screenshots/ (empty, so the homepage shows three grey placeholder boxes) and a seeded demo course slug for DEMO_COURSE_SLUGS (empt <span class="where">:423</span></li><li>pending Cam's approval for a prod write <span class="where">:664</span></li><li>Cam's approval for a prod backfill <span class="where">:705</span></li><li>pending Cam's approval for a prod write <span class="where">:742</span></li><li>pending Cam's approval for a prod write <span class="where">:791</span></li><li>pending Cam's approval for a prod write <span class="where">:839</span></li><li>pending Cam's approval for a prod write <span class="where">:881</span></li><li>CAM: confirm the state before this runs — e <span class="where">:1492</span></li></ul>
+<ul class="plain"><li>CAM: three real dashboard screenshots into public/screenshots/ (empty, so the homepage shows three grey placeholder boxes) and a seeded demo course slug for DEMO_COURSE_SLUGS (empt <span class="where">:423</span></li><li>pending Cam's approval for a prod write <span class="where">:664</span></li><li>Cam's approval for a prod backfill <span class="where">:705</span></li><li>pending Cam's approval for a prod write <span class="where">:742</span></li><li>pending Cam's approval for a prod write <span class="where">:791</span></li><li>pending Cam's approval for a prod write <span class="where">:839</span></li><li>pending Cam's approval for a prod write <span class="where">:881</span></li><li>CAM: confirm the state before this runs — e <span class="where">:1492</span></li><li>pending Cam's walk below <span class="where">:2211</span></li></ul>
 </section>
 <section><h2>Parked, with triggers</h2><ul class="plain"><li>Role-shaped admin (parked 2026-08-26 — TRIGGER: first employee account provisioned)</li><li>Future admin tabs (from brainstorm 2026-07-09 — each has a TRIGGER, don't build early)</li></ul></section>
 </div></div>
@@ -243,6 +237,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">2432aa8</td><td class="num">2026-09-17</td><td>SD-11 review fixes: a cap that exists, a verifier the client cannot crack, and a way out of the dead end</td></tr>
+<tr><td class="num">7970047</td><td class="num">2026-09-17</td><td>queue/spec update</td></tr>
 <tr><td class="num">cfeb2e1</td><td class="num">2026-09-17</td><td>SD-11: ask before offering sign-in, and make them prove the inbox</td></tr>
 <tr><td class="num">5bf7e4b</td><td class="num">2026-09-16</td><td>Rate-limit setup-intent, and delete ARCHITECTURE.md's route tables</td></tr>
 <tr><td class="num">f5c5a5b</td><td class="num">2026-09-16</td><td>queue/spec update</td></tr>
@@ -253,8 +249,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">7d5b1e6</td><td class="num">2026-09-16</td><td>queue/spec update</td></tr>
 <tr><td class="num">f9ffa23</td><td class="num">2026-09-16</td><td>queue/spec update</td></tr>
 <tr><td class="num">30385cd</td><td class="num">2026-09-16</td><td>SECURITY follow-on review fixes: gate the already-built email, close the id oracle, stop the screen contradicting the email</td></tr>
-<tr><td class="num">951433d</td><td class="num">2026-09-16</td><td>SECURITY follow-on: a built course's resubmit points at the dashboard, not at an admin diff</td></tr>
-<tr><td class="num">063afa1</td><td class="num">2026-09-16</td><td>queue/spec update</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

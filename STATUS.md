@@ -4,23 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-17 14:02 UTC · branch `main` · HEAD `cfeb2e1` · working tree **3 dirty file(s)**
+Generated 2026-09-17 14:13 UTC · branch `main` · HEAD `2432aa8` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-09-16**. 1 commit(s) since then are not mentioned anywhere in it:
+None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-| commit | date | subject |
-|---|---|---|
-| `5bf7e4b` | 2026-09-16 | Rate-limit setup-intent, and delete ARCHITECTURE.md's route tables |
-
-**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (3 file(s))
+### Uncommitted working tree (1 file(s))
 
 - `M RUN_QUEUE.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -53,7 +45,7 @@ This is the distinction a raw checkbox count gets wrong.
 | MP-2e | 2026-08-30 | 17d | `bf3bcb2` | `RUN_QUEUE.md:881` |
 | UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | 2026-09-11 | 5d | `a3c1bea` | `RUN_QUEUE.md:2056` |
 | SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED | 2026-09-16 | 1d | `951433d` | `RUN_QUEUE.md:2098` |
-| SD-11 (cfeb2e1) — BUILT 2026-09-17, review running. "Are you trying to sign in?" + a code, instead of a sign-i | 2026-09-17 | 0d | `cfeb2e1` | `RUN_QUEUE.md:2211` |
+| SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box | 2026-09-17 | 0d | `cfeb2e1` | `RUN_QUEUE.md:2211` |
 
 ## Not started — the actual queue
 
@@ -87,6 +79,7 @@ This is the distinction a raw checkbox count gets wrong.
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:839`
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:881`
 - CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1492`
+- pending Cam's walk below — `RUN_QUEUE.md:2211`
 
 ## Revise campaign (page-by-page pass)
 
@@ -174,6 +167,8 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 
 ## Recent commits
 
+- `2432aa8` 2026-09-17 — SD-11 review fixes: a cap that exists, a verifier the client cannot crack, and a way out of the dead end
+- `7970047` 2026-09-17 — queue/spec update
 - `cfeb2e1` 2026-09-17 — SD-11: ask before offering sign-in, and make them prove the inbox
 - `5bf7e4b` 2026-09-16 — Rate-limit setup-intent, and delete ARCHITECTURE.md's route tables
 - `f5c5a5b` 2026-09-16 — queue/spec update
@@ -184,8 +179,6 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `7d5b1e6` 2026-09-16 — queue/spec update
 - `f9ffa23` 2026-09-16 — queue/spec update
 - `30385cd` 2026-09-16 — SECURITY follow-on review fixes: gate the already-built email, close the id oracle, stop the screen contradicting the email
-- `951433d` 2026-09-16 — SECURITY follow-on: a built course's resubmit points at the dashboard, not at an admin diff
-- `063afa1` 2026-09-16 — queue/spec update
 
 ---
 
