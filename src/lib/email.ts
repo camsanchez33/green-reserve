@@ -1042,6 +1042,35 @@ export async function sendInquirySigninCode(data: {
   });
 }
 
+// SD-11 review (HIGH): the "your login isn't ready" screen promises that the
+// team has been told and will be in touch. A ledger row nobody reads is not
+// being told. This is what makes that sentence true.
+export async function sendLockedOutOperatorAlert(data: {
+  courseName: string; inquiryId: string; operatorEmail: string; reason: 'no-account' | 'unverified';
+}) {
+  const why = data.reason === 'no-account'
+    ? 'No CourseOperator row exists for that address at all.'
+    : 'A CourseOperator row exists but its email is still unverified, so they cannot complete a login.';
+  const html = baseTemplate(`
+    <h2 style="margin:0 0 4px;color:#111827;font-size:20px;font-weight:700;">An operator proved their email and still cannot get in</h2>
+    <p style="margin:0 0 12px;color:#6b7280;font-size:14px;">
+      Someone at <strong>${escHtml(data.courseName)}</strong> used the public sign-up form, confirmed a code sent to
+      <strong>${escHtml(data.operatorEmail)}</strong> &mdash; so they do read that inbox &mdash; and hit a dead end.
+    </p>
+    <p style="margin:0 0 16px;color:#374151;font-size:13px;">${escHtml(why)}</p>
+    <p style="margin:0 0 16px;color:#6b7280;font-size:13px;">They were told someone would email them. That is this email&apos;s job.</p>
+    <a href="${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/admin/inquiries/${data.inquiryId}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;">Open the inquiry &rarr;</a>
+  `);
+  const r = await getResend().emails.send({
+    from: FROM,
+    to: 'hello@greenreserve.app',
+    replyTo: data.operatorEmail,
+    subject: `Locked out: ${subj(data.courseName)} confirmed their email but has no login`,
+    html,
+  });
+  if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
+}
+
 export async function sendDetailsSheetConfirmationEmail(data: {
   firstName: string; contactName: string; email: string; courseName: string;
   details: Record<string, unknown>;

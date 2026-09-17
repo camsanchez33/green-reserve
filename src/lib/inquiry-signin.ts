@@ -13,19 +13,31 @@
 // dashboard that moves money. So a correct code buys exactly one thing: we tell
 // them which address their account uses and point them at the real login.
 //
-// NO SCHEMA CHANGE. The challenge lives in a signed, short-lived, httpOnly
-// cookie rather than new columns on CourseInquiry — schema changes here are
-// attended work (CLAUDE.md), and this needs no durable state: the code is
-// useless after ten minutes and belongs to one browser. The attempt counter
-// rides in the same cookie and is re-signed on every miss, so it cannot be
-// edited away; a per-IP limit in front covers someone throwing the cookie away
-// to reset it.
+// NO SCHEMA CHANGE. The challenge is a signed, short-lived, httpOnly cookie —
+// schema changes here are attended work (CLAUDE.md), and there is nothing
+// durable to keep: the code dies in ten minutes and belongs to one browser.
 
 import { SignJWT, jwtVerify } from 'jose';
-import { randomInt } from 'crypto';
-import bcrypt from 'bcryptjs';
+import { randomInt, randomUUID, createHmac, timingSafeEqual } from 'crypto';
 
-const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'dev-secret-change-me');
+// Fails CLOSED in production, like every sibling token lib in this codebase
+// (auth.ts, admin-session.ts, member-session.ts, owner-totp.ts, golfer-otp.ts,
+// preview-token.ts). The first version took the dev fallback unconditionally and
+// was the only one of the seven that did: with JWT_SECRET unset in production
+// anyone could forge a challenge for any inquiry id under a published string.
+// The dev fallback itself is the convention and stays — a local checkout has no
+// JWT_SECRET and every one of those six libs would refuse to load without it.
+const rawSecret =
+  process.env.JWT_SECRET ||
+  (process.env.NODE_ENV !== 'production' ? 'dev-secret-change-me' : undefined);
+if (!rawSecret) {
+  throw new Error('JWT_SECRET is not set — refusing to sign sign-in challenges in production');
+}
+// Narrowed once here rather than inside macCode: TypeScript does not carry the
+// throw above into a function body, and `rawSecret!` would silence the check
+// that is the whole point of the lines above it.
+const MAC_KEY: string = rawSecret;
+const secret = new TextEncoder().encode(MAC_KEY);
 
 export const SIGNIN_COOKIE = 'gr_signin_challenge';
 export const MAX_CODE_ATTEMPTS = 5;
@@ -34,18 +46,43 @@ export const CODE_TTL_SECONDS = 600;
 
 export interface SigninChallenge {
   inquiryId: string;
-  /** bcrypt hash — the plaintext code exists only in the email. */
-  codeHash: string;
-  attempts: number;
+  /** Random per challenge. The attempt counter is keyed on it SERVER-side, so a
+   *  replayed cookie cannot reset the count — see verifyAttemptKey below. */
+  cid: string;
+  /** HMAC, not bcrypt. A JWT claim is signed, not encrypted, so the client holds
+   *  whatever goes in here: a bcrypt hash of a six-digit code is a verifier for a
+   *  10^6 keyspace, crackable offline in under a minute on one GPU, which makes
+   *  the TTL and both rate limits irrelevant. An HMAC under a key the client does
+   *  not have cannot be attacked offline at all, and a short code needs no work
+   *  factor once its verifier is unguessable. */
+  codeMac: string;
 }
 
 export function generateCode(): string {
   return randomInt(100000, 1000000).toString();
 }
 
-export async function hashCode(code: string): Promise<string> {
-  return bcrypt.hash(code, 10);
+export function newChallengeId(): string {
+  return randomUUID();
 }
+
+/** Bound to the challenge id, so a MAC from one challenge cannot be presented
+ *  against another. */
+export function macCode(cid: string, code: string): string {
+  return createHmac('sha256', MAC_KEY).update(`${cid}:${code}`).digest('hex');
+}
+
+export function codeMatches(cid: string, code: string, mac: string): boolean {
+  const expected = Buffer.from(macCode(cid, code), 'utf8');
+  const given = Buffer.from(mac, 'utf8');
+  if (expected.length !== given.length) return false;
+  return timingSafeEqual(expected, given);
+}
+
+/** The server-side attempt counter's key. Rides on the existing RateLimit table
+ *  rather than a new column, and is derived from the cid INSIDE the token, so
+ *  replaying an older cookie lands on the same counter. */
+export const verifyAttemptKey = (cid: string) => `signin-attempt:${cid}`;
 
 export async function signChallenge(c: SigninChallenge): Promise<string> {
   return new SignJWT({ ...c, type: 'signin_challenge' })
@@ -60,16 +97,20 @@ export async function readChallenge(token: string | undefined): Promise<SigninCh
   try {
     const { payload } = await jwtVerify(token, secret);
     if (payload.type !== 'signin_challenge') return null;
-    if (typeof payload.inquiryId !== 'string' || typeof payload.codeHash !== 'string') return null;
-    const attempts = typeof payload.attempts === 'number' ? payload.attempts : 0;
-    return { inquiryId: payload.inquiryId, codeHash: payload.codeHash, attempts };
+    const { inquiryId, cid, codeMac } = payload as Record<string, unknown>;
+    if (typeof inquiryId !== 'string' || typeof cid !== 'string' || typeof codeMac !== 'string') return null;
+    return { inquiryId, cid, codeMac };
   } catch {
     return null;
   }
 }
 
-export async function checkCode(code: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(code, hash);
+/** A challenge that cannot succeed, for the paths that must not admit they found
+ *  nothing. The route sets one of these whenever it declines, so the presence of
+ *  a Set-Cookie header stops being an answer. */
+export function inertChallenge(): SigninChallenge {
+  const cid = newChallengeId();
+  return { inquiryId: 'none', cid, codeMac: macCode(cid, generateCode() + '-never-sent') };
 }
 
 /** Same options everywhere, so the cookie cannot be cleared in one place and

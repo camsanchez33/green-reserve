@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { rateLimit, evidentiaryIp } from '@/lib/rate-limit';
-import { SIGNIN_COOKIE, MAX_CODE_ATTEMPTS, CODE_TTL_SECONDS, cookieOptions, checkCode, readChallenge, signChallenge } from '@/lib/inquiry-signin';
+import { rateLimit, rateLimitCount, evidentiaryIp } from '@/lib/rate-limit';
+import { sendLockedOutOperatorAlert } from '@/lib/email';
+import {
+  SIGNIN_COOKIE, MAX_CODE_ATTEMPTS, cookieOptions,
+  codeMatches, readChallenge, verifyAttemptKey, CODE_TTL_SECONDS,
+} from '@/lib/inquiry-signin';
 
 // SD-11 step 3. A correct code proves the person reads the address on file.
 // It does NOT sign them in — see the note at the top of lib/inquiry-signin.ts.
@@ -20,29 +24,40 @@ export async function POST(req: NextRequest) {
   // earlier request had found a real course.
   if (!challenge) return NextResponse.json({ error: GENERIC }, { status: 400 });
 
-  const body = await req.json().catch(() => ({}));
-  const code = String(body.code || '').trim();
-
-  if (challenge.attempts >= MAX_CODE_ATTEMPTS) {
-    const dead = NextResponse.json({ error: 'Too many wrong codes. Start again.' }, { status: 429 });
+  // REVIEW FIX (cfeb2e1 audit): the attempt counter used to live INSIDE the
+  // token, re-signed on each miss. That stops someone editing it down and does
+  // nothing about replay — you do not need to edit a token you already have, and
+  // resending the original cookie reset the count to zero on every guess, so the
+  // cap did not exist. The counter now hangs off the challenge id on the server,
+  // in the RateLimit table this codebase already has, so an old cookie lands on
+  // the same counter. No schema change, and a real cap this time.
+  const cap = await rateLimitCount(verifyAttemptKey(challenge.cid), MAX_CODE_ATTEMPTS, CODE_TTL_SECONDS);
+  const attemptsLeft = Math.max(0, MAX_CODE_ATTEMPTS - cap.used);
+  if (!cap.allowed) {
+    const dead = NextResponse.json({ error: 'Too many wrong codes. Send yourself a new one.' }, { status: 429 });
     dead.cookies.set(SIGNIN_COOKIE, '', { ...cookieOptions, maxAge: 0 });
     return dead;
   }
 
-  const ok = code.length === 6 && await checkCode(code, challenge.codeHash);
-  if (!ok) {
-    // Re-signed rather than incremented client-side, so the counter cannot be
-    // edited back down by anyone holding the cookie.
-    const next = await signChallenge({ ...challenge, attempts: challenge.attempts + 1 });
-    const res = NextResponse.json({ error: GENERIC, attemptsLeft: MAX_CODE_ATTEMPTS - challenge.attempts - 1 }, { status: 400 });
-    res.cookies.set(SIGNIN_COOKIE, next, { ...cookieOptions, maxAge: CODE_TTL_SECONDS });
-    return res;
+  const body = await req.json().catch(() => ({}));
+  const code = String(body.code || '').trim();
+
+  if (code.length !== 6 || !codeMatches(challenge.cid, code, challenge.codeMac)) {
+    // The count the limiter already had. Without it the lockout arrived with no
+    // warning it was coming.
+    return NextResponse.json({ error: GENERIC, attemptsLeft }, { status: 400 });
   }
 
-  const inquiry = await prisma.courseInquiry.findUnique({
-    where: { id: challenge.inquiryId },
-    select: { id: true, status: true, email: true, courseName: true, builtCourseId: true },
-  });
+  let inquiry;
+  try {
+    inquiry = await prisma.courseInquiry.findUnique({
+      where: { id: challenge.inquiryId },
+      select: { id: true, status: true, email: true, courseName: true, builtCourseId: true },
+    });
+  } catch (err) {
+    console.error('signin-verify lookup failed:', err);
+    return NextResponse.json({ error: GENERIC }, { status: 400 });
+  }
   if (!inquiry || !inquiry.builtCourseId) {
     return NextResponse.json({ error: GENERIC }, { status: 400 });
   }
@@ -53,9 +68,22 @@ export async function POST(req: NextRequest) {
   const operator = await prisma.courseOperator.findUnique({
     where: { email: inquiry.email.trim().toLowerCase() },
     select: { id: true, emailVerified: true },
-  });
+  }).catch(() => null);
   const hasAccount = !!operator;
   const needsSetup = !!operator && operator.emailVerified === false;
+
+  // REVIEW FIX (UX audit, HIGH): the screen tells this person the team has been
+  // told and will email them. A ledger row is a record, not a notification —
+  // nothing reads it unless someone happens to open that inquiry. So send the
+  // actual email, and let it reply straight back to them.
+  if (!hasAccount || needsSetup) {
+    sendLockedOutOperatorAlert({
+      courseName: inquiry.courseName,
+      inquiryId: inquiry.id,
+      operatorEmail: inquiry.email,
+      reason: hasAccount ? 'unverified' : 'no-account',
+    }).catch(err => console.error('locked-out operator alert failed:', err));
+  }
 
   await prisma.inquiryStatusEvent.create({
     data: {
@@ -74,7 +102,7 @@ export async function POST(req: NextRequest) {
   const res = NextResponse.json({
     ok: true,
     courseName: inquiry.courseName,
-    // Safe to return: they have just proved they read this inbox.
+    // Safe to return: they had to type this address to get a challenge at all.
     loginEmail: inquiry.email,
     hasAccount,
     needsSetup,

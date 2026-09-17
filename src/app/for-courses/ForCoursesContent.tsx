@@ -114,6 +114,9 @@ export default function ForCoursesContent() {
   const [signinCode, setSigninCode] = useState('');
   const [signinBusy, setSigninBusy] = useState(false);
   const [signinError, setSigninError] = useState('');
+  // True once the server has retired the challenge — the only way forward is a
+  // fresh code, so the Confirm button stops pretending otherwise.
+  const [signinLocked, setSigninLocked] = useState(false);
   const [signinResult, setSigninResult] = useState<{ loginEmail: string; hasAccount: boolean; needsSetup: boolean } | null>(null);
   const [submittedCourse, setSubmittedCourse] = useState({ courseName: '', city: '', state: '' });
   const [serverError, setServerError] = useState('');
@@ -206,7 +209,7 @@ export default function ForCoursesContent() {
 
   // SD-11 step 2: they said yes. The code goes to the address ON FILE.
   const requestSigninCode = async () => {
-    setSigninBusy(true); setSigninError('');
+    setSigninBusy(true); setSigninError(''); setSigninCode(''); setSigninLocked(false);
     try {
       const res = await fetch('/api/inquiries/signin-code', {
         method: 'POST',
@@ -237,7 +240,15 @@ export default function ForCoursesContent() {
       });
       const d = await res.json().catch(() => ({}));
       if (!res.ok || !d.ok) {
-        setSigninError(d.error || 'That code is not right. Check the email and try again.');
+        // The server already works out how many tries are left; it was being
+        // thrown away, so the lockout arrived with no warning it was coming.
+        const left = typeof d.attemptsLeft === 'number' ? d.attemptsLeft : null;
+        const base = d.error || 'That code is not right. Check the email and try again.';
+        setSigninError(left !== null && left > 0 ? `${base} ${left} attempt${left === 1 ? '' : 's'} left.` : base);
+        setSigninCode('');
+        // 429 means the cookie is gone server-side: no code can succeed now, so
+        // sending a new one is the only move left, and the step has to offer it.
+        if (res.status === 429) setSigninLocked(true);
       } else {
         setSigninResult({ loginEmail: d.loginEmail, hasAccount: !!d.hasAccount, needsSetup: !!d.needsSetup });
         setSigninStep('done');
@@ -270,7 +281,7 @@ export default function ForCoursesContent() {
             </p>
 
             {signinError && (
-              <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm mb-4">{signinError}</div>
+              <div role="alert" className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm mb-4">{signinError}</div>
             )}
 
             <button
@@ -302,7 +313,7 @@ export default function ForCoursesContent() {
             </p>
 
             {signinError && (
-              <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm mb-4">{signinError}</div>
+              <div role="alert" className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm mb-4">{signinError}</div>
             )}
 
             <label htmlFor="signin-code" className="sr-only">Six-digit code</label>
@@ -320,10 +331,20 @@ export default function ForCoursesContent() {
             <button
               type="button"
               onClick={verifySigninCode}
-              disabled={signinBusy || signinCode.length !== 6}
+              disabled={signinBusy || signinLocked || signinCode.length !== 6}
               className="flex items-center justify-center gap-2 w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-sm transition-colors disabled:opacity-50 mb-3"
             >
               {signinBusy ? 'Checking...' : 'Confirm'}
+            </button>
+            {/* The way out of every failure on this step. Without it, "start
+                again" meant reloading the page and re-filling the whole form. */}
+            <button
+              type="button"
+              onClick={requestSigninCode}
+              disabled={signinBusy}
+              className="w-full bg-paper border border-line hover:border-line-strong text-ink-soft py-2.5 rounded-md font-medium text-[12.5px] transition-colors disabled:opacity-50 mb-3"
+            >
+              {signinBusy ? 'Sending...' : 'Send a new code'}
             </button>
             <p className="text-center text-xs text-ink-muted">
               Didn&apos;t arrive? Check spam, or{' '}

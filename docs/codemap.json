@@ -2981,7 +2981,7 @@
     },
     {
       "path": "src/app/api/inquiries/signin-code/route.ts",
-      "lines": 93,
+      "lines": 132,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3009,7 +3009,7 @@
     },
     {
       "path": "src/app/api/inquiries/signin-verify/route.ts",
-      "lines": 85,
+      "lines": 113,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3026,6 +3026,7 @@
       "auth": "public",
       "guard": "public",
       "imports": [
+        "@/lib/email",
         "@/lib/inquiry-signin",
         "@/lib/prisma",
         "@/lib/rate-limit",
@@ -5530,7 +5531,7 @@
     },
     {
       "path": "src/app/for-courses/ForCoursesContent.tsx",
-      "lines": 730,
+      "lines": 751,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9298,7 +9299,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1769,
+      "lines": 1798,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9463,6 +9464,10 @@
           "kind": "fn"
         },
         {
+          "name": "sendLockedOutOperatorAlert",
+          "kind": "fn"
+        },
+        {
           "name": "sendMemberInviteEmail",
           "kind": "fn"
         },
@@ -9573,6 +9578,7 @@
         "src/app/api/inquiries/details/route.ts",
         "src/app/api/inquiries/route.ts",
         "src/app/api/inquiries/signin-code/route.ts",
+        "src/app/api/inquiries/signin-verify/route.ts",
         "src/app/api/manage/[bookingId]/send-modified-email/route.ts",
         "src/app/api/member/[courseSlug]/send-code/route.ts",
         "src/app/api/membership/[id]/route.ts",
@@ -10058,19 +10064,19 @@
     },
     {
       "path": "src/lib/inquiry-signin.ts",
-      "lines": 83,
+      "lines": 124,
       "purpose": "SD-11 — the \"are you trying to sign in?\" challenge that sits between the public sign-up form and a course that already exists.",
       "brain": [
         "inquiry-signin-challenge"
       ],
       "exports": [
         {
-          "name": "checkCode",
-          "kind": "fn"
-        },
-        {
           "name": "CODE_TTL_SECONDS",
           "kind": "const"
+        },
+        {
+          "name": "codeMatches",
+          "kind": "fn"
         },
         {
           "name": "cookieOptions",
@@ -10081,12 +10087,20 @@
           "kind": "fn"
         },
         {
-          "name": "hashCode",
+          "name": "inertChallenge",
+          "kind": "fn"
+        },
+        {
+          "name": "macCode",
           "kind": "fn"
         },
         {
           "name": "MAX_CODE_ATTEMPTS",
           "kind": "const"
+        },
+        {
+          "name": "newChallengeId",
+          "kind": "fn"
         },
         {
           "name": "readChallenge",
@@ -10103,6 +10117,10 @@
         {
           "name": "SigninChallenge",
           "kind": "type"
+        },
+        {
+          "name": "verifyAttemptKey",
+          "kind": "fn"
         }
       ],
       "route": null,
@@ -10111,7 +10129,6 @@
       "auth": null,
       "guard": null,
       "imports": [
-        "bcryptjs",
         "crypto",
         "jose"
       ],
@@ -10870,7 +10887,7 @@
     },
     {
       "path": "src/lib/rate-limit.ts",
-      "lines": 49,
+      "lines": 78,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10884,6 +10901,10 @@
         },
         {
           "name": "rateLimit",
+          "kind": "fn"
+        },
+        {
+          "name": "rateLimitCount",
           "kind": "fn"
         }
       ],
