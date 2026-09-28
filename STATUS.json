@@ -1,21 +1,24 @@
 {
-  "generatedAt": "2026-09-28T16:24:20.128Z",
+  "generatedAt": "2026-09-28T20:24:25.053Z",
   "repo": {
-    "head": "70a424e",
+    "head": "8b9a046",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 1,
+    "dirtyCount": 4,
     "dirty": [
-      "M RUN_QUEUE.md"
+      "M RUN_QUEUE.md",
+      " M STATUS.artifact.html",
+      " M STATUS.json",
+      " M STATUS.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-28T16:17:49+00:00",
+    "queueLastCommit": "2026-09-28T16:24:20+00:00",
     "unrecorded": []
   },
   "counts": {
     "runDone": 194,
-    "runAwaiting": 12,
+    "runAwaiting": 13,
     "runInFlight": 1,
     "runNotStarted": 20,
     "reviseDone": 14,
@@ -57,6 +60,13 @@
       "title": "SD-8d — browser Back still discards unsaved Settings edits (from the",
       "line": 536,
       "hash": "70a424e",
+      "shipDate": "2026-09-28",
+      "ageDays": 0
+    },
+    {
+      "title": "BUG: inquiry submissions send no emails",
+      "line": 2432,
+      "hash": "8b9a046",
       "shipDate": "2026-09-28",
       "ageDays": 0
     },
@@ -217,12 +227,12 @@
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2432,
+      "line": 2453,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2577,
+      "line": 2598,
       "section": "Queue (run in this order)"
     }
   ],
@@ -271,6 +281,11 @@
       "item": "SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box",
       "note": "pending Cam's walk below",
       "line": 2229
+    },
+    {
+      "item": "BUG: inquiry submissions send no emails",
+      "note": "Cam: \"after submitting an inquiry they aren't getting sent an email",
+      "line": 2432
     }
   ],
   "ideas": {
@@ -352,7 +367,7 @@
       "file": "CLAUDE.md",
       "openRefs": 3,
       "lastTouched": "2026-09-16",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
@@ -514,6 +529,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "8b9a046",
+      "date": "2026-09-28",
+      "subject": "Fix: inquiry submissions send no emails"
+    },
+    {
+      "h": "2a7989f",
+      "date": "2026-09-28",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "70a424e",
       "date": "2026-09-28",
       "subject": "SD-8d: ask before browser Back discards unsaved Settings edits"
@@ -562,16 +587,6 @@
       "h": "f5c5a5b",
       "date": "2026-09-16",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "063507f",
-      "date": "2026-09-16",
-      "subject": "CODEMAP review fixes: a guard is enforcement, not a mention"
-    },
-    {
-      "h": "f924e07",
-      "date": "2026-09-16",
-      "subject": "CODEMAP_SPEC CM-1: a generated map of the code, so agents stop reading files to find things"
     }
   ]
 }

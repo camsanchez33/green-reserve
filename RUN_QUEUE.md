@@ -2429,6 +2429,27 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
      by guarded APIs today, so nothing is exposed — but nothing stops a future
      edit from putting real data in them either.
 
+- [ ] BUG: inquiry submissions send no emails — SHIPPED 8b9a046, 2026-09-28,
+  box open until /gr-review. Cam: "after submitting an inquiry they aren't
+  getting sent an email." /api/inquiries started every send without awaiting
+  and returned; Vercel freezes the function once the response is sent, so the
+  sends died with it. Since 722934f (SC-2 review) nothing on the new-lead path
+  was awaited at all — before it, the awaited invite send kept the function
+  alive long enough. Fix wraps all four send sites in next/server after(), as
+  operator/sign already does. NOT confirmed from Vercel logs (no access from
+  the session) — if mail still does not arrive, check RESEND_API_KEY and the
+  Resend domain status next.
+  SAME PATTERN, NOT FIXED (candidate sweep item, Cam to approve): ~20 other
+  unawaited send*/deliver* calls with no after(), incl. the inquiry sign-in
+  code (inquiries/signin-code:111), operator welcome + dashboard-access emails
+  (admin/inquiries:428/472/497/1081, admin/create-course:170), details-sheet
+  emails (inquiries/details:115/120), member invites (operator/members:123/165),
+  membership receipt (membership/[id]:127). Find them with:
+  grep -rnE "^\s+(send|deliver)[A-Za-z]+\(" src/app/api src/lib | grep -v "await\|return\|after("
+  CAM TO WALK: submit the form at /for-courses with an inbox you control →
+  confirmation email (with the call-setup button) arrives; hello@ gets the
+  new-lead alert.
+
 - [ ] EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)
   (Renamed from A-1 — REVISE_QUEUE.md already owns A-01…A-13.)
 

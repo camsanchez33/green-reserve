@@ -4,15 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-28 16:24 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `70a424e` · working tree **1 dirty file(s)**
+Generated 2026-09-28 20:24 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `8b9a046` · working tree **4 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-### Uncommitted working tree (1 file(s))
+### Uncommitted working tree (4 file(s))
 
 - `M RUN_QUEUE.md`
+- `M STATUS.artifact.html`
+- `M STATUS.json`
+- `M STATUS.md`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -38,6 +41,7 @@ This is the distinction a raw checkbox count gets wrong.
 | SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED | 2026-09-16 | 12d | `951433d` | `RUN_QUEUE.md:2116` |
 | SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box | 2026-09-17 | 11d | `cfeb2e1` | `RUN_QUEUE.md:2229` |
 | SD-8d — browser Back still discards unsaved Settings edits (from the | 2026-09-28 | 0d | `70a424e` | `RUN_QUEUE.md:536` |
+| BUG: inquiry submissions send no emails | 2026-09-28 | 0d | `8b9a046` | `RUN_QUEUE.md:2432` |
 | MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | — | — | — | `RUN_QUEUE.md:617` |
 | MP-1 | — | — | — | `RUN_QUEUE.md:647` |
 | MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | — | — | — | `RUN_QUEUE.md:682` |
@@ -68,8 +72,8 @@ This is the distinction a raw checkbox count gets wrong.
 16. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1406`
 17. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1455`
 18. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1510`
-19. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2432`
-20. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2577`
+19. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2453`
+20. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2598`
 
 ## Waiting on you (not on a build)
 
@@ -82,6 +86,7 @@ This is the distinction a raw checkbox count gets wrong.
 - pending Cam's approval for a prod write — `RUN_QUEUE.md:899`
 - CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1510`
 - pending Cam's walk below — `RUN_QUEUE.md:2229`
+- Cam: "after submitting an inquiry they aren't getting sent an email — `RUN_QUEUE.md:2432`
 
 ## Revise campaign (page-by-page pass)
 
@@ -126,7 +131,7 @@ This is the distinction a raw checkbox count gets wrong.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `ARCHITECTURE.md` | 4 | 2026-09-16 | 11d |
-| `CLAUDE.md` | 3 | 2026-09-16 | 11d |
+| `CLAUDE.md` | 3 | 2026-09-16 | 12d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-15 | 12d |
 | `ADMIN_V4_SPEC.md` | 1 | 2026-09-15 | 12d |
 | `UI_REVISE_SPEC.md` | 1 | 2026-09-16 | 12d |
@@ -156,6 +161,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `8b9a046` 2026-09-28 — Fix: inquiry submissions send no emails
+- `2a7989f` 2026-09-28 — queue/spec update
 - `70a424e` 2026-09-28 — SD-8d: ask before browser Back discards unsaved Settings edits
 - `d4a5d40` 2026-09-28 — queue/spec update
 - `3aff643` 2026-09-28 — queue/spec update
@@ -166,9 +173,7 @@ This is the distinction a raw checkbox count gets wrong.
 - `cfeb2e1` 2026-09-17 — SD-11: ask before offering sign-in, and make them prove the inbox
 - `5bf7e4b` 2026-09-16 — Rate-limit setup-intent, and delete ARCHITECTURE.md's route tables
 - `f5c5a5b` 2026-09-16 — queue/spec update
-- `063507f` 2026-09-16 — CODEMAP review fixes: a guard is enforcement, not a mention
-- `f924e07` 2026-09-16 — CODEMAP_SPEC CM-1: a generated map of the code, so agents stop reading files to find things
 
 ---
 
-**Totals:** 194 done · 12 awaiting review · 1 in flight · 20 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 194 done · 13 awaiting review · 1 in flight · 20 not started · 8 revise pages open · 15 ideas · 2 parked.
