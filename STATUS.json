@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-28T22:58:54.312Z",
+  "generatedAt": "2026-09-28T23:59:16.556Z",
   "repo": {
-    "head": "fdd9c0c",
+    "head": "8a92a94",
     "branch": "claude/eager-maxwell-qf1pd0",
     "dirtyCount": 1,
     "dirty": [
@@ -10,7 +10,7 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-28T20:24:25+00:00",
+    "queueLastCommit": "2026-09-28T22:58:54+00:00",
     "unrecorded": []
   },
   "counts": {
@@ -229,7 +229,7 @@
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2598,
+      "line": 2602,
       "section": "Queue (run in this order)"
     }
   ],
@@ -526,6 +526,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "e4f3b3b",
+      "date": "2026-09-28",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "fdd9c0c",
       "date": "2026-09-28",
       "subject": "Fix: 20 more email sends died when the response returned"
@@ -579,11 +584,6 @@
       "h": "7970047",
       "date": "2026-09-17",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "cfeb2e1",
-      "date": "2026-09-17",
-      "subject": "SD-11: ask before offering sign-in, and make them prove the inbox"
     }
   ]
 }

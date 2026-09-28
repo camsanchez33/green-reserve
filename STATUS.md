@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-28 22:58 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `fdd9c0c` · working tree **1 dirty file(s)**
+Generated 2026-09-28 23:59 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `8a92a94` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -70,7 +70,7 @@ This is the distinction a raw checkbox count gets wrong.
 17. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1455`
 18. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1510`
 19. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2453`
-20. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2598`
+20. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2602`
 
 ## Waiting on you (not on a build)
 
@@ -158,6 +158,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `e4f3b3b` 2026-09-28 — queue/spec update
 - `fdd9c0c` 2026-09-28 — Fix: 20 more email sends died when the response returned
 - `f76c618` 2026-09-28 — queue/spec update
 - `8b9a046` 2026-09-28 — Fix: inquiry submissions send no emails
@@ -169,7 +170,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `ded9ed6` 2026-09-17 — queue/spec update
 - `2432aa8` 2026-09-17 — SD-11 review fixes: a cap that exists, a verifier the client cannot crack, and a way out of the dead end
 - `7970047` 2026-09-17 — queue/spec update
-- `cfeb2e1` 2026-09-17 — SD-11: ask before offering sign-in, and make them prove the inbox
 
 ---
 
