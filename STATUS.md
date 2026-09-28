@@ -4,18 +4,11 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-17 14:13 UTC · branch `main` · HEAD `2432aa8` · working tree **1 dirty file(s)**
+Generated 2026-09-28 16:17 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `3aff643` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
-
-### Uncommitted working tree (1 file(s))
-
-- `M RUN_QUEUE.md`
-
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
 
 ## In flight
 
@@ -35,17 +28,17 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 18d | `7246a62` | `RUN_QUEUE.md:599` |
-| MP-1 | 2026-08-29 | 18d | `41f5ea8` | `RUN_QUEUE.md:629` |
-| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 18d | `4ef11dd` | `RUN_QUEUE.md:664` |
-| MP-2 | 2026-08-29 | 18d | `958f229` | `RUN_QUEUE.md:705` |
-| MP-2b | 2026-08-29 | 18d | `a134af5` | `RUN_QUEUE.md:742` |
-| MP-2c | 2026-08-29 | 18d | `e5b5413` | `RUN_QUEUE.md:791` |
-| MP-2d | 2026-08-29 | 18d | `22d0f68` | `RUN_QUEUE.md:839` |
-| MP-2e | 2026-08-30 | 17d | `bf3bcb2` | `RUN_QUEUE.md:881` |
-| UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | 2026-09-11 | 5d | `a3c1bea` | `RUN_QUEUE.md:2056` |
-| SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED | 2026-09-16 | 1d | `951433d` | `RUN_QUEUE.md:2098` |
-| SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box | 2026-09-17 | 0d | `cfeb2e1` | `RUN_QUEUE.md:2211` |
+| SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED | 2026-09-16 | 12d | `951433d` | `RUN_QUEUE.md:2098` |
+| SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box | 2026-09-17 | 11d | `cfeb2e1` | `RUN_QUEUE.md:2211` |
+| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | — | — | — | `RUN_QUEUE.md:599` |
+| MP-1 | — | — | — | `RUN_QUEUE.md:629` |
+| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | — | — | — | `RUN_QUEUE.md:664` |
+| MP-2 | — | — | — | `RUN_QUEUE.md:705` |
+| MP-2b | — | — | — | `RUN_QUEUE.md:742` |
+| MP-2c | — | — | — | `RUN_QUEUE.md:791` |
+| MP-2d | — | — | — | `RUN_QUEUE.md:839` |
+| MP-2e | — | — | — | `RUN_QUEUE.md:881` |
+| UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | — | — | — | `RUN_QUEUE.md:2056` |
 
 ## Not started — the actual queue
 
@@ -68,6 +61,8 @@ This is the distinction a raw checkbox count gets wrong.
 17. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1388`
 18. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1437`
 19. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1492`
+20. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2414`
+21. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2559`
 
 ## Waiting on you (not on a build)
 
@@ -117,56 +112,46 @@ This is the distinction a raw checkbox count gets wrong.
 - Dashboard screenshots → public/screenshots/dashboard-1/2/3.png (Cam captures — retake AFTER Clubhouse sweep)
 - Course hero photos: upload flow for course pages (D3 adds the slot)
 
-## Ideas bank — AUDIT_MASTER.md
-
-Page-by-page findings and maybes. **Noticed, not scheduled** — nothing here is on the queue
-until it becomes a RUN_QUEUE item. Counts are unfixed findings as written in that file.
-
-Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across 43 page blocks; 15 of them carry ideas.
-
-| page | verdict | sec | money | polish | ideas |
-|---|---|---|---|---|---|
-| /dashboard — Tee sheet (+ ?tab=analytics) | Reshape (strip onboarding chrome once live; this is the product). | 2 | 6 | 5 | yes |
-| /admin/courses (+ /[id]) — Fleet | Reshape list (put the evidence on rows); detail 10 tabs → 6. | 2 | 4 | 1 | yes |
-| /dashboard/settings — 9-tab settings | Reshape (split 9 tabs → 5; close the write-holes). | 2 | 3 | 3 | yes |
-| /admin/inquiries (+ /[id]) — Pipeline | Reshape list queue-first; keep detail (best-built admin page). | 2 | 3 | 1 | yes |
-| /courses/[slug] — The course page (storefront) | Keep + reshape — the strongest page in the product. | 2 | 2 | 1 | yes |
-| /admin/employees — Team &amp; access | Keep, demote to utility, slim to one card. | 2 |  | 1 |  |
-| /dashboard/verify · /dashboard/2fa · /dashboard/login · /dashboard/forgot-password · /dashboard/reset-password — Auth | Keep (mostly well-built), fix the recovery dead-ends. | 1 | 2 | 1 |  |
-| /admin/messages — Operator comms | Keep + absorb Broadcasts. | 1 | 2 |  | yes |
-| /admin/broadcasts — Mass operator email | Merge into Messages, then park the page (trigger: ~10 courses). | 1 | 2 |  | yes |
-| /for-courses — Lead form | Keep (good on a phone), fix the plumbing. | 1 | 1 | 1 |  |
-| /admin/golfers — Support lookup | Reshape into a record page; search → ⌘K palette. | 1 | 1 |  | yes |
-| /api/inquiries — Lead intake API | Fix now (ship-blocker). | 1 |  |  |  |
-| /admin/create — "Manual build" wizard | Delete as a destination. | 1 |  |  | yes |
-| /admin — Overview | Reshape (5 zones — see Deep Dive 01). |  | 5 | 3 | yes |
-| /admin/revenue — Money | Reshape (problems pinned on top, P&L on a collected basis). |  | 4 | 1 | yes |
-| /for-courses/details — Concierge details sheet | Reshape (split it). |  | 2 | 2 | yes |
-| /admin/activity — Cross-course feed | Merge a 15-event strip into Overview, park the page (trigger: >20 events/day). |  | 2 |  |  |
-| /admin/system — Health check | Keep — make the dots able to turn red. |  | 2 |  | yes |
-| / — Homepage | Reshape (honesty + assets, not structure). |  | 1 | 6 | yes |
-| /dashboard/payments + /dashboard/cancellations — Money | Merge into one "Money" page (same endpoint already). |  | 1 | 1 | yes |
-| /book — Checkout (card capture) | Keep — the model the other pages should match. |  | 1 |  |  |
-| /manage/[bookingId] — Manage a booking | Keep. Most feature-complete terminal — cancel, change time (slot picker + price deltas), change party size (repriced), all timezone-correct. |  | 1 |  |  |
-| /dashboard/schedules — Tee-time generator | Keep (best-explained page in the app). |  | 1 |  |  |
-| /dashboard/onboarding — Guided first-run | Keep (self-destructs once live), fix the state bug. |  | 1 |  |  |
-| Admin chrome — AdminSidebar · CommandPalette |  |  |  | 3 |  |
-| /dashboard/members — Membership tiers | Keep — freeze (over-built for pre-launch). |  |  | 3 |  |
-| SEO plumbing (robots / sitemap / metadata) | Fix now (build it). |  |  | 2 |  |
-| /terms · /privacy · /operator-agreement — Legal | Keep, fix the template. |  |  | 1 |  |
-| /admin/profile — Account | Keep — make it the sole home of change-password. |  |  | 1 |  |
-| /admin/login · /admin/owner-login · /admin/set-password · /admin/forgot-password — Doors | Merge to one door; keep set/forgot. |  |  | 1 |  |
-| Stubs — /dashboard/tournaments · /dashboard/outings · (empty dashboard/tee-times/) | Keep the honest stubs; delete the empty dir. |  |  | 1 |  |
-
 ## Spec inventory
 
 `open refs` = how many open queue items still point at this spec. Zero + old = fully consumed.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
+| `ARCHITECTURE.md` | 4 | 2026-09-16 | 11d |
+| `CLAUDE.md` | 3 | 2026-09-16 | 11d |
+| `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-15 | 12d |
+| `ADMIN_V4_SPEC.md` | 1 | 2026-09-15 | 12d |
+| `UI_REVISE_SPEC.md` | 1 | 2026-09-16 | 12d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `CODEMAP_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `GOLFER_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `HARDENING_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `RECEIPT_SPEC.md` | 0 | 2026-09-15 | 12d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-09-15 | 12d |
 
 ## Recent commits
 
+- `3aff643` 2026-09-28 — queue/spec update
+- `f6ec6fb` 2026-09-28 — queue/spec update
+- `ded9ed6` 2026-09-17 — queue/spec update
 - `2432aa8` 2026-09-17 — SD-11 review fixes: a cap that exists, a verifier the client cannot crack, and a way out of the dead end
 - `7970047` 2026-09-17 — queue/spec update
 - `cfeb2e1` 2026-09-17 — SD-11: ask before offering sign-in, and make them prove the inbox
@@ -176,10 +161,7 @@ Totals: **19 security/data-loss · 47 money-truth · 39 polish** findings across
 - `f924e07` 2026-09-16 — CODEMAP_SPEC CM-1: a generated map of the code, so agents stop reading files to find things
 - `2e3e1fa` 2026-09-16 — queue/spec update
 - `8e0b692` 2026-09-16 — H-2h: the shadows come back, the cream dissolves go
-- `7d5b1e6` 2026-09-16 — queue/spec update
-- `f9ffa23` 2026-09-16 — queue/spec update
-- `30385cd` 2026-09-16 — SECURITY follow-on review fixes: gate the already-built email, close the id oracle, stop the screen contradicting the email
 
 ---
 
-**Totals:** 194 done · 11 awaiting review · 1 in flight · 19 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 194 done · 11 awaiting review · 1 in flight · 21 not started · 8 revise pages open · 15 ideas · 2 parked.
