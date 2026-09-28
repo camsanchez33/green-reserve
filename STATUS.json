@@ -1,19 +1,16 @@
 {
-  "generatedAt": "2026-09-28T20:24:25.053Z",
+  "generatedAt": "2026-09-28T22:58:54.312Z",
   "repo": {
-    "head": "8b9a046",
+    "head": "fdd9c0c",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 4,
+    "dirtyCount": 1,
     "dirty": [
-      "M RUN_QUEUE.md",
-      " M STATUS.artifact.html",
-      " M STATUS.json",
-      " M STATUS.md"
+      "M RUN_QUEUE.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-28T16:24:20+00:00",
+    "queueLastCommit": "2026-09-28T20:24:25+00:00",
     "unrecorded": []
   },
   "counts": {
@@ -361,7 +358,7 @@
       "file": "ARCHITECTURE.md",
       "openRefs": 4,
       "lastTouched": "2026-09-16",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "CLAUDE.md",
@@ -529,6 +526,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "fdd9c0c",
+      "date": "2026-09-28",
+      "subject": "Fix: 20 more email sends died when the response returned"
+    },
+    {
+      "h": "f76c618",
+      "date": "2026-09-28",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "8b9a046",
       "date": "2026-09-28",
       "subject": "Fix: inquiry submissions send no emails"
@@ -577,16 +584,6 @@
       "h": "cfeb2e1",
       "date": "2026-09-17",
       "subject": "SD-11: ask before offering sign-in, and make them prove the inbox"
-    },
-    {
-      "h": "5bf7e4b",
-      "date": "2026-09-16",
-      "subject": "Rate-limit setup-intent, and delete ARCHITECTURE.md's route tables"
-    },
-    {
-      "h": "f5c5a5b",
-      "date": "2026-09-16",
-      "subject": "queue/spec update"
     }
   ]
 }

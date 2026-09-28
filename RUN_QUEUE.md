@@ -2439,16 +2439,16 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   operator/sign already does. NOT confirmed from Vercel logs (no access from
   the session) — if mail still does not arrive, check RESEND_API_KEY and the
   Resend domain status next.
-  SAME PATTERN, NOT FIXED (candidate sweep item, Cam to approve): ~20 other
-  unawaited send*/deliver* calls with no after(), incl. the inquiry sign-in
-  code (inquiries/signin-code:111), operator welcome + dashboard-access emails
-  (admin/inquiries:428/472/497/1081, admin/create-course:170), details-sheet
-  emails (inquiries/details:115/120), member invites (operator/members:123/165),
-  membership receipt (membership/[id]:127). Find them with:
+  SWEEP SHIPPED fdd9c0c (Cam approved 2026-09-28): the other 20 unawaited
+  send*/deliver* sites across 15 files, same after() wrap, each checked by hand
+  to be genuinely unawaited. Guard against regressions — this must stay empty:
   grep -rnE "^\s+(send|deliver)[A-Za-z]+\(" src/app/api src/lib | grep -v "await\|return\|after("
   CAM TO WALK: submit the form at /for-courses with an inbox you control →
   confirmation email (with the call-setup button) arrives; hello@ gets the
-  new-lead alert.
+  new-lead alert. Then, for the sweep: request a sign-in code at
+  /for-courses (existing inquiry) → code arrives; admin → Send Sheet on an
+  inquiry → setup-sheet email arrives; add a member from /dashboard/members →
+  invite arrives.
 
 - [ ] EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)
   (Renamed from A-1 — REVISE_QUEUE.md already owns A-01…A-13.)

@@ -4,18 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-28 20:24 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `8b9a046` · working tree **4 dirty file(s)**
+Generated 2026-09-28 22:58 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `fdd9c0c` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-### Uncommitted working tree (4 file(s))
+### Uncommitted working tree (1 file(s))
 
 - `M RUN_QUEUE.md`
-- `M STATUS.artifact.html`
-- `M STATUS.json`
-- `M STATUS.md`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -130,7 +127,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `ARCHITECTURE.md` | 4 | 2026-09-16 | 11d |
+| `ARCHITECTURE.md` | 4 | 2026-09-16 | 12d |
 | `CLAUDE.md` | 3 | 2026-09-16 | 12d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-15 | 12d |
 | `ADMIN_V4_SPEC.md` | 1 | 2026-09-15 | 12d |
@@ -161,6 +158,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `fdd9c0c` 2026-09-28 — Fix: 20 more email sends died when the response returned
+- `f76c618` 2026-09-28 — queue/spec update
 - `8b9a046` 2026-09-28 — Fix: inquiry submissions send no emails
 - `2a7989f` 2026-09-28 — queue/spec update
 - `70a424e` 2026-09-28 — SD-8d: ask before browser Back discards unsaved Settings edits
@@ -171,8 +170,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `2432aa8` 2026-09-17 — SD-11 review fixes: a cap that exists, a verifier the client cannot crack, and a way out of the dead end
 - `7970047` 2026-09-17 — queue/spec update
 - `cfeb2e1` 2026-09-17 — SD-11: ask before offering sign-in, and make them prove the inbox
-- `5bf7e4b` 2026-09-16 — Rate-limit setup-intent, and delete ARCHITECTURE.md's route tables
-- `f5c5a5b` 2026-09-16 — queue/spec update
 
 ---
 
