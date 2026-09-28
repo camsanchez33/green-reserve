@@ -4,15 +4,22 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-28 16:17 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `3aff643` · working tree clean
+Generated 2026-09-28 16:24 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `70a424e` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
+### Uncommitted working tree (1 file(s))
+
+- `M RUN_QUEUE.md`
+
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
+
 ## In flight
 
-- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:1895`
+- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:1913`
   - FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because "no linked inquiry" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding the
   - Last session's raw Prisma script (a read-only check confirming Fake
   - Fairways existed) got blocked by this sandbox's auto-mode classifier as a potential production-database access outside the app's own authenticated API. That block is almost certainly the intended, correct behavior — a raw script has no place touching real course/booking/ operator data, authorized or not — so I did NOT retry it, and built the override into the sanctioned admin API instead, per the 
@@ -28,53 +35,53 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED | 2026-09-16 | 12d | `951433d` | `RUN_QUEUE.md:2098` |
-| SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box | 2026-09-17 | 11d | `cfeb2e1` | `RUN_QUEUE.md:2211` |
-| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | — | — | — | `RUN_QUEUE.md:599` |
-| MP-1 | — | — | — | `RUN_QUEUE.md:629` |
-| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | — | — | — | `RUN_QUEUE.md:664` |
-| MP-2 | — | — | — | `RUN_QUEUE.md:705` |
-| MP-2b | — | — | — | `RUN_QUEUE.md:742` |
-| MP-2c | — | — | — | `RUN_QUEUE.md:791` |
-| MP-2d | — | — | — | `RUN_QUEUE.md:839` |
-| MP-2e | — | — | — | `RUN_QUEUE.md:881` |
-| UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | — | — | — | `RUN_QUEUE.md:2056` |
+| SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED | 2026-09-16 | 12d | `951433d` | `RUN_QUEUE.md:2116` |
+| SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box | 2026-09-17 | 11d | `cfeb2e1` | `RUN_QUEUE.md:2229` |
+| SD-8d — browser Back still discards unsaved Settings edits (from the | 2026-09-28 | 0d | `70a424e` | `RUN_QUEUE.md:536` |
+| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | — | — | — | `RUN_QUEUE.md:617` |
+| MP-1 | — | — | — | `RUN_QUEUE.md:647` |
+| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | — | — | — | `RUN_QUEUE.md:682` |
+| MP-2 | — | — | — | `RUN_QUEUE.md:723` |
+| MP-2b | — | — | — | `RUN_QUEUE.md:760` |
+| MP-2c | — | — | — | `RUN_QUEUE.md:809` |
+| MP-2d | — | — | — | `RUN_QUEUE.md:857` |
+| MP-2e | — | — | — | `RUN_QUEUE.md:899` |
+| UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | — | — | — | `RUN_QUEUE.md:2074` |
 
 ## Not started — the actual queue
 
 1. SD-7b — assets, BLOCKED ON CAM: three real dashboard screenshots into — `RUN_QUEUE.md:423`
-2. SD-8d — browser Back still discards unsaved Settings edits (from the — `RUN_QUEUE.md:536`
-3. SD-8e — status is rendered as bare coloured text where the design — `RUN_QUEUE.md:544`
-4. SD-9 — funnel + auth polish: split the details sheet into a required core — `RUN_QUEUE.md:579`
-5. MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) — — `RUN_QUEUE.md:999`
-6. MP-4 — pipeline reshape (split into 4a/4b/4c) — `RUN_QUEUE.md:1006`
-7. MP-4f — retire the JSON-in-actorName pattern. Three separate things — `RUN_QUEUE.md:1089`
-8. MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong — `RUN_QUEUE.md:1111`
-9. Golfer course directory (`/courses`) — NOT scheduled. If Cam wants — `RUN_QUEUE.md:1190`
-10. MP-5e part 3 — the Overview relationship feed (notes + settings — `RUN_QUEUE.md:1194`
-11. MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today) — `RUN_QUEUE.md:1220`
-12. MP-7 — comms merge (split into 7a–7b) — `RUN_QUEUE.md:1292`
-13. MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE, — `RUN_QUEUE.md:1310`
-14. MP-8 — chrome + System (split into 8a–8b) — `RUN_QUEUE.md:1317`
-15. MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table — `RUN_QUEUE.md:1334`
-16. MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in — `RUN_QUEUE.md:1341`
-17. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1388`
-18. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1437`
-19. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1492`
-20. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2414`
-21. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2559`
+2. SD-8e — status is rendered as bare coloured text where the design — `RUN_QUEUE.md:562`
+3. SD-9 — funnel + auth polish: split the details sheet into a required core — `RUN_QUEUE.md:597`
+4. MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) — — `RUN_QUEUE.md:1017`
+5. MP-4 — pipeline reshape (split into 4a/4b/4c) — `RUN_QUEUE.md:1024`
+6. MP-4f — retire the JSON-in-actorName pattern. Three separate things — `RUN_QUEUE.md:1107`
+7. MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong — `RUN_QUEUE.md:1129`
+8. Golfer course directory (`/courses`) — NOT scheduled. If Cam wants — `RUN_QUEUE.md:1208`
+9. MP-5e part 3 — the Overview relationship feed (notes + settings — `RUN_QUEUE.md:1212`
+10. MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today) — `RUN_QUEUE.md:1238`
+11. MP-7 — comms merge (split into 7a–7b) — `RUN_QUEUE.md:1310`
+12. MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE, — `RUN_QUEUE.md:1328`
+13. MP-8 — chrome + System (split into 8a–8b) — `RUN_QUEUE.md:1335`
+14. MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table — `RUN_QUEUE.md:1352`
+15. MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in — `RUN_QUEUE.md:1359`
+16. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1406`
+17. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1455`
+18. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1510`
+19. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2432`
+20. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2577`
 
 ## Waiting on you (not on a build)
 
 - CAM: three real dashboard screenshots into public/screenshots/ (empty, so the homepage shows three grey placeholder boxes) and a seeded demo course slug for DEMO_COURSE_SLUGS (empt — `RUN_QUEUE.md:423`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:664`
-- Cam's approval for a prod backfill — `RUN_QUEUE.md:705`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:742`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:791`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:839`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:881`
-- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1492`
-- pending Cam's walk below — `RUN_QUEUE.md:2211`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:682`
+- Cam's approval for a prod backfill — `RUN_QUEUE.md:723`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:760`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:809`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:857`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:899`
+- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1510`
+- pending Cam's walk below — `RUN_QUEUE.md:2229`
 
 ## Revise campaign (page-by-page pass)
 
@@ -149,6 +156,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `70a424e` 2026-09-28 — SD-8d: ask before browser Back discards unsaved Settings edits
+- `d4a5d40` 2026-09-28 — queue/spec update
 - `3aff643` 2026-09-28 — queue/spec update
 - `f6ec6fb` 2026-09-28 — queue/spec update
 - `ded9ed6` 2026-09-17 — queue/spec update
@@ -159,9 +168,7 @@ This is the distinction a raw checkbox count gets wrong.
 - `f5c5a5b` 2026-09-16 — queue/spec update
 - `063507f` 2026-09-16 — CODEMAP review fixes: a guard is enforcement, not a mention
 - `f924e07` 2026-09-16 — CODEMAP_SPEC CM-1: a generated map of the code, so agents stop reading files to find things
-- `2e3e1fa` 2026-09-16 — queue/spec update
-- `8e0b692` 2026-09-16 — H-2h: the shadows come back, the cream dissolves go
 
 ---
 
-**Totals:** 194 done · 11 awaiting review · 1 in flight · 21 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 194 done · 12 awaiting review · 1 in flight · 20 not started · 8 revise pages open · 15 ideas · 2 parked.

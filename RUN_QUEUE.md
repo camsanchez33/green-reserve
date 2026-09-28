@@ -540,6 +540,24 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     Needs a popstate/history interception, which is a different mechanism from
     the click guard — hence its own item. Also unguarded for the same reason:
     Birdie answer links, which are client-side <Link>s. (small, no migration)
+    SHIPPED 70a424e, 2026-09-28 — box open until /gr-review. useBackGuard in
+    lib/unsaved-guard.ts: while dirty, push a same-url trap entry; Back pops
+    it (Next traverses to the same tree, page stays mounted) and asks the
+    SAME named prompt via confirmLeave. Stay re-arms; Leave steps back once
+    more. Saving consumes the trap (flag survives Next's restore via
+    preserveCustomHistoryState), so a later Back is not swallowed. Birdie
+    links call confirmLeave on plain left-click (new-tab clicks untouched).
+    Verified in Chromium against a throwaway page (not committed), both
+    client-nav and hard-load arrival: cancel keeps edits, accept leaves in one
+    prompt, save-then-Back leaves with no prompt.
+    KNOWN WART, accepted: leave via the sidebar while dirty, then press Back
+    on the next page — you land on Settings, and one more Back is needed
+    (the trap entry is still in history; consuming it on unmount is unsafe
+    because the url may already be the next page's).
+    CAM TO WALK: /dashboard/settings, edit a field, press browser Back →
+    prompt names the section; Cancel keeps the edit on screen; Back again →
+    OK leaves. Then edit, Save, press Back once → leaves with no prompt.
+    Open Birdie, ask something that returns a link, click it while dirty.
 
   - [ ] SD-8e — status is rendered as bare coloured text where the design
     system says StatusDot (from the SD-8c design audit, 2026-09-16). Both live
