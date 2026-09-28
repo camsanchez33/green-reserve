@@ -7,12 +7,21 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { X, Send, ArrowRight } from 'lucide-react';
+import { confirmLeave } from '@/lib/unsaved-guard';
 
 type Turn = { role: 'user' | 'assistant'; content: string; pending?: boolean; error?: boolean };
 type Meta = { enabled: boolean; greeting: string; chips: string[]; helpsWith: string };
 
 const OPEN_KEY = 'birdie:open';
 const iCls = 'flex-1 min-w-0 bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10 focus:outline-none transition-colors';
+
+// SD-8d: these are client-side <Link>s, so they bypass beforeunload the same
+// way the sidebar did. Ask first — except for a new-tab click, which leaves
+// nothing behind.
+function guardLink(e: React.MouseEvent) {
+  if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  if (!confirmLeave()) e.preventDefault();
+}
 
 // Only same-origin dashboard paths become links; anything else stays text.
 const LINK_RE = /\[([^\]]+)\]\((\/dashboard[^)\s]*)\)/g;
@@ -23,7 +32,7 @@ function renderReply(text: string) {
   while ((m = LINK_RE.exec(text))) {
     if (m.index > last) parts.push(<span key={`t${i++}`}>{text.slice(last, m.index)}</span>);
     parts.push(
-      <Link key={`l${i++}`} href={m[2]} className="inline-flex items-center gap-1 mt-1 text-xs font-medium text-pine border border-pine/30 hover:bg-pine/5 rounded-md px-2.5 py-1 transition-colors">
+      <Link key={`l${i++}`} href={m[2]} onClick={guardLink} className="inline-flex items-center gap-1 mt-1 text-xs font-medium text-pine border border-pine/30 hover:bg-pine/5 rounded-md px-2.5 py-1 transition-colors">
         {m[1]} <ArrowRight className="w-3 h-3" />
       </Link>,
     );

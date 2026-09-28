@@ -11,7 +11,7 @@ import CoursePreview from '@/components/dashboard/CoursePreview';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
 import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
-import { setLeaveGuard } from '@/lib/unsaved-guard';
+import { setLeaveGuard, useBackGuard } from '@/lib/unsaved-guard';
 import { downscaleImage } from '@/lib/image-resize';
 
 type Course = Record<string, unknown>;
@@ -316,6 +316,10 @@ function SettingsPageInner() {
     });
     return () => setLeaveGuard(null);
   }, [anyDirty, dirtyFields]);
+
+  // SD-8d: browser Back is an App Router popstate — neither of the guards
+  // above sees it. This routes it through the same named prompt.
+  useBackGuard(anyDirty);
 
   async function save() {
     setSaving(true); setSaveError('');

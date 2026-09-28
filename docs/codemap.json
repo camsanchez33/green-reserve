@@ -5428,7 +5428,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 996,
+      "lines": 1000,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6417,7 +6417,7 @@
     },
     {
       "path": "src/components/birdie/BirdieWidget.tsx",
-      "lines": 159,
+      "lines": 168,
       "purpose": "BIRDIE_AI_SPEC B1 — the floating Birdie button and chat panel for the operator dashboard.",
       "brain": [],
       "exports": [
@@ -6432,6 +6432,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/lib/unsaved-guard",
         "lucide-react",
         "next/image",
         "next/link",
@@ -11648,7 +11649,7 @@
     },
     {
       "path": "src/lib/unsaved-guard.ts",
-      "lines": 36,
+      "lines": 95,
       "purpose": "SD-8b — leaving a dashboard page with unsaved edits.",
       "brain": [],
       "exports": [
@@ -11659,6 +11660,10 @@
         {
           "name": "setLeaveGuard",
           "kind": "fn"
+        },
+        {
+          "name": "useBackGuard",
+          "kind": "fn"
         }
       ],
       "route": null,
@@ -11666,10 +11671,13 @@
       "methods": [],
       "auth": null,
       "guard": null,
-      "imports": [],
+      "imports": [
+        "react"
+      ],
       "usedBy": [
         "src/app/dashboard/settings/page.tsx",
-        "src/components/OperatorSidebar.tsx"
+        "src/components/OperatorSidebar.tsx",
+        "src/components/birdie/BirdieWidget.tsx"
       ]
     },
     {
