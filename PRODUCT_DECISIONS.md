@@ -44,6 +44,6 @@ So: analytics wins demos and justifies price — build it. Do not let it outrank
 the ship-blockers that make GreenReserve the system of record in the first
 place (see the SD items in RUN_QUEUE.md).
 
-The one exception is the event log (A-1), which is queued now because it is
+The one exception is the event log (EV-1), which is queued now because it is
 cheap today and irrecoverable later — data not captured in October cannot be
 recovered in March.
