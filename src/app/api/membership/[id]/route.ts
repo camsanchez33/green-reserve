@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { stripe, chargeOnConnectedAccount, MEMBERSHIP_FEE_CENTS } from '@/lib/stripe';
 import { sendMembershipReceiptEmail } from '@/lib/email';
@@ -124,14 +124,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     },
   });
 
-  sendMembershipReceiptEmail({
+  after(sendMembershipReceiptEmail({
     name: m.inviteName,
     email: m.inviteEmail,
     courseName: m.course.name,
     tierName: m.tier?.name ?? m.membershipType,
     amountPaid: totalCents / 100,
     expiresAt: updated.expiresAt,
-  }).catch(console.error);
+  }).catch(console.error));
 
   return NextResponse.json({ success: true, amountPaid: totalCents / 100, expiresAt: updated.expiresAt });
 }

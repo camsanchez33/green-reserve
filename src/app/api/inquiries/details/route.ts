@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendDetailsSubmittedNotification, sendDetailsSheetConfirmationEmail } from '@/lib/email';
 import { gateSheetAccess } from '@/lib/sheet-token';
@@ -112,18 +112,18 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  sendDetailsSubmittedNotification({
+  after(sendDetailsSubmittedNotification({
     courseName: inquiry.courseName,
     contactName: inquiry.contactName,
-  }).catch(err => console.error('Details submitted notification failed:', err));
+  }).catch(err => console.error('Details submitted notification failed:', err)));
 
-  sendDetailsSheetConfirmationEmail({
+  after(sendDetailsSheetConfirmationEmail({
     firstName: inquiry.firstName || inquiry.contactName.split(' ')[0],
     contactName: inquiry.contactName,
     email: inquiry.email,
     courseName: inquiry.courseName,
     details,
-  }).catch(err => console.error('Details sheet confirmation email failed:', err));
+  }).catch(err => console.error('Details sheet confirmation email failed:', err)));
 
   return NextResponse.json({ success: true });
 }

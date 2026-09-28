@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, evidentiaryIp } from '@/lib/rate-limit';
 import { ALIVE_STATUSES } from '@/lib/inquiry-status';
@@ -108,12 +108,12 @@ export async function POST(req: NextRequest) {
   // REVIEW FIX: fired, not awaited, like its sibling in /api/inquiries. Awaiting
   // a live Resend call put hundreds of milliseconds on the success path and none
   // on the declining ones, which is the same oracle again through a slower lens.
-  sendInquirySigninCode({
+  after(sendInquirySigninCode({
     email: existing.email,
     firstName: existing.firstName || 'there',
     courseName,
     code,
-  }).catch(err => console.error('signin code email failed:', err));
+  }).catch(err => console.error('signin code email failed:', err)));
 
   await prisma.inquiryStatusEvent.create({
     data: {

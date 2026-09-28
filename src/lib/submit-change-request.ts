@@ -1,3 +1,4 @@
+import { after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendMessageNotificationEmail } from '@/lib/email';
 import { CATEGORY_LABEL, CHANGE_CATEGORIES, encodeChangesRequested, type ChangeItem } from '@/lib/change-requests';
@@ -70,7 +71,7 @@ export async function submitChangeRequest(courseId: string, cleanItems: ChangeIt
   if (shouldEmail) {
     // Fire-and-forget (A6 item 2 pattern) — message + activity event are
     // already durably recorded above; don't block the response on Resend.
-    sendMessageNotificationEmail({
+    after(sendMessageNotificationEmail({
       recipientEmail: ADMIN_EMAIL,
       recipientName: 'GreenReserve Team',
       senderName,
@@ -79,7 +80,7 @@ export async function submitChangeRequest(courseId: string, cleanItems: ChangeIt
       replyUrl: `${process.env.NEXT_PUBLIC_URL}/admin/messages?courseId=${courseId}`,
     })
       .then(() => prisma.messageThread.update({ where: { id: thread.id }, data: { adminLastEmailAt: new Date() } }))
-      .catch(e => console.error('Message notification email failed:', e));
+      .catch(e => console.error('Message notification email failed:', e)));
   }
 
   return { ok: true as const };

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getOperatorSession, signToken } from '@/lib/auth';
 import { validatePasswordStrength } from '@/lib/password';
@@ -29,8 +29,8 @@ export async function POST(req: NextRequest) {
   // gets a fresh token with the new version so the operator is not bounced.
   const updated = await prisma.courseOperator.update({ where: { id: operator.id }, data: { password: hashed, sessionVersion: { increment: 1 } }, select: { sessionVersion: true } });
 
-  sendPasswordChangedNotification({ operatorName: operator.name, operatorEmail: operator.email })
-    .catch(err => console.error('Password-changed notification failed:', err));
+  after(sendPasswordChangedNotification({ operatorName: operator.name, operatorEmail: operator.email })
+    .catch(err => console.error('Password-changed notification failed:', err)));
 
   const token = await signToken({ operatorId: operator.id, email: operator.email, sv: updated.sessionVersion });
   const res = NextResponse.json({ success: true, signedOutElsewhere: true });

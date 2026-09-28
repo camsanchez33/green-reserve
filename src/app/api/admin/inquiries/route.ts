@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
 import {
@@ -425,12 +425,12 @@ async function handleAction(
         // again on day 9" isn't invisible in Activity.
         await logEvent(inquiryId, from, from, 'admin', `Setup sheet resent by ${adminName}`);
       }
-      sendDetailsRequestEmail({
+      after(sendDetailsRequestEmail({
         contactName: inquiry.contactName,
         email: inquiry.email,
         courseName: inquiry.courseName,
         detailsLink,
-      }).catch(emailErr => console.error('Details request email failed:', emailErr));
+      }).catch(emailErr => console.error('Details request email failed:', emailErr)));
       return NextResponse.json({ success: true, detailsLink });
     } catch (e) {
       return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
@@ -469,10 +469,10 @@ async function handleAction(
       const verificationToken = randomBytes(32).toString('hex');
       await prisma.courseOperator.update({ where: { id: course.operator.id }, data: { password: hashed, verificationToken } });
       const setupLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/verify?token=${verificationToken}`;
-      sendOperatorWelcomeEmail({
+      after(sendOperatorWelcomeEmail({
         operatorName: inquiry.contactName, operatorEmail: inquiry.email,
         courseName: inquiry.courseName, tempPassword, setupLink,
-      }).catch(emailErr => console.error('Resend welcome email failed:', emailErr));
+      }).catch(emailErr => console.error('Resend welcome email failed:', emailErr)));
       await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `Welcome email resent by ${adminName}`);
       // MP-2c: the email carries these. Echoing a rotated password and a verify
       // link back in JSON puts them in browser memory and every proxy log —
@@ -494,10 +494,10 @@ async function handleAction(
       const verificationToken = randomBytes(32).toString('hex');
       await prisma.courseOperator.update({ where: { id: course.operator.id }, data: { password: hashed, verificationToken } });
       const setupLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/verify?token=${verificationToken}`;
-      sendDashboardAccessEmail({
+      after(sendDashboardAccessEmail({
         operatorName: inquiry.contactName, operatorEmail: inquiry.email,
         courseName: inquiry.courseName, tempPassword, setupLink,
-      }).catch(emailErr => console.error('Dashboard access email failed:', emailErr));
+      }).catch(emailErr => console.error('Dashboard access email failed:', emailErr)));
       await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `Dashboard access sent by ${adminName}`);
       // MP-2c: the email carries these. Echoing a rotated password and a verify
       // link back in JSON puts them in browser memory and every proxy log —
@@ -1078,10 +1078,10 @@ async function handleAction(
           return NextResponse.json({ error: 'Course was created but no operator login was minted — check the course in Courses before retrying' }, { status: 500 });
         }
         const setupLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/verify?token=${newLogin.verificationToken}`;
-        sendOperatorWelcomeEmail({
+        after(sendOperatorWelcomeEmail({
           operatorName: inquiry.contactName, operatorEmail,
           courseName: inquiry.courseName, tempPassword: newLogin.tempPassword, setupLink,
-        }).catch(emailErr => console.error('Welcome email failed:', emailErr));
+        }).catch(emailErr => console.error('Welcome email failed:', emailErr)));
         // Response shape unchanged — the detail page renders tempPassword and
         // setupLink after a build. (Removing them from JSON is its own queue item.)
         return NextResponse.json({

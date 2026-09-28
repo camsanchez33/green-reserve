@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, rateLimitCount, evidentiaryIp } from '@/lib/rate-limit';
 import { sendLockedOutOperatorAlert } from '@/lib/email';
@@ -77,12 +77,12 @@ export async function POST(req: NextRequest) {
   // nothing reads it unless someone happens to open that inquiry. So send the
   // actual email, and let it reply straight back to them.
   if (!hasAccount || needsSetup) {
-    sendLockedOutOperatorAlert({
+    after(sendLockedOutOperatorAlert({
       courseName: inquiry.courseName,
       inquiryId: inquiry.id,
       operatorEmail: inquiry.email,
       reason: hasAccount ? 'unverified' : 'no-account',
-    }).catch(err => console.error('locked-out operator alert failed:', err));
+    }).catch(err => console.error('locked-out operator alert failed:', err)));
   }
 
   await prisma.inquiryStatusEvent.create({

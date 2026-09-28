@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
 import { sendMessageNotificationEmail } from '@/lib/email';
@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
     (!freshThread?.operatorLastEmailAt || Date.now() - freshThread.operatorLastEmailAt.getTime() > ONE_HOUR_MS);
 
   if (shouldEmail && course.operator) {
-    sendMessageNotificationEmail({
+    after(sendMessageNotificationEmail({
       recipientEmail: course.operator.email,
       recipientName: course.operator.name,
       senderName: session.name,
@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
       messageBody: body.trim(),
       replyUrl: `${process.env.NEXT_PUBLIC_URL}/dashboard/messages`,
     }).then(() => prisma.messageThread.update({ where: { id: thread.id }, data: { operatorLastEmailAt: new Date() } }))
-      .catch(e => console.error('Message notification email failed:', e));
+      .catch(e => console.error('Message notification email failed:', e)));
   }
 
   return NextResponse.json({ message, threadId: thread.id });

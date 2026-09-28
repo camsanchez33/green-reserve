@@ -4,7 +4,7 @@
 // when Google cannot be read); POST books, reschedules or cancels. Every slot
 // is re-verified server-side before a Call is written — a slot that has gone
 // answers 409 slot_taken and the page reloads its grid.
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, evidentiaryIp } from '@/lib/rate-limit';
@@ -59,8 +59,8 @@ async function grid(inq: Inq, now: Date, excludeCallId?: string) {
   catch (err) {
     // S5: never show unverified slots. Tell Cam, once an hour per inquiry.
     if (await rateLimit(`calalert:${inq.id}`, 1, 3600)) {
-      sendCalendarUnavailableAlert({ courseName: inq.courseName, inquiryId: inq.id, error: err instanceof Error ? err.message : String(err) })
-        .catch(e => console.error('Calendar alert email failed:', e));
+      after(sendCalendarUnavailableAlert({ courseName: inq.courseName, inquiryId: inq.id, error: err instanceof Error ? err.message : String(err) })
+        .catch(e => console.error('Calendar alert email failed:', e)));
     }
     return { unavailable: true as const, days: [] };
   }
