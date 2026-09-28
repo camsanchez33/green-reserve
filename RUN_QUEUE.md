@@ -2411,6 +2411,94 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
      by guarded APIs today, so nothing is exposed — but nothing stops a future
      edit from putting real data in them either.
 
+- [ ] A-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)
+
+  WHY: booking rows mutate (confirmed → completed / cancelled), so history is
+  destroyed as it happens. Every analytics question later ("how many July
+  bookings cancelled inside 24h", "no-show rate by weekday", "booking lead time")
+  is unanswerable from final state alone. This item captures the data. It ships
+  NO reporting UI — see A-2.
+
+  SCHEMA (prisma/schema.prisma):
+
+    enum BookingEventType {
+      booking_created
+      booking_cancelled
+      checked_in
+      no_show_marked
+      fee_charged
+      fee_refunded
+    }
+
+    enum EventActorType { golfer  staff  admin  cron  system }
+
+    model BookingEvent {
+      id           String            @id @default(cuid())
+      bookingId    String
+      courseId     String
+      type         BookingEventType
+      occurredAt   DateTime          @default(now())
+      actorType    EventActorType
+      actorId      String?
+      amountCents  Int?
+      playerCount  Int?
+      teeTimeAt    DateTime?
+      metadata     Json?
+
+      @@index([courseId, occurredAt])
+      @@index([bookingId, occurredAt])
+      @@index([type, occurredAt])
+    }
+
+  DENORMALIZATION IS DELIBERATE. courseId, amountCents, playerCount and teeTimeAt
+  are copied onto the row, not joined at read time. A price change or a deleted
+  course must not rewrite history. Do not replace them with relations.
+
+  APPEND-ONLY IS THE WHOLE POINT. No code path may UPDATE or DELETE a
+  BookingEvent row. A correction is a new row, never an edit. If a later item
+  needs to "fix" an event, that item is wrong.
+
+  WRITE SITES — one row per real-world occurrence, written inside the SAME
+  transaction as the state change it records, so a row can never exist without
+  its state change or vice versa:
+    - booking creation path            → booking_created
+    - src/lib/cancel-booking.ts        → booking_cancelled
+    - src/lib/checkin-booking.ts       → checked_in   (covers BOTH staff and
+                                          golfer self check-in, since both call
+                                          performCheckIn)
+    - src/app/api/cron/charge-cancellation-fee → no_show_marked, fee_charged
+    - refund path in src/lib/stripe.ts callers → fee_refunded
+
+  actorType: golfer for self-serve, staff for dashboard actions, admin for
+  admin-console actions, cron for the scheduled job.
+
+  OUT OF SCOPE for this run: any chart, any /dashboard or /admin page, any
+  aggregation query, any backfill of existing bookings. Historical bookings get
+  no events — that gap is expected and must be stated in the hand-off, not
+  papered over.
+
+  SHIPPING: schema change → feature branch, Neon branch DB, `migrate dev`,
+  commit the migration file, verify on the Vercel preview, schema-check CI must
+  pass, then `migrate deploy` on prod. Attended. Never swept into a batch.
+  Per docs/SHIPPING.md.
+
+  VERIFY (manual, after deploy):
+    1. Book a tee time as a golfer      → exactly ONE booking_created row
+    2. Cancel it before the window      → exactly ONE booking_cancelled row
+    3. Book + check in from /dashboard  → ONE checked_in row, actorType staff
+    4. Check in via /checkin/[id]?token → ONE checked_in row, actorType golfer
+    5. /api/health returns {"ok":true,"db":"up"}
+    6. `npx prisma migrate status` reports up to date
+  Confirm every amountCents and playerCount matches the booking it came from.
+
+- [ ] A-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET
+
+  BLOCKED BY DESIGN, not by dependency. A-1 captures the data; the reports wait
+  until a live course says what it opens on a Monday morning. Building reports
+  from guesses with zero live courses is how you build six charts nobody opens.
+  Unblock condition: one live operator names the questions. Then spec it.
+
+
 ## Ideas / not yet specced
 
 - OPERATOR STAFF ACCOUNTS rework (Cam, 2026-07-10: "whole thing is going to be reworked and better") — current section contradicts itself: copy says "full dashboard access", role dropdown says "tee sheet access". Rework needs: clear role tiers (e.g. owner / manager / tee-sheet-only), what each can see (money? settings? members?), invite email flow, deactivate/reset from the card, and the same no-silent-failure patterns as admin. Spec when Cam's ready to define the role tiers.
