@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendInquiryNotification, sendInquiryConfirmation, sendInquiryAlreadyBuilt } from '@/lib/email';
 import { ALIVE_STATUSES, encodeResubmit } from '@/lib/inquiry-status';
@@ -131,11 +131,11 @@ export async function POST(req: NextRequest) {
       // file is told the course exists; everyone else gets the ordinary
       // confirmation, byte for byte what they got before this branch existed.
       if (verified) {
-        sendInquiryAlreadyBuilt({ firstName: body.firstName as string, email, courseName })
-          .catch(err => console.error('Already-built inquiry email failed:', err));
+        after(sendInquiryAlreadyBuilt({ firstName: body.firstName as string, email, courseName })
+          .catch(err => console.error('Already-built inquiry email failed:', err)));
       } else {
-        sendInquiryConfirmation({ firstName: body.firstName as string, contactName, email, courseName, callUrl: liveInvite })
-          .catch(err => console.error('Inquiry confirmation email failed:', err));
+        after(sendInquiryConfirmation({ firstName: body.firstName as string, contactName, email, courseName, callUrl: liveInvite })
+          .catch(err => console.error('Inquiry confirmation email failed:', err)));
       }
       // No InquiryStatusEvent, per the item: an admin diff against a course
       // that is already built is a decision nobody should be asked to make.
@@ -182,8 +182,8 @@ export async function POST(req: NextRequest) {
     // a "duplicate" flag would turn this public endpoint into an oracle for
     // which courses are already in the pipeline. No admin new-lead notification
     // fires, because this is not a new lead.
-    sendInquiryConfirmation({ firstName: body.firstName as string, contactName, email, courseName, callUrl: liveInvite })
-      .catch(err => console.error('Inquiry confirmation email failed:', err));
+    after(sendInquiryConfirmation({ firstName: body.firstName as string, contactName, email, courseName, callUrl: liveInvite })
+      .catch(err => console.error('Inquiry confirmation email failed:', err)));
 
     return NextResponse.json({ success: true });
   }
@@ -234,8 +234,10 @@ export async function POST(req: NextRequest) {
     ? deliverCallInvite(inviteFor, inviteUrlForEmails).catch(err => ({ sent: false, error: err instanceof Error ? err.message : String(err) }))
     : Promise.resolve({ sent: false, error: 'token not issued' });
 
+  // after(): an unawaited promise does not outlive the response on Vercel —
+  // the function is frozen once it returns, and these sends died with it.
   const emailData = { firstName, contactName, email, courseName, callUrl: inviteUrlForEmails };
-  inviteDelivery.then(invite => sendInquiryNotification({
+  after(inviteDelivery.then(invite => sendInquiryNotification({
     contactName,
     contactTitle,
     email,
@@ -248,10 +250,10 @@ export async function POST(req: NextRequest) {
     greenFeeRange: optStr(body.greenFeeRange, 120),
     additionalNotes,
     inviteNote: invite.sent ? null : (invite.error || 'unknown'),
-  })).catch(err => console.error('Inquiry notification email failed:', err));
+  })).catch(err => console.error('Inquiry notification email failed:', err)));
 
-  sendInquiryConfirmation(emailData)
-    .catch(err => console.error('Inquiry confirmation email failed:', err));
+  after(sendInquiryConfirmation(emailData)
+    .catch(err => console.error('Inquiry confirmation email failed:', err)));
 
   return NextResponse.json({ success: true });
 }
