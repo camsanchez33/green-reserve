@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { validatePasswordStrength } from '@/lib/password';
@@ -34,8 +34,8 @@ export async function POST(req: NextRequest) {
     data: { password: hashed, resetToken: null, resetTokenExpiry: null, sessionVersion: { increment: 1 } },
   });
 
-  sendPasswordChangedNotification({ operatorName: operator.name, operatorEmail: operator.email })
-    .catch(err => console.error('Password-changed notification failed:', err));
+  after(sendPasswordChangedNotification({ operatorName: operator.name, operatorEmail: operator.email })
+    .catch(err => console.error('Password-changed notification failed:', err)));
 
   return NextResponse.json({ success: true });
 }

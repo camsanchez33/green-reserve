@@ -540,6 +540,24 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     Needs a popstate/history interception, which is a different mechanism from
     the click guard — hence its own item. Also unguarded for the same reason:
     Birdie answer links, which are client-side <Link>s. (small, no migration)
+    SHIPPED 70a424e, 2026-09-28 — box open until /gr-review. useBackGuard in
+    lib/unsaved-guard.ts: while dirty, push a same-url trap entry; Back pops
+    it (Next traverses to the same tree, page stays mounted) and asks the
+    SAME named prompt via confirmLeave. Stay re-arms; Leave steps back once
+    more. Saving consumes the trap (flag survives Next's restore via
+    preserveCustomHistoryState), so a later Back is not swallowed. Birdie
+    links call confirmLeave on plain left-click (new-tab clicks untouched).
+    Verified in Chromium against a throwaway page (not committed), both
+    client-nav and hard-load arrival: cancel keeps edits, accept leaves in one
+    prompt, save-then-Back leaves with no prompt.
+    KNOWN WART, accepted: leave via the sidebar while dirty, then press Back
+    on the next page — you land on Settings, and one more Back is needed
+    (the trap entry is still in history; consuming it on unmount is unsafe
+    because the url may already be the next page's).
+    CAM TO WALK: /dashboard/settings, edit a field, press browser Back →
+    prompt names the section; Cancel keeps the edit on screen; Back again →
+    OK leaves. Then edit, Save, press Back once → leaves with no prompt.
+    Open Birdie, ask something that returns a link, click it while dirty.
 
   - [ ] SD-8e — status is rendered as bare coloured text where the design
     system says StatusDot (from the SD-8c design audit, 2026-09-16). Both live
@@ -2410,6 +2428,179 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
      /courses/[slug] portals have no page-level guard. They are client shells fed
      by guarded APIs today, so nothing is exposed — but nothing stops a future
      edit from putting real data in them either.
+
+- [ ] BUG: inquiry submissions send no emails — SHIPPED 8b9a046, 2026-09-28,
+  box open until /gr-review. Cam: "after submitting an inquiry they aren't
+  getting sent an email." /api/inquiries started every send without awaiting
+  and returned; Vercel freezes the function once the response is sent, so the
+  sends died with it. Since 722934f (SC-2 review) nothing on the new-lead path
+  was awaited at all — before it, the awaited invite send kept the function
+  alive long enough. Fix wraps all four send sites in next/server after(), as
+  operator/sign already does. NOT confirmed from Vercel logs (no access from
+  the session) — if mail still does not arrive, check RESEND_API_KEY and the
+  Resend domain status next.
+  SWEEP SHIPPED fdd9c0c (Cam approved 2026-09-28): the other 20 unawaited
+  send*/deliver* sites across 15 files, same after() wrap, each checked by hand
+  to be genuinely unawaited. Guard against regressions — this must stay empty:
+  grep -rnE "^\s+(send|deliver)[A-Za-z]+\(" src/app/api src/lib | grep -v "await\|return\|after("
+  CAM TO WALK: submit the form at /for-courses with an inbox you control →
+  confirmation email (with the call-setup button) arrives; hello@ gets the
+  new-lead alert. Then, for the sweep: request a sign-in code at
+  /for-courses (existing inquiry) → code arrives; admin → Send Sheet on an
+  inquiry → setup-sheet email arrives; add a member from /dashboard/members →
+  invite arrives.
+
+- [ ] EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)
+  (Renamed from A-1 — REVISE_QUEUE.md already owns A-01…A-13.)
+
+  WHY: booking rows mutate (confirmed → completed / cancelled), so history is
+  destroyed as it happens. Every analytics question later ("how many July
+  bookings cancelled inside 24h", "no-show rate by weekday", "booking lead time")
+  is unanswerable from final state alone. This item captures the data. It ships
+  NO reporting UI — see EV-2.
+
+  SCHEMA (prisma/schema.prisma):
+
+    enum BookingEventType {
+      booking_created
+      booking_cancelled
+      checked_in
+      no_show_marked
+      no_show_cleared
+      fee_charged
+      fee_refunded
+    }
+
+    enum EventActorType { golfer  staff  admin  cron  system }
+
+    model BookingEvent {
+      id           String            @id @default(cuid())
+      bookingId    String
+      courseId     String
+      type         BookingEventType
+      occurredAt   DateTime          @default(now())
+      actorType    EventActorType
+      actorId      String?
+      amountCents  Int?
+      playerCount  Int?
+      teeTimeAt    DateTime?
+      stripeId     String?           @unique
+      metadata     Json?
+
+      @@index([courseId, occurredAt])
+      @@index([bookingId, occurredAt])
+      @@index([type, occurredAt])
+    }
+
+  DENORMALIZATION IS DELIBERATE. courseId, amountCents, playerCount and teeTimeAt
+  are copied onto the row, not joined at read time. A price change or a deleted
+  course must not rewrite history. Do not replace them with relations — and that
+  includes bookingId: NO foreign key, so a deleted booking cannot cascade its
+  history away (PaymentEvent has onDelete: Cascade; BookingEvent must not).
+
+  APPEND-ONLY IS THE WHOLE POINT. No code path may UPDATE or DELETE a
+  BookingEvent row. A correction is a new row, never an edit. If a later item
+  needs to "fix" an event, that item is wrong. This is why no_show_cleared
+  exists: SD-5's `still_coming` action un-marks a no-show, and that reversal is
+  a second row, not a delete of the first.
+
+  RELATION TO PaymentEvent (src/lib/refund-booking.ts, MP-6b): PaymentEvent stays
+  the money-ops ledger — refunds, refund failures, disputes, charge failures,
+  what admin support reads. BookingEvent is the analytics log. They overlap only
+  on successful fee charges/refunds; that overlap is accepted because
+  PaymentEvent cascades on booking delete and carries no courseId. Do NOT merge
+  them in this run and do NOT start writing charge-failure rows to BookingEvent.
+
+  ATOMICITY — two rules, because Stripe is not in a Postgres transaction:
+    (a) DB-only state changes (created, cancelled with no fee, no-show marked /
+        cleared, paid-offline check-in): the event row is written inside the
+        SAME prisma.$transaction as the state change. Neither exists without
+        the other.
+    (b) Stripe-backed changes (fee_charged, fee_refunded, and the checked_in
+        that follows a successful round charge): write the event AFTER Stripe
+        confirms, in the same $transaction as the booking update that records
+        the Stripe id. Set stripeId to the PaymentIntent / Refund id — the
+        @unique makes a cron retry or double-submit a no-op (catch P2002, do
+        not fail the request). Accepted gap: Stripe succeeds and the DB write
+        fails → no event, same as today's booking row. Log it; do not retry
+        from inside the request.
+
+  ACTOR PLUMBING. performCancellation() and performCheckIn() take no actor today.
+  Add a required `actor: { type: EventActorType; id?: string }` param to both and
+  pass it from EVERY caller — the compiler finds them:
+    performCancellation:
+      src/app/api/bookings/cancel/route.ts          → golfer
+      src/app/api/operator/bookings/route.ts        → staff
+      src/app/api/operator/blackouts/route.ts       → staff
+      src/app/api/admin/golfers/route.ts            → admin
+      src/app/api/admin/tee-sheet/route.ts          → admin
+      src/lib/course-closure.ts                     → system
+    performCheckIn:
+      src/app/api/checkin/[bookingId]/route.ts      → golfer
+      src/app/api/operator/bookings/route.ts        → staff
+      src/app/api/admin/retry-charge/[bookingId]    → admin
+
+  WRITE SITES — one row per real-world occurrence:
+    - src/lib/claim-tee-time.ts (the single tx.booking.create for all three
+      creators: /api/bookings → golfer, /api/operator/bookings → staff,
+      /api/admin/tee-sheet → admin)                → booking_created
+    - src/lib/cancel-booking.ts                    → booking_cancelled
+                                                     (+ fee_charged / fee_refunded
+                                                     for the Stripe calls at
+                                                     :50 and :67)
+    - src/lib/checkin-booking.ts                   → checked_in, and
+                                                     fee_refunded for the
+                                                     late-fee refund at :285
+    - src/app/api/operator/bookings/route.ts:
+        action 'no_show'      → no_show_marked   (staff)
+        action 'still_coming' → no_show_cleared  (staff)
+        action 'paid_offline' → checked_in, metadata {paidOffline:true} (staff).
+          This path sets status 'completed' WITHOUT performCheckIn — miss it
+          and every counter check-in vanishes from the log.
+    - src/app/api/cron/cancellation-cutoff/route.ts → fee_charged (cron),
+          metadata {reason:'cutoff_hold'}.
+          NOTE what this fee is: the cron does NOT detect no-shows. It charges
+          every confirmed card-on-file booking with a fee policy once the
+          cancellation cutoff passes, and that charge is refunded at check-in.
+          So fee_charged from the cron is a HOLD, not a penalty. Reporting must
+          net it against the check-in fee_refunded; the metadata reason is
+          what makes that possible.
+
+  NO-SHOW SEMANTICS. no_show_marked records what the counter said; the booking
+  stays 'confirmed' (SD-5). A booking can legitimately carry no_show_marked →
+  no_show_cleared → checked_in. "Is this a no-show" = last no-show event is
+  _marked AND no checked_in AND no booking_cancelled. Write that sentence into
+  the hand-off so EV-2 does not have to rediscover it.
+
+  OUT OF SCOPE for this run: any chart, any /dashboard or /admin page, any
+  aggregation query, any backfill of existing bookings, any change to
+  PaymentEvent. Historical bookings get no events — that gap is expected and
+  must be stated in the hand-off, not papered over.
+
+  SHIPPING: schema change → feature branch, Neon branch DB, `migrate dev`,
+  commit the migration file, verify on the Vercel preview, schema-check CI must
+  pass, then `migrate deploy` on prod. Attended. Never swept into a batch.
+  Per docs/SHIPPING.md.
+
+  VERIFY (manual, after deploy):
+    1. Book a tee time as a golfer      → exactly ONE booking_created row
+    2. Cancel it before the window      → exactly ONE booking_cancelled row
+    3. Book + check in from /dashboard  → ONE checked_in row, actorType staff
+    4. Check in via /checkin/[id]?token → ONE checked_in row, actorType golfer
+    5. Mark no-show, then still-coming  → TWO rows (_marked, _cleared), both staff
+    6. Paid-offline at the counter      → ONE checked_in row, metadata.paidOffline
+    7. Run the cutoff cron twice        → ONE fee_charged row (stripeId dedupes)
+    8. /api/health returns {"ok":true,"db":"up"}
+    9. `npx prisma migrate status` reports up to date
+  Confirm every amountCents and playerCount matches the booking it came from.
+  `grep -rn 'bookingEvent\.\(update\|delete\|upsert\)' src` must be empty.
+
+- [ ] EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET
+
+  BLOCKED BY DESIGN, not by dependency. EV-1 captures the data; the reports wait
+  until a live course says what it opens on a Monday morning. Building reports
+  from guesses with zero live courses is how you build six charts nobody opens.
+  Unblock condition: one live operator names the questions. Then spec it.
 
 ## Ideas / not yet specced
 

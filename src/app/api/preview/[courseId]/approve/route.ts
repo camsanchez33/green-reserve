@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyPreviewToken } from '@/lib/preview-token';
 import { sendCourseApprovedNotification } from '@/lib/email';
@@ -62,8 +62,8 @@ export async function POST(
 
   // Fire-and-forget (A6 item 2 pattern) — never await an email send in the
   // request path.
-  sendCourseApprovedNotification({ courseName: course.name, contactName: inquiry.contactName || course.name })
-    .catch(err => console.error('Course-approved notification email failed:', err));
+  after(sendCourseApprovedNotification({ courseName: course.name, contactName: inquiry.contactName || course.name })
+    .catch(err => console.error('Course-approved notification email failed:', err)));
 
   return NextResponse.json({ ok: true });
 }

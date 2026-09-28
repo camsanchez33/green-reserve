@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAdminSetPasswordToken } from '@/lib/admin-session';
 import { validatePasswordStrength } from '@/lib/password';
@@ -62,8 +62,8 @@ export async function POST(req: NextRequest) {
   });
 
   if (isReset) {
-    sendAdminPasswordChangedNotification({ adminName: admin.name, adminEmail: admin.email })
-      .catch(err => console.error('Admin password-changed notification failed:', err));
+    after(sendAdminPasswordChangedNotification({ adminName: admin.name, adminEmail: admin.email })
+      .catch(err => console.error('Admin password-changed notification failed:', err)));
   }
 
   // Role is returned so the success screen can send the account to a door it

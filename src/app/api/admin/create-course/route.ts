@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
 import { randomBytes } from 'crypto';
@@ -167,8 +167,8 @@ export async function POST(req: NextRequest) {
       seedTierCreated = true;
     }
 
-    sendOperatorWelcomeEmail({ operatorName: contactName, operatorEmail: contactEmail, courseName, tempPassword, setupLink })
-      .catch(e => console.error('Welcome email failed:', e));
+    after(sendOperatorWelcomeEmail({ operatorName: contactName, operatorEmail: contactEmail, courseName, tempPassword, setupLink })
+      .catch(e => console.error('Welcome email failed:', e)));
 
     return NextResponse.json({
       success: true, slug, tempPassword, setupLink, courseId, operatorId: operator.id,

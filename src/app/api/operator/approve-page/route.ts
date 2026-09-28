@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 import { sendCourseApprovedNotification } from '@/lib/email';
@@ -57,8 +57,8 @@ export async function POST() {
   // Fire-and-forget (A6 item 2 pattern) — an awaited email send in the
   // request path is what made "Send Sheet"/"Reset pwd" freeze for 30s-2min;
   // never repeat that here. The approval is already durably recorded above.
-  sendCourseApprovedNotification({ courseName: course.name, contactName: inquiry.contactName || course.name })
-    .catch(err => console.error('Course-approved notification email failed:', err));
+  after(sendCourseApprovedNotification({ courseName: course.name, contactName: inquiry.contactName || course.name })
+    .catch(err => console.error('Course-approved notification email failed:', err)));
 
   return NextResponse.json({ ok: true });
 }

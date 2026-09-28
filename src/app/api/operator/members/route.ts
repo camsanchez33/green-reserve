@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
@@ -120,13 +120,13 @@ export async function POST(req: NextRequest) {
 
     // Existing golfer account — just let them know, no password setup needed.
     const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { name: true, slug: true } });
-    sendMemberLinkedNotification({
+    after(sendMemberLinkedNotification({
       name: membership.golfer ? `${membership.golfer.firstName} ${membership.golfer.lastName}`.trim() : (name || ''),
       email: lowerEmail,
       courseName: course?.name || 'your course',
       courseSlug: course?.slug,
       tierName: tier.name,
-    }).catch(err => console.error('Member linked email error:', err));
+    }).catch(err => console.error('Member linked email error:', err)));
     maybeSendPayLink(membership.id).catch(err => console.error('Pay link email error:', err));
 
     return NextResponse.json({ ...membership, linked: true }, { status: 201 });
@@ -162,13 +162,13 @@ export async function POST(req: NextRequest) {
     // No GolferAccount yet — send a set-password invite link.
     const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { name: true, slug: true } });
     const token = await signMemberInviteToken({ membershipId: membership.id, email: lowerEmail });
-    sendMemberInviteEmail({
+    after(sendMemberInviteEmail({
       name: name.trim(),
       email: lowerEmail,
       courseName: course?.name || 'your course',
       tierName: tier.name,
       setupLink: `${process.env.NEXT_PUBLIC_URL}/courses/${course?.slug}/account/accept-invite?token=${token}`,
-    }).catch(err => console.error('Member invite email error:', err));
+    }).catch(err => console.error('Member invite email error:', err)));
     maybeSendPayLink(membership.id).catch(err => console.error('Pay link email error:', err));
 
     return NextResponse.json({ ...membership, linked: false }, { status: 201 });
