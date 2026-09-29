@@ -1,27 +1,21 @@
 {
-  "generatedAt": "2026-09-29T02:28:25.492Z",
+  "generatedAt": "2026-09-29T02:28:38.640Z",
   "repo": {
-    "head": "371ffff",
+    "head": "7756ce9",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 0,
-    "dirty": [],
+    "dirtyCount": 1,
+    "dirty": [
+      "M RUN_QUEUE.md"
+    ],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-09-29T01:52:20+00:00",
-    "unrecorded": [
-      {
-        "h": "371ffff",
-        "date": "2026-09-29T02:28:25+00:00",
-        "subject": "All contact, alert and reply-to addresses point at the inbox that is read",
-        "ids": [],
-        "matches": []
-      }
-    ]
+    "unrecorded": []
   },
   "counts": {
     "runDone": 194,
-    "runAwaiting": 18,
+    "runAwaiting": 19,
     "runInFlight": 1,
     "runNotStarted": 19,
     "reviseDone": 14,
@@ -102,8 +96,15 @@
       "ageDays": 0
     },
     {
-      "title": "CAL-1 — Cal.com as the call scheduler",
+      "title": "BUG: hello@greenreserve.app takes no mail",
       "line": 2527,
+      "hash": "371ffff",
+      "shipDate": "2026-09-29",
+      "ageDays": 0
+    },
+    {
+      "title": "CAL-1 — Cal.com as the call scheduler",
+      "line": 2543,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 0
@@ -260,12 +261,12 @@
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2551,
+      "line": 2567,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2704,
+      "line": 2720,
       "section": "Queue (run in this order)"
     }
   ],
@@ -321,9 +322,14 @@
       "line": 2498
     },
     {
+      "item": "BUG: hello@greenreserve.app takes no mail",
+      "note": "Cam: \"all emails need to go to thegreenreserve@outlook",
+      "line": 2527
+    },
+    {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2527
+      "line": 2543
     }
   ],
   "ideas": {
@@ -396,16 +402,16 @@
   },
   "specs": [
     {
+      "file": "CLAUDE.md",
+      "openRefs": 4,
+      "lastTouched": "2026-09-29",
+      "ageDays": 0
+    },
+    {
       "file": "ARCHITECTURE.md",
       "openRefs": 4,
       "lastTouched": "2026-09-16",
       "ageDays": 12
-    },
-    {
-      "file": "CLAUDE.md",
-      "openRefs": 3,
-      "lastTouched": "2026-09-29",
-      "ageDays": 0
     },
     {
       "file": "UI_REVISE_SPEC.md",
@@ -567,6 +573,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "7756ce9",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "371ffff",
       "date": "2026-09-29",
       "subject": "All contact, alert and reply-to addresses point at the inbox that is read"
@@ -620,11 +631,6 @@
       "h": "9d6dc6a",
       "date": "2026-09-29",
       "subject": "SD-8e: booking status is a StatusDot, and 'card on file' reads differently from 'paid'"
-    },
-    {
-      "h": "22a3d7d",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
     }
   ]
 }

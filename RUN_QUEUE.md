@@ -2524,6 +2524,22 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   static page. Next PR's "Lighthouse budget check" is the first REAL measurement
   of production — if it goes red, that is a genuine budget miss, not the tool.
 
+- [ ] BUG: hello@greenreserve.app takes no mail — SHIPPED 371ffff, 2026-09-29, box
+  open until /gr-review. Cam: "all emails need to go to thegreenreserve@outlook.com,
+  the other one doesn't take replies." Every visible contact address, admin alert
+  recipient and hard-coded replyTo in src/ now uses the Outlook inbox (97
+  occurrences, 19 files); getResend() sets it as Reply-To on any send without
+  one (verified by capturing the SDK request). FROM stays hello@ — Resend only
+  sends from the verified domain. NOT CHANGED, needs Cam: the versioned legal
+  documents under legal/documents/ (operator-agreement 2026-08, brand-license
+  2026-09) still name hello@ — they are accepted contracts, so a new version,
+  not an edit. Alternative Cam declined as too many steps: forward hello@ via
+  ImprovMX MX records in Vercel DNS, which would also rescue mail courses
+  already have. Still worth doing later.
+  NOTICED, NOT FIXED: api/admin/resend-staff-setup builds its own new Resend()
+  and fires the send without await/after() — both CLAUDE.md gotchas 6 and 7 —
+  so the staff-login email can die silently. Three-line fix.
+
 - [ ] CAL-1 — Cal.com as the call scheduler — SHIPPED a5ed9d7, 2026-09-29, box open
   until /gr-review. Cam: invite link showed "I can't show my calendar right now".
   Cause: SC-1's Google Calendar env vars were never set (PASSWORD_CHECKLIST 7b
