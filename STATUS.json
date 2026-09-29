@@ -1,19 +1,26 @@
 {
-  "generatedAt": "2026-09-29T02:40:49.783Z",
+  "generatedAt": "2026-09-29T02:48:51.084Z",
   "repo": {
-    "head": "0c5bcf2",
+    "head": "02c5cac",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 3,
+    "dirtyCount": 2,
     "dirty": [
-      "M RUN_QUEUE.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-29T02:28:39+00:00",
-    "unrecorded": []
+    "queueLastCommit": "2026-09-29T02:40:50+00:00",
+    "unrecorded": [
+      {
+        "h": "02c5cac",
+        "date": "2026-09-29T02:48:49+00:00",
+        "subject": "Review fixes: three lost emails, a preview-send lockout, misleading admin errors",
+        "ids": [],
+        "matches": []
+      }
+    ]
   },
   "counts": {
     "runDone": 194,
@@ -575,6 +582,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "02c5cac",
+      "date": "2026-09-29",
+      "subject": "Review fixes: three lost emails, a preview-send lockout, misleading admin errors"
+    },
+    {
+      "h": "271108e",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "0c5bcf2",
       "date": "2026-09-29",
       "subject": "Fix: staff-login email reported 'sent' even when it never went"
@@ -621,16 +638,6 @@
     },
     {
       "h": "0a16333",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "209e652",
-      "date": "2026-09-29",
-      "subject": "Fix: rejected emails reported success (Resend returns errors, never throws)"
-    },
-    {
-      "h": "a130919",
       "date": "2026-09-29",
       "subject": "queue/spec update"
     }

@@ -89,13 +89,13 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/expenses/[id]` | admin | file | DELETE PATCH | `src/app/api/admin/expenses/[id]/route.ts` | 72 |
 | `/api/admin/forgot-password` | admin | entry | POST | `src/app/api/admin/forgot-password/route.ts` | 45 |
 | `/api/admin/golfers` | admin | file | GET POST | `src/app/api/admin/golfers/route.ts` | 246 |
-| `/api/admin/inquiries` | admin | file | DELETE GET PATCH POST | `src/app/api/admin/inquiries/route.ts` | 1135 |
+| `/api/admin/inquiries` | admin | file | DELETE GET PATCH POST | `src/app/api/admin/inquiries/route.ts` | 1137 |
 | `/api/admin/login` | admin | entry | POST | `src/app/api/admin/login/route.ts` | 90 |
 | `/api/admin/logout` | admin | entry | POST | `src/app/api/admin/logout/route.ts` | 14 |
 | `/api/admin/messages` | admin | file | GET PATCH POST | `src/app/api/admin/messages/route.ts` | 177 |
 | `/api/admin/nav-badges` | admin | file | GET | `src/app/api/admin/nav-badges/route.ts` | 36 |
 | `/api/admin/orphan-sweep` | admin | file | GET POST | `src/app/api/admin/orphan-sweep/route.ts` | 45 |
-| `/api/admin/owner-login` | admin | entry | POST | `src/app/api/admin/owner-login/route.ts` | 202 |
+| `/api/admin/owner-login` | admin | entry | POST | `src/app/api/admin/owner-login/route.ts` | 209 |
 | `/api/admin/platform-stripe` | admin | file | GET | `src/app/api/admin/platform-stripe/route.ts` | 117 |
 | `/api/admin/reconcile-lifecycle-pairs` | admin | file | POST | `src/app/api/admin/reconcile-lifecycle-pairs/route.ts` | 19 |
 | `/api/admin/refund` | admin | file | POST | `src/app/api/admin/refund/route.ts` | 23 |
@@ -206,7 +206,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/preview/[courseId]/approve` | public | token | POST | `src/app/api/preview/[courseId]/approve/route.ts` | 70 |
 | `/api/preview/[courseId]/request-changes` | public | token | POST | `src/app/api/preview/[courseId]/request-changes/route.ts` | 38 |
 | `/api/preview/[courseId]/tee-times` | public | token | GET | `src/app/api/preview/[courseId]/tee-times/route.ts` | 67 |
-| `/api/preview/send` | admin | file | POST | `src/app/api/preview/send/route.ts` | 132 |
+| `/api/preview/send` | admin | file | POST | `src/app/api/preview/send/route.ts` | 148 |
 | `/api/receipt/[bookingId]` | admin | file | GET | `src/app/api/receipt/[bookingId]/route.ts` | 61 |
 | `/api/stripe/webhook` | public | secret header | POST | `src/app/api/stripe/webhook/route.ts` | 116 |
 | `/api/waitlist` | public | public | POST | `src/app/api/waitlist/route.ts` | 7 |

@@ -4,15 +4,20 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-29 02:40 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `0c5bcf2` · working tree **3 dirty file(s)**
+Generated 2026-09-29 02:48 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `02c5cac` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
+`RUN_QUEUE.md` was last committed **2026-09-29**. 1 commit(s) since then are not mentioned anywhere in it:
 
-### Uncommitted working tree (3 file(s))
+| commit | date | subject |
+|---|---|---|
+| `02c5cac` | 2026-09-29 | Review fixes: three lost emails, a preview-send lockout, misleading admin errors |
 
-- `M RUN_QUEUE.md`
+**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (2 file(s))
+
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
 
@@ -167,6 +172,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `02c5cac` 2026-09-29 — Review fixes: three lost emails, a preview-send lockout, misleading admin errors
+- `271108e` 2026-09-29 — queue/spec update
 - `0c5bcf2` 2026-09-29 — Fix: staff-login email reported 'sent' even when it never went
 - `8126d1c` 2026-09-29 — queue/spec update
 - `b81c2f1` 2026-09-29 — queue/spec update
@@ -177,8 +184,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `5d3fe1d` 2026-09-29 — queue/spec update
 - `d1ccc46` 2026-09-29 — queue/spec update
 - `0a16333` 2026-09-29 — queue/spec update
-- `209e652` 2026-09-29 — Fix: rejected emails reported success (Resend returns errors, never throws)
-- `a130919` 2026-09-29 — queue/spec update
 
 ---
 

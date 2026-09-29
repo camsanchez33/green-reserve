@@ -117,10 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-09-29 02:40 UTC</span><span>claude/eager-maxwell-qf1pd0 @ 0c5bcf2</span>
-    <span>3 uncommitted</span>
+    <span>2026-09-29 02:48 UTC</span><span>claude/eager-maxwell-qf1pd0 @ 02c5cac</span>
+    <span>2 uncommitted</span>
   </div>
 </header>
+<div class="alarm">
+<div class="lede">1 run has shipped that the queue doesn't know about</div>
+<p class="note">RUN_QUEUE.md was last committed 2026-09-29. These commits appear nowhere in it.</p>
+<ul>
+<li><span class="h">02c5cac</span><span>Review fixes: three lost emails, a preview-send lockout, misleading admin errors</span></li>
+</ul></div>
 <div class="tiles">
   <div class="tile t-good"><span class="n">194</span><span class="l">Done</span></div>
   <div class="tile t-warn"><span class="n">19</span><span class="l">Awaiting review</span></div>
@@ -132,7 +138,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card">
 <h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M RUN_QUEUE.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -238,6 +244,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 13d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">02c5cac</td><td class="num">2026-09-29</td><td>Review fixes: three lost emails, a preview-send lockout, misleading admin errors</td></tr>
+<tr><td class="num">271108e</td><td class="num">2026-09-29</td><td>queue/spec update</td></tr>
 <tr><td class="num">0c5bcf2</td><td class="num">2026-09-29</td><td>Fix: staff-login email reported 'sent' even when it never went</td></tr>
 <tr><td class="num">8126d1c</td><td class="num">2026-09-29</td><td>queue/spec update</td></tr>
 <tr><td class="num">b81c2f1</td><td class="num">2026-09-29</td><td>queue/spec update</td></tr>
@@ -248,8 +256,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">5d3fe1d</td><td class="num">2026-09-29</td><td>queue/spec update</td></tr>
 <tr><td class="num">d1ccc46</td><td class="num">2026-09-29</td><td>queue/spec update</td></tr>
 <tr><td class="num">0a16333</td><td class="num">2026-09-29</td><td>queue/spec update</td></tr>
-<tr><td class="num">209e652</td><td class="num">2026-09-29</td><td>Fix: rejected emails reported success (Resend returns errors, never throws)</td></tr>
-<tr><td class="num">a130919</td><td class="num">2026-09-29</td><td>queue/spec update</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
