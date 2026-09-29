@@ -1,21 +1,24 @@
 {
-  "generatedAt": "2026-09-29T02:49:09.296Z",
+  "generatedAt": "2026-09-29T03:06:48.231Z",
   "repo": {
-    "head": "502fb9d",
+    "head": "e082dd0",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 1,
+    "dirtyCount": 4,
     "dirty": [
-      "M RUN_QUEUE.md"
+      "M CALL_SCHEDULING_SPEC.md",
+      " M CLAUDE.md",
+      " M PASSWORD_CHECKLIST.md",
+      " M RUN_QUEUE.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-29T02:40:50+00:00",
+    "queueLastCommit": "2026-09-29T02:49:10+00:00",
     "unrecorded": []
   },
   "counts": {
     "runDone": 194,
-    "runAwaiting": 19,
+    "runAwaiting": 20,
     "runInFlight": 1,
     "runNotStarted": 19,
     "reviseDone": 14,
@@ -96,15 +99,22 @@
       "ageDays": 0
     },
     {
-      "title": "BUG: hello@greenreserve.app takes no mail",
+      "title": "CAL-2 — Cal.com is the ONLY call scheduler",
       "line": 2539,
+      "hash": "e082dd0",
+      "shipDate": "2026-09-29",
+      "ageDays": 0
+    },
+    {
+      "title": "BUG: hello@greenreserve.app takes no mail",
+      "line": 2559,
       "hash": "371ffff",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 2557,
+      "line": 2577,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 0
@@ -261,12 +271,12 @@
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2581,
+      "line": 2601,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2734,
+      "line": 2754,
       "section": "Queue (run in this order)"
     }
   ],
@@ -322,14 +332,19 @@
       "line": 2503
     },
     {
+      "item": "CAL-2 — Cal.com is the ONLY call scheduler",
+      "note": "Cam: \"there should be no google calendar thing\" and, after setting both env vars and redeploying, \"it is just the same as before\"",
+      "line": 2539
+    },
+    {
       "item": "BUG: hello@greenreserve.app takes no mail",
       "note": "Cam: \"all emails need to go to thegreenreserve@outlook",
-      "line": 2539
+      "line": 2559
     },
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2557
+      "line": 2577
     }
   ],
   "ideas": {
@@ -573,6 +588,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "e082dd0",
+      "date": "2026-09-29",
+      "subject": "CAL-2: Cal.com is the only call scheduler; Google Calendar removed"
+    },
+    {
+      "h": "734b067",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "502fb9d",
       "date": "2026-09-29",
       "subject": "queue/spec update"
@@ -619,16 +644,6 @@
     },
     {
       "h": "b2fdff8",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "5d3fe1d",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "d1ccc46",
       "date": "2026-09-29",
       "subject": "queue/spec update"
     }

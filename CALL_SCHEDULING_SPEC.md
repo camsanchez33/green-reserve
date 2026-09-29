@@ -1,3 +1,8 @@
+> **SUPERSEDED IN PART (2026-09-29, CAL-1/CAL-2):** the Google Calendar availability grid, service account and
+> SC-2 self-serve booking writes described below were never connected and are DELETED. Cal.com is the only
+> scheduler — see `src/lib/calcom.ts` and RUN_QUEUE CAL-1/CAL-2. Invite tokens, reminders and admin call
+> logging from this spec still stand.
+
 # Call Scheduling Spec — the course books its own call, against your real calendar
 
 Source: Cam, 2026-09-15. "It shouldn't be that we just set up a call — they should

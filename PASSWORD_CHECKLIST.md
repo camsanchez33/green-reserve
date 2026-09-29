@@ -111,10 +111,10 @@ Just put your existing passwords into KeePassXC so they exist somewhere safe.
       Make it a NEW strong one (KeePassXC can generate: the dice icon in the entry editor).
 - [ ] 7.2 KeePassXC — Title: `GreenReserve admin (owner)`, URL: https://greenreserve.app/admin
 
-## PHASE 7a — Cal.com for call booking (CAL-1 — Cam's pick 2026-09-29; REPLACES 7b)
+## PHASE 7a — Cal.com for call booking (CAL-1 — Cam's pick 2026-09-29; the only call scheduler)
 
-Your calendar is personal Outlook.com, which 7b's Google integration cannot read. With
-CALCOM_BOOKING_URL set, the call page embeds Cal.com and 7b is not needed at all.
+Your calendar is personal Outlook.com. With CALCOM_BOOKING_URL set, the call page embeds Cal.com.
+If the page still says online booking isn't available, Admin → System → Call booking shows what the site sees.
 
 - [ ] 7a.1 https://cal.com → sign up (free plan is enough — it includes webhooks). KeePassXC: Title `Cal.com`.
 - [ ] 7a.2 Settings → Calendars → connect **Outlook.com**, and turn on "check for conflicts" for it, so busy times in Outlook block slots.
@@ -124,16 +124,6 @@ CALCOM_BOOKING_URL set, the call page embeds Cal.com and 7b is not needed at all
 - [ ] 7a.6 Settings → Developer → Webhooks → New: Subscriber URL `https://greenreserve.app/api/calcom/webhook`; triggers **Booking Created, Booking Rescheduled, Booking Cancelled**; Secret = a long random string (KeePassXC: Title `Cal.com webhook secret`). Use "Ping test" — it should answer 200.
 - [ ] 7a.7 Vercel → Environment Variables (Production): `CALCOM_BOOKING_URL` = the 7a.5 link; `CALCOM_WEBHOOK_SECRET` = the 7a.6 secret. **Redeploy.**
 - [ ] 7a.8 Open a real invite link (submit a test inquiry at /for-courses): the Cal.com calendar shows, prefilled. Book a slot → within a minute the page flips to "You're booked", and /admin/inquiries shows the call. Cancel from the page's link → the admin row shows cancelled.
-
-## PHASE 7b — Google Calendar for call booking — SKIP: superseded by 7a (Cal.com). Kept for reference only.
-
-- [ ] 7b.1 https://console.cloud.google.com → new project → APIs & Services → enable **Google Calendar API**
-- [ ] 7b.2 IAM & Admin → Service Accounts → create one → Keys → **Add key → JSON** → download. KeePassXC: Title `Google service account (calendar)`, attach the file.
-- [ ] 7b.3 In Google Calendar, open the calendar that is the source of truth → Settings → **Share with specific people** → add the service account's email (`…@….iam.gserviceaccount.com`) with **Make changes to events**
-- [ ] 7b.4 Vercel → Environment Variables: `GOOGLE_SERVICE_ACCOUNT_JSON` = the key file's contents on one line; `GOOGLE_CALENDAR_ID` = the calendar's id (Settings → Integrate calendar; often the Gmail address)
-- [ ] 7b.5 `vercel env pull .env.local` then `npx dotenv -e .env.local -- npx tsx scripts/google-calendar-check.ts` — must print PASS for freebusy, create and delete. Then delete the local copy of the key from any scratch location.
-
----
 
 ## PHASE 7c — Birdie (the dashboard assistant; off until you do this)
 
