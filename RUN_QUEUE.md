@@ -2642,6 +2642,11 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   pre-filled from the taps, and skips sections the call answered no to (with
   "show all"). Walked end to end in Chromium. OPEN: nothing sent for real yet
   (no Resend key in the sandbox) — Cam's first real call is the live test.
+- [ ] PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29:
+  private clubs pay GreenReserve (subscription, or $1.50/round billed monthly and
+  capped at the subscription price); members pay $0. BLOCKED on Cam's prices and on
+  previews building again (schema change). Ship the member-fee removal WITH billing,
+  never before. (large, money, attended)
 - [ ] SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +
   paymentMethodId (found in the FB-3 review, pre-existing). No route exposes
   another golfer's ids, but anyone holding a cus_ id could attach their own card
