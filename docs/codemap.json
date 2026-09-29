@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 354,
+    "files": 360,
     "routes": 195,
-    "libs": 92,
+    "libs": 93,
     "models": 33,
     "orphans": 8,
     "ungatedRoutes": 3
@@ -23,7 +23,7 @@
   "files": [
     {
       "path": "src/app/HomeContent.tsx",
-      "lines": 316,
+      "lines": 205,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -40,12 +40,14 @@
       "imports": [
         "./home.module.css",
         "@/components/home/HomeDemo",
+        "@/components/home/HomeFaq",
+        "@/components/home/HomeMotion",
+        "@/components/home/MountNearView",
         "@/components/home/SeeItWork",
+        "@/components/home/StoryMedia",
         "@/lib/demo-courses",
-        "@/lib/faq",
         "next/image",
-        "next/link",
-        "react"
+        "next/link"
       ],
       "usedBy": [
         "src/app/page.tsx"
@@ -2958,7 +2960,7 @@
     },
     {
       "path": "src/app/api/courses/[slug]/tee-times/route.ts",
-      "lines": 81,
+      "lines": 15,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2975,10 +2977,7 @@
       "auth": "public",
       "guard": "public",
       "imports": [
-        "@/lib/booking-window",
-        "@/lib/course-time",
-        "@/lib/money",
-        "@/lib/prisma",
+        "@/lib/public-tee-times",
         "next/server"
       ],
       "usedBy": []
@@ -5195,21 +5194,33 @@
       "usedBy": []
     },
     {
-      "path": "src/app/book/page.tsx",
-      "lines": 553,
+      "path": "src/app/book/BookClient.tsx",
+      "lines": 563,
       "purpose": "",
       "brain": [],
       "exports": [
         {
-          "name": "default (BookPage)",
+          "name": "BookInitial",
+          "kind": "type"
+        },
+        {
+          "name": "CourseInfo",
+          "kind": "type"
+        },
+        {
+          "name": "default (BookClient)",
           "kind": "component"
+        },
+        {
+          "name": "LiveTeeTime",
+          "kind": "type"
         }
       ],
-      "route": "/book",
-      "kind": "page",
+      "route": null,
+      "kind": null,
       "methods": [],
-      "auth": "public",
-      "guard": "public",
+      "auth": null,
+      "guard": null,
       "imports": [
         "@/components/CourseHeaderBar",
         "@/components/TrustNote",
@@ -5219,6 +5230,36 @@
         "lucide-react",
         "next/navigation",
         "react"
+      ],
+      "usedBy": [
+        "src/app/book/page.tsx"
+      ]
+    },
+    {
+      "path": "src/app/book/page.tsx",
+      "lines": 33,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (BookPage)",
+          "kind": "component"
+        },
+        {
+          "name": "metadata",
+          "kind": "const"
+        }
+      ],
+      "route": "/book",
+      "kind": "page",
+      "methods": [],
+      "auth": "public",
+      "guard": "public",
+      "imports": [
+        "./BookClient",
+        "@/lib/public-course",
+        "@/lib/public-tee-times",
+        "next"
       ],
       "usedBy": []
     },
@@ -6509,7 +6550,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/book/page.tsx",
+        "src/app/book/BookClient.tsx",
         "src/app/checkin/[bookingId]/page.tsx",
         "src/app/courses/[slug]/account/accept-invite/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
@@ -6707,7 +6748,7 @@
         "react"
       ],
       "usedBy": [
-        "src/app/book/page.tsx",
+        "src/app/book/BookClient.tsx",
         "src/app/courses/[slug]/CourseBookingClient.tsx"
       ]
     },
@@ -7333,6 +7374,78 @@
       ]
     },
     {
+      "path": "src/components/home/HomeFaq.tsx",
+      "lines": 22,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (HomeFaq)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/app/home.module.css",
+        "@/lib/faq",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/HomeContent.tsx"
+      ]
+    },
+    {
+      "path": "src/components/home/HomeMotion.tsx",
+      "lines": 69,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (HomeMotion)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/app/home.module.css",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/HomeContent.tsx"
+      ]
+    },
+    {
+      "path": "src/components/home/MountNearView.tsx",
+      "lines": 23,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (MountNearView)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "react"
+      ],
+      "usedBy": [
+        "src/app/HomeContent.tsx"
+      ]
+    },
+    {
       "path": "src/components/home/SeeItWork.tsx",
       "lines": 55,
       "purpose": "",
@@ -7353,6 +7466,31 @@
         "./HomeDemo",
         "@/app/home.module.css",
         "next/dynamic",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/HomeContent.tsx"
+      ]
+    },
+    {
+      "path": "src/components/home/StoryMedia.tsx",
+      "lines": 66,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (StoryMedia)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/app/home.module.css",
+        "next/image",
         "react"
       ],
       "usedBy": [
@@ -8642,7 +8780,7 @@
       "imports": [],
       "usedBy": [
         "src/app/api/admin/system/route.ts",
-        "src/app/book/page.tsx",
+        "src/app/book/BookClient.tsx",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
@@ -8774,8 +8912,8 @@
       "imports": [],
       "usedBy": [
         "src/app/api/bookings/route.ts",
-        "src/app/api/courses/[slug]/tee-times/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
+        "src/lib/public-tee-times.ts",
         "src/lib/tee-sheet-engine.ts"
       ]
     },
@@ -9633,7 +9771,6 @@
       "imports": [],
       "usedBy": [
         "src/app/api/bookings/route.ts",
-        "src/app/api/courses/[slug]/tee-times/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/bookings/route.ts",
@@ -9641,6 +9778,7 @@
         "src/app/api/operator/tee-times/route.ts",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/settings/page.tsx",
+        "src/lib/public-tee-times.ts",
         "src/lib/tee-sheet-engine.ts"
       ]
     },
@@ -10399,8 +10537,8 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/HomeContent.tsx",
-        "src/app/page.tsx"
+        "src/app/page.tsx",
+        "src/components/home/HomeFaq.tsx"
       ]
     },
     {
@@ -11202,7 +11340,6 @@
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/transactions/route.ts",
         "src/app/api/bookings/route.ts",
-        "src/app/api/courses/[slug]/tee-times/route.ts",
         "src/app/api/courses/route.ts",
         "src/app/api/cron/send-reminders/route.ts",
         "src/app/api/manage/[bookingId]/available-times/route.ts",
@@ -11220,6 +11357,7 @@
         "src/lib/go-live-preflight.ts",
         "src/lib/normalize-course.ts",
         "src/lib/public-course.ts",
+        "src/lib/public-tee-times.ts",
         "src/lib/schedule-service.ts",
         "src/lib/schedule-wire.ts",
         "src/lib/tier-wire.ts"
@@ -11506,7 +11644,6 @@
         "src/app/api/call/[token]/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
         "src/app/api/courses/[slug]/account/route.ts",
-        "src/app/api/courses/[slug]/tee-times/route.ts",
         "src/app/api/courses/route.ts",
         "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/chase-onboarding/route.ts",
@@ -11595,6 +11732,7 @@
         "src/lib/member-session.ts",
         "src/lib/money-problems.ts",
         "src/lib/public-course.ts",
+        "src/lib/public-tee-times.ts",
         "src/lib/rate-limit.ts",
         "src/lib/refund-booking.ts",
         "src/lib/schedule-service.ts",
@@ -11628,7 +11766,43 @@
       ],
       "usedBy": [
         "src/app/api/courses/[slug]/route.ts",
+        "src/app/book/page.tsx",
         "src/app/courses/[slug]/page.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/public-tee-times.ts",
+      "lines": 81,
+      "purpose": "PERF-1:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "loadPublicTeeTimes",
+          "kind": "fn"
+        },
+        {
+          "name": "normalizeDbTeeTime",
+          "kind": "fn"
+        },
+        {
+          "name": "PublicTeeTimes",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/booking-window",
+        "@/lib/course-time",
+        "@/lib/money",
+        "@/lib/prisma"
+      ],
+      "usedBy": [
+        "src/app/api/courses/[slug]/tee-times/route.ts",
+        "src/app/book/page.tsx"
       ]
     },
     {
@@ -13731,7 +13905,6 @@
         "src/app/api/admin/system/route.ts",
         "src/app/api/alerts/route.ts",
         "src/app/api/courses/[slug]/account/route.ts",
-        "src/app/api/courses/[slug]/tee-times/route.ts",
         "src/app/api/courses/route.ts",
         "src/app/api/cron/chase-onboarding/route.ts",
         "src/app/api/member/[courseSlug]/payments/route.ts",
@@ -13770,6 +13943,7 @@
         "src/lib/go-live-preflight.ts",
         "src/lib/lifecycle.ts",
         "src/lib/public-course.ts",
+        "src/lib/public-tee-times.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts"
       ]
@@ -15195,7 +15369,6 @@
       "readers": [
         "src/app/api/admin/tee-sheet/route.ts",
         "src/app/api/bookings/route.ts",
-        "src/app/api/courses/[slug]/tee-times/route.ts",
         "src/app/api/manage/[bookingId]/available-times/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/operator/analytics/route.ts",
@@ -15203,6 +15376,7 @@
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/api/preview/[courseId]/tee-times/route.ts",
+        "src/lib/public-tee-times.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts"
       ]

@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-354 source files · 195 routes · 92 libraries · 33 models
+360 source files · 195 routes · 93 libraries · 33 models
 
 ## Single sources of truth
 
@@ -136,7 +136,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/courses` | public | public | GET | `src/app/api/courses/route.ts` | 44 |
 | `/api/courses/[slug]` | public | public | GET | `src/app/api/courses/[slug]/route.ts` | 13 |
 | `/api/courses/[slug]/account` | golfer | file | GET | `src/app/api/courses/[slug]/account/route.ts` | 86 |
-| `/api/courses/[slug]/tee-times` | public | public | GET | `src/app/api/courses/[slug]/tee-times/route.ts` | 81 |
+| `/api/courses/[slug]/tee-times` | public | public | GET | `src/app/api/courses/[slug]/tee-times/route.ts` | 15 |
 | `/api/cron/cancellation-cutoff` | cron | file | GET | `src/app/api/cron/cancellation-cutoff/route.ts` | 127 |
 | `/api/cron/chase-onboarding` | cron | file | GET | `src/app/api/cron/chase-onboarding/route.ts` | 107 |
 | `/api/cron/generate-tee-times` | cron | file | GET | `src/app/api/cron/generate-tee-times/route.ts` | 14 |
@@ -210,7 +210,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/receipt/[bookingId]` | admin | file | GET | `src/app/api/receipt/[bookingId]/route.ts` | 61 |
 | `/api/stripe/webhook` | public | secret header | POST | `src/app/api/stripe/webhook/route.ts` | 130 |
 | `/api/waitlist` | public | public | POST | `src/app/api/waitlist/route.ts` | 7 |
-| `/book` | public | public | page | `src/app/book/page.tsx` | 553 |
+| `/book` | public | public | page | `src/app/book/page.tsx` | 33 |
 | `/call/[token]` | public | public | page | `src/app/call/[token]/page.tsx` | 147 |
 | `/checkin/[bookingId]` | golfer | token | page | `src/app/checkin/[bookingId]/page.tsx` | 291 |
 | `/contact` | public | public | page | `src/app/contact/page.tsx` | 42 |
@@ -303,6 +303,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/go-live-preflight.ts` | 3 | 35 |  | `computeStripeGoLiveCheck`, `StripeGoLiveCheck` |
 | `src/lib/inquiry-needs.ts` | 3 | 38 | INQUIRY_CALL_SPEC IC-1 §3 — "Still need from them", the sheet's column. | `NeedItem`, `stillNeed` |
 | `src/lib/normalize-course.ts` | 3 | 66 |  | `normalizeDbCourse` |
+| `src/lib/public-course.ts` | 3 | 29 | PERF-1: | `loadPublicCourse` |
 | `src/lib/refund-booking.ts` | 3 | 131 | MP-6b. | `findBookingByStripeId`, `PaymentEventKind`, `recordPaymentEvent`, `refundBooking`, `RefundResult` |
 | `src/lib/staff-fonts.ts` | 3 | 26 |  | `newsreader`, `sourceSans`, `STAFF_LOOK_CLASS` |
 | `src/lib/thread-signal.ts` | 3 | 49 | MP-7a. | `compareThreads`, `SignalMessage`, `threadSignal`, `ThreadSignal`, `UNANSWERED_AFTER_DAYS` |
@@ -321,7 +322,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/money-problems.ts` | 2 | 43 |  | `FAILED_CHARGE_WHERE`, `missedCheckInWhere`, `openDisputes` |
 | `src/lib/owner-totp.ts` | 2 | 100 | OWNER TOTP 2FA (RUN_QUEUE) — the authenticator-app second factor for the owner account. | `generateRecoveryCodes`, `generateTotpSecret`, `looksLikeRecoveryCode`, `matchRecoveryCode`, `normalizeRecoveryCode`, `RECOVERY_CODE_COUNT`, `signEnrolToken`, `TOTP_ISSUER` +8 more |
 | `src/lib/platform-stripe.ts` | 2 | 58 |  | `fetchStripeFeeWindow`, `fetchStripeProcessingCostCents`, `StripeFeeWindow` |
-| `src/lib/public-course.ts` | 2 | 29 | PERF-1: | `loadPublicCourse` |
+| `src/lib/public-tee-times.ts` | 2 | 81 | PERF-1: | `loadPublicTeeTimes`, `normalizeDbTeeTime`, `PublicTeeTimes` |
 | `src/lib/schedule-conflict.ts` | 2 | 78 | COURSE_LAYOUT_SPEC L2 — conflict detection for product-scoped schedules. | `ConflictNine`, `ConflictProduct`, `ConflictSchedule`, `findScheduleConflict` |
 | `src/lib/schedule-wire.ts` | 2 | 92 |  | `scheduleMoneyForCreate`, `scheduleMoneyFromWire`, `scheduleToWire`, `teeTimeToWire` |
 | `src/lib/settings-validation.ts` | 2 | 130 | SD-1. | `normalizeHttpUrl`, `SettingsValidation`, `validateSettingsPatch` |
@@ -384,7 +385,11 @@ Sorted the same way.
 | `src/components/dashboard/money/PayoutsPanel.tsx` | 1 | 125 | SD-8 — the Stripe card, moved here out of Settings. | `PayoutsPanel` |
 | `src/components/Footer.tsx` | 1 | 77 |  | `default (Footer)` |
 | `src/components/home/HomeDashboardDemo.tsx` | 1 | 149 |  | `default (HomeDashboardDemo)` |
+| `src/components/home/HomeFaq.tsx` | 1 | 22 |  | `default (HomeFaq)` |
+| `src/components/home/HomeMotion.tsx` | 1 | 69 |  | `default (HomeMotion)` |
+| `src/components/home/MountNearView.tsx` | 1 | 23 |  | `default (MountNearView)` |
 | `src/components/home/SeeItWork.tsx` | 1 | 55 |  | `default (SeeItWork)` |
+| `src/components/home/StoryMedia.tsx` | 1 | 66 |  | `default (StoryMedia)` |
 | `src/components/MainOffset.tsx` | 1 | 32 |  | `default (MainOffset)` |
 | `src/components/Nav.tsx` | 1 | 126 |  | `default (Nav)` |
 | `src/components/ui/Btn.tsx` | 1 | 27 |  | `Btn` |
@@ -645,7 +650,7 @@ without opening anything.
 
 - fields: `id`, `courseId`, `course`, `date`, `time`, `holes`, `playersAvailable`, `playersBooked`, `greenFeeCents`, `memberRateCents`, `residentRateCents`, `cartFeeCents`, `walkingAllowed`, `tierName`, `status`, `createdAt`, `bookings`, `teeTimeAlerts`, `productId`, `product`
 - writers: `src/app/api/operator/blackouts/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/lib/cancel-booking.ts`, `src/lib/lifecycle.ts`, `src/lib/schedule-service.ts`, `src/lib/tee-sheet-engine.ts`
-- readers: `src/app/api/admin/tee-sheet/route.ts`, `src/app/api/bookings/route.ts`, `src/app/api/courses/[slug]/tee-times/route.ts`, `src/app/api/manage/[bookingId]/available-times/route.ts`, `src/app/api/member/[courseSlug]/tee-times/route.ts`, `src/app/api/operator/analytics/route.ts`, `src/app/api/operator/bookings/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/app/api/preview/[courseId]/route.ts`, `src/app/api/preview/[courseId]/tee-times/route.ts`, `src/lib/schedule-service.ts`, `src/lib/tee-sheet-engine.ts`
+- readers: `src/app/api/admin/tee-sheet/route.ts`, `src/app/api/bookings/route.ts`, `src/app/api/manage/[bookingId]/available-times/route.ts`, `src/app/api/member/[courseSlug]/tee-times/route.ts`, `src/app/api/operator/analytics/route.ts`, `src/app/api/operator/bookings/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/app/api/preview/[courseId]/route.ts`, `src/app/api/preview/[courseId]/tee-times/route.ts`, `src/lib/public-tee-times.ts`, `src/lib/schedule-service.ts`, `src/lib/tee-sheet-engine.ts`
 
 ### TeeTimeAlert
 

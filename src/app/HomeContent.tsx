@@ -1,11 +1,12 @@
-'use client';
-import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { HOME_FAQ } from '@/lib/faq';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
 import SeeItWork from '@/components/home/SeeItWork';
 import HomeDemo from '@/components/home/HomeDemo';
+import HomeMotion from '@/components/home/HomeMotion';
+import StoryMedia from '@/components/home/StoryMedia';
+import HomeFaq from '@/components/home/HomeFaq';
+import MountNearView from '@/components/home/MountNearView';
 import s from './home.module.css';
 
 // H-1 (UI_REVISE_SPEC §5): the homepage from the approved prototype
@@ -47,102 +48,15 @@ const STEPS = [
   { n: '4', h: 'Go live', p: 'Put the link on your website and Google listing. Golfers start booking.' },
 ];
 
+// PERF-1 (Cam 2026-09-29, keep the speed check strict): a SERVER component
+// now. As one 'use client' tree the whole page hydrated on load — the longest
+// task in Home's trace. The only interactive parts are islands: HomeMotion
+// (reveals + story scroll), StoryMedia (story photo/clip), HomeFaq, and the
+// demos, which were already their own client components.
 export default function HomeContent() {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const storyRef = useRef<HTMLElement>(null);
-  const storyPhRef = useRef<HTMLDivElement>(null);
-  const beatsRef = useRef<HTMLDivElement>(null);
-  const progRef = useRef<HTMLDivElement>(null);
-  const [faqOpen, setFaqOpen] = useState(0);
-  // H-2a: the story clip is mounted only when the page is wide enough (phones
-  // never download it) and the user has not asked for reduced motion or data.
-  const [storyVideo, setStoryVideo] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
-    if (!reduce && !saveData && window.matchMedia('(min-width: 960px)').matches) setStoryVideo(true);
-
-    // Reveals. Everything already in the viewport is marked before the
-    // `js` class hides the rest, so the first paint never flashes.
-    const els = Array.from(root.querySelectorAll<HTMLElement>(`.${s.fade}`));
-    const vh = window.innerHeight;
-    els.forEach(el => { if (el.getBoundingClientRect().top < vh * 0.92) el.classList.add(s.in); });
-    root.classList.add(s.js);
-    let io: IntersectionObserver | null = null;
-    if ('IntersectionObserver' in window && !reduce) {
-      io = new IntersectionObserver(entries => {
-        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add(s.in); io?.unobserve(e.target); } });
-      }, { threshold: 0.15, rootMargin: '0px 0px -6% 0px' });
-      els.forEach(el => { if (!el.classList.contains(s.in)) io?.observe(el); });
-    } else {
-      els.forEach(el => el.classList.add(s.in));
-    }
-
-    // Scroll-driven motion: transform-only, one rAF per frame.
-    let cur = 0, ticking = false;
-    const beats = beatsRef.current ? Array.from(beatsRef.current.children) : [];
-    const prog = progRef.current ? Array.from(progRef.current.children) : [];
-    function frame() {
-      ticking = false;
-      if (reduce) return;
-      const y = window.scrollY || window.pageYOffset;
-      const h = window.innerHeight;
-      const story = storyRef.current;
-      if (story && storyPhRef.current) {
-        const r = story.getBoundingClientRect();
-        const total = story.offsetHeight - h;
-        const p = total > 0 ? Math.min(1, Math.max(0, -r.top / total)) : 0;
-        // H-2d §2: the still gets the slow push; the clip already moves, and a
-        // second stepped zoom on top of it was the shimmer.
-        if (!storyPhRef.current.classList.contains(s.hasVideo)) storyPhRef.current.style.setProperty('--z', (1 + p * 0.14).toFixed(4));
-        const i = p < 0.34 ? 0 : p < 0.67 ? 1 : 2;
-        if (i !== cur) {
-          cur = i;
-          beats.forEach((b, k) => b.classList.toggle(s.on, k === i));
-          prog.forEach((b, k) => b.classList.toggle(s.on, k === i));
-        }
-      }
-    }
-    const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(frame); } };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', frame);
-    frame();
-    return () => {
-      io?.disconnect();
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', frame);
-    };
-  }, []);
-
-  // H-2a: play only while the pinned story is on screen; pause the moment it
-  // leaves. A clip that fails to load simply stays hidden behind the poster.
-  useEffect(() => {
-    const v = videoRef.current;
-    const story = storyRef.current;
-    if (!storyVideo || !v || !story) return;
-    let timer: number | null = null;
-    const io = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          v.play().catch(() => {});
-          // A clip that cannot play within 4s of being asked stays hidden
-          // behind the poster (slow network, unsupported codec, blocked autoplay).
-          if (timer === null) timer = window.setTimeout(() => { if (v.readyState < 3 || v.paused) setStoryVideo(false); }, 4000);
-        } else {
-          v.pause();
-        }
-      });
-    }, { threshold: 0.1 });
-    io.observe(story);
-    return () => { io.disconnect(); if (timer !== null) window.clearTimeout(timer); };
-  }, [storyVideo]);
-
   return (
-    <div ref={rootRef} className={s.root}>
+    <div data-home-root="" className={s.root}>
+      <HomeMotion />
       {/* 2. HERO — H-2d direction A: paper + the product. No photo; the
           booking page itself is the picture, live (the same HomeDemo the
           "See it work" section runs, its own instance). */}
@@ -175,29 +89,11 @@ export default function HomeContent() {
       </section>
 
       {/* 3. STORY — pinned photo, three beats */}
-      <section ref={storyRef} className={s.story} id="how">
+      <section data-story="" className={s.story} id="how">
         <div className={s.pin}>
-          <div ref={storyPhRef} className={`${s.storyPh} ${storyVideo ? s.hasVideo : ''}`}>
-            <Image src="/home/bunker.jpg" alt="" fill sizes="100vw" loading="lazy" className={storyVideo ? undefined : s.drift} />
-            {storyVideo && (
-              <video
-                ref={videoRef}
-                muted
-                loop
-                playsInline
-                preload="none"
-                poster="/home/story-poster.jpg"
-                aria-hidden="true"
-                onError={() => setStoryVideo(false)}
-              >
-                {/* H-2d-R2: mp4 first — the v2 webm is the larger file, and browsers take the first source they can play. */}
-                <source src="/home/story.mp4" type="video/mp4" />
-                <source src="/home/story.webm" type="video/webm" />
-              </video>
-            )}
-          </div>
+          <StoryMedia />
           <div className={`${s.shade} ${s.storyShade}`} />
-          <div ref={beatsRef} className={s.beats}>
+          <div data-story-beats="" className={s.beats}>
             {BEATS.map((b, i) => (
               <div key={b.eyebrow} className={`${s.beat} ${i === 0 ? s.on : ''}`}>
                 <div className={s.eyebrow}>{b.eyebrow}</div>
@@ -206,7 +102,7 @@ export default function HomeContent() {
               </div>
             ))}
           </div>
-          <div ref={progRef} className={s.prog} aria-hidden="true"><i className={s.on} /><i /><i /></div>
+          <div data-story-prog="" className={s.prog} aria-hidden="true"><i className={s.on} /><i /><i /></div>
         </div>
       </section>
 
@@ -215,7 +111,7 @@ export default function HomeContent() {
         <div className={s.wrap}>
           <h2 className={`${s.h2} ${s.fade}`}>See it work.</h2>
           <p className={`${s.sub} ${s.fade}`}>This is how it works, not a picture of it. Tap a time. Reserve it. Then flip to the sheet your shop runs.</p>
-          <SeeItWork />
+          <MountNearView minHeight={720}><SeeItWork /></MountNearView>
         </div>
       </section>
 
@@ -288,14 +184,7 @@ export default function HomeContent() {
         <div className={`${s.wrap} ${s.faqGrid}`}>
           <div><h2 className={`${s.h2} ${s.fade}`}>Questions courses ask.</h2></div>
           <div className={s.fade}>
-            {HOME_FAQ.map((f, i) => (
-              <div key={f.q} className={`${s.q} ${faqOpen === i ? s.open : ''}`}>
-                <button type="button" aria-expanded={faqOpen === i} onClick={() => setFaqOpen(faqOpen === i ? -1 : i)}>
-                  <span>{f.q}</span><span aria-hidden="true">+</span>
-                </button>
-                <div className={s.a}><div><p>{f.a}</p></div></div>
-              </div>
-            ))}
+            <HomeFaq />
           </div>
         </div>
       </section>
