@@ -2653,6 +2653,13 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   Chromium: fees, tee times, all 7 days, 24 h / $20 arrive pre-filled. Still only
   applies when the call is ended with "End call → Send setup sheet"; a link sent
   any other way carries only what was tapped.
+- [x] PERF-3 — Home TBT on CI 1101ms (run 25) / 1798ms (run 26) while every other
+  page passed. Cause: the 10s fallback timer in sentry.client.config.ts. Home's CI
+  audit ran ~10.3s (others ~6s), so Sentry + Replay init landed inside the
+  measured window; locally a 1s timer took Home from 59ms to 250ms TBT. Fix: no
+  timer — Sentry loads on first input, the first error, or the tab going hidden.
+  Local: Home TBT 29–41ms; idle page loads no Sentry chunk, an error or a scroll
+  does. The audit measures PRODUCTION, so it turns green only after this deploys.
 - [ ] PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29:
   private clubs pay GreenReserve (subscription, or $1.50/round billed monthly and
   capped at the subscription price); members pay $0. BLOCKED on Cam's prices and on
