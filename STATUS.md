@@ -4,11 +4,20 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-29 02:32 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `b81c2f1` · working tree clean
+Generated 2026-09-29 02:40 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `0c5bcf2` · working tree **3 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
+
+### Uncommitted working tree (3 file(s))
+
+- `M RUN_QUEUE.md`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -37,7 +46,7 @@ This is the distinction a raw checkbox count gets wrong.
 | BUG: inquiry submissions send no emails | 2026-09-28 | 0d | `8b9a046` | `RUN_QUEUE.md:2498` |
 | BUG: perf audit crashed on every page | 2026-09-29 | 0d | `dd7056a` | `RUN_QUEUE.md:2519` |
 | BUG: hello@greenreserve.app takes no mail | 2026-09-29 | 0d | `371ffff` | `RUN_QUEUE.md:2527` |
-| CAL-1 — Cal.com as the call scheduler | 2026-09-29 | 0d | `a5ed9d7` | `RUN_QUEUE.md:2543` |
+| CAL-1 — Cal.com as the call scheduler | 2026-09-29 | 0d | `a5ed9d7` | `RUN_QUEUE.md:2544` |
 | MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | — | — | — | `RUN_QUEUE.md:683` |
 | MP-1 | — | — | — | `RUN_QUEUE.md:713` |
 | MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | — | — | — | `RUN_QUEUE.md:748` |
@@ -67,8 +76,8 @@ This is the distinction a raw checkbox count gets wrong.
 15. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1472`
 16. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1521`
 17. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1576`
-18. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2567`
-19. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2720`
+18. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2568`
+19. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2721`
 
 ## Waiting on you (not on a build)
 
@@ -83,7 +92,7 @@ This is the distinction a raw checkbox count gets wrong.
 - pending Cam's walk below — `RUN_QUEUE.md:2295`
 - Cam: "after submitting an inquiry they aren't getting sent an email — `RUN_QUEUE.md:2498`
 - Cam: "all emails need to go to thegreenreserve@outlook — `RUN_QUEUE.md:2527`
-- Cam: invite link showed "I can't show my calendar right now" — `RUN_QUEUE.md:2543`
+- Cam: invite link showed "I can't show my calendar right now" — `RUN_QUEUE.md:2544`
 
 ## Revise campaign (page-by-page pass)
 
@@ -158,6 +167,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `0c5bcf2` 2026-09-29 — Fix: staff-login email reported 'sent' even when it never went
+- `8126d1c` 2026-09-29 — queue/spec update
 - `b81c2f1` 2026-09-29 — queue/spec update
 - `a9012e2` 2026-09-29 — queue/spec update
 - `7756ce9` 2026-09-29 — queue/spec update
@@ -168,8 +179,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `0a16333` 2026-09-29 — queue/spec update
 - `209e652` 2026-09-29 — Fix: rejected emails reported success (Resend returns errors, never throws)
 - `a130919` 2026-09-29 — queue/spec update
-- `0d84aaf` 2026-09-29 — SD-9c: tee-sheet staff can reset a forgotten password
-- `0fc22b8` 2026-09-29 — queue/spec update
 
 ---
 

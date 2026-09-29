@@ -1,10 +1,14 @@
 {
-  "generatedAt": "2026-09-29T02:32:02.592Z",
+  "generatedAt": "2026-09-29T02:40:49.783Z",
   "repo": {
-    "head": "b81c2f1",
+    "head": "0c5bcf2",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 0,
-    "dirty": [],
+    "dirtyCount": 3,
+    "dirty": [
+      "M RUN_QUEUE.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json"
+    ],
     "looksLikeRunInProgress": false
   },
   "drift": {
@@ -102,7 +106,7 @@
     },
     {
       "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 2543,
+      "line": 2544,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 0
@@ -259,12 +263,12 @@
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2567,
+      "line": 2568,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2720,
+      "line": 2721,
       "section": "Queue (run in this order)"
     }
   ],
@@ -327,7 +331,7 @@
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2543
+      "line": 2544
     }
   ],
   "ideas": {
@@ -571,6 +575,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "0c5bcf2",
+      "date": "2026-09-29",
+      "subject": "Fix: staff-login email reported 'sent' even when it never went"
+    },
+    {
+      "h": "8126d1c",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "b81c2f1",
       "date": "2026-09-29",
       "subject": "queue/spec update"
@@ -617,16 +631,6 @@
     },
     {
       "h": "a130919",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "0d84aaf",
-      "date": "2026-09-29",
-      "subject": "SD-9c: tee-sheet staff can reset a forgotten password"
-    },
-    {
-      "h": "0fc22b8",
       "date": "2026-09-29",
       "subject": "queue/spec update"
     }

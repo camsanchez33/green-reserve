@@ -2539,6 +2539,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   NOTICED, NOT FIXED: api/admin/resend-staff-setup builds its own new Resend()
   and fires the send without await/after() — both CLAUDE.md gotchas 6 and 7 —
   so the staff-login email can die silently. Three-line fix.
+  FIXED 0c5bcf2 (2026-09-29): awaited, r.error checked, 502 with the reason.
 
 - [ ] CAL-1 — Cal.com as the call scheduler — SHIPPED a5ed9d7, 2026-09-29, box open
   until /gr-review. Cam: invite link showed "I can't show my calendar right now".
