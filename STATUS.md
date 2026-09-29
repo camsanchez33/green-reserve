@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-29 20:59 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `8c8b4d7` · working tree clean
+Generated 2026-09-29 21:16 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `bb9b1e4` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -39,9 +39,9 @@ This is the distinction a raw checkbox count gets wrong.
 | BUG: perf audit crashed on every page | 2026-09-29 | 0d | `dd7056a` | `RUN_QUEUE.md:2571` |
 | RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM). | 2026-09-29 | 0d | `f57f269` | `RUN_QUEUE.md:2582` |
 | RV-2 — review follow-ups, small (from /gr-review 2026-09-29): | 2026-09-29 | 0d | `0eab366` | `RUN_QUEUE.md:2592` |
-| CAL-2 — Cal.com is the ONLY call scheduler | 2026-09-29 | 0d | `e082dd0` | `RUN_QUEUE.md:2765` |
-| BUG: hello@greenreserve.app takes no mail | 2026-09-29 | 0d | `371ffff` | `RUN_QUEUE.md:2797` |
-| CAL-1 — Cal.com as the call scheduler | 2026-09-29 | 0d | `a5ed9d7` | `RUN_QUEUE.md:2815` |
+| CAL-2 — Cal.com is the ONLY call scheduler | 2026-09-29 | 0d | `e082dd0` | `RUN_QUEUE.md:2784` |
+| BUG: hello@greenreserve.app takes no mail | 2026-09-29 | 0d | `371ffff` | `RUN_QUEUE.md:2816` |
+| CAL-1 — Cal.com as the call scheduler | 2026-09-29 | 0d | `a5ed9d7` | `RUN_QUEUE.md:2834` |
 | MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | — | — | — | `RUN_QUEUE.md:701` |
 | MP-1 | — | — | — | `RUN_QUEUE.md:731` |
 | MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | — | — | — | `RUN_QUEUE.md:766` |
@@ -68,9 +68,10 @@ This is the distinction a raw checkbox count gets wrong.
 12. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1518`
 13. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1624`
 14. PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29: — `RUN_QUEUE.md:2687`
-15. SEC-1 — /api/bookings trusts the client-supplied Stripe customerId + — `RUN_QUEUE.md:2692`
-16. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2839`
-17. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2993`
+15. SETUP (Cam 2026-09-29: "we need to do blob storage, birdie ai … we also need — `RUN_QUEUE.md:2692`
+16. SEC-1 — /api/bookings trusts the client-supplied Stripe customerId + — `RUN_QUEUE.md:2710`
+17. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2858`
+18. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:3012`
 
 ## Waiting on you (not on a build)
 
@@ -85,9 +86,9 @@ This is the distinction a raw checkbox count gets wrong.
 - CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1624`
 - pending Cam's walk below — `RUN_QUEUE.md:2343`
 - Cam: "after submitting an inquiry they aren't getting sent an email — `RUN_QUEUE.md:2546`
-- Cam: "there should be no google calendar thing" and, after setting both env vars and redeploying, "it is just the same as before" — `RUN_QUEUE.md:2765`
-- Cam: "all emails need to go to thegreenreserve@outlook — `RUN_QUEUE.md:2797`
-- Cam: invite link showed "I can't show my calendar right now" — `RUN_QUEUE.md:2815`
+- Cam: "there should be no google calendar thing" and, after setting both env vars and redeploying, "it is just the same as before" — `RUN_QUEUE.md:2784`
+- Cam: "all emails need to go to thegreenreserve@outlook — `RUN_QUEUE.md:2816`
+- Cam: invite link showed "I can't show my calendar right now" — `RUN_QUEUE.md:2834`
 
 ## Revise campaign (page-by-page pass)
 
@@ -165,6 +166,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `bb9b1e4` 2026-09-29 — BLOB-2: contracts and signed agreements use their own private Blob store
+- `6f97981` 2026-09-29 — queue/spec update
+- `dbdbcda` 2026-09-29 — queue/spec update
 - `8c8b4d7` 2026-09-29 — Homepage: 'See it work' demo was invisible; hero blurb in full sentences
 - `621ef1e` 2026-09-29 — queue/spec update
 - `0ecafbc` 2026-09-29 — PERF-4: speed check judges the median of 3 runs; hero blurb no longer fades in
@@ -174,10 +178,7 @@ This is the distinction a raw checkbox count gets wrong.
 - `1d318fe` 2026-09-29 — FB-2: homepage copy Cam approved
 - `377d6e3` 2026-09-29 — queue/spec update
 - `4828b58` 2026-09-29 — queue/spec update
-- `0cb172f` 2026-09-29 — PERF-3: load Sentry on input, error or tab hidden, not a 10s timer
-- `8f42d39` 2026-09-29 — queue/spec update
-- `07d902a` 2026-09-29 — CG-2: pre-fill the setup sheet from details captured on the call
 
 ---
 
-**Totals:** 207 done · 23 awaiting review · 1 in flight · 17 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 208 done · 23 awaiting review · 1 in flight · 18 not started · 8 revise pages open · 15 ideas · 2 parked.
