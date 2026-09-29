@@ -12,6 +12,9 @@ import {
   type CheckinCallLike,
 } from '@/lib/course-checkin';
 import { fmtCallTime, easternToIso, easternParts, parseJson, DIRECTION_LABEL, OUTCOME_LABEL } from '@/lib/inquiry-call';
+import { Card } from '@/components/ui/Card';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { INPUT_COMPACT } from '@/components/ui/field';
 
 export type CourseCallRow = CheckinCallLike & {
   id: string; kind: string; scheduledAt: string; outcome: string; durationMin: number; direction: string; phone: string;
@@ -31,7 +34,7 @@ type Props = {
 };
 
 const H = { 'Content-Type': 'application/json' };
-const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10 focus:outline-none transition-colors';
+const iCls = `${INPUT_COMPACT} w-full`;
 const lbl = 'block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1';
 const btnP = 'bg-pine hover:bg-pine-hover disabled:opacity-50 text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
 const btnO = 'bg-paper hover:bg-line border border-line text-ink disabled:opacity-50 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
@@ -88,12 +91,12 @@ export default function CourseCheckInCard({ courseId, operatorName, phone, nextC
     : `Next ${fmtCallTime(signal.at!)}`;
 
   return (
-    <div ref={wrap} className="bg-white border border-line rounded-lg p-5">
+    <Card ref={wrap} className="p-5">
       <div className="flex items-start justify-between gap-3 mb-1">
         <div>
-          <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.1em] text-ink-muted">
+          <Eyebrow className="flex items-center gap-2">
             <Phone className={'w-3.5 h-3.5 ' + (signal.state === 'overdue' ? 'text-bad' : signal.state === 'due' ? 'text-warn' : 'text-pine')} />Next check-in
-          </div>
+          </Eyebrow>
           <div className={'text-sm font-medium mt-1 ' + (signal.state === 'overdue' ? 'text-bad' : signal.state === 'due' ? 'text-warn' : 'text-ink')}>{stateLine}</div>
           <div className="text-xs text-ink-muted mt-0.5">{fmtLastContact(last)}</div>
         </div>
@@ -117,7 +120,7 @@ export default function CourseCheckInCard({ courseId, operatorName, phone, nextC
           <span>{error}</span><button onClick={() => setError('')} className="shrink-0 opacity-60 hover:opacity-100">Dismiss</button>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
