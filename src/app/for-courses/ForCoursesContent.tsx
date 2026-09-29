@@ -294,7 +294,7 @@ export default function ForCoursesContent() {
             </button>
             <p className="text-center text-xs text-ink-muted">
               No, something else?{' '}
-              <a href="mailto:hello@greenreserve.app" className="text-ink-soft underline hover:text-ink">hello@greenreserve.app</a>.
+              <a href="mailto:thegreenreserve@outlook.com" className="text-ink-soft underline hover:text-ink">thegreenreserve@outlook.com</a>.
             </p>
           </>
         )}
@@ -348,7 +348,7 @@ export default function ForCoursesContent() {
             </button>
             <p className="text-center text-xs text-ink-muted">
               Didn&apos;t arrive? Check spam, or{' '}
-              <a href="mailto:hello@greenreserve.app" className="text-ink-soft underline hover:text-ink">email us</a>.
+              <a href="mailto:thegreenreserve@outlook.com" className="text-ink-soft underline hover:text-ink">email us</a>.
             </p>
           </>
         )}
@@ -393,10 +393,10 @@ export default function ForCoursesContent() {
                   GreenReserve email or use the address below.
                 </p>
                 <a
-                  href="mailto:hello@greenreserve.app"
+                  href="mailto:thegreenreserve@outlook.com"
                   className="flex items-center justify-center gap-2 w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-sm transition-colors"
                 >
-                  Email hello@greenreserve.app
+                  Email thegreenreserve@outlook.com
                 </a>
               </>
             )}

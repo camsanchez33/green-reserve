@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return NextResponse.json(
-      { error: 'Photo uploads are not available yet. Email hello@greenreserve.app to send photos.' },
+      { error: 'Photo uploads are not available yet. Email thegreenreserve@outlook.com to send photos.' },
       { status: 503 },
     );
   }

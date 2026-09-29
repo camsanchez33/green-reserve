@@ -227,7 +227,7 @@ Schedules are in `vercel.json`.
 
 ## Key people
 - **Beast (Cam)** — founder/operator, `camsanchez33@icloud.com`
-- Admin email: `hello@greenreserve.app`
+- Admin inbox: `thegreenreserve@outlook.com` — every alert, reply-to and visible contact address. `hello@greenreserve.app` is SEND-ONLY (the Resend `from`, which must be on the verified domain); it takes no mail, so never show it as a contact or send alerts to it (Cam 2026-09-29).
 
 ## Preferences
 - Concise, direct responses — no unnecessary explanation

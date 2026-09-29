@@ -172,7 +172,7 @@ function CheckInPageInner() {
                 attempted. Now it only says so when it went through. */}
             {result?.feeRefundFailed && (
               <div className="bg-warn/5 border border-warn/20 rounded-md p-4 mb-6 text-left">
-                <p className="text-warn text-xs">Your earlier ${(result.feeRefundAmount / 100).toFixed(2)} late-cancellation fee is owed back to you, but the refund did not go through automatically. The course has been notified — if it hasn&apos;t appeared within a few days, contact them or hello@greenreserve.app.</p>
+                <p className="text-warn text-xs">Your earlier ${(result.feeRefundAmount / 100).toFixed(2)} late-cancellation fee is owed back to you, but the refund did not go through automatically. The course has been notified — if it hasn&apos;t appeared within a few days, contact them or thegreenreserve@outlook.com.</p>
               </div>
             )}
             <p className="text-xs text-ink-muted mb-4">A receipt has been emailed to you.</p>

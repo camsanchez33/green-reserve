@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   // no limit at all. Five an hour per connection is generous for a human.
   // Keyed on the platform-set hop, not the client-writable leftmost x-forwarded-for.
   if (!(await rateLimit(`inquiry:${evidentiaryIp(req)}`, 5, 3600))) {
-    return NextResponse.json({ error: 'Too many submissions from this connection — try again in an hour, or email hello@greenreserve.app.' }, { status: 429 });
+    return NextResponse.json({ error: 'Too many submissions from this connection — try again in an hour, or email thegreenreserve@outlook.com.' }, { status: 429 });
   }
 
   const required = ['firstName', 'lastName', 'contactTitle', 'email', 'phone', 'courseName', 'city', 'state', 'courseType', 'currentBookingMethod'];

@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    return NextResponse.json({ error: 'Image storage is not configured yet. Contact hello@greenreserve.app.' }, { status: 503 });
+    return NextResponse.json({ error: 'Image storage is not configured yet. Contact thegreenreserve@outlook.com.' }, { status: 503 });
   }
 
   const form = await req.formData();

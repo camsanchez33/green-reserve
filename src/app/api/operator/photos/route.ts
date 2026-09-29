@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    return NextResponse.json({ error: 'Image storage is not configured. Contact hello@greenreserve.app.' }, { status: 503 });
+    return NextResponse.json({ error: 'Image storage is not configured. Contact thegreenreserve@outlook.com.' }, { status: 503 });
   }
 
   const existing = await prisma.coursePhoto.count({ where: { courseId: session.courseId } });

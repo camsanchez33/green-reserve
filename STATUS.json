@@ -1,23 +1,21 @@
 {
-  "generatedAt": "2026-09-29T01:52:20.094Z",
+  "generatedAt": "2026-09-29T02:28:38.640Z",
   "repo": {
-    "head": "0a16333",
+    "head": "7756ce9",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 3,
+    "dirtyCount": 1,
     "dirty": [
-      "M .claude/commands/gr-debug.md",
-      " M CLAUDE.md",
-      " M RUN_QUEUE.md"
+      "M RUN_QUEUE.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-29T01:50:36+00:00",
+    "queueLastCommit": "2026-09-29T01:52:20+00:00",
     "unrecorded": []
   },
   "counts": {
     "runDone": 194,
-    "runAwaiting": 18,
+    "runAwaiting": 19,
     "runInFlight": 1,
     "runNotStarted": 19,
     "reviseDone": 14,
@@ -98,8 +96,15 @@
       "ageDays": 0
     },
     {
-      "title": "CAL-1 — Cal.com as the call scheduler",
+      "title": "BUG: hello@greenreserve.app takes no mail",
       "line": 2527,
+      "hash": "371ffff",
+      "shipDate": "2026-09-29",
+      "ageDays": 0
+    },
+    {
+      "title": "CAL-1 — Cal.com as the call scheduler",
+      "line": 2543,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 0
@@ -256,12 +261,12 @@
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2551,
+      "line": 2567,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2704,
+      "line": 2720,
       "section": "Queue (run in this order)"
     }
   ],
@@ -317,9 +322,14 @@
       "line": 2498
     },
     {
+      "item": "BUG: hello@greenreserve.app takes no mail",
+      "note": "Cam: \"all emails need to go to thegreenreserve@outlook",
+      "line": 2527
+    },
+    {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2527
+      "line": 2543
     }
   ],
   "ideas": {
@@ -392,14 +402,14 @@
   },
   "specs": [
     {
-      "file": "ARCHITECTURE.md",
+      "file": "CLAUDE.md",
       "openRefs": 4,
-      "lastTouched": "2026-09-16",
-      "ageDays": 12
+      "lastTouched": "2026-09-29",
+      "ageDays": 0
     },
     {
-      "file": "CLAUDE.md",
-      "openRefs": 3,
+      "file": "ARCHITECTURE.md",
+      "openRefs": 4,
       "lastTouched": "2026-09-16",
       "ageDays": 12
     },
@@ -563,6 +573,31 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "7756ce9",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "371ffff",
+      "date": "2026-09-29",
+      "subject": "All contact, alert and reply-to addresses point at the inbox that is read"
+    },
+    {
+      "h": "b2fdff8",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "5d3fe1d",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "d1ccc46",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "0a16333",
       "date": "2026-09-29",
       "subject": "queue/spec update"
@@ -596,31 +631,6 @@
       "h": "9d6dc6a",
       "date": "2026-09-29",
       "subject": "SD-8e: booking status is a StatusDot, and 'card on file' reads differently from 'paid'"
-    },
-    {
-      "h": "22a3d7d",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "141582d",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "a5ed9d7",
-      "date": "2026-09-29",
-      "subject": "CAL-1: Cal.com as the call scheduler (Outlook-backed), in place of the Google grid"
-    },
-    {
-      "h": "dd7056a",
-      "date": "2026-09-29",
-      "subject": "Fix: perf audit crashed with '__name is not defined' on every page"
-    },
-    {
-      "h": "1ceeff5",
-      "date": "2026-09-28",
-      "subject": "queue/spec update"
     }
   ]
 }

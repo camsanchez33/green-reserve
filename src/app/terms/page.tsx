@@ -175,7 +175,7 @@ export default function TermsOfServicePage() {
                 <h2 className="font-semibold text-base text-ink mb-2">Contact</h2>
                 <p>
                   Questions about these terms? Reach us at{' '}
-                  <a href="mailto:hello@greenreserve.app" className="text-pine font-medium hover:underline">hello@greenreserve.app</a>.
+                  <a href="mailto:thegreenreserve@outlook.com" className="text-pine font-medium hover:underline">thegreenreserve@outlook.com</a>.
                 </p>
               </section>
             </div>

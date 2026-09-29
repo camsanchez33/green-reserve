@@ -502,7 +502,7 @@ export default function CourseDetailPage({
         <div className="text-center">
           <Image src="/brand/birdie-sitting.png" alt="" width={72} height={101} className="mx-auto mb-4" />
           <h1 className="text-2xl font-semibold text-ink mb-2">Birdie couldn&apos;t find that course.</h1>
-          <p className="text-ink-muted text-sm mt-2">Please use the booking link on your course&apos;s website, or contact <a href="mailto:hello@greenreserve.app" className="text-pine hover:underline">hello@greenreserve.app</a>.</p>
+          <p className="text-ink-muted text-sm mt-2">Please use the booking link on your course&apos;s website, or contact <a href="mailto:thegreenreserve@outlook.com" className="text-pine hover:underline">thegreenreserve@outlook.com</a>.</p>
           <Link href="/" className="mt-6 inline-block text-sm text-pine hover:underline">← Back to home</Link>
         </div>
       </div>

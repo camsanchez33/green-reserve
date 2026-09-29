@@ -19,11 +19,11 @@ export default function ContactPage() {
         </p>
 
         <a
-          href="mailto:hello@greenreserve.app"
+          href="mailto:thegreenreserve@outlook.com"
           className="inline-flex items-center gap-3 bg-pine hover:bg-pine-hover text-white px-7 py-4 rounded-md font-medium text-sm transition-colors"
         >
           <Mail size={16} />
-          hello@greenreserve.app
+          thegreenreserve@outlook.com
         </a>
 
         <div className="mt-16 border-t border-line pt-10">

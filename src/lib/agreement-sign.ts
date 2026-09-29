@@ -52,7 +52,7 @@ export async function recordSigning(input: SignInput): Promise<SignResult> {
   if (signerTitle.length < 2) return { ok: false, status: 400, error: 'Enter your title.' };
 
   const docs = signableDocuments();
-  if (docs.length === 0) return { ok: false, status: 503, error: 'No agreements are ready to sign right now. Contact hello@greenreserve.app.' };
+  if (docs.length === 0) return { ok: false, status: 503, error: 'No agreements are ready to sign right now. Contact thegreenreserve@outlook.com.' };
   const status = await agreementStatus(input.courseId);
   const alreadyCurrent = status.documents.filter(d => d.signed).map(d => d.document);
   const toSign = docs.filter(d => !alreadyCurrent.includes(d.document));

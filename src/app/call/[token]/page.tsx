@@ -142,8 +142,8 @@ export default function CallPage() {
 
   if (loadState === 'loading') return <Shell><p className="text-sm text-ink-muted flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Loading your times…</p></Shell>;
   if (loadState === 'invalid') return <Shell><Notice tone="bad">This link is not valid. Reply to the email we sent you and we&apos;ll send a fresh one.</Notice></Shell>;
-  if (loadState === 'expired') return <Shell><Notice tone="warn">This link has expired. Reply to the email we sent you, or write to hello@greenreserve.app, and we&apos;ll send a fresh one.</Notice></Shell>;
-  if (loadState === 'closed') return <Shell><Notice tone="warn">This inquiry is no longer open. If that&apos;s a surprise, write to hello@greenreserve.app.</Notice></Shell>;
+  if (loadState === 'expired') return <Shell><Notice tone="warn">This link has expired. Reply to the email we sent you, or write to thegreenreserve@outlook.com, and we&apos;ll send a fresh one.</Notice></Shell>;
+  if (loadState === 'closed') return <Shell><Notice tone="warn">This inquiry is no longer open. If that&apos;s a surprise, write to thegreenreserve@outlook.com.</Notice></Shell>;
   if (loadState === 'error' || !info) return (
     <Shell>
       <Notice tone="bad">{loadError || 'Could not load.'}</Notice>
@@ -237,7 +237,7 @@ export default function CallPage() {
         {heading}
         <Notice tone="warn">
           I can&apos;t show my calendar right now — reply to the email we sent you with a couple of times that suit you and I&apos;ll confirm.
-          Or write to hello@greenreserve.app.
+          Or write to thegreenreserve@outlook.com.
         </Notice>
         <button onClick={load} className={btnO + ' mt-4'}>Try again</button>
       </Shell>

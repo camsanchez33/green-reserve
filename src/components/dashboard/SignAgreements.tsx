@@ -121,7 +121,7 @@ export default function SignAgreements({ onSigned, continueLabel = 'Sign and con
   }
   const toSign = data.documents.filter(d => !d.signed);
   if (data.documents.length === 0) {
-    return <p className="text-sm text-ink-soft">No agreements are ready to sign right now — contact hello@greenreserve.app.</p>;
+    return <p className="text-sm text-ink-soft">No agreements are ready to sign right now — contact thegreenreserve@outlook.com.</p>;
   }
   if (toSign.length === 0) {
     return (
