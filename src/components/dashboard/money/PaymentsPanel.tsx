@@ -4,7 +4,8 @@
 // prop because Money loads them once for all three tabs.
 import { useState } from 'react';
 import { DollarSign, CreditCard, Clock3, X, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { getBookingStatus, statusToneText } from '@/lib/booking-status';
+import { getBookingStatus, statusDot } from '@/lib/booking-status';
+import { StatusDot } from '@/components/ui/StatusDot';
 import { ACCESS_FEE_PER_PLAYER } from '@/lib/booking-fees';
 import type { MoneyBooking } from './types';
 
@@ -164,7 +165,7 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate }: {
                       {b.paymentStatus !== 'paid' && b.status !== 'cancelled' && <span className="text-ink-faint text-xs"> est.</span>}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={'text-[13.5px] font-medium ' + statusToneText(bStatus.tone)}>{bStatus.label}</span>
+                      <span className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-ink"><StatusDot {...statusDot(bStatus.tone)} />{bStatus.label}</span>
                     </td>
                   </tr>
                 );

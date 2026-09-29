@@ -16,7 +16,8 @@ import { toast } from '@/components/dashboard/Toast';
 import GettingStartedChecklist from '@/components/dashboard/GettingStartedChecklist';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
-import { getBookingStatus, statusToneText } from '@/lib/booking-status';
+import { getBookingStatus, statusDot } from '@/lib/booking-status';
+import { StatusDot } from '@/components/ui/StatusDot';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
@@ -904,7 +905,7 @@ function DashboardPageInner() {
                                 {b.status === 'confirmed' && b.checkInFailReason ? (
                                   <span className="shrink-0 text-[12.5px] font-medium text-bad" title={b.checkInFailReason}>Card declined</span>
                                 ) : (
-                                  <span className={'shrink-0 text-[12.5px] font-medium ' + statusToneText(bStatus.tone)}>{bStatus.label}</span>
+                                  <span className="shrink-0 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-ink"><StatusDot {...statusDot(bStatus.tone)} />{bStatus.label}</span>
                                 )}
                                 {b.status === 'confirmed' && b.noShowAt && (
                                   <button onClick={e => { e.stopPropagation(); bookingLifecycle(b, 'still_coming'); }} disabled={rowBusy === b.id}

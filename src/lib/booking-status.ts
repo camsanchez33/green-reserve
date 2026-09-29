@@ -56,26 +56,21 @@ export function getBookingStatus(status: string, paymentStatus: string): Booking
   return { label: 'Card on File', sublabel: 'Not yet checked in', tone: 'blue' };
 }
 
-const TONE_CLASSES: Record<StatusTone, string> = {
-  blue:    'bg-blue-50 text-blue-700',
-  amber:   'bg-amber-50 text-amber-700',
-  red:     'bg-red-50 text-red-700',
-  gray:    'bg-gray-100 text-gray-500',
-  emerald: 'bg-emerald-50 text-emerald-700',
+// SD-8e (Cam 2026-09-29): booking status renders as <StatusDot>, never as
+// coloured text. The palette has four semantic tones and bookings have five,
+// so 'blue' (card on file / nothing due yet) and 'emerald' (paid) share `ok`
+// and differ by FILL: a hollow ring is "fine, nothing collected yet", a filled
+// dot is "money in". No fifth colour token.
+// statusBadgeClass (bg-*-50 tinted pills — the BANNED list) is deleted, not
+// deprecated: it had no importers and was a pill waiting to be shipped.
+const TONE_DOT: Record<StatusTone, { status: 'ok' | 'warn' | 'bad' | 'neutral'; hollow: boolean }> = {
+  blue:    { status: 'ok',      hollow: true },
+  amber:   { status: 'warn',    hollow: false },
+  red:     { status: 'bad',     hollow: false },
+  gray:    { status: 'neutral', hollow: false },
+  emerald: { status: 'ok',      hollow: false },
 };
 
-export function statusBadgeClass(tone: StatusTone) {
-  return TONE_CLASSES[tone];
-}
-
-const TONE_TEXT: Record<StatusTone, string> = {
-  blue:    'text-ok',
-  amber:   'text-warn',
-  red:     'text-bad',
-  gray:    'text-ink-muted',
-  emerald: 'text-ok',
-};
-
-export function statusToneText(tone: StatusTone) {
-  return TONE_TEXT[tone];
+export function statusDot(tone: StatusTone) {
+  return TONE_DOT[tone];
 }

@@ -8,6 +8,14 @@ const DOT: Record<string, string> = {
   warn:    'bg-warn',
   neutral: 'bg-dot-neutral',
 };
+// SD-8e: a hollow ring in the same colour — "fine, nothing collected yet"
+// beside a filled "paid". Same 5px footprint so rows stay aligned.
+const RING: Record<string, string> = {
+  ok:      'border-ok',
+  bad:     'border-bad',
+  warn:    'border-warn',
+  neutral: 'border-dot-neutral',
+};
 const TXT: Record<string, string> = {
   ok:      'text-ok',
   bad:     'text-bad',
@@ -15,8 +23,8 @@ const TXT: Record<string, string> = {
   neutral: 'text-ink-muted',
 };
 
-export function StatusDot({ status, label }: { status: StatusKey; label?: string }) {
-  const dot = DOT[status] || DOT.neutral;
+export function StatusDot({ status, label, hollow = false }: { status: StatusKey; label?: string; hollow?: boolean }) {
+  const dot = hollow ? `border ${RING[status] || RING.neutral}` : (DOT[status] || DOT.neutral);
   const txt = TXT[status] || TXT.neutral;
   return (
     <span className="inline-flex items-center gap-1.5">

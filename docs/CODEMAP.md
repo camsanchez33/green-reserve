@@ -218,7 +218,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 150 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 853 |
-| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1198 |
+| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1199 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 102 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
 | `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 68 |
@@ -305,7 +305,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/unsaved-guard.ts` | 3 | 95 | SD-8b — leaving a dashboard page with unsaved edits. | `confirmLeave`, `setLeaveGuard`, `useBackGuard` |
 | `src/lib/agreement-sign.ts` | 2 | 198 | AGREEMENT_SPEC AG-2 — the signing service. | `deliverAgreementPdfs`, `recordSigning`, `retryMissingAgreementPdfs`, `SignInput`, `SignResult` |
 | `src/lib/birdie/guardrails.ts` | 2 | 74 | BIRDIE_AI_SPEC B1 — scope, caps and the kill switch. | `BIRDIE_MODEL`, `birdieEnabled`, `BirdieTurn`, `birdieUsageToday`, `checkCaps`, `logConversation`, `MAX_HISTORY_TURNS`, `MAX_REPLY_TOKENS` +4 more |
-| `src/lib/booking-status.ts` | 2 | 82 | Single source of truth for what to show a user (operator, staff, or golfer) given a booking's current status + paymentStatus pair. | `BookingStatusInfo`, `getBookingStatus`, `statusBadgeClass`, `StatusTone`, `statusToneText` |
+| `src/lib/booking-status.ts` | 2 | 77 | Single source of truth for what to show a user (operator, staff, or golfer) given a booking's current status + paymentStatus pair. | `BookingStatusInfo`, `getBookingStatus`, `statusDot`, `StatusTone` |
 | `src/lib/calcom.ts` | 2 | 70 | CAL-1 — Cal.com as the call scheduler, in place of the Google Calendar grid. | `calcomBookingUrl`, `calcomCreatedBy`, `calcomEmbedUrl`, `calcomManageLinks`, `calcomUidOf`, `verifyCalcomSignature` |
 | `src/lib/call-availability.ts` | 2 | 124 | CALL_SCHEDULING_SPEC SC-1 §3 — which 30-minute call slots are open. | `BusyBlock`, `CALL_WINDOWS`, `CallLikeForSlots`, `CallPreference`, `CallWindow`, `DaySlots`, `fmtSlot`, `fmtSlotDay` +5 more |
 | `src/lib/course-closure.ts` | 2 | 125 | MP-5b. | `cancelFutureBookingsForClosure`, `closureImpact`, `ClosureImpact`, `ClosureResult`, `notifyOperatorOfClosure` |
@@ -348,7 +348,7 @@ Sorted the same way.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/components/ui/StatusDot.tsx` | 14 | 28 |  | `StatusDot` |
+| `src/components/ui/StatusDot.tsx` | 16 | 36 |  | `StatusDot` |
 | `src/components/admin/AdminSidebar.tsx` | 13 | 264 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/OperatorSidebar.tsx` | 9 | 271 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
 | `src/components/dashboard/Toast.tsx` | 7 | 69 | SD-2. | `toast`, `Toaster`, `ToastKind` |
@@ -374,7 +374,7 @@ Sorted the same way.
 | `src/components/dashboard/CoursePreview.tsx` | 1 | 80 |  | `CoursePreviewProps`, `default (CoursePreview)` |
 | `src/components/dashboard/GettingStartedChecklist.tsx` | 1 | 186 |  | `default (GettingStartedChecklist)` |
 | `src/components/dashboard/money/CancellationsPanel.tsx` | 1 | 165 | SD-8 — the Cancellations half of the Money page. | `CancellationsPanel` |
-| `src/components/dashboard/money/PaymentsPanel.tsx` | 1 | 179 | SD-8 — the Payments half of the Money page. | `PaymentsPanel` |
+| `src/components/dashboard/money/PaymentsPanel.tsx` | 1 | 180 | SD-8 — the Payments half of the Money page. | `PaymentsPanel` |
 | `src/components/dashboard/money/PayoutsPanel.tsx` | 1 | 125 | SD-8 — the Stripe card, moved here out of Settings. | `PayoutsPanel` |
 | `src/components/Footer.tsx` | 1 | 77 |  | `default (Footer)` |
 | `src/components/home/HomeDashboardDemo.tsx` | 1 | 149 |  | `default (HomeDashboardDemo)` |
