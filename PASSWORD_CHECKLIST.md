@@ -30,6 +30,11 @@ Just put your existing passwords into KeePassXC so they exist somewhere safe.
 
 ## PHASE 2 — Neon database password (the important one)
 
+> **THE SITE IS DOWN from 2.1 until the redeploy in 2.4b.** Resetting the password
+> kills the old one instantly, and production keeps using the old one until it is
+> redeployed. Do Phase 2 at a quiet hour, in one sitting, and do NOT wait for
+> Phase 8 to redeploy (Claude, 2026-09-29).
+
 - [ ] 2.1 Neon console → project → **Branches** → **production** → **Roles & Databases**
       → `neondb_owner` → **Reset password**. Copy it.
 - [ ] 2.2 KeePassXC entry — Title: `Neon neondb_owner (production)`, Username: `neondb_owner`,
@@ -46,6 +51,9 @@ Just put your existing passwords into KeePassXC so they exist somewhere safe.
       vercel env rm DIRECT_URL production
       vercel env add DIRECT_URL production
       ```
+- [ ] 2.4b Redeploy NOW — Vercel → Deployments → latest production → ⋯ → **Redeploy**
+      (or `vercel --prod`). Then open https://greenreserve.app/api/health — it must say
+      `{"ok":true,"db":"up"}`. If it says db down, the URL in Vercel is wrong: redo 2.4.
 - [ ] 2.5 Update GitHub backup secret: repo → Settings → Secrets and variables → Actions.
       Whichever exists there — `DATABASE_URL` or `BACKUP_DATABASE_URL` — click it →
       Update → paste the **DIRECT** url (pooling OFF one).
@@ -117,7 +125,7 @@ CALCOM_BOOKING_URL set, the call page embeds Cal.com and 7b is not needed at all
 - [ ] 7a.7 Vercel → Environment Variables (Production): `CALCOM_BOOKING_URL` = the 7a.5 link; `CALCOM_WEBHOOK_SECRET` = the 7a.6 secret. **Redeploy.**
 - [ ] 7a.8 Open a real invite link (submit a test inquiry at /for-courses): the Cal.com calendar shows, prefilled. Book a slot → within a minute the page flips to "You're booked", and /admin/inquiries shows the call. Cancel from the page's link → the admin row shows cancelled.
 
-## PHASE 7b — Google Calendar for call booking (SC-1; before the "pick a call time" page goes live)
+## PHASE 7b — Google Calendar for call booking — SKIP: superseded by 7a (Cal.com). Kept for reference only.
 
 - [ ] 7b.1 https://console.cloud.google.com → new project → APIs & Services → enable **Google Calendar API**
 - [ ] 7b.2 IAM & Admin → Service Accounts → create one → Keys → **Add key → JSON** → download. KeePassXC: Title `Google service account (calendar)`, attach the file.
