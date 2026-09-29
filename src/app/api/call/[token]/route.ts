@@ -10,7 +10,7 @@ import { prisma } from '@/lib/prisma';
 import { rateLimit, evidentiaryIp } from '@/lib/rate-limit';
 import { inviteAgendaLines } from '@/lib/call-invite';
 import { ALIVE_STATUSES } from '@/lib/inquiry-status';
-import { calcomBookingUrl, calcomInlineEmbed, calcomManageLinks, calcomUidOf } from '@/lib/calcom';
+import { calcomBookingUrl, calcomEmbedUrl, calcomManageLinks, calcomUidOf } from '@/lib/calcom';
 
 const SLOT_MINUTES = 30;
 
@@ -56,10 +56,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
   const contactFirst = (inq.firstName || inq.contactName.split(' ')[0] || '').trim();
   const bookedUid = booked ? calcomUidOf(booked.createdBy) : null;
   return NextResponse.json({
-    // Cal.com's inline embed, prefilled, while nothing is booked. Null when
-    // Cal.com is off: the page then asks them to reply with times instead.
-    calcom: calBase && !booked
-      ? calcomInlineEmbed(calBase, { token, name: inq.contactName || contactFirst, email: inq.email, phone: inq.phone })
+    // Cal.com's public booking page, prefilled, while nothing is booked — the
+    // page sends the course straight there (Cam 2026-09-29: an embed rendered
+    // blank live). metadata[invite] rides along so the webhook finds the
+    // inquiry. Null when Cal.com is off: the page asks them to reply instead.
+    calcomUrl: calBase && !booked
+      ? calcomEmbedUrl(calBase, { token, name: inq.contactName || contactFirst, email: inq.email, phone: inq.phone })
       : null,
     // Cal.com's own reschedule / cancel pages — only for a call booked there.
     // A call Cam set up by hand has none; the page says to reply instead.
