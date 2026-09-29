@@ -903,7 +903,7 @@ function DashboardPageInner() {
                                   <div className="text-[12.5px] text-ink-muted truncate">{b.golferEmail.endsWith('@noemail.greenreserve.app') ? (b.golferPhone || 'no contact on file') : b.golferEmail}</div>
                                 </div>
                                 {b.status === 'confirmed' && b.checkInFailReason ? (
-                                  <span className="shrink-0 text-[12.5px] font-medium text-bad" title={b.checkInFailReason}>Card declined</span>
+                                  <span className="shrink-0 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-ink" title={b.checkInFailReason}><StatusDot status="bad" />Card declined</span>
                                 ) : (
                                   <span className="shrink-0 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-ink"><StatusDot {...statusDot(bStatus.tone)} />{bStatus.label}</span>
                                 )}

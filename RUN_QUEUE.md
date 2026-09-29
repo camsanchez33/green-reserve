@@ -1181,6 +1181,13 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       The schema already carries a real `ChangeRequest` table for the first
       two (unused). One reworded log line breaks any of them. Migrate all
       three onto real rows (SCHEMA CHANGE, ATTENDED).
+      BLOCKED (assessed 2026-09-29): RESUBMIT:: has no table → real schema
+      change → blocked on Vercel previews (see EV-1). The two change-request
+      encodings COULD move onto ChangeRequest without a migration, but 10+
+      readers (computeOpenChanges, isSendPreviewGated, queueSignal, overview)
+      parse the strings and existing rows need a prod backfill (Cam's approval);
+      a half-move means dual-reading on the approval gate for no user-visible
+      gain with zero live courses. Do all three together once previews build.
     - [x] MP-4d (6a5a3dd) — Overview stops deriving "whose move is it" for
       itself. It built FOUR overlapping amber sources in SQL over `updatedAt`
       with its own 3/5/7-day thresholds (waitingOnUs, sheetNoResponse,
@@ -1287,6 +1294,13 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       `firstWentLiveAt` so health stops reading a failed welcome email as
       "setup incomplete" forever (SCHEMA CHANGE, ATTENDED — needs the
       migration checklist, a Neon branch and Cam present).
+      SHIPPED c6a2142, 2026-09-29 — box open until /gr-review. NOT a schema change
+      after all: MP-3a already added both columns and 2FA verify stamps
+      lastLoginAt. Feed (lib/course-feed.ts), Engagement card, firstWentLiveAt
+      stamped at both go-live paths, health prefers it (welcome email fallback,
+      no backfill). Verified on local Postgres via the real admin page.
+      CAM TO WALK: /admin/courses/<any course> → Overview: Relationship feed and
+      Engagement card show; set a course live → "First went live" fills in.
     - [x] MP-5d (87a9695) — detail tabs 9 -> 6 (the "10" counted Contact,
       folded in earlier): Overview · Money · Records · Messages · Operate ·
       Setup. Staff tab gone — resend-login sits on the Overview staff card;
@@ -2535,6 +2549,37 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   REVIEWED 2026-09-29: PARTIAL — docs/SHIPPING.md still gave the tsx command.
   FIXED 02c5cac. First real run (PR #2) measured production: every audited page
   over budget (Home 63 / TBT 1301ms; For Courses CLS 0.265; Booking LCP 5.07s).
+
+- [ ] RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM).
+  /api/auth/forgot-password has no rate limit: anyone can loop a victim's email
+  and flood their inbox (operators, and staff since SD-9c), burning Resend quota.
+  It also leaks which emails have accounts (500 for a known email whose send
+  fails vs 200 for unknown; timing). Fix: rateLimit per IP and per email
+  (3/hour/email; over the limit answer the SAME {success:true} without sending);
+  send inside after() so the response time and status never depend on whether
+  the account exists. (small, no migration)
+  SHIPPED f57f269, 2026-09-29 — box open until /gr-review. 10/h per IP (429), 3/h per
+  address (silent success), lookups+send in after(). Tested on local Postgres.
+- [ ] RV-2 — review follow-ups, small (from /gr-review 2026-09-29):
+  (a) staff-setup resend on admin/courses/[id]/page.tsx (~927) shows "Error
+  sending email" and drops the route's reason — show d.error; (b) Overview action
+  queue "Resend preview" (admin/page.tsx ~270-287) shows "Failed — retry" with no
+  reason, a dead end on a 409 — show d.error per row; (c) staff reset link is
+  check-then-write — make the update conditional on the old hash (updateMany
+  where password = current) so two simultaneous uses cannot both land; (d) tee
+  sheet "Card declined" (dashboard/page.tsx ~904) is bare text-bad — StatusDot
+  like its neighbour; (e) Footer contact row (components/Footer.tsx ~20, ~43) add
+  flex-wrap so the longer Outlook address cannot overflow at 320px; (f) stale
+  hello@ comments (agreement-sign.ts, agreement-required.ts, email.ts,
+  call/[token]/route.ts). (small, no migration)
+  SHIPPED 0eab366, 2026-09-29 — box open until /gr-review. All six (a)-(f); (c) tested
+  with two simultaneous submits, (e) at 320px.
+- [ ] PERF-1 — golfer pages over budget (first real Lighthouse run, PR #2,
+  mobile + slow 4G): Home 63 (TBT 1301ms, LCP 3.83s), For Courses 69 (CLS 0.265,
+  LCP 3.57s), Course page 77 (CLS 0.181, LCP 3.59s), Booking 70 (LCP 5.07s,
+  TBT 439ms). Worst: Home's blocking JS and For Courses' layout shift. Diagnose
+  with the Lighthouse report per page first; fix the largest contributors; the
+  perf-audit check must go green. (medium, no migration)
 
 - [ ] CAL-2 — Cal.com is the ONLY call scheduler — SHIPPED e082dd0, 2026-09-29, box
   open until /gr-review + Cam's live walk. Cam: "there should be no google calendar

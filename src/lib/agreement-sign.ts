@@ -133,7 +133,7 @@ async function renderAndStore(acceptanceId: string): Promise<string | null> {
 
 /**
  * The courtesy copies: PDFs to Blob, then one email to the operator with the
- * PDFs attached and a copy to hello@. Any failure is logged, never thrown —
+ * PDFs attached and a copy to the admin inbox. Any failure is logged, never thrown —
  * the caller has already answered the signer.
  */
 export async function deliverAgreementPdfs(courseId: string, acceptanceIds: string[]): Promise<void> {

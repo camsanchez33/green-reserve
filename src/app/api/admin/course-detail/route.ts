@@ -11,6 +11,7 @@ import { computeOpenChanges, CATEGORY_LABEL } from '@/lib/change-requests';
 import { getCourseTimeline, isRemindersPaused, latestAgreementAcceptance } from '@/lib/course-timeline';
 import { hasAcceptedAgreement, agreementStatus } from '@/lib/agreement-gate';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
+import { buildRelationshipFeed } from '@/lib/course-feed';
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
   sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
 
   const [course, recentBookings, totalBookings, revenue, staff, lastBookingAgg, priorBookingsCount, approval, unreadMessages, linkedInquiry, timeline] = await Promise.all([
-    prisma.course.findUnique({ where: { id: courseId }, include: { operator: { select: { id: true, name: true, email: true, emailVerified: true, onboardingStep: true, phone: true } }, schedules: true } }),
+    prisma.course.findUnique({ where: { id: courseId }, include: { operator: { select: { id: true, name: true, email: true, emailVerified: true, onboardingStep: true, phone: true, lastLoginAt: true } }, schedules: true } }),
     prisma.booking.findMany({ where: { courseId, status: { in: COMPLETED_BOOKING_STATUSES }, createdAt: { gte: thirtyDaysAgo } }, select: { id: true, golferName: true, golferEmail: true, players: true, totalAmount: true, createdAt: true, teeTime: { select: { date: true, time: true } } }, orderBy: { createdAt: 'desc' }, take: 20 }),
     prisma.booking.count({ where: { courseId, status: { in: COMPLETED_BOOKING_STATUSES } } }),
     prisma.booking.aggregate({ where: { courseId, status: { in: COMPLETED_BOOKING_STATUSES }, createdAt: { gte: thirtyDaysAgo } }, _sum: { greenFeeTotal: true, accessFeeTotal: true, totalAmount: true }, _count: { id: true } }),
@@ -45,7 +46,7 @@ export async function GET(req: NextRequest) {
         id: true, createdAt: true,
         courseName: true, courseType: true, address: true, city: true,
         state: true, zipCode: true, phone: true, website: true, detailsJson: true,
-        events: { select: { actorName: true, toStatus: true, createdAt: true } },
+        events: { select: { actorName: true, fromStatus: true, toStatus: true, createdAt: true } },
       },
     }),
     getCourseTimeline(courseId),
@@ -55,13 +56,22 @@ export async function GET(req: NextRequest) {
 
   // CS-3: every call about this course — its own check-ins and the linked
   // inquiry's discovery calls (which count as contact). Few rows.
-  const [calls, agreements] = await Promise.all([
+  const [calls, agreements, earnedAgg, recentMessages] = await Promise.all([
     prisma.call.findMany({
       where: { OR: [{ courseId }, { inquiry: { builtCourseId: courseId } }] },
       orderBy: { scheduledAt: 'desc' },
     }),
     // AG-2 §3: the Setup checklist counts signed documents.
     agreementStatus(courseId),
+    // MP-5e part 3: what this course has earned GreenReserve, all time — the
+    // service fee on rounds actually paid through us (same PAID rule as
+    // /admin/revenue, so the two never disagree).
+    prisma.booking.aggregate({ where: { courseId, paymentStatus: 'paid', roundPaymentIntentId: { not: '' } }, _sum: { accessFeeTotal: true }, _count: { id: true } }),
+    prisma.message.findMany({
+      where: { thread: { courseId } },
+      orderBy: { createdAt: 'desc' }, take: 25,
+      select: { createdAt: true, senderType: true, senderName: true, body: true, isBroadcast: true },
+    }),
   ]);
 
   const bookings30d = revenue._count.id;
@@ -71,6 +81,7 @@ export async function GET(req: NextRequest) {
     liveStatus: course.liveStatus,
     stripeAccountActive: course.stripeAccountActive,
     welcomeEmailSentAt: course.welcomeEmailSentAt,
+    firstWentLiveAt: course.firstWentLiveAt,
     createdAt: course.createdAt,
     bookings30d,
     bookingsPrev30d: priorBookingsCount,
@@ -150,6 +161,16 @@ export async function GET(req: NextRequest) {
       unreadMessages,
       openChanges: openChanges.map(c => CATEGORY_LABEL[c.category] || c.category),
       hasSchedule: (course.schedules ?? []).length > 0,
+    },
+    // MP-5e part 3: the relationship at a glance — one chronological feed
+    // across notes, messages, pipeline moves and calls; when the operator was
+    // last in their dashboard; and what the course has earned GreenReserve.
+    relationship: {
+      feed: buildRelationshipFeed({ timeline, messages: recentMessages, statusEvents: linkedInquiry?.events ?? [], calls }),
+      operatorLastLoginAt: course.operator?.lastLoginAt?.toISOString() ?? null,
+      earnedCents: earnedAgg._sum.accessFeeTotal ?? 0,
+      paidRounds: earnedAgg._count.id,
+      firstWentLiveAt: course.firstWentLiveAt?.toISOString() ?? null,
     },
     // A-05 items 4/5: course-timeline events (settings edits, reminders,
     // agreement acceptance, uploaded docs, notes) — null if there's no
@@ -242,6 +263,8 @@ export async function PATCH(req: NextRequest) {
     // CS-1 go-live hook: the first check-in call lands 14 days out, only when
     // nothing is set — a re-activation never moves a planned date.
     await prisma.course.updateMany({ where: { id: courseId, nextCheckInAt: null }, data: { nextCheckInAt: firstCheckInAfterGoLive() } });
+    // MP-5e part 3: the first time only — a re-activation is not a first go-live.
+    await prisma.course.updateMany({ where: { id: courseId, firstWentLiveAt: null }, data: { firstWentLiveAt: new Date() } });
     const linked = await prisma.courseInquiry.findFirst({
       where: { builtCourseId: courseId, status: 'building' },
     });

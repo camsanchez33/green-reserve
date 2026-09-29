@@ -549,6 +549,8 @@ async function handleAction(
       // CS-1 go-live hook: the first check-in call lands 14 days out. Only
       // when nothing is set — a re-activation never moves a planned date.
       await prisma.course.updateMany({ where: { id: inquiry.builtCourseId, nextCheckInAt: null }, data: { nextCheckInAt: firstCheckInAfterGoLive(now) } });
+      // MP-5e part 3: the first time only — a re-activation is not a first go-live.
+      await prisma.course.updateMany({ where: { id: inquiry.builtCourseId, firstWentLiveAt: null }, data: { firstWentLiveAt: now } });
       const from = inquiry.status;
       await prisma.courseInquiry.update({ where: { id: inquiryId }, data: { status: 'live', wentLiveAt: now } });
       await logEvent(inquiryId, from, 'live', 'admin', adminName);

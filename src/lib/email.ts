@@ -919,7 +919,7 @@ export async function sendMemberLinkedNotification(data: {
 }
 
 // The lead form is public: every field below is attacker-controlled text that
-// is interpolated into HTML delivered to hello@. Escape it.
+// is interpolated into HTML delivered to the admin inbox. Escape it.
 const escHtml = (s: string) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 // Subject lines are plain text but still user text: one line, bounded.
 const subj = (s: string) => String(s ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, 120);
@@ -1679,7 +1679,7 @@ export async function sendRefundEmail(data: {
 }
 
 // AG-2 §2: "Your signed GreenReserve agreements" — the PDFs attached, a copy
-// to hello@. `pending` names any document whose PDF did not render; the
+// to the admin inbox. `pending` names any document whose PDF did not render; the
 // signing itself is on record regardless and the copy follows by email.
 export async function sendSignedAgreementsEmail(data: {
   operatorName: string; operatorEmail: string; courseName: string; legalName: string;

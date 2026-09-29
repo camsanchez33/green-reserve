@@ -84,7 +84,7 @@ export async function agreementOverdueCourses(now: Date = new Date()): Promise<{
 /**
  * Day-0 notice (spec §2): for every AgreementVersion with a re-acceptance
  * deadline and no notice yet, email each course that has ever been live (or
- * is) and has an operator; then one summary to hello@; then stamp
+ * is) and has an operator; then one summary to the admin inbox; then stamp
  * noticeSentAt. Idempotent — the stamp is written only after the sends.
  */
 export async function sendAgreementBumpNotices(now: Date = new Date()): Promise<{ versions: number; notified: number; failed: number }> {

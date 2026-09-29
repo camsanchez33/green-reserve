@@ -17,7 +17,7 @@ export default function Footer() {
       <footer className="bg-paper border-t border-line">
         <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-ink-faint">
           <span>Powered by <Link href="/" className="text-pine hover:text-pine-hover transition-colors font-medium">GreenReserve</Link></span>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
             <a href="mailto:thegreenreserve@outlook.com" className="hover:text-ink-soft transition-colors">thegreenreserve@outlook.com</a>
             <Link href="/privacy" className="hover:text-ink-soft transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-ink-soft transition-colors">Terms</Link>
@@ -40,7 +40,7 @@ export default function Footer() {
               <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={120} height={22} loading="lazy" className="w-[120px] h-auto" />
             </Link>
           </span>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
             <a href="mailto:thegreenreserve@outlook.com" className="hover:text-ink-soft transition-colors">thegreenreserve@outlook.com</a>
             <Link href="/privacy" className="hover:text-ink-soft transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-ink-soft transition-colors">Terms</Link>

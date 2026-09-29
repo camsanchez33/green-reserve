@@ -48,10 +48,14 @@ export async function POST(req: NextRequest) {
     // lockout lets a staff member who locked themselves out back in at once.
     // NOT done, and cannot be without a schema change: signing out their other
     // sessions — CourseStaff has no sessionVersion (operators do).
-    await prisma.courseStaff.update({
-      where: { id: staff.id },
+    // RV-2: conditional on the hash the link was issued against, so two
+    // simultaneous submits of one link cannot both land — the loser matches
+    // zero rows and is told the link is spent.
+    const { count } = await prisma.courseStaff.updateMany({
+      where: { id: staff.id, password: staff.password },
       data: { password: await bcrypt.hash(password, 12), failedLoginAttempts: 0, lockoutUntil: null },
     });
+    if (count === 0) return NextResponse.json({ error: 'This reset link is invalid or has expired.' }, { status: 400 });
     after(sendPasswordChangedNotification({ operatorName: staff.name, operatorEmail: staff.email })
       .catch(err => console.error('Password-changed notification failed:', err)));
     return NextResponse.json({ success: true });
