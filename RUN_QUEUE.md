@@ -2664,6 +2664,16 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   1181ms on CI (others pass; locally 40ms). The Sentry timer was not the whole
   cause. perf-audit.ts now prints main-thread breakdown, top scripts, long tasks
   and third parties for any failing page — the next CI run names the cause.
+- [x] PERF-4 (Cam 2026-09-29, "option 1") — the speed check audits each page 3x
+  and judges the median of each metric; budgets unchanged. Found with it: the
+  first run in a fresh browser is always the slow one (Home TBT 186 vs 41/46).
+  Also fixed: since FB-2 the hero BLURB (not the h1) is Home's LCP element and it
+  faded in from opacity 0, which held LCP back; it now rises without fading, like
+  the h1 (observed LCP = FCP). STILL OPEN: Home's simulated LCP sits ~2.6-3.0s
+  locally against the 2.5s budget (swings ±0.3s run to run; /for-courses sits at
+  ~2.5s). It is byte-bound on slow 4G (fonts + CSS + JS before first paint).
+  Un-preloading the hero mockup photo did not help (reverted). Next lever: drop
+  an unused font weight / subset, once the CI median shows whether it is needed.
 - [ ] PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29:
   private clubs pay GreenReserve (subscription, or $1.50/round billed monthly and
   capped at the subscription price); members pay $0. BLOCKED on Cam's prices and on
