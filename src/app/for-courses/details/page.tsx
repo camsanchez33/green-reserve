@@ -74,6 +74,7 @@ type Draft = {
   // legacy
   facilities: string[]; facilitiesNotes: Record<string, string>; restaurantType: string;
   website: string; description: string; photos: string[];
+  scorecardPhotos: string[];
   additionalNotes: string;
   branch: BranchAnswers;
 };
@@ -154,53 +155,51 @@ const initDraft: Draft = {
   cancellationPolicy: '', cancellationHours: '24', lateFee: '',
   facilitiesV2: initFacilitiesV2(),
   facilities: [], facilitiesNotes: {}, restaurantType: 'none',
-  website: '', description: '', photos: [],
+  website: '', description: '', photos: [], scorecardPhotos: [],
   additionalNotes: '',
   branch: { passes: '', public_fees: '', member_rate: '', outings: '' },
 };
 
 type SectionId = 'basics' | 'playability' | 'tee_sets' | 'schedule' | 'fees' | 'passes' | 'member' | 'public_fees' | 'member_rate' | 'outings' | 'cancellation' | 'facilities' | 'about' | 'notes';
 
-// IF-1 §4b: the sections no longer branch off the inquiry form (those
-// questions moved to the discovery call). Every conditional section is always
-// in the list and asks its own question at the top — see BRANCH_Q. Nothing is
-// hidden because an answer is missing.
-function buildSections(courseType: string): { id: SectionId; title: string }[] {
-  const head: { id: SectionId; title: string }[] = [
+// SD-9b (Cam 2026-09-29): the REQUIRED CORE comes first — the four steps that
+// are enough to build the booking page (course basics, tee sheet schedule,
+// green fees, cancellation yes/no). Everything after them is optional: the
+// course can submit once the core is done and finish the rest later or on the
+// call. Each conditional section still asks its own question at the top, but
+// an unanswered question no longer blocks Next.
+// FB-1: Public / Private only — a legacy 'semi-private' record reads as Public
+// (member passes cover it).
+type SectionDef = { id: SectionId; title: string; optional?: boolean };
+function buildSections(rawType: string): SectionDef[] {
+  const courseType = rawType === 'private' ? 'private' : 'public';
+  const core: SectionDef[] = [
     { id: 'basics', title: 'Course basics' },
-    { id: 'playability', title: 'Playability' },
-    { id: 'tee_sets', title: 'Tee sets & yardages' },
     { id: 'schedule', title: 'Tee sheet schedule' },
-  ];
-  const tail: { id: SectionId; title: string }[] = [
+    { id: 'fees', title: 'Green fees' },
     { id: 'cancellation', title: 'Cancellation policy' },
-    { id: 'facilities', title: 'Facilities' },
-    { id: 'about', title: 'About your course' },
-    { id: 'notes', title: 'Anything else' },
   ];
-  // Semi-private (an IF-1 option) sells public tee times AND has members: the
-  // public list plus the member-booking window and the per-round member rate.
-  const mid: { id: SectionId; title: string }[] = courseType === 'private'
+  const mid: SectionDef[] = courseType === 'private'
     ? [
-        { id: 'fees', title: 'Green fees' },
         { id: 'member', title: 'Member booking' },
         { id: 'public_fees', title: 'Public tee times' },
         { id: 'member_rate', title: 'Member rate' },
         { id: 'outings', title: 'Outside outings' },
       ]
-    : courseType === 'semi-private'
-    ? [
-        { id: 'fees', title: 'Green fees' },
-        { id: 'passes', title: 'Memberships & passes' },
-        { id: 'member', title: 'Member booking' },
-        { id: 'member_rate', title: 'Member rate' },
-      ]
     : [
-        { id: 'fees', title: 'Green fees' },
         { id: 'passes', title: 'Memberships & passes' },
       ];
-  return [...head, ...mid, ...tail];
+  const optional: SectionDef[] = ([
+    { id: 'playability', title: 'Nines & replays' },
+    { id: 'tee_sets', title: 'Scorecard & tee sets' },
+    ...mid,
+    { id: 'facilities', title: 'Facilities' },
+    { id: 'about', title: 'About your course' },
+    { id: 'notes', title: 'Anything else' },
+  ] as SectionDef[]).map(x => ({ ...x, optional: true }));
+  return [...core, ...optional];
 }
+const CORE_STEPS = 4;
 
 // The branching questions, asked inline at the top of their section.
 type BranchKey = 'passes' | 'public_fees' | 'member_rate' | 'outings';
@@ -347,14 +346,15 @@ function DetailsForm() {
   const [callAnswers, setCallAnswers] = useState<Record<string, string>>({});
   const [prefilled, setPrefilled] = useState<string[]>([]);
   const [draft, setDraft] = useState<Draft>(initDraft);
-  const [sections, setSections] = useState<{ id: SectionId; title: string }[]>([]);
+  const [sections, setSections] = useState<SectionDef[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [saving, setSaving] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
-  const [teeWomensOpen, setTeeWomensOpen] = useState<Record<number, boolean>>({});
+  // SD-9b: the tee-set grid is the fallback; a scorecard photo is the default.
+  const [teeByHand, setTeeByHand] = useState(false);
 
   const set = useCallback(<K extends keyof Draft>(k: K, v: Draft[K]) => setDraft(d => ({ ...d, [k]: v })), []);
 
@@ -463,7 +463,7 @@ function DetailsForm() {
         setDraft(prev => ({
           ...prev, ...saved,
           teeSets: teeSetsLoaded, passes: passesLoaded,
-          facilitiesV2: fv2, photos: photosLoaded, daysOpen: daysOpenLoaded,
+          facilitiesV2: fv2, photos: photosLoaded, scorecardPhotos: Array.isArray(saved.scorecardPhotos) ? (saved.scorecardPhotos as unknown[]).filter((x): x is string => typeof x === 'string') : [], daysOpen: daysOpenLoaded,
           nine27Names: nine27NamesLoaded, course36Names: course36NamesLoaded,
           nine27CombosEnabled: Array.isArray(saved.nine27CombosEnabled) ? saved.nine27CombosEnabled : [],
           nine27ComboNotes: (saved.nine27ComboNotes && typeof saved.nine27ComboNotes === 'object') ? saved.nine27ComboNotes : {},
@@ -479,14 +479,17 @@ function DetailsForm() {
   const filled = (v: unknown) => v !== '' && v !== null && v !== undefined;
 
   const validateSection = (id: SectionId): string => {
-    if (isBranchKey(id) && !draft.branch[id]) return 'Answer the question at the top of this section to continue.';
+    if (id === 'schedule') {
+      if (draft.daysOpen.length === 0) return 'Pick the days you are open.';
+      if (!draft.firstTeeTime || !draft.lastTeeTime) return 'Enter your first and last tee times.';
+    }
+    if (id === 'cancellation' && !draft.cancellationPolicy) return 'Choose Yes or No to continue.';
     if (id === 'fees') {
       if (!filled(draft.greenFeeWeekday)) return 'Please enter weekday green fee.';
       if (!filled(draft.greenFeeWeekend)) return 'Please enter weekend green fee.';
     }
     if (id === 'public_fees' && draft.branch.public_fees === 'yes' && !filled(draft.publicGreenFee)) return 'Please enter the public green fee.';
     if (id === 'member_rate' && draft.branch.member_rate === 'yes' && !filled(draft.memberRate)) return 'Please enter the member rate.';
-    if (id === 'about' && !draft.description) return 'Please enter a short course description.';
     return '';
   };
 
@@ -512,7 +515,23 @@ function DetailsForm() {
     setError('');
 
     const isLast = activeIdx === sections.length - 1;
-    if (isLast) {
+    if (isLast) { await submitAll(); return; }
+
+    setSaving(true);
+    await saveDraft(draft);
+    setSaving(false);
+    setActiveIdx(i => i + 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // SD-9b: submit is allowed as soon as the required core is valid — from the
+  // last step, or early via "Submit now" once the core steps are behind them.
+  const submitAll = async () => {
+    for (let i = 0; i < Math.min(CORE_STEPS, sections.length); i++) {
+      const e = validateSection(sections[i].id);
+      if (e) { setError(`${sections[i].title}: ${e}`); setActiveIdx(i); return; }
+    }
+    {
       // SD-9: no try/catch here meant a dropped connection left "Submitting…"
       // on screen forever with nothing saved and nothing said.
       setSaving(true);
@@ -530,21 +549,30 @@ function DetailsForm() {
       } finally {
         setSaving(false);
       }
-      return;
     }
-
-    setSaving(true);
-    await saveDraft(draft);
-    setSaving(false);
-    setActiveIdx(i => i + 1);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // SD-9b: the step survives a reload (answers already did, via the draft).
+  const stepKey = `gr-sheet-step:${token}`;
+  useEffect(() => {
+    if (loading || sections.length === 0) return;
+    try {
+      const n = Number(localStorage.getItem(stepKey));
+      if (Number.isInteger(n) && n > 0 && n < sections.length) setActiveIdx(n);
+    } catch { /* storage blocked: start at step 1 */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, sections.length]);
+  useEffect(() => {
+    if (loading) return;
+    try { localStorage.setItem(stepKey, String(activeIdx)); } catch { /* ignore */ }
+  }, [activeIdx, loading, stepKey]);
 
   const goBack = () => { setError(''); setActiveIdx(i => i - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
-  async function handlePhotoUpload(file: File) {
-    const currentPhotos = draft.photos || [];
-    if (currentPhotos.length >= 6) { setUploadError('Maximum 6 photos.'); return; }
+  async function handlePhotoUpload(file: File, kind: 'photos' | 'scorecardPhotos' = 'photos') {
+    const currentPhotos = draft[kind] || [];
+    const max = kind === 'photos' ? 6 : 4;
+    if (currentPhotos.length >= max) { setUploadError(`Maximum ${max} photos.`); return; }
     setUploading(true);
     setUploadError('');
     try {
@@ -556,16 +584,16 @@ function DetailsForm() {
       const d = await r.json();
       if (!r.ok) { setUploadError(d.error || 'Upload failed'); return; }
       const newPhotos = [...currentPhotos, d.url as string];
-      setDraft(prev => ({ ...prev, photos: newPhotos }));
-      saveDraft({ photos: newPhotos });
+      setDraft(prev => ({ ...prev, [kind]: newPhotos }));
+      saveDraft({ [kind]: newPhotos });
     } catch { setUploadError('Upload failed — try again'); }
     finally { setUploading(false); }
   }
 
-  function removePhoto(url: string) {
-    const newPhotos = (draft.photos || []).filter(p => p !== url);
-    setDraft(prev => ({ ...prev, photos: newPhotos }));
-    saveDraft({ photos: newPhotos });
+  function removePhoto(url: string, kind: 'photos' | 'scorecardPhotos' = 'photos') {
+    const newPhotos = (draft[kind] || []).filter(p => p !== url);
+    setDraft(prev => ({ ...prev, [kind]: newPhotos }));
+    saveDraft({ [kind]: newPhotos });
   }
 
   if (loading) return <div className="min-h-screen bg-paper flex items-center justify-center text-ink-muted text-sm">Loading...</div>;
@@ -846,21 +874,6 @@ function DetailsForm() {
                       }} placeholder={['North Course','South Course'][ni]} />
                     ))}
                   </div>
-                  {validCourses.length >= 2 && (
-                    <div>
-                      <Label text="Par per course" />
-                      <div className="grid grid-cols-2 gap-3">
-                        {validCourses.map(cName => (
-                          <div key={cName}>
-                            <p className="text-[11px] text-ink-faint mb-1">{cName}</p>
-                            <input type="number" className={inp} value={draft.course36ParsPerCourse[cName] || ''}
-                              onChange={e => set('course36ParsPerCourse', { ...draft.course36ParsPerCourse, [cName]: e.target.value })}
-                              placeholder="72" />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                   <p className="text-[11px] text-ink-faint">Each 18 gets its own front/back nine tee-set yardages in the next step.</p>
                 </div>
               );
@@ -942,8 +955,45 @@ function DetailsForm() {
           ? 'Add one row per tee set. Enter total yardage and, if you have it, per-course splits.'
           : 'Add all tees you offer. You can edit these anytime after launch.';
 
+        // SD-9b: a photo of the scorecard is the whole answer for most
+        // courses — we read the tees, yardages, par and ratings off it. The
+        // grid stays for anyone who would rather type.
+        const handEntered = draft.teeSets.some(t => t.name.trim() || t.yardage);
+        const showGrid = teeByHand || handEntered;
+        const cards = draft.scorecardPhotos || [];
         return (
           <div className="space-y-4">
+            <div className="space-y-3">
+              <p className="text-sm text-ink-soft">Upload a photo of your scorecard — front and back if the tees are on both. We&apos;ll read the tee sets, yardages, par and ratings from it.</p>
+              {cards.length > 0 && (
+                <div className="grid grid-cols-2 gap-2">
+                  {cards.map(url => (
+                    <div key={url} className="relative border border-line rounded-md overflow-hidden">
+                      <img src={url} alt="Scorecard" loading="lazy" className="w-full h-32 object-cover" />
+                      <button type="button" onClick={() => removePhoto(url, 'scorecardPhotos')} aria-label="Remove scorecard photo"
+                        className="absolute top-1.5 right-1.5 bg-white/90 border border-line rounded-md p-1 text-ink-muted hover:text-bad transition-colors">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {cards.length < 4 && (
+                <label className="flex items-center justify-center gap-2 w-full border border-dashed border-line-strong rounded-md py-4 text-sm text-ink-soft hover:border-pine/40 hover:text-ink cursor-pointer transition-colors">
+                  <Upload className="w-4 h-4" />
+                  {uploading ? 'Uploading…' : cards.length ? 'Add another photo' : 'Upload scorecard photo'}
+                  <input type="file" accept="image/*" className="sr-only" disabled={uploading}
+                    onChange={e => { const f = e.target.files?.[0]; if (f) handlePhotoUpload(f, 'scorecardPhotos'); e.target.value = ''; }} />
+                </label>
+              )}
+              {uploadError && <p className="text-xs text-bad">{uploadError}</p>}
+              {!showGrid && (
+                <button type="button" onClick={() => setTeeByHand(true)} className="text-xs text-ink-muted hover:text-ink underline underline-offset-2 transition-colors">
+                  No scorecard handy? Enter tee sets by hand instead
+                </button>
+              )}
+            </div>
+            {showGrid && (<>
             <p className="text-sm text-ink-muted">{descLabel}</p>
             <div className="space-y-4">
               {draft.teeSets.map((ts, i) => (
@@ -1013,26 +1063,6 @@ function DetailsForm() {
                         <Label text="Total yardage" />
                         <input type="number" className={inp} value={ts.yardage} onChange={e => updateTeeSet(i, { yardage: e.target.value })} placeholder="6,400" />
                       </div>
-                      {h === '18' && (
-                        <div>
-                          <button type="button" className="text-xs text-ink-faint hover:text-ink transition-colors"
-                            onClick={() => updateTeeSet(i, { frontYardage: ts.frontYardage || '', backYardage: ts.backYardage || '' })}>
-                            {ts.frontYardage || ts.backYardage ? 'Front/back split' : '+ Add front/back split (optional)'}
-                          </button>
-                          {(ts.frontYardage !== undefined || ts.backYardage !== undefined) && (ts.yardage || ts.frontYardage || ts.backYardage) && (
-                            <div className="grid grid-cols-2 gap-2 mt-2">
-                              <div>
-                                <p className="text-[11px] text-ink-faint mb-1">Front 9</p>
-                                <input type="number" className={inp} value={ts.frontYardage} onChange={e => updateTeeSet(i, { frontYardage: e.target.value })} placeholder="3,200" />
-                              </div>
-                              <div>
-                                <p className="text-[11px] text-ink-faint mb-1">Back 9</p>
-                                <input type="number" className={inp} value={ts.backYardage} onChange={e => updateTeeSet(i, { backYardage: e.target.value })} placeholder="3,200" />
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </div>
                   )}
 
@@ -1050,40 +1080,6 @@ function DetailsForm() {
                       <Label text="Slope" sub="(opt.)" />
                       <input type="number" className={inp} value={ts.slope} onChange={e => updateTeeSet(i, { slope: e.target.value })} placeholder="128" />
                     </div>
-                  </div>
-
-                  {/* Women's ratings toggle */}
-                  <div>
-                    {!teeWomensOpen[i] ? (
-                      <button type="button" className="text-xs text-ink-faint hover:text-ink transition-colors"
-                        onClick={() => setTeeWomensOpen(prev => ({ ...prev, [i]: true }))}>
-                        + Add women&apos;s par / rating / slope (optional)
-                      </button>
-                    ) : (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium">Women&apos;s ratings</span>
-                          <button type="button" className="text-[11px] text-ink-faint hover:text-bad transition-colors"
-                            onClick={() => { setTeeWomensOpen(prev => ({ ...prev, [i]: false })); updateTeeSet(i, { womensPar: '', womensRating: '', womensSlope: '' }); }}>
-                            Remove
-                          </button>
-                        </div>
-                        <div className="grid grid-cols-3 gap-3">
-                          <div>
-                            <Label text="Par" />
-                            <input type="number" className={inp} value={ts.womensPar} onChange={e => updateTeeSet(i, { womensPar: e.target.value })} placeholder="74" />
-                          </div>
-                          <div>
-                            <Label text="Rating" />
-                            <input type="number" step="0.1" className={inp} value={ts.womensRating} onChange={e => updateTeeSet(i, { womensRating: e.target.value })} placeholder="73.2" />
-                          </div>
-                          <div>
-                            <Label text="Slope" />
-                            <input type="number" className={inp} value={ts.womensSlope} onChange={e => updateTeeSet(i, { womensSlope: e.target.value })} placeholder="131" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   {/* Per-combo ratings (27-hole three 9s only) */}
@@ -1133,8 +1129,9 @@ function DetailsForm() {
               </button>
             )}
             {is27Three9s && nineNamesFor27.length === 0 && (
-              <p className="text-[11px] text-warn">Name your three nines in the Playability step to see per-nine yardage fields here.</p>
+              <p className="text-[11px] text-warn">Name your three nines in the Nines &amp; replays step to see per-nine yardage fields here.</p>
             )}
+            </>)}
           </div>
         );
       }
@@ -1629,39 +1626,6 @@ function DetailsForm() {
             {/* Club rental */}
             <div className="space-y-2">
               {togBtn(fv2.clubRental, () => tog('clubRental', fv2.clubRental), 'Club rental')}
-              {fv2.clubRental && (
-                <div className="pl-4 space-y-2 border-l-2 border-pine/20">
-                  <Label text="How to arrange (select all that apply)" />
-                  {[
-                    { v: 'pro_shop', label: 'Walk into the pro shop' },
-                    { v: 'phone', label: 'Call ahead' },
-                  ].map(({ v, label }) => {
-                    const methods = fv2.clubRentalMethods || [];
-                    const on = methods.includes(v);
-                    return (
-                      <button key={v} type="button" onClick={() => {
-                        const next = on ? methods.filter(m => m !== v) : [...methods, v];
-                        setFv2({ clubRentalMethods: next });
-                      }}
-                        className={'flex items-center gap-3 px-3 py-2 rounded-md border text-sm text-left w-full transition-colors ' +
-                          (on ? 'border-pine bg-pine/5 text-pine' : 'border-line text-ink hover:border-pine/40')}>
-                        <div className={'w-4 h-4 rounded border flex items-center justify-center shrink-0 ' + (on ? 'bg-pine border-pine' : 'border-line-strong')}>
-                          {on && <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10"><path d="M1.5 5l2.5 2.5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                        </div>
-                        <span className={on ? 'font-medium' : ''}>{label}</span>
-                      </button>
-                    );
-                  })}
-                  {(fv2.clubRentalMethods || []).includes('phone') && (
-                    <div>
-                      <Label text="Phone to call" sub="(opt.)" />
-                      <input type="tel" className={inp} value={fv2.clubRentalPhone || ''}
-                        onChange={e => setFv2({ clubRentalPhone: e.target.value })}
-                        placeholder={fv2.proShopPhone || '(555) 000-0000'} />
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Push/pull cart rental */}
@@ -1794,7 +1758,7 @@ function DetailsForm() {
           <Image src="/brand/logo-lockup-cream-900.png" alt="GreenReserve" width={80} height={40} priority className="h-10 w-auto mx-auto" />
         </Link>
         <h1 className="text-white text-[20px] font-serif font-medium mt-3 mb-0.5 tracking-tight">Setup sheet — {courseName}</h1>
-        <p className="text-white/50 text-sm">Takes 10–15 minutes. Saves as you go.</p>
+        <p className="text-white/50 text-sm">The first 4 steps are all we need to build your page — about 5 minutes. The rest is optional. Saves as you go.</p>
       </div>
 
       <div className="bg-pine/10 h-1">
@@ -1812,6 +1776,7 @@ function DetailsForm() {
         <div className="bg-white rounded-lg border border-line p-6 mb-5">
           <h2 className="text-[18px] font-serif font-medium tracking-tight text-ink mb-5">
             {section?.title}
+            {section?.optional && <span className="ml-2 align-middle text-[11px] font-sans uppercase tracking-[0.06em] text-ink-faint">Optional</span>}
           </h2>
           {section && (SECTION_PREFILL_KEYS[section.id] || []).some(k => prefilled.includes(k)) && (
             <p className="text-[12.5px] text-ink-muted leading-relaxed -mt-2 mb-3">Pre-filled from your call — change anything that&apos;s off.</p>
@@ -1853,6 +1818,16 @@ function DetailsForm() {
         </div>
         {section?.id === 'cancellation' && !draft.cancellationPolicy && (
           <p className="text-[11px] text-ink-faint text-center mt-2">Select Yes or No above to continue.</p>
+        )}
+        {/* SD-9b: past the required core, the course can stop here. */}
+        {section?.optional && !isLast && (
+          <div className="mt-5 text-center space-y-1.5">
+            <button onClick={submitAll} disabled={saving}
+              className="text-sm font-medium text-pine hover:text-pine-hover underline underline-offset-2 disabled:opacity-50 transition-colors">
+              Submit now — we&apos;ll cover the rest together
+            </button>
+            <p className="text-[11px] text-ink-faint">Everything we need to build your page is done. The optional steps can wait for a follow-up call, or reply to our email.</p>
+          </div>
         )}
       </div>
     </div>

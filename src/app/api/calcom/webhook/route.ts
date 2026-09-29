@@ -80,18 +80,38 @@ export async function POST(req: NextRequest) {
   const durationMin = end && !Number.isNaN(end.getTime()) ? Math.max(5, Math.round((end.getTime() - start.getTime()) / 60_000)) : 30;
 
   const token = typeof p.metadata?.invite === 'string' ? p.metadata.invite : '';
-  const inq = /^[a-f0-9]{48}$/.test(token)
-    ? await prisma.courseInquiry.findUnique({
-        where: { callInviteToken: token },
-        // Everything defaultAgenda reads — its type has these optional, so a
-        // narrower select would compile and silently mark answered items open.
-        select: {
-          id: true, status: true, phone: true, detailsJson: true, needsJson: true,
-          greenFeeRange: true, teeTimesPerDay: true, currentBookingMethod: true,
-          hasResidentPricing: true, hasMemberPricing: true, hasCaddies: true, callSkippedReason: true,
-        },
-      })
+  // Everything defaultAgenda reads — its type has these optional, so a
+  // narrower select would compile and silently mark answered items open.
+  const INQ_SELECT = {
+    id: true, status: true, phone: true, detailsJson: true, needsJson: true,
+    greenFeeRange: true, teeTimesPerDay: true, currentBookingMethod: true,
+    hasResidentPricing: true, hasMemberPricing: true, hasCaddies: true, callSkippedReason: true,
+  } as const;
+  let inq = /^[a-f0-9]{48}$/.test(token)
+    ? await prisma.courseInquiry.findUnique({ where: { callInviteToken: token }, select: INQ_SELECT })
     : null;
+
+  // FB-1: the /for-courses thanks page links the plain Cal.com booker (no
+  // invite token — a per-inquiry link there leaked which courses were already
+  // in the pipeline). Such a booking is matched by the attendee's email, but
+  // only when that picks out exactly ONE live inquiry submitted in the last 30
+  // days — anything ambiguous is left for Cam to attach by hand, as before.
+  // Not for reschedules: those carry the original booking's metadata.
+  if (!inq && !token && !p.rescheduleUid) {
+    const email = (p.attendees?.[0]?.email || '').trim().toLowerCase();
+    if (email) {
+      const matches = await prisma.courseInquiry.findMany({
+        where: {
+          email: { equals: email, mode: 'insensitive' },
+          status: { in: [...ALIVE_STATUSES] },
+          createdAt: { gte: new Date(Date.now() - 30 * 86_400_000) },
+        },
+        select: INQ_SELECT,
+        take: 2,
+      });
+      if (matches.length === 1) inq = matches[0];
+    }
+  }
 
   // CAL-2 (review): a closed inquiry does not get a Call row from a stale link.
   // Cal.com has already put the booking in Cam's calendar, so say so on the

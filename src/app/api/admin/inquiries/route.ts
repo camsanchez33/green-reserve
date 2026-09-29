@@ -741,7 +741,10 @@ async function handleAction(
       const hasShortGameArea = !!(fv2.chippingArea ?? d.hasShortGameArea);
       const hasProShop = !!(fv2.proShop ?? d.hasProShop);
       const hasLessons = !!(fv2.lessons ?? d.hasLessons);
-      const proShopPhone = str(fv2.lessonsProPhone ?? d.proShopPhone, '');
+      // SD-9b: this read fv2.lessonsProPhone, so the pro-shop number the course
+      // typed (fv2.proShopPhone) never reached the course. Lessons phone is now
+      // only the fallback when no pro-shop number was given.
+      const proShopPhone = str(fv2.proShopPhone || fv2.lessonsProPhone || d.proShopPhone, '');
       const hasClubRental = !!(fv2.clubRental ?? d.hasClubRental);
       const hasPushCartRental = !!(fv2.cartRental ?? d.hasPushCartRental);
       const pushCartRate = flt(fv2.cartRentalCost ?? d.pushCartRate, 0);

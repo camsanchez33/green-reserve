@@ -2,7 +2,8 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, Calendar, CheckCircle, Globe, HelpCircle, Lock, Mail, Users } from 'lucide-react';
+import { ArrowLeft, Calendar, CheckCircle, Globe, HelpCircle, Lock, Mail } from 'lucide-react';
+import { calcomEmbedUrl } from '@/lib/calcom-url';
 
 const STATES = [
   'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
@@ -14,22 +15,19 @@ const STATES = [
 // INQUIRY_FORM_SPEC IF-1: the form asks only what the discovery call can't.
 const TITLE_OPTIONS = ['General Manager', 'Head Professional', 'Owner', 'Superintendent', 'Other'];
 const BOOKING_TODAY_OPTIONS = ['Phone and a paper sheet', 'Phone and a spreadsheet', 'GolfNow or a similar site', 'Our own website', 'Something else'];
-const CALL_TIMES = ['Mornings', 'Afternoons', 'Evenings'];
-const CALL_DAYS = ['Weekdays', 'Weekends'];
-type CourseType = 'public' | 'semi-private' | 'private';
-const COURSE_TYPES: CourseType[] = ['public', 'semi-private', 'private'];
-
-const CALENDLY_URL = 'https://calendly.com/greenreserve';
+type CourseType = 'public' | 'private';
+// FB-1 (Cam 2026-09-29): Public / Private only. A semi-private club signs up as
+// Public and turns on member passes during setup.
+const COURSE_TYPES: CourseType[] = ['public', 'private'];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 type FormData = {
   firstName: string; lastName: string;
   contactTitle: string; contactTitleOther: string;
   email: string; phone: string;
-  courseName: string; city: string; state: string;
+  courseName: string; address: string; city: string; state: string;
   courseType: CourseType;
   bookingToday: string;
-  callTimes: string[]; callDays: string[];
   notes: string;
 };
 
@@ -37,10 +35,9 @@ const init: FormData = {
   firstName: '', lastName: '',
   contactTitle: '', contactTitleOther: '',
   email: '', phone: '',
-  courseName: '', city: '', state: '',
+  courseName: '', address: '', city: '', state: '',
   courseType: 'public',
   bookingToday: '',
-  callTimes: [], callDays: [],
   notes: '',
 };
 
@@ -63,37 +60,7 @@ function FieldError({ msg }: { msg?: string }) {
   return <p className="mt-1 text-xs text-bad">{msg}</p>;
 }
 
-// Multi-select chip row (the call-time preference). Toggles, never required.
-function ChipRow({ options, value, onChange, ariaLabel }: {
-  options: string[];
-  value: string[];
-  onChange: (v: string[]) => void;
-  ariaLabel: string;
-}) {
-  return (
-    <div className="flex flex-wrap gap-2" role="group" aria-label={ariaLabel}>
-      {options.map(opt => {
-        const on = value.includes(opt);
-        return (
-          <button
-            key={opt}
-            type="button"
-            aria-pressed={on}
-            onClick={() => onChange(on ? value.filter(v => v !== opt) : [...value, opt])}
-            className={
-              'px-3 py-2 rounded-md border text-sm transition-colors ' +
-              (on ? 'border-pine bg-pine/5 text-pine font-medium' : 'border-line bg-paper text-ink hover:border-pine/40')
-            }
-          >
-            {opt}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-export default function ForCoursesContent() {
+export default function ForCoursesContent({ calBookingUrl = null }: { calBookingUrl?: string | null }) {
   const [form, setForm] = useState<FormData>(init);
   // SD review: the honeypot input existed but its value was never sent — the
   // payload hardcoded ''. Bots that fill every field now get the silent 200.
@@ -118,6 +85,7 @@ export default function ForCoursesContent() {
   const [signinResult, setSigninResult] = useState<{ loginEmail: string; hasAccount: boolean; needsSetup: boolean } | null>(null);
   const [submittedCourse, setSubmittedCourse] = useState({ courseName: '', city: '', state: '' });
   const [serverError, setServerError] = useState('');
+  const [callUrl, setCallUrl] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -133,7 +101,6 @@ export default function ForCoursesContent() {
 
   const set = (k: keyof FormData, v: string) => setForm(f => ({ ...f, [k]: v }));
   const setType = (t: CourseType) => setForm(f => ({ ...f, courseType: t }));
-  const setList = (k: 'callTimes' | 'callDays', v: string[]) => setForm(f => ({ ...f, [k]: v }));
 
   const validateAll = (): Record<string, string> => {
     const errs: Record<string, string> = {};
@@ -145,6 +112,7 @@ export default function ForCoursesContent() {
     else if (!EMAIL_RE.test(form.email.trim())) errs.email = 'Enter a valid email address (e.g. you@course.com)';
     if (!form.phone.trim()) errs.phone = 'Phone number is required';
     if (!form.courseName.trim()) errs.courseName = 'Course name is required';
+    if (!form.address.trim()) errs.address = 'Street address is required';
     if (!form.city.trim()) errs.city = 'City is required';
     if (!form.state) errs.state = 'State is required';
     if (!form.bookingToday) errs.bookingToday = 'Tell us how you take tee times today';
@@ -180,14 +148,12 @@ export default function ForCoursesContent() {
         firstName: form.firstName, lastName: form.lastName,
         contactTitle,
         email: form.email, phone: form.phone,
-        courseName: form.courseName, city: form.city, state: form.state,
+        courseName: form.courseName, address: form.address, city: form.city, state: form.state,
         courseType: form.courseType,
         currentBookingMethod: form.bookingToday,
-        // Optional. Sent only when something was picked; lands in needsJson.callPreference.
-        callPreference: form.callTimes.length || form.callDays.length ? { times: form.callTimes, days: form.callDays } : null,
         additionalNotes: form.notes,
         // honeypot (always empty for real users; bots fill it)
-        _website: honeypotRef.current?.value ?? '',
+        hp: honeypotRef.current?.value ?? '',
       }),
     });
     setSubmitting(false);
@@ -197,6 +163,12 @@ export default function ForCoursesContent() {
       setSubmittedEmail(form.email.trim());
       setSubmittedCourse({ courseName: form.courseName, city: form.city, state: form.state });
       setAlreadyBuilt(!!d.alreadyBuilt);
+      // Built from what they typed, never from the response — every submit
+      // path answers identically (FB-1 review). The webhook attaches the
+      // booking to this inquiry by email.
+      setCallUrl(calBookingUrl ? calcomEmbedUrl(calBookingUrl, {
+        name: `${form.firstName} ${form.lastName}`.trim(), email: form.email.trim(), phone: form.phone,
+      }) : null);
       setSubmitted(true);
     } else {
       const d = await res.json();
@@ -423,15 +395,23 @@ export default function ForCoursesContent() {
         </p>
         <p className="text-ink-muted text-center mb-8 text-sm">Most courses are live within a week of that call.</p>
 
-        <a
-          href={CALENDLY_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-sm transition-colors mb-3"
-        >
-          <Calendar className="w-4 h-4" />
-          Pick a call time
-        </a>
+        {/* FB-1: this used to link a Calendly page that was never set up. Now
+            the Cal.com booker, prefilled with what they typed; the booking is
+            matched to the inquiry by email. The confirmation email carries the
+            invite link too. */}
+        {callUrl ? (
+          <a
+            href={callUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-sm transition-colors mb-3"
+          >
+            <Calendar className="w-4 h-4" />
+            Pick a call time
+          </a>
+        ) : (
+          <p className="text-center text-sm text-ink-soft mb-3">The email has a link to pick your call time.</p>
+        )}
         <p className="text-center text-xs text-ink-muted">20 minutes, at a time that works for you.</p>
         {/* Cam 2026-09-16: a course that already has a page can't be created
             again — its details change in the dashboard. This line is shown to
@@ -479,15 +459,19 @@ export default function ForCoursesContent() {
             </div>
           )}
 
-          {/* Honeypot — hidden from humans, read by bots */}
+          {/* Honeypot — hidden from humans, read by bots. FB-1: it used to be
+              labelled "Website" / name="_website", which browser autofill and
+              password managers fill in (they ignore autocomplete="off" for
+              address-like fields) — and a filled honeypot silently discards the
+              whole inquiry. Nothing here looks like a field autofill knows. */}
           <div style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }} aria-hidden="true">
-            <label htmlFor="hp-website">Website</label>
-            <input ref={honeypotRef} id="hp-website" name="_website" type="text" tabIndex={-1} autoComplete="off" defaultValue=""/>
+            <label htmlFor="gr-hp-q7">Leave this empty</label>
+            <input ref={honeypotRef} id="gr-hp-q7" name="gr_hp_q7" type="text" tabIndex={-1} autoComplete="new-password" data-1p-ignore data-lpignore="true" defaultValue=""/>
           </div>
 
           {/* Section 1: You */}
           <div>
-            <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">About you</p>
+            <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">Contact info</p>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div id="fld-firstName">
@@ -573,7 +557,7 @@ export default function ForCoursesContent() {
 
           {/* Section 2: Your course */}
           <div>
-            <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">Your course</p>
+            <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">Course information</p>
             <div className="space-y-4">
               <div id="fld-courseName">
                 <Label text="Course name" required />
@@ -586,6 +570,18 @@ export default function ForCoursesContent() {
                   autoComplete="organization"
                 />
                 <FieldError msg={fieldErrors.courseName}/>
+              </div>
+              <div id="fld-address">
+                <Label text="Street address" required />
+                <input
+                  className={fieldErrors.address ? inpErr : inp}
+                  value={form.address}
+                  onChange={e => set('address', e.target.value)}
+                  onBlur={() => blurField('address')}
+                  placeholder="1700 17-Mile Drive"
+                  autoComplete="street-address"
+                />
+                <FieldError msg={fieldErrors.address}/>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div id="fld-city">
@@ -616,13 +612,12 @@ export default function ForCoursesContent() {
                 </div>
               </div>
 
-              {/* Course type — three cards */}
+              {/* Course type — two cards (FB-1) */}
               <div id="fld-courseType">
                 <Label text="Course type" required />
-                <div className="grid grid-cols-3 gap-3 max-sm:grid-cols-1">
+                <div className="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
                   {([
-                    { value: 'public' as const, label: 'Public', Icon: Globe, desc: 'Open to all golfers.' },
-                    { value: 'semi-private' as const, label: 'Semi-private', Icon: Users, desc: 'Members plus public tee times.' },
+                    { value: 'public' as const, label: 'Public', Icon: Globe, desc: 'Open to all golfers — members welcome too.' },
                     { value: 'private' as const, label: 'Private', Icon: Lock, desc: 'Member-controlled access.' },
                   ] as const).map(({ value, label, Icon, desc }) => {
                     const active = form.courseType === value;
@@ -665,19 +660,19 @@ export default function ForCoursesContent() {
             </div>
           </div>
 
-          {/* Section 3: the call */}
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-1">When&apos;s good for a 20-minute call? <span className="normal-case tracking-normal font-normal text-ink-faint">(optional)</span></p>
-            <p className="text-xs text-ink-muted mb-4">We&apos;ll go through your green fees, your tee sheet, and what going live looks like.</p>
-            <div className="space-y-3">
-              <ChipRow options={CALL_TIMES} value={form.callTimes} onChange={v => setList('callTimes', v)} ariaLabel="Time of day" />
-              <ChipRow options={CALL_DAYS} value={form.callDays} onChange={v => setList('callDays', v)} ariaLabel="Days" />
+          {/* Section 3: the call. FB-1: the time is picked on the calendar right
+              after submitting (Cal.com), so no time-of-day chips here. */}
+          <div className="bg-white border border-line rounded-lg px-5 py-4 flex gap-3">
+            <Calendar className="w-4 h-4 text-pine shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-ink">Next: a 20-minute call</p>
+              <p className="text-xs text-ink-muted mt-0.5">Right after you submit, you&apos;ll pick a time on our calendar. We&apos;ll go through your green fees, your tee sheet, and what going live looks like.</p>
             </div>
           </div>
 
           {/* Section 4: Optional notes */}
           <div>
-            <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">Anything we should know? <span className="normal-case tracking-normal font-normal text-ink-faint">(optional)</span></p>
+            <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">Anything else you&apos;d like to tell us? <span className="normal-case tracking-normal font-normal text-ink-faint">(optional)</span></p>
             <textarea
               rows={3}
               className={inp}
