@@ -577,6 +577,21 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     BANNED list targets. It has ZERO importers today, so it is a landmine a
     future page could import and ship a banned pill with. Delete it as part
     of this. (small once (a) is decided, no migration)
+    SHIPPED 9d6dc6a, 2026-09-29 — box open until /gr-review. CAM DECIDED: (a)
+    hollow vs filled, no fifth colour — 'blue' (card on file / no card needed /
+    pay at counter) = hollow ok ring, 'emerald' (paid) = filled ok dot;
+    (b) delete. StatusDot gained `hollow`; lib/booking-status.ts exports
+    statusDot(tone) → {status, hollow}; both callers (PaymentsPanel, tee sheet
+    in dashboard/page.tsx) render dot + label in ink at their existing sizes
+    (13.5px / 12.5px) rather than StatusDot's 12px coloured label, which would
+    have shrunk the table text and kept colour carrying meaning.
+    statusBadgeClass AND statusToneText deleted (the latter had no importers
+    left). Visually checked: ring vs filled distinct at 1x and 3x.
+    NOTICED, NOT FIXED: tee sheet's "Card declined" (dashboard/page.tsx ~907)
+    is still bare text-bad — not a getBookingStatus output, so outside this spec.
+    CAM TO WALK: /dashboard (tee sheet) and /dashboard/money → Payments: a
+    booking with a card on file shows a hollow green ring, a checked-in paid
+    one a solid green dot, a charged fee amber, a kept fee red.
 
   - [x] SD-8c (fa3d7bf) — SHIPPED + REVIEWED 2026-09-16, 7/7 spec claims MET,
     no scope creep. Both local tone maps deleted for lib/booking-status.ts's
