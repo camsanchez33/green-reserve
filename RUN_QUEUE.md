@@ -2450,6 +2450,30 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   inquiry → setup-sheet email arrives; add a member from /dashboard/members →
   invite arrives.
 
+- [ ] CAL-1 — Cal.com as the call scheduler — SHIPPED a5ed9d7, 2026-09-29, box open
+  until /gr-review. Cam: invite link showed "I can't show my calendar right now".
+  Cause: SC-1's Google Calendar env vars were never set (PASSWORD_CHECKLIST 7b
+  all open) — and Cam's calendar is personal Outlook.com, which the Google
+  integration cannot read anyway. Cam chose Cal.com (free plan has webhooks),
+  course picks a slot, Cam calls them. Build: lib/calcom.ts, /api/calcom/webhook
+  (HMAC-verified; created/rescheduled/cancelled → the inquiry's discovery Call +
+  timeline), /call/[token] embeds the booker when CALCOM_BOOKING_URL is set and
+  polls for the webhook's booking; manage view links to Cal.com's own
+  reschedule/cancel pages; POST /api/call refuses in Cal.com mode. Tested
+  against a local Postgres with signed payloads: bad sig 400, ping ignored,
+  retry deduped, no-metadata ignored, reschedule moves the same Call and keeps
+  its phone, cancel closes it, page renders booked + booker states.
+  ACCEPTED SHORTCUTS: (1) the Cal.com uid is stored in Call.createdBy as
+  `calcom:<uid>` to avoid a schema change while previews are broken — add a
+  real column (externalBookingUid) when EV-1's preview blocker clears. (2) An
+  admin rescheduling a Cal.com call from /admin moves our row but not the
+  Cal.com booking — do it in Cal.com. (3) No GreenReserve emails in this mode;
+  Cal.com sends confirmations to both sides.
+  NOT VERIFIED against live cal.com (egress-blocked from the build session) —
+  the contract was read from calcom/cal.com source.
+  CAM TO DO: PASSWORD_CHECKLIST Phase 7a (account, Outlook, event type, webhook,
+  two env vars, redeploy), then its 7a.8 walk.
+
 - [ ] EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)
   (Renamed from A-1 — REVISE_QUEUE.md already owns A-01…A-13.)
 
