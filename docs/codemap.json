@@ -1,11 +1,11 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 338,
+    "files": 351,
     "routes": 195,
-    "libs": 88,
+    "libs": 89,
     "models": 33,
-    "orphans": 10,
+    "orphans": 8,
     "ungatedRoutes": 3
   },
   "brain": {
@@ -52,7 +52,7 @@
     },
     {
       "path": "src/app/admin/activity/page.tsx",
-      "lines": 210,
+      "lines": 211,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -68,9 +68,13 @@
       "guard": "client-side",
       "imports": [
         "@/components/admin/AdminSidebar",
+        "@/components/ui/Card",
         "@/components/ui/ErrorState",
+        "@/components/ui/Eyebrow",
         "@/components/ui/StatusDot",
+        "@/components/ui/field",
         "@/lib/admin-fetch",
+        "@/lib/format",
         "lucide-react",
         "next/navigation",
         "react"
@@ -100,8 +104,379 @@
       "usedBy": []
     },
     {
+      "path": "src/app/admin/courses/[id]/_parts/CourseDialogs.tsx",
+      "lines": 208,
+      "purpose": "MP-12 (ADMIN_V4 V4-9):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CourseDialogs",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./context",
+        "./shared",
+        "@/components/ui/Eyebrow",
+        "@/components/ui/Modal",
+        "@/lib/format",
+        "lucide-react"
+      ],
+      "usedBy": [
+        "src/app/admin/courses/[id]/page.tsx"
+      ]
+    },
+    {
+      "path": "src/app/admin/courses/[id]/_parts/MessagesTab.tsx",
+      "lines": 93,
+      "purpose": "MP-12 (ADMIN_V4 V4-9):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "MessagesTab",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./context",
+        "@/components/ui/Card",
+        "lucide-react"
+      ],
+      "usedBy": [
+        "src/app/admin/courses/[id]/page.tsx"
+      ]
+    },
+    {
+      "path": "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
+      "lines": 128,
+      "purpose": "MP-12 (ADMIN_V4 V4-9):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "MoneyTab",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./context",
+        "./shared",
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/lib/format",
+        "lucide-react"
+      ],
+      "usedBy": [
+        "src/app/admin/courses/[id]/page.tsx"
+      ]
+    },
+    {
+      "path": "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
+      "lines": 317,
+      "purpose": "MP-12 (ADMIN_V4 V4-9):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "OperateTab",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./context",
+        "./shared",
+        "@/components/ui/Card",
+        "@/components/ui/Eyebrow",
+        "@/components/ui/StatusDot",
+        "@/lib/format",
+        "lucide-react"
+      ],
+      "usedBy": [
+        "src/app/admin/courses/[id]/page.tsx"
+      ]
+    },
+    {
+      "path": "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
+      "lines": 383,
+      "purpose": "MP-12 (ADMIN_V4 V4-9):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "OverviewTab",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./context",
+        "./shared",
+        "@/components/admin/CourseCheckInCard",
+        "@/components/ui/Card",
+        "@/components/ui/Eyebrow",
+        "@/components/ui/StatusDot",
+        "@/lib/course-metrics",
+        "@/lib/course-setup",
+        "@/lib/format",
+        "@/lib/inquiry-call",
+        "lucide-react",
+        "next/link"
+      ],
+      "usedBy": [
+        "src/app/admin/courses/[id]/page.tsx"
+      ]
+    },
+    {
+      "path": "src/app/admin/courses/[id]/_parts/RecordsTab.tsx",
+      "lines": 166,
+      "purpose": "MP-12 (ADMIN_V4 V4-9):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "RecordsTab",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./context",
+        "./shared",
+        "@/components/admin/CourseCheckInCard",
+        "@/components/ui/Card",
+        "@/components/ui/Eyebrow",
+        "@/lib/format",
+        "lucide-react"
+      ],
+      "usedBy": [
+        "src/app/admin/courses/[id]/page.tsx"
+      ]
+    },
+    {
+      "path": "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
+      "lines": 289,
+      "purpose": "MP-12 (ADMIN_V4 V4-9):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "SetupTab",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./context",
+        "./shared",
+        "@/components/ui/Card",
+        "@/components/ui/Eyebrow",
+        "@/components/ui/StatusDot",
+        "@/lib/format",
+        "lucide-react"
+      ],
+      "usedBy": [
+        "src/app/admin/courses/[id]/page.tsx"
+      ]
+    },
+    {
+      "path": "src/app/admin/courses/[id]/_parts/context.ts",
+      "lines": 19,
+      "purpose": "MP-12 (ADMIN_V4 V4-9):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CourseCtx",
+          "kind": "type"
+        },
+        {
+          "name": "CourseDetailContext",
+          "kind": "const"
+        },
+        {
+          "name": "useCourse",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./shared",
+        "./useCourseDetail",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/admin/courses/[id]/_parts/CourseDialogs.tsx",
+        "src/app/admin/courses/[id]/_parts/MessagesTab.tsx",
+        "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
+        "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
+        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
+        "src/app/admin/courses/[id]/_parts/RecordsTab.tsx",
+        "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
+        "src/app/admin/courses/[id]/page.tsx"
+      ]
+    },
+    {
+      "path": "src/app/admin/courses/[id]/_parts/shared.tsx",
+      "lines": 276,
+      "purpose": "MP-12 (ADMIN_V4 V4-9):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CourseDetail",
+          "kind": "type"
+        },
+        {
+          "name": "DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "EMPTY_SCHEDULE",
+          "kind": "const"
+        },
+        {
+          "name": "iCls",
+          "kind": "const"
+        },
+        {
+          "name": "MemberRow",
+          "kind": "type"
+        },
+        {
+          "name": "OnboardingStep",
+          "kind": "type"
+        },
+        {
+          "name": "onboardingSteps",
+          "kind": "fn"
+        },
+        {
+          "name": "ScheduleFields",
+          "kind": "component"
+        },
+        {
+          "name": "ScheduleFormState",
+          "kind": "type"
+        },
+        {
+          "name": "ScheduleRow",
+          "kind": "type"
+        },
+        {
+          "name": "TabName",
+          "kind": "type"
+        },
+        {
+          "name": "TABS",
+          "kind": "const"
+        },
+        {
+          "name": "TeeSlot",
+          "kind": "type"
+        },
+        {
+          "name": "TierRow",
+          "kind": "type"
+        },
+        {
+          "name": "TimelineEventDTO",
+          "kind": "type"
+        },
+        {
+          "name": "TX_STATUS",
+          "kind": "const"
+        },
+        {
+          "name": "TxRow",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/admin/CourseCheckInCard",
+        "@/components/ui/field",
+        "@/lib/course-metrics"
+      ],
+      "usedBy": [
+        "src/app/admin/courses/[id]/_parts/CourseDialogs.tsx",
+        "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
+        "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
+        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
+        "src/app/admin/courses/[id]/_parts/RecordsTab.tsx",
+        "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
+        "src/app/admin/courses/[id]/_parts/context.ts",
+        "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
+        "src/app/admin/courses/[id]/page.tsx"
+      ]
+    },
+    {
+      "path": "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
+      "lines": 965,
+      "purpose": "MP-12 (ADMIN_V4 V4-9):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CourseDetailState",
+          "kind": "type"
+        },
+        {
+          "name": "useCourseDetail",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./shared",
+        "@/lib/format",
+        "@/lib/use-resource",
+        "next/navigation",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/admin/courses/[id]/_parts/context.ts",
+        "src/app/admin/courses/[id]/page.tsx"
+      ]
+    },
+    {
       "path": "src/app/admin/courses/[id]/page.tsx",
-      "lines": 2741,
+      "lines": 334,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -116,17 +491,20 @@
       "auth": "admin",
       "guard": "client-side",
       "imports": [
+        "./_parts/CourseDialogs",
+        "./_parts/MessagesTab",
+        "./_parts/MoneyTab",
+        "./_parts/OperateTab",
+        "./_parts/OverviewTab",
+        "./_parts/RecordsTab",
+        "./_parts/SetupTab",
+        "./_parts/context",
+        "./_parts/shared",
+        "./_parts/useCourseDetail",
         "@/components/admin/AdminSidebar",
-        "@/components/admin/CourseCheckInCard",
+        "@/components/ui/Card",
         "@/components/ui/StatusDot",
-        "@/lib/course-metrics",
-        "@/lib/course-setup",
-        "@/lib/inquiry-call",
-        "@/lib/use-resource",
-        "lucide-react",
-        "next/link",
-        "next/navigation",
-        "react"
+        "lucide-react"
       ],
       "usedBy": []
     },
@@ -149,12 +527,15 @@
       "imports": [
         "@/components/EmptyState",
         "@/components/admin/AdminSidebar",
+        "@/components/ui/Card",
         "@/components/ui/ErrorState",
+        "@/components/ui/Eyebrow",
         "@/components/ui/StatusDot",
         "@/lib/admin-fetch",
         "@/lib/course-checkin",
         "@/lib/course-metrics",
         "@/lib/course-setup",
+        "@/lib/format",
         "@/lib/inquiry-call",
         "lucide-react",
         "next/link",
@@ -165,7 +546,7 @@
     },
     {
       "path": "src/app/admin/create/page.tsx",
-      "lines": 757,
+      "lines": 760,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -181,6 +562,9 @@
       "guard": "client-side",
       "imports": [
         "@/components/admin/AdminSidebar",
+        "@/components/ui/Card",
+        "@/components/ui/Eyebrow",
+        "@/components/ui/field",
         "lucide-react",
         "next/navigation",
         "react"
@@ -189,7 +573,7 @@
     },
     {
       "path": "src/app/admin/employees/page.tsx",
-      "lines": 401,
+      "lines": 406,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -205,8 +589,11 @@
       "guard": "client-side",
       "imports": [
         "@/components/admin/AdminSidebar",
+        "@/components/ui/Card",
         "@/components/ui/ErrorState",
+        "@/components/ui/Eyebrow",
         "@/components/ui/StatusDot",
+        "@/components/ui/field",
         "@/lib/admin-fetch",
         "@/lib/admin-session-context",
         "lucide-react",
@@ -217,7 +604,7 @@
     },
     {
       "path": "src/app/admin/forgot-password/page.tsx",
-      "lines": 67,
+      "lines": 70,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -232,6 +619,9 @@
       "auth": "admin",
       "guard": "client-side",
       "imports": [
+        "@/components/ui/Card",
+        "@/components/ui/Eyebrow",
+        "@/components/ui/field",
         "lucide-react",
         "next/image",
         "react"
@@ -257,10 +647,15 @@
       "imports": [
         "@/components/EmptyState",
         "@/components/admin/AdminSidebar",
+        "@/components/ui/Card",
+        "@/components/ui/Eyebrow",
+        "@/components/ui/Modal",
         "@/components/ui/StatusDot",
+        "@/components/ui/field",
         "@/lib/admin-fetch",
         "@/lib/admin-roles",
         "@/lib/admin-session-context",
+        "@/lib/format",
         "lucide-react",
         "next/navigation",
         "react"
@@ -269,7 +664,7 @@
     },
     {
       "path": "src/app/admin/inquiries/[id]/page.tsx",
-      "lines": 2266,
+      "lines": 2238,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -286,11 +681,16 @@
       "imports": [
         "@/components/admin/AdminSidebar",
         "@/components/admin/InquiryCallCards",
+        "@/components/ui/Card",
         "@/components/ui/ErrorState",
+        "@/components/ui/Eyebrow",
+        "@/components/ui/Modal",
         "@/components/ui/StatusDot",
+        "@/components/ui/field",
         "@/lib/admin-fetch",
         "@/lib/call-answers",
         "@/lib/change-requests",
+        "@/lib/format",
         "@/lib/inquiry-call",
         "@/lib/inquiry-status",
         "lucide-react",
@@ -301,7 +701,7 @@
     },
     {
       "path": "src/app/admin/inquiries/page.tsx",
-      "lines": 991,
+      "lines": 990,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -318,7 +718,11 @@
       "imports": [
         "@/components/EmptyState",
         "@/components/admin/AdminSidebar",
+        "@/components/ui/Card",
+        "@/components/ui/Eyebrow",
+        "@/components/ui/Modal",
         "@/components/ui/StatusDot",
+        "@/lib/format",
         "@/lib/inquiry-call",
         "@/lib/inquiry-needs",
         "@/lib/inquiry-status",
@@ -363,7 +767,7 @@
     },
     {
       "path": "src/app/admin/login/page.tsx",
-      "lines": 151,
+      "lines": 154,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -378,6 +782,9 @@
       "auth": "admin",
       "guard": "client-side",
       "imports": [
+        "@/components/ui/Card",
+        "@/components/ui/Eyebrow",
+        "@/components/ui/field",
         "next/image",
         "next/navigation",
         "react"
@@ -386,7 +793,7 @@
     },
     {
       "path": "src/app/admin/messages/page.tsx",
-      "lines": 600,
+      "lines": 602,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -402,10 +809,14 @@
       "guard": "client-side",
       "imports": [
         "@/components/admin/AdminSidebar",
+        "@/components/ui/Card",
         "@/components/ui/ErrorState",
+        "@/components/ui/Eyebrow",
         "@/components/ui/StatusDot",
+        "@/components/ui/field",
         "@/lib/admin-fetch",
         "@/lib/admin-session-context",
+        "@/lib/format",
         "@/lib/thread-signal",
         "lucide-react",
         "next/navigation",
@@ -415,7 +826,7 @@
     },
     {
       "path": "src/app/admin/owner-login/page.tsx",
-      "lines": 144,
+      "lines": 147,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -430,6 +841,9 @@
       "auth": "admin",
       "guard": "client-side",
       "imports": [
+        "@/components/ui/Card",
+        "@/components/ui/Eyebrow",
+        "@/components/ui/field",
         "lucide-react",
         "next/image",
         "next/link",
@@ -440,7 +854,7 @@
     },
     {
       "path": "src/app/admin/page.tsx",
-      "lines": 558,
+      "lines": 548,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -456,9 +870,12 @@
       "guard": "client-side",
       "imports": [
         "@/components/admin/AdminSidebar",
+        "@/components/ui/Card",
+        "@/components/ui/Eyebrow",
         "@/components/ui/StatusDot",
         "@/lib/admin-roles",
         "@/lib/admin-session-context",
+        "@/lib/format",
         "lucide-react",
         "next/navigation",
         "react"
@@ -467,7 +884,7 @@
     },
     {
       "path": "src/app/admin/profile/page.tsx",
-      "lines": 127,
+      "lines": 130,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -484,6 +901,9 @@
       "imports": [
         "@/components/admin/AdminSidebar",
         "@/components/admin/OwnerTwoFactorCard",
+        "@/components/ui/Card",
+        "@/components/ui/Eyebrow",
+        "@/components/ui/field",
         "@/lib/admin-session-context",
         "lucide-react",
         "react"
@@ -508,8 +928,13 @@
       "guard": "client-side",
       "imports": [
         "@/components/admin/AdminSidebar",
+        "@/components/ui/Card",
+        "@/components/ui/Eyebrow",
+        "@/components/ui/Modal",
         "@/components/ui/StatusDot",
+        "@/components/ui/field",
         "@/lib/expenses",
+        "@/lib/format",
         "lucide-react",
         "next/link",
         "next/navigation",
@@ -519,7 +944,7 @@
     },
     {
       "path": "src/app/admin/set-password/page.tsx",
-      "lines": 156,
+      "lines": 159,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -534,6 +959,9 @@
       "auth": "admin",
       "guard": "client-side",
       "imports": [
+        "@/components/ui/Card",
+        "@/components/ui/Eyebrow",
+        "@/components/ui/field",
         "@/lib/password",
         "lucide-react",
         "next/image",
@@ -544,7 +972,7 @@
     },
     {
       "path": "src/app/admin/system/page.tsx",
-      "lines": 519,
+      "lines": 517,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -560,10 +988,14 @@
       "guard": "client-side",
       "imports": [
         "@/components/admin/AdminSidebar",
+        "@/components/ui/Card",
         "@/components/ui/ErrorState",
+        "@/components/ui/Eyebrow",
+        "@/components/ui/Modal",
         "@/components/ui/StatusDot",
         "@/lib/admin-fetch",
         "@/lib/admin-session-context",
+        "@/lib/format",
         "lucide-react",
         "next/navigation",
         "react"
@@ -5221,7 +5653,9 @@
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/TabIntro",
         "@/components/dashboard/Toast",
+        "@/components/ui/StatusDot",
         "@/lib/dashboard-fetch",
+        "@/lib/format",
         "@/lib/use-tab-intro",
         "lucide-react",
         "react"
@@ -5230,7 +5664,7 @@
     },
     {
       "path": "src/app/dashboard/messages/page.tsx",
-      "lines": 159,
+      "lines": 158,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5250,6 +5684,7 @@
         "@/components/dashboard/TabIntro",
         "@/components/dashboard/Toast",
         "@/lib/dashboard-fetch",
+        "@/lib/format",
         "@/lib/use-tab-intro",
         "lucide-react",
         "next/navigation",
@@ -5339,7 +5774,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1199,
+      "lines": 1198,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5364,6 +5799,7 @@
         "@/lib/change-requests",
         "@/lib/course-time",
         "@/lib/dashboard-fetch",
+        "@/lib/format",
         "@/lib/use-tab-intro",
         "@stripe/react-stripe-js",
         "@stripe/stripe-js",
@@ -5443,6 +5879,7 @@
         "@/components/dashboard/Toast",
         "@/components/ui/StatusDot",
         "@/lib/dashboard-fetch",
+        "@/lib/format",
         "@/lib/use-tab-intro",
         "lucide-react",
         "react"
@@ -6343,7 +6780,7 @@
     },
     {
       "path": "src/components/admin/CourseCheckInCard.tsx",
-      "lines": 361,
+      "lines": 364,
       "purpose": "COURSES_SHEET_SPEC CS-3 §2 — the \"Next check-in\" card on a live course's Overview.",
       "brain": [],
       "exports": [
@@ -6366,18 +6803,23 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/ui/Card",
+        "@/components/ui/Eyebrow",
+        "@/components/ui/field",
         "@/lib/course-checkin",
         "@/lib/inquiry-call",
         "lucide-react",
         "react"
       ],
       "usedBy": [
-        "src/app/admin/courses/[id]/page.tsx"
+        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
+        "src/app/admin/courses/[id]/_parts/RecordsTab.tsx",
+        "src/app/admin/courses/[id]/_parts/shared.tsx"
       ]
     },
     {
       "path": "src/components/admin/InquiryCallCards.tsx",
-      "lines": 777,
+      "lines": 779,
       "purpose": "INQUIRY_CALL_SPEC IC-2 — the two discovery-call cards on the inquiry detail page.",
       "brain": [],
       "exports": [
@@ -6404,6 +6846,8 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/ui/Card",
+        "@/components/ui/field",
         "@/lib/call-answers",
         "@/lib/inquiry-call",
         "@/lib/inquiry-needs",
@@ -6416,7 +6860,7 @@
     },
     {
       "path": "src/components/admin/OwnerTwoFactorCard.tsx",
-      "lines": 156,
+      "lines": 159,
       "purpose": "OWNER TOTP 2FA — the enrolment card on /admin/profile (owner only).",
       "brain": [],
       "exports": [
@@ -6431,6 +6875,9 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/ui/Card",
+        "@/components/ui/Eyebrow",
+        "@/components/ui/field",
         "lucide-react",
         "react"
       ],
@@ -6497,7 +6944,7 @@
     },
     {
       "path": "src/components/dashboard/CourseLayoutTab.tsx",
-      "lines": 467,
+      "lines": 469,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6512,6 +6959,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/ui/StatusDot",
         "lucide-react",
         "next/link",
         "react"
@@ -6721,7 +7169,7 @@
     },
     {
       "path": "src/components/dashboard/money/CancellationsPanel.tsx",
-      "lines": 165,
+      "lines": 159,
       "purpose": "SD-8 — the Cancellations half of the Money page.",
       "brain": [],
       "exports": [
@@ -6739,6 +7187,7 @@
         "./types",
         "@/components/dashboard/Toast",
         "@/lib/dashboard-fetch",
+        "@/lib/format",
         "lucide-react",
         "react"
       ],
@@ -6748,7 +7197,7 @@
     },
     {
       "path": "src/components/dashboard/money/PaymentsPanel.tsx",
-      "lines": 180,
+      "lines": 178,
       "purpose": "SD-8 — the Payments half of the Money page.",
       "brain": [],
       "exports": [
@@ -6767,6 +7216,7 @@
         "@/components/ui/StatusDot",
         "@/lib/booking-fees",
         "@/lib/booking-status",
+        "@/lib/format",
         "lucide-react",
         "react"
       ],
@@ -6931,13 +7381,17 @@
     },
     {
       "path": "src/components/ui/Card.tsx",
-      "lines": 19,
+      "lines": 15,
       "purpose": "",
       "brain": [],
       "exports": [
         {
           "name": "Card",
-          "kind": "component"
+          "kind": "const"
+        },
+        {
+          "name": "CARD",
+          "kind": "const"
         }
       ],
       "route": null,
@@ -6948,7 +7402,34 @@
       "imports": [
         "react"
       ],
-      "usedBy": []
+      "usedBy": [
+        "src/app/admin/activity/page.tsx",
+        "src/app/admin/courses/[id]/_parts/MessagesTab.tsx",
+        "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
+        "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
+        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
+        "src/app/admin/courses/[id]/_parts/RecordsTab.tsx",
+        "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
+        "src/app/admin/courses/[id]/page.tsx",
+        "src/app/admin/courses/page.tsx",
+        "src/app/admin/create/page.tsx",
+        "src/app/admin/employees/page.tsx",
+        "src/app/admin/forgot-password/page.tsx",
+        "src/app/admin/golfers/page.tsx",
+        "src/app/admin/inquiries/[id]/page.tsx",
+        "src/app/admin/inquiries/page.tsx",
+        "src/app/admin/login/page.tsx",
+        "src/app/admin/messages/page.tsx",
+        "src/app/admin/owner-login/page.tsx",
+        "src/app/admin/page.tsx",
+        "src/app/admin/profile/page.tsx",
+        "src/app/admin/revenue/page.tsx",
+        "src/app/admin/set-password/page.tsx",
+        "src/app/admin/system/page.tsx",
+        "src/components/admin/CourseCheckInCard.tsx",
+        "src/components/admin/InquiryCallCards.tsx",
+        "src/components/admin/OwnerTwoFactorCard.tsx"
+      ]
     },
     {
       "path": "src/components/ui/ErrorState.tsx",
@@ -6987,12 +7468,65 @@
     },
     {
       "path": "src/components/ui/Eyebrow.tsx",
-      "lines": 10,
+      "lines": 16,
       "purpose": "",
       "brain": [],
       "exports": [
         {
           "name": "Eyebrow",
+          "kind": "component"
+        },
+        {
+          "name": "EYEBROW",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "react"
+      ],
+      "usedBy": [
+        "src/app/admin/activity/page.tsx",
+        "src/app/admin/courses/[id]/_parts/CourseDialogs.tsx",
+        "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
+        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
+        "src/app/admin/courses/[id]/_parts/RecordsTab.tsx",
+        "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
+        "src/app/admin/courses/page.tsx",
+        "src/app/admin/create/page.tsx",
+        "src/app/admin/employees/page.tsx",
+        "src/app/admin/forgot-password/page.tsx",
+        "src/app/admin/golfers/page.tsx",
+        "src/app/admin/inquiries/[id]/page.tsx",
+        "src/app/admin/inquiries/page.tsx",
+        "src/app/admin/login/page.tsx",
+        "src/app/admin/messages/page.tsx",
+        "src/app/admin/owner-login/page.tsx",
+        "src/app/admin/page.tsx",
+        "src/app/admin/profile/page.tsx",
+        "src/app/admin/revenue/page.tsx",
+        "src/app/admin/set-password/page.tsx",
+        "src/app/admin/system/page.tsx",
+        "src/components/admin/CourseCheckInCard.tsx",
+        "src/components/admin/OwnerTwoFactorCard.tsx"
+      ]
+    },
+    {
+      "path": "src/components/ui/Modal.tsx",
+      "lines": 141,
+      "purpose": "MP-9 (ADMIN_V4 V4-6 §4) — the one dialog.",
+      "brain": [],
+      "exports": [
+        {
+          "name": "Modal",
+          "kind": "component"
+        },
+        {
+          "name": "ModalActions",
           "kind": "component"
         }
       ],
@@ -7004,7 +7538,14 @@
       "imports": [
         "react"
       ],
-      "usedBy": []
+      "usedBy": [
+        "src/app/admin/courses/[id]/_parts/CourseDialogs.tsx",
+        "src/app/admin/golfers/page.tsx",
+        "src/app/admin/inquiries/[id]/page.tsx",
+        "src/app/admin/inquiries/page.tsx",
+        "src/app/admin/revenue/page.tsx",
+        "src/app/admin/system/page.tsx"
+      ]
     },
     {
       "path": "src/components/ui/PageHeader.tsx",
@@ -7090,6 +7631,10 @@
       ],
       "usedBy": [
         "src/app/admin/activity/page.tsx",
+        "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
+        "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
+        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
+        "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
         "src/app/admin/courses/[id]/page.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/admin/employees/page.tsx",
@@ -7101,10 +7646,52 @@
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/system/page.tsx",
         "src/app/courses/[slug]/member/page.tsx",
+        "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
+        "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx"
+      ]
+    },
+    {
+      "path": "src/components/ui/field.ts",
+      "lines": 8,
+      "purpose": "MP-9:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "INPUT",
+          "kind": "const"
+        },
+        {
+          "name": "INPUT_COMPACT",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/activity/page.tsx",
+        "src/app/admin/courses/[id]/_parts/shared.tsx",
+        "src/app/admin/create/page.tsx",
+        "src/app/admin/employees/page.tsx",
+        "src/app/admin/forgot-password/page.tsx",
+        "src/app/admin/golfers/page.tsx",
+        "src/app/admin/inquiries/[id]/page.tsx",
+        "src/app/admin/login/page.tsx",
+        "src/app/admin/messages/page.tsx",
+        "src/app/admin/owner-login/page.tsx",
+        "src/app/admin/profile/page.tsx",
+        "src/app/admin/revenue/page.tsx",
+        "src/app/admin/set-password/page.tsx",
+        "src/components/admin/CourseCheckInCard.tsx",
+        "src/components/admin/InquiryCallCards.tsx",
+        "src/components/admin/OwnerTwoFactorCard.tsx"
       ]
     },
     {
@@ -8858,7 +9445,8 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/admin/courses/[id]/page.tsx",
+        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
+        "src/app/admin/courses/[id]/_parts/shared.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/courses/route.ts",
@@ -8905,7 +9493,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/admin/courses/[id]/page.tsx",
+        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/api/admin/courses/route.ts"
       ]
@@ -9720,6 +10308,88 @@
       ]
     },
     {
+      "path": "src/lib/format.ts",
+      "lines": 78,
+      "purpose": "MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time.",
+      "brain": [],
+      "exports": [
+        {
+          "name": "formatCents",
+          "kind": "fn"
+        },
+        {
+          "name": "formatDate",
+          "kind": "fn"
+        },
+        {
+          "name": "formatDateTime",
+          "kind": "fn"
+        },
+        {
+          "name": "formatEasternDate",
+          "kind": "fn"
+        },
+        {
+          "name": "formatEasternDay",
+          "kind": "fn"
+        },
+        {
+          "name": "formatMoney",
+          "kind": "fn"
+        },
+        {
+          "name": "formatRelative",
+          "kind": "fn"
+        },
+        {
+          "name": "formatStamp",
+          "kind": "fn"
+        },
+        {
+          "name": "formatTeeDate",
+          "kind": "fn"
+        },
+        {
+          "name": "formatTeeDay",
+          "kind": "fn"
+        },
+        {
+          "name": "formatTeeTime",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/activity/page.tsx",
+        "src/app/admin/courses/[id]/_parts/CourseDialogs.tsx",
+        "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
+        "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
+        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
+        "src/app/admin/courses/[id]/_parts/RecordsTab.tsx",
+        "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
+        "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
+        "src/app/admin/courses/page.tsx",
+        "src/app/admin/golfers/page.tsx",
+        "src/app/admin/inquiries/[id]/page.tsx",
+        "src/app/admin/inquiries/page.tsx",
+        "src/app/admin/messages/page.tsx",
+        "src/app/admin/page.tsx",
+        "src/app/admin/revenue/page.tsx",
+        "src/app/admin/system/page.tsx",
+        "src/app/dashboard/members/page.tsx",
+        "src/app/dashboard/messages/page.tsx",
+        "src/app/dashboard/page.tsx",
+        "src/app/dashboard/schedules/page.tsx",
+        "src/components/dashboard/money/CancellationsPanel.tsx",
+        "src/components/dashboard/money/PaymentsPanel.tsx"
+      ]
+    },
+    {
       "path": "src/lib/go-live-preflight.ts",
       "lines": 35,
       "purpose": "",
@@ -9965,7 +10635,7 @@
         "./call-answers"
       ],
       "usedBy": [
-        "src/app/admin/courses/[id]/page.tsx",
+        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
@@ -11659,7 +12329,7 @@
         "react"
       ],
       "usedBy": [
-        "src/app/admin/courses/[id]/page.tsx"
+        "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx"
       ]
     },
     {
@@ -14584,8 +15254,6 @@
   ],
   "orphans": [
     "src/components/CourseCard.tsx",
-    "src/components/ui/Card.tsx",
-    "src/components/ui/Eyebrow.tsx",
     "src/components/ui/PageHeader.tsx",
     "src/components/ui/SidebarShell.tsx",
     "src/components/ui/StatGroup.tsx",

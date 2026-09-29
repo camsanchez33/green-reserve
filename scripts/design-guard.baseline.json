@@ -1,5 +1,5 @@
 {
-  "src/app/admin/courses/[id]/page.tsx": {
+  "src/app/admin/courses/[id]/_parts/MessagesTab.tsx": {
     "input": 1
   },
   "src/app/admin/inquiries/[id]/page.tsx": {
