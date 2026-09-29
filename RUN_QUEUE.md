@@ -1441,7 +1441,21 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       receipt log (StripeEvent id + type + receivedAt) so the Webhook card
       stops using a course's updatedAt as a proxy; Employees demoted to the
       utility cluster as "Team & access" if Cam agrees.
-  - [ ] MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in
+  - [x] MP-9 (81cb4a4..2000908) — DONE except Btn/PageHeader (below). lib/format.ts
+    (16 files' formatters); components/ui/Modal.tsx (dialog role, focus trap,
+    Escape, focus return — keyboard-walked) on every admin dialog + the Revenue
+    drawer; 87 admin labels name their field, global :focus-visible ring,
+    sidebar aria; Card / Eyebrow / INPUT codemod, one commit per page, every
+    page screenshot-identical; tinted pills → StatusDot. GUARD: ESLint is not
+    installed and nothing ran it, so the guard is scripts/design-guard.mjs in
+    typecheck.yml — a ratchet over admin + dashboard (no new raw card/eyebrow/
+    input strings). OPEN, CAM'S CALL: Btn + PageHeader were NOT codemodded —
+    34 primary buttons use ~20 size combos (py-2/2.5/3, px-4/5, text-sm vs
+    12.5px) and titles are 30px vs 22px, so consolidating them changes how
+    pages look, which V4-6 says a codemod must not. Pick the sizes (suggest:
+    buttons py-2 dense / py-2.5 default at 12.5px; titles 30px leading-none)
+    and it is one mechanical run. Dashboard not migrated (guard holds it).
+    ORIGINAL: MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in
     ADMIN_V4_SPEC.md): codemod to Card/Eyebrow/PageHeader/Btn (verified: ONE
     import exists in all of src/, StatusDot ×10), ESLint guard so it can't
     regress, create lib/format.ts (fmtMoney ×6, fmtDate ×7), promote Modal with
@@ -1537,7 +1551,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   neither is blocked by the parking, but don't let a run "helpfully" build the
   absorption without the spec.
 
-  - [ ] MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState
+  - [x] MP-12 (da9f604) — page.tsx 2,724 → 333 lines: _parts/useCourseDetail +
+    context + six tab files + CourseDialogs + shared. Babel-driven, verbatim;
+    all six tabs pixel-identical. ORIGINAL: MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState
     → nine tab files + useCourseDetail. AFTER MP-9 so tabs inherit shared
     components; overlaps MP-5's tab reshape, so run MP-5 first and let this
     finish it (big)
