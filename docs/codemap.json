@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 351,
+    "files": 352,
     "routes": 195,
-    "libs": 89,
+    "libs": 90,
     "models": 33,
     "orphans": 8,
     "ungatedRoutes": 3
@@ -2933,7 +2933,7 @@
     },
     {
       "path": "src/app/api/courses/[slug]/route.ts",
-      "lines": 31,
+      "lines": 13,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2950,9 +2950,7 @@
       "auth": "public",
       "guard": "public",
       "imports": [
-        "@/lib/money",
-        "@/lib/normalize-course",
-        "@/lib/prisma",
+        "@/lib/public-course",
         "next/server"
       ],
       "usedBy": []
@@ -5351,7 +5349,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1722,
+      "lines": 1749,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5486,7 +5484,7 @@
     },
     {
       "path": "src/app/courses/[slug]/page.tsx",
-      "lines": 39,
+      "lines": 45,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5508,6 +5506,7 @@
         "./CourseBookingClient",
         "@/lib/demo-courses",
         "@/lib/prisma",
+        "@/lib/public-course",
         "next",
         "react"
       ],
@@ -5991,7 +5990,7 @@
     },
     {
       "path": "src/app/for-courses/ForCoursesContent.tsx",
-      "lines": 751,
+      "lines": 753,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6009,7 +6008,6 @@
         "lucide-react",
         "next/image",
         "next/link",
-        "next/navigation",
         "react"
       ],
       "usedBy": [
@@ -6069,7 +6067,7 @@
     },
     {
       "path": "src/app/for-courses/page.tsx",
-      "lines": 17,
+      "lines": 12,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6089,8 +6087,7 @@
       "guard": "public",
       "imports": [
         "./ForCoursesContent",
-        "next",
-        "react"
+        "next"
       ],
       "usedBy": []
     },
@@ -7305,7 +7302,7 @@
     },
     {
       "path": "src/components/home/HomeDemo.tsx",
-      "lines": 111,
+      "lines": 114,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11106,7 +11103,6 @@
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/transactions/route.ts",
         "src/app/api/bookings/route.ts",
-        "src/app/api/courses/[slug]/route.ts",
         "src/app/api/courses/[slug]/tee-times/route.ts",
         "src/app/api/courses/route.ts",
         "src/app/api/cron/send-reminders/route.ts",
@@ -11124,6 +11120,7 @@
         "src/lib/course-wire.ts",
         "src/lib/go-live-preflight.ts",
         "src/lib/normalize-course.ts",
+        "src/lib/public-course.ts",
         "src/lib/schedule-service.ts",
         "src/lib/schedule-wire.ts",
         "src/lib/tier-wire.ts"
@@ -11149,9 +11146,9 @@
         "./money"
       ],
       "usedBy": [
-        "src/app/api/courses/[slug]/route.ts",
         "src/app/api/courses/route.ts",
-        "src/app/api/preview/[courseId]/route.ts"
+        "src/app/api/preview/[courseId]/route.ts",
+        "src/lib/public-course.ts"
       ]
     },
     {
@@ -11410,7 +11407,6 @@
         "src/app/api/call/[token]/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
         "src/app/api/courses/[slug]/account/route.ts",
-        "src/app/api/courses/[slug]/route.ts",
         "src/app/api/courses/[slug]/tee-times/route.ts",
         "src/app/api/courses/route.ts",
         "src/app/api/cron/cancellation-cutoff/route.ts",
@@ -11498,6 +11494,7 @@
         "src/lib/lifecycle.ts",
         "src/lib/member-session.ts",
         "src/lib/money-problems.ts",
+        "src/lib/public-course.ts",
         "src/lib/rate-limit.ts",
         "src/lib/refund-booking.ts",
         "src/lib/schedule-service.ts",
@@ -11506,6 +11503,32 @@
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/two-factor.ts"
+      ]
+    },
+    {
+      "path": "src/lib/public-course.ts",
+      "lines": 29,
+      "purpose": "PERF-1:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "loadPublicCourse",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/money",
+        "@/lib/normalize-course",
+        "@/lib/prisma"
+      ],
+      "usedBy": [
+        "src/app/api/courses/[slug]/route.ts",
+        "src/app/courses/[slug]/page.tsx"
       ]
     },
     {
@@ -13603,7 +13626,6 @@
         "src/app/api/admin/system/route.ts",
         "src/app/api/alerts/route.ts",
         "src/app/api/courses/[slug]/account/route.ts",
-        "src/app/api/courses/[slug]/route.ts",
         "src/app/api/courses/[slug]/tee-times/route.ts",
         "src/app/api/courses/route.ts",
         "src/app/api/cron/chase-onboarding/route.ts",
@@ -13642,6 +13664,7 @@
         "src/lib/course-closure.ts",
         "src/lib/go-live-preflight.ts",
         "src/lib/lifecycle.ts",
+        "src/lib/public-course.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts"
       ]

@@ -20,12 +20,17 @@ import type { RunnerResult } from 'lighthouse';
 
 const BASE = (process.env.AUDIT_BASE_URL || 'https://greenreserve.app').replace(/\/$/, '');
 
+// PERF-1: 'daisylinks' is not a live course on production, so for months the
+// "Course Page" row timed the not-found state (its CLS 0.181 was that page's).
+// Set the repo variable AUDIT_COURSE_SLUG to a real live course.
+const COURSE = process.env.AUDIT_COURSE_SLUG || 'daisylinks';
+
 // Pages to audit. /book shows an error-state shell with dummy params — fine for perf.
 const PAGES = [
   { name: 'Home', path: '/' },
   { name: 'For Courses', path: '/for-courses' },
-  { name: 'Course Page', path: '/courses/daisylinks' },
-  { name: 'Booking Flow', path: '/book?tee_time_id=dummy&course_slug=daisylinks&date=2026-07-10&players=2' },
+  { name: 'Course Page', path: `/courses/${COURSE}` },
+  { name: 'Booking Flow', path: `/book?tee_time_id=dummy&course_slug=${COURSE}&date=2026-07-10&players=2` },
 ];
 
 // Budgets — must ALL pass

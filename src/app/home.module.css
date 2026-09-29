@@ -68,9 +68,13 @@
 .hsWho { color: #5d5f56; }
 .hsSt { font-size: 11px; font-weight: 600; }
 .hsOk { color: var(--ok); } .hsDue { color: var(--warn); } .hsOpen { color: var(--ink-3); font-weight: 500; }
-/* Load motion: the device rises and fades in, the sheet follows 150ms later. */
-.js .heroDevice { animation: rise .6s var(--ease) both; }
-.js .heroSheet { animation: riseSheet .6s var(--ease) both .15s; }
+/* Load motion: the device rises and fades in, the sheet follows 150ms later.
+   PERF-1: pure CSS from first paint, NOT gated on the .js class. Gated, the
+   server-rendered hero painted, vanished when React hydrated and added .js,
+   then faded back in — a visible flash, and Lighthouse's LCP became
+   "hydration + 1.2s" (render delay 1.6s bare, 3.4s once Sentry loaded). */
+.heroDevice { animation: rise .6s var(--ease) both; }
+.heroSheet { animation: riseSheet .6s var(--ease) both .15s; }
 @keyframes rise { from { opacity: 0; transform: translateY(16px) rotate(-2deg); } to { opacity: 1; transform: translateY(0) rotate(-2deg); } }
 @keyframes riseSheet { from { opacity: 0; transform: translateY(16px) rotate(1.5deg); } to { opacity: 1; transform: translateY(0) rotate(1.5deg); } }
 .shade { position: absolute; inset: 0; pointer-events: none; }
@@ -79,9 +83,12 @@
 .hero p { font-size: 19px; line-height: 1.5; max-width: 520px; margin: 26px 0 34px; color: var(--ink-2); text-wrap: pretty; }
 .cta { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
 .fine { margin-top: 22px; font-size: 13px; color: var(--ink-3); }
-.js .heroText > * { animation: up 1.2s var(--ease) both; }
-.js .heroText > h1 { animation-delay: .06s; } .js .heroText > p { animation-delay: .12s; } .js .heroText > .cta { animation-delay: .22s; } .js .heroText > .fine { animation-delay: .3s; }
+.heroText > * { animation: up 1.2s var(--ease) both; }
+/* The headline is the page's LCP element: it rises but never fades, so it
+   counts as painted on the first frame. The lines under it still fade. */
+.heroText > h1 { animation-name: upNoFade; animation-delay: .06s; } .heroText > p { animation-delay: .12s; } .heroText > .cta { animation-delay: .22s; } .heroText > .fine { animation-delay: .3s; }
 @keyframes up { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+@keyframes upNoFade { from { transform: translateY(28px); } to { transform: none; } }
 
 /* STORY — pinned photo, three beats */
 .story { position: relative; height: 340vh; background: var(--pine-deep); }
@@ -278,7 +285,7 @@
   .heroGrid { grid-template-columns: 1fr; gap: 40px; }
   .heroStage { height: auto; }
   .heroDevice { transform: scale(.9) rotate(0deg); transform-origin: top center; }
-  .js .heroDevice { animation: none; opacity: 1; }
+  .heroDevice { animation: none; opacity: 1; }
   .heroSheet { display: none; }
   /* §5: below 960px the story unpins and the three beats stack over the photo. */
   .story { height: auto; }
@@ -296,7 +303,7 @@
   .hero { padding-top: 132px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .js .heroText > *, .js .heroDevice, .js .heroSheet { animation: none; }
+  .heroText > *, .heroDevice, .heroSheet { animation: none; }
   .storyPh { transform: none !important; }
   .drift { animation: none; }
   .fade, .beat, .card, .img img, .detail, .chev, .a, .btn { transition: none; }

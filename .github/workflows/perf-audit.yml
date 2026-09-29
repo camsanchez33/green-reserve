@@ -35,3 +35,6 @@ jobs:
           # Override via GitHub repo variable AUDIT_BASE_URL to test a preview URL.
           # Default is production — acceptable since Vercel deploys every branch anyway.
           AUDIT_BASE_URL: ${{ vars.AUDIT_BASE_URL || 'https://greenreserve.app' }}
+          # A LIVE course's slug (repo variable). Unset = 'daisylinks', which is
+          # not live on production — the course row then times a not-found page.
+          AUDIT_COURSE_SLUG: ${{ vars.AUDIT_COURSE_SLUG || 'daisylinks' }}
