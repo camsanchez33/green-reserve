@@ -2,8 +2,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { Card } from '@/components/ui/Card';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { INPUT } from '@/components/ui/field';
 
-const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+const iCls = `${INPUT} w-full`;
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -65,7 +68,7 @@ export default function AdminLoginPage() {
           <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={190} height={36} priority className="w-[190px] max-w-full h-auto mx-auto" />
         </div>
 
-        <div className="bg-white border border-line rounded-lg p-8">
+        <Card className="p-8">
           <h1 className="text-[22px] font-serif font-medium text-ink mb-1">Sign in</h1>
           <p className="text-sm text-ink-soft mb-6">Admin console access</p>
 
@@ -97,9 +100,9 @@ export default function AdminLoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block"><span className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">
+              <label className="block"><Eyebrow as="span" className="block mb-1.5">
                 Email
-              </span>
+              </Eyebrow>
               <input
                 type="email"
                 value={email}
@@ -112,9 +115,9 @@ export default function AdminLoginPage() {
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted">
+                <Eyebrow as="label" className="block">
                   Password
-                </label>
+                </Eyebrow>
                 <a href="/admin/forgot-password" className="text-[11px] text-pine font-medium hover:underline">
                   Forgot password?
                 </a>
@@ -136,7 +139,7 @@ export default function AdminLoginPage() {
               {loading ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
-        </div>
+        </Card>
 
         <p className="mt-5 text-center text-xs text-ink-muted">
           Owner? <a href="/admin/owner-login" className="text-pine font-medium hover:underline">Owner sign-in →</a>
