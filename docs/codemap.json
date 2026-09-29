@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 340,
+    "files": 337,
     "routes": 195,
-    "libs": 90,
+    "libs": 87,
     "models": 33,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -17,7 +17,6 @@
     "inquiry-statuses": "src/lib/inquiry-status.ts",
     "money-movement": "src/lib/stripe.ts",
     "still-need-from-them": "src/lib/inquiry-needs.ts",
-    "when-cam-is-free": "src/lib/call-availability.ts",
     "whose-move-is-it": "src/lib/inquiry-status.ts"
   },
   "files": [
@@ -545,7 +544,7 @@
     },
     {
       "path": "src/app/admin/system/page.tsx",
-      "lines": 523,
+      "lines": 519,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -565,7 +564,6 @@
         "@/components/ui/StatusDot",
         "@/lib/admin-fetch",
         "@/lib/admin-session-context",
-        "@/lib/call-availability",
         "lucide-react",
         "next/navigation",
         "react"
@@ -1196,7 +1194,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1137,
+      "lines": 1150,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1230,6 +1228,7 @@
       "imports": [
         "@/lib/admin-session",
         "@/lib/agreement-gate",
+        "@/lib/calcom",
         "@/lib/call-answers",
         "@/lib/call-invite",
         "@/lib/change-requests",
@@ -1787,7 +1786,7 @@
     },
     {
       "path": "src/app/api/admin/system/route.ts",
-      "lines": 103,
+      "lines": 102,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1808,6 +1807,7 @@
         "@/lib/admin-session",
         "@/lib/birdie/guardrails",
         "@/lib/booking-fees",
+        "@/lib/calcom",
         "@/lib/prisma",
         "next/server"
       ],
@@ -2387,7 +2387,7 @@
     },
     {
       "path": "src/app/api/calcom/webhook/route.ts",
-      "lines": 138,
+      "lines": 151,
       "purpose": "CAL-1 — Cal.com booking webhook.",
       "brain": [],
       "exports": [
@@ -2406,6 +2406,7 @@
       "imports": [
         "@/lib/calcom",
         "@/lib/inquiry-call",
+        "@/lib/inquiry-status",
         "@/lib/prisma",
         "next/server"
       ],
@@ -2413,38 +2414,28 @@
     },
     {
       "path": "src/app/api/call/[token]/route.ts",
-      "lines": 271,
-      "purpose": "CALL_SCHEDULING_SPEC SC-2 §2 — the public \"pick a call time\" endpoint.",
+      "lines": 75,
+      "purpose": "The public \"book a call\" endpoint behind /call/[token].",
       "brain": [],
       "exports": [
         {
           "name": "GET",
-          "kind": "route"
-        },
-        {
-          "name": "POST",
           "kind": "route"
         }
       ],
       "route": "/api/call/[token]",
       "kind": "api",
       "methods": [
-        "GET",
-        "POST"
+        "GET"
       ],
       "auth": "public",
       "guard": "public",
       "imports": [
         "@/lib/calcom",
-        "@/lib/call-availability",
         "@/lib/call-invite",
-        "@/lib/email",
-        "@/lib/google-calendar",
-        "@/lib/inquiry-call",
         "@/lib/inquiry-status",
         "@/lib/prisma",
         "@/lib/rate-limit",
-        "@prisma/client",
         "next/server"
       ],
       "usedBy": []
@@ -4797,8 +4788,8 @@
     },
     {
       "path": "src/app/call/[token]/page.tsx",
-      "lines": 321,
-      "purpose": "CALL_SCHEDULING_SPEC SC-2 §2 — /call/[token]:",
+      "lines": 164,
+      "purpose": "/call/[token] — the course books its discovery call.",
       "brain": [],
       "exports": [
         {
@@ -6384,7 +6375,7 @@
     },
     {
       "path": "src/components/admin/InquiryCallCards.tsx",
-      "lines": 757,
+      "lines": 777,
       "purpose": "INQUIRY_CALL_SPEC IC-2 — the two discovery-call cards on the inquiry detail page.",
       "brain": [],
       "exports": [
@@ -8151,7 +8142,7 @@
     },
     {
       "path": "src/lib/calcom.ts",
-      "lines": 70,
+      "lines": 100,
       "purpose": "CAL-1 — Cal.com as the call scheduler, in place of the Google Calendar grid.",
       "brain": [],
       "exports": [
@@ -8172,6 +8163,10 @@
           "kind": "fn"
         },
         {
+          "name": "calcomStatus",
+          "kind": "fn"
+        },
+        {
           "name": "calcomUidOf",
           "kind": "fn"
         },
@@ -8189,6 +8184,8 @@
         "node:crypto"
       ],
       "usedBy": [
+        "src/app/api/admin/inquiries/route.ts",
+        "src/app/api/admin/system/route.ts",
         "src/app/api/calcom/webhook/route.ts",
         "src/app/api/call/[token]/route.ts"
       ]
@@ -8305,80 +8302,6 @@
         "src/components/admin/InquiryCallCards.tsx",
         "src/lib/inquiry-call.ts",
         "src/lib/inquiry-needs.ts"
-      ]
-    },
-    {
-      "path": "src/lib/call-availability.ts",
-      "lines": 124,
-      "purpose": "CALL_SCHEDULING_SPEC SC-1 §3 — which 30-minute call slots are open.",
-      "brain": [
-        "when-cam-is-free"
-      ],
-      "exports": [
-        {
-          "name": "BusyBlock",
-          "kind": "type"
-        },
-        {
-          "name": "CALL_WINDOWS",
-          "kind": "const"
-        },
-        {
-          "name": "CallLikeForSlots",
-          "kind": "type"
-        },
-        {
-          "name": "CallPreference",
-          "kind": "type"
-        },
-        {
-          "name": "CallWindow",
-          "kind": "type"
-        },
-        {
-          "name": "DaySlots",
-          "kind": "type"
-        },
-        {
-          "name": "fmtSlot",
-          "kind": "fn"
-        },
-        {
-          "name": "fmtSlotDay",
-          "kind": "fn"
-        },
-        {
-          "name": "HORIZON_DAYS",
-          "kind": "const"
-        },
-        {
-          "name": "LEAD_HOURS",
-          "kind": "const"
-        },
-        {
-          "name": "matchesPreference",
-          "kind": "fn"
-        },
-        {
-          "name": "openSlots",
-          "kind": "fn"
-        },
-        {
-          "name": "SLOT_MINUTES",
-          "kind": "const"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [
-        "./inquiry-call"
-      ],
-      "usedBy": [
-        "src/app/admin/system/page.tsx",
-        "src/app/api/call/[token]/route.ts"
       ]
     },
     {
@@ -9383,7 +9306,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1820,
+      "lines": 1750,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9437,18 +9360,6 @@
         },
         {
           "name": "sendBookingModifiedEmail",
-          "kind": "fn"
-        },
-        {
-          "name": "sendCalendarUnavailableAlert",
-          "kind": "fn"
-        },
-        {
-          "name": "sendCallBookedAdminEmail",
-          "kind": "fn"
-        },
-        {
-          "name": "sendCallBookedEmail",
           "kind": "fn"
         },
         {
@@ -9634,7 +9545,6 @@
       "auth": null,
       "guard": null,
       "imports": [
-        "./ics",
         "@/lib/booking-fees",
         "resend"
       ],
@@ -9653,7 +9563,6 @@
         "src/app/api/auth/resend-verification/route.ts",
         "src/app/api/auth/reset-password/route.ts",
         "src/app/api/bookings/route.ts",
-        "src/app/api/call/[token]/route.ts",
         "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/chase-onboarding/route.ts",
         "src/app/api/cron/hourly/route.ts",
@@ -9864,83 +9773,6 @@
       ]
     },
     {
-      "path": "src/lib/google-calendar.ts",
-      "lines": 174,
-      "purpose": "CALL_SCHEDULING_SPEC SC-1 §2 — Google Calendar, the smallest honest version.",
-      "brain": [],
-      "exports": [
-        {
-          "name": "BusyBlock",
-          "kind": "type"
-        },
-        {
-          "name": "busyBlocks",
-          "kind": "fn"
-        },
-        {
-          "name": "calendarConfigured",
-          "kind": "fn"
-        },
-        {
-          "name": "CallForEvent",
-          "kind": "type"
-        },
-        {
-          "name": "clearBusyCache",
-          "kind": "fn"
-        },
-        {
-          "name": "createCallEvent",
-          "kind": "fn"
-        },
-        {
-          "name": "deleteCallEvent",
-          "kind": "fn"
-        },
-        {
-          "name": "InquiryForEvent",
-          "kind": "type"
-        },
-        {
-          "name": "moveCallEvent",
-          "kind": "fn"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [
-        "@sentry/nextjs",
-        "jose"
-      ],
-      "usedBy": [
-        "src/app/api/call/[token]/route.ts"
-      ]
-    },
-    {
-      "path": "src/lib/ics.ts",
-      "lines": 45,
-      "purpose": "SC-2 §3 — a minimal iCalendar file so a booked call lands in the course's own calendar with no integration on their side.",
-      "brain": [],
-      "exports": [
-        {
-          "name": "buildIcs",
-          "kind": "fn"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [],
-      "usedBy": [
-        "src/lib/email.ts"
-      ]
-    },
-    {
       "path": "src/lib/image-resize.ts",
       "lines": 33,
       "purpose": "Client-side downscale so a 12MB phone photo never has to travel over the wire or blow the perf budget on the page that eventually renders it.",
@@ -10105,10 +9937,8 @@
         "src/app/api/admin/course-calls/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/calcom/webhook/route.ts",
-        "src/app/api/call/[token]/route.ts",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
-        "src/lib/call-availability.ts",
         "src/lib/call-invite.ts",
         "src/lib/inquiry-action-queue.ts",
         "src/lib/inquiry-needs.ts",
@@ -10362,6 +10192,7 @@
         "src/app/admin/inquiries/page.tsx",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/stats/route.ts",
+        "src/app/api/calcom/webhook/route.ts",
         "src/app/api/call/[token]/route.ts",
         "src/app/api/inquiries/route.ts",
         "src/app/api/inquiries/signin-code/route.ts",
@@ -12545,8 +12376,7 @@
       "writers": [
         "src/app/api/admin/course-calls/route.ts",
         "src/app/api/admin/inquiries/route.ts",
-        "src/app/api/calcom/webhook/route.ts",
-        "src/app/api/call/[token]/route.ts"
+        "src/app/api/calcom/webhook/route.ts"
       ],
       "readers": [
         "src/app/api/admin/course-calls/route.ts",
@@ -13998,7 +13828,6 @@
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/calcom/webhook/route.ts",
-        "src/app/api/call/[token]/route.ts",
         "src/app/api/inquiries/details/route.ts",
         "src/app/api/inquiries/route.ts",
         "src/app/api/inquiries/signin-code/route.ts",

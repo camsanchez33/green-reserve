@@ -14,7 +14,8 @@ import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 import { resolveAdminSession, requireRole, requireOwner, ownerGateError, MANAGER_PLUS, SUPPORT_PLUS, VIEWER_PLUS, type AdminSession } from '@/lib/admin-session';
 import { AGENDA, callGate, fmtCallTime, nextCall, latestCall, parseJson } from '@/lib/inquiry-call';
 import { validateAnswers, flatSummaries, parseCallAnswers, toSheetPrefill } from '@/lib/call-answers';
-import { sendCallInvite } from '@/lib/call-invite';
+import { sendCallInvite, issueCallInvite } from '@/lib/call-invite';
+import { calcomBookingUrl, calcomEmbedUrl } from '@/lib/calcom';
 import { rateLimit } from '@/lib/rate-limit';
 import { firstCheckInAfterGoLive } from '@/lib/course-checkin';
 import { sendCallScheduledEmail, sendCallRecapEmail } from '@/lib/email';
@@ -152,6 +153,18 @@ async function handleAction(
     await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin',
       r.sent ? `Booking link sent to ${inquiry.email} by ${adminName}` : `Booking link NOT sent to ${inquiry.email} (${r.error || 'unknown'}) — by ${adminName}`);
     return NextResponse.json({ success: r.sent, sent: r.sent, error: r.sent ? null : (r.error || 'send failed') });
+  }
+
+  // CAL-2: book the call FOR the course on Cal.com — the same prefilled page
+  // they get, so it lands in Cam's Outlook, blocks the slot, and the webhook
+  // records it like any other booking. Reuses the course's existing invite
+  // token: minting a new one would kill the link already in their inbox.
+  if (action === 'calcom_link') {
+    if (CLOSED.includes(inquiry.status)) return NextResponse.json({ error: 'This inquiry is closed — reopen it before booking a call.' }, { status: 409 });
+    const base = calcomBookingUrl();
+    if (!base) return NextResponse.json({ error: 'Cal.com is not set up in this deployment — see Admin → System → Call booking.' }, { status: 409 });
+    const token = inquiry.callInviteToken || (await issueCallInvite(inquiryId)).token;
+    return NextResponse.json({ url: calcomEmbedUrl(base, { token, name: inquiry.contactName, email: inquiry.email, phone: inquiry.phone }) });
   }
 
   if (action === 'schedule_call') {

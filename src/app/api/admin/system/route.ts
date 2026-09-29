@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { birdieEnabled, birdieUsageToday, PLATFORM_PER_DAY, BIRDIE_MODEL } from '@/lib/birdie/guardrails';
 import { prisma } from '@/lib/prisma';
+import { calcomStatus } from '@/lib/calcom';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
 import { ACCESS_FEE_CENTS } from '@/lib/booking-fees';
 import vercelConfig from '../../../../../vercel.json';
@@ -58,11 +59,9 @@ export async function GET() {
   const vercelProjectUrl = env.ADMIN_VERCEL_PROJECT_URL || '';
 
   return NextResponse.json({
-    // SC-3 §4: which calendar the public booking page reads free/busy from
-    // (an identifier, not a secret — the credential is the service-account
-    // JSON, which is never returned). `configured` needs both env vars.
-    googleCalendarId: process.env.GOOGLE_CALENDAR_ID || null,
-    googleCalendarConfigured: !!(process.env.GOOGLE_CALENDAR_ID && process.env.GOOGLE_SERVICE_ACCOUNT_JSON),
+    // CAL-2: what the booking page will do. The booking URL is public (it is
+    // the link courses open); the webhook secret is reported only as set/unset.
+    calcom: calcomStatus(),
     // BIRDIE_AI_SPEC B1: the kill switch and today's platform-wide reply count (the daily cap reads the same counter).
     birdie: { enabled: birdieEnabled(), keySet: !!process.env.ANTHROPIC_API_KEY, flag: process.env.BIRDIE_ENABLED === 'true', todayReplies: await birdieUsageToday(), dailyCap: PLATFORM_PER_DAY, model: BIRDIE_MODEL },
     lastStripeTouch: lastStripeTouch

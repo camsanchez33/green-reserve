@@ -2536,6 +2536,26 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   FIXED 02c5cac. First real run (PR #2) measured production: every audited page
   over budget (Home 63 / TBT 1301ms; For Courses CLS 0.265; Booking LCP 5.07s).
 
+- [ ] CAL-2 — Cal.com is the ONLY call scheduler — SHIPPED e082dd0, 2026-09-29, box
+  open until /gr-review + Cam's live walk. Cam: "there should be no google calendar
+  thing" and, after setting both env vars and redeploying, "it is just the same as
+  before". Built: Google path deleted (lib/google-calendar, lib/call-availability,
+  lib/ics, scripts, /api/call grid + book/move/cancel writes, 3 dead emails);
+  CALCOM_BOOKING_URL normalised (no https://, quotes, whitespace) with the reason
+  shown on Admin → System → Call booking; secret trimmed; "Book on Cal.com" on the
+  inquiry call card (admin_inquiries action calcom_link, reuses the invite token);
+  webhook never moves/cancels a non-Cal.com call (review LOW) and notes a booking
+  on a closed inquiry on the timeline instead of recording it; booked view says
+  "reply to move it" for a hand-set call. Also fixed: "We'll call you at ." when
+  the call had no phone. Tested on local Postgres (see commit).
+  KNOWN, NOT DONE: the hand "Set up call" form still exists and does not block the
+  slot in Cal.com — prefer "Book on Cal.com". Webhook dedupe still not atomic
+  (needs the calcomUid column → schema, blocked on previews).
+  CAM TO WALK: Admin → System → Call booking must say "On" + "Webhook secret set"
+  (if it says invalid, it shows why). Then the Test Course 3 link shows the
+  Cal.com calendar; book → /admin/inquiries shows the call within a minute.
+  Cal.com "Ping test" on the webhook answers 200.
+
 - [ ] BUG: hello@greenreserve.app takes no mail — SHIPPED 371ffff, 2026-09-29, box
   open until /gr-review. Cam: "all emails need to go to thegreenreserve@outlook.com,
   the other one doesn't take replies." Every visible contact address, admin alert

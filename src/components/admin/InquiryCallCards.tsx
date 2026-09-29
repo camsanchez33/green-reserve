@@ -243,6 +243,21 @@ function SetupCard({ inquiry, sheet, needs, calls, disabled, busy, setBusy, setE
     } catch (e) { setError('Error: ' + e); }
     finally { setBusy(false); }
   };
+  // CAL-2: book it yourself on Cal.com (on the phone with them, say) — the
+  // webhook records it, so it shows here like a booking they made. The tab is
+  // opened BEFORE the request so the browser does not block it as a pop-up.
+  const bookOnCalcom = async () => {
+    const tab = window.open('', '_blank');
+    setBusy(true); setError(''); setNotice(null);
+    try {
+      const r = await patch(inquiry.id, 'calcom_link', {});
+      if (!r.ok || typeof r.data.url !== 'string') { tab?.close(); setError(errText(r)); return; }
+      if (tab) tab.location.href = r.data.url;
+      else window.location.href = r.data.url;
+      setNotice({ tone: 'ok', text: `Cal.com opened in a new tab with ${contactFirst}'s details filled in. Once you book, the call shows up here within a minute — refresh to see it.` });
+    } catch (e) { tab?.close(); setError('Error: ' + e); }
+    finally { setBusy(false); }
+  };
   const inviteDay = inquiry.callInviteSentAt
     ? new Date(inquiry.callInviteSentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' })
     : null;
@@ -279,9 +294,14 @@ function SetupCard({ inquiry, sheet, needs, calls, disabled, busy, setBusy, setE
             ? <><span className="font-medium text-ink">Booking link sent {inviteDay}</span> · {calls.some(c => c.outcome === 'cancelled') ? 'they cancelled once — link still open' : calls.length ? 'used; link still open' : 'not booked yet'}</>
             : <>Or let {contactFirst} pick a time from your calendar.</>}
         </div>
-        <button type="button" onClick={sendLink} disabled={disabled} className={btnO}>
-          <Send className="w-3.5 h-3.5" />{busy ? 'Sending…' : inviteDay ? 'Resend the link' : 'Send a booking link'}
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button type="button" onClick={bookOnCalcom} disabled={disabled} className={btnO}>
+            <CalendarClock className="w-3.5 h-3.5" />Book on Cal.com
+          </button>
+          <button type="button" onClick={sendLink} disabled={disabled} className={btnO}>
+            <Send className="w-3.5 h-3.5" />{busy ? 'Sending…' : inviteDay ? 'Resend the link' : 'Send a booking link'}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-[1fr_1fr_120px] gap-3 mb-4">
