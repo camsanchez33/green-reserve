@@ -8,9 +8,7 @@ import { getBookingStatus, statusDot } from '@/lib/booking-status';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { ACCESS_FEE_PER_PLAYER } from '@/lib/booking-fees';
 import type { MoneyBooking } from './types';
-
-function fmtTime(t: string) { const [h, m] = t.split(':').map(Number); return `${h % 12 || 12}:${m.toString().padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`; }
-function fmtDate(d: string) { return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+import { formatTeeTime as fmtTime, formatTeeDate as fmtDate } from '@/lib/format';
 
 function StatCard({ icon, label, value, sub, accent = false }: {
   icon: React.ReactNode; label: string; value: string | number; sub: string; accent?: boolean;

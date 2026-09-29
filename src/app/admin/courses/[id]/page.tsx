@@ -15,6 +15,7 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { periodDelta, lastBookingLabel, type CourseHealthStatus } from '@/lib/course-metrics';
 import { useResource } from '@/lib/use-resource';
+import { formatDate as fmtDate, formatMoney as fmtMoney, formatTeeTime as fmtTime } from '@/lib/format';
 
 type TabName = 'overview' | 'money' | 'records' | 'messages' | 'operate' | 'setup';
 
@@ -254,16 +255,6 @@ function ScheduleFields({ value, onChange, showMemberRates, products = [] }: {
     </>
   );
 }
-
-const fmtDate = (d: string) =>
-  new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-const fmtMoney = (n: number) =>
-  '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-const fmtTime = (t: string) => {
-  const [h, m] = t.split(':');
-  const hr = Number(h);
-  return `${hr > 12 ? hr - 12 : hr || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`;
-};
 
 // A-05 item 4a — the onboarding checklist as named steps with date/state,
 // replacing "Verified 3/3" everywhere. Dates are shown only where a real

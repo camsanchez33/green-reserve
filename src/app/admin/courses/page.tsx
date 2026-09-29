@@ -12,6 +12,7 @@ import { HEALTH_STATUS_SEVERITY, periodDelta, lastBookingLabel, type CourseHealt
 import { checkInSignal, type CheckinCallLike } from '@/lib/course-checkin';
 import { nextCall, overdueCall, fmtCallClock } from '@/lib/inquiry-call';
 import type { SetupProgress } from '@/lib/course-setup';
+import { formatDate as fmtDate, formatEasternDate as fmtShort, formatEasternDay as fmtDay } from '@/lib/format';
 
 // COURSES_SHEET_SPEC CS-2 — /admin/courses as a sheet. One table, two
 // sections ("Getting live" above "Live"), eight fixed columns, the same
@@ -65,9 +66,6 @@ const NEEDS_ATTENTION_STATUSES: CourseHealthStatus[] = ['setup_incomplete', 'pay
 // in Live because it WAS live; its Status cell says so.
 const GETTING_LIVE_STATUSES: CourseHealthStatus[] = ['setup_incomplete', 'orphaned'];
 
-const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-const fmtShort = (d: string | Date) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' });
-const fmtDay = (d: string | Date) => new Date(d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'America/New_York' });
 const fmtWeekday = (d: Date) => d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'America/New_York' });
 const daysSinceIso = (d: string) => Math.max(0, Math.floor((Date.now() - new Date(d).getTime()) / 86_400_000));
 

@@ -7,6 +7,7 @@ import { HardDrive, Clock3, Zap, GitBranch, Bug, ExternalLink, Landmark, Link2, 
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { formatDateTime as fmtDate, formatMoney as fmtMoney } from '@/lib/format';
 
 interface SystemData {
   lastStripeTouch: { courseName: string; updatedAt: string } | null;
@@ -32,11 +33,6 @@ interface PlatformStripe {
 // check, not a course-management feature.
 interface OrphanSweepItem { kind: 'course' | 'inquiry'; id: string; name: string; action: string; reason: string }
 interface AcknowledgedOrphan { id: string; name: string; archivedAt: string }
-
-function fmtDate(d: string) {
-  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
-}
-const fmtMoney = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 // U-A (UI_REVISE_SPEC §3): one legible signal per card. Green = this page reads
 // the real state. Grey = link-only; we can only point you at where it lives.

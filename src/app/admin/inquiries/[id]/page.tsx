@@ -23,6 +23,7 @@ import {
 import InquiryCallCards, { describeCall, type CallRow, type CallFocus } from '@/components/admin/InquiryCallCards';
 import { flatSummaries } from '@/lib/call-answers';
 import { AGENDA, callGate, fmtCallTime, nextCall, overdueCall, latestCall, parseJson } from '@/lib/inquiry-call';
+import { formatDate as fmtDate } from '@/lib/format';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -54,8 +55,6 @@ interface ApproveResult {
 // source of truth — never redefine these locally).
 const TERMINAL_STATUSES = new Set(['live', 'rejected', 'archived']);
 
-const fmtDate = (d: string) =>
-  new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 function daysAgo(d: string) {
   return Math.max(0, Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24)));
 }

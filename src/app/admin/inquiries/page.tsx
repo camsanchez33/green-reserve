@@ -14,6 +14,7 @@ import {
 // IC-3: the Next-call column and the calls-this-week count.
 import { nextCall, overdueCall, latestCall, isSameEasternDay, fmtCallClock, easternParts, OUTCOME_LABEL } from '@/lib/inquiry-call';
 import type { NeedItem } from '@/lib/inquiry-needs';
+import { formatDate as fmtDate, formatEasternDay as fmtDay, formatEasternDate as fmtShort } from '@/lib/format';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -67,10 +68,7 @@ const SECTION_CAP = 50;
 // U-A: a row this long in one stage is stalled, and fades back in the queue.
 const STALLED_DAYS = 7;
 
-const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 // IC-3 Next-call cell: "Tue Sep 15" and "Sep 9", always in Eastern.
-const fmtDay = (d: string) => new Date(d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'America/New_York' });
-const fmtShort = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' });
 // Stages where a discovery call is still ahead of us.
 const SETUP_CALL_STATUSES = new Set(['pending', 'in_review', 'details_requested', 'details_submitted']);
 const COURSE_TYPE_LABEL: Record<string, string> = { public: 'public', private: 'private', 'semi-private': 'semi-private', semi_private: 'semi-private', municipal: 'municipal', resort: 'resort' };

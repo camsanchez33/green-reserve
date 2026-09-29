@@ -8,6 +8,7 @@ import { MANAGER_PLUS } from '@/lib/admin-roles';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
 import { adminFetch } from '@/lib/admin-fetch';
+import { formatMoney as fmtMoney, formatDate as fmtDate, formatStamp as fmtStamp } from '@/lib/format';
 
 // MP-6d: the Golfers RECORD page. Before this it could look but barely touch:
 // resend confirmation (and "Sent" was a guess), nothing else. A real support
@@ -17,9 +18,6 @@ import { adminFetch } from '@/lib/admin-fetch';
 // confirmation, resend receipt, cancel on their behalf, refund.
 
 const BASE_URL = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_URL ?? '');
-const fmtMoney = (n: number) => `$${n.toFixed(2)}`;
-const fmtDate = (s: string) => new Date(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-const fmtStamp = (s: string) => new Date(s).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 const iCls = 'bg-paper border border-line rounded-md px-3 py-2.5 text-ink text-sm placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
 interface GolferSummary { id: string; email: string; name: string; phone: string; bookingCount: number; createdAt: string }

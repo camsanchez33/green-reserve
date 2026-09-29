@@ -19,6 +19,7 @@ import { useTabIntro } from '@/lib/use-tab-intro';
 import { getBookingStatus, statusDot } from '@/lib/booking-status';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
+import { formatTeeDay as fmtDate, formatTeeTime as fmtTime } from '@/lib/format';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
@@ -56,8 +57,6 @@ interface AnalyticsData {
 // this module-level fallback only seeds state before the course has loaded.
 const todayFallback = () => todayIn(DEFAULT_TZ);
 const addDays = (d: string, n: number) => { const dt = new Date(d + 'T12:00:00'); dt.setDate(dt.getDate() + n); return dt.toISOString().split('T')[0]; };
-const fmtDate = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-const fmtTime = (t: string) => { const [h, m] = t.split(':').map(Number); return `${h % 12 || 12}:${m.toString().padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`; };
 
 function slotBorderCls(tt: TeeTime) {
   if (tt.status === 'blocked') return 'bg-paper border-line opacity-60';

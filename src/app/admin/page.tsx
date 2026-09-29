@@ -9,6 +9,7 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-roles';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { formatMoney as fmtMoney, formatRelative as fmtAgo } from '@/lib/format';
 
 interface QueueItem { id: string; label: string; ageDays: number; }
 interface ActionRow {
@@ -51,19 +52,6 @@ interface Stats {
 // MP-11a: role lists come from ONE place. Local copies were the mechanism by
 // which the owner's view and an employee's could drift (LAW rule 2).
 const REFRESH_MS = 5 * 60 * 1000;
-
-// null means "not visible at your access level" — render a dash, never NaN.
-const fmtMoney = (n: number | null | undefined) =>
-  n == null ? '—' : '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-
-function fmtAgo(ts: number, nowMs: number) {
-  const s = Math.floor((nowMs - ts) / 1000);
-  if (s < 5) return 'just now';
-  if (s < 60) return `${s}s ago`;
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
-  return `${Math.floor(m / 60)}h ago`;
-}
 
 function Trend({ current, prev, suffix = 'vs prior 30d' }: { current: number | null; prev: number | null; suffix?: string }) {
   // MP-2e: null means the value is above the viewer's access level. Computing

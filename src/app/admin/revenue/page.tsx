@@ -9,9 +9,8 @@ import Link from 'next/link';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EXPENSE_CATEGORIES, EXPENSE_CADENCES, EXPENSE_CATEGORY_LABEL, EXPENSE_CADENCE_LABEL } from '@/lib/expenses';
+import { formatMoney as fmtMoney } from '@/lib/format';
 
-const fmtMoney = (n: number) =>
-  (n < 0 ? '-$' : '$') + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtCount = (n: number) => n.toLocaleString('en-US');
 
 type PeriodKind = 'day' | 'week' | 'mtd' | 'custom';

@@ -8,6 +8,7 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { compareThreads, type ThreadSignal } from '@/lib/thread-signal';
+import { formatStamp as fmtFull, formatDateTime as fmtDate } from '@/lib/format';
 
 interface MessageItem {
   id: string; senderType: 'admin' | 'operator'; senderName: string;
@@ -49,8 +50,6 @@ const fmtTime = (d: string) => {
   if (diffDays < 7) return dt.toLocaleDateString('en-US', { weekday: 'short' });
   return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
-const fmtFull = (d: string) => new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
-const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 

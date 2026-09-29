@@ -6,6 +6,7 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { LoadFailure } from '@/components/ui/ErrorState';
 import type { AdminFetchFailure } from '@/lib/admin-fetch';
+import { formatStamp as fmtDate, formatMoney as fmtMoney } from '@/lib/format';
 
 interface Course { id: string; name: string; archivedAt: string | null; }
 interface EventRow {
@@ -14,9 +15,6 @@ interface EventRow {
   golferName?: string; golferEmail?: string;
   description: string; amount?: number; timestamp: string;
 }
-
-const fmtDate = (d: string) => new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-const fmtMoney = (n: number) => `$${n.toFixed(2)}`;
 
 const TYPE_DOT: Record<EventRow['type'], string> = {
   booking: 'ok',
