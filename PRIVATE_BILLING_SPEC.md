@@ -1,8 +1,8 @@
 # PB — Private-club billing
 
-Status: **DECIDED (Cam 2026-09-29)** — model below. **BLOCKED** on (1) Cam's prices,
-(2) Vercel previews building again (schema change; CLAUDE.md: attended, verified on
-a preview with a Neon branch DB). Money path — attended build.
+Status: **DECIDED (Cam 2026-09-29)** — model below. **BLOCKED** only on Cam's prices
+(the preview blocker was dropped 2026-09-29; the schema change is verified locally
+per CLAUDE.md). Money path — attended build.
 
 ## Decision
 - **Public courses — unchanged.** The golfer pays GreenReserve $1.50/player on each
@@ -24,8 +24,8 @@ sell that way). The cap keeps pay-as-you-go without the disincentive.
 ## Build (when unblocked)
 1. **Schema** (additive): `Course.billingPlan` ('none' | 'subscription' | 'payg'),
    `Course.billingTier`, `Course.stripeBillingCustomerId`,
-   `Course.stripeSubscriptionId`, `Course.billingStartedAt`. Migration, Neon branch,
-   preview, schema-check workflow.
+   `Course.stripeSubscriptionId`, `Course.billingStartedAt`. Migration, verified
+   locally, schema-check workflow.
 2. **Stripe Billing on the PLATFORM account** (GreenReserve is the seller): one
    Product "GreenReserve for private clubs", a monthly Price per tier; pay-as-you-go
    as a metered Price with usage reported at month end and the invoice capped by

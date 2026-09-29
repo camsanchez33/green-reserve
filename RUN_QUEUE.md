@@ -2936,10 +2936,11 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   commit the migration file, verify on the Vercel preview, schema-check CI must
   pass, then `migrate deploy` on prod. Attended. Never swept into a batch.
   Per docs/SHIPPING.md.
-  BLOCKED (2026-09-28): Vercel PREVIEW builds fail on every push, even
-  docs-only ones (production builds fine) — most likely an env var missing
-  from the Preview scope. Cam chose to leave previews broken for now, so this
-  item cannot run until they build: its verify step IS the preview.
+  UNBLOCKED (Cam 2026-09-29: "drop the preview rule"): schema changes are now
+  verified locally (fresh local Postgres, every migration applied, feature
+  walked end to end), additive migrations only — CLAUDE.md "Shipping". Every
+  item that said "blocked on previews" is unblocked by this: EV-1, SD-9c (2),
+  MP-4f, the calcomUid column, PB (still needs prices).
 
   VERIFY (manual, after deploy):
     1. Book a tee time as a golfer      → exactly ONE booking_created row

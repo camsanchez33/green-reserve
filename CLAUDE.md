@@ -90,9 +90,9 @@ npx vercel --prod
 Full checklist, rollback steps and env-var list: `docs/SHIPPING.md`. The rules that never bend:
 
 - Schema changes go through real Prisma migrations: `migrate dev` → commit the migration file → `migrate deploy` on prod. `db push` is banned except on throwaway sandbox DBs.
-- Schema changes are run attended, on a feature branch, against a Neon branch DB, verified on the Vercel preview, and must pass `.github/workflows/schema-check.yml`. Never `migrate reset`, `db push`, or direct `psql` writes on prod.
-- Vercel's production build runs `scripts/migrate-prod.js` (`migrate deploy` only when `VERCEL_ENV === 'production'`); previews skip it, so previews sharing the prod `DATABASE_URL` is safe.
-- **Current state (Cam 2026-09-28): Vercel PREVIEW builds fail on every push** (production builds fine; most likely a Preview-scope env var). Cam chose to leave it for now, so a schema change cannot be verified on a preview and is BLOCKED until previews build again. Do not route around this by testing a migration on prod.
+- Schema changes are run attended, on a feature branch, and must pass `.github/workflows/schema-check.yml`. Never `migrate reset`, `db push`, or direct `psql` writes on prod, and never test a migration on prod.
+- **No Vercel preview step (Cam 2026-09-29: "drop the preview rule").** Preview builds fail and nobody uses them. A schema change is verified LOCALLY instead: apply every migration from scratch to a local Postgres (`migrate deploy`), run the app against it and walk the feature end to end. Migrations must be additive — new tables, nullable columns or columns with a default; no drops, renames or type changes. A migration that rewrites or backfills existing rows is tested against a Neon branch of prod first (docs/SHIPPING.md) and needs Cam's approval.
+- Vercel's production build runs `scripts/migrate-prod.js` (`migrate deploy` only when `VERCEL_ENV === 'production'`), so merging to main applies the migration to prod. Rollback: Neon PITR or a compensating migration.
 - After any schema deploy: `/api/health` returns `{"ok":true,"db":"up"}` and `npx prisma migrate status` reports up to date.
 
 ### Performance budgets (golfer-facing pages)

@@ -24,11 +24,15 @@ rule and still allowed `prisma db push` — that advice is gone on purpose.**
    - Set `SHADOW_DATABASE_URL` to a second Neon branch (needed by `migrate dev`)
 3. Generate the migration: `npx prisma migrate dev --name <descriptive-name>`
    - This creates `prisma/migrations/<timestamp>_<name>/migration.sql` — commit it
-4. Push branch — Vercel auto-creates a preview deployment
-5. In Vercel dashboard → the preview deployment → Settings → Environment Variables:
-   override `DATABASE_URL` + `DIRECT_URL` to point to the Neon branch
-6. `npx prisma migrate deploy` applies the migration to the Neon branch
-7. Verify the feature on the preview URL
+4. Verify locally (Cam 2026-09-29: no Vercel preview step): apply every migration
+   from scratch to a local Postgres with `npx prisma migrate deploy`, run the app
+   against it, and walk the feature end to end.
+5. Additive only: new tables, nullable columns, or columns with a default. No drops,
+   renames or type changes.
+6. A migration that rewrites or backfills existing rows: also `migrate deploy` it on
+   the Neon branch from step 2 (a copy of prod data) and check the rows, and get
+   Cam's approval before merging.
+7. Push the branch; `.github/workflows/schema-check.yml` must pass.
 8. Merge PR to main → Vercel build command is:
    `prisma generate && node scripts/migrate-prod.js && next build`
    `scripts/migrate-prod.js` runs `prisma migrate deploy` **only when
