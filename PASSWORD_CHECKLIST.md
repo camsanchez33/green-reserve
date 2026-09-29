@@ -103,6 +103,20 @@ Just put your existing passwords into KeePassXC so they exist somewhere safe.
       Make it a NEW strong one (KeePassXC can generate: the dice icon in the entry editor).
 - [ ] 7.2 KeePassXC — Title: `GreenReserve admin (owner)`, URL: https://greenreserve.app/admin
 
+## PHASE 7a — Cal.com for call booking (CAL-1 — Cam's pick 2026-09-29; REPLACES 7b)
+
+Your calendar is personal Outlook.com, which 7b's Google integration cannot read. With
+CALCOM_BOOKING_URL set, the call page embeds Cal.com and 7b is not needed at all.
+
+- [ ] 7a.1 https://cal.com → sign up (free plan is enough — it includes webhooks). KeePassXC: Title `Cal.com`.
+- [ ] 7a.2 Settings → Calendars → connect **Outlook.com**, and turn on "check for conflicts" for it, so busy times in Outlook block slots.
+- [ ] 7a.3 Settings → Availability → the hours you take calls (Eastern).
+- [ ] 7a.4 Event Types → new: title `GreenReserve call`, **30 minutes**, Location **Attendee phone number** (you call them). In the event's Advanced / booking questions, make sure the phone question is shown and required.
+- [ ] 7a.5 Copy the event's public link (e.g. `https://cal.com/yourname/greenreserve-call`).
+- [ ] 7a.6 Settings → Developer → Webhooks → New: Subscriber URL `https://greenreserve.app/api/calcom/webhook`; triggers **Booking Created, Booking Rescheduled, Booking Cancelled**; Secret = a long random string (KeePassXC: Title `Cal.com webhook secret`). Use "Ping test" — it should answer 200.
+- [ ] 7a.7 Vercel → Environment Variables (Production): `CALCOM_BOOKING_URL` = the 7a.5 link; `CALCOM_WEBHOOK_SECRET` = the 7a.6 secret. **Redeploy.**
+- [ ] 7a.8 Open a real invite link (submit a test inquiry at /for-courses): the Cal.com calendar shows, prefilled. Book a slot → within a minute the page flips to "You're booked", and /admin/inquiries shows the call. Cancel from the page's link → the admin row shows cancelled.
+
 ## PHASE 7b — Google Calendar for call booking (SC-1; before the "pick a call time" page goes live)
 
 - [ ] 7b.1 https://console.cloud.google.com → new project → APIs & Services → enable **Google Calendar API**

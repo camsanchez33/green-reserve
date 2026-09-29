@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-28T22:58:54.312Z",
+  "generatedAt": "2026-09-29T00:21:25.573Z",
   "repo": {
-    "head": "fdd9c0c",
+    "head": "141582d",
     "branch": "claude/eager-maxwell-qf1pd0",
     "dirtyCount": 1,
     "dirty": [
@@ -10,12 +10,12 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-28T20:24:25+00:00",
+    "queueLastCommit": "2026-09-29T00:21:14+00:00",
     "unrecorded": []
   },
   "counts": {
     "runDone": 194,
-    "runAwaiting": 13,
+    "runAwaiting": 15,
     "runInFlight": 1,
     "runNotStarted": 20,
     "reviseDone": 14,
@@ -65,6 +65,20 @@
       "line": 2432,
       "hash": "8b9a046",
       "shipDate": "2026-09-28",
+      "ageDays": 0
+    },
+    {
+      "title": "BUG: perf audit crashed on every page",
+      "line": 2453,
+      "hash": "dd7056a",
+      "shipDate": "2026-09-29",
+      "ageDays": 0
+    },
+    {
+      "title": "CAL-1 — Cal.com as the call scheduler",
+      "line": 2461,
+      "hash": "a5ed9d7",
+      "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
@@ -224,12 +238,12 @@
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2453,
+      "line": 2485,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2598,
+      "line": 2634,
       "section": "Queue (run in this order)"
     }
   ],
@@ -283,6 +297,11 @@
       "item": "BUG: inquiry submissions send no emails",
       "note": "Cam: \"after submitting an inquiry they aren't getting sent an email",
       "line": 2432
+    },
+    {
+      "item": "CAL-1 — Cal.com as the call scheduler",
+      "note": "Cam: invite link showed \"I can't show my calendar right now\"",
+      "line": 2461
     }
   ],
   "ideas": {
@@ -526,6 +545,31 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "141582d",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "a5ed9d7",
+      "date": "2026-09-29",
+      "subject": "CAL-1: Cal.com as the call scheduler (Outlook-backed), in place of the Google grid"
+    },
+    {
+      "h": "dd7056a",
+      "date": "2026-09-29",
+      "subject": "Fix: perf audit crashed with '__name is not defined' on every page"
+    },
+    {
+      "h": "1ceeff5",
+      "date": "2026-09-28",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "e4f3b3b",
+      "date": "2026-09-28",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "fdd9c0c",
       "date": "2026-09-28",
       "subject": "Fix: 20 more email sends died when the response returned"
@@ -559,31 +603,6 @@
       "h": "3aff643",
       "date": "2026-09-28",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "f6ec6fb",
-      "date": "2026-09-28",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "ded9ed6",
-      "date": "2026-09-17",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "2432aa8",
-      "date": "2026-09-17",
-      "subject": "SD-11 review fixes: a cap that exists, a verifier the client cannot crack, and a way out of the dead end"
-    },
-    {
-      "h": "7970047",
-      "date": "2026-09-17",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "cfeb2e1",
-      "date": "2026-09-17",
-      "subject": "SD-11: ask before offering sign-in, and make them prove the inbox"
     }
   ]
 }

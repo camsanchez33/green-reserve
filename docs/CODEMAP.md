@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-338 source files · 194 routes · 89 libraries · 33 models
+340 source files · 195 routes · 90 libraries · 33 models
 
 ## Single sources of truth
 
@@ -130,7 +130,8 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/bookings` | golfer | public for POST | GET POST | `src/app/api/bookings/route.ts` | 368 |
 | `/api/bookings/cancel` | golfer | file | POST | `src/app/api/bookings/cancel/route.ts` | 45 |
 | `/api/bookings/setup-intent` | public | public | POST | `src/app/api/bookings/setup-intent/route.ts` | 72 |
-| `/api/call/[token]` | public | public | GET POST | `src/app/api/call/[token]/route.ts` | 256 |
+| `/api/calcom/webhook` | public | public | POST | `src/app/api/calcom/webhook/route.ts` | 138 |
+| `/api/call/[token]` | public | public | GET POST | `src/app/api/call/[token]/route.ts` | 271 |
 | `/api/checkin/[bookingId]` | public | token | GET POST | `src/app/api/checkin/[bookingId]/route.ts` | 78 |
 | `/api/courses` | public | public | GET | `src/app/api/courses/route.ts` | 44 |
 | `/api/courses/[slug]` | public | public | GET | `src/app/api/courses/[slug]/route.ts` | 31 |
@@ -210,7 +211,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/stripe/webhook` | public | secret header | POST | `src/app/api/stripe/webhook/route.ts` | 116 |
 | `/api/waitlist` | public | public | POST | `src/app/api/waitlist/route.ts` | 7 |
 | `/book` | public | public | page | `src/app/book/page.tsx` | 644 |
-| `/call/[token]` | public | public | page | `src/app/call/[token]/page.tsx` | 280 |
+| `/call/[token]` | public | public | page | `src/app/call/[token]/page.tsx` | 321 |
 | `/checkin/[bookingId]` | golfer | token | page | `src/app/checkin/[bookingId]/page.tsx` | 291 |
 | `/contact` | public | public | page | `src/app/contact/page.tsx` | 42 |
 | `/courses/[slug]` | public | public | page | `src/app/courses/[slug]/page.tsx` | 39 |
@@ -250,7 +251,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/lib/prisma.ts` | 148 | 15 |  | `prisma` |
+| `src/lib/prisma.ts` | 149 | 15 |  | `prisma` |
 | `src/lib/admin-session.ts` | 48 | 149 |  | `AdminSession`, `AdminSessionUnavailable`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole`, `resolveAdminSession` +5 more |
 | `src/lib/email.ts` | 44 | 1798 |  | `BookingEmailData`, `escapeHtml`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail`, `sendAdminSetPasswordEmail`, `sendAdminTwoFactorCode` +52 more |
 | `src/lib/session.ts` | 34 | 80 |  | `ACTIVE_COURSE_COOKIE`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN` |
@@ -259,8 +260,8 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/auth.ts` | 26 | 169 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffToken`, `signToken` +2 more |
 | `src/lib/agreement-required.ts` | 19 | 122 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
 | `src/lib/change-requests.ts` | 15 | 149 | Single source of truth for structured "request changes" data (V13b). | `APPROVED_MARKER`, `CATEGORY_LABEL`, `CHANGE_ADDRESSED_PREFIX`, `CHANGE_CATEGORIES`, `ChangeCategoryKey`, `ChangeItem`, `CHANGES_REQUESTED_PREFIX`, `computeOpenChanges` +14 more |
+| `src/lib/inquiry-call.ts` | 15 | 175 | INQUIRY_CALL_SPEC IC-1 §2 — the discovery-call agenda catalog, and the small derivations the sheet, the detail page and the queue share. | `AGENDA`, `AgendaItem`, `agendaStatus`, `AgendaStatusRow`, `callGate`, `CallLike`, `defaultAgenda`, `DIRECTION_LABEL` +13 more |
 | `src/lib/stripe.ts` | 15 | 87 | Every charge, refund and SetupIntent GreenReserve makes goes through here. | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `MEMBERSHIP_FEE_CENTS`, `refundOnConnectedAccount`, `stripe` |
-| `src/lib/inquiry-call.ts` | 14 | 175 | INQUIRY_CALL_SPEC IC-1 §2 — the discovery-call agenda catalog, and the small derivations the sheet, the detail page and the queue share. | `AGENDA`, `AgendaItem`, `agendaStatus`, `AgendaStatusRow`, `callGate`, `CallLike`, `defaultAgenda`, `DIRECTION_LABEL` +13 more |
 | `src/lib/course-timeline.ts` | 12 | 165 |  | `AGREEMENT_ACCEPTED_PREFIX`, `AgreementAcceptedPayload`, `CHECKIN_CALL_PREFIX`, `CheckInCallPayload`, `CURRENT_AGREEMENT_VERSION`, `DOCUMENT_UPLOADED_PREFIX`, `DocumentUploadedPayload`, `getCourseTimeline` +20 more |
 | `src/lib/admin-fetch.ts` | 10 | 150 | One place that decides what an admin fetch failure MEANS. | `adminErrorMessage`, `adminFetch`, `AdminFetchAction`, `AdminFetchFailure`, `AdminFetchResult`, `LOGIN_SESSION_ENDED` |
 | `src/lib/course-time.ts` | 10 | 46 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `todayIn`, `US_TIMEZONES` |
@@ -305,6 +306,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/agreement-sign.ts` | 2 | 198 | AGREEMENT_SPEC AG-2 — the signing service. | `deliverAgreementPdfs`, `recordSigning`, `retryMissingAgreementPdfs`, `SignInput`, `SignResult` |
 | `src/lib/birdie/guardrails.ts` | 2 | 74 | BIRDIE_AI_SPEC B1 — scope, caps and the kill switch. | `BIRDIE_MODEL`, `birdieEnabled`, `BirdieTurn`, `birdieUsageToday`, `checkCaps`, `logConversation`, `MAX_HISTORY_TURNS`, `MAX_REPLY_TOKENS` +4 more |
 | `src/lib/booking-status.ts` | 2 | 82 | Single source of truth for what to show a user (operator, staff, or golfer) given a booking's current status + paymentStatus pair. | `BookingStatusInfo`, `getBookingStatus`, `statusBadgeClass`, `StatusTone`, `statusToneText` |
+| `src/lib/calcom.ts` | 2 | 70 | CAL-1 — Cal.com as the call scheduler, in place of the Google Calendar grid. | `calcomBookingUrl`, `calcomCreatedBy`, `calcomEmbedUrl`, `calcomManageLinks`, `calcomUidOf`, `verifyCalcomSignature` |
 | `src/lib/call-availability.ts` | 2 | 124 | CALL_SCHEDULING_SPEC SC-1 §3 — which 30-minute call slots are open. | `BusyBlock`, `CALL_WINDOWS`, `CallLikeForSlots`, `CallPreference`, `CallWindow`, `DaySlots`, `fmtSlot`, `fmtSlotDay` +5 more |
 | `src/lib/course-closure.ts` | 2 | 125 | MP-5b. | `cancelFutureBookingsForClosure`, `closureImpact`, `ClosureImpact`, `ClosureResult`, `notifyOperatorOfClosure` |
 | `src/lib/courses-data.ts` | 2 | 320 |  | `Course`, `COURSES`, `generateTeeTimes`, `getCourseBySlug`, `searchCourses`, `TeeTime` |
@@ -459,11 +461,11 @@ without opening anything.
 
 ### Call
 
-22 fields · 3 writer(s) · 6 reader(s)
+22 fields · 4 writer(s) · 7 reader(s)
 
 - fields: `id`, `kind`, `inquiryId`, `inquiry`, `courseId`, `course`, `scheduledAt`, `durationMin`, `direction`, `phone`, `agendaJson`, `agendaExtra`, `outcome`, `answersJson`, `notes`, `followUpAt`, `completedAt`, `createdBy`, `createdAt`, `updatedAt`, `bookedByCourse`, `gcalEventId`
-- writers: `src/app/api/admin/course-calls/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/call/[token]/route.ts`
-- readers: `src/app/api/admin/course-calls/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/call/[token]/route.ts`, `src/app/api/inquiries/details/route.ts`, `src/lib/call-invite.ts`
+- writers: `src/app/api/admin/course-calls/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/calcom/webhook/route.ts`, `src/app/api/call/[token]/route.ts`
+- readers: `src/app/api/admin/course-calls/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/calcom/webhook/route.ts`, `src/app/api/call/[token]/route.ts`, `src/app/api/inquiries/details/route.ts`, `src/lib/call-invite.ts`
 
 ### ChangeRequest
 
@@ -483,11 +485,11 @@ without opening anything.
 
 ### CourseInquiry
 
-45 fields · 8 writer(s) · 24 reader(s)
+45 fields · 8 writer(s) · 25 reader(s)
 
 - fields: `id`, `firstName`, `lastName`, `contactName`, `contactTitle`, `email`, `phone`, `courseName`, `address`, `city`, `state`, `zipCode`, `website`, `courseType`, `currentBookingMethod`, `teeTimesPerDay`, `greenFeeRange`, `hasResidentPricing`, `hasMemberPricing`, `hasCaddies`, `pricingNotes`, `facilitiesNotes`, `lookingFor`, `additionalNotes`, `needsJson`, `status`, `adminNotes`, `builtCourseId`, `detailsToken`, `detailsJson`, `reviewStartedAt`, `wentLiveAt`, `source`, `closedReason`, `snoozeUntil`, `nextFollowUpAt`, `createdAt`, `updatedAt`, `events`, `changeRequests`, `callSkippedReason`, `calls`, `callInviteToken`, `callInviteSentAt`, `callInviteExpiresAt`
 - writers: `src/app/api/admin/backfill-orphaned-inquiries/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/inquiries/details/route.ts`, `src/app/api/inquiries/route.ts`, `src/lib/call-invite.ts`, `src/lib/lifecycle.ts`
-- readers: `src/app/api/admin/backfill-orphaned-inquiries/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/messages/route.ts`, `src/app/api/admin/nav-badges/route.ts`, `src/app/api/admin/request-re-review/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/admin/stats/route.ts`, `src/app/api/call/[token]/route.ts`, `src/app/api/inquiries/details/route.ts`, `src/app/api/inquiries/route.ts` +12 more (see `docs/codemap.json`)
+- readers: `src/app/api/admin/backfill-orphaned-inquiries/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/messages/route.ts`, `src/app/api/admin/nav-badges/route.ts`, `src/app/api/admin/request-re-review/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/admin/stats/route.ts`, `src/app/api/calcom/webhook/route.ts`, `src/app/api/call/[token]/route.ts`, `src/app/api/inquiries/details/route.ts` +13 more (see `docs/codemap.json`)
 
 ### CourseMembership
 
@@ -563,10 +565,10 @@ without opening anything.
 
 ### InquiryStatusEvent
 
-8 fields · 15 writer(s) · 10 reader(s)
+8 fields · 16 writer(s) · 10 reader(s)
 
 - fields: `id`, `inquiryId`, `fromStatus`, `toStatus`, `trigger`, `actorName`, `createdAt`, `inquiry`
-- writers: `src/app/api/admin/backfill-orphaned-inquiries/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/request-re-review/route.ts`, `src/app/api/call/[token]/route.ts`, `src/app/api/inquiries/details/route.ts`, `src/app/api/inquiries/route.ts`, `src/app/api/inquiries/signin-code/route.ts`, `src/app/api/inquiries/signin-verify/route.ts`, `src/app/api/operator/approve-page/route.ts`, `src/app/api/preview/[courseId]/approve/route.ts`, `src/app/api/preview/send/route.ts`, `src/lib/course-timeline.ts`, `src/lib/lifecycle.ts`, `src/lib/submit-change-request.ts`
+- writers: `src/app/api/admin/backfill-orphaned-inquiries/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/request-re-review/route.ts`, `src/app/api/calcom/webhook/route.ts`, `src/app/api/call/[token]/route.ts`, `src/app/api/inquiries/details/route.ts`, `src/app/api/inquiries/route.ts`, `src/app/api/inquiries/signin-code/route.ts`, `src/app/api/inquiries/signin-verify/route.ts`, `src/app/api/operator/approve-page/route.ts`, `src/app/api/preview/[courseId]/approve/route.ts`, `src/app/api/preview/send/route.ts`, `src/lib/course-timeline.ts`, `src/lib/lifecycle.ts`, `src/lib/submit-change-request.ts`
 - readers: `src/app/api/admin/courses/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/stats/route.ts`, `src/app/api/operator/approve-page/route.ts`, `src/app/api/operator/courses/route.ts`, `src/app/api/preview/[courseId]/approve/route.ts`, `src/app/api/preview/[courseId]/route.ts`, `src/lib/approval-state.ts`, `src/lib/course-timeline.ts`, `src/lib/sheet-token.ts`
 
 ### MembershipTier

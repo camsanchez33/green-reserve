@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-28 22:58 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `fdd9c0c` · working tree **1 dirty file(s)**
+Generated 2026-09-29 00:21 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `141582d` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -39,6 +39,8 @@ This is the distinction a raw checkbox count gets wrong.
 | SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box | 2026-09-17 | 11d | `cfeb2e1` | `RUN_QUEUE.md:2229` |
 | SD-8d — browser Back still discards unsaved Settings edits (from the | 2026-09-28 | 0d | `70a424e` | `RUN_QUEUE.md:536` |
 | BUG: inquiry submissions send no emails | 2026-09-28 | 0d | `8b9a046` | `RUN_QUEUE.md:2432` |
+| BUG: perf audit crashed on every page | 2026-09-29 | 0d | `dd7056a` | `RUN_QUEUE.md:2453` |
+| CAL-1 — Cal.com as the call scheduler | 2026-09-29 | 0d | `a5ed9d7` | `RUN_QUEUE.md:2461` |
 | MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | — | — | — | `RUN_QUEUE.md:617` |
 | MP-1 | — | — | — | `RUN_QUEUE.md:647` |
 | MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | — | — | — | `RUN_QUEUE.md:682` |
@@ -69,8 +71,8 @@ This is the distinction a raw checkbox count gets wrong.
 16. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1406`
 17. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1455`
 18. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1510`
-19. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2453`
-20. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2598`
+19. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2485`
+20. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2634`
 
 ## Waiting on you (not on a build)
 
@@ -84,6 +86,7 @@ This is the distinction a raw checkbox count gets wrong.
 - CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1510`
 - pending Cam's walk below — `RUN_QUEUE.md:2229`
 - Cam: "after submitting an inquiry they aren't getting sent an email — `RUN_QUEUE.md:2432`
+- Cam: invite link showed "I can't show my calendar right now" — `RUN_QUEUE.md:2461`
 
 ## Revise campaign (page-by-page pass)
 
@@ -158,6 +161,11 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `141582d` 2026-09-29 — queue/spec update
+- `a5ed9d7` 2026-09-29 — CAL-1: Cal.com as the call scheduler (Outlook-backed), in place of the Google grid
+- `dd7056a` 2026-09-29 — Fix: perf audit crashed with '__name is not defined' on every page
+- `1ceeff5` 2026-09-28 — queue/spec update
+- `e4f3b3b` 2026-09-28 — queue/spec update
 - `fdd9c0c` 2026-09-28 — Fix: 20 more email sends died when the response returned
 - `f76c618` 2026-09-28 — queue/spec update
 - `8b9a046` 2026-09-28 — Fix: inquiry submissions send no emails
@@ -165,12 +173,7 @@ This is the distinction a raw checkbox count gets wrong.
 - `70a424e` 2026-09-28 — SD-8d: ask before browser Back discards unsaved Settings edits
 - `d4a5d40` 2026-09-28 — queue/spec update
 - `3aff643` 2026-09-28 — queue/spec update
-- `f6ec6fb` 2026-09-28 — queue/spec update
-- `ded9ed6` 2026-09-17 — queue/spec update
-- `2432aa8` 2026-09-17 — SD-11 review fixes: a cap that exists, a verifier the client cannot crack, and a way out of the dead end
-- `7970047` 2026-09-17 — queue/spec update
-- `cfeb2e1` 2026-09-17 — SD-11: ask before offering sign-in, and make them prove the inbox
 
 ---
 
-**Totals:** 194 done · 13 awaiting review · 1 in flight · 20 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 194 done · 15 awaiting review · 1 in flight · 20 not started · 8 revise pages open · 15 ideas · 2 parked.

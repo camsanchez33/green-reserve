@@ -12,6 +12,8 @@ type Booked = { scheduledAt: string; durationMin: number; direction: string; pho
 type Info = {
   courseName: string; contactFirst: string; phone: string; durationMin: number; agendaLines: string[];
   booked: Booked | null; calendarUnavailable: boolean; days: Day[];
+  // CAL-1: set when Cal.com is the scheduler.
+  calcomUrl: string | null; calcomManage: { reschedule: string; cancel: string } | null;
 };
 
 const TZ = 'America/New_York';
@@ -73,6 +75,25 @@ export default function CallPage() {
     } catch { setLoadState('error'); setLoadError('Network error — check your connection and try again.'); }
   }, [token]);
   useEffect(() => { load(); }, [load]);
+
+  // CAL-1: the booking lands through Cal.com's webhook, not through this page,
+  // so check quietly for it while the booker is showing. Capped well inside
+  // the GET rate limit (60/hour per IP).
+  const calcomPicking = !!info?.calcomUrl && mode === 'pick';
+  useEffect(() => {
+    if (!calcomPicking) return;
+    let n = 0;
+    const id = setInterval(async () => {
+      if (++n > 20) { clearInterval(id); return; }
+      try {
+        const r = await fetch(`/api/call/${encodeURIComponent(token)}`, { cache: 'no-store' });
+        if (!r.ok) return;
+        const d = await r.json();
+        if (d.booked) { clearInterval(id); setInfo(d); setMode('manage'); }
+      } catch { /* the next tick tries again; the page stays usable */ }
+    }, 30_000);
+    return () => clearInterval(id);
+  }, [calcomPicking, token]);
 
   const post = async (payload: Record<string, unknown>) => {
     setBusy(true); setError(''); setNotice(null);
@@ -137,7 +158,7 @@ export default function CallPage() {
       {mode !== 'manage' && (
         <p className="text-sm text-ink-soft flex items-center gap-1.5 flex-wrap">
           {info.durationMin} minutes ·
-          {theyCall ? <span>you&apos;ll call us</span> : editingPhone ? (
+          {info.calcomUrl ? <span>we&apos;ll call you at {phone || 'the number you give us'}</span> : theyCall ? <span>you&apos;ll call us</span> : editingPhone ? (
             <span className="inline-flex items-center gap-1.5">
               we&apos;ll call you at
               <input type="tel" className={inp + ' !w-44 !py-1'} value={phone} autoFocus onChange={e => setPhone(e.target.value)} onBlur={() => setEditingPhone(false)} onKeyDown={e => { if (e.key === 'Enter') setEditingPhone(false); }} autoComplete="tel" aria-label="Phone number" />
@@ -171,10 +192,17 @@ export default function CallPage() {
         </div>
         {notice && <div className="mb-4"><Notice tone={notice.tone}>{notice.text}</Notice></div>}
         {error && <div className="mb-4"><Notice tone="bad">{error}</Notice></div>}
+        {info.calcomManage ? (
+          <div className="flex gap-3 flex-wrap">
+            <a href={info.calcomManage.reschedule} target="_blank" rel="noopener noreferrer" className={btnO}><CalendarClock className="w-4 h-4" />Reschedule</a>
+            <a href={info.calcomManage.cancel} target="_blank" rel="noopener noreferrer" className="text-sm text-ink-muted hover:text-bad px-3 py-3 transition-colors">Cancel the call</a>
+          </div>
+        ) : (
         <div className="flex gap-3 flex-wrap">
           <button onClick={() => { setMode('reschedule'); setPicked(null); setError(''); setNotice(null); load(); }} disabled={busy} className={btnO}><CalendarClock className="w-4 h-4" />Reschedule</button>
           <button onClick={cancel} disabled={busy} className="text-sm text-ink-muted hover:text-bad px-3 py-3 transition-colors disabled:opacity-50">{busy ? 'Working…' : 'Cancel the call'}</button>
         </div>
+        )}
       </Shell>
     );
   }
@@ -190,6 +218,19 @@ export default function CallPage() {
   }
 
   // ── pick / reschedule ───────────────────────────────────────────────
+  if (info.calcomUrl) {
+    return (
+      <Shell>
+        {heading}
+        <iframe src={info.calcomUrl} title="Pick a time for your call" className="w-full h-[720px] border border-line rounded-lg bg-white" />
+        <div className="mt-4 flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-xs text-ink-muted">Booked? This page updates on its own within a minute.</p>
+          <button onClick={load} className="text-sm text-pine hover:text-pine-hover">Check now</button>
+        </div>
+      </Shell>
+    );
+  }
+
   if (info.calendarUnavailable) {
     return (
       <Shell>
