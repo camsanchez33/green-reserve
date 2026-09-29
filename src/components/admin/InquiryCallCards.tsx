@@ -22,6 +22,8 @@ import {
   CALL_FIELDS, DAY_SHORT, parseCallAnswers, summarize, hasAnyCapture,
   type CallAnswers, type ItemAnswers, type FieldSpec,
 } from '@/lib/call-answers';
+import { Card } from '@/components/ui/Card';
+import { INPUT_COMPACT } from '@/components/ui/field';
 
 export type CallRow = CallLike & {
   id: string; scheduledAt: string; outcome: string; durationMin: number; direction: string; phone: string;
@@ -53,7 +55,7 @@ type Props = {
 };
 
 const H = { 'Content-Type': 'application/json' };
-const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10 focus:outline-none transition-colors';
+const iCls = `${INPUT_COMPACT} w-full`;
 const lbl = 'block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1';
 const btnP = 'bg-pine hover:bg-pine-hover disabled:opacity-50 text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
 const btnO = 'bg-paper hover:bg-line border border-line text-ink disabled:opacity-50 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
@@ -198,11 +200,11 @@ export default function InquiryCallCards({ inquiry, processing, onRefresh, onReq
   }
 
   return (
-    <div ref={wrap} className="mt-4 max-w-3xl bg-white border border-line rounded-lg px-5 py-4">
+    <Card ref={wrap} className="mt-4 max-w-3xl px-5 py-4">
       {body}
       {notice && <Notice tone={notice.tone} onClose={() => setNotice(null)}>{notice.text}</Notice>}
       {error && <Notice tone="bad" onClose={() => setError('')}>{error}</Notice>}
-    </div>
+    </Card>
   );
 }
 
