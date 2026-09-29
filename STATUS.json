@@ -1,18 +1,18 @@
 {
-  "generatedAt": "2026-09-29T01:50:35.708Z",
+  "generatedAt": "2026-09-29T01:52:20.094Z",
   "repo": {
-    "head": "209e652",
+    "head": "0a16333",
     "branch": "claude/eager-maxwell-qf1pd0",
     "dirtyCount": 3,
     "dirty": [
-      "M RUN_QUEUE.md",
-      " M docs/CODEMAP.md",
-      " M docs/codemap.json"
+      "M .claude/commands/gr-debug.md",
+      " M CLAUDE.md",
+      " M RUN_QUEUE.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-29T01:48:28+00:00",
+    "queueLastCommit": "2026-09-29T01:50:36+00:00",
     "unrecorded": []
   },
   "counts": {
@@ -261,7 +261,7 @@
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2700,
+      "line": 2704,
       "section": "Queue (run in this order)"
     }
   ],
@@ -563,6 +563,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "0a16333",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "209e652",
       "date": "2026-09-29",
       "subject": "Fix: rejected emails reported success (Resend returns errors, never throws)"
@@ -614,11 +619,6 @@
     },
     {
       "h": "1ceeff5",
-      "date": "2026-09-28",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "e4f3b3b",
       "date": "2026-09-28",
       "subject": "queue/spec update"
     }

@@ -14,20 +14,28 @@ GreenReserve is an OpenTable-style golf tee sheet platform. Golf courses list fo
 - Golfers save a card at booking via Stripe SetupIntent — **nothing is charged at booking time**
 - Charge happens at **check-in** via direct Stripe charge against the saved PaymentMethod
 - Courses with no cancellation fee policy skip card collection entirely (no-card flow)
-- Late cancellation fee: if golfer cancels after the window, the saved card is charged automatically by cron — this fee is refunded at check-in
+- Cancellation-window hold: the moment a booking's cancellation cutoff passes, the `hourly` cron charges the fee (the daily `cancellation-cutoff` is a safety net) to the saved card for EVERY still-confirmed booking at a fee-policy course. It is a hold, not a no-show penalty — it is refunded at check-in. No-fee courses get a check-in reminder email instead.
+- Cancelling after the window keeps that fee (non-refundable)
 
 ### Booking status flow
 ```
 confirmed → (check-in) → completed
 confirmed → (cancel before window) → cancelled (no charge)
 confirmed → (cancel after window) → cancelled (fee charged, non-refundable)
-confirmed → (no-show, cron fires) → fee charged, booking still confirmed until check-in
+confirmed → (cutoff passes, hourly cron) → hold fee charged, still confirmed; refunded at check-in
+confirmed → (staff marks no-show) → noShowAt set, still confirmed (reversible: "still coming")
+confirmed → (staff "paid offline") → completed, paymentStatus paid_offline, no Stripe charge
 ```
 
 ### Check-in
-- Staff check-in: `/dashboard` button → `POST /api/checkin/[bookingId]`
-- Golfer self check-in: `/checkin/[bookingId]?token=...` (token-gated, emailed in confirmation)
-- Both paths call shared `performCheckIn()` in `src/lib/checkin-booking.ts`
+- Staff check-in: tee sheet on `/dashboard` → `PATCH /api/operator/bookings` with `action: 'checkin'`
+- Golfer self check-in: `/checkin/[bookingId]?token=...` → `/api/checkin/[bookingId]` (token-gated, emailed in confirmation)
+- Both call shared `performCheckIn()` in `src/lib/checkin-booking.ts`
+- EXCEPTION: the counter's `paid_offline` action (same operator route) completes the booking WITHOUT `performCheckIn()` — anything that must happen on every check-in has to cover that branch too
+
+### Discovery-call booking (inquiry → call)
+- The inquiry confirmation email links to `/call/[token]` (token-gated, 21 days)
+- With `CALCOM_BOOKING_URL` set, that page embeds Cal.com (reads Cam's Outlook calendar); a signed webhook at `/api/calcom/webhook` writes the inquiry's `Call` row. Without it, the page falls back to the older Google Calendar grid, which needs `GOOGLE_*` env vars that are not set. See `src/lib/calcom.ts`
 
 ### Operator onboarding pipeline
 Inquiry → `pending` → `in_review` → `details_requested` → `details_submitted` → `building` → `live`
@@ -84,12 +92,13 @@ Full checklist, rollback steps and env-var list: `docs/SHIPPING.md`. The rules t
 - Schema changes go through real Prisma migrations: `migrate dev` → commit the migration file → `migrate deploy` on prod. `db push` is banned except on throwaway sandbox DBs.
 - Schema changes are run attended, on a feature branch, against a Neon branch DB, verified on the Vercel preview, and must pass `.github/workflows/schema-check.yml`. Never `migrate reset`, `db push`, or direct `psql` writes on prod.
 - Vercel's production build runs `scripts/migrate-prod.js` (`migrate deploy` only when `VERCEL_ENV === 'production'`); previews skip it, so previews sharing the prod `DATABASE_URL` is safe.
+- **Current state (Cam 2026-09-28): Vercel PREVIEW builds fail on every push** (production builds fine; most likely a Preview-scope env var). Cam chose to leave it for now, so a schema change cannot be verified on a preview and is BLOCKED until previews build again. Do not route around this by testing a migration on prod.
 - After any schema deploy: `/api/health` returns `{"ok":true,"db":"up"}` and `npx prisma migrate status` reports up to date.
 
 ### Performance budgets (golfer-facing pages)
 
 Enforced by `.github/workflows/perf-audit.yml` on every PR (budgets, audited pages and the local command are in `docs/SHIPPING.md`). Rules that keep it green:
-- No heavy client-side animation libraries (framer-motion removed — use CSS transitions)
+- No heavy client-side animation libraries (framer-motion is unused but still listed in package.json — never import it; use CSS transitions)
 - `<img>` tags must have `loading="lazy"` unless above the fold
 - Stripe JS deferred until a card is actually needed (`getStripePromise()` pattern in book/page.tsx)
 - New `'use client'` components on golfer pages need a bundle-size justification
@@ -108,7 +117,7 @@ Every admin action must show: pending state → then success or an explicit erro
 | Member (per-course) | `gr_member` | 90 days absolute | None |
 
 Sliding renewal is implemented in `src/lib/auth.ts` → `getOperatorSession()` / `getGolferSession()`.
-Re-run `scripts/route-inventory.ts` after adding routes to keep ARCHITECTURE.md current.
+Do NOT run `scripts/route-inventory.ts`: ARCHITECTURE.md's route tables were deleted on purpose (Cam 2026-09-16, they drifted from the code map) and that script would regenerate them. `docs/CODEMAP.md` (`node scripts/codemap.mjs`) is the route map.
 
 ### Status board — regenerate at the end of EVERY run
 
@@ -195,8 +204,12 @@ outside it. Do not hardcode radii or font-families to force either look.
 ---
 
 ## Cron jobs (`src/app/api/cron/`)
-- `charge-cancellation-fee` — fires at the cancellation cutoff, charges late cancellations, also sends check-in reminder for no-fee courses
-- Triggered by Vercel cron (configured in `vercel.json`)
+Schedules are in `vercel.json`.
+- `hourly` — the time-sensitive one: free-cancel warning ~1h before the cutoff, charges the hold fee the moment the window closes, check-in email ~3h before the round (no-fee courses), agreement PDF retries, call reminders
+- `cancellation-cutoff` — daily SAFETY NET for the same charge/check-in email; `paymentStatus` is the dedup so it never double-charges
+- `send-reminders` — pre-round reminders and membership pay links
+- `generate-tee-times` — materialises slots from `TeeTimeSchedule`
+- `chase-onboarding` — nudges courses stalled in onboarding
 
 ---
 
@@ -206,6 +219,9 @@ outside it. Do not hardcode radii or font-families to force either look.
 3. **JSX multi-line ternaries** — SWC/Babel chokes on `? [...]` starting a new line inside JSX. Pre-compute filtered arrays before the `return` instead.
 4. **Missing closing divs** — JSX parse errors often cascade from a missing `</div>` much earlier in the file. Binary-search with `@babel/parser` to find the true root.
 5. **Stripe webhook** — must be registered in Stripe dashboard pointing to `/api/stripe/webhook`
+6. **Never fire-and-forget in a route** — Vercel freezes the function once the response is sent, so an un-awaited promise (an email, a log write) silently dies. Await it, or wrap it in `after()` from `next/server`. This is why inquiry emails stopped for two weeks in Sept 2026.
+7. **Resend never throws** — the SDK returns `{ error }`. `getResend()` in `src/lib/email.ts` converts that into a throw; always send through it, never through a fresh `new Resend()`.
+8. **Edits made through Bash bypass the parse hook** — the PostToolUse hook only fires on the Edit/Write tools. After a Python/heredoc edit, run `node scripts/parse-check.js <files>` yourself.
 
 ---
 

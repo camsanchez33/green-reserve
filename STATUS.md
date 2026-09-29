@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-29 01:50 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `209e652` · working tree **3 dirty file(s)**
+Generated 2026-09-29 01:52 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `0a16333` · working tree **3 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,9 +12,9 @@ None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
 ### Uncommitted working tree (3 file(s))
 
+- `M .claude/commands/gr-debug.md`
+- `M CLAUDE.md`
 - `M RUN_QUEUE.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -76,7 +76,7 @@ This is the distinction a raw checkbox count gets wrong.
 16. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1521`
 17. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1576`
 18. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2551`
-19. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2700`
+19. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2704`
 
 ## Waiting on you (not on a build)
 
@@ -165,6 +165,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `0a16333` 2026-09-29 — queue/spec update
 - `209e652` 2026-09-29 — Fix: rejected emails reported success (Resend returns errors, never throws)
 - `a130919` 2026-09-29 — queue/spec update
 - `0d84aaf` 2026-09-29 — SD-9c: tee-sheet staff can reset a forgotten password
@@ -176,7 +177,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `a5ed9d7` 2026-09-29 — CAL-1: Cal.com as the call scheduler (Outlook-backed), in place of the Google grid
 - `dd7056a` 2026-09-29 — Fix: perf audit crashed with '__name is not defined' on every page
 - `1ceeff5` 2026-09-28 — queue/spec update
-- `e4f3b3b` 2026-09-28 — queue/spec update
 
 ---
 

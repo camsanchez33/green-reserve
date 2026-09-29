@@ -2655,8 +2655,12 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
         action 'paid_offline' → checked_in, metadata {paidOffline:true} (staff).
           This path sets status 'completed' WITHOUT performCheckIn — miss it
           and every counter check-in vanishes from the log.
-    - src/app/api/cron/cancellation-cutoff/route.ts → fee_charged (cron),
-          metadata {reason:'cutoff_hold'}.
+    - src/app/api/cron/hourly/route.ts (PRIMARY — charges the moment the
+      window closes) AND src/app/api/cron/cancellation-cutoff/route.ts (daily
+      safety net) → fee_charged (cron), metadata {reason:'cutoff_hold'}.
+      Corrected 2026-09-29: the first draft named only the safety net, which
+      would have logged almost no fee charges. stripeId @unique dedupes the
+      two if both ever fire for one booking.
           NOTE what this fee is: the cron does NOT detect no-shows. It charges
           every confirmed card-on-file booking with a fee policy once the
           cancellation cutoff passes, and that charge is refunded at check-in.
