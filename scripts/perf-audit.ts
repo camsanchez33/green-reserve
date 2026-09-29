@@ -3,7 +3,7 @@
  * Lighthouse performance audit against golfer-facing pages.
  *
  * Usage:
- *   AUDIT_BASE_URL=https://greenreserve.app npx tsx scripts/perf-audit.ts
+ *   AUDIT_BASE_URL=https://greenreserve.app node --experimental-strip-types scripts/perf-audit.ts  (Node 22; not tsx — see perf-audit.yml)
  *
  * Requires: npm install -D lighthouse tsx
  *
