@@ -95,6 +95,10 @@ AUDIT_BASE_URL=https://greenreserve.app node --experimental-strip-types scripts/
 
 Pages audited: `/`, `/for-courses`, `/courses/[slug]`, `/book` (shell).
 Mobile emulation + simulated slow-4G throttling. Chromium required.
+Each page runs 3 times and is judged on the MEDIAN of each metric (Cam 2026-09-29,
+PERF-4 — single runs swung Home's TBT 443–1798ms on identical code); `AUDIT_RUNS=1`
+for a quick local look. A failing page prints its main-thread breakdown, top
+scripts and long tasks.
 
 Key rules to keep budgets green:
 - No heavy client-side animation libraries (framer-motion removed — use CSS transitions)

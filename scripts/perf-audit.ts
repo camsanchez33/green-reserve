@@ -41,6 +41,9 @@ const BUDGETS = {
   cls: 0.10,         // unitless
 };
 
+// Median-of-N (PERF-4). AUDIT_RUNS overrides it for a quick local check.
+const RUNS = Math.max(1, Number(process.env.AUDIT_RUNS) || 3);
+
 async function auditPage(url: string, chrome: chromeLauncher.LaunchedChrome) {
   const result: RunnerResult | undefined = await lighthouse(url, {
     port: chrome.port,
@@ -97,22 +100,35 @@ async function main() {
       const url = BASE + page.path;
       process.stdout.write(`\n=== ${page.name} ===\n${url}\n`);
 
-      let lhr: Awaited<ReturnType<typeof auditPage>>;
-      try {
-        lhr = await auditPage(url, chrome);
-      } catch (e) {
-        console.error(`  ERROR: ${(e as Error).message}`);
-        anyFailed = true;
-        continue;
+      // PERF-4 (Cam 2026-09-29, option 1): each page is audited RUNS times and
+      // judged on the MEDIAN of each metric — Lighthouse's own advice for CI.
+      // One run swung Home's TBT from 443ms to 1798ms on identical code; the
+      // budgets themselves are unchanged.
+      const runs: Awaited<ReturnType<typeof auditPage>>[] = [];
+      for (let i = 0; i < RUNS; i++) {
+        try {
+          runs.push(await auditPage(url, chrome));
+        } catch (e) {
+          console.error(`  run ${i + 1} ERROR: ${(e as Error).message}`);
+        }
       }
+      if (runs.length === 0) { anyFailed = true; continue; }
 
-      const cats = lhr.categories;
-      const audits = lhr.audits;
-
-      const perf = Math.round((cats['performance']?.score ?? 0) * 100);
-      const lcp = (audits['largest-contentful-paint']?.numericValue ?? 9999) as number;
-      const tbt = (audits['total-blocking-time']?.numericValue ?? 9999) as number;
-      const cls = (audits['cumulative-layout-shift']?.numericValue ?? 9999) as number;
+      const metric = (l: (typeof runs)[number]) => ({
+        perf: Math.round((l.categories['performance']?.score ?? 0) * 100),
+        lcp: (l.audits['largest-contentful-paint']?.numericValue ?? 9999) as number,
+        tbt: (l.audits['total-blocking-time']?.numericValue ?? 9999) as number,
+        cls: (l.audits['cumulative-layout-shift']?.numericValue ?? 9999) as number,
+      });
+      const all = runs.map(metric);
+      const median = (xs: number[]) => { const v = [...xs].sort((x, y) => x - y); return v[Math.floor((v.length - 1) / 2)]; };
+      const perf = median(all.map(m => m.perf));
+      const lcp = median(all.map(m => m.lcp));
+      const tbt = median(all.map(m => m.tbt));
+      const cls = median(all.map(m => m.cls));
+      console.log(`  ${runs.length} runs — TBT ${all.map(m => Math.round(m.tbt)).join(' / ')}ms · LCP ${all.map(m => (m.lcp / 1000).toFixed(2)).join(' / ')}s · score ${all.map(m => m.perf).join(' / ')}`);
+      // Diagnostics come from the run whose TBT is the median one.
+      const audits = runs[all.findIndex(m => m.tbt === tbt)].audits;
 
       const checks = [
         { name: 'Performance', pass: perf >= BUDGETS.performance, display: `${perf}`, budget: `≥${BUDGETS.performance}` },
