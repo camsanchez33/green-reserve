@@ -3,8 +3,11 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle, Copy, ChevronRight, ArrowLeft, Eye, Globe, Lock } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import { Card } from '@/components/ui/Card';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { INPUT } from '@/components/ui/field';
 
-const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+const iCls = `${INPUT} w-full`;
 const H = () => ({ 'Content-Type': 'application/json' });
 
 const MONTHS = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -300,7 +303,7 @@ function WizardContent() {
         <AdminSidebar active="create" />
         <div className="admin-content flex-1 min-h-screen flex items-start justify-center pt-16">
           <div className="w-full max-w-lg px-4">
-            <div className="bg-white border border-line rounded-lg p-8">
+            <Card className="p-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 rounded-md bg-ok/10 flex items-center justify-center shrink-0">
                   <CheckCircle className="w-5 h-5 text-ok"/>
@@ -357,7 +360,7 @@ function WizardContent() {
                   Add another
                 </button>
               </div>
-            </div>
+            </Card>
           </div>
         </div>
       </div>
@@ -395,8 +398,8 @@ function WizardContent() {
           {/* ── Step 1: Type ──────────────────────────────────────────── */}
           {step === 1 && (
             <div className="space-y-5">
-              <div className="bg-white border border-line rounded-lg p-6">
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">What kind of course is this?</div>
+              <Card className="p-6">
+                <Eyebrow className="mb-4">What kind of course is this?</Eyebrow>
                 <div className="grid grid-cols-2 gap-3">
                   {COURSE_TYPES.map(t => {
                     const IconComp = t.Icon;
@@ -416,7 +419,7 @@ function WizardContent() {
                     );
                   })}
                 </div>
-              </div>
+              </Card>
               <button onClick={() => setStep(2)}
                 className="w-full py-3 bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-[12.5px] transition-colors flex items-center justify-center gap-2">
                 Continue <ChevronRight className="w-4 h-4"/>
@@ -427,17 +430,17 @@ function WizardContent() {
           {/* ── Step 2: Basics ────────────────────────────────────────── */}
           {step === 2 && (
             <div className="space-y-5">
-              <div className="bg-white border border-line rounded-lg p-6 space-y-4">
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Course Details</div>
+              <Card className="p-6 space-y-4">
+                <Eyebrow>Course Details</Eyebrow>
                 <div>
-                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Course Name *</span>
+                  <label className="block"><Eyebrow as="span" className="block mb-1.5">Course Name *</Eyebrow>
                   <input value={basics.name} onChange={e => setBasics(b => ({ ...b, name: e.target.value }))} className={iCls} placeholder="Pine Brook Golf Club" autoFocus/></label>
                 </div>
                 <div>
-                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">
+                  <label className="block"><Eyebrow as="span" className="block mb-1.5">
                     URL Slug *
                     {slugStatusLabel && <span className={'ml-2 text-[10px] font-medium ' + slugStatusCls}>{slugStatusLabel}</span>}
-                  </span>
+                  </Eyebrow>
                   <input
                     value={basics.slug}
                     onChange={e => { setSlugManuallyEdited(true); setBasics(b => ({ ...b, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })); }}
@@ -447,34 +450,34 @@ function WizardContent() {
                   <p className="text-[10px] text-ink-muted mt-1">greenreserve.app/courses/{basics.slug || '...'}</p>
                 </div>
                 <div>
-                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Address</span>
+                  <label className="block"><Eyebrow as="span" className="block mb-1.5">Address</Eyebrow>
                   <input value={basics.address} onChange={e => setBasics(b => ({ ...b, address: e.target.value }))} className={iCls} placeholder="123 Fairway Dr"/></label>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">City *</span>
+                    <label className="block"><Eyebrow as="span" className="block mb-1.5">City *</Eyebrow>
                     <input value={basics.city} onChange={e => setBasics(b => ({ ...b, city: e.target.value }))} className={iCls}/></label>
                   </div>
                   <div>
-                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">State *</span>
+                    <label className="block"><Eyebrow as="span" className="block mb-1.5">State *</Eyebrow>
                     <input value={basics.state} onChange={e => setBasics(b => ({ ...b, state: e.target.value.toUpperCase() }))} className={iCls} maxLength={2}/></label>
                   </div>
                   <div>
-                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Zip</span>
+                    <label className="block"><Eyebrow as="span" className="block mb-1.5">Zip</Eyebrow>
                     <input value={basics.zipCode} onChange={e => setBasics(b => ({ ...b, zipCode: e.target.value }))} className={iCls}/></label>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Phone</span>
+                    <label className="block"><Eyebrow as="span" className="block mb-1.5">Phone</Eyebrow>
                     <input value={basics.phone} onChange={e => setBasics(b => ({ ...b, phone: e.target.value }))} className={iCls} placeholder="(201) 555-0100"/></label>
                   </div>
                   <div>
-                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Website</span>
+                    <label className="block"><Eyebrow as="span" className="block mb-1.5">Website</Eyebrow>
                     <input value={basics.website} onChange={e => setBasics(b => ({ ...b, website: e.target.value }))} className={iCls} placeholder="https://"/></label>
                   </div>
                 </div>
-              </div>
+              </Card>
               {step2Attempted && !step2Valid && (
                 <div className="bg-bad/5 border border-bad/20 rounded-md px-4 py-2.5 text-bad text-xs">
                   {!basics.name && <div>Course name is required.</div>}
@@ -502,27 +505,27 @@ function WizardContent() {
           {/* ── Step 3: Fees ──────────────────────────────────────────── */}
           {step === 3 && (
             <div className="space-y-5">
-              <div className="bg-white border border-line rounded-lg p-6 space-y-5">
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">
+              <Card className="p-6 space-y-5">
+                <Eyebrow>
                   Pricing — {courseType === 'private' ? 'Private' : 'Public'}
-                </div>
+                </Eyebrow>
 
                 {/* Common: weekday/weekend/cart/walking */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Weekday green fee *</label>
+                    <Eyebrow as="label" className="block mb-1.5">Weekday green fee *</Eyebrow>
                     <DollarInput value={fees.weekdayFee} onChange={v => setFees(f => ({ ...f, weekdayFee: v }))} hasError={step3Attempted && !fees.weekdayFee}/>
                     {step3Attempted && !fees.weekdayFee && <p className="text-bad text-[10px] mt-1">Required</p>}
                   </div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Weekend green fee *</label>
+                    <Eyebrow as="label" className="block mb-1.5">Weekend green fee *</Eyebrow>
                     <DollarInput value={fees.weekendFee} onChange={v => setFees(f => ({ ...f, weekendFee: v }))} hasError={step3Attempted && !fees.weekendFee}/>
                     {step3Attempted && !fees.weekendFee && <p className="text-bad text-[10px] mt-1">Required</p>}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 items-end">
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Cart fee per player</label>
+                    <Eyebrow as="label" className="block mb-1.5">Cart fee per player</Eyebrow>
                     <DollarInput value={fees.cartFee} onChange={v => setFees(f => ({ ...f, cartFee: v }))} placeholder="18.00"/>
                   </div>
                   <div className="pb-2">
@@ -546,7 +549,7 @@ function WizardContent() {
 
                 {/* Season */}
                 <div className="border-t border-line-soft pt-4 space-y-2">
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Season <span className="normal-case tracking-normal font-normal text-ink-faint">(optional)</span></div>
+                  <Eyebrow>Season <span className="normal-case tracking-normal font-normal text-ink-faint">(optional)</span></Eyebrow>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] text-ink-muted block mb-1">Opens</label>
@@ -562,7 +565,7 @@ function WizardContent() {
                 {/* Public: optional resident rates */}
                 {courseType === 'public' && (
                   <div className="border-t border-line-soft pt-4 space-y-4">
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Resident pricing</div>
+                    <Eyebrow>Resident pricing</Eyebrow>
                     <label className="flex items-center gap-2 text-sm text-ink cursor-pointer select-none">
                       <input type="checkbox" checked={fees.hasResidentRates} onChange={e => setFees(f => ({ ...f, hasResidentRates: e.target.checked }))} className="w-4 h-4 accent-pine rounded"/>
                       Enable resident rates
@@ -571,16 +574,16 @@ function WizardContent() {
                       <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Resident weekday</label>
+                            <Eyebrow as="label" className="block mb-1.5">Resident weekday</Eyebrow>
                             <DollarInput value={fees.residentWeekday} onChange={v => setFees(f => ({ ...f, residentWeekday: v }))} placeholder="30.00"/>
                           </div>
                           <div>
-                            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Resident weekend</label>
+                            <Eyebrow as="label" className="block mb-1.5">Resident weekend</Eyebrow>
                             <DollarInput value={fees.residentWeekend} onChange={v => setFees(f => ({ ...f, residentWeekend: v }))} placeholder="40.00"/>
                           </div>
                         </div>
                         <div>
-                          <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Resident verification note</span>
+                          <label className="block"><Eyebrow as="span" className="block mb-1.5">Resident verification note</Eyebrow>
                           <input value={fees.residentNote} onChange={e => setFees(f => ({ ...f, residentNote: e.target.value }))} className={iCls} placeholder="County ID or utility bill required"/></label>
                         </div>
                       </div>
@@ -591,9 +594,9 @@ function WizardContent() {
                 {/* Private: member advance + starter tier */}
                 {courseType === 'private' && (
                   <div className="border-t border-line-soft pt-4 space-y-4">
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Member access</div>
+                    <Eyebrow>Member access</Eyebrow>
                     <div>
-                      <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Member advance booking window</span>
+                      <label className="block"><Eyebrow as="span" className="block mb-1.5">Member advance booking window</Eyebrow>
                       <div className="flex items-center gap-2">
                         <input type="number" min="1" max="365" value={fees.memberAdvanceDays} onChange={e => setFees(f => ({ ...f, memberAdvanceDays: e.target.value }))} className={iCls + ' w-24'}/>
                         <span className="text-sm text-ink-soft">days</span>
@@ -608,11 +611,11 @@ function WizardContent() {
                       {fees.hasStarterTier && (
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Tier name</span>
+                            <label className="block"><Eyebrow as="span" className="block mb-1.5">Tier name</Eyebrow>
                             <input value={fees.starterTierName} onChange={e => setFees(f => ({ ...f, starterTierName: e.target.value }))} className={iCls} placeholder="Full Member"/></label>
                           </div>
                           <div>
-                            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Annual fee</label>
+                            <Eyebrow as="label" className="block mb-1.5">Annual fee</Eyebrow>
                             <DollarInput value={fees.starterTierFee} onChange={v => setFees(f => ({ ...f, starterTierFee: v }))} placeholder="1200.00"/>
                           </div>
                         </div>
@@ -620,7 +623,7 @@ function WizardContent() {
                     </div>
                   </div>
                 )}
-              </div>
+              </Card>
               {step3Attempted && !step3Valid && (
                 <div className="bg-bad/5 border border-bad/20 rounded-md px-4 py-2.5 text-bad text-xs">
                   Weekday and weekend green fees are required.
@@ -642,23 +645,23 @@ function WizardContent() {
           {/* ── Step 4: Operator ──────────────────────────────────────── */}
           {step === 4 && (
             <div className="space-y-5">
-              <div className="bg-white border border-line rounded-lg p-6 space-y-4">
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Operator Account</div>
+              <Card className="p-6 space-y-4">
+                <Eyebrow>Operator Account</Eyebrow>
                 <p className="text-xs text-ink-muted">Creates their dashboard login. They receive a welcome email with a temp password and setup link.</p>
                 <div>
-                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Full Name *</span>
+                  <label className="block"><Eyebrow as="span" className="block mb-1.5">Full Name *</Eyebrow>
                   <input value={op.contactName} onChange={e => setOp(f => ({ ...f, contactName: e.target.value }))} className={iCls} placeholder="John Smith" autoFocus/></label>
                 </div>
                 <div>
-                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Email *</span>
+                  <label className="block"><Eyebrow as="span" className="block mb-1.5">Email *</Eyebrow>
                   <input type="email" value={op.contactEmail} onChange={e => setOp(f => ({ ...f, contactEmail: e.target.value }))} className={iCls} placeholder="gm@pinecreek.com"/></label>
                 </div>
                 <div>
-                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Phone *</span>
+                  <label className="block"><Eyebrow as="span" className="block mb-1.5">Phone *</Eyebrow>
                   <input type="tel" value={op.contactPhone} onChange={e => setOp(f => ({ ...f, contactPhone: e.target.value }))} className={iCls} placeholder="(201) 555-0100"/></label>
                   <p className="text-[10px] text-ink-muted mt-1">Used for SMS two-factor login codes.</p>
                 </div>
-              </div>
+              </Card>
               {step4Attempted && !step4Valid && (
                 <div className="bg-bad/5 border border-bad/20 rounded-md px-4 py-2.5 text-bad text-xs">
                   {!op.contactName && <div>Full name is required.</div>}
@@ -682,8 +685,8 @@ function WizardContent() {
           {/* ── Step 5: Review ────────────────────────────────────────── */}
           {step === 5 && (
             <div className="space-y-5">
-              <div className="bg-white border border-line rounded-lg p-6 space-y-5">
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Review before creating</div>
+              <Card className="p-6 space-y-5">
+                <Eyebrow>Review before creating</Eyebrow>
 
                 <div className="grid grid-cols-2 gap-x-8 gap-y-3">
                   {reviewCourseRows.map(([label, val]) => (
@@ -695,7 +698,7 @@ function WizardContent() {
                 </div>
 
                 <div className="border-t border-line pt-4">
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Pricing</div>
+                  <Eyebrow className="mb-3">Pricing</Eyebrow>
                   <div className="grid grid-cols-2 gap-x-8 gap-y-2">
                     {reviewFeeRows.map(([label, val]) => (
                       <div key={label}>
@@ -707,7 +710,7 @@ function WizardContent() {
                 </div>
 
                 <div className="border-t border-line pt-4">
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Operator</div>
+                  <Eyebrow className="mb-3">Operator</Eyebrow>
                   <div className="grid grid-cols-3 gap-4">
                     {([['Name', op.contactName], ['Email', op.contactEmail], ['Phone', op.contactPhone]] as [string, string][]).map(([label, val]) => (
                       <div key={label}>
@@ -726,7 +729,7 @@ function WizardContent() {
                 <div className="bg-pine/5 border border-pine/20 rounded-md px-4 py-3 text-xs text-pine">
                   A welcome email with a temporary password and setup link will be sent to <strong>{op.contactEmail}</strong>.
                 </div>
-              </div>
+              </Card>
               {createError && (
                 <div className="mb-3 text-sm text-bad bg-bad/5 border border-bad/20 rounded-md px-4 py-2.5">{createError}</div>
               )}
