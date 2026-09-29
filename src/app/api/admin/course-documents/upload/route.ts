@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { put } from '@vercel/blob';
+import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
-import { logDocumentUploaded } from '@/lib/course-timeline';
 import { privateBlobToken, PRIVATE_STORAGE_MISSING } from '@/lib/private-blob';
 
-// A-05 item 5b — PDF uploads per course, via the same Vercel Blob storage
-// operator photo uploads already use. Listed via the course timeline
-// (name + url + uploader + date), no new document model needed.
-const MAX_BYTES = 15 * 1024 * 1024; // 15MB
+// A-05 5b / MP-5a / BLOB-3. Course contracts (PDF) upload from the admin's
+// browser STRAIGHT to the private Blob store; this route only issues the
+// one-time upload permit. Cam's first live test failed with a bare "Upload
+// failed": the file went through our function, and Vercel rejects any request
+// body over 4.5 MB before our code runs (a plain-text 413 the page could not
+// read). With a permit there is no function in the file's path, so the 15 MB
+// limit below is the real one.
+//
+// The permit is locked down: an admin session at manager+, PDF only, 15 MB,
+// and only under course-documents/<the course in the payload>/. Recording the
+// uploaded file on the course happens in ../record (which re-checks all of it).
+const MAX_BYTES = 15 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -17,38 +24,36 @@ export async function POST(req: NextRequest) {
   const token = privateBlobToken();
   if (!token) return NextResponse.json({ error: PRIVATE_STORAGE_MISSING }, { status: 503 });
 
-  const form = await req.formData();
-  const file = form.get('file');
-  const courseId = form.get('courseId');
-  if (!(file instanceof File) || typeof courseId !== 'string' || !courseId) {
-    return NextResponse.json({ error: 'Missing file or courseId' }, { status: 400 });
-  }
-  if (file.type !== 'application/pdf') {
-    return NextResponse.json({ error: 'Only PDF files are allowed' }, { status: 400 });
-  }
-  if (file.size > MAX_BYTES) {
-    return NextResponse.json({ error: 'File too large (15MB max)' }, { status: 400 });
-  }
-
-  // MP-5a: these are signed contracts. As public blobs they were readable by
-  // anyone who ever saw the URL — no session, no expiry, and nothing to revoke.
-  // Private blobs are served only through the authenticated download route.
-  let blob: Awaited<ReturnType<typeof put>>;
+  let body: HandleUploadBody;
   try {
-    blob = await put(`course-documents/${courseId}/${Date.now()}-${file.name}`, file, {
-      access: 'private',
-      contentType: 'application/pdf',
-      token,
-    });
-  } catch (e) {
-    // No-silent-failures: say what storage refused (e.g. a PUBLIC store behind
-    // the private token) instead of a bare 500.
-    const msg = e instanceof Error ? e.message : 'unknown error';
-    return NextResponse.json({ error: `File storage refused the upload: ${msg}. Check that the contracts store in Vercel is set to Private.` }, { status: 502 });
+    body = (await req.json()) as HandleUploadBody;
+  } catch {
+    return NextResponse.json({ error: 'Bad upload request' }, { status: 400 });
+  }
+  // Only the permit request comes from the browser. No completion callback is
+  // configured, so a "completed" event here is not ours to act on.
+  if (body.type !== 'blob.generate-client-token') {
+    return NextResponse.json({ error: 'Unexpected upload event' }, { status: 400 });
   }
 
-  const ok = await logDocumentUploaded(courseId, file.name, blob.url, session.name);
-  if (!ok) return NextResponse.json({ error: 'No linked inquiry to log against for this course' }, { status: 400 });
-
-  return NextResponse.json({ success: true, url: blob.url });
+  try {
+    const result = await handleUpload({
+      body,
+      request: req,
+      token,
+      onBeforeGenerateToken: async (pathname, clientPayload) => {
+        let courseId = '';
+        try { courseId = String((JSON.parse(clientPayload || '{}') as { courseId?: unknown }).courseId || ''); } catch { /* checked below */ }
+        if (!/^[A-Za-z0-9_-]{1,64}$/.test(courseId)) throw new Error('Missing course');
+        if (!pathname.startsWith(`course-documents/${courseId}/`) || pathname.includes('..') || !pathname.toLowerCase().endsWith('.pdf')) {
+          throw new Error('That file path is not allowed');
+        }
+        return { allowedContentTypes: ['application/pdf'], maximumSizeInBytes: MAX_BYTES, addRandomSuffix: true };
+      },
+    });
+    return NextResponse.json(result);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'unknown error';
+    return NextResponse.json({ error: `Could not start the upload: ${msg}` }, { status: 400 });
+  }
 }

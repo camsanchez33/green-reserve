@@ -2707,6 +2707,15 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   upload/download, and agreement PDFs stay pending for the hourly retry.
   Storage errors on upload now show their reason. /admin/system lists
   "Private storage (contracts)". CAM: create the private store (see SHIPPING).
+- [x] BLOB-3 (Cam 2026-09-29: contract upload still a bare "Upload failed" after
+  BLOB-2). A bare message means a non-JSON response: the PDF went through our
+  function, and Vercel rejects request bodies over 4.5 MB before the code runs.
+  Contracts now upload browser → private store directly (@vercel/blob/client):
+  /api/admin/course-documents/upload only issues a permit (manager+, PDF, 15 MB,
+  course-documents/<courseId>/ only), then /record head()-checks the file in OUR
+  private store under that course's folder before listing it. Every failure
+  shows a reason (or the HTTP status). Permit path verified locally with a
+  format-valid token; the live upload is Cam's test.
 - [ ] SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +
   paymentMethodId (found in the FB-3 review, pre-existing). No route exposes
   another golfer's ids, but anyone holding a cus_ id could attach their own card
