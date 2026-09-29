@@ -117,7 +117,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-09-29 03:21 UTC</span><span>claude/eager-maxwell-qf1pd0 @ 56a52c7</span>
+    <span>2026-09-29 03:31 UTC</span><span>claude/eager-maxwell-qf1pd0 @ ffcb0d8</span>
     <span>3 uncommitted</span>
   </div>
 </header>
@@ -125,14 +125,14 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-good"><span class="n">194</span><span class="l">Done</span></div>
   <div class="tile t-warn"><span class="n">20</span><span class="l">Awaiting review</span></div>
   <div class="tile t-alarm"><span class="n">1</span><span class="l">In flight</span></div>
-  <div class="tile t-idle"><span class="n">19</span><span class="l">Not started</span></div>
+  <div class="tile t-idle"><span class="n">22</span><span class="l">Not started</span></div>
   <div class="tile t-idle"><span class="n">8</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">15</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
 <div class="card">
 <h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M RUN_QUEUE.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
+<ul class="plain"><li><code>M RUN_QUEUE.md</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -153,8 +153,11 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="row"><span class="idx">15</span><span class="t">MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)</span><span class="where">:1477</span></div>
 <div class="row"><span class="idx">16</span><span class="t">MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState</span><span class="where">:1526</span></div>
 <div class="row"><span class="idx">17</span><span class="t">Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with &quot;TheGre</span><span class="where">:1581</span></div>
-<div class="row"><span class="idx">18</span><span class="t">EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)</span><span class="where">:2613</span></div>
-<div class="row"><span class="idx">19</span><span class="t">EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET</span><span class="where">:2766</span></div>
+<div class="row"><span class="idx">18</span><span class="t">RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM).</span><span class="where">:2539</span></div>
+<div class="row"><span class="idx">19</span><span class="t">RV-2 — review follow-ups, small (from /gr-review 2026-09-29):</span><span class="where">:2547</span></div>
+<div class="row"><span class="idx">20</span><span class="t">PERF-1 — golfer pages over budget (first real Lighthouse run, PR #2,</span><span class="where">:2559</span></div>
+<div class="row"><span class="idx">21</span><span class="t">EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)</span><span class="where">:2640</span></div>
+<div class="row"><span class="idx">22</span><span class="t">EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET</span><span class="where">:2793</span></div>
 </div></section>
 <section><h2>Revise campaign &mdash; page by page</h2>
 <p class="note">14 pages closed, 8 open. One page in flight at a time.</p>
@@ -201,7 +204,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="row"><span class="t">UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until r</span><span class="age"></span><span class="where"></span></div>
 </div></section>
 <section><h2>Waiting on you, not on a build</h2>
-<ul class="plain"><li>CAM: three real dashboard screenshots into public/screenshots/ (empty, so the homepage shows three grey placeholder boxes) and a seeded demo course slug for DEMO_COURSE_SLUGS (empt <span class="where">:423</span></li><li>pending Cam's approval for a prod write <span class="where">:753</span></li><li>Cam's approval for a prod backfill <span class="where">:794</span></li><li>pending Cam's approval for a prod write <span class="where">:831</span></li><li>pending Cam's approval for a prod write <span class="where">:880</span></li><li>pending Cam's approval for a prod write <span class="where">:928</span></li><li>pending Cam's approval for a prod write <span class="where">:970</span></li><li>CAM: confirm the state before this runs — e <span class="where">:1581</span></li><li>pending Cam's walk below <span class="where">:2300</span></li><li>Cam: &quot;after submitting an inquiry they aren't getting sent an email <span class="where">:2503</span></li><li>Cam: &quot;there should be no google calendar thing&quot; and, after setting both env vars and redeploying, &quot;it is just the same as before&quot; <span class="where">:2539</span></li><li>Cam: &quot;all emails need to go to thegreenreserve@outlook <span class="where">:2571</span></li><li>Cam: invite link showed &quot;I can't show my calendar right now&quot; <span class="where">:2589</span></li></ul>
+<ul class="plain"><li>CAM: three real dashboard screenshots into public/screenshots/ (empty, so the homepage shows three grey placeholder boxes) and a seeded demo course slug for DEMO_COURSE_SLUGS (empt <span class="where">:423</span></li><li>pending Cam's approval for a prod write <span class="where">:753</span></li><li>Cam's approval for a prod backfill <span class="where">:794</span></li><li>pending Cam's approval for a prod write <span class="where">:831</span></li><li>pending Cam's approval for a prod write <span class="where">:880</span></li><li>pending Cam's approval for a prod write <span class="where">:928</span></li><li>pending Cam's approval for a prod write <span class="where">:970</span></li><li>CAM: confirm the state before this runs — e <span class="where">:1581</span></li><li>pending Cam's walk below <span class="where">:2300</span></li><li>Cam: &quot;after submitting an inquiry they aren't getting sent an email <span class="where">:2503</span></li><li>Cam: &quot;there should be no google calendar thing&quot; and, after setting both env vars and redeploying, &quot;it is just the same as before&quot; <span class="where">:2566</span></li><li>Cam: &quot;all emails need to go to thegreenreserve@outlook <span class="where">:2598</span></li><li>Cam: invite link showed &quot;I can't show my calendar right now&quot; <span class="where">:2616</span></li></ul>
 </section>
 <section><h2>Parked, with triggers</h2><ul class="plain"><li>Role-shaped admin (parked 2026-08-26 — TRIGGER: first employee account provisioned)</li><li>Future admin tabs (from brainstorm 2026-07-09 — each has a TRIGGER, don't build early)</li></ul></section>
 </div></div>
@@ -239,6 +242,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 13d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">cbbb67d</td><td class="num">2026-09-29</td><td>queue/spec update</td></tr>
 <tr><td class="num">56a52c7</td><td class="num">2026-09-29</td><td>Catch CALCOM_BOOKING_URL set to the webhook address</td></tr>
 <tr><td class="num">49529b8</td><td class="num">2026-09-29</td><td>queue/spec update</td></tr>
 <tr><td class="num">54312b6</td><td class="num">2026-09-29</td><td>Fix: call page answered 'Too many requests' during normal testing</td></tr>
@@ -250,7 +254,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">e082dd0</td><td class="num">2026-09-29</td><td>CAL-2: Cal.com is the only call scheduler; Google Calendar removed</td></tr>
 <tr><td class="num">734b067</td><td class="num">2026-09-29</td><td>queue/spec update</td></tr>
 <tr><td class="num">502fb9d</td><td class="num">2026-09-29</td><td>queue/spec update</td></tr>
-<tr><td class="num">02c5cac</td><td class="num">2026-09-29</td><td>Review fixes: three lost emails, a preview-send lockout, misleading admin errors</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

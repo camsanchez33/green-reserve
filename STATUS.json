@@ -1,25 +1,25 @@
 {
-  "generatedAt": "2026-09-29T03:21:18.117Z",
+  "generatedAt": "2026-09-29T03:31:11.407Z",
   "repo": {
-    "head": "56a52c7",
+    "head": "ffcb0d8",
     "branch": "claude/eager-maxwell-qf1pd0",
     "dirtyCount": 3,
     "dirty": [
       "M RUN_QUEUE.md",
-      " M docs/CODEMAP.md",
-      " M docs/codemap.json"
+      " M STATUS.json",
+      " M STATUS.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-29T03:18:47+00:00",
+    "queueLastCommit": "2026-09-29T03:21:18+00:00",
     "unrecorded": []
   },
   "counts": {
     "runDone": 194,
     "runAwaiting": 20,
     "runInFlight": 1,
-    "runNotStarted": 19,
+    "runNotStarted": 22,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -99,21 +99,21 @@
     },
     {
       "title": "CAL-2 — Cal.com is the ONLY call scheduler",
-      "line": 2539,
+      "line": 2566,
       "hash": "e082dd0",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "BUG: hello@greenreserve.app takes no mail",
-      "line": 2571,
+      "line": 2598,
       "hash": "371ffff",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 2589,
+      "line": 2616,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 0
@@ -269,13 +269,28 @@
       "section": "Queue (run in this order)"
     },
     {
+      "title": "RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM).",
+      "line": 2539,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "RV-2 — review follow-ups, small (from /gr-review 2026-09-29):",
+      "line": 2547,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "PERF-1 — golfer pages over budget (first real Lighthouse run, PR #2,",
+      "line": 2559,
+      "section": "Queue (run in this order)"
+    },
+    {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2613,
+      "line": 2640,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2766,
+      "line": 2793,
       "section": "Queue (run in this order)"
     }
   ],
@@ -333,17 +348,17 @@
     {
       "item": "CAL-2 — Cal.com is the ONLY call scheduler",
       "note": "Cam: \"there should be no google calendar thing\" and, after setting both env vars and redeploying, \"it is just the same as before\"",
-      "line": 2539
+      "line": 2566
     },
     {
       "item": "BUG: hello@greenreserve.app takes no mail",
       "note": "Cam: \"all emails need to go to thegreenreserve@outlook",
-      "line": 2571
+      "line": 2598
     },
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2589
+      "line": 2616
     }
   ],
   "ideas": {
@@ -587,6 +602,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "cbbb67d",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "56a52c7",
       "date": "2026-09-29",
       "subject": "Catch CALCOM_BOOKING_URL set to the webhook address"
@@ -640,11 +660,6 @@
       "h": "502fb9d",
       "date": "2026-09-29",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "02c5cac",
-      "date": "2026-09-29",
-      "subject": "Review fixes: three lost emails, a preview-send lockout, misleading admin errors"
     }
   ]
 }
