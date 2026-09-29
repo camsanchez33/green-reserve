@@ -186,7 +186,7 @@ function ReceiptPageInner() {
 
             {/* Footer */}
             <div className="border-t border-line px-6 py-4 text-center text-xs text-ink-muted">
-              hello@greenreserve.app · greenreserve.app
+              thegreenreserve@outlook.com · greenreserve.app
             </div>
           </div>
 

@@ -18,7 +18,7 @@ export default function Footer() {
         <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-ink-faint">
           <span>Powered by <Link href="/" className="text-pine hover:text-pine-hover transition-colors font-medium">GreenReserve</Link></span>
           <div className="flex items-center gap-4">
-            <a href="mailto:hello@greenreserve.app" className="hover:text-ink-soft transition-colors">hello@greenreserve.app</a>
+            <a href="mailto:thegreenreserve@outlook.com" className="hover:text-ink-soft transition-colors">thegreenreserve@outlook.com</a>
             <Link href="/privacy" className="hover:text-ink-soft transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-ink-soft transition-colors">Terms</Link>
           </div>
@@ -41,7 +41,7 @@ export default function Footer() {
             </Link>
           </span>
           <div className="flex items-center gap-4">
-            <a href="mailto:hello@greenreserve.app" className="hover:text-ink-soft transition-colors">hello@greenreserve.app</a>
+            <a href="mailto:thegreenreserve@outlook.com" className="hover:text-ink-soft transition-colors">thegreenreserve@outlook.com</a>
             <Link href="/privacy" className="hover:text-ink-soft transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-ink-soft transition-colors">Terms</Link>
           </div>
@@ -67,7 +67,7 @@ export default function Footer() {
           <Link href="/contact" className="hover:text-ink transition-colors">Contact</Link>
           {/* H-2e §8: the durable route to the dashboard, independent of scroll position. */}
           <Link href="/dashboard/login" className="hover:text-ink transition-colors">Operator login</Link>
-          <a href="mailto:hello@greenreserve.app" className="hover:text-ink transition-colors">hello@greenreserve.app</a>
+          <a href="mailto:thegreenreserve@outlook.com" className="hover:text-ink transition-colors">thegreenreserve@outlook.com</a>
         </nav>
         <span>© {new Date().getFullYear()} GreenReserve</span>
       </div>

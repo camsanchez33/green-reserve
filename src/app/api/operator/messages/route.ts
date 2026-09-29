@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession } from '@/lib/session';
 import { sendMessageNotificationEmail } from '@/lib/email';
 
-const ADMIN_EMAIL = 'hello@greenreserve.app';
+const ADMIN_EMAIL = 'thegreenreserve@outlook.com';
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
 // GET /api/operator/messages — own thread with all messages

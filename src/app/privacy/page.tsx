@@ -126,7 +126,7 @@ export default function PrivacyPolicyPage() {
                 <p>
                   You can request a copy of the data we hold on you, or ask us to delete your account and associated
                   personal information, by emailing{' '}
-                  <a href="mailto:hello@greenreserve.app" className="text-pine font-medium hover:underline">hello@greenreserve.app</a>.
+                  <a href="mailto:thegreenreserve@outlook.com" className="text-pine font-medium hover:underline">thegreenreserve@outlook.com</a>.
                   We&apos;ll process deletion requests within a reasonable time, except where we&apos;re required to
                   retain booking and payment records for accounting or legal purposes.
                 </p>
@@ -168,7 +168,7 @@ export default function PrivacyPolicyPage() {
                       experience, not GreenReserve&apos;s. <strong className="text-ink">GreenReserve does not use your
                       golfer data for its own marketing, aggregate it across courses, repurpose your branding, or sell
                       it to any third party.</strong> You may request a full data export at any time by emailing{' '}
-                      <a href="mailto:hello@greenreserve.app" className="text-pine font-medium hover:underline">hello@greenreserve.app</a>.
+                      <a href="mailto:thegreenreserve@outlook.com" className="text-pine font-medium hover:underline">thegreenreserve@outlook.com</a>.
                     </p>
                   </div>
 
@@ -236,7 +236,7 @@ export default function PrivacyPolicyPage() {
                 <h2 className="font-semibold text-base text-ink mb-2">Contact</h2>
                 <p>
                   Questions about this policy? Reach us at{' '}
-                  <a href="mailto:hello@greenreserve.app" className="text-pine font-medium hover:underline">hello@greenreserve.app</a>.
+                  <a href="mailto:thegreenreserve@outlook.com" className="text-pine font-medium hover:underline">thegreenreserve@outlook.com</a>.
                 </p>
               </section>
             </div>

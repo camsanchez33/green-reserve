@@ -7,7 +7,7 @@ const VALID_CATEGORIES = new Set<string>(CHANGE_CATEGORIES.map(c => c.key));
 const MAX_ITEMS = 6;
 const MAX_DETAIL = 2000;
 
-const ADMIN_EMAIL = 'hello@greenreserve.app';
+const ADMIN_EMAIL = 'thegreenreserve@outlook.com';
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
 export function cleanChangeItems(items: unknown): ChangeItem[] {

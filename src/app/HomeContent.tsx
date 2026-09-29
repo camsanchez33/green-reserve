@@ -306,7 +306,7 @@ export default function HomeContent() {
           <h2 className={`${s.h2} ${s.fade}`}>Put your course online this week.</h2>
           <div className={`${s.cta} ${s.fade}`}>
             <Link className={s.btn} href="/for-courses">List your course <Arrow /></Link>
-            <a className={s.link} href="mailto:hello@greenreserve.app" style={{ color: 'var(--pine)' }}>Or email hello@greenreserve.app</a>
+            <a className={s.link} href="mailto:thegreenreserve@outlook.com" style={{ color: 'var(--pine)' }}>Or email thegreenreserve@outlook.com</a>
           </div>
         </div>
       </section>

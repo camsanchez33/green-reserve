@@ -9383,7 +9383,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1811,
+      "lines": 1820,
       "purpose": "",
       "brain": [],
       "exports": [

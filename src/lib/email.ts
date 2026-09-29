@@ -12,7 +12,14 @@ function getResend() {
     // point throw, so each caller's existing handling finally sees it.
     const send = _resend.emails.send.bind(_resend.emails);
     _resend.emails.send = (async (...args: Parameters<typeof send>) => {
-      const r = await send(...args);
+      // Mail is SENT from hello@greenreserve.app (Resend only sends from a
+      // verified domain) but that address takes no mail (Cam 2026-09-29), so
+      // every reply goes to the inbox that is read, unless a sender set its own.
+      const [opts, ...rest] = args;
+      if (opts && typeof opts === 'object' && !('replyTo' in opts && opts.replyTo)) {
+        (opts as { replyTo?: string }).replyTo = REPLY_TO;
+      }
+      const r = await send(opts, ...rest);
       if (r.error) throw new Error(`Resend rejected the email: ${r.error.message || r.error.name || 'unknown error'}`);
       return r;
     }) as typeof send;
@@ -20,6 +27,8 @@ function getResend() {
   return _resend;
 }
 const FROM = 'GreenReserve <hello@greenreserve.app>';
+/** The inbox that is actually read. hello@ is send-only. */
+const REPLY_TO = 'thegreenreserve@outlook.com';
 
 function baseTemplate(content: string) {
   return `<!DOCTYPE html>
@@ -231,7 +240,7 @@ export async function sendCourseClosedNotice(data: {
       online whenever you are ready. If this is not what you expected, reply to this email and we will sort it out.
     </p>
     <p style="margin:0;color:#98968B;font-size:12px;">
-      Questions? Reply to this email — hello@greenreserve.app.
+      Questions? Reply to this email — thegreenreserve@outlook.com.
     </p>
   `);
   await getResend().emails.send({
@@ -373,7 +382,7 @@ export async function sendCheckInReceiptEmail(data: {
       </table>
     </div>
     ${data.feeRefunded ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#166534;font-size:14px;font-weight:600;">&#10003; The $${(data.feeRefundAmount / 100).toFixed(2)} late-cancellation fee you were charged earlier has been refunded.</p></div>` : ''}
-    ${data.feeRefundFailed ? `<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:4px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#92400e;font-size:14px;font-weight:600;">Your earlier $${(data.feeRefundAmount / 100).toFixed(2)} late-cancellation fee is owed back to you, but the automatic refund did not go through. The course has been notified — if it has not appeared within a few days, contact them or hello@greenreserve.app.</p></div>` : ''}
+    ${data.feeRefundFailed ? `<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:4px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#92400e;font-size:14px;font-weight:600;">Your earlier $${(data.feeRefundAmount / 100).toFixed(2)} late-cancellation fee is owed back to you, but the automatic refund did not go through. The course has been notified — if it has not appeared within a few days, contact them or thegreenreserve@outlook.com.</p></div>` : ''}
     ${data.checkInToken ? `<a href="${process.env.NEXT_PUBLIC_URL}/receipt/${data.bookingId}?token=${data.checkInToken}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:600;font-size:15px;margin-bottom:16px;">View Receipt &rarr;</a>` : ''}
     ${data.courseSlug ? `<a href="${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}/account?email=${encodeURIComponent(data.golferEmail)}" style="display:block;color:#6b7280;text-decoration:none;text-align:center;padding:4px;font-weight:600;font-size:12px;margin-bottom:16px;">View your tee times at ${data.courseName} &rarr;</a>` : ''}
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
@@ -466,7 +475,7 @@ export async function sendOperatorWelcomeEmail(data: {
     </a>
 
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
-      Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+      Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#6b7280;">thegreenreserve@outlook.com</a>
     </p>
   `);
 
@@ -493,7 +502,7 @@ export async function sendOperatorPasswordResetEmail(data: {
       Set a New Password &rarr;
     </a>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
-      This link expires in 1 hour. Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+      This link expires in 1 hour. Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#6b7280;">thegreenreserve@outlook.com</a>
     </p>
   `);
   await getResend().emails.send({
@@ -519,7 +528,7 @@ export async function sendAdminPasswordResetEmail(data: {
       Set a New Password &rarr;
     </a>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
-      This link expires in 24 hours. Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+      This link expires in 24 hours. Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#6b7280;">thegreenreserve@outlook.com</a>
     </p>
   `);
   await getResend().emails.send({
@@ -540,7 +549,7 @@ export async function sendAdminPasswordChangedNotification(data: {
       Hi ${data.adminName} — this confirms the password on your GreenReserve admin account (${data.adminEmail}) was just changed.
     </p>
     <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:4px;padding:16px 20px;margin-bottom:20px;">
-      <p style="margin:0;color:#92400e;font-size:13px;"><strong>Wasn't you?</strong> Reply to this email or reach <a href="mailto:hello@greenreserve.app" style="color:#92400e;text-decoration:underline;">hello@greenreserve.app</a> right away.</p>
+      <p style="margin:0;color:#92400e;font-size:13px;"><strong>Wasn't you?</strong> Reply to this email or reach <a href="mailto:thegreenreserve@outlook.com" style="color:#92400e;text-decoration:underline;">thegreenreserve@outlook.com</a> right away.</p>
     </div>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
       Green Reserve &middot; <a href="https://greenreserve.app" style="color:#6b7280;">greenreserve.app</a>
@@ -570,7 +579,7 @@ export async function sendOperatorVerifyEmail(data: {
       Confirm My Email &rarr;
     </a>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
-      Didn't request this? You can ignore this email. Questions? Reply here or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+      Didn't request this? You can ignore this email. Questions? Reply here or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#6b7280;">thegreenreserve@outlook.com</a>
     </p>
   `);
   await getResend().emails.send({
@@ -596,7 +605,7 @@ export async function sendGolferPasswordResetEmail(data: {
       Set a New Password &rarr;
     </a>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
-      This link expires in 1 hour. Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+      This link expires in 1 hour. Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#6b7280;">thegreenreserve@outlook.com</a>
     </p>
   `);
   await getResend().emails.send({
@@ -630,13 +639,13 @@ export async function sendPreviewEmail(data: {
     <p style="margin:0 0 12px;color:#9ca3af;font-size:13px;">Want to see your dashboard too? We can send you access &mdash; just reply.</p>
     <p style="margin:0 0 20px;color:#9ca3af;font-size:13px;">When you log in, your Getting Started checklist will walk you through everything, including payments setup.</p>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
-      Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+      Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#6b7280;">thegreenreserve@outlook.com</a>
     </p>
   `);
   await getResend().emails.send({
     from: FROM,
     to: data.contactEmail,
-    replyTo: 'hello@greenreserve.app',
+    replyTo: 'thegreenreserve@outlook.com',
     subject: `Preview: Your GreenReserve page for ${data.courseName}`,
     html,
   });
@@ -679,13 +688,13 @@ export async function sendPreviewWithDashboardAccessEmail(data: {
     </a>
     <p style="margin:0 0 20px;color:#9ca3af;font-size:13px;">Log in and your Getting Started checklist will walk you through everything, including payments setup. Nothing is live yet — golfers can't book until you approve the page.</p>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
-      Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+      Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#6b7280;">thegreenreserve@outlook.com</a>
     </p>
   `);
   await getResend().emails.send({
     from: FROM,
     to: data.contactEmail,
-    replyTo: 'hello@greenreserve.app',
+    replyTo: 'thegreenreserve@outlook.com',
     subject: `Preview + dashboard access: Your GreenReserve page for ${data.courseName}`,
     html,
   });
@@ -718,7 +727,7 @@ export async function sendDashboardAccessEmail(data: {
     </a>
     <p style="margin:0 0 20px;color:#9ca3af;font-size:13px;">When you log in, your Getting Started checklist will walk you through everything, including payments setup.</p>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
-      Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+      Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#6b7280;">thegreenreserve@outlook.com</a>
     </p>
   `);
   await getResend().emails.send({
@@ -751,7 +760,7 @@ export async function sendGoLiveSimpleEmail(data: {
       View My Dashboard &rarr;
     </a>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
-      Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+      Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#6b7280;">thegreenreserve@outlook.com</a>
     </p>
   `);
   await getResend().emails.send({
@@ -776,7 +785,7 @@ export async function sendTwoFactorCodeEmail(data: {
       <p style="margin:0;color:#111827;font-size:32px;font-weight:700;font-family:monospace;letter-spacing:0.2em;">${data.code}</p>
     </div>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
-      This code expires in 10 minutes. Didn't try to sign in? Reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+      This code expires in 10 minutes. Didn't try to sign in? Reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#6b7280;">thegreenreserve@outlook.com</a>
     </p>
   `);
   await getResend().emails.send({
@@ -821,7 +830,7 @@ export async function sendAdminTwoFactorCode(data: { email: string; name: string
       <p style="margin:0;color:#111827;font-size:36px;font-weight:700;font-family:monospace;letter-spacing:0.25em;">${data.code}</p>
     </div>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
-      Expires in 10 minutes. Not you? Reply to this email immediately — <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>
+      Expires in 10 minutes. Not you? Reply to this email immediately — <a href="mailto:thegreenreserve@outlook.com" style="color:#6b7280;">thegreenreserve@outlook.com</a>
     </p>
   `);
   await getResend().emails.send({
@@ -845,7 +854,7 @@ export async function sendPasswordChangedNotification(data: {
       Hi ${data.operatorName} — this confirms the password on your GreenReserve dashboard (${data.operatorEmail}) was just changed.
     </p>
     <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:4px;padding:16px 20px;margin-bottom:20px;">
-      <p style="margin:0;color:#92400e;font-size:13px;"><strong>Wasn't you?</strong> Reply to this email or reach <a href="mailto:hello@greenreserve.app" style="color:#92400e;text-decoration:underline;">hello@greenreserve.app</a> right away.</p>
+      <p style="margin:0;color:#92400e;font-size:13px;"><strong>Wasn't you?</strong> Reply to this email or reach <a href="mailto:thegreenreserve@outlook.com" style="color:#92400e;text-decoration:underline;">thegreenreserve@outlook.com</a> right away.</p>
     </div>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
       Green Reserve &middot; <a href="https://greenreserve.app" style="color:#6b7280;">greenreserve.app</a>
@@ -951,7 +960,7 @@ export async function sendInquiryNotification(data: {
 
   await getResend().emails.send({
     from: FROM,
-    to: 'hello@greenreserve.app',
+    to: 'thegreenreserve@outlook.com',
     subject: `New inquiry: ${data.courseName} — ${data.city}, ${data.state}`,
     html,
   });
@@ -979,7 +988,7 @@ export async function sendInquiryConfirmation(data: {
     </a>
     <p style="margin:0 0 24px;color:#9ca3af;font-size:12px;text-align:center;">20 minutes, at a time that works for you.</p>
     <p style="margin:16px 0 0;color:#9ca3af;font-size:12px;text-align:center;">
-      Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>.
+      Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#6b7280;">thegreenreserve@outlook.com</a>.
     </p>
   `);
   await getResend().emails.send({
@@ -1011,7 +1020,7 @@ export async function sendInquiryAlreadyBuilt(data: {
     </a>
     <p style="margin:0 0 24px;color:#9ca3af;font-size:12px;text-align:center;">Use the email address your course is registered under.</p>
     <p style="margin:16px 0 0;color:#9ca3af;font-size:12px;text-align:center;">
-      Can&apos;t get in, or think this isn&apos;t your course? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>.
+      Can&apos;t get in, or think this isn&apos;t your course? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#6b7280;">thegreenreserve@outlook.com</a>.
     </p>
   `);
   await getResend().emails.send({
@@ -1044,7 +1053,7 @@ export async function sendInquirySigninCode(data: {
       <strong>If you didn&apos;t ask for it, ignore this email</strong>; nothing has changed and nobody has been let in.
     </p>
     <p style="margin:16px 0 0;color:#9ca3af;font-size:12px;text-align:center;">
-      Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>.
+      Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#6b7280;">thegreenreserve@outlook.com</a>.
     </p>
   `);
   await getResend().emails.send({
@@ -1076,7 +1085,7 @@ export async function sendLockedOutOperatorAlert(data: {
   `);
   const r = await getResend().emails.send({
     from: FROM,
-    to: 'hello@greenreserve.app',
+    to: 'thegreenreserve@outlook.com',
     replyTo: data.operatorEmail,
     subject: `Locked out: ${subj(data.courseName)} confirmed their email but has no login`,
     html,
@@ -1172,7 +1181,7 @@ export async function sendDetailsSheetConfirmationEmail(data: {
       We'll review your sheet and follow up within 1–2 business days with next steps.
     </p>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
-      Questions? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a>.
+      Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#6b7280;">thegreenreserve@outlook.com</a>.
     </p>
   `);
   await getResend().emails.send({
@@ -1202,7 +1211,7 @@ export async function sendDetailsRequestEmail(data: {
       <tr><td style="padding:10px 0;color:#1C1C18;font-size:14px;font-weight:600;">3. You go live</td><td style="padding:10px 0;color:#6E6D64;font-size:14px;">Review everything before golfers can book</td></tr>
     </table>
     <p style="margin:0;color:#98968B;font-size:12px;">
-      Questions? Reply to this email — hello@greenreserve.app.
+      Questions? Reply to this email — thegreenreserve@outlook.com.
     </p>
   `);
   await getResend().emails.send({
@@ -1236,7 +1245,7 @@ export async function sendCallInviteEmail(data: {
       ${data.agendaLines.map(l => `<li>${escHtml(l)}</li>`).join('')}
     </ul>
     <p style="margin:0 0 16px;color:#6b7280;font-size:14px;line-height:1.6;">If none of the times work, just reply to this email.</p>
-    <p style="margin:0;color:#111827;font-size:14px;">Cam<br /><span style="color:#98968B;font-size:12px;">GreenReserve · hello@greenreserve.app</span></p>
+    <p style="margin:0;color:#111827;font-size:14px;">Cam<br /><span style="color:#98968B;font-size:12px;">GreenReserve · thegreenreserve@outlook.com</span></p>
   `);
   const r = await getResend().emails.send({ from: FROM, to: data.email, subject: 'Set up your call with GreenReserve', html });
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
@@ -1267,7 +1276,7 @@ export async function sendCallBookedEmail(data: {
     <h1 style="margin:0 0 8px;color:#111827;font-size:22px;font-weight:700;">${heading}</h1>
     ${data.kind !== 'cancelled' ? `<p style="margin:0 0 16px;color:#6b7280;font-size:15px;line-height:1.6;">Hi ${first} — here are the details for our call about <strong>${escHtml(data.courseName)}</strong>. The calendar file is attached.</p>` : ''}
     ${body}
-    <p style="margin:0;color:#98968B;font-size:12px;">Questions? Reply to this email — hello@greenreserve.app.</p>
+    <p style="margin:0;color:#98968B;font-size:12px;">Questions? Reply to this email — thegreenreserve@outlook.com.</p>
   `);
   const { buildIcs } = await import('./ics');
   const ics = buildIcs({
@@ -1297,7 +1306,7 @@ export async function sendCallReminderEmail(data: {
     <p style="margin:0 0 4px;color:#111827;font-size:15px;line-height:1.6;"><strong>${when} ET</strong> · about ${data.durationMin || 30} minutes</p>
     <p style="margin:0 0 16px;color:#6b7280;font-size:15px;line-height:1.6;">${who}</p>
     ${data.manageUrl ? `<p style="margin:0 0 16px;color:#6b7280;font-size:14px;line-height:1.6;">Need to move it? <a href="${data.manageUrl}" style="color:#1b4332;">Reschedule or cancel</a>.</p>` : `<p style="margin:0 0 16px;color:#6b7280;font-size:14px;line-height:1.6;">Need to move it? Just reply to this email.</p>`}
-    <p style="margin:0;color:#98968B;font-size:12px;">Questions? Reply to this email — hello@greenreserve.app.</p>
+    <p style="margin:0;color:#98968B;font-size:12px;">Questions? Reply to this email — thegreenreserve@outlook.com.</p>
   `);
   const r = await getResend().emails.send({ from: FROM, to: data.email, subject: `Talking tomorrow at ${clock} — GreenReserve`, html });
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
@@ -1316,7 +1325,7 @@ export async function sendCallBookedAdminEmail(data: {
       Open the inquiry &rarr;
     </a>
   `);
-  const r = await getResend().emails.send({ from: FROM, to: 'hello@greenreserve.app', subject: `${data.kind === 'cancelled' ? 'Cancelled' : data.kind === 'moved' ? 'Moved' : 'Booked'}: ${subj(data.courseName)} — ${when} ET`, html });
+  const r = await getResend().emails.send({ from: FROM, to: 'thegreenreserve@outlook.com', subject: `${data.kind === 'cancelled' ? 'Cancelled' : data.kind === 'moved' ? 'Moved' : 'Booked'}: ${subj(data.courseName)} — ${when} ET`, html });
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
 
@@ -1328,7 +1337,7 @@ export async function sendCalendarUnavailableAlert(data: { courseName: string; i
     <p style="margin:0 0 16px;color:#374151;font-size:13px;font-family:monospace;">${escHtml(data.error.slice(0, 400))}</p>
     <a href="${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/admin/inquiries/${data.inquiryId}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;">Open the inquiry &rarr;</a>
   `);
-  const r = await getResend().emails.send({ from: FROM, to: 'hello@greenreserve.app', subject: `Calendar unreachable — ${subj(data.courseName)} could not book`, html });
+  const r = await getResend().emails.send({ from: FROM, to: 'thegreenreserve@outlook.com', subject: `Calendar unreachable — ${subj(data.courseName)} could not book`, html });
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
 
@@ -1352,7 +1361,7 @@ export async function sendCallRecapEmail(data: {
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">${rows}
     </table>
     <p style="margin:0;color:#98968B;font-size:12px;">
-      Questions? Reply to this email — hello@greenreserve.app.
+      Questions? Reply to this email — thegreenreserve@outlook.com.
     </p>
   `);
   const r = await getResend().emails.send({
@@ -1408,7 +1417,7 @@ export async function sendInquiryDeclinedEmail(data: {
       Either way, thank you for the time you spent telling us about ${data.courseName}.
     </p>
     <p style="margin:0;color:#98968B;font-size:12px;">
-      Questions? Reply to this email — hello@greenreserve.app.
+      Questions? Reply to this email — thegreenreserve@outlook.com.
     </p>
   `);
   await getResend().emails.send({
@@ -1432,7 +1441,7 @@ export async function sendDetailsSubmittedNotification(data: { courseName: strin
   `);
   await getResend().emails.send({
     from: FROM,
-    to: 'hello@greenreserve.app',
+    to: 'thegreenreserve@outlook.com',
     subject: `Setup sheet ready: ${data.courseName}`,
     html,
   });
@@ -1450,7 +1459,7 @@ export async function sendCourseApprovedNotification(data: { courseName: string;
   `);
   await getResend().emails.send({
     from: FROM,
-    to: 'hello@greenreserve.app',
+    to: 'thegreenreserve@outlook.com',
     subject: `Approved: ${data.courseName}`,
     html,
   });
@@ -1507,7 +1516,7 @@ export async function sendCourseLiveOrientationEmail(data: {
     </div>
 
     <p style="margin:16px 0 0;color:#9ca3af;font-size:12px;text-align:center;">
-      Questions or something looks wrong? Reply to this email or reach us at <a href="mailto:hello@greenreserve.app" style="color:#6b7280;">hello@greenreserve.app</a> — a real person reads it.
+      Questions or something looks wrong? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#6b7280;">thegreenreserve@outlook.com</a> — a real person reads it.
     </p>
   `);
 
@@ -1537,7 +1546,7 @@ export async function sendOnboardingChaseEmail(data: {
       Finish Setup &rarr;
     </a>
     <p style="margin:16px 0 0;color:#9ca3af;font-size:12px;">
-      Stuck on something? Reply to this email — hello@greenreserve.app.
+      Stuck on something? Reply to this email — thegreenreserve@outlook.com.
     </p>
   `);
   await getResend().emails.send({
@@ -1759,13 +1768,13 @@ export async function sendSignedAgreementsEmail(data: {
     </p>
     <ul style="margin:0 0 16px;padding-left:20px;color:#111827;font-size:14px;">${list}</ul>
     ${data.pending.length ? `<p style="margin:0 0 16px;color:#92400e;font-size:13px;">The PDF for ${data.pending.join(' and ')} is still being prepared and will follow.</p>` : ''}
-    <p style="margin:0;color:#9ca3af;font-size:12px;">Signed electronically from ${data.signerEmail}. Keep this email for your records. Questions? Reply to this email &mdash; hello@greenreserve.app.</p>
+    <p style="margin:0;color:#9ca3af;font-size:12px;">Signed electronically from ${data.signerEmail}. Keep this email for your records. Questions? Reply to this email &mdash; thegreenreserve@outlook.com.</p>
   `);
   const r = await getResend().emails.send({
     from: FROM,
     to: data.operatorEmail,
-    cc: 'hello@greenreserve.app',
-    replyTo: 'hello@greenreserve.app',
+    cc: 'thegreenreserve@outlook.com',
+    replyTo: 'thegreenreserve@outlook.com',
     subject: `Your signed GreenReserve agreements — ${data.courseName}`,
     html,
     attachments: data.attachments.map(a => ({ filename: a.filename, content: a.content })),
@@ -1789,10 +1798,10 @@ export async function sendAgreementBumpNoticeEmail(data: {
     ${data.changeSummary ? `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:16px;margin-bottom:20px;"><p style="margin:0 0 4px;color:#374151;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">What changed</p><p style="margin:0;color:#374151;font-size:14px;line-height:1.6;">${data.changeSummary}</p></div>` : ''}
     <a href="${signUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:20px;">Review and sign &rarr;</a>
     <p style="margin:0 0 12px;color:#6b7280;font-size:13px;line-height:1.6;">After ${d(data.reacceptBy)}, course settings in your dashboard become read-only until the new version is signed. Bookings and check-ins are never affected.</p>
-    <p style="margin:0;color:#9ca3af;font-size:12px;">Questions? Reply to this email &mdash; hello@greenreserve.app.</p>
+    <p style="margin:0;color:#9ca3af;font-size:12px;">Questions? Reply to this email &mdash; thegreenreserve@outlook.com.</p>
   `);
   const r = await getResend().emails.send({
-    from: FROM, to: data.operatorEmail, replyTo: 'hello@greenreserve.app',
+    from: FROM, to: data.operatorEmail, replyTo: 'thegreenreserve@outlook.com',
     subject: `Action needed: the GreenReserve ${data.title} changed — sign by ${d(data.reacceptBy)}`,
     html,
   });
@@ -1805,6 +1814,6 @@ export async function sendAgreementBumpAdminSummaryEmail(data: { title: string; 
     <p style="margin:0 0 12px;color:#6b7280;font-size:14px;line-height:1.6;">${data.notified} operator${data.notified === 1 ? '' : 's'} notified. Re-acceptance deadline ${data.reacceptBy.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' })}.</p>
     ${data.failures.length ? `<p style="margin:0;color:#92400e;font-size:13px;">Failed to send to: ${data.failures.join(', ')} — contact them another way.</p>` : ''}
   `);
-  const r = await getResend().emails.send({ from: FROM, to: 'hello@greenreserve.app', subject: `[GreenReserve] ${data.title} v${data.version} notice sent to ${data.notified}`, html });
+  const r = await getResend().emails.send({ from: FROM, to: 'thegreenreserve@outlook.com', subject: `[GreenReserve] ${data.title} v${data.version} notice sent to ${data.notified}`, html });
   if (r.error) throw new Error(r.error.message);
 }
