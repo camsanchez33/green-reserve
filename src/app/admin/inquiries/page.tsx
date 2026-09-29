@@ -14,6 +14,10 @@ import {
 // IC-3: the Next-call column and the calls-this-week count.
 import { nextCall, overdueCall, latestCall, isSameEasternDay, fmtCallClock, easternParts, OUTCOME_LABEL } from '@/lib/inquiry-call';
 import type { NeedItem } from '@/lib/inquiry-needs';
+import { formatDate as fmtDate, formatEasternDay as fmtDay, formatEasternDate as fmtShort } from '@/lib/format';
+import { Modal } from '@/components/ui/Modal';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { Card } from '@/components/ui/Card';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -67,10 +71,7 @@ const SECTION_CAP = 50;
 // U-A: a row this long in one stage is stalled, and fades back in the queue.
 const STALLED_DAYS = 7;
 
-const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 // IC-3 Next-call cell: "Tue Sep 15" and "Sep 9", always in Eastern.
-const fmtDay = (d: string) => new Date(d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'America/New_York' });
-const fmtShort = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' });
 // Stages where a discovery call is still ahead of us.
 const SETUP_CALL_STATUSES = new Set(['pending', 'in_review', 'details_requested', 'details_submitted']);
 const COURSE_TYPE_LABEL: Record<string, string> = { public: 'public', private: 'private', 'semi-private': 'semi-private', semi_private: 'semi-private', municipal: 'municipal', resort: 'resort' };
@@ -552,7 +553,7 @@ function InquiriesListInner() {
           <div className="text-sm text-ink truncate">{inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''}</div>
           <div className="text-[12px] text-ink-muted truncate">{inq.phone || <span className="text-ink-faint">no phone</span>}</div>
           {hasBadEmail(inq) && (
-            <span className="inline-block mt-0.5 text-[9px] font-medium uppercase tracking-[0.1em] bg-warn/10 text-warn px-1.5 py-0.5" title={inq.email}>Bad email</span>
+            <span className="block mt-0.5" title={inq.email}><StatusDot status="warn" label="Bad email"/></span>
           )}
         </td>
         {/* 3 · Stage */}
@@ -622,7 +623,7 @@ function InquiriesListInner() {
       <tr key={g.key + ':head'} className="border-t border-line">
         <td colSpan={8} className="bg-paper px-3 py-1.5">
           <div className="flex items-baseline gap-2">
-            <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">{g.title}</span>
+            <Eyebrow as="span">{g.title}</Eyebrow>
             <span className="text-[11px] text-ink-faint">{g.rows.length}{g.hint ? ' · ' + g.hint : ''}</span>
             {canBulkSelect && g.mode === 'queue' && (
               <button onClick={toggleSection} className="ml-auto text-[11px] text-ink-faint hover:text-ink transition-colors">
@@ -639,7 +640,7 @@ function InquiriesListInner() {
     const nonEmpty = groups.filter(g => g.rows.length > 0);
     if (nonEmpty.length === 0) return null;
     return (
-      <div className="bg-white border border-line rounded-lg overflow-x-auto">
+      <Card className="overflow-x-auto">
         <table className="w-full table-fixed min-w-[760px]">
           <thead>
             <tr className="bg-paper">
@@ -670,7 +671,7 @@ function InquiriesListInner() {
             );
           })}
         </table>
-      </div>
+      </Card>
     );
   };
 
@@ -888,11 +889,11 @@ function InquiriesListInner() {
         const withCourse = targets.filter(t => !!t.builtCourseId).length;
         const canConfirm = !isArchive || bulkConfirmText.trim().toUpperCase() === 'ARCHIVE';
         return (
-          <div className="fixed inset-0 bg-ink/30 flex items-center justify-center z-50 px-4">
-            <div className="bg-white rounded-lg border border-line max-w-md w-full p-5">
-              <div className="text-sm font-medium text-ink mb-1">
+          <Modal title={isArchive ? `Archive ${targets.length} inquir${targets.length === 1 ? 'y' : 'ies'}?` : `Send setup sheet to ${targets.length} contact${targets.length === 1 ? '' : 's'}?`}
+            titleNode={<div className="text-sm font-medium text-ink mb-1">
                 {isArchive ? `Archive ${targets.length} inquir${targets.length === 1 ? 'y' : 'ies'}?` : `Send setup sheet to ${targets.length} contact${targets.length === 1 ? '' : 's'}?`}
-              </div>
+              </div>}
+            onClose={() => { setBulkPreview(null); setBulkConfirmText(''); }}>
               <p className="text-xs text-ink-muted mb-3">
                 {isArchive
                   ? (withCourse > 0
@@ -911,13 +912,13 @@ function InquiriesListInner() {
               </div>
               {isArchive && (
                 <div className="mb-4">
-                  <label className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Type ARCHIVE to confirm</label>
+                  <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Type ARCHIVE to confirm</span>
                   <input
                     value={bulkConfirmText}
                     onChange={e => setBulkConfirmText(e.target.value)}
                     className="w-full bg-paper border border-line rounded-md px-3 py-2 text-sm outline-none focus:border-bad/40"
                     placeholder="ARCHIVE"
-                  />
+                  /></label>
                 </div>
               )}
               <div className="flex items-center justify-end gap-2">
@@ -938,8 +939,7 @@ function InquiriesListInner() {
                   {bulkRunning ? 'Working…' : isArchive ? 'Archive' : 'Send Sheet'}
                 </button>
               </div>
-            </div>
-          </div>
+          </Modal>
         );
       })()}
 
@@ -948,16 +948,16 @@ function InquiriesListInner() {
       {deleteTarget && (() => {
         const matches = deleteConfirmText.trim().toLowerCase() === deleteTarget.name.trim().toLowerCase();
         return (
-          <div className="fixed inset-0 bg-ink/30 flex items-center justify-center z-50 px-4">
-            <div className="bg-white rounded-lg border border-line max-w-md w-full p-5">
-              <div className="text-sm font-medium text-ink mb-1">Permanently delete &quot;{deleteTarget.name}&quot;?</div>
+          <Modal title={`Permanently delete "${deleteTarget.name}"?`}
+            titleNode={<div className="text-sm font-medium text-ink mb-1">Permanently delete &quot;{deleteTarget.name}&quot;?</div>}
+            onClose={() => { setDeleteTarget(null); setDeleteConfirmText(''); }}>
               <p className="text-xs text-ink-muted mb-3">This cannot be undone — the inquiry and its history are gone for good.</p>
-              <label className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Type &quot;{deleteTarget.name}&quot; to confirm</label>
+              <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Type &quot;{deleteTarget.name}&quot; to confirm</span>
               <input
                 value={deleteConfirmText}
                 onChange={e => setDeleteConfirmText(e.target.value)}
                 className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-4"
-              />
+              /></label>
               <div className="flex items-center justify-end gap-2">
                 <button
                   onClick={() => { setDeleteTarget(null); setDeleteConfirmText(''); }}
@@ -973,8 +973,7 @@ function InquiriesListInner() {
                   {deleteBusy ? 'Deleting…' : 'Delete permanently'}
                 </button>
               </div>
-            </div>
-          </div>
+          </Modal>
         );
       })()}
     </div>

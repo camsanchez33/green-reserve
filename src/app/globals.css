@@ -49,6 +49,22 @@
   --color-line-soft: #F0EDE2;
 }
 
+/* MP-9 (ADMIN_V4 V4-6 §5): one keyboard focus ring, everywhere. Admin had
+   `outline-none` 36 times and `focus-visible` zero, so a keyboard user could
+   not see where they were. :focus-visible only fires for keyboard focus, so
+   mouse users see nothing new; the base layer + :where() keep it weaker than
+   any utility, so inputs that draw their own focus:ring keep theirs. On the
+   pine admin sidebar the ring is paper, not pine-on-pine. */
+@layer base {
+  :where(a, button, summary, [tabindex], input, select, textarea):focus-visible {
+    outline: 2px solid var(--color-pine);
+    outline-offset: 2px;
+  }
+  :where(.bg-pine) :where(a, button, [tabindex]):focus-visible {
+    outline-color: var(--color-paper);
+  }
+}
+
 :root {
   --green: #24513B;
   --green-light: #2E6349;

@@ -1,23 +1,21 @@
 {
-  "generatedAt": "2026-09-29T03:39:37.612Z",
+  "generatedAt": "2026-09-29T05:01:39.880Z",
   "repo": {
-    "head": "c6a2142",
+    "head": "57ab750",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 1,
-    "dirty": [
-      "M RUN_QUEUE.md"
-    ],
+    "dirtyCount": 0,
+    "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-29T03:35:11+00:00",
+    "queueLastCommit": "2026-09-29T05:01:11+00:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 194,
+    "runDone": 197,
     "runAwaiting": 23,
     "runInFlight": 1,
-    "runNotStarted": 19,
+    "runNotStarted": 16,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -26,7 +24,7 @@
   "inFlight": [
     {
       "title": "BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET",
-      "line": 1998,
+      "line": 2014,
       "body": [
         "FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because \"no linked inquiry\" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding them outright. FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() + a \"Force delete permanently\" button per acknowledged orphan — owner-only, typed name confirm, server re-verifies the course is still an orphan before touching anything (refuses if it turns out to have a real inquiry link — this can never be used to route around the doctrine for a real course). This is the mechanism for Cam's DaisyLinks exception, but I have NOT executed it against DaisyLinks yet:",
         "- Last session's raw Prisma script (a read-only check confirming Fake",
@@ -41,14 +39,14 @@
   "awaiting": [
     {
       "title": "SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED",
-      "line": 2201,
+      "line": 2217,
       "hash": "951433d",
       "shipDate": "2026-09-16",
       "ageDays": 12
     },
     {
       "title": "SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box",
-      "line": 2314,
+      "line": 2330,
       "hash": "cfeb2e1",
       "shipDate": "2026-09-17",
       "ageDays": 11
@@ -90,49 +88,49 @@
     },
     {
       "title": "BUG: inquiry submissions send no emails",
-      "line": 2517,
+      "line": 2533,
       "hash": "8b9a046",
       "shipDate": "2026-09-28",
       "ageDays": 0
     },
     {
       "title": "BUG: perf audit crashed on every page",
-      "line": 2542,
+      "line": 2558,
       "hash": "dd7056a",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM).",
-      "line": 2553,
+      "line": 2569,
       "hash": "f57f269",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "RV-2 — review follow-ups, small (from /gr-review 2026-09-29):",
-      "line": 2563,
+      "line": 2579,
       "hash": "0eab366",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "CAL-2 — Cal.com is the ONLY call scheduler",
-      "line": 2584,
+      "line": 2614,
       "hash": "e082dd0",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "BUG: hello@greenreserve.app takes no mail",
-      "line": 2616,
+      "line": 2646,
       "hash": "371ffff",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 2634,
+      "line": 2664,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 0
@@ -195,7 +193,7 @@
     },
     {
       "title": "UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until r",
-      "line": 2159,
+      "line": 2175,
       "hash": null,
       "shipDate": null,
       "ageDays": null
@@ -263,38 +261,23 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in",
-      "line": 1444,
-      "section": "Queue (run in this order)"
-    },
-    {
       "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)",
-      "line": 1491,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState",
-      "line": 1540,
+      "line": 1505,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
-      "line": 1595,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "PERF-1 — golfer pages over budget (first real Lighthouse run, PR #2,",
-      "line": 2577,
+      "line": 1611,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2658,
+      "line": 2688,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2811,
+      "line": 2841,
       "section": "Queue (run in this order)"
     }
   ],
@@ -342,32 +325,32 @@
     {
       "item": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
       "note": "CAM: confirm the state before this runs — e",
-      "line": 1595
+      "line": 1611
     },
     {
       "item": "SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box",
       "note": "pending Cam's walk below",
-      "line": 2314
+      "line": 2330
     },
     {
       "item": "BUG: inquiry submissions send no emails",
       "note": "Cam: \"after submitting an inquiry they aren't getting sent an email",
-      "line": 2517
+      "line": 2533
     },
     {
       "item": "CAL-2 — Cal.com is the ONLY call scheduler",
       "note": "Cam: \"there should be no google calendar thing\" and, after setting both env vars and redeploying, \"it is just the same as before\"",
-      "line": 2584
+      "line": 2614
     },
     {
       "item": "BUG: hello@greenreserve.app takes no mail",
       "note": "Cam: \"all emails need to go to thegreenreserve@outlook",
-      "line": 2616
+      "line": 2646
     },
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2634
+      "line": 2664
     }
   ],
   "ideas": {
@@ -464,12 +447,6 @@
       "ageDays": 13
     },
     {
-      "file": "ADMIN_V4_SPEC.md",
-      "openRefs": 1,
-      "lastTouched": "2026-09-15",
-      "ageDays": 13
-    },
-    {
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
@@ -489,6 +466,12 @@
     },
     {
       "file": "ADMIN_V3_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-15",
+      "ageDays": 13
+    },
+    {
+      "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
       "ageDays": 13
@@ -611,64 +594,64 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "c6a2142",
-      "date": "2026-09-29",
-      "subject": "MP-5e part 3: course relationship feed, engagement card, real firstWentLiveAt — no migration"
-    },
-    {
-      "h": "5a0df4a",
+      "h": "57ab750",
       "date": "2026-09-29",
       "subject": "queue/spec update"
     },
     {
-      "h": "4922b3f",
+      "h": "77c8947",
+      "date": "2026-09-29",
+      "subject": "PERF-1: golfer pages back under budget (measured against a Sentry build)"
+    },
+    {
+      "h": "33acce6",
       "date": "2026-09-29",
       "subject": "queue/spec update"
     },
     {
-      "h": "0eab366",
+      "h": "da9f604",
       "date": "2026-09-29",
-      "subject": "RV-2: review follow-ups — failures say why, one-use reset links, status dots, footer wrap"
+      "subject": "MP-12: split admin/courses/[id] into a hook, six tab files and the dialogs"
     },
     {
-      "h": "f14c9b1",
+      "h": "2000908",
       "date": "2026-09-29",
-      "subject": "queue/spec update"
+      "subject": "MP-9: last tinted pills become StatusDot / plain text"
     },
     {
-      "h": "f57f269",
+      "h": "074b914",
       "date": "2026-09-29",
-      "subject": "RV-1: forgot-password is rate-limited and no longer reveals which emails exist"
+      "subject": "MP-9: design-system guard in CI (ratchet on raw card/eyebrow/input strings)"
     },
     {
-      "h": "94ad2b9",
+      "h": "6be88c0",
       "date": "2026-09-29",
-      "subject": "queue/spec update"
+      "subject": "MP-9 codemod: components/admin/OwnerTwoFactorCard.tsx onto Card / Eyebrow / INPUT"
     },
     {
-      "h": "cbbb67d",
+      "h": "cceb007",
       "date": "2026-09-29",
-      "subject": "queue/spec update"
+      "subject": "MP-9 codemod: components/admin/InquiryCallCards.tsx onto Card / Eyebrow / INPUT"
     },
     {
-      "h": "56a52c7",
+      "h": "2a42107",
       "date": "2026-09-29",
-      "subject": "Catch CALCOM_BOOKING_URL set to the webhook address"
+      "subject": "MP-9 codemod: components/admin/CourseCheckInCard.tsx onto Card / Eyebrow / INPUT"
     },
     {
-      "h": "49529b8",
+      "h": "1ce6c95",
       "date": "2026-09-29",
-      "subject": "queue/spec update"
+      "subject": "MP-9 codemod: app/admin/system/page.tsx onto Card / Eyebrow / INPUT"
     },
     {
-      "h": "54312b6",
+      "h": "8e27177",
       "date": "2026-09-29",
-      "subject": "Fix: call page answered 'Too many requests' during normal testing"
+      "subject": "MP-9 codemod: app/admin/set-password/page.tsx onto Card / Eyebrow / INPUT"
     },
     {
-      "h": "f1f2365",
+      "h": "8768294",
       "date": "2026-09-29",
-      "subject": "queue/spec update"
+      "subject": "MP-9 codemod: app/admin/revenue/page.tsx onto Card / Eyebrow / INPUT"
     }
   ]
 }

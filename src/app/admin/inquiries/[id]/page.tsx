@@ -23,6 +23,11 @@ import {
 import InquiryCallCards, { describeCall, type CallRow, type CallFocus } from '@/components/admin/InquiryCallCards';
 import { flatSummaries } from '@/lib/call-answers';
 import { AGENDA, callGate, fmtCallTime, nextCall, overdueCall, latestCall, parseJson } from '@/lib/inquiry-call';
+import { formatDate as fmtDate } from '@/lib/format';
+import { Modal as ModalShell, ModalActions } from '@/components/ui/Modal';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { Card } from '@/components/ui/Card';
+import { INPUT } from '@/components/ui/field';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -54,8 +59,6 @@ interface ApproveResult {
 // source of truth — never redefine these locally).
 const TERMINAL_STATUSES = new Set(['live', 'rejected', 'archived']);
 
-const fmtDate = (d: string) =>
-  new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 function daysAgo(d: string) {
   return Math.max(0, Math.floor((Date.now() - new Date(d).getTime()) / (1000 * 60 * 60 * 24)));
 }
@@ -154,7 +157,7 @@ function CheckpointStepper({ checkpoints }: { checkpoints: Checkpoint[] }) {
 function MoreMenu({ open, onToggle, onClose, children }: { open: boolean; onToggle: () => void; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="relative">
-      <button onClick={onToggle}
+      <button onClick={onToggle} aria-label="More actions" aria-expanded={open} aria-haspopup="menu"
         className="w-8 h-8 flex items-center justify-center rounded-md text-ink-muted hover:text-ink hover:bg-paper border border-line transition-colors">
         <MoreHorizontal className="w-4 h-4"/>
       </button>
@@ -166,37 +169,6 @@ function MoreMenu({ open, onToggle, onClose, children }: { open: boolean; onTogg
           </div>
         </>
       )}
-    </div>
-  );
-}
-
-function ModalShell({ title, danger, onClose, children }: { title: string; danger?: boolean; onClose: () => void; children: React.ReactNode }) {
-  return (
-    <div className="fixed inset-0 bg-ink/30 flex items-center justify-center z-50 px-4">
-      <div className="bg-white rounded-lg border border-line max-w-md w-full p-5">
-        <div className={'text-sm font-medium mb-3 ' + (danger ? 'text-bad' : 'text-ink')}>{title}</div>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function ModalActions({ onCancel, onConfirm, confirmLabel, disabled, danger, working }: {
-  onCancel: () => void; onConfirm: () => void; confirmLabel: string; disabled?: boolean; danger?: boolean; working?: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-end gap-2 mt-4">
-      <button onClick={onCancel} className="text-xs text-ink-muted hover:text-ink px-3 py-1.5 transition-colors">Cancel</button>
-      <button
-        onClick={onConfirm}
-        disabled={disabled || working}
-        className={
-          'text-xs font-medium px-3 py-1.5 rounded-md text-white transition-colors disabled:opacity-40 ' +
-          (danger ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')
-        }
-      >
-        {working ? 'Working…' : confirmLabel}
-      </button>
     </div>
   );
 }
@@ -248,7 +220,7 @@ function SField({ label, value, amber, span2 }: {
 function SSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">{title}</div>
+      <Eyebrow className="mb-2">{title}</Eyebrow>
       <div className="grid grid-cols-2 gap-3">{children}</div>
     </div>
   );
@@ -319,7 +291,7 @@ function defaultTabFor(status: string): TabKey {
   return 'lead';
 }
 
-const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10 focus:outline-none transition-colors';
+const iCls = `${INPUT} w-full`;
 
 const NEEDS_LABELS: Record<string, string> = {
   residentRates: 'Resident rates', hasMemberships: 'Memberships / season passes',
@@ -1365,7 +1337,7 @@ function InquiryDetailInner() {
           {activeTab === 'lead' && (
             <div className="max-w-3xl">
               <div className="flex items-center justify-between mb-4">
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Contact Info</div>
+                <Eyebrow>Contact Info</Eyebrow>
                 {!editContact ? (
                   <button onClick={() => {
                     setContactEdits({
@@ -1394,32 +1366,32 @@ function InquiryDetailInner() {
                     ['courseName', 'Course name'], ['city', 'City'], ['state', 'State'],
                   ] as [string, string][]).map(([field, label]) => (
                     <div key={field}>
-                      <label className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">{label}</label>
-                      <input value={contactEdits[field] ?? ''} onChange={e => setContactEdits(p => ({ ...p, [field]: e.target.value }))} className={iCls} />
+                      <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">{label}</span>
+                      <input value={contactEdits[field] ?? ''} onChange={e => setContactEdits(p => ({ ...p, [field]: e.target.value }))} className={iCls} /></label>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="bg-white border border-line rounded-lg p-5">
+                  <Card className="p-5">
                     <div className="text-base font-medium text-ink">{inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''}</div>
                     <a href={'mailto:' + inq.email} className="text-sm text-pine hover:underline block mt-1">{inq.email}</a>
                     {inq.phone && <div className="text-sm text-ink-muted mt-0.5">{inq.phone}</div>}
-                  </div>
+                  </Card>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-white border border-line rounded-lg px-4 py-3">
+                    <Card className="px-4 py-3">
                       <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">City / State</div>
                       <div className="text-ink font-medium">{inq.city}, {inq.state}</div>
-                    </div>
-                    <div className="bg-white border border-line rounded-lg px-4 py-3">
+                    </Card>
+                    <Card className="px-4 py-3">
                       <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Course type</div>
                       <div className="text-ink font-medium capitalize">{inq.courseType}</div>
-                    </div>
+                    </Card>
                     {/* MP-4c: which channel this lead came from — the
                         pre-launch growth question nothing could answer.
                         "Not recorded" stays a real, visible state; it must
                         never be silently folded into a category. */}
-                    <div className="col-span-2 bg-white border border-line rounded-lg px-4 py-3">
+                    <Card className="col-span-2 px-4 py-3">
                       <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Source</div>
                       <select
                         value={inq.source || ''}
@@ -1430,23 +1402,23 @@ function InquiryDetailInner() {
                         <option value="">Not recorded</option>
                         {INQUIRY_SOURCES.map(src => <option key={src} value={src}>{src}</option>)}
                       </select>
-                    </div>
+                    </Card>
                     {inq.website && (
-                      <div className="col-span-2 bg-white border border-line rounded-lg px-4 py-3">
+                      <Card className="col-span-2 px-4 py-3">
                         <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Website</div>
                         <a href={inq.website} target="_blank" rel="noreferrer" className="text-pine hover:underline text-sm">{inq.website}</a>
-                      </div>
+                      </Card>
                     )}
                     {inq.address && (
-                      <div className="col-span-2 bg-white border border-line rounded-lg px-4 py-3">
+                      <Card className="col-span-2 px-4 py-3">
                         <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Address</div>
                         <div className="text-ink text-sm">{inq.address}{inq.zipCode ? ', ' + inq.zipCode : ''}</div>
-                      </div>
+                      </Card>
                     )}
-                    <div className="col-span-2 bg-white border border-line rounded-lg px-4 py-3">
+                    <Card className="col-span-2 px-4 py-3">
                       <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Submitted</div>
                       <div className="text-ink text-sm">{fmtDate(inq.createdAt)}</div>
-                    </div>
+                    </Card>
                   </div>
                 </div>
               )}
@@ -1455,7 +1427,7 @@ function InquiryDetailInner() {
 
           {activeTab === 'lead' && (
             <div className="max-w-3xl space-y-5 mt-8">
-              <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">What they told us</div>
+              <Eyebrow>What they told us</Eyebrow>
               {(() => {
                 const rows: [string, string][] = [];
                 if (inq.currentBookingMethod) rows.push(['Current booking', inq.currentBookingMethod]);
@@ -1464,10 +1436,10 @@ function InquiryDetailInner() {
                 return rows.length > 0 ? (
                   <div className="grid grid-cols-2 gap-3">
                     {rows.map(([label, val]) => (
-                      <div key={label} className="bg-white border border-line rounded-lg px-4 py-3">
+                      <Card key={label} className="px-4 py-3">
                         <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-0.5">{label}</div>
                         <div className="text-ink font-medium">{val}</div>
-                      </div>
+                      </Card>
                     ))}
                   </div>
                 ) : null;
@@ -1480,22 +1452,22 @@ function InquiryDetailInner() {
                 </div>
               )}
               {inq.lookingFor && inq.lookingFor.length > 0 && (
-                <div className="bg-white border border-line rounded-lg px-4 py-3">
+                <Card className="px-4 py-3">
                   <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Looking for</div>
                   <div className="text-ink font-medium">{inq.lookingFor.join(', ')}</div>
-                </div>
+                </Card>
               )}
               {inq.additionalNotes && (
-                <div className="bg-white border border-line rounded-lg px-4 py-3">
+                <Card className="px-4 py-3">
                   <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Additional notes</div>
                   <div className="text-ink text-sm">{inq.additionalNotes}</div>
-                </div>
+                </Card>
               )}
               {inq.pricingNotes && (
-                <div className="bg-white border border-line rounded-lg px-4 py-3">
+                <Card className="px-4 py-3">
                   <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Pricing notes</div>
                   <div className="text-ink text-sm">{inq.pricingNotes}</div>
-                </div>
+                </Card>
               )}
               {inq.needsJson && (() => {
                 let n: Record<string, unknown> = {};
@@ -1529,10 +1501,10 @@ function InquiryDetailInner() {
           {/* IC-2 §3: what the latest talked call gave us. */}
           {activeTab === 'lead' && talkedCall && callAnswerRows.length > 0 && (
             <div className="max-w-3xl space-y-3 mt-8">
-              <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">
+              <Eyebrow>
                 From the call · {fmtCallTime(talkedCall.scheduledAt)}
-              </div>
-              <div className="bg-white border border-line rounded-lg divide-y divide-line">
+              </Eyebrow>
+              <Card className="divide-y divide-line">
                 {callAnswerRows.map(([label, val]) => (
                   <div key={label} className="grid grid-cols-[180px_1fr] gap-3 px-4 py-2.5">
                     <div className="text-xs text-ink-muted pt-0.5">{label}</div>
@@ -1545,7 +1517,7 @@ function InquiryDetailInner() {
                     <div className="text-sm text-ink whitespace-pre-wrap">{talkedCall.notes}</div>
                   </div>
                 )}
-              </div>
+              </Card>
             </div>
           )}
 
@@ -1605,7 +1577,7 @@ function InquiryDetailInner() {
                       <SField label="27-hole layout" value={LAYOUT27_LABELS[shLayout27] || null} amber />
                       {shLayout27 === 'three_9s' && (
                         <>
-                          <div className="col-span-2 bg-white border border-line rounded-lg px-4 py-3">
+                          <Card className="col-span-2 px-4 py-3">
                             <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Nine names</div>
                             {shNine27Names.every(n => !n.trim())
                               ? <div className="text-[13px] text-warn font-medium">Not provided</div>
@@ -1615,10 +1587,10 @@ function InquiryDetailInner() {
                                   ))}
                                 </div>
                             }
-                          </div>
+                          </Card>
                           {/* V7: structured combos */}
                           {Array.isArray(sd.nine27CombosEnabled) && (sd.nine27CombosEnabled as string[]).length > 0 ? (
-                            <div className="col-span-2 bg-white border border-line rounded-lg px-4 py-3">
+                            <Card className="col-span-2 px-4 py-3">
                               <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">18-hole combos offered</div>
                               <div className="flex gap-2 flex-wrap">
                                 {(sd.nine27CombosEnabled as string[]).map(k => (
@@ -1630,20 +1602,20 @@ function InquiryDetailInner() {
                                   </span>
                                 ))}
                               </div>
-                            </div>
+                            </Card>
                           ) : sd.nine27Combos ? (
                             <SField label="18-hole combos" value={String(sd.nine27Combos)} />
                           ) : null}
                           {/* V7: par per nine */}
                           {sd.nine27ParsPerNine && Object.keys(sd.nine27ParsPerNine as object).length > 0 && (
-                            <div className="col-span-2 bg-white border border-line rounded-lg px-4 py-3">
+                            <Card className="col-span-2 px-4 py-3">
                               <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Par per nine</div>
                               <div className="flex gap-3 flex-wrap">
                                 {Object.entries(sd.nine27ParsPerNine as Record<string, string>).map(([name, par]) => (
                                   <span key={name} className="text-sm text-ink"><span className="text-ink-muted">{name}:</span> {par}</span>
                                 ))}
                               </div>
-                            </div>
+                            </Card>
                           )}
                           <SField label="Each nine bookable alone?" value={BOOL_LABELS[String(sd.nine27BookableAlone || '')] || null} />
                         </>
@@ -1668,7 +1640,7 @@ function InquiryDetailInner() {
                     <SSection title="Playability">
                       <SField label="36-hole layout" value={LAYOUT36_LABELS[shLayout36] || null} amber />
                       {shCourse36Names.length > 0 && (
-                        <div className="col-span-2 bg-white border border-line rounded-lg px-4 py-3">
+                        <Card className="col-span-2 px-4 py-3">
                           <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Course names</div>
                           {shCourse36Names.every(n => !n.trim())
                             ? <div className="text-[13px] text-warn font-medium">Not provided</div>
@@ -1678,7 +1650,7 @@ function InquiryDetailInner() {
                                 ))}
                               </div>
                           }
-                        </div>
+                        </Card>
                       )}
                       <SField label="Layout notes" value={sd.course36LayoutDesc ? String(sd.course36LayoutDesc) : null} />
                     </SSection>
@@ -1687,8 +1659,8 @@ function InquiryDetailInner() {
                   {/* Tee Sets */}
                   {shTeeSets.length > 0 && shTeeSets.some(ts => ts.name) && (
                     <div>
-                      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Tee Sets</div>
-                      <div className="bg-white border border-line rounded-lg overflow-x-auto">
+                      <Eyebrow className="mb-2">Tee Sets</Eyebrow>
+                      <Card className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="border-b border-line bg-paper">
@@ -1714,7 +1686,7 @@ function InquiryDetailInner() {
                             ))}
                           </tbody>
                         </table>
-                      </div>
+                      </Card>
                     </div>
                   )}
 
@@ -1756,12 +1728,12 @@ function InquiryDetailInner() {
                   {/* Memberships & Passes */}
                   {shPasses.length > 0 && shPasses.some(p => p.name || p.type) && (
                     <div>
-                      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Memberships &amp; Passes</div>
+                      <Eyebrow className="mb-2">Memberships &amp; Passes</Eyebrow>
                       <div className="space-y-3">
                         {shPasses.filter(p => p.name || p.type).map((p, i) => {
                           const isResident = p.type === 'resident_card' || p.type === 'resident_rate';
                           return (
-                            <div key={i} className="bg-white border border-line rounded-lg px-4 py-3">
+                            <Card key={i} className="px-4 py-3">
                               <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">
                                 {PASS_TYPE_LABEL[String(p.type || '')] || String(p.type || 'Pass')}
                               </div>
@@ -1777,7 +1749,7 @@ function InquiryDetailInner() {
                                 {p.type === 'resident_rate' && !!p.residentWeekend && <span>WE rate: {fmtMoney(p.residentWeekend)}</span>}
                                 {p.type === 'resident_rate' && !!p.residentTwilight && <span>Twilight: {fmtMoney(p.residentTwilight)}</span>}
                               </div>
-                            </div>
+                            </Card>
                           );
                         })}
                       </div>
@@ -1794,18 +1766,18 @@ function InquiryDetailInner() {
                       </>
                     )}
                     {noCancel && (
-                      <div className="col-span-2 bg-white border border-line rounded-lg px-4 py-3">
+                      <Card className="col-span-2 px-4 py-3">
                         <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-0.5">Note</div>
                         <div className="text-sm text-ink-soft">No cancellation policy — golfers pay at the course (no card required at booking).</div>
-                      </div>
+                      </Card>
                     )}
                   </SSection>
 
                   {/* Facilities */}
                   {facilityItems.length > 0 && (
                     <div>
-                      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Facilities</div>
-                      <div className="bg-white border border-line rounded-lg divide-y divide-line">
+                      <Eyebrow className="mb-2">Facilities</Eyebrow>
+                      <Card className="divide-y divide-line">
                         {facilityItems.map((item, i) => (
                           <div key={i} className="px-4 py-2.5 flex items-start gap-2">
                             <div className="w-1.5 h-1.5 rounded-full bg-ok/60 mt-1.5 shrink-0" />
@@ -1815,13 +1787,13 @@ function InquiryDetailInner() {
                             </div>
                           </div>
                         ))}
-                      </div>
+                      </Card>
                     </div>
                   )}
                   {Object.keys(shFv2).length > 0 && facilityItems.length === 0 && (
                     <div>
-                      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Facilities</div>
-                      <div className="bg-white border border-line rounded-lg px-4 py-3 text-sm text-ink-soft">None selected.</div>
+                      <Eyebrow className="mb-2">Facilities</Eyebrow>
+                      <Card className="px-4 py-3 text-sm text-ink-soft">None selected.</Card>
                     </div>
                   )}
 
@@ -1866,7 +1838,7 @@ function InquiryDetailInner() {
                       missing: { dot: 'bad', label: 'missing', text: 'text-bad' },
                     };
                     return (
-                      <div className="bg-white border border-line rounded-lg p-4">
+                      <Card className="p-4">
                         <div className={'text-[11px] uppercase tracking-[0.1em] mb-3 ' + (allGood ? 'text-ok' : 'text-warn')}>
                           {allGood ? 'Ready to Build' : 'Build Checklist'}
                         </div>
@@ -1882,7 +1854,7 @@ function InquiryDetailInner() {
                             );
                           })}
                         </div>
-                      </div>
+                      </Card>
                     );
                   })()}
                 </>
@@ -1895,8 +1867,8 @@ function InquiryDetailInner() {
             <div className="max-w-3xl space-y-6">
               {calls.length > 0 && (
                 <div>
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Calls</div>
-                  <div className="bg-white border border-line rounded-lg divide-y divide-line">
+                  <Eyebrow className="mb-3">Calls</Eyebrow>
+                  <Card className="divide-y divide-line">
                     {calls.map(c => (
                       <div key={c.id} className="px-4 py-3 flex items-start gap-3">
                         <Phone className={'w-3.5 h-3.5 mt-0.5 shrink-0 ' + (c.outcome === 'talked' ? 'text-ok' : c.outcome === 'scheduled' ? 'text-pine' : 'text-ink-faint')} />
@@ -1910,13 +1882,13 @@ function InquiryDetailInner() {
                         </div>
                       </div>
                     ))}
-                  </div>
+                  </Card>
                 </div>
               )}
               {inq.events && inq.events.length > 0 && (
                 <div>
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">History</div>
-                  <div className="bg-white border border-line rounded-lg divide-y divide-line">
+                  <Eyebrow className="mb-3">History</Eyebrow>
+                  <Card className="divide-y divide-line">
                     {inq.events.map(ev => {
                       // Honest attribution: "by Cam" only for admin clicks,
                       // "Course" for course-originated actions (sheet
@@ -1966,7 +1938,7 @@ function InquiryDetailInner() {
                         </div>
                       );
                     })}
-                  </div>
+                  </Card>
                 </div>
               )}
             </div>
@@ -1978,7 +1950,7 @@ function InquiryDetailInner() {
               page a human writes. */}
           {activeTab === 'notes' && (
             <div className="max-w-3xl">
-              <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Internal Notes</div>
+              <Eyebrow className="mb-3">Internal Notes</Eyebrow>
               {inq.adminNotes && (
                 <pre className="text-sm text-ink-soft bg-white border border-line rounded-lg px-4 py-3 mb-3 whitespace-pre-wrap font-sans">
                   {inq.adminNotes}
@@ -2034,9 +2006,9 @@ function InquiryDetailInner() {
               <p className="text-sm text-ink-soft mb-3">
                 This cannot be undone — the inquiry and its history are gone for good.
               </p>
-              <label className="block text-[10px] uppercase tracking-[0.1em] text-bad mb-1">Type &quot;{expected}&quot; to confirm</label>
+              <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-bad mb-1">Type &quot;{expected}&quot; to confirm</span>
               <input value={deleteCourseConfirm} onChange={e => setDeleteCourseConfirm(e.target.value)}
-                className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-1"/>
+                className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-1"/></label>
               <ModalActions working={working} onCancel={close} onConfirm={() => fire(deleteInquiry)} confirmLabel="Delete permanently" danger
                 disabled={!matches}/>
             </ModalShell>
@@ -2071,11 +2043,11 @@ function InquiryDetailInner() {
           return (
             <ModalShell title="Reject this inquiry?" danger onClose={close}>
               <p className="text-sm text-ink-soft mb-3">Moves it to Closed.</p>
-              <label className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Why are we losing this one?</label>
+              <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Why are we losing this one?</span>
               <select value={rejectReason} onChange={e => { setRejectReason(e.target.value); setRejectNotify(e.target.value !== 'Duplicate'); }} className={iCls}>
                 <option value="">Pick a reason&hellip;</option>
                 {CLOSED_REASONS.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
+              </select></label>
               <p className="text-[11px] text-ink-faint mt-1.5">
                 Stored on the inquiry and named in the timeline — this is the only place &quot;why do we lose leads&quot; ever gets answered.
               </p>
@@ -2109,8 +2081,8 @@ function InquiryDetailInner() {
                 It drops out of the work queue until this date, then comes back as an overdue follow-up.
                 If the course fills the interest form again in the meantime, the snooze breaks and it returns straight away.
               </p>
-              <label className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Come back on</label>
-              <input type="date" value={snoozeDate} min={plus(1)} onChange={e => setSnoozeDate(e.target.value)} className={iCls} />
+              <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Come back on</span>
+              <input type="date" value={snoozeDate} min={plus(1)} onChange={e => setSnoozeDate(e.target.value)} className={iCls} /></label>
               <div className="flex items-center gap-2 mt-2">
                 {[7, 14, 30, 90].map(d => (
                   <button key={d} onClick={() => setSnoozeDate(plus(d))}
@@ -2179,9 +2151,9 @@ function InquiryDetailInner() {
                 <li>Emails a welcome message + temporary password to <strong>{inq.email}</strong></li>
                 <li>Attempts to create a Stripe Connect account for the course</li>
               </ul>
-              <label className="block text-[10px] uppercase tracking-[0.1em] text-bad mb-1">Type BUILD to confirm</label>
+              <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-bad mb-1">Type BUILD to confirm</span>
               <input value={buildConfirmText} onChange={e => setBuildConfirmText(e.target.value)}
-                className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50" placeholder="BUILD"/>
+                className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50" placeholder="BUILD"/></label>
               <ModalActions working={working} onCancel={close} onConfirm={() => fire(() => action('build_course'))} confirmLabel="Build & Email" danger disabled={!canConfirm || processing}/>
             </ModalShell>
           );
@@ -2232,11 +2204,11 @@ function InquiryDetailInner() {
               )}
               {!blocked && goLiveChecks && advisoryFailing.length > 0 && (
                 <div className="mt-3">
-                  <label className="block text-[10px] uppercase tracking-[0.1em] text-bad mb-1">
+                  <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-bad mb-1">
                     Type &quot;{inq.courseName}&quot; to override and go live anyway
-                  </label>
+                  </span>
                   <input value={goLiveOverride} onChange={e => setGoLiveOverride(e.target.value)}
-                    className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50"/>
+                    className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50"/></label>
                 </div>
               )}
               <ModalActions

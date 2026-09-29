@@ -9,9 +9,12 @@ import Link from 'next/link';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EXPENSE_CATEGORIES, EXPENSE_CADENCES, EXPENSE_CATEGORY_LABEL, EXPENSE_CADENCE_LABEL } from '@/lib/expenses';
+import { formatMoney as fmtMoney } from '@/lib/format';
+import { Modal } from '@/components/ui/Modal';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { Card } from '@/components/ui/Card';
+import { INPUT_COMPACT } from '@/components/ui/field';
 
-const fmtMoney = (n: number) =>
-  (n < 0 ? '-$' : '$') + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtCount = (n: number) => n.toLocaleString('en-US');
 
 type PeriodKind = 'day' | 'week' | 'mtd' | 'custom';
@@ -84,7 +87,7 @@ interface RevenueData {
   reconciliation?: { expected: number; actual: number; gap: number; reconciles: boolean | null; unavailable: boolean };
 }
 
-const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-ink text-sm placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+const iCls = INPUT_COMPACT;
 
 function DeltaBadge({ delta, goodWhenUp = true }: { delta?: Delta; goodWhenUp?: boolean }) {
   if (!delta || delta.pct === null || delta.direction === null) {
@@ -330,7 +333,7 @@ export default function RevenuePage() {
           {/* Header + one period picker that rules the whole page */}
           <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">Admin</p>
+              <Eyebrow as="p" className="mb-1">Admin</Eyebrow>
               <h1 className="text-[30px] leading-none font-serif font-medium text-ink">Revenue</h1>
               {/* U-A (UI_REVISE_SPEC §3): say whose money this page counts. Courses
                   collect their green fees on their own Stripe accounts; none of that is on this page. */}
@@ -535,10 +538,10 @@ export default function RevenuePage() {
 
           {/* HEADLINE — fees collected leads, full P&L statement beneath (owner) */}
           {pnl && (
-            <div className="bg-white border border-line rounded-lg p-6 mb-6">
+            <Card className="p-6 mb-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">Fees collected · {data?.period.label}</div>
+                  <Eyebrow className="mb-1">Fees collected · {data?.period.label}</Eyebrow>
                   <div className="text-[34px] font-serif font-medium text-ink tabular-nums leading-none">{fmtMoney(pnl.feesCollected)}</div>
                   <div className="mt-2 flex items-center gap-3 flex-wrap">
                     <DeltaBadge delta={pnl.feesCollectedDelta}/>
@@ -581,14 +584,14 @@ export default function RevenuePage() {
                   )}
                 </div>
               )}
-            </div>
+            </Card>
           )}
 
           {/* SECTION 3 — Money in motion (forward ledger) */}
           {data && (
-            <div className="bg-white border border-line rounded-lg p-5 mb-6">
+            <Card className="p-5 mb-6">
               <div className="flex items-center justify-between gap-3 mb-1">
-                <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Money in motion</span>
+                <Eyebrow as="span">Money in motion</Eyebrow>
                 <span className="text-[10px] uppercase tracking-[0.1em] text-ink-faint">Expected · not booked revenue</span>
               </div>
 
@@ -650,14 +653,14 @@ export default function RevenuePage() {
                   </div>
                 </div>
               )}
-            </div>
+            </Card>
           )}
 
           {/* SECTION 5 — Per-course table (follows the page period) */}
           {data && (
-            <div className="bg-white border border-line rounded-lg overflow-hidden mb-6">
+            <Card className="overflow-hidden mb-6">
               <div className="px-5 py-4 border-b border-line-soft flex items-center justify-between gap-3 flex-wrap">
-                <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">By course · {data.period.label}</span>
+                <Eyebrow as="span">By course · {data.period.label}</Eyebrow>
                 <div className="flex items-center gap-2 flex-wrap">
                   <label className="flex items-center gap-1.5 text-[12px] text-ink-soft cursor-pointer select-none">
                     <input type="checkbox" checked={showArchived} onChange={e => setShowArchived(e.target.checked)} className="accent-pine"/>
@@ -695,7 +698,7 @@ export default function RevenuePage() {
                         <th className="px-4 py-3 font-normal"><div className="flex justify-end"><SortHead col="serviceFees" label="Fees collected" right/></div></th>
                         <th className="px-4 py-3 font-normal"><div className="flex justify-end"><SortHead col="greenFeeVolume" label="Green fee vol." right/></div></th>
                         <th className="px-4 py-3 font-normal" title="All time — matches the problems list above, not the period"><div className="flex justify-end"><SortHead col="failedCharges" label="Failed · all time" right/></div></th>
-                        <th className="text-center px-4 py-3 font-normal"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Stripe</span></th>
+                        <th className="text-center px-4 py-3 font-normal"><Eyebrow as="span">Stripe</Eyebrow></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-line-soft">
@@ -727,16 +730,16 @@ export default function RevenuePage() {
                   <span className="text-xs text-ink-muted">{data.period.label}</span>
                 </div>
               )}
-            </div>
+            </Card>
           )}
 
           {/* SECTION 6 — Platform Stripe reference card (owner, bottom) */}
           {isOwner && (
-            <div className="bg-white border border-line rounded-lg p-5">
+            <Card className="p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Landmark className="w-4 h-4 text-pine"/>
-                  <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Platform Stripe account</span>
+                  <Eyebrow as="span">Platform Stripe account</Eyebrow>
                 </div>
                 <a href="https://dashboard.stripe.com/balance" target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-1 text-[11px] text-pine hover:text-pine-hover underline">Open Stripe dashboard<ExternalLink className="w-3 h-3"/></a>
@@ -769,7 +772,7 @@ export default function RevenuePage() {
                       that reached the bank" — the only number a bank statement agrees with. */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Payouts to the bank</div>
+                      <Eyebrow>Payouts to the bank</Eyebrow>
                       <span className="text-[11px] text-ink-faint">{fmtMoney(platform.paidOutRecent)} paid out, last {platform.payouts.length}</span>
                     </div>
                     {platform.payouts.length === 0 ? (
@@ -790,7 +793,7 @@ export default function RevenuePage() {
                       component — so a 1-player round and a 4-player round net very
                       differently. From Stripe's own balance transactions. */}
                   <div>
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Unit economics · last {platform.period}</div>
+                    <Eyebrow className="mb-2">Unit economics · last {platform.period}</Eyebrow>
                     {platform.unitEconomics.charges === 0 ? (
                       <p className="text-sm text-ink-muted">No fees collected in this period yet.</p>
                     ) : (
@@ -805,7 +808,7 @@ export default function RevenuePage() {
                   </div>
                 </div>
               )}
-            </div>
+            </Card>
           )}
 
           {loading && !data && <div className="py-16 text-center text-ink-muted text-sm">Loading…</div>}
@@ -814,17 +817,15 @@ export default function RevenuePage() {
 
       {/* SECTION 2 — Manage expenses drawer (owner) */}
       {drawerOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          <div className="absolute inset-0 bg-ink/30" onClick={() => setDrawerOpen(false)}/>
-          <div className="relative w-full max-w-md bg-paper h-full shadow-sm border-l border-line overflow-y-auto">
-            <div className="sticky top-0 bg-paper border-b border-line px-5 py-4 flex items-center justify-between">
+        <Modal variant="drawer" title="Operating expenses" onClose={() => setDrawerOpen(false)}
+          titleNode={<div className="bg-paper border-b border-line px-5 py-4 flex items-center justify-between">
               <h2 className="text-[15px] font-serif font-medium text-ink">Operating expenses</h2>
-              <button onClick={() => setDrawerOpen(false)} className="text-ink-muted hover:text-ink"><X className="w-4 h-4"/></button>
-            </div>
+              <button onClick={() => setDrawerOpen(false)} aria-label="Close" className="text-ink-muted hover:text-ink"><X className="w-4 h-4"/></button>
+            </div>}>
             <div className="p-5 space-y-5">
               {/* Add / edit form */}
-              <div className="bg-white border border-line rounded-lg p-4 space-y-3">
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">{editing ? 'Edit expense' : 'Add expense'}</div>
+              <Card className="p-4 space-y-3">
+                <Eyebrow>{editing ? 'Edit expense' : 'Add expense'}</Eyebrow>
                 <input placeholder="Name (e.g. Vercel Pro)" value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} className={iCls + ' w-full'}/>
                 <div className="grid grid-cols-2 gap-2">
                   <select value={draft.category} onChange={e => setDraft({ ...draft, category: e.target.value })} className={iCls}>
@@ -846,7 +847,7 @@ export default function RevenuePage() {
                   </button>
                   {editing && <button onClick={resetDraft} className="text-[12px] text-ink-muted hover:text-ink">Cancel</button>}
                 </div>
-              </div>
+              </Card>
 
               {/* List */}
               {expensesLoading ? (
@@ -879,8 +880,7 @@ export default function RevenuePage() {
                 </div>
               )}
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

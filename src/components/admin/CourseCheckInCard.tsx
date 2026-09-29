@@ -12,6 +12,9 @@ import {
   type CheckinCallLike,
 } from '@/lib/course-checkin';
 import { fmtCallTime, easternToIso, easternParts, parseJson, DIRECTION_LABEL, OUTCOME_LABEL } from '@/lib/inquiry-call';
+import { Card } from '@/components/ui/Card';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { INPUT_COMPACT } from '@/components/ui/field';
 
 export type CourseCallRow = CheckinCallLike & {
   id: string; kind: string; scheduledAt: string; outcome: string; durationMin: number; direction: string; phone: string;
@@ -31,7 +34,7 @@ type Props = {
 };
 
 const H = { 'Content-Type': 'application/json' };
-const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10 focus:outline-none transition-colors';
+const iCls = `${INPUT_COMPACT} w-full`;
 const lbl = 'block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1';
 const btnP = 'bg-pine hover:bg-pine-hover disabled:opacity-50 text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
 const btnO = 'bg-paper hover:bg-line border border-line text-ink disabled:opacity-50 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
@@ -88,12 +91,12 @@ export default function CourseCheckInCard({ courseId, operatorName, phone, nextC
     : `Next ${fmtCallTime(signal.at!)}`;
 
   return (
-    <div ref={wrap} className="bg-white border border-line rounded-lg p-5">
+    <Card ref={wrap} className="p-5">
       <div className="flex items-start justify-between gap-3 mb-1">
         <div>
-          <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.1em] text-ink-muted">
+          <Eyebrow className="flex items-center gap-2">
             <Phone className={'w-3.5 h-3.5 ' + (signal.state === 'overdue' ? 'text-bad' : signal.state === 'due' ? 'text-warn' : 'text-pine')} />Next check-in
-          </div>
+          </Eyebrow>
           <div className={'text-sm font-medium mt-1 ' + (signal.state === 'overdue' ? 'text-bad' : signal.state === 'due' ? 'text-warn' : 'text-ink')}>{stateLine}</div>
           <div className="text-xs text-ink-muted mt-0.5">{fmtLastContact(last)}</div>
         </div>
@@ -117,7 +120,7 @@ export default function CourseCheckInCard({ courseId, operatorName, phone, nextC
           <span>{error}</span><button onClick={() => setError('')} className="shrink-0 opacity-60 hover:opacity-100">Dismiss</button>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -180,14 +183,14 @@ function ScheduleCard({ courseId, first, phone, nextCheckInAt, busy, setBusy, se
         {dateOnly && <span className="text-xs text-ink-faint">for “{first} said call back in November”</span>}
       </div>
       <div className={'grid gap-3 mb-3 ' + (dateOnly ? 'grid-cols-[1fr]' : 'grid-cols-[1fr_1fr_120px]')}>
-        <div><label className={lbl}>Date</label><input type="date" value={date} onChange={e => setDate(e.target.value)} className={iCls} disabled={busy} /></div>
-        {!dateOnly && <div><label className={lbl}>Time (ET)</label><input type="time" value={time} onChange={e => setTime(e.target.value)} className={iCls} disabled={busy} /></div>}
+        <div><label className="block"><span className={lbl}>Date</span><input type="date" value={date} onChange={e => setDate(e.target.value)} className={iCls} disabled={busy} /></label></div>
+        {!dateOnly && <div><label className="block"><span className={lbl}>Time (ET)</span><input type="time" value={time} onChange={e => setTime(e.target.value)} className={iCls} disabled={busy} /></label></div>}
         {!dateOnly && (
           <div>
-            <label className={lbl}>Length</label>
+            <label className="block"><span className={lbl}>Length</span>
             <select value={durationMin} onChange={e => setDurationMin(Number(e.target.value))} className={iCls} disabled={busy}>
               {LENGTHS.map(n => <option key={n} value={n}>{n} min</option>)}
-            </select>
+            </select></label>
           </div>
         )}
       </div>
@@ -199,8 +202,8 @@ function ScheduleCard({ courseId, first, phone, nextCheckInAt, busy, setBusy, se
               <Segmented value={direction} onChange={setDirection} disabled={busy} options={[['we_call', 'I call them'], ['they_call', 'They call me']]} />
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className={lbl}>Number</label>
-              <input value={num} onChange={e => setNum(e.target.value)} placeholder="(555) 555-5555" className={iCls} disabled={busy} />
+              <label className="block"><span className={lbl}>Number</span>
+              <input value={num} onChange={e => setNum(e.target.value)} placeholder="(555) 555-5555" className={iCls} disabled={busy} /></label>
             </div>
           </div>
           <label className={lbl}>To go over</label>
@@ -302,8 +305,8 @@ function LogCard({ call, courseId, first, busy, setBusy, setError, setNotice, fo
       </div>
       {moving && (
         <div className="mt-3 flex items-end gap-2 flex-wrap">
-          <div><label className={lbl}>New date</label><input type="date" value={reDate} onChange={e => setReDate(e.target.value)} className={iCls} disabled={busy} /></div>
-          <div><label className={lbl}>Time (ET)</label><input type="time" value={reTime} onChange={e => setReTime(e.target.value)} className={iCls} disabled={busy} /></div>
+          <div><label className="block"><span className={lbl}>New date</span><input type="date" value={reDate} onChange={e => setReDate(e.target.value)} className={iCls} disabled={busy} /></label></div>
+          <div><label className="block"><span className={lbl}>Time (ET)</span><input type="time" value={reTime} onChange={e => setReTime(e.target.value)} className={iCls} disabled={busy} /></label></div>
           <button onClick={move} disabled={busy} className={btnP}>{busy ? 'Saving…' : 'Move'}</button>
           <button onClick={() => setMoving(false)} disabled={busy} className="text-xs text-ink-muted hover:text-ink px-1 py-1.5">Cancel</button>
         </div>
@@ -317,15 +320,15 @@ function LogCard({ call, courseId, first, busy, setBusy, setError, setNotice, fo
           {outcome === 'no_answer' ? (
             <div>
               <div className="flex items-end gap-2 flex-wrap mb-3">
-                <div><label className={lbl}>Try again on</label><input type="date" value={reDate} onChange={e => setReDate(e.target.value)} className={iCls} disabled={busy} /></div>
-                <div><label className={lbl}>Time (ET)</label><input type="time" value={reTime} onChange={e => setReTime(e.target.value)} className={iCls} disabled={busy} /></div>
+                <div><label className="block"><span className={lbl}>Try again on</span><input type="date" value={reDate} onChange={e => setReDate(e.target.value)} className={iCls} disabled={busy} /></label></div>
+                <div><label className="block"><span className={lbl}>Time (ET)</span><input type="time" value={reTime} onChange={e => setReTime(e.target.value)} className={iCls} disabled={busy} /></label></div>
               </div>
               <textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notes (optional)" className={iCls + ' mb-3'} disabled={busy} />
               <button onClick={noAnswer} disabled={busy || !easternToIso(reDate, reTime)} className={btnP}><CalendarClock className="w-3.5 h-3.5" />{busy ? 'Saving…' : 'Reschedule'}</button>
             </div>
           ) : (
             <div>
-              <label className={lbl}>What {first} said</label>
+              <label className="block"><span className={lbl}>What {first} said</span>
               <div className="border border-line rounded-md divide-y divide-line-soft mb-3">
                 {agendaItems.map(a => (
                   <div key={a.key} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-3 items-center px-3 py-2">
@@ -334,13 +337,13 @@ function LogCard({ call, courseId, first, busy, setBusy, setError, setNotice, fo
                   </div>
                 ))}
                 {call.agendaExtra && <div className="px-3 py-2 text-xs text-ink-soft"><span className="text-ink-muted">Also:</span> {call.agendaExtra}</div>}
-              </div>
-              <label className={lbl}>Notes</label>
-              <textarea rows={3} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Anything else from the call" className={iCls + ' mb-3'} disabled={busy} />
+              </div></label>
+              <label className="block"><span className={lbl}>Notes</span>
+              <textarea rows={3} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Anything else from the call" className={iCls + ' mb-3'} disabled={busy} /></label>
               <div className="flex items-end gap-3 flex-wrap pt-3 border-t border-line-soft">
                 <div>
-                  <label className={lbl}>Next check-in</label>
-                  <input type="date" value={nextDate} onChange={e => setNextDate(e.target.value)} className={iCls} disabled={busy} />
+                  <label className="block"><span className={lbl}>Next check-in</span>
+                  <input type="date" value={nextDate} onChange={e => setNextDate(e.target.value)} className={iCls} disabled={busy} /></label>
                 </div>
                 <span className="text-[11px] text-ink-faint pb-2.5">defaults to {CHECKIN_EVERY_DAYS} days out</span>
                 <button onClick={saveTalked} disabled={busy} className={btnP + ' ml-auto'}><Check className="w-3.5 h-3.5" />{busy ? 'Saving…' : 'Save'}</button>

@@ -38,7 +38,10 @@ export default function HomeDemo({ accent, photo, compact = false }: { accent: s
     <div className={`${s.device} ${photo ? '' : s.nophoto} ${compact ? s.compact : ''}`} style={{ '--course': accent } as React.CSSProperties} aria-label="Example course booking page — try it">
       <div className={s.dHd}>
         {/* H-2d-R2: in the hero (compact) this sits above the fold, so it loads eagerly instead of popping in. */}
-        <Image src="/home/iron.jpg" alt="" fill sizes="390px" priority={compact} loading={compact ? 'eager' : 'lazy'} />
+        {/* PERF-1: the hero copy is preloaded ahead of first paint, so its weight
+            lands on LCP; it is a ~150px band under a dark scrim, where q60 is
+            indistinguishable from q75 and ~35% lighter. */}
+        <Image src="/home/iron.jpg" alt="" fill sizes="390px" priority={compact} loading={compact ? 'eager' : 'lazy'} quality={compact ? 60 : undefined} />
         <div className={s.dTag}>Example course · Public · Est. 1962</div>
         <div className={s.dId}>
           <div className={s.dCrest} aria-hidden="true">HC</div>

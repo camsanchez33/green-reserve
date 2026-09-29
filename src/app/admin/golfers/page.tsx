@@ -8,6 +8,11 @@ import { MANAGER_PLUS } from '@/lib/admin-roles';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
 import { adminFetch } from '@/lib/admin-fetch';
+import { formatMoney as fmtMoney, formatDate as fmtDate, formatStamp as fmtStamp } from '@/lib/format';
+import { Modal } from '@/components/ui/Modal';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { Card } from '@/components/ui/Card';
+import { INPUT } from '@/components/ui/field';
 
 // MP-6d: the Golfers RECORD page. Before this it could look but barely touch:
 // resend confirmation (and "Sent" was a guess), nothing else. A real support
@@ -17,10 +22,7 @@ import { adminFetch } from '@/lib/admin-fetch';
 // confirmation, resend receipt, cancel on their behalf, refund.
 
 const BASE_URL = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_URL ?? '');
-const fmtMoney = (n: number) => `$${n.toFixed(2)}`;
-const fmtDate = (s: string) => new Date(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-const fmtStamp = (s: string) => new Date(s).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-const iCls = 'bg-paper border border-line rounded-md px-3 py-2.5 text-ink text-sm placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+const iCls = INPUT;
 
 interface GolferSummary { id: string; email: string; name: string; phone: string; bookingCount: number; createdAt: string }
 interface GuestBooking {
@@ -183,7 +185,7 @@ function GolfersInner() {
       <div className="admin-content flex-1 min-h-screen">
         <div className="px-8 py-7 max-w-5xl">
           <div className="mb-6">
-            <p className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">Support</p>
+            <Eyebrow as="p" className="mb-1">Support</Eyebrow>
             <h1 className="text-[30px] leading-none font-serif font-medium text-ink">{inRecord ? 'Golfer record' : 'Golfer lookup'}</h1>
           </div>
 
@@ -204,7 +206,7 @@ function GolfersInner() {
               {detail && t && (
                 <div className="space-y-5">
                   {/* Identity */}
-                  <div className="bg-white border border-line rounded-lg p-5">
+                  <Card className="p-5">
                     <div className="flex items-start gap-3">
                       <div className="w-9 h-9 rounded-full bg-pine/10 flex items-center justify-center shrink-0"><User className="w-4 h-4 text-pine"/></div>
                       <div className="flex-1 min-w-0">
@@ -217,7 +219,7 @@ function GolfersInner() {
                         <div className="font-medium text-ink-soft mt-0.5">{detail.createdAt ? fmtDate(detail.createdAt) : detail.bookings.length ? fmtDate(detail.bookings[detail.bookings.length - 1].createdAt) : '—'}</div>
                       </div>
                     </div>
-                  </div>
+                  </Card>
 
                   {/* Trust strip — whether to waive a fee gladly or spot a pattern */}
                   <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
@@ -229,11 +231,11 @@ function GolfersInner() {
                       { label: 'Failed charges', value: String(t.failedCharges), tone: t.failedCharges > 0 ? 'text-bad' : 'text-ink' },
                       { label: 'Lifetime paid', value: fmtMoney(t.lifetimeCollected), tone: 'text-ok', sub: t.refunded > 0 ? `${fmtMoney(t.refunded)} refunded` : undefined },
                     ].map(c => (
-                      <div key={c.label} className="bg-white border border-line rounded-lg p-4">
-                        <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">{c.label}</div>
+                      <Card key={c.label} className="p-4">
+                        <Eyebrow className="mb-1">{c.label}</Eyebrow>
                         <div className={'text-[22px] font-serif font-medium leading-none tabular-nums ' + c.tone}>{c.value}</div>
                         {c.sub && <div className="text-[11px] text-ink-faint mt-1">{c.sub}</div>}
-                      </div>
+                      </Card>
                     ))}
                   </div>
 
@@ -245,9 +247,9 @@ function GolfersInner() {
                   )}
 
                   {/* Bookings + money, one timeline per booking */}
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Bookings ({detail.bookings.length})</div>
+                  <Eyebrow>Bookings ({detail.bookings.length})</Eyebrow>
                   {detail.bookings.length === 0 ? (
-                    <div className="bg-white border border-line rounded-lg py-12 text-center text-ink-muted text-sm">No bookings</div>
+                    <Card className="py-12 text-center text-ink-muted text-sm">No bookings</Card>
                   ) : (
                     <div className="space-y-2">
                       {detail.bookings.map(b => {
@@ -257,7 +259,7 @@ function GolfersInner() {
                         const canRefund = (b.paymentStatus === 'paid' || b.paymentStatus === 'refunded') && b.totalAmount - b.refundedTotal > 0.005;
                         const canReceipt = b.paymentStatus === 'paid' || b.paymentStatus === 'refunded';
                         return (
-                          <div key={b.id} className="bg-white border border-line rounded-lg px-5 py-4">
+                          <Card key={b.id} className="px-5 py-4">
                             <div className="flex items-start gap-3">
                               <div className="pt-0.5"><StatusDot status={st.dot} label={st.label}/></div>
                               <div className="flex-1 min-w-0">
@@ -319,7 +321,7 @@ function GolfersInner() {
                                 </button>
                               )}
                             </div>
-                          </div>
+                          </Card>
                         );
                       })}
                     </div>
@@ -344,13 +346,13 @@ function GolfersInner() {
 
               {searched && !searching && (
                 golfers.length === 0 && guestPeople.length === 0 ? (
-                  <div className="bg-white border border-line rounded-lg"><EmptyState message={`No golfers found for "${query}"`} /></div>
+                  <Card><EmptyState message={`No golfers found for "${query}"`} /></Card>
                 ) : (
                   <div className="space-y-5">
                     {golfers.length > 0 && (
                       <div>
-                        <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Golfer accounts ({golfers.length})</div>
-                        <div className="bg-white border border-line rounded-lg divide-y divide-line-soft overflow-hidden">
+                        <Eyebrow className="mb-2">Golfer accounts ({golfers.length})</Eyebrow>
+                        <Card className="divide-y divide-line-soft overflow-hidden">
                           {golfers.map(g => (
                             <button key={g.id} onClick={() => go({ id: g.id, guest: null, q: query })} className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-paper/60 transition-colors text-left">
                               <div className="w-8 h-8 rounded-full bg-pine/10 flex items-center justify-center shrink-0"><User className="w-4 h-4 text-pine"/></div>
@@ -365,13 +367,13 @@ function GolfersInner() {
                               <ChevronRight className="w-4 h-4 text-ink-faint shrink-0"/>
                             </button>
                           ))}
-                        </div>
+                        </Card>
                       </div>
                     )}
                     {guestPeople.length > 0 && (
                       <div>
-                        <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Guests — no account ({guestPeople.length})</div>
-                        <div className="bg-white border border-line rounded-lg divide-y divide-line-soft overflow-hidden">
+                        <Eyebrow className="mb-2">Guests — no account ({guestPeople.length})</Eyebrow>
+                        <Card className="divide-y divide-line-soft overflow-hidden">
                           {guestPeople.map(p => (
                             <button key={p.email} onClick={() => go({ guest: p.email, id: null, q: query })} className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-paper/60 transition-colors text-left">
                               <div className="w-8 h-8 rounded-full bg-paper border border-line flex items-center justify-center shrink-0"><User className="w-4 h-4 text-ink-muted"/></div>
@@ -386,7 +388,7 @@ function GolfersInner() {
                               <ChevronRight className="w-4 h-4 text-ink-faint shrink-0"/>
                             </button>
                           ))}
-                        </div>
+                        </Card>
                       </div>
                     )}
                   </div>
@@ -406,9 +408,9 @@ function GolfersInner() {
 
       {/* Cancel on the golfer's behalf */}
       {cancelTarget && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-line rounded-lg p-6 w-full max-w-sm shadow-sm">
-            <h3 className="font-serif font-medium text-ink mb-1">Cancel {cancelTarget.courseName} for {detail?.firstName}?</h3>
+        <Modal size="sm" pad="p-6" dismissable={!busy} onClose={() => setCancelTarget(null)}
+          title={`Cancel ${cancelTarget.courseName} for ${detail?.firstName ?? 'this golfer'}?`}
+          titleNode={<h3 className="font-serif font-medium text-ink mb-1">Cancel {cancelTarget.courseName} for {detail?.firstName}?</h3>}>
             <p className="text-sm text-ink-soft mb-3">
               {cancelTarget.teeDate} at {cancelTarget.teeTime}. {cancelTarget.paymentStatus === 'paid'
                 ? 'The round was already paid — it is refunded as part of the cancellation.'
@@ -416,39 +418,37 @@ function GolfersInner() {
                   ? 'Their late-cancellation fee was already charged and stays charged.'
                   : 'Nothing has been charged; their card is simply never billed.'} They are emailed with your reason.
             </p>
-            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Reason — the golfer reads this</label>
-            <textarea value={cancelReason} onChange={e => setCancelReason(e.target.value)} rows={3} placeholder="You called to say you can't make it and asked us to cancel." className={iCls + ' w-full resize-none mb-3'} />
+            <label className="block"><Eyebrow as="span" className="block mb-1.5">Reason — the golfer reads this</Eyebrow>
+            <textarea value={cancelReason} onChange={e => setCancelReason(e.target.value)} rows={3} placeholder="You called to say you can't make it and asked us to cancel." className={iCls + ' w-full resize-none mb-3'} /></label>
             {modalError && <p className="text-xs text-bad mb-3">{modalError}</p>}
             <div className="flex gap-3">
               <button onClick={() => setCancelTarget(null)} disabled={!!busy} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors disabled:opacity-50">Keep it</button>
               <button onClick={submitCancel} disabled={!!busy} className="flex-1 bg-bad hover:bg-bad/90 text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors">{busy ? 'Cancelling…' : 'Cancel booking'}</button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Refund */}
       {refundTarget && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-line rounded-lg p-6 w-full max-w-sm shadow-sm">
-            <h3 className="font-serif font-medium text-ink mb-1">Refund {detail?.firstName}</h3>
+        <Modal size="sm" pad="p-6" dismissable={!busy} onClose={() => setRefundTarget(null)}
+          title={`Refund ${detail?.firstName ?? 'this golfer'}`}
+          titleNode={<h3 className="font-serif font-medium text-ink mb-1">Refund {detail?.firstName}</h3>}>
             <p className="text-sm text-ink-soft mb-4">
               {fmtMoney(refundTarget.totalAmount)} was charged for {refundTarget.courseName}, {refundTarget.teeDate}{refundTarget.refundedTotal > 0 ? ` · ${fmtMoney(refundTarget.refundedTotal)} already refunded` : ''}. It goes back to the card they paid with; the course&apos;s payout and GreenReserve&apos;s fee are both reduced.
             </p>
-            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Amount (blank = {fmtMoney(remaining)}, the rest)</label>
+            <label className="block"><Eyebrow as="span" className="block mb-1.5">Amount (blank = {fmtMoney(remaining)}, the rest)</Eyebrow>
             <div className="relative mb-3">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
               <input type="number" step="0.01" min="0.01" max={remaining} value={refundAmount} onChange={e => setRefundAmount(e.target.value)} placeholder={remaining.toFixed(2)} className={iCls + ' w-full pl-7'} />
-            </div>
-            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Reason — the golfer reads this</label>
-            <textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} rows={3} placeholder="Charged twice by mistake — refunding the duplicate." className={iCls + ' w-full resize-none mb-3'} />
+            </div></label>
+            <label className="block"><Eyebrow as="span" className="block mb-1.5">Reason — the golfer reads this</Eyebrow>
+            <textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} rows={3} placeholder="Charged twice by mistake — refunding the duplicate." className={iCls + ' w-full resize-none mb-3'} /></label>
             {modalError && <p className="text-xs text-bad mb-3">{modalError}</p>}
             <div className="flex gap-3">
               <button onClick={() => setRefundTarget(null)} disabled={!!busy} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors disabled:opacity-50">Cancel</button>
               <button onClick={submitRefund} disabled={!!busy} className="flex-1 bg-bad hover:bg-bad/90 text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors">{busy ? 'Refunding…' : refundAmount.trim() ? `Refund $${Number(refundAmount || 0).toFixed(2)}` : `Refund ${fmtMoney(remaining)}`}</button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

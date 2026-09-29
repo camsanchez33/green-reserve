@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, RefreshCw, Lock, Copy, KeyRound } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
@@ -7,6 +7,9 @@ import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { ErrorBanner } from '@/components/ui/ErrorState';
+import { Card } from '@/components/ui/Card';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { INPUT_COMPACT } from '@/components/ui/field';
 
 interface Admin {
   id: string; email: string; name: string; role: string;
@@ -20,14 +23,16 @@ const ROLES = [
   { value: 'viewer',  label: 'Viewer',  desc: 'Read-only: Overview, inquiries and the courses list. No money, golfer data, messages or course settings.' },
 ];
 
-function roleBadgeClass(role: string) {
-  if (role === 'owner') return 'bg-pine/10 text-pine';
-  if (role === 'manager') return 'bg-ink/5 text-ink border border-line';
-  if (role === 'support') return 'bg-paper text-ink-soft border border-line';
-  return 'bg-paper text-ink-faint border border-line';
+// A role is not a status, so it is plain text, not a tinted pill (CLAUDE.md
+// BANNED); the owner reads in the accent, the rest step down in weight.
+function roleTextClass(role: string) {
+  if (role === 'owner') return 'text-pine font-medium';
+  if (role === 'manager') return 'text-ink font-medium';
+  if (role === 'support') return 'text-ink-soft';
+  return 'text-ink-muted';
 }
 
-const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-ink text-sm placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+const iCls = INPUT_COMPACT;
 
 function fmt(d: string | null) {
   if (!d) return 'Never';
@@ -207,21 +212,21 @@ export default function EmployeesPage() {
           </div>
 
           {/* Role reference */}
-          <div className="bg-white border border-line rounded-lg p-4 mb-6">
-            <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2.5">Role permissions</div>
+          <Card className="p-4 mb-6">
+            <Eyebrow className="mb-2.5">Role permissions</Eyebrow>
             <div className="grid grid-cols-2 gap-2">
               {ROLES.map(r => (
                 <div key={r.value} className="flex items-start gap-2">
-                  <span className={`text-[10px] uppercase tracking-[0.04em] font-medium px-2 py-0.5 rounded shrink-0 ${roleBadgeClass(r.value)}`}>{r.label}</span>
+                  <span className={`text-[10px] uppercase tracking-[0.1em] shrink-0 ${roleTextClass(r.value)}`}>{r.label}</span>
                   <span className="text-xs text-ink-muted">{r.desc}</span>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
 
           {/* Add employee — owner only */}
           {isOwner && (
-            <div className="bg-white border border-line rounded-lg p-5 mb-6">
+            <Card className="p-5 mb-6">
               <div className="flex items-center gap-2 mb-4">
                 <Plus className="w-4 h-4 text-pine"/>
                 <span className="text-sm font-medium text-ink">Add employee</span>
@@ -252,7 +257,7 @@ export default function EmployeesPage() {
                   {creating ? 'Creating...' : 'Create account'}
                 </button>
               </form>
-            </div>
+            </Card>
           )}
 
           {loadError && (
@@ -264,21 +269,21 @@ export default function EmployeesPage() {
 
 
           {/* Employee list */}
-          <div className="bg-white border border-line rounded-lg overflow-x-auto mb-6">
+          <Card className="overflow-x-auto mb-6">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-line bg-paper">
-                  <th className="text-left text-[11px] uppercase tracking-[0.1em] text-ink-muted px-5 py-3">Name</th>
-                  <th className="text-left text-[11px] uppercase tracking-[0.1em] text-ink-muted px-5 py-3">Role</th>
-                  <th className="text-left text-[11px] uppercase tracking-[0.1em] text-ink-muted px-5 py-3">Last login</th>
-                  <th className="text-left text-[11px] uppercase tracking-[0.1em] text-ink-muted px-5 py-3">Status</th>
+                  <Eyebrow as="th" className="text-left px-5 py-3">Name</Eyebrow>
+                  <Eyebrow as="th" className="text-left px-5 py-3">Role</Eyebrow>
+                  <Eyebrow as="th" className="text-left px-5 py-3">Last login</Eyebrow>
+                  <Eyebrow as="th" className="text-left px-5 py-3">Status</Eyebrow>
                   {isOwner && <th className="px-5 py-3 w-56"/>}
                 </tr>
               </thead>
               <tbody>
                 {admins.map((admin, i) => (
-                  <>
-                    <tr key={admin.id} className={'transition-colors ' + (i < admins.length - 1 && !resetPwds[admin.id] ? 'border-b border-line-soft' : '')}>
+                  <Fragment key={admin.id}>
+                    <tr className={'transition-colors ' + (i < admins.length - 1 && !resetPwds[admin.id] ? 'border-b border-line-soft' : '')}>
                       <td className="px-5 py-3.5">
                         <div className="text-sm font-medium text-ink">{admin.name}</div>
                         <div className="text-xs text-ink-soft">{admin.email}</div>
@@ -295,7 +300,7 @@ export default function EmployeesPage() {
                             {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                           </select>
                         ) : (
-                          <span className={`text-[11px] uppercase tracking-[0.1em] px-2 py-0.5 rounded ${roleBadgeClass(admin.role)}`}>
+                          <span className={`text-[11px] uppercase tracking-[0.1em] ${roleTextClass(admin.role)}`}>
                             {ROLES.find(r => r.value === admin.role)?.label || admin.role}
                           </span>
                         )}
@@ -346,7 +351,7 @@ export default function EmployeesPage() {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 ))}
                 {admins.length === 0 && !loadError && (
                   <tr>
@@ -357,10 +362,10 @@ export default function EmployeesPage() {
                 )}
               </tbody>
             </table>
-          </div>
+          </Card>
 
           {/* Change own password */}
-          <div className="bg-white border border-line rounded-lg p-5">
+          <Card className="p-5">
             <div className="flex items-center gap-2 mb-4">
               <Lock className="w-4 h-4 text-pine"/>
               <span className="text-sm font-medium text-ink">Change your password</span>
@@ -373,16 +378,16 @@ export default function EmployeesPage() {
             )}
             <form onSubmit={handleChangePassword} className="grid grid-cols-3 gap-3">
               <div>
-                <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Current password</label>
-                <input type="password" value={cpCurrentPassword} onChange={e => setCpCurrentPassword(e.target.value)} required placeholder="Current password" className={iCls + ' w-full'}/>
+                <label className="block"><Eyebrow as="span" className="block mb-1.5">Current password</Eyebrow>
+                <input type="password" value={cpCurrentPassword} onChange={e => setCpCurrentPassword(e.target.value)} required placeholder="Current password" className={iCls + ' w-full'}/></label>
               </div>
               <div>
-                <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">New password</label>
-                <input type="password" value={cpNewPassword} onChange={e => setCpNewPassword(e.target.value)} required placeholder="Min 8 characters" className={iCls + ' w-full'}/>
+                <label className="block"><Eyebrow as="span" className="block mb-1.5">New password</Eyebrow>
+                <input type="password" value={cpNewPassword} onChange={e => setCpNewPassword(e.target.value)} required placeholder="Min 8 characters" className={iCls + ' w-full'}/></label>
               </div>
               <div>
-                <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Confirm new password</label>
-                <input type="password" value={cpConfirm} onChange={e => setCpConfirm(e.target.value)} required placeholder="Confirm password" className={iCls + ' w-full'}/>
+                <label className="block"><Eyebrow as="span" className="block mb-1.5">Confirm new password</Eyebrow>
+                <input type="password" value={cpConfirm} onChange={e => setCpConfirm(e.target.value)} required placeholder="Confirm password" className={iCls + ' w-full'}/></label>
               </div>
               <div className="col-span-3">
                 <button type="submit" disabled={cpLoading || !cpCurrentPassword || !cpNewPassword || !cpConfirm}
@@ -391,7 +396,7 @@ export default function EmployeesPage() {
                 </button>
               </div>
             </form>
-          </div>
+          </Card>
 
         </div>
       </div>

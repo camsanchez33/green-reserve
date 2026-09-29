@@ -4,8 +4,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { CheckCircle } from 'lucide-react';
 import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { Card } from '@/components/ui/Card';
+import { INPUT } from '@/components/ui/field';
 
-const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+const iCls = `${INPUT} w-full`;
 
 function SetPasswordForm() {
   const router = useRouter();
@@ -102,7 +105,7 @@ function SetPasswordForm() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Password</label>
+          <label className="block"><Eyebrow as="span" className="block mb-1.5">Password</Eyebrow>
           <input
             type="password"
             value={password}
@@ -112,18 +115,18 @@ function SetPasswordForm() {
             minLength={10}
             className={iCls}
             placeholder="Min. 10 characters"
-          />
+          /></label>
           <p className="text-xs text-ink-faint mt-1.5">{PASSWORD_REQUIREMENTS_HINT}</p>
         </div>
         <div>
-          <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Confirm password</label>
+          <label className="block"><Eyebrow as="span" className="block mb-1.5">Confirm password</Eyebrow>
           <input
             type="password"
             value={confirm}
             onChange={e => setConfirm(e.target.value)}
             required
             className={iCls}
-          />
+          /></label>
         </div>
         <button
           type="submit"
@@ -144,11 +147,11 @@ export default function SetPasswordPage() {
         <div className="text-center mb-8">
           <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={190} height={36} priority className="w-[190px] max-w-full h-auto mx-auto" />
         </div>
-        <div className="bg-white border border-line rounded-lg p-8">
+        <Card className="p-8">
           <Suspense fallback={<div className="text-ink-soft text-sm">Loading…</div>}>
             <SetPasswordForm />
           </Suspense>
-        </div>
+        </Card>
       </div>
     </div>
   );

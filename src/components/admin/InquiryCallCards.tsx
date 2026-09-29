@@ -22,6 +22,8 @@ import {
   CALL_FIELDS, DAY_SHORT, parseCallAnswers, summarize, hasAnyCapture,
   type CallAnswers, type ItemAnswers, type FieldSpec,
 } from '@/lib/call-answers';
+import { Card } from '@/components/ui/Card';
+import { INPUT_COMPACT } from '@/components/ui/field';
 
 export type CallRow = CallLike & {
   id: string; scheduledAt: string; outcome: string; durationMin: number; direction: string; phone: string;
@@ -53,7 +55,7 @@ type Props = {
 };
 
 const H = { 'Content-Type': 'application/json' };
-const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10 focus:outline-none transition-colors';
+const iCls = `${INPUT_COMPACT} w-full`;
 const lbl = 'block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1';
 const btnP = 'bg-pine hover:bg-pine-hover disabled:opacity-50 text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
 const btnO = 'bg-paper hover:bg-line border border-line text-ink disabled:opacity-50 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
@@ -123,9 +125,9 @@ function SkipInline({ inquiryId, contactFirst, busy, setBusy, onDone, onError, o
   return (
     <div className="flex items-end gap-2 flex-1 min-w-[280px]">
       <div className="flex-1">
-        <label className={lbl}>Why skip the call with {contactFirst}?</label>
+        <label className="block"><span className={lbl}>Why skip the call with {contactFirst}?</span>
         <input ref={ref} value={reason} onChange={e => setReason(e.target.value)} placeholder="e.g. Met in person at the course on Sep 10" className={iCls}
-          onKeyDown={e => { if (e.key === 'Enter' && reason.trim().length >= 5) submit(); }} />
+          onKeyDown={e => { if (e.key === 'Enter' && reason.trim().length >= 5) submit(); }} /></label>
       </div>
       <button type="button" onClick={submit} disabled={busy || reason.trim().length < 5} className={btnP}>Skip</button>
       <button type="button" onClick={() => { setOpen(false); setReason(''); }} disabled={busy} className="text-xs text-ink-muted hover:text-ink px-1 py-1.5">Cancel</button>
@@ -198,11 +200,11 @@ export default function InquiryCallCards({ inquiry, processing, onRefresh, onReq
   }
 
   return (
-    <div ref={wrap} className="mt-4 max-w-3xl bg-white border border-line rounded-lg px-5 py-4">
+    <Card ref={wrap} className="mt-4 max-w-3xl px-5 py-4">
       {body}
       {notice && <Notice tone={notice.tone} onClose={() => setNotice(null)}>{notice.text}</Notice>}
       {error && <Notice tone="bad" onClose={() => setError('')}>{error}</Notice>}
-    </div>
+    </Card>
   );
 }
 
@@ -305,13 +307,13 @@ function SetupCard({ inquiry, sheet, needs, calls, disabled, busy, setBusy, setE
       </div>
 
       <div className="grid grid-cols-[1fr_1fr_120px] gap-3 mb-4">
-        <div><label className={lbl}>Date</label><input type="date" value={date} onChange={e => setDate(e.target.value)} className={iCls} disabled={disabled} /></div>
-        <div><label className={lbl}>Time (ET)</label><input type="time" value={time} onChange={e => setTime(e.target.value)} className={iCls} disabled={disabled} /></div>
+        <div><label className="block"><span className={lbl}>Date</span><input type="date" value={date} onChange={e => setDate(e.target.value)} className={iCls} disabled={disabled} /></label></div>
+        <div><label className="block"><span className={lbl}>Time (ET)</span><input type="time" value={time} onChange={e => setTime(e.target.value)} className={iCls} disabled={disabled} /></label></div>
         <div>
-          <label className={lbl}>Length</label>
+          <label className="block"><span className={lbl}>Length</span>
           <select value={durationMin} onChange={e => setDurationMin(Number(e.target.value))} className={iCls} disabled={disabled}>
             {LENGTHS.map(n => <option key={n} value={n}>{n} min</option>)}
-          </select>
+          </select></label>
         </div>
       </div>
 
@@ -322,8 +324,8 @@ function SetupCard({ inquiry, sheet, needs, calls, disabled, busy, setBusy, setE
             options={[['we_call', 'I call them'], ['they_call', 'They call me']]} />
         </div>
         <div className="flex-1 min-w-[200px]">
-          <label className={lbl}>{direction === 'we_call' ? 'Number to dial' : 'Number they should dial from'}</label>
-          <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="(555) 555-5555" className={iCls} disabled={disabled} />
+          <label className="block"><span className={lbl}>{direction === 'we_call' ? 'Number to dial' : 'Number they should dial from'}</span>
+          <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="(555) 555-5555" className={iCls} disabled={disabled} /></label>
         </div>
       </div>
 
@@ -528,8 +530,8 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
 
       {moving && (
         <div className="mt-3 flex items-end gap-2 flex-wrap">
-          <div><label className={lbl}>New date</label><input type="date" value={reDate} onChange={e => setReDate(e.target.value)} className={iCls} disabled={disabled} /></div>
-          <div><label className={lbl}>Time (ET)</label><input type="time" value={reTime} onChange={e => setReTime(e.target.value)} className={iCls} disabled={disabled} /></div>
+          <div><label className="block"><span className={lbl}>New date</span><input type="date" value={reDate} onChange={e => setReDate(e.target.value)} className={iCls} disabled={disabled} /></label></div>
+          <div><label className="block"><span className={lbl}>Time (ET)</span><input type="time" value={reTime} onChange={e => setReTime(e.target.value)} className={iCls} disabled={disabled} /></label></div>
           <button onClick={move} disabled={disabled} className={btnP}>{busy ? 'Saving…' : 'Move'}</button>
           <button onClick={() => setMoving(false)} disabled={disabled} className="text-xs text-ink-muted hover:text-ink px-1 py-1.5">Cancel</button>
         </div>
@@ -546,8 +548,8 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
           {outcome === 'no_answer' ? (
             <div>
               <div className="flex items-end gap-2 flex-wrap mb-3">
-                <div><label className={lbl}>Try again on</label><input type="date" value={reDate} onChange={e => setReDate(e.target.value)} className={iCls} disabled={disabled} /></div>
-                <div><label className={lbl}>Time (ET)</label><input type="time" value={reTime} onChange={e => setReTime(e.target.value)} className={iCls} disabled={disabled} /></div>
+                <div><label className="block"><span className={lbl}>Try again on</span><input type="date" value={reDate} onChange={e => setReDate(e.target.value)} className={iCls} disabled={disabled} /></label></div>
+                <div><label className="block"><span className={lbl}>Time (ET)</span><input type="time" value={reTime} onChange={e => setReTime(e.target.value)} className={iCls} disabled={disabled} /></label></div>
                 <label className="flex items-center gap-2 text-xs text-ink-soft cursor-pointer pb-2.5">
                   <input type="checkbox" checked={emailNew} onChange={e => setEmailNew(e.target.checked)} disabled={disabled} />
                   Email {contactFirst} the new time
@@ -579,8 +581,8 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
                 )}
               </div>
 
-              <label className={lbl}>Notes</label>
-              <textarea rows={3} value={notes} onChange={e => setNotesDirty(e.target.value)} placeholder="Anything else from the call" className={iCls + ' mb-3'} disabled={disabled} />
+              <label className="block"><span className={lbl}>Notes</span>
+              <textarea rows={3} value={notes} onChange={e => setNotesDirty(e.target.value)} placeholder="Anything else from the call" className={iCls + ' mb-3'} disabled={disabled} /></label>
 
               <div className="flex items-start gap-6 flex-wrap mb-4">
                 <div className="flex-1 min-w-[240px]">
@@ -594,8 +596,8 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
                   )}
                 </div>
                 <div>
-                  <label className={lbl}>Follow up by</label>
-                  <input type="date" value={followUp} onChange={e => setFollowUp(e.target.value)} className={iCls} disabled={disabled} />
+                  <label className="block"><span className={lbl}>Follow up by</span>
+                  <input type="date" value={followUp} onChange={e => setFollowUp(e.target.value)} className={iCls} disabled={disabled} /></label>
                 </div>
               </div>
               {outcome === 'talked' && (
@@ -686,8 +688,8 @@ function AnswerRow({ agendaKey, short, label, prior, value, open, onToggle, onCh
               </div>
             ))}
             <div className="sm:col-span-2">
-              <label className={lbl}>Note</label>
-              <input value={value.note} onChange={e => onChange({ ...value, note: e.target.value })} placeholder="Anything else on this" className={iCls} disabled={disabled} />
+              <label className="block"><span className={lbl}>Note</span>
+              <input value={value.note} onChange={e => onChange({ ...value, note: e.target.value })} placeholder="Anything else on this" className={iCls} disabled={disabled} /></label>
             </div>
           </div>
         </div>

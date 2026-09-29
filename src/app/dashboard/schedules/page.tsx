@@ -9,6 +9,7 @@ import { toast } from '@/components/dashboard/Toast';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { formatTeeTime as fmtTime } from '@/lib/format';
 
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-full';
@@ -23,7 +24,6 @@ type Schedule = {
   cartFee: number; walkingAllowed: boolean; active: boolean; createdAt: string;
 };
 
-function fmtTime(t: string) { const [h,m]=t.split(':').map(Number); return `${h%12||12}:${m.toString().padStart(2,'0')} ${h>=12?'PM':'AM'}`; }
 type ProductOpt = { id: string; label: string; holes: number; active: boolean; scheduleCount?: number };
 const emptyForm = () => ({ productId: '' as string, tierName:'standard', daysOfWeek:[0,1,2,3,4,5,6] as number[], startTime:'06:30', endTime:'17:30', intervalMinutes:8, holes:18, greenFeeWeekday:65, greenFeeWeekend:85, memberRateWeekday:'', memberRateWeekend:'', residentRateWeekday:'', residentRateWeekend:'', cartFee:18, walkingAllowed:true });
 

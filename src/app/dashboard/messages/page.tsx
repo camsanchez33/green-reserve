@@ -8,14 +8,13 @@ import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
+import { formatStamp as fmtFull } from '@/lib/format';
 
 interface MessageItem {
   id: string; senderType: 'admin' | 'operator'; senderName: string;
   body: string; readAt: string | null; isBroadcast: boolean; createdAt: string;
 }
 interface Thread { id: string; messages: MessageItem[]; }
-
-const fmtFull = (d: string) => new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
 
 function MessagesContent() {
   const router = useRouter();

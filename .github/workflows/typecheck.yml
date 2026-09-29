@@ -26,3 +26,8 @@ jobs:
 
       - name: Type check
         run: npx tsc --noEmit
+
+      # MP-9: no new hand-typed card / eyebrow / input class strings on staff
+      # surfaces — use the shared components (see the script header).
+      - name: Design-system guard
+        run: node scripts/design-guard.mjs

@@ -6,6 +6,10 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { LoadFailure } from '@/components/ui/ErrorState';
 import type { AdminFetchFailure } from '@/lib/admin-fetch';
+import { formatStamp as fmtDate, formatMoney as fmtMoney } from '@/lib/format';
+import { Card } from '@/components/ui/Card';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { INPUT_COMPACT } from '@/components/ui/field';
 
 interface Course { id: string; name: string; archivedAt: string | null; }
 interface EventRow {
@@ -14,9 +18,6 @@ interface EventRow {
   golferName?: string; golferEmail?: string;
   description: string; amount?: number; timestamp: string;
 }
-
-const fmtDate = (d: string) => new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-const fmtMoney = (n: number) => `$${n.toFixed(2)}`;
 
 const TYPE_DOT: Record<EventRow['type'], string> = {
   booking: 'ok',
@@ -91,7 +92,7 @@ export default function ActivityPage() {
   function handlePrev() { const p = Math.max(1, page - 1); setPage(p); doLoad(p, courseId, from, to); }
   function handleNext() { const p = page + 1; setPage(p); doLoad(p, courseId, from, to); }
 
-  const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-ink text-sm placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+  const iCls = INPUT_COMPACT;
 
   return (
     <div className="min-h-screen bg-paper flex">
@@ -109,10 +110,10 @@ export default function ActivityPage() {
           </div>
 
           {/* Filters */}
-          <div className="bg-white border border-line rounded-lg p-4 mb-5">
+          <Card className="p-4 mb-5">
             <div className="flex items-center gap-2 mb-3">
               <Filter className="w-4 h-4 text-pine"/>
-              <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Filters</span>
+              <Eyebrow as="span">Filters</Eyebrow>
             </div>
             <div className="flex flex-wrap gap-3">
               <select value={courseId} onChange={e => setCourseId(e.target.value)} className={iCls + ' flex-1 min-w-44 cursor-pointer'}>
@@ -144,10 +145,10 @@ export default function ActivityPage() {
                 Load
               </button>
             </div>
-          </div>
+          </Card>
 
           {/* Events */}
-          <div className="bg-white border border-line rounded-lg overflow-hidden">
+          <Card className="overflow-hidden">
             {loading ? (
               <div className="py-12 text-center text-ink-muted text-sm">Loading...</div>
             ) : events.length === 0 ? (
@@ -163,7 +164,7 @@ export default function ActivityPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                        <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">{TYPE_LABEL[ev.type]}</span>
+                        <Eyebrow as="span">{TYPE_LABEL[ev.type]}</Eyebrow>
                         <span className="text-[11px] text-ink-faint">·</span>
                         <span className="text-[11px] text-ink-muted">{ev.courseName}</span>
                       </div>
@@ -184,7 +185,7 @@ export default function ActivityPage() {
                 ))}
               </div>
             )}
-          </div>
+          </Card>
 
           {/* Pagination */}
           {!loading && events.length > 0 && (

@@ -11,6 +11,8 @@ import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
+import { formatMoney as fmtMoney, formatDate as fmtDate } from '@/lib/format';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 interface Tier {
@@ -34,8 +36,6 @@ interface Member {
 const TIER_COLORS = ['#10b981','#3b82f6','#8b5cf6','#f59e0b','#f43f5e','#14b8a6','#94a3b8'];
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 const lblCls = 'block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5';
-const fmtMoney = (n: number | null) => n == null ? '—' : `$${n.toFixed(2)}`;
-const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 const addMonthsISO = (months: number) => { const d = new Date(); d.setMonth(d.getMonth() + months); return d.toISOString().slice(0, 10); };
 
 const emptyTier = (): Partial<Tier> => ({
@@ -677,7 +677,7 @@ export default function MembersPage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium text-ink text-sm">{m.name || '—'}</span>
                         {!m.linked && (
-                          <span className="text-xs text-warn bg-warn/5 border border-warn/20 px-2 py-0.5 rounded-md">No account yet</span>
+                          <StatusDot status="warn" label="No account yet"/>
                         )}
                         {m.status !== 'active' && (
                           <span className="text-xs text-ink-muted bg-paper border border-line px-2 py-0.5 rounded-md">Inactive</span>

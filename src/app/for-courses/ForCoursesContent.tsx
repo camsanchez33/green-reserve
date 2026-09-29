@@ -1,6 +1,5 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, CheckCircle, Globe, HelpCircle, Lock, Mail, Users } from 'lucide-react';
@@ -95,7 +94,6 @@ function ChipRow({ options, value, onChange, ariaLabel }: {
 }
 
 export default function ForCoursesContent() {
-  const searchParams = useSearchParams();
   const [form, setForm] = useState<FormData>(init);
   // SD review: the honeypot input existed but its value was never sent — the
   // payload hardcoded ''. Bots that fill every field now get the silent 200.
@@ -123,8 +121,12 @@ export default function ForCoursesContent() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const formRef = useRef<HTMLDivElement>(null);
 
+  // PERF-1: ?type= is read here, once, from the URL — not with
+  // useSearchParams(), which made Next skip server-rendering this whole page:
+  // the HTML shipped an empty Suspense boundary, the form appeared only after
+  // JS ran, and the footer jumped 2,000px down (CLS 0.26, LCP 3.6s).
   useEffect(() => {
-    const t = searchParams.get('type');
+    const t = new URLSearchParams(window.location.search).get('type');
     if (t && (COURSE_TYPES as string[]).includes(t)) setType(t as CourseType);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -4,12 +4,15 @@ import { Lock, User } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import OwnerTwoFactorCard from '@/components/admin/OwnerTwoFactorCard';
+import { Card } from '@/components/ui/Card';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { INPUT_COMPACT } from '@/components/ui/field';
 
 const ROLE_LABELS: Record<string, string> = {
   owner: 'Owner', manager: 'Manager', support: 'Support', viewer: 'Viewer',
 };
 
-const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-ink text-sm placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-full';
+const iCls = `${INPUT_COMPACT} w-full`;
 
 export default function ProfilePage() {
   // MP-11a: the session comes from the layout — nothing to fetch, no loading state.
@@ -54,22 +57,22 @@ export default function ProfilePage() {
           </div>
 
           {/* Account info */}
-          <div className="bg-white border border-line rounded-lg p-5 mb-5">
+          <Card className="p-5 mb-5">
             <div className="flex items-center gap-2 mb-4">
               <User className="w-4 h-4 text-pine" />
               <span className="text-sm font-medium text-ink">Account</span>
             </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between py-2 border-b border-line-soft">
-                <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Name</span>
+                <Eyebrow as="span">Name</Eyebrow>
                 <span className="text-sm text-ink font-medium">{session.name}</span>
               </div>
               <div className="flex items-center justify-between py-2 border-b border-line-soft">
-                <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Email</span>
+                <Eyebrow as="span">Email</Eyebrow>
                 <span className="text-sm text-ink">{session.email}</span>
               </div>
               <div className="flex items-center justify-between py-2">
-                <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Role</span>
+                <Eyebrow as="span">Role</Eyebrow>
                 <span className="text-sm text-ink font-medium">{ROLE_LABELS[session.role ?? ''] ?? session.role}</span>
               </div>
             </div>
@@ -80,13 +83,13 @@ export default function ProfilePage() {
                 </a>
               </div>
             )}
-          </div>
+          </Card>
 
           {/* OWNER TOTP 2FA — enrolment lives here, owner only. */}
           {session.role === 'owner' && <OwnerTwoFactorCard mfaSession={session.mfa === true} />}
 
           {/* Change password */}
-          <div className="bg-white border border-line rounded-lg p-5">
+          <Card className="p-5">
             <div className="flex items-center gap-2 mb-4">
               <Lock className="w-4 h-4 text-pine" />
               <span className="text-sm font-medium text-ink">Change password</span>
@@ -99,16 +102,16 @@ export default function ProfilePage() {
             )}
             <form onSubmit={handleChangePassword} className="space-y-3">
               <div>
-                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Current password</label>
-                <input type="password" value={cpCurrent} onChange={e => setCpCurrent(e.target.value)} required className={iCls} />
+                <label className="block"><Eyebrow as="span" className="block mb-1.5">Current password</Eyebrow>
+                <input type="password" value={cpCurrent} onChange={e => setCpCurrent(e.target.value)} required className={iCls} /></label>
               </div>
               <div>
-                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">New password</label>
-                <input type="password" value={cpNew} onChange={e => setCpNew(e.target.value)} required placeholder="Min 8 characters" className={iCls} />
+                <label className="block"><Eyebrow as="span" className="block mb-1.5">New password</Eyebrow>
+                <input type="password" value={cpNew} onChange={e => setCpNew(e.target.value)} required placeholder="Min 8 characters" className={iCls} /></label>
               </div>
               <div>
-                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Confirm new password</label>
-                <input type="password" value={cpConfirm} onChange={e => setCpConfirm(e.target.value)} required className={iCls} />
+                <label className="block"><Eyebrow as="span" className="block mb-1.5">Confirm new password</Eyebrow>
+                <input type="password" value={cpConfirm} onChange={e => setCpConfirm(e.target.value)} required className={iCls} /></label>
               </div>
               <div className="pt-1">
                 <button type="submit" disabled={cpLoading || !cpCurrent || !cpNew || !cpConfirm}
@@ -117,7 +120,7 @@ export default function ProfilePage() {
                 </button>
               </div>
             </form>
-          </div>
+          </Card>
 
         </div>
       </div>

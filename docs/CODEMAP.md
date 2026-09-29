@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-338 source files · 195 routes · 88 libraries · 33 models
+352 source files · 195 routes · 90 libraries · 33 models
 
 ## Single sources of truth
 
@@ -49,24 +49,24 @@ this script with a non-zero exit — that is the point of the tag.
 | url | auth | guard | methods | file | lines |
 |---|---|---|---|---|---|
 | `/` | public | public | page | `src/app/page.tsx` | 21 |
-| `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 558 |
-| `/admin/activity` | admin | client-side | page | `src/app/admin/activity/page.tsx` | 210 |
+| `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 548 |
+| `/admin/activity` | admin | client-side | page | `src/app/admin/activity/page.tsx` | 211 |
 | `/admin/broadcasts` | admin | client-side | page | `src/app/admin/broadcasts/page.tsx` | 13 |
 | `/admin/courses` | admin | client-side | page | `src/app/admin/courses/page.tsx` | 522 |
-| `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 2741 |
-| `/admin/create` | admin | client-side | page | `src/app/admin/create/page.tsx` | 757 |
-| `/admin/employees` | admin | client-side | page | `src/app/admin/employees/page.tsx` | 401 |
-| `/admin/forgot-password` | admin | client-side | page | `src/app/admin/forgot-password/page.tsx` | 67 |
+| `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 334 |
+| `/admin/create` | admin | client-side | page | `src/app/admin/create/page.tsx` | 760 |
+| `/admin/employees` | admin | client-side | page | `src/app/admin/employees/page.tsx` | 406 |
+| `/admin/forgot-password` | admin | client-side | page | `src/app/admin/forgot-password/page.tsx` | 70 |
 | `/admin/golfers` | admin | client-side | page | `src/app/admin/golfers/page.tsx` | 464 |
-| `/admin/inquiries` | admin | client-side | page | `src/app/admin/inquiries/page.tsx` | 991 |
-| `/admin/inquiries/[id]` | admin | client-side | page | `src/app/admin/inquiries/[id]/page.tsx` | 2266 |
-| `/admin/login` | admin | client-side | page | `src/app/admin/login/page.tsx` | 151 |
-| `/admin/messages` | admin | client-side | page | `src/app/admin/messages/page.tsx` | 600 |
-| `/admin/owner-login` | admin | client-side | page | `src/app/admin/owner-login/page.tsx` | 144 |
-| `/admin/profile` | admin | client-side | page | `src/app/admin/profile/page.tsx` | 127 |
+| `/admin/inquiries` | admin | client-side | page | `src/app/admin/inquiries/page.tsx` | 990 |
+| `/admin/inquiries/[id]` | admin | client-side | page | `src/app/admin/inquiries/[id]/page.tsx` | 2238 |
+| `/admin/login` | admin | client-side | page | `src/app/admin/login/page.tsx` | 154 |
+| `/admin/messages` | admin | client-side | page | `src/app/admin/messages/page.tsx` | 602 |
+| `/admin/owner-login` | admin | client-side | page | `src/app/admin/owner-login/page.tsx` | 147 |
+| `/admin/profile` | admin | client-side | page | `src/app/admin/profile/page.tsx` | 130 |
 | `/admin/revenue` | admin | client-side | page | `src/app/admin/revenue/page.tsx` | 902 |
-| `/admin/set-password` | admin | client-side | page | `src/app/admin/set-password/page.tsx` | 156 |
-| `/admin/system` | admin | client-side | page | `src/app/admin/system/page.tsx` | 519 |
+| `/admin/set-password` | admin | client-side | page | `src/app/admin/set-password/page.tsx` | 159 |
+| `/admin/system` | admin | client-side | page | `src/app/admin/system/page.tsx` | 517 |
 | `/api/admin/activity` | admin | file | GET | `src/app/api/admin/activity/route.ts` | 145 |
 | `/api/admin/archive-course` | admin | file | POST | `src/app/api/admin/archive-course/route.ts` | 71 |
 | `/api/admin/backfill-orphaned-inquiries` | admin | file | POST | `src/app/api/admin/backfill-orphaned-inquiries/route.ts` | 42 |
@@ -133,7 +133,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/call/[token]` | public | public | GET | `src/app/api/call/[token]/route.ts` | 80 |
 | `/api/checkin/[bookingId]` | public | token | GET POST | `src/app/api/checkin/[bookingId]/route.ts` | 78 |
 | `/api/courses` | public | public | GET | `src/app/api/courses/route.ts` | 44 |
-| `/api/courses/[slug]` | public | public | GET | `src/app/api/courses/[slug]/route.ts` | 31 |
+| `/api/courses/[slug]` | public | public | GET | `src/app/api/courses/[slug]/route.ts` | 13 |
 | `/api/courses/[slug]/account` | golfer | file | GET | `src/app/api/courses/[slug]/account/route.ts` | 86 |
 | `/api/courses/[slug]/tee-times` | public | public | GET | `src/app/api/courses/[slug]/tee-times/route.ts` | 81 |
 | `/api/cron/cancellation-cutoff` | cron | file | GET | `src/app/api/cron/cancellation-cutoff/route.ts` | 127 |
@@ -213,17 +213,17 @@ this script with a non-zero exit — that is the point of the tag.
 | `/call/[token]` | public | public | page | `src/app/call/[token]/page.tsx` | 147 |
 | `/checkin/[bookingId]` | golfer | token | page | `src/app/checkin/[bookingId]/page.tsx` | 291 |
 | `/contact` | public | public | page | `src/app/contact/page.tsx` | 42 |
-| `/courses/[slug]` | public | public | page | `src/app/courses/[slug]/page.tsx` | 39 |
+| `/courses/[slug]` | public | public | page | `src/app/courses/[slug]/page.tsx` | 45 |
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 150 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 853 |
-| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1199 |
+| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1198 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 102 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
 | `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 73 |
 | `/dashboard/login` | operator | entry | page | `src/app/dashboard/login/page.tsx` | 79 |
 | `/dashboard/members` | operator | middleware | page | `src/app/dashboard/members/page.tsx` | 728 |
-| `/dashboard/messages` | operator | middleware | page | `src/app/dashboard/messages/page.tsx` | 159 |
+| `/dashboard/messages` | operator | middleware | page | `src/app/dashboard/messages/page.tsx` | 158 |
 | `/dashboard/money` | operator | middleware | page | `src/app/dashboard/money/page.tsx` | 205 |
 | `/dashboard/onboarding` | operator | **NONE FOUND** | page | `src/app/dashboard/onboarding/page.tsx` | 319 |
 | `/dashboard/outings` | operator | middleware | page | `src/app/dashboard/outings/page.tsx` | 28 |
@@ -234,7 +234,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/sign` | operator | middleware | page | `src/app/dashboard/sign/page.tsx` | 26 |
 | `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 28 |
 | `/dashboard/verify` | operator | token | page | `src/app/dashboard/verify/page.tsx` | 157 |
-| `/for-courses` | public | public | page | `src/app/for-courses/page.tsx` | 17 |
+| `/for-courses` | public | public | page | `src/app/for-courses/page.tsx` | 12 |
 | `/for-courses/details` | public | token | page | `src/app/for-courses/details/page.tsx` | 1869 |
 | `/manage/[bookingId]` | golfer | token | page | `src/app/manage/[bookingId]/page.tsx` | 558 |
 | `/membership/[id]` | public | token | page | `src/app/membership/[id]/page.tsx` | 197 |
@@ -257,6 +257,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/rate-limit.ts` | 33 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
 | `src/lib/auth.ts` | 28 | 202 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffResetToken`, `signStaffToken` +4 more |
 | `src/lib/money.ts` | 27 | 50 | Money conversions, in one place. | `centsToDollars`, `centsToDollarsOr0`, `dollarsToCents`, `dollarsToCentsOr0`, `fmtCents` |
+| `src/lib/format.ts` | 22 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
 | `src/lib/agreement-required.ts` | 19 | 122 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
 | `src/lib/change-requests.ts` | 15 | 149 | Single source of truth for structured "request changes" data (V13b). | `APPROVED_MARKER`, `CATEGORY_LABEL`, `CHANGE_ADDRESSED_PREFIX`, `CHANGE_CATEGORIES`, `ChangeCategoryKey`, `ChangeItem`, `CHANGES_REQUESTED_PREFIX`, `computeOpenChanges` +14 more |
 | `src/lib/stripe.ts` | 15 | 87 | Every charge, refund and SetupIntent GreenReserve makes goes through here. | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `MEMBERSHIP_FEE_CENTS`, `refundOnConnectedAccount`, `stripe` |
@@ -267,10 +268,10 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/course-time.ts` | 10 | 46 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `todayIn`, `US_TIMEZONES` |
 | `src/lib/admin-session-context.tsx` | 8 | 77 | MP-11a (ADMIN_V4 V4-7, LAW rule 2): | `AdminSessionProvider`, `AdminSessionView`, `isAdminAuthPath`, `useAdminSession` |
 | `src/lib/agreements.ts` | 8 | 118 | AGREEMENT_SPEC AG-1 §2 — versioned agreement documents. | `AgreementDocument`, `currentDocuments`, `currentVersion`, `DOCUMENT_DIR`, `DocumentMeta`, `listVersions`, `loadDocument`, `LoadedDocument` +1 more |
+| `src/lib/course-metrics.ts` | 8 | 219 | THE shared metrics brain (REVISE_QUEUE A-04 item 0) — bookings/gross/ GR-fees/period math defined ONCE. | `COMPLETED_BOOKING_STATUSES`, `computeCourseHealth`, `computeNetPnL`, `CourseHealth`, `CourseHealthInput`, `CourseHealthStatus`, `HEALTH_STATUS_DOT`, `HEALTH_STATUS_LABEL` +9 more |
 | `src/lib/agreement-gate.ts` | 7 | 91 | AG-1: | `AgreementDocStatus`, `agreementStatus`, `AgreementStatus`, `hasAcceptedAgreement` |
 | `src/lib/booking-fees.ts` | 7 | 11 |  | `ACCESS_FEE_CENTS`, `ACCESS_FEE_PER_PLAYER`, `hoursLabel`, `serviceFeeLabel` |
 | `src/lib/course-checkin.ts` | 7 | 106 | COURSES_SHEET_SPEC CS-1 §2 — check-in calls with live courses. | `CHECKIN_AGENDA`, `CHECKIN_DUE_WINDOW_DAYS`, `CHECKIN_EVERY_DAYS`, `CHECKIN_FIRST_DAYS`, `CheckinAgendaItem`, `CheckinCallLike`, `CheckinCourseLike`, `checkInSignal` +8 more |
-| `src/lib/course-metrics.ts` | 7 | 219 | THE shared metrics brain (REVISE_QUEUE A-04 item 0) — bookings/gross/ GR-fees/period math defined ONCE. | `COMPLETED_BOOKING_STATUSES`, `computeCourseHealth`, `computeNetPnL`, `CourseHealth`, `CourseHealthInput`, `CourseHealthStatus`, `HEALTH_STATUS_DOT`, `HEALTH_STATUS_LABEL` +9 more |
 | `src/lib/member-session.ts` | 7 | 89 |  | `getGolferMembership`, `getMemberSession`, `signMemberMagicToken`, `signMemberSessionToken`, `verifyMemberMagicToken` |
 | `src/lib/preview-token.ts` | 7 | 25 |  | `signPreviewToken`, `verifyPreviewToken` |
 | `src/lib/call-answers.ts` | 6 | 266 | INQUIRY_CALL_SPEC IC-5 — structured discovery-call answers. | `BOOKING_METHOD_OPTIONS`, `CALL_FIELDS`, `CallAnswers`, `DAY_SHORT`, `emptyAnswers`, `FieldSpec`, `FieldType`, `flatSummaries` +15 more |
@@ -316,6 +317,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/money-problems.ts` | 2 | 43 |  | `FAILED_CHARGE_WHERE`, `missedCheckInWhere`, `openDisputes` |
 | `src/lib/owner-totp.ts` | 2 | 100 | OWNER TOTP 2FA (RUN_QUEUE) — the authenticator-app second factor for the owner account. | `generateRecoveryCodes`, `generateTotpSecret`, `looksLikeRecoveryCode`, `matchRecoveryCode`, `normalizeRecoveryCode`, `RECOVERY_CODE_COUNT`, `signEnrolToken`, `TOTP_ISSUER` +8 more |
 | `src/lib/platform-stripe.ts` | 2 | 58 |  | `fetchStripeFeeWindow`, `fetchStripeProcessingCostCents`, `StripeFeeWindow` |
+| `src/lib/public-course.ts` | 2 | 29 | PERF-1: | `loadPublicCourse` |
 | `src/lib/refund-booking.ts` | 2 | 129 | MP-6b. | `findBookingByStripeId`, `PaymentEventKind`, `recordPaymentEvent`, `refundBooking`, `RefundResult` |
 | `src/lib/schedule-conflict.ts` | 2 | 78 | COURSE_LAYOUT_SPEC L2 — conflict detection for product-scoped schedules. | `ConflictNine`, `ConflictProduct`, `ConflictSchedule`, `findScheduleConflict` |
 | `src/lib/schedule-wire.ts` | 2 | 92 |  | `scheduleMoneyForCreate`, `scheduleMoneyFromWire`, `scheduleToWire`, `teeTimeToWire` |
@@ -345,33 +347,37 @@ Sorted the same way.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/components/ui/StatusDot.tsx` | 16 | 36 |  | `StatusDot` |
+| `src/components/ui/Card.tsx` | 26 | 15 |  | `Card`, `CARD` |
+| `src/components/ui/Eyebrow.tsx` | 23 | 16 |  | `Eyebrow`, `EYEBROW` |
+| `src/components/ui/StatusDot.tsx` | 22 | 36 |  | `StatusDot` |
+| `src/components/ui/field.ts` | 16 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/admin/AdminSidebar.tsx` | 13 | 264 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/OperatorSidebar.tsx` | 9 | 271 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
 | `src/components/dashboard/Toast.tsx` | 7 | 69 | SD-2. | `toast`, `Toaster`, `ToastKind` |
 | `src/components/dashboard/TabIntro.tsx` | 6 | 36 |  | `TabIntroButton`, `TabIntroCard` |
 | `src/components/ui/ErrorState.tsx` | 6 | 96 |  | `ErrorBanner`, `LoadFailure` |
+| `src/components/ui/Modal.tsx` | 6 | 141 | MP-9 (ADMIN_V4 V4-6 §4) — the one dialog. | `Modal`, `ModalActions` |
 | `src/components/CourseHeaderBar.tsx` | 5 | 17 | White-label rule: | `CourseHeaderBar` |
 | `src/components/dashboard/LoadError.tsx` | 5 | 16 | SD-10. | `LoadError` |
 | `src/components/dashboard/money/types.ts` | 4 | 18 | SD-8 — one booking shape for all three Money tabs. | `MoneyBooking`, `MoneyCourse` |
+| `src/components/admin/CourseCheckInCard.tsx` | 3 | 364 | COURSES_SHEET_SPEC CS-3 §2 — the "Next check-in" card on a live course's Overview. | `CourseCallRow`, `default (CourseCheckInCard)`, `describeCheckIn` |
 | `src/components/dashboard/SignAgreements.tsx` | 3 | 220 | AGREEMENT_SPEC AG-2 §1 — the "Sign" step. | `default (SignAgreements)` |
 | `src/components/dashboard/StaffNotice.tsx` | 3 | 26 | SD-11 (from the SD review). | `StaffNotice` |
 | `src/components/EmptyState.tsx` | 3 | 21 |  | `EmptyState` |
 | `src/components/GolferExitLinks.tsx` | 3 | 24 |  | `GolferExitLinks` |
-| `src/components/home/HomeDemo.tsx` | 2 | 111 |  | `default (HomeDemo)` |
+| `src/components/home/HomeDemo.tsx` | 2 | 114 |  | `default (HomeDemo)` |
 | `src/components/TrustNote.tsx` | 2 | 12 |  | `TrustNote` |
 | `src/components/admin/CommandPalette.tsx` | 1 | 248 |  | `default (CommandPalette)` |
-| `src/components/admin/CourseCheckInCard.tsx` | 1 | 361 | COURSES_SHEET_SPEC CS-3 §2 — the "Next check-in" card on a live course's Overview. | `CourseCallRow`, `default (CourseCheckInCard)`, `describeCheckIn` |
-| `src/components/admin/InquiryCallCards.tsx` | 1 | 777 | INQUIRY_CALL_SPEC IC-2 — the two discovery-call cards on the inquiry detail page. | `CallFocus`, `CallRow`, `default (InquiryCallCards)`, `describeCall` |
-| `src/components/admin/OwnerTwoFactorCard.tsx` | 1 | 156 | OWNER TOTP 2FA — the enrolment card on /admin/profile (owner only). | `default (OwnerTwoFactorCard)` |
+| `src/components/admin/InquiryCallCards.tsx` | 1 | 779 | INQUIRY_CALL_SPEC IC-2 — the two discovery-call cards on the inquiry detail page. | `CallFocus`, `CallRow`, `default (InquiryCallCards)`, `describeCall` |
+| `src/components/admin/OwnerTwoFactorCard.tsx` | 1 | 159 | OWNER TOTP 2FA — the enrolment card on /admin/profile (owner only). | `default (OwnerTwoFactorCard)` |
 | `src/components/AnnouncementBanner.tsx` | 1 | 45 |  | `default (AnnouncementBanner)` |
 | `src/components/birdie/BirdieWidget.tsx` | 1 | 168 | BIRDIE_AI_SPEC B1 — the floating Birdie button and chat panel for the operator dashboard. | `default (BirdieWidget)` |
 | `src/components/dashboard/AgreementNotice.tsx` | 1 | 67 | AGREEMENT_SPEC AG-3 §3 — the re-acceptance banner and, after the deadline, the modal. | `AGREEMENT_REQUIRED_EVENT`, `default (AgreementNotice)` |
-| `src/components/dashboard/CourseLayoutTab.tsx` | 1 | 467 |  | `default (CourseLayoutTab)` |
+| `src/components/dashboard/CourseLayoutTab.tsx` | 1 | 469 |  | `default (CourseLayoutTab)` |
 | `src/components/dashboard/CoursePreview.tsx` | 1 | 80 |  | `CoursePreviewProps`, `default (CoursePreview)` |
 | `src/components/dashboard/GettingStartedChecklist.tsx` | 1 | 186 |  | `default (GettingStartedChecklist)` |
-| `src/components/dashboard/money/CancellationsPanel.tsx` | 1 | 165 | SD-8 — the Cancellations half of the Money page. | `CancellationsPanel` |
-| `src/components/dashboard/money/PaymentsPanel.tsx` | 1 | 180 | SD-8 — the Payments half of the Money page. | `PaymentsPanel` |
+| `src/components/dashboard/money/CancellationsPanel.tsx` | 1 | 159 | SD-8 — the Cancellations half of the Money page. | `CancellationsPanel` |
+| `src/components/dashboard/money/PaymentsPanel.tsx` | 1 | 178 | SD-8 — the Payments half of the Money page. | `PaymentsPanel` |
 | `src/components/dashboard/money/PayoutsPanel.tsx` | 1 | 125 | SD-8 — the Stripe card, moved here out of Settings. | `PayoutsPanel` |
 | `src/components/Footer.tsx` | 1 | 77 |  | `default (Footer)` |
 | `src/components/home/HomeDashboardDemo.tsx` | 1 | 149 |  | `default (HomeDashboardDemo)` |
@@ -380,8 +386,6 @@ Sorted the same way.
 | `src/components/Nav.tsx` | 1 | 126 |  | `default (Nav)` |
 | `src/components/ui/Btn.tsx` | 1 | 27 |  | `Btn` |
 | `src/components/CourseCard.tsx` | 0 | 121 |  | `default (CourseCard)` |
-| `src/components/ui/Card.tsx` | 0 | 19 |  | `Card` |
-| `src/components/ui/Eyebrow.tsx` | 0 | 10 |  | `Eyebrow` |
 | `src/components/ui/PageHeader.tsx` | 0 | 18 |  | `PageHeader` |
 | `src/components/ui/SidebarShell.tsx` | 0 | 24 |  | `SidebarShell` |
 | `src/components/ui/StatGroup.tsx` | 0 | 18 |  | `StatGroup` |
@@ -663,8 +667,6 @@ Nothing imports these and no route serves them. Framework-owned filenames
 Next.js, not imported, so "nothing imports it" proves nothing about them.
 
 - `src/components/CourseCard.tsx` (121 lines)
-- `src/components/ui/Card.tsx` (19 lines)
-- `src/components/ui/Eyebrow.tsx` (10 lines)
 - `src/components/ui/PageHeader.tsx` (18 lines)
 - `src/components/ui/SidebarShell.tsx` (24 lines)
 - `src/components/ui/StatGroup.tsx` (18 lines)

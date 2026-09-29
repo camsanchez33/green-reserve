@@ -12,6 +12,9 @@ import { HEALTH_STATUS_SEVERITY, periodDelta, lastBookingLabel, type CourseHealt
 import { checkInSignal, type CheckinCallLike } from '@/lib/course-checkin';
 import { nextCall, overdueCall, fmtCallClock } from '@/lib/inquiry-call';
 import type { SetupProgress } from '@/lib/course-setup';
+import { formatDate as fmtDate, formatEasternDate as fmtShort, formatEasternDay as fmtDay } from '@/lib/format';
+import { Card } from '@/components/ui/Card';
+import { Eyebrow } from '@/components/ui/Eyebrow';
 
 // COURSES_SHEET_SPEC CS-2 — /admin/courses as a sheet. One table, two
 // sections ("Getting live" above "Live"), eight fixed columns, the same
@@ -65,9 +68,6 @@ const NEEDS_ATTENTION_STATUSES: CourseHealthStatus[] = ['setup_incomplete', 'pay
 // in Live because it WAS live; its Status cell says so.
 const GETTING_LIVE_STATUSES: CourseHealthStatus[] = ['setup_incomplete', 'orphaned'];
 
-const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-const fmtShort = (d: string | Date) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' });
-const fmtDay = (d: string | Date) => new Date(d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'America/New_York' });
 const fmtWeekday = (d: Date) => d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'America/New_York' });
 const daysSinceIso = (d: string) => Math.max(0, Math.floor((Date.now() - new Date(d).getTime()) / 86_400_000));
 
@@ -330,7 +330,7 @@ function CoursesContent() {
           <div className="text-sm text-ink truncate">{c.operator?.name || <span className="text-ink-faint">No operator</span>}</div>
           <div className="text-[12px] text-ink-muted truncate">{c.operator?.email || ''}</div>
           {c.operator && !c.operator.emailVerified && (
-            <span className="inline-block mt-0.5 text-[9px] font-medium uppercase tracking-[0.1em] bg-warn/10 text-warn px-1.5 py-0.5">Unverified</span>
+            <span className="block mt-0.5"><StatusDot status="warn" label="Unverified"/></span>
           )}
         </td>
         {/* 3 · Status */}
@@ -360,7 +360,7 @@ function CoursesContent() {
     const nonEmpty = groups.filter(g => g.rows.length > 0);
     if (nonEmpty.length === 0) return null;
     return (
-      <div className="bg-white border border-line rounded-lg overflow-x-auto">
+      <Card className="overflow-x-auto">
         <table className="w-full table-fixed min-w-[760px]">
           <thead>
             <tr className="bg-paper">
@@ -381,7 +381,7 @@ function CoursesContent() {
                 {g.title && (
                   <tr className="border-t border-line">
                     <td colSpan={8} className="bg-paper px-3 py-1.5">
-                      <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">{g.title}</span>
+                      <Eyebrow as="span">{g.title}</Eyebrow>
                       <span className="text-[11px] text-ink-faint ml-2">{g.rows.length}{g.hint ? ' · ' + g.hint : ''}</span>
                     </td>
                   </tr>
@@ -398,7 +398,7 @@ function CoursesContent() {
             );
           })}
         </table>
-      </div>
+      </Card>
     );
   };
 

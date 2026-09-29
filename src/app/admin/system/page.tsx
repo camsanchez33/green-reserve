@@ -7,6 +7,10 @@ import { HardDrive, Clock3, Zap, GitBranch, Bug, ExternalLink, Landmark, Link2, 
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { formatDateTime as fmtDate, formatMoney as fmtMoney } from '@/lib/format';
+import { Modal } from '@/components/ui/Modal';
+import { Card } from '@/components/ui/Card';
+import { Eyebrow } from '@/components/ui/Eyebrow';
 
 interface SystemData {
   lastStripeTouch: { courseName: string; updatedAt: string } | null;
@@ -33,21 +37,16 @@ interface PlatformStripe {
 interface OrphanSweepItem { kind: 'course' | 'inquiry'; id: string; name: string; action: string; reason: string }
 interface AcknowledgedOrphan { id: string; name: string; archivedAt: string }
 
-function fmtDate(d: string) {
-  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
-}
-const fmtMoney = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
 // U-A (UI_REVISE_SPEC §3): one legible signal per card. Green = this page reads
 // the real state. Grey = link-only; we can only point you at where it lives.
 // Turning a grey card green is a schema item, not a reskin.
 function SystemCard({ icon, title, tracked = false, right, children }: { icon: React.ReactNode; title: string; tracked?: boolean; right?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="bg-white border border-line rounded-lg p-5">
+    <Card className="p-5">
       <div className="flex items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
           <span className="text-ink-muted">{icon}</span>
-          <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">{title}</div>
+          <Eyebrow>{title}</Eyebrow>
           <span title={tracked ? 'Tracked here — this page reads the real state.' : 'Link-only — this page cannot see the real state; follow the link.'}>
             <StatusDot status={tracked ? 'ok' : 'neutral'}/>
           </span>
@@ -55,7 +54,7 @@ function SystemCard({ icon, title, tracked = false, right, children }: { icon: R
         {right}
       </div>
       {children}
-    </div>
+    </Card>
   );
 }
 
@@ -480,21 +479,21 @@ export default function AdminSystemPage() {
       {/* Force-delete confirm — owner-authorized override, typed name confirm,
           server re-verifies it's still an orphan before touching anything. */}
       {forceDeleteTarget && (
-        <div className="fixed inset-0 bg-ink/30 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-lg border border-line max-w-md w-full p-5">
-            <div className="text-sm font-medium text-ink mb-1">Permanently delete &quot;{forceDeleteTarget.name}&quot;?</div>
+        <Modal title={`Permanently delete "${forceDeleteTarget.name}"?`}
+          titleNode={<div className="text-sm font-medium text-ink mb-1">Permanently delete &quot;{forceDeleteTarget.name}&quot;?</div>}
+          onClose={() => { setForceDeleteTarget(null); setForceDeleteConfirm(''); setForceDeleteError(''); }}>
             <p className="text-xs text-ink-muted mb-3">
               This cannot be undone — deletes the course, its bookings, tee times, and staff, and the operator&apos;s login if this was their only course. Owner-authorized override: this bypasses the usual archive-only rule because this course is an acknowledged orphan with no real history behind the doctrine&apos;s protection.
             </p>
             {forceDeleteError && (
               <div className="text-xs text-bad mb-2">{forceDeleteError}</div>
             )}
-            <label className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Type &quot;{forceDeleteTarget.name}&quot; to confirm</label>
+            <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Type &quot;{forceDeleteTarget.name}&quot; to confirm</span>
             <input
               value={forceDeleteConfirm}
               onChange={e => setForceDeleteConfirm(e.target.value)}
               className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-4"
-            />
+            /></label>
             <div className="flex items-center justify-end gap-2">
               <button
                 onClick={() => { setForceDeleteTarget(null); setForceDeleteConfirm(''); setForceDeleteError(''); }}
@@ -510,8 +509,7 @@ export default function AdminSystemPage() {
                 {forceDeleteBusy ? 'Deleting…' : 'Delete permanently'}
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

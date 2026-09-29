@@ -617,6 +617,16 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     Stripe multi-course findFirst (operator/stripe/connect + dashboard-link).
     Admin OWNER 2FA already has 10 recovery codes (lib/owner-totp.ts). Unreviewed
     as SD-9 work — fold into the next /gr-review. What remains:
+  DECIDED (Cam 2026-09-29) — required core = TEE SHEET + PRICES: holes/par,
+    days open, first/last tee time, interval, weekday + weekend green fee,
+    cart fee / walking, cancellation yes/no. Everything else optional
+    ("finish later"); branch questions stop blocking Next; About not required;
+    scorecard photo upload replaces the tee-set grid; "rather do this on the
+    call?" escape; persist step position; DELETE fields the build never reads
+    (inventory 2026-09-29: twilight/nine-hole/replay fees, season, protected
+    times, outings volume, women's tee data, front/back yardage, club-rental
+    methods/phone, …). Also fix: build reads fv2.lessonsProPhone as the
+    pro-shop phone (fv2.proShopPhone never read).
   - [ ] SD-9b — details-sheet funnel UX: split into a required core that finishes
     the lead + a deferrable polish pass; scorecard photo upload replaces the
     tee-sets grid for most courses; "prefer to do this on a call?" escape hatch
@@ -1441,7 +1451,21 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       receipt log (StripeEvent id + type + receivedAt) so the Webhook card
       stops using a course's updatedAt as a proxy; Employees demoted to the
       utility cluster as "Team & access" if Cam agrees.
-  - [ ] MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in
+  - [x] MP-9 (81cb4a4..2000908) — DONE except Btn/PageHeader (below). lib/format.ts
+    (16 files' formatters); components/ui/Modal.tsx (dialog role, focus trap,
+    Escape, focus return — keyboard-walked) on every admin dialog + the Revenue
+    drawer; 87 admin labels name their field, global :focus-visible ring,
+    sidebar aria; Card / Eyebrow / INPUT codemod, one commit per page, every
+    page screenshot-identical; tinted pills → StatusDot. GUARD: ESLint is not
+    installed and nothing ran it, so the guard is scripts/design-guard.mjs in
+    typecheck.yml — a ratchet over admin + dashboard (no new raw card/eyebrow/
+    input strings). OPEN, CAM'S CALL: Btn + PageHeader were NOT codemodded —
+    34 primary buttons use ~20 size combos (py-2/2.5/3, px-4/5, text-sm vs
+    12.5px) and titles are 30px vs 22px, so consolidating them changes how
+    pages look, which V4-6 says a codemod must not. Pick the sizes (suggest:
+    buttons py-2 dense / py-2.5 default at 12.5px; titles 30px leading-none)
+    and it is one mechanical run. Dashboard not migrated (guard holds it).
+    ORIGINAL: MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in
     ADMIN_V4_SPEC.md): codemod to Card/Eyebrow/PageHeader/Btn (verified: ONE
     import exists in all of src/, StatusDot ×10), ESLint guard so it can't
     regress, create lib/format.ts (fmtMoney ×6, fmtDate ×7), promote Modal with
@@ -1537,7 +1561,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   neither is blocked by the parking, but don't let a run "helpfully" build the
   absorption without the spec.
 
-  - [ ] MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState
+  - [x] MP-12 (da9f604) — page.tsx 2,724 → 333 lines: _parts/useCourseDetail +
+    context + six tab files + CourseDialogs + shared. Babel-driven, verbatim;
+    all six tabs pixel-identical. ORIGINAL: MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState
     → nine tab files + useCourseDetail. AFTER MP-9 so tabs inherit shared
     components; overlaps MP-5's tab reshape, so run MP-5 first and let this
     finish it (big)
@@ -2574,7 +2600,56 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   call/[token]/route.ts). (small, no migration)
   SHIPPED 0eab366, 2026-09-29 — box open until /gr-review. All six (a)-(f); (c) tested
   with two simultaneous submits, (e) at 320px.
-- [ ] PERF-1 — golfer pages over budget (first real Lighthouse run, PR #2,
+- [ ] FB-1 — /for-courses sign-up page, Cam's walk-through notes 2026-09-29
+  (verbatim intent): organise into CONTACT INFO (first/last name, email,
+  phone, role/course) → COURSE INFORMATION (course name, city, state,
+  ADDRESS; course type PUBLIC / PRIVATE only — drop semi-private; keep "how
+  are tee times looking"; the 20-minute call set up here) → "anything else
+  you'd like to message". After submit: thanks / check-your-email page, and
+  PICKING A CALL TIME must still be part of it. BUG REPORTED: "didn't get an
+  email from GreenReserve after submitting". Found while filing: the form
+  still carries a Calendly URL constant. OPEN QUESTION to Cam: note says
+  "set up by Google Calendar" but CAL-2 (Cam, same day) made Cal.com the only
+  scheduler and deleted the Google path — which one?
+  DECIDED (Cam 2026-09-29): Cal.com stays the only scheduler — the 20 minutes
+  is the Cal.com event length (Cam sets it there); the thanks page itself
+  offers "pick a call time". Course type is PUBLIC / PRIVATE EVERYWHERE
+  (sign-up, setup sheet, admin); a semi-private club = Public + member passes.
+- [ ] FB-3 — GreenReserve's $1.50/player is lost when a golfer pays at the
+  counter ("paid offline" → no Stripe charge). DECIDED (Cam 2026-09-29):
+  charge the $1.50/player to the golfer's card AT BOOKING, non-refundable;
+  the green fee stays paid at the course. Every course therefore collects a
+  card (the no-card flow ends). Touches money: attended, spec first — the
+  booking/cancel/refund/check-in paths all assume the fee is collected at
+  check-in today.
+- [ ] FB-2 — homepage (greenreserve.app) copy + structure, Cam's notes
+  2026-09-29: change the hero blurb; must NOT say "no contract" (and not "no
+  courses in the new contract"); smoother "See how it works" button; "Your
+  page" section should be about how it links from the course's own website,
+  and how it sits inside the current secure site; shorter "Your rules";
+  app/courses up front; drop "every course gets its own page"; "Live in four
+  steps" needs more depth (the process is more extensive); explain fees /
+  taxes; better FAQ questions. BUSINESS PROBLEM (not copy): golfers who pay
+  the course cash/card at the counter — GreenReserve still has to collect its
+  per-player fee ("$50" in the note, presumably the $1.50/player) — needs a
+  decision before any copy claims it. Marketing fee copy is FROZEN behind
+  LQ-2 (CLAUDE.md) — copy changes need Cam's wording approval.
+
+- [x] PERF-1 (77c8947) — FIXED, measured locally against a Sentry-enabled
+  production build (prod's numbers only reproduce with the DSN set). Causes:
+  Sentry SDK + Replay in every page's first-load JS (now loaded on first input
+  / 10s, errors buffered); Home hero hid-and-refaded at hydration; /for-courses
+  client-rendered by useSearchParams (CLS 0.26); course page fetched after
+  hydration (now SSR via lib/public-course, booking area mounts client-side
+  because "today" is the golfer's timezone). After: every page 94-99, TBT
+  <150ms, CLS <=0.004. OPEN, CAM: (1) LCP is 2.0-2.9s vs a 2.5s budget —
+  what is left is the two preloaded Fraunces/Inter files (84 kB) + framework
+  JS on the SIMULATED slow-4G link (real first paint ~0.2s). Options: subset
+  the fonts / drop a weight (design call), or budget LCP at 3.0s under
+  simulation. (2) Set repo variable AUDIT_COURSE_SLUG to a live course —
+  'daisylinks' is not live on prod, so that row timed a 404. (3) The audit
+  measures PRODUCTION, not the PR, so it only goes green after merge+deploy.
+  ORIGINAL: PERF-1 — golfer pages over budget (first real Lighthouse run, PR #2,
   mobile + slow 4G): Home 63 (TBT 1301ms, LCP 3.83s), For Courses 69 (CLS 0.265,
   LCP 3.57s), Course page 77 (CLS 0.181, LCP 3.59s), Booking 70 (LCP 5.07s,
   TBT 439ms). Worst: Home's blocking JS and For Courses' layout shift. Diagnose

@@ -145,9 +145,12 @@ type PreviewMode = { courseId: string; token: string } | null;
 export default function CourseDetailPage({
   params,
   previewMode = null,
+  initialCourse,
 }: {
   params: Promise<{ slug: string }>;
   previewMode?: PreviewMode;
+  /** PERF-1: server-rendered course (null = not found); undefined = fetch it here (preview). */
+  initialCourse?: CourseWithBrand | null;
 }) {
   const { slug } = use(params);
   const isDemo = DEMO_COURSE_SLUGS.includes(slug) && !previewMode;
@@ -165,8 +168,11 @@ export default function CourseDetailPage({
   const [previewChangesError, setPreviewChangesError] = useState('');
   const [previewChangesConfirmMsg, setPreviewChangesConfirmMsg] = useState('');
 
-  const [course, setCourse] = useState<CourseWithBrand | null>(null);
-  const [notFound, setNotFound] = useState(false);
+  // Set on mount; the date-dependent booking area renders only after it (see below).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  const [course, setCourse] = useState<CourseWithBrand | null>(initialCourse ?? null);
+  const [notFound, setNotFound] = useState(initialCourse === null);
 
   const [selectedDate, setSelectedDate] = useState(() => {
     const d = searchParams.get('date');
@@ -183,7 +189,7 @@ export default function CourseDetailPage({
     return [1, 2, 3, 4].includes(p) ? p : 2;
   });
   const [selectedTime, setSelectedTime] = useState<TeeTime | null>(null);
-  const [withCart, setWithCart] = useState(false);
+  const [withCart, setWithCart] = useState(!!initialCourse?.cart_required);
   const [todFilter, setTodFilter] = useState<TimeOfDay>(() => {
     const t = searchParams.get('tod');
     return ['all', 'morning', 'afternoon', 'twilight'].includes(t ?? '') ? (t as TimeOfDay) : 'all';
@@ -216,6 +222,9 @@ export default function CourseDetailPage({
   const [windowNotice, setWindowNotice] = useState<WindowNotice | null>(null);
 
   useEffect(() => {
+    if (!previewMode && initialCourse !== undefined) {
+      return; // server already sent it (cart default set from it in useState)
+    }
     const url = previewMode
       ? `/api/preview/${previewMode.courseId}?token=${previewMode.token}`
       : `/api/courses/${slug}`;
@@ -898,8 +907,26 @@ export default function CourseDetailPage({
                 </a>
               )}
             </div>
+          ) : !mounted ? (
+            // PERF-1: the course arrives in the first HTML now, but everything in
+            // the booking area hangs off "today" in the GOLFER's timezone (the
+            // date strip, the calendar, "Today", the booking window), which the
+            // server — on UTC — cannot know; rendering it there broke hydration
+            // every US evening. So the shell is server-rendered and this area
+            // fills in on mount. Tall on purpose: anything it pushes is below the fold.
+            // A <section> with its own key, not a <div>: React must REPLACE it
+            // with the grid, not morph it — a morphed node counts as a layout
+            // shift (measured 0.24), a newly inserted one does not.
+            <section key="booking-placeholder" className="min-h-[900px] animate-pulse" aria-hidden="true">
+              <div className="h-10 bg-line/60 rounded-md mb-4 lg:ml-[292px]" />
+              <div className="space-y-3 lg:ml-[292px]">
+                <div className="h-16 bg-line/60 rounded-md" />
+                <div className="h-16 bg-line/60 rounded-md" />
+                <div className="h-16 bg-line/60 rounded-md" />
+              </div>
+            </section>
           ) : (
-            <div className="grid lg:grid-cols-[260px_1fr] gap-8 items-start">
+            <div key="booking" className="grid lg:grid-cols-[260px_1fr] gap-8 items-start">
 
               {/* LEFT: Filters */}
               <aside className={`${filtersOpen ? 'block' : 'hidden'} lg:block`}>
