@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, RefreshCw, Lock, Copy, KeyRound } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
@@ -23,11 +23,13 @@ const ROLES = [
   { value: 'viewer',  label: 'Viewer',  desc: 'Read-only: Overview, inquiries and the courses list. No money, golfer data, messages or course settings.' },
 ];
 
-function roleBadgeClass(role: string) {
-  if (role === 'owner') return 'bg-pine/10 text-pine';
-  if (role === 'manager') return 'bg-ink/5 text-ink border border-line';
-  if (role === 'support') return 'bg-paper text-ink-soft border border-line';
-  return 'bg-paper text-ink-faint border border-line';
+// A role is not a status, so it is plain text, not a tinted pill (CLAUDE.md
+// BANNED); the owner reads in the accent, the rest step down in weight.
+function roleTextClass(role: string) {
+  if (role === 'owner') return 'text-pine font-medium';
+  if (role === 'manager') return 'text-ink font-medium';
+  if (role === 'support') return 'text-ink-soft';
+  return 'text-ink-muted';
 }
 
 const iCls = INPUT_COMPACT;
@@ -215,7 +217,7 @@ export default function EmployeesPage() {
             <div className="grid grid-cols-2 gap-2">
               {ROLES.map(r => (
                 <div key={r.value} className="flex items-start gap-2">
-                  <span className={`text-[10px] uppercase tracking-[0.04em] font-medium px-2 py-0.5 rounded shrink-0 ${roleBadgeClass(r.value)}`}>{r.label}</span>
+                  <span className={`text-[10px] uppercase tracking-[0.1em] shrink-0 ${roleTextClass(r.value)}`}>{r.label}</span>
                   <span className="text-xs text-ink-muted">{r.desc}</span>
                 </div>
               ))}
@@ -280,8 +282,8 @@ export default function EmployeesPage() {
               </thead>
               <tbody>
                 {admins.map((admin, i) => (
-                  <>
-                    <tr key={admin.id} className={'transition-colors ' + (i < admins.length - 1 && !resetPwds[admin.id] ? 'border-b border-line-soft' : '')}>
+                  <Fragment key={admin.id}>
+                    <tr className={'transition-colors ' + (i < admins.length - 1 && !resetPwds[admin.id] ? 'border-b border-line-soft' : '')}>
                       <td className="px-5 py-3.5">
                         <div className="text-sm font-medium text-ink">{admin.name}</div>
                         <div className="text-xs text-ink-soft">{admin.email}</div>
@@ -298,7 +300,7 @@ export default function EmployeesPage() {
                             {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                           </select>
                         ) : (
-                          <span className={`text-[11px] uppercase tracking-[0.1em] px-2 py-0.5 rounded ${roleBadgeClass(admin.role)}`}>
+                          <span className={`text-[11px] uppercase tracking-[0.1em] ${roleTextClass(admin.role)}`}>
                             {ROLES.find(r => r.value === admin.role)?.label || admin.role}
                           </span>
                         )}
@@ -349,7 +351,7 @@ export default function EmployeesPage() {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 ))}
                 {admins.length === 0 && !loadError && (
                   <tr>

@@ -1928,9 +1928,8 @@ export default function CourseDetailPage() {
                       <div className="px-4 py-3 flex items-center gap-3">
                         <span className="font-mono font-medium text-ink text-sm w-14 shrink-0">{slot.time}</span>
                         <span className="text-xs text-ink-muted">{slot.product?.label ? `${slot.product.label} · ` : ''}{slot.holes}h · ${slot.greenFee}</span>
-                        <span className={'text-xs px-2 py-0.5 rounded font-medium ' + (slot.status === 'blocked' ? 'bg-bad/10 text-bad' : slot.bookings.length > 0 ? 'bg-ok/10 text-ok' : 'bg-paper text-ink-muted border border-line')}>
-                          {slot.status === 'blocked' ? 'Blocked' : slot.bookings.length > 0 ? `${slot.bookings.length} booked` : `${slot.playersAvailable} open`}
-                        </span>
+                        <StatusDot status={slot.status === 'blocked' ? 'bad' : slot.bookings.length > 0 ? 'ok' : 'neutral'}
+                          label={slot.status === 'blocked' ? 'Blocked' : slot.bookings.length > 0 ? `${slot.bookings.length} booked` : `${slot.playersAvailable} open`}/>
                         <div className="ml-auto flex items-center gap-1.5">
                           <button
                             onClick={() => { setManualError(''); setManualSlot(slot.id); }}
@@ -1962,7 +1961,7 @@ export default function CourseDetailPage() {
                                     <a href={'mailto:' + b.golferEmail} className="text-xs text-pine hover:underline">{b.golferEmail}</a>
                                     {b.golferPhone && <span className="text-xs text-ink-muted">{b.golferPhone}</span>}
                                     {b.paymentStatus === 'manual' && (
-                                      <span className="text-xs px-1.5 py-0.5 bg-warn/10 text-warn rounded border border-warn/20">Manual</span>
+                                      <StatusDot status="warn" label="Manual"/>
                                     )}
                                   </div>
                                 </div>

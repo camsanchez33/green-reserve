@@ -12,6 +12,7 @@ import { toast } from '@/components/dashboard/Toast';
 import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
 import { useTabIntro } from '@/lib/use-tab-intro';
 import { formatMoney as fmtMoney, formatDate as fmtDate } from '@/lib/format';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 interface Tier {
@@ -676,7 +677,7 @@ export default function MembersPage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium text-ink text-sm">{m.name || '—'}</span>
                         {!m.linked && (
-                          <span className="text-xs text-warn bg-warn/5 border border-warn/20 px-2 py-0.5 rounded-md">No account yet</span>
+                          <StatusDot status="warn" label="No account yet"/>
                         )}
                         {m.status !== 'active' && (
                           <span className="text-xs text-ink-muted bg-paper border border-line px-2 py-0.5 rounded-md">Inactive</span>

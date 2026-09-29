@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Plus, Trash2, AlertCircle, CheckCircle2, CalendarClock } from 'lucide-react';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
@@ -236,9 +237,10 @@ function ProductsSection({ products, setProducts, nines }: { products: CoursePro
                   <option value={18}>18 holes</option>
                   <option value={9}>9 holes</option>
                 </select>
-                <button onClick={() => updateProduct(product.id, { active: !product.active })}
-                  className={'text-xs font-medium px-2.5 py-1.5 rounded-md shrink-0 transition-colors ' + (product.active ? 'bg-ok/10 text-ok' : 'bg-line-soft text-ink-faint')}>
-                  {product.active ? 'Active' : 'Inactive'}
+                <button onClick={() => updateProduct(product.id, { active: !product.active })} aria-pressed={product.active}
+                  title={product.active ? 'Click to hide this product from golfers' : 'Click to offer this product again'}
+                  className="px-2.5 py-1.5 rounded-md shrink-0 border border-line hover:border-line-strong transition-colors">
+                  <StatusDot status={product.active ? 'ok' : 'neutral'} label={product.active ? 'Active' : 'Inactive'}/>
                 </button>
                 <RowStatus saving={savingId === product.id} saved={savedId === product.id} error={errorId === product.id ? errorMsg : ''} />
                 <button onClick={() => deleteProduct(product.id)} className="text-ink-faint hover:text-bad transition-colors shrink-0" title="Delete product">

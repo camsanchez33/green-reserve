@@ -553,7 +553,7 @@ function InquiriesListInner() {
           <div className="text-sm text-ink truncate">{inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''}</div>
           <div className="text-[12px] text-ink-muted truncate">{inq.phone || <span className="text-ink-faint">no phone</span>}</div>
           {hasBadEmail(inq) && (
-            <span className="inline-block mt-0.5 text-[9px] font-medium uppercase tracking-[0.1em] bg-warn/10 text-warn px-1.5 py-0.5" title={inq.email}>Bad email</span>
+            <span className="block mt-0.5" title={inq.email}><StatusDot status="warn" label="Bad email"/></span>
           )}
         </td>
         {/* 3 · Stage */}
