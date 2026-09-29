@@ -7,6 +7,9 @@ import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { ErrorBanner } from '@/components/ui/ErrorState';
+import { Card } from '@/components/ui/Card';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { INPUT_COMPACT } from '@/components/ui/field';
 
 interface Admin {
   id: string; email: string; name: string; role: string;
@@ -27,7 +30,7 @@ function roleBadgeClass(role: string) {
   return 'bg-paper text-ink-faint border border-line';
 }
 
-const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-ink text-sm placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+const iCls = INPUT_COMPACT;
 
 function fmt(d: string | null) {
   if (!d) return 'Never';
@@ -207,8 +210,8 @@ export default function EmployeesPage() {
           </div>
 
           {/* Role reference */}
-          <div className="bg-white border border-line rounded-lg p-4 mb-6">
-            <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2.5">Role permissions</div>
+          <Card className="p-4 mb-6">
+            <Eyebrow className="mb-2.5">Role permissions</Eyebrow>
             <div className="grid grid-cols-2 gap-2">
               {ROLES.map(r => (
                 <div key={r.value} className="flex items-start gap-2">
@@ -217,11 +220,11 @@ export default function EmployeesPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
 
           {/* Add employee — owner only */}
           {isOwner && (
-            <div className="bg-white border border-line rounded-lg p-5 mb-6">
+            <Card className="p-5 mb-6">
               <div className="flex items-center gap-2 mb-4">
                 <Plus className="w-4 h-4 text-pine"/>
                 <span className="text-sm font-medium text-ink">Add employee</span>
@@ -252,7 +255,7 @@ export default function EmployeesPage() {
                   {creating ? 'Creating...' : 'Create account'}
                 </button>
               </form>
-            </div>
+            </Card>
           )}
 
           {loadError && (
@@ -264,14 +267,14 @@ export default function EmployeesPage() {
 
 
           {/* Employee list */}
-          <div className="bg-white border border-line rounded-lg overflow-x-auto mb-6">
+          <Card className="overflow-x-auto mb-6">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-line bg-paper">
-                  <th className="text-left text-[11px] uppercase tracking-[0.1em] text-ink-muted px-5 py-3">Name</th>
-                  <th className="text-left text-[11px] uppercase tracking-[0.1em] text-ink-muted px-5 py-3">Role</th>
-                  <th className="text-left text-[11px] uppercase tracking-[0.1em] text-ink-muted px-5 py-3">Last login</th>
-                  <th className="text-left text-[11px] uppercase tracking-[0.1em] text-ink-muted px-5 py-3">Status</th>
+                  <Eyebrow as="th" className="text-left px-5 py-3">Name</Eyebrow>
+                  <Eyebrow as="th" className="text-left px-5 py-3">Role</Eyebrow>
+                  <Eyebrow as="th" className="text-left px-5 py-3">Last login</Eyebrow>
+                  <Eyebrow as="th" className="text-left px-5 py-3">Status</Eyebrow>
                   {isOwner && <th className="px-5 py-3 w-56"/>}
                 </tr>
               </thead>
@@ -357,10 +360,10 @@ export default function EmployeesPage() {
                 )}
               </tbody>
             </table>
-          </div>
+          </Card>
 
           {/* Change own password */}
-          <div className="bg-white border border-line rounded-lg p-5">
+          <Card className="p-5">
             <div className="flex items-center gap-2 mb-4">
               <Lock className="w-4 h-4 text-pine"/>
               <span className="text-sm font-medium text-ink">Change your password</span>
@@ -373,15 +376,15 @@ export default function EmployeesPage() {
             )}
             <form onSubmit={handleChangePassword} className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Current password</span>
+                <label className="block"><Eyebrow as="span" className="block mb-1.5">Current password</Eyebrow>
                 <input type="password" value={cpCurrentPassword} onChange={e => setCpCurrentPassword(e.target.value)} required placeholder="Current password" className={iCls + ' w-full'}/></label>
               </div>
               <div>
-                <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">New password</span>
+                <label className="block"><Eyebrow as="span" className="block mb-1.5">New password</Eyebrow>
                 <input type="password" value={cpNewPassword} onChange={e => setCpNewPassword(e.target.value)} required placeholder="Min 8 characters" className={iCls + ' w-full'}/></label>
               </div>
               <div>
-                <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Confirm new password</span>
+                <label className="block"><Eyebrow as="span" className="block mb-1.5">Confirm new password</Eyebrow>
                 <input type="password" value={cpConfirm} onChange={e => setCpConfirm(e.target.value)} required placeholder="Confirm password" className={iCls + ' w-full'}/></label>
               </div>
               <div className="col-span-3">
@@ -391,7 +394,7 @@ export default function EmployeesPage() {
                 </button>
               </div>
             </form>
-          </div>
+          </Card>
 
         </div>
       </div>
