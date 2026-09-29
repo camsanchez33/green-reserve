@@ -42,7 +42,10 @@ function inviteState(inq: Inq, booked: object | null) {
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
-  if (!(await rateLimit(`callpage:${evidentiaryIp(req)}`, 60, 3600))) {
+  // 300/hour/IP (was 60): the token is 192 random bits, so this is not what
+  // stops guessing — it only caps abuse. 60 locked Cam out while testing
+  // (the old embed polled every 30s). One page open is now one request.
+  if (!(await rateLimit(`callpage:${evidentiaryIp(req)}`, 300, 3600))) {
     return NextResponse.json({ error: 'Too many requests — try again in a little while.' }, { status: 429 });
   }
   const { token } = await params;
