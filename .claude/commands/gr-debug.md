@@ -16,7 +16,7 @@ Read `CLAUDE.md` — specifically the **Known gotchas** section and the
 failures in this codebase, including why a broken deploy can pass a build. Do not
 work from memory of how this project behaves; read it.
 
-If the bug is in a route, `ARCHITECTURE.md` maps the backend.
+If the bug is in a route, `docs/CODEMAP.md` maps the backend (every route, its auth, where that auth is enforced). ARCHITECTURE.md no longer carries route tables.
 
 ## 2. Reproduce before touching anything
 
