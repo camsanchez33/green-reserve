@@ -4,18 +4,11 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-29 02:28 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `7756ce9` · working tree **1 dirty file(s)**
+Generated 2026-09-29 02:32 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `b81c2f1` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
-
-### Uncommitted working tree (1 file(s))
-
-- `M RUN_QUEUE.md`
-
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
 
 ## In flight
 
@@ -165,6 +158,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `b81c2f1` 2026-09-29 — queue/spec update
+- `a9012e2` 2026-09-29 — queue/spec update
 - `7756ce9` 2026-09-29 — queue/spec update
 - `371ffff` 2026-09-29 — All contact, alert and reply-to addresses point at the inbox that is read
 - `b2fdff8` 2026-09-29 — queue/spec update
@@ -175,8 +170,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `a130919` 2026-09-29 — queue/spec update
 - `0d84aaf` 2026-09-29 — SD-9c: tee-sheet staff can reset a forgotten password
 - `0fc22b8` 2026-09-29 — queue/spec update
-- `34ea4d9` 2026-09-29 — queue/spec update
-- `9d6dc6a` 2026-09-29 — SD-8e: booking status is a StatusDot, and 'card on file' reads differently from 'paid'
 
 ---
 
