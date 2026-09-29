@@ -9,6 +9,9 @@ import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { compareThreads, type ThreadSignal } from '@/lib/thread-signal';
 import { formatStamp as fmtFull, formatDateTime as fmtDate } from '@/lib/format';
+import { Card } from '@/components/ui/Card';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { INPUT } from '@/components/ui/field';
 
 interface MessageItem {
   id: string; senderType: 'admin' | 'operator'; senderName: string;
@@ -51,7 +54,7 @@ const fmtTime = (d: string) => {
   return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
-const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+const iCls = `${INPUT} w-full`;
 
 function MessagesContent() {
   const router = useRouter();
@@ -478,7 +481,7 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
         )}
 
         {isOwner ? (
-          <div className="bg-white border border-line rounded-lg p-6 mb-7">
+          <Card className="p-6 mb-7">
             <div className="flex items-center gap-2 mb-4">
               <Radio className="w-4 h-4 text-pine"/>
               <span className="text-sm font-medium text-ink">{reviewing ? 'Review before sending' : 'New announcement'}</span>
@@ -491,11 +494,11 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
             {!reviewing ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Title</span>
+                  <label className="block"><Eyebrow as="span" className="block mb-1.5">Title</Eyebrow>
                   <input value={title} onChange={e => setTitle(e.target.value)} className={iCls} placeholder="Maintenance window this weekend"/></label>
                 </div>
                 <div>
-                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Message</span>
+                  <label className="block"><Eyebrow as="span" className="block mb-1.5">Message</Eyebrow>
                   <textarea value={body} onChange={e => setBody(e.target.value)} rows={5} className={iCls + ' resize-none'} placeholder="Write your message here. Separate paragraphs with blank lines."/></label>
                 </div>
                 <div className="flex items-center justify-between flex-wrap gap-4">
@@ -522,7 +525,7 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
             ) : (
               <div className="space-y-4">
                 <div className="bg-paper border border-line rounded-lg p-4">
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Preview</div>
+                  <Eyebrow className="mb-2">Preview</Eyebrow>
                   <div className="text-sm font-medium text-ink mb-2">{title}</div>
                   <div className="text-sm text-ink-soft whitespace-pre-line leading-relaxed">{body}</div>
                 </div>
@@ -549,7 +552,7 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
                 </div>
               </div>
             )}
-          </div>
+          </Card>
         ) : (
           <div className="bg-paper border border-line rounded-lg px-5 py-4 mb-7 text-sm text-ink-soft">
             Only the owner can send an announcement. The history is below.
@@ -557,16 +560,16 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
         )}
 
         <div>
-          <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">History</div>
+          <Eyebrow className="mb-3">History</Eyebrow>
           {loading && <div className="text-ink-muted text-sm py-8 text-center">Loading...</div>}
           {!loading && !loadError && broadcasts.length === 0 && (
-            <div className="text-ink-muted text-sm py-12 text-center bg-white border border-line rounded-lg">
+            <Card className="text-ink-muted text-sm py-12 text-center">
               No announcements yet
-            </div>
+            </Card>
           )}
           <div className="space-y-3">
             {broadcasts.map(b => (
-              <div key={b.id} className="bg-white border border-line rounded-lg p-5">
+              <Card key={b.id} className="p-5">
                 <div className="flex items-start justify-between gap-4 mb-2">
                   <div className="font-medium text-ink text-sm">{b.title}</div>
                   <div className="flex items-center gap-3 shrink-0">
@@ -580,7 +583,7 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
                 </div>
                 <div className="text-sm text-ink-soft whitespace-pre-line line-clamp-3 mb-3">{b.body}</div>
                 <div className="text-xs text-ink-muted">{fmtDate(b.createdAt)} · by {b.sentByName}</div>
-              </div>
+              </Card>
             ))}
           </div>
         </div>
