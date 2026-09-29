@@ -176,6 +176,15 @@ export async function GET(req: NextRequest) {
   const collectedCents = collectedCurrentAgg._sum.accessFeeTotal ?? 0;
   const collectedPriorCents = collectedPriorAgg._sum.accessFeeTotal ?? 0;
 
+  // FB-3: booking fees charged on their own (no-shows, rounds paid at the
+  // counter) on the PLATFORM account. Not application fees, so they stay out
+  // of the Stripe reconciliation below; they do count toward net.
+  const [sepCharged, sepRefunded] = await Promise.all([
+    prisma.paymentEvent.aggregate({ where: { kind: 'fee_charged', createdAt: inCurrent }, _sum: { amountCents: true }, _count: { id: true } }),
+    prisma.paymentEvent.aggregate({ where: { kind: 'fee_refunded', createdAt: inCurrent }, _sum: { amountCents: true } }),
+  ]);
+  const separateFeesCents = (sepCharged._sum.amountCents ?? 0) - (sepRefunded._sum.amountCents ?? 0);
+
   // ---- Problems (ALL-TIME): money that should exist and does not ----
   const failedCheckIn = failedCheckIns.map(b => ({
     bookingId: b.id, courseId: b.course.id, courseName: b.course.name,
@@ -221,6 +230,8 @@ export async function GET(req: NextRequest) {
       feesCollectedDelta: periodDelta(collectedCents, collectedPriorCents),
       bookedPending: (bookedPendingAgg._sum.accessFeeTotal ?? 0) / 100,
       bookedPendingRounds: bookedPendingAgg._count.id,
+      separateFees: separateFeesCents / 100,
+      separateFeeCharges: sepCharged._count.id,
     },
     byCourse,
     moneyInMotion: {
@@ -261,7 +272,7 @@ export async function GET(req: NextRequest) {
     stripeUnavailable = true;
   }
 
-  const pnlCurrent = computeNetPnL({ feesEarnedCents: collectedCents, stripeProcessingCents, expensesCents });
+  const pnlCurrent = computeNetPnL({ feesEarnedCents: collectedCents + separateFeesCents, stripeProcessingCents, expensesCents });
   // The prior delta compares NET excluding Stripe (collected − expenses) so a
   // missing Stripe fetch never fabricates a prior processing number. MP-6a:
   // it is an absolute dollar move now — a percentage across a sign flip

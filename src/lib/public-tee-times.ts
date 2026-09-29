@@ -1,0 +1,80 @@
+// PERF-1: the public tee-time list, in one place — the tee-times API and the
+// server render of /book both use it, so /book can ship its tee time in the
+// first HTML instead of fetching it after hydration (its whole LCP).
+import { todayIn, clockIn } from '@/lib/course-time';
+import { prisma } from '@/lib/prisma';
+import { centsToDollarsOr0 } from '@/lib/money';
+import { windowFor, withinWindow, outsideWindowBody } from '@/lib/booking-window';
+
+/**
+ * Maps a Prisma TeeTime row (camelCase, real availability counts) onto the
+ * snake_case shape the golfer-facing UI was built against (courses/[slug]/page.tsx
+ * reads green_fee, cart_fee, players_available, walking_allowed, status).
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function normalizeDbTeeTime(t: any) {
+  const spotsLeft = t.playersAvailable - t.playersBooked;
+  const status = spotsLeft <= 1 ? 'almost_full' : spotsLeft <= 2 ? 'limited' : 'available';
+  return {
+    id: t.id,
+    course_id: t.courseId,
+    date: t.date,
+    time: t.time,
+    holes: t.holes,
+    // L2: which bookable product this slot sells (null on a simple course).
+    product_id: t.productId ?? null,
+    product_label: t.product?.label ?? null,
+    // the round's rating/slope on the course's first tee set, when it was set
+    ...(() => {
+      const r = (t.product?.teeSetRatings ?? []).slice().sort((a: { teeSet: { sortOrder: number } }, b: { teeSet: { sortOrder: number } }) => a.teeSet.sortOrder - b.teeSet.sortOrder)[0];
+      return r && r.rating > 0 ? { product_rating: r.rating, product_slope: r.slope } : {};
+    })(),
+    players_available: spotsLeft,
+    // MP-3 B2c — THE `any` HOLE AGAIN. This mapper takes `t: any` (with an
+    // explicit eslint-disable), so the renamed columns produced NO compile
+    // error: t.greenFee simply read undefined and every tee time on the
+    // public course page would have rendered with no price. Found by grepping the old
+    // names after tsc went green — the same way B2b's normalize-course was.
+    // Cents at rest, dollars on the wire (the UI formats dollars).
+    green_fee: centsToDollarsOr0(t.greenFeeCents),
+    cart_fee: centsToDollarsOr0(t.cartFeeCents),
+    walking_allowed: t.walkingAllowed,
+    status,
+  };
+}
+
+export type PublicTeeTimes =
+  | { ok: true; teeTimes: ReturnType<typeof normalizeDbTeeTime>[] }
+  | { ok: false; status: number; body: Record<string, unknown> };
+
+/** Bookable public tee times for a course on a date — the API's exact rules. */
+export async function loadPublicTeeTimes(slug: string, date: string): Promise<PublicTeeTimes> {
+  const dbCourse = await prisma.course.findUnique({ where: { slug } });
+  if (!dbCourse || !dbCourse.active || dbCourse.liveStatus !== 'live') {
+    return { ok: false, status: 404, body: { error: 'Course not found' } };
+  }
+
+  // BOOKING WINDOWS: the public sees the sheet only as far ahead as the course
+  // allows. Enforced here, not just in the picker — the picker reads this.
+  const win = windowFor(dbCourse, null);
+  if (!withinWindow(date, win.days)) {
+    return { ok: false, status: 403, body: outsideWindowBody(win.days, win.scope, dbCourse) as Record<string, unknown> };
+  }
+
+  const teeTimes = await prisma.teeTime.findMany({
+    where: { courseId: dbCourse.id, date, status: { not: 'blocked' } },
+    orderBy: { time: 'asc' },
+    include: { product: { select: { label: true, teeSetRatings: { select: { rating: true, slope: true, teeSet: { select: { sortOrder: true } } } } } } },
+  });
+
+  // SD-3: strip slots that have passed on the COURSE's clock. TeeTime.time is
+  // course-local, so comparing it against a UTC clock hid or showed the
+  // wrong hours for any course outside UTC.
+  const todayLocal = todayIn(dbCourse.timezone);
+  const nowLocal = clockIn(dbCourse.timezone);
+  const visible = date === todayLocal
+    ? teeTimes.filter(t => t.time > nowLocal)
+    : teeTimes;
+
+  return { ok: true, teeTimes: visible.map(normalizeDbTeeTime) };
+}

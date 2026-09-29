@@ -35,7 +35,7 @@ type TeeTime = {
 };
 type Booking = {
   id: string; golferName: string; golferEmail: string; players: number; createdAt: string;
-  status: string; paymentStatus: string; totalAmount: number;
+  status: string; paymentStatus: string; totalAmount: number; accessFeeTotal?: number;
   // SD-4: set by a failed check-in charge; cleared when a charge goes through.
   checkInFailReason?: string;
   // SD-5 lifecycle
@@ -171,13 +171,20 @@ function DashboardPageInner() {
       const n = askHeadcount(b);
       if (n === null) return;
       checkedInPlayers = n < b.players ? n : undefined;
-      const owed = Math.round(b.totalAmount * (checkedInPlayers ?? b.players) / b.players);
-      if (!confirm(`Mark ${b.golferName} checked in — ${checkedInPlayers ?? b.players} of ${b.players} players, paid $${(owed / 100).toFixed(2)} at the counter? No card will be charged.`)) return;
+      // FB-3: GreenReserve's booking fee is charged to the golfer's saved card
+      // on its own, so the counter collects only the course's share — taking
+      // the full total here would charge the golfer the fee twice.
+      const who = checkedInPlayers ?? b.players;
+      const fee = Math.round((b.accessFeeTotal ?? 0) * who / b.players);
+      const owed = Math.round((b.totalAmount - (b.accessFeeTotal ?? 0)) * who / b.players);
+      const feeLine = fee > 0 ? ` GreenReserve's $${(fee / 100).toFixed(2)} booking fee is charged to their saved card — don't collect it at the counter.` : ' No card will be charged.';
+      if (!confirm(`Mark ${b.golferName} checked in — ${who} of ${b.players} players, paid $${(owed / 100).toFixed(2)} at the counter?${feeLine}`)) return;
     }
     setRowBusy(b.id);
     try {
-      const r = await dfetch('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action, ...(checkedInPlayers ? { checkedInPlayers } : {}) }) });
+      const r = await dfetch<{ fee?: string | null }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action, ...(checkedInPlayers ? { checkedInPlayers } : {}) }) });
       if (!r.ok) { toast(r.error, 'warn'); return; }
+      if (r.data?.fee) toast(r.data.fee, 'warn');
       toast(action === 'no_show' ? `${b.golferName} marked as a no-show.` : action === 'still_coming' ? `${b.golferName} is still coming.` : `${b.golferName} checked in — paid at the counter.`, 'ok');
       await loadTimes(selectedDate);
     } finally {

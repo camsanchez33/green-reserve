@@ -4,15 +4,28 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-29 05:01 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `57ab750` · working tree clean
+Generated 2026-09-29 13:11 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `e343788` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
+`RUN_QUEUE.md` was last committed **2026-09-29**. 1 commit(s) since then are not mentioned anywhere in it:
+
+| commit | date | subject |
+|---|---|---|
+| `e343788` | 2026-09-29 | FB-3: collect the $1.50/player when a round isn't paid by card |
+
+**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (1 file(s))
+
+- `M RUN_QUEUE.md`
+
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
-- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:2014`
+- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:2027`
   - FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because "no linked inquiry" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding the
   - Last session's raw Prisma script (a read-only check confirming Fake
   - Fairways existed) got blocked by this sandbox's auto-mode classifier as a potential production-database access outside the app's own authenticated API. That block is almost certainly the intended, correct behavior — a raw script has no place touching real course/booking/ operator data, authorized or not — so I did NOT retry it, and built the override into the sanctioned admin API instead, per the 
@@ -28,65 +41,65 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED | 2026-09-16 | 12d | `951433d` | `RUN_QUEUE.md:2217` |
-| SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box | 2026-09-17 | 11d | `cfeb2e1` | `RUN_QUEUE.md:2330` |
+| SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED | 2026-09-16 | 13d | `951433d` | `RUN_QUEUE.md:2230` |
+| SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box | 2026-09-17 | 11d | `cfeb2e1` | `RUN_QUEUE.md:2343` |
 | SD-8d — browser Back still discards unsaved Settings edits (from the | 2026-09-28 | 0d | `70a424e` | `RUN_QUEUE.md:536` |
 | SD-8e — status is rendered as bare coloured text where the design | 2026-09-29 | 0d | `9d6dc6a` | `RUN_QUEUE.md:562` |
-| SD-9c — auth: (1) staff password recovery — CourseStaff has no reset | 2026-09-29 | 0d | `0d84aaf` | `RUN_QUEUE.md:626` |
-| BUG: 56 of 59 email senders report success when Resend rejects the send | 2026-09-29 | 0d | `209e652` | `RUN_QUEUE.md:647` |
-| MP-5e part 3 — the Overview relationship feed (notes + settings | 2026-09-29 | 0d | `c6a2142` | `RUN_QUEUE.md:1290` |
-| BUG: inquiry submissions send no emails | 2026-09-28 | 0d | `8b9a046` | `RUN_QUEUE.md:2533` |
-| BUG: perf audit crashed on every page | 2026-09-29 | 0d | `dd7056a` | `RUN_QUEUE.md:2558` |
-| RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM). | 2026-09-29 | 0d | `f57f269` | `RUN_QUEUE.md:2569` |
-| RV-2 — review follow-ups, small (from /gr-review 2026-09-29): | 2026-09-29 | 0d | `0eab366` | `RUN_QUEUE.md:2579` |
-| CAL-2 — Cal.com is the ONLY call scheduler | 2026-09-29 | 0d | `e082dd0` | `RUN_QUEUE.md:2614` |
-| BUG: hello@greenreserve.app takes no mail | 2026-09-29 | 0d | `371ffff` | `RUN_QUEUE.md:2646` |
-| CAL-1 — Cal.com as the call scheduler | 2026-09-29 | 0d | `a5ed9d7` | `RUN_QUEUE.md:2664` |
-| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | — | — | — | `RUN_QUEUE.md:688` |
-| MP-1 | — | — | — | `RUN_QUEUE.md:718` |
-| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | — | — | — | `RUN_QUEUE.md:753` |
-| MP-2 | — | — | — | `RUN_QUEUE.md:794` |
-| MP-2b | — | — | — | `RUN_QUEUE.md:831` |
-| MP-2c | — | — | — | `RUN_QUEUE.md:880` |
-| MP-2d | — | — | — | `RUN_QUEUE.md:928` |
-| MP-2e | — | — | — | `RUN_QUEUE.md:970` |
-| UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | — | — | — | `RUN_QUEUE.md:2175` |
+| SD-9c — auth: (1) staff password recovery — CourseStaff has no reset | 2026-09-29 | 0d | `0d84aaf` | `RUN_QUEUE.md:639` |
+| BUG: 56 of 59 email senders report success when Resend rejects the send | 2026-09-29 | 0d | `209e652` | `RUN_QUEUE.md:660` |
+| MP-5e part 3 — the Overview relationship feed (notes + settings | 2026-09-29 | 0d | `c6a2142` | `RUN_QUEUE.md:1303` |
+| BUG: inquiry submissions send no emails | 2026-09-28 | 0d | `8b9a046` | `RUN_QUEUE.md:2546` |
+| BUG: perf audit crashed on every page | 2026-09-29 | 0d | `dd7056a` | `RUN_QUEUE.md:2571` |
+| RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM). | 2026-09-29 | 0d | `f57f269` | `RUN_QUEUE.md:2582` |
+| RV-2 — review follow-ups, small (from /gr-review 2026-09-29): | 2026-09-29 | 0d | `0eab366` | `RUN_QUEUE.md:2592` |
+| CAL-2 — Cal.com is the ONLY call scheduler | 2026-09-29 | 0d | `e082dd0` | `RUN_QUEUE.md:2682` |
+| BUG: hello@greenreserve.app takes no mail | 2026-09-29 | 0d | `371ffff` | `RUN_QUEUE.md:2714` |
+| CAL-1 — Cal.com as the call scheduler | 2026-09-29 | 0d | `a5ed9d7` | `RUN_QUEUE.md:2732` |
+| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | — | — | — | `RUN_QUEUE.md:701` |
+| MP-1 | — | — | — | `RUN_QUEUE.md:731` |
+| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | — | — | — | `RUN_QUEUE.md:766` |
+| MP-2 | — | — | — | `RUN_QUEUE.md:807` |
+| MP-2b | — | — | — | `RUN_QUEUE.md:844` |
+| MP-2c | — | — | — | `RUN_QUEUE.md:893` |
+| MP-2d | — | — | — | `RUN_QUEUE.md:941` |
+| MP-2e | — | — | — | `RUN_QUEUE.md:983` |
+| UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | — | — | — | `RUN_QUEUE.md:2188` |
 
 ## Not started — the actual queue
 
 1. SD-7b — assets, BLOCKED ON CAM: three real dashboard screenshots into — `RUN_QUEUE.md:423`
-2. SD-9b — details-sheet funnel UX: split into a required core that finishes — `RUN_QUEUE.md:620`
-3. MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) — — `RUN_QUEUE.md:1088`
-4. MP-4 — pipeline reshape (split into 4a/4b/4c) — `RUN_QUEUE.md:1095`
-5. MP-4f — retire the JSON-in-actorName pattern. Three separate things — `RUN_QUEUE.md:1178`
-6. MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong — `RUN_QUEUE.md:1207`
-7. Golfer course directory (`/courses`) — NOT scheduled. If Cam wants — `RUN_QUEUE.md:1286`
-8. MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today) — `RUN_QUEUE.md:1323`
-9. MP-7 — comms merge (split into 7a–7b) — `RUN_QUEUE.md:1395`
-10. MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE, — `RUN_QUEUE.md:1413`
-11. MP-8 — chrome + System (split into 8a–8b) — `RUN_QUEUE.md:1420`
-12. MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table — `RUN_QUEUE.md:1437`
-13. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1505`
-14. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1611`
-15. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2688`
-16. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2841`
+2. MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) — — `RUN_QUEUE.md:1101`
+3. MP-4 — pipeline reshape (split into 4a/4b/4c) — `RUN_QUEUE.md:1108`
+4. MP-4f — retire the JSON-in-actorName pattern. Three separate things — `RUN_QUEUE.md:1191`
+5. MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong — `RUN_QUEUE.md:1220`
+6. Golfer course directory (`/courses`) — NOT scheduled. If Cam wants — `RUN_QUEUE.md:1299`
+7. MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today) — `RUN_QUEUE.md:1336`
+8. MP-7 — comms merge (split into 7a–7b) — `RUN_QUEUE.md:1408`
+9. MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE, — `RUN_QUEUE.md:1426`
+10. MP-8 — chrome + System (split into 8a–8b) — `RUN_QUEUE.md:1433`
+11. MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table — `RUN_QUEUE.md:1450`
+12. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1518`
+13. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1624`
+14. FB-2 — homepage (greenreserve.app) copy + structure, Cam's notes — `RUN_QUEUE.md:2648`
+15. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2756`
+16. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2909`
 
 ## Waiting on you (not on a build)
 
 - CAM: three real dashboard screenshots into public/screenshots/ (empty, so the homepage shows three grey placeholder boxes) and a seeded demo course slug for DEMO_COURSE_SLUGS (empt — `RUN_QUEUE.md:423`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:753`
-- Cam's approval for a prod backfill — `RUN_QUEUE.md:794`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:831`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:880`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:928`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:970`
-- Cam's approval) — `RUN_QUEUE.md:1178`
-- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1611`
-- pending Cam's walk below — `RUN_QUEUE.md:2330`
-- Cam: "after submitting an inquiry they aren't getting sent an email — `RUN_QUEUE.md:2533`
-- Cam: "there should be no google calendar thing" and, after setting both env vars and redeploying, "it is just the same as before" — `RUN_QUEUE.md:2614`
-- Cam: "all emails need to go to thegreenreserve@outlook — `RUN_QUEUE.md:2646`
-- Cam: invite link showed "I can't show my calendar right now" — `RUN_QUEUE.md:2664`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:766`
+- Cam's approval for a prod backfill — `RUN_QUEUE.md:807`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:844`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:893`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:941`
+- pending Cam's approval for a prod write — `RUN_QUEUE.md:983`
+- Cam's approval) — `RUN_QUEUE.md:1191`
+- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1624`
+- pending Cam's walk below — `RUN_QUEUE.md:2343`
+- Cam: "after submitting an inquiry they aren't getting sent an email — `RUN_QUEUE.md:2546`
+- Cam: "there should be no google calendar thing" and, after setting both env vars and redeploying, "it is just the same as before" — `RUN_QUEUE.md:2682`
+- Cam: "all emails need to go to thegreenreserve@outlook — `RUN_QUEUE.md:2714`
+- Cam: invite link showed "I can't show my calendar right now" — `RUN_QUEUE.md:2732`
 
 ## Revise campaign (page-by-page pass)
 
@@ -130,11 +143,13 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 4 | 2026-09-29 | 0d |
+| `CLAUDE.md` | 5 | 2026-09-29 | 0d |
 | `ARCHITECTURE.md` | 4 | 2026-09-16 | 12d |
-| `UI_REVISE_SPEC.md` | 1 | 2026-09-16 | 12d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-15 | 13d |
+| `UI_REVISE_SPEC.md` | 1 | 2026-09-16 | 13d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-29 | 0d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-09-29 | 0d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-09-29 | 0d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-15 | 13d |
 | `ADMIN_V2_SPEC.md` | 0 | 2026-09-15 | 13d |
 | `ADMIN_V3_SPEC.md` | 0 | 2026-09-15 | 13d |
@@ -161,19 +176,19 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `57ab750` 2026-09-29 — queue/spec update
-- `77c8947` 2026-09-29 — PERF-1: golfer pages back under budget (measured against a Sentry build)
-- `33acce6` 2026-09-29 — queue/spec update
-- `da9f604` 2026-09-29 — MP-12: split admin/courses/[id] into a hook, six tab files and the dialogs
-- `2000908` 2026-09-29 — MP-9: last tinted pills become StatusDot / plain text
-- `074b914` 2026-09-29 — MP-9: design-system guard in CI (ratchet on raw card/eyebrow/input strings)
-- `6be88c0` 2026-09-29 — MP-9 codemod: components/admin/OwnerTwoFactorCard.tsx onto Card / Eyebrow / INPUT
-- `cceb007` 2026-09-29 — MP-9 codemod: components/admin/InquiryCallCards.tsx onto Card / Eyebrow / INPUT
-- `2a42107` 2026-09-29 — MP-9 codemod: components/admin/CourseCheckInCard.tsx onto Card / Eyebrow / INPUT
-- `1ce6c95` 2026-09-29 — MP-9 codemod: app/admin/system/page.tsx onto Card / Eyebrow / INPUT
-- `8e27177` 2026-09-29 — MP-9 codemod: app/admin/set-password/page.tsx onto Card / Eyebrow / INPUT
-- `8768294` 2026-09-29 — MP-9 codemod: app/admin/revenue/page.tsx onto Card / Eyebrow / INPUT
+- `e343788` 2026-09-29 — FB-3: collect the $1.50/player when a round isn't paid by card
+- `962031b` 2026-09-29 — queue/spec update
+- `ea3306b` 2026-09-29 — FB-1 review: no pipeline oracle; sheet photos only from our uploads
+- `cbe9235` 2026-09-29 — queue/spec update
+- `10cd62e` 2026-09-29 — queue/spec update
+- `6cab760` 2026-09-29 — queue/spec update
+- `1871e32` 2026-09-29 — SD-9b: setup sheet — required core first, the rest optional; scorecard photo
+- `f361e89` 2026-09-29 — FB-1: sign-up page per Cam's walk-through; honeypot no longer eats real inquiries
+- `2782e9d` 2026-09-29 — queue/spec update
+- `dfce64d` 2026-09-29 — queue/spec update
+- `5676107` 2026-09-29 — PERF-1 review: cap the pre-init Sentry error buffer, drop it if the SDK is blocked
+- `b32f8c5` 2026-09-29 — status board
 
 ---
 
-**Totals:** 197 done · 23 awaiting review · 1 in flight · 16 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 200 done · 23 awaiting review · 1 in flight · 16 not started · 8 revise pages open · 15 ideas · 2 parked.

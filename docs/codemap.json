@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 353,
+    "files": 360,
     "routes": 195,
-    "libs": 91,
+    "libs": 93,
     "models": 33,
     "orphans": 8,
     "ungatedRoutes": 3
@@ -16,13 +16,14 @@
     "inquiry-signin-challenge": "src/lib/inquiry-signin.ts",
     "inquiry-statuses": "src/lib/inquiry-status.ts",
     "money-movement": "src/lib/stripe.ts",
+    "separate-booking-fee": "src/lib/access-fee.ts",
     "still-need-from-them": "src/lib/inquiry-needs.ts",
     "whose-move-is-it": "src/lib/inquiry-status.ts"
   },
   "files": [
     {
       "path": "src/app/HomeContent.tsx",
-      "lines": 316,
+      "lines": 205,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -39,12 +40,14 @@
       "imports": [
         "./home.module.css",
         "@/components/home/HomeDemo",
+        "@/components/home/HomeFaq",
+        "@/components/home/HomeMotion",
+        "@/components/home/MountNearView",
         "@/components/home/SeeItWork",
+        "@/components/home/StoryMedia",
         "@/lib/demo-courses",
-        "@/lib/faq",
         "next/image",
-        "next/link",
-        "react"
+        "next/link"
       ],
       "usedBy": [
         "src/app/page.tsx"
@@ -912,7 +915,7 @@
     },
     {
       "path": "src/app/admin/revenue/page.tsx",
-      "lines": 902,
+      "lines": 910,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1627,7 +1630,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1155,
+      "lines": 1201,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2013,7 +2016,7 @@
     },
     {
       "path": "src/app/api/admin/revenue/route.ts",
-      "lines": 299,
+      "lines": 310,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2752,7 +2755,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 368,
+      "lines": 378,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2957,7 +2960,7 @@
     },
     {
       "path": "src/app/api/courses/[slug]/tee-times/route.ts",
-      "lines": 81,
+      "lines": 15,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2974,10 +2977,7 @@
       "auth": "public",
       "guard": "public",
       "imports": [
-        "@/lib/booking-window",
-        "@/lib/course-time",
-        "@/lib/money",
-        "@/lib/prisma",
+        "@/lib/public-tee-times",
         "next/server"
       ],
       "usedBy": []
@@ -3092,7 +3092,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 176,
+      "lines": 179,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3368,7 +3368,7 @@
     },
     {
       "path": "src/app/api/inquiries/details/route.ts",
-      "lines": 130,
+      "lines": 135,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4034,7 +4034,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 179,
+      "lines": 224,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4061,6 +4061,7 @@
       "auth": "operator",
       "guard": "file",
       "imports": [
+        "@/lib/access-fee",
         "@/lib/cancel-booking",
         "@/lib/checkin-booking",
         "@/lib/claim-tee-time",
@@ -4068,6 +4069,7 @@
         "@/lib/email",
         "@/lib/prisma",
         "@/lib/session",
+        "@/lib/stripe",
         "crypto",
         "next/server"
       ],
@@ -5142,7 +5144,7 @@
     },
     {
       "path": "src/app/api/stripe/webhook/route.ts",
-      "lines": 116,
+      "lines": 130,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5159,6 +5161,7 @@
       "auth": "public",
       "guard": "secret header",
       "imports": [
+        "@/lib/access-fee",
         "@/lib/prisma",
         "@/lib/refund-booking",
         "@/lib/stripe",
@@ -5191,21 +5194,33 @@
       "usedBy": []
     },
     {
-      "path": "src/app/book/page.tsx",
-      "lines": 644,
+      "path": "src/app/book/BookClient.tsx",
+      "lines": 563,
       "purpose": "",
       "brain": [],
       "exports": [
         {
-          "name": "default (BookPage)",
+          "name": "BookInitial",
+          "kind": "type"
+        },
+        {
+          "name": "CourseInfo",
+          "kind": "type"
+        },
+        {
+          "name": "default (BookClient)",
           "kind": "component"
+        },
+        {
+          "name": "LiveTeeTime",
+          "kind": "type"
         }
       ],
-      "route": "/book",
-      "kind": "page",
+      "route": null,
+      "kind": null,
       "methods": [],
-      "auth": "public",
-      "guard": "public",
+      "auth": null,
+      "guard": null,
       "imports": [
         "@/components/CourseHeaderBar",
         "@/components/TrustNote",
@@ -5215,6 +5230,36 @@
         "lucide-react",
         "next/navigation",
         "react"
+      ],
+      "usedBy": [
+        "src/app/book/page.tsx"
+      ]
+    },
+    {
+      "path": "src/app/book/page.tsx",
+      "lines": 33,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (BookPage)",
+          "kind": "component"
+        },
+        {
+          "name": "metadata",
+          "kind": "const"
+        }
+      ],
+      "route": "/book",
+      "kind": "page",
+      "methods": [],
+      "auth": "public",
+      "guard": "public",
+      "imports": [
+        "./BookClient",
+        "@/lib/public-course",
+        "@/lib/public-tee-times",
+        "next"
       ],
       "usedBy": []
     },
@@ -5773,7 +5818,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1198,
+      "lines": 1205,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6042,7 +6087,7 @@
     },
     {
       "path": "src/app/for-courses/details/page.tsx",
-      "lines": 1844,
+      "lines": 1882,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6417,7 +6462,7 @@
     },
     {
       "path": "src/app/terms/page.tsx",
-      "lines": 189,
+      "lines": 193,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6505,7 +6550,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/book/page.tsx",
+        "src/app/book/BookClient.tsx",
         "src/app/checkin/[bookingId]/page.tsx",
         "src/app/courses/[slug]/account/accept-invite/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
@@ -6703,7 +6748,7 @@
         "react"
       ],
       "usedBy": [
-        "src/app/book/page.tsx",
+        "src/app/book/BookClient.tsx",
         "src/app/courses/[slug]/CourseBookingClient.tsx"
       ]
     },
@@ -6818,7 +6863,7 @@
     },
     {
       "path": "src/components/admin/InquiryCallCards.tsx",
-      "lines": 779,
+      "lines": 880,
       "purpose": "INQUIRY_CALL_SPEC IC-2 — the two discovery-call cards on the inquiry detail page.",
       "brain": [],
       "exports": [
@@ -7329,6 +7374,78 @@
       ]
     },
     {
+      "path": "src/components/home/HomeFaq.tsx",
+      "lines": 22,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (HomeFaq)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/app/home.module.css",
+        "@/lib/faq",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/HomeContent.tsx"
+      ]
+    },
+    {
+      "path": "src/components/home/HomeMotion.tsx",
+      "lines": 69,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (HomeMotion)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/app/home.module.css",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/HomeContent.tsx"
+      ]
+    },
+    {
+      "path": "src/components/home/MountNearView.tsx",
+      "lines": 23,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (MountNearView)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "react"
+      ],
+      "usedBy": [
+        "src/app/HomeContent.tsx"
+      ]
+    },
+    {
       "path": "src/components/home/SeeItWork.tsx",
       "lines": 55,
       "purpose": "",
@@ -7349,6 +7466,31 @@
         "./HomeDemo",
         "@/app/home.module.css",
         "next/dynamic",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/HomeContent.tsx"
+      ]
+    },
+    {
+      "path": "src/components/home/StoryMedia.tsx",
+      "lines": 66,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (StoryMedia)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/app/home.module.css",
+        "next/image",
         "react"
       ],
       "usedBy": [
@@ -7691,6 +7833,53 @@
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/access-fee.ts",
+      "lines": 131,
+      "purpose": "FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B).",
+      "brain": [
+        "separate-booking-fee"
+      ],
+      "exports": [
+        {
+          "name": "bookingIdForFeeCharge",
+          "kind": "fn"
+        },
+        {
+          "name": "chargeAccessFeeSeparately",
+          "kind": "fn"
+        },
+        {
+          "name": "FeeChargeResult",
+          "kind": "type"
+        },
+        {
+          "name": "liveSeparateFee",
+          "kind": "fn"
+        },
+        {
+          "name": "refundSeparateAccessFee",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma",
+        "./refund-booking",
+        "./stripe",
+        "stripe"
+      ],
+      "usedBy": [
+        "src/app/api/operator/bookings/route.ts",
+        "src/app/api/stripe/webhook/route.ts",
+        "src/lib/cancel-booking.ts",
+        "src/lib/checkin-booking.ts"
       ]
     },
     {
@@ -8591,7 +8780,7 @@
       "imports": [],
       "usedBy": [
         "src/app/api/admin/system/route.ts",
-        "src/app/book/page.tsx",
+        "src/app/book/BookClient.tsx",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
@@ -8723,8 +8912,8 @@
       "imports": [],
       "usedBy": [
         "src/app/api/bookings/route.ts",
-        "src/app/api/courses/[slug]/tee-times/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
+        "src/lib/public-tee-times.ts",
         "src/lib/tee-sheet-engine.ts"
       ]
     },
@@ -8804,7 +8993,7 @@
     },
     {
       "path": "src/lib/call-answers.ts",
-      "lines": 266,
+      "lines": 323,
       "purpose": "INQUIRY_CALL_SPEC IC-5 — structured discovery-call answers.",
       "brain": [],
       "exports": [
@@ -8819,6 +9008,10 @@
         {
           "name": "CallAnswers",
           "kind": "type"
+        },
+        {
+          "name": "callRecapLines",
+          "kind": "fn"
         },
         {
           "name": "DAY_SHORT",
@@ -8853,12 +9046,20 @@
           "kind": "fn"
         },
         {
+          "name": "HOLES_OPTIONS",
+          "kind": "const"
+        },
+        {
           "name": "isCaptured",
           "kind": "fn"
         },
         {
           "name": "ItemAnswers",
           "kind": "type"
+        },
+        {
+          "name": "LIVE_BY_OPTIONS",
+          "kind": "const"
         },
         {
           "name": "missingNeedFields",
@@ -8899,6 +9100,10 @@
         {
           "name": "validateAnswers",
           "kind": "fn"
+        },
+        {
+          "name": "WALKING_OPTIONS",
+          "kind": "const"
         }
       ],
       "route": null,
@@ -8977,7 +9182,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 161,
+      "lines": 167,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8996,6 +9201,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./access-fee",
         "./email",
         "./prisma",
         "./stripe"
@@ -9130,7 +9336,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 364,
+      "lines": 372,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9153,6 +9359,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./access-fee",
         "./email",
         "./prisma",
         "./stripe"
@@ -9564,7 +9771,6 @@
       "imports": [],
       "usedBy": [
         "src/app/api/bookings/route.ts",
-        "src/app/api/courses/[slug]/tee-times/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/bookings/route.ts",
@@ -9572,6 +9778,7 @@
         "src/app/api/operator/tee-times/route.ts",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/settings/page.tsx",
+        "src/lib/public-tee-times.ts",
         "src/lib/tee-sheet-engine.ts"
       ]
     },
@@ -9952,7 +10159,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1750,
+      "lines": 1790,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10006,6 +10213,10 @@
         },
         {
           "name": "sendBookingModifiedEmail",
+          "kind": "fn"
+        },
+        {
+          "name": "sendCallFollowupEmail",
           "kind": "fn"
         },
         {
@@ -10326,8 +10537,8 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/HomeContent.tsx",
-        "src/app/page.tsx"
+        "src/app/page.tsx",
+        "src/components/home/HomeFaq.tsx"
       ]
     },
     {
@@ -11129,7 +11340,6 @@
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/transactions/route.ts",
         "src/app/api/bookings/route.ts",
-        "src/app/api/courses/[slug]/tee-times/route.ts",
         "src/app/api/courses/route.ts",
         "src/app/api/cron/send-reminders/route.ts",
         "src/app/api/manage/[bookingId]/available-times/route.ts",
@@ -11147,6 +11357,7 @@
         "src/lib/go-live-preflight.ts",
         "src/lib/normalize-course.ts",
         "src/lib/public-course.ts",
+        "src/lib/public-tee-times.ts",
         "src/lib/schedule-service.ts",
         "src/lib/schedule-wire.ts",
         "src/lib/tier-wire.ts"
@@ -11433,7 +11644,6 @@
         "src/app/api/call/[token]/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
         "src/app/api/courses/[slug]/account/route.ts",
-        "src/app/api/courses/[slug]/tee-times/route.ts",
         "src/app/api/courses/route.ts",
         "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/chase-onboarding/route.ts",
@@ -11503,6 +11713,7 @@
         "src/app/courses/[slug]/page.tsx",
         "src/app/preview/[courseId]/page.tsx",
         "src/app/sitemap.ts",
+        "src/lib/access-fee.ts",
         "src/lib/admin-session.ts",
         "src/lib/agreement-gate.ts",
         "src/lib/agreement-required.ts",
@@ -11521,6 +11732,7 @@
         "src/lib/member-session.ts",
         "src/lib/money-problems.ts",
         "src/lib/public-course.ts",
+        "src/lib/public-tee-times.ts",
         "src/lib/rate-limit.ts",
         "src/lib/refund-booking.ts",
         "src/lib/schedule-service.ts",
@@ -11554,7 +11766,43 @@
       ],
       "usedBy": [
         "src/app/api/courses/[slug]/route.ts",
+        "src/app/book/page.tsx",
         "src/app/courses/[slug]/page.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/public-tee-times.ts",
+      "lines": 81,
+      "purpose": "PERF-1:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "loadPublicTeeTimes",
+          "kind": "fn"
+        },
+        {
+          "name": "normalizeDbTeeTime",
+          "kind": "fn"
+        },
+        {
+          "name": "PublicTeeTimes",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/booking-window",
+        "@/lib/course-time",
+        "@/lib/money",
+        "@/lib/prisma"
+      ],
+      "usedBy": [
+        "src/app/api/courses/[slug]/tee-times/route.ts",
+        "src/app/book/page.tsx"
       ]
     },
     {
@@ -11626,7 +11874,7 @@
     },
     {
       "path": "src/lib/refund-booking.ts",
-      "lines": 129,
+      "lines": 131,
       "purpose": "MP-6b.",
       "brain": [],
       "exports": [
@@ -11664,7 +11912,8 @@
       ],
       "usedBy": [
         "src/app/api/admin/refund/route.ts",
-        "src/app/api/stripe/webhook/route.ts"
+        "src/app/api/stripe/webhook/route.ts",
+        "src/lib/access-fee.ts"
       ]
     },
     {
@@ -12079,10 +12328,12 @@
         "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/membership/[id]/route.ts",
+        "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/stripe/callback/route.ts",
         "src/app/api/operator/stripe/connect/route.ts",
         "src/app/api/operator/stripe/dashboard-link/route.ts",
         "src/app/api/stripe/webhook/route.ts",
+        "src/lib/access-fee.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/platform-stripe.ts",
@@ -12996,6 +13247,7 @@
         "src/app/api/golfer/auth/otp/verify/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/stripe/webhook/route.ts",
+        "src/lib/access-fee.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/lifecycle.ts",
@@ -13029,6 +13281,7 @@
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
+        "src/lib/access-fee.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/course-closure.ts",
@@ -13652,7 +13905,6 @@
         "src/app/api/admin/system/route.ts",
         "src/app/api/alerts/route.ts",
         "src/app/api/courses/[slug]/account/route.ts",
-        "src/app/api/courses/[slug]/tee-times/route.ts",
         "src/app/api/courses/route.ts",
         "src/app/api/cron/chase-onboarding/route.ts",
         "src/app/api/member/[courseSlug]/payments/route.ts",
@@ -13691,6 +13943,7 @@
         "src/lib/go-live-preflight.ts",
         "src/lib/lifecycle.ts",
         "src/lib/public-course.ts",
+        "src/lib/public-tee-times.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts"
       ]
@@ -14903,8 +15156,10 @@
         "src/lib/refund-booking.ts"
       ],
       "readers": [
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/transactions/export/route.ts",
         "src/app/api/stripe/webhook/route.ts",
+        "src/lib/access-fee.ts",
         "src/lib/money-problems.ts"
       ]
     },
@@ -15114,7 +15369,6 @@
       "readers": [
         "src/app/api/admin/tee-sheet/route.ts",
         "src/app/api/bookings/route.ts",
-        "src/app/api/courses/[slug]/tee-times/route.ts",
         "src/app/api/manage/[bookingId]/available-times/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/operator/analytics/route.ts",
@@ -15122,6 +15376,7 @@
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/api/preview/[courseId]/tee-times/route.ts",
+        "src/lib/public-tee-times.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts"
       ]

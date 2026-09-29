@@ -1192,6 +1192,46 @@ export async function sendDetailsSheetConfirmationEmail(data: {
   });
 }
 
+// CG-1 (Cam 2026-09-29): sent with one click when the discovery call ends —
+// the recap of what we agreed, THEIR setup link (sections chosen by the call),
+// what happens next, and the fee model in writing (LQ-2 approved sentence,
+// verbatim from the go-live email below — do not reword it here).
+export async function sendCallFollowupEmail(data: {
+  contactName: string; email: string; courseName: string; detailsLink: string;
+  recap: string[]; liveTarget: string | null;
+}) {
+  const recapRows = data.recap.map(l => `<li style="margin:0 0 6px;">${escHtml(l)}</li>`).join('');
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:22px;font-weight:700;">Thanks for the call — here&apos;s your setup link</h1>
+    <p style="margin:0 0 16px;color:#6b7280;font-size:15px;line-height:1.6;">
+      Hi ${escHtml(data.contactName)} — great talking about <strong>${escHtml(data.courseName)}</strong>. Here&apos;s what we covered, and your next step.
+    </p>
+    ${recapRows ? `<p style="margin:0 0 6px;color:#1C1C18;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">What we discussed</p>
+    <ul style="margin:0 0 20px;padding-left:18px;color:#1C1C18;font-size:14px;line-height:1.5;">${recapRows}</ul>
+    <p style="margin:-12px 0 20px;color:#98968B;font-size:12px;">Anything off? Just reply and we&apos;ll fix it.</p>` : ''}
+    <a href="${data.detailsLink}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:600;font-size:15px;margin-bottom:8px;">
+      Open your setup sheet &rarr;
+    </a>
+    <p style="margin:0 0 20px;color:#6b7280;font-size:13px;text-align:center;">Built from our call. The first four steps take about 5 minutes; the rest is optional.</p>
+    <p style="margin:0 0 6px;color:#1C1C18;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">What happens next${data.liveTarget ? ` — aiming for ${escHtml(data.liveTarget)}` : ''}</p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+      <tr><td style="padding:9px 0;border-bottom:1px solid #E6E3D7;color:#1C1C18;font-size:14px;font-weight:600;">1. Your setup sheet</td><td style="padding:9px 0;border-bottom:1px solid #E6E3D7;color:#6E6D64;font-size:14px;">Tee times, prices, cancellation — you type them, so they&apos;re exactly right</td></tr>
+      <tr><td style="padding:9px 0;border-bottom:1px solid #E6E3D7;color:#1C1C18;font-size:14px;font-weight:600;">2. We build your page</td><td style="padding:9px 0;border-bottom:1px solid #E6E3D7;color:#6E6D64;font-size:14px;">Your booking page and tee sheet, then a private preview for you to approve</td></tr>
+      <tr><td style="padding:9px 0;border-bottom:1px solid #E6E3D7;color:#1C1C18;font-size:14px;font-weight:600;">3. Agreement + Stripe</td><td style="padding:9px 0;border-bottom:1px solid #E6E3D7;color:#6E6D64;font-size:14px;">Sign the operator agreement and connect Stripe in your course&apos;s name (~10 min)</td></tr>
+      <tr><td style="padding:9px 0;color:#1C1C18;font-size:14px;font-weight:600;">4. Go live</td><td style="padding:9px 0;color:#6E6D64;font-size:14px;">Add the link to your website; golfers start booking</td></tr>
+    </table>
+    <p style="margin:0 0 6px;color:#1C1C18;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">How the fee works</p>
+    <p style="margin:0 0 20px;color:#6b7280;font-size:13px;line-height:1.6;">Golfers pay GreenReserve&apos;s $1.50 per player on top of your price, in the same card payment as your green fee; Stripe&apos;s normal processing fee applies to the payment, and GreenReserve charges you nothing on top of it.</p>
+    <p style="margin:0;color:#98968B;font-size:12px;">Questions? Reply to this email — thegreenreserve@outlook.com.</p>
+  `);
+  await getResend().emails.send({
+    from: FROM,
+    to: data.email,
+    subject: `${data.courseName} — recap of our call + your setup sheet`,
+    html,
+  });
+}
+
 export async function sendDetailsRequestEmail(data: {
   contactName: string; email: string; courseName: string; detailsLink: string;
 }) {

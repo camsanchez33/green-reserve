@@ -2,7 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendDetailsSubmittedNotification, sendDetailsSheetConfirmationEmail } from '@/lib/email';
 import { gateSheetAccess } from '@/lib/sheet-token';
-import { flatSummaries, parseCallAnswers, toSheetPrefill } from '@/lib/call-answers';
+import { flatSummaries, parseCallAnswers, toSheetPrefill, callRecapLines } from '@/lib/call-answers';
 
 // MP-2b: the gate that used to live here now lives in src/lib/sheet-token.ts so
 // api/inquiries/upload shares it — it had been left on the old status list.
@@ -48,9 +48,13 @@ export async function GET(req: NextRequest) {
   // structured values as a prefill the sheet applies only where it is empty.
   let callAnswers: Record<string, string> = {};
   let prefill: Record<string, unknown> = { branch: {} };
+  // CG-1: the call's recap, shown at the top of the sheet ("From our call").
+  let callRecap: string[] = [];
   if (talked?.answersJson) {
     callAnswers = flatSummaries(talked.answersJson);
-    prefill = toSheetPrefill(parseCallAnswers(talked.answersJson));
+    const parsed = parseCallAnswers(talked.answersJson);
+    prefill = toSheetPrefill(parsed);
+    callRecap = callRecapLines(parsed);
   }
 
   let details = {};
@@ -69,6 +73,7 @@ export async function GET(req: NextRequest) {
     details,
     callAnswers,
     prefill,
+    callRecap,
   });
 }
 

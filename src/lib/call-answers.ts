@@ -42,7 +42,32 @@ export const BOOKING_METHOD_OPTIONS: [string, string][] = [
 // The sheet's season selects are month names, so the call captures the same.
 export const MONTH_OPTIONS: [string, string][] = [['January', 'January'], ['February', 'February'], ['March', 'March'], ['April', 'April'], ['May', 'May'], ['June', 'June'], ['July', 'July'], ['August', 'August'], ['September', 'September'], ['October', 'October'], ['November', 'November'], ['December', 'December']];
 
+// CG-1 (Cam 2026-09-29): the call is a conversation, not data entry. The call
+// guide captures only the SHAPE of the course in taps — enough to decide which
+// setup-sheet sections they get and to pre-fill the obvious — plus who decides,
+// when they want to launch, and which talking points were covered. Prices and
+// tee times are typed by the course on its own sheet (they own the accuracy).
+export const HOLES_OPTIONS: [string, string][] = [['9', '9'], ['18', '18'], ['27', '27'], ['36', '36']];
+export const WALKING_OPTIONS: [string, string][] = [['no', 'Carts required'], ['yes', 'Walking allowed'], ['weekdays', 'Walking weekdays only']];
+export const LIVE_BY_OPTIONS: [string, string][] = [['asap', 'As soon as possible'], ['2w', 'Within 2 weeks'], ['month', 'Within a month'], ['season', 'Before next season'], ['unsure', 'Not sure yet']];
+
 export const CALL_FIELDS: Record<string, FieldSpec[]> = {
+  shape: [
+    { key: 'courseType', label: 'Course type', type: 'enum', options: [['public', 'Public'], ['private', 'Private']] },
+    { key: 'holes', label: 'Holes', type: 'enum', sheetKey: 'holes', options: HOLES_OPTIONS },
+    { key: 'memberships', label: 'Memberships / passes / resident rates', type: 'bool', sheetKey: 'branch.passes' },
+    { key: 'cancelFee', label: 'Cancellation fee', type: 'bool', sheetKey: 'cancellationPolicy' },
+    { key: 'walking', label: 'Carts', type: 'enum', sheetKey: 'walkingAllowed', options: WALKING_OPTIONS },
+    { key: 'bookingToday', label: 'Books today by', type: 'enum', options: BOOKING_METHOD_OPTIONS },
+  ],
+  timeline: [
+    { key: 'liveBy', label: 'Wants to go live', type: 'enum', options: LIVE_BY_OPTIONS },
+  ],
+  talk_track: [
+    { key: 'feeModel', label: 'Fee model explained', type: 'bool' },
+    { key: 'goLive', label: 'Go-live steps explained', type: 'bool' },
+    { key: 'nextSteps', label: 'Next steps agreed', type: 'bool' },
+  ],
   green_fees: [
     { key: 'weekday', label: 'Weekday', type: 'money', sheetKey: 'greenFeeWeekday', need: true },
     { key: 'weekend', label: 'Weekend', type: 'money', sheetKey: 'greenFeeWeekend', need: true },
@@ -247,7 +272,9 @@ export function toSheetPrefill(answers: CallAnswers): SheetPrefill {
       if (!spec.sheetKey || !isCaptured(v)) continue;
       if (spec.sheetKey.startsWith('branch.')) {
         const b = spec.sheetKey.slice('branch.'.length);
-        if (b === 'passes') { if (v === true) passesYes = true; else if (v === false) passesNo++; continue; }
+        // CG-1: the call guide's single "memberships / passes / resident rates"
+        // tap is the whole answer, so its "no" counts on its own.
+        if (b === 'passes') { if (v === true) passesYes = true; else if (v === false) passesNo += key === 'shape' ? 2 : 1; continue; }
         out.branch[b] = v === true ? 'yes' : 'no';
         continue;
       }
@@ -263,3 +290,33 @@ export function toSheetPrefill(answers: CallAnswers): SheetPrefill {
   else if (passesNo >= 2) out.branch.passes = 'no';
   return out;
 }
+
+/**
+ * CG-1: the recap of the call, in the course's words — shown to Cam before
+ * sending, then in the follow-up email and at the top of their setup sheet.
+ * Pure: the admin page, the email and the sheet all call this.
+ */
+export function callRecapLines(answers: CallAnswers): string[] {
+  const f = (item: string, key: string) => answers.items[item]?.fields[key];
+  const opt = (opts: [string, string][], v: unknown) => opts.find(([val]) => val === v)?.[1] ?? '';
+  const out: string[] = [];
+  const kind = f('shape', 'courseType') === 'private' ? 'Private club' : f('shape', 'courseType') === 'public' ? 'Public course' : '';
+  const holes = isCaptured(f('shape', 'holes')) ? `${f('shape', 'holes')} holes` : '';
+  if (kind || holes) out.push([kind, holes].filter(Boolean).join(', '));
+  const m = f('shape', 'memberships');
+  if (m === true) out.push('You offer memberships, passes or resident rates — your sheet asks how they work.');
+  if (m === false) out.push('No memberships or resident rates.');
+  const c = f('shape', 'cancelFee');
+  if (c === true) out.push('You charge a late-cancellation fee — you\u2019ll set the window and amount on your sheet.');
+  if (c === false) out.push('No cancellation fee.');
+  const w = opt(WALKING_OPTIONS, f('shape', 'walking'));
+  if (w) out.push(w + '.');
+  const b = opt(BOOKING_METHOD_OPTIONS, f('shape', 'bookingToday'));
+  if (b) out.push(`Today you take tee times by: ${b.charAt(0).toLowerCase() + b.slice(1)}.`);
+  const signer = f('people', 'signer'), day = f('people', 'dayToDay');
+  if (isCaptured(signer) || isCaptured(day)) out.push([isCaptured(signer) ? `Signs off: ${signer}` : '', isCaptured(day) ? `Runs the tee sheet day to day: ${day}` : ''].filter(Boolean).join(' · '));
+  const live = opt(LIVE_BY_OPTIONS, f('timeline', 'liveBy'));
+  if (live && f('timeline', 'liveBy') !== 'unsure') out.push(`Target: live ${live.charAt(0).toLowerCase() + live.slice(1)}.`);
+  return out;
+}
+

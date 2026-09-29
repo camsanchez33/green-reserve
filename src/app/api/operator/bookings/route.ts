@@ -5,8 +5,10 @@ import { performCancellation } from '@/lib/cancel-booking';
 import { performCheckIn } from '@/lib/checkin-booking';
 import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
 import { sendBookingConfirmation } from '@/lib/email';
-import { todayIn } from '@/lib/course-time';
+import { todayIn, isPastIn } from '@/lib/course-time';
 import { randomUUID } from 'crypto';
+import { chargeAccessFeeSeparately, refundSeparateAccessFee, liveSeparateFee, type FeeChargeResult } from '@/lib/access-fee';
+import { refundOnConnectedAccount } from '@/lib/stripe';
 
 // Used by both the Payments tab (all bookings, transaction ledger) and the
 // Cancellations tab (status=cancelled) — one endpoint, filtered by query param.
@@ -59,7 +61,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Missing id or unsupported action' }, { status: 400 });
   }
 
-  const booking = await prisma.booking.findUnique({ where: { id }, select: { courseId: true, status: true, paymentStatus: true, noShowAt: true } });
+  const booking = await prisma.booking.findUnique({ where: { id }, select: { courseId: true, status: true, paymentStatus: true, noShowAt: true, players: true, cancellationFeeChargeId: true, teeTime: { select: { date: true, time: true } }, course: { select: { timezone: true, stripeAccountId: true } } } });
   if (!booking || booking.courseId !== session.courseId) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
@@ -71,23 +73,59 @@ export async function PATCH(req: NextRequest) {
   //   paid_offline the group paid at the counter (walk-ins, phone bookings, a
   //                declined card settled in cash) — checked in, no Stripe
   //                charge, and never counted as platform-collected.
+  // FB-3 (Cam 2026-09-29): a no-show or a counter-paid round never reaches the
+  // check-in charge that carries GreenReserve's $1.50/player, so the fee is
+  // charged on its own here (lib/access-fee.ts). The staff action never waits
+  // on it or fails because of it — the tee sheet is told what happened.
+  const actorName = session.email;
   if (action === 'no_show') {
     if (booking.status !== 'confirmed') return NextResponse.json({ error: 'Only a confirmed booking can be marked a no-show.' }, { status: 409 });
+    // Review: a no-show now costs the golfer the booking fee, so it can only be
+    // recorded once the tee time has actually passed.
+    if (!isPastIn(booking.course.timezone, booking.teeTime.date, booking.teeTime.time)) {
+      return NextResponse.json({ error: 'You can mark a no-show once their tee time has passed.' }, { status: 409 });
+    }
     await prisma.booking.update({ where: { id }, data: { noShowAt: new Date() } });
-    return NextResponse.json({ success: true, noShowAt: new Date().toISOString() });
+    const fee = await chargeAccessFeeSeparately(id, { why: 'no_show', actor: 'operator', actorName });
+    return NextResponse.json({ success: true, noShowAt: new Date().toISOString(), fee: feeNote(fee) });
   }
   if (action === 'still_coming') {
     await prisma.booking.update({ where: { id }, data: { noShowAt: null } });
-    return NextResponse.json({ success: true });
+    // The no-show fee was taken in error — they are here after all.
+    const r = await refundSeparateAccessFee(id, 'no-show marked in error (still coming)', 'operator', actorName);
+    return NextResponse.json({ success: true, ...(r.ok ? {} : { fee: `The booking fee could not be refunded (${r.error}) — GreenReserve will follow up.` }) });
   }
   if (action === 'paid_offline') {
     if (booking.status === 'cancelled') return NextResponse.json({ error: 'This booking was cancelled.' }, { status: 409 });
     if (booking.status === 'completed') return NextResponse.json({ error: 'Already checked in.' }, { status: 409 });
+    // Review (HIGH): a round already charged by card (an admin "collect
+    // payment") is paid — marking it paid offline would hide that payment and
+    // take the booking fee a second time.
+    if (booking.paymentStatus === 'paid') return NextResponse.json({ error: 'This round was already paid by card — check them in instead.' }, { status: 409 });
+    const hadHoldFee = booking.paymentStatus === 'cancellation_fee_charged' && !!booking.cancellationFeeChargeId;
     await prisma.booking.update({
       where: { id },
       data: { status: 'completed', checkedInAt: new Date(), paidAt: new Date(), paidOffline: true, paymentStatus: 'paid_offline', noShowAt: null, checkInFailReason: '', ...(cip !== undefined ? { checkedInPlayers: cip } : {}) },
     });
-    return NextResponse.json({ success: true });
+    // They paid the round at the counter, so the hold fee the cron took after
+    // the cutoff goes back — exactly as a card check-in refunds it (review: this
+    // branch skips performCheckIn and kept it).
+    let holdNote: string | null = null;
+    if (hadHoldFee && booking.course.stripeAccountId) {
+      try {
+        await refundOnConnectedAccount({ paymentIntentId: booking.cancellationFeeChargeId as string, connectedAccountId: booking.course.stripeAccountId });
+      } catch (err) {
+        holdNote = `The late-cancellation hold fee could not be refunded automatically (${err instanceof Error ? err.message : 'Stripe error'}) — GreenReserve will follow up.`;
+      }
+    }
+    // A no-show fee taken for the whole party, then fewer players arrive and
+    // pay at the counter: give it back and take the prorated fee instead.
+    const live = await liveSeparateFee(id);
+    if (live && cip !== undefined && cip < booking.players) {
+      await refundSeparateAccessFee(id, `only ${cip} of ${booking.players} players came and paid at the counter`, 'operator', actorName);
+    }
+    const fee = await chargeAccessFeeSeparately(id, { why: 'paid_offline', players: cip, actor: 'operator', actorName });
+    return NextResponse.json({ success: true, fee: [feeNote(fee), holdNote].filter(Boolean).join(' ') || null });
   }
 
   const result = action === 'cancel'
@@ -176,3 +214,10 @@ export async function POST(req: NextRequest) {
   }
   return NextResponse.json({ success: true, bookingId: claimed.id, emailSent });
 }
+
+/** What the tee sheet shows after a separate fee charge (null = nothing to say). */
+function feeNote(r: FeeChargeResult): string | null {
+  if (!r.ok) return `GreenReserve's booking fee could not be charged to the golfer's card (${r.error}). Nothing for you to do — we'll follow up.`;
+  return null;
+}
+

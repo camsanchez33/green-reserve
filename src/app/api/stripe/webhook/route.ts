@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import { findBookingByStripeId, recordPaymentEvent } from '@/lib/refund-booking';
+import { bookingIdForFeeCharge } from '@/lib/access-fee';
 
 // MP-6b: this handled exactly ONE event type (account.updated), so the first
 // chargeback was invisible until the bank letter, and a refund issued from the
@@ -44,14 +45,17 @@ export async function POST(req: NextRequest) {
       // — or one we did, arriving a second time. Dedupe on the refund id.
       case 'charge.refunded': {
         const charge = event.data.object as Stripe.Charge;
-        const booking = await findBookingByStripeId(piOf(charge.payment_intent));
+        const booking = await bookingForPi(piOf(charge.payment_intent));
         if (!booking) break;
+        // FB-3: a refund of GreenReserve's separately-charged fee is a
+        // fee_refunded row, so admin revenue's separate-fee line stays true.
+        const isFee = !!(await bookingIdForFeeCharge(piOf(charge.payment_intent)));
         const refunds = charge.refunds?.data ?? [];
         for (const r of refunds) {
           const seen = await prisma.paymentEvent.findFirst({ where: { stripeId: r.id }, select: { id: true } });
           if (seen) continue;
           await recordPaymentEvent({
-            bookingId: booking.id, kind: 'refund', amountCents: r.amount, stripeId: r.id, actor: 'stripe',
+            bookingId: booking.id, kind: isFee ? 'fee_refunded' : 'refund', amountCents: r.amount, stripeId: r.id, actor: 'stripe',
             detail: `Refund recorded from Stripe (${r.reason ?? 'no reason given'})`,
           });
         }
@@ -66,7 +70,7 @@ export async function POST(req: NextRequest) {
       case 'charge.dispute.updated':
       case 'charge.dispute.closed': {
         const dispute = event.data.object as Stripe.Dispute;
-        const booking = await findBookingByStripeId(piOf(dispute.payment_intent));
+        const booking = await bookingForPi(piOf(dispute.payment_intent));
         if (!booking) break;
         const closed = event.type === 'charge.dispute.closed';
         const kind = closed ? 'dispute_closed' : 'dispute_opened';
@@ -88,7 +92,7 @@ export async function POST(req: NextRequest) {
       // complete for charges made outside it.
       case 'payment_intent.payment_failed': {
         const pi = event.data.object as Stripe.PaymentIntent;
-        const booking = await findBookingByStripeId(pi.id);
+        const booking = await bookingForPi(pi.id);
         if (!booking) break;
         const marker = `${pi.id}:failed:${pi.last_payment_error?.code ?? 'unknown'}`;
         const seen = await prisma.paymentEvent.findFirst({ where: { stripeId: marker }, select: { id: true } });
@@ -113,3 +117,13 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ received: true });
 }
+
+// FB-3: a separately-charged booking fee is cleared from the booking once
+// refunded, so a later dispute on it is found through the ledger instead.
+async function bookingForPi(pi: string) {
+  const b = await findBookingByStripeId(pi);
+  if (b) return b;
+  const id = await bookingIdForFeeCharge(pi);
+  return id ? { id, roundPaymentIntentId: '', cancellationFeeChargeId: '', totalAmount: 0, cancellationFeeTotal: 0 } : null;
+}
+

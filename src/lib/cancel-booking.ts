@@ -1,6 +1,7 @@
 import { prisma } from './prisma';
 import { sendCancellationEmail, sendTeeTimeAlertEmail } from './email';
 import { refundOnConnectedAccount } from './stripe';
+import { refundSeparateAccessFee } from './access-fee';
 
 export type CancellationOptions = {
   /**
@@ -155,6 +156,11 @@ export async function performCancellation(bookingId: string, opts: CancellationO
     bookingId: booking.id,
     reason,
   }).catch(console.error);
+
+  // FB-3 review: a booking fee charged on its own (a no-show that is then
+  // cancelled) is not kept on a cancelled round — any late-cancellation fee is
+  // the course's hold fee above, not ours. Never blocks the cancellation.
+  await refundSeparateAccessFee(bookingId, 'booking cancelled', 'system');
 
   return { success: true, feeCharged: feeAlreadyCharged, roundRefunded, feeRefundFailed } as const;
 }
