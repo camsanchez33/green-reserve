@@ -1294,6 +1294,13 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       `firstWentLiveAt` so health stops reading a failed welcome email as
       "setup incomplete" forever (SCHEMA CHANGE, ATTENDED — needs the
       migration checklist, a Neon branch and Cam present).
+      SHIPPED c6a2142, 2026-09-29 — box open until /gr-review. NOT a schema change
+      after all: MP-3a already added both columns and 2FA verify stamps
+      lastLoginAt. Feed (lib/course-feed.ts), Engagement card, firstWentLiveAt
+      stamped at both go-live paths, health prefers it (welcome email fallback,
+      no backfill). Verified on local Postgres via the real admin page.
+      CAM TO WALK: /admin/courses/<any course> → Overview: Relationship feed and
+      Engagement card show; set a course live → "First went live" fills in.
     - [x] MP-5d (87a9695) — detail tabs 9 -> 6 (the "10" counted Contact,
       folded in earlier): Overview · Money · Records · Messages · Operate ·
       Setup. Staff tab gone — resend-login sits on the Overview staff card;
