@@ -2698,6 +2698,15 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER (golfer SMS login codes + 2FA) — US SMS
   needs A2P 10DLC registration or a verified toll-free number or carriers drop
   it. Verify each on /admin/system.
+- [x] BLOB-2 (Cam 2026-09-29: Blob connected, "everything is working but the
+  uploading of the pdf"). The store Cam created is PUBLIC (photos must be
+  viewable); a public store refuses access:'private' writes, so contract uploads
+  failed — and signed operator-agreement PDFs (lib/agreement-sign.ts) would have
+  too. Contracts + agreements now use a second, PRIVATE store via
+  BLOB_PRIVATE_READ_WRITE_TOKEN (lib/private-blob.ts); unset = a clear 503 on
+  upload/download, and agreement PDFs stay pending for the hourly retry.
+  Storage errors on upload now show their reason. /admin/system lists
+  "Private storage (contracts)". CAM: create the private store (see SHIPPING).
 - [ ] SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +
   paymentMethodId (found in the FB-3 review, pre-existing). No route exposes
   another golfer's ids, but anyone holding a cus_ id could attach their own card

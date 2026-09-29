@@ -25,7 +25,7 @@ interface SystemData {
   birdie?: { enabled: boolean; keySet: boolean; flag: boolean; todayReplies: number; dailyCap: number; model: string };
   platform: {
     accessFeeCents: number; env: string; commitSha: string; commitMessage: string; branch: string; publicUrl: string;
-    integrations: { stripe: boolean; stripeWebhook: boolean; resend: boolean; twilio: boolean; sentry: boolean; blob: boolean };
+    integrations: { stripe: boolean; stripeWebhook: boolean; resend: boolean; twilio: boolean; sentry: boolean; blob: boolean; privateBlob: boolean };
   };
 }
 interface PlatformStripe {
@@ -191,7 +191,7 @@ export default function AdminSystemPage() {
   const integrations: [string, boolean][] = p ? [
     ['Stripe', p.integrations.stripe], ['Stripe webhook', p.integrations.stripeWebhook],
     ['Resend', p.integrations.resend], ['Twilio', p.integrations.twilio],
-    ['Sentry', p.integrations.sentry], ['Blob storage', p.integrations.blob],
+    ['Sentry', p.integrations.sentry], ['Blob storage', p.integrations.blob], ['Private storage (contracts)', p.integrations.privateBlob],
   ] : [];
 
   return (

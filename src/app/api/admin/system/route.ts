@@ -95,6 +95,7 @@ export async function GET() {
         twilio: !!(env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_FROM_NUMBER),
         sentry: !!(env.SENTRY_DSN || env.NEXT_PUBLIC_SENTRY_DSN),
         blob: !!env.BLOB_READ_WRITE_TOKEN,
+        privateBlob: !!env.BLOB_PRIVATE_READ_WRITE_TOKEN,
       },
     },
   });

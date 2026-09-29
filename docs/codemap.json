@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 360,
+    "files": 361,
     "routes": 195,
-    "libs": 93,
+    "libs": 94,
     "models": 33,
     "orphans": 8,
     "ungatedRoutes": 3
@@ -16,6 +16,7 @@
     "inquiry-signin-challenge": "src/lib/inquiry-signin.ts",
     "inquiry-statuses": "src/lib/inquiry-status.ts",
     "money-movement": "src/lib/stripe.ts",
+    "private-file-storage": "src/lib/private-blob.ts",
     "separate-booking-fee": "src/lib/access-fee.ts",
     "still-need-from-them": "src/lib/inquiry-needs.ts",
     "whose-move-is-it": "src/lib/inquiry-status.ts"
@@ -1233,7 +1234,7 @@
     },
     {
       "path": "src/app/api/admin/course-documents/download/route.ts",
-      "lines": 51,
+      "lines": 54,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1251,6 +1252,7 @@
       "guard": "file",
       "imports": [
         "@/lib/admin-session",
+        "@/lib/private-blob",
         "@vercel/blob",
         "next/server"
       ],
@@ -1294,7 +1296,7 @@
     },
     {
       "path": "src/app/api/admin/course-documents/upload/route.ts",
-      "lines": 46,
+      "lines": 55,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1313,6 +1315,7 @@
       "imports": [
         "@/lib/admin-session",
         "@/lib/course-timeline",
+        "@/lib/private-blob",
         "@vercel/blob",
         "next/server"
       ],
@@ -2220,7 +2223,7 @@
     },
     {
       "path": "src/app/api/admin/system/route.ts",
-      "lines": 102,
+      "lines": 103,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8338,7 +8341,7 @@
     },
     {
       "path": "src/lib/agreement-sign.ts",
-      "lines": 198,
+      "lines": 203,
       "purpose": "AGREEMENT_SPEC AG-2 — the signing service.",
       "brain": [],
       "exports": [
@@ -8374,6 +8377,7 @@
         "./agreements",
         "./course-timeline",
         "./email",
+        "./private-blob",
         "@/lib/prisma",
         "@vercel/blob"
       ],
@@ -11738,6 +11742,35 @@
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/two-factor.ts"
+      ]
+    },
+    {
+      "path": "src/lib/private-blob.ts",
+      "lines": 18,
+      "purpose": "Contracts and signed agreements live in their OWN, private Vercel Blob store (Cam 2026-09-29).",
+      "brain": [
+        "private-file-storage"
+      ],
+      "exports": [
+        {
+          "name": "PRIVATE_STORAGE_MISSING",
+          "kind": "const"
+        },
+        {
+          "name": "privateBlobToken",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/admin/course-documents/download/route.ts",
+        "src/app/api/admin/course-documents/upload/route.ts",
+        "src/lib/agreement-sign.ts"
       ]
     },
     {
