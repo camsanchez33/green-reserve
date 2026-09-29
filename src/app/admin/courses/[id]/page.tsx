@@ -16,6 +16,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { periodDelta, lastBookingLabel, type CourseHealthStatus } from '@/lib/course-metrics';
 import { useResource } from '@/lib/use-resource';
 import { formatDate as fmtDate, formatMoney as fmtMoney, formatTeeTime as fmtTime } from '@/lib/format';
+import { Modal } from '@/components/ui/Modal';
 
 type TabName = 'overview' | 'money' | 'records' | 'messages' | 'operate' | 'setup';
 
@@ -2538,11 +2539,10 @@ export default function CourseDetailPage() {
         const busy = action === 'archive' ? archiveBusy : liveToggleBusy;
         const plural = impact.bookings === 1 ? '' : 's';
         return (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white border border-line rounded-lg p-6 w-full max-w-md shadow-2xl">
-              <h3 className="font-serif font-medium text-ink mb-2">
+          <Modal size="md" pad="p-6" title={`${impact.bookings} golfer booking${plural} still standing`} onClose={() => { setClosurePrompt(null); setClosureError(''); }} dismissable={!busy}
+            titleNode={<h3 className="font-serif font-medium text-ink mb-2">
                 {impact.bookings} golfer booking{plural} {impact.bookings === 1 ? 'is' : 'are'} still standing
-              </h3>
+              </h3>}>
               <p className="text-sm text-ink-soft mb-3">
                 {verb === 'Archive' ? 'Archiving' : 'Taking'} <strong>{detail?.course.name}</strong>
                 {verb === 'Archive' ? '' : ' offline'} removes it from the public site. These rounds would be left
@@ -2580,17 +2580,15 @@ export default function CourseDetailPage() {
                   {busy ? 'Working…' : `Cancel ${impact.bookings} & ${verb.toLowerCase()}`}
                 </button>
               </div>
-            </div>
-          </div>
+          </Modal>
         );
       })()}
 
       {/* MP-5a: deleting a schedule now says what it costs, and the rebuild it
           triggers is described honestly — unsold slots go, sold ones stay. */}
       {schedDeleteTarget && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-line rounded-lg p-6 w-full max-w-sm shadow-2xl">
-            <h3 className="font-serif font-medium text-ink mb-2">Delete this schedule?</h3>
+        <Modal size="sm" pad="p-6" title="Delete this schedule?" onClose={() => { setSchedDeleteTarget(null); setSchedDeleteError(''); }} dismissable={!schedDeleteBusy}
+          titleNode={<h3 className="font-serif font-medium text-ink mb-2">Delete this schedule?</h3>}>
             <p className="text-sm text-ink-soft mb-2">
               The tee sheet is rebuilt straight away, so the times this schedule was creating stop being bookable.
             </p>
@@ -2613,17 +2611,15 @@ export default function CourseDetailPage() {
                 {schedDeleteBusy ? 'Deleting…' : 'Delete schedule'}
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* MP-6b: refund a paid round. Money leaves the course's Stripe account
           and GreenReserve's fee on it is reversed pro rata; the golfer is
           emailed the reason. Full unless an amount is given. */}
       {refundTarget && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-line rounded-lg p-6 w-full max-w-sm shadow-2xl">
-            <h3 className="font-serif font-medium text-ink mb-1">Refund {refundTarget.golferName}</h3>
+        <Modal size="sm" pad="p-6" title={`Refund ${refundTarget.golferName}`} onClose={() => setRefundTarget(null)} dismissable={!refundBusy}
+          titleNode={<h3 className="font-serif font-medium text-ink mb-1">Refund {refundTarget.golferName}</h3>}>
             <p className="text-sm text-ink-soft mb-4">
               {fmtMoney(refundTarget.amount)} was charged for {fmtDate(refundTarget.date)}. The money goes back to the card they paid with; the course&apos;s payout and GreenReserve&apos;s fee are both reduced.
             </p>
@@ -2645,15 +2641,13 @@ export default function CourseDetailPage() {
                 {refundBusy ? 'Refunding…' : refundAmount.trim() ? `Refund $${Number(refundAmount || 0).toFixed(2)}` : `Refund ${fmtMoney(refundTarget.amount)}`}
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Send Preview confirm — lists both things being sent + recipient (RUN_QUEUE "Send Preview = one combined send") */}
       {showPreviewConfirm && detail?.course.operator && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-line rounded-lg p-6 w-full max-w-sm shadow-2xl">
-            <h3 className="font-serif font-medium text-ink mb-2">Send preview + dashboard access?</h3>
+        <Modal size="sm" pad="p-6" title="Send preview + dashboard access?" onClose={() => setShowPreviewConfirm(false)}
+          titleNode={<h3 className="font-serif font-medium text-ink mb-2">Send preview + dashboard access?</h3>}>
             <p className="text-sm text-ink-soft mb-2">
               Sends ONE email to <strong>{detail.course.operator.name}</strong> at <strong>{detail.course.operator.email}</strong> containing:
             </p>
@@ -2671,15 +2665,13 @@ export default function CourseDetailPage() {
                 {sendingPreview ? 'Sending…' : 'Send Preview'}
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Manual booking modal */}
       {manualSlot && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-line rounded-lg p-6 w-full max-w-sm shadow-2xl">
-            <div className="flex items-center justify-between mb-5">
+        <Modal size="sm" pad="p-6" title="Add Manual Booking" onClose={() => setManualSlot(null)}
+          titleNode={<div className="flex items-center justify-between mb-5">
               <h3 className="font-serif font-medium text-ink">Add Manual Booking</h3>
               <button
                 onClick={() => setManualSlot(null)}
@@ -2687,7 +2679,7 @@ export default function CourseDetailPage() {
               >
                 <X className="w-4 h-4" />
               </button>
-            </div>
+            </div>}>
             <div className="space-y-3">
               {([['Golfer Name *', 'name', 'text'], ['Email *', 'email', 'email'], ['Phone', 'phone', 'tel']] as [string, string, string][]).map(([label, field, type]) => (
                 <div key={field}>
@@ -2723,8 +2715,7 @@ export default function CourseDetailPage() {
                 {manualSaving ? 'Adding…' : 'Add Booking'}
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

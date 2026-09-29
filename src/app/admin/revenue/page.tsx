@@ -10,6 +10,7 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EXPENSE_CATEGORIES, EXPENSE_CADENCES, EXPENSE_CATEGORY_LABEL, EXPENSE_CADENCE_LABEL } from '@/lib/expenses';
 import { formatMoney as fmtMoney } from '@/lib/format';
+import { Modal } from '@/components/ui/Modal';
 
 const fmtCount = (n: number) => n.toLocaleString('en-US');
 
@@ -813,13 +814,11 @@ export default function RevenuePage() {
 
       {/* SECTION 2 — Manage expenses drawer (owner) */}
       {drawerOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          <div className="absolute inset-0 bg-ink/30" onClick={() => setDrawerOpen(false)}/>
-          <div className="relative w-full max-w-md bg-paper h-full shadow-sm border-l border-line overflow-y-auto">
-            <div className="sticky top-0 bg-paper border-b border-line px-5 py-4 flex items-center justify-between">
+        <Modal variant="drawer" title="Operating expenses" onClose={() => setDrawerOpen(false)}
+          titleNode={<div className="bg-paper border-b border-line px-5 py-4 flex items-center justify-between">
               <h2 className="text-[15px] font-serif font-medium text-ink">Operating expenses</h2>
-              <button onClick={() => setDrawerOpen(false)} className="text-ink-muted hover:text-ink"><X className="w-4 h-4"/></button>
-            </div>
+              <button onClick={() => setDrawerOpen(false)} aria-label="Close" className="text-ink-muted hover:text-ink"><X className="w-4 h-4"/></button>
+            </div>}>
             <div className="p-5 space-y-5">
               {/* Add / edit form */}
               <div className="bg-white border border-line rounded-lg p-4 space-y-3">
@@ -878,8 +877,7 @@ export default function RevenuePage() {
                 </div>
               )}
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

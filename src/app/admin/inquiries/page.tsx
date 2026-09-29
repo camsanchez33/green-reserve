@@ -15,6 +15,7 @@ import {
 import { nextCall, overdueCall, latestCall, isSameEasternDay, fmtCallClock, easternParts, OUTCOME_LABEL } from '@/lib/inquiry-call';
 import type { NeedItem } from '@/lib/inquiry-needs';
 import { formatDate as fmtDate, formatEasternDay as fmtDay, formatEasternDate as fmtShort } from '@/lib/format';
+import { Modal } from '@/components/ui/Modal';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -886,11 +887,11 @@ function InquiriesListInner() {
         const withCourse = targets.filter(t => !!t.builtCourseId).length;
         const canConfirm = !isArchive || bulkConfirmText.trim().toUpperCase() === 'ARCHIVE';
         return (
-          <div className="fixed inset-0 bg-ink/30 flex items-center justify-center z-50 px-4">
-            <div className="bg-white rounded-lg border border-line max-w-md w-full p-5">
-              <div className="text-sm font-medium text-ink mb-1">
+          <Modal title={isArchive ? `Archive ${targets.length} inquir${targets.length === 1 ? 'y' : 'ies'}?` : `Send setup sheet to ${targets.length} contact${targets.length === 1 ? '' : 's'}?`}
+            titleNode={<div className="text-sm font-medium text-ink mb-1">
                 {isArchive ? `Archive ${targets.length} inquir${targets.length === 1 ? 'y' : 'ies'}?` : `Send setup sheet to ${targets.length} contact${targets.length === 1 ? '' : 's'}?`}
-              </div>
+              </div>}
+            onClose={() => { setBulkPreview(null); setBulkConfirmText(''); }}>
               <p className="text-xs text-ink-muted mb-3">
                 {isArchive
                   ? (withCourse > 0
@@ -936,8 +937,7 @@ function InquiriesListInner() {
                   {bulkRunning ? 'Working…' : isArchive ? 'Archive' : 'Send Sheet'}
                 </button>
               </div>
-            </div>
-          </div>
+          </Modal>
         );
       })()}
 
@@ -946,9 +946,9 @@ function InquiriesListInner() {
       {deleteTarget && (() => {
         const matches = deleteConfirmText.trim().toLowerCase() === deleteTarget.name.trim().toLowerCase();
         return (
-          <div className="fixed inset-0 bg-ink/30 flex items-center justify-center z-50 px-4">
-            <div className="bg-white rounded-lg border border-line max-w-md w-full p-5">
-              <div className="text-sm font-medium text-ink mb-1">Permanently delete &quot;{deleteTarget.name}&quot;?</div>
+          <Modal title={`Permanently delete "${deleteTarget.name}"?`}
+            titleNode={<div className="text-sm font-medium text-ink mb-1">Permanently delete &quot;{deleteTarget.name}&quot;?</div>}
+            onClose={() => { setDeleteTarget(null); setDeleteConfirmText(''); }}>
               <p className="text-xs text-ink-muted mb-3">This cannot be undone — the inquiry and its history are gone for good.</p>
               <label className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Type &quot;{deleteTarget.name}&quot; to confirm</label>
               <input
@@ -971,8 +971,7 @@ function InquiriesListInner() {
                   {deleteBusy ? 'Deleting…' : 'Delete permanently'}
                 </button>
               </div>
-            </div>
-          </div>
+          </Modal>
         );
       })()}
     </div>

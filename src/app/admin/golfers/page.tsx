@@ -9,6 +9,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
 import { adminFetch } from '@/lib/admin-fetch';
 import { formatMoney as fmtMoney, formatDate as fmtDate, formatStamp as fmtStamp } from '@/lib/format';
+import { Modal } from '@/components/ui/Modal';
 
 // MP-6d: the Golfers RECORD page. Before this it could look but barely touch:
 // resend confirmation (and "Sent" was a guess), nothing else. A real support
@@ -404,9 +405,9 @@ function GolfersInner() {
 
       {/* Cancel on the golfer's behalf */}
       {cancelTarget && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-line rounded-lg p-6 w-full max-w-sm shadow-sm">
-            <h3 className="font-serif font-medium text-ink mb-1">Cancel {cancelTarget.courseName} for {detail?.firstName}?</h3>
+        <Modal size="sm" pad="p-6" dismissable={!busy} onClose={() => setCancelTarget(null)}
+          title={`Cancel ${cancelTarget.courseName} for ${detail?.firstName ?? 'this golfer'}?`}
+          titleNode={<h3 className="font-serif font-medium text-ink mb-1">Cancel {cancelTarget.courseName} for {detail?.firstName}?</h3>}>
             <p className="text-sm text-ink-soft mb-3">
               {cancelTarget.teeDate} at {cancelTarget.teeTime}. {cancelTarget.paymentStatus === 'paid'
                 ? 'The round was already paid — it is refunded as part of the cancellation.'
@@ -421,15 +422,14 @@ function GolfersInner() {
               <button onClick={() => setCancelTarget(null)} disabled={!!busy} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors disabled:opacity-50">Keep it</button>
               <button onClick={submitCancel} disabled={!!busy} className="flex-1 bg-bad hover:bg-bad/90 text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors">{busy ? 'Cancelling…' : 'Cancel booking'}</button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Refund */}
       {refundTarget && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-line rounded-lg p-6 w-full max-w-sm shadow-sm">
-            <h3 className="font-serif font-medium text-ink mb-1">Refund {detail?.firstName}</h3>
+        <Modal size="sm" pad="p-6" dismissable={!busy} onClose={() => setRefundTarget(null)}
+          title={`Refund ${detail?.firstName ?? 'this golfer'}`}
+          titleNode={<h3 className="font-serif font-medium text-ink mb-1">Refund {detail?.firstName}</h3>}>
             <p className="text-sm text-ink-soft mb-4">
               {fmtMoney(refundTarget.totalAmount)} was charged for {refundTarget.courseName}, {refundTarget.teeDate}{refundTarget.refundedTotal > 0 ? ` · ${fmtMoney(refundTarget.refundedTotal)} already refunded` : ''}. It goes back to the card they paid with; the course&apos;s payout and GreenReserve&apos;s fee are both reduced.
             </p>
@@ -445,8 +445,7 @@ function GolfersInner() {
               <button onClick={() => setRefundTarget(null)} disabled={!!busy} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors disabled:opacity-50">Cancel</button>
               <button onClick={submitRefund} disabled={!!busy} className="flex-1 bg-bad hover:bg-bad/90 text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors">{busy ? 'Refunding…' : refundAmount.trim() ? `Refund $${Number(refundAmount || 0).toFixed(2)}` : `Refund ${fmtMoney(remaining)}`}</button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

@@ -8,6 +8,7 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { formatDateTime as fmtDate, formatMoney as fmtMoney } from '@/lib/format';
+import { Modal } from '@/components/ui/Modal';
 
 interface SystemData {
   lastStripeTouch: { courseName: string; updatedAt: string } | null;
@@ -476,9 +477,9 @@ export default function AdminSystemPage() {
       {/* Force-delete confirm — owner-authorized override, typed name confirm,
           server re-verifies it's still an orphan before touching anything. */}
       {forceDeleteTarget && (
-        <div className="fixed inset-0 bg-ink/30 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-lg border border-line max-w-md w-full p-5">
-            <div className="text-sm font-medium text-ink mb-1">Permanently delete &quot;{forceDeleteTarget.name}&quot;?</div>
+        <Modal title={`Permanently delete "${forceDeleteTarget.name}"?`}
+          titleNode={<div className="text-sm font-medium text-ink mb-1">Permanently delete &quot;{forceDeleteTarget.name}&quot;?</div>}
+          onClose={() => { setForceDeleteTarget(null); setForceDeleteConfirm(''); setForceDeleteError(''); }}>
             <p className="text-xs text-ink-muted mb-3">
               This cannot be undone — deletes the course, its bookings, tee times, and staff, and the operator&apos;s login if this was their only course. Owner-authorized override: this bypasses the usual archive-only rule because this course is an acknowledged orphan with no real history behind the doctrine&apos;s protection.
             </p>
@@ -506,8 +507,7 @@ export default function AdminSystemPage() {
                 {forceDeleteBusy ? 'Deleting…' : 'Delete permanently'}
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

@@ -24,6 +24,7 @@ import InquiryCallCards, { describeCall, type CallRow, type CallFocus } from '@/
 import { flatSummaries } from '@/lib/call-answers';
 import { AGENDA, callGate, fmtCallTime, nextCall, overdueCall, latestCall, parseJson } from '@/lib/inquiry-call';
 import { formatDate as fmtDate } from '@/lib/format';
+import { Modal as ModalShell, ModalActions } from '@/components/ui/Modal';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -153,7 +154,7 @@ function CheckpointStepper({ checkpoints }: { checkpoints: Checkpoint[] }) {
 function MoreMenu({ open, onToggle, onClose, children }: { open: boolean; onToggle: () => void; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="relative">
-      <button onClick={onToggle}
+      <button onClick={onToggle} aria-label="More actions" aria-expanded={open} aria-haspopup="menu"
         className="w-8 h-8 flex items-center justify-center rounded-md text-ink-muted hover:text-ink hover:bg-paper border border-line transition-colors">
         <MoreHorizontal className="w-4 h-4"/>
       </button>
@@ -165,37 +166,6 @@ function MoreMenu({ open, onToggle, onClose, children }: { open: boolean; onTogg
           </div>
         </>
       )}
-    </div>
-  );
-}
-
-function ModalShell({ title, danger, onClose, children }: { title: string; danger?: boolean; onClose: () => void; children: React.ReactNode }) {
-  return (
-    <div className="fixed inset-0 bg-ink/30 flex items-center justify-center z-50 px-4">
-      <div className="bg-white rounded-lg border border-line max-w-md w-full p-5">
-        <div className={'text-sm font-medium mb-3 ' + (danger ? 'text-bad' : 'text-ink')}>{title}</div>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function ModalActions({ onCancel, onConfirm, confirmLabel, disabled, danger, working }: {
-  onCancel: () => void; onConfirm: () => void; confirmLabel: string; disabled?: boolean; danger?: boolean; working?: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-end gap-2 mt-4">
-      <button onClick={onCancel} className="text-xs text-ink-muted hover:text-ink px-3 py-1.5 transition-colors">Cancel</button>
-      <button
-        onClick={onConfirm}
-        disabled={disabled || working}
-        className={
-          'text-xs font-medium px-3 py-1.5 rounded-md text-white transition-colors disabled:opacity-40 ' +
-          (danger ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')
-        }
-      >
-        {working ? 'Working…' : confirmLabel}
-      </button>
     </div>
   );
 }
