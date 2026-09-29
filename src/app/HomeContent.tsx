@@ -59,7 +59,7 @@ export default function HomeContent() {
             <div className={s.heroText}>
               <div className={s.heroEyebrow}>Free online tee sheet for golf courses</div>
               <h1>The tee sheet your course deserves.</h1>
-              <p>Online tee times for your course, on a booking page with your name, colors and photos. Add a “Book a tee time” button to your website — golfers book and pay securely, and your staff run the day from one tee sheet.</p>
+              <p>Golfers book your tee times online, on a page with your course&apos;s name, colors and photos. Link it from your website with a “Book a tee time” button, and your staff run the whole day from one tee sheet.</p>
               <div className={s.cta}>
                 <Link className={s.btn} href="/for-courses">List your course <Arrow /></Link>
                 <a className={`${s.btn} ${s.btnOutline}`} href="#list">See how it works <Down /></a>

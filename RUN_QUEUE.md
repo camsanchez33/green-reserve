@@ -2664,6 +2664,16 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   1181ms on CI (others pass; locally 40ms). The Sentry timer was not the whole
   cause. perf-audit.ts now prints main-thread breakdown, top scripts, long tasks
   and third parties for any failing page — the next CI run names the cause.
+- [x] FB-2 FIX (Cam 2026-09-29, screenshot: "See it work" blank; hero blurb
+  "doesn't make sense"). The demo was INVISIBLE, not slow: PERF-1's MountNearView
+  mounts SeeItWork after HomeMotion collected the page's .fade elements, so its
+  three .fade wrappers never got `.in` and stayed at opacity 0 (live since
+  PERF-1). Removed .fade inside SeeItWork. Lesson: my earlier checks read the
+  page TEXT (innerText includes opacity-0 text) — a visual check must assert
+  computed opacity or look at a screenshot of that section. Hero blurb rewritten
+  as full sentences: "Golfers book your tee times online, on a page with your
+  course's name, colors and photos. Link it from your website with a “Book a tee
+  time” button, and your staff run the whole day from one tee sheet."
 - [x] PERF-4 (Cam 2026-09-29, "option 1") — the speed check audits each page 3x
   and judges the median of each metric; budgets unchanged. Found with it: the
   first run in a fresh browser is always the slow one (Home TBT 186 vs 41/46).

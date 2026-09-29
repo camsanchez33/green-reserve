@@ -388,7 +388,7 @@ Sorted the same way.
 | `src/components/home/HomeFaq.tsx` | 1 | 22 |  | `default (HomeFaq)` |
 | `src/components/home/HomeMotion.tsx` | 1 | 69 |  | `default (HomeMotion)` |
 | `src/components/home/MountNearView.tsx` | 1 | 23 |  | `default (MountNearView)` |
-| `src/components/home/SeeItWork.tsx` | 1 | 55 |  | `default (SeeItWork)` |
+| `src/components/home/SeeItWork.tsx` | 1 | 58 |  | `default (SeeItWork)` |
 | `src/components/home/StoryMedia.tsx` | 1 | 66 |  | `default (StoryMedia)` |
 | `src/components/MainOffset.tsx` | 1 | 32 |  | `default (MainOffset)` |
 | `src/components/Nav.tsx` | 1 | 126 |  | `default (Nav)` |
