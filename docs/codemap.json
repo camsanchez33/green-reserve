@@ -4788,7 +4788,7 @@
     },
     {
       "path": "src/app/call/[token]/page.tsx",
-      "lines": 164,
+      "lines": 227,
       "purpose": "/call/[token] — the course books its discovery call.",
       "brain": [],
       "exports": [
@@ -8142,7 +8142,7 @@
     },
     {
       "path": "src/lib/calcom.ts",
-      "lines": 100,
+      "lines": 123,
       "purpose": "CAL-1 — Cal.com as the call scheduler, in place of the Google Calendar grid.",
       "brain": [],
       "exports": [
@@ -8156,6 +8156,10 @@
         },
         {
           "name": "calcomEmbedUrl",
+          "kind": "fn"
+        },
+        {
+          "name": "calcomInlineEmbed",
           "kind": "fn"
         },
         {
