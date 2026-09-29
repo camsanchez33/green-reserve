@@ -2625,11 +2625,16 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   (sign-up, setup sheet, admin); a semi-private club = Public + member passes.
 - [ ] FB-3 — GreenReserve's $1.50/player is lost when a golfer pays at the
   counter ("paid offline" → no Stripe charge). DECIDED (Cam 2026-09-29):
-  charge the $1.50/player to the golfer's card AT BOOKING, non-refundable;
+  [SUPERSEDED same day, see FB3_FEE_PLAN_SPEC.md: Option B — one payment as
+  today; the $1.50/player is charged separately, on the PLATFORM account, only
+  when staff mark paid-offline or no-show; every course collects a card.]
+  (was:) charge the $1.50/player to the golfer's card AT BOOKING, non-refundable;
   the green fee stays paid at the course. Every course therefore collects a
   card (the no-card flow ends). Touches money: attended, spec first — the
   booking/cancel/refund/check-in paths all assume the fee is collected at
   check-in today.
+  FB-2 DECIDED (Cam 2026-09-29): taxes = built into the course's price, GreenReserve
+  adds none. Draft sentences in FB2_COPY_SPEC.md still await Cam's per-block approval.
 - [ ] FB-2 — homepage (greenreserve.app) copy + structure, Cam's notes
   2026-09-29: change the hero blurb; must NOT say "no contract" (and not "no
   courses in the new contract"); smoother "See how it works" button; "Your

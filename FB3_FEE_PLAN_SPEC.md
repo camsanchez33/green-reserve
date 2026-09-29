@@ -1,6 +1,6 @@
 # FB-3 — collecting the $1.50/player when the round isn't paid by card
 
-Status: **PLAN — needs Cam's re-confirmation before any build.** Money path;
+Status: **DECIDED (Cam 2026-09-29): Option B, charged on the PLATFORM account (GreenReserve pays the ~34¢).** Zero-price rounds: open. Money path;
 attended. Written 2026-09-29 from a read-only map of every payment path.
 
 ## The problem (Cam's note)
