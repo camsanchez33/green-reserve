@@ -1,6 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
-import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
 import SeeItWork from '@/components/home/SeeItWork';
 import HomeDemo from '@/components/home/HomeDemo';
 import HomeMotion from '@/components/home/HomeMotion';
@@ -11,15 +9,16 @@ import s from './home.module.css';
 
 // H-1 (UI_REVISE_SPEC §5): the homepage from the approved prototype
 // (docs/design/homepage-prototype.html). Sections in the spec's order:
-// hero → pinned story → live demo → course cards → four steps →
-// pricing on pine → FAQ → final CTA. Nav and Footer live in the root layout.
+// hero → pinned story → live demo → steps → pricing on pine → FAQ →
+// final CTA. Nav and Footer live in the root layout. FB-2 (Cam approved
+// FB2_COPY_SPEC.md 2026-09-29): the course-cards section is gone, the steps are
+// the real five-step process, and "no contract" became "no long-term commitment"
+// (the operator agreement IS a contract).
 //
 // Fee copy follows legal/LQ-2_FEE_COPY.md (decided 2026-09-14): the golfer
 // pays $1.50 per player on top of the course's price, collected in the same
 // card payment to the course's Stripe account; Stripe's fee applies to the
 // whole payment. Never "keep 100%", never "never touches your Stripe account".
-
-const DEMO_SLUG = DEMO_COURSE_SLUGS[0] ?? null;
 
 const Arrow = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
@@ -28,24 +27,18 @@ const Down = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6" /></svg>
 );
 
-const BEATS = [
-  { eyebrow: 'Your page', h: 'Golfers book on a page that looks like your course.', p: 'Your logo, your color, your photo. Our name is one small line at the bottom. Nobody feels like they left your website.' },
-  { eyebrow: 'Your money', h: 'Green fees are paid straight to your own account.', p: 'A card holds the time. Golfers pay when they check in, and it lands in your own Stripe account on its normal schedule.' },
-  { eyebrow: 'Your rules', h: 'Members keep their rules.', p: 'Member rates, booking windows, guest pricing per tier. Members sign in on the same page with a code — no app, no password.' },
-];
-
-// Example pages. Real courses replace these as they go live (§0.4).
-const CARDS = [
-  { img: '/home/aerial.jpg', name: 'Hollow Creek Golf Club', where: 'Suffern, New York · Public · 18 holes', from: 'From $54 / player' },
-  { img: '/home/bunker-card.jpg', name: 'Sandpiper Links', where: 'Montauk, New York · Public · 18 holes', from: 'From $88 / player' },
-  { img: '/home/iron.jpg', name: 'Stony Hollow Country Club', where: 'Mahwah, New Jersey · Semi-private · 18 holes', from: 'Members & guests' },
+const BEATS: { eyebrow: string; h: string; p: string; fine?: string }[] = [
+  { eyebrow: 'Your page', h: 'It works with the website you already have.', p: 'Your booking page gets its own secure link. Put it behind a “Book a tee time” button on your site, your Google listing and your social pages. It carries your logo, colors and photos, so golfers never feel they left you.', fine: 'Every page is served over HTTPS, and card details go straight to Stripe. They never touch your computer or ours.' },
+  { eyebrow: 'Your money', h: 'Green fees go to your own Stripe account.', p: 'A card holds the time; the golfer is charged when they check in, and Stripe pays you out on its normal schedule.' },
+  { eyebrow: 'Your rules', h: 'Members keep their rules.', p: 'Member rates, booking windows and guest pricing, set by tier. Members sign in with a code — no app, no password.' },
 ];
 
 const STEPS = [
-  { n: '1', h: 'Tell us about your course', p: 'Two minutes. Name, town, holes, rates, and anything we should know.' },
-  { n: '2', h: 'We build your sheet', p: 'You get a private preview of your page to approve or mark up.' },
-  { n: '3', h: 'Connect your bank', p: 'Stripe, ten minutes, in your own name. Payouts go straight to you.' },
-  { n: '4', h: 'Go live', p: 'Put the link on your website and Google listing. Golfers start booking.' },
+  { n: '1', h: 'Tell us about your course', p: 'A two-minute form, then a 20-minute call about your green fees, tee sheet and how you take bookings today.' },
+  { n: '2', h: 'Fill in your setup sheet', p: 'Most of it is already filled in from the call. Check your tee times, prices and cancellation policy (about five minutes); the rest can wait.' },
+  { n: '3', h: 'Approve your page', p: 'We build your booking page and tee sheet and send you a private preview to approve or mark up.' },
+  { n: '4', h: 'Sign and connect Stripe', p: 'The operator agreement and Stripe, about ten minutes, in your course’s name. Payouts go straight to your bank.' },
+  { n: '5', h: 'Go live', p: 'Add the link to your website and Google listing. Your staff log in to the tee sheet; golfers start booking.' },
 ];
 
 // PERF-1 (Cam 2026-09-29, keep the speed check strict): a SERVER component
@@ -66,12 +59,12 @@ export default function HomeContent() {
             <div className={s.heroText}>
               <div className={s.heroEyebrow}>Free online tee sheet for golf courses</div>
               <h1>The tee sheet your course deserves.</h1>
-              <p>Golfers book on a page that looks like your course. You run the sheet, take check-ins and payments, and keep your members&apos; rules. Live in days.</p>
+              <p>Online tee times for your course, on a booking page with your name, colors and photos. Add a “Book a tee time” button to your website — golfers book and pay securely, and your staff run the day from one tee sheet.</p>
               <div className={s.cta}>
                 <Link className={s.btn} href="/for-courses">List your course <Arrow /></Link>
-                <a className={`${s.btn} ${s.btnOutline}`} href="#how">See how it works <Down /></a>
+                <a className={`${s.btn} ${s.btnOutline}`} href="#list">See how it works <Down /></a>
               </div>
-              <div className={s.fine}>Free for courses. $0/month, no contract. We reply within one business day.</div>
+              <div className={s.fine}>Free for courses. $0/month, no long-term commitment. We reply within one business day.</div>
             </div>
             <div className={s.heroStage}>
               <div className={s.heroDevice}>
@@ -99,6 +92,7 @@ export default function HomeContent() {
                 <div className={s.eyebrow}>{b.eyebrow}</div>
                 <h2>{b.h}</h2>
                 <p>{b.p}</p>
+                {b.fine && <p className={s.beatFine}>{b.fine}</p>}
               </div>
             ))}
           </div>
@@ -115,39 +109,14 @@ export default function HomeContent() {
         </div>
       </section>
 
-      {/* 5. COURSE CARDS */}
-      <section className={s.courses}>
-        <div className={s.wrap}>
-          <div className={s.head}>
-            <div>
-              <h2 className={`${s.h2} ${s.fade}`}>Every course gets its own page.</h2>
-              <p className={`${s.sub} ${s.fade}`}>Not a listing on ours. A booking page under your name, on your link, with your photography. These are example pages — real courses take their place as they go live.</p>
-            </div>
-            <Link className={`${s.link} ${s.fade}`} href="/for-courses" style={{ color: 'var(--pine)' }}>List your course <Arrow /></Link>
-          </div>
-          <div className={s.cards}>
-            {CARDS.map((c, i) => (
-              <Link key={c.name} className={`${s.card} ${s.fade}`} href={DEMO_SLUG ? `/courses/${DEMO_SLUG}` : '/for-courses'} style={{ transitionDelay: `${i * 0.1}s` }}>
-                <div className={s.img}><Image src={c.img} alt="" fill sizes="(max-width: 960px) 100vw, 33vw" loading="lazy" /></div>
-                <div className={s.body}>
-                  <div className={s.name}>{c.name}</div>
-                  <div className={s.where}>{c.where}</div>
-                  <div className={s.row2}><b>{c.from}</b><span>{DEMO_SLUG ? 'See tee times →' : 'Get a page like this →'}</span></div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* H-2c: the photo band that sat here is gone — every photo section is
           now followed by a quiet one. Its line lives under the steps title. */}
 
-      {/* 6. FOUR STEPS */}
+      {/* 6. STEPS — the real process, first call to first booking */}
       <section className={s.steps} id="list">
         <div className={s.wrap}>
-          <h2 className={`${s.h2} ${s.fade}`}>Live in four steps.</h2>
-          <p className={`${s.sub} ${s.fade}`}>We set it up. You run it. Tell us about your course and we build the sheet with you; you approve a private preview, connect your bank, and go live. Days, not months.</p>
+          <h2 className={`${s.h2} ${s.fade}`}>From first call to first booking.</h2>
+          <p className={`${s.sub} ${s.fade}`}>We set it up with you. Most courses are live in about a week.</p>
           <div className={s.stepsRow}>
             {STEPS.map((st, i) => (
               <div key={st.n} className={`${s.s} ${s.fade}`} style={{ transitionDelay: `${i * 0.08}s` }}>
@@ -165,21 +134,23 @@ export default function HomeContent() {
         <div className={`${s.wrap} ${s.priceWrap}`}>
           <div>
             <h2 className={`${s.h2} ${s.fade}`}>Free for courses.</h2>
-            <p className={s.fade}>No setup fee, no monthly fee, no contract. Golfers pay $1.50 per player on each online booking, added to your price — they see it before they book. Stripe&apos;s card-processing fee applies to the payment, the same as any card you take today.</p>
+            <p className={s.fade}>No setup fee. No monthly fee. No long-term commitment — leave with 30 days&apos; notice. Golfers pay a $1.50 per player booking fee on each online booking, shown to them before they book and added to your price, never taken out of it. Stripe&apos;s card-processing fee applies to the payment, the same as any card you take today.</p>
+            <p className={`${s.priceNote} ${s.fade}`}><b>Taxes.</b> Your prices are shown to golfers exactly as you set them. GreenReserve doesn&apos;t add or collect sales tax on green fees — if tax applies at your course, include it in your price.</p>
           </div>
           <div className={`${s.tile} ${s.fade}`}>
             <div className={s.eyebrow}>Per online booking</div>
             <div className={s.amt}><span className={s.n}>$1.50</span><span className={s.u}>per player</span></div>
             <ul>
-              <li>Bookings your staff enter by hand: $0</li>
-              <li>Setup, onboarding, your preview page: $0</li>
-              <li>Monthly: $0. Contract: none.</li>
+              <li>Bookings your staff enter: $0</li>
+              <li>Setup and your preview page: $0</li>
+              <li>Monthly: $0</li>
+              <li>Leave anytime with 30 days&apos; notice</li>
             </ul>
           </div>
         </div>
       </section>
 
-      {/* 9. FAQ — the six questions in lib/faq.ts, same array as the JSON-LD */}
+      {/* 9. FAQ — the questions in lib/faq.ts, same array as the JSON-LD */}
       <section className={s.faq} id="faq">
         <div className={`${s.wrap} ${s.faqGrid}`}>
           <div><h2 className={`${s.h2} ${s.fade}`}>Questions courses ask.</h2></div>

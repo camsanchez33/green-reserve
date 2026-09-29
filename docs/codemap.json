@@ -23,7 +23,7 @@
   "files": [
     {
       "path": "src/app/HomeContent.tsx",
-      "lines": 205,
+      "lines": 176,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -45,8 +45,6 @@
         "@/components/home/MountNearView",
         "@/components/home/SeeItWork",
         "@/components/home/StoryMedia",
-        "@/lib/demo-courses",
-        "next/image",
         "next/link"
       ],
       "usedBy": [
@@ -10150,7 +10148,6 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/HomeContent.tsx",
         "src/app/api/bookings/route.ts",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/app/courses/[slug]/page.tsx",
@@ -10517,7 +10514,7 @@
     },
     {
       "path": "src/lib/faq.ts",
-      "lines": 26,
+      "lines": 29,
       "purpose": "SD-7:",
       "brain": [],
       "exports": [

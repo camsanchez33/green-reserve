@@ -2660,6 +2660,10 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   timer — Sentry loads on first input, the first error, or the tab going hidden.
   Local: Home TBT 29–41ms; idle page loads no Sentry chunk, an error or a scroll
   does. The audit measures PRODUCTION, so it turns green only after this deploys.
+  RESULT (2026-09-29 16:28, run on PR #19 after PERF-3 deployed): Home TBT still
+  1181ms on CI (others pass; locally 40ms). The Sentry timer was not the whole
+  cause. perf-audit.ts now prints main-thread breakdown, top scripts, long tasks
+  and third parties for any failing page — the next CI run names the cause.
 - [ ] PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29:
   private clubs pay GreenReserve (subscription, or $1.50/round billed monthly and
   capped at the subscription price); members pay $0. BLOCKED on Cam's prices and on
@@ -2693,7 +2697,18 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   check-in today.
   FB-2 DECIDED (Cam 2026-09-29): taxes = built into the course's price, GreenReserve
   adds none. Draft sentences in FB2_COPY_SPEC.md still await Cam's per-block approval.
-- [ ] FB-2 — homepage (greenreserve.app) copy + structure, Cam's notes
+- [x] FB-2 — BUILT (Cam 2026-09-29: "keep everything" — every block of
+  FB2_COPY_SPEC.md approved as drafted, incl. delete the course cards, "about a
+  week" everywhere, taxes built into the price). Hero blurb + fine line (no
+  long-term commitment), See-how-it-works glides to the steps (reduced-motion
+  respected), Your page / Your money / Your rules beats + HTTPS/Stripe line,
+  course-cards section deleted, five real steps, pricing + tiles + taxes note,
+  eight-question FAQ (lib/faq.ts, same array as the JSON-LD), page meta
+  description, /for-courses "how long" answer = about a week. Verified at 390 and
+  1280px, no page errors, no sideways scroll; Home Lighthouse 96 / TBT 40ms. The
+  three example-card photos in public/home/ are now unused (left in place).
+  Original notes:
+  FB-2 — homepage (greenreserve.app) copy + structure, Cam's notes
   2026-09-29: change the hero blurb; must NOT say "no contract" (and not "no
   courses in the new contract"); smoother "See how it works" button; "Your
   page" section should be about how it links from the course's own website,
@@ -2936,10 +2951,11 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   commit the migration file, verify on the Vercel preview, schema-check CI must
   pass, then `migrate deploy` on prod. Attended. Never swept into a batch.
   Per docs/SHIPPING.md.
-  BLOCKED (2026-09-28): Vercel PREVIEW builds fail on every push, even
-  docs-only ones (production builds fine) — most likely an env var missing
-  from the Preview scope. Cam chose to leave previews broken for now, so this
-  item cannot run until they build: its verify step IS the preview.
+  UNBLOCKED (Cam 2026-09-29: "drop the preview rule"): schema changes are now
+  verified locally (fresh local Postgres, every migration applied, feature
+  walked end to end), additive migrations only — CLAUDE.md "Shipping". Every
+  item that said "blocked on previews" is unblocked by this: EV-1, SD-9c (2),
+  MP-4f, the calcomUid column, PB (still needs prices).
 
   VERIFY (manual, after deploy):
     1. Book a tee time as a golfer      → exactly ONE booking_created row

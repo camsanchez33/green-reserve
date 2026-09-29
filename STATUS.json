@@ -1,21 +1,21 @@
 {
-  "generatedAt": "2026-09-29T15:30:20.042Z",
+  "generatedAt": "2026-09-29T16:30:29.081Z",
   "repo": {
-    "head": "0cb172f",
+    "head": "38deb1a",
     "branch": "claude/eager-maxwell-qf1pd0",
     "dirtyCount": 0,
     "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-29T15:30:18+00:00",
+    "queueLastCommit": "2026-09-29T16:30:28+00:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 204,
+    "runDone": 205,
     "runAwaiting": 23,
     "runInFlight": 1,
-    "runNotStarted": 18,
+    "runNotStarted": 17,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -56,7 +56,7 @@
       "line": 536,
       "hash": "70a424e",
       "shipDate": "2026-09-28",
-      "ageDays": 0
+      "ageDays": 1
     },
     {
       "title": "SD-8e — status is rendered as bare coloured text where the design",
@@ -116,21 +116,21 @@
     },
     {
       "title": "CAL-2 — Cal.com is the ONLY call scheduler",
-      "line": 2730,
+      "line": 2745,
       "hash": "e082dd0",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "BUG: hello@greenreserve.app takes no mail",
-      "line": 2762,
+      "line": 2777,
       "hash": "371ffff",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 2780,
+      "line": 2795,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 0
@@ -267,27 +267,22 @@
     },
     {
       "title": "PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29:",
-      "line": 2663,
+      "line": 2667,
       "section": "Queue (run in this order)"
     },
     {
       "title": "SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +",
-      "line": 2668,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "FB-2 — homepage (greenreserve.app) copy + structure, Cam's notes",
-      "line": 2696,
+      "line": 2672,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2804,
+      "line": 2819,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2957,
+      "line": 2973,
       "section": "Queue (run in this order)"
     }
   ],
@@ -350,17 +345,17 @@
     {
       "item": "CAL-2 — Cal.com is the ONLY call scheduler",
       "note": "Cam: \"there should be no google calendar thing\" and, after setting both env vars and redeploying, \"it is just the same as before\"",
-      "line": 2730
+      "line": 2745
     },
     {
       "item": "BUG: hello@greenreserve.app takes no mail",
       "note": "Cam: \"all emails need to go to thegreenreserve@outlook",
-      "line": 2762
+      "line": 2777
     },
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2780
+      "line": 2795
     }
   ],
   "ideas": {
@@ -622,6 +617,31 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "38deb1a",
+      "date": "2026-09-29",
+      "subject": "PERF-3: speed check prints where the main-thread time went on a failing page"
+    },
+    {
+      "h": "38860cd",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "1d318fe",
+      "date": "2026-09-29",
+      "subject": "FB-2: homepage copy Cam approved"
+    },
+    {
+      "h": "377d6e3",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "4828b58",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "0cb172f",
       "date": "2026-09-29",
       "subject": "PERF-3: load Sentry on input, error or tab hidden, not a 10s timer"
@@ -655,31 +675,6 @@
       "h": "88539ee",
       "date": "2026-09-29",
       "subject": "CG-1: call guide — a conversation on the call, a sheet built from it after"
-    },
-    {
-      "h": "461caea",
-      "date": "2026-09-29",
-      "subject": "FB-3 review: no double fee, no early no-show, partial party, ledger"
-    },
-    {
-      "h": "d52b6af",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "e343788",
-      "date": "2026-09-29",
-      "subject": "FB-3: collect the $1.50/player when a round isn't paid by card"
-    },
-    {
-      "h": "962031b",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "ea3306b",
-      "date": "2026-09-29",
-      "subject": "FB-1 review: no pipeline oracle; sheet photos only from our uploads"
     }
   ]
 }

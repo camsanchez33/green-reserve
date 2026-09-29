@@ -99,3 +99,9 @@ body {
 :root { --admin-sidebar-w: 14rem; }
 html.sidebar-collapsed { --admin-sidebar-w: 3.5rem; }
 .admin-content { margin-left: var(--admin-sidebar-w); transition: margin-left 0.2s ease; }
+
+/* FB-2: "See how it works" on the homepage glides to the steps instead of
+   jumping. Homepage only, and never for visitors who asked for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  html:has([data-home-root]) { scroll-behavior: smooth; }
+}

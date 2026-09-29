@@ -1,7 +1,8 @@
 # FB-2 — homepage copy (DRAFT for Cam's approval)
 
-Source: Cam's walk-through notes, 2026-09-29. Status: **DRAFT — nothing below is
-live.** Marketing fee copy is frozen behind LQ-2 (CLAUDE.md), so the build run
+Source: Cam's walk-through notes, 2026-09-29. Status: **APPROVED AS DRAFTED (Cam
+2026-09-29: "keep everything") and BUILT.** The [FB-3] alternatives are moot — FB-3
+shipped as option B, so the $1.50 stays inside the check-in charge. Marketing fee copy is frozen behind LQ-2 (CLAUDE.md), so the build run
 applies exactly the approved sentences, the way legal/LQ-2_FEE_COPY.md worked.
 Mark each block ✅ / ✏️ (with your edit) / ❌.
 
