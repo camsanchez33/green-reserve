@@ -17,6 +17,9 @@ import { periodDelta, lastBookingLabel, type CourseHealthStatus } from '@/lib/co
 import { useResource } from '@/lib/use-resource';
 import { formatDate as fmtDate, formatMoney as fmtMoney, formatTeeTime as fmtTime } from '@/lib/format';
 import { Modal } from '@/components/ui/Modal';
+import { Card } from '@/components/ui/Card';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { INPUT } from '@/components/ui/field';
 
 type TabName = 'overview' | 'money' | 'records' | 'messages' | 'operate' | 'setup';
 
@@ -136,7 +139,7 @@ interface MemberRow {
   expiresAt: string | null; createdAt: string;
 }
 
-const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+const iCls = `${INPUT} w-full`;
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 interface ScheduleRow {
@@ -1098,7 +1101,7 @@ export default function CourseDetailPage() {
                 {dangerOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setDangerOpen(false)} />
-                    <div className="absolute right-0 top-10 z-20 bg-white border border-line rounded-lg shadow-lg w-64 py-1.5">
+                    <Card className="absolute right-0 top-10 z-20 shadow-lg w-64 py-1.5">
                       {/* Below ~1200px the header's action row cannot fit, so
                           Take offline / View page / Refresh live here instead.
                           Same handlers, same pending + disabled state —
@@ -1156,7 +1159,7 @@ export default function CourseDetailPage() {
                       <p className="px-3 py-2 text-[11px] text-ink-faint leading-relaxed">
                         Courses are archived, never deleted — booking and payment history is retained.
                       </p>
-                    </div>
+                    </Card>
                   </>
                 )}
               </div>
@@ -1283,9 +1286,9 @@ export default function CourseDetailPage() {
                     return null;
                   };
                   return (
-                    <div className="bg-white border border-line rounded-lg p-5">
+                    <Card className="p-5">
                       <div className="flex items-center justify-between mb-3">
-                        <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Setup</div>
+                        <Eyebrow>Setup</Eyebrow>
                         <span className="text-xs text-ink-soft">{setup.done} of {setup.total}{setup.next ? ` · next: ${setup.next.short}` : ' · ready to go live'}</span>
                       </div>
                       <div className="border border-line rounded-md divide-y divide-line-soft">
@@ -1310,7 +1313,7 @@ export default function CourseDetailPage() {
                           <a href={`/admin/inquiries/${detail.origin.inquiryId}?call=1`} className="ml-auto font-medium text-pine hover:underline">Open on the inquiry</a>
                         </div>
                       )}
-                    </div>
+                    </Card>
                   );
                 })()}
 
@@ -1387,9 +1390,9 @@ export default function CourseDetailPage() {
                 )}
 
                 {/* Client health block (item 3, top) */}
-                <div className="bg-white border border-line rounded-lg p-5">
+                <Card className="p-5">
                   <div className="flex items-center justify-between mb-3">
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Client Health</div>
+                    <Eyebrow>Client Health</Eyebrow>
                     <span title={detail.health.reason}><StatusDot status={detail.health.dot} label={detail.health.label} /></span>
                   </div>
                   <p className="text-sm text-ink-soft mb-4">{detail.health.reason}</p>
@@ -1401,7 +1404,7 @@ export default function CourseDetailPage() {
                   </div>
                   {openItemsList.length > 0 ? (
                     <div className="border-t border-line-soft pt-3">
-                      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Open items</div>
+                      <Eyebrow className="mb-2">Open items</Eyebrow>
                       <ul className="space-y-1">
                         {openItemsList.map((item, i) => (
                           <li key={i} className="text-sm text-ink-soft flex items-center gap-2">
@@ -1413,7 +1416,7 @@ export default function CourseDetailPage() {
                   ) : (
                     <div className="border-t border-line-soft pt-3 text-sm text-ink-muted">No open items.</div>
                   )}
-                </div>
+                </Card>
 
                 {/* Money block (item 3, bottom) — shared metrics brain */}
                 <div className="grid grid-cols-4 gap-4">
@@ -1423,22 +1426,22 @@ export default function CourseDetailPage() {
                     { label: 'GR Fees (30d)', value: fmtMoney(detail.revenue30d.platform), color: 'text-ok' },
                     { label: 'All-time Bookings', value: String(detail.totalBookings), color: 'text-ink' },
                   ].map(({ label, value, color }) => (
-                    <div key={label} className="bg-white border border-line rounded-lg p-5">
-                      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">{label}</div>
+                    <Card key={label} className="p-5">
+                      <Eyebrow className="mb-2">{label}</Eyebrow>
                       <div className={'text-[28px] font-serif font-medium leading-none ' + color}>{value}</div>
                       {label === 'Bookings (30d)' && (
                         <div className={'text-xs font-medium mt-1.5 ' + (trend.direction === 'up' ? 'text-ok' : trend.direction === 'down' ? 'text-bad' : 'text-ink-muted')}>
                           {trend.pct === null ? 'no prior period' : `${trend.pct > 0 ? '+' : ''}${trend.pct.toFixed(0)}% vs prior 30d`}
                         </div>
                       )}
-                    </div>
+                    </Card>
                   ))}
                 </div>
 
                 {detail.recentBookings.length > 0 && (
                   <div>
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Recent Bookings</div>
-                    <div className="bg-white border border-line rounded-lg divide-y divide-line-soft">
+                    <Eyebrow className="mb-2">Recent Bookings</Eyebrow>
+                    <Card className="divide-y divide-line-soft">
                       {detail.recentBookings.map(b => (
                         <div key={b.id} className="flex items-center gap-4 px-5 py-3">
                           <div className="flex-1 min-w-0">
@@ -1450,21 +1453,21 @@ export default function CourseDetailPage() {
                           <div className="text-sm font-medium text-ok">{fmtMoney(b.totalAmount / 100)}</div>
                         </div>
                       ))}
-                    </div>
+                    </Card>
                   </div>
                 )}
 
                 {detail.recentBookings.length === 0 && detail.totalBookings === 0 && (
-                  <div className="text-center py-12 text-ink-muted text-sm bg-white border border-line rounded-lg">
+                  <Card className="text-center py-12 text-ink-muted text-sm">
                     No bookings yet for this course
-                  </div>
+                  </Card>
                 )}
 
                 {/* MP-5e part 3: every touchpoint with this course in one line of
                     time — notes, messages, pipeline moves, calls, settings. */}
                 {detail.relationship && (
-                  <div className="bg-white border border-line rounded-lg p-5">
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Relationship</div>
+                  <Card className="p-5">
+                    <Eyebrow className="mb-3">Relationship</Eyebrow>
                     {detail.relationship.feed.length === 0 ? (
                       <p className="text-sm text-ink-muted">Nothing recorded yet — notes, messages, calls and pipeline moves will show here.</p>
                     ) : (
@@ -1478,26 +1481,26 @@ export default function CourseDetailPage() {
                         ))}
                       </div>
                     )}
-                  </div>
+                  </Card>
                 )}
               </div>
 
               {/* Client card (contact info) — folded in from the old Contact tab (item 1) */}
               <div className="space-y-5">
                 {detail.relationship && (
-                  <div className="bg-white border border-line rounded-lg p-5">
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Engagement</div>
+                  <Card className="p-5">
+                    <Eyebrow className="mb-3">Engagement</Eyebrow>
                     <dl className="space-y-2 text-sm">
                       <div className="flex justify-between gap-3"><dt className="text-ink-muted">Operator last signed in</dt><dd className="text-ink text-right">{detail.relationship.operatorLastLoginAt ? fmtDate(detail.relationship.operatorLastLoginAt) : 'Never'}</dd></div>
                       <div className="flex justify-between gap-3"><dt className="text-ink-muted">First went live</dt><dd className="text-ink text-right">{detail.relationship.firstWentLiveAt ? fmtDate(detail.relationship.firstWentLiveAt) : 'Not yet'}</dd></div>
                       <div className="flex justify-between gap-3"><dt className="text-ink-muted">Earned GreenReserve</dt><dd className="text-ink text-right tabular-nums">${(detail.relationship.earnedCents / 100).toFixed(2)} <span className="text-ink-muted">· {detail.relationship.paidRounds} paid round{detail.relationship.paidRounds === 1 ? '' : 's'}</span></dd></div>
                     </dl>
-                  </div>
+                  </Card>
                 )}
                 {/* ORPHAN SWEEP item 2 (FUTURE-PROOF) — origin card. A broken
                     link says so loudly instead of pretending it's fine. */}
                 <div className={'bg-white border rounded-lg p-5 ' + (detail.origin ? 'border-line' : 'border-bad/30 bg-bad/5')}>
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Origin</div>
+                  <Eyebrow className="mb-2">Origin</Eyebrow>
                   {detail.origin ? (
                     <Link href={'/admin/inquiries/' + detail.origin.inquiryId} className="text-sm text-pine hover:underline">
                       From inquiry · accepted {fmtDate(detail.origin.acceptedAt)}
@@ -1509,8 +1512,8 @@ export default function CourseDetailPage() {
                   )}
                 </div>
                 {c.operator && (
-                  <div className="bg-white border border-line rounded-lg p-5">
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Operator / Owner</div>
+                  <Card className="p-5">
+                    <Eyebrow className="mb-3">Operator / Owner</Eyebrow>
                     <div className="font-medium text-ink mb-2">{c.operator.name}</div>
                     <div className="space-y-1.5 mb-3">
                       <a href={'mailto:' + c.operator.email} className="flex items-center gap-2 text-sm text-ink-soft hover:text-pine transition-colors">
@@ -1530,12 +1533,12 @@ export default function CourseDetailPage() {
                         ? <StatusDot status="ok" label="Stripe connected" />
                         : <StatusDot status="warn" label="No Stripe" />}
                     </div>
-                  </div>
+                  </Card>
                 )}
 
-                <div className="bg-white border border-line rounded-lg p-5">
+                <Card className="p-5">
                   <div className="flex items-center justify-between mb-3">
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Course Contact</div>
+                    <Eyebrow>Course Contact</Eyebrow>
                   </div>
                   <div className="space-y-2.5">
                     <div className="flex gap-3 text-sm">
@@ -1565,14 +1568,14 @@ export default function CourseDetailPage() {
                       <span className="text-ink font-medium">{c.city}, {c.state}</span>
                     </div>
                   </div>
-                </div>
+                </Card>
 
                 {/* MP-5d: the Staff tab's one real action — resend a login —
                     lives here now. Everything else that tab showed is on
                     this rail already. */}
                 {detail.staff.length > 0 && (
-                  <div className="bg-white border border-line rounded-lg p-5">
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Staff Contacts</div>
+                  <Card className="p-5">
+                    <Eyebrow className="mb-3">Staff Contacts</Eyebrow>
                     <div className="space-y-3">
                       {detail.staff.map(s => (
                         <div key={s.id} className="flex items-center gap-3">
@@ -1597,7 +1600,7 @@ export default function CourseDetailPage() {
                     {resendMsg && (
                       <p className={'text-xs mt-3 ' + (resendMsg.startsWith('Error') ? 'text-bad' : 'text-ok')}>{resendMsg}</p>
                     )}
-                  </div>
+                  </Card>
                 )}
               </div>
             </div>
@@ -1607,7 +1610,7 @@ export default function CourseDetailPage() {
           {/* MONEY (was Transactions) */}
           {tab === 'money' && (
             <div className="max-w-5xl">
-              <div className="bg-white border border-line rounded-lg p-4 mb-5">
+              <Card className="p-4 mb-5">
                 <div className="flex flex-wrap gap-3">
                   <div className="relative flex-1 min-w-52">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-muted pointer-events-none" />
@@ -1628,7 +1631,7 @@ export default function CourseDetailPage() {
                     Load
                   </button>
                 </div>
-              </div>
+              </Card>
 
               {refundNote && (
                 <div className="mb-4 text-sm font-medium px-4 py-2.5 rounded-md border bg-ok/5 text-ok border-ok/20 flex items-center justify-between gap-3">
@@ -1647,13 +1650,13 @@ export default function CourseDetailPage() {
               )}
 
               {!txLoading && !txError && txItems.length === 0 && (
-                <div className="text-center text-ink-muted py-12 text-sm bg-white border border-line rounded-lg">
+                <Card className="text-center text-ink-muted py-12 text-sm">
                   No transactions found
-                </div>
+                </Card>
               )}
 
               {!txLoading && txItems.length > 0 && (
-                <div className="bg-white border border-line rounded-lg overflow-hidden">
+                <Card className="overflow-hidden">
                   <div className="px-5 py-2.5 border-b border-line-soft bg-paper/50 grid grid-cols-[1fr_1fr_90px_80px_100px_90px] gap-3 text-[10px] uppercase tracking-[0.1em] text-ink-muted">
                     <span>Golfer</span>
                     <span>Detail</span>
@@ -1694,7 +1697,7 @@ export default function CourseDetailPage() {
                       );
                     })}
                   </div>
-                </div>
+                </Card>
               )}
 
               {!txLoading && txPages > 1 && (
@@ -1726,8 +1729,8 @@ export default function CourseDetailPage() {
               {docsLoading && <div className="text-center text-ink-muted py-12 text-sm">Loading...</div>}
               {!docsLoading && docsData && (
                 <>
-                  <div className="bg-white border border-line rounded-lg p-6">
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">Auto Records</div>
+                  <Card className="p-6">
+                    <Eyebrow className="mb-4">Auto Records</Eyebrow>
                     <div className="space-y-3">
                       {/* AG-2 §3: one row per acceptance, and a red "Not signed"
                           per signable document still missing. */}
@@ -1777,12 +1780,12 @@ export default function CourseDetailPage() {
                         <span className="text-ink font-medium">v{docsData.bookingTermsVersion}</span>
                       </div>
                     </div>
-                  </div>
+                  </Card>
 
                   {/* CS-3 §3: calls as human entries. */}
                   {(detail.calls ?? []).length > 0 && (
-                    <div className="bg-white border border-line rounded-lg p-6">
-                      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">Calls</div>
+                    <Card className="p-6">
+                      <Eyebrow className="mb-4">Calls</Eyebrow>
                       <div className="border border-line rounded-md divide-y divide-line">
                         {(detail.calls ?? []).map(cl => (
                           <div key={cl.id} className="px-3 py-2.5 flex items-start gap-3">
@@ -1794,12 +1797,12 @@ export default function CourseDetailPage() {
                           </div>
                         ))}
                       </div>
-                    </div>
+                    </Card>
                   )}
 
-                  <div className="bg-white border border-line rounded-lg p-6">
+                  <Card className="p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Uploaded Documents</div>
+                      <Eyebrow>Uploaded Documents</Eyebrow>
                       <label className="flex items-center gap-1.5 text-xs font-medium text-pine hover:text-pine-hover cursor-pointer transition-colors">
                         <Upload className="w-3.5 h-3.5" />{docUploading ? 'Uploading…' : 'Upload PDF'}
                         <input
@@ -1824,10 +1827,10 @@ export default function CourseDetailPage() {
                         ))}
                       </div>
                     )}
-                  </div>
+                  </Card>
 
-                  <div className="bg-white border border-line rounded-lg p-6">
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">Client Notes</div>
+                  <Card className="p-6">
+                    <Eyebrow className="mb-4">Client Notes</Eyebrow>
                     <div className="flex gap-2 mb-4">
                       <input
                         value={noteDraft}
@@ -1856,7 +1859,7 @@ export default function CourseDetailPage() {
                         ))}
                       </div>
                     )}
-                  </div>
+                  </Card>
 
                   <div className="flex items-center gap-2 text-xs text-ink-faint px-1">
                     <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
@@ -1907,11 +1910,11 @@ export default function CourseDetailPage() {
                   </div>
                 )}
                 {!tsLoading && !ts.error && tsSlots.length === 0 && (
-                  <div className="text-center text-ink-muted py-12 text-sm bg-white border border-line rounded-lg">
+                  <Card className="text-center text-ink-muted py-12 text-sm">
                     {schedules.length === 0
                       ? 'No tee times for this date — this course has no schedule yet. Add one below.'
                       : 'No tee times for this date'}
-                  </div>
+                  </Card>
                 )}
 
                 <div className="space-y-2">
@@ -1987,9 +1990,9 @@ export default function CourseDetailPage() {
               {/* Schedules — with EDIT. The PATCH endpoint had existed with no
                   UI caller, so fixing a fee typo meant delete + recreate, which
                   rebuilt the whole sheet. */}
-              <div className="bg-white border border-line rounded-lg p-6 space-y-4">
+              <Card className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Tee Time Schedules</div>
+                  <Eyebrow>Tee Time Schedules</Eyebrow>
                   {!showAddSched && !editSched && (
                     <button
                       onClick={() => { setSchedMsg(null); setShowAddSched(true); }}
@@ -2081,7 +2084,7 @@ export default function CourseDetailPage() {
 
                 {showAddSched && (
                   <div className="border-t border-line pt-4 space-y-3">
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Add Schedule</div>
+                    <Eyebrow>Add Schedule</Eyebrow>
                     <ScheduleFields products={(detail?.layout?.products ?? []).filter(p => p.active)}
                       value={newSchedule}
                       onChange={p => setNewSchedule(s => ({ ...s, ...p }))}
@@ -2104,13 +2107,13 @@ export default function CourseDetailPage() {
                     </div>
                   </div>
                 )}
-              </div>
+              </Card>
 
               {/* Members — read-only. The course runs its own programme from
                   the dashboard; this is a window onto it, not a control. */}
-              <div className="bg-white border border-line rounded-lg p-6">
+              <Card className="p-6">
                 <div className="flex items-center justify-between mb-1">
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Members</div>
+                  <Eyebrow>Members</Eyebrow>
                   <span className="text-[11px] text-ink-faint">Read-only — the course manages this</span>
                 </div>
                 {membersLoading && <div className="text-center text-ink-muted py-8 text-sm">Loading...</div>}
@@ -2139,9 +2142,9 @@ export default function CourseDetailPage() {
                         </div>
                       )}
                       <div>
-                        <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">
+                        <Eyebrow className="mb-2">
                           {membersData.members.length} member{membersData.members.length === 1 ? '' : 's'}
-                        </div>
+                        </Eyebrow>
                         {membersData.members.length === 0 ? (
                           <p className="text-sm text-ink-muted">No members yet.</p>
                         ) : (
@@ -2169,14 +2172,14 @@ export default function CourseDetailPage() {
                     </div>
                   )
                 )}
-              </div>
+              </Card>
             </div>
           )}
 
           {/* MESSAGES */}
           {tab === 'messages' && (
             <div className="max-w-2xl">
-              <div className="bg-white border border-line rounded-lg flex flex-col" style={{ minHeight: 480 }}>
+              <Card className="flex flex-col" style={{ minHeight: 480 }}>
                 {/* Messages list */}
                 <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4" style={{ maxHeight: 420 }}>
                   {msgLoading && <div className="py-8 text-center text-ink-muted text-sm">Loading...</div>}
@@ -2250,7 +2253,7 @@ export default function CourseDetailPage() {
                   </div>
                   <div className="text-[10px] text-ink-faint mt-1.5">⌘/Ctrl + Enter to send · <button onClick={() => window.open('/admin/messages?courseId=' + courseId, '_blank')} className="text-pine hover:underline">Open full view</button></div>
                 </div>
-              </div>
+              </Card>
             </div>
           )}
 
@@ -2266,8 +2269,8 @@ export default function CourseDetailPage() {
               </div>
 
               {/* 4a — onboarding checklist as named steps */}
-              <div className="bg-white border border-line rounded-lg p-6">
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">Onboarding Checklist</div>
+              <Card className="p-6">
+                <Eyebrow className="mb-4">Onboarding Checklist</Eyebrow>
                 <div className="space-y-3">
                   {steps.map(s => {
                     // AGREEMENT = GO-LIVE GATE item 3 — a live course missing
@@ -2286,12 +2289,12 @@ export default function CourseDetailPage() {
                     );
                   })}
                 </div>
-              </div>
+              </Card>
 
               {/* 4b — auto-chase reminders */}
-              <div className="bg-white border border-line rounded-lg p-6">
+              <Card className="p-6">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Auto-Chase Reminders</div>
+                  <Eyebrow>Auto-Chase Reminders</Eyebrow>
                   <button
                     onClick={() => toggleRemindersPaused(!detail.remindersPaused)}
                     disabled={remindersBusy || detail.timeline === null}
@@ -2316,7 +2319,7 @@ export default function CourseDetailPage() {
                     ))}
                   </ul>
                 )}
-              </div>
+              </Card>
 
               {setupMsg && (
                 <div className={'text-sm font-medium px-4 py-2.5 rounded-md border ' + (setupMsg === 'error' ? 'bg-bad/5 text-bad border-bad/20' : 'bg-ok/5 text-ok border-ok/20')}>
@@ -2325,11 +2328,11 @@ export default function CourseDetailPage() {
               )}
 
               {/* 4c — full mirror of operator settings, same endpoint/whitelist the operator's own Settings page uses */}
-              <div className="bg-white border border-line rounded-lg p-6 space-y-4">
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Course Policy</div>
+              <Card className="p-6 space-y-4">
+                <Eyebrow>Course Policy</Eyebrow>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Walking policy</span>
+                    <label className="block"><Eyebrow as="span" className="block mb-1.5">Walking policy</Eyebrow>
                     <select
                       value={String(setupForm.walkingAllowed ?? 'always')}
                       onChange={e => setSetupForm(f => ({ ...f, walkingAllowed: e.target.value }))}
@@ -2342,7 +2345,7 @@ export default function CourseDetailPage() {
                     </select></label>
                   </div>
                   <div>
-                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Cancellation window (hrs)</span>
+                    <label className="block"><Eyebrow as="span" className="block mb-1.5">Cancellation window (hrs)</Eyebrow>
                     <input
                       type="number"
                       value={Number(setupForm.cancellationHours ?? 24)}
@@ -2351,7 +2354,7 @@ export default function CourseDetailPage() {
                     /></label>
                   </div>
                   <div>
-                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Min players</span>
+                    <label className="block"><Eyebrow as="span" className="block mb-1.5">Min players</Eyebrow>
                     <input
                       type="number"
                       value={Number(setupForm.minPlayers ?? 1)}
@@ -2360,7 +2363,7 @@ export default function CourseDetailPage() {
                     /></label>
                   </div>
                   <div>
-                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Max players</span>
+                    <label className="block"><Eyebrow as="span" className="block mb-1.5">Max players</Eyebrow>
                     <input
                       type="number"
                       value={Number(setupForm.maxPlayers ?? 4)}
@@ -2369,7 +2372,7 @@ export default function CourseDetailPage() {
                     /></label>
                   </div>
                   <div>
-                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Public booking window (days)</span>
+                    <label className="block"><Eyebrow as="span" className="block mb-1.5">Public booking window (days)</Eyebrow>
                     <input
                       type="number"
                       value={Number(setupForm.publicAdvanceDays ?? 7)}
@@ -2378,7 +2381,7 @@ export default function CourseDetailPage() {
                     /></label>
                   </div>
                   <div>
-                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Member booking window (days)</span>
+                    <label className="block"><Eyebrow as="span" className="block mb-1.5">Member booking window (days)</Eyebrow>
                     <input
                       type="number"
                       value={Number(setupForm.memberAdvanceDays ?? 14)}
@@ -2388,7 +2391,7 @@ export default function CourseDetailPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Rain check policy</span>
+                  <label className="block"><Eyebrow as="span" className="block mb-1.5">Rain check policy</Eyebrow>
                   <input
                     value={String(setupForm.rainCheckPolicy ?? '')}
                     onChange={e => setSetupForm(f => ({ ...f, rainCheckPolicy: e.target.value }))}
@@ -2416,7 +2419,7 @@ export default function CourseDetailPage() {
                 {!!setupForm.hasResidentPricing && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Resident county</span>
+                      <label className="block"><Eyebrow as="span" className="block mb-1.5">Resident county</Eyebrow>
                       <input
                         value={String(setupForm.residentCounty ?? '')}
                         onChange={e => setSetupForm(f => ({ ...f, residentCounty: e.target.value }))}
@@ -2424,7 +2427,7 @@ export default function CourseDetailPage() {
                       /></label>
                     </div>
                     <div>
-                      <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Resident state</span>
+                      <label className="block"><Eyebrow as="span" className="block mb-1.5">Resident state</Eyebrow>
                       <input
                         value={String(setupForm.residentState ?? '')}
                         maxLength={2}
@@ -2434,13 +2437,13 @@ export default function CourseDetailPage() {
                     </div>
                   </div>
                 )}
-              </div>
+              </Card>
 
               {/* COURSE_LAYOUT L3: the layout the sheet's answers became. Read-only
                   here — the operator configures it on their Course & Layout tab. */}
-              <div className="bg-white border border-line rounded-lg p-6 space-y-4">
+              <Card className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Course layout</div>
+                  <Eyebrow>Course layout</Eyebrow>
                   {detail.layout && <span className="text-[11px] text-ink-faint">{detail.layout.configured ? `${detail.layout.nines.length} nine${detail.layout.nines.length === 1 ? '' : 's'} · ${detail.layout.products.filter(x => x.active).length} bookable product${detail.layout.products.filter(x => x.active).length === 1 ? '' : 's'}` : 'simple layout'}</span>}
                 </div>
                 {!detail.layout || !detail.layout.configured ? (
@@ -2484,10 +2487,10 @@ export default function CourseDetailPage() {
                     )}
                   </div>
                 )}
-              </div>
+              </Card>
 
-              <div className="bg-white border border-line rounded-lg p-6 space-y-4">
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Facilities & Amenities</div>
+              <Card className="p-6 space-y-4">
+                <Eyebrow>Facilities & Amenities</Eyebrow>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
                   {([
                     ['hasDrivingRange', 'Driving range'],
@@ -2514,7 +2517,7 @@ export default function CourseDetailPage() {
                     </label>
                   ))}
                 </div>
-              </div>
+              </Card>
 
               <button
                 onClick={saveSetup}
@@ -2623,12 +2626,12 @@ export default function CourseDetailPage() {
             <p className="text-sm text-ink-soft mb-4">
               {fmtMoney(refundTarget.amount)} was charged for {fmtDate(refundTarget.date)}. The money goes back to the card they paid with; the course&apos;s payout and GreenReserve&apos;s fee are both reduced.
             </p>
-            <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Amount (blank = full refund)</span>
+            <label className="block"><Eyebrow as="span" className="block mb-1.5">Amount (blank = full refund)</Eyebrow>
             <div className="relative mb-3">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
               <input type="number" step="0.01" min="0.01" max={refundTarget.amount} value={refundAmount} onChange={e => setRefundAmount(e.target.value)} placeholder={refundTarget.amount.toFixed(2)} className={iCls + ' pl-7'} />
             </div></label>
-            <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Reason — the golfer reads this</span>
+            <label className="block"><Eyebrow as="span" className="block mb-1.5">Reason — the golfer reads this</Eyebrow>
             <textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} rows={3} placeholder="Course closed for weather on the day — refunding the round in full." className={iCls + ' resize-none mb-3'} /></label>
             {refundError && <p className="text-xs text-bad mb-3">{refundError}</p>}
             <div className="flex gap-3">
@@ -2683,7 +2686,7 @@ export default function CourseDetailPage() {
             <div className="space-y-3">
               {([['Golfer Name *', 'name', 'text'], ['Email *', 'email', 'email'], ['Phone', 'phone', 'tel']] as [string, string, string][]).map(([label, field, type]) => (
                 <div key={field}>
-                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">{label}</span>
+                  <label className="block"><Eyebrow as="span" className="block mb-1.5">{label}</Eyebrow>
                   <input
                     type={type}
                     value={(manualForm as Record<string, unknown>)[field] as string}
@@ -2693,7 +2696,7 @@ export default function CourseDetailPage() {
                 </div>
               ))}
               <div>
-                <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Players *</span>
+                <label className="block"><Eyebrow as="span" className="block mb-1.5">Players *</Eyebrow>
                 <select value={manualForm.players} onChange={e => setManualForm(f => ({ ...f, players: Number(e.target.value) }))} className={iCls}>
                   {[1, 2, 3, 4].map(n => <option key={n} value={n}>{n}</option>)}
                 </select></label>
