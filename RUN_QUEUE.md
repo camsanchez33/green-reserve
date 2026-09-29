@@ -2560,6 +2560,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   page handshakes; embeds load from app.cal.com/<link>/embed). Now Cal.com's
   official inline embed (embed.js + Cal('inline')), verified queued once with the
   right calLink/prefill in Chromium; drawing the calendar itself is Cam's check.
+  STILL BLANK live → REPLACED 29c3a7c (Cam's call): no embed at all. /call/[token]
+  redirects to the prefilled public Cal.com page (metadata[invite] in the URL);
+  booked calls still show our page with Cal.com's reschedule/cancel links.
 
 - [ ] BUG: hello@greenreserve.app takes no mail — SHIPPED 371ffff, 2026-09-29, box
   open until /gr-review. Cam: "all emails need to go to thegreenreserve@outlook.com,

@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-29 03:13 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `421543d` · working tree **1 dirty file(s)**
+Generated 2026-09-29 03:16 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `29c3a7c` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-### Uncommitted working tree (1 file(s))
+### Uncommitted working tree (2 file(s))
 
+- `M CLAUDE.md`
 - `M RUN_QUEUE.md`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
@@ -44,8 +45,8 @@ This is the distinction a raw checkbox count gets wrong.
 | BUG: inquiry submissions send no emails | 2026-09-28 | 0d | `8b9a046` | `RUN_QUEUE.md:2503` |
 | BUG: perf audit crashed on every page | 2026-09-29 | 0d | `dd7056a` | `RUN_QUEUE.md:2528` |
 | CAL-2 — Cal.com is the ONLY call scheduler | 2026-09-29 | 0d | `e082dd0` | `RUN_QUEUE.md:2539` |
-| BUG: hello@greenreserve.app takes no mail | 2026-09-29 | 0d | `371ffff` | `RUN_QUEUE.md:2564` |
-| CAL-1 — Cal.com as the call scheduler | 2026-09-29 | 0d | `a5ed9d7` | `RUN_QUEUE.md:2582` |
+| BUG: hello@greenreserve.app takes no mail | 2026-09-29 | 0d | `371ffff` | `RUN_QUEUE.md:2567` |
+| CAL-1 — Cal.com as the call scheduler | 2026-09-29 | 0d | `a5ed9d7` | `RUN_QUEUE.md:2585` |
 | MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | — | — | — | `RUN_QUEUE.md:688` |
 | MP-1 | — | — | — | `RUN_QUEUE.md:718` |
 | MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | — | — | — | `RUN_QUEUE.md:753` |
@@ -75,8 +76,8 @@ This is the distinction a raw checkbox count gets wrong.
 15. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1477`
 16. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1526`
 17. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1581`
-18. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2606`
-19. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2759`
+18. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2609`
+19. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2762`
 
 ## Waiting on you (not on a build)
 
@@ -91,8 +92,8 @@ This is the distinction a raw checkbox count gets wrong.
 - pending Cam's walk below — `RUN_QUEUE.md:2300`
 - Cam: "after submitting an inquiry they aren't getting sent an email — `RUN_QUEUE.md:2503`
 - Cam: "there should be no google calendar thing" and, after setting both env vars and redeploying, "it is just the same as before" — `RUN_QUEUE.md:2539`
-- Cam: "all emails need to go to thegreenreserve@outlook — `RUN_QUEUE.md:2564`
-- Cam: invite link showed "I can't show my calendar right now" — `RUN_QUEUE.md:2582`
+- Cam: "all emails need to go to thegreenreserve@outlook — `RUN_QUEUE.md:2567`
+- Cam: invite link showed "I can't show my calendar right now" — `RUN_QUEUE.md:2585`
 
 ## Revise campaign (page-by-page pass)
 
@@ -167,6 +168,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `29c3a7c` 2026-09-29 — CAL-2: send the course straight to Cal.com instead of embedding it
+- `2861d16` 2026-09-29 — queue/spec update
 - `421543d` 2026-09-29 — CAL-2 fix: the Cal.com calendar rendered as a blank box — use Cal.com's official inline embed
 - `1e0a455` 2026-09-29 — queue/spec update
 - `e082dd0` 2026-09-29 — CAL-2: Cal.com is the only call scheduler; Google Calendar removed
@@ -177,8 +180,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `0c5bcf2` 2026-09-29 — Fix: staff-login email reported 'sent' even when it never went
 - `8126d1c` 2026-09-29 — queue/spec update
 - `b81c2f1` 2026-09-29 — queue/spec update
-- `a9012e2` 2026-09-29 — queue/spec update
-- `7756ce9` 2026-09-29 — queue/spec update
 
 ---
 
