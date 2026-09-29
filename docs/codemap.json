@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 361,
-    "routes": 195,
+    "files": 362,
+    "routes": 196,
     "libs": 94,
     "models": 33,
     "orphans": 8,
@@ -446,7 +446,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
-      "lines": 965,
+      "lines": 987,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -468,6 +468,7 @@
         "./shared",
         "@/lib/format",
         "@/lib/use-resource",
+        "@vercel/blob/client",
         "next/navigation",
         "react"
       ],
@@ -1259,6 +1260,33 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/admin/course-documents/record/route.ts",
+      "lines": 36,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/course-documents/record",
+      "kind": "api",
+      "methods": [
+        "POST"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-session",
+        "@/lib/course-timeline",
+        "@/lib/private-blob",
+        "@vercel/blob",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/admin/course-documents/route.ts",
       "lines": 83,
       "purpose": "",
@@ -1296,7 +1324,7 @@
     },
     {
       "path": "src/app/api/admin/course-documents/upload/route.ts",
-      "lines": 55,
+      "lines": 60,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1314,9 +1342,8 @@
       "guard": "file",
       "imports": [
         "@/lib/admin-session",
-        "@/lib/course-timeline",
         "@/lib/private-blob",
-        "@vercel/blob",
+        "@vercel/blob/client",
         "next/server"
       ],
       "usedBy": []
@@ -8142,6 +8169,7 @@
         "src/app/api/admin/course-calls/route.ts",
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/course-documents/download/route.ts",
+        "src/app/api/admin/course-documents/record/route.ts",
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/course-documents/upload/route.ts",
         "src/app/api/admin/course-members/route.ts",
@@ -9916,8 +9944,8 @@
       "usedBy": [
         "src/app/api/admin/course-calls/route.ts",
         "src/app/api/admin/course-detail/route.ts",
+        "src/app/api/admin/course-documents/record/route.ts",
         "src/app/api/admin/course-documents/route.ts",
-        "src/app/api/admin/course-documents/upload/route.ts",
         "src/app/api/admin/course-reminders/route.ts",
         "src/app/api/admin/course-settings/route.ts",
         "src/app/api/admin/send-golive-reminder/route.ts",
@@ -11769,6 +11797,7 @@
       "imports": [],
       "usedBy": [
         "src/app/api/admin/course-documents/download/route.ts",
+        "src/app/api/admin/course-documents/record/route.ts",
         "src/app/api/admin/course-documents/upload/route.ts",
         "src/lib/agreement-sign.ts"
       ]

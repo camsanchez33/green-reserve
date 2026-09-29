@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-361 source files · 195 routes · 94 libraries · 33 models
+362 source files · 196 routes · 94 libraries · 33 models
 
 ## Single sources of truth
 
@@ -79,7 +79,8 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/course-detail` | admin | file | GET PATCH | `src/app/api/admin/course-detail/route.ts` | 314 |
 | `/api/admin/course-documents` | admin | file | GET POST | `src/app/api/admin/course-documents/route.ts` | 83 |
 | `/api/admin/course-documents/download` | admin | file | GET | `src/app/api/admin/course-documents/download/route.ts` | 54 |
-| `/api/admin/course-documents/upload` | admin | file | POST | `src/app/api/admin/course-documents/upload/route.ts` | 55 |
+| `/api/admin/course-documents/record` | admin | file | POST | `src/app/api/admin/course-documents/record/route.ts` | 36 |
+| `/api/admin/course-documents/upload` | admin | file | POST | `src/app/api/admin/course-documents/upload/route.ts` | 60 |
 | `/api/admin/course-members` | admin | file | GET | `src/app/api/admin/course-members/route.ts` | 51 |
 | `/api/admin/course-reminders` | admin | file | PATCH | `src/app/api/admin/course-reminders/route.ts` | 18 |
 | `/api/admin/course-settings` | admin | file | GET PATCH | `src/app/api/admin/course-settings/route.ts` | 72 |
@@ -253,7 +254,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
 | `src/lib/prisma.ts` | 150 | 15 |  | `prisma` |
-| `src/lib/admin-session.ts` | 48 | 149 |  | `AdminSession`, `AdminSessionUnavailable`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole`, `resolveAdminSession` +5 more |
+| `src/lib/admin-session.ts` | 49 | 149 |  | `AdminSession`, `AdminSessionUnavailable`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole`, `resolveAdminSession` +5 more |
 | `src/lib/email.ts` | 43 | 1790 |  | `BookingEmailData`, `escapeHtml`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail`, `sendAdminSetPasswordEmail`, `sendAdminTwoFactorCode` +50 more |
 | `src/lib/session.ts` | 34 | 80 |  | `ACTIVE_COURSE_COOKIE`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN` |
 | `src/lib/rate-limit.ts` | 33 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
@@ -292,6 +293,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/demo-courses.ts` | 4 | 4 | Cam: | `DEMO_COURSE_SLUGS` |
 | `src/lib/expenses.ts` | 4 | 77 | EXPENSE TRACKER (RUN_QUEUE "EXPENSE TRACKER / real P&L") — the manual half of the P&L: | `EXPENSE_CADENCE_LABEL`, `EXPENSE_CADENCES`, `EXPENSE_CATEGORIES`, `EXPENSE_CATEGORY_LABEL`, `ExpenseCadence`, `ExpenseCategory`, `isExpenseCadence`, `isExpenseCategory` +3 more |
 | `src/lib/lifecycle.ts` | 4 | 414 |  | `archivePair`, `deleteInquiryOrPair`, `deletePair`, `forceDeleteOrphan`, `ForceDeleteResult`, `LifecycleResult`, `listAcknowledgedOrphans`, `ORPHAN_FLAG` +6 more |
+| `src/lib/private-blob.ts` | 4 | 18 | Contracts and signed agreements live in their OWN, private Vercel Blob store (Cam 2026-09-29). | `PRIVATE_STORAGE_MISSING`, `privateBlobToken` |
 | `src/lib/schedule-service.ts` | 4 | 216 | MP-5d. | `createSchedule`, `deleteSchedule`, `listSchedules`, `ScheduleConflictError`, `ScheduleProductError`, `ScheduleScope`, `setTeeTimeBlocked`, `updateSchedule` |
 | `src/lib/tee-time-utils.ts` | 4 | 36 | Converts a stored tee-time (date "YYYY-MM-DD", time "HH:MM" in the course's local timezone) to a UTC millisecond timestamp. | `teeToUtcMs` |
 | `src/lib/terms.ts` | 4 | 6 | Bump this whenever /terms materially changes so old bookings keep an honest record of which version the golfer actually agreed to. | `CURRENT_TERMS_VERSION` |
@@ -304,7 +306,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/go-live-preflight.ts` | 3 | 35 |  | `computeStripeGoLiveCheck`, `StripeGoLiveCheck` |
 | `src/lib/inquiry-needs.ts` | 3 | 38 | INQUIRY_CALL_SPEC IC-1 §3 — "Still need from them", the sheet's column. | `NeedItem`, `stillNeed` |
 | `src/lib/normalize-course.ts` | 3 | 66 |  | `normalizeDbCourse` |
-| `src/lib/private-blob.ts` | 3 | 18 | Contracts and signed agreements live in their OWN, private Vercel Blob store (Cam 2026-09-29). | `PRIVATE_STORAGE_MISSING`, `privateBlobToken` |
 | `src/lib/public-course.ts` | 3 | 29 | PERF-1: | `loadPublicCourse` |
 | `src/lib/refund-booking.ts` | 3 | 131 | MP-6b. | `findBookingByStripeId`, `PaymentEventKind`, `recordPaymentEvent`, `refundBooking`, `RefundResult` |
 | `src/lib/staff-fonts.ts` | 3 | 26 |  | `newsreader`, `sourceSans`, `STAFF_LOOK_CLASS` |

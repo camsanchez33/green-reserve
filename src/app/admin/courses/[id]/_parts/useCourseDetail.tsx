@@ -470,15 +470,37 @@ export function useCourseDetail() {
     }
   }
 
+  // BLOB-3: the PDF goes from this browser straight to the private Blob store
+  // (the upload route only issues a permit), then /record lists it on the
+  // course. Through our own function, Vercel refused anything over 4.5 MB with
+  // a body the page could not read — which surfaced as a bare "Upload failed".
   async function uploadDocument(file: File) {
     setDocUploading(true); setDocsError('');
-    const form = new FormData();
-    form.append('file', file);
-    form.append('courseId', courseId);
     try {
-      const r = await fetch('/api/admin/course-documents/upload', { method: 'POST', body: form });
-      if (r.ok) loadDocuments();
-      else { const d = await r.json().catch(() => ({})); setDocsError(d.error || 'Upload failed'); }
+      if (file.type !== 'application/pdf') { setDocsError('Only PDF files can be uploaded.'); return; }
+      if (file.size > 15 * 1024 * 1024) { setDocsError('That PDF is over 15 MB — compress it and try again.'); return; }
+      const { upload } = await import('@vercel/blob/client');
+      const safeName = file.name.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+/, '').slice(0, 120) || 'document.pdf';
+      const pathname = `course-documents/${courseId}/${Date.now()}-${safeName.toLowerCase().endsWith('.pdf') ? safeName : safeName + '.pdf'}`;
+      let blob: { url: string };
+      try {
+        blob = await upload(pathname, file, {
+          access: 'private',
+          handleUploadUrl: '/api/admin/course-documents/upload',
+          clientPayload: JSON.stringify({ courseId }),
+          contentType: 'application/pdf',
+        });
+      } catch (e) {
+        setDocsError(`Upload failed: ${e instanceof Error ? e.message : 'storage did not accept the file'}. Nothing was saved.`);
+        return;
+      }
+      const r = await fetch('/api/admin/course-documents/record', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courseId, url: blob.url, name: file.name }),
+      });
+      if (r.ok) { loadDocuments(); return; }
+      const d = await r.json().catch(() => null) as { error?: string } | null;
+      setDocsError(d?.error || `The file uploaded but could not be listed (HTTP ${r.status}). Try again, or tell Claude this code.`);
     } catch {
       setDocsError('Network error — the file was not uploaded. Check your connection and try again.');
     } finally {
