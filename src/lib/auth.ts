@@ -166,3 +166,36 @@ export async function verifyMemberInviteToken(token: string) {
     return p;
   } catch { return null; }
 }
+
+// ── Staff password reset (SD-9c) ───────────────────────────────────────────────
+// CourseStaff has no resetToken columns, and a schema change is blocked while
+// previews are broken. So the reset link is a 1-hour JWT carrying a fingerprint
+// of the staff member's CURRENT password hash: the moment the password changes,
+// the fingerprint stops matching and the link is dead — single-use by
+// construction, no column needed. Its type ('staff_reset') is on no session
+// allowlist, so it can never stand in for a login cookie.
+// Web Crypto, not node:crypto, so this file stays importable anywhere.
+async function passwordFingerprint(hash: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(hash));
+  return Array.from(new Uint8Array(digest).slice(0, 12), b => b.toString(16).padStart(2, '0')).join('');
+}
+
+export async function signStaffResetToken(staff: { id: string; password: string }) {
+  return new SignJWT({ staffId: staff.id, pf: await passwordFingerprint(staff.password), type: 'staff_reset' })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('1h')
+    .sign(secret);
+}
+
+/** The staffId if the link is genuine, unexpired and the password has not changed since it was sent. */
+export async function verifyStaffResetToken(token: string, currentHash: (staffId: string) => Promise<string | null>): Promise<string | null> {
+  try {
+    const { payload } = await jwtVerify(token, secret);
+    const p = payload as { staffId?: string; pf?: string; type?: string };
+    if (p.type !== 'staff_reset' || !p.staffId || !p.pf) return null;
+    const hash = await currentHash(p.staffId);
+    if (!hash || (await passwordFingerprint(hash)) !== p.pf) return null;
+    return p.staffId;
+  } catch { return null; }
+}
