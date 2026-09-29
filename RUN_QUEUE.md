@@ -2689,6 +2689,15 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   capped at the subscription price); members pay $0. BLOCKED on Cam's prices and on
   previews building again (schema change). Ship the member-fee removal WITH billing,
   never before. (large, money, attended)
+- [ ] SETUP (Cam 2026-09-29: "we need to do blob storage, birdie ai … we also need
+  to set up twilio"). All three are BUILT; each needs Cam's account + Vercel env
+  vars, then a redeploy. Blob: Vercel → Storage → Blob store connected to the
+  project (sets BLOB_READ_WRITE_TOKEN; photo/document/sheet uploads). Birdie:
+  ANTHROPIC_API_KEY + BIRDIE_ENABLED=true, spend limit on the Anthropic console
+  (PASSWORD_CHECKLIST 7c; model claude-haiku-4-5). Twilio: TWILIO_ACCOUNT_SID,
+  TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER (golfer SMS login codes + 2FA) — US SMS
+  needs A2P 10DLC registration or a verified toll-free number or carriers drop
+  it. Verify each on /admin/system.
 - [ ] SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +
   paymentMethodId (found in the FB-3 review, pre-existing). No route exposes
   another golfer's ids, but anyone holding a cus_ id could attach their own card
@@ -2699,7 +2708,8 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   fee alone on the platform account at 'paid offline' / 'no-show', refunds it on
   'still coming' or a later card check-in; every booking saves a card (server
   enforced); counter confirm collects only the course's share; Terms §2 +
-  version 2026-09-29; revenue line. OPEN FOR CAM: (1) walk one real no-show +
+  version 2026-09-29; revenue line. STRIPE TEST DONE (Cam 2026-09-29: "I did a stripe
+  test and everything works on that end"). Remaining OPEN FOR CAM: (1) walk one real no-show +
   one paid-offline in Stripe TEST mode before relying on it (no Stripe key in the
   build sandbox); (2) the operator agreement §2 and the frozen /for-courses FAQ
   still say the fee is 'in the same card payment' — needs one added sentence
