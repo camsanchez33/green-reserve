@@ -921,7 +921,8 @@ export default function CourseDetailPage() {
     const r = await fetch('/api/admin/resend-staff-setup', {
       method: 'POST', headers: H(), body: JSON.stringify({ staffId }),
     });
-    setResendMsg(r.ok ? `Login email sent to ${staffName}` : 'Error sending email');
+    const d = r.ok ? null : await r.json().catch(() => ({}));
+    setResendMsg(r.ok ? `Login email sent to ${staffName}` : `Error: ${d?.error || `the email was not sent (${r.status}) — try again.`}`);
     } catch {
       setResendMsg('Error: network — the email was not sent. Try again.');
     } finally {

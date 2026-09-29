@@ -169,9 +169,9 @@ function RevenueChart({ data, gran }: { data: TickerPoint[]; gran: Gran }) {
 type FireStatus = 'idle' | 'pending' | 'success' | 'error';
 const FIRE_LABELS: Record<string, string> = { resend_preview: 'Resend preview', resend_sheet: 'Resend sheet', send_nudge: 'Send nudge' };
 
-function QueueRow({ row, severity, router, expanded, onToggleExpand, fireStatus, onFire, canFire }: {
+function QueueRow({ row, severity, router, expanded, onToggleExpand, fireStatus, fireError, onFire, canFire }: {
   row: ActionRow; severity: 'bad' | 'warn'; router: ReturnType<typeof useRouter>;
-  expanded: boolean; onToggleExpand: () => void; fireStatus: FireStatus; onFire: () => void; canFire: boolean;
+  expanded: boolean; onToggleExpand: () => void; fireStatus: FireStatus; fireError?: string; onFire: () => void; canFire: boolean;
 }) {
   const hasItems = (row.items?.length ?? 0) > 0;
   return (
@@ -202,6 +202,10 @@ function QueueRow({ row, severity, router, expanded, onToggleExpand, fireStatus,
         <button onClick={e => { e.stopPropagation(); router.push(row.href); }} className="shrink-0 text-xs font-medium text-pine">{row.actionLabel}</button>
         <ChevronRight className={`w-3.5 h-3.5 text-ink-faint shrink-0 transition-transform ${hasItems && expanded ? 'rotate-90' : ''}`}/>
       </div>
+      {/* RV-2: a failed quick action says why — a 409 (already approved) can never succeed on retry. */}
+      {fireStatus === 'error' && fireError && (
+        <div className="px-3 pb-2 -mt-1 text-xs text-bad">{fireError}</div>
+      )}
       {hasItems && expanded && (
         <div className="border-t border-line-soft px-3 py-2 space-y-1 bg-paper/50">
           {row.items!.map(it => (
@@ -228,6 +232,7 @@ export default function AdminOverviewPage() {
   const [, setTick] = useState(0);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [fireStatuses, setFireStatuses] = useState<Record<string, FireStatus>>({});
+  const [fireErrors, setFireErrors] = useState<Record<string, string>>({});
 
   const loadStats = useCallback(async () => {
     setLoading(true);
@@ -279,8 +284,13 @@ export default function AdminOverviewPage() {
       } else {
         res = await fetch('/api/admin/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ courseId: row.fire.courseId, body: 'Just checking in on this — let us know if you have any questions!' }) });
       }
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setFireErrors(s => ({ ...s, [row.id]: d.error || `Failed (${res.status}).` }));
+      }
       setFireStatuses(s => ({ ...s, [row.id]: res.ok ? 'success' : 'error' }));
     } catch {
+      setFireErrors(s => ({ ...s, [row.id]: 'Network error — nothing was sent.' }));
       setFireStatuses(s => ({ ...s, [row.id]: 'error' }));
     }
   }
@@ -394,7 +404,7 @@ export default function AdminOverviewPage() {
                         {stats.actionQueue.red.map(row => (
                           <QueueRow key={row.id} row={row} severity="bad" router={router}
                             expanded={expandedRows.has(row.id)} onToggleExpand={() => toggleExpand(row.id)}
-                            fireStatus={fireStatuses[row.id] ?? 'idle'} onFire={() => fireAction(row)} canFire={canFireRow(row)}/>
+                            fireStatus={fireStatuses[row.id] ?? 'idle'} fireError={fireErrors[row.id]} onFire={() => fireAction(row)} canFire={canFireRow(row)}/>
                         ))}
                       </div>
                       {stats.actionQueue.redCount > stats.actionQueue.red.length && (
@@ -411,7 +421,7 @@ export default function AdminOverviewPage() {
                         {stats.actionQueue.amber.map(row => (
                           <QueueRow key={row.id} row={row} severity="warn" router={router}
                             expanded={expandedRows.has(row.id)} onToggleExpand={() => toggleExpand(row.id)}
-                            fireStatus={fireStatuses[row.id] ?? 'idle'} onFire={() => fireAction(row)} canFire={canFireRow(row)}/>
+                            fireStatus={fireStatuses[row.id] ?? 'idle'} fireError={fireErrors[row.id]} onFire={() => fireAction(row)} canFire={canFireRow(row)}/>
                         ))}
                       </div>
                       {stats.actionQueue.amberCount > stats.actionQueue.amber.length && (
