@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-29T01:33:05.299Z",
+  "generatedAt": "2026-09-29T01:48:28.247Z",
   "repo": {
-    "head": "1e287a8",
+    "head": "0d84aaf",
     "branch": "claude/eager-maxwell-qf1pd0",
     "dirtyCount": 1,
     "dirty": [
@@ -10,12 +10,12 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-29T01:19:33+00:00",
+    "queueLastCommit": "2026-09-29T01:33:06+00:00",
     "unrecorded": []
   },
   "counts": {
     "runDone": 194,
-    "runAwaiting": 16,
+    "runAwaiting": 17,
     "runInFlight": 1,
     "runNotStarted": 20,
     "reviseDone": 14,
@@ -26,7 +26,7 @@
   "inFlight": [
     {
       "title": "BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET",
-      "line": 1939,
+      "line": 1965,
       "body": [
         "FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because \"no linked inquiry\" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding them outright. FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() + a \"Force delete permanently\" button per acknowledged orphan — owner-only, typed name confirm, server re-verifies the course is still an orphan before touching anything (refuses if it turns out to have a real inquiry link — this can never be used to route around the doctrine for a real course). This is the mechanism for Cam's DaisyLinks exception, but I have NOT executed it against DaisyLinks yet:",
         "- Last session's raw Prisma script (a read-only check confirming Fake",
@@ -41,14 +41,14 @@
   "awaiting": [
     {
       "title": "SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED",
-      "line": 2142,
+      "line": 2168,
       "hash": "951433d",
       "shipDate": "2026-09-16",
       "ageDays": 12
     },
     {
       "title": "SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box",
-      "line": 2255,
+      "line": 2281,
       "hash": "cfeb2e1",
       "shipDate": "2026-09-17",
       "ageDays": 11
@@ -68,85 +68,92 @@
       "ageDays": 0
     },
     {
+      "title": "SD-9c — auth: (1) staff password recovery — CourseStaff has no reset",
+      "line": 626,
+      "hash": "0d84aaf",
+      "shipDate": "2026-09-29",
+      "ageDays": 0
+    },
+    {
       "title": "BUG: inquiry submissions send no emails",
-      "line": 2458,
+      "line": 2484,
       "hash": "8b9a046",
       "shipDate": "2026-09-28",
       "ageDays": 0
     },
     {
       "title": "BUG: perf audit crashed on every page",
-      "line": 2479,
+      "line": 2505,
       "hash": "dd7056a",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 2487,
+      "line": 2513,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin",
-      "line": 643,
+      "line": 669,
       "hash": null,
       "shipDate": null,
       "ageDays": null
     },
     {
       "title": "MP-1",
-      "line": 673,
+      "line": 699,
       "hash": null,
       "shipDate": null,
       "ageDays": null
     },
     {
       "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
-      "line": 708,
+      "line": 734,
       "hash": null,
       "shipDate": null,
       "ageDays": null
     },
     {
       "title": "MP-2",
-      "line": 749,
+      "line": 775,
       "hash": null,
       "shipDate": null,
       "ageDays": null
     },
     {
       "title": "MP-2b",
-      "line": 786,
+      "line": 812,
       "hash": null,
       "shipDate": null,
       "ageDays": null
     },
     {
       "title": "MP-2c",
-      "line": 835,
+      "line": 861,
       "hash": null,
       "shipDate": null,
       "ageDays": null
     },
     {
       "title": "MP-2d",
-      "line": 883,
+      "line": 909,
       "hash": null,
       "shipDate": null,
       "ageDays": null
     },
     {
       "title": "MP-2e",
-      "line": 925,
+      "line": 951,
       "hash": null,
       "shipDate": null,
       "ageDays": null
     },
     {
       "title": "UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until r",
-      "line": 2100,
+      "line": 2126,
       "hash": null,
       "shipDate": null,
       "ageDays": null
@@ -164,93 +171,93 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "SD-9c — auth: (1) staff password recovery — CourseStaff has no reset",
-      "line": 626,
+      "title": "BUG: 56 of 59 email senders report success when Resend rejects the send",
+      "line": 647,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) —",
-      "line": 1043,
+      "line": 1069,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-4 — pipeline reshape (split into 4a/4b/4c)",
-      "line": 1050,
+      "line": 1076,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-4f — retire the JSON-in-actorName pattern. Three separate things",
-      "line": 1133,
+      "line": 1159,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong",
-      "line": 1155,
+      "line": 1181,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Golfer course directory (`/courses`) — NOT scheduled. If Cam wants",
-      "line": 1234,
+      "line": 1260,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-5e part 3 — the Overview relationship feed (notes + settings",
-      "line": 1238,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today)",
       "line": 1264,
       "section": "Queue (run in this order)"
     },
     {
+      "title": "MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today)",
+      "line": 1290,
+      "section": "Queue (run in this order)"
+    },
+    {
       "title": "MP-7 — comms merge (split into 7a–7b)",
-      "line": 1336,
+      "line": 1362,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE,",
-      "line": 1354,
+      "line": 1380,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-8 — chrome + System (split into 8a–8b)",
-      "line": 1361,
+      "line": 1387,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table",
-      "line": 1378,
+      "line": 1404,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-9 — adopt the design system (was ADMIN_V4 V4-6, full spec in",
-      "line": 1385,
+      "line": 1411,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)",
-      "line": 1432,
+      "line": 1458,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState",
-      "line": 1481,
+      "line": 1507,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
-      "line": 1536,
+      "line": 1562,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2511,
+      "line": 2537,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2660,
+      "line": 2686,
       "section": "Queue (run in this order)"
     }
   ],
@@ -263,52 +270,52 @@
     {
       "item": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
       "note": "pending Cam's approval for a prod write",
-      "line": 708
+      "line": 734
     },
     {
       "item": "MP-2",
       "note": "Cam's approval for a prod backfill",
-      "line": 749
+      "line": 775
     },
     {
       "item": "MP-2b",
       "note": "pending Cam's approval for a prod write",
-      "line": 786
+      "line": 812
     },
     {
       "item": "MP-2c",
       "note": "pending Cam's approval for a prod write",
-      "line": 835
+      "line": 861
     },
     {
       "item": "MP-2d",
       "note": "pending Cam's approval for a prod write",
-      "line": 883
+      "line": 909
     },
     {
       "item": "MP-2e",
       "note": "pending Cam's approval for a prod write",
-      "line": 925
+      "line": 951
     },
     {
       "item": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
       "note": "CAM: confirm the state before this runs — e",
-      "line": 1536
+      "line": 1562
     },
     {
       "item": "SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box",
       "note": "pending Cam's walk below",
-      "line": 2255
+      "line": 2281
     },
     {
       "item": "BUG: inquiry submissions send no emails",
       "note": "Cam: \"after submitting an inquiry they aren't getting sent an email",
-      "line": 2458
+      "line": 2484
     },
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2487
+      "line": 2513
     }
   ],
   "ideas": {
@@ -552,6 +559,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "0d84aaf",
+      "date": "2026-09-29",
+      "subject": "SD-9c: tee-sheet staff can reset a forgotten password"
+    },
+    {
+      "h": "0fc22b8",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "34ea4d9",
       "date": "2026-09-29",
       "subject": "queue/spec update"
@@ -598,16 +615,6 @@
     },
     {
       "h": "f76c618",
-      "date": "2026-09-28",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "8b9a046",
-      "date": "2026-09-28",
-      "subject": "Fix: inquiry submissions send no emails"
-    },
-    {
-      "h": "2a7989f",
       "date": "2026-09-28",
       "subject": "queue/spec update"
     }
