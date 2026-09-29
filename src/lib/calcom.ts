@@ -39,6 +39,12 @@ function parseBookingUrl(input: string): { url: string } | { reason: string } {
   try { u = new URL(v); } catch { return { reason: 'it is not a web address' }; }
   if (!u.hostname.includes('.')) return { reason: `"${u.hostname}" is not a full domain` };
   if (u.pathname === '/' || u.pathname === '') return { reason: 'it is the Cal.com home page, not your event link (it should end in /yourname/your-event)' };
+  // Seen live 2026-09-29: the WEBHOOK address was pasted here, so every course
+  // was sent to our own /api/calcom/webhook (HTTP 405). This must point at
+  // Cal.com, never back at this site.
+  if (/(^|\.)greenreserve\.app$/i.test(u.hostname) || u.pathname.startsWith('/api/')) {
+    return { reason: 'that is the webhook address (it belongs in Cal.com → Settings → Developer → Webhooks). This variable needs your Cal.com event link, e.g. https://cal.com/yourname/greenreserve-call' };
+  }
   u.protocol = 'https:';
   return { url: u.toString().replace(/\/$/, '') };
 }
