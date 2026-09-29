@@ -14,10 +14,15 @@ export default function ForgotPasswordPage() {
   const submit = async () => {
     if (!email) return;
     setLoading(true); setError('');
-    const res = await fetch('/api/auth/forgot-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
-    setLoading(false);
-    if (!res.ok) { const d = await res.json(); setError(d.error || 'Something went wrong. Try again.'); return; }
-    setSent(true);
+    try {
+      const res = await fetch('/api/auth/forgot-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+      if (!res.ok) { const d = await res.json().catch(() => ({})); setError(d.error || `Something went wrong (${res.status}). Try again.`); return; }
+      setSent(true);
+    } catch {
+      setError('Network error — nothing was sent. Check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
