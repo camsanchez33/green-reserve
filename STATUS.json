@@ -1,19 +1,16 @@
 {
-  "generatedAt": "2026-09-29T03:06:48.231Z",
+  "generatedAt": "2026-09-29T03:13:12.881Z",
   "repo": {
-    "head": "e082dd0",
+    "head": "421543d",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 4,
+    "dirtyCount": 1,
     "dirty": [
-      "M CALL_SCHEDULING_SPEC.md",
-      " M CLAUDE.md",
-      " M PASSWORD_CHECKLIST.md",
-      " M RUN_QUEUE.md"
+      "M RUN_QUEUE.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-29T02:49:10+00:00",
+    "queueLastCommit": "2026-09-29T03:06:49+00:00",
     "unrecorded": []
   },
   "counts": {
@@ -107,14 +104,14 @@
     },
     {
       "title": "BUG: hello@greenreserve.app takes no mail",
-      "line": 2559,
+      "line": 2564,
       "hash": "371ffff",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 2577,
+      "line": 2582,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 0
@@ -271,12 +268,12 @@
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2601,
+      "line": 2606,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2754,
+      "line": 2759,
       "section": "Queue (run in this order)"
     }
   ],
@@ -339,12 +336,12 @@
     {
       "item": "BUG: hello@greenreserve.app takes no mail",
       "note": "Cam: \"all emails need to go to thegreenreserve@outlook",
-      "line": 2559
+      "line": 2564
     },
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2577
+      "line": 2582
     }
   ],
   "ideas": {
@@ -447,6 +444,12 @@
       "ageDays": 13
     },
     {
+      "file": "CALL_SCHEDULING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 0
+    },
+    {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
@@ -484,12 +487,6 @@
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 13
-    },
-    {
-      "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
       "ageDays": 13
@@ -588,6 +585,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "421543d",
+      "date": "2026-09-29",
+      "subject": "CAL-2 fix: the Cal.com calendar rendered as a blank box — use Cal.com's official inline embed"
+    },
+    {
+      "h": "1e0a455",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "e082dd0",
       "date": "2026-09-29",
       "subject": "CAL-2: Cal.com is the only call scheduler; Google Calendar removed"
@@ -634,16 +641,6 @@
     },
     {
       "h": "7756ce9",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "371ffff",
-      "date": "2026-09-29",
-      "subject": "All contact, alert and reply-to addresses point at the inbox that is read"
-    },
-    {
-      "h": "b2fdff8",
       "date": "2026-09-29",
       "subject": "queue/spec update"
     }
