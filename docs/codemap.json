@@ -4035,7 +4035,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 196,
+      "lines": 224,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4070,6 +4070,7 @@
         "@/lib/email",
         "@/lib/prisma",
         "@/lib/session",
+        "@/lib/stripe",
         "crypto",
         "next/server"
       ],
@@ -5144,7 +5145,7 @@
     },
     {
       "path": "src/app/api/stripe/webhook/route.ts",
-      "lines": 116,
+      "lines": 130,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5161,6 +5162,7 @@
       "auth": "public",
       "guard": "secret header",
       "imports": [
+        "@/lib/access-fee",
         "@/lib/prisma",
         "@/lib/refund-booking",
         "@/lib/stripe",
@@ -7697,12 +7699,16 @@
     },
     {
       "path": "src/lib/access-fee.ts",
-      "lines": 101,
+      "lines": 131,
       "purpose": "FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B).",
       "brain": [
         "separate-booking-fee"
       ],
       "exports": [
+        {
+          "name": "bookingIdForFeeCharge",
+          "kind": "fn"
+        },
         {
           "name": "chargeAccessFeeSeparately",
           "kind": "fn"
@@ -7710,6 +7716,10 @@
         {
           "name": "FeeChargeResult",
           "kind": "type"
+        },
+        {
+          "name": "liveSeparateFee",
+          "kind": "fn"
         },
         {
           "name": "refundSeparateAccessFee",
@@ -7729,6 +7739,8 @@
       ],
       "usedBy": [
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/stripe/webhook/route.ts",
+        "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts"
       ]
     },
@@ -9016,7 +9028,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 161,
+      "lines": 167,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9035,6 +9047,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./access-fee",
         "./email",
         "./prisma",
         "./stripe"
@@ -12121,6 +12134,7 @@
         "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/membership/[id]/route.ts",
+        "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/stripe/callback/route.ts",
         "src/app/api/operator/stripe/connect/route.ts",
         "src/app/api/operator/stripe/dashboard-link/route.ts",

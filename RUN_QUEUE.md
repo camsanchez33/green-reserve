@@ -2623,6 +2623,12 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   is the Cal.com event length (Cam sets it there); the thanks page itself
   offers "pick a call time". Course type is PUBLIC / PRIVATE EVERYWHERE
   (sign-up, setup sheet, admin); a semi-private club = Public + member passes.
+- [ ] SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +
+  paymentMethodId (found in the FB-3 review, pre-existing). No route exposes
+  another golfer's ids, but anyone holding a cus_ id could attach their own card
+  to it and change its default. Fix: bind server-side — setup-intent returns a
+  signed token (or retrieve the SetupIntent by id and use ITS customer +
+  payment_method); check pm.customer before attaching. (small)
 - [x] FB-3 (see git log 'FB-3:') — BUILT as option B: lib/access-fee.ts charges the
   fee alone on the platform account at 'paid offline' / 'no-show', refunds it on
   'still coming' or a later card check-in; every booking saves a card (server
