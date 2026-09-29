@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { get } from '@vercel/blob';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
+import { privateBlobToken, PRIVATE_STORAGE_MISSING } from '@/lib/private-blob';
 
 // MP-5a. Signed contracts used to be uploaded as `access: 'public'` Vercel
 // Blobs — readable by anyone who ever saw the URL, forever, with no session
@@ -33,7 +34,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'That document does not belong to this course' }, { status: 403 });
   }
 
-  const result = await get(url, { access: 'private' }).catch(() => null);
+  const token = privateBlobToken();
+  if (!token) return NextResponse.json({ error: PRIVATE_STORAGE_MISSING }, { status: 503 });
+  const result = await get(url, { access: 'private', token }).catch(() => null);
   if (!result || result.statusCode !== 200 || !result.stream) {
     return NextResponse.json({ error: 'Document not found in storage' }, { status: 404 });
   }

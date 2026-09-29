@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
 import { logDocumentUploaded } from '@/lib/course-timeline';
+import { privateBlobToken, PRIVATE_STORAGE_MISSING } from '@/lib/private-blob';
 
 // A-05 item 5b — PDF uploads per course, via the same Vercel Blob storage
 // operator photo uploads already use. Listed via the course timeline
@@ -13,9 +14,8 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    return NextResponse.json({ error: 'File storage is not configured yet.' }, { status: 503 });
-  }
+  const token = privateBlobToken();
+  if (!token) return NextResponse.json({ error: PRIVATE_STORAGE_MISSING }, { status: 503 });
 
   const form = await req.formData();
   const file = form.get('file');
@@ -33,10 +33,19 @@ export async function POST(req: NextRequest) {
   // MP-5a: these are signed contracts. As public blobs they were readable by
   // anyone who ever saw the URL — no session, no expiry, and nothing to revoke.
   // Private blobs are served only through the authenticated download route.
-  const blob = await put(`course-documents/${courseId}/${Date.now()}-${file.name}`, file, {
-    access: 'private',
-    contentType: 'application/pdf',
-  });
+  let blob: Awaited<ReturnType<typeof put>>;
+  try {
+    blob = await put(`course-documents/${courseId}/${Date.now()}-${file.name}`, file, {
+      access: 'private',
+      contentType: 'application/pdf',
+      token,
+    });
+  } catch (e) {
+    // No-silent-failures: say what storage refused (e.g. a PUBLIC store behind
+    // the private token) instead of a bare 500.
+    const msg = e instanceof Error ? e.message : 'unknown error';
+    return NextResponse.json({ error: `File storage refused the upload: ${msg}. Check that the contracts store in Vercel is set to Private.` }, { status: 502 });
+  }
 
   const ok = await logDocumentUploaded(courseId, file.name, blob.url, session.name);
   if (!ok) return NextResponse.json({ error: 'No linked inquiry to log against for this course' }, { status: 400 });

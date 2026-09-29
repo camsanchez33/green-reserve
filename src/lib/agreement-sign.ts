@@ -7,6 +7,7 @@
 // The row IS the record. A PDF that fails to render never undoes a signing;
 // it is logged and retried, and the admin Records tab shows the row either way.
 import { put } from '@vercel/blob';
+import { privateBlobToken } from './private-blob';
 import { prisma } from '@/lib/prisma';
 import { loadDocument, signableDocuments, type AgreementDocument, type LoadedDocument } from './agreements';
 import { agreementStatus } from './agreement-gate';
@@ -124,8 +125,12 @@ async function renderAndStore(acceptanceId: string): Promise<string | null> {
     acceptedAt: row.acceptedAt, ip: row.ip, acceptanceId: row.id,
     authorityAttested: row.authorityAttested, marketingOptOut: row.marketingOptOut, legacy: row.legacy,
   });
+  // Private store only (lib/private-blob). Unset = leave pdfUrl empty; the
+  // hourly cron retries PDFs once the store exists, and the signature stands.
+  const token = privateBlobToken();
+  if (!token) { console.error(`agreement pdf: private Blob store not configured, ${acceptanceId} pending`); return null; }
   const blob = await put(`agreements/${row.courseId}/${row.document}-${row.version}-${row.id}.pdf`, pdf, {
-    access: 'private', contentType: 'application/pdf', addRandomSuffix: false,
+    access: 'private', contentType: 'application/pdf', addRandomSuffix: false, token,
   });
   await prisma.agreementAcceptance.update({ where: { id: row.id }, data: { pdfUrl: blob.url } });
   return blob.url;

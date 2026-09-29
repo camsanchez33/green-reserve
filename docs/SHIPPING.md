@@ -127,6 +127,8 @@ CALCOM_BOOKING_URL            # CAL-1/2: the Cal.com event link courses book on 
 CALCOM_WEBHOOK_SECRET         # CAL-1: signs Cal.com → /api/calcom/webhook (booking created/rescheduled/cancelled)
 ANTHROPIC_API_KEY             # BIRDIE B1: the assistant's key (costs money; caps in lib/birdie/guardrails.ts)
 BIRDIE_ENABLED                # BIRDIE B1: 'true' switches the assistant on; anything else is off
+BLOB_READ_WRITE_TOKEN         # PUBLIC Blob store (photos, sheet uploads). Connect with the read-write token box ticked
+BLOB_PRIVATE_READ_WRITE_TOKEN # PRIVATE Blob store (contracts + signed agreement PDFs, lib/private-blob.ts). Prefix BLOB_PRIVATE, token box ticked
 ```
 
 

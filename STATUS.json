@@ -1,21 +1,21 @@
 {
-  "generatedAt": "2026-09-29T20:59:56.987Z",
+  "generatedAt": "2026-09-29T21:16:26.738Z",
   "repo": {
-    "head": "8c8b4d7",
+    "head": "bb9b1e4",
     "branch": "claude/eager-maxwell-qf1pd0",
     "dirtyCount": 0,
     "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-29T20:59:56+00:00",
+    "queueLastCommit": "2026-09-29T21:16:26+00:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 207,
+    "runDone": 208,
     "runAwaiting": 23,
     "runInFlight": 1,
-    "runNotStarted": 17,
+    "runNotStarted": 18,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -116,21 +116,21 @@
     },
     {
       "title": "CAL-2 — Cal.com is the ONLY call scheduler",
-      "line": 2765,
+      "line": 2784,
       "hash": "e082dd0",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "BUG: hello@greenreserve.app takes no mail",
-      "line": 2797,
+      "line": 2816,
       "hash": "371ffff",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 2815,
+      "line": 2834,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 0
@@ -271,18 +271,23 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +",
+      "title": "SETUP (Cam 2026-09-29: \"we need to do blob storage, birdie ai … we also need",
       "line": 2692,
       "section": "Queue (run in this order)"
     },
     {
+      "title": "SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +",
+      "line": 2710,
+      "section": "Queue (run in this order)"
+    },
+    {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2839,
+      "line": 2858,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2993,
+      "line": 3012,
       "section": "Queue (run in this order)"
     }
   ],
@@ -345,17 +350,17 @@
     {
       "item": "CAL-2 — Cal.com is the ONLY call scheduler",
       "note": "Cam: \"there should be no google calendar thing\" and, after setting both env vars and redeploying, \"it is just the same as before\"",
-      "line": 2765
+      "line": 2784
     },
     {
       "item": "BUG: hello@greenreserve.app takes no mail",
       "note": "Cam: \"all emails need to go to thegreenreserve@outlook",
-      "line": 2797
+      "line": 2816
     },
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2815
+      "line": 2834
     }
   ],
   "ideas": {
@@ -617,6 +622,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "bb9b1e4",
+      "date": "2026-09-29",
+      "subject": "BLOB-2: contracts and signed agreements use their own private Blob store"
+    },
+    {
+      "h": "6f97981",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "dbdbcda",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "8c8b4d7",
       "date": "2026-09-29",
       "subject": "Homepage: 'See it work' demo was invisible; hero blurb in full sentences"
@@ -660,21 +680,6 @@
       "h": "4828b58",
       "date": "2026-09-29",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "0cb172f",
-      "date": "2026-09-29",
-      "subject": "PERF-3: load Sentry on input, error or tab hidden, not a 10s timer"
-    },
-    {
-      "h": "8f42d39",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "07d902a",
-      "date": "2026-09-29",
-      "subject": "CG-2: pre-fill the setup sheet from details captured on the call"
     }
   ]
 }
