@@ -64,20 +64,7 @@ export function calcomBookingUrl(): string | null {
   return s.state === 'on' ? s.url : null;
 }
 
-/** The booker, prefilled, carrying the invite token home through the webhook. */
-export function calcomEmbedUrl(base: string, p: { token: string; name: string; email: string; phone: string }): string {
-  const u = new URL(base);
-  u.searchParams.set('name', p.name);
-  u.searchParams.set('email', p.email);
-  // Cal.com validates the phone field as E.164 and skips a prefill that fails,
-  // so a bare US number would silently not appear. Anything else is left out.
-  const digits = p.phone.replace(/\D/g, '');
-  const e164 = digits.length === 10 ? `+1${digits}` : digits.length === 11 && digits.startsWith('1') ? `+${digits}` : '';
-  if (e164) u.searchParams.set('attendeePhoneNumber', e164);
-  u.searchParams.set('metadata[invite]', p.token);
-  u.searchParams.set('theme', 'light');
-  return u.toString();
-}
+export { calcomEmbedUrl } from './calcom-url';
 
 // No schema change for this: the Cal.com booking uid rides in Call.createdBy,
 // which nothing displays. A proper column is a follow-up once previews build

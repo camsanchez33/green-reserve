@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, CheckCircle, Globe, HelpCircle, Lock, Mail } from 'lucide-react';
+import { calcomEmbedUrl } from '@/lib/calcom-url';
 
 const STATES = [
   'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
@@ -59,7 +60,7 @@ function FieldError({ msg }: { msg?: string }) {
   return <p className="mt-1 text-xs text-bad">{msg}</p>;
 }
 
-export default function ForCoursesContent() {
+export default function ForCoursesContent({ calBookingUrl = null }: { calBookingUrl?: string | null }) {
   const [form, setForm] = useState<FormData>(init);
   // SD review: the honeypot input existed but its value was never sent — the
   // payload hardcoded ''. Bots that fill every field now get the silent 200.
@@ -162,7 +163,12 @@ export default function ForCoursesContent() {
       setSubmittedEmail(form.email.trim());
       setSubmittedCourse({ courseName: form.courseName, city: form.city, state: form.state });
       setAlreadyBuilt(!!d.alreadyBuilt);
-      setCallUrl(typeof d.callUrl === 'string' ? d.callUrl : null);
+      // Built from what they typed, never from the response — every submit
+      // path answers identically (FB-1 review). The webhook attaches the
+      // booking to this inquiry by email.
+      setCallUrl(calBookingUrl ? calcomEmbedUrl(calBookingUrl, {
+        name: `${form.firstName} ${form.lastName}`.trim(), email: form.email.trim(), phone: form.phone,
+      }) : null);
       setSubmitted(true);
     } else {
       const d = await res.json();
@@ -389,13 +395,15 @@ export default function ForCoursesContent() {
         </p>
         <p className="text-ink-muted text-center mb-8 text-sm">Most courses are live within a week of that call.</p>
 
-        {/* FB-1: this used to link a Calendly page that was never set up. The
-            API returns this inquiry's own call link (/call/[token] → Cal.com,
-            prefilled, so the booking lands on the inquiry). A resubmission gets
-            no link back — the email carries it instead. */}
+        {/* FB-1: this used to link a Calendly page that was never set up. Now
+            the Cal.com booker, prefilled with what they typed; the booking is
+            matched to the inquiry by email. The confirmation email carries the
+            invite link too. */}
         {callUrl ? (
           <a
             href={callUrl}
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-sm transition-colors mb-3"
           >
             <Calendar className="w-4 h-4" />

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import ForCoursesContent from './ForCoursesContent';
+import { calcomBookingUrl } from '@/lib/calcom';
 
 export const metadata: Metadata = {
   title: 'List Your Course Free',
@@ -7,5 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default function ForCoursesPage() {
-  return <ForCoursesContent />;
+  // The public Cal.com event link — the same for every visitor, so the thanks
+  // page's 'Pick a call time' reveals nothing about any inquiry (FB-1 review).
+  return <ForCoursesContent calBookingUrl={calcomBookingUrl()} />;
 }

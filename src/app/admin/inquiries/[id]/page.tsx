@@ -753,10 +753,21 @@ function InquiryDetailInner() {
   const shPasses = Array.isArray(sd.passes) ? sd.passes as Record<string, unknown>[] : [];
   const shTeeSets = Array.isArray(sd.teeSets) ? sd.teeSets as Record<string, unknown>[] : [];
   const shFv2 = (sd.facilitiesV2 || {}) as Record<string, unknown>;
-  const shPhotos = Array.isArray(sd.photos) ? sd.photos as string[] : [];
+  // FB-1 review: the sheet's PATCH stores whatever it is sent, so a course (or
+  // anyone with its sheet link) could plant an outside URL that this page then
+  // loads — handing over the admin's IP and a trusted-looking link. Only
+  // images our own upload route produced are shown.
+  const fromOurUploads = (u: unknown): u is string => {
+    if (typeof u !== 'string') return false;
+    try {
+      const url = new URL(u);
+      return url.protocol === 'https:' && url.hostname.endsWith('.public.blob.vercel-storage.com') && url.pathname.startsWith('/inquiries/');
+    } catch { return false; }
+  };
+  const shPhotos = Array.isArray(sd.photos) ? (sd.photos as unknown[]).filter(fromOurUploads) : [];
   // SD-9b: the sheet asks for a scorecard photo instead of the tee-set grid —
   // read the tees, yardages, par and ratings off it when building.
-  const shScorecards = Array.isArray(sd.scorecardPhotos) ? (sd.scorecardPhotos as unknown[]).filter((x): x is string => typeof x === 'string') : [];
+  const shScorecards = Array.isArray(sd.scorecardPhotos) ? (sd.scorecardPhotos as unknown[]).filter(fromOurUploads) : [];
   const shDaysOpen = Array.isArray(sd.daysOpen) ? sd.daysOpen as number[] : [];
   const shDaysStr = shDaysOpen.length > 0 ? shDaysOpen.map(n => DAYS_SHORT[n]).join(', ') : 'Every day';
   const shNine27Names = Array.isArray(sd.nine27Names) ? sd.nine27Names as string[] : [];

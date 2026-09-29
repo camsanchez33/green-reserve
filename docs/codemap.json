@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 352,
+    "files": 353,
     "routes": 195,
-    "libs": 90,
+    "libs": 91,
     "models": 33,
     "orphans": 8,
     "ungatedRoutes": 3
@@ -664,7 +664,7 @@
     },
     {
       "path": "src/app/admin/inquiries/[id]/page.tsx",
-      "lines": 2255,
+      "lines": 2266,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2821,7 +2821,7 @@
     },
     {
       "path": "src/app/api/calcom/webhook/route.ts",
-      "lines": 151,
+      "lines": 171,
       "purpose": "CAL-1 — Cal.com booking webhook.",
       "brain": [],
       "exports": [
@@ -3405,7 +3405,7 @@
     },
     {
       "path": "src/app/api/inquiries/route.ts",
-      "lines": 285,
+      "lines": 286,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5990,7 +5990,7 @@
     },
     {
       "path": "src/app/for-courses/ForCoursesContent.tsx",
-      "lines": 740,
+      "lines": 748,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6005,6 +6005,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/lib/calcom-url",
         "lucide-react",
         "next/image",
         "next/link",
@@ -6067,7 +6068,7 @@
     },
     {
       "path": "src/app/for-courses/page.tsx",
-      "lines": 12,
+      "lines": 15,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6087,6 +6088,7 @@
       "guard": "public",
       "imports": [
         "./ForCoursesContent",
+        "@/lib/calcom",
         "next"
       ],
       "usedBy": []
@@ -8727,8 +8729,30 @@
       ]
     },
     {
+      "path": "src/lib/calcom-url.ts",
+      "lines": 21,
+      "purpose": "The prefilled Cal.com booking link — no server-only imports, so the /for-courses thanks page can build it in the browser (FB-1 review) as well as the server routes (via lib/calcom.ts).",
+      "brain": [],
+      "exports": [
+        {
+          "name": "calcomEmbedUrl",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/for-courses/ForCoursesContent.tsx",
+        "src/lib/calcom.ts"
+      ]
+    },
+    {
       "path": "src/lib/calcom.ts",
-      "lines": 106,
+      "lines": 93,
       "purpose": "CAL-1 — Cal.com as the call scheduler, in place of the Google Calendar grid.",
       "brain": [],
       "exports": [
@@ -8742,7 +8766,7 @@
         },
         {
           "name": "calcomEmbedUrl",
-          "kind": "fn"
+          "kind": "reexport"
         },
         {
           "name": "calcomManageLinks",
@@ -8767,13 +8791,15 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./calcom-url",
         "node:crypto"
       ],
       "usedBy": [
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/system/route.ts",
         "src/app/api/calcom/webhook/route.ts",
-        "src/app/api/call/[token]/route.ts"
+        "src/app/api/call/[token]/route.ts",
+        "src/app/for-courses/page.tsx"
       ]
     },
     {

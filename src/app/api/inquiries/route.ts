@@ -42,7 +42,8 @@ export async function POST(req: NextRequest) {
   // course caught by it shows up in the Vercel logs instead of vanishing.
   const hp = body.hp || body._website;
   if (hp) {
-    console.warn(`[inquiries] honeypot hit — submission discarded: email=${String(body.email ?? '').slice(0, 80)} course=${String(body.courseName ?? '').slice(0, 80)}`);
+    const clean = (v: unknown) => String(v ?? '').replace(/[\r\n\t]+/g, ' ').slice(0, 80);
+    console.warn(`[inquiries] honeypot hit — submission discarded: email=${clean(body.email)} course=${clean(body.courseName)}`);
     return NextResponse.json({ success: true });
   }
 
@@ -266,11 +267,11 @@ export async function POST(req: NextRequest) {
   after(sendInquiryConfirmation(emailData)
     .catch(err => console.error('Inquiry confirmation email failed:', err)));
 
-  // FB-1: the thanks page offers "Pick a call time" straight away. Only on a
-  // FRESH inquiry — the submitter just created it, so its invite is theirs.
-  // The duplicate paths above never return a link: that would hand an
-  // existing inquiry's invite to whoever typed its course name.
-  return NextResponse.json({ success: true, callUrl: inviteUrlForEmails });
+  // Byte-identical to every duplicate path above. (FB-1 review: returning this
+  // inquiry's call link here, and nothing on the duplicate paths, told anyone
+  // who typed a course's name whether it was already in the pipeline. The
+  // thanks page now builds its Cal.com link from what the visitor typed.)
+  return NextResponse.json({ success: true });
 }
 
 // GET deliberately removed (MP-1b). It was PUBLIC — no session check behind a
