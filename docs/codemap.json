@@ -3368,7 +3368,7 @@
     },
     {
       "path": "src/app/api/inquiries/details/route.ts",
-      "lines": 135,
+      "lines": 141,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6087,7 +6087,7 @@
     },
     {
       "path": "src/app/for-courses/details/page.tsx",
-      "lines": 1882,
+      "lines": 1897,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6863,7 +6863,7 @@
     },
     {
       "path": "src/components/admin/InquiryCallCards.tsx",
-      "lines": 880,
+      "lines": 913,
       "purpose": "INQUIRY_CALL_SPEC IC-2 — the two discovery-call cards on the inquiry detail page.",
       "brain": [],
       "exports": [
@@ -8993,7 +8993,7 @@
     },
     {
       "path": "src/lib/call-answers.ts",
-      "lines": 323,
+      "lines": 349,
       "purpose": "INQUIRY_CALL_SPEC IC-5 — structured discovery-call answers.",
       "brain": [],
       "exports": [

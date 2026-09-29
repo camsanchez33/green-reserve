@@ -1,31 +1,21 @@
 {
-  "generatedAt": "2026-09-29T13:11:19.110Z",
+  "generatedAt": "2026-09-29T15:30:20.042Z",
   "repo": {
-    "head": "e343788",
+    "head": "0cb172f",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 1,
-    "dirty": [
-      "M RUN_QUEUE.md"
-    ],
+    "dirtyCount": 0,
+    "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-29T13:03:07+00:00",
-    "unrecorded": [
-      {
-        "h": "e343788",
-        "date": "2026-09-29T13:11:06+00:00",
-        "subject": "FB-3: collect the $1.50/player when a round isn't paid by card",
-        "ids": [],
-        "matches": []
-      }
-    ]
+    "queueLastCommit": "2026-09-29T15:30:18+00:00",
+    "unrecorded": []
   },
   "counts": {
-    "runDone": 200,
+    "runDone": 204,
     "runAwaiting": 23,
     "runInFlight": 1,
-    "runNotStarted": 16,
+    "runNotStarted": 18,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -59,7 +49,7 @@
       "line": 2343,
       "hash": "cfeb2e1",
       "shipDate": "2026-09-17",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "title": "SD-8d — browser Back still discards unsaved Settings edits (from the",
@@ -126,21 +116,21 @@
     },
     {
       "title": "CAL-2 — Cal.com is the ONLY call scheduler",
-      "line": 2682,
+      "line": 2730,
       "hash": "e082dd0",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "BUG: hello@greenreserve.app takes no mail",
-      "line": 2714,
+      "line": 2762,
       "hash": "371ffff",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 2732,
+      "line": 2780,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 0
@@ -276,18 +266,28 @@
       "section": "Queue (run in this order)"
     },
     {
+      "title": "PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29:",
+      "line": 2663,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +",
+      "line": 2668,
+      "section": "Queue (run in this order)"
+    },
+    {
       "title": "FB-2 — homepage (greenreserve.app) copy + structure, Cam's notes",
-      "line": 2648,
+      "line": 2696,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2756,
+      "line": 2804,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2909,
+      "line": 2957,
       "section": "Queue (run in this order)"
     }
   ],
@@ -350,17 +350,17 @@
     {
       "item": "CAL-2 — Cal.com is the ONLY call scheduler",
       "note": "Cam: \"there should be no google calendar thing\" and, after setting both env vars and redeploying, \"it is just the same as before\"",
-      "line": 2682
+      "line": 2730
     },
     {
       "item": "BUG: hello@greenreserve.app takes no mail",
       "note": "Cam: \"all emails need to go to thegreenreserve@outlook",
-      "line": 2714
+      "line": 2762
     },
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2732
+      "line": 2780
     }
   ],
   "ideas": {
@@ -443,6 +443,12 @@
       "openRefs": 4,
       "lastTouched": "2026-09-16",
       "ageDays": 12
+    },
+    {
+      "file": "PRIVATE_BILLING_SPEC.md",
+      "openRefs": 1,
+      "lastTouched": "2026-09-29",
+      "ageDays": 0
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
@@ -616,6 +622,51 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "0cb172f",
+      "date": "2026-09-29",
+      "subject": "PERF-3: load Sentry on input, error or tab hidden, not a 10s timer"
+    },
+    {
+      "h": "8f42d39",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "07d902a",
+      "date": "2026-09-29",
+      "subject": "CG-2: pre-fill the setup sheet from details captured on the call"
+    },
+    {
+      "h": "1ec24ed",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "7ad49c8",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "4eda035",
+      "date": "2026-09-29",
+      "subject": "PERF-2: Home server-rendered, /book server-rendered (strict speed check)"
+    },
+    {
+      "h": "88539ee",
+      "date": "2026-09-29",
+      "subject": "CG-1: call guide — a conversation on the call, a sheet built from it after"
+    },
+    {
+      "h": "461caea",
+      "date": "2026-09-29",
+      "subject": "FB-3 review: no double fee, no early no-show, partial party, ledger"
+    },
+    {
+      "h": "d52b6af",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "e343788",
       "date": "2026-09-29",
       "subject": "FB-3: collect the $1.50/player when a round isn't paid by card"
@@ -629,51 +680,6 @@
       "h": "ea3306b",
       "date": "2026-09-29",
       "subject": "FB-1 review: no pipeline oracle; sheet photos only from our uploads"
-    },
-    {
-      "h": "cbe9235",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "10cd62e",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "6cab760",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "1871e32",
-      "date": "2026-09-29",
-      "subject": "SD-9b: setup sheet — required core first, the rest optional; scorecard photo"
-    },
-    {
-      "h": "f361e89",
-      "date": "2026-09-29",
-      "subject": "FB-1: sign-up page per Cam's walk-through; honeypot no longer eats real inquiries"
-    },
-    {
-      "h": "2782e9d",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "dfce64d",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "5676107",
-      "date": "2026-09-29",
-      "subject": "PERF-1 review: cap the pre-init Sentry error buffer, drop it if the SDK is blocked"
-    },
-    {
-      "h": "b32f8c5",
-      "date": "2026-09-29",
-      "subject": "status board"
     }
   ]
 }

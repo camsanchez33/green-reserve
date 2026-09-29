@@ -74,6 +74,12 @@ export async function GET(req: NextRequest) {
     callAnswers,
     prefill,
     callRecap,
+    // CG-2: what we already have for them, shown on step 1 so the sheet opens
+    // set up. Their own record, behind their own sheet token.
+    contact: {
+      contactName: inquiry.contactName, contactTitle: inquiry.contactTitle, email: inquiry.email, phone: inquiry.phone,
+      courseName: inquiry.courseName, address: inquiry.address, city: inquiry.city, state: inquiry.state, zipCode: inquiry.zipCode,
+    },
   });
 }
 

@@ -353,6 +353,7 @@ function DetailsForm() {
   const [callNo, setCallNo] = useState<SectionId[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [callRecap, setCallRecap] = useState<string[]>([]);
+  const [contact, setContact] = useState<Record<string, string> | null>(null);
   const sections = useMemo(
     () => (showAll ? allSections : allSections.filter(sec => !callNo.includes(sec.id))),
     [allSections, callNo, showAll],
@@ -406,6 +407,7 @@ function DetailsForm() {
         const ca: Record<string, string> = d.callAnswers && typeof d.callAnswers === 'object' ? d.callAnswers : {};
         setCallAnswers(ca);
         setAllSections(buildSections(ct));
+        setContact(d.contact && typeof d.contact === 'object' ? d.contact as Record<string, string> : null);
         setCallRecap(Array.isArray(d.callRecap) ? (d.callRecap as unknown[]).filter((x): x is string => typeof x === 'string') : []);
         // IC-5 §4: the call's structured answers fill empty keys only.
         const pre: Record<string, unknown> = d.prefill && typeof d.prefill === 'object' ? d.prefill : {};
@@ -1182,7 +1184,7 @@ function DetailsForm() {
               <Label text="Days open" sub="(leave all unselected if open every day)" />
               <div className="flex gap-1.5 flex-wrap">
                 {DAYS_SHORT.map((day, i) => (
-                  <button key={day} type="button" onClick={() => toggleDay(i)}
+                  <button key={day} type="button" onClick={() => toggleDay(i)} aria-pressed={draft.daysOpen.includes(i)}
                     className={'px-3 py-2 rounded-md border text-sm transition-colors ' + (draft.daysOpen.includes(i) ? 'border-pine bg-pine/5 text-pine font-medium' : 'border-line text-ink hover:border-pine/40')}>
                     {day}
                   </button>
@@ -1791,6 +1793,19 @@ function DetailsForm() {
           <p className="text-[11px] text-ink-faint">{Math.round(progress)}% complete</p>
         </div>
 
+        {activeIdx === 0 && contact && (
+          <div className="bg-white rounded-lg border border-line px-5 py-4 mb-4">
+            <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2">Your details</p>
+            <dl className="grid grid-cols-[110px_1fr] gap-x-3 gap-y-1 text-[13px]">
+              <dt className="text-ink-muted">Contact</dt><dd className="text-ink">{contact.contactName}{contact.contactTitle ? ` · ${contact.contactTitle}` : ''}</dd>
+              <dt className="text-ink-muted">Email</dt><dd className="text-ink break-all">{contact.email}</dd>
+              {contact.phone && (<><dt className="text-ink-muted">Phone</dt><dd className="text-ink">{contact.phone}</dd></>)}
+              <dt className="text-ink-muted">Course</dt><dd className="text-ink">{contact.courseName}</dd>
+              <dt className="text-ink-muted">Address</dt><dd className="text-ink">{[contact.address, contact.city, [contact.state, contact.zipCode].filter(Boolean).join(' ')].filter(Boolean).join(', ')}</dd>
+            </dl>
+            <p className="text-[11.5px] text-ink-faint mt-2">Already on file — nothing to re-type. Something wrong? Reply to our email and we&apos;ll fix it.</p>
+          </div>
+        )}
         {activeIdx === 0 && callRecap.length > 0 && (
           <div className="bg-white rounded-lg border border-line px-5 py-4 mb-4">
             <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2">From our call</p>

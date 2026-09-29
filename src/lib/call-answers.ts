@@ -63,6 +63,11 @@ export const CALL_FIELDS: Record<string, FieldSpec[]> = {
   timeline: [
     { key: 'liveBy', label: 'Wants to go live', type: 'enum', options: LIVE_BY_OPTIONS },
   ],
+  // CG-2 (Cam 2026-09-29, after the first live send): the sheet should arrive
+  // already set up — anything the course mentions is noted here and pre-fills.
+  course_info: [
+    { key: 'website', label: 'Website', type: 'text', sheetKey: 'website' },
+  ],
   talk_track: [
     { key: 'feeModel', label: 'Fee model explained', type: 'bool' },
     { key: 'goLive', label: 'Go-live steps explained', type: 'bool' },
@@ -215,7 +220,14 @@ export function fmtFieldValue(spec: FieldSpec, v: unknown): string {
   if (!isCaptured(v)) return '';
   switch (spec.type) {
     case 'money': return typeof v === 'number' ? fmtMoneyCents(v) : String(v);
-    case 'days': return Array.isArray(v) ? (v as number[]).map(d => DAY_SHORT[d] ?? String(d)).join(' ') : String(v);
+    case 'days': return Array.isArray(v) ? (v.length === 7 ? 'every day' : (v as number[]).map(d => DAY_SHORT[d] ?? String(d)).join(' ')) : String(v);
+    case 'time': {
+      // "17:30" -> "5:30 PM": the recap is read by the course, not by us.
+      const m = typeof v === 'string' ? TIME_RE.exec(v) && v.split(':').map(Number) : null;
+      if (!m) return String(v);
+      const [h, min] = m;
+      return `${h % 12 || 12}:${String(min).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+    }
     case 'bool': return v === true ? 'Yes' : 'No';
     case 'enum': return (spec.options ?? []).find(([val]) => val === v)?.[1] ?? String(v);
     default: return String(v);
@@ -307,7 +319,7 @@ export function callRecapLines(answers: CallAnswers): string[] {
   if (m === true) out.push('You offer memberships, passes or resident rates — your sheet asks how they work.');
   if (m === false) out.push('No memberships or resident rates.');
   const c = f('shape', 'cancelFee');
-  if (c === true) out.push('You charge a late-cancellation fee — you\u2019ll set the window and amount on your sheet.');
+  if (c === true) out.push(isCaptured(f('cancellation', 'hours')) || isCaptured(f('cancellation', 'lateFee')) ? 'You charge a late-cancellation fee.' : 'You charge a late-cancellation fee — you\u2019ll set the window and amount on your sheet.');
   if (c === false) out.push('No cancellation fee.');
   const w = opt(WALKING_OPTIONS, f('shape', 'walking'));
   if (w) out.push(w + '.');
@@ -315,6 +327,20 @@ export function callRecapLines(answers: CallAnswers): string[] {
   if (b) out.push(`Today you take tee times by: ${b.charAt(0).toLowerCase() + b.slice(1)}.`);
   const signer = f('people', 'signer'), day = f('people', 'dayToDay');
   if (isCaptured(signer) || isCaptured(day)) out.push([isCaptured(signer) ? `Signs off: ${signer}` : '', isCaptured(day) ? `Runs the tee sheet day to day: ${day}` : ''].filter(Boolean).join(' · '));
+  // CG-2: the details they mentioned, so the email and the sheet show exactly
+  // what was pre-filled and they can correct it.
+  for (const [k, label] of [['green_fees', 'Green fees'], ['tee_times', 'Tee times'], ['season_hours', 'Season']] as const) {
+    const line = summarize(k, answers.items[k] ? { ...answers.items[k], note: '' } : undefined);
+    if (line) out.push(`${label}: ${line}`);
+  }
+  const site = f('course_info', 'website');
+  if (isCaptured(site)) out.push(`Website: ${site}`);
+  const cartFee = f('carts_caddies', 'cartFee');
+  if (typeof cartFee === 'number') out.push(`Cart fee: ${fmtMoneyCents(cartFee)} per player.`);
+  if (c === true) {
+    const hrs = f('cancellation', 'hours'), fee = f('cancellation', 'lateFee');
+    if (isCaptured(hrs) || typeof fee === 'number') out.push(`Cancellation: ${isCaptured(hrs) ? `${hrs} hours` : ''}${isCaptured(hrs) && typeof fee === 'number' ? ', ' : ''}${typeof fee === 'number' ? `${fmtMoneyCents(fee)} late fee` : ''}.`);
+  }
   const live = opt(LIVE_BY_OPTIONS, f('timeline', 'liveBy'));
   if (live && f('timeline', 'liveBy') !== 'unsure') out.push(`Target: live ${live.charAt(0).toLowerCase() + live.slice(1)}.`);
   return out;

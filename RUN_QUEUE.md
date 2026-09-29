@@ -2623,6 +2623,12 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   is the Cal.com event length (Cam sets it there); the thanks page itself
   offers "pick a call time". Course type is PUBLIC / PRIVATE EVERYWHERE
   (sign-up, setup sheet, admin); a semi-private club = Public + member passes.
+- [x] PERF-2 (4eda035, merged #17) — the strict speed check still failed after
+  PERF-1: Home TBT 361ms, Booking LCP 4.59s. Home is server-rendered with small
+  client islands (the whole page used to hydrate), the below-the-fold demos mount
+  near the viewport; /book loads its course + tee time on the server. Local:
+  Home TBT 33-49ms, /book LCP 1.7-2.5s. CI's runner is ~3x slower than local, so
+  Home's TBT may still sit near the 300ms line — read the next PR's audit.
 - [x] CG-1 — call guide (Cam 2026-09-29: "it should just be a conversation, then we
   send them a form dedicated to them"; OpenTable-style sales call → onboarding
   portal). Built: the Log-the-call card's Talked view is a one-screen guide —
@@ -2636,6 +2642,29 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   pre-filled from the taps, and skips sections the call answered no to (with
   "show all"). Walked end to end in Chromium. OPEN: nothing sent for real yet
   (no Resend key in the sandbox) — Cam's first real call is the live test.
+- [x] CG-2 — the sheet arrives set up (Cam 2026-09-29: "what was discussed in the
+  call wasnt automatically filled out"). Cause: CG-1 deliberately captured no
+  prices/times, so only the shape taps could pre-fill. Built: the call guide gains
+  an optional "Details they mentioned" block (weekday/weekend/twilight fees, first/
+  last tee time + interval, days open + season, cart fee, cancellation window + late
+  fee when they charge one, website); each maps onto its sheet field and into the
+  recap. Sheet step 1 now shows "Your details" (contact, email, phone, course,
+  address from the inquiry — nothing re-typed) above "From our call". Walked in
+  Chromium: fees, tee times, all 7 days, 24 h / $20 arrive pre-filled. Still only
+  applies when the call is ended with "End call → Send setup sheet"; a link sent
+  any other way carries only what was tapped.
+- [x] PERF-3 — Home TBT on CI 1101ms (run 25) / 1798ms (run 26) while every other
+  page passed. Cause: the 10s fallback timer in sentry.client.config.ts. Home's CI
+  audit ran ~10.3s (others ~6s), so Sentry + Replay init landed inside the
+  measured window; locally a 1s timer took Home from 59ms to 250ms TBT. Fix: no
+  timer — Sentry loads on first input, the first error, or the tab going hidden.
+  Local: Home TBT 29–41ms; idle page loads no Sentry chunk, an error or a scroll
+  does. The audit measures PRODUCTION, so it turns green only after this deploys.
+- [ ] PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29:
+  private clubs pay GreenReserve (subscription, or $1.50/round billed monthly and
+  capped at the subscription price); members pay $0. BLOCKED on Cam's prices and on
+  previews building again (schema change). Ship the member-fee removal WITH billing,
+  never before. (large, money, attended)
 - [ ] SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +
   paymentMethodId (found in the FB-3 review, pre-existing). No route exposes
   another golfer's ids, but anyone holding a cus_ id could attach their own card

@@ -617,6 +617,21 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
 // questions decide which sections their setup sheet asks and pre-fill the
 // obvious; prices and tee times are theirs to type. Autosaves like the old card.
 
+// CG-2: the optional details, in the order a course usually says them.
+const DETAIL_FIELDS: [string, string, boolean?][] = [
+  ['green_fees', 'weekday'], ['green_fees', 'weekend'], ['green_fees', 'twilight'],
+  ['tee_times', 'first'], ['tee_times', 'last'], ['tee_times', 'interval'],
+  ['season_hours', 'daysOpen', true],
+  ['season_hours', 'seasonOpen'], ['season_hours', 'seasonClose'], ['carts_caddies', 'cartFee'],
+  ['cancellation', 'hours'], ['cancellation', 'lateFee'], ['course_info', 'website'],
+];
+const DETAIL_LABEL: Record<string, string> = {
+  'green_fees.weekday': 'Weekday green fee', 'green_fees.weekend': 'Weekend green fee', 'green_fees.twilight': 'Twilight',
+  'tee_times.first': 'First tee time', 'tee_times.last': 'Last tee time', 'tee_times.interval': 'Interval',
+  'season_hours.daysOpen': 'Days open', 'carts_caddies.cartFee': 'Cart fee / player',
+  'cancellation.hours': 'Cancellation window', 'cancellation.lateFee': 'Late-cancel fee',
+};
+
 function CallGuide({ inquiry, answers, setItem, notes, setNotes, draftState, onRetryDraft, disabled, contactFirst, sheetAlreadySent, busy, onSend, onSaveOnly }: {
   inquiry: InquiryForCards; answers: CallAnswers; setItem: (key: string, item: ItemAnswers) => void;
   notes: string; setNotes: (v: string) => void;
@@ -693,6 +708,24 @@ function CallGuide({ inquiry, answers, setItem, notes, setNotes, draftState, onR
             <option value="">—</option>
             {LIVE_BY_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select></label>
+      </div>
+
+      {/* CG-2 (Cam, after the first live send): anything they mention is noted
+          here and arrives pre-filled on their sheet — they confirm or fix it. */}
+      <div className="border border-line rounded-md px-3 py-2.5 mb-3">
+        <span className={lbl}>Details they mentioned <span className="normal-case tracking-normal text-ink-faint">— pre-fills their sheet; leave blank what didn&apos;t come up</span></span>
+        <div className="grid sm:grid-cols-3 gap-x-3 gap-y-2.5 mt-1">
+          {DETAIL_FIELDS.filter(([item]) => item !== 'cancellation' || get('shape', 'cancelFee') === true).map(([item, key, wide]) => {
+            const spec = (CALL_FIELDS[item] ?? []).find(f => f.key === key);
+            if (!spec) return null;
+            return (
+              <div key={item + key} className={wide ? 'sm:col-span-3' : undefined}>
+                <span className={lbl}>{DETAIL_LABEL[item + '.' + key] ?? spec.label}</span>
+                <FieldInput spec={spec} value={get(item, key)} onChange={v => put(item, key, v)} disabled={disabled} />
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       <div className="mb-3">
