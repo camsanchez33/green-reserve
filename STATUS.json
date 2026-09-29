@@ -1,19 +1,23 @@
 {
-  "generatedAt": "2026-09-29T01:52:20.094Z",
+  "generatedAt": "2026-09-29T02:28:25.492Z",
   "repo": {
-    "head": "0a16333",
+    "head": "371ffff",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 3,
-    "dirty": [
-      "M .claude/commands/gr-debug.md",
-      " M CLAUDE.md",
-      " M RUN_QUEUE.md"
-    ],
+    "dirtyCount": 0,
+    "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-29T01:50:36+00:00",
-    "unrecorded": []
+    "queueLastCommit": "2026-09-29T01:52:20+00:00",
+    "unrecorded": [
+      {
+        "h": "371ffff",
+        "date": "2026-09-29T02:28:25+00:00",
+        "subject": "All contact, alert and reply-to addresses point at the inbox that is read",
+        "ids": [],
+        "matches": []
+      }
+    ]
   },
   "counts": {
     "runDone": 194,
@@ -400,8 +404,8 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 3,
-      "lastTouched": "2026-09-16",
-      "ageDays": 12
+      "lastTouched": "2026-09-29",
+      "ageDays": 0
     },
     {
       "file": "UI_REVISE_SPEC.md",
@@ -563,6 +567,26 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "371ffff",
+      "date": "2026-09-29",
+      "subject": "All contact, alert and reply-to addresses point at the inbox that is read"
+    },
+    {
+      "h": "b2fdff8",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "5d3fe1d",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "d1ccc46",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "0a16333",
       "date": "2026-09-29",
       "subject": "queue/spec update"
@@ -600,26 +624,6 @@
     {
       "h": "22a3d7d",
       "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "141582d",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "a5ed9d7",
-      "date": "2026-09-29",
-      "subject": "CAL-1: Cal.com as the call scheduler (Outlook-backed), in place of the Google grid"
-    },
-    {
-      "h": "dd7056a",
-      "date": "2026-09-29",
-      "subject": "Fix: perf audit crashed with '__name is not defined' on every page"
-    },
-    {
-      "h": "1ceeff5",
-      "date": "2026-09-28",
       "subject": "queue/spec update"
     }
   ]

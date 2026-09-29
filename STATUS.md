@@ -4,20 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-29 01:52 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `0a16333` · working tree **3 dirty file(s)**
+Generated 2026-09-29 02:28 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `371ffff` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
+`RUN_QUEUE.md` was last committed **2026-09-29**. 1 commit(s) since then are not mentioned anywhere in it:
 
-### Uncommitted working tree (3 file(s))
+| commit | date | subject |
+|---|---|---|
+| `371ffff` | 2026-09-29 | All contact, alert and reply-to addresses point at the inbox that is read |
 
-- `M .claude/commands/gr-debug.md`
-- `M CLAUDE.md`
-- `M RUN_QUEUE.md`
-
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
+**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
 ## In flight
 
@@ -135,7 +132,7 @@ This is the distinction a raw checkbox count gets wrong.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `ARCHITECTURE.md` | 4 | 2026-09-16 | 12d |
-| `CLAUDE.md` | 3 | 2026-09-16 | 12d |
+| `CLAUDE.md` | 3 | 2026-09-29 | 0d |
 | `UI_REVISE_SPEC.md` | 1 | 2026-09-16 | 12d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-15 | 13d |
 | `ADMIN_V4_SPEC.md` | 1 | 2026-09-15 | 13d |
@@ -165,6 +162,10 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `371ffff` 2026-09-29 — All contact, alert and reply-to addresses point at the inbox that is read
+- `b2fdff8` 2026-09-29 — queue/spec update
+- `5d3fe1d` 2026-09-29 — queue/spec update
+- `d1ccc46` 2026-09-29 — queue/spec update
 - `0a16333` 2026-09-29 — queue/spec update
 - `209e652` 2026-09-29 — Fix: rejected emails reported success (Resend returns errors, never throws)
 - `a130919` 2026-09-29 — queue/spec update
@@ -173,10 +174,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `34ea4d9` 2026-09-29 — queue/spec update
 - `9d6dc6a` 2026-09-29 — SD-8e: booking status is a StatusDot, and 'card on file' reads differently from 'paid'
 - `22a3d7d` 2026-09-29 — queue/spec update
-- `141582d` 2026-09-29 — queue/spec update
-- `a5ed9d7` 2026-09-29 — CAL-1: Cal.com as the call scheduler (Outlook-backed), in place of the Google grid
-- `dd7056a` 2026-09-29 — Fix: perf audit crashed with '__name is not defined' on every page
-- `1ceeff5` 2026-09-28 — queue/spec update
 
 ---
 
