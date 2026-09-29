@@ -7,6 +7,7 @@ import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
 import { sendBookingConfirmation } from '@/lib/email';
 import { todayIn } from '@/lib/course-time';
 import { randomUUID } from 'crypto';
+import { chargeAccessFeeSeparately, refundSeparateAccessFee, type FeeChargeResult } from '@/lib/access-fee';
 
 // Used by both the Payments tab (all bookings, transaction ledger) and the
 // Cancellations tab (status=cancelled) — one endpoint, filtered by query param.
@@ -71,14 +72,22 @@ export async function PATCH(req: NextRequest) {
   //   paid_offline the group paid at the counter (walk-ins, phone bookings, a
   //                declined card settled in cash) — checked in, no Stripe
   //                charge, and never counted as platform-collected.
+  // FB-3 (Cam 2026-09-29): a no-show or a counter-paid round never reaches the
+  // check-in charge that carries GreenReserve's $1.50/player, so the fee is
+  // charged on its own here (lib/access-fee.ts). The staff action never waits
+  // on it or fails because of it — the tee sheet is told what happened.
+  const actorName = session.email;
   if (action === 'no_show') {
     if (booking.status !== 'confirmed') return NextResponse.json({ error: 'Only a confirmed booking can be marked a no-show.' }, { status: 409 });
     await prisma.booking.update({ where: { id }, data: { noShowAt: new Date() } });
-    return NextResponse.json({ success: true, noShowAt: new Date().toISOString() });
+    const fee = await chargeAccessFeeSeparately(id, { why: 'no_show', actor: 'operator', actorName });
+    return NextResponse.json({ success: true, noShowAt: new Date().toISOString(), fee: feeNote(fee) });
   }
   if (action === 'still_coming') {
     await prisma.booking.update({ where: { id }, data: { noShowAt: null } });
-    return NextResponse.json({ success: true });
+    // The no-show fee was taken in error — they are here after all.
+    const r = await refundSeparateAccessFee(id, 'no-show marked in error (still coming)', 'operator', actorName);
+    return NextResponse.json({ success: true, ...(r.ok ? {} : { fee: `The booking fee could not be refunded (${r.error}) — GreenReserve will follow up.` }) });
   }
   if (action === 'paid_offline') {
     if (booking.status === 'cancelled') return NextResponse.json({ error: 'This booking was cancelled.' }, { status: 409 });
@@ -87,7 +96,8 @@ export async function PATCH(req: NextRequest) {
       where: { id },
       data: { status: 'completed', checkedInAt: new Date(), paidAt: new Date(), paidOffline: true, paymentStatus: 'paid_offline', noShowAt: null, checkInFailReason: '', ...(cip !== undefined ? { checkedInPlayers: cip } : {}) },
     });
-    return NextResponse.json({ success: true });
+    const fee = await chargeAccessFeeSeparately(id, { why: 'paid_offline', players: cip, actor: 'operator', actorName });
+    return NextResponse.json({ success: true, fee: feeNote(fee) });
   }
 
   const result = action === 'cancel'
@@ -176,3 +186,10 @@ export async function POST(req: NextRequest) {
   }
   return NextResponse.json({ success: true, bookingId: claimed.id, emailSent });
 }
+
+/** What the tee sheet shows after a separate fee charge (null = nothing to say). */
+function feeNote(r: FeeChargeResult): string | null {
+  if (!r.ok) return `GreenReserve's booking fee could not be charged to the golfer's card (${r.error}). Nothing for you to do — we'll follow up.`;
+  return null;
+}
+

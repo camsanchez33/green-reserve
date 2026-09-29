@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 353,
+    "files": 354,
     "routes": 195,
-    "libs": 91,
+    "libs": 92,
     "models": 33,
     "orphans": 8,
     "ungatedRoutes": 3
@@ -16,6 +16,7 @@
     "inquiry-signin-challenge": "src/lib/inquiry-signin.ts",
     "inquiry-statuses": "src/lib/inquiry-status.ts",
     "money-movement": "src/lib/stripe.ts",
+    "separate-booking-fee": "src/lib/access-fee.ts",
     "still-need-from-them": "src/lib/inquiry-needs.ts",
     "whose-move-is-it": "src/lib/inquiry-status.ts"
   },
@@ -912,7 +913,7 @@
     },
     {
       "path": "src/app/admin/revenue/page.tsx",
-      "lines": 902,
+      "lines": 910,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2013,7 +2014,7 @@
     },
     {
       "path": "src/app/api/admin/revenue/route.ts",
-      "lines": 299,
+      "lines": 310,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2752,7 +2753,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 368,
+      "lines": 378,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3092,7 +3093,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 176,
+      "lines": 179,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4034,7 +4035,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 179,
+      "lines": 196,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4061,6 +4062,7 @@
       "auth": "operator",
       "guard": "file",
       "imports": [
+        "@/lib/access-fee",
         "@/lib/cancel-booking",
         "@/lib/checkin-booking",
         "@/lib/claim-tee-time",
@@ -5192,7 +5194,7 @@
     },
     {
       "path": "src/app/book/page.tsx",
-      "lines": 644,
+      "lines": 553,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5773,7 +5775,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1198,
+      "lines": 1205,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6417,7 +6419,7 @@
     },
     {
       "path": "src/app/terms/page.tsx",
-      "lines": 189,
+      "lines": 193,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7691,6 +7693,43 @@
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/access-fee.ts",
+      "lines": 101,
+      "purpose": "FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B).",
+      "brain": [
+        "separate-booking-fee"
+      ],
+      "exports": [
+        {
+          "name": "chargeAccessFeeSeparately",
+          "kind": "fn"
+        },
+        {
+          "name": "FeeChargeResult",
+          "kind": "type"
+        },
+        {
+          "name": "refundSeparateAccessFee",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma",
+        "./refund-booking",
+        "./stripe",
+        "stripe"
+      ],
+      "usedBy": [
+        "src/app/api/operator/bookings/route.ts",
+        "src/lib/checkin-booking.ts"
       ]
     },
     {
@@ -9130,7 +9169,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 364,
+      "lines": 372,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9153,6 +9192,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./access-fee",
         "./email",
         "./prisma",
         "./stripe"
@@ -11503,6 +11543,7 @@
         "src/app/courses/[slug]/page.tsx",
         "src/app/preview/[courseId]/page.tsx",
         "src/app/sitemap.ts",
+        "src/lib/access-fee.ts",
         "src/lib/admin-session.ts",
         "src/lib/agreement-gate.ts",
         "src/lib/agreement-required.ts",
@@ -11626,7 +11667,7 @@
     },
     {
       "path": "src/lib/refund-booking.ts",
-      "lines": 129,
+      "lines": 131,
       "purpose": "MP-6b.",
       "brain": [],
       "exports": [
@@ -11664,7 +11705,8 @@
       ],
       "usedBy": [
         "src/app/api/admin/refund/route.ts",
-        "src/app/api/stripe/webhook/route.ts"
+        "src/app/api/stripe/webhook/route.ts",
+        "src/lib/access-fee.ts"
       ]
     },
     {
@@ -12083,6 +12125,7 @@
         "src/app/api/operator/stripe/connect/route.ts",
         "src/app/api/operator/stripe/dashboard-link/route.ts",
         "src/app/api/stripe/webhook/route.ts",
+        "src/lib/access-fee.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/platform-stripe.ts",
@@ -12996,6 +13039,7 @@
         "src/app/api/golfer/auth/otp/verify/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/stripe/webhook/route.ts",
+        "src/lib/access-fee.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/lifecycle.ts",
@@ -13029,6 +13073,7 @@
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
+        "src/lib/access-fee.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/course-closure.ts",
@@ -14903,8 +14948,10 @@
         "src/lib/refund-booking.ts"
       ],
       "readers": [
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/transactions/export/route.ts",
         "src/app/api/stripe/webhook/route.ts",
+        "src/lib/access-fee.ts",
         "src/lib/money-problems.ts"
       ]
     },

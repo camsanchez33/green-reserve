@@ -125,8 +125,11 @@ export async function GET(req: NextRequest) {
   }
 
   // ─── 3: No-fee check-in reminder (~3 hours before tee time) ─────────────────
+  // FB-3: no-fee courses collect a card now too, so their bookings are
+  // 'card_on_file' with a $0 hold fee — section 2 skips those, and they need
+  // this reminder exactly as the old no-card bookings did.
   const noCardBookings = await prisma.booking.findMany({
-    where: { status: 'confirmed', paymentStatus: 'no_payment_method' },
+    where: { status: 'confirmed', OR: [{ paymentStatus: 'no_payment_method' }, { paymentStatus: 'card_on_file', cancellationFeeTotal: { lte: 0 } }] },
     include: {
       teeTime: { select: { date: true, time: true } },
       course: { select: { name: true, timezone: true, checkInWindowHours: true } },

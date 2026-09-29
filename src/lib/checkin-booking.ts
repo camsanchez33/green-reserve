@@ -1,6 +1,7 @@
 import { prisma } from './prisma';
 import { stripe, chargeOnConnectedAccount, refundOnConnectedAccount } from './stripe';
 import { sendCheckInReceiptEmail } from './email';
+import { refundSeparateAccessFee } from './access-fee';
 
 /**
  * Charging a round, and checking a golfer in, are two different things.
@@ -295,6 +296,13 @@ async function chargeBooking(
         feeRefundError = err instanceof Error ? err.message : String(err);
         console.error(JSON.stringify({ ev: `${ev}.fee_refund.fail`, bookingId, error: feeRefundError }));
       }
+    }
+
+    // FB-3: if GreenReserve's fee was already charged on its own (a no-show
+    // that turned up after all), this round charge carries it again — give the
+    // separate one back. Never fails the check-in; the ledger records a miss.
+    if (booking.stripePaymentIntentId) {
+      await refundSeparateAccessFee(bookingId, 'golfer checked in and paid by card', 'system');
     }
   }
 

@@ -19,7 +19,9 @@ import { sendRefundEmail } from './email';
 export type PaymentEventKind =
   | 'refund' | 'refund_failed'
   | 'dispute_opened' | 'dispute_closed'
-  | 'charge_failed';
+  | 'charge_failed'
+  // FB-3: GreenReserve's fee charged on its own (paid offline / no-show).
+  | 'fee_charged' | 'fee_refunded';
 
 export async function recordPaymentEvent(e: {
   bookingId: string; kind: PaymentEventKind; amountCents: number;

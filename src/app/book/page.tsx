@@ -281,9 +281,7 @@ function BookPageInner() {
 
         <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Confirm Your Tee Time</h1>
         <p className="text-ink-soft text-sm mb-8">
-          {hasNoFeePolicy
-            ? <>Lock in your tee time at {course.name} — no card required.</>
-            : <>Save your card to lock in your tee time at {course.name} — you won&apos;t be charged today.</>}
+          Save your card to lock in your tee time at {course.name} — you won&apos;t be charged today.
         </p>
 
         <div className="grid gap-6">
@@ -368,17 +366,8 @@ function BookPageInner() {
             </div>
           </div>
 
-          {hasNoFeePolicy ? (
-            <SimpleConfirmForm
-              teeTimeId={teeTime.id}
-              players={players}
-              golfer={golfer}
-              cartSelected={cartSelected}
-              rangeBallsSize={rangeBallsTotal > 0 ? rangeBallsSize : ''}
-              accent={accent}
-              onConfirmed={setConfirmedData}
-            />
-          ) : (
+          {/* FB-3 (Cam 2026-09-29): every course collects a card — a no-show or a
+              round paid at the counter is charged GreenReserve's booking fee. */}
             <Elements stripe={getStripePromise()}>
               <CheckoutForm
                 teeTimeId={teeTime.id}
@@ -390,21 +379,21 @@ function BookPageInner() {
                 onConfirmed={setConfirmedData}
               />
             </Elements>
-          )}
+
 
           {/* The question golfers actually ask, answered with the policy facts
               that were already on this page. */}
           <div className="bg-white rounded-lg p-5 border border-line">
             <p className="text-ink text-sm font-medium mb-1.5">
-              {hasNoFeePolicy ? 'How this works' : 'Why a card, if nothing is charged?'}
+              Why a card, if nothing is charged?
             </p>
             {hasNoFeePolicy ? (
               <p className="text-ink-soft text-xs leading-relaxed">
-                No card required. Book your spot now and pay at the course when you check in — or use the check-in link in your confirmation email to pay online before your round.
+                We save your card to hold your tee time — you&apos;re not charged now. You pay for your round when you check in. If you don&apos;t show up, or you pay at the counter instead, only the ${(ACCESS_FEE_PER_PLAYER * players).toFixed(2)} booking fee (${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player) is charged to this card.
               </p>
             ) : (
               <p className="text-ink-soft text-xs leading-relaxed">
-                We save your card to hold your tee time — you&apos;re not charged now. Cancel at least {hoursLabel(course.cancellation_hours)} ahead and it&apos;s free; cancelling later (or no-showing) triggers a ${course.late_cancellation_fee.toFixed(2)} late-cancellation fee. Otherwise, you pay for your round when you check in at the course.
+                We save your card to hold your tee time — you&apos;re not charged now. Cancel at least {hoursLabel(course.cancellation_hours)} ahead and it&apos;s free; cancelling later (or no-showing) triggers a ${course.late_cancellation_fee.toFixed(2)} late-cancellation fee. Otherwise, you pay for your round when you check in at the course. If you don&apos;t show up, or you pay at the counter instead, the ${(ACCESS_FEE_PER_PLAYER * players).toFixed(2)} booking fee is also charged to this card.
               </p>
             )}
           </div>
@@ -553,86 +542,6 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
   );
 }
 
-function SimpleConfirmForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize, accent, onConfirmed }: {
-  teeTimeId: string; players: number; golfer: GolferProfile | null;
-  cartSelected: boolean; rangeBallsSize: string;
-  accent: string;
-  onConfirmed: (data: ConfirmedData) => void;
-}) {
-  const [name, setName]   = useState(golfer ? `${golfer.firstName} ${golfer.lastName}`.trim() : '');
-  const [email, setEmail] = useState(golfer?.email || '');
-  const [phone, setPhone] = useState(golfer?.phone || '');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (golfer) {
-      setName(`${golfer.firstName} ${golfer.lastName}`.trim());
-      setEmail(golfer.email);
-      setPhone(golfer.phone || '');
-    }
-  }, [golfer]);
-
-  async function handleSubmit() {
-    setError('');
-    if (!name.trim() || !email.trim()) { setError('Please enter your name and email.'); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Please enter a valid email address.'); return; }
-    setLoading(true);
-    try {
-      const res = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teeTimeId, players, golferName: name, golferEmail: email, golferPhone: phone, cartSelected, rangeBallsSize, termsAccepted: true }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Something went wrong. Please try again.'); setLoading(false); return; }
-      onConfirmed({
-        courseName: data.courseName, date: data.date, time: data.time, players: data.players,
-        greenFeeTotal: data.greenFeeTotal, cartFeeTotal: data.cartFeeTotal, rangeBallsTotal: data.rangeBallsTotal,
-        accessFeeTotal: data.accessFeeTotal, totalAmount: data.totalAmount,
-        cancellationFeeTotal: data.cancellationFeeTotal, cancellationHours: data.cancellationHours ?? 24,
-        noCard: true,
-        golferEmail: email,
-      });
-    } catch {
-      setError('Something went wrong. Please try again.');
-      setLoading(false);
-    }
-  }
-
-  return (
-    <div className="bg-white rounded-lg border border-line p-6 space-y-5">
-      <StepHeading n={1} title="Your details" note="Where your confirmation goes — no account is created." />
-      <div>
-        <label className={lCls}>Full Name</label>
-        <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="John Smith" className={iCls} />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className={lCls}>Email</label>
-          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="john@example.com" className={iCls} />
-        </div>
-        <div>
-          <label className={lCls}>Phone (optional)</label>
-          <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="(555) 555-5555" className={iCls} />
-        </div>
-      </div>
-      <p className="text-xs text-ink-muted">No card needed — you&apos;ll pay at the course or via the check-in link in your confirmation email.</p>
-      {error && <p className="text-bad text-sm">{error}</p>}
-      <p className="text-[11px] text-ink-muted text-center leading-snug">
-        By confirming, you agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink">Terms of Service</a> and this course&apos;s cancellation policy.
-      </p>
-      <button
-        onClick={handleSubmit}
-        disabled={loading}
-        className="w-full py-3.5 rounded-md font-medium text-white text-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        style={{ backgroundColor: accent }}
-      >
-        {loading ? <><Loader2 size={16} className="animate-spin" /> Reserving spot…</> : 'Reserve Tee Time'}
-      </button>
-    </div>
-  );
-}
 
 export default function BookPage() {
   return (

@@ -76,6 +76,7 @@ interface RevenueData {
     // added to the headline.
     feesCollected: number; collectedRounds: number; feesCollectedDelta: Delta;
     bookedPending: number; bookedPendingRounds: number;
+    separateFees?: number; separateFeeCharges?: number;
     stripeProcessing?: number; stripeUnavailable?: boolean;
     expenses?: number; expensesDelta?: Delta;
     net?: number; netDeltaAbs?: number;
@@ -552,6 +553,13 @@ export default function RevenuePage() {
                     Booked this period, awaiting check-in: <span className="font-medium text-ink tabular-nums">{fmtMoney(pnl.bookedPending)}</span>
                     <span className="text-ink-muted"> across {fmtCount(pnl.bookedPendingRounds)} round{pnl.bookedPendingRounds === 1 ? '' : 's'} — collected only when the golfer checks in.</span>
                   </div>
+                  {/* FB-3: fees charged on their own — no-shows and rounds paid at the counter. */}
+                  {(pnl.separateFeeCharges ?? 0) > 0 && (
+                    <div className="mt-1 text-xs text-ink-soft">
+                      Plus booking fees charged separately (no-shows, paid at the counter): <span className="font-medium text-ink tabular-nums">{fmtMoney(pnl.separateFees ?? 0)}</span>
+                      <span className="text-ink-muted"> from {fmtCount(pnl.separateFeeCharges ?? 0)} charge{pnl.separateFeeCharges === 1 ? '' : 's'}, net of refunds — counted in net below.</span>
+                    </div>
+                  )}
                 </div>
                 {isOwner && (
                   <button onClick={openDrawer}

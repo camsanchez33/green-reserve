@@ -205,7 +205,15 @@ export async function POST(req: NextRequest) {
   // the card is attached to the customer but no booking exists — harmless.
   let savedCustomerId = '';
   let savedPaymentMethodId = '';
-  if (teeTimeFull.course.stripeAccountActive && paymentMethodId && customerId) {
+  // FB-3 (Cam 2026-09-29): every online booking saves a card — the booking fee
+  // is charged to it on a no-show or a round paid at the counter. Enforced here,
+  // not only on the page (a cached page from before the change sends noCard).
+  // The card lives on the PLATFORM Customer, so it is kept whether or not the
+  // course's own Stripe account is active yet (that used to drop it silently).
+  if (!paymentMethodId || !customerId) {
+    return NextResponse.json({ error: 'Please add a card to hold your tee time — you won’t be charged today. If this page looks out of date, refresh it.' }, { status: 400 });
+  }
+  if (paymentMethodId && customerId) {
     try {
       await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
       await stripe.customers.update(customerId, { invoice_settings: { default_payment_method: paymentMethodId } });
@@ -318,7 +326,9 @@ export async function POST(req: NextRequest) {
           checkInToken: claimed.checkInToken,
         }).catch(console.error);
       }
-    } else if (!savedPaymentMethodId && minsUntilCutoff < 165) {
+    } else if (cancellationFeeTotal <= 0 && minsUntilCutoff < 165) {
+      // FB-3: keyed on the course having no hold fee, not on a missing card —
+      // every booking saves a card now.
       await sendCheckInAvailableEmail({
         golferName,
         golferEmail,
