@@ -13,6 +13,8 @@ import { checkInSignal, type CheckinCallLike } from '@/lib/course-checkin';
 import { nextCall, overdueCall, fmtCallClock } from '@/lib/inquiry-call';
 import type { SetupProgress } from '@/lib/course-setup';
 import { formatDate as fmtDate, formatEasternDate as fmtShort, formatEasternDay as fmtDay } from '@/lib/format';
+import { Card } from '@/components/ui/Card';
+import { Eyebrow } from '@/components/ui/Eyebrow';
 
 // COURSES_SHEET_SPEC CS-2 — /admin/courses as a sheet. One table, two
 // sections ("Getting live" above "Live"), eight fixed columns, the same
@@ -358,7 +360,7 @@ function CoursesContent() {
     const nonEmpty = groups.filter(g => g.rows.length > 0);
     if (nonEmpty.length === 0) return null;
     return (
-      <div className="bg-white border border-line rounded-lg overflow-x-auto">
+      <Card className="overflow-x-auto">
         <table className="w-full table-fixed min-w-[760px]">
           <thead>
             <tr className="bg-paper">
@@ -379,7 +381,7 @@ function CoursesContent() {
                 {g.title && (
                   <tr className="border-t border-line">
                     <td colSpan={8} className="bg-paper px-3 py-1.5">
-                      <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">{g.title}</span>
+                      <Eyebrow as="span">{g.title}</Eyebrow>
                       <span className="text-[11px] text-ink-faint ml-2">{g.rows.length}{g.hint ? ' · ' + g.hint : ''}</span>
                     </td>
                   </tr>
@@ -396,7 +398,7 @@ function CoursesContent() {
             );
           })}
         </table>
-      </div>
+      </Card>
     );
   };
 
