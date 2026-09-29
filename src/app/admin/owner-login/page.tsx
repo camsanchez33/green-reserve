@@ -28,8 +28,8 @@ export default function OwnerLoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Login failed'); return; }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(data.error || `Sign-in failed (${res.status}) — try again.`); return; }
       if (data.mustChangePassword && data.setPasswordToken) {
         router.push(`/admin/set-password?token=${encodeURIComponent(data.setPasswordToken)}`);
         return;
@@ -57,8 +57,8 @@ export default function OwnerLoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ step: 'verify', email, code }),
       });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Verification failed'); return; }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(data.error || `Verification failed (${res.status}) — try again.`); return; }
       window.location.assign('/admin'); // MP-11a: hard nav — the layout must re-read the new cookie
     } catch {
       setError('Network error');

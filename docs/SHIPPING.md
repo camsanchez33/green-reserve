@@ -79,7 +79,7 @@ GitHub secret `SHADOW_DATABASE_URL` must be set in the repo for the CI check to 
 
 Enforced by `.github/workflows/perf-audit.yml` on every PR. Run locally:
 ```bash
-AUDIT_BASE_URL=https://greenreserve.app npx tsx scripts/perf-audit.ts
+AUDIT_BASE_URL=https://greenreserve.app node --experimental-strip-types scripts/perf-audit.ts   # Node 22+; NOT tsx (crashes: __name is not defined)
 ```
 
 | Metric | Budget |

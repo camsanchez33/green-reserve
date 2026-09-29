@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
       courseSlug: course?.slug,
       tierName: tier.name,
     }).catch(err => console.error('Member linked email error:', err)));
-    maybeSendPayLink(membership.id).catch(err => console.error('Pay link email error:', err));
+    after(maybeSendPayLink(membership.id).catch(err => console.error('Pay link email error:', err)));
 
     return NextResponse.json({ ...membership, linked: true }, { status: 201 });
   } else {
@@ -169,7 +169,7 @@ export async function POST(req: NextRequest) {
       tierName: tier.name,
       setupLink: `${process.env.NEXT_PUBLIC_URL}/courses/${course?.slug}/account/accept-invite?token=${token}`,
     }).catch(err => console.error('Member invite email error:', err)));
-    maybeSendPayLink(membership.id).catch(err => console.error('Pay link email error:', err));
+    after(maybeSendPayLink(membership.id).catch(err => console.error('Pay link email error:', err)));
 
     return NextResponse.json({ ...membership, linked: false }, { status: 201 });
   }

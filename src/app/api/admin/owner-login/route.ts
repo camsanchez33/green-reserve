@@ -195,7 +195,14 @@ export async function POST(req: NextRequest) {
     data: { twoFactorCode: hashedCode, twoFactorCodeExpiry: expiry, twoFactorAttempts: 0 },
   });
 
-  await sendAdminTwoFactorCode({ email: admin.email, name: admin.name, code });
+  // Review fix: this send now throws on a Resend rejection (getResend), and an
+  // uncaught throw reached the page as a non-JSON 500 → "Network error".
+  try {
+    await sendAdminTwoFactorCode({ email: admin.email, name: admin.name, code });
+  } catch (err) {
+    console.error('Admin 2FA code email failed:', err);
+    return NextResponse.json({ error: 'Your password was right, but the sign-in code email did not send. Wait a minute and sign in again.' }, { status: 502 });
+  }
 
   return NextResponse.json({ requires2FA: true, method: 'email' });
 }
