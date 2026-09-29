@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 338,
-    "routes": 194,
-    "libs": 89,
+    "files": 340,
+    "routes": 195,
+    "libs": 90,
     "models": 33,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -2384,8 +2384,34 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/calcom/webhook/route.ts",
+      "lines": 138,
+      "purpose": "CAL-1 — Cal.com booking webhook.",
+      "brain": [],
+      "exports": [
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/calcom/webhook",
+      "kind": "api",
+      "methods": [
+        "POST"
+      ],
+      "auth": "public",
+      "guard": "public",
+      "imports": [
+        "@/lib/calcom",
+        "@/lib/inquiry-call",
+        "@/lib/prisma",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/call/[token]/route.ts",
-      "lines": 256,
+      "lines": 271,
       "purpose": "CALL_SCHEDULING_SPEC SC-2 §2 — the public \"pick a call time\" endpoint.",
       "brain": [],
       "exports": [
@@ -2407,6 +2433,7 @@
       "auth": "public",
       "guard": "public",
       "imports": [
+        "@/lib/calcom",
         "@/lib/call-availability",
         "@/lib/call-invite",
         "@/lib/email",
@@ -4768,7 +4795,7 @@
     },
     {
       "path": "src/app/call/[token]/page.tsx",
-      "lines": 280,
+      "lines": 321,
       "purpose": "CALL_SCHEDULING_SPEC SC-2 §2 — /call/[token]:",
       "brain": [],
       "exports": [
@@ -8111,6 +8138,50 @@
       ]
     },
     {
+      "path": "src/lib/calcom.ts",
+      "lines": 70,
+      "purpose": "CAL-1 — Cal.com as the call scheduler, in place of the Google Calendar grid.",
+      "brain": [],
+      "exports": [
+        {
+          "name": "calcomBookingUrl",
+          "kind": "fn"
+        },
+        {
+          "name": "calcomCreatedBy",
+          "kind": "fn"
+        },
+        {
+          "name": "calcomEmbedUrl",
+          "kind": "fn"
+        },
+        {
+          "name": "calcomManageLinks",
+          "kind": "fn"
+        },
+        {
+          "name": "calcomUidOf",
+          "kind": "fn"
+        },
+        {
+          "name": "verifyCalcomSignature",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "node:crypto"
+      ],
+      "usedBy": [
+        "src/app/api/calcom/webhook/route.ts",
+        "src/app/api/call/[token]/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/call-answers.ts",
       "lines": 266,
       "purpose": "INQUIRY_CALL_SPEC IC-5 — structured discovery-call answers.",
@@ -10021,6 +10092,7 @@
         "src/app/admin/inquiries/page.tsx",
         "src/app/api/admin/course-calls/route.ts",
         "src/app/api/admin/inquiries/route.ts",
+        "src/app/api/calcom/webhook/route.ts",
         "src/app/api/call/[token]/route.ts",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
@@ -10785,6 +10857,7 @@
         "src/app/api/bookings/cancel/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/bookings/setup-intent/route.ts",
+        "src/app/api/calcom/webhook/route.ts",
         "src/app/api/call/[token]/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
         "src/app/api/courses/[slug]/account/route.ts",
@@ -12460,12 +12533,14 @@
       "writers": [
         "src/app/api/admin/course-calls/route.ts",
         "src/app/api/admin/inquiries/route.ts",
+        "src/app/api/calcom/webhook/route.ts",
         "src/app/api/call/[token]/route.ts"
       ],
       "readers": [
         "src/app/api/admin/course-calls/route.ts",
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/inquiries/route.ts",
+        "src/app/api/calcom/webhook/route.ts",
         "src/app/api/call/[token]/route.ts",
         "src/app/api/inquiries/details/route.ts",
         "src/lib/call-invite.ts"
@@ -13226,6 +13301,7 @@
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/search/route.ts",
         "src/app/api/admin/stats/route.ts",
+        "src/app/api/calcom/webhook/route.ts",
         "src/app/api/call/[token]/route.ts",
         "src/app/api/inquiries/details/route.ts",
         "src/app/api/inquiries/route.ts",
@@ -13906,6 +13982,7 @@
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
+        "src/app/api/calcom/webhook/route.ts",
         "src/app/api/call/[token]/route.ts",
         "src/app/api/inquiries/details/route.ts",
         "src/app/api/inquiries/route.ts",

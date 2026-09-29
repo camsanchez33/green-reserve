@@ -14,6 +14,7 @@ import { AGENDA, defaultAgenda, parseJson } from '@/lib/inquiry-call';
 import { inviteAgendaLines, inviteUrl } from '@/lib/call-invite';
 import { sendCallBookedEmail, sendCallBookedAdminEmail, sendCalendarUnavailableAlert } from '@/lib/email';
 import { ALIVE_STATUSES } from '@/lib/inquiry-status';
+import { calcomBookingUrl, calcomEmbedUrl, calcomManageLinks, calcomUidOf } from '@/lib/calcom';
 
 const SELECT = {
   id: true, status: true, courseName: true, contactName: true, firstName: true, email: true, phone: true,
@@ -33,7 +34,7 @@ async function scheduledCall(inquiryId: string) {
   return prisma.call.findFirst({
     where: { inquiryId, kind: 'discovery', outcome: 'scheduled' },
     orderBy: { scheduledAt: 'desc' },
-    select: { id: true, scheduledAt: true, durationMin: true, direction: true, phone: true, gcalEventId: true, bookedByCourse: true },
+    select: { id: true, scheduledAt: true, durationMin: true, direction: true, phone: true, gcalEventId: true, bookedByCourse: true, createdBy: true },
   });
 }
 
@@ -92,10 +93,20 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
   const state = inviteState(inq, booked);
   if (state !== 'ok') return NextResponse.json({ error: state }, { status: 410 });
   const now = new Date();
-  const g = booked ? { unavailable: false as const, days: [] } : await grid(inq, now);
+  // CAL-1: with CALCOM_BOOKING_URL set, Cal.com owns availability — the page
+  // embeds its booker and the Google grid is never consulted.
+  const calBase = calcomBookingUrl();
+  const contactFirst = (inq.firstName || inq.contactName.split(' ')[0] || '').trim();
+  const calcomUrl = calBase && !booked
+    ? calcomEmbedUrl(calBase, { token, name: inq.contactName || contactFirst, email: inq.email, phone: inq.phone })
+    : null;
+  const bookedUid = booked ? calcomUidOf(booked.createdBy) : null;
+  const g = booked || calBase ? { unavailable: false as const, days: [] } : await grid(inq, now);
   return NextResponse.json({
+    calcomUrl,
+    calcomManage: bookedUid ? calcomManageLinks(bookedUid) : null,
     courseName: inq.courseName,
-    contactFirst: (inq.firstName || inq.contactName.split(' ')[0] || '').trim(),
+    contactFirst,
     phone: booked?.phone || inq.phone,
     durationMin: SLOT_MINUTES,
     agendaLines: inviteAgendaLines(),
@@ -139,6 +150,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
   const booked = await scheduledCall(inq.id);
   const state = inviteState(inq, booked);
   if (state !== 'ok') return NextResponse.json({ error: state }, { status: 410 });
+  // CAL-1: a Cal.com booking is changed on Cal.com, or the two drift apart.
+  if (calcomBookingUrl() || calcomUidOf(booked?.createdBy)) {
+    return NextResponse.json({ error: 'Book, move or cancel this call with the calendar on this page.' }, { status: 409 });
+  }
 
   const action = String(body.action ?? '');
   const now = new Date();
