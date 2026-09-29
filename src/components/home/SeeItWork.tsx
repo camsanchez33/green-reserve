@@ -18,6 +18,9 @@ const SWATCHES = [
   { c: '#5B2A86', label: 'Plum' },
 ];
 
+// No `s.fade` in here: this mounts late (MountNearView), after HomeMotion has
+// collected the page's .fade elements, so a .fade here never got `.in` and the
+// whole demo stayed at opacity 0 (Cam 2026-09-29: "this isn't loading").
 export default function SeeItWork() {
   const [tab, setTab] = useState<'golfer' | 'course'>('golfer');
   const [accent, setAccent] = useState(SWATCHES[0].c);
@@ -25,16 +28,16 @@ export default function SeeItWork() {
 
   return (
     <div className={s.stage}>
-      <div className={`${s.seg} ${s.fade}`} role="tablist" aria-label="Which side to see">
+      <div className={s.seg} role="tablist" aria-label="Which side to see">
         <button type="button" role="tab" aria-selected={tab === 'golfer'} aria-pressed={tab === 'golfer'} onClick={() => setTab('golfer')}>What golfers see</button>
         <button type="button" role="tab" aria-selected={tab === 'course'} aria-pressed={tab === 'course'} onClick={() => setTab('course')}>What you see</button>
       </div>
 
-      <div className={s.fade}>
+      <div>
         {tab === 'golfer' ? <HomeDemo accent={accent} photo={photo} /> : <HomeDashboardDemo accent={accent} />}
       </div>
 
-      <div className={`${s.knobs} ${s.fade}`}>
+      <div className={s.knobs}>
         <span>Your color</span>
         <div className={s.sws} role="group" aria-label="Course accent color">
           {SWATCHES.map(sw => (
