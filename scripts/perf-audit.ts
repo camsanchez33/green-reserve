@@ -70,6 +70,21 @@ async function auditPage(url: string, chrome: chromeLauncher.LaunchedChrome) {
   return result.lhr;
 }
 
+type AuditMap = Record<string, { numericValue?: number; details?: { items?: Record<string, unknown>[] } } | undefined>;
+
+function printDiagnostics(audits: AuditMap) {
+  const ms = (v: unknown) => `${Math.round(Number(v) || 0)}ms`;
+  const short = (u: unknown) => String(u ?? '').replace(BASE, '').slice(0, 90);
+  const groups = (audits['mainthread-work-breakdown']?.details?.items ?? []).slice(0, 6);
+  if (groups.length) console.log('    main thread: ' + groups.map(g => `${g.groupLabel ?? g.group} ${ms(g.duration)}`).join(' · '));
+  const boot = (audits['bootup-time']?.details?.items ?? []).slice(0, 6);
+  for (const b of boot) console.log(`    script ${short(b.url)}  total ${ms(b.total)}  scripting ${ms(b.scripting)}`);
+  const tasks = (audits['long-tasks']?.details?.items ?? []).slice(0, 8);
+  for (const t of tasks) console.log(`    long task ${ms(t.duration)} at ${ms(t.startTime)}  ${short(t.url)}`);
+  const third = (audits['third-party-summary']?.details?.items ?? []).slice(0, 5);
+  for (const t of third) console.log(`    third party ${String((t.entity as { text?: string } | undefined)?.text ?? t.entity)}  blocking ${ms(t.blockingTime)}`);
+}
+
 async function main() {
   const chrome = await chromeLauncher.launch({
     chromeFlags: ['--headless=new', '--no-sandbox', '--disable-dev-shm-usage'],
@@ -111,6 +126,9 @@ async function main() {
         console.log(`  ${icon} ${c.name}  ${c.display.padStart(8)}  (budget ${c.budget})`);
         if (!c.pass) anyFailed = true;
       }
+      // PERF-3: a failing page says WHERE the time went, so the fix is not a
+      // guess. (Home failed TBT on CI only — 40ms locally, 1.1-1.8s here.)
+      if (checks.some(c => !c.pass)) printDiagnostics(audits as unknown as AuditMap);
     }
   } finally {
     await chrome.kill();

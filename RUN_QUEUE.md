@@ -2660,6 +2660,10 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   timer — Sentry loads on first input, the first error, or the tab going hidden.
   Local: Home TBT 29–41ms; idle page loads no Sentry chunk, an error or a scroll
   does. The audit measures PRODUCTION, so it turns green only after this deploys.
+  RESULT (2026-09-29 16:28, run on PR #19 after PERF-3 deployed): Home TBT still
+  1181ms on CI (others pass; locally 40ms). The Sentry timer was not the whole
+  cause. perf-audit.ts now prints main-thread breakdown, top scripts, long tasks
+  and third parties for any failing page — the next CI run names the cause.
 - [ ] PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29:
   private clubs pay GreenReserve (subscription, or $1.50/round billed monthly and
   capped at the subscription price); members pay $0. BLOCKED on Cam's prices and on
