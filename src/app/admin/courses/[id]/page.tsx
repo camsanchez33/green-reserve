@@ -89,6 +89,11 @@ interface CourseDetail {
   health: { status: CourseHealthStatus; label: string; dot: 'ok' | 'bad' | 'warn' | 'neutral'; reason: string };
   openItems: { unreadMessages: number; openChanges: string[]; hasSchedule: boolean };
   timeline: TimelineEventDTO[] | null;
+  /** MP-5e part 3 — see lib/course-feed.ts. */
+  relationship?: {
+    feed: { at: string; kind: string; text: string; by?: string }[];
+    operatorLastLoginAt: string | null; earnedCents: number; paidRounds: number; firstWentLiveAt: string | null;
+  };
   /** CS-3: check-in calls + the linked inquiry's discovery calls, newest first. */
   calls?: CourseCallRow[];
   remindersPaused: boolean;
@@ -1462,10 +1467,41 @@ export default function CourseDetailPage() {
                     No bookings yet for this course
                   </div>
                 )}
+
+                {/* MP-5e part 3: every touchpoint with this course in one line of
+                    time — notes, messages, pipeline moves, calls, settings. */}
+                {detail.relationship && (
+                  <div className="bg-white border border-line rounded-lg p-5">
+                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Relationship</div>
+                    {detail.relationship.feed.length === 0 ? (
+                      <p className="text-sm text-ink-muted">Nothing recorded yet — notes, messages, calls and pipeline moves will show here.</p>
+                    ) : (
+                      <div className="divide-y divide-line-soft">
+                        {detail.relationship.feed.map((f, i) => (
+                          <div key={i} className="py-2 grid grid-cols-[88px_76px_minmax(0,1fr)] gap-3 text-[13.5px]">
+                            <span className="text-ink-muted tabular-nums">{fmtDate(f.at)}</span>
+                            <span className="text-[11px] uppercase tracking-[0.1em] text-ink-faint pt-0.5">{f.kind}</span>
+                            <span className="text-ink min-w-0 break-words">{f.text}{f.by ? <span className="text-ink-muted"> · {f.by}</span> : null}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Client card (contact info) — folded in from the old Contact tab (item 1) */}
               <div className="space-y-5">
+                {detail.relationship && (
+                  <div className="bg-white border border-line rounded-lg p-5">
+                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Engagement</div>
+                    <dl className="space-y-2 text-sm">
+                      <div className="flex justify-between gap-3"><dt className="text-ink-muted">Operator last signed in</dt><dd className="text-ink text-right">{detail.relationship.operatorLastLoginAt ? fmtDate(detail.relationship.operatorLastLoginAt) : 'Never'}</dd></div>
+                      <div className="flex justify-between gap-3"><dt className="text-ink-muted">First went live</dt><dd className="text-ink text-right">{detail.relationship.firstWentLiveAt ? fmtDate(detail.relationship.firstWentLiveAt) : 'Not yet'}</dd></div>
+                      <div className="flex justify-between gap-3"><dt className="text-ink-muted">Earned GreenReserve</dt><dd className="text-ink text-right tabular-nums">${(detail.relationship.earnedCents / 100).toFixed(2)} <span className="text-ink-muted">· {detail.relationship.paidRounds} paid round{detail.relationship.paidRounds === 1 ? '' : 's'}</span></dd></div>
+                    </dl>
+                  </div>
+                )}
                 {/* ORPHAN SWEEP item 2 (FUTURE-PROOF) — origin card. A broken
                     link says so loudly instead of pretending it's fine. */}
                 <div className={'bg-white border rounded-lg p-5 ' + (detail.origin ? 'border-line' : 'border-bad/30 bg-bad/5')}>

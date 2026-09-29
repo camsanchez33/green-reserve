@@ -109,6 +109,10 @@ export interface CourseHealthInput {
    *  "never been live" (setup incomplete) apart from "was live, taken down" (offline)
    *  without a new schema field. */
   welcomeEmailSentAt: Date | string | null;
+  /** MP-5e part 3: the real "first went live" stamp. Preferred when set; the
+   *  welcome email stays as the fallback for courses live before the stamp
+   *  existed (a failed welcome email used to read as "setup incomplete"). */
+  firstWentLiveAt?: Date | string | null;
   createdAt: Date | string;
   bookings30d: number;
   bookingsPrev30d: number;
@@ -147,7 +151,7 @@ export function computeCourseHealth(c: CourseHealthInput, now: Date = new Date()
   }
 
   if (!isLive) {
-    return c.welcomeEmailSentAt
+    return (c.firstWentLiveAt || c.welcomeEmailSentAt)
       ? mk('offline', 'Was live, currently taken offline.')
       : mk('setup_incomplete', "Hasn't gone live yet — onboarding still in progress.");
   }

@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 337,
+    "files": 338,
     "routes": 195,
-    "libs": 87,
+    "libs": 88,
     "models": 33,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -101,7 +101,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/page.tsx",
-      "lines": 2705,
+      "lines": 2741,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -759,7 +759,7 @@
     },
     {
       "path": "src/app/api/admin/course-detail/route.ts",
-      "lines": 291,
+      "lines": 314,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -787,6 +787,7 @@
         "@/lib/change-requests",
         "@/lib/course-checkin",
         "@/lib/course-closure",
+        "@/lib/course-feed",
         "@/lib/course-metrics",
         "@/lib/course-timeline",
         "@/lib/email",
@@ -969,7 +970,7 @@
     },
     {
       "path": "src/app/api/admin/courses/route.ts",
-      "lines": 243,
+      "lines": 244,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1194,7 +1195,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1150,
+      "lines": 1152,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8742,8 +8743,40 @@
       ]
     },
     {
+      "path": "src/lib/course-feed.ts",
+      "lines": 64,
+      "purpose": "MP-5e part 3 — the course's relationship feed:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "buildRelationshipFeed",
+          "kind": "fn"
+        },
+        {
+          "name": "FeedItem",
+          "kind": "type"
+        },
+        {
+          "name": "FeedKind",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./course-timeline",
+        "./inquiry-status"
+      ],
+      "usedBy": [
+        "src/app/api/admin/course-detail/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/course-metrics.ts",
-      "lines": 215,
+      "lines": 219,
       "purpose": "THE shared metrics brain (REVISE_QUEUE A-04 item 0) — bookings/gross/ GR-fees/period math defined ONCE.",
       "brain": [
         "course-health"
@@ -9072,6 +9105,7 @@
         "src/app/api/operator/agreement/route.ts",
         "src/lib/agreement-gate.ts",
         "src/lib/agreement-sign.ts",
+        "src/lib/course-feed.ts",
         "src/lib/schedule-service.ts"
       ]
     },
@@ -10199,6 +10233,7 @@
         "src/app/api/inquiries/signin-code/route.ts",
         "src/lib/call-invite.ts",
         "src/lib/course-checkin.ts",
+        "src/lib/course-feed.ts",
         "src/lib/inquiry-action-queue.ts"
       ]
     },

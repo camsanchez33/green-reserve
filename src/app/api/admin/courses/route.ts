@@ -185,6 +185,7 @@ export async function GET(req: NextRequest) {
         liveStatus: c.liveStatus,
         stripeAccountActive: c.stripeAccountActive,
         welcomeEmailSentAt: c.welcomeEmailSentAt,
+        firstWentLiveAt: c.firstWentLiveAt,
         createdAt: c.createdAt,
         bookings30d,
         bookingsPrev30d: bookingsPrior30d,

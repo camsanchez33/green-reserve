@@ -162,7 +162,7 @@ export async function GET() {
     prisma.courseInquiry.count({ where: { wentLiveAt: { gte: startOfMonth } } }),
     prisma.booking.findMany({ where: { status: { in: COMPLETED }, teeTime: { date: todayDateStr } }, select: { checkedInAt: true, totalAmount: true, accessFeeTotal: true } }),
     // CS-1: nextCheckInAt + the scheduled check-in calls, for the queue rows.
-    prisma.course.findMany({ where: { active: true, archivedAt: null }, select: { id: true, name: true, createdAt: true, stripeAccountActive: true, liveStatus: true, welcomeEmailSentAt: true, archivedAt: true, nextCheckInAt: true, operator: { select: { name: true } }, calls: { where: { kind: 'checkin', outcome: 'scheduled' }, select: { kind: true, scheduledAt: true, outcome: true } } } }),
+    prisma.course.findMany({ where: { active: true, archivedAt: null }, select: { id: true, name: true, createdAt: true, stripeAccountActive: true, liveStatus: true, welcomeEmailSentAt: true, firstWentLiveAt: true, archivedAt: true, nextCheckInAt: true, operator: { select: { name: true } }, calls: { where: { kind: 'checkin', outcome: 'scheduled' }, select: { kind: true, scheduledAt: true, outcome: true } } } }),
     prisma.booking.groupBy({ by: ['courseId'], where: { status: { in: COMPLETED }, createdAt: { gte: thirtyDaysAgo } }, _count: { id: true } }),
     prisma.booking.groupBy({ by: ['courseId'], where: { status: { in: COMPLETED }, createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } }, _count: { id: true } }),
   ]);
@@ -427,7 +427,7 @@ export async function GET() {
     // in the Action Queue's red section. Always worst-severity.
     const health = computeCourseHealth({
       archivedAt: c.archivedAt, active: true, liveStatus: c.liveStatus,
-      stripeAccountActive: c.stripeAccountActive, welcomeEmailSentAt: c.welcomeEmailSentAt,
+      stripeAccountActive: c.stripeAccountActive, welcomeEmailSentAt: c.welcomeEmailSentAt, firstWentLiveAt: c.firstWentLiveAt,
       createdAt: c.createdAt, bookings30d: cur, bookingsPrev30d: prev,
     });
     if (health.status === 'payments_broken') {
