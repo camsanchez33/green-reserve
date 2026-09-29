@@ -2623,7 +2623,17 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   is the Cal.com event length (Cam sets it there); the thanks page itself
   offers "pick a call time". Course type is PUBLIC / PRIVATE EVERYWHERE
   (sign-up, setup sheet, admin); a semi-private club = Public + member passes.
-- [ ] FB-3 — GreenReserve's $1.50/player is lost when a golfer pays at the
+- [x] FB-3 (see git log 'FB-3:') — BUILT as option B: lib/access-fee.ts charges the
+  fee alone on the platform account at 'paid offline' / 'no-show', refunds it on
+  'still coming' or a later card check-in; every booking saves a card (server
+  enforced); counter confirm collects only the course's share; Terms §2 +
+  version 2026-09-29; revenue line. OPEN FOR CAM: (1) walk one real no-show +
+  one paid-offline in Stripe TEST mode before relying on it (no Stripe key in the
+  build sandbox); (2) the operator agreement §2 and the frozen /for-courses FAQ
+  still say the fee is 'in the same card payment' — needs one added sentence
+  each, your wording (LQ-2 / versioned agreement); (3) $0-green-fee member
+  rounds still pay the course Stripe's fee on our $1.50 — decide.
+  ORIGINAL: FB-3 — GreenReserve's $1.50/player is lost when a golfer pays at the
   counter ("paid offline" → no Stripe charge). DECIDED (Cam 2026-09-29):
   [SUPERSEDED same day, see FB3_FEE_PLAN_SPEC.md: Option B — one payment as
   today; the $1.50/player is charged separately, on the PLATFORM account, only
