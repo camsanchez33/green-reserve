@@ -4,8 +4,11 @@ import { useRouter } from 'next/navigation';
 import { ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Card } from '@/components/ui/Card';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { INPUT } from '@/components/ui/field';
 
-const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+const iCls = `${INPUT} w-full`;
 
 export default function OwnerLoginPage() {
   const router = useRouter();
@@ -74,7 +77,7 @@ export default function OwnerLoginPage() {
           <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={190} height={36} priority className="w-[190px] max-w-full h-auto mx-auto" />
         </div>
 
-        <div className="bg-white border border-line rounded-lg p-8">
+        <Card className="p-8">
           <div className="flex items-center gap-2 mb-1">
             <ShieldCheck className="w-4 h-4 text-pine" />
             <h1 className="text-[22px] font-serif font-medium text-ink">Owner sign in</h1>
@@ -92,11 +95,11 @@ export default function OwnerLoginPage() {
           {step === 'credentials' ? (
             <form onSubmit={handleCredentials} className="space-y-4">
               <div>
-                <label className="block"><span className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Email</span>
+                <label className="block"><Eyebrow as="span" className="block mb-1.5">Email</Eyebrow>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus className={iCls} /></label>
               </div>
               <div>
-                <label className="block"><span className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Password</span>
+                <label className="block"><Eyebrow as="span" className="block mb-1.5">Password</Eyebrow>
                 <input type="password" value={password} onChange={e => setPassword(e.target.value)} required className={iCls} /></label>
               </div>
               <button type="submit" disabled={loading}
@@ -107,7 +110,7 @@ export default function OwnerLoginPage() {
           ) : (
             <form onSubmit={handleVerify} className="space-y-4">
               <div>
-                <label className="block"><span className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">{method === 'totp' ? 'Authenticator or recovery code' : 'Verification code'}</span>
+                <label className="block"><Eyebrow as="span" className="block mb-1.5">{method === 'totp' ? 'Authenticator or recovery code' : 'Verification code'}</Eyebrow>
                 <input
                   type="text"
                   value={code}
@@ -131,7 +134,7 @@ export default function OwnerLoginPage() {
               </button>
             </form>
           )}
-        </div>
+        </Card>
 
         <p className="text-center text-[12px] text-ink-faint mt-4">
           Not an owner?{' '}
