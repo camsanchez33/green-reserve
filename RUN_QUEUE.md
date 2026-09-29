@@ -668,6 +668,11 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     can show (no-silent-failures) rather than an unhandled 500 — candidate item.
     CAM TO WALK: nothing visible if email works. The proof is the next Resend
     failure showing up in Vercel logs (search "Resend rejected the email").
+    REVIEWED 2026-09-29: surfacing the errors exposed three admin paths that
+    mis-reported them. FIXED 02c5cac: preview/send now sends BEFORE rotating the
+    operator's password (it used to leave the working password dead when the
+    email failed) and answers 502 JSON; owner-login 2FA send caught; owner-login
+    + inquiry pages parse error bodies safely (no more false "Network error").
 
 - ADMIN MASTER PLAN — full spec in ADMIN_MASTER_PLAN.md; the ADMIN_V4 phases it
   does NOT cover survive as MP-9/10/11/12 and their detail stays in
@@ -2509,6 +2514,10 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   send*/deliver* sites across 15 files, same after() wrap, each checked by hand
   to be genuinely unawaited. Guard against regressions — this must stay empty:
   grep -rnE "^\s+(send|deliver)[A-Za-z]+\(" src/app/api src/lib | grep -v "await\|return\|after("
+  REVIEWED 2026-09-29 (/gr-review, 4 auditors): sweep was PARTIAL — the grep
+  above cannot see sends behind a wrapper. Missed: operator/members maybeSendPayLink
+  (x2) and the admin go-live email. FIXED 02c5cac (after()). A broader scan for any
+  un-awaited .then/.catch statement in src/app/api + src/lib now comes back clean.
   CAM TO WALK: submit the form at /for-courses with an inbox you control →
   confirmation email (with the call-setup button) arrives; hello@ gets the
   new-lead alert. Then, for the sweep: request a sign-in code at
@@ -2523,6 +2532,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   Node 22 --experimental-strip-types; reproduced + verified locally against a
   static page. Next PR's "Lighthouse budget check" is the first REAL measurement
   of production — if it goes red, that is a genuine budget miss, not the tool.
+  REVIEWED 2026-09-29: PARTIAL — docs/SHIPPING.md still gave the tsx command.
+  FIXED 02c5cac. First real run (PR #2) measured production: every audited page
+  over budget (Home 63 / TBT 1301ms; For Courses CLS 0.265; Booking LCP 5.07s).
 
 - [ ] BUG: hello@greenreserve.app takes no mail — SHIPPED 371ffff, 2026-09-29, box
   open until /gr-review. Cam: "all emails need to go to thegreenreserve@outlook.com,
@@ -2533,7 +2545,8 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   sends from the verified domain. NOT CHANGED, needs Cam: the versioned legal
   documents under legal/documents/ (operator-agreement 2026-08, brand-license
   2026-09) still name hello@ — they are accepted contracts, so a new version,
-  not an edit. Alternative Cam declined as too many steps: forward hello@ via
+  not an edit. [SUPERSEDED same day: Cam — no course has accepted anything —
+  so both were edited IN PLACE in b81c2f1.] Alternative Cam declined as too many steps: forward hello@ via
   ImprovMX MX records in Vercel DNS, which would also rescue mail courses
   already have. Still worth doing later.
   NOTICED, NOT FIXED: api/admin/resend-staff-setup builds its own new Resend()
