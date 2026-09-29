@@ -2544,6 +2544,8 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   (3/hour/email; over the limit answer the SAME {success:true} without sending);
   send inside after() so the response time and status never depend on whether
   the account exists. (small, no migration)
+  SHIPPED f57f269, 2026-09-29 — box open until /gr-review. 10/h per IP (429), 3/h per
+  address (silent success), lookups+send in after(). Tested on local Postgres.
 - [ ] RV-2 — review follow-ups, small (from /gr-review 2026-09-29):
   (a) staff-setup resend on admin/courses/[id]/page.tsx (~927) shows "Error
   sending email" and drops the route's reason — show d.error; (b) Overview action
