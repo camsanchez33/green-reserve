@@ -617,6 +617,16 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     Stripe multi-course findFirst (operator/stripe/connect + dashboard-link).
     Admin OWNER 2FA already has 10 recovery codes (lib/owner-totp.ts). Unreviewed
     as SD-9 work — fold into the next /gr-review. What remains:
+  DECIDED (Cam 2026-09-29) — required core = TEE SHEET + PRICES: holes/par,
+    days open, first/last tee time, interval, weekday + weekend green fee,
+    cart fee / walking, cancellation yes/no. Everything else optional
+    ("finish later"); branch questions stop blocking Next; About not required;
+    scorecard photo upload replaces the tee-set grid; "rather do this on the
+    call?" escape; persist step position; DELETE fields the build never reads
+    (inventory 2026-09-29: twilight/nine-hole/replay fees, season, protected
+    times, outings volume, women's tee data, front/back yardage, club-rental
+    methods/phone, …). Also fix: build reads fv2.lessonsProPhone as the
+    pro-shop phone (fv2.proShopPhone never read).
   - [ ] SD-9b — details-sheet funnel UX: split into a required core that finishes
     the lead + a deferrable polish pass; scorecard photo upload replaces the
     tee-sets grid for most courses; "prefer to do this on a call?" escape hatch
@@ -2601,6 +2611,17 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   still carries a Calendly URL constant. OPEN QUESTION to Cam: note says
   "set up by Google Calendar" but CAL-2 (Cam, same day) made Cal.com the only
   scheduler and deleted the Google path — which one?
+  DECIDED (Cam 2026-09-29): Cal.com stays the only scheduler — the 20 minutes
+  is the Cal.com event length (Cam sets it there); the thanks page itself
+  offers "pick a call time". Course type is PUBLIC / PRIVATE EVERYWHERE
+  (sign-up, setup sheet, admin); a semi-private club = Public + member passes.
+- [ ] FB-3 — GreenReserve's $1.50/player is lost when a golfer pays at the
+  counter ("paid offline" → no Stripe charge). DECIDED (Cam 2026-09-29):
+  charge the $1.50/player to the golfer's card AT BOOKING, non-refundable;
+  the green fee stays paid at the course. Every course therefore collects a
+  card (the no-card flow ends). Touches money: attended, spec first — the
+  booking/cancel/refund/check-in paths all assume the fee is collected at
+  check-in today.
 - [ ] FB-2 — homepage (greenreserve.app) copy + structure, Cam's notes
   2026-09-29: change the hero blurb; must NOT say "no contract" (and not "no
   courses in the new contract"); smoother "See how it works" button; "Your
