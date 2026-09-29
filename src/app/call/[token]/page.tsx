@@ -1,10 +1,11 @@
 'use client';
 // /call/[token] — the course books its discovery call. Public look, no session.
-// CAL-2 (Cam 2026-09-29): Cal.com is the only scheduler. The page embeds the
-// Cal.com booker; the booking reaches GreenReserve through /api/calcom/webhook,
-// so the page checks back quietly and flips to "You're booked" once it lands.
-// Moving or cancelling happens on Cal.com's own pages.
-import { useCallback, useEffect, useRef, useState } from 'react';
+// CAL-2 (Cam 2026-09-29): Cal.com is the only scheduler. With nothing booked,
+// the page sends the course straight to the prefilled Cal.com booking page (an
+// in-page embed rendered blank live). The booking reaches GreenReserve through
+// /api/calcom/webhook; opening this link again then shows "You're booked", with
+// Cal.com's own reschedule / cancel pages.
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -14,67 +15,8 @@ type Booked = { scheduledAt: string; durationMin: number; direction: string; pho
 type Info = {
   courseName: string; contactFirst: string; phone: string; durationMin: number; agendaLines: string[];
   booked: Booked | null;
-  calcom: CalEmbed | null; calcomManage: { reschedule: string; cancel: string } | null;
+  calcomUrl: string | null; calcomManage: { reschedule: string; cancel: string } | null;
 };
-type CalEmbed = { origin: string; calLink: string; config: Record<string, string> };
-
-// Cal.com's official inline embed. A bare <iframe> of the booking page renders
-// blank — the embedded page stays hidden until embed.js on THIS page completes
-// its handshake — so load their snippet (verbatim shape of
-// packages/embeds/embed-snippet) and mount with Cal('inline').
-type CalFn = ((...args: unknown[]) => void) & { loaded?: boolean; ns?: Record<string, CalFn>; q?: unknown[] };
-declare global { interface Window { Cal?: CalFn } }
-const EMBED_JS = 'https://app.cal.com/embed/embed.js';
-const NS = 'grcall';
-
-function loadCal(): CalFn {
-  const w = window;
-  if (!w.Cal) {
-    const push = (api: CalFn, args: IArguments | unknown[]) => { (api.q = api.q || []).push(args); };
-    const cal: CalFn = function (...args: unknown[]) {
-      const c = w.Cal!;
-      if (!c.loaded) {
-        c.ns = {}; c.q = c.q || [];
-        const el = document.createElement('script'); el.src = EMBED_JS; document.head.appendChild(el);
-        c.loaded = true;
-      }
-      if (args[0] === 'init') {
-        const api: CalFn = function (...a: unknown[]) { push(api, a); };
-        const ns = args[1];
-        if (typeof ns === 'string') {
-          c.ns![ns] = c.ns![ns] || api;
-          push(c.ns![ns], args);
-          push(c, ['initNamespace', ns]);
-        } else push(c, args);
-        return;
-      }
-      push(c, args);
-    };
-    w.Cal = cal;
-  }
-  return w.Cal;
-}
-
-function CalInline({ embed, onBooked }: { embed: CalEmbed; onBooked: () => void }) {
-  const box = useRef<HTMLDivElement>(null);
-  const booked = useRef(onBooked);
-  booked.current = onBooked;
-  const mounted = useRef(false);
-  useEffect(() => {
-    // Once per mount: Cal('inline') calls are queued until embed.js loads, so a
-    // second run (React dev double-invoke) would draw a second calendar.
-    if (!box.current || mounted.current) return;
-    mounted.current = true;
-    const Cal = loadCal();
-    Cal('init', NS, { origin: embed.origin });
-    const api = () => window.Cal!.ns![NS];
-    api()('inline', { elementOrSelector: box.current, calLink: embed.calLink, config: embed.config });
-    api()('ui', { theme: 'light', hideEventTypeDetails: false, layout: 'month_view' });
-    api()('on', { action: 'bookingSuccessful', callback: () => booked.current() });
-  }, [embed.origin, embed.calLink, embed.config]);
-  return <div ref={box} className="w-full min-h-[640px] bg-white border border-line rounded-lg overflow-auto" />;
-}
-
 const CONTACT = 'thegreenreserve@outlook.com';
 const TZ = 'America/New_York';
 const fmtFull = (iso: string) => new Date(iso).toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: TZ });
@@ -122,27 +64,10 @@ export default function CallPage() {
   }, [token]);
   useEffect(() => { load(); }, [load]);
 
-  // Quiet re-check: only swaps in the booked view, never flashes "Loading…"
-  // or remounts the calendar while someone is mid-booking.
-  const refresh = useCallback(async () => {
-    try {
-      const r = await fetch(`/api/call/${encodeURIComponent(token)}`, { cache: 'no-store' });
-      if (!r.ok) return;
-      const d = await r.json();
-      if (d.booked) setInfo(d);
-    } catch { /* the next check tries again */ }
-  }, [token]);
-
-  // The booking lands through Cal.com's webhook, not through this page, so
-  // check quietly for it while the booker is showing. Capped well inside the
-  // GET rate limit (60/hour per IP).
-  const picking = !!info?.calcom && !info?.booked;
-  useEffect(() => {
-    if (!picking) return;
-    let n = 0;
-    const id = setInterval(() => { if (++n > 20) clearInterval(id); else refresh(); }, 30_000);
-    return () => clearInterval(id);
-  }, [picking, refresh]);
+  // Nothing booked and Cal.com is on: go straight to the Cal.com booking page.
+  // replace(), not assign(), so Back returns to the email, not a bounce page.
+  const goTo = info && !info.booked ? info.calcomUrl : null;
+  useEffect(() => { if (goTo) window.location.replace(goTo); }, [goTo]);
 
   if (loadState === 'loading') return <Shell><p className="text-sm text-ink-muted flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</p></Shell>;
   if (loadState === 'invalid') return <Shell><Notice tone="bad">This link is not valid. Reply to the email we sent you and we&apos;ll send a fresh one.</Notice></Shell>;
@@ -198,7 +123,7 @@ export default function CallPage() {
   }
 
   // ── pick a time ─────────────────────────────────────────────────────
-  if (!info.calcom) {
+  if (!info.calcomUrl) {
     return (
       <Shell>
         {heading}
@@ -214,13 +139,8 @@ export default function CallPage() {
   return (
     <Shell>
       {heading}
-      {/* Cal.com fires bookingSuccessful before its webhook has reached us, so
-          check a few times over the next minute rather than once. */}
-      <CalInline embed={info.calcom} onBooked={() => { [3000, 10000, 25000, 50000].forEach(ms => setTimeout(refresh, ms)); }} />
-      <div className="mt-4 flex items-center justify-between gap-3 flex-wrap">
-        <p className="text-xs text-ink-muted">Booked? This page updates on its own within a minute.</p>
-        <button onClick={refresh} className="text-sm text-pine hover:text-pine-hover">Check now</button>
-      </div>
+      <p className="text-sm text-ink-soft flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Taking you to the calendar…</p>
+      <a href={info.calcomUrl} className={btnO + ' mt-4'}><CalendarClock className="w-4 h-4" />Open the calendar</a>
     </Shell>
   );
 }

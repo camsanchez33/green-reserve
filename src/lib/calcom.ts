@@ -73,29 +73,6 @@ export function calcomEmbedUrl(base: string, p: { token: string; name: string; e
   return u.toString();
 }
 
-/**
- * What the page needs to mount Cal.com's OFFICIAL inline embed. A bare
- * <iframe src="cal.com/…"> renders blank: the embed page keeps itself hidden
- * until Cal.com's embed.js on the PARENT page completes a handshake
- * (embed-core/src/embed-iframe.ts), and it loads from app.cal.com/<link>/embed,
- * not the public link (embed-core/src/embed.ts). So the page loads embed.js and
- * calls Cal('inline', …) with these. `config` keys become the booking page's
- * query params, exactly like calcomEmbedUrl's — metadata[invite] included.
- */
-export function calcomInlineEmbed(base: string, p: { token: string; name: string; email: string; phone: string }) {
-  const u = new URL(base);
-  const full = new URL(calcomEmbedUrl(base, p));
-  const config: Record<string, string> = {};
-  full.searchParams.forEach((v, k) => { config[k] = v; });
-  config.layout = 'month_view';
-  return {
-    // cal.com's own embed swaps to app.cal.com (Safari asset-rewrite issue).
-    origin: u.hostname === 'cal.com' || u.hostname === 'www.cal.com' ? 'https://app.cal.com' : u.origin,
-    calLink: u.pathname.replace(/^\/+|\/+$/g, ''),
-    config,
-  };
-}
-
 // No schema change for this: the Cal.com booking uid rides in Call.createdBy,
 // which nothing displays. A proper column is a follow-up once previews build
 // again (schema changes are verified on a preview).

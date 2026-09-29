@@ -35,7 +35,7 @@ confirmed → (staff "paid offline") → completed, paymentStatus paid_offline, 
 
 ### Discovery-call booking (inquiry → call)
 - The inquiry confirmation email links to `/call/[token]` (token-gated, 21 days)
-- **Cal.com is the only scheduler** (Cam 2026-09-29 — the Google Calendar path was never connected and is deleted; do not reintroduce it). The page embeds the Cal.com booker (reads Cam's Outlook); a signed webhook at `/api/calcom/webhook` creates/moves/cancels the inquiry's discovery `Call`. Admins book for a course with "Book on Cal.com" on the inquiry page. Unset `CALCOM_BOOKING_URL` = the page asks the course to reply with times. Admin → System → Call booking shows what the site sees. See `src/lib/calcom.ts`
+- **Cal.com is the only scheduler** (Cam 2026-09-29 — the Google Calendar path was never connected and is deleted; do not reintroduce it). The page REDIRECTS to the prefilled public Cal.com booking page (reads Cam's Outlook; an in-page embed rendered blank live — don't retry it without testing against real cal.com); a signed webhook at `/api/calcom/webhook` creates/moves/cancels the inquiry's discovery `Call`. Admins book for a course with "Book on Cal.com" on the inquiry page. Unset `CALCOM_BOOKING_URL` = the page asks the course to reply with times. Admin → System → Call booking shows what the site sees. See `src/lib/calcom.ts`
 
 ### Operator onboarding pipeline
 Inquiry → `pending` → `in_review` → `details_requested` → `details_submitted` → `building` → `live`
