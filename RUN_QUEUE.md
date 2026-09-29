@@ -2623,6 +2623,12 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   is the Cal.com event length (Cam sets it there); the thanks page itself
   offers "pick a call time". Course type is PUBLIC / PRIVATE EVERYWHERE
   (sign-up, setup sheet, admin); a semi-private club = Public + member passes.
+- [x] PERF-2 (4eda035, merged #17) — the strict speed check still failed after
+  PERF-1: Home TBT 361ms, Booking LCP 4.59s. Home is server-rendered with small
+  client islands (the whole page used to hydrate), the below-the-fold demos mount
+  near the viewport; /book loads its course + tee time on the server. Local:
+  Home TBT 33-49ms, /book LCP 1.7-2.5s. CI's runner is ~3x slower than local, so
+  Home's TBT may still sit near the 300ms line — read the next PR's audit.
 - [x] CG-1 — call guide (Cam 2026-09-29: "it should just be a conversation, then we
   send them a form dedicated to them"; OpenTable-style sales call → onboarding
   portal). Built: the Log-the-call card's Talked view is a one-screen guide —
