@@ -2590,6 +2590,30 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   call/[token]/route.ts). (small, no migration)
   SHIPPED 0eab366, 2026-09-29 — box open until /gr-review. All six (a)-(f); (c) tested
   with two simultaneous submits, (e) at 320px.
+- [ ] FB-1 — /for-courses sign-up page, Cam's walk-through notes 2026-09-29
+  (verbatim intent): organise into CONTACT INFO (first/last name, email,
+  phone, role/course) → COURSE INFORMATION (course name, city, state,
+  ADDRESS; course type PUBLIC / PRIVATE only — drop semi-private; keep "how
+  are tee times looking"; the 20-minute call set up here) → "anything else
+  you'd like to message". After submit: thanks / check-your-email page, and
+  PICKING A CALL TIME must still be part of it. BUG REPORTED: "didn't get an
+  email from GreenReserve after submitting". Found while filing: the form
+  still carries a Calendly URL constant. OPEN QUESTION to Cam: note says
+  "set up by Google Calendar" but CAL-2 (Cam, same day) made Cal.com the only
+  scheduler and deleted the Google path — which one?
+- [ ] FB-2 — homepage (greenreserve.app) copy + structure, Cam's notes
+  2026-09-29: change the hero blurb; must NOT say "no contract" (and not "no
+  courses in the new contract"); smoother "See how it works" button; "Your
+  page" section should be about how it links from the course's own website,
+  and how it sits inside the current secure site; shorter "Your rules";
+  app/courses up front; drop "every course gets its own page"; "Live in four
+  steps" needs more depth (the process is more extensive); explain fees /
+  taxes; better FAQ questions. BUSINESS PROBLEM (not copy): golfers who pay
+  the course cash/card at the counter — GreenReserve still has to collect its
+  per-player fee ("$50" in the note, presumably the $1.50/player) — needs a
+  decision before any copy claims it. Marketing fee copy is FROZEN behind
+  LQ-2 (CLAUDE.md) — copy changes need Cam's wording approval.
+
 - [x] PERF-1 (77c8947) — FIXED, measured locally against a Sentry-enabled
   production build (prod's numbers only reproduce with the DSN set). Causes:
   Sentry SDK + Replay in every page's first-load JS (now loaded on first input
