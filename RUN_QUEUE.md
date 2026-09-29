@@ -654,6 +654,20 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     config would never show up in Vercel logs. Fix: route every send through
     one helper that throws on r.error (the three existing checks show the
     shape). Mechanical, lib/email.ts only. (small, high value)
+    SHIPPED 209e652, 2026-09-29 — box open until /gr-review. One choke point:
+    getResend() wraps emails.send to throw on r.error (the three old explicit
+    checks are now redundant, left in place). Before changing behaviour, every
+    send call site was classified with the TypeScript AST: all are .catch()'d,
+    in a try, in after(), or allSettled (broadcasts — now counts real
+    failures) EXCEPT three that now answer 500 instead of a false success:
+    admin owner-login 2FA code, member magic link (member/[slug]/send-code),
+    and preview/send (which rotates the operator's temp password BEFORE
+    sending — it used to report "sent" while the operator never got it).
+    Verified: a real sender with a bad key now throws.
+    NOTICED: preview/send should catch and return a JSON error the admin page
+    can show (no-silent-failures) rather than an unhandled 500 — candidate item.
+    CAM TO WALK: nothing visible if email works. The proof is the next Resend
+    failure showing up in Vercel logs (search "Resend rejected the email").
 
 - ADMIN MASTER PLAN — full spec in ADMIN_MASTER_PLAN.md; the ADMIN_V4 phases it
   does NOT cover survive as MP-9/10/11/12 and their detail stays in
