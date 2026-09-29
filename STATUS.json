@@ -1,16 +1,14 @@
 {
-  "generatedAt": "2026-09-29T02:28:38.640Z",
+  "generatedAt": "2026-09-29T02:32:02.592Z",
   "repo": {
-    "head": "7756ce9",
+    "head": "b81c2f1",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 1,
-    "dirty": [
-      "M RUN_QUEUE.md"
-    ],
+    "dirtyCount": 0,
+    "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-29T01:52:20+00:00",
+    "queueLastCommit": "2026-09-29T02:28:39+00:00",
     "unrecorded": []
   },
   "counts": {
@@ -573,6 +571,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "b81c2f1",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "a9012e2",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "7756ce9",
       "date": "2026-09-29",
       "subject": "queue/spec update"
@@ -621,16 +629,6 @@
       "h": "0fc22b8",
       "date": "2026-09-29",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "34ea4d9",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "9d6dc6a",
-      "date": "2026-09-29",
-      "subject": "SD-8e: booking status is a StatusDot, and 'card on file' reads differently from 'paid'"
     }
   ]
 }

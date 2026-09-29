@@ -55,7 +55,7 @@ attempted. `⚖️` cannot be closed by a Claude session.
 - [ ] **LQ-7 — Build the SMS consent + revocation path.**
       Schema field for comms consent and revocation timestamp; own `STOP`/`HELP`
       handler; honor a revocation received by *any* means within 10 business
-      days, including email to hello@greenreserve.app.
+      days, including email to thegreenreserve@outlook.com.
       → Findings L-5 · Register CC-1, CC-2, CC-3
 
 - [ ] **LQ-8 — Fix the self-contradicting amendment clause** in the Operator
