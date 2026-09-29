@@ -99,16 +99,16 @@ export default function ProfilePage() {
             )}
             <form onSubmit={handleChangePassword} className="space-y-3">
               <div>
-                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Current password</label>
-                <input type="password" value={cpCurrent} onChange={e => setCpCurrent(e.target.value)} required className={iCls} />
+                <label className="block"><span className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Current password</span>
+                <input type="password" value={cpCurrent} onChange={e => setCpCurrent(e.target.value)} required className={iCls} /></label>
               </div>
               <div>
-                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">New password</label>
-                <input type="password" value={cpNew} onChange={e => setCpNew(e.target.value)} required placeholder="Min 8 characters" className={iCls} />
+                <label className="block"><span className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">New password</span>
+                <input type="password" value={cpNew} onChange={e => setCpNew(e.target.value)} required placeholder="Min 8 characters" className={iCls} /></label>
               </div>
               <div>
-                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Confirm new password</label>
-                <input type="password" value={cpConfirm} onChange={e => setCpConfirm(e.target.value)} required className={iCls} />
+                <label className="block"><span className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Confirm new password</span>
+                <input type="password" value={cpConfirm} onChange={e => setCpConfirm(e.target.value)} required className={iCls} /></label>
               </div>
               <div className="pt-1">
                 <button type="submit" disabled={cpLoading || !cpCurrent || !cpNew || !cpConfirm}

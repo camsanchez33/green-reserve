@@ -491,12 +491,12 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
             {!reviewing ? (
               <div className="space-y-4">
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Title</label>
-                  <input value={title} onChange={e => setTitle(e.target.value)} className={iCls} placeholder="Maintenance window this weekend"/>
+                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Title</span>
+                  <input value={title} onChange={e => setTitle(e.target.value)} className={iCls} placeholder="Maintenance window this weekend"/></label>
                 </div>
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Message</label>
-                  <textarea value={body} onChange={e => setBody(e.target.value)} rows={5} className={iCls + ' resize-none'} placeholder="Write your message here. Separate paragraphs with blank lines."/>
+                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Message</span>
+                  <textarea value={body} onChange={e => setBody(e.target.value)} rows={5} className={iCls + ' resize-none'} placeholder="Write your message here. Separate paragraphs with blank lines."/></label>
                 </div>
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <label className="flex items-center gap-3 cursor-pointer select-none">

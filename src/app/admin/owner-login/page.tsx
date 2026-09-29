@@ -92,12 +92,12 @@ export default function OwnerLoginPage() {
           {step === 'credentials' ? (
             <form onSubmit={handleCredentials} className="space-y-4">
               <div>
-                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Email</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus className={iCls} />
+                <label className="block"><span className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Email</span>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus className={iCls} /></label>
               </div>
               <div>
-                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Password</label>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} required className={iCls} />
+                <label className="block"><span className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Password</span>
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} required className={iCls} /></label>
               </div>
               <button type="submit" disabled={loading}
                 className="w-full bg-pine hover:bg-pine-hover disabled:opacity-50 text-white text-[12.5px] font-medium py-2.5 rounded-md transition-colors mt-2">
@@ -107,7 +107,7 @@ export default function OwnerLoginPage() {
           ) : (
             <form onSubmit={handleVerify} className="space-y-4">
               <div>
-                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">{method === 'totp' ? 'Authenticator or recovery code' : 'Verification code'}</label>
+                <label className="block"><span className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">{method === 'totp' ? 'Authenticator or recovery code' : 'Verification code'}</span>
                 <input
                   type="text"
                   value={code}
@@ -118,7 +118,7 @@ export default function OwnerLoginPage() {
                   placeholder={method === 'totp' ? '000000' : '000000'}
                   autoComplete="one-time-code"
                   className={iCls + ' text-center text-xl font-mono tracking-[0.25em]'}
-                />
+                /></label>
                 {method === 'totp' && <p className="text-[11px] text-ink-faint mt-1.5">Lost the phone? A recovery code (xxxx-xxxx) works once.</p>}
               </div>
               <button type="submit" disabled={loading || code.length < 6}

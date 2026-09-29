@@ -97,9 +97,9 @@ export default function AdminLoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">
+              <label className="block"><span className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">
                 Email
-              </label>
+              </span>
               <input
                 type="email"
                 value={email}
@@ -108,7 +108,7 @@ export default function AdminLoginPage() {
                 autoFocus
                 autoComplete="email"
                 className={iCls}
-              />
+              /></label>
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">

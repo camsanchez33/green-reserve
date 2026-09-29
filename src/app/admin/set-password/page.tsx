@@ -102,7 +102,7 @@ function SetPasswordForm() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Password</label>
+          <label className="block"><span className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Password</span>
           <input
             type="password"
             value={password}
@@ -112,18 +112,18 @@ function SetPasswordForm() {
             minLength={10}
             className={iCls}
             placeholder="Min. 10 characters"
-          />
+          /></label>
           <p className="text-xs text-ink-faint mt-1.5">{PASSWORD_REQUIREMENTS_HINT}</p>
         </div>
         <div>
-          <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Confirm password</label>
+          <label className="block"><span className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Confirm password</span>
           <input
             type="password"
             value={confirm}
             onChange={e => setConfirm(e.target.value)}
             required
             className={iCls}
-          />
+          /></label>
         </div>
         <button
           type="submit"

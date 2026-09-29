@@ -373,16 +373,16 @@ export default function EmployeesPage() {
             )}
             <form onSubmit={handleChangePassword} className="grid grid-cols-3 gap-3">
               <div>
-                <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Current password</label>
-                <input type="password" value={cpCurrentPassword} onChange={e => setCpCurrentPassword(e.target.value)} required placeholder="Current password" className={iCls + ' w-full'}/>
+                <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Current password</span>
+                <input type="password" value={cpCurrentPassword} onChange={e => setCpCurrentPassword(e.target.value)} required placeholder="Current password" className={iCls + ' w-full'}/></label>
               </div>
               <div>
-                <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">New password</label>
-                <input type="password" value={cpNewPassword} onChange={e => setCpNewPassword(e.target.value)} required placeholder="Min 8 characters" className={iCls + ' w-full'}/>
+                <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">New password</span>
+                <input type="password" value={cpNewPassword} onChange={e => setCpNewPassword(e.target.value)} required placeholder="Min 8 characters" className={iCls + ' w-full'}/></label>
               </div>
               <div>
-                <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Confirm new password</label>
-                <input type="password" value={cpConfirm} onChange={e => setCpConfirm(e.target.value)} required placeholder="Confirm password" className={iCls + ' w-full'}/>
+                <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Confirm new password</span>
+                <input type="password" value={cpConfirm} onChange={e => setCpConfirm(e.target.value)} required placeholder="Confirm password" className={iCls + ' w-full'}/></label>
               </div>
               <div className="col-span-3">
                 <button type="submit" disabled={cpLoading || !cpCurrentPassword || !cpNewPassword || !cpConfirm}

@@ -47,9 +47,9 @@ export default function AdminForgotPasswordPage() {
               </div>
               <p className="text-sm text-ink-soft mb-5">Enter the email on your admin account and we&apos;ll send you a reset link.</p>
               {error && <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-3 py-2.5 text-sm mb-4">{error}</div>}
-              <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Email</label>
+              <label className="block"><span className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Email</span>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && submit()} className={iCls} autoFocus/>
+                onKeyDown={e => e.key === 'Enter' && submit()} className={iCls} autoFocus/></label>
               <button onClick={submit} disabled={loading || !email}
                 className="mt-4 w-full bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
                 {loading ? 'Sending...' : 'Send Reset Link'}

@@ -105,8 +105,8 @@ export default function OwnerTwoFactorCard({ mfaSession }: { mfaSession: boolean
           {regenOpen && (
             <div className="mt-3 flex items-end gap-2 flex-wrap">
               <div className="w-40">
-                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Current app code</label>
-                <input value={code} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="000000" className={iCls + ' text-center font-mono tracking-[0.25em]'} />
+                <label className="block"><span className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Current app code</span>
+                <input value={code} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="000000" className={iCls + ' text-center font-mono tracking-[0.25em]'} /></label>
               </div>
               <button onClick={regenerate} disabled={busy || code.length < 6} className={btnP}>{busy ? 'Working…' : 'Replace all ten'}</button>
               <button onClick={() => setRegenOpen(false)} className="text-xs text-ink-muted hover:text-ink px-1 py-2">Cancel</button>

@@ -486,12 +486,12 @@ export default function AdminSystemPage() {
             {forceDeleteError && (
               <div className="text-xs text-bad mb-2">{forceDeleteError}</div>
             )}
-            <label className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Type &quot;{forceDeleteTarget.name}&quot; to confirm</label>
+            <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Type &quot;{forceDeleteTarget.name}&quot; to confirm</span>
             <input
               value={forceDeleteConfirm}
               onChange={e => setForceDeleteConfirm(e.target.value)}
               className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-4"
-            />
+            /></label>
             <div className="flex items-center justify-end gap-2">
               <button
                 onClick={() => { setForceDeleteTarget(null); setForceDeleteConfirm(''); setForceDeleteError(''); }}

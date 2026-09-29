@@ -910,13 +910,13 @@ function InquiriesListInner() {
               </div>
               {isArchive && (
                 <div className="mb-4">
-                  <label className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Type ARCHIVE to confirm</label>
+                  <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Type ARCHIVE to confirm</span>
                   <input
                     value={bulkConfirmText}
                     onChange={e => setBulkConfirmText(e.target.value)}
                     className="w-full bg-paper border border-line rounded-md px-3 py-2 text-sm outline-none focus:border-bad/40"
                     placeholder="ARCHIVE"
-                  />
+                  /></label>
                 </div>
               )}
               <div className="flex items-center justify-end gap-2">
@@ -950,12 +950,12 @@ function InquiriesListInner() {
             titleNode={<div className="text-sm font-medium text-ink mb-1">Permanently delete &quot;{deleteTarget.name}&quot;?</div>}
             onClose={() => { setDeleteTarget(null); setDeleteConfirmText(''); }}>
               <p className="text-xs text-ink-muted mb-3">This cannot be undone — the inquiry and its history are gone for good.</p>
-              <label className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Type &quot;{deleteTarget.name}&quot; to confirm</label>
+              <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Type &quot;{deleteTarget.name}&quot; to confirm</span>
               <input
                 value={deleteConfirmText}
                 onChange={e => setDeleteConfirmText(e.target.value)}
                 className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-4"
-              />
+              /></label>
               <div className="flex items-center justify-end gap-2">
                 <button
                   onClick={() => { setDeleteTarget(null); setDeleteConfirmText(''); }}

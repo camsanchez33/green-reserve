@@ -430,48 +430,48 @@ function WizardContent() {
               <div className="bg-white border border-line rounded-lg p-6 space-y-4">
                 <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Course Details</div>
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Course Name *</label>
-                  <input value={basics.name} onChange={e => setBasics(b => ({ ...b, name: e.target.value }))} className={iCls} placeholder="Pine Brook Golf Club" autoFocus/>
+                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Course Name *</span>
+                  <input value={basics.name} onChange={e => setBasics(b => ({ ...b, name: e.target.value }))} className={iCls} placeholder="Pine Brook Golf Club" autoFocus/></label>
                 </div>
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">
+                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">
                     URL Slug *
                     {slugStatusLabel && <span className={'ml-2 text-[10px] font-medium ' + slugStatusCls}>{slugStatusLabel}</span>}
-                  </label>
+                  </span>
                   <input
                     value={basics.slug}
                     onChange={e => { setSlugManuallyEdited(true); setBasics(b => ({ ...b, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })); }}
                     className={slugInputCls}
                     placeholder="pine-brook-golf-club"
-                  />
+                  /></label>
                   <p className="text-[10px] text-ink-muted mt-1">greenreserve.app/courses/{basics.slug || '...'}</p>
                 </div>
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Address</label>
-                  <input value={basics.address} onChange={e => setBasics(b => ({ ...b, address: e.target.value }))} className={iCls} placeholder="123 Fairway Dr"/>
+                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Address</span>
+                  <input value={basics.address} onChange={e => setBasics(b => ({ ...b, address: e.target.value }))} className={iCls} placeholder="123 Fairway Dr"/></label>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">City *</label>
-                    <input value={basics.city} onChange={e => setBasics(b => ({ ...b, city: e.target.value }))} className={iCls}/>
+                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">City *</span>
+                    <input value={basics.city} onChange={e => setBasics(b => ({ ...b, city: e.target.value }))} className={iCls}/></label>
                   </div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">State *</label>
-                    <input value={basics.state} onChange={e => setBasics(b => ({ ...b, state: e.target.value.toUpperCase() }))} className={iCls} maxLength={2}/>
+                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">State *</span>
+                    <input value={basics.state} onChange={e => setBasics(b => ({ ...b, state: e.target.value.toUpperCase() }))} className={iCls} maxLength={2}/></label>
                   </div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Zip</label>
-                    <input value={basics.zipCode} onChange={e => setBasics(b => ({ ...b, zipCode: e.target.value }))} className={iCls}/>
+                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Zip</span>
+                    <input value={basics.zipCode} onChange={e => setBasics(b => ({ ...b, zipCode: e.target.value }))} className={iCls}/></label>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Phone</label>
-                    <input value={basics.phone} onChange={e => setBasics(b => ({ ...b, phone: e.target.value }))} className={iCls} placeholder="(201) 555-0100"/>
+                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Phone</span>
+                    <input value={basics.phone} onChange={e => setBasics(b => ({ ...b, phone: e.target.value }))} className={iCls} placeholder="(201) 555-0100"/></label>
                   </div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Website</label>
-                    <input value={basics.website} onChange={e => setBasics(b => ({ ...b, website: e.target.value }))} className={iCls} placeholder="https://"/>
+                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Website</span>
+                    <input value={basics.website} onChange={e => setBasics(b => ({ ...b, website: e.target.value }))} className={iCls} placeholder="https://"/></label>
                   </div>
                 </div>
               </div>
@@ -580,8 +580,8 @@ function WizardContent() {
                           </div>
                         </div>
                         <div>
-                          <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Resident verification note</label>
-                          <input value={fees.residentNote} onChange={e => setFees(f => ({ ...f, residentNote: e.target.value }))} className={iCls} placeholder="County ID or utility bill required"/>
+                          <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Resident verification note</span>
+                          <input value={fees.residentNote} onChange={e => setFees(f => ({ ...f, residentNote: e.target.value }))} className={iCls} placeholder="County ID or utility bill required"/></label>
                         </div>
                       </div>
                     )}
@@ -593,11 +593,11 @@ function WizardContent() {
                   <div className="border-t border-line-soft pt-4 space-y-4">
                     <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Member access</div>
                     <div>
-                      <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Member advance booking window</label>
+                      <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Member advance booking window</span>
                       <div className="flex items-center gap-2">
                         <input type="number" min="1" max="365" value={fees.memberAdvanceDays} onChange={e => setFees(f => ({ ...f, memberAdvanceDays: e.target.value }))} className={iCls + ' w-24'}/>
                         <span className="text-sm text-ink-soft">days</span>
-                      </div>
+                      </div></label>
                       <p className="text-[10px] text-ink-muted mt-1">Public booking window defaults to 7 days.</p>
                     </div>
                     <div className="space-y-3">
@@ -608,8 +608,8 @@ function WizardContent() {
                       {fees.hasStarterTier && (
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Tier name</label>
-                            <input value={fees.starterTierName} onChange={e => setFees(f => ({ ...f, starterTierName: e.target.value }))} className={iCls} placeholder="Full Member"/>
+                            <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Tier name</span>
+                            <input value={fees.starterTierName} onChange={e => setFees(f => ({ ...f, starterTierName: e.target.value }))} className={iCls} placeholder="Full Member"/></label>
                           </div>
                           <div>
                             <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Annual fee</label>
@@ -646,16 +646,16 @@ function WizardContent() {
                 <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Operator Account</div>
                 <p className="text-xs text-ink-muted">Creates their dashboard login. They receive a welcome email with a temp password and setup link.</p>
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Full Name *</label>
-                  <input value={op.contactName} onChange={e => setOp(f => ({ ...f, contactName: e.target.value }))} className={iCls} placeholder="John Smith" autoFocus/>
+                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Full Name *</span>
+                  <input value={op.contactName} onChange={e => setOp(f => ({ ...f, contactName: e.target.value }))} className={iCls} placeholder="John Smith" autoFocus/></label>
                 </div>
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Email *</label>
-                  <input type="email" value={op.contactEmail} onChange={e => setOp(f => ({ ...f, contactEmail: e.target.value }))} className={iCls} placeholder="gm@pinecreek.com"/>
+                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Email *</span>
+                  <input type="email" value={op.contactEmail} onChange={e => setOp(f => ({ ...f, contactEmail: e.target.value }))} className={iCls} placeholder="gm@pinecreek.com"/></label>
                 </div>
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Phone *</label>
-                  <input type="tel" value={op.contactPhone} onChange={e => setOp(f => ({ ...f, contactPhone: e.target.value }))} className={iCls} placeholder="(201) 555-0100"/>
+                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Phone *</span>
+                  <input type="tel" value={op.contactPhone} onChange={e => setOp(f => ({ ...f, contactPhone: e.target.value }))} className={iCls} placeholder="(201) 555-0100"/></label>
                   <p className="text-[10px] text-ink-muted mt-1">Used for SMS two-factor login codes.</p>
                 </div>
               </div>

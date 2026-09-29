@@ -1363,8 +1363,8 @@ function InquiryDetailInner() {
                     ['courseName', 'Course name'], ['city', 'City'], ['state', 'State'],
                   ] as [string, string][]).map(([field, label]) => (
                     <div key={field}>
-                      <label className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">{label}</label>
-                      <input value={contactEdits[field] ?? ''} onChange={e => setContactEdits(p => ({ ...p, [field]: e.target.value }))} className={iCls} />
+                      <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">{label}</span>
+                      <input value={contactEdits[field] ?? ''} onChange={e => setContactEdits(p => ({ ...p, [field]: e.target.value }))} className={iCls} /></label>
                     </div>
                   ))}
                 </div>
@@ -2003,9 +2003,9 @@ function InquiryDetailInner() {
               <p className="text-sm text-ink-soft mb-3">
                 This cannot be undone — the inquiry and its history are gone for good.
               </p>
-              <label className="block text-[10px] uppercase tracking-[0.1em] text-bad mb-1">Type &quot;{expected}&quot; to confirm</label>
+              <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-bad mb-1">Type &quot;{expected}&quot; to confirm</span>
               <input value={deleteCourseConfirm} onChange={e => setDeleteCourseConfirm(e.target.value)}
-                className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-1"/>
+                className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-1"/></label>
               <ModalActions working={working} onCancel={close} onConfirm={() => fire(deleteInquiry)} confirmLabel="Delete permanently" danger
                 disabled={!matches}/>
             </ModalShell>
@@ -2040,11 +2040,11 @@ function InquiryDetailInner() {
           return (
             <ModalShell title="Reject this inquiry?" danger onClose={close}>
               <p className="text-sm text-ink-soft mb-3">Moves it to Closed.</p>
-              <label className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Why are we losing this one?</label>
+              <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Why are we losing this one?</span>
               <select value={rejectReason} onChange={e => { setRejectReason(e.target.value); setRejectNotify(e.target.value !== 'Duplicate'); }} className={iCls}>
                 <option value="">Pick a reason&hellip;</option>
                 {CLOSED_REASONS.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
+              </select></label>
               <p className="text-[11px] text-ink-faint mt-1.5">
                 Stored on the inquiry and named in the timeline — this is the only place &quot;why do we lose leads&quot; ever gets answered.
               </p>
@@ -2078,8 +2078,8 @@ function InquiryDetailInner() {
                 It drops out of the work queue until this date, then comes back as an overdue follow-up.
                 If the course fills the interest form again in the meantime, the snooze breaks and it returns straight away.
               </p>
-              <label className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Come back on</label>
-              <input type="date" value={snoozeDate} min={plus(1)} onChange={e => setSnoozeDate(e.target.value)} className={iCls} />
+              <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Come back on</span>
+              <input type="date" value={snoozeDate} min={plus(1)} onChange={e => setSnoozeDate(e.target.value)} className={iCls} /></label>
               <div className="flex items-center gap-2 mt-2">
                 {[7, 14, 30, 90].map(d => (
                   <button key={d} onClick={() => setSnoozeDate(plus(d))}
@@ -2148,9 +2148,9 @@ function InquiryDetailInner() {
                 <li>Emails a welcome message + temporary password to <strong>{inq.email}</strong></li>
                 <li>Attempts to create a Stripe Connect account for the course</li>
               </ul>
-              <label className="block text-[10px] uppercase tracking-[0.1em] text-bad mb-1">Type BUILD to confirm</label>
+              <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-bad mb-1">Type BUILD to confirm</span>
               <input value={buildConfirmText} onChange={e => setBuildConfirmText(e.target.value)}
-                className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50" placeholder="BUILD"/>
+                className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50" placeholder="BUILD"/></label>
               <ModalActions working={working} onCancel={close} onConfirm={() => fire(() => action('build_course'))} confirmLabel="Build & Email" danger disabled={!canConfirm || processing}/>
             </ModalShell>
           );
@@ -2201,11 +2201,11 @@ function InquiryDetailInner() {
               )}
               {!blocked && goLiveChecks && advisoryFailing.length > 0 && (
                 <div className="mt-3">
-                  <label className="block text-[10px] uppercase tracking-[0.1em] text-bad mb-1">
+                  <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-bad mb-1">
                     Type &quot;{inq.courseName}&quot; to override and go live anyway
-                  </label>
+                  </span>
                   <input value={goLiveOverride} onChange={e => setGoLiveOverride(e.target.value)}
-                    className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50"/>
+                    className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50"/></label>
                 </div>
               )}
               <ModalActions

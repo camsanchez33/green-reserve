@@ -180,11 +180,11 @@ function ScheduleFields({ value, onChange, showMemberRates, products = [] }: {
     <>
       {products.length > 0 && (
         <div>
-          <label className="text-xs text-ink-muted block mb-1">Which round</label>
+          <label className="block"><span className="text-xs text-ink-muted block mb-1">Which round</span>
           <select value={value.productId ?? ''} onChange={e => onChange({ productId: e.target.value })} className={iCls}>
             <option value="">Select…</option>
             {products.map(p => <option key={p.id} value={p.id}>{p.label} · {p.holes} holes</option>)}
-          </select>
+          </select></label>
         </div>
       )}
       <div>
@@ -204,43 +204,43 @@ function ScheduleFields({ value, onChange, showMemberRates, products = [] }: {
       </div>
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className="text-xs text-ink-muted block mb-1">First tee</label>
-          <input type="time" value={value.startTime} onChange={e => onChange({ startTime: e.target.value })} className={iCls} />
+          <label className="block"><span className="text-xs text-ink-muted block mb-1">First tee</span>
+          <input type="time" value={value.startTime} onChange={e => onChange({ startTime: e.target.value })} className={iCls} /></label>
         </div>
         <div>
-          <label className="text-xs text-ink-muted block mb-1">Last tee</label>
-          <input type="time" value={value.endTime} onChange={e => onChange({ endTime: e.target.value })} className={iCls} />
+          <label className="block"><span className="text-xs text-ink-muted block mb-1">Last tee</span>
+          <input type="time" value={value.endTime} onChange={e => onChange({ endTime: e.target.value })} className={iCls} /></label>
         </div>
         <div>
-          <label className="text-xs text-ink-muted block mb-1">Interval</label>
+          <label className="block"><span className="text-xs text-ink-muted block mb-1">Interval</span>
           <select value={value.intervalMinutes} onChange={e => onChange({ intervalMinutes: Number(e.target.value) })} className={iCls}>
             {[7, 8, 9, 10, 12, 15].map(v => <option key={v} value={v}>{v} min</option>)}
-          </select>
+          </select></label>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className="text-xs text-ink-muted block mb-1">WD Green fee $</label>
-          <input type="number" value={value.greenFeeWeekday} onChange={e => onChange({ greenFeeWeekday: Number(e.target.value) })} className={iCls} />
+          <label className="block"><span className="text-xs text-ink-muted block mb-1">WD Green fee $</span>
+          <input type="number" value={value.greenFeeWeekday} onChange={e => onChange({ greenFeeWeekday: Number(e.target.value) })} className={iCls} /></label>
         </div>
         <div>
-          <label className="text-xs text-ink-muted block mb-1">WE Green fee $</label>
-          <input type="number" value={value.greenFeeWeekend} onChange={e => onChange({ greenFeeWeekend: Number(e.target.value) })} className={iCls} />
+          <label className="block"><span className="text-xs text-ink-muted block mb-1">WE Green fee $</span>
+          <input type="number" value={value.greenFeeWeekend} onChange={e => onChange({ greenFeeWeekend: Number(e.target.value) })} className={iCls} /></label>
         </div>
         <div>
-          <label className="text-xs text-ink-muted block mb-1">Cart fee $</label>
-          <input type="number" value={value.cartFee} onChange={e => onChange({ cartFee: Number(e.target.value) })} className={iCls} />
+          <label className="block"><span className="text-xs text-ink-muted block mb-1">Cart fee $</span>
+          <input type="number" value={value.cartFee} onChange={e => onChange({ cartFee: Number(e.target.value) })} className={iCls} /></label>
         </div>
       </div>
       {showMemberRates && (
         <div className="grid grid-cols-2 gap-3 bg-pine/5 border border-pine/20 rounded-md p-3">
           <div>
-            <label className="text-xs font-medium text-pine block mb-1">Member rate WD $</label>
-            <input type="number" value={value.memberRateWeekday} onChange={e => onChange({ memberRateWeekday: e.target.value })} className={iCls} />
+            <label className="block"><span className="text-xs font-medium text-pine block mb-1">Member rate WD $</span>
+            <input type="number" value={value.memberRateWeekday} onChange={e => onChange({ memberRateWeekday: e.target.value })} className={iCls} /></label>
           </div>
           <div>
-            <label className="text-xs font-medium text-pine block mb-1">Member rate WE $</label>
-            <input type="number" value={value.memberRateWeekend} onChange={e => onChange({ memberRateWeekend: e.target.value })} className={iCls} />
+            <label className="block"><span className="text-xs font-medium text-pine block mb-1">Member rate WE $</span>
+            <input type="number" value={value.memberRateWeekend} onChange={e => onChange({ memberRateWeekend: e.target.value })} className={iCls} /></label>
           </div>
         </div>
       )}
@@ -2329,7 +2329,7 @@ export default function CourseDetailPage() {
                 <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Course Policy</div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Walking policy</label>
+                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Walking policy</span>
                     <select
                       value={String(setupForm.walkingAllowed ?? 'always')}
                       onChange={e => setSetupForm(f => ({ ...f, walkingAllowed: e.target.value }))}
@@ -2339,61 +2339,61 @@ export default function CourseDetailPage() {
                       <option value="weekdays">Weekdays only</option>
                       <option value="after12">After 12pm only</option>
                       <option value="never">Cart required</option>
-                    </select>
+                    </select></label>
                   </div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Cancellation window (hrs)</label>
+                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Cancellation window (hrs)</span>
                     <input
                       type="number"
                       value={Number(setupForm.cancellationHours ?? 24)}
                       onChange={e => setSetupForm(f => ({ ...f, cancellationHours: Number(e.target.value) }))}
                       className={iCls}
-                    />
+                    /></label>
                   </div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Min players</label>
+                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Min players</span>
                     <input
                       type="number"
                       value={Number(setupForm.minPlayers ?? 1)}
                       onChange={e => setSetupForm(f => ({ ...f, minPlayers: Number(e.target.value) }))}
                       className={iCls}
-                    />
+                    /></label>
                   </div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Max players</label>
+                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Max players</span>
                     <input
                       type="number"
                       value={Number(setupForm.maxPlayers ?? 4)}
                       onChange={e => setSetupForm(f => ({ ...f, maxPlayers: Number(e.target.value) }))}
                       className={iCls}
-                    />
+                    /></label>
                   </div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Public booking window (days)</label>
+                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Public booking window (days)</span>
                     <input
                       type="number"
                       value={Number(setupForm.publicAdvanceDays ?? 7)}
                       onChange={e => setSetupForm(f => ({ ...f, publicAdvanceDays: Number(e.target.value) }))}
                       className={iCls}
-                    />
+                    /></label>
                   </div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Member booking window (days)</label>
+                    <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Member booking window (days)</span>
                     <input
                       type="number"
                       value={Number(setupForm.memberAdvanceDays ?? 14)}
                       onChange={e => setSetupForm(f => ({ ...f, memberAdvanceDays: Number(e.target.value) }))}
                       className={iCls}
-                    />
+                    /></label>
                   </div>
                 </div>
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Rain check policy</label>
+                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Rain check policy</span>
                   <input
                     value={String(setupForm.rainCheckPolicy ?? '')}
                     onChange={e => setSetupForm(f => ({ ...f, rainCheckPolicy: e.target.value }))}
                     className={iCls}
-                  />
+                  /></label>
                 </div>
                 <div className="flex flex-wrap gap-4">
                   {([
@@ -2416,21 +2416,21 @@ export default function CourseDetailPage() {
                 {!!setupForm.hasResidentPricing && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Resident county</label>
+                      <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Resident county</span>
                       <input
                         value={String(setupForm.residentCounty ?? '')}
                         onChange={e => setSetupForm(f => ({ ...f, residentCounty: e.target.value }))}
                         className={iCls}
-                      />
+                      /></label>
                     </div>
                     <div>
-                      <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Resident state</label>
+                      <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Resident state</span>
                       <input
                         value={String(setupForm.residentState ?? '')}
                         maxLength={2}
                         onChange={e => setSetupForm(f => ({ ...f, residentState: e.target.value }))}
                         className={iCls}
-                      />
+                      /></label>
                     </div>
                   </div>
                 )}
@@ -2623,13 +2623,13 @@ export default function CourseDetailPage() {
             <p className="text-sm text-ink-soft mb-4">
               {fmtMoney(refundTarget.amount)} was charged for {fmtDate(refundTarget.date)}. The money goes back to the card they paid with; the course&apos;s payout and GreenReserve&apos;s fee are both reduced.
             </p>
-            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Amount (blank = full refund)</label>
+            <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Amount (blank = full refund)</span>
             <div className="relative mb-3">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
               <input type="number" step="0.01" min="0.01" max={refundTarget.amount} value={refundAmount} onChange={e => setRefundAmount(e.target.value)} placeholder={refundTarget.amount.toFixed(2)} className={iCls + ' pl-7'} />
-            </div>
-            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Reason — the golfer reads this</label>
-            <textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} rows={3} placeholder="Course closed for weather on the day — refunding the round in full." className={iCls + ' resize-none mb-3'} />
+            </div></label>
+            <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Reason — the golfer reads this</span>
+            <textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} rows={3} placeholder="Course closed for weather on the day — refunding the round in full." className={iCls + ' resize-none mb-3'} /></label>
             {refundError && <p className="text-xs text-bad mb-3">{refundError}</p>}
             <div className="flex gap-3">
               <button onClick={() => setRefundTarget(null)} disabled={refundBusy}
@@ -2683,20 +2683,20 @@ export default function CourseDetailPage() {
             <div className="space-y-3">
               {([['Golfer Name *', 'name', 'text'], ['Email *', 'email', 'email'], ['Phone', 'phone', 'tel']] as [string, string, string][]).map(([label, field, type]) => (
                 <div key={field}>
-                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">{label}</label>
+                  <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">{label}</span>
                   <input
                     type={type}
                     value={(manualForm as Record<string, unknown>)[field] as string}
                     onChange={e => setManualForm(f => ({ ...f, [field]: e.target.value }))}
                     className={iCls}
-                  />
+                  /></label>
                 </div>
               ))}
               <div>
-                <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Players *</label>
+                <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Players *</span>
                 <select value={manualForm.players} onChange={e => setManualForm(f => ({ ...f, players: Number(e.target.value) }))} className={iCls}>
                   {[1, 2, 3, 4].map(n => <option key={n} value={n}>{n}</option>)}
-                </select>
+                </select></label>
               </div>
             </div>
             {manualError && <p className="text-xs text-bad mt-3">{manualError}</p>}

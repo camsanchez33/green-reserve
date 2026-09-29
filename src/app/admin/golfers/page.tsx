@@ -415,8 +415,8 @@ function GolfersInner() {
                   ? 'Their late-cancellation fee was already charged and stays charged.'
                   : 'Nothing has been charged; their card is simply never billed.'} They are emailed with your reason.
             </p>
-            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Reason — the golfer reads this</label>
-            <textarea value={cancelReason} onChange={e => setCancelReason(e.target.value)} rows={3} placeholder="You called to say you can't make it and asked us to cancel." className={iCls + ' w-full resize-none mb-3'} />
+            <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Reason — the golfer reads this</span>
+            <textarea value={cancelReason} onChange={e => setCancelReason(e.target.value)} rows={3} placeholder="You called to say you can't make it and asked us to cancel." className={iCls + ' w-full resize-none mb-3'} /></label>
             {modalError && <p className="text-xs text-bad mb-3">{modalError}</p>}
             <div className="flex gap-3">
               <button onClick={() => setCancelTarget(null)} disabled={!!busy} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors disabled:opacity-50">Keep it</button>
@@ -433,13 +433,13 @@ function GolfersInner() {
             <p className="text-sm text-ink-soft mb-4">
               {fmtMoney(refundTarget.totalAmount)} was charged for {refundTarget.courseName}, {refundTarget.teeDate}{refundTarget.refundedTotal > 0 ? ` · ${fmtMoney(refundTarget.refundedTotal)} already refunded` : ''}. It goes back to the card they paid with; the course&apos;s payout and GreenReserve&apos;s fee are both reduced.
             </p>
-            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Amount (blank = {fmtMoney(remaining)}, the rest)</label>
+            <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Amount (blank = {fmtMoney(remaining)}, the rest)</span>
             <div className="relative mb-3">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
               <input type="number" step="0.01" min="0.01" max={remaining} value={refundAmount} onChange={e => setRefundAmount(e.target.value)} placeholder={remaining.toFixed(2)} className={iCls + ' w-full pl-7'} />
-            </div>
-            <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Reason — the golfer reads this</label>
-            <textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} rows={3} placeholder="Charged twice by mistake — refunding the duplicate." className={iCls + ' w-full resize-none mb-3'} />
+            </div></label>
+            <label className="block"><span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Reason — the golfer reads this</span>
+            <textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} rows={3} placeholder="Charged twice by mistake — refunding the duplicate." className={iCls + ' w-full resize-none mb-3'} /></label>
             {modalError && <p className="text-xs text-bad mb-3">{modalError}</p>}
             <div className="flex gap-3">
               <button onClick={() => setRefundTarget(null)} disabled={!!busy} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors disabled:opacity-50">Cancel</button>
