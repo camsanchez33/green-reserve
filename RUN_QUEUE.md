@@ -2555,6 +2555,11 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   (if it says invalid, it shows why). Then the Test Course 3 link shows the
   Cal.com calendar; book → /admin/inquiries shows the call within a minute.
   Cal.com "Ping test" on the webhook answers 200.
+  LIVE FIX 421543d: Cam's first live look was a blank white box. A bare iframe of the
+  booking link can't render (the embed page stays hidden until embed.js on our
+  page handshakes; embeds load from app.cal.com/<link>/embed). Now Cal.com's
+  official inline embed (embed.js + Cal('inline')), verified queued once with the
+  right calLink/prefill in Chromium; drawing the calendar itself is Cam's check.
 
 - [ ] BUG: hello@greenreserve.app takes no mail — SHIPPED 371ffff, 2026-09-29, box
   open until /gr-review. Cam: "all emails need to go to thegreenreserve@outlook.com,
