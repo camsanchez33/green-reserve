@@ -10,6 +10,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 // INQUIRY_FORM_SPEC IF-1: the form asks ten things; the eight branch questions
 // moved to the discovery call. What still lands in needsJson is only the
 // optional call-time preference, whitelisted here — this endpoint is public.
+// FB-1 (Cam 2026-09-29): Public / Private only. 'semi-private' is still
+// accepted from a form cached before the change, and stored as 'public'.
 const COURSE_TYPES = new Set(['public', 'semi-private', 'private']);
 const CALL_TIMES = new Set(['Mornings', 'Afternoons', 'Evenings']);
 const CALL_DAYS = new Set(['Weekdays', 'Weekends']);
@@ -57,6 +59,7 @@ export async function POST(req: NextRequest) {
   }
   const optStr = (v: unknown, max = 4000) => (typeof v === 'string' ? v.slice(0, max) : '');
   if (!COURSE_TYPES.has(String(body.courseType))) return NextResponse.json({ error: 'Invalid: courseType' }, { status: 400 });
+  if (body.courseType === 'semi-private') body.courseType = 'public';
   const currentBookingMethod = String(body.currentBookingMethod).trim().slice(0, 80);
   const callPreference = callPreferenceFrom(body.callPreference);
   const needsJson = callPreference ? JSON.stringify({ callPreference }) : '';

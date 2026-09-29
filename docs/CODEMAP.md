@@ -59,7 +59,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/forgot-password` | admin | client-side | page | `src/app/admin/forgot-password/page.tsx` | 70 |
 | `/admin/golfers` | admin | client-side | page | `src/app/admin/golfers/page.tsx` | 464 |
 | `/admin/inquiries` | admin | client-side | page | `src/app/admin/inquiries/page.tsx` | 990 |
-| `/admin/inquiries/[id]` | admin | client-side | page | `src/app/admin/inquiries/[id]/page.tsx` | 2238 |
+| `/admin/inquiries/[id]` | admin | client-side | page | `src/app/admin/inquiries/[id]/page.tsx` | 2255 |
 | `/admin/login` | admin | client-side | page | `src/app/admin/login/page.tsx` | 154 |
 | `/admin/messages` | admin | client-side | page | `src/app/admin/messages/page.tsx` | 602 |
 | `/admin/owner-login` | admin | client-side | page | `src/app/admin/owner-login/page.tsx` | 147 |
@@ -88,7 +88,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/expenses/[id]` | admin | file | DELETE PATCH | `src/app/api/admin/expenses/[id]/route.ts` | 72 |
 | `/api/admin/forgot-password` | admin | entry | POST | `src/app/api/admin/forgot-password/route.ts` | 45 |
 | `/api/admin/golfers` | admin | file | GET POST | `src/app/api/admin/golfers/route.ts` | 246 |
-| `/api/admin/inquiries` | admin | file | DELETE GET PATCH POST | `src/app/api/admin/inquiries/route.ts` | 1152 |
+| `/api/admin/inquiries` | admin | file | DELETE GET PATCH POST | `src/app/api/admin/inquiries/route.ts` | 1155 |
 | `/api/admin/login` | admin | entry | POST | `src/app/api/admin/login/route.ts` | 90 |
 | `/api/admin/logout` | admin | entry | POST | `src/app/api/admin/logout/route.ts` | 14 |
 | `/api/admin/messages` | admin | file | GET PATCH POST | `src/app/api/admin/messages/route.ts` | 177 |
@@ -149,7 +149,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/golfer/memberships` | golfer | file | GET POST | `src/app/api/golfer/memberships/route.ts` | 29 |
 | `/api/golfer/profile` | golfer | file | GET | `src/app/api/golfer/profile/route.ts` | 14 |
 | `/api/health` | public | public | GET | `src/app/api/health/route.ts` | 21 |
-| `/api/inquiries` | public | public | POST | `src/app/api/inquiries/route.ts` | 282 |
+| `/api/inquiries` | public | public | POST | `src/app/api/inquiries/route.ts` | 285 |
 | `/api/inquiries/details` | public | token | GET PATCH POST | `src/app/api/inquiries/details/route.ts` | 130 |
 | `/api/inquiries/signin-code` | public | public | POST | `src/app/api/inquiries/signin-code/route.ts` | 132 |
 | `/api/inquiries/signin-verify` | public | public | POST | `src/app/api/inquiries/signin-verify/route.ts` | 113 |
@@ -235,7 +235,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 28 |
 | `/dashboard/verify` | operator | token | page | `src/app/dashboard/verify/page.tsx` | 157 |
 | `/for-courses` | public | public | page | `src/app/for-courses/page.tsx` | 12 |
-| `/for-courses/details` | public | token | page | `src/app/for-courses/details/page.tsx` | 1869 |
+| `/for-courses/details` | public | token | page | `src/app/for-courses/details/page.tsx` | 1844 |
 | `/manage/[bookingId]` | golfer | token | page | `src/app/manage/[bookingId]/page.tsx` | 558 |
 | `/membership/[id]` | public | token | page | `src/app/membership/[id]/page.tsx` | 197 |
 | `/operator-agreement` | public | public | page | `src/app/operator-agreement/page.tsx` | 83 |

@@ -664,7 +664,7 @@
     },
     {
       "path": "src/app/admin/inquiries/[id]/page.tsx",
-      "lines": 2238,
+      "lines": 2255,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1627,7 +1627,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1152,
+      "lines": 1155,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3405,7 +3405,7 @@
     },
     {
       "path": "src/app/api/inquiries/route.ts",
-      "lines": 282,
+      "lines": 285,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6041,7 +6041,7 @@
     },
     {
       "path": "src/app/for-courses/details/page.tsx",
-      "lines": 1869,
+      "lines": 1844,
       "purpose": "",
       "brain": [],
       "exports": [
