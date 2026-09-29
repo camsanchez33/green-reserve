@@ -4,18 +4,11 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-29 14:07 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `546ea08` · working tree **1 dirty file(s)**
+Generated 2026-09-29 15:20 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `07d902a` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
-
-### Uncommitted working tree (1 file(s))
-
-- `M RUN_QUEUE.md`
-
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
 
 ## In flight
 
@@ -46,9 +39,9 @@ This is the distinction a raw checkbox count gets wrong.
 | BUG: perf audit crashed on every page | 2026-09-29 | 0d | `dd7056a` | `RUN_QUEUE.md:2571` |
 | RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM). | 2026-09-29 | 0d | `f57f269` | `RUN_QUEUE.md:2582` |
 | RV-2 — review follow-ups, small (from /gr-review 2026-09-29): | 2026-09-29 | 0d | `0eab366` | `RUN_QUEUE.md:2592` |
-| CAL-2 — Cal.com is the ONLY call scheduler | 2026-09-29 | 0d | `e082dd0` | `RUN_QUEUE.md:2707` |
-| BUG: hello@greenreserve.app takes no mail | 2026-09-29 | 0d | `371ffff` | `RUN_QUEUE.md:2739` |
-| CAL-1 — Cal.com as the call scheduler | 2026-09-29 | 0d | `a5ed9d7` | `RUN_QUEUE.md:2757` |
+| CAL-2 — Cal.com is the ONLY call scheduler | 2026-09-29 | 0d | `e082dd0` | `RUN_QUEUE.md:2723` |
+| BUG: hello@greenreserve.app takes no mail | 2026-09-29 | 0d | `371ffff` | `RUN_QUEUE.md:2755` |
+| CAL-1 — Cal.com as the call scheduler | 2026-09-29 | 0d | `a5ed9d7` | `RUN_QUEUE.md:2773` |
 | MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | — | — | — | `RUN_QUEUE.md:701` |
 | MP-1 | — | — | — | `RUN_QUEUE.md:731` |
 | MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | — | — | — | `RUN_QUEUE.md:766` |
@@ -74,10 +67,11 @@ This is the distinction a raw checkbox count gets wrong.
 11. MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table — `RUN_QUEUE.md:1450`
 12. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1518`
 13. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1624`
-14. SEC-1 — /api/bookings trusts the client-supplied Stripe customerId + — `RUN_QUEUE.md:2645`
-15. FB-2 — homepage (greenreserve.app) copy + structure, Cam's notes — `RUN_QUEUE.md:2673`
-16. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2781`
-17. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2934`
+14. PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29: — `RUN_QUEUE.md:2656`
+15. SEC-1 — /api/bookings trusts the client-supplied Stripe customerId + — `RUN_QUEUE.md:2661`
+16. FB-2 — homepage (greenreserve.app) copy + structure, Cam's notes — `RUN_QUEUE.md:2689`
+17. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2797`
+18. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2950`
 
 ## Waiting on you (not on a build)
 
@@ -92,9 +86,9 @@ This is the distinction a raw checkbox count gets wrong.
 - CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1624`
 - pending Cam's walk below — `RUN_QUEUE.md:2343`
 - Cam: "after submitting an inquiry they aren't getting sent an email — `RUN_QUEUE.md:2546`
-- Cam: "there should be no google calendar thing" and, after setting both env vars and redeploying, "it is just the same as before" — `RUN_QUEUE.md:2707`
-- Cam: "all emails need to go to thegreenreserve@outlook — `RUN_QUEUE.md:2739`
-- Cam: invite link showed "I can't show my calendar right now" — `RUN_QUEUE.md:2757`
+- Cam: "there should be no google calendar thing" and, after setting both env vars and redeploying, "it is just the same as before" — `RUN_QUEUE.md:2723`
+- Cam: "all emails need to go to thegreenreserve@outlook — `RUN_QUEUE.md:2755`
+- Cam: invite link showed "I can't show my calendar right now" — `RUN_QUEUE.md:2773`
 
 ## Revise campaign (page-by-page pass)
 
@@ -140,6 +134,7 @@ This is the distinction a raw checkbox count gets wrong.
 |---|---|---|---|
 | `CLAUDE.md` | 5 | 2026-09-29 | 0d |
 | `ARCHITECTURE.md` | 4 | 2026-09-16 | 12d |
+| `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 0d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-15 | 13d |
 | `UI_REVISE_SPEC.md` | 1 | 2026-09-16 | 13d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-29 | 0d |
@@ -171,6 +166,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `07d902a` 2026-09-29 — CG-2: pre-fill the setup sheet from details captured on the call
+- `1ec24ed` 2026-09-29 — queue/spec update
+- `7ad49c8` 2026-09-29 — queue/spec update
 - `4eda035` 2026-09-29 — PERF-2: Home server-rendered, /book server-rendered (strict speed check)
 - `88539ee` 2026-09-29 — CG-1: call guide — a conversation on the call, a sheet built from it after
 - `461caea` 2026-09-29 — FB-3 review: no double fee, no early no-show, partial party, ledger
@@ -180,10 +178,7 @@ This is the distinction a raw checkbox count gets wrong.
 - `ea3306b` 2026-09-29 — FB-1 review: no pipeline oracle; sheet photos only from our uploads
 - `cbe9235` 2026-09-29 — queue/spec update
 - `10cd62e` 2026-09-29 — queue/spec update
-- `6cab760` 2026-09-29 — queue/spec update
-- `1871e32` 2026-09-29 — SD-9b: setup sheet — required core first, the rest optional; scorecard photo
-- `f361e89` 2026-09-29 — FB-1: sign-up page per Cam's walk-through; honeypot no longer eats real inquiries
 
 ---
 
-**Totals:** 202 done · 23 awaiting review · 1 in flight · 17 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 203 done · 23 awaiting review · 1 in flight · 18 not started · 8 revise pages open · 15 ideas · 2 parked.

@@ -1,23 +1,21 @@
 {
-  "generatedAt": "2026-09-29T14:07:54.799Z",
+  "generatedAt": "2026-09-29T15:20:10.242Z",
   "repo": {
-    "head": "546ea08",
+    "head": "07d902a",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 1,
-    "dirty": [
-      "M RUN_QUEUE.md"
-    ],
+    "dirtyCount": 0,
+    "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-29T13:33:36+00:00",
+    "queueLastCommit": "2026-09-29T15:20:10+00:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 202,
+    "runDone": 203,
     "runAwaiting": 23,
     "runInFlight": 1,
-    "runNotStarted": 17,
+    "runNotStarted": 18,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -118,21 +116,21 @@
     },
     {
       "title": "CAL-2 — Cal.com is the ONLY call scheduler",
-      "line": 2707,
+      "line": 2723,
       "hash": "e082dd0",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "BUG: hello@greenreserve.app takes no mail",
-      "line": 2739,
+      "line": 2755,
       "hash": "371ffff",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 2757,
+      "line": 2773,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 0
@@ -268,23 +266,28 @@
       "section": "Queue (run in this order)"
     },
     {
+      "title": "PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29:",
+      "line": 2656,
+      "section": "Queue (run in this order)"
+    },
+    {
       "title": "SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +",
-      "line": 2645,
+      "line": 2661,
       "section": "Queue (run in this order)"
     },
     {
       "title": "FB-2 — homepage (greenreserve.app) copy + structure, Cam's notes",
-      "line": 2673,
+      "line": 2689,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2781,
+      "line": 2797,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2934,
+      "line": 2950,
       "section": "Queue (run in this order)"
     }
   ],
@@ -347,17 +350,17 @@
     {
       "item": "CAL-2 — Cal.com is the ONLY call scheduler",
       "note": "Cam: \"there should be no google calendar thing\" and, after setting both env vars and redeploying, \"it is just the same as before\"",
-      "line": 2707
+      "line": 2723
     },
     {
       "item": "BUG: hello@greenreserve.app takes no mail",
       "note": "Cam: \"all emails need to go to thegreenreserve@outlook",
-      "line": 2739
+      "line": 2755
     },
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2757
+      "line": 2773
     }
   ],
   "ideas": {
@@ -440,6 +443,12 @@
       "openRefs": 4,
       "lastTouched": "2026-09-16",
       "ageDays": 12
+    },
+    {
+      "file": "PRIVATE_BILLING_SPEC.md",
+      "openRefs": 1,
+      "lastTouched": "2026-09-29",
+      "ageDays": 0
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
@@ -613,6 +622,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "07d902a",
+      "date": "2026-09-29",
+      "subject": "CG-2: pre-fill the setup sheet from details captured on the call"
+    },
+    {
+      "h": "1ec24ed",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "7ad49c8",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "4eda035",
       "date": "2026-09-29",
       "subject": "PERF-2: Home server-rendered, /book server-rendered (strict speed check)"
@@ -656,21 +680,6 @@
       "h": "10cd62e",
       "date": "2026-09-29",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "6cab760",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "1871e32",
-      "date": "2026-09-29",
-      "subject": "SD-9b: setup sheet — required core first, the rest optional; scorecard photo"
-    },
-    {
-      "h": "f361e89",
-      "date": "2026-09-29",
-      "subject": "FB-1: sign-up page per Cam's walk-through; honeypot no longer eats real inquiries"
     }
   ]
 }
