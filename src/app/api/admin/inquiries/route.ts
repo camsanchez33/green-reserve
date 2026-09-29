@@ -13,12 +13,12 @@ import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrient
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 import { resolveAdminSession, requireRole, requireOwner, ownerGateError, MANAGER_PLUS, SUPPORT_PLUS, VIEWER_PLUS, type AdminSession } from '@/lib/admin-session';
 import { AGENDA, callGate, fmtCallTime, nextCall, latestCall, parseJson } from '@/lib/inquiry-call';
-import { validateAnswers, flatSummaries, parseCallAnswers, toSheetPrefill } from '@/lib/call-answers';
+import { validateAnswers, flatSummaries, parseCallAnswers, toSheetPrefill, callRecapLines, LIVE_BY_OPTIONS } from '@/lib/call-answers';
 import { sendCallInvite, issueCallInvite } from '@/lib/call-invite';
 import { calcomBookingUrl, calcomEmbedUrl } from '@/lib/calcom';
 import { rateLimit } from '@/lib/rate-limit';
 import { firstCheckInAfterGoLive } from '@/lib/course-checkin';
-import { sendCallScheduledEmail, sendCallRecapEmail } from '@/lib/email';
+import { sendCallScheduledEmail, sendCallRecapEmail, sendCallFollowupEmail } from '@/lib/email';
 import { encodeChangeAddressed, encodeRequestReReview } from '@/lib/change-requests';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 import { hasAcceptedAgreement } from '@/lib/agreement-gate';
@@ -271,6 +271,52 @@ async function handleAction(
       }
     }
     return NextResponse.json({ success: true, call: updated, needsClose: outcome === 'not_a_fit', emailSent, emailError });
+  }
+
+  // CG-1 (Cam 2026-09-29): "End call → Send setup sheet". One click logs the
+  // call as talked (taps + notes), corrects the course type if the call
+  // changed it, issues the setup link, and emails the recap + link + next
+  // steps + fee model. The email is awaited so the button reports whether it
+  // actually went (no-silent-failures).
+  if (action === 'send_call_followup') {
+    const call = await prisma.call.findUnique({ where: { id: String(payload?.callId ?? '') } });
+    if (!call || call.inquiryId !== inquiryId) return NextResponse.json({ error: 'Call not found' }, { status: 404 });
+    if (CLOSED.includes(inquiry.status)) return NextResponse.json({ error: `This inquiry is ${inquiry.status} — reopen it first.` }, { status: 409 });
+    const answers = payload?.answers !== undefined ? validateAnswers(payload.answers) : parseCallAnswers(call.answersJson);
+    const notes = typeof payload?.notes === 'string' ? payload.notes.slice(0, 8000) : undefined;
+    await prisma.call.update({
+      where: { id: call.id },
+      data: {
+        answersJson: JSON.stringify(answers),
+        ...(notes !== undefined ? { notes } : {}),
+        ...(call.outcome === 'scheduled' ? { outcome: 'talked', completedAt: new Date() } : {}),
+      },
+    });
+    const talkedType = answers.items.shape?.fields.courseType;
+    if ((talkedType === 'public' || talkedType === 'private') && talkedType !== inquiry.courseType) {
+      await prisma.courseInquiry.update({ where: { id: inquiryId }, data: { courseType: talkedType } });
+      await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `Course type set to ${talkedType} on the call — by ${adminName}`);
+    }
+    const detailsToken = inquiry.detailsToken ?? randomBytes(24).toString('hex');
+    const detailsLink = `${process.env.NEXT_PUBLIC_URL}/for-courses/details?token=${detailsToken}`;
+    const advance = inquiry.status === 'pending' || inquiry.status === 'in_review';
+    await prisma.courseInquiry.update({
+      where: { id: inquiryId },
+      // Chase the sheet in three days if it has not come back.
+      data: { detailsToken, nextFollowUpAt: new Date(Date.now() + 3 * 86_400_000), ...(advance ? { status: 'details_requested' } : {}) },
+    });
+    await logEvent(inquiryId, inquiry.status, advance ? 'details_requested' : inquiry.status, 'admin', `Call logged — talked — setup sheet sent from the call by ${adminName}`);
+    const liveBy = answers.items.timeline?.fields.liveBy;
+    const liveTarget = typeof liveBy === 'string' && liveBy !== 'unsure' ? (LIVE_BY_OPTIONS.find(([v]) => v === liveBy)?.[1] ?? '').toLowerCase() : null;
+    try {
+      await sendCallFollowupEmail({
+        contactName: inquiry.firstName || inquiry.contactName, email: inquiry.email, courseName: inquiry.courseName,
+        detailsLink, recap: callRecapLines(answers), liveTarget: liveTarget || null,
+      });
+      return NextResponse.json({ success: true, emailSent: true, detailsLink });
+    } catch (err) {
+      return NextResponse.json({ success: true, emailSent: false, emailError: err instanceof Error ? err.message : 'send failed', detailsLink });
+    }
   }
 
   if (action === 'skip_call') {

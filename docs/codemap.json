@@ -1628,7 +1628,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1155,
+      "lines": 1201,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3369,7 +3369,7 @@
     },
     {
       "path": "src/app/api/inquiries/details/route.ts",
-      "lines": 130,
+      "lines": 135,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6046,7 +6046,7 @@
     },
     {
       "path": "src/app/for-courses/details/page.tsx",
-      "lines": 1844,
+      "lines": 1882,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6822,7 +6822,7 @@
     },
     {
       "path": "src/components/admin/InquiryCallCards.tsx",
-      "lines": 779,
+      "lines": 880,
       "purpose": "INQUIRY_CALL_SPEC IC-2 — the two discovery-call cards on the inquiry detail page.",
       "brain": [],
       "exports": [
@@ -8855,7 +8855,7 @@
     },
     {
       "path": "src/lib/call-answers.ts",
-      "lines": 266,
+      "lines": 323,
       "purpose": "INQUIRY_CALL_SPEC IC-5 — structured discovery-call answers.",
       "brain": [],
       "exports": [
@@ -8870,6 +8870,10 @@
         {
           "name": "CallAnswers",
           "kind": "type"
+        },
+        {
+          "name": "callRecapLines",
+          "kind": "fn"
         },
         {
           "name": "DAY_SHORT",
@@ -8904,12 +8908,20 @@
           "kind": "fn"
         },
         {
+          "name": "HOLES_OPTIONS",
+          "kind": "const"
+        },
+        {
           "name": "isCaptured",
           "kind": "fn"
         },
         {
           "name": "ItemAnswers",
           "kind": "type"
+        },
+        {
+          "name": "LIVE_BY_OPTIONS",
+          "kind": "const"
         },
         {
           "name": "missingNeedFields",
@@ -8950,6 +8962,10 @@
         {
           "name": "validateAnswers",
           "kind": "fn"
+        },
+        {
+          "name": "WALKING_OPTIONS",
+          "kind": "const"
         }
       ],
       "route": null,
@@ -10005,7 +10021,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1750,
+      "lines": 1790,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10059,6 +10075,10 @@
         },
         {
           "name": "sendBookingModifiedEmail",
+          "kind": "fn"
+        },
+        {
+          "name": "sendCallFollowupEmail",
           "kind": "fn"
         },
         {

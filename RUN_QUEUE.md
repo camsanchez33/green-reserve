@@ -2623,6 +2623,19 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   is the Cal.com event length (Cam sets it there); the thanks page itself
   offers "pick a call time". Course type is PUBLIC / PRIVATE EVERYWHERE
   (sign-up, setup sheet, admin); a semi-private club = Public + member passes.
+- [x] CG-1 — call guide (Cam 2026-09-29: "it should just be a conversation, then we
+  send them a form dedicated to them"; OpenTable-style sales call → onboarding
+  portal). Built: the Log-the-call card's Talked view is a one-screen guide —
+  opener from their form, six one-tap shape questions (type, holes,
+  memberships, cancel fee, carts, booking method; pre-selected from the form),
+  signs-off / day-to-day / go-live, talk-track ticks, one private notes box, no
+  price or time fields. "End call → Send setup sheet" previews the recap, then
+  one action (send_call_followup) logs the call, fixes the course type, issues
+  the link, sets a 3-day follow-up and emails recap + link + next steps + fee
+  model (LQ-2 approved sentence). The sheet opens with "From our call", is
+  pre-filled from the taps, and skips sections the call answered no to (with
+  "show all"). Walked end to end in Chromium. OPEN: nothing sent for real yet
+  (no Resend key in the sandbox) — Cam's first real call is the live test.
 - [ ] SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +
   paymentMethodId (found in the FB-3 review, pre-existing). No route exposes
   another golfer's ids, but anyone holding a cus_ id could attach their own card

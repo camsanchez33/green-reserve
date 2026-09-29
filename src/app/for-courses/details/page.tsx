@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useCallback, Suspense, useRef } from 'react';
+import { useEffect, useState, useCallback, Suspense, useRef, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -346,7 +346,18 @@ function DetailsForm() {
   const [callAnswers, setCallAnswers] = useState<Record<string, string>>({});
   const [prefilled, setPrefilled] = useState<string[]>([]);
   const [draft, setDraft] = useState<Draft>(initDraft);
-  const [sections, setSections] = useState<SectionDef[]>([]);
+  const [allSections, setAllSections] = useState<SectionDef[]>([]);
+  // CG-1: a section the discovery call answered "no" to (no memberships, no
+  // outside outings…) is skipped — the sheet is theirs, built from the call.
+  // "Show all sections" brings them back if we got something wrong.
+  const [callNo, setCallNo] = useState<SectionId[]>([]);
+  const [showAll, setShowAll] = useState(false);
+  const [callRecap, setCallRecap] = useState<string[]>([]);
+  const sections = useMemo(
+    () => (showAll ? allSections : allSections.filter(sec => !callNo.includes(sec.id))),
+    [allSections, callNo, showAll],
+  );
+  const skippedCount = allSections.filter(sec => callNo.includes(sec.id)).length;
   const [activeIdx, setActiveIdx] = useState(0);
   const [saving, setSaving] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -394,10 +405,17 @@ function DetailsForm() {
         const n: Needs = d.needs && typeof d.needs === 'object' ? d.needs : {};
         const ca: Record<string, string> = d.callAnswers && typeof d.callAnswers === 'object' ? d.callAnswers : {};
         setCallAnswers(ca);
-        setSections(buildSections(ct));
+        setAllSections(buildSections(ct));
+        setCallRecap(Array.isArray(d.callRecap) ? (d.callRecap as unknown[]).filter((x): x is string => typeof x === 'string') : []);
         // IC-5 §4: the call's structured answers fill empty keys only.
         const pre: Record<string, unknown> = d.prefill && typeof d.prefill === 'object' ? d.prefill : {};
         const preBranch: Record<string, unknown> = pre.branch && typeof pre.branch === 'object' ? pre.branch as Record<string, unknown> : {};
+        {
+          const savedBranch = (d.details && typeof d.details === 'object' && (d.details as Record<string, unknown>).branch && typeof (d.details as Record<string, unknown>).branch === 'object')
+            ? (d.details as Record<string, Record<string, unknown>>).branch : {};
+          // Hidden only when the call said no AND the course has not said yes itself.
+          setCallNo(BRANCH_KEYS.filter(k => preBranch[k] === 'no' && savedBranch[k] !== 'yes'));
+        }
         const { merged, applied } = applyPrefill((d.details && typeof d.details === 'object' ? d.details : {}) as Record<string, unknown>, pre);
         setPrefilled(applied);
         // The saved sheet was always read loosely below (it predates any typing here).
@@ -1773,6 +1791,14 @@ function DetailsForm() {
           <p className="text-[11px] text-ink-faint">{Math.round(progress)}% complete</p>
         </div>
 
+        {activeIdx === 0 && callRecap.length > 0 && (
+          <div className="bg-white rounded-lg border border-line px-5 py-4 mb-4">
+            <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2">From our call</p>
+            <ul className="list-disc pl-5 space-y-1 text-[13px] text-ink-soft">{callRecap.map(l => <li key={l}>{l}</li>)}</ul>
+            <p className="text-[11.5px] text-ink-faint mt-2">This sheet only asks what applies to you. Something off? Reply to our email.</p>
+          </div>
+        )}
+
         <div className="bg-white rounded-lg border border-line p-6 mb-5">
           <h2 className="text-[18px] font-serif font-medium tracking-tight text-ink mb-5">
             {section?.title}
@@ -1818,6 +1844,18 @@ function DetailsForm() {
         </div>
         {section?.id === 'cancellation' && !draft.cancellationPolicy && (
           <p className="text-[11px] text-ink-faint text-center mt-2">Select Yes or No above to continue.</p>
+        )}
+        {!showAll && skippedCount > 0 && (
+          <p className="text-center mt-4">
+            <button type="button" onClick={() => {
+              const id = sections[activeIdx]?.id;
+              setShowAll(true);
+              const idx = allSections.findIndex(sec => sec.id === id);
+              if (idx >= 0) setActiveIdx(idx);
+            }} className="text-[11.5px] text-ink-muted hover:text-ink underline underline-offset-2">
+              We skipped {skippedCount} section{skippedCount === 1 ? '' : 's'} based on our call — show all
+            </button>
+          </p>
         )}
         {/* SD-9b: past the required core, the course can stop here. */}
         {section?.optional && !isLast && (

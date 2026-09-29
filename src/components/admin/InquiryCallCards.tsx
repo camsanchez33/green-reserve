@@ -20,6 +20,7 @@ import {
 import { stillNeed } from '@/lib/inquiry-needs';
 import {
   CALL_FIELDS, DAY_SHORT, parseCallAnswers, summarize, hasAnyCapture,
+  callRecapLines, HOLES_OPTIONS, WALKING_OPTIONS, LIVE_BY_OPTIONS, BOOKING_METHOD_OPTIONS,
   type CallAnswers, type ItemAnswers, type FieldSpec,
 } from '@/lib/call-answers';
 import { Card } from '@/components/ui/Card';
@@ -33,6 +34,7 @@ export type CallRow = CallLike & {
 
 type InquiryForCards = InquiryLike & {
   id: string; contactName: string; email: string; phone: string;
+  courseType?: string | null;
   /** SC-3: when the "pick a call time" link went out. */
   callInviteSentAt?: string | null;
   detailsJson?: string | null; needsJson?: string | null;
@@ -467,7 +469,7 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
     try {
       if (timer.current) clearTimeout(timer.current);
       draftSeq.current++; // any autosave still in flight is now stale
-      const r = await patch(inquiry.id, 'log_call', { callId: call.id, outcome: 'talked', answers, notes, followUpAt: followUpIso, emailRecap });
+      const r = await patch(inquiry.id, 'log_call', { callId: call.id, outcome: 'talked', answers, notes, followUpAt: followUpIso, emailRecap: false });
       if (!r.ok) { setError(errText(r)); return; }
       setDraftState({ status: 'idle' });
       const recap = r.data.emailSent === true ? ` Recap emailed to ${inquiry.email}.`
@@ -475,6 +477,23 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
         : emailRecap ? ' No recap was sent — nothing was captured to send.' : '';
       if (sendSheet) { if (recap) setNotice({ tone: r.data.emailSent === false ? 'warn' : 'ok', text: 'Call logged.' + recap }); await onRequestSheet(); return; }
       setNotice({ tone: r.data.emailSent === false ? 'warn' : 'ok', text: 'Call logged.' + recap });
+      await onRefresh();
+    } catch (e) { setError('Error: ' + e); }
+    finally { setBusy(false); }
+  };
+
+  // CG-1: "End call → Send setup sheet" — logs the call, sends the recap,
+  // their link, next steps and the fee model in one go.
+  const sendFromCall = async () => {
+    setBusy(true); setError(''); setNotice(null);
+    try {
+      if (timer.current) clearTimeout(timer.current);
+      draftSeq.current++;
+      const r = await patch(inquiry.id, 'send_call_followup', { callId: call.id, answers, notes });
+      if (!r.ok) { setError(errText(r)); return; }
+      setDraftState({ status: 'idle' });
+      if (r.data.emailSent === true) setNotice({ tone: 'ok', text: `Call logged. Recap + setup sheet emailed to ${inquiry.email}.` });
+      else setNotice({ tone: 'warn', text: `Call logged and the setup link was created, but the email did not send (${String(r.data.emailError || 'unknown')}). Send it with "Resend sheet", or give them this link: ${String(r.data.detailsLink || '')}` });
       await onRefresh();
     } catch (e) { setError('Error: ' + e); }
     finally { setBusy(false); }
@@ -564,77 +583,159 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
             </div>
           ) : (
             <div>
-              <div className="flex items-center justify-between gap-3 mb-1">
-                <label className={lbl + ' mb-0'}>What you got <span className="normal-case tracking-normal text-ink-faint">— the course sees these on their setup sheet; notes below stay private</span></label>
-                <DraftStatus state={draftState} onRetry={saveDraftNow} />
-              </div>
-              <div className="border border-line rounded-md divide-y divide-line-soft mb-3">
-                {agendaKeys.map(item => (
-                  <AnswerRow key={item.key} agendaKey={item.key} short={item.short} label={item.label}
-                    prior={status.find(s => s.key === item.key)?.answered ?? null}
-                    value={answers.items[item.key] ?? { fields: {}, note: '' }}
-                    open={openKeys.has(item.key)} onToggle={() => toggleOpen(item.key)}
-                    onChange={it => setItem(item.key, it)} disabled={disabled} />
-                ))}
-                {call.agendaExtra && (
-                  <div className="px-3 py-2 text-xs text-ink-soft"><span className="text-ink-muted">Also on the agenda:</span> {call.agendaExtra}</div>
-                )}
-              </div>
-
-              <label className="block"><span className={lbl}>Notes</span>
-              <textarea rows={3} value={notes} onChange={e => setNotesDirty(e.target.value)} placeholder="Anything else from the call" className={iCls + ' mb-3'} disabled={disabled} /></label>
-
-              <div className="flex items-start gap-6 flex-wrap mb-4">
-                <div className="flex-1 min-w-[240px]">
-                  <label className={lbl}>Still need from them</label>
-                  {still.length === 0 ? (
-                    <div className="flex items-center gap-1.5 text-xs text-ok"><Check className="w-3.5 h-3.5" />Nothing outstanding</div>
-                  ) : (
-                    <div className="flex flex-wrap gap-1.5">
-                      {still.map(s => <span key={s.key} className="text-[11px] text-ink-soft bg-paper border border-line rounded-md px-2 py-0.5">{s.label}</span>)}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <label className="block"><span className={lbl}>Follow up by</span>
-                  <input type="date" value={followUp} onChange={e => setFollowUp(e.target.value)} className={iCls} disabled={disabled} /></label>
-                </div>
-              </div>
-              {outcome === 'talked' && (
-                <label className="flex items-center gap-2 text-xs text-ink-soft cursor-pointer mb-4">
-                  <input type="checkbox" checked={emailRecap} onChange={e => setEmailRecap(e.target.checked)} disabled={disabled} />
-                  Email {contactFirst} a recap of what we captured
-                </label>
-              )}
-
-              <div className="flex items-center gap-2 flex-wrap pt-3 border-t border-line-soft">
-                {outcome === 'talked' && !sheetAlreadySent && (
-                  <>
-                    <button onClick={() => saveTalked(true)} disabled={disabled} className={btnP}>
-                      <Check className="w-3.5 h-3.5" />{busy ? 'Saving…' : 'Save + send pre-filled sheet'}
+              {outcome === 'talked' ? (
+                <CallGuide inquiry={inquiry} answers={answers} setItem={setItem} notes={notes} setNotes={setNotesDirty}
+                  draftState={draftState} onRetryDraft={saveDraftNow} disabled={disabled} contactFirst={contactFirst}
+                  sheetAlreadySent={sheetAlreadySent} busy={busy}
+                  onSend={sendFromCall} onSaveOnly={() => saveTalked(false)} />
+              ) : (
+                <>
+                  <label className="block"><span className={lbl}>Notes</span>
+                  <textarea rows={3} value={notes} onChange={e => setNotesDirty(e.target.value)} placeholder="Why it isn't a fit" className={iCls + ' mb-3'} disabled={disabled} /></label>
+                  <div className="flex items-center gap-2 flex-wrap pt-3 border-t border-line-soft">
+                    <button onClick={notAFit} disabled={disabled} className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 disabled:opacity-50 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors">
+                      <AlertTriangle className="w-3.5 h-3.5" />{busy ? 'Saving…' : 'Save and close as not a fit'}
                     </button>
-                    <button onClick={() => saveTalked(false)} disabled={disabled} className={btnO}>Save, don’t send yet</button>
-                  </>
-                )}
-                {outcome === 'talked' && sheetAlreadySent && (
-                  <button onClick={() => saveTalked(false)} disabled={disabled} className={btnP}>
-                    <Check className="w-3.5 h-3.5" />{busy ? 'Saving…' : 'Save'}
-                  </button>
-                )}
-                {outcome === 'not_a_fit' && (
-                  <button onClick={notAFit} disabled={disabled} className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 disabled:opacity-50 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors">
-                    <AlertTriangle className="w-3.5 h-3.5" />{busy ? 'Saving…' : 'Save and close as not a fit'}
-                  </button>
-                )}
-                <div className="ml-auto">
-                  <SkipInline inquiryId={inquiry.id} contactFirst={contactFirst} busy={disabled} setBusy={setBusy}
-                    onDone={onRefresh} onError={setError} open={skipOpen} setOpen={setSkipOpen} />
-                </div>
+                  </div>
+                </>
+              )}
+              <div className="flex justify-end mt-3">
+                <SkipInline inquiryId={inquiry.id} contactFirst={contactFirst} busy={disabled} setBusy={setBusy}
+                  onDone={onRefresh} onError={setError} open={skipOpen} setOpen={setSkipOpen} />
               </div>
             </div>
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── CG-1: the call guide ─────────────────────────────────────────────
+// Cam 2026-09-29: "it should just be a conversation, and then we send them a
+// form dedicated to them and what they said". Taps, not typing: six shape
+// questions decide which sections their setup sheet asks and pre-fill the
+// obvious; prices and tee times are theirs to type. Autosaves like the old card.
+
+function CallGuide({ inquiry, answers, setItem, notes, setNotes, draftState, onRetryDraft, disabled, contactFirst, sheetAlreadySent, busy, onSend, onSaveOnly }: {
+  inquiry: InquiryForCards; answers: CallAnswers; setItem: (key: string, item: ItemAnswers) => void;
+  notes: string; setNotes: (v: string) => void;
+  draftState: { status: 'idle' | 'saving' | 'saved' | 'failed'; at?: string; err?: string }; onRetryDraft: () => void;
+  disabled: boolean; contactFirst: string; sheetAlreadySent: boolean; busy: boolean;
+  onSend: () => void; onSaveOnly: () => void;
+}) {
+  const [preview, setPreview] = useState(false);
+  const item = (k: string): ItemAnswers => answers.items[k] ?? { fields: {}, note: '' };
+  const get = (k: string, f: string) => item(k).fields[f];
+  const put = (k: string, f: string, v: unknown) => {
+    const it = item(k);
+    const fields = { ...it.fields };
+    if (v === undefined || v === '') delete fields[f]; else fields[f] = v;
+    setItem(k, { ...it, fields });
+  };
+  const yn = (v: unknown): '' | 'yes' | 'no' => (v === true ? 'yes' : v === false ? 'no' : '');
+
+  // What they already told us on the form is the starting point — Cam only
+  // changes a tap if the call says otherwise.
+  const seeded = useRef(false);
+  useEffect(() => {
+    if (seeded.current) return;
+    seeded.current = true;
+    const shape = { ...item('shape').fields };
+    let changed = false;
+    if (shape.courseType === undefined && inquiry.courseType) { shape.courseType = inquiry.courseType === 'private' ? 'private' : 'public'; changed = true; }
+    if (shape.bookingToday === undefined && inquiry.currentBookingMethod && BOOKING_METHOD_OPTIONS.some(([v]) => v === inquiry.currentBookingMethod)) { shape.bookingToday = inquiry.currentBookingMethod; changed = true; }
+    if (changed) setItem('shape', { ...item('shape'), fields: shape });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const recap = callRecapLines(answers);
+  const row = 'grid grid-cols-[150px_1fr] items-center gap-3 py-1.5';
+  const q = 'text-[12.5px] text-ink-soft';
+  const talk: [string, string][] = [['feeModel', '$1.50 fee model'], ['goLive', 'What go-live looks like'], ['nextSteps', 'Next steps + their setup sheet']];
+
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <p className="text-[12.5px] text-ink-soft">
+          {inquiry.currentBookingMethod
+            ? <>Opener: &ldquo;You mentioned you take tee times by <span className="text-ink">{inquiry.currentBookingMethod.toLowerCase()}</span> — walk me through a busy Saturday.&rdquo;</>
+            : <>Opener: &ldquo;Tell me how you take tee times today.&rdquo;</>}
+        </p>
+        <DraftStatus state={draftState} onRetry={onRetryDraft} />
+      </div>
+
+      <div className="border border-line rounded-md px-3 py-2 mb-3">
+        <span className={lbl}>The shape of the course — decides what their sheet asks</span>
+        <div className={row}><span className={q}>Course type</span>
+          <Segmented value={(get('shape', 'courseType') as string) ?? ''} onChange={v => put('shape', 'courseType', v)} disabled={disabled} options={[['public', 'Public'], ['private', 'Private']]} /></div>
+        <div className={row}><span className={q}>Holes</span>
+          <Segmented value={(get('shape', 'holes') as string) ?? ''} onChange={v => put('shape', 'holes', v)} disabled={disabled} options={HOLES_OPTIONS} /></div>
+        <div className={row}><span className={q}>Memberships / passes / resident rates?</span>
+          <Segmented value={yn(get('shape', 'memberships'))} onChange={v => put('shape', 'memberships', v === 'yes')} disabled={disabled} options={[['yes', 'Yes'], ['no', 'No']]} /></div>
+        <div className={row}><span className={q}>Cancellation fee?</span>
+          <Segmented value={yn(get('shape', 'cancelFee'))} onChange={v => put('shape', 'cancelFee', v === 'yes')} disabled={disabled} options={[['yes', 'Yes'], ['no', 'No']]} /></div>
+        <div className={row}><span className={q}>Carts</span>
+          <Segmented value={(get('shape', 'walking') as string) ?? ''} onChange={v => put('shape', 'walking', v)} disabled={disabled} options={WALKING_OPTIONS} /></div>
+        <div className={row}><span className={q}>Books today by</span>
+          <select value={(get('shape', 'bookingToday') as string) ?? ''} onChange={e => put('shape', 'bookingToday', e.target.value)} className={iCls} disabled={disabled}>
+            <option value="">—</option>
+            {BOOKING_METHOD_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select></div>
+      </div>
+
+      <div className="grid sm:grid-cols-3 gap-3 mb-3">
+        <label className="block"><span className={lbl}>Who signs off</span>
+          <input value={(get('people', 'signer') as string) ?? ''} onChange={e => put('people', 'signer', e.target.value)} placeholder="Mike, owner" className={iCls} disabled={disabled} /></label>
+        <label className="block"><span className={lbl}>Runs the sheet day to day</span>
+          <input value={(get('people', 'dayToDay') as string) ?? ''} onChange={e => put('people', 'dayToDay', e.target.value)} placeholder="Sarah, pro shop" className={iCls} disabled={disabled} /></label>
+        <label className="block"><span className={lbl}>Wants to go live</span>
+          <select value={(get('timeline', 'liveBy') as string) ?? ''} onChange={e => put('timeline', 'liveBy', e.target.value)} className={iCls} disabled={disabled}>
+            <option value="">—</option>
+            {LIVE_BY_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select></label>
+      </div>
+
+      <div className="mb-3">
+        <span className={lbl}>Talk track — tick as you cover it</span>
+        <div className="flex flex-wrap gap-x-5 gap-y-1.5">
+          {talk.map(([k, l]) => (
+            <label key={k} className="flex items-center gap-2 text-[12.5px] text-ink-soft cursor-pointer">
+              <input type="checkbox" checked={get('talk_track', k) === true} onChange={e => put('talk_track', k, e.target.checked ? true : undefined)} disabled={disabled} />{l}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <label className="block"><span className={lbl}>Notes <span className="normal-case tracking-normal text-ink-faint">— private, never sent</span></span>
+        <textarea rows={3} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Anything worth remembering — pain points, questions, what they liked" className={iCls + ' mb-3'} disabled={disabled} /></label>
+
+      {preview && (
+        <div className="border border-line rounded-md bg-paper px-3 py-2.5 mb-3">
+          <span className={lbl}>{contactFirst} gets this recap, their setup link, the next steps and the fee model</span>
+          {recap.length ? (
+            <ul className="list-disc pl-5 text-[12.5px] text-ink space-y-0.5">{recap.map(l => <li key={l}>{l}</li>)}</ul>
+          ) : <p className="text-[12.5px] text-ink-muted">Nothing tapped yet — they&apos;ll get the link and next steps without a recap.</p>}
+          <p className="text-[11px] text-ink-faint mt-1.5">Their sheet only asks the sections these answers call for, pre-filled.</p>
+        </div>
+      )}
+
+      <div className="flex items-center gap-2 flex-wrap pt-3 border-t border-line-soft">
+        {!sheetAlreadySent ? (
+          preview ? (
+            <>
+              <button onClick={onSend} disabled={disabled} className={btnP}><Send className="w-3.5 h-3.5" />{busy ? 'Sending…' : `Send to ${contactFirst}`}</button>
+              <button onClick={() => setPreview(false)} disabled={disabled} className={btnO}>Back</button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => setPreview(true)} disabled={disabled} className={btnP}><Check className="w-3.5 h-3.5" />End call → Send setup sheet</button>
+              <button onClick={onSaveOnly} disabled={disabled} className={btnO}>Save, don&apos;t send yet</button>
+            </>
+          )
+        ) : (
+          <button onClick={onSaveOnly} disabled={disabled} className={btnP}><Check className="w-3.5 h-3.5" />{busy ? 'Saving…' : 'Save'}</button>
+        )}
+      </div>
     </div>
   );
 }
