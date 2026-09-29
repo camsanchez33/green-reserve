@@ -2558,6 +2558,8 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   flex-wrap so the longer Outlook address cannot overflow at 320px; (f) stale
   hello@ comments (agreement-sign.ts, agreement-required.ts, email.ts,
   call/[token]/route.ts). (small, no migration)
+  SHIPPED 0eab366, 2026-09-29 — box open until /gr-review. All six (a)-(f); (c) tested
+  with two simultaneous submits, (e) at 320px.
 - [ ] PERF-1 — golfer pages over budget (first real Lighthouse run, PR #2,
   mobile + slow 4G): Home 63 (TBT 1301ms, LCP 3.83s), For Courses 69 (CLS 0.265,
   LCP 3.57s), Course page 77 (CLS 0.181, LCP 3.59s), Booking 70 (LCP 5.07s,

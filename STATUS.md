@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-29 03:31 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `ffcb0d8` · working tree **3 dirty file(s)**
+Generated 2026-09-29 03:34 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `0eab366` · working tree **3 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -13,8 +13,8 @@ None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 ### Uncommitted working tree (3 file(s))
 
 - `M RUN_QUEUE.md`
-- `M STATUS.json`
-- `M STATUS.md`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -45,9 +45,11 @@ This is the distinction a raw checkbox count gets wrong.
 | BUG: 56 of 59 email senders report success when Resend rejects the send | 2026-09-29 | 0d | `209e652` | `RUN_QUEUE.md:647` |
 | BUG: inquiry submissions send no emails | 2026-09-28 | 0d | `8b9a046` | `RUN_QUEUE.md:2503` |
 | BUG: perf audit crashed on every page | 2026-09-29 | 0d | `dd7056a` | `RUN_QUEUE.md:2528` |
-| CAL-2 — Cal.com is the ONLY call scheduler | 2026-09-29 | 0d | `e082dd0` | `RUN_QUEUE.md:2566` |
-| BUG: hello@greenreserve.app takes no mail | 2026-09-29 | 0d | `371ffff` | `RUN_QUEUE.md:2598` |
-| CAL-1 — Cal.com as the call scheduler | 2026-09-29 | 0d | `a5ed9d7` | `RUN_QUEUE.md:2616` |
+| RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM). | 2026-09-29 | 0d | `f57f269` | `RUN_QUEUE.md:2539` |
+| RV-2 — review follow-ups, small (from /gr-review 2026-09-29): | 2026-09-29 | 0d | `0eab366` | `RUN_QUEUE.md:2549` |
+| CAL-2 — Cal.com is the ONLY call scheduler | 2026-09-29 | 0d | `e082dd0` | `RUN_QUEUE.md:2570` |
+| BUG: hello@greenreserve.app takes no mail | 2026-09-29 | 0d | `371ffff` | `RUN_QUEUE.md:2602` |
+| CAL-1 — Cal.com as the call scheduler | 2026-09-29 | 0d | `a5ed9d7` | `RUN_QUEUE.md:2620` |
 | MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | — | — | — | `RUN_QUEUE.md:688` |
 | MP-1 | — | — | — | `RUN_QUEUE.md:718` |
 | MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | — | — | — | `RUN_QUEUE.md:753` |
@@ -77,11 +79,9 @@ This is the distinction a raw checkbox count gets wrong.
 15. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1477`
 16. MP-12 — split courses/[id] (was ADMIN_V4 V4-9): 1,900 lines / 52 useState — `RUN_QUEUE.md:1526`
 17. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1581`
-18. RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM). — `RUN_QUEUE.md:2539`
-19. RV-2 — review follow-ups, small (from /gr-review 2026-09-29): — `RUN_QUEUE.md:2547`
-20. PERF-1 — golfer pages over budget (first real Lighthouse run, PR #2, — `RUN_QUEUE.md:2559`
-21. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2640`
-22. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2793`
+18. PERF-1 — golfer pages over budget (first real Lighthouse run, PR #2, — `RUN_QUEUE.md:2563`
+19. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2644`
+20. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:2797`
 
 ## Waiting on you (not on a build)
 
@@ -95,9 +95,9 @@ This is the distinction a raw checkbox count gets wrong.
 - CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1581`
 - pending Cam's walk below — `RUN_QUEUE.md:2300`
 - Cam: "after submitting an inquiry they aren't getting sent an email — `RUN_QUEUE.md:2503`
-- Cam: "there should be no google calendar thing" and, after setting both env vars and redeploying, "it is just the same as before" — `RUN_QUEUE.md:2566`
-- Cam: "all emails need to go to thegreenreserve@outlook — `RUN_QUEUE.md:2598`
-- Cam: invite link showed "I can't show my calendar right now" — `RUN_QUEUE.md:2616`
+- Cam: "there should be no google calendar thing" and, after setting both env vars and redeploying, "it is just the same as before" — `RUN_QUEUE.md:2570`
+- Cam: "all emails need to go to thegreenreserve@outlook — `RUN_QUEUE.md:2602`
+- Cam: invite link showed "I can't show my calendar right now" — `RUN_QUEUE.md:2620`
 
 ## Revise campaign (page-by-page pass)
 
@@ -147,13 +147,13 @@ This is the distinction a raw checkbox count gets wrong.
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-15 | 13d |
 | `ADMIN_V4_SPEC.md` | 1 | 2026-09-15 | 13d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-29 | 0d |
-| `CODEMAP_SPEC.md` | 0 | 2026-09-15 | 12d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-15 | 13d |
 | `ADMIN_V2_SPEC.md` | 0 | 2026-09-15 | 13d |
 | `ADMIN_V3_SPEC.md` | 0 | 2026-09-15 | 13d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-09-15 | 13d |
 | `BACKUP_OPS_SPEC.md` | 0 | 2026-09-15 | 13d |
 | `BIRDIE_AI_SPEC.md` | 0 | 2026-09-15 | 13d |
+| `CODEMAP_SPEC.md` | 0 | 2026-09-15 | 13d |
 | `COURSES_SHEET_SPEC.md` | 0 | 2026-09-15 | 13d |
 | `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-15 | 13d |
 | `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-09-15 | 13d |
@@ -172,6 +172,10 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `0eab366` 2026-09-29 — RV-2: review follow-ups — failures say why, one-use reset links, status dots, footer wrap
+- `f14c9b1` 2026-09-29 — queue/spec update
+- `f57f269` 2026-09-29 — RV-1: forgot-password is rate-limited and no longer reveals which emails exist
+- `94ad2b9` 2026-09-29 — queue/spec update
 - `cbbb67d` 2026-09-29 — queue/spec update
 - `56a52c7` 2026-09-29 — Catch CALCOM_BOOKING_URL set to the webhook address
 - `49529b8` 2026-09-29 — queue/spec update
@@ -180,11 +184,7 @@ This is the distinction a raw checkbox count gets wrong.
 - `29c3a7c` 2026-09-29 — CAL-2: send the course straight to Cal.com instead of embedding it
 - `2861d16` 2026-09-29 — queue/spec update
 - `421543d` 2026-09-29 — CAL-2 fix: the Cal.com calendar rendered as a blank box — use Cal.com's official inline embed
-- `1e0a455` 2026-09-29 — queue/spec update
-- `e082dd0` 2026-09-29 — CAL-2: Cal.com is the only call scheduler; Google Calendar removed
-- `734b067` 2026-09-29 — queue/spec update
-- `502fb9d` 2026-09-29 — queue/spec update
 
 ---
 
-**Totals:** 194 done · 20 awaiting review · 1 in flight · 22 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 194 done · 22 awaiting review · 1 in flight · 20 not started · 8 revise pages open · 15 ideas · 2 parked.

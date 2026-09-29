@@ -1,25 +1,25 @@
 {
-  "generatedAt": "2026-09-29T03:31:11.407Z",
+  "generatedAt": "2026-09-29T03:34:39.853Z",
   "repo": {
-    "head": "ffcb0d8",
+    "head": "0eab366",
     "branch": "claude/eager-maxwell-qf1pd0",
     "dirtyCount": 3,
     "dirty": [
       "M RUN_QUEUE.md",
-      " M STATUS.json",
-      " M STATUS.md"
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-29T03:21:18+00:00",
+    "queueLastCommit": "2026-09-29T03:33:00+00:00",
     "unrecorded": []
   },
   "counts": {
     "runDone": 194,
-    "runAwaiting": 20,
+    "runAwaiting": 22,
     "runInFlight": 1,
-    "runNotStarted": 22,
+    "runNotStarted": 20,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -98,22 +98,36 @@
       "ageDays": 0
     },
     {
+      "title": "RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM).",
+      "line": 2539,
+      "hash": "f57f269",
+      "shipDate": "2026-09-29",
+      "ageDays": 0
+    },
+    {
+      "title": "RV-2 — review follow-ups, small (from /gr-review 2026-09-29):",
+      "line": 2549,
+      "hash": "0eab366",
+      "shipDate": "2026-09-29",
+      "ageDays": 0
+    },
+    {
       "title": "CAL-2 — Cal.com is the ONLY call scheduler",
-      "line": 2566,
+      "line": 2570,
       "hash": "e082dd0",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "BUG: hello@greenreserve.app takes no mail",
-      "line": 2598,
+      "line": 2602,
       "hash": "371ffff",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 2616,
+      "line": 2620,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 0
@@ -269,28 +283,18 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM).",
-      "line": 2539,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "RV-2 — review follow-ups, small (from /gr-review 2026-09-29):",
-      "line": 2547,
-      "section": "Queue (run in this order)"
-    },
-    {
       "title": "PERF-1 — golfer pages over budget (first real Lighthouse run, PR #2,",
-      "line": 2559,
+      "line": 2563,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2640,
+      "line": 2644,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2793,
+      "line": 2797,
       "section": "Queue (run in this order)"
     }
   ],
@@ -348,17 +352,17 @@
     {
       "item": "CAL-2 — Cal.com is the ONLY call scheduler",
       "note": "Cam: \"there should be no google calendar thing\" and, after setting both env vars and redeploying, \"it is just the same as before\"",
-      "line": 2566
+      "line": 2570
     },
     {
       "item": "BUG: hello@greenreserve.app takes no mail",
       "note": "Cam: \"all emails need to go to thegreenreserve@outlook",
-      "line": 2598
+      "line": 2602
     },
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2616
+      "line": 2620
     }
   ],
   "ideas": {
@@ -467,12 +471,6 @@
       "ageDays": 0
     },
     {
-      "file": "CODEMAP_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 12
-    },
-    {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
@@ -504,6 +502,12 @@
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-15",
+      "ageDays": 13
+    },
+    {
+      "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
       "ageDays": 13
@@ -602,6 +606,26 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "0eab366",
+      "date": "2026-09-29",
+      "subject": "RV-2: review follow-ups — failures say why, one-use reset links, status dots, footer wrap"
+    },
+    {
+      "h": "f14c9b1",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "f57f269",
+      "date": "2026-09-29",
+      "subject": "RV-1: forgot-password is rate-limited and no longer reveals which emails exist"
+    },
+    {
+      "h": "94ad2b9",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "cbbb67d",
       "date": "2026-09-29",
       "subject": "queue/spec update"
@@ -640,26 +664,6 @@
       "h": "421543d",
       "date": "2026-09-29",
       "subject": "CAL-2 fix: the Cal.com calendar rendered as a blank box — use Cal.com's official inline embed"
-    },
-    {
-      "h": "1e0a455",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "e082dd0",
-      "date": "2026-09-29",
-      "subject": "CAL-2: Cal.com is the only call scheduler; Google Calendar removed"
-    },
-    {
-      "h": "734b067",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "502fb9d",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
     }
   ]
 }

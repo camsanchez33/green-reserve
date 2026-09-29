@@ -101,7 +101,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/page.tsx",
-      "lines": 2704,
+      "lines": 2705,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -440,7 +440,7 @@
     },
     {
       "path": "src/app/admin/page.tsx",
-      "lines": 548,
+      "lines": 558,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2091,7 +2091,7 @@
     },
     {
       "path": "src/app/api/auth/forgot-password/route.ts",
-      "lines": 55,
+      "lines": 58,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2111,6 +2111,7 @@
         "@/lib/auth",
         "@/lib/email",
         "@/lib/prisma",
+        "@/lib/rate-limit",
         "crypto",
         "next/server"
       ],
@@ -2197,7 +2198,7 @@
     },
     {
       "path": "src/app/api/auth/reset-password/route.ts",
-      "lines": 77,
+      "lines": 81,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5126,7 +5127,7 @@
     },
     {
       "path": "src/app/dashboard/forgot-password/page.tsx",
-      "lines": 68,
+      "lines": 73,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10841,6 +10842,7 @@
         "src/app/api/admin/two-factor/route.ts",
         "src/app/api/alerts/route.ts",
         "src/app/api/auth/2fa/verify/route.ts",
+        "src/app/api/auth/forgot-password/route.ts",
         "src/app/api/auth/login/route.ts",
         "src/app/api/auth/resend-verification/route.ts",
         "src/app/api/bookings/cancel/route.ts",
