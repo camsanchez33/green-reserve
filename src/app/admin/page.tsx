@@ -10,6 +10,8 @@ import { useAdminSession } from '@/lib/admin-session-context';
 import { SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-roles';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { formatMoney as fmtMoney, formatRelative as fmtAgo } from '@/lib/format';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { Card } from '@/components/ui/Card';
 
 interface QueueItem { id: string; label: string; ageDays: number; }
 interface ActionRow {
@@ -106,7 +108,7 @@ function RevenueChart({ data, gran }: { data: TickerPoint[]; gran: Gran }) {
         ) : (
           <>
             <div>
-              <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">{copy.period} — GR Fees</div>
+              <Eyebrow>{copy.period} — GR Fees</Eyebrow>
               <div className="flex items-baseline gap-2">
                 <div className="text-xl font-serif font-medium text-ok">{fmtMoney(latest.fees)}</div>
                 <Trend current={latest.fees} prev={latest.ghostFees} suffix={copy.suffix}/>
@@ -114,7 +116,7 @@ function RevenueChart({ data, gran }: { data: TickerPoint[]; gran: Gran }) {
             </div>
             {showGross && (
               <div>
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">{copy.period} — Gross</div>
+                <Eyebrow>{copy.period} — Gross</Eyebrow>
                 <div className="flex items-baseline gap-2">
                   <div className="text-xl font-serif font-medium text-ink">{fmtMoney(latest.gross)}</div>
                   <Trend current={latest.gross} prev={latest.ghostGross} suffix={copy.suffix}/>
@@ -317,12 +319,12 @@ export default function AdminOverviewPage() {
           {stats && <>
             {/* 1. TOP STRIP — the morning pulse */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div onClick={() => router.push('/admin/revenue')} className="bg-white border border-line rounded-lg p-5 cursor-pointer hover:border-line-strong transition-colors">
+              <Card onClick={() => router.push('/admin/revenue')} className="p-5 cursor-pointer hover:border-line-strong transition-colors">
                 <div className="flex items-start justify-between mb-2">
                   <div className="p-2 rounded-md bg-pine/10"><DollarSign className="w-4 h-4 text-pine"/></div>
                 </div>
                 <div className="text-[30px] leading-none font-serif font-medium text-pine mb-1">{fmtMoney(stats.topStrip.feesToday)}</div>
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">GreenReserve fees today</div>
+                <Eyebrow>GreenReserve fees today</Eyebrow>
                 <div className="flex items-center gap-3 mt-2 text-xs text-ink-faint">
                   {/* U-A: the fee is per PLAYER — say players first, never derive them from bookings. */}
                   {typeof stats.topStrip.playersToday === 'number' && <><span>{stats.topStrip.playersToday} player{stats.topStrip.playersToday === 1 ? '' : 's'}</span><span>·</span></>}
@@ -332,24 +334,24 @@ export default function AdminOverviewPage() {
                   <span>·</span>
                   <span>{stats.topStrip.cancellationsToday} cancelled</span>
                 </div>
-              </div>
+              </Card>
 
-              <div onClick={() => router.push('/admin/messages')} className="bg-white border border-line rounded-lg p-5 cursor-pointer hover:border-line-strong transition-colors">
+              <Card onClick={() => router.push('/admin/messages')} className="p-5 cursor-pointer hover:border-line-strong transition-colors">
                 <div className="flex items-start justify-between mb-2">
                   <div className="p-2 rounded-md bg-paper"><MessageSquare className="w-4 h-4 text-ink-muted"/></div>
                 </div>
                 <div className="text-[30px] leading-none font-serif font-medium text-ink mb-1">{isSupportPlus ? stats.topStrip.unreadMessages : '—'}</div>
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Unread</div>
+                <Eyebrow>Unread</Eyebrow>
                 <div className="text-xs text-ink-faint mt-2">
                   {!isSupportPlus ? 'Requires support access' : stats.topStrip.unreadNewestSender ? `Newest: ${stats.topStrip.unreadNewestSender}` : 'All caught up'}
                 </div>
-              </div>
+              </Card>
 
-              <div className="bg-white border border-line rounded-lg p-5">
+              <Card className="p-5">
                 <div className="flex items-start justify-between mb-2">
                   <div className="p-2 rounded-md bg-paper"><Clock3 className="w-4 h-4 text-ink-muted"/></div>
                 </div>
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Waiting</div>
+                <Eyebrow className="mb-2">Waiting</Eyebrow>
                 <div className="space-y-1.5">
                   {stats.topStrip.waitingNewInquiries > 0 ? (
                     <button onClick={() => router.push('/admin/inquiries')} className="w-full text-left text-sm text-ink hover:text-pine transition-colors">
@@ -368,14 +370,14 @@ export default function AdminOverviewPage() {
                     </button>
                   ) : null}
                 </div>
-              </div>
+              </Card>
             </div>
 
             {/* 2. ACTION QUEUE — blockers + stalls only */}
-            <div className="bg-white border border-line rounded-lg p-5 mb-6">
+            <Card className="p-5 mb-6">
               <div className="flex items-center gap-2 mb-3">
                 <AlertCircle className="w-3.5 h-3.5 text-warn"/>
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Action Queue</div>
+                <Eyebrow>Action Queue</Eyebrow>
               </div>
 
               {stats.actionQueue.redCount === 0 && stats.actionQueue.amberCount === 0 ? (
@@ -421,14 +423,14 @@ export default function AdminOverviewPage() {
                   )}
                 </div>
               )}
-            </div>
+            </Card>
 
             {/* 3. REVENUE CHART */}
-            <div className="bg-white border border-line rounded-lg p-6 mb-5">
+            <Card className="p-6 mb-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <LineChart className="w-4 h-4 text-ink-muted"/>
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Revenue</div>
+                  <Eyebrow>Revenue</Eyebrow>
                 </div>
                 <div className="flex gap-1 bg-paper border border-line rounded-md p-0.5">
                   {(['day', 'week', 'month'] as Gran[]).map(g => (
@@ -445,13 +447,13 @@ export default function AdminOverviewPage() {
               {stats.revenue
                 ? <RevenueChart data={stats.revenue[gran]} gran={gran}/>
                 : <div className="py-12 text-center text-sm text-ink-muted">Revenue detail requires support access.</div>}
-            </div>
+            </Card>
 
             {/* 4. 30-DAY ROW */}
-            <div className="bg-white border border-line rounded-lg mb-5 grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-line-soft">
+            <Card className="mb-5 grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-line-soft">
               <div onClick={() => router.push('/admin/courses')} className="p-5 cursor-pointer hover:bg-paper transition-colors flex items-center justify-between">
                 <div>
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">Live Courses</div>
+                  <Eyebrow className="mb-1">Live Courses</Eyebrow>
                   <div className="text-xl font-serif font-medium text-ink">{stats.thirtyDay.activeCourses}</div>
                   <div className="text-xs text-ink-faint mt-0.5">{stats.thirtyDay.archivedCourses > 0 ? `${stats.thirtyDay.totalCourses} active · ${stats.thirtyDay.archivedCourses} archived` : `${stats.thirtyDay.totalCourses} total`}</div>
                 </div>
@@ -459,24 +461,24 @@ export default function AdminOverviewPage() {
               </div>
               <div onClick={() => router.push('/admin/activity')} className="p-5 cursor-pointer hover:bg-paper transition-colors flex items-center justify-between">
                 <div>
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">Bookings (30d)</div>
+                  <Eyebrow className="mb-1">Bookings (30d)</Eyebrow>
                   <div className="text-xl font-serif font-medium text-ink">{stats.thirtyDay.bookings30d}</div>
                 </div>
                 <Trend current={stats.thirtyDay.bookings30d} prev={stats.thirtyDay.bookingsPrev30d}/>
               </div>
               <div onClick={() => router.push('/admin/activity')} className="p-5 cursor-pointer hover:bg-paper transition-colors flex items-center justify-between">
                 <div>
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">GreenReserve fees (30d)</div>
+                  <Eyebrow className="mb-1">GreenReserve fees (30d)</Eyebrow>
                   <div className="text-xl font-serif font-medium text-ok">{fmtMoney(stats.thirtyDay.fees30d)}</div>
                 </div>
                 <Trend current={stats.thirtyDay.fees30d} prev={stats.thirtyDay.feesPrev30d}/>
               </div>
-            </div>
+            </Card>
 
             {/* 5. BOTTOM TRIO — pipeline funnel, today's tee sheet, course health watchlist */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-              <div className="bg-white border border-line rounded-lg p-5">
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Pipeline (MTD)</div>
+              <Card className="p-5">
+                <Eyebrow className="mb-3">Pipeline (MTD)</Eyebrow>
                 <div className="space-y-1">
                   {([
                     { label: 'New inquiries', value: stats.bottomTrio.pipeline.newInquiries, href: '/admin/inquiries?tab=new' },
@@ -495,10 +497,10 @@ export default function AdminOverviewPage() {
                     </button>
                   ))}
                 </div>
-              </div>
+              </Card>
 
-              <div className="bg-white border border-line rounded-lg p-5">
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Today's Tee Sheet</div>
+              <Card className="p-5">
+                <Eyebrow className="mb-3">Today's Tee Sheet</Eyebrow>
                 <div className="space-y-1">
                   <button onClick={() => router.push('/admin/activity')} className="w-full flex items-center justify-between text-left px-2 py-1.5 -mx-2 rounded-md hover:bg-paper transition-colors">
                     <span className="text-sm text-ink">Rounds today</span>
@@ -514,10 +516,10 @@ export default function AdminOverviewPage() {
                   </button>
                   <div className="px-2 text-xs text-ink-faint">courses will collect ~{fmtMoney(stats.bottomTrio.teeSheetToday.grossExpected)}</div>
                 </div>
-              </div>
+              </Card>
 
-              <div className="bg-white border border-line rounded-lg p-5">
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Course Health Watchlist</div>
+              <Card className="p-5">
+                <Eyebrow className="mb-3">Course Health Watchlist</Eyebrow>
                 {stats.bottomTrio.courseHealthWatchlist.length === 0 ? (
                   <div className="text-xs text-ink-faint py-4">No courses trending down.</div>
                 ) : (
@@ -530,7 +532,7 @@ export default function AdminOverviewPage() {
                     ))}
                   </div>
                 )}
-              </div>
+              </Card>
             </div>
 
             {/* Systems — one dot, detail lives on /admin/system */}
