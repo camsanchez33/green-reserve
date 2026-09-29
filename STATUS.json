@@ -1,18 +1,18 @@
 {
-  "generatedAt": "2026-09-29T16:30:29.081Z",
+  "generatedAt": "2026-09-29T20:50:02.420Z",
   "repo": {
-    "head": "38deb1a",
+    "head": "0ecafbc",
     "branch": "claude/eager-maxwell-qf1pd0",
     "dirtyCount": 0,
     "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-29T16:30:28+00:00",
+    "queueLastCommit": "2026-09-29T20:50:00+00:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 205,
+    "runDone": 206,
     "runAwaiting": 23,
     "runInFlight": 1,
     "runNotStarted": 17,
@@ -59,6 +59,13 @@
       "ageDays": 1
     },
     {
+      "title": "BUG: inquiry submissions send no emails",
+      "line": 2546,
+      "hash": "8b9a046",
+      "shipDate": "2026-09-28",
+      "ageDays": 1
+    },
+    {
       "title": "SD-8e — status is rendered as bare coloured text where the design",
       "line": 562,
       "hash": "9d6dc6a",
@@ -87,13 +94,6 @@
       "ageDays": 0
     },
     {
-      "title": "BUG: inquiry submissions send no emails",
-      "line": 2546,
-      "hash": "8b9a046",
-      "shipDate": "2026-09-28",
-      "ageDays": 0
-    },
-    {
       "title": "BUG: perf audit crashed on every page",
       "line": 2571,
       "hash": "dd7056a",
@@ -116,21 +116,21 @@
     },
     {
       "title": "CAL-2 — Cal.com is the ONLY call scheduler",
-      "line": 2745,
+      "line": 2755,
       "hash": "e082dd0",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "BUG: hello@greenreserve.app takes no mail",
-      "line": 2777,
+      "line": 2787,
       "hash": "371ffff",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 2795,
+      "line": 2805,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 0
@@ -267,22 +267,22 @@
     },
     {
       "title": "PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29:",
-      "line": 2667,
+      "line": 2677,
       "section": "Queue (run in this order)"
     },
     {
       "title": "SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +",
-      "line": 2672,
+      "line": 2682,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2819,
+      "line": 2829,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2973,
+      "line": 2983,
       "section": "Queue (run in this order)"
     }
   ],
@@ -345,17 +345,17 @@
     {
       "item": "CAL-2 — Cal.com is the ONLY call scheduler",
       "note": "Cam: \"there should be no google calendar thing\" and, after setting both env vars and redeploying, \"it is just the same as before\"",
-      "line": 2745
+      "line": 2755
     },
     {
       "item": "BUG: hello@greenreserve.app takes no mail",
       "note": "Cam: \"all emails need to go to thegreenreserve@outlook",
-      "line": 2777
+      "line": 2787
     },
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2795
+      "line": 2805
     }
   ],
   "ideas": {
@@ -617,6 +617,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "0ecafbc",
+      "date": "2026-09-29",
+      "subject": "PERF-4: speed check judges the median of 3 runs; hero blurb no longer fades in"
+    },
+    {
+      "h": "5465a86",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "38deb1a",
       "date": "2026-09-29",
       "subject": "PERF-3: speed check prints where the main-thread time went on a failing page"
@@ -665,16 +675,6 @@
       "h": "7ad49c8",
       "date": "2026-09-29",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "4eda035",
-      "date": "2026-09-29",
-      "subject": "PERF-2: Home server-rendered, /book server-rendered (strict speed check)"
-    },
-    {
-      "h": "88539ee",
-      "date": "2026-09-29",
-      "subject": "CG-1: call guide — a conversation on the call, a sheet built from it after"
     }
   ]
 }
