@@ -33,8 +33,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
   }
 
-  // Honeypot: bots fill hidden fields, humans leave them blank. Silently accept but discard.
-  if (body._website) return NextResponse.json({ success: true });
+  // Honeypot. FB-1: the field was "_website", which autofill fills for real
+  // people — and this line then threw their inquiry away with a success reply
+  // and no trace. Renamed on the form ("hp"; "_website" still honoured for
+  // pages cached before the rename), and every hit is now logged, so a real
+  // course caught by it shows up in the Vercel logs instead of vanishing.
+  const hp = body.hp || body._website;
+  if (hp) {
+    console.warn(`[inquiries] honeypot hit — submission discarded: email=${String(body.email ?? '').slice(0, 80)} course=${String(body.courseName ?? '').slice(0, 80)}`);
+    return NextResponse.json({ success: true });
+  }
 
   // SD-1: the intake sends two emails per submission and creates a row; it had
   // no limit at all. Five an hour per connection is generous for a human.
@@ -255,7 +263,11 @@ export async function POST(req: NextRequest) {
   after(sendInquiryConfirmation(emailData)
     .catch(err => console.error('Inquiry confirmation email failed:', err)));
 
-  return NextResponse.json({ success: true });
+  // FB-1: the thanks page offers "Pick a call time" straight away. Only on a
+  // FRESH inquiry — the submitter just created it, so its invite is theirs.
+  // The duplicate paths above never return a link: that would hand an
+  // existing inquiry's invite to whoever typed its course name.
+  return NextResponse.json({ success: true, callUrl: inviteUrlForEmails });
 }
 
 // GET deliberately removed (MP-1b). It was PUBLIC — no session check behind a

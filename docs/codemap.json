@@ -3405,7 +3405,7 @@
     },
     {
       "path": "src/app/api/inquiries/route.ts",
-      "lines": 270,
+      "lines": 282,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5990,7 +5990,7 @@
     },
     {
       "path": "src/app/for-courses/ForCoursesContent.tsx",
-      "lines": 753,
+      "lines": 740,
       "purpose": "",
       "brain": [],
       "exports": [
