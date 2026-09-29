@@ -5344,7 +5344,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1198,
+      "lines": 1199,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5364,6 +5364,7 @@
         "@/components/dashboard/LoadError",
         "@/components/dashboard/TabIntro",
         "@/components/dashboard/Toast",
+        "@/components/ui/StatusDot",
         "@/lib/booking-status",
         "@/lib/change-requests",
         "@/lib/course-time",
@@ -6752,7 +6753,7 @@
     },
     {
       "path": "src/components/dashboard/money/PaymentsPanel.tsx",
-      "lines": 179,
+      "lines": 180,
       "purpose": "SD-8 — the Payments half of the Money page.",
       "brain": [],
       "exports": [
@@ -6768,6 +6769,7 @@
       "guard": null,
       "imports": [
         "./types",
+        "@/components/ui/StatusDot",
         "@/lib/booking-fees",
         "@/lib/booking-status",
         "lucide-react",
@@ -7074,7 +7076,7 @@
     },
     {
       "path": "src/components/ui/StatusDot.tsx",
-      "lines": 28,
+      "lines": 36,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7104,8 +7106,10 @@
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/system/page.tsx",
         "src/app/courses/[slug]/member/page.tsx",
+        "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
-        "src/app/receipt/[bookingId]/page.tsx"
+        "src/app/receipt/[bookingId]/page.tsx",
+        "src/components/dashboard/money/PaymentsPanel.tsx"
       ]
     },
     {
@@ -8033,7 +8037,7 @@
     },
     {
       "path": "src/lib/booking-status.ts",
-      "lines": 82,
+      "lines": 77,
       "purpose": "Single source of truth for what to show a user (operator, staff, or golfer) given a booking's current status + paymentStatus pair.",
       "brain": [],
       "exports": [
@@ -8046,16 +8050,12 @@
           "kind": "fn"
         },
         {
-          "name": "statusBadgeClass",
+          "name": "statusDot",
           "kind": "fn"
         },
         {
           "name": "StatusTone",
           "kind": "type"
-        },
-        {
-          "name": "statusToneText",
-          "kind": "fn"
         }
       ],
       "route": null,
