@@ -14,8 +14,10 @@ const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
 
 if (dsn && typeof window !== 'undefined') {
   const early: unknown[] = [];
-  const onError = (e: ErrorEvent) => early.push(e.error ?? e.message);
-  const onRejection = (e: PromiseRejectionEvent) => early.push(e.reason);
+  // Capped: an error loop before init must not grow this without bound.
+  const keep = (x: unknown) => { if (early.length < 50) early.push(x); };
+  const onError = (e: ErrorEvent) => keep(e.error ?? e.message);
+  const onRejection = (e: PromiseRejectionEvent) => keep(e.reason);
   window.addEventListener('error', onError);
   window.addEventListener('unhandledrejection', onRejection);
 
@@ -30,7 +32,12 @@ if (dsn && typeof window !== 'undefined') {
       window.removeEventListener('error', onError);
       window.removeEventListener('unhandledrejection', onRejection);
       for (const err of early.splice(0)) Sentry.captureException(err);
-    }).catch(() => { /* blocked or offline: nothing to report to */ });
+    }).catch(() => {
+      // Blocked (ad blockers) or offline: nothing to report to — stop buffering.
+      window.removeEventListener('error', onError);
+      window.removeEventListener('unhandledrejection', onRejection);
+      early.length = 0;
+    });
   };
   // Init (and Replay's first DOM snapshot) is real main-thread work — ~200ms
   // of blocking on a mid phone. So it waits for the visitor's first input, or
