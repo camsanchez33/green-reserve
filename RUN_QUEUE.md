@@ -609,14 +609,51 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     copy of the same bug). Three <td> cells use text-xs inside a table whose
     base is the §1b 13.5px. Fix: import statusToneText, delete both local
     copies, size the cells. (tiny, no migration)
-  - [ ] SD-9 — funnel + auth polish: split the details sheet into a required core
-    that finishes the lead and a deferrable polish pass (scorecard photo upload
-    replaces the tee-sets grid for most courses), "prefer to do this on a call?"
-    escape hatch, persist step position, try/catch both submit paths ("Submitting…"
-    hangs forever on a blip today), fix optional qualifiers silently gating whole
-    sheet sections; onboarding step-1 persistence (never bumps onboardingStep, so
-    each re-entry logs a duplicate agreement acceptance), 2FA backup codes, staff
-    password recovery, Stripe multi-course findFirst bug (medium)
+  - [~] SD-9 — funnel + auth polish — SPLIT 2026-09-29 (Cam: "split, bugs
+    first"). Audit found the three bugs ALREADY SHIPPED in 32d985e (2026-09-15,
+    inside the SC-1 commit, never recorded here): both details-sheet submit
+    paths try/catch'd (for-courses/details/page.tsx "SD-9:" comments), onboarding
+    step-1 persistence (dashboard/onboarding calls PATCH /api/operator/profile),
+    Stripe multi-course findFirst (operator/stripe/connect + dashboard-link).
+    Admin OWNER 2FA already has 10 recovery codes (lib/owner-totp.ts). Unreviewed
+    as SD-9 work — fold into the next /gr-review. What remains:
+  - [ ] SD-9b — details-sheet funnel UX: split into a required core that finishes
+    the lead + a deferrable polish pass; scorecard photo upload replaces the
+    tee-sets grid for most courses; "prefer to do this on a call?" escape hatch
+    (now that CAL-1 exists, it can link the invite); persist step position; stop
+    optional qualifiers silently gating whole sections. 1,868-line page — needs
+    Cam's call on what "required core" is before building. (medium-large)
+  - [ ] SD-9c — auth: (1) staff password recovery — CourseStaff has no reset
+    path; doable WITHOUT schema via a short-lived JWT reset token that embeds a
+    hash of the current password (single-use by construction). (2) operator 2FA
+    backup codes — needs a column (SCHEMA CHANGE) → blocked while previews are
+    broken (see EV-1). Build (1) alone first. (small / blocked)
+    (1) SHIPPED 0d84aaf, 2026-09-29 — box open until /gr-review (and (2) is still
+    open). lib/auth.ts signStaffResetToken / verifyStaffResetToken (Web Crypto
+    fingerprint of the current hash, type 'staff_reset', 1h);
+    /api/auth/forgot-password falls through to CourseStaff (active only) with the
+    identical response; /api/auth/reset-password tells tokens apart by shape
+    (JWT vs 64-hex) and, for staff, rehashes + clears lockout + sends the
+    password-changed notice. Reuses /dashboard/reset-password unchanged.
+    Tested against a local Postgres: valid GET, tampered → invalid, weak pw →
+    400, reset → ok, SAME link again → invalid (GET and POST), new password logs
+    in and clears a live lockout, operator hex tokens unaffected, unknown email
+    → identical success. KNOWN GAP (needs a column): a staff reset does not sign
+    out their other sessions — operators have sessionVersion, CourseStaff doesn't.
+    CAM TO WALK: /dashboard/login → Forgot password → a STAFF email → the link
+    arrives, sets a new password, logs in; clicking the same link again says
+    expired.
+
+  - [ ] BUG: 56 of 59 email senders report success when Resend rejects the send
+    (found during SD-9c, 2026-09-29). Resend SDK 6.x RETURNS { data: null, error }
+    instead of throwing (verified directly against the installed SDK); only three
+    senders in lib/email.ts check `r.error`. So a bad API key, an unverified
+    domain or a rejected address is invisible everywhere else: the fire-and-
+    forget sends' .catch never fires, awaited sends (forgot-password) tell the
+    user "sent", and after() logs nothing. This is also why a broken Resend
+    config would never show up in Vercel logs. Fix: route every send through
+    one helper that throws on r.error (the three existing checks show the
+    shape). Mechanical, lib/email.ts only. (small, high value)
 
 - ADMIN MASTER PLAN — full spec in ADMIN_MASTER_PLAN.md; the ADMIN_V4 phases it
   does NOT cover survive as MP-9/10/11/12 and their detail stays in

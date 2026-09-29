@@ -2091,7 +2091,7 @@
     },
     {
       "path": "src/app/api/auth/forgot-password/route.ts",
-      "lines": 42,
+      "lines": 55,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2108,6 +2108,7 @@
       "auth": "public",
       "guard": "entry",
       "imports": [
+        "@/lib/auth",
         "@/lib/email",
         "@/lib/prisma",
         "crypto",
@@ -2196,7 +2197,7 @@
     },
     {
       "path": "src/app/api/auth/reset-password/route.ts",
-      "lines": 42,
+      "lines": 77,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2218,6 +2219,7 @@
       "auth": "public",
       "guard": "entry",
       "imports": [
+        "@/lib/auth",
         "@/lib/email",
         "@/lib/password",
         "@/lib/prisma",
@@ -7756,7 +7758,7 @@
     },
     {
       "path": "src/lib/auth.ts",
-      "lines": 169,
+      "lines": 202,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7785,6 +7787,10 @@
           "kind": "fn"
         },
         {
+          "name": "signStaffResetToken",
+          "kind": "fn"
+        },
+        {
           "name": "signStaffToken",
           "kind": "fn"
         },
@@ -7794,6 +7800,10 @@
         },
         {
           "name": "verifyMemberInviteToken",
+          "kind": "fn"
+        },
+        {
+          "name": "verifyStaffResetToken",
           "kind": "fn"
         },
         {
@@ -7814,8 +7824,10 @@
         "src/app/api/auth/2fa/resend/route.ts",
         "src/app/api/auth/2fa/status/route.ts",
         "src/app/api/auth/2fa/verify/route.ts",
+        "src/app/api/auth/forgot-password/route.ts",
         "src/app/api/auth/login/route.ts",
         "src/app/api/auth/resend-verification/route.ts",
+        "src/app/api/auth/reset-password/route.ts",
         "src/app/api/bookings/cancel/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/bookings/setup-intent/route.ts",
@@ -13765,13 +13777,16 @@
       ],
       "writers": [
         "src/app/api/auth/login/route.ts",
+        "src/app/api/auth/reset-password/route.ts",
         "src/app/api/operator/staff/route.ts",
         "src/lib/lifecycle.ts"
       ],
       "readers": [
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/resend-staff-setup/route.ts",
+        "src/app/api/auth/forgot-password/route.ts",
         "src/app/api/auth/login/route.ts",
+        "src/app/api/auth/reset-password/route.ts",
         "src/app/api/operator/messages/route.ts",
         "src/app/api/operator/staff/route.ts",
         "src/lib/lifecycle.ts",
