@@ -1181,6 +1181,13 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       The schema already carries a real `ChangeRequest` table for the first
       two (unused). One reworded log line breaks any of them. Migrate all
       three onto real rows (SCHEMA CHANGE, ATTENDED).
+      BLOCKED (assessed 2026-09-29): RESUBMIT:: has no table → real schema
+      change → blocked on Vercel previews (see EV-1). The two change-request
+      encodings COULD move onto ChangeRequest without a migration, but 10+
+      readers (computeOpenChanges, isSendPreviewGated, queueSignal, overview)
+      parse the strings and existing rows need a prod backfill (Cam's approval);
+      a half-move means dual-reading on the approval gate for no user-visible
+      gain with zero live courses. Do all three together once previews build.
     - [x] MP-4d (6a5a3dd) — Overview stops deriving "whose move is it" for
       itself. It built FOUR overlapping amber sources in SQL over `updatedAt`
       with its own 3/5/7-day thresholds (waitingOnUs, sheetNoResponse,
