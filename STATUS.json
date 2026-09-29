@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-09-29T16:25:54.925Z",
+  "generatedAt": "2026-09-29T16:30:29.081Z",
   "repo": {
-    "head": "1d318fe",
+    "head": "38deb1a",
     "branch": "claude/eager-maxwell-qf1pd0",
     "dirtyCount": 0,
     "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-29T16:25:54+00:00",
+    "queueLastCommit": "2026-09-29T16:30:28+00:00",
     "unrecorded": []
   },
   "counts": {
@@ -116,21 +116,21 @@
     },
     {
       "title": "CAL-2 — Cal.com is the ONLY call scheduler",
-      "line": 2741,
+      "line": 2745,
       "hash": "e082dd0",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "BUG: hello@greenreserve.app takes no mail",
-      "line": 2773,
+      "line": 2777,
       "hash": "371ffff",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 2791,
+      "line": 2795,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 0
@@ -267,22 +267,22 @@
     },
     {
       "title": "PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29:",
-      "line": 2663,
+      "line": 2667,
       "section": "Queue (run in this order)"
     },
     {
       "title": "SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +",
-      "line": 2668,
+      "line": 2672,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2815,
+      "line": 2819,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2969,
+      "line": 2973,
       "section": "Queue (run in this order)"
     }
   ],
@@ -345,17 +345,17 @@
     {
       "item": "CAL-2 — Cal.com is the ONLY call scheduler",
       "note": "Cam: \"there should be no google calendar thing\" and, after setting both env vars and redeploying, \"it is just the same as before\"",
-      "line": 2741
+      "line": 2745
     },
     {
       "item": "BUG: hello@greenreserve.app takes no mail",
       "note": "Cam: \"all emails need to go to thegreenreserve@outlook",
-      "line": 2773
+      "line": 2777
     },
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2791
+      "line": 2795
     }
   ],
   "ideas": {
@@ -617,6 +617,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "38deb1a",
+      "date": "2026-09-29",
+      "subject": "PERF-3: speed check prints where the main-thread time went on a failing page"
+    },
+    {
+      "h": "38860cd",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "1d318fe",
       "date": "2026-09-29",
       "subject": "FB-2: homepage copy Cam approved"
@@ -665,16 +675,6 @@
       "h": "88539ee",
       "date": "2026-09-29",
       "subject": "CG-1: call guide — a conversation on the call, a sheet built from it after"
-    },
-    {
-      "h": "461caea",
-      "date": "2026-09-29",
-      "subject": "FB-3 review: no double fee, no early no-show, partial party, ledger"
-    },
-    {
-      "h": "d52b6af",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
     }
   ]
 }
