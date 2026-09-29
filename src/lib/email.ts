@@ -1251,47 +1251,6 @@ export async function sendCallInviteEmail(data: {
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
 
-// SC-2 §3: to the course on book / move / cancel, with a .ics so it lands in
-// their own calendar with no integration on their side.
-export async function sendCallBookedEmail(data: {
-  kind: 'booked' | 'moved' | 'cancelled';
-  contactName: string; email: string; courseName: string; callId: string;
-  scheduledAt: Date; durationMin: number; direction: string; phone: string; agendaLabels: string[]; manageUrl: string;
-}) {
-  const when = data.scheduledAt.toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
-  const who = data.direction === 'they_call' ? 'You call us — reply to this email and we\u2019ll send the number.' : `We\u2019ll call you at ${escHtml(data.phone)}.`;
-  const first = escHtml(data.contactName.split(' ')[0] || data.contactName);
-  const heading = data.kind === 'cancelled' ? 'Your call is cancelled' : data.kind === 'moved' ? `Moved — ${when} ET` : `You\u2019re booked — ${when} ET`;
-  const agenda = data.agendaLabels.length && data.kind !== 'cancelled'
-    ? `<p style="margin:16px 0 6px;color:#111827;font-size:14px;font-weight:600;">What we'll go over</p><ul style="margin:0 0 16px;padding-left:20px;color:#6b7280;font-size:14px;line-height:1.6;">${data.agendaLabels.map(l => `<li>${escHtml(l)}</li>`).join('')}</ul>`
-    : '';
-  const body = data.kind === 'cancelled'
-    ? `<p style="margin:0 0 16px;color:#6b7280;font-size:15px;line-height:1.6;">Hi ${first} — the call about <strong>${escHtml(data.courseName)}</strong> set for ${when} ET is cancelled. Nothing is booked now.</p>
-       <a href="${data.manageUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:16px;">Pick a new time &rarr;</a>`
-    : `<p style="margin:0 0 4px;color:#111827;font-size:15px;line-height:1.6;"><strong>${when} ET</strong> · about ${data.durationMin} minutes</p>
-       <p style="margin:0 0 16px;color:#6b7280;font-size:15px;line-height:1.6;">${who}</p>
-       ${agenda}
-       <p style="margin:0 0 16px;color:#6b7280;font-size:14px;line-height:1.6;">Need to change it? <a href="${data.manageUrl}" style="color:#1b4332;">Reschedule or cancel</a> — the same link works until we talk.</p>`;
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;color:#111827;font-size:22px;font-weight:700;">${heading}</h1>
-    ${data.kind !== 'cancelled' ? `<p style="margin:0 0 16px;color:#6b7280;font-size:15px;line-height:1.6;">Hi ${first} — here are the details for our call about <strong>${escHtml(data.courseName)}</strong>. The calendar file is attached.</p>` : ''}
-    ${body}
-    <p style="margin:0;color:#98968B;font-size:12px;">Questions? Reply to this email — thegreenreserve@outlook.com.</p>
-  `);
-  const { buildIcs } = await import('./ics');
-  const ics = buildIcs({
-    uid: `call-${data.callId}@greenreserve.app`, start: data.scheduledAt, durationMin: data.durationMin,
-    summary: `Call with GreenReserve — ${data.courseName}`, description: `${data.direction === 'they_call' ? 'You call GreenReserve.' : `GreenReserve calls you at ${data.phone}.`}\n${data.manageUrl}`,
-    url: data.manageUrl, method: data.kind === 'cancelled' ? 'CANCEL' : 'REQUEST', sequence: data.kind === 'booked' ? 0 : 1,
-  });
-  const subject = data.kind === 'cancelled' ? `Cancelled — your call with GreenReserve` : data.kind === 'moved' ? `Moved — your call with GreenReserve, ${when} ET` : `You\u2019re booked — ${when} ET`;
-  const r = await getResend().emails.send({
-    from: FROM, to: data.email, subject, html,
-    attachments: [{ filename: data.kind === 'cancelled' ? 'cancelled.ics' : 'greenreserve-call.ics', content: Buffer.from(ics, 'utf8') }],
-  });
-  if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
-}
-
 // SC-3 §3: 24 hours before a scheduled call — "Talking tomorrow at 2:00".
 export async function sendCallReminderEmail(data: {
   contactName: string; email: string; courseName: string; scheduledAt: Date; durationMin?: number; direction: string; phone: string; manageUrl: string | null;
@@ -1309,35 +1268,6 @@ export async function sendCallReminderEmail(data: {
     <p style="margin:0;color:#98968B;font-size:12px;">Questions? Reply to this email — thegreenreserve@outlook.com.</p>
   `);
   const r = await getResend().emails.send({ from: FROM, to: data.email, subject: `Talking tomorrow at ${clock} — GreenReserve`, html });
-  if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
-}
-
-// SC-2 §3: to hello@ — course, contact, phone, time, link to the inquiry.
-export async function sendCallBookedAdminEmail(data: {
-  kind: 'booked' | 'moved' | 'cancelled'; contactName: string; phone: string; courseName: string; inquiryId: string; scheduledAt: Date; direction: string;
-}) {
-  const when = data.scheduledAt.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
-  const verb = data.kind === 'booked' ? 'booked a call' : data.kind === 'moved' ? 'moved their call' : 'cancelled their call';
-  const html = baseTemplate(`
-    <h2 style="margin:0 0 4px;color:#111827;font-size:20px;font-weight:700;">${escHtml(data.courseName)} ${verb}</h2>
-    <p style="margin:0 0 16px;color:#6b7280;font-size:14px;">${when} ET · ${escHtml(data.contactName)} · ${escHtml(data.phone)} · ${data.direction === 'they_call' ? 'they call us' : 'we call them'}</p>
-    <a href="${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/admin/inquiries/${data.inquiryId}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;">
-      Open the inquiry &rarr;
-    </a>
-  `);
-  const r = await getResend().emails.send({ from: FROM, to: 'thegreenreserve@outlook.com', subject: `${data.kind === 'cancelled' ? 'Cancelled' : data.kind === 'moved' ? 'Moved' : 'Booked'}: ${subj(data.courseName)} — ${when} ET`, html });
-  if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
-}
-
-// SC-2 §2 (S5): the booking page could not read the calendar — Cam should know.
-export async function sendCalendarUnavailableAlert(data: { courseName: string; inquiryId: string; error: string }) {
-  const html = baseTemplate(`
-    <h2 style="margin:0 0 4px;color:#111827;font-size:20px;font-weight:700;">Call booking page could not read Google Calendar</h2>
-    <p style="margin:0 0 12px;color:#6b7280;font-size:14px;">${escHtml(data.courseName)} opened their booking link and saw the "reply with a couple of times" fallback instead of the grid.</p>
-    <p style="margin:0 0 16px;color:#374151;font-size:13px;font-family:monospace;">${escHtml(data.error.slice(0, 400))}</p>
-    <a href="${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/admin/inquiries/${data.inquiryId}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;">Open the inquiry &rarr;</a>
-  `);
-  const r = await getResend().emails.send({ from: FROM, to: 'thegreenreserve@outlook.com', subject: `Calendar unreachable — ${subj(data.courseName)} could not book`, html });
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
 

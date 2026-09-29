@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyCalcomSignature, calcomCreatedBy } from '@/lib/calcom';
 import { defaultAgenda, parseJson } from '@/lib/inquiry-call';
+import { ALIVE_STATUSES } from '@/lib/inquiry-status';
 
 type Attendee = { name?: string; email?: string; phoneNumber?: string | null };
 type Payload = {
@@ -40,7 +41,8 @@ function phoneOf(p: Payload, fallback: string): string {
 }
 
 export async function POST(req: NextRequest) {
-  const secret = process.env.CALCOM_WEBHOOK_SECRET;
+  // Trimmed: a trailing newline pasted into Vercel made every signature fail.
+  const secret = process.env.CALCOM_WEBHOOK_SECRET?.trim();
   if (!secret) {
     console.error('CALCOM_WEBHOOK_SECRET not set');
     return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 });
@@ -91,6 +93,14 @@ export async function POST(req: NextRequest) {
       })
     : null;
 
+  // CAL-2 (review): a closed inquiry does not get a Call row from a stale link.
+  // Cal.com has already put the booking in Cam's calendar, so say so on the
+  // timeline rather than dropping it silently.
+  if (inq && !(ALIVE_STATUSES as readonly string[]).includes(inq.status)) {
+    await timeline(inq.id, inq.status, `Course booked ${fmtWhen(start)} on Cal.com, but this inquiry is ${inq.status} — not added as a call. Cancel it in Cal.com if it should not happen.`);
+    return NextResponse.json({ ignored: `inquiry ${inq.status}` });
+  }
+
   // Idempotent: Cal.com retries, and a retry of an applied booking is a no-op.
   const already = await prisma.call.findFirst({ where: { createdBy: calcomCreatedBy(uid) }, select: { id: true } });
   if (already) return NextResponse.json({ ok: true, duplicate: true });
@@ -102,7 +112,10 @@ export async function POST(req: NextRequest) {
       outcome: 'scheduled',
       OR: [
         ...(p.rescheduleUid ? [{ createdBy: calcomCreatedBy(p.rescheduleUid) }] : []),
-        ...(inq ? [{ inquiryId: inq.id, kind: 'discovery' }] : []),
+        // Only a call that came FROM Cal.com is ever moved by it — never one
+        // an admin scheduled by hand (review: the course's booking used to take
+        // that over, and a later Cal.com cancel then cancelled the admin's call).
+        ...(inq ? [{ inquiryId: inq.id, kind: 'discovery', createdBy: { startsWith: 'calcom:' } }] : []),
       ],
     },
     orderBy: { scheduledAt: 'desc' },

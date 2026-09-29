@@ -1,7 +1,7 @@
 // CAL-1 — Cal.com as the call scheduler, in place of the Google Calendar grid.
 //
 // Cam's calendar is a personal Outlook.com one, which the Google free/busy
-// integration (lib/google-calendar.ts) cannot read. Cal.com reads Outlook,
+// integration (deleted in CAL-2) could not read. Cal.com reads Outlook,
 // owns availability, reminders and its own emails; GreenReserve embeds the
 // booker on /call/[token] and learns about bookings from a signed webhook, so
 // the inquiry's Call row — and everything in /admin that reads it — still
@@ -21,11 +21,41 @@
 //     (packages/lib/LinkBuilder.ts)
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-/** The public booking page, e.g. https://cal.com/cam/greenreserve-call. */
+type CalcomStatus =
+  | { state: 'off' }
+  | { state: 'invalid'; raw: string; reason: string }
+  | { state: 'on'; url: string; webhookSecretSet: boolean };
+
+// CAL-2: the first live setup set both env vars and the page still showed the
+// old fallback — and nothing anywhere said why. A value pasted without
+// https://, wrapped in quotes, or with a trailing newline used to fail
+// new URL() silently and read as "not set". Now normalised, and when it
+// genuinely cannot be used, /admin/system says exactly what the site saw.
+function parseBookingUrl(input: string): { url: string } | { reason: string } {
+  let v = input.trim().replace(/^['"`]+|['"`]+$/g, '').trim();
+  if (!v) return { reason: 'the value is empty' };
+  if (!/^https?:\/\//i.test(v)) v = `https://${v}`;
+  let u: URL;
+  try { u = new URL(v); } catch { return { reason: 'it is not a web address' }; }
+  if (!u.hostname.includes('.')) return { reason: `"${u.hostname}" is not a full domain` };
+  if (u.pathname === '/' || u.pathname === '') return { reason: 'it is the Cal.com home page, not your event link (it should end in /yourname/your-event)' };
+  u.protocol = 'https:';
+  return { url: u.toString().replace(/\/$/, '') };
+}
+
+export function calcomStatus(): CalcomStatus {
+  const raw = process.env.CALCOM_BOOKING_URL;
+  if (!raw || !raw.trim()) return { state: 'off' };
+  const r = parseBookingUrl(raw);
+  if ('reason' in r) return { state: 'invalid', raw: raw.slice(0, 200), reason: r.reason };
+  return { state: 'on', url: r.url, webhookSecretSet: !!process.env.CALCOM_WEBHOOK_SECRET?.trim() };
+}
+
+/** The public booking page, e.g. https://cal.com/cam/greenreserve-call — null when off or unusable. */
 export function calcomBookingUrl(): string | null {
-  const raw = process.env.CALCOM_BOOKING_URL?.trim();
-  if (!raw) return null;
-  try { return new URL(raw).toString().replace(/\/$/, ''); } catch { return null; }
+  const s = calcomStatus();
+  if (s.state === 'invalid') console.warn(`[calcom] CALCOM_BOOKING_URL is set but unusable (${s.reason}) — the call page will ask courses to reply with times`);
+  return s.state === 'on' ? s.url : null;
 }
 
 /** The booker, prefilled, carrying the invite token home through the webhook. */

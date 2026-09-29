@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { LoadFailure } from '@/components/ui/ErrorState';
 import { HardDrive, Clock3, Zap, GitBranch, Bug, ExternalLink, Landmark, Link2, Phone, MessageCircle } from 'lucide-react';
-import { CALL_WINDOWS, SLOT_MINUTES, LEAD_HOURS, HORIZON_DAYS } from '@/lib/call-availability';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -18,8 +17,7 @@ interface SystemData {
     stripeWebhooks: string;
   };
   crons: { path: string; schedule: string; human: string }[];
-  googleCalendarId?: string | null;
-  googleCalendarConfigured?: boolean;
+  calcom?: { state: 'off' } | { state: 'invalid'; raw: string; reason: string } | { state: 'on'; url: string; webhookSecretSet: boolean };
   birdie?: { enabled: boolean; keySet: boolean; flag: boolean; todayReplies: number; dailyCap: number; model: string };
   platform: {
     accessFeeCents: number; env: string; commitSha: string; commitMessage: string; branch: string; publicUrl: string;
@@ -287,36 +285,34 @@ export default function AdminSystemPage() {
               {data && <OutLink href={data.links.vercel} deep={data.links.vercelIsDeep}>Open Vercel</OutLink>}
             </SystemCard>
 
-            {/* SC-3 §4: what the public booking page believes, without reading code. */}
-            <SystemCard icon={<Phone className="w-3.5 h-3.5"/>} title="Call booking" tracked
-              right={<span className="text-[11px] text-ink-faint">{SLOT_MINUTES}-min slots · {LEAD_HOURS} h notice · {HORIZON_DAYS} days out</span>}>
-              <div className="border border-line rounded-md divide-y divide-line-soft mb-3">
-                {[1, 2, 3, 4, 5, 6, 0].map(day => {
-                  const ws = CALL_WINDOWS.filter(w => w.day === day);
-                  return (
-                    <div key={day} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
-                      <span className="text-ink">{['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][day]}</span>
-                      {ws.length
-                        ? <span className="text-xs text-ink-soft">{ws.map(w => `${w.from}–${w.to}`).join(', ')} ET</span>
-                        : <span className="text-xs text-ink-faint">no calls</span>}
+            {/* CAL-2: what the public booking page believes, without reading code.
+                Cal.com is the only scheduler; availability lives in Cal.com. */}
+            <SystemCard icon={<Phone className="w-3.5 h-3.5"/>} title="Call booking (Cal.com)" tracked>
+              {data?.calcom ? (
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <span className="mt-1"><StatusDot status={data.calcom.state === 'on' ? 'ok' : data.calcom.state === 'invalid' ? 'bad' : 'warn'}/></span>
+                    <span className="text-sm text-ink-soft">
+                      {data.calcom.state === 'on'
+                        ? <>On. Courses book from <a href={data.calcom.url} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-ink underline decoration-line-strong">{data.calcom.url}</a>; your hours and busy times come from Cal.com and the Outlook calendar connected to it.</>
+                        : data.calcom.state === 'invalid'
+                          ? <><span className="text-bad">CALCOM_BOOKING_URL is set but cannot be used</span> — {data.calcom.reason}. The site sees: <code className="font-mono text-xs text-ink break-all">{data.calcom.raw}</code>. Fix it in Vercel → Environment Variables (it should look like https://cal.com/yourname/your-event), then redeploy.</>
+                          : <><span className="text-warn">Off</span> — CALCOM_BOOKING_URL is not set in this deployment, so the booking page asks courses to reply with times. Add it in Vercel → Environment Variables (Production), then redeploy.</>}
+                    </span>
+                  </div>
+                  {data.calcom.state === 'on' && (
+                    <div className="flex items-start gap-2">
+                      <span className="mt-1"><StatusDot status={data.calcom.webhookSecretSet ? 'ok' : 'bad'}/></span>
+                      <span className="text-sm text-ink-soft">
+                        {data.calcom.webhookSecretSet
+                          ? <>Webhook secret set. Bookings reach GreenReserve at <code className="font-mono text-xs text-ink">/api/calcom/webhook</code> — use Cal.com&rsquo;s &ldquo;Ping test&rdquo; to confirm.</>
+                          : <><span className="text-bad">CALCOM_WEBHOOK_SECRET is not set</span> — courses can book, but the bookings will not show up here. Add it in Vercel (the same secret as the Cal.com webhook), then redeploy.</>}
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
-              {data ? (
-                <div className="flex items-start gap-2">
-                  <span className="mt-1"><StatusDot status={data.googleCalendarConfigured ? 'ok' : 'warn'}/></span>
-                  <span className="text-sm text-ink-soft">
-                    These are the widest windows the booking page will ever offer. The real filter is the linked Google Calendar
-                    {data.googleCalendarConfigured
-                      ? <>: <code className="font-mono text-xs text-ink">{data.googleCalendarId}</code>. Anything busy there is removed.</>
-                      : data.googleCalendarId
-                        ? <>: <code className="font-mono text-xs text-ink">{data.googleCalendarId}</code> — but the <span className="text-warn">service-account key is missing</span> (PASSWORD_CHECKLIST Phase 7b), so the page shows its &ldquo;reply with a couple of times&rdquo; fallback instead of a grid.</>
-                        : <> — <span className="text-warn">not configured</span> (PASSWORD_CHECKLIST Phase 7b), so the page shows its &ldquo;reply with a couple of times&rdquo; fallback instead of a grid.</>}
-                  </span>
+                  )}
                 </div>
               ) : loadError ? (
-                <p className="text-sm text-ink-muted">Could not read which calendar is linked — the system status above says why.</p>
+                <p className="text-sm text-ink-muted">Could not read the booking setup — the system status above says why.</p>
               ) : (
                 <p className="text-sm text-ink-muted">Loading…</p>
               )}
