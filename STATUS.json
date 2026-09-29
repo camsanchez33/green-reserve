@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-29T00:21:14.105Z",
+  "generatedAt": "2026-09-29T00:21:25.573Z",
   "repo": {
-    "head": "a5ed9d7",
+    "head": "141582d",
     "branch": "claude/eager-maxwell-qf1pd0",
     "dirtyCount": 1,
     "dirty": [
@@ -10,20 +10,12 @@
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-28T23:59:17+00:00",
-    "unrecorded": [
-      {
-        "h": "dd7056a",
-        "date": "2026-09-29T00:01:16+00:00",
-        "subject": "Fix: perf audit crashed with '__name is not defined' on every page",
-        "ids": [],
-        "matches": []
-      }
-    ]
+    "queueLastCommit": "2026-09-29T00:21:14+00:00",
+    "unrecorded": []
   },
   "counts": {
     "runDone": 194,
-    "runAwaiting": 14,
+    "runAwaiting": 15,
     "runInFlight": 1,
     "runNotStarted": 20,
     "reviseDone": 14,
@@ -76,8 +68,15 @@
       "ageDays": 0
     },
     {
-      "title": "CAL-1 — Cal.com as the call scheduler",
+      "title": "BUG: perf audit crashed on every page",
       "line": 2453,
+      "hash": "dd7056a",
+      "shipDate": "2026-09-29",
+      "ageDays": 0
+    },
+    {
+      "title": "CAL-1 — Cal.com as the call scheduler",
+      "line": 2461,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 0
@@ -239,12 +238,12 @@
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2477,
+      "line": 2485,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 2626,
+      "line": 2634,
       "section": "Queue (run in this order)"
     }
   ],
@@ -302,7 +301,7 @@
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2453
+      "line": 2461
     }
   ],
   "ideas": {
@@ -546,6 +545,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "141582d",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "a5ed9d7",
       "date": "2026-09-29",
       "subject": "CAL-1: Cal.com as the call scheduler (Outlook-backed), in place of the Google grid"
@@ -597,11 +601,6 @@
     },
     {
       "h": "3aff643",
-      "date": "2026-09-28",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "f6ec6fb",
       "date": "2026-09-28",
       "subject": "queue/spec update"
     }

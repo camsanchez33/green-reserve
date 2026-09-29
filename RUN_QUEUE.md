@@ -2450,6 +2450,14 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   inquiry → setup-sheet email arrives; add a member from /dashboard/members →
   invite arrives.
 
+- [ ] BUG: perf audit crashed on every page — SHIPPED dd7056a, 2026-09-29, box
+  open until /gr-review. perf-audit.yml's first-ever run failed with "__name is
+  not defined" on all four pages before measuring anything: tsx's esbuild
+  keepNames wraps Lighthouse's page-side functions in __name(). Now runs under
+  Node 22 --experimental-strip-types; reproduced + verified locally against a
+  static page. Next PR's "Lighthouse budget check" is the first REAL measurement
+  of production — if it goes red, that is a genuine budget miss, not the tool.
+
 - [ ] CAL-1 — Cal.com as the call scheduler — SHIPPED a5ed9d7, 2026-09-29, box open
   until /gr-review. Cam: invite link showed "I can't show my calendar right now".
   Cause: SC-1's Google Calendar env vars were never set (PASSWORD_CHECKLIST 7b
