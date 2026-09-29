@@ -2590,7 +2590,21 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   call/[token]/route.ts). (small, no migration)
   SHIPPED 0eab366, 2026-09-29 — box open until /gr-review. All six (a)-(f); (c) tested
   with two simultaneous submits, (e) at 320px.
-- [ ] PERF-1 — golfer pages over budget (first real Lighthouse run, PR #2,
+- [x] PERF-1 (77c8947) — FIXED, measured locally against a Sentry-enabled
+  production build (prod's numbers only reproduce with the DSN set). Causes:
+  Sentry SDK + Replay in every page's first-load JS (now loaded on first input
+  / 10s, errors buffered); Home hero hid-and-refaded at hydration; /for-courses
+  client-rendered by useSearchParams (CLS 0.26); course page fetched after
+  hydration (now SSR via lib/public-course, booking area mounts client-side
+  because "today" is the golfer's timezone). After: every page 94-99, TBT
+  <150ms, CLS <=0.004. OPEN, CAM: (1) LCP is 2.0-2.9s vs a 2.5s budget —
+  what is left is the two preloaded Fraunces/Inter files (84 kB) + framework
+  JS on the SIMULATED slow-4G link (real first paint ~0.2s). Options: subset
+  the fonts / drop a weight (design call), or budget LCP at 3.0s under
+  simulation. (2) Set repo variable AUDIT_COURSE_SLUG to a live course —
+  'daisylinks' is not live on prod, so that row timed a 404. (3) The audit
+  measures PRODUCTION, not the PR, so it only goes green after merge+deploy.
+  ORIGINAL: PERF-1 — golfer pages over budget (first real Lighthouse run, PR #2,
   mobile + slow 4G): Home 63 (TBT 1301ms, LCP 3.83s), For Courses 69 (CLS 0.265,
   LCP 3.57s), Course page 77 (CLS 0.181, LCP 3.59s), Booking 70 (LCP 5.07s,
   TBT 439ms). Worst: Home's blocking JS and For Courses' layout shift. Diagnose
