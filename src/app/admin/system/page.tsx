@@ -9,6 +9,8 @@ import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { formatDateTime as fmtDate, formatMoney as fmtMoney } from '@/lib/format';
 import { Modal } from '@/components/ui/Modal';
+import { Card } from '@/components/ui/Card';
+import { Eyebrow } from '@/components/ui/Eyebrow';
 
 interface SystemData {
   lastStripeTouch: { courseName: string; updatedAt: string } | null;
@@ -40,11 +42,11 @@ interface AcknowledgedOrphan { id: string; name: string; archivedAt: string }
 // Turning a grey card green is a schema item, not a reskin.
 function SystemCard({ icon, title, tracked = false, right, children }: { icon: React.ReactNode; title: string; tracked?: boolean; right?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="bg-white border border-line rounded-lg p-5">
+    <Card className="p-5">
       <div className="flex items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
           <span className="text-ink-muted">{icon}</span>
-          <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">{title}</div>
+          <Eyebrow>{title}</Eyebrow>
           <span title={tracked ? 'Tracked here — this page reads the real state.' : 'Link-only — this page cannot see the real state; follow the link.'}>
             <StatusDot status={tracked ? 'ok' : 'neutral'}/>
           </span>
@@ -52,7 +54,7 @@ function SystemCard({ icon, title, tracked = false, right, children }: { icon: R
         {right}
       </div>
       {children}
-    </div>
+    </Card>
   );
 }
 
