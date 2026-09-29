@@ -2642,6 +2642,17 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   pre-filled from the taps, and skips sections the call answered no to (with
   "show all"). Walked end to end in Chromium. OPEN: nothing sent for real yet
   (no Resend key in the sandbox) — Cam's first real call is the live test.
+- [x] CG-2 — the sheet arrives set up (Cam 2026-09-29: "what was discussed in the
+  call wasnt automatically filled out"). Cause: CG-1 deliberately captured no
+  prices/times, so only the shape taps could pre-fill. Built: the call guide gains
+  an optional "Details they mentioned" block (weekday/weekend/twilight fees, first/
+  last tee time + interval, days open + season, cart fee, cancellation window + late
+  fee when they charge one, website); each maps onto its sheet field and into the
+  recap. Sheet step 1 now shows "Your details" (contact, email, phone, course,
+  address from the inquiry — nothing re-typed) above "From our call". Walked in
+  Chromium: fees, tee times, all 7 days, 24 h / $20 arrive pre-filled. Still only
+  applies when the call is ended with "End call → Send setup sheet"; a link sent
+  any other way carries only what was tapped.
 - [ ] PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29:
   private clubs pay GreenReserve (subscription, or $1.50/round billed monthly and
   capped at the subscription price); members pay $0. BLOCKED on Cam's prices and on
