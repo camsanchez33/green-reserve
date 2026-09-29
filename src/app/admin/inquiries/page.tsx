@@ -16,6 +16,8 @@ import { nextCall, overdueCall, latestCall, isSameEasternDay, fmtCallClock, east
 import type { NeedItem } from '@/lib/inquiry-needs';
 import { formatDate as fmtDate, formatEasternDay as fmtDay, formatEasternDate as fmtShort } from '@/lib/format';
 import { Modal } from '@/components/ui/Modal';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { Card } from '@/components/ui/Card';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -621,7 +623,7 @@ function InquiriesListInner() {
       <tr key={g.key + ':head'} className="border-t border-line">
         <td colSpan={8} className="bg-paper px-3 py-1.5">
           <div className="flex items-baseline gap-2">
-            <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">{g.title}</span>
+            <Eyebrow as="span">{g.title}</Eyebrow>
             <span className="text-[11px] text-ink-faint">{g.rows.length}{g.hint ? ' · ' + g.hint : ''}</span>
             {canBulkSelect && g.mode === 'queue' && (
               <button onClick={toggleSection} className="ml-auto text-[11px] text-ink-faint hover:text-ink transition-colors">
@@ -638,7 +640,7 @@ function InquiriesListInner() {
     const nonEmpty = groups.filter(g => g.rows.length > 0);
     if (nonEmpty.length === 0) return null;
     return (
-      <div className="bg-white border border-line rounded-lg overflow-x-auto">
+      <Card className="overflow-x-auto">
         <table className="w-full table-fixed min-w-[760px]">
           <thead>
             <tr className="bg-paper">
@@ -669,7 +671,7 @@ function InquiriesListInner() {
             );
           })}
         </table>
-      </div>
+      </Card>
     );
   };
 
