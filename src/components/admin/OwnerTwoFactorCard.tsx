@@ -5,9 +5,12 @@
 // needs a current code and invalidates all ten.
 import { useEffect, useState } from 'react';
 import { ShieldCheck, Copy, Check, KeyRound } from 'lucide-react';
+import { Card } from '@/components/ui/Card';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { INPUT_COMPACT } from '@/components/ui/field';
 
 type Status = { enrolled: boolean; enrolledAt: string | null; recoveryCodesLeft: number };
-const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-ink text-sm placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-full';
+const iCls = `${INPUT_COMPACT} w-full`;
 const btnP = 'bg-pine hover:bg-pine-hover disabled:opacity-50 text-white text-[12.5px] font-medium px-4 py-2 rounded-md transition-colors';
 const btnO = 'bg-paper hover:bg-line border border-line text-ink disabled:opacity-50 text-[12.5px] font-medium px-4 py-2 rounded-md transition-colors';
 
@@ -68,7 +71,7 @@ export default function OwnerTwoFactorCard({ mfaSession }: { mfaSession: boolean
   };
 
   return (
-    <div className="bg-white border border-line rounded-lg p-5 mb-5">
+    <Card className="p-5 mb-5">
       <div className="flex items-center gap-2 mb-1">
         <ShieldCheck className="w-4 h-4 text-pine" />
         <span className="text-sm font-medium text-ink">Two-factor authentication</span>
@@ -86,14 +89,14 @@ export default function OwnerTwoFactorCard({ mfaSession }: { mfaSession: boolean
       {status && !setup && !codes && (
         <div>
           <div className="flex items-center justify-between py-2 border-b border-line-soft">
-            <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Authenticator app</span>
+            <Eyebrow as="span">Authenticator app</Eyebrow>
             <span className={'text-sm font-medium ' + (status.enrolled ? 'text-ok' : 'text-ink-soft')}>
               {status.enrolled ? `On · since ${new Date(status.enrolledAt as string).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : 'Not set up — emailed codes in use'}
             </span>
           </div>
           {status.enrolled && (
             <div className="flex items-center justify-between py-2 border-b border-line-soft">
-              <span className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Recovery codes left</span>
+              <Eyebrow as="span">Recovery codes left</Eyebrow>
               <span className={'text-sm font-medium ' + (status.recoveryCodesLeft <= 2 ? 'text-warn' : 'text-ink')}>{status.recoveryCodesLeft} of 10</span>
             </div>
           )}
@@ -105,7 +108,7 @@ export default function OwnerTwoFactorCard({ mfaSession }: { mfaSession: boolean
           {regenOpen && (
             <div className="mt-3 flex items-end gap-2 flex-wrap">
               <div className="w-40">
-                <label className="block"><span className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Current app code</span>
+                <label className="block"><Eyebrow as="span" className="block mb-1.5">Current app code</Eyebrow>
                 <input value={code} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="000000" className={iCls + ' text-center font-mono tracking-[0.25em]'} /></label>
               </div>
               <button onClick={regenerate} disabled={busy || code.length < 6} className={btnP}>{busy ? 'Working…' : 'Replace all ten'}</button>
@@ -124,7 +127,7 @@ export default function OwnerTwoFactorCard({ mfaSession }: { mfaSession: boolean
             <div className="min-w-0">
               <p className="text-sm text-ink mb-2">Scan with your authenticator app (KeePassXC, 1Password, Google Authenticator…). Can&rsquo;t scan? Enter this secret by hand:</p>
               <code className="block text-xs font-mono bg-paper border border-line rounded-md px-3 py-2 break-all select-all">{setup.secret}</code>
-              <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mt-4 mb-1.5">Enter the 6-digit code it shows</label>
+              <Eyebrow as="label" className="block mt-4 mb-1.5">Enter the 6-digit code it shows</Eyebrow>
               <div className="flex items-center gap-2">
                 <input value={code} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="000000" autoFocus className={iCls + ' w-40 text-center font-mono tracking-[0.25em]'} onKeyDown={e => { if (e.key === 'Enter' && code.length === 6) confirm(); }} />
                 <button onClick={confirm} disabled={busy || code.length < 6} className={btnP}>{busy ? 'Checking…' : 'Confirm'}</button>
@@ -150,6 +153,6 @@ export default function OwnerTwoFactorCard({ mfaSession }: { mfaSession: boolean
           </div>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
