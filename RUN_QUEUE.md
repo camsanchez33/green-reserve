@@ -2564,6 +2564,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   redirects to the prefilled public Cal.com page (metadata[invite] in the URL);
   booked calls still show our page with Cal.com's reschedule/cancel links.
   Then 'Too many requests' live (60/h/IP cap hit while testing) → raised to 300/h, 54312b6.
+  ROOT CAUSE of blank embed + 405: CALCOM_BOOKING_URL held the WEBHOOK url
+  (greenreserve.app/api/calcom/webhook). Cam to set it to the Cal.com event link.
+  Guard 56a52c7: a booking URL pointing at this site is 'invalid' with that reason.
 
 - [ ] BUG: hello@greenreserve.app takes no mail — SHIPPED 371ffff, 2026-09-29, box
   open until /gr-review. Cam: "all emails need to go to thegreenreserve@outlook.com,

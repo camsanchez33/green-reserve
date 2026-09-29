@@ -2414,7 +2414,7 @@
     },
     {
       "path": "src/app/api/call/[token]/route.ts",
-      "lines": 77,
+      "lines": 80,
       "purpose": "The public \"book a call\" endpoint behind /call/[token].",
       "brain": [],
       "exports": [
@@ -8142,7 +8142,7 @@
     },
     {
       "path": "src/lib/calcom.ts",
-      "lines": 100,
+      "lines": 106,
       "purpose": "CAL-1 — Cal.com as the call scheduler, in place of the Google Calendar grid.",
       "brain": [],
       "exports": [
