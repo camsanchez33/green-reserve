@@ -627,7 +627,10 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     times, outings volume, women's tee data, front/back yardage, club-rental
     methods/phone, …). Also fix: build reads fv2.lessonsProPhone as the
     pro-shop phone (fv2.proShopPhone never read).
-  - [ ] SD-9b — details-sheet funnel UX: split into a required core that finishes
+  - [x] SD-9b (1871e32) — BUILT as decided below: core first (basics, schedule,
+    fees, cancellation), rest optional + 'Submit now', scorecard photo, step
+    persisted, unread inputs deleted, pro-shop phone fix. Walked end to end.
+    ORIGINAL: SD-9b — details-sheet funnel UX: split into a required core that finishes
     the lead + a deferrable polish pass; scorecard photo upload replaces the
     tee-sets grid for most courses; "prefer to do this on a call?" escape hatch
     (now that CAL-1 exists, it can link the invite); persist step position; stop
@@ -2600,7 +2603,12 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   call/[token]/route.ts). (small, no migration)
   SHIPPED 0eab366, 2026-09-29 — box open until /gr-review. All six (a)-(f); (c) tested
   with two simultaneous submits, (e) at 320px.
-- [ ] FB-1 — /for-courses sign-up page, Cam's walk-through notes 2026-09-29
+- [x] FB-1 (f361e89, 1871e32) — BUILT: sections, street address, Public/Private
+  everywhere, thanks page links the inquiry's own call page (was a dead Calendly
+  URL), honeypot renamed (autofill filled 'Website' and the API silently
+  discarded the inquiry — likeliest cause of the missing email). CAM: if your
+  test inquiry is absent from /admin/inquiries, that was it.
+  ORIGINAL: FB-1 — /for-courses sign-up page, Cam's walk-through notes 2026-09-29
   (verbatim intent): organise into CONTACT INFO (first/last name, email,
   phone, role/course) → COURSE INFORMATION (course name, city, state,
   ADDRESS; course type PUBLIC / PRIVATE only — drop semi-private; keep "how
