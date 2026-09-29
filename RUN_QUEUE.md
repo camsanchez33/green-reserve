@@ -2693,7 +2693,18 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   check-in today.
   FB-2 DECIDED (Cam 2026-09-29): taxes = built into the course's price, GreenReserve
   adds none. Draft sentences in FB2_COPY_SPEC.md still await Cam's per-block approval.
-- [ ] FB-2 — homepage (greenreserve.app) copy + structure, Cam's notes
+- [x] FB-2 — BUILT (Cam 2026-09-29: "keep everything" — every block of
+  FB2_COPY_SPEC.md approved as drafted, incl. delete the course cards, "about a
+  week" everywhere, taxes built into the price). Hero blurb + fine line (no
+  long-term commitment), See-how-it-works glides to the steps (reduced-motion
+  respected), Your page / Your money / Your rules beats + HTTPS/Stripe line,
+  course-cards section deleted, five real steps, pricing + tiles + taxes note,
+  eight-question FAQ (lib/faq.ts, same array as the JSON-LD), page meta
+  description, /for-courses "how long" answer = about a week. Verified at 390 and
+  1280px, no page errors, no sideways scroll; Home Lighthouse 96 / TBT 40ms. The
+  three example-card photos in public/home/ are now unused (left in place).
+  Original notes:
+  FB-2 — homepage (greenreserve.app) copy + structure, Cam's notes
   2026-09-29: change the hero blurb; must NOT say "no contract" (and not "no
   courses in the new contract"); smoother "See how it works" button; "Your
   page" section should be about how it links from the course's own website,
