@@ -3,7 +3,20 @@ import { serviceFeeLabel, hoursLabel } from '@/lib/booking-fees';
 
 let _resend: Resend | null = null;
 function getResend() {
-  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
+  if (!_resend) {
+    _resend = new Resend(process.env.RESEND_API_KEY);
+    // The Resend SDK (6.x) RETURNS { data: null, error } on a rejected send —
+    // bad key, unverified domain, refused address — it does not throw. 56 of
+    // the senders below never looked, so every failure read as success: every
+    // .catch() and try/catch around them was dead code. Make the one choke
+    // point throw, so each caller's existing handling finally sees it.
+    const send = _resend.emails.send.bind(_resend.emails);
+    _resend.emails.send = (async (...args: Parameters<typeof send>) => {
+      const r = await send(...args);
+      if (r.error) throw new Error(`Resend rejected the email: ${r.error.message || r.error.name || 'unknown error'}`);
+      return r;
+    }) as typeof send;
+  }
   return _resend;
 }
 const FROM = 'GreenReserve <hello@greenreserve.app>';
