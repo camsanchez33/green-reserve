@@ -572,12 +572,12 @@ function InquiryDetailInner() {
       const r = await fetch('/api/preview/send', {
         method: 'POST', headers: H(), body: JSON.stringify({ inquiryId: inq.id }),
       });
-      const d = await r.json();
+      const d = await r.json().catch(() => ({}));
       if (r.ok) {
         setPreviewMsg('Preview email sent to ' + inq.email);
         await loadInquiry();
       } else {
-        setPreviewMsg('Error: ' + (d.error || 'Failed to send'));
+        setPreviewMsg('Error: ' + (d.error || `Failed to send (${r.status}) — try again.`));
       }
     } catch { setPreviewMsg('Error: network failure'); }
     setSendingPreview(false);

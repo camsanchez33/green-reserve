@@ -548,11 +548,13 @@ async function handleAction(
         });
         const hasDashboardAccess = events.some(e => e.actorName?.startsWith('Dashboard access sent'));
         const goLiveFn = hasDashboardAccess ? sendGoLiveSimpleEmail : sendCourseLiveOrientationEmail;
-        goLiveFn({
+        // after(): un-awaited, the email and its welcomeEmailSentAt stamp died
+        // whenever the function froze after the response (review 2026-09-29).
+        after(goLiveFn({
           operatorName: inquiry.contactName, operatorEmail: inquiry.email,
           courseName: inquiry.courseName, courseSlug: builtCourse.slug,
         }).then(() => prisma.course.update({ where: { id: inquiry.builtCourseId! }, data: { welcomeEmailSentAt: new Date() } }))
-          .catch(emailErr => console.error('Go-live email failed:', emailErr));
+          .catch(emailErr => console.error('Go-live email failed:', emailErr)));
       }
       return NextResponse.json({ success: true });
     } catch (e) {

@@ -52,15 +52,23 @@ export async function POST(req: NextRequest) {
     const tempPassword = randomBytes(8).toString('hex');
     const hashed = await bcrypt.hash(tempPassword, 12);
     const verificationToken = randomBytes(32).toString('hex');
-    await prisma.courseOperator.update({ where: { id: course.operator.id }, data: { password: hashed, verificationToken } });
     const setupLink = `${base}/dashboard/verify?token=${verificationToken}`;
 
-    await sendPreviewWithDashboardAccessEmail({
-      contactName: inquiry.contactName,
-      contactEmail: inquiry.email,
-      courseName: inquiry.courseName,
-      previewUrl, tempPassword, setupLink,
-    });
+    // Review fix: the password used to be rotated BEFORE the send, so a failed
+    // email left the operator's working password dead and nothing delivered.
+    // Send first; rotate only once the email carrying the new one has gone.
+    try {
+      await sendPreviewWithDashboardAccessEmail({
+        contactName: inquiry.contactName,
+        contactEmail: inquiry.email,
+        courseName: inquiry.courseName,
+        previewUrl, tempPassword, setupLink,
+      });
+    } catch (err) {
+      console.error('Preview email failed:', err);
+      return NextResponse.json({ error: `The preview email did not send (${err instanceof Error ? err.message : 'unknown error'}). Nothing was changed — the operator's password still works. Try again.` }, { status: 502 });
+    }
+    await prisma.courseOperator.update({ where: { id: course.operator.id }, data: { password: hashed, verificationToken } });
 
     await prisma.inquiryStatusEvent.create({
       data: {
@@ -100,15 +108,23 @@ export async function POST(req: NextRequest) {
     const tempPassword = randomBytes(8).toString('hex');
     const hashed = await bcrypt.hash(tempPassword, 12);
     const verificationToken = randomBytes(32).toString('hex');
-    await prisma.courseOperator.update({ where: { id: operator.id }, data: { password: hashed, verificationToken } });
     const setupLink = `${base}/dashboard/verify?token=${verificationToken}`;
 
-    await sendPreviewWithDashboardAccessEmail({
-      contactName: operator.name,
-      contactEmail: operator.email,
-      courseName: course.name,
-      previewUrl, tempPassword, setupLink,
-    });
+    // Review fix: the password used to be rotated BEFORE the send, so a failed
+    // email left the operator's working password dead and nothing delivered.
+    // Send first; rotate only once the email carrying the new one has gone.
+    try {
+      await sendPreviewWithDashboardAccessEmail({
+        contactName: operator.name,
+        contactEmail: operator.email,
+        courseName: course.name,
+        previewUrl, tempPassword, setupLink,
+      });
+    } catch (err) {
+      console.error('Preview email failed:', err);
+      return NextResponse.json({ error: `The preview email did not send (${err instanceof Error ? err.message : 'unknown error'}). Nothing was changed — the operator's password still works. Try again.` }, { status: 502 });
+    }
+    await prisma.courseOperator.update({ where: { id: operator.id }, data: { password: hashed, verificationToken } });
 
     const linkedInquiry = await prisma.courseInquiry.findFirst({ where: { builtCourseId: rawCourseId } });
     if (linkedInquiry) {
