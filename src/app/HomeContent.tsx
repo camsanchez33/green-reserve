@@ -68,7 +68,7 @@ export default function HomeContent() {
             </div>
             <div className={s.heroStage}>
               <div className={s.heroDevice}>
-                <HomeDemo accent="#24513B" photo compact />
+                <HomeDemo accent="#1F6B47" photo compact />
               </div>
               <div className={s.heroSheet} aria-hidden="true">
                 <div className={s.hsHead}><span>Your tee sheet</span><b>Sat · 7 AM</b></div>

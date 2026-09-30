@@ -12,7 +12,7 @@ import s from '@/app/home.module.css';
 // both; the photo toggle only means something on the golfer side.
 
 const SWATCHES = [
-  { c: '#24513B', label: 'Pine' },
+  { c: '#1F6B47', label: 'Green' },
   { c: '#1F3A5F', label: 'Navy' },
   { c: '#8A3B1F', label: 'Rust' },
   { c: '#5B2A86', label: 'Plum' },

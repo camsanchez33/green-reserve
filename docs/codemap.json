@@ -6168,7 +6168,7 @@
     },
     {
       "path": "src/app/layout.tsx",
-      "lines": 59,
+      "lines": 56,
       "purpose": "",
       "brain": [],
       "exports": [

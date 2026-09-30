@@ -1,21 +1,18 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Fraunces } from 'next/font/google';
+import { Figtree } from 'next/font/google';
 import './globals.css';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import MainOffset from '@/components/MainOffset';
 
-const inter = Inter({
+// UI-B (Cam 2026-09-30, "I like B"): one variable family for the whole PUBLIC
+// look — Figtree, heavy for headlines, regular for body. It replaced Fraunces +
+// Inter (two files → one). --font-serif points at the same family in
+// globals.css, so existing `font-serif` headings render in Figtree; the staff
+// look re-points both variables to its own fonts and is unaffected.
+const figtree = Figtree({
   subsets: ['latin'],
-  weight: ['400', '500'],
   variable: '--font-sans',
-  display: 'swap',
-});
-
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  weight: ['400', '500'],
-  variable: '--font-serif',
   display: 'swap',
 });
 
@@ -47,7 +44,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${fraunces.variable}`}>
+    <html lang="en" className={figtree.variable}>
       <body className="font-sans bg-paper text-ink antialiased">
         <Nav />
         <MainOffset>{children}</MainOffset>

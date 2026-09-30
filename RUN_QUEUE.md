@@ -2736,6 +2736,20 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   LOGO-1c (Cam 2026-09-30, "it should just be this guy"): tab icon is the bare
   golfer, no square — pine, cream in dark mode (icon.svg media query); home-screen
   icon is the pine golfer on paper.
+- [x] UI-B-1 — BUILT 2026-09-30 (homepage). Cam picked Direction B from the look
+  options ("I like B") and asked for NO course photo in the hero: keep the booking
+  card with the tee sheet overlapping it. Figtree replaces Fraunces + Inter for the
+  whole PUBLIC look (root layout; --font-serif points at --font-sans, so existing
+  font-serif headings render Figtree; staff look untouched). Homepage: white ground,
+  Figtree 800 headlines, green #1F6B47, pill buttons, soft #EEF4F0 secondary, 18-22px
+  cards, steps on a #F5F7F6 band. Local Lighthouse home: LCP 2.33s median, TBT 44ms.
+- [ ] UI-B-2 — the rest of the public look in B: /for-courses (+ details, thanks),
+  the golfer booking pages (/courses/[slug], /book, /checkin, /manage, /receipt,
+  member portal), legal pages. White ground, pill buttons, rounder cards; per-course
+  brandColor stays the accent on golfer pages. Also fix /for-courses' stale "1–2 days
+  typical setup time" (homepage and FAQ say about a week).
+- [ ] UI-C? — dashboards: I recommended Direction C for staff surfaces; Cam has not
+  decided. Do nothing until he does.
 - [x] SEC-1 — BUILT 2026-09-30: the page posts only setupIntentId; /api/bookings retrieves the SetupIntent and uses ITS customer + payment_method (status succeeded; never attaches a card that belongs to another customer); setup-intent no longer returns the customer id. Live test = one real booking. Original: /api/bookings trusts the client-supplied Stripe customerId +
   paymentMethodId (found in the FB-3 review, pre-existing). No route exposes
   another golfer's ids, but anyone holding a cus_ id could attach their own card
