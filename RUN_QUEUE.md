@@ -2733,6 +2733,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   home-screen icon were still the dog (src/app/icon.png, apple-icon.png,
   favicon.ico, public/apple-touch-icon.png) — replaced with the paper golfer on a
   pine square, plus a vector src/app/icon.svg.
+  LOGO-1c (Cam 2026-09-30, "it should just be this guy"): tab icon is the bare
+  golfer, no square — pine, cream in dark mode (icon.svg media query); home-screen
+  icon is the pine golfer on paper.
 - [ ] SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +
   paymentMethodId (found in the FB-3 review, pre-existing). No route exposes
   another golfer's ids, but anyone holding a cus_ id could attach their own card
