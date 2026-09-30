@@ -1,21 +1,21 @@
 {
-  "generatedAt": "2026-09-30T15:48:30.125Z",
+  "generatedAt": "2026-09-30T15:28:18.160Z",
   "repo": {
-    "head": "aeedc4c",
+    "head": "4106287",
     "branch": "claude/eager-maxwell-qf1pd0",
     "dirtyCount": 0,
     "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-30T15:48:29+00:00",
+    "queueLastCommit": "2026-09-30T15:28:13+00:00",
     "unrecorded": []
   },
   "counts": {
-    "runDone": 212,
+    "runDone": 211,
     "runAwaiting": 23,
     "runInFlight": 1,
-    "runNotStarted": 19,
+    "runNotStarted": 17,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -116,21 +116,21 @@
     },
     {
       "title": "CAL-2 — Cal.com is the ONLY call scheduler",
-      "line": 2827,
+      "line": 2813,
       "hash": "e082dd0",
       "shipDate": "2026-09-29",
       "ageDays": 1
     },
     {
       "title": "BUG: hello@greenreserve.app takes no mail",
-      "line": 2859,
+      "line": 2845,
       "hash": "371ffff",
       "shipDate": "2026-09-29",
       "ageDays": 1
     },
     {
       "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 2877,
+      "line": 2863,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 1
@@ -276,23 +276,13 @@
       "section": "Queue (run in this order)"
     },
     {
-      "title": "UI-B-2 — the rest of the public look in B: /for-courses (+ details, thanks),",
-      "line": 2746,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "UI-C? — dashboards: I recommended Direction C for staff surfaces; Cam has not",
-      "line": 2751,
-      "section": "Queue (run in this order)"
-    },
-    {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2901,
+      "line": 2887,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 3055,
+      "line": 3041,
       "section": "Queue (run in this order)"
     }
   ],
@@ -355,17 +345,17 @@
     {
       "item": "CAL-2 — Cal.com is the ONLY call scheduler",
       "note": "Cam: \"there should be no google calendar thing\" and, after setting both env vars and redeploying, \"it is just the same as before\"",
-      "line": 2827
+      "line": 2813
     },
     {
       "item": "BUG: hello@greenreserve.app takes no mail",
       "note": "Cam: \"all emails need to go to thegreenreserve@outlook",
-      "line": 2859
+      "line": 2845
     },
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2877
+      "line": 2863
     }
   ],
   "ideas": {
@@ -627,16 +617,6 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "aeedc4c",
-      "date": "2026-09-30",
-      "subject": "UI-B-1: homepage in Direction B, Figtree for the public look"
-    },
-    {
-      "h": "a9e191d",
-      "date": "2026-09-30",
-      "subject": "queue/spec update"
-    },
-    {
       "h": "4106287",
       "date": "2026-09-30",
       "subject": "SEC-1: bookings read the card and customer from Stripe, not the request"
@@ -685,6 +665,16 @@
       "h": "880f6e9",
       "date": "2026-09-29",
       "subject": "BLOB-3: contract PDFs upload straight from the browser to the private store"
+    },
+    {
+      "h": "cffc09e",
+      "date": "2026-09-29",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "bb9b1e4",
+      "date": "2026-09-29",
+      "subject": "BLOB-2: contracts and signed agreements use their own private Blob store"
     }
   ]
 }
