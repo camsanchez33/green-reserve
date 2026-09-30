@@ -26,6 +26,11 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 ## Queue (run in this order)
 
+- [ ] UI-H-1 — homepage as one golf hole (Cam approved 2026-09-30). Full spec,
+  content rules, waypoints and build plan: HOMEPAGE_HOLE_SPEC.md; mockup
+  docs/design/hole/index.html. Includes: Book a demo → Cal.com must create an
+  Inquiry when no token matches (§4.2). Supersedes UI-B (rejected, never merged).
+
 - [x] DESIGN_SYSTEM_SPEC Phase D1 — Clubhouse tokens, shared UI components, admin sweep, CLAUDE.md design section rewrite — 99cbc9a
 - [x] ADMIN_V2 Phase 1 — full course detail page at /admin/courses/[id] (build in Clubhouse style)
 - [x] ADMIN_V2 Phase 2 — inquiries kanban board (build in Clubhouse style) — ad20254

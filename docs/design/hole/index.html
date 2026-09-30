@@ -1,0 +1,355 @@
+<title>GreenReserve Hole One</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap">
+<style>
+/* Layout concept: the whole site is played over one real-looking par 4, seen
+   straight down. The course is pinned behind everything and the camera walks
+   down it as you scroll; the ball's flight is the progress bar. Words sit on
+   the tree side of the hole under a dark wash; the fairway side stays clear
+   so the shot is always visible. */
+:root {
+  --forest: #173B2A;
+  --deep: #0E1F16;
+  --paper: #FFFFFF;
+  --cream: #F6F4EC;
+  --ink: #141814;
+  --muted: #6B706A;
+  --line: #E3E4DE;
+  --sage: #CFDCC8;
+  --due: #9A5B13;
+  --f: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --lift: 0 1px 2px rgba(0,0,0,.08), 0 28px 56px -24px rgba(0,0,0,.55);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { overflow-x: clip; }
+body { margin: 0; background: var(--deep); color: var(--cream); font-family: var(--f); font-size: 17px; line-height: 1.55; }
+a { color: inherit; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+.display { font-stretch: 118%; font-weight: 700; letter-spacing: -.02em; }
+.eyebrow { font-stretch: 87.5%; font-weight: 600; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--sage); }
+.btn { display: inline-flex; align-items: center; gap: 10px; height: 50px; padding: 0 22px; border-radius: 6px; background: var(--cream); color: var(--forest); font-weight: 600; font-size: 16px; text-decoration: none; }
+.btn:hover { background: #fff; }
+.quiet { font-size: 15.5px; font-weight: 500; color: rgba(246,244,236,.8); text-decoration: none; }
+.quiet:hover { color: #fff; text-decoration: underline; text-underline-offset: 4px; }
+:focus-visible { outline: 2px solid var(--cream); outline-offset: 3px; }
+.mock { position: relative; z-index: 30; background: var(--sage); color: var(--forest); font-size: 13px; padding: 7px 16px; text-align: center; }
+
+/* THE COURSE — pinned behind the page */
+.course { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: #1F3A24; }
+#img { position: absolute; left: 0; top: 0; width: 667px; height: 2000px; transform-origin: 0 0; will-change: transform; background: url(course.webp) 0 0 / 100% 100% no-repeat; }
+.wash { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(8,18,12,.82) 0%, rgba(8,18,12,.66) 34%, rgba(8,18,12,.18) 50%, rgba(8,18,12,0) 58%); }
+#fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.ball, .shadow { position: absolute; left: 0; top: 0; border-radius: 50%; pointer-events: none; will-change: transform; }
+.ball { width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px; background: radial-gradient(circle at 35% 30%, #fff 0 35%, #EAEAE4 60%, #B9B9B0 100%); box-shadow: 0 0 0 .5px rgba(0,0,0,.3); z-index: 3; }
+.shadow { width: 13px; height: 8px; margin: -4px 0 0 -6.5px; background: rgba(0,0,0,.45); filter: blur(1.5px); z-index: 2; }
+.hud { position: absolute; right: 24px; bottom: 24px; z-index: 4; background: rgba(8,18,12,.7); border-radius: 4px; padding: 10px 14px; min-width: 200px; }
+.hud .k { font-stretch: 87.5%; font-weight: 600; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--sage); }
+.hud .v { font-weight: 600; font-size: 15px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+/* NAV */
+.nav { position: absolute; left: 0; right: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; padding: 20px clamp(20px, 3vw, 40px); }
+.nav img { width: clamp(150px, 15vw, 210px); display: block; }
+.nav .r { display: flex; align-items: center; gap: 22px; }
+.nav .r a:not(.btn) { font-size: 15px; font-weight: 500; text-decoration: none; color: rgba(246,244,236,.9); }
+.nav .btn { height: 42px; font-size: 15px; padding: 0 16px; }
+
+/* CONTENT — the left 46%, over the trees */
+main { position: relative; z-index: 5; width: min(46vw, 640px); margin-left: max(24px, calc((100vw - 1320px) / 2)); }
+section { padding-block: 18vh; }
+.hero { padding-top: 160px; min-height: 100vh; }
+.hero h1 { font-size: clamp(38px, 3.6vw, 54px); line-height: 1.05; margin: 16px 0 18px; color: #fff; }
+.hero p, .lead { font-size: 18px; margin: 0 0 28px; max-width: 27em; color: rgba(246,244,236,.88); }
+.cta { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+.trust { margin-top: 12px; font-size: 13.5px; color: rgba(246,244,236,.65); }
+h2 { font-size: clamp(30px, 3vw, 42px); line-height: 1.07; margin: 12px 0 16px; color: #fff; }
+
+/* product pieces — the only things with a surface */
+.combo { position: relative; margin: 56px 0 230px; max-width: 500px; color: var(--ink); }
+.app { background: var(--paper); border-radius: 8px; box-shadow: var(--lift); overflow: hidden; font-size: 13.5px; }
+.appBar { display: flex; align-items: center; gap: 14px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+.appBar b { font-size: 14.5px; }
+.tabs { display: flex; gap: 14px; font-size: 13px; color: var(--muted); }
+.tabs .on { color: var(--ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--forest); padding-bottom: 2px; }
+.day { margin-left: auto; font-size: 13px; }
+.tt { width: 100%; border-collapse: collapse; color: var(--ink); font-size: inherit; }
+.tt th { font-stretch: 75%; font-weight: 600; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 7px 16px; border-bottom: 1px solid var(--line); }
+.tt td { padding: 8px 16px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.tt tr:last-child td { border-bottom: 0; }
+.tt .t { font-weight: 700; font-variant-numeric: tabular-nums; width: 60px; }
+.tt .r { text-align: right; }
+.in { color: var(--forest); font-weight: 600; }
+.in::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #3D7A55; margin-right: 7px; vertical-align: 2px; }
+.dueTxt { color: var(--due); font-weight: 600; }
+.hold { color: var(--muted); font-style: italic; }
+tr.open td { color: var(--muted); } tr.open .t { color: var(--ink); }
+tr.now td { background: #F3F6F1; }
+.appFoot { padding: 8px 16px; border-top: 1px solid var(--line); background: #F6F7F3; font-size: 12.5px; color: var(--muted); text-align: right; }
+.phone { position: absolute; right: -150px; bottom: -220px; width: 220px; background: var(--paper); border-radius: 22px; box-shadow: var(--lift); border: 6px solid #111; overflow: hidden; font-size: 13px; }
+.phHead { position: relative; height: 92px; background: #2B4A38 url(phone.jpg) center/cover no-repeat; color: #fff; display: flex; align-items: flex-end; padding: 10px 12px; }
+.phHead::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,.55)); }
+.phHead div { position: relative; }
+.phHead b { display: block; font-size: 15px; line-height: 1.1; }
+.phHead span { font-size: 11px; opacity: .9; }
+.dates { display: flex; gap: 6px; padding: 10px 12px 6px; }
+.dates span { flex: 1; text-align: center; font-size: 11.5px; padding: 5px 0; border: 1px solid var(--line); border-radius: 5px; color: var(--muted); }
+.dates span.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+.slot { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; border-top: 1px solid var(--line); }
+.slot b { font-size: 16px; font-variant-numeric: tabular-nums; }
+.slot small { color: var(--muted); margin-left: 6px; }
+.slot em { font-style: normal; font-weight: 600; }
+.reserve { margin: 8px 12px 12px; height: 36px; border-radius: 6px; background: #2B4A38; color: #fff; font-weight: 600; display: flex; align-items: center; justify-content: center; font-size: 13.5px; }
+
+.feat { margin-top: 40px; display: flex; flex-direction: column; gap: 44px; }
+.feat > div:nth-child(2) { margin-left: 8%; }
+.feat h3 { font-size: 22px; font-stretch: 112%; margin-bottom: 6px; color: #fff; }
+.feat p { margin: 0 0 16px; color: rgba(246,244,236,.85); max-width: 26em; }
+.site, .walk, .bh { color: var(--ink); box-shadow: var(--lift); }
+.site { width: 320px; max-width: 100%; background: var(--paper); border-radius: 6px; overflow: hidden; }
+.siteBar { display: flex; align-items: center; gap: 12px; padding: 10px 14px; font-size: 12.5px; color: var(--muted); border-bottom: 1px solid var(--line); }
+.siteBar b { color: #7A2E2E; font-family: Georgia, serif; font-size: 14px; margin-right: auto; }
+.siteBar span.b { background: #7A2E2E; color: #fff; padding: 5px 10px; border-radius: 3px; font-weight: 600; }
+.siteBody { height: 66px; background: #E9E4DA; display: flex; align-items: center; padding: 0 14px; font-family: Georgia, serif; color: #5A4A3A; font-size: 15px; }
+.walk { width: 340px; max-width: 100%; background: var(--paper); border-radius: 6px; font-size: 14px; overflow: hidden; }
+.walk div { display: grid; grid-template-columns: 50px 1fr auto; gap: 10px; padding: 9px 14px; border-bottom: 1px solid var(--line); }
+.walk div:last-child { border-bottom: 0; }
+.walk .t { font-weight: 700; font-variant-numeric: tabular-nums; }
+.walk .added { background: #F3F6F1; }
+.walk .tag { font-size: 12px; color: var(--muted); }
+.brands { display: flex; gap: 10px; flex-wrap: wrap; }
+.bh { width: 100px; border-radius: 6px; overflow: hidden; background: var(--paper); font-size: 11px; }
+.bh div { height: 50px; color: #fff; padding: 8px; display: flex; align-items: flex-end; font-weight: 700; line-height: 1.1; }
+.bh span { display: block; padding: 5px 8px; color: var(--muted); }
+.steps { list-style: none; margin: 32px 0 0; padding: 0; }
+.steps li { display: grid; grid-template-columns: 48px 1fr; padding-block: 18px; border-top: 1px solid rgba(246,244,236,.2); }
+.steps .n { font-stretch: 87.5%; font-weight: 600; font-size: 13px; letter-spacing: .08em; color: var(--sage); padding-top: 5px; }
+.steps h3 { font-size: 21px; font-stretch: 112%; margin-bottom: 4px; color: #fff; }
+.steps p { margin: 0; color: rgba(246,244,236,.82); }
+.faq { margin-top: 28px; }
+.faq div { padding-block: 15px; border-top: 1px solid rgba(246,244,236,.2); }
+.faq h3 { font-size: 17px; margin-bottom: 4px; color: #fff; }
+.faq p { margin: 0; font-size: 15.5px; color: rgba(246,244,236,.82); }
+.end { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+.score { display: flex; align-items: baseline; gap: 14px; margin: 16px 0 6px; opacity: 0; transform: translateY(8px); transition: opacity .5s ease .35s, transform .5s ease .35s; }
+.score b { font-stretch: 118%; font-weight: 700; font-size: 88px; line-height: 1; color: #fff; }
+.score span { font-size: 22px; font-weight: 600; color: var(--sage); }
+.holed .score { opacity: 1; transform: none; }
+.mail { display: block; margin-top: 18px; color: rgba(246,244,236,.7); font-size: 15px; }
+footer { position: relative; z-index: 6; background: var(--forest); color: rgba(246,244,236,.72); font-size: 14px; }
+footer .fin { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 24px max(24px, calc((100vw - 1320px) / 2)); }
+footer img { width: 150px; }
+
+@media (max-width: 900px) {
+  /* Phones: the hole is a strip pinned at the top; the words scroll below it. */
+  .course { position: sticky; inset: auto; top: 0; height: 40svh; z-index: 8; }
+  .wash { display: none; }
+  .nav { position: static; background: var(--deep); }
+  .nav .r a:not(.btn) { display: none; }
+  main { width: auto; margin: 0; padding-inline: 20px; }
+  .hero { padding-top: 36px; min-height: 0; }
+  section { padding-block: 12vh; }
+  .phone { right: 4px; bottom: -200px; width: 196px; }
+  .combo { margin-bottom: 210px; }
+  .feat > div:nth-child(2) { margin-left: 0; }
+  .hud { right: 12px; bottom: 12px; min-width: 0; padding: 7px 10px; }
+  .hud .v { font-size: 13.5px; }
+  .end { min-height: 70svh; }
+}
+@media (prefers-reduced-motion: reduce) { .score { transition: none; } }
+</style>
+
+<div class="mock">Mockup for review. Nothing here is live. The course is AI-generated; names and prices are examples.</div>
+<header class="nav">
+  <img src="logo-cream.svg" alt="GreenReserve">
+  <div class="r"><a href="#">Operator login</a><a class="btn" href="#">Book a demo</a></div>
+</header>
+
+<div class="course" id="course" aria-hidden="true">
+  <div id="img"></div>
+  <div class="wash"></div>
+  <svg id="fx"><path id="trace" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity="0"/></svg>
+  <div class="shadow" id="sh"></div>
+  <div class="ball" id="ball"></div>
+  <div class="hud"><div class="k" id="hudK">Hole 1 · Par 4</div><div class="v" id="hudV">464 yards from the tee</div></div>
+</div>
+
+<main>
+  <section class="hero" data-phase>
+    <div class="eyebrow">Free online tee sheet for golf courses</div>
+    <h1 class="display">The tee sheet your course deserves.</h1>
+    <p>GreenReserve gives your course an online booking page with your name and colors, and one tee sheet your staff run the day from.</p>
+    <div class="cta"><a class="btn" href="#">Book a demo <span aria-hidden="true">→</span></a><a class="quiet" href="#">Send an inquiry</a></div>
+    <div class="trust">Free for courses.</div>
+    <div class="combo">
+      <div class="app">
+        <div class="appBar"><b>Hollow Creek</b><div class="tabs"><span class="on">Tee sheet</span><span>Bookings</span></div><div class="day">Sat, Oct 4</div></div>
+        <table class="tt">
+          <thead><tr><th>Time</th><th>Group</th><th class="r">Status</th></tr></thead>
+          <tbody>
+            <tr><td class="t">7:00</td><td>Marino · 4</td><td class="r"><span class="in">Checked in</span></td></tr>
+            <tr class="now"><td class="t">7:08</td><td>Okafor · 2</td><td class="r"><span class="dueTxt">Due $104.00</span></td></tr>
+            <tr><td class="t">7:16</td><td>Men's league</td><td class="r"><span class="hold">Held</span></td></tr>
+            <tr><td class="t">7:24</td><td>Delgado · 3</td><td class="r"><span class="dueTxt">Due $68.00</span></td></tr>
+            <tr class="open"><td class="t">7:32</td><td>—</td><td class="r">4 spots open</td></tr>
+          </tbody>
+        </table>
+        <div class="appFoot">55 tee times today</div>
+      </div>
+      <div class="phone" aria-hidden="true">
+        <div class="phHead"><div><b>Hollow Creek Golf Club</b><span>Suffern, NY · 18 holes</span></div></div>
+        <div class="dates"><span>Fri 3</span><span class="on">Sat 4</span><span>Sun 5</span></div>
+        <div class="slot"><span><b>7:32</b><small>4 spots</small></span><em>$52</em></div>
+        <div class="slot"><span><b>8:04</b><small>2 spots</small></span><em>$52</em></div>
+        <div class="reserve">Reserve 7:32</div>
+      </div>
+    </div>
+  </section>
+
+  <section data-phase>
+    <div class="eyebrow">Built for the course</div>
+    <h2 class="display">Your course, your sheet, your golfers.</h2>
+    <div class="feat">
+      <div><h3>Fill the tee sheet</h3><p>Golfers book from a “Book a tee time” button on your own website.</p>
+        <div class="site"><div class="siteBar"><b>Hollow Creek</b><span>Course</span><span class="b">Book a tee time</span></div><div class="siteBody">Established 1962</div></div></div>
+      <div><h3>Run the day</h3><p>Online, phone and walk-in bookings on one sheet, so nothing is double-booked.</p>
+        <div class="walk"><div><span class="t">7:40</span><span>Pratt · 1</span><span class="tag">Walk-up</span></div><div class="added"><span class="t">7:40</span><span>+ Kowalski · 1</span><span class="tag">Added at counter</span></div><div><span class="t">7:48</span><span style="color:var(--muted)">Open</span><span class="tag">4 spots</span></div></div></div>
+      <div><h3>Keep your brand</h3><p>Your course's name, colors and photos. Not a discount marketplace.</p>
+        <div class="brands"><div class="bh"><div style="background:#2B4A38">Hollow Creek</div><span>Pine</span></div><div class="bh"><div style="background:#7A2E2E">Stonebridge</div><span>Oxblood</span></div><div class="bh"><div style="background:#23395B">Lake Wren</div><span>Navy</span></div></div></div>
+    </div>
+  </section>
+
+  <section data-phase>
+    <div class="eyebrow">Your booking page</div>
+    <h2 class="display">Golfers see your course, not ours.</h2>
+    <p class="lead">Your photos lead your booking page. GreenReserve stays in the small print.</p>
+  </section>
+
+  <section data-phase>
+    <div class="eyebrow">How it works</div>
+    <h2 class="display">From first call to first tee time.</h2>
+    <p class="lead">We set it up with you, around how your course already runs.</p>
+    <ol class="steps">
+      <li><span class="n">01</span><div><h3>Tell us about your course</h3><p>A short call about your tee sheet and how you take bookings today.</p></div></li>
+      <li><span class="n">02</span><div><h3>We build it</h3><p>Your booking page and tee sheet, set up with your times and prices.</p></div></li>
+      <li><span class="n">03</span><div><h3>Go live</h3><p>Add the button to your website. Golfers start booking.</p></div></li>
+    </ol>
+  </section>
+
+  <section data-phase>
+    <div class="eyebrow">Price</div>
+    <h2 class="display">Free for courses.</h2>
+    <p class="lead">No setup fee and no monthly fee. Golfers pay a small booking fee when they book online. We'll walk you through the details on a call.</p>
+  </section>
+
+  <section data-phase>
+    <div class="eyebrow">Questions</div>
+    <h2 class="display">What courses ask us.</h2>
+    <div class="faq">
+      <div><h3>What is GreenReserve?</h3><p>An online booking page and tee sheet for golf courses. Golfers book online; your staff run the day from one sheet.</p></div>
+      <div><h3>Does it work with our website?</h3><p>Yes. You add a “Book a tee time” button that opens your booking page.</p></div>
+      <div><h3>Can we still take phone and walk-in bookings?</h3><p>Yes. They go on the same tee sheet, so online golfers only see what's really open.</p></div>
+      <div><h3>How do we get paid?</h3><p>Green fees go to your course's own Stripe account.</p></div>
+      <div><h3>Do members get their own rates?</h3><p>Yes. Member rates and booking windows are set by tier.</p></div>
+    </div>
+  </section>
+
+  <section class="end" data-phase>
+    <div class="eyebrow">Hole 1 · Par 4</div>
+    <div class="score" aria-live="polite"><b>3</b><span>Birdie.</span></div>
+    <h2 class="display">See it with your course's tee sheet.</h2>
+    <div class="cta"><a class="btn" href="#">Book a demo <span aria-hidden="true">→</span></a><a class="quiet" href="#">Send an inquiry</a></div>
+    <span class="mail">Or email thegreenreserve@outlook.com</span>
+  </section>
+</main>
+<footer><div class="fin"><img src="logo-cream.svg" alt="GreenReserve"><span>Terms · Privacy · Operator agreement · Contact</span></div></footer>
+
+<script>
+(() => {
+  // Waypoints in the course image's own pixels (667 x 2000), read off the photo.
+  const IW = 667, IH = 2000;
+  const T = [458, 72], LAND = [468, 990], REST = [474, 1036], AP = [336, 1766], APR = [328, 1779], CUP = [341, 1811], LIP = [348, 1804];
+  const course = document.getElementById('course'), img = document.getElementById('img');
+  const ballEl = document.getElementById('ball'), shEl = document.getElementById('sh'), trace = document.getElementById('trace');
+  const hudK = document.getElementById('hudK'), hudV = document.getElementById('hudV');
+  const secs = [...document.querySelectorAll('[data-phase]')];
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const lerp = (a, b, t) => a + (b - a) * t, mix = (A, B, t) => [lerp(A[0], B[0], t), lerp(A[1], B[1], t)];
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), outE = (t, k = 2) => 1 - Math.pow(1 - t, k);
+  const smooth = t => t * t * (3 - 2 * t);
+
+  function shot(p) {
+    if (p < .25) return { at: T, h: 0, hud: ['Hole 1 · Par 4', '464 yards from the tee'] };
+    if (p < 1.05) { const t = (p - .25) / .8; return { at: mix(T, LAND, t), h: 4 * t * (1 - t), fl: [T, LAND, 1, t], hud: ['Shot 1 · Drive', Math.round(256 * t) + ' yds'] }; }
+    if (p < 1.35) { const t = (p - 1.05) / .3; return { at: mix(LAND, REST, outE(t)), h: .1 * Math.abs(Math.sin(Math.PI * t * 2)) * (1 - t), tr: [T, LAND, 1, 1 - t], hud: ['Shot 1 · Drive', '256 yds · fairway'] }; }
+    if (p < 1.9) return { at: REST, h: 0, hud: ['Shot 1 · Drive', '256 yds · fairway'] };
+    if (p < 2.8) { const t = (p - 1.9) / .9; return { at: mix(REST, AP, t), h: .8 * 4 * t * (1 - t), fl: [REST, AP, .8, t], hud: ['Shot 2 · Approach', Math.round(198 * t) + ' yds'] }; }
+    if (p < 3.1) { const t = (p - 2.8) / .3; return { at: mix(AP, APR, outE(t)), h: 0, tr: [REST, AP, .8, 1 - t], hud: ['Shot 2 · Approach', 'On the green · 12 ft'] }; }
+    if (p < 4.3) return { at: APR, h: 0, hud: ['Shot 2 · Approach', 'On the green · 12 ft'] };
+    if (p < 5.7) {
+      const t = outE((p - 4.3) / 1.4, 2.4), c = [300, 1812];
+      const at = [(1 - t) ** 2 * APR[0] + 2 * (1 - t) * t * c[0] + t * t * LIP[0], (1 - t) ** 2 * APR[1] + 2 * (1 - t) * t * c[1] + t * t * LIP[1]];
+      return { at, h: 0, hud: ['Shot 3 · Putt', Math.max(1, Math.round(12 * (1 - t))) + ' ft'] };
+    }
+    if (p < 5.88) {
+      const t = (p - 5.7) / .18, a0 = Math.atan2(LIP[1] - CUP[1], LIP[0] - CUP[0]), r = lerp(8.6, 2.5, t), a = a0 + t * Math.PI * 1.3;
+      return { at: [CUP[0] + Math.cos(a) * r, CUP[1] + Math.sin(a) * r], h: 0, hud: ['Shot 3 · Putt', 'On the lip'] };
+    }
+    const t = clamp((p - 5.88) / .1, 0, 1);
+    return { at: CUP, h: 0, drop: t, hud: t < 1 ? ['Shot 3 · Putt', 'On the lip'] : ['Birdie', '3 on a par 4'] };
+  }
+
+  let W, H, S, mobile, anchors = [], target = 0, cur = 0, raf = 0;
+  const LIFT = 130;
+  function measure() {
+    mobile = innerWidth <= 900; W = course.clientWidth; H = course.clientHeight;
+    S = Math.max(W / IW, H / IH);                       // cover
+    const focus = mobile ? H + (innerHeight - H) * .45 : innerHeight * .55;
+    const maxY = document.documentElement.scrollHeight - innerHeight;
+    anchors = secs.map(s => clamp(s.getBoundingClientRect().top + scrollY - focus, 0, maxY));
+    anchors[0] = 0; anchors[anchors.length - 1] = maxY;
+    for (let i = 1; i < anchors.length; i++) anchors[i] = Math.max(anchors[i], anchors[i - 1] + 1);
+  }
+  function phaseAt(y) {
+    for (let i = 0; i < anchors.length - 1; i++) if (y < anchors[i + 1]) return i + clamp((y - anchors[i]) / (anchors[i + 1] - anchors[i]), 0, 1);
+    return anchors.length - 1;
+  }
+  function arc(fl, upto, k, tx, ty) {
+    const [A, B, peak] = fl; let d = '';
+    for (let i = 0; i <= 40; i++) {
+      const t = upto * i / 40, h = peak * 4 * t * (1 - t);
+      d += (i ? 'L' : 'M') + (tx + lerp(A[0], B[0], t) * k).toFixed(1) + ' ' + (ty + lerp(A[1], B[1], t) * k - h * LIFT).toFixed(1);
+    }
+    return d;
+  }
+  function render(p) {
+    const s = shot(p);
+    const z = 1 + .35 * smooth(clamp((p - 2.7) / .6, 0, 1));   // a gentle push-in on the green
+    const k = S * z, focusY = H * (mobile ? .6 : .58);
+    const ty = clamp(focusY - s.at[1] * k, H - IH * k, 0);
+    const tx = mobile ? clamp(W * .55 - s.at[0] * k, W - IW * k, 0) : clamp(W * .66 - s.at[0] * k, W - IW * k, 0);
+    img.style.transform = `translate(${tx}px,${ty}px) scale(${k})`;
+    const gx = tx + s.at[0] * k, gy = ty + s.at[1] * k, h = s.h;
+    const size = (mobile ? .85 : 1) * (1 + (z - 1) * .5) * (1 + h * .9) * (s.drop != null ? 1 - s.drop * .75 : 1);
+    ballEl.style.transform = `translate(${gx}px,${gy - h * LIFT}px) scale(${size})`;
+    ballEl.style.opacity = s.drop != null ? 1 - s.drop : 1;
+    shEl.style.transform = `translate(${gx + h * 34}px,${gy + h * 22 + 3}px) scale(${1 + h * .4})`;
+    shEl.style.opacity = s.drop != null ? .7 * (1 - s.drop) : .8 - h * .35;
+    if (s.fl && !reduced) { trace.setAttribute('d', arc(s.fl, s.fl[3], k, tx, ty)); trace.setAttribute('opacity', .9); }
+    else if (s.tr && !reduced) { trace.setAttribute('d', arc(s.tr, 1, k, tx, ty)); trace.setAttribute('opacity', (.9 * s.tr[3]).toFixed(2)); }
+    else trace.setAttribute('opacity', 0);
+    hudK.textContent = s.hud[0]; hudV.textContent = s.hud[1];
+    document.body.classList.toggle('holed', s.drop === 1);
+  }
+  function tick() {
+    cur = reduced ? target : cur + (target - cur) * .14;
+    if (Math.abs(target - cur) < .0008) cur = target;
+    render(cur);
+    raf = cur !== target ? requestAnimationFrame(tick) : 0;
+  }
+  function onScroll() { target = phaseAt(scrollY); if (!raf) raf = requestAnimationFrame(tick); }
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', () => { measure(); onScroll(); });
+  measure(); target = cur = phaseAt(scrollY); render(cur);
+  addEventListener('load', () => { measure(); onScroll(); });
+})();
+</script>
