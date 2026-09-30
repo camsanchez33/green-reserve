@@ -2727,6 +2727,12 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   golfer on 404, empty states, course-not-found, outings/tournaments and the
   assistant avatar; character copy made plain. Old PNGs kept (sent emails link
   golfer.png). CLAUDE.md design rules updated.
+  LOGO-1b (Cam 2026-09-30): homepage logo pinned to the window's top-left CORNER
+  (px-6 / md:px-10 edge padding, "like Salesforce"), not the 1180px content
+  column; inner-page nav uses the same padding. The browser-tab icon and phone
+  home-screen icon were still the dog (src/app/icon.png, apple-icon.png,
+  favicon.ico, public/apple-touch-icon.png) — replaced with the paper golfer on a
+  pine square, plus a vector src/app/icon.svg.
 - [ ] SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +
   paymentMethodId (found in the FB-3 review, pre-existing). No route exposes
   another golfer's ids, but anyone holding a cus_ id could attach their own card

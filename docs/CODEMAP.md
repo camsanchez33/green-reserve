@@ -394,7 +394,7 @@ Sorted the same way.
 | `src/components/home/SeeItWork.tsx` | 1 | 58 |  | `default (SeeItWork)` |
 | `src/components/home/StoryMedia.tsx` | 1 | 66 |  | `default (StoryMedia)` |
 | `src/components/MainOffset.tsx` | 1 | 32 |  | `default (MainOffset)` |
-| `src/components/Nav.tsx` | 1 | 122 |  | `default (Nav)` |
+| `src/components/Nav.tsx` | 1 | 123 |  | `default (Nav)` |
 | `src/components/ui/Btn.tsx` | 1 | 27 |  | `Btn` |
 | `src/components/CourseCard.tsx` | 0 | 121 |  | `default (CourseCard)` |
 | `src/components/ui/PageHeader.tsx` | 0 | 18 |  | `PageHeader` |

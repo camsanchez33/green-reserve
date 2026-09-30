@@ -6687,7 +6687,7 @@
     },
     {
       "path": "src/components/Nav.tsx",
-      "lines": 122,
+      "lines": 123,
       "purpose": "",
       "brain": [],
       "exports": [
