@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-09-30T01:30:12.394Z",
+  "generatedAt": "2026-09-30T01:47:13.008Z",
   "repo": {
-    "head": "4ed5d7b",
+    "head": "2593e8b",
     "branch": "claude/eager-maxwell-qf1pd0",
     "dirtyCount": 0,
     "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-30T01:30:10+00:00",
+    "queueLastCommit": "2026-09-30T01:47:12+00:00",
     "unrecorded": []
   },
   "counts": {
@@ -81,7 +81,7 @@
     },
     {
       "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 2854,
+      "line": 2860,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 1
@@ -123,14 +123,14 @@
     },
     {
       "title": "CAL-2 — Cal.com is the ONLY call scheduler",
-      "line": 2804,
+      "line": 2810,
       "hash": "e082dd0",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "BUG: hello@greenreserve.app takes no mail",
-      "line": 2836,
+      "line": 2842,
       "hash": "371ffff",
       "shipDate": "2026-09-29",
       "ageDays": 0
@@ -277,17 +277,17 @@
     },
     {
       "title": "SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +",
-      "line": 2730,
+      "line": 2736,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2878,
+      "line": 2884,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 3032,
+      "line": 3038,
       "section": "Queue (run in this order)"
     }
   ],
@@ -350,17 +350,17 @@
     {
       "item": "CAL-2 — Cal.com is the ONLY call scheduler",
       "note": "Cam: \"there should be no google calendar thing\" and, after setting both env vars and redeploying, \"it is just the same as before\"",
-      "line": 2804
+      "line": 2810
     },
     {
       "item": "BUG: hello@greenreserve.app takes no mail",
       "note": "Cam: \"all emails need to go to thegreenreserve@outlook",
-      "line": 2836
+      "line": 2842
     },
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2854
+      "line": 2860
     }
   ],
   "ideas": {
@@ -622,6 +622,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "2593e8b",
+      "date": "2026-09-30",
+      "subject": "LOGO-1b: logo in the window's corner; golfer replaces the dog in the tab icon"
+    },
+    {
+      "h": "2e718a1",
+      "date": "2026-09-30",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "4ed5d7b",
       "date": "2026-09-30",
       "subject": "LOGO-1: sharp vector logo top-left, logo in emails, golfer mark replaces the dog"
@@ -668,16 +678,6 @@
     },
     {
       "h": "621ef1e",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "0ecafbc",
-      "date": "2026-09-29",
-      "subject": "PERF-4: speed check judges the median of 3 runs; hero blurb no longer fades in"
-    },
-    {
-      "h": "5465a86",
       "date": "2026-09-29",
       "subject": "queue/spec update"
     }

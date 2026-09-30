@@ -47,8 +47,9 @@ export default function Nav() {
   // the top of the hero (`.hero` is `position: relative`, and nothing above it
   // is positioned, so `top: 0` lands on the hero either way) — out of flow, so
   // the hero still measures exactly one viewport, and it scrolls away with the
-  // hero and never returns. LOGO-1 (Cam 2026-09-30): the lockup sits top-LEFT,
-  // Operator login top-right — it used to be centred. The logo is the traced
+  // hero and never returns. LOGO-1 (Cam 2026-09-30): the lockup sits in the
+  // top-left CORNER of the window (edge padding, not the 1180px content column —
+  // Cam: "like Salesforce, all the way in that corner"), Operator login top-right. The logo is the traced
   // vector (/brand/logo.svg), so it is sharp at every size and density.
   // "List your course" is deliberately absent: the hero's own primary button
   // sits ~200px below it, and two of the same call to action on one screen is
@@ -56,7 +57,7 @@ export default function Nav() {
   if (isHome) {
     return (
       <nav className="absolute top-0 left-0 right-0 z-50">
-        <div className="w-[min(1180px,calc(100%-48px))] mx-auto py-5 flex items-center justify-between gap-4">
+        <div className="px-6 md:px-10 py-5 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center shrink-0" aria-label="GreenReserve">
             {/* Explicit width/height: this is near the top of the fold, so
                 the reserved box is what keeps §5's CLS budget. */}
@@ -80,7 +81,7 @@ export default function Nav() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/85 backdrop-blur-lg border-b border-black/5">
-      <div className={`px-6 flex items-center justify-between transition-[height] duration-500 ${EASE} ${solid ? 'h-14' : 'h-16'}`}>
+      <div className={`px-6 md:px-10 flex items-center justify-between transition-[height] duration-500 ${EASE} ${solid ? 'h-14' : 'h-16'}`}>
         <Link href="/" className="flex items-center shrink-0" aria-label="GreenReserve">
           <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={200} height={38} priority className="w-[180px] md:w-[200px] h-auto" />
         </Link>
