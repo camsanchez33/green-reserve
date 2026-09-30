@@ -148,6 +148,14 @@ All required in Vercel; the full list is in `docs/SHIPPING.md`, the secrets inve
 
 ---
 
+## Homepage direction — READ `HOMEPAGE_HOLE_SPEC.md` FIRST (Cam 2026-09-30)
+
+The homepage is being rebuilt as one golf hole played by scrolling (approved
+mockup: `docs/design/hole/index.html`). Direction B (Figtree/white/pills) and the
+printed-scorecard look were both rejected — never revive them. Homepage copy
+has NO durations and NO contract terms; CTAs are Book a demo + Send an inquiry.
+The spec also carries the full list of what is waiting on Cam.
+
 ## Design system — two looks, split by audience (UI_REVISE_SPEC, Sept 2026)
 
 Source of truth for anything visual: `UI_REVISE_SPEC.md` §1 (tokens) and §0 (decisions).
