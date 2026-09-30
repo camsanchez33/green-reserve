@@ -31,7 +31,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           <ArrowLeft size={14} /> Back
         </Link>
         <Link href="/" className="inline-block">
-          <Image src="/brand/logo-lockup-cream-900.png" alt="GreenReserve" width={80} height={40} priority className="h-10 w-auto mx-auto" />
+          <Image src="/brand/logo-cream.svg" unoptimized alt="GreenReserve" width={80} height={40} priority className="h-10 w-auto mx-auto" />
         </Link>
       </div>
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">{children}</div>

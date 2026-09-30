@@ -435,7 +435,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
           <ArrowLeft size={14} /> Back
         </Link>
         <Link href="/" className="inline-block">
-          <Image src="/brand/logo-lockup-cream-900.png" alt="GreenReserve" width={88} height={44} priority className="h-11 w-auto mx-auto" />
+          <Image src="/brand/logo-cream.svg" unoptimized alt="GreenReserve" width={88} height={44} priority className="h-11 w-auto mx-auto" />
         </Link>
         <h1 className="text-white text-3xl sm:text-4xl font-serif font-medium mt-4 mb-2 tracking-tight">Get your course listed</h1>
         <p className="text-white/50 text-sm">Free to list. $0 / month. Golfers pay our $1.50 per player — added to their total, not taken from your green fee.</p>

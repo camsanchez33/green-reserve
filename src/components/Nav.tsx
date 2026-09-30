@@ -47,28 +47,24 @@ export default function Nav() {
   // the top of the hero (`.hero` is `position: relative`, and nothing above it
   // is positioned, so `top: 0` lands on the hero either way) — out of flow, so
   // the hero still measures exactly one viewport, and it scrolls away with the
-  // hero and never returns. Three columns: empty · lockup · one link, so the
-  // lockup is genuinely centred rather than optically shoved by the link.
+  // hero and never returns. LOGO-1 (Cam 2026-09-30): the lockup sits top-LEFT,
+  // Operator login top-right — it used to be centred. The logo is the traced
+  // vector (/brand/logo.svg), so it is sharp at every size and density.
   // "List your course" is deliberately absent: the hero's own primary button
   // sits ~200px below it, and two of the same call to action on one screen is
   // one too many. Operator login's durable home is the footer (§4).
   if (isHome) {
     return (
       <nav className="absolute top-0 left-0 right-0 z-50">
-        <div className="w-[min(1180px,calc(100%-48px))] mx-auto py-5 flex flex-col items-center gap-2 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:gap-4">
-          <div aria-hidden="true" className="hidden sm:block" />
-          <Link href="/" className="flex items-center sm:justify-self-center" aria-label="GreenReserve">
-            {/* Explicit width/height: this is near the top of the fold now, so
+        <div className="w-[min(1180px,calc(100%-48px))] mx-auto py-5 flex items-center justify-between gap-4">
+          <Link href="/" className="flex items-center shrink-0" aria-label="GreenReserve">
+            {/* Explicit width/height: this is near the top of the fold, so
                 the reserved box is what keeps §5's CLS budget. */}
-            <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={280} height={52} priority className="w-[200px] min-[960px]:w-[280px] h-auto" />
+            <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={240} height={45} priority className="w-[170px] min-[960px]:w-[240px] h-auto" />
           </Link>
-          {/* H-2g review: ink-soft, not ink-muted. §4 justifies deleting the
-              sticky bar on the grounds that this is the first link on screen —
-              but ink-muted on paper is 3.3:1, under the 4.5:1 floor for normal
-              text at 13/15px. A load-bearing link that fails contrast is the
-              one place the muted token cannot be spent. Hit padding matches
-              the same link on the fixed bar below. */}
-          <Link href="/dashboard/login" className="text-ink-soft hover:text-ink text-[13px] sm:text-[15px] font-medium px-3 py-2 -mx-3 transition-colors sm:justify-self-end">
+          {/* H-2g review: ink-soft, not ink-muted (ink-muted on paper is 3.3:1,
+              under the 4.5:1 floor for this size). */}
+          <Link href="/dashboard/login" className="text-ink-soft hover:text-ink text-[13px] sm:text-[15px] font-medium px-3 py-2 -mx-3 transition-colors">
             Operator login
           </Link>
         </div>
@@ -86,7 +82,7 @@ export default function Nav() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/85 backdrop-blur-lg border-b border-black/5">
       <div className={`px-6 flex items-center justify-between transition-[height] duration-500 ${EASE} ${solid ? 'h-14' : 'h-16'}`}>
         <Link href="/" className="flex items-center shrink-0" aria-label="GreenReserve">
-          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={200} height={38} priority className="w-[180px] md:w-[200px] h-auto" />
+          <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={200} height={38} priority className="w-[180px] md:w-[200px] h-auto" />
         </Link>
 
         <div className="hidden md:flex items-center gap-1">

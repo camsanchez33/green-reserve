@@ -126,13 +126,13 @@ export default function BirdieWidget() {
         <button type="button" onClick={show} aria-label="Ask Birdie"
           className="fixed bottom-5 right-5 z-40 w-14 h-14 rounded-full bg-white border border-line hover:border-pine/40 transition-colors flex items-center justify-center"
           style={{ boxShadow: '0 1px 2px rgba(0,0,0,.08)' }}>
-          <Image src="/brand/birdie-head.png" alt="" width={36} height={36} className="w-9 h-9" />
+          <Image src="/brand/golfer.svg" unoptimized alt="" width={27} height={33} className="h-8 w-auto" />
         </button>
       )}
       {open && (
         <div role="dialog" aria-label="Birdie" className="fixed bottom-5 right-5 z-40 w-[min(380px,calc(100vw-2rem))] max-h-[min(600px,calc(100vh-2.5rem))] bg-white border border-line rounded-lg flex flex-col" style={{ boxShadow: '0 1px 2px rgba(0,0,0,.08)' }}>
           <div className="flex items-center gap-2.5 px-4 py-3 border-b border-line">
-            <Image src="/brand/birdie-head.png" alt="" width={28} height={28} className="w-7 h-7" />
+            <Image src="/brand/golfer.svg" unoptimized alt="" width={22} height={27} className="h-7 w-auto" />
             <div className="min-w-0">
               <div className="text-sm font-medium text-ink leading-tight">Birdie</div>
               <div className="text-[11px] text-ink-muted truncate">Can help with {meta.helpsWith}</div>

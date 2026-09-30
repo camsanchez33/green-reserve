@@ -191,7 +191,9 @@ outside it. Do not hardcode radii or font-families to force either look.
 - No emojis — lucide-react icons. Nav/Footer return null on `/admin/*` and `/dashboard/*`
 - Reskin runs change **zero behavior** (UI_REVISE_SPEC §3); behavior lives in §4, one run each
 - Marketing fee copy is FROZEN behind the LQ-2 placeholder — never restore it in a reskin
-- Email template: ONE light template for all emails (operator + golfer) — white body, ink text, pine accents (`#1b4332`), sharp corners (`border-radius:4px`), zinc border. No logo in the header — content starts straight at the top of the card. Footer: the standalone golfer mark (`public/brand/golfer.png`, ~56px tall) centered above "Green Reserve · greenreserve.app" — no lockup, no Birdie (Birdie is web-only: 404, coming-soon, empty states).
+- Email template: ONE light template for all emails (operator + golfer) — white body, ink text, pine accents (`#1b4332`), sharp corners (`border-radius:4px`), zinc border. LOGO-1 (Cam 2026-09-30): the lockup sits TOP-LEFT of every email (`public/brand/email-logo-3x.png`, shown at 180px — rendered from the vector at 3x because email clients don't show SVG); the footer is text only, "GreenReserve · greenreserve.app".
+- Logo (LOGO-1): the vector lockup `public/brand/logo.svg` (cream: `logo-cream.svg`) everywhere on the web, with `unoptimized` on next/image — never the old raster `logo-lockup*.png`. Homepage header: logo top-left, Operator login top-right. The golfer mark alone is `public/brand/golfer.svg`.
+- NO Birdie dog artwork anywhere (Cam 2026-09-30: "unprofessional — it should just be the little golfer logo"). 404, empty states, coming-soon pages and the assistant's avatar use the golfer mark, and copy never speaks as the character ("We couldn't find…", not "Birdie couldn't…"). The assistant keeps the NAME Birdie (a golf term).
 
 ### BANNED
 - `font-black`, `tracking-widest` — use `font-medium`/`font-semibold` and `tracking-[0.06em]` (public) / `tracking-[0.1em]` (staff eyebrows)

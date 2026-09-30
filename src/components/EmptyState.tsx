@@ -6,10 +6,11 @@ export function EmptyState({ message, sub }: { message: string; sub?: string }) 
   return (
     <div className="text-center py-16">
       <Image
-        src="/brand/birdie-sitting.png"
+        src="/brand/golfer.svg"
+        unoptimized
         alt=""
-        width={72}
-        height={101}
+        width={52}
+        height={64}
         loading="lazy"
         className="mx-auto mb-4 opacity-80"
       />

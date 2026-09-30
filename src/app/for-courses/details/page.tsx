@@ -1775,7 +1775,7 @@ function DetailsForm() {
           <ArrowLeft size={14} /> Back
         </Link>
         <Link href="/" className="inline-block">
-          <Image src="/brand/logo-lockup-cream-900.png" alt="GreenReserve" width={80} height={40} priority className="h-10 w-auto mx-auto" />
+          <Image src="/brand/logo-cream.svg" unoptimized alt="GreenReserve" width={80} height={40} priority className="h-10 w-auto mx-auto" />
         </Link>
         <h1 className="text-white text-[20px] font-serif font-medium mt-3 mb-0.5 tracking-tight">Setup sheet — {courseName}</h1>
         <p className="text-white/50 text-sm">The first 4 steps are all we need to build your page — about 5 minutes. The rest is optional. Saves as you go.</p>
