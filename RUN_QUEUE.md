@@ -2715,7 +2715,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   course-documents/<courseId>/ only), then /record head()-checks the file in OUR
   private store under that course's folder before listing it. Every failure
   shows a reason (or the HTTP status). Permit path verified locally with a
-  format-valid token; the live upload is Cam's test.
+  format-valid token. VERIFIED LIVE (Cam 2026-09-30: "ok it works now").
 - [ ] SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +
   paymentMethodId (found in the FB-3 review, pre-existing). No route exposes
   another golfer's ids, but anyone holding a cus_ id could attach their own card
