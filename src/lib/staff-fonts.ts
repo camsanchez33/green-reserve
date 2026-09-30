@@ -5,7 +5,7 @@ import { Newsreader, Source_Sans_3 } from 'next/font/google';
 // points Tailwind's --font-serif / --font-sans at them, so every existing
 // `font-serif` / `font-sans` utility inside those trees renders Newsreader /
 // Source Sans 3 without a single page edit. The public site (root layout)
-// keeps Figtree — these fonts are never loaded there.
+// keeps Fraunces / Inter — these fonts are never loaded there.
 export const newsreader = Newsreader({
   subsets: ['latin'],
   weight: 'variable',

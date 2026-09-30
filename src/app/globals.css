@@ -19,8 +19,8 @@
   --color-dot-neutral: #B3B1A6;
 
   /* Fonts */
-  --font-sans:  'Figtree', system-ui, sans-serif;
-  --font-serif: var(--font-sans);
+  --font-sans:  'Inter', system-ui, sans-serif;
+  --font-serif: 'Fraunces', Georgia, serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -31,7 +31,7 @@
    `bg-paper` is `var(--color-paper)`), so re-pointing those variables on one
    wrapper reskins every existing class inside it: square corners, Newsreader
    + Source Sans 3, the staff palette. Nothing outside the wrapper changes —
-   the public site keeps Figtree / rounded. `rounded-full` is not a
+   the public site keeps Fraunces / Inter / rounded. `rounded-full` is not a
    variable, so avatars, dots and swatches stay round on purpose. */
 .staff-look {
   --font-sans:  var(--font-sans-staff), 'Source Sans 3', system-ui, sans-serif;

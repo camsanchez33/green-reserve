@@ -150,13 +150,6 @@ All required in Vercel; the full list is in `docs/SHIPPING.md`, the secrets inve
 
 ## Design system — two looks, split by audience (UI_REVISE_SPEC, Sept 2026)
 
-**UI-B (Cam 2026-09-30, "I like B" — he did not want it looking AI-made):** the PUBLIC look is
-moving to Direction B — bright, rounded, marketplace-style (OpenTable / Resy / Vagaro Pro were the
-references): Figtree, white ground, green #1F6B47, pill buttons with a soft #EEF4F0 secondary,
-rounder cards. The homepage hero is the PRODUCT — booking card with the tee sheet overlapping it —
-never a course photo (Cam: "whats really the need for that golf course picture"). Homepage done
-(UI-B-1); the other public pages follow (UI-B-2). Staff look unchanged until Cam decides.
-
 Source of truth for anything visual: `UI_REVISE_SPEC.md` §1 (tokens) and §0 (decisions).
 Clubhouse *structure* (white cards on paper, StatusDot, no pills, no dark mode) holds
 everywhere; the type, corners and palette depend on **who the page is for**.
@@ -164,10 +157,10 @@ everywhere; the type, corners and palette depend on **who the page is for**.
 | | PUBLIC look | STAFF look |
 |---|---|---|
 | Where | `/`, `/for-courses`, legal pages, every golfer-facing page (`/courses/[slug]`, `/book`, `/checkin`, `/manage`, `/receipt`, member portal) | `/dashboard/*` and `/admin/*` |
-| Fonts | Figtree — 800 headlines, 400–700 body (root layout `--font-sans`; `--font-serif` points at it). UI-B, Cam 2026-09-30 | Newsreader display · Source Sans 3 body (`src/lib/staff-fonts.ts`) |
-| Corners | pill buttons (999px) on B pages, 8px inputs (`rounded-md`), 16–22px cards | **0 everywhere.** `rounded-full` only for avatars, dots, swatches |
-| Paper / ink / line | B pages (homepage so far): #FFFFFF / #13201A / #E4E9E6, alt band #F5F7F6; not-yet-reskinned pages still #F6F4EC / #1C1C18 / #E6E3D7 | #F7F5EF / #1D1F1A / #E3E0D5 |
-| Accent | green #1F6B47 (marketing, B) · per-course `Course.brandColor` (golfer pages) | course accent (operator) · pine (admin) |
+| Fonts | Fraunces display · Inter body (root layout, `--font-serif` / `--font-sans`) | Newsreader display · Source Sans 3 body (`src/lib/staff-fonts.ts`) |
+| Corners | 8px buttons/inputs (`rounded-md`), 14px cards (`rounded-lg`), pills 999px | **0 everywhere.** `rounded-full` only for avatars, dots, swatches |
+| Paper / ink / line | #F6F4EC / #1C1C18 / #E6E3D7 | #F7F5EF / #1D1F1A / #E3E0D5 |
+| Accent | pine (marketing) · per-course `Course.brandColor` (golfer pages) | course accent (operator) · pine (admin) |
 
 **How the switch works (U-0):** the `/admin` and `/dashboard` route layouts wrap their
 children in `.staff-look` (`STAFF_LOOK_CLASS` from `src/lib/staff-fonts.ts`). That class,
