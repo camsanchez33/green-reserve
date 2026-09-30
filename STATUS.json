@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-09-30T01:47:13.008Z",
+  "generatedAt": "2026-09-30T01:54:16.122Z",
   "repo": {
-    "head": "2593e8b",
+    "head": "f3e2456",
     "branch": "claude/eager-maxwell-qf1pd0",
     "dirtyCount": 0,
     "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-30T01:47:12+00:00",
+    "queueLastCommit": "2026-09-30T01:54:14+00:00",
     "unrecorded": []
   },
   "counts": {
@@ -66,6 +66,20 @@
       "ageDays": 1
     },
     {
+      "title": "SD-9c — auth: (1) staff password recovery — CourseStaff has no reset",
+      "line": 639,
+      "hash": "0d84aaf",
+      "shipDate": "2026-09-29",
+      "ageDays": 1
+    },
+    {
+      "title": "BUG: 56 of 59 email senders report success when Resend rejects the send",
+      "line": 660,
+      "hash": "209e652",
+      "shipDate": "2026-09-29",
+      "ageDays": 1
+    },
+    {
       "title": "BUG: inquiry submissions send no emails",
       "line": 2546,
       "hash": "8b9a046",
@@ -81,24 +95,10 @@
     },
     {
       "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 2860,
+      "line": 2863,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 1
-    },
-    {
-      "title": "SD-9c — auth: (1) staff password recovery — CourseStaff has no reset",
-      "line": 639,
-      "hash": "0d84aaf",
-      "shipDate": "2026-09-29",
-      "ageDays": 0
-    },
-    {
-      "title": "BUG: 56 of 59 email senders report success when Resend rejects the send",
-      "line": 660,
-      "hash": "209e652",
-      "shipDate": "2026-09-29",
-      "ageDays": 0
     },
     {
       "title": "MP-5e part 3 — the Overview relationship feed (notes + settings",
@@ -123,14 +123,14 @@
     },
     {
       "title": "CAL-2 — Cal.com is the ONLY call scheduler",
-      "line": 2810,
+      "line": 2813,
       "hash": "e082dd0",
       "shipDate": "2026-09-29",
       "ageDays": 0
     },
     {
       "title": "BUG: hello@greenreserve.app takes no mail",
-      "line": 2842,
+      "line": 2845,
       "hash": "371ffff",
       "shipDate": "2026-09-29",
       "ageDays": 0
@@ -277,17 +277,17 @@
     },
     {
       "title": "SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +",
-      "line": 2736,
+      "line": 2739,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2884,
+      "line": 2887,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 3038,
+      "line": 3041,
       "section": "Queue (run in this order)"
     }
   ],
@@ -350,17 +350,17 @@
     {
       "item": "CAL-2 — Cal.com is the ONLY call scheduler",
       "note": "Cam: \"there should be no google calendar thing\" and, after setting both env vars and redeploying, \"it is just the same as before\"",
-      "line": 2810
+      "line": 2813
     },
     {
       "item": "BUG: hello@greenreserve.app takes no mail",
       "note": "Cam: \"all emails need to go to thegreenreserve@outlook",
-      "line": 2842
+      "line": 2845
     },
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2860
+      "line": 2863
     }
   ],
   "ideas": {
@@ -622,6 +622,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "f3e2456",
+      "date": "2026-09-30",
+      "subject": "LOGO-1c: tab icon is just the golfer, no square"
+    },
+    {
+      "h": "4263e7f",
+      "date": "2026-09-30",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "2593e8b",
       "date": "2026-09-30",
       "subject": "LOGO-1b: logo in the window's corner; golfer replaces the dog in the tab icon"
@@ -668,16 +678,6 @@
     },
     {
       "h": "dbdbcda",
-      "date": "2026-09-29",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "8c8b4d7",
-      "date": "2026-09-29",
-      "subject": "Homepage: 'See it work' demo was invisible; hero blurb in full sentences"
-    },
-    {
-      "h": "621ef1e",
       "date": "2026-09-29",
       "subject": "queue/spec update"
     }
