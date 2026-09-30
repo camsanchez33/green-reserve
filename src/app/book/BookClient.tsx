@@ -477,8 +477,8 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
           golferName: name,
           golferEmail: email,
           golferPhone: phone,
-          paymentMethodId,
-          customerId: siData.customerId,
+          // SEC-1: only the SetupIntent — the server reads its customer and card from Stripe.
+          setupIntentId: setupIntent.id,
           cartSelected,
           rangeBallsSize,
           termsAccepted: true,

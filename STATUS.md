@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-30 01:54 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `f3e2456` · working tree clean
+Generated 2026-09-30 15:28 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `4106287` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -28,20 +28,20 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED | 2026-09-16 | 13d | `951433d` | `RUN_QUEUE.md:2230` |
-| SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box | 2026-09-17 | 12d | `cfeb2e1` | `RUN_QUEUE.md:2343` |
+| SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED | 2026-09-16 | 14d | `951433d` | `RUN_QUEUE.md:2230` |
+| SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box | 2026-09-17 | 13d | `cfeb2e1` | `RUN_QUEUE.md:2343` |
 | SD-8d — browser Back still discards unsaved Settings edits (from the | 2026-09-28 | 1d | `70a424e` | `RUN_QUEUE.md:536` |
 | SD-8e — status is rendered as bare coloured text where the design | 2026-09-29 | 1d | `9d6dc6a` | `RUN_QUEUE.md:562` |
 | SD-9c — auth: (1) staff password recovery — CourseStaff has no reset | 2026-09-29 | 1d | `0d84aaf` | `RUN_QUEUE.md:639` |
 | BUG: 56 of 59 email senders report success when Resend rejects the send | 2026-09-29 | 1d | `209e652` | `RUN_QUEUE.md:660` |
+| MP-5e part 3 — the Overview relationship feed (notes + settings | 2026-09-29 | 1d | `c6a2142` | `RUN_QUEUE.md:1303` |
 | BUG: inquiry submissions send no emails | 2026-09-28 | 1d | `8b9a046` | `RUN_QUEUE.md:2546` |
 | BUG: perf audit crashed on every page | 2026-09-29 | 1d | `dd7056a` | `RUN_QUEUE.md:2571` |
+| RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM). | 2026-09-29 | 1d | `f57f269` | `RUN_QUEUE.md:2582` |
+| RV-2 — review follow-ups, small (from /gr-review 2026-09-29): | 2026-09-29 | 1d | `0eab366` | `RUN_QUEUE.md:2592` |
+| CAL-2 — Cal.com is the ONLY call scheduler | 2026-09-29 | 1d | `e082dd0` | `RUN_QUEUE.md:2813` |
+| BUG: hello@greenreserve.app takes no mail | 2026-09-29 | 1d | `371ffff` | `RUN_QUEUE.md:2845` |
 | CAL-1 — Cal.com as the call scheduler | 2026-09-29 | 1d | `a5ed9d7` | `RUN_QUEUE.md:2863` |
-| MP-5e part 3 — the Overview relationship feed (notes + settings | 2026-09-29 | 0d | `c6a2142` | `RUN_QUEUE.md:1303` |
-| RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM). | 2026-09-29 | 0d | `f57f269` | `RUN_QUEUE.md:2582` |
-| RV-2 — review follow-ups, small (from /gr-review 2026-09-29): | 2026-09-29 | 0d | `0eab366` | `RUN_QUEUE.md:2592` |
-| CAL-2 — Cal.com is the ONLY call scheduler | 2026-09-29 | 0d | `e082dd0` | `RUN_QUEUE.md:2813` |
-| BUG: hello@greenreserve.app takes no mail | 2026-09-29 | 0d | `371ffff` | `RUN_QUEUE.md:2845` |
 | MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | — | — | — | `RUN_QUEUE.md:701` |
 | MP-1 | — | — | — | `RUN_QUEUE.md:731` |
 | MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | — | — | — | `RUN_QUEUE.md:766` |
@@ -69,9 +69,8 @@ This is the distinction a raw checkbox count gets wrong.
 13. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1624`
 14. PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29: — `RUN_QUEUE.md:2687`
 15. SETUP (Cam 2026-09-29: "we need to do blob storage, birdie ai … we also need — `RUN_QUEUE.md:2692`
-16. SEC-1 — /api/bookings trusts the client-supplied Stripe customerId + — `RUN_QUEUE.md:2739`
-17. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2887`
-18. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:3041`
+16. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2887`
+17. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:3041`
 
 ## Waiting on you (not on a build)
 
@@ -135,12 +134,11 @@ This is the distinction a raw checkbox count gets wrong.
 | `CLAUDE.md` | 5 | 2026-09-30 | 0d |
 | `ARCHITECTURE.md` | 4 | 2026-09-16 | 13d |
 | `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 0d |
-| `UI_REVISE_SPEC.md` | 1 | 2026-09-16 | 13d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-15 | 14d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-29 | 0d |
+| `UI_REVISE_SPEC.md` | 1 | 2026-09-16 | 14d |
 | `FB2_COPY_SPEC.md` | 0 | 2026-09-29 | 0d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-09-29 | 0d |
-| `CODEMAP_SPEC.md` | 0 | 2026-09-15 | 13d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-29 | 1d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-09-29 | 1d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-15 | 14d |
 | `ADMIN_V2_SPEC.md` | 0 | 2026-09-15 | 14d |
 | `ADMIN_V3_SPEC.md` | 0 | 2026-09-15 | 14d |
@@ -148,6 +146,7 @@ This is the distinction a raw checkbox count gets wrong.
 | `AGREEMENT_SPEC.md` | 0 | 2026-09-15 | 14d |
 | `BACKUP_OPS_SPEC.md` | 0 | 2026-09-15 | 14d |
 | `BIRDIE_AI_SPEC.md` | 0 | 2026-09-15 | 14d |
+| `CODEMAP_SPEC.md` | 0 | 2026-09-15 | 14d |
 | `COURSES_SHEET_SPEC.md` | 0 | 2026-09-15 | 14d |
 | `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-15 | 14d |
 | `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-09-15 | 14d |
@@ -166,6 +165,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `4106287` 2026-09-30 — SEC-1: bookings read the card and customer from Stripe, not the request
+- `def2b1d` 2026-09-30 — queue/spec update
 - `f3e2456` 2026-09-30 — LOGO-1c: tab icon is just the golfer, no square
 - `4263e7f` 2026-09-30 — queue/spec update
 - `2593e8b` 2026-09-30 — LOGO-1b: logo in the window's corner; golfer replaces the dog in the tab icon
@@ -176,9 +177,7 @@ This is the distinction a raw checkbox count gets wrong.
 - `880f6e9` 2026-09-29 — BLOB-3: contract PDFs upload straight from the browser to the private store
 - `cffc09e` 2026-09-29 — queue/spec update
 - `bb9b1e4` 2026-09-29 — BLOB-2: contracts and signed agreements use their own private Blob store
-- `6f97981` 2026-09-29 — queue/spec update
-- `dbdbcda` 2026-09-29 — queue/spec update
 
 ---
 
-**Totals:** 210 done · 23 awaiting review · 1 in flight · 18 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 211 done · 23 awaiting review · 1 in flight · 17 not started · 8 revise pages open · 15 ideas · 2 parked.

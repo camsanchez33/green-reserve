@@ -2783,7 +2783,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 378,
+      "lines": 394,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2825,7 +2825,7 @@
     },
     {
       "path": "src/app/api/bookings/setup-intent/route.ts",
-      "lines": 72,
+      "lines": 73,
       "purpose": "",
       "brain": [],
       "exports": [

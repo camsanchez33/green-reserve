@@ -62,7 +62,8 @@ export async function POST(req: NextRequest) {
       payment_method_types: ['card'],
     });
 
-    return NextResponse.json({ clientSecret: setupIntent.client_secret, customerId });
+    // SEC-1: the Customer id stays server-side; /api/bookings reads it from the SetupIntent.
+    return NextResponse.json({ clientSecret: setupIntent.client_secret });
   } catch (e) {
     console.error('Setup intent error:', e);
     const msg = e instanceof Error ? e.message : 'Could not prepare card setup.';
