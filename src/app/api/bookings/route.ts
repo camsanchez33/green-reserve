@@ -73,7 +73,7 @@ function applyTierRates(
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { teeTimeId, players: playersRaw, golferName, golferEmail, golferPhone, paymentMethodId, customerId, cartSelected, rangeBallsSize, termsAccepted } = body;
+  const { teeTimeId, players: playersRaw, golferName, golferEmail, golferPhone, setupIntentId, cartSelected, rangeBallsSize, termsAccepted } = body;
 
   if (!teeTimeId || !playersRaw || !golferName || !golferEmail)
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -210,21 +210,37 @@ export async function POST(req: NextRequest) {
   // not only on the page (a cached page from before the change sends noCard).
   // The card lives on the PLATFORM Customer, so it is kept whether or not the
   // course's own Stripe account is active yet (that used to drop it silently).
-  if (!paymentMethodId || !customerId) {
+  // SEC-1: the card and customer are read from STRIPE, never from the request.
+  // The page used to post customerId + paymentMethodId and this route attached
+  // one to the other — so anyone holding a cus_ id could attach their own card
+  // to someone else's Customer and make it the default. Now the page posts only
+  // the SetupIntent it just confirmed; the SetupIntent (created server-side in
+  // ./setup-intent) names its own customer and payment method.
+  if (typeof setupIntentId !== 'string' || !/^seti_[A-Za-z0-9]+$/.test(setupIntentId)) {
     return NextResponse.json({ error: 'Please add a card to hold your tee time — you won’t be charged today. If this page looks out of date, refresh it.' }, { status: 400 });
   }
-  if (paymentMethodId && customerId) {
-    try {
-      await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
-      await stripe.customers.update(customerId, { invoice_settings: { default_payment_method: paymentMethodId } });
-      savedCustomerId = customerId;
-      savedPaymentMethodId = paymentMethodId;
-    } catch (attachErr) {
-      if (attachErr instanceof Stripe.errors.StripeError) {
-        return NextResponse.json({ error: attachErr.message || 'Your card could not be saved.' }, { status: 402 });
-      }
-      return NextResponse.json({ error: 'Your card could not be saved. Please check your details and try again.' }, { status: 402 });
+  try {
+    const si = await stripe.setupIntents.retrieve(setupIntentId, { expand: ['payment_method'] });
+    const siCustomer = typeof si.customer === 'string' ? si.customer : si.customer?.id;
+    const pm = si.payment_method && typeof si.payment_method !== 'string' ? si.payment_method : null;
+    if (si.status !== 'succeeded' || !siCustomer || !pm) {
+      return NextResponse.json({ error: 'Your card was not saved. Please enter it again.' }, { status: 402 });
     }
+    // A confirmed SetupIntent with a customer attaches the card itself; attach
+    // only if Stripe has not (never onto a different customer).
+    const pmCustomer = typeof pm.customer === 'string' ? pm.customer : pm.customer?.id;
+    if (pmCustomer && pmCustomer !== siCustomer) {
+      return NextResponse.json({ error: 'Your card could not be saved. Please enter it again.' }, { status: 402 });
+    }
+    if (!pmCustomer) await stripe.paymentMethods.attach(pm.id, { customer: siCustomer });
+    await stripe.customers.update(siCustomer, { invoice_settings: { default_payment_method: pm.id } });
+    savedCustomerId = siCustomer;
+    savedPaymentMethodId = pm.id;
+  } catch (attachErr) {
+    if (attachErr instanceof Stripe.errors.StripeError) {
+      return NextResponse.json({ error: attachErr.message || 'Your card could not be saved.' }, { status: 402 });
+    }
+    return NextResponse.json({ error: 'Your card could not be saved. Please check your details and try again.' }, { status: 402 });
   }
 
   // Atomically claim the tee time (Serializable isolation prevents double-booking)

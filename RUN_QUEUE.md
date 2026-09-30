@@ -2693,7 +2693,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   to set up twilio"). All three are BUILT; each needs Cam's account + Vercel env
   vars, then a redeploy. Blob: Vercel → Storage → Blob store connected to the
   project (sets BLOB_READ_WRITE_TOKEN; photo/document/sheet uploads). Birdie:
-  ANTHROPIC_API_KEY + BIRDIE_ENABLED=true, spend limit on the Anthropic console
+  ANTHROPIC_API_KEY + BIRDIE_ENABLED=true, spend limit on the Anthropic console [BIRDIE LIVE + tested by Cam 2026-09-30]
   (PASSWORD_CHECKLIST 7c; model claude-haiku-4-5). Twilio: TWILIO_ACCOUNT_SID,
   TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER (golfer SMS login codes + 2FA) — US SMS
   needs A2P 10DLC registration or a verified toll-free number or carriers drop
@@ -2736,7 +2736,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   LOGO-1c (Cam 2026-09-30, "it should just be this guy"): tab icon is the bare
   golfer, no square — pine, cream in dark mode (icon.svg media query); home-screen
   icon is the pine golfer on paper.
-- [ ] SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +
+- [x] SEC-1 — BUILT 2026-09-30: the page posts only setupIntentId; /api/bookings retrieves the SetupIntent and uses ITS customer + payment_method (status succeeded; never attaches a card that belongs to another customer); setup-intent no longer returns the customer id. Live test = one real booking. Original: /api/bookings trusts the client-supplied Stripe customerId +
   paymentMethodId (found in the FB-3 review, pre-existing). No route exposes
   another golfer's ids, but anyone holding a cus_ id could attach their own card
   to it and change its default. Fix: bind server-side — setup-intent returns a
