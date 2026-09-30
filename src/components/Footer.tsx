@@ -37,7 +37,7 @@ export default function Footer() {
           <span className="flex items-center gap-1.5">
             Powered by
             <Link href="/" className="inline-flex items-center hover:opacity-80 transition-opacity">
-              <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={120} height={22} loading="lazy" className="w-[120px] h-auto" />
+              <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={120} height={22} loading="lazy" className="w-[120px] h-auto" />
             </Link>
           </span>
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
@@ -58,7 +58,7 @@ export default function Footer() {
     <footer className="bg-paper border-t border-line">
       <div className="w-[min(1180px,calc(100%-48px))] mx-auto py-8 flex flex-wrap justify-between items-center gap-x-6 gap-y-3.5 text-sm text-ink-muted max-md:justify-center max-md:text-center">
         <Link href="/" className="inline-flex items-center hover:opacity-80 transition-opacity" aria-label="GreenReserve">
-          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={130} height={25} loading="lazy" className="w-[130px] h-auto" />
+          <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={130} height={25} loading="lazy" className="w-[130px] h-auto" />
         </Link>
         <nav aria-label="Footer" className="flex flex-wrap gap-x-5 gap-y-2 justify-center">
           <Link href="/terms" className="hover:text-ink transition-colors">Terms</Link>

@@ -93,7 +93,7 @@ export default function TwoFactorVerifyPage() {
         </div>
 
         <div className="mt-6 flex justify-center">
-          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={190} height={36} priority className="w-[130px] max-w-full h-auto opacity-60" />
+          <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={190} height={36} priority className="w-[130px] max-w-full h-auto opacity-60" />
         </div>
       </div>
     </div>

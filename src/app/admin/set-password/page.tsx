@@ -145,7 +145,7 @@ export default function SetPasswordPage() {
     <div className="min-h-screen bg-paper flex items-center justify-center">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <Image src="/brand/logo-lockup-900.png" alt="GreenReserve" width={190} height={36} priority className="w-[190px] max-w-full h-auto mx-auto" />
+          <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={190} height={36} priority className="w-[190px] max-w-full h-auto mx-auto" />
         </div>
         <Card className="p-8">
           <Suspense fallback={<div className="text-ink-soft text-sm">Loading…</div>}>

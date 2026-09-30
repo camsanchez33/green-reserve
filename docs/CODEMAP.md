@@ -255,7 +255,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 |---|---|---|---|---|
 | `src/lib/prisma.ts` | 150 | 15 |  | `prisma` |
 | `src/lib/admin-session.ts` | 49 | 149 |  | `AdminSession`, `AdminSessionUnavailable`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole`, `resolveAdminSession` +5 more |
-| `src/lib/email.ts` | 43 | 1790 |  | `BookingEmailData`, `escapeHtml`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail`, `sendAdminSetPasswordEmail`, `sendAdminTwoFactorCode` +50 more |
+| `src/lib/email.ts` | 43 | 1796 |  | `BookingEmailData`, `escapeHtml`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail`, `sendAdminSetPasswordEmail`, `sendAdminTwoFactorCode` +50 more |
 | `src/lib/session.ts` | 34 | 80 |  | `ACTIVE_COURSE_COOKIE`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN` |
 | `src/lib/rate-limit.ts` | 33 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
 | `src/lib/auth.ts` | 28 | 202 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffResetToken`, `signStaffToken` +4 more |
@@ -370,7 +370,7 @@ Sorted the same way.
 | `src/components/admin/CourseCheckInCard.tsx` | 3 | 364 | COURSES_SHEET_SPEC CS-3 §2 — the "Next check-in" card on a live course's Overview. | `CourseCallRow`, `default (CourseCheckInCard)`, `describeCheckIn` |
 | `src/components/dashboard/SignAgreements.tsx` | 3 | 220 | AGREEMENT_SPEC AG-2 §1 — the "Sign" step. | `default (SignAgreements)` |
 | `src/components/dashboard/StaffNotice.tsx` | 3 | 26 | SD-11 (from the SD review). | `StaffNotice` |
-| `src/components/EmptyState.tsx` | 3 | 21 |  | `EmptyState` |
+| `src/components/EmptyState.tsx` | 3 | 22 |  | `EmptyState` |
 | `src/components/GolferExitLinks.tsx` | 3 | 24 |  | `GolferExitLinks` |
 | `src/components/home/HomeDemo.tsx` | 2 | 114 |  | `default (HomeDemo)` |
 | `src/components/TrustNote.tsx` | 2 | 12 |  | `TrustNote` |
@@ -394,7 +394,7 @@ Sorted the same way.
 | `src/components/home/SeeItWork.tsx` | 1 | 58 |  | `default (SeeItWork)` |
 | `src/components/home/StoryMedia.tsx` | 1 | 66 |  | `default (StoryMedia)` |
 | `src/components/MainOffset.tsx` | 1 | 32 |  | `default (MainOffset)` |
-| `src/components/Nav.tsx` | 1 | 126 |  | `default (Nav)` |
+| `src/components/Nav.tsx` | 1 | 122 |  | `default (Nav)` |
 | `src/components/ui/Btn.tsx` | 1 | 27 |  | `Btn` |
 | `src/components/CourseCard.tsx` | 0 | 121 |  | `default (CourseCard)` |
 | `src/components/ui/PageHeader.tsx` | 0 | 18 |  | `PageHeader` |

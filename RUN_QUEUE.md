@@ -2715,7 +2715,18 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   course-documents/<courseId>/ only), then /record head()-checks the file in OUR
   private store under that course's folder before listing it. Every failure
   shows a reason (or the HTTP status). Permit path verified locally with a
-  format-valid token; the live upload is Cam's test.
+  format-valid token. VERIFIED LIVE (Cam 2026-09-30: "ok it works now").
+- [x] LOGO-1 (Cam 2026-09-30: logo "very defined, no bad resolution", top-left,
+  defined in emails, and "the logo of the dog is unprofessional — just the little
+  golfer"). The lockup existed only as a raster PNG (rough edges, then
+  recompressed by next/image). Traced to vector with potrace at 4x:
+  public/brand/logo.svg (+ logo-cream.svg, golfer.svg), exact letterforms, solid
+  pine; all 15 pages switched (unoptimized). Homepage header: logo top-left,
+  Operator login right. Emails: lockup top-left from a 3x PNG render
+  (email-logo-3x.png, 180px), footer text only. Birdie dog art replaced by the
+  golfer on 404, empty states, course-not-found, outings/tournaments and the
+  assistant avatar; character copy made plain. Old PNGs kept (sent emails link
+  golfer.png). CLAUDE.md design rules updated.
 - [ ] SEC-1 — /api/bookings trusts the client-supplied Stripe customerId +
   paymentMethodId (found in the FB-3 review, pre-existing). No route exposes
   another golfer's ids, but anyone holding a cus_ id could attach their own card

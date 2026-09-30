@@ -30,6 +30,10 @@ const FROM = 'GreenReserve <hello@greenreserve.app>';
 /** The inbox that is actually read. hello@ is send-only. */
 const REPLY_TO = 'thegreenreserve@outlook.com';
 
+// LOGO-1 (Cam 2026-09-30: the logo should be "defined" in the emails, top
+// left). The lockup sits top-left of every email, rendered from the vector
+// logo at 3x its 180px display width (email clients do not show SVG), so it is
+// sharp on retina phones. The footer is text only — one logo per email.
 function baseTemplate(content: string) {
   return `<!DOCTYPE html>
 <html>
@@ -38,12 +42,14 @@ function baseTemplate(content: string) {
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 20px;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
-        <tr><td style="background:#ffffff;padding:36px;border-top:1px solid #e4e4e7;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;border-radius:4px 4px 0 0;">${content}</td></tr>
+        <tr><td style="background:#ffffff;padding:28px 36px 0;border-top:1px solid #e4e4e7;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;border-radius:4px 4px 0 0;">
+          <img src="${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/brand/email-logo-3x.png" width="180" height="34" alt="GreenReserve" style="display:block;border:0;outline:none;text-decoration:none;width:180px;height:34px;" />
+        </td></tr>
+        <tr><td style="background:#ffffff;padding:24px 36px 36px;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;">${content}</td></tr>
         <tr>
           <td style="background:#ffffff;padding:0 36px 20px;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;border-bottom:1px solid #e4e4e7;border-radius:0 0 4px 4px;">
             <div style="border-top:1px solid #f4f4f5;padding-top:20px;text-align:center;color:#a1a1aa;font-size:11px;">
-              <img src="${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/brand/golfer.png" width="46" height="56" alt="" style="display:block;margin:0 auto 8px;" />
-              Green Reserve &middot; <a href="https://greenreserve.app" style="color:#71717a;text-decoration:none;">greenreserve.app</a>
+              GreenReserve &middot; <a href="https://greenreserve.app" style="color:#71717a;text-decoration:none;">greenreserve.app</a>
             </div>
           </td>
         </tr>

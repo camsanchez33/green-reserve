@@ -6253,7 +6253,7 @@
     },
     {
       "path": "src/app/not-found.tsx",
-      "lines": 29,
+      "lines": 30,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6587,7 +6587,7 @@
     },
     {
       "path": "src/components/EmptyState.tsx",
-      "lines": 21,
+      "lines": 22,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6687,7 +6687,7 @@
     },
     {
       "path": "src/components/Nav.tsx",
-      "lines": 126,
+      "lines": 122,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10188,7 +10188,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1790,
+      "lines": 1796,
       "purpose": "",
       "brain": [],
       "exports": [
