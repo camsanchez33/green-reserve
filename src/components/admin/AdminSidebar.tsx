@@ -1,13 +1,13 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { SUPPORT_PLUS, MANAGER_PLUS, VIEWER_PLUS } from '@/lib/admin-roles';
+import { SUPPORT_PLUS, MANAGER_PLUS, VIEWER_PLUS, OWNER_ONLY } from '@/lib/admin-roles';
 import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
-import { BarChart2, AlertCircle, Building2, Hammer, Users, Activity, MessageSquare, UserCircle, ChevronLeft, ChevronRight, DollarSign, Search, UserSearch, Wrench, LogOut } from 'lucide-react';
+import { BarChart2, AlertCircle, Building2, Hammer, Users, Activity, MessageSquare, UserCircle, ChevronLeft, ChevronRight, DollarSign, Search, UserSearch, Wrench, LogOut, FileLock2 } from 'lucide-react';
 import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 
-export type AdminNavKey = 'overview' | 'inquiries' | 'courses' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system';
+export type AdminNavKey = 'overview' | 'inquiries' | 'courses' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system' | 'company';
 
 const LS_KEY = 'admin-sidebar-collapsed';
 
@@ -139,6 +139,8 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   const allBottomNav: NavItem[] = [
     { key: 'create',  label: 'Manual build', href: '/admin/create',   icon: <Hammer className="w-[18px] h-[18px]"/>, minRole: MANAGER_PLUS },
     { key: 'system',  label: 'System',       href: '/admin/system',  icon: <Wrench className="w-[18px] h-[18px]"/>, minRole: MANAGER_PLUS },
+    // CO-DOCS: the company's own paperwork (LLC filing, EIN, bank) — owner only.
+    { key: 'company', label: 'Company docs', href: '/admin/company-documents', icon: <FileLock2 className="w-[18px] h-[18px]"/>, minRole: OWNER_ONLY },
     { key: 'profile', label: 'My profile',   href: '/admin/profile',  icon: <UserCircle className="w-[18px] h-[18px]"/> },
   ];
 

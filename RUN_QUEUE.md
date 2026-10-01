@@ -37,6 +37,21 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   opens a pending inquiry (source "Demo booking") + its call when a new booking
   matches no inquiry. Old homepage components and the story video are deleted.
   Local Lighthouse home (mobile, 3 runs): LCP 2.27/2.41/2.41s, TBT ≤61ms, CLS 0.
+- [x] CO-DOCS — BUILT 2026-10-01: Admin → Company docs (/admin/company-documents),
+  owner-with-2FA only. GreenReserve LLC's own paperwork (formation, tax, banking,
+  insurance, contracts) in the PRIVATE Blob store under company/<category>/; the
+  store's listing is the record (no schema change). Direct browser upload (25 MB,
+  PDF/PNG/JPEG), download streamed through an owner-gated route, delete with an
+  inline confirm; uploads and deletes go to AdminAuditLog. URLs are checked for
+  host AND path so the store token can never be sent to another host. The repo is
+  PUBLIC — company documents must never be committed.
+- [ ] LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed
+  2026-09-29, Rockland County). Put the legal name into the Terms and operator
+  agreement. Waiting on Cam: which business address to publish, and confirming
+  the Terms' governing law moves from New Jersey to New York (LLC is NY).
+- [ ] SEC-blob-host — /api/admin/course-documents/download checks only the URL
+  path; add the same host check as companyDocPathOf (lib/company-documents.ts) so
+  the private-store token is only ever sent to *.blob.vercel-storage.com.
 - [ ] UI-H-2 — /for-courses in the homepage's language; remove its "1–2 days
   typical setup time" (no-durations rule). Inner-page nav still says "List your
   course"; decide with Cam whether it becomes "Book a demo" everywhere.
