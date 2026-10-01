@@ -4149,7 +4149,7 @@
     },
     {
       "path": "src/app/api/operator/blackouts/route.ts",
-      "lines": 64,
+      "lines": 46,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4177,7 +4177,6 @@
       "guard": "file",
       "imports": [
         "@/lib/agreement-required",
-        "@/lib/cancel-booking",
         "@/lib/prisma",
         "@/lib/session",
         "next/server"
@@ -6134,7 +6133,7 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 461,
+      "lines": 448,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9486,7 +9485,6 @@
         "src/app/api/admin/golfers/route.ts",
         "src/app/api/admin/tee-sheet/route.ts",
         "src/app/api/bookings/cancel/route.ts",
-        "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/lib/course-closure.ts",
         "src/lib/weather-cancel.ts"
@@ -13749,7 +13747,6 @@
         "src/app/api/manage/[bookingId]/available-times/route.ts",
         "src/app/api/manage/[bookingId]/route.ts",
         "src/app/api/manage/[bookingId]/send-modified-email/route.ts",
-        "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
@@ -14447,7 +14444,6 @@
         "src/app/api/operator/active-course/route.ts",
         "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/approve-page/route.ts",
-        "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",

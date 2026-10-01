@@ -22,7 +22,7 @@ export const OPERATOR_KNOWLEDGE = `
 
 ## Tee Sheet (/dashboard)
 - Shows the day's tee times. Tap a time to see bookings, check a party in (whole or partial), add a walk-in or phone booking, mark a no-show, or block the time so nobody can book it.
-- "Close a day" (weather) blocks every open time that day and emails golfers who had bookings.
+- "Weather" (top of the Tee Sheet) has two choices. Cancel times: the whole day or a window (e.g. 1pm to close) — every booking in it is cancelled with no fee (a hold already charged is refunded), each golfer is emailed why, and the times are blocked; on today, times already gone out are left alone. Delay start (frost): pick the new first tee time — earlier groups move into the earliest open times that fit and are emailed; groups that don't fit are listed to call.
 - Times marked "Next up" are the next tee-off. Blocked times show hatched.
 
 ## Schedule (/dashboard/schedules)

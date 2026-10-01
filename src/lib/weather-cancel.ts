@@ -1,11 +1,11 @@
 // WX-1 weather cancel (Cam 2026-10-01: "it should just be like a mass
 // cancelation"). The course calls off play for the whole day or a window of it
-// (a storm after 1pm). Every confirmed group in the window is cancelled the way
-// Close a day cancels it: fee waived (a hold already taken is refunded, best
+// (a storm after 1pm). Every confirmed group in the window is cancelled (this
+// replaced SD-5's Schedule "Close a day" option): fee waived (a hold already taken is refunded, best
 // effort), the golfer emailed the reason, slot alerts kept quiet. Every tee time
 // in the window is BLOCKED, so nobody books into the storm and the generator
 // (which leaves blocked rows alone) cannot reopen it. A whole day also gets a
-// Blackout row, exactly like Close a day, so it shows under Schedule.
+// Blackout row so it shows under Schedule → Blocked days.
 //
 // On today, times that have already gone out are left alone — those groups are
 // on the course or already played, and their hold fee belongs to check-in.

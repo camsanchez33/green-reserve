@@ -1,22 +1,32 @@
 {
-  "generatedAt": "2026-10-01T06:20:04.874Z",
+  "generatedAt": "2026-10-01T06:23:34.306Z",
   "repo": {
-    "head": "04f2335",
+    "head": "a1a160a",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 6,
+    "dirtyCount": 8,
     "dirty": [
       "M UI_REVISE_SPEC.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M src/app/dashboard/page.tsx",
-      "?? src/app/api/operator/weather-cancel/",
-      "?? src/lib/weather-cancel.ts"
+      " M src/app/api/operator/blackouts/route.ts",
+      " M src/app/dashboard/schedules/page.tsx",
+      " M src/lib/birdie/knowledge-operator.ts",
+      " M src/lib/cancel-booking.ts",
+      " M src/lib/weather-cancel.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-01T02:15:43-04:00",
-    "unrecorded": []
+    "unrecorded": [
+      {
+        "h": "a1a160a",
+        "date": "2026-10-01T06:20:37+00:00",
+        "subject": "WX-1: Weather button on the Tee Sheet — cancel times (day or window) or delay start",
+        "ids": [],
+        "matches": []
+      }
+    ]
   },
   "counts": {
     "runDone": 219,
@@ -655,6 +665,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "a1a160a",
+      "date": "2026-10-01",
+      "subject": "WX-1: Weather button on the Tee Sheet — cancel times (day or window) or delay start"
+    },
+    {
       "h": "04f2335",
       "date": "2026-10-01",
       "subject": "Review fixes: security, spec, UX and design findings from /gr-review (#40)"
@@ -708,11 +723,6 @@
       "h": "cd43efe",
       "date": "2026-10-01",
       "subject": "Homepage: centre hero text against the demo; See it work before the FAQ"
-    },
-    {
-      "h": "775d18b",
-      "date": "2026-09-30",
-      "subject": "CO-DOCS: owner-only Company documents in the private Blob store (#32)"
     }
   ]
 }

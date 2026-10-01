@@ -4,20 +4,28 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-01 06:20 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `04f2335` · working tree **6 dirty file(s)**
+Generated 2026-10-01 06:23 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `a1a160a` · working tree **8 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
+`RUN_QUEUE.md` was last committed **2026-10-01**. 1 commit(s) since then are not mentioned anywhere in it:
 
-### Uncommitted working tree (6 file(s))
+| commit | date | subject |
+|---|---|---|
+| `a1a160a` | 2026-10-01 | WX-1: Weather button on the Tee Sheet — cancel times (day or window) or delay start |
+
+**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (8 file(s))
 
 - `M UI_REVISE_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M src/app/dashboard/page.tsx`
-- `?? src/app/api/operator/weather-cancel/`
-- `?? src/lib/weather-cancel.ts`
+- `M src/app/api/operator/blackouts/route.ts`
+- `M src/app/dashboard/schedules/page.tsx`
+- `M src/lib/birdie/knowledge-operator.ts`
+- `M src/lib/cancel-booking.ts`
+- `M src/lib/weather-cancel.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -183,6 +191,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `a1a160a` 2026-10-01 — WX-1: Weather button on the Tee Sheet — cancel times (day or window) or delay start
 - `04f2335` 2026-10-01 — Review fixes: security, spec, UX and design findings from /gr-review (#40)
 - `3e0f34f` 2026-10-01 — B-9: frost delay — move early groups into open slots, block the early times, email golfers
 - `af425f9` 2026-10-01 — AN-1: Analytics tab, and operational tabs stripped to the working UI
@@ -194,7 +203,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `4a69ffe` 2026-10-01 — FLOW-1 (wip): one palette and typeface for every page, staff surfaces included
 - `edd24e7` 2026-10-01 — SEC-blob-host: only send the private-store token to Vercel Blob's host
 - `cd43efe` 2026-10-01 — Homepage: centre hero text against the demo; See it work before the FAQ
-- `775d18b` 2026-09-30 — CO-DOCS: owner-only Company documents in the private Blob store (#32)
 
 ---
 
