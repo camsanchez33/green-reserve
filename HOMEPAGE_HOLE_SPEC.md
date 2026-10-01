@@ -1,4 +1,10 @@
-# HOMEPAGE_HOLE_SPEC — the homepage is one golf hole (and session handoff)
+# HOMEPAGE_HOLE_SPEC — the homepage scrolls down one golf hole (and session handoff)
+
+> **Latest decision (Cam 2026-10-01): NO BALL.** "lets make it where its no ball and kind
+> of zoomed out and just scrolling down the course." The course is a zoomed-out
+> backdrop the view glides down from tee to green as the page scrolls. No ball, no
+> tracer, no shot readout, no "3 · Birdie" ending. Where this file still describes
+> the ball (§1.4, §3 waypoints) it is history only; build what §3a says.
 
 Written 2026-09-30 at the end of a long session so a fresh session can pick up
 without the history. Read this, then `docs/design/hole/index.html` (the approved
@@ -60,7 +66,23 @@ Live mockup: https://claude.ai/artifact/KU2aJBhanuRQqkbB5fWQdY
   works, 3 steps, no times · 4 Price line · 5 FAQ (5 general questions) · 6 end
   (drop, "3 · Birdie.", "See it with your course's tee sheet.", CTAs, email).
 
-## 3. How the mockup works (port this, don't reinvent it)
+## 3a. How the CURRENT mockup works (build this)
+
+- `.course` is `position: fixed` behind everything; `#img` holds the course at
+  667×2000 and moves with ONE `transform: translate() scale()` per frame.
+- Zoomed out: scale `k = max(2.2 × viewportHeight / 2000, 0.45 × viewportWidth / 667)`,
+  so about 2.2 screens of hole; the hole sits centred at ~70% of the width, its left
+  and right edges fading into the page colour with a `mask-image` (not a gradient
+  background), and a left-to-right dark wash keeps the words readable.
+- Vertical position is page progress: `translateY = -(scrollY / maxScroll) × (2000k − viewportHeight)`
+  — the tee at the top of the page, the green at the very bottom. Eased (lerp .12)
+  for a glide; `prefers-reduced-motion` snaps.
+- Phones (≤900px): the course is a strip pinned at the top (40svh, width-fit),
+  same glide; content scrolls below on #0E1F16.
+- End section: eyebrow "Hole 1 · Par 4", "See it with your course's tee sheet.",
+  Book a demo / Send an inquiry, email. No score.
+
+## 3. (History) How the ball version worked
 
 - `.course` is `position: fixed` full-viewport behind everything; `#img` holds
   the course at its native 667×2000 and is moved with ONE `transform:

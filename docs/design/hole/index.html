@@ -2,11 +2,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap">
 <style>
-/* Layout concept: the whole site is played over one real-looking par 4, seen
-   straight down. The course is pinned behind everything and the camera walks
-   down it as you scroll; the ball's flight is the progress bar. Words sit on
-   the tree side of the hole under a dark wash; the fairway side stays clear
-   so the shot is always visible. */
+/* Layout concept: one real-looking par 4, seen from high up, pinned behind the
+   whole site. Scrolling glides the view down the hole from the tee to the green.
+   No ball, no game: the course is the atmosphere. Words sit on the left over
+   deep green; the hole sits right of centre and its edges dissolve into the
+   ground colour, so it reads as a window onto the course. */
 :root {
   --forest: #173B2A;
   --deep: #0E1F16;
@@ -36,16 +36,9 @@ h1, h2, h3 { margin: 0; text-wrap: balance; }
 .mock { position: relative; z-index: 30; background: var(--sage); color: var(--forest); font-size: 13px; padding: 7px 16px; text-align: center; }
 
 /* THE COURSE — pinned behind the page */
-.course { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: #1F3A24; }
-#img { position: absolute; left: 0; top: 0; width: 667px; height: 2000px; transform-origin: 0 0; will-change: transform; background: url(course.webp) 0 0 / 100% 100% no-repeat; }
-.wash { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(8,18,12,.82) 0%, rgba(8,18,12,.66) 34%, rgba(8,18,12,.18) 50%, rgba(8,18,12,0) 58%); }
-#fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.ball, .shadow { position: absolute; left: 0; top: 0; border-radius: 50%; pointer-events: none; will-change: transform; }
-.ball { width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px; background: radial-gradient(circle at 35% 30%, #fff 0 35%, #EAEAE4 60%, #B9B9B0 100%); box-shadow: 0 0 0 .5px rgba(0,0,0,.3); z-index: 3; }
-.shadow { width: 13px; height: 8px; margin: -4px 0 0 -6.5px; background: rgba(0,0,0,.45); filter: blur(1.5px); z-index: 2; }
-.hud { position: absolute; right: 24px; bottom: 24px; z-index: 4; background: rgba(8,18,12,.7); border-radius: 4px; padding: 10px 14px; min-width: 200px; }
-.hud .k { font-stretch: 87.5%; font-weight: 600; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--sage); }
-.hud .v { font-weight: 600; font-size: 15px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.course { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: var(--deep); }
+#img { position: absolute; left: 0; top: 0; width: 667px; height: 2000px; transform-origin: 0 0; will-change: transform; background: url(course.webp) 0 0 / 100% 100% no-repeat; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16%, #000 84%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 16%, #000 84%, transparent 100%); }
+.wash { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(14,31,22,.9) 0%, rgba(14,31,22,.6) 40%, rgba(14,31,22,0) 56%); }
 
 /* NAV */
 .nav { position: absolute; left: 0; right: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; padding: 20px clamp(20px, 3vw, 40px); }
@@ -130,10 +123,6 @@ tr.now td { background: #F3F6F1; }
 .faq h3 { font-size: 17px; margin-bottom: 4px; color: #fff; }
 .faq p { margin: 0; font-size: 15.5px; color: rgba(246,244,236,.82); }
 .end { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
-.score { display: flex; align-items: baseline; gap: 14px; margin: 16px 0 6px; opacity: 0; transform: translateY(8px); transition: opacity .5s ease .35s, transform .5s ease .35s; }
-.score b { font-stretch: 118%; font-weight: 700; font-size: 88px; line-height: 1; color: #fff; }
-.score span { font-size: 22px; font-weight: 600; color: var(--sage); }
-.holed .score { opacity: 1; transform: none; }
 .mail { display: block; margin-top: 18px; color: rgba(246,244,236,.7); font-size: 15px; }
 footer { position: relative; z-index: 6; background: var(--forest); color: rgba(246,244,236,.72); font-size: 14px; }
 footer .fin { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 24px max(24px, calc((100vw - 1320px) / 2)); }
@@ -151,11 +140,8 @@ footer img { width: 150px; }
   .phone { right: 4px; bottom: -200px; width: 196px; }
   .combo { margin-bottom: 210px; }
   .feat > div:nth-child(2) { margin-left: 0; }
-  .hud { right: 12px; bottom: 12px; min-width: 0; padding: 7px 10px; }
-  .hud .v { font-size: 13.5px; }
   .end { min-height: 70svh; }
 }
-@media (prefers-reduced-motion: reduce) { .score { transition: none; } }
 </style>
 
 <div class="mock">Mockup for review. Nothing here is live. The course is AI-generated; names and prices are examples.</div>
@@ -167,10 +153,6 @@ footer img { width: 150px; }
 <div class="course" id="course" aria-hidden="true">
   <div id="img"></div>
   <div class="wash"></div>
-  <svg id="fx"><path id="trace" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity="0"/></svg>
-  <div class="shadow" id="sh"></div>
-  <div class="ball" id="ball"></div>
-  <div class="hud"><div class="k" id="hudK">Hole 1 · Par 4</div><div class="v" id="hudV">464 yards from the tee</div></div>
 </div>
 
 <main>
@@ -255,7 +237,6 @@ footer img { width: 150px; }
 
   <section class="end" data-phase>
     <div class="eyebrow">Hole 1 · Par 4</div>
-    <div class="score" aria-live="polite"><b>3</b><span>Birdie.</span></div>
     <h2 class="display">See it with your course's tee sheet.</h2>
     <div class="cta"><a class="btn" href="#">Book a demo <span aria-hidden="true">→</span></a><a class="quiet" href="#">Send an inquiry</a></div>
     <span class="mail">Or email thegreenreserve@outlook.com</span>
@@ -265,91 +246,31 @@ footer img { width: 150px; }
 
 <script>
 (() => {
-  // Waypoints in the course image's own pixels (667 x 2000), read off the photo.
+  // The view glides from the tee (top of the image) to the green (bottom) as the
+  // page scrolls. One transform per frame on one layer; eased for a smooth glide.
   const IW = 667, IH = 2000;
-  const T = [458, 72], LAND = [468, 990], REST = [474, 1036], AP = [336, 1766], APR = [328, 1779], CUP = [341, 1811], LIP = [348, 1804];
   const course = document.getElementById('course'), img = document.getElementById('img');
-  const ballEl = document.getElementById('ball'), shEl = document.getElementById('sh'), trace = document.getElementById('trace');
-  const hudK = document.getElementById('hudK'), hudV = document.getElementById('hudV');
-  const secs = [...document.querySelectorAll('[data-phase]')];
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const lerp = (a, b, t) => a + (b - a) * t, mix = (A, B, t) => [lerp(A[0], B[0], t), lerp(A[1], B[1], t)];
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), outE = (t, k = 2) => 1 - Math.pow(1 - t, k);
-  const smooth = t => t * t * (3 - 2 * t);
-
-  function shot(p) {
-    if (p < .25) return { at: T, h: 0, hud: ['Hole 1 · Par 4', '464 yards from the tee'] };
-    if (p < 1.05) { const t = (p - .25) / .8; return { at: mix(T, LAND, t), h: 4 * t * (1 - t), fl: [T, LAND, 1, t], hud: ['Shot 1 · Drive', Math.round(256 * t) + ' yds'] }; }
-    if (p < 1.35) { const t = (p - 1.05) / .3; return { at: mix(LAND, REST, outE(t)), h: .1 * Math.abs(Math.sin(Math.PI * t * 2)) * (1 - t), tr: [T, LAND, 1, 1 - t], hud: ['Shot 1 · Drive', '256 yds · fairway'] }; }
-    if (p < 1.9) return { at: REST, h: 0, hud: ['Shot 1 · Drive', '256 yds · fairway'] };
-    if (p < 2.8) { const t = (p - 1.9) / .9; return { at: mix(REST, AP, t), h: .8 * 4 * t * (1 - t), fl: [REST, AP, .8, t], hud: ['Shot 2 · Approach', Math.round(198 * t) + ' yds'] }; }
-    if (p < 3.1) { const t = (p - 2.8) / .3; return { at: mix(AP, APR, outE(t)), h: 0, tr: [REST, AP, .8, 1 - t], hud: ['Shot 2 · Approach', 'On the green · 12 ft'] }; }
-    if (p < 4.3) return { at: APR, h: 0, hud: ['Shot 2 · Approach', 'On the green · 12 ft'] };
-    if (p < 5.7) {
-      const t = outE((p - 4.3) / 1.4, 2.4), c = [300, 1812];
-      const at = [(1 - t) ** 2 * APR[0] + 2 * (1 - t) * t * c[0] + t * t * LIP[0], (1 - t) ** 2 * APR[1] + 2 * (1 - t) * t * c[1] + t * t * LIP[1]];
-      return { at, h: 0, hud: ['Shot 3 · Putt', Math.max(1, Math.round(12 * (1 - t))) + ' ft'] };
-    }
-    if (p < 5.88) {
-      const t = (p - 5.7) / .18, a0 = Math.atan2(LIP[1] - CUP[1], LIP[0] - CUP[0]), r = lerp(8.6, 2.5, t), a = a0 + t * Math.PI * 1.3;
-      return { at: [CUP[0] + Math.cos(a) * r, CUP[1] + Math.sin(a) * r], h: 0, hud: ['Shot 3 · Putt', 'On the lip'] };
-    }
-    const t = clamp((p - 5.88) / .1, 0, 1);
-    return { at: CUP, h: 0, drop: t, hud: t < 1 ? ['Shot 3 · Putt', 'On the lip'] : ['Birdie', '3 on a par 4'] };
-  }
-
-  let W, H, S, mobile, anchors = [], target = 0, cur = 0, raf = 0;
-  const LIFT = 130;
+  let W, H, k, x0, travel, target = 0, cur = 0, raf = 0;
   function measure() {
-    mobile = innerWidth <= 900; W = course.clientWidth; H = course.clientHeight;
-    S = Math.max(W / IW, H / IH);                       // cover
-    const focus = mobile ? H + (innerHeight - H) * .45 : innerHeight * .55;
-    const maxY = document.documentElement.scrollHeight - innerHeight;
-    anchors = secs.map(s => clamp(s.getBoundingClientRect().top + scrollY - focus, 0, maxY));
-    anchors[0] = 0; anchors[anchors.length - 1] = maxY;
-    for (let i = 1; i < anchors.length; i++) anchors[i] = Math.max(anchors[i], anchors[i - 1] + 1);
+    W = course.clientWidth; H = course.clientHeight;
+    const mobile = innerWidth <= 900;
+    // Zoomed out: about 2.2 screens of hole, never narrower than 45% of the window.
+    k = mobile ? W / IW : Math.max(2.2 * H / IH, .45 * W / IW);
+    x0 = mobile ? 0 : Math.min(W - IW * k, W * .7 - IW * k / 2);
+    travel = Math.max(0, IH * k - H);
   }
-  function phaseAt(y) {
-    for (let i = 0; i < anchors.length - 1; i++) if (y < anchors[i + 1]) return i + clamp((y - anchors[i]) / (anchors[i + 1] - anchors[i]), 0, 1);
-    return anchors.length - 1;
-  }
-  function arc(fl, upto, k, tx, ty) {
-    const [A, B, peak] = fl; let d = '';
-    for (let i = 0; i <= 40; i++) {
-      const t = upto * i / 40, h = peak * 4 * t * (1 - t);
-      d += (i ? 'L' : 'M') + (tx + lerp(A[0], B[0], t) * k).toFixed(1) + ' ' + (ty + lerp(A[1], B[1], t) * k - h * LIFT).toFixed(1);
-    }
-    return d;
-  }
-  function render(p) {
-    const s = shot(p);
-    const z = 1 + .35 * smooth(clamp((p - 2.7) / .6, 0, 1));   // a gentle push-in on the green
-    const k = S * z, focusY = H * (mobile ? .6 : .58);
-    const ty = clamp(focusY - s.at[1] * k, H - IH * k, 0);
-    const tx = mobile ? clamp(W * .55 - s.at[0] * k, W - IW * k, 0) : clamp(W * .66 - s.at[0] * k, W - IW * k, 0);
-    img.style.transform = `translate(${tx}px,${ty}px) scale(${k})`;
-    const gx = tx + s.at[0] * k, gy = ty + s.at[1] * k, h = s.h;
-    const size = (mobile ? .85 : 1) * (1 + (z - 1) * .5) * (1 + h * .9) * (s.drop != null ? 1 - s.drop * .75 : 1);
-    ballEl.style.transform = `translate(${gx}px,${gy - h * LIFT}px) scale(${size})`;
-    ballEl.style.opacity = s.drop != null ? 1 - s.drop : 1;
-    shEl.style.transform = `translate(${gx + h * 34}px,${gy + h * 22 + 3}px) scale(${1 + h * .4})`;
-    shEl.style.opacity = s.drop != null ? .7 * (1 - s.drop) : .8 - h * .35;
-    if (s.fl && !reduced) { trace.setAttribute('d', arc(s.fl, s.fl[3], k, tx, ty)); trace.setAttribute('opacity', .9); }
-    else if (s.tr && !reduced) { trace.setAttribute('d', arc(s.tr, 1, k, tx, ty)); trace.setAttribute('opacity', (.9 * s.tr[3]).toFixed(2)); }
-    else trace.setAttribute('opacity', 0);
-    hudK.textContent = s.hud[0]; hudV.textContent = s.hud[1];
-    document.body.classList.toggle('holed', s.drop === 1);
-  }
+  const progress = () => { const max = document.documentElement.scrollHeight - innerHeight; return max > 0 ? Math.min(1, Math.max(0, scrollY / max)) : 0; };
+  function render(p) { img.style.transform = `translate(${x0}px,${-p * travel}px) scale(${k})`; }
   function tick() {
-    cur = reduced ? target : cur + (target - cur) * .14;
-    if (Math.abs(target - cur) < .0008) cur = target;
+    cur = reduced ? target : cur + (target - cur) * .12;
+    if (Math.abs(target - cur) < .0002) cur = target;
     render(cur);
     raf = cur !== target ? requestAnimationFrame(tick) : 0;
   }
-  function onScroll() { target = phaseAt(scrollY); if (!raf) raf = requestAnimationFrame(tick); }
+  function onScroll() { target = progress(); if (!raf) raf = requestAnimationFrame(tick); }
   addEventListener('scroll', onScroll, { passive: true });
   addEventListener('resize', () => { measure(); onScroll(); });
-  measure(); target = cur = phaseAt(scrollY); render(cur);
-  addEventListener('load', () => { measure(); onScroll(); });
+  measure(); target = cur = progress(); render(cur);
 })();
 </script>

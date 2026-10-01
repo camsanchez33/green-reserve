@@ -117,8 +117,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-09-30 16:39 UTC</span><span>claude/eager-maxwell-qf1pd0 @ 95f1e22</span>
-    <span>7 uncommitted</span>
+    <span>2026-10-01 02:14 UTC</span><span>claude/eager-maxwell-qf1pd0 @ 97b97f7</span>
+    <span>2 uncommitted</span>
   </div>
 </header>
 <div class="tiles">
@@ -132,7 +132,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card">
 <h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M RUN_QUEUE.md</code></li><li><code>M STATUS.artifact.html</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li><li><code>?? HOMEPAGE_HOLE_SPEC.md</code></li><li><code>?? docs/design/hole/</code></li></ul>
+<ul class="plain"><li><code>M HOMEPAGE_HOLE_SPEC.md</code></li><li><code>M docs/design/hole/index.html</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -181,17 +181,17 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="row"><span class="t">SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED</span><span class="age">14d</span><span class="where">951433d</span></div>
 <div class="row"><span class="t">SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box</span><span class="age">13d</span><span class="where">cfeb2e1</span></div>
 <div class="row"><span class="t">SD-8d — browser Back still discards unsaved Settings edits (from the</span><span class="age">2d</span><span class="where">70a424e</span></div>
-<div class="row"><span class="t">SD-8e — status is rendered as bare coloured text where the design</span><span class="age">1d</span><span class="where">9d6dc6a</span></div>
-<div class="row"><span class="t">SD-9c — auth: (1) staff password recovery — CourseStaff has no reset</span><span class="age">1d</span><span class="where">0d84aaf</span></div>
-<div class="row"><span class="t">BUG: 56 of 59 email senders report success when Resend rejects the send</span><span class="age">1d</span><span class="where">209e652</span></div>
+<div class="row"><span class="t">SD-8e — status is rendered as bare coloured text where the design</span><span class="age">2d</span><span class="where">9d6dc6a</span></div>
+<div class="row"><span class="t">SD-9c — auth: (1) staff password recovery — CourseStaff has no reset</span><span class="age">2d</span><span class="where">0d84aaf</span></div>
+<div class="row"><span class="t">BUG: 56 of 59 email senders report success when Resend rejects the send</span><span class="age">2d</span><span class="where">209e652</span></div>
+<div class="row"><span class="t">BUG: inquiry submissions send no emails</span><span class="age">2d</span><span class="where">8b9a046</span></div>
+<div class="row"><span class="t">BUG: perf audit crashed on every page</span><span class="age">2d</span><span class="where">dd7056a</span></div>
+<div class="row"><span class="t">CAL-1 — Cal.com as the call scheduler</span><span class="age">2d</span><span class="where">a5ed9d7</span></div>
 <div class="row"><span class="t">MP-5e part 3 — the Overview relationship feed (notes + settings</span><span class="age">1d</span><span class="where">c6a2142</span></div>
-<div class="row"><span class="t">BUG: inquiry submissions send no emails</span><span class="age">1d</span><span class="where">8b9a046</span></div>
-<div class="row"><span class="t">BUG: perf audit crashed on every page</span><span class="age">1d</span><span class="where">dd7056a</span></div>
 <div class="row"><span class="t">RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM).</span><span class="age">1d</span><span class="where">f57f269</span></div>
 <div class="row"><span class="t">RV-2 — review follow-ups, small (from /gr-review 2026-09-29):</span><span class="age">1d</span><span class="where">0eab366</span></div>
 <div class="row"><span class="t">CAL-2 — Cal.com is the ONLY call scheduler</span><span class="age">1d</span><span class="where">e082dd0</span></div>
 <div class="row"><span class="t">BUG: hello@greenreserve.app takes no mail</span><span class="age">1d</span><span class="where">371ffff</span></div>
-<div class="row"><span class="t">CAL-1 — Cal.com as the call scheduler</span><span class="age">1d</span><span class="where">a5ed9d7</span></div>
 <div class="row"><span class="t">MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin</span><span class="age"></span><span class="where"></span></div>
 <div class="row"><span class="t">MP-1</span><span class="age"></span><span class="where"></span></div>
 <div class="row"><span class="t">MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until</span><span class="age"></span><span class="where"></span></div>
@@ -212,38 +212,41 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
 <tr><td><code>CLAUDE.md</code></td><td class="num">5</td><td class="num">2026-09-30 &middot; 0d</td></tr>
-<tr><td><code>ARCHITECTURE.md</code></td><td class="num">4</td><td class="num">2026-09-16 &middot; 13d</td></tr>
+<tr><td><code>ARCHITECTURE.md</code></td><td class="num">4</td><td class="num">2026-09-16 &middot; 14d</td></tr>
+<tr><td><code>HOMEPAGE_HOLE_SPEC.md</code></td><td class="num">1</td><td class="num">2026-09-30 &middot; 0d</td></tr>
 <tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">1</td><td class="num">2026-09-29 &middot; 1d</td></tr>
-<tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">1</td><td class="num">2026-09-15 &middot; 14d</td></tr>
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">1</td><td class="num">2026-09-16 &middot; 14d</td></tr>
+<tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">1</td><td class="num">2026-09-15 &middot; 15d</td></tr>
 <tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 1d</td></tr>
 <tr><td><code>FB2_COPY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 1d</td></tr>
 <tr><td><code>FB3_FEE_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 1d</td></tr>
-<tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
 <tr><td><code>CODEMAP_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>COURSES_SHEET_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>DESIGN_SYSTEM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>GOLFER_EDGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>GOLFER_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>HARDENING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>INQUIRY_CALL_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>INQUIRY_FORM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
-<tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 14d</td></tr>
+<tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>COURSES_SHEET_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>DESIGN_SYSTEM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>GOLFER_EDGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>GOLFER_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>HARDENING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>INQUIRY_CALL_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>INQUIRY_FORM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
+<tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">adce275</td><td class="num">2026-09-30</td><td>Homepage hole spec + approved mockup (session handoff) (#28)</td></tr>
+<tr><td class="num">e18a045</td><td class="num">2026-09-30</td><td>queue/spec update</td></tr>
 <tr><td class="num">95f1e22</td><td class="num">2026-09-30</td><td>Revert &quot;UI-B-1: homepage in Direction B, Figtree for the public look&quot;</td></tr>
 <tr><td class="num">fef7f84</td><td class="num">2026-09-30</td><td>Revert &quot;queue/spec update&quot;</td></tr>
 <tr><td class="num">8d3b4aa</td><td class="num">2026-09-30</td><td>queue/spec update</td></tr>
@@ -254,8 +257,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">f3e2456</td><td class="num">2026-09-30</td><td>LOGO-1c: tab icon is just the golfer, no square</td></tr>
 <tr><td class="num">4263e7f</td><td class="num">2026-09-30</td><td>queue/spec update</td></tr>
 <tr><td class="num">2593e8b</td><td class="num">2026-09-30</td><td>LOGO-1b: logo in the window's corner; golfer replaces the dog in the tab icon</td></tr>
-<tr><td class="num">2e718a1</td><td class="num">2026-09-30</td><td>queue/spec update</td></tr>
-<tr><td class="num">4ed5d7b</td><td class="num">2026-09-30</td><td>LOGO-1: sharp vector logo top-left, logo in emails, golfer mark replaces the dog</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

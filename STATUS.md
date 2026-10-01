@@ -4,21 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-09-30 16:39 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `95f1e22` · working tree **7 dirty file(s)**
+Generated 2026-10-01 02:14 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `97b97f7` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-### Uncommitted working tree (7 file(s))
+### Uncommitted working tree (2 file(s))
 
-- `M CLAUDE.md`
-- `M RUN_QUEUE.md`
-- `M STATUS.artifact.html`
-- `M STATUS.json`
-- `M STATUS.md`
-- `?? HOMEPAGE_HOLE_SPEC.md`
-- `?? docs/design/hole/`
+- `M HOMEPAGE_HOLE_SPEC.md`
+- `M docs/design/hole/index.html`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -44,17 +39,17 @@ This is the distinction a raw checkbox count gets wrong.
 | SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED | 2026-09-16 | 14d | `951433d` | `RUN_QUEUE.md:2235` |
 | SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box | 2026-09-17 | 13d | `cfeb2e1` | `RUN_QUEUE.md:2348` |
 | SD-8d — browser Back still discards unsaved Settings edits (from the | 2026-09-28 | 2d | `70a424e` | `RUN_QUEUE.md:541` |
-| SD-8e — status is rendered as bare coloured text where the design | 2026-09-29 | 1d | `9d6dc6a` | `RUN_QUEUE.md:567` |
-| SD-9c — auth: (1) staff password recovery — CourseStaff has no reset | 2026-09-29 | 1d | `0d84aaf` | `RUN_QUEUE.md:644` |
-| BUG: 56 of 59 email senders report success when Resend rejects the send | 2026-09-29 | 1d | `209e652` | `RUN_QUEUE.md:665` |
+| SD-8e — status is rendered as bare coloured text where the design | 2026-09-29 | 2d | `9d6dc6a` | `RUN_QUEUE.md:567` |
+| SD-9c — auth: (1) staff password recovery — CourseStaff has no reset | 2026-09-29 | 2d | `0d84aaf` | `RUN_QUEUE.md:644` |
+| BUG: 56 of 59 email senders report success when Resend rejects the send | 2026-09-29 | 2d | `209e652` | `RUN_QUEUE.md:665` |
+| BUG: inquiry submissions send no emails | 2026-09-28 | 2d | `8b9a046` | `RUN_QUEUE.md:2551` |
+| BUG: perf audit crashed on every page | 2026-09-29 | 2d | `dd7056a` | `RUN_QUEUE.md:2576` |
+| CAL-1 — Cal.com as the call scheduler | 2026-09-29 | 2d | `a5ed9d7` | `RUN_QUEUE.md:2868` |
 | MP-5e part 3 — the Overview relationship feed (notes + settings | 2026-09-29 | 1d | `c6a2142` | `RUN_QUEUE.md:1308` |
-| BUG: inquiry submissions send no emails | 2026-09-28 | 1d | `8b9a046` | `RUN_QUEUE.md:2551` |
-| BUG: perf audit crashed on every page | 2026-09-29 | 1d | `dd7056a` | `RUN_QUEUE.md:2576` |
 | RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM). | 2026-09-29 | 1d | `f57f269` | `RUN_QUEUE.md:2587` |
 | RV-2 — review follow-ups, small (from /gr-review 2026-09-29): | 2026-09-29 | 1d | `0eab366` | `RUN_QUEUE.md:2597` |
 | CAL-2 — Cal.com is the ONLY call scheduler | 2026-09-29 | 1d | `e082dd0` | `RUN_QUEUE.md:2818` |
 | BUG: hello@greenreserve.app takes no mail | 2026-09-29 | 1d | `371ffff` | `RUN_QUEUE.md:2850` |
-| CAL-1 — Cal.com as the call scheduler | 2026-09-29 | 1d | `a5ed9d7` | `RUN_QUEUE.md:2868` |
 | MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | — | — | — | `RUN_QUEUE.md:706` |
 | MP-1 | — | — | — | `RUN_QUEUE.md:736` |
 | MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | — | — | — | `RUN_QUEUE.md:771` |
@@ -146,39 +141,42 @@ This is the distinction a raw checkbox count gets wrong.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 5 | 2026-09-30 | 0d |
-| `ARCHITECTURE.md` | 4 | 2026-09-16 | 13d |
+| `ARCHITECTURE.md` | 4 | 2026-09-16 | 14d |
+| `HOMEPAGE_HOLE_SPEC.md` | 1 | 2026-09-30 | 0d |
 | `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 1d |
-| `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-15 | 14d |
 | `UI_REVISE_SPEC.md` | 1 | 2026-09-16 | 14d |
+| `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-15 | 15d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-29 | 1d |
 | `FB2_COPY_SPEC.md` | 0 | 2026-09-29 | 1d |
 | `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-09-29 | 1d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-09-15 | 14d |
 | `CODEMAP_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `GOLFER_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `HARDENING_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `RECEIPT_SPEC.md` | 0 | 2026-09-15 | 14d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-09-15 | 14d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `GOLFER_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `HARDENING_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `RECEIPT_SPEC.md` | 0 | 2026-09-15 | 15d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-09-15 | 15d |
 
 ## Recent commits
 
+- `adce275` 2026-09-30 — Homepage hole spec + approved mockup (session handoff) (#28)
+- `e18a045` 2026-09-30 — queue/spec update
 - `95f1e22` 2026-09-30 — Revert "UI-B-1: homepage in Direction B, Figtree for the public look"
 - `fef7f84` 2026-09-30 — Revert "queue/spec update"
 - `8d3b4aa` 2026-09-30 — queue/spec update
@@ -189,8 +187,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `f3e2456` 2026-09-30 — LOGO-1c: tab icon is just the golfer, no square
 - `4263e7f` 2026-09-30 — queue/spec update
 - `2593e8b` 2026-09-30 — LOGO-1b: logo in the window's corner; golfer replaces the dog in the tab icon
-- `2e718a1` 2026-09-30 — queue/spec update
-- `4ed5d7b` 2026-09-30 — LOGO-1: sharp vector logo top-left, logo in emails, golfer mark replaces the dog
 
 ---
 

@@ -1,22 +1,17 @@
 {
-  "generatedAt": "2026-09-30T16:39:39.649Z",
+  "generatedAt": "2026-10-01T02:14:30.362Z",
   "repo": {
-    "head": "95f1e22",
+    "head": "97b97f7",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 7,
+    "dirtyCount": 2,
     "dirty": [
-      "M CLAUDE.md",
-      " M RUN_QUEUE.md",
-      " M STATUS.artifact.html",
-      " M STATUS.json",
-      " M STATUS.md",
-      "?? HOMEPAGE_HOLE_SPEC.md",
-      "?? docs/design/hole/"
+      "M HOMEPAGE_HOLE_SPEC.md",
+      " M docs/design/hole/index.html"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-30T16:39:32+00:00",
+    "queueLastCommit": "2026-09-30T16:39:40+00:00",
     "unrecorded": []
   },
   "counts": {
@@ -71,40 +66,47 @@
       "line": 567,
       "hash": "9d6dc6a",
       "shipDate": "2026-09-29",
-      "ageDays": 1
+      "ageDays": 2
     },
     {
       "title": "SD-9c — auth: (1) staff password recovery — CourseStaff has no reset",
       "line": 644,
       "hash": "0d84aaf",
       "shipDate": "2026-09-29",
-      "ageDays": 1
+      "ageDays": 2
     },
     {
       "title": "BUG: 56 of 59 email senders report success when Resend rejects the send",
       "line": 665,
       "hash": "209e652",
       "shipDate": "2026-09-29",
-      "ageDays": 1
-    },
-    {
-      "title": "MP-5e part 3 — the Overview relationship feed (notes + settings",
-      "line": 1308,
-      "hash": "c6a2142",
-      "shipDate": "2026-09-29",
-      "ageDays": 1
+      "ageDays": 2
     },
     {
       "title": "BUG: inquiry submissions send no emails",
       "line": 2551,
       "hash": "8b9a046",
       "shipDate": "2026-09-28",
-      "ageDays": 1
+      "ageDays": 2
     },
     {
       "title": "BUG: perf audit crashed on every page",
       "line": 2576,
       "hash": "dd7056a",
+      "shipDate": "2026-09-29",
+      "ageDays": 2
+    },
+    {
+      "title": "CAL-1 — Cal.com as the call scheduler",
+      "line": 2868,
+      "hash": "a5ed9d7",
+      "shipDate": "2026-09-29",
+      "ageDays": 2
+    },
+    {
+      "title": "MP-5e part 3 — the Overview relationship feed (notes + settings",
+      "line": 1308,
+      "hash": "c6a2142",
       "shipDate": "2026-09-29",
       "ageDays": 1
     },
@@ -133,13 +135,6 @@
       "title": "BUG: hello@greenreserve.app takes no mail",
       "line": 2850,
       "hash": "371ffff",
-      "shipDate": "2026-09-29",
-      "ageDays": 1
-    },
-    {
-      "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 2868,
-      "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 1
     },
@@ -450,7 +445,13 @@
       "file": "ARCHITECTURE.md",
       "openRefs": 4,
       "lastTouched": "2026-09-16",
-      "ageDays": 13
+      "ageDays": 14
+    },
+    {
+      "file": "HOMEPAGE_HOLE_SPEC.md",
+      "openRefs": 1,
+      "lastTouched": "2026-09-30",
+      "ageDays": 0
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
@@ -459,16 +460,16 @@
       "ageDays": 1
     },
     {
-      "file": "ADMIN_MASTER_PLAN.md",
-      "openRefs": 1,
-      "lastTouched": "2026-09-15",
-      "ageDays": 14
-    },
-    {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-09-16",
       "ageDays": 14
+    },
+    {
+      "file": "ADMIN_MASTER_PLAN.md",
+      "openRefs": 1,
+      "lastTouched": "2026-09-15",
+      "ageDays": 15
     },
     {
       "file": "CALL_SCHEDULING_SPEC.md",
@@ -489,146 +490,156 @@
       "ageDays": 1
     },
     {
-      "file": "ADMIN_REBUILD_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 14
-    },
-    {
-      "file": "ADMIN_V2_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 14
-    },
-    {
-      "file": "ADMIN_V3_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 14
-    },
-    {
-      "file": "ADMIN_V4_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 14
-    },
-    {
-      "file": "AGREEMENT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 14
-    },
-    {
-      "file": "BACKUP_OPS_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 14
-    },
-    {
-      "file": "BIRDIE_AI_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 14
-    },
-    {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
       "ageDays": 14
     },
     {
+      "file": "ADMIN_REBUILD_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-15",
+      "ageDays": 15
+    },
+    {
+      "file": "ADMIN_V2_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-15",
+      "ageDays": 15
+    },
+    {
+      "file": "ADMIN_V3_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-15",
+      "ageDays": 15
+    },
+    {
+      "file": "ADMIN_V4_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-15",
+      "ageDays": 15
+    },
+    {
+      "file": "AGREEMENT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-15",
+      "ageDays": 15
+    },
+    {
+      "file": "BACKUP_OPS_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-15",
+      "ageDays": 15
+    },
+    {
+      "file": "BIRDIE_AI_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-15",
+      "ageDays": 15
+    },
+    {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
-      "ageDays": 14
+      "ageDays": 15
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
-      "ageDays": 14
+      "ageDays": 15
     }
   ],
   "bank": null,
   "recentCommits": [
+    {
+      "h": "adce275",
+      "date": "2026-09-30",
+      "subject": "Homepage hole spec + approved mockup (session handoff) (#28)"
+    },
+    {
+      "h": "e18a045",
+      "date": "2026-09-30",
+      "subject": "queue/spec update"
+    },
     {
       "h": "95f1e22",
       "date": "2026-09-30",
@@ -678,16 +689,6 @@
       "h": "2593e8b",
       "date": "2026-09-30",
       "subject": "LOGO-1b: logo in the window's corner; golfer replaces the dog in the tab icon"
-    },
-    {
-      "h": "2e718a1",
-      "date": "2026-09-30",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "4ed5d7b",
-      "date": "2026-09-30",
-      "subject": "LOGO-1: sharp vector logo top-left, logo in emails, golfer mark replaces the dog"
     }
   ]
 }
