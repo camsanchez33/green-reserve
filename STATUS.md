@@ -4,26 +4,11 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-01 02:18 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `7fd7385` · working tree **9 dirty file(s)**
+Generated 2026-10-01 02:18 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `012373d` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
-
-### Uncommitted working tree (9 file(s))
-
-- `M CLAUDE.md`
-- `D  HOMEPAGE_HOLE_SPEC.md`
-- `M RUN_QUEUE.md`
-- `D  docs/design/hole/course.webp`
-- `D  docs/design/hole/index.html`
-- `D  docs/design/hole/logo-cream.svg`
-- `D  docs/design/hole/phone.jpg`
-- `?? HOMEPAGE_SPEC.md`
-- `?? docs/design/home/`
-
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
 
 ## In flight
 
@@ -147,8 +132,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 5 | 2026-09-30 | 0d |
+| `CLAUDE.md` | 5 | 2026-10-01 | 0d |
 | `ARCHITECTURE.md` | 4 | 2026-09-16 | 14d |
+| `HOMEPAGE_SPEC.md` | 1 | 2026-10-01 | 0d |
 | `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 1d |
 | `UI_REVISE_SPEC.md` | 1 | 2026-09-16 | 14d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-15 | 15d |
@@ -181,6 +167,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `012373d` 2026-10-01 — queue/spec update
 - `7fd7385` 2026-10-01 — queue/spec update
 - `1ceecb4` 2026-10-01 — queue/spec update
 - `adce275` 2026-09-30 — Homepage hole spec + approved mockup (session handoff) (#28)
@@ -192,7 +179,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `a9e191d` 2026-09-30 — queue/spec update
 - `4106287` 2026-09-30 — SEC-1: bookings read the card and customer from Stripe, not the request
 - `def2b1d` 2026-09-30 — queue/spec update
-- `f3e2456` 2026-09-30 — LOGO-1c: tab icon is just the golfer, no square
 
 ---
 

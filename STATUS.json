@@ -1,24 +1,14 @@
 {
-  "generatedAt": "2026-10-01T02:18:17.642Z",
+  "generatedAt": "2026-10-01T02:18:30.871Z",
   "repo": {
-    "head": "7fd7385",
+    "head": "012373d",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 9,
-    "dirty": [
-      "M CLAUDE.md",
-      "D  HOMEPAGE_HOLE_SPEC.md",
-      " M RUN_QUEUE.md",
-      "D  docs/design/hole/course.webp",
-      "D  docs/design/hole/index.html",
-      "D  docs/design/hole/logo-cream.svg",
-      "D  docs/design/hole/phone.jpg",
-      "?? HOMEPAGE_SPEC.md",
-      "?? docs/design/home/"
-    ],
+    "dirtyCount": 0,
+    "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-09-30T16:39:40+00:00",
+    "queueLastCommit": "2026-10-01T02:18:30+00:00",
     "unrecorded": []
   },
   "counts": {
@@ -445,7 +435,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 5,
-      "lastTouched": "2026-09-30",
+      "lastTouched": "2026-10-01",
       "ageDays": 0
     },
     {
@@ -453,6 +443,12 @@
       "openRefs": 4,
       "lastTouched": "2026-09-16",
       "ageDays": 14
+    },
+    {
+      "file": "HOMEPAGE_SPEC.md",
+      "openRefs": 1,
+      "lastTouched": "2026-10-01",
+      "ageDays": 0
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
@@ -632,6 +628,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "012373d",
+      "date": "2026-10-01",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "7fd7385",
       "date": "2026-10-01",
       "subject": "queue/spec update"
@@ -685,11 +686,6 @@
       "h": "def2b1d",
       "date": "2026-09-30",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "f3e2456",
-      "date": "2026-09-30",
-      "subject": "LOGO-1c: tab icon is just the golfer, no square"
     }
   ]
 }
