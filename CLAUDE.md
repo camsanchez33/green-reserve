@@ -160,35 +160,32 @@ The homepage is built from the approved plain-background mockup
 course background concept. Homepage copy has NO durations and NO contract terms;
 CTAs are Book a demo + Send an inquiry. The spec also lists what is waiting on Cam.
 
-## Design system — two looks, split by audience (UI_REVISE_SPEC, Sept 2026)
+## Design system — ONE look for every page (FLOW-1, Cam 2026-10-01)
 
-Source of truth for anything visual: `UI_REVISE_SPEC.md` §1 (tokens) and §0 (decisions).
-Clubhouse *structure* (white cards on paper, StatusDot, no pills, no dark mode) holds
-everywhere; the type, corners and palette depend on **who the page is for**.
+Cam 2026-10-01: "get this ui build out through /admin and /dashboard and every other
+page so the whole site flows together." The split PUBLIC/STAFF look (UI_REVISE_SPEC §0/§1,
+Sept 2026) is RETIRED. Every page — homepage, /for-courses, legal, golfer pages, /dashboard,
+/admin — uses the homepage's palette, Archivo and corners. Clubhouse *structure* still holds
+(white cards on paper, StatusDot, no pills, no dark mode).
 
-| | PUBLIC look | STAFF look |
-|---|---|---|
-| Where | `/`, `/for-courses`, legal pages, every golfer-facing page (`/courses/[slug]`, `/book`, `/checkin`, `/manage`, `/receipt`, member portal) | `/dashboard/*` and `/admin/*` |
-| Fonts | Archivo, one variable family with a width axis (root layout `--font-sans`; `--font-serif` points at it). UI-H-1, Cam 2026-10-01 | Newsreader display · Source Sans 3 body (`src/lib/staff-fonts.ts`) |
-| Corners | 8px buttons/inputs (`rounded-md`), 14px cards (`rounded-lg`), pills 999px | **0 everywhere.** `rounded-full` only for avatars, dots, swatches |
-| Paper / ink / line | #F6F4EC / #1C1C18 / #E6E3D7 | #F7F5EF / #1D1F1A / #E3E0D5 |
-| Accent | pine (marketing) · per-course `Course.brandColor` (golfer pages) | course accent (operator) · pine (admin) |
+| | Every page |
+|---|---|
+| Fonts | Archivo only (variable, width axis). `font-sans` = Archivo; `font-serif` = Archivo widened to 115% — the display face (globals.css base layer). Newsreader / Source Sans 3 are no longer loaded |
+| Corners | Tailwind defaults: `rounded-md` 6px buttons/inputs, `rounded-lg` 8px cards; `rounded-full` avatars/dots/swatches |
+| Paper / ink / line | #FAFAF7 / #141814 / #E3E4DE |
+| Accent | `pine` (#173B2A forest) for GreenReserve; per-course `Course.brandColor` on golfer pages and the operator dashboard |
 
-**How the switch works (U-0):** the `/admin` and `/dashboard` route layouts wrap their
-children in `.staff-look` (`STAFF_LOOK_CLASS` from `src/lib/staff-fonts.ts`). That class,
-in `globals.css`, re-points Tailwind's theme variables — `--radius-*` to 0, `--font-serif` /
-`--font-sans` to the staff fonts, the paper/ink/line tokens to the staff palette. Because
-Tailwind v4 utilities resolve through those variables, **write staff pages with the same
-classes as always** (`rounded-md`, `rounded-lg`, `font-serif`, `bg-paper`, `text-ink`); they
-render square and in Newsreader/Source Sans 3 inside the wrapper and rounded/Archivo
-outside it. Do not hardcode radii or font-families to force either look.
+`.staff-look` (`STAFF_LOOK_CLASS`, src/lib/staff-fonts.ts) still wraps /admin and /dashboard
+but carries no styling — it is only a hook. Never re-add a second palette, font or radius
+set there. Self-contained public pages that skip the Nav (/for-courses, setup sheet,
+/call) use `<PlainHeader>` (src/components/PlainHeader.tsx) — logo top-left like `/`.
 
 ### Shared tokens (Tailwind v4, `globals.css` `@theme {}`)
-- `paper`, `card` (#FFFFFF), `ink`, `ink-soft`, `ink-muted`, `ink-faint` (#98968B), `line`, `line-soft`, `line-strong` (#D9D6C8)
-- `pine` (#24513B) / `pine-hover` (#2E6349); `ok` (#3D6B4C), `bad` (#A3452F), `warn` (#8A6116), `dot-neutral` (#B3B1A6)
-- `font-sans`, `font-serif` — resolve per look, see above
+- `paper` (#FAFAF7), `card` (#FFFFFF), `ink` (#141814), `ink-soft`, `ink-muted` (#6B706A), `ink-faint`, `line` (#E3E4DE), `line-soft`, `line-strong`
+- `pine` (#173B2A) / `pine-hover` (#0F2C1F, darker); `ok` (#3D7A55), `bad` (#A3452F), `warn` (#9A5B13), `dot-neutral`
+- `font-sans` (Archivo), `font-serif` (Archivo widened — display)
 
-### Staff-look type scale (§1b)
+### Staff-page type scale (§1b — sizes still apply; fonts are Archivo since FLOW-1)
 - Page title: `font-serif text-[30px] leading-none` (existing 22px titles are acceptable until their reskin run lands)
 - Section title: 15px/600 sans · Eyebrow: `text-[11px] uppercase tracking-[0.1em] text-ink-muted` · body 13.5–14px · tables 13.5px
 - Attention: a 3px **left** border in the semantic color on a white card — the only place borders carry color
@@ -208,11 +205,11 @@ outside it. Do not hardcode radii or font-families to force either look.
 - NO Birdie dog artwork anywhere (Cam 2026-09-30: "unprofessional — it should just be the little golfer logo"). 404, empty states, coming-soon pages and the assistant's avatar use the golfer mark, and copy never speaks as the character ("We couldn't find…", not "Birdie couldn't…"). The assistant keeps the NAME Birdie (a golf term).
 
 ### BANNED
-- `font-black`, `tracking-widest` — use `font-medium`/`font-semibold` and `tracking-[0.06em]` (public) / `tracking-[0.1em]` (staff eyebrows)
+- `font-black`, `tracking-widest` — use `font-medium`/`font-semibold`/`font-bold` and `tracking-[0.06em]`–`tracking-[0.1em]` for eyebrows
 - Dark backgrounds (`bg-gray-950`, `bg-gray-900`) on admin/dashboard; gradients; drop shadows heavier than `0 1px 2px`. **Page-background gradients now have no exemption at all** (Cam 2026-09-16, H-2h): the four cream section hand-off dissolves on `/` are deleted, so `grep 'linear-gradient(.*#F6F4EC' src/app/home.module.css` must stay empty (match on the colour, not on `180deg` — two of the four deleted dissolves were `0deg`, so a `180deg` pattern would have passed with both still live). One exemption stands (Cam 2026-09-16, H-2h, reinstating H-2d-R1): the device mockups and cards in `home.module.css` keep their poster shadows — `.device`, `.heroDevice .device`, `.heroSheet`, `.laptopScreen`, `.btn:hover`, `.card:hover`. Nowhere else, and never on a staff surface. The two exemptions traded places on the same day and the trade was deliberate: H-2g deleted every shadow, then Cam chose shadows over dissolves, so the history reads as a reversal because it was one. The ban was never about scrims: a gradient that darkens a photo so text sits on it (`.storyShade`, `.dHd::after`) or shapes a device mockup's own hardware (`.laptopBase`) is not a background gradient and was never in scope — an earlier wording said "the only allowed gradients" while three such rules were already live, which is the kind of false absolute that gets a real rule ignored
 - Tinted colored pill badges — use `<StatusDot>` instead
 - `emerald-600` as accent — use `pine` / `ok` tokens
-- `rounded-xl/2xl/3xl` anywhere; any rounded corner on a staff surface that isn't an avatar/dot/swatch
+- `rounded-xl/2xl/3xl` anywhere
 - Cursor-tracking motion, bounce easing; anything that moves without `prefers-reduced-motion` respected
 
 ---

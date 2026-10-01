@@ -1,5 +1,12 @@
 # UI REVISE SPEC — whole-product visual revise
 
+> **SUPERSEDED IN PART — FLOW-1 (Cam 2026-10-01): "the whole site flows together."**
+> The two-look split below (PUBLIC Fraunces/rounded vs STAFF Newsreader/Source Sans/square,
+> two palettes) is retired. Every page now uses the homepage's palette, Archivo and
+> Tailwind-default corners — see CLAUDE.md "Design system". Structure rules here
+> (StatusDot, no pills, cards, the no-silent-failures UX) still stand; wherever this file
+> names a font, a hex or "0 corners" for staff pages, CLAUDE.md wins.
+
 Decision record + build queue for the visual redesign of GreenReserve, September 2026.
 Source of truth for anything about "how it looks". Runs go through `/gr-run <item>`
 like everything else; check boxes here only after `/gr-review` and a live walk.

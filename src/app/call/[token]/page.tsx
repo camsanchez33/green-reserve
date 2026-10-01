@@ -7,9 +7,9 @@
 // Cal.com's own reschedule / cancel pages.
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, Phone, Check, CalendarClock, Loader2 } from 'lucide-react';
+import PlainHeader from '@/components/PlainHeader';
+import { Phone, Check, CalendarClock, Loader2 } from 'lucide-react';
 
 type Booked = { scheduledAt: string; durationMin: number; direction: string; phone: string };
 type Info = {
@@ -26,14 +26,8 @@ const btnO = 'inline-flex items-center justify-center gap-2 border border-line h
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-paper">
-      <div className="relative bg-pine px-6 py-8 text-center">
-        <Link href="/" className="absolute left-6 top-6 inline-flex items-center gap-1.5 text-white/60 hover:text-white transition-colors text-sm">
-          <ArrowLeft size={14} /> Back
-        </Link>
-        <Link href="/" className="inline-block">
-          <Image src="/brand/logo-cream.svg" unoptimized alt="GreenReserve" width={80} height={40} priority className="h-10 w-auto mx-auto" />
-        </Link>
-      </div>
+      {/* FLOW-1: the homepage's plain header, not a pine band. */}
+      <PlainHeader />
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">{children}</div>
     </div>
   );

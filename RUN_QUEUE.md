@@ -53,9 +53,14 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   (https + *.blob.vercel-storage.com) now gates course-documents download AND
   record (record also handed a client URL to the SDK with the token), and
   companyDocPathOf uses it.
-- [ ] UI-H-2 — /for-courses in the homepage's language; remove its "1–2 days
-  typical setup time" (no-durations rule). Inner-page nav still says "List your
-  course"; decide with Cam whether it becomes "Book a demo" everywhere.
+- [x] UI-H-2 / FLOW-1 — done 2026-10-01: one look site-wide (CLAUDE.md "Design system").
+  Tokens moved to the homepage palette, Archivo everywhere incl. /admin + /dashboard
+  (staff fonts no longer load), Tailwind default corners. /for-courses, setup sheet and
+  /call lose the pine band for `<PlainHeader>`; "1–2 days" stat → "$0 setup or monthly
+  fee". OPEN for Cam: inner-page Nav still says "List your course" (kept: a visitor
+  there is past the demo stage); /for-courses still shows "$1.50", "About a week" and
+  "30 days' notice" — the homepage's no-fee/no-duration/no-contract rules were not
+  applied to it.
 - [ ] CAM — Cal.com: add a booking question with identifier `courseName` ("Golf
   course name") to the demo event, so homepage demo inquiries arrive with the
   course named (the webhook reads it; without it the inquiry's course is blank).

@@ -1,8 +1,8 @@
 'use client';
 import { useEffect, useState, useCallback, Suspense, useRef, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
+import PlainHeader from '@/components/PlainHeader';
 import { CheckCircle, AlertTriangle, ChevronRight, ArrowLeft, Plus, Trash2, Upload, X } from 'lucide-react';
 import { downscaleImage } from '@/lib/image-resize';
 
@@ -1770,15 +1770,11 @@ function DetailsForm() {
 
   return (
     <div className="min-h-screen bg-paper">
-      <div className="relative bg-pine px-6 py-8 text-center">
-        <Link href="/" className="absolute left-6 top-6 inline-flex items-center gap-1.5 text-white/60 hover:text-white transition-colors text-sm">
-          <ArrowLeft size={14} /> Back
-        </Link>
-        <Link href="/" className="inline-block">
-          <Image src="/brand/logo-cream.svg" unoptimized alt="GreenReserve" width={80} height={40} priority className="h-10 w-auto mx-auto" />
-        </Link>
-        <h1 className="text-white text-[20px] font-serif font-medium mt-3 mb-0.5 tracking-tight">Setup sheet — {courseName}</h1>
-        <p className="text-white/50 text-sm">The first 4 steps are all we need to build your page — about 5 minutes. The rest is optional. Saves as you go.</p>
+      {/* FLOW-1: the homepage's plain header, not a pine band. */}
+      <PlainHeader />
+      <div className="max-w-lg mx-auto px-4 pt-4 pb-6">
+        <h1 className="text-ink text-[26px] leading-tight font-serif font-bold tracking-[-0.02em]">Setup sheet — {courseName}</h1>
+        <p className="mt-2 text-ink-soft text-sm">The first 4 steps are all we need to build your page — about 5 minutes. The rest is optional. Saves as you go.</p>
       </div>
 
       <div className="bg-pine/10 h-1">
