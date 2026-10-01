@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     closed = { cancelled: 0, feeRefundsFailed: 0, failed: [] };
     const why = `${course?.name ?? 'The course'} is closed on ${date}${reason ? ` (${reason})` : ''}, so your round has been cancelled. Nothing is owed — sorry for the day.`;
     for (const b of bookings) {
-      const r = await performCancellation(b.id, { notifySlotAlerts: false, reason: why, waiveFee: true })
+      const r = await performCancellation(b.id, { type: 'staff', id: session.staffId ?? session.operatorId }, { notifySlotAlerts: false, reason: why, waiveFee: true })
         .catch(err => ({ error: err instanceof Error ? err.message : String(err), status: 500 } as const));
       if ('error' in r && r.error) closed.failed.push({ bookingId: b.id, golferName: b.golferName, error: r.error });
       else { closed.cancelled++; if ('feeRefundFailed' in r && r.feeRefundFailed) closed.feeRefundsFailed++; }

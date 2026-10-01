@@ -792,6 +792,52 @@ model PaymentEvent {
   @@index([createdAt])
 }
 
+/// EV-1: what happened to a booking, one row per real-world occurrence, kept
+/// forever. APPEND-ONLY — no code path updates or deletes a row; a correction is
+/// a new row (that is why no_show_cleared exists). courseId, amountCents,
+/// playerCount and teeTimeAt are copied, not joined, and bookingId has NO
+/// foreign key, so a price change or a deleted booking/course cannot rewrite or
+/// cascade away history. PaymentEvent stays the money-ops ledger; this is the
+/// analytics log. Written through src/lib/booking-events.ts only.
+enum BookingEventType {
+  booking_created
+  booking_cancelled
+  checked_in
+  no_show_marked
+  no_show_cleared
+  fee_charged
+  fee_refunded
+}
+
+enum EventActorType {
+  golfer
+  staff
+  admin
+  cron
+  system
+}
+
+model BookingEvent {
+  id          String           @id @default(cuid())
+  bookingId   String
+  courseId    String
+  type        BookingEventType
+  occurredAt  DateTime         @default(now())
+  actorType   EventActorType
+  actorId     String?
+  amountCents Int?
+  playerCount Int?
+  teeTimeAt   DateTime?
+  /// PaymentIntent / Refund id for Stripe-backed events — @unique makes a cron
+  /// retry or a double submit a no-op.
+  stripeId    String?          @unique
+  metadata    Json?
+
+  @@index([courseId, occurredAt])
+  @@index([bookingId, occurredAt])
+  @@index([type, occurredAt])
+}
+
 /// The course-approval / change-request loop, currently encoded as JSON stuffed
 /// into InquiryStatusEvent.actorName. One reworded log line breaks it today.
 model ChangeRequest {

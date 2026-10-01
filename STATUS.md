@@ -4,18 +4,34 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-01 05:15 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `67704e9` · working tree **4 dirty file(s)**
+Generated 2026-10-01 05:24 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `7ea3961` · working tree **21 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-### Uncommitted working tree (4 file(s))
+### Uncommitted working tree (21 file(s))
 
 - `M RUN_QUEUE.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M src/app/dashboard/page.tsx`
+- `M prisma/schema.prisma`
+- `M src/app/api/admin/golfers/route.ts`
+- `M src/app/api/admin/retry-charge/[bookingId]/route.ts`
+- `M src/app/api/admin/tee-sheet/route.ts`
+- `M src/app/api/bookings/cancel/route.ts`
+- `M src/app/api/bookings/route.ts`
+- `M src/app/api/checkin/[bookingId]/route.ts`
+- `M src/app/api/cron/cancellation-cutoff/route.ts`
+- `M src/app/api/cron/hourly/route.ts`
+- `M src/app/api/operator/blackouts/route.ts`
+- `M src/app/api/operator/bookings/route.ts`
+- `M src/lib/access-fee.ts`
+- `M src/lib/cancel-booking.ts`
+- `M src/lib/checkin-booking.ts`
+- `M src/lib/claim-tee-time.ts`
+- `M src/lib/course-closure.ts`
+- `?? prisma/migrations/20261001051815_booking_event_log/`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -82,7 +98,7 @@ This is the distinction a raw checkbox count gets wrong.
 16. PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29: — `RUN_QUEUE.md:2746`
 17. SETUP (Cam 2026-09-29: "we need to do blob storage, birdie ai … we also need — `RUN_QUEUE.md:2751`
 18. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:2946`
-19. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:3100`
+19. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:3120`
 
 ## Waiting on you (not on a build)
 
@@ -101,6 +117,7 @@ This is the distinction a raw checkbox count gets wrong.
 - Cam: "there should be no google calendar thing" and, after setting both env vars and redeploying, "it is just the same as before" — `RUN_QUEUE.md:2872`
 - Cam: "all emails need to go to thegreenreserve@outlook — `RUN_QUEUE.md:2904`
 - Cam: invite link showed "I can't show my calendar right now" — `RUN_QUEUE.md:2922`
+- Cam: "keep going with whatever is next") — `RUN_QUEUE.md:2946`
 
 ## Revise campaign (page-by-page pass)
 
@@ -179,6 +196,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `e707182` 2026-10-01 — Fix: walk-ins no longer arrive checked in; each group is checked in on its own
 - `67704e9` 2026-10-01 — FLOW-3: golfer course page in the homepage phone's style; calendar pop-up on the tee sheet
 - `ffde8a4` 2026-10-01 — FLOW-2: tee sheet matches the homepage demo; soft cards, light admin rail; fix bare $ prices
 - `06376c0` 2026-10-01 — FLOW-1: one look across the site; /for-courses, setup sheet and /call on the homepage header
@@ -190,7 +208,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `209eb2a` 2026-10-01 — CO-DOCS: use the shared INPUT_COMPACT class (design-guard)
 - `ebd77aa` 2026-10-01 — queue/spec update
 - `da9aabf` 2026-10-01 — CO-DOCS: owner-only Company documents in the private Blob store
-- `62e5d55` 2026-09-30 — UI-H-1: new homepage from the approved mockup (#31)
 
 ---
 

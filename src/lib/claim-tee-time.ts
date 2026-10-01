@@ -1,5 +1,6 @@
 import { prisma } from './prisma';
 import type { Prisma } from '@prisma/client';
+import { recordBookingEvent, teeTimeInstant, type EventActor } from './booking-events';
 
 export class TeeTimeClaimError extends Error {
   constructor(
@@ -18,9 +19,13 @@ export class TeeTimeClaimError extends Error {
  *
  * All booking fields must be pre-computed by the caller. The teeTimeId and
  * players fields in `data` drive the capacity check.
+ *
+ * EV-1: the one place every booking is born (golfer, counter, admin), so the
+ * booking_created event is written here, in the same transaction.
  */
 export async function claimTeeTime(
-  data: Prisma.BookingUncheckedCreateInput
+  data: Prisma.BookingUncheckedCreateInput,
+  actor: EventActor,
 ): Promise<{ id: string; checkInToken: string | null }> {
   const teeTimeId = String(data.teeTimeId);
   const players = Number(data.players);
@@ -30,7 +35,7 @@ export async function claimTeeTime(
       async (tx) => {
         const teeTime = await tx.teeTime.findUnique({
           where: { id: teeTimeId },
-          select: { id: true, playersBooked: true, playersAvailable: true, status: true },
+          select: { id: true, playersBooked: true, playersAvailable: true, status: true, date: true, time: true, course: { select: { timezone: true } } },
         });
 
         if (!teeTime) throw new TeeTimeClaimError('NOT_FOUND');
@@ -45,6 +50,12 @@ export async function claimTeeTime(
         }
 
         const booking = await tx.booking.create({ data });
+        await recordBookingEvent(tx, {
+          bookingId: booking.id, courseId: booking.courseId, type: 'booking_created', actor,
+          amountCents: booking.totalAmount, playerCount: booking.players,
+          teeTimeAt: teeTimeInstant(teeTime.course.timezone, teeTime.date, teeTime.time),
+          metadata: { source: booking.source ?? null },
+        });
 
         const newBooked = teeTime.playersBooked + players;
         await tx.teeTime.update({

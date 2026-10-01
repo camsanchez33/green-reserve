@@ -24,6 +24,21 @@ import Stripe from 'stripe';
 import { prisma } from './prisma';
 import { stripe } from './stripe';
 import { recordPaymentEvent } from './refund-booking';
+import { recordBookingEventSafe, teeTimeInstant } from './booking-events';
+
+// EV-1: the separate fee's charge / refund in the analytics log. Stripe has
+// already confirmed by the time this runs, so it never fails the caller.
+async function logFeeEvent(bookingId: string, type: 'fee_charged' | 'fee_refunded', amountCents: number, stripeId: string, actor: 'operator' | 'admin' | 'system', actorName: string | undefined, reason: string) {
+  const b = await prisma.booking.findUnique({ where: { id: bookingId }, select: { courseId: true, players: true, teeTime: { select: { date: true, time: true } }, course: { select: { timezone: true } } } }).catch(() => null);
+  if (!b) return;
+  await recordBookingEventSafe({
+    bookingId, courseId: b.courseId, type,
+    actor: { type: actor === 'operator' ? 'staff' : actor, id: actorName ?? null },
+    amountCents, playerCount: b.players,
+    teeTimeAt: teeTimeInstant(b.course.timezone, b.teeTime.date, b.teeTime.time),
+    stripeId, metadata: { reason },
+  });
+}
 
 export type FeeChargeResult =
   | { ok: true; charged: true; amountCents: number; paymentIntentId: string }
@@ -106,6 +121,7 @@ export async function chargeAccessFeeSeparately(bookingId: string, opts: {
   }
   await recordPaymentEvent({ bookingId, kind: 'fee_charged', amountCents, stripeId: pi.id, actor: opts.actor, actorName: opts.actorName, detail: `GreenReserve fee charged separately (${opts.why === 'no_show' ? 'no-show' : 'paid at the course'})` });
   await prisma.booking.update({ where: { id: bookingId }, data: { stripePaymentIntentId: pi.id } });
+  await logFeeEvent(bookingId, 'fee_charged', amountCents, pi.id, opts.actor, opts.actorName, `booking_fee_${opts.why}`);
   return { ok: true, charged: true, amountCents, paymentIntentId: pi.id };
 }
 
@@ -126,5 +142,6 @@ export async function refundSeparateAccessFee(bookingId: string, reason: string,
   const seen = await prisma.paymentEvent.findFirst({ where: { stripeId: r.id }, select: { id: true } });
   if (!seen) await recordPaymentEvent({ bookingId, kind: 'fee_refunded', amountCents: r.amount, stripeId: r.id, actor, actorName, detail: `GreenReserve fee refunded: ${reason}` });
   await prisma.booking.update({ where: { id: bookingId }, data: { stripePaymentIntentId: '' } });
+  await logFeeEvent(bookingId, 'fee_refunded', r.amount, r.id, actor, actorName, 'booking_fee_refunded');
   return { ok: true, refunded: true };
 }

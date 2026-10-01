@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from '@/lib/booking-events';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession } from '@/lib/session';
 import { performCancellation } from '@/lib/cancel-booking';
@@ -61,7 +62,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Missing id or unsupported action' }, { status: 400 });
   }
 
-  const booking = await prisma.booking.findUnique({ where: { id }, select: { courseId: true, status: true, paymentStatus: true, noShowAt: true, players: true, cancellationFeeChargeId: true, teeTime: { select: { date: true, time: true } }, course: { select: { timezone: true, stripeAccountId: true } } } });
+  const booking = await prisma.booking.findUnique({ where: { id }, select: { courseId: true, status: true, paymentStatus: true, noShowAt: true, players: true, cancellationFeeChargeId: true, teeTime: { select: { date: true, time: true } }, course: { select: { timezone: true, stripeAccountId: true } }, totalAmount: true, checkedInPlayers: true } });
   if (!booking || booking.courseId !== session.courseId) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
@@ -78,6 +79,10 @@ export async function PATCH(req: NextRequest) {
   // charged on its own here (lib/access-fee.ts). The staff action never waits
   // on it or fails because of it — the tee sheet is told what happened.
   const actorName = session.email;
+  // EV-1: every counter action below is DB-only, so its event is written in the
+  // same transaction as the state change.
+  const staff: EventActor = { type: 'staff', id: session.staffId ?? session.operatorId };
+  const evBase = { bookingId: id as string, courseId: booking.courseId, actor: staff, teeTimeAt: teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time) };
   if (action === 'no_show') {
     if (booking.status !== 'confirmed') return NextResponse.json({ error: 'Only a confirmed booking can be marked a no-show.' }, { status: 409 });
     // Review: a no-show now costs the golfer the booking fee, so it can only be
@@ -85,12 +90,19 @@ export async function PATCH(req: NextRequest) {
     if (!isPastIn(booking.course.timezone, booking.teeTime.date, booking.teeTime.time)) {
       return NextResponse.json({ error: 'You can mark a no-show once their tee time has passed.' }, { status: 409 });
     }
-    await prisma.booking.update({ where: { id }, data: { noShowAt: new Date() } });
+    await prisma.$transaction(async (tx) => {
+      await tx.booking.update({ where: { id }, data: { noShowAt: new Date() } });
+      await recordBookingEvent(tx, { ...evBase, type: 'no_show_marked', playerCount: booking.players });
+    });
     const fee = await chargeAccessFeeSeparately(id, { why: 'no_show', actor: 'operator', actorName });
     return NextResponse.json({ success: true, noShowAt: new Date().toISOString(), fee: feeNote(fee) });
   }
   if (action === 'still_coming') {
-    await prisma.booking.update({ where: { id }, data: { noShowAt: null } });
+    await prisma.$transaction(async (tx) => {
+      await tx.booking.update({ where: { id }, data: { noShowAt: null } });
+      // Only a real reversal is an event — clearing a mark that was never set is not.
+      if (booking.noShowAt) await recordBookingEvent(tx, { ...evBase, type: 'no_show_cleared', playerCount: booking.players });
+    });
     // The no-show fee was taken in error — they are here after all.
     const r = await refundSeparateAccessFee(id, 'no-show marked in error (still coming)', 'operator', actorName);
     return NextResponse.json({ success: true, ...(r.ok ? {} : { fee: `The booking fee could not be refunded (${r.error}) — GreenReserve will follow up.` }) });
@@ -103,9 +115,14 @@ export async function PATCH(req: NextRequest) {
     // take the booking fee a second time.
     if (booking.paymentStatus === 'paid') return NextResponse.json({ error: 'This round was already paid by card — check them in instead.' }, { status: 409 });
     const hadHoldFee = booking.paymentStatus === 'cancellation_fee_charged' && !!booking.cancellationFeeChargeId;
-    await prisma.booking.update({
-      where: { id },
-      data: { status: 'completed', checkedInAt: new Date(), paidAt: new Date(), paidOffline: true, paymentStatus: 'paid_offline', noShowAt: null, checkInFailReason: '', ...(cip !== undefined ? { checkedInPlayers: cip } : {}) },
+    // This branch completes the booking WITHOUT performCheckIn (CLAUDE.md) —
+    // so it writes its own checked_in event, or counter check-ins vanish from the log.
+    await prisma.$transaction(async (tx) => {
+      await tx.booking.update({
+        where: { id },
+        data: { status: 'completed', checkedInAt: new Date(), paidAt: new Date(), paidOffline: true, paymentStatus: 'paid_offline', noShowAt: null, checkInFailReason: '', ...(cip !== undefined ? { checkedInPlayers: cip } : {}) },
+      });
+      await recordBookingEvent(tx, { ...evBase, type: 'checked_in', amountCents: booking.totalAmount, playerCount: cip ?? booking.players, metadata: { paidOffline: true } });
     });
     // They paid the round at the counter, so the hold fee the cron took after
     // the cutoff goes back — exactly as a card check-in refunds it (review: this
@@ -113,7 +130,8 @@ export async function PATCH(req: NextRequest) {
     let holdNote: string | null = null;
     if (hadHoldFee && booking.course.stripeAccountId) {
       try {
-        await refundOnConnectedAccount({ paymentIntentId: booking.cancellationFeeChargeId as string, connectedAccountId: booking.course.stripeAccountId });
+        const refund = await refundOnConnectedAccount({ paymentIntentId: booking.cancellationFeeChargeId as string, connectedAccountId: booking.course.stripeAccountId });
+        await recordBookingEventSafe({ ...evBase, type: 'fee_refunded', amountCents: refund.amount, playerCount: booking.players, stripeId: refund.id, metadata: { reason: 'hold_refunded_at_checkin', paidOffline: true } });
       } catch (err) {
         holdNote = `The late-cancellation hold fee could not be refunded automatically (${err instanceof Error ? err.message : 'Stripe error'}) — GreenReserve will follow up.`;
       }
@@ -129,8 +147,8 @@ export async function PATCH(req: NextRequest) {
   }
 
   const result = action === 'cancel'
-    ? await performCancellation(id)
-    : await performCheckIn(id, { ...(paymentMethodId ? { externalPaymentMethodId: paymentMethodId } : {}), ...(cip !== undefined ? { checkedInPlayers: cip } : {}) });
+    ? await performCancellation(id, { type: 'staff', id: session.staffId ?? session.operatorId })
+    : await performCheckIn(id, { type: 'staff', id: session.staffId ?? session.operatorId }, { ...(paymentMethodId ? { externalPaymentMethodId: paymentMethodId } : {}), ...(cip !== undefined ? { checkedInPlayers: cip } : {}) });
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status });
   return NextResponse.json(result);
 }
@@ -184,7 +202,7 @@ export async function POST(req: NextRequest) {
       paidOffline: checkInNow,
       source,
       cancellationHoursAtBooking: teeTime.course.cancellationHours,
-    });
+    }, { type: 'staff', id: session.staffId ?? session.operatorId });
   } catch (err) {
     if (err instanceof TeeTimeClaimError) {
       if (err.code === 'NOT_FOUND') return NextResponse.json({ error: 'Tee time not found' }, { status: 404 });

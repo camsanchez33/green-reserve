@@ -71,7 +71,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
     return NextResponse.json({ error: 'A cart can\'t be added to this booking online — ask at the pro shop and check in there.' }, { status: 409 });
   }
 
-  const result = await performCheckIn(bookingId, { externalPaymentMethodId: paymentMethodId || undefined, addCart: addCart === true });
+  const result = await performCheckIn(bookingId, { type: 'golfer' }, { externalPaymentMethodId: paymentMethodId || undefined, addCart: addCart === true });
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status });
   return NextResponse.json(result);
 }

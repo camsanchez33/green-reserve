@@ -49,7 +49,7 @@ export async function PATCH(req: NextRequest) {
     // fired no tee-time alerts, and had no already-cancelled guard, so two
     // clicks decremented playersBooked twice and overbooked the slot. The
     // vetted service does all of it; there is exactly one cancellation path.
-    const result = await performCancellation(body.bookingId);
+    const result = await performCancellation(body.bookingId, { type: 'admin', id: session.adminId });
     if ('error' in result) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
       totalAmount,
       paymentStatus: 'manual',
       status: 'confirmed',
-    });
+    }, { type: 'admin', id: session.adminId });
     return NextResponse.json({ success: true, bookingId: claimed.id });
   } catch (err) {
     if (err instanceof TeeTimeClaimError) {

@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const result = await performCancellation(bookingId);
+  const result = await performCancellation(bookingId, { type: 'golfer', id: golferSession?.golferId ?? null });
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status });
   return NextResponse.json(result);
 }

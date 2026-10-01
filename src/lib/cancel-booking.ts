@@ -2,6 +2,7 @@ import { prisma } from './prisma';
 import { sendCancellationEmail, sendTeeTimeAlertEmail } from './email';
 import { refundOnConnectedAccount } from './stripe';
 import { refundSeparateAccessFee } from './access-fee';
+import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
 
 export type CancellationOptions = {
   /**
@@ -19,13 +20,13 @@ export type CancellationOptions = {
   waiveFee?: boolean;
 };
 
-export async function performCancellation(bookingId: string, opts: CancellationOptions = {}) {
+export async function performCancellation(bookingId: string, actor: EventActor, opts: CancellationOptions = {}) {
   const { notifySlotAlerts = true, reason, waiveFee = false } = opts;
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
       teeTime: true,
-      course: { select: { name: true, slug: true, cancellationHours: true, stripeAccountId: true } },
+      course: { select: { name: true, slug: true, cancellationHours: true, stripeAccountId: true, timezone: true } },
     },
   });
 
@@ -48,11 +49,17 @@ export async function performCancellation(bookingId: string, opts: CancellationO
       return { error: 'This round was already paid but the course has no connected Stripe account — refund it manually before cancelling.', status: 409 } as const;
     }
     try {
-      await refundOnConnectedAccount({
+      const refund = await refundOnConnectedAccount({
         paymentIntentId: booking.roundPaymentIntentId as string,
         connectedAccountId: booking.course.stripeAccountId,
       });
       roundRefunded = true;
+      await recordBookingEventSafe({
+        bookingId, courseId: booking.courseId, type: 'fee_refunded', actor,
+        amountCents: refund.amount, playerCount: booking.checkedInPlayers ?? booking.players,
+        teeTimeAt: teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time),
+        stripeId: refund.id, metadata: { reason: 'round_refunded_on_cancel' },
+      });
       console.log(JSON.stringify({ ev: 'cancel.round_refund.ok', bookingId, paymentIntentId: booking.roundPaymentIntentId }));
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -65,8 +72,14 @@ export async function performCancellation(bookingId: string, opts: CancellationO
   let feeRefundFailed = '';
   if (feeAlreadyCharged && waiveFee && booking.cancellationFeeChargeId && booking.course.stripeAccountId) {
     try {
-      await refundOnConnectedAccount({ paymentIntentId: booking.cancellationFeeChargeId, connectedAccountId: booking.course.stripeAccountId });
+      const refund = await refundOnConnectedAccount({ paymentIntentId: booking.cancellationFeeChargeId, connectedAccountId: booking.course.stripeAccountId });
       feeAlreadyCharged = false;
+      await recordBookingEventSafe({
+        bookingId, courseId: booking.courseId, type: 'fee_refunded', actor,
+        amountCents: refund.amount, playerCount: booking.players,
+        teeTimeAt: teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time),
+        stripeId: refund.id, metadata: { reason: 'late_fee_waived' },
+      });
       console.log(JSON.stringify({ ev: 'cancel.fee_waived.ok', bookingId, paymentIntentId: booking.cancellationFeeChargeId }));
     } catch (err) {
       feeRefundFailed = err instanceof Error ? err.message : String(err);
@@ -85,8 +98,9 @@ export async function performCancellation(bookingId: string, opts: CancellationO
   // (MP-3's cancellationFeeApplies flag replaces this with a real state.)
   const clearPhantomFee = !feeAlreadyCharged && booking.cancellationFeeTotal > 0;
 
-  await prisma.$transaction([
-    prisma.booking.update({
+  // EV-1: the cancel and its booking_cancelled event commit together.
+  await prisma.$transaction(async (tx) => {
+    await tx.booking.update({
       where: { id: bookingId },
       data: {
         status: 'cancelled',
@@ -95,12 +109,18 @@ export async function performCancellation(bookingId: string, opts: CancellationO
         ...(roundRefunded ? { paymentStatus: 'refunded', roundPaymentIntentId: '' } : {}),
         ...(waiveFee && !feeAlreadyCharged && booking.paymentStatus === 'cancellation_fee_charged' ? { paymentStatus: 'refunded', cancellationFeeApplies: false } : {}),
       },
-    }),
-    prisma.teeTime.update({
+    });
+    await tx.teeTime.update({
       where: { id: booking.teeTimeId },
       data: { playersBooked: { decrement: booking.players }, status: 'available' },
-    }),
-  ]);
+    });
+    await recordBookingEvent(tx, {
+      bookingId, courseId: booking.courseId, type: 'booking_cancelled', actor,
+      amountCents: feeAlreadyCharged ? booking.cancellationFeeTotal : 0, playerCount: booking.players,
+      teeTimeAt: teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time),
+      metadata: { feeKept: feeAlreadyCharged, roundRefunded, ...(opts.reason ? { reason: opts.reason } : {}) },
+    });
+  });
 
   // Find all unnotified alerts for this slot (specific-slot or criteria-based)
   const alerts = notifySlotAlerts ? await prisma.teeTimeAlert.findMany({

@@ -273,7 +273,7 @@ export async function POST(req: NextRequest) {
       cancellationHoursAtBooking: teeTimeFull.course.cancellationHours,
       termsAcceptedAt:  new Date(),
       termsVersion:     CURRENT_TERMS_VERSION,
-    });
+    }, { type: 'golfer', id: golferSession?.golferId ?? null });
   } catch (err) {
     if (err instanceof TeeTimeClaimError) {
       if (err.code === 'NOT_FOUND') return NextResponse.json({ error: 'Tee time not found.' }, { status: 404 });
