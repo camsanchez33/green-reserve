@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { ErrorBanner } from '@/components/ui/ErrorState';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Send, MessageSquare, ArrowUpRight, RefreshCw, Radio, Mail, Users, Archive } from 'lucide-react';
+import { Send, MessageSquare, ArrowUpRight, RefreshCw, Radio, Mail, Users, Archive, CheckCircle2, RotateCcw } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -21,6 +21,7 @@ interface ThreadSummary {
   id: string; courseId: string; courseName: string; courseSlug: string;
   courseActive: boolean; courseArchived: boolean;
   lastMessage: MessageItem | null; unreadCount: number; updatedAt: string;
+  closedAt: string | null;
   // MP-7a: computed server-side by lib/thread-signal — the same derivation
   // the Overview's action queue uses, so the two can never disagree.
   signal: ThreadSignal;
@@ -29,13 +30,18 @@ interface FullThread {
   id: string | null; courseId: string; messages: MessageItem[];
   course: { name: string; slug: string; active: boolean; archivedAt: string | null };
   inquiryId: string | null;
+  closedAt: string | null;
+  context: {
+    operator: { name: string; email: string; phone: string; lastLoginAt: string | null } | null;
+    firstWentLiveAt: string | null; lastBookingAt: string | null; bookings30d: number;
+  } | null;
 }
 interface Broadcast {
   id: string; title: string; body: string; emailSent: boolean;
   sentByName: string; createdAt: string; dismissalCount: number;
 }
 interface SendOutcome {
-  threadInserts: number; threadFailures: string[];
+  courses: number;
   emailRequested: boolean; emailRecipients: number; emailsSent: number; emailFailures: string[];
 }
 
@@ -74,6 +80,8 @@ function MessagesContent() {
   const [listError, setListError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
   const [threadError, setThreadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
   const [sendError, setSendError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
+  const [showClosed, setShowClosed] = useState(false);
+  const [closing, setClosing] = useState(false);
   // MP-2e: cleared on conversation switch — the banner about course A used to
   // hang over course B's composer.
   useEffect(() => { setSendError(null); }, [selectedCourseId]);
@@ -134,6 +142,24 @@ function MessagesContent() {
   // past setSending(false) and latched the button on "Sending..." forever. The
   // failure path was also alert('Forbidden'), which is neither inline nor
   // explanatory. Mutations go through the classifier now, same as loads.
+  // MP-7b: close a finished conversation / reopen it. Errors show inline.
+  async function setClosed(close: boolean) {
+    if (!selectedCourseId || closing) return;
+    setClosing(true); setSendError(null);
+    try {
+      const res = await adminFetch('/api/admin/messages', {
+        method: 'PATCH',
+        body: JSON.stringify({ courseId: selectedCourseId, action: close ? 'close' : 'reopen' }),
+        subject: 'this conversation',
+        action: 'save',
+      });
+      if (!res.ok) { setSendError({ msg: res.message, kind: res.kind }); return; }
+      await loadThread(selectedCourseId);
+    } finally {
+      setClosing(false);
+    }
+  }
+
   async function sendMessage() {
     if (!selectedCourseId || !compose.trim() || sending) return;
     setSending(true); setSendError(null);
@@ -155,7 +181,10 @@ function MessagesContent() {
   const q = search.toLowerCase().trim();
   // MP-7a: waiting-on-us first, oldest wait at the top, then by activity —
   // the order the Overview already implied and this list never had.
-  const filteredThreads = (q ? threads.filter(t => t.courseName.toLowerCase().includes(q)) : threads).slice().sort(compareThreads);
+  const matched = (q ? threads.filter(t => t.courseName.toLowerCase().includes(q)) : threads).slice().sort(compareThreads);
+  // MP-7b: closed conversations sink into their own group.
+  const filteredThreads = matched.filter(t => !t.closedAt);
+  const closedThreads = matched.filter(t => t.closedAt);
   const totalUnread = threads.reduce((s, t) => s + t.unreadCount, 0);
   const waitingCount = threads.filter(t => t.signal.waitingOnUs).length;
 
@@ -163,46 +192,7 @@ function MessagesContent() {
   const archivedThread = !!thread?.course.archivedAt;
   const composerLocked = denied || archivedThread;
 
-  if (!adminReady) return null;
-
-  return (
-    <div className="h-screen bg-paper flex overflow-hidden">
-      <AdminSidebar active="messages" unreadMessages={totalUnread} />
-      <div className="admin-content flex-1 flex overflow-hidden">
-
-        {/* Thread list */}
-        <div className="w-72 shrink-0 border-r border-line flex flex-col bg-white overflow-hidden">
-          <div className="px-4 py-4 border-b border-line shrink-0">
-            <div className="flex items-center justify-between mb-3">
-              <h1 className="text-[15px] font-serif font-medium text-ink">Messages</h1>
-              {waitingCount > 0 && (
-                <span className="text-[11px] text-warn font-medium">{waitingCount} waiting on you</span>
-              )}
-            </div>
-            {/* MP-7a: Broadcasts merged in. A broadcast is a message inserted
-                into every thread, so its composer belongs in the same room. */}
-            <div className="flex gap-0.5 bg-paper border border-line rounded-md p-0.5 mb-3">
-              {([['conversations', 'Conversations'], ['announcements', 'Announcements']] as [View, string][]).map(([v, label]) => (
-                <button key={v} onClick={() => setView(v)}
-                  className={'flex-1 px-2 py-1 rounded text-[11px] font-medium transition-colors ' + (view === v ? 'bg-white text-ink border border-line' : 'text-ink-muted hover:text-ink')}>
-                  {label}
-                </button>
-              ))}
-            </div>
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search courses..."
-              className="w-full bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40"
-            />
-          </div>
-          <div className="flex-1 overflow-y-auto">
-            {filteredThreads.length === 0 && (
-              <div className={'px-4 py-8 text-center text-xs ' + (listError ? 'text-bad' : 'text-ink-muted')}>
-                {listError ? listError.msg : (threads.length === 0 ? 'No messages yet.' : 'No matches.')}
-              </div>
-            )}
-            {filteredThreads.map(t => {
+  const renderRow = (t: ThreadSummary) => {
               const isSelected = t.courseId === selectedCourseId && view === 'conversations';
               return (
                 <button
@@ -249,7 +239,56 @@ function MessagesContent() {
                   )}
                 </button>
               );
-            })}
+  };
+
+  if (!adminReady) return null;
+
+  return (
+    <div className="h-screen bg-paper flex overflow-hidden">
+      <AdminSidebar active="messages" unreadMessages={totalUnread} />
+      <div className="admin-content flex-1 flex overflow-hidden">
+
+        {/* Thread list */}
+        <div className="w-72 shrink-0 border-r border-line flex flex-col bg-white overflow-hidden">
+          <div className="px-4 py-4 border-b border-line shrink-0">
+            <div className="flex items-center justify-between mb-3">
+              <h1 className="text-[15px] font-serif font-medium text-ink">Messages</h1>
+              {waitingCount > 0 && (
+                <span className="text-[11px] text-warn font-medium">{waitingCount} waiting on you</span>
+              )}
+            </div>
+            {/* MP-7a: Broadcasts merged in. A broadcast is a message inserted
+                into every thread, so its composer belongs in the same room. */}
+            <div className="flex gap-0.5 bg-paper border border-line rounded-md p-0.5 mb-3">
+              {([['conversations', 'Conversations'], ['announcements', 'Announcements']] as [View, string][]).map(([v, label]) => (
+                <button key={v} onClick={() => setView(v)}
+                  className={'flex-1 px-2 py-1 rounded text-[11px] font-medium transition-colors ' + (view === v ? 'bg-white text-ink border border-line' : 'text-ink-muted hover:text-ink')}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search courses..."
+              className="w-full bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40"
+            />
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {filteredThreads.length === 0 && (
+              <div className={'px-4 py-8 text-center text-xs ' + (listError ? 'text-bad' : 'text-ink-muted')}>
+                {listError ? listError.msg : threads.length === 0 ? 'No messages yet.' : closedThreads.length > 0 ? 'Nothing open — every conversation is closed.' : 'No matches.'}
+              </div>
+            )}
+            {filteredThreads.map(renderRow)}
+            {closedThreads.length > 0 && (
+              <>
+                <button onClick={() => setShowClosed(v => !v)} className="w-full text-left px-4 py-2.5 text-[12px] font-medium text-ink-muted hover:text-ink border-b border-line bg-paper/70">
+                  Closed · {closedThreads.length} {showClosed ? '— hide' : '— show'}
+                </button>
+                {showClosed && closedThreads.map(renderRow)}
+              </>
+            )}
           </div>
         </div>
 
@@ -280,10 +319,30 @@ function MessagesContent() {
                     {thread && !archivedThread && !thread.course.active && <StatusDot status="neutral" label="Not live" />}
                   </div>
                   <div className="text-xs text-ink-muted mt-0.5">
-                    {archivedThread ? 'This course is archived — its operator has left the platform.' : 'Conversation with this course operator'}
+                    {archivedThread ? 'This course is archived — its operator has left the platform.'
+                      : thread?.closedAt ? `Closed ${fmtDate(thread.closedAt)} — a new message from either side reopens it.`
+                      : 'Conversation with this course operator'}
                   </div>
+                  {/* MP-7b: context for the reply, so it doesn't need a tab hop. */}
+                  {thread?.context && (
+                    <div className="text-xs text-ink-soft mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5">
+                      {thread.context.operator && (
+                        <span>{thread.context.operator.name} · <a href={`mailto:${thread.context.operator.email}`} className="hover:text-pine">{thread.context.operator.email}</a>{thread.context.operator.phone ? ` · ${thread.context.operator.phone}` : ''}</span>
+                      )}
+                      <span>{thread.context.operator?.lastLoginAt ? `Last dashboard login ${fmtTime(thread.context.operator.lastLoginAt)}` : 'Never logged in'}</span>
+                      <span>{thread.context.bookings30d} booking{thread.context.bookings30d === 1 ? '' : 's'} in 30 days{thread.context.lastBookingAt ? ` · last ${fmtTime(thread.context.lastBookingAt)}` : ''}</span>
+                      <span>{thread.context.firstWentLiveAt ? `Live since ${new Date(thread.context.firstWentLiveAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : 'Never gone live'}</span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
+                  {thread?.id && !archivedThread && !denied && (
+                    <button onClick={() => setClosed(!thread.closedAt)} disabled={closing}
+                      className="flex items-center gap-1.5 text-xs font-medium text-ink-soft hover:text-ink border border-line hover:border-line-strong px-3 py-1.5 rounded-md transition-colors disabled:opacity-50">
+                      {thread.closedAt ? <RotateCcw className="w-3.5 h-3.5"/> : <CheckCircle2 className="w-3.5 h-3.5"/>}
+                      {closing ? 'Saving…' : thread.closedAt ? 'Reopen' : 'Close'}
+                    </button>
+                  )}
                   <button
                     onClick={() => loadThread(selectedCourseId)}
                     className="w-8 h-8 flex items-center justify-center rounded-md text-ink-muted hover:text-ink hover:bg-paper transition-colors"
@@ -410,6 +469,26 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
   const [reach, setReach] = useState<{ courses: number; operators: number } | null>(null);
   const [outcome, setOutcome] = useState<SendOutcome | null>(null);
   const [sendErr, setSendErr] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
+  // MP-7b: send-test-to-self — emails only the signed-in admin, records nothing.
+  const [testing, setTesting] = useState(false);
+  const [testNote, setTestNote] = useState('');
+
+  async function sendTest() {
+    if (!title.trim() || !body.trim() || testing) return;
+    setTesting(true); setTestNote(''); setSendErr(null);
+    try {
+      const res = await adminFetch<{ sentTo: string }>('/api/admin/broadcasts', {
+        method: 'POST',
+        body: JSON.stringify({ title: title.trim(), body: body.trim(), test: true }),
+        subject: 'the test email',
+        action: 'send',
+      });
+      if (!res.ok) { setSendErr({ msg: res.message, kind: res.kind }); return; }
+      setTestNote(`Test sent to ${res.data.sentTo} — nobody else got it.`);
+    } finally {
+      setTesting(false);
+    }
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -444,7 +523,7 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
     }
   }
 
-  const outcomeBad = outcome && (outcome.threadFailures.length > 0 || outcome.emailFailures.length > 0 || (outcome.emailRequested && outcome.emailsSent === 0));
+  const outcomeBad = outcome && (outcome.emailFailures.length > 0 || (outcome.emailRequested && outcome.emailsSent === 0));
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -453,7 +532,7 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
           <div>
             <h2 className="text-[18px] font-serif font-medium tracking-tight text-ink">Announcements</h2>
             <p className="text-sm text-ink-soft mt-0.5">
-              One message into every live course&apos;s thread{reach ? ` — ${reach.courses} course${reach.courses === 1 ? '' : 's'}, ${reach.operators} operator${reach.operators === 1 ? '' : 's'} right now` : ''}.
+              Shown on every live course&apos;s dashboard{reach ? ` — ${reach.courses} course${reach.courses === 1 ? '' : 's'}, ${reach.operators} operator${reach.operators === 1 ? '' : 's'} right now` : ''}.
             </p>
           </div>
           <button onClick={load} className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors">
@@ -468,14 +547,11 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
         {outcome && (
           <div className={'rounded-md px-4 py-3 text-sm mb-5 border ' + (outcomeBad ? 'bg-warn/5 border-warn/20 text-ink' : 'bg-ok/5 border-ok/20 text-ok')}>
             <div className="font-medium">
-              Posted to {outcome.threadInserts} course thread{outcome.threadInserts === 1 ? '' : 's'}
+              Posted to {outcome.courses} course dashboard{outcome.courses === 1 ? '' : 's'}
               {outcome.emailRequested ? ` · ${outcome.emailsSent} of ${outcome.emailRecipients} email${outcome.emailRecipients === 1 ? '' : 's'} delivered to Resend` : ' · no email'}
             </div>
-            {outcome.threadFailures.length > 0 && (
-              <div className="text-xs text-bad mt-1">Could not post to: {outcome.threadFailures.join(', ')}.</div>
-            )}
             {outcome.emailFailures.length > 0 && (
-              <div className="text-xs text-bad mt-1">Email failed for: {outcome.emailFailures.join(', ')} — they still see it in their dashboard thread.</div>
+              <div className="text-xs text-bad mt-1">Email failed for: {outcome.emailFailures.join(', ')} — they still see it on their dashboard.</div>
             )}
           </div>
         )}
@@ -530,16 +606,24 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
                   <div className="text-sm text-ink-soft whitespace-pre-line leading-relaxed">{body}</div>
                 </div>
                 <div className="text-xs text-ink-soft bg-pine/5 border border-pine/20 rounded-md px-3 py-2">
-                  Posts into {reach ? `${reach.courses} course thread${reach.courses === 1 ? '' : 's'}` : 'every live course’s thread'}
+                  Shows on {reach ? `${reach.courses} course dashboard${reach.courses === 1 ? '' : 's'}` : 'every live course’s dashboard'}
                   {sendEmail ? ` and emails ${reach ? `${reach.operators} operator${reach.operators === 1 ? '' : 's'}` : 'their operators'}.` : '. No email.'}
                   {' '}This cannot be recalled.
                 </div>
-                <div className="flex gap-3 pt-1">
+                {testNote && <div className="text-xs text-ok">{testNote}</div>}
+                <div className="flex flex-wrap gap-3 pt-1">
                   <button
                     onClick={() => setReviewing(false)}
                     className="px-4 py-2.5 border border-line text-ink-soft hover:text-ink hover:border-line-strong rounded-md text-[12.5px] font-medium transition-colors"
                   >
                     Back to edit
+                  </button>
+                  <button
+                    onClick={sendTest}
+                    disabled={testing || sending}
+                    className="flex items-center gap-2 px-4 py-2.5 border border-line text-ink-soft hover:text-ink hover:border-line-strong disabled:opacity-40 rounded-md text-[12.5px] font-medium transition-colors"
+                  >
+                    <Mail className="w-4 h-4"/>{testing ? 'Sending test…' : 'Send test to me'}
                   </button>
                   <button
                     onClick={sendBroadcast}

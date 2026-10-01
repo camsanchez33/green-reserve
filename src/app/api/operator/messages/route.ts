@@ -71,8 +71,8 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // Touch thread updatedAt
-  await prisma.messageThread.update({ where: { id: thread.id }, data: {} });
+  // Touch thread updatedAt; MP-7b: a new message reopens a closed thread.
+  await prisma.messageThread.update({ where: { id: thread.id }, data: { closedAt: null } });
 
   // Email admin if not already notified recently
   const freshThread = await prisma.messageThread.findUnique({ where: { id: thread.id } });

@@ -1,18 +1,22 @@
 'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Send, MessageSquare, Radio } from 'lucide-react';
+import { Send, MessageSquare, Radio, Megaphone } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import { formatStamp as fmtFull } from '@/lib/format';
+import { Card } from '@/components/ui/Card';
+import { Eyebrow } from '@/components/ui/Eyebrow';
 
 interface MessageItem {
   id: string; senderType: 'admin' | 'operator'; senderName: string;
   body: string; readAt: string | null; isBroadcast: boolean; createdAt: string;
 }
 interface Thread { id: string; messages: MessageItem[]; }
+// MP-7b: announcements are stored once and read here; read = dismissed.
+interface AnnouncementItem { id: string; title: string; body: string; createdAt: string; read: boolean }
 
 function MessagesContent() {
   const router = useRouter();
@@ -26,6 +30,21 @@ function MessagesContent() {
   const [compose, setCompose] = useState(() => searchParams.get('prefill') || '');
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
+  const [annError, setAnnError] = useState('');
+  const [openAnn, setOpenAnn] = useState<string | null>(null);
+
+  const loadAnnouncements = useCallback(async () => {
+    const r = await dfetch<AnnouncementItem[]>('/api/operator/announcements?all=1');
+    if (r.ok) { setAnnouncements(Array.isArray(r.data) ? r.data : []); setAnnError(''); }
+    else if (r.status !== 401) setAnnError(r.error);
+  }, []);
+
+  async function markRead(id: string) {
+    const r = await dfetch('/api/operator/announcements/dismiss', { method: 'POST', body: JSON.stringify({ announcementId: id }) });
+    if (r.ok) setAnnouncements(list => list.map(a => a.id === id ? { ...a, read: true } : a));
+    else toast(r.error);
+  }
 
   const loadThread = useCallback(async () => {
     const r = await dfetch<Thread>('/api/operator/messages');
@@ -44,7 +63,8 @@ function MessagesContent() {
       if (p.onboardingStep < 3) { router.push('/dashboard/onboarding'); return; }
     }).catch(() => {});
     loadThread();
-  }, [router, loadThread]);
+    loadAnnouncements();
+  }, [router, loadThread, loadAnnouncements]);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [thread?.messages?.length]);
 
@@ -77,6 +97,30 @@ function MessagesContent() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+          {annError && <LoadError message={`Couldn't load announcements — ${annError}`} onRetry={loadAnnouncements} />}
+          {announcements.length > 0 && (
+            <Card id="announcements">
+              <div className="flex items-center gap-2 px-4 pt-3 pb-2">
+                <Megaphone className="w-3.5 h-3.5 text-pine"/>
+                <Eyebrow as="span">From GreenReserve</Eyebrow>
+                {announcements.some(a => !a.read) && <span className="text-[11px] text-pine font-semibold">{announcements.filter(a => !a.read).length} new</span>}
+              </div>
+              <ul className="divide-y divide-line">
+                {announcements.slice(0, openAnn === 'all' ? undefined : 3).map(a => (
+                  <li key={a.id} className="px-4 py-2.5">
+                    <button onClick={() => { setOpenAnn(o => o === a.id ? null : a.id); if (!a.read) markRead(a.id); }} className="w-full flex items-baseline justify-between gap-3 text-left">
+                      <span className={'text-[13.5px] truncate ' + (a.read ? 'text-ink-soft' : 'text-ink font-semibold')}>{a.title}</span>
+                      <span className="shrink-0 text-[11px] text-ink-faint">{fmtFull(a.createdAt)}</span>
+                    </button>
+                    {openAnn === a.id && <p className="mt-1.5 text-[13px] text-ink-soft whitespace-pre-wrap leading-relaxed">{a.body}</p>}
+                  </li>
+                ))}
+              </ul>
+              {announcements.length > 3 && openAnn !== 'all' && (
+                <button onClick={() => setOpenAnn('all')} className="w-full px-4 py-2 text-[12.5px] font-semibold text-pine hover:underline underline-offset-4 text-left border-t border-line">Show all {announcements.length}</button>
+              )}
+            </Card>
+          )}
           {loadError && <LoadError message={loadError} onRetry={loadThread} />}
           {loading && <div className="text-center py-10 text-ink-muted text-sm">Loading...</div>}
           {!loading && messages.length === 0 && (

@@ -5,8 +5,8 @@
 // so the Overview could say "unanswered · 38d" about a thread the inbox showed
 // as just another row. Both read from here now.
 //
-// Announcements are ignored on purpose. A broadcast inserts an admin-authored
-// message into every thread, so without this rule sending one would make every
+// Announcements are ignored on purpose. A broadcast used to insert an
+// admin-authored message into every thread (MP-7b stopped that; old copies remain), so without this rule sending one would make every
 // operator's open question look answered.
 
 export const UNANSWERED_AFTER_DAYS = 2;
@@ -27,9 +27,12 @@ export interface ThreadSignal {
   lastHumanAt: Date | null;
 }
 
-/** `messages` newest-first — the order every list query already uses. */
-export function threadSignal(messages: SignalMessage[], now: Date = new Date()): ThreadSignal {
+/** `messages` newest-first — the order every list query already uses.
+ *  MP-7b: a CLOSED thread is never waiting on us — closing is the admin
+ *  saying it's finished; a new message from either side reopens it. */
+export function threadSignal(messages: SignalMessage[], now: Date = new Date(), closedAt?: Date | string | null): ThreadSignal {
   const last = messages.find(m => !m.isBroadcast) ?? null;
+  if (closedAt) return { waitingOnUs: false, ageDays: 0, overdue: false, lastHumanAt: last ? new Date(last.createdAt) : null };
   if (!last) return { waitingOnUs: false, ageDays: 0, overdue: false, lastHumanAt: null };
   const at = new Date(last.createdAt);
   const ageDays = Math.max(0, Math.floor((now.getTime() - at.getTime()) / 86400000));

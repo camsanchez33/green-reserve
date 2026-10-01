@@ -1525,6 +1525,21 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       closedAt so a finished conversation stops competing for attention;
       per-thread context card (course health, last booking, open items) so a
       reply does not need a tab hop; send-test-to-self on the composer.
+      BUILT 2026-10-01 (Cam: "keep going with the queue"). ONE additive migration
+      (20261001063107_thread_closed_at: nullable MessageThread.closedAt) — verified with
+      migrate deploy from scratch + zero schema diff on local Postgres. (1) Stored once:
+      broadcasts POST no longer copies the announcement into every thread (old copies stay
+      as history); operators read it from the Announcement row — the dashboard banner
+      (reskinned: white bar, pine, no amber / font-black) and a new "From GreenReserve"
+      list on /dashboard/messages (read = their dismissal, opening one marks it read).
+      (2) Close/Reopen in the admin thread header; closed threads sink to a "Closed" group,
+      never count as waiting on us (threadSignal takes closedAt; Overview skips them); any
+      new message from either side reopens. (3) Context line in the thread header:
+      operator name/email/phone, last dashboard login, 30-day bookings + last booking,
+      live since. (4) "Send test to me" in the announcement review step — emails only the
+      signed-in admin, records nothing; a failure is shown. Verified locally end to end
+      (no Message rows on broadcast; close → Closed group; operator reply reopens).
+      Box open until a live look after deploy.
   - [ ] MP-8 — chrome + System (split into 8a–8b)
     - [x] MP-8a (4eb1c9d, fix 892af22) — sidebar nav items are real <Link>s (middle/cmd-click
       work); ONE /api/admin/nav-badges fetch feeds inquiries + messages + money
