@@ -767,7 +767,7 @@
     },
     {
       "path": "src/app/admin/layout.tsx",
-      "lines": 38,
+      "lines": 37,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -12371,18 +12371,10 @@
     },
     {
       "path": "src/lib/staff-fonts.ts",
-      "lines": 26,
-      "purpose": "",
+      "lines": 10,
+      "purpose": "U-0 (UI_REVISE_SPEC §1b) used to give /dashboard and /admin their own STAFF look here:",
       "brain": [],
       "exports": [
-        {
-          "name": "newsreader",
-          "kind": "const"
-        },
-        {
-          "name": "sourceSans",
-          "kind": "const"
-        },
         {
           "name": "STAFF_LOOK_CLASS",
           "kind": "const"
@@ -12393,9 +12385,7 @@
       "methods": [],
       "auth": null,
       "guard": null,
-      "imports": [
-        "next/font/google"
-      ],
+      "imports": [],
       "usedBy": [
         "src/app/admin/layout.tsx",
         "src/app/dashboard/layout.tsx"

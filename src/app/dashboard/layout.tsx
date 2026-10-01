@@ -6,8 +6,8 @@
 import type { Metadata } from 'next';
 import { STAFF_LOOK_CLASS } from '@/lib/staff-fonts';
 export const metadata: Metadata = { robots: { index: false, follow: false } };
-// U-0: the STAFF look (UI_REVISE_SPEC §1b) for every /dashboard route — see
-// src/lib/staff-fonts.ts and `.staff-look` in globals.css.
+// The staff wrapper (src/lib/staff-fonts.ts). Since FLOW-1 it carries no look
+// of its own — the dashboard renders in the site's one look.
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return <div className={STAFF_LOOK_CLASS}>{children}</div>;
 }
