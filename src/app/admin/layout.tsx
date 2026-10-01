@@ -26,9 +26,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     if (err instanceof AdminSessionUnavailable) unavailable = true;
     else throw err;
   }
-  // U-0: the STAFF look (UI_REVISE_SPEC §1b) — Newsreader / Source Sans 3,
-  // square corners, the staff palette — is switched on here for every /admin
-  // route by one wrapper. `display: contents` keeps it out of the box tree.
+  // The staff wrapper (src/lib/staff-fonts.ts). Since FLOW-1 it carries no
+  // look of its own — admin renders in the site's one look.
   return (
     <AdminSessionProvider session={session} unavailable={unavailable}>
       <div className={STAFF_LOOK_CLASS}>{children}</div>

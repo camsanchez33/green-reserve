@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
+import PlainHeader from '@/components/PlainHeader';
 import { ArrowLeft, Calendar, CheckCircle, Globe, HelpCircle, Lock, Mail } from 'lucide-react';
 import { calcomEmbedUrl } from '@/lib/calcom-url';
 
@@ -430,15 +430,21 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
 
   return (
     <div className="min-h-screen bg-paper">
-      <div className="relative bg-pine px-6 py-10 text-center">
-        <Link href="/" className="absolute left-6 top-6 inline-flex items-center gap-1.5 text-white/60 hover:text-white transition-colors text-sm">
+      {/* FLOW-1 (Cam 2026-10-01): the homepage's header and type, not a pine
+          band — the page a "Send an inquiry" click lands on should read as the
+          same site. Logo top-left as on `/`; the demo stays one click away. */}
+      <PlainHeader right={
+        <a href="/demo" className="inline-flex items-center h-[42px] px-4 rounded-md bg-pine hover:bg-pine-hover text-white text-[15px] font-semibold transition-colors">
+          Book a demo
+        </a>
+      } />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12">
+        <Link href="/" className="inline-flex items-center gap-1.5 text-ink-muted hover:text-ink transition-colors text-sm">
           <ArrowLeft size={14} /> Back
         </Link>
-        <Link href="/" className="inline-block">
-          <Image src="/brand/logo-cream.svg" unoptimized alt="GreenReserve" width={88} height={44} priority className="h-11 w-auto mx-auto" />
-        </Link>
-        <h1 className="text-white text-3xl sm:text-4xl font-serif font-medium mt-4 mb-2 tracking-tight">Get your course listed</h1>
-        <p className="text-white/50 text-sm">Free to list. $0 / month. Golfers pay our $1.50 per player — added to their total, not taken from your green fee.</p>
+        <p className="mt-6 text-[13px] font-semibold uppercase tracking-[0.08em] text-ink-muted">Send an inquiry</p>
+        <h1 className="mt-3 text-ink text-[34px] sm:text-[46px] leading-[1.05] font-serif font-bold tracking-[-0.02em]">Get your course listed</h1>
+        <p className="mt-3 text-ink-soft text-[17px] max-w-[40em]">Free to list. $0 / month. Golfers pay our $1.50 per player — added to their total, not taken from your green fee.</p>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 lg:py-14">
@@ -707,7 +713,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
                 {[
                   { stat: '$1.50', label: "Per player, added to the golfer's total" },
                   { stat: '0%', label: 'Commission on green fees' },
-                  { stat: '1–2 days', label: 'Typical setup time' },
+                  { stat: '$0', label: 'Setup or monthly fee' },
                 ].map(({ stat, label }) => (
                   <div key={stat} className="px-5 py-4">
                     <div className="text-2xl font-serif font-medium text-ink leading-none mb-1.5">{stat}</div>

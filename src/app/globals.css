@@ -1,52 +1,41 @@
 @import "tailwindcss";
 
 @theme {
-  /* Clubhouse palette */
-  --color-paper:       #F6F4EC;
+  /* FLOW-1 (Cam 2026-10-01: "the whole site flows together"): ONE palette for
+     every page, taken from the approved homepage (home.module.css .root) —
+     off-white ground, forest green, cool ink. The token NAMES are unchanged, so
+     every bg-paper / text-ink / bg-pine on the site picked this up at once. */
+  --color-paper:       #FAFAF7;
   --color-card:        #FFFFFF;
-  --color-ink:         #1C1C18;
-  --color-ink-soft:    #6E6D64;
-  --color-ink-muted:   #87867C;
-  --color-ink-faint:   #98968B;
-  --color-line:        #E6E3D7;
-  --color-line-soft:   #F0EDE2;
-  --color-line-strong: #D9D6C8;
-  --color-pine:        #24513B;
-  --color-pine-hover:  #2E6349;
-  --color-ok:          #3D6B4C;
+  --color-ink:         #141814;
+  --color-ink-soft:    #50554F;
+  --color-ink-muted:   #6B706A;
+  --color-ink-faint:   #979B94;
+  --color-line:        #E3E4DE;
+  --color-line-soft:   #EFF0EB;
+  --color-line-strong: #D3D5CD;
+  --color-pine:        #173B2A;
+  --color-pine-hover:  #0F2C1F;
+  --color-ok:          #3D7A55;
   --color-bad:         #A3452F;
-  --color-warn:        #8A6116;
-  --color-dot-neutral: #B3B1A6;
+  --color-warn:        #9A5B13;
+  --color-dot-neutral: #B3B6AF;
 
-  /* Fonts */
+  /* Fonts: Archivo everywhere, staff surfaces included (FLOW-1). */
   --font-sans:  'Archivo', system-ui, sans-serif;
   --font-serif: var(--font-sans);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
 
-/* U-0 — the STAFF look (UI_REVISE_SPEC §1b), scoped to /dashboard and /admin.
-   Tailwind v4 utilities resolve through theme variables (`rounded-md` is
-   `border-radius: var(--radius-md)`, `font-serif` is `var(--font-serif)`,
-   `bg-paper` is `var(--color-paper)`), so re-pointing those variables on one
-   wrapper reskins every existing class inside it: square corners, Newsreader
-   + Source Sans 3, the staff palette. Nothing outside the wrapper changes —
-   the public site keeps Archivo / rounded. `rounded-full` is not a
-   variable, so avatars, dots and swatches stay round on purpose. */
-.staff-look {
-  --font-sans:  var(--font-sans-staff), 'Source Sans 3', system-ui, sans-serif;
-  --font-serif: var(--font-serif-staff), 'Newsreader', Georgia, serif;
-  font-family: var(--font-sans);
-
-  --radius-xs: 0; --radius-sm: 0; --radius-md: 0; --radius-lg: 0;
-  --radius-xl: 0; --radius-2xl: 0; --radius-3xl: 0; --radius-4xl: 0;
-
-  --color-paper:     #F7F5EF;
-  --color-ink:       #1D1F1A;
-  --color-ink-soft:  #5D5F56;
-  --color-ink-muted: #8A8B80;
-  --color-line:      #E3E0D5;
-  --color-line-soft: #F0EDE2;
+/* FLOW-1: `font-serif` is the site's DISPLAY face — Archivo widened, as the
+   homepage headlines are. It was a real serif once (Fraunces, then Newsreader
+   on staff pages); the class name stayed so 140-odd headings needed no edit.
+   Base layer, so any tracking-* utility still wins over the letter-spacing.
+   The old `.staff-look` override (Newsreader / Source Sans 3, square corners,
+   a second palette) is gone: staff and public pages are one look now. */
+@layer base {
+  .font-serif { font-stretch: 115%; letter-spacing: -0.012em; }
 }
 
 /* MP-9 (ADMIN_V4 V4-6 §5): one keyboard focus ring, everywhere. Admin had
@@ -66,15 +55,15 @@
 }
 
 :root {
-  --green: #24513B;
-  --green-light: #2E6349;
+  --green: #173B2A;
+  --green-light: #0F2C1F;
   --gold: #c9a84c;
   --gold-hover: #b8942a;
 }
 
 body {
-  background: #F6F4EC;
-  color: #1C1C18;
+  background: var(--color-paper);
+  color: var(--color-ink);
 }
 
 /* Scroll reveal */

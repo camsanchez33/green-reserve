@@ -71,7 +71,7 @@ export default function Nav() {
             <Link href="/dashboard/login" className="hidden sm:inline text-ink-soft hover:text-ink text-[15px] font-medium transition-colors">
               Operator login
             </Link>
-            <a href="/demo" className="inline-flex items-center h-[42px] px-4 rounded-md bg-[#173B2A] hover:bg-[#0F2C1F] text-white text-[15px] font-semibold transition-colors">
+            <a href="/demo" className="inline-flex items-center h-[42px] px-4 rounded-md bg-pine hover:bg-pine-hover text-white text-[15px] font-semibold transition-colors">
               Book a demo
             </a>
           </div>
@@ -87,7 +87,7 @@ export default function Nav() {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/85 backdrop-blur-lg border-b border-black/5">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-paper/90 backdrop-blur-lg border-b border-line">
       <div className={`px-6 md:px-10 flex items-center justify-between transition-[height] duration-500 ${EASE} ${solid ? 'h-14' : 'h-16'}`}>
         <Link href="/" className="flex items-center shrink-0" aria-label="GreenReserve">
           <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={200} height={38} priority className="w-[180px] md:w-[200px] h-auto" />
@@ -99,7 +99,7 @@ export default function Nav() {
               {l.label}
             </Link>
           ))}
-          <Link href="/for-courses" className="ml-3 bg-pine hover:bg-pine-hover text-white text-[14.5px] font-semibold px-[18px] h-[42px] inline-flex items-center rounded-lg transition-colors">
+          <Link href="/for-courses" className="ml-3 bg-pine hover:bg-pine-hover text-white text-[15px] font-semibold px-4 h-[42px] inline-flex items-center rounded-md transition-colors">
             List your course
           </Link>
         </div>
@@ -120,7 +120,7 @@ export default function Nav() {
             {links.map(l => (
               <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="text-ink-soft hover:text-ink text-sm py-2">{l.label}</Link>
             ))}
-            <Link href="/for-courses" onClick={() => setOpen(false)} className="mt-2 bg-pine text-white text-sm font-medium px-4 py-2.5 rounded-lg text-center">List your course</Link>
+            <Link href="/for-courses" onClick={() => setOpen(false)} className="mt-2 bg-pine text-white text-sm font-semibold px-4 py-2.5 rounded-md text-center">List your course</Link>
           </div>
         </div>
       )}

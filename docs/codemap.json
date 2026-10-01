@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 362,
+    "files": 363,
     "routes": 201,
     "libs": 95,
     "models": 33,
@@ -767,7 +767,7 @@
     },
     {
       "path": "src/app/admin/layout.tsx",
-      "lines": 38,
+      "lines": 37,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5414,7 +5414,7 @@
     },
     {
       "path": "src/app/call/[token]/page.tsx",
-      "lines": 147,
+      "lines": 141,
       "purpose": "/call/[token] — the course books its discovery call.",
       "brain": [],
       "exports": [
@@ -5429,8 +5429,8 @@
       "auth": "public",
       "guard": "public",
       "imports": [
+        "@/components/PlainHeader",
         "lucide-react",
-        "next/image",
         "next/link",
         "next/navigation",
         "react"
@@ -6212,7 +6212,7 @@
     },
     {
       "path": "src/app/for-courses/ForCoursesContent.tsx",
-      "lines": 748,
+      "lines": 754,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6227,9 +6227,9 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/PlainHeader",
         "@/lib/calcom-url",
         "lucide-react",
-        "next/image",
         "next/link",
         "react"
       ],
@@ -6264,7 +6264,7 @@
     },
     {
       "path": "src/app/for-courses/details/page.tsx",
-      "lines": 1897,
+      "lines": 1893,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6279,9 +6279,9 @@
       "auth": "public",
       "guard": "token",
       "imports": [
+        "@/components/PlainHeader",
         "@/lib/image-resize",
         "lucide-react",
-        "next/image",
         "next/link",
         "next/navigation",
         "react"
@@ -6903,6 +6903,32 @@
         "src/app/dashboard/settings/page.tsx",
         "src/app/dashboard/tournaments/page.tsx",
         "src/lib/dashboard-visits.ts"
+      ]
+    },
+    {
+      "path": "src/components/PlainHeader.tsx",
+      "lines": 17,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (PlainHeader)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "next/image",
+        "next/link"
+      ],
+      "usedBy": [
+        "src/app/call/[token]/page.tsx",
+        "src/app/for-courses/ForCoursesContent.tsx",
+        "src/app/for-courses/details/page.tsx"
       ]
     },
     {
@@ -12371,18 +12397,10 @@
     },
     {
       "path": "src/lib/staff-fonts.ts",
-      "lines": 26,
-      "purpose": "",
+      "lines": 10,
+      "purpose": "U-0 (UI_REVISE_SPEC §1b) used to give /dashboard and /admin their own STAFF look here:",
       "brain": [],
       "exports": [
-        {
-          "name": "newsreader",
-          "kind": "const"
-        },
-        {
-          "name": "sourceSans",
-          "kind": "const"
-        },
         {
           "name": "STAFF_LOOK_CLASS",
           "kind": "const"
@@ -12393,9 +12411,7 @@
       "methods": [],
       "auth": null,
       "guard": null,
-      "imports": [
-        "next/font/google"
-      ],
+      "imports": [],
       "usedBy": [
         "src/app/admin/layout.tsx",
         "src/app/dashboard/layout.tsx"
