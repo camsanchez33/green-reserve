@@ -53,6 +53,17 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   (https + *.blob.vercel-storage.com) now gates course-documents download AND
   record (record also handed a client URL to the SDK with the token), and
   companyDocPathOf uses it.
+- [x] AN-1 — dashboard refactor + full Analytics tab — built 2026-10-01 (Cam's brief, no
+  migrations by Cam's OK). Part 0 audit answered in chat. /dashboard/analytics (owner only):
+  range Today/7d/30d/Season(Mar 1→)/Custom, compare to previous period, CSV per table;
+  Revenue, Utilization (+ day×hour heatmap), Unfilled slots, No-shows (30-min grace),
+  Cancellations, Customers (+ members), Booking behavior — lib/analytics.ts, all by
+  tee-time date. Tracking-starts-Oct-1 (EV-1 event log): who cancelled; expected-vs-collected
+  for partial parties; admin-made bookings' channel. Operational tabs stripped of tiles /
+  charts / intro cards; Money's Collected/Pending tiles → Analytics Revenue. Tee sheet: one
+  header line, rate shown once when uniform, denser rows, "Pay" quick action for counter
+  groups, setup checklist only while required setup is unfinished (collapsed). Past tee
+  times can't be deleted (API 409 + no button). Staff logins no longer see Analytics.
 - [x] BUG walk-in auto check-in — fixed 2026-10-01 (Cam: "when one person gets checked in it's
   automatically checking in other people"). No code path checks in >1 booking (every action is
   by booking id; verified). Cause: the walk-in form's "check in and mark paid now" box defaulted

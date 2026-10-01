@@ -9,8 +9,6 @@ import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
-import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
-import { useTabIntro } from '@/lib/use-tab-intro';
 import { formatMoney as fmtMoney, formatDate as fmtDate } from '@/lib/format';
 import { StatusDot } from '@/components/ui/StatusDot';
 
@@ -60,7 +58,6 @@ export default function MembersPage() {
   const [loadError, setLoadError] = useState('');
   const [view, setView] = useState<View>('list');
   const [panel, setPanel] = useState<'tiers' | 'members'>('tiers');
-  const intro = useTabIntro('members');
 
   const [wizStep, setWizStep] = useState(1);
   const [tierForm, setTierForm] = useState<Partial<Tier>>(emptyTier());
@@ -463,11 +460,7 @@ export default function MembersPage() {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Members</h1>
-                <TabIntroButton onClick={intro.show}/>
               </div>
-              <p className="text-[13.5px] text-ink-soft mt-2">
-                {tiers.length} tier{tiers.length !== 1 ? 's' : ''} · {members.filter(m => m.status === 'active').length} active member{members.filter(m => m.status === 'active').length !== 1 ? 's' : ''} of {members.length} on file
-              </p>
             </div>
             <div className="shrink-0 flex gap-1.5">
               {(['tiers', 'members'] as const).map(p => (
@@ -483,17 +476,6 @@ export default function MembersPage() {
 
         <div className="max-w-6xl mx-auto px-6 py-8">
 
-          <TabIntroCard
-            open={intro.open}
-            onDismiss={intro.dismiss}
-            title="This is your Members page."
-            bullets={[
-              'Tiers are your membership or season-pass types — set pricing and perks per tier.',
-              'See who’s signed up and whether their dues are paid.',
-              'Add a member manually if they signed up in person, not through the site.',
-              'Members get their tier’s pricing automatically when they book.',
-            ]}
-          />
 
           {/* ── Tiers panel ── */}
           {panel === 'tiers' && (

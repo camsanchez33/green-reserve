@@ -6,8 +6,6 @@ import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
-import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
-import { useTabIntro } from '@/lib/use-tab-intro';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { formatTeeTime as fmtTime } from '@/lib/format';
 
@@ -49,7 +47,6 @@ export default function SchedulesPage() {
   const [blackoutError, setBlackoutError] = useState('');
   const [windows, setWindows] = useState<{ publicAdvanceDays: number | null; memberAdvanceDays: number | null }>({ publicAdvanceDays: null, memberAdvanceDays: null });
   const [windowsError, setWindowsError] = useState('');
-  const intro = useTabIntro('schedule');
 
   // SD-10: a 403 (staff by URL) or 500 here used to render "No schedules yet".
   const loadSchedules = useCallback(async () => {
@@ -218,7 +215,6 @@ export default function SchedulesPage() {
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Schedule</h1>
-              <TabIntroButton onClick={intro.show}/>
             </div>
             <p className="text-[13.5px] text-ink-soft mt-2">
               {schedules.length} schedule{schedules.length !== 1 ? 's' : ''} · {schedules.filter(s => s.active).length} running · {schedules.filter(s => !s.active).length} paused
@@ -235,17 +231,6 @@ export default function SchedulesPage() {
         </div>
 
         <div className="max-w-6xl mx-auto px-4 py-6 space-y-4">
-          <TabIntroCard
-            open={intro.open}
-            onDismiss={intro.dismiss}
-            title="This is your Schedule."
-            bullets={[
-              'This is the template that creates your bookable tee times automatically.',
-              'Set your tee time interval, hours, and which days of the week it runs.',
-              'GreenReserve generates real tee times from this every night for the days ahead.',
-              'Change it anytime — it only affects future tee times, never past bookings.',
-            ]}
-          />
           <div className="bg-pine/5 border border-pine/20 rounded-lg p-4 text-sm text-ink-soft leading-relaxed">
             <span className="font-medium text-ink">How this works:</span> each schedule is a recipe — days, hours, interval, and pricing — and GreenReserve automatically generates your bookable tee times from it every night for the next 8 days. Editing a schedule changes <span className="font-medium text-ink">future</span> generation only; to update the tee sheet right now, hit <span className="font-medium text-ink">Apply to Tee Sheet</span> above. Times that already have bookings are never touched.
           </div>

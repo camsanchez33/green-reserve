@@ -1,11 +1,11 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 365,
-    "routes": 201,
-    "libs": 96,
+    "files": 367,
+    "routes": 202,
+    "libs": 97,
     "models": 34,
-    "orphans": 8,
+    "orphans": 10,
     "ungatedRoutes": 3
   },
   "brain": {
@@ -4045,7 +4045,7 @@
     },
     {
       "path": "src/app/api/operator/analytics/route.ts",
-      "lines": 93,
+      "lines": 35,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4062,6 +4062,7 @@
       "auth": "operator",
       "guard": "file",
       "imports": [
+        "@/lib/analytics",
         "@/lib/course-time",
         "@/lib/prisma",
         "@/lib/session",
@@ -5013,7 +5014,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 117,
+      "lines": 123,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5734,6 +5735,34 @@
       "usedBy": []
     },
     {
+      "path": "src/app/dashboard/analytics/page.tsx",
+      "lines": 361,
+      "purpose": "AN-1 (Cam 2026-10-01):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (AnalyticsPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/dashboard/analytics",
+      "kind": "page",
+      "methods": [],
+      "auth": "operator",
+      "guard": "middleware",
+      "imports": [
+        "@/components/OperatorSidebar",
+        "@/components/dashboard/LoadError",
+        "@/components/ui/Card",
+        "@/components/ui/Eyebrow",
+        "@/lib/analytics",
+        "@/lib/dashboard-fetch",
+        "lucide-react",
+        "react"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/dashboard/cancellations/page.tsx",
       "lines": 17,
       "purpose": "SD-8 — Cancellations merged into /dashboard/money.",
@@ -5829,7 +5858,7 @@
     },
     {
       "path": "src/app/dashboard/members/page.tsx",
-      "lines": 728,
+      "lines": 710,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5847,12 +5876,10 @@
         "@/components/OperatorSidebar",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/StaffNotice",
-        "@/components/dashboard/TabIntro",
         "@/components/dashboard/Toast",
         "@/components/ui/StatusDot",
         "@/lib/dashboard-fetch",
         "@/lib/format",
-        "@/lib/use-tab-intro",
         "lucide-react",
         "react"
       ],
@@ -5860,7 +5887,7 @@
     },
     {
       "path": "src/app/dashboard/messages/page.tsx",
-      "lines": 158,
+      "lines": 145,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5877,11 +5904,9 @@
       "imports": [
         "@/components/OperatorSidebar",
         "@/components/dashboard/LoadError",
-        "@/components/dashboard/TabIntro",
         "@/components/dashboard/Toast",
         "@/lib/dashboard-fetch",
         "@/lib/format",
-        "@/lib/use-tab-intro",
         "lucide-react",
         "next/navigation",
         "react"
@@ -5890,7 +5915,7 @@
     },
     {
       "path": "src/app/dashboard/money/page.tsx",
-      "lines": 205,
+      "lines": 188,
       "purpose": "SD-8 — Payments and Cancellations were two pages querying the same endpoint, and Payouts was buried in Settings.",
       "brain": [],
       "exports": [
@@ -5907,13 +5932,11 @@
       "imports": [
         "@/components/OperatorSidebar",
         "@/components/dashboard/LoadError",
-        "@/components/dashboard/TabIntro",
         "@/components/dashboard/money/CancellationsPanel",
         "@/components/dashboard/money/PaymentsPanel",
         "@/components/dashboard/money/PayoutsPanel",
         "@/components/dashboard/money/types",
         "@/lib/dashboard-fetch",
-        "@/lib/use-tab-intro",
         "lucide-react",
         "next/navigation",
         "react"
@@ -5970,7 +5993,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1245,
+      "lines": 1111,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5988,7 +6011,6 @@
         "@/components/OperatorSidebar",
         "@/components/dashboard/GettingStartedChecklist",
         "@/components/dashboard/LoadError",
-        "@/components/dashboard/TabIntro",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
         "@/components/ui/MonthPicker",
@@ -5998,7 +6020,6 @@
         "@/lib/course-time",
         "@/lib/dashboard-fetch",
         "@/lib/format",
-        "@/lib/use-tab-intro",
         "@stripe/react-stripe-js",
         "@stripe/stripe-js",
         "lucide-react",
@@ -6055,7 +6076,7 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 476,
+      "lines": 461,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6073,12 +6094,10 @@
         "@/components/OperatorSidebar",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/StaffNotice",
-        "@/components/dashboard/TabIntro",
         "@/components/dashboard/Toast",
         "@/components/ui/StatusDot",
         "@/lib/dashboard-fetch",
         "@/lib/format",
-        "@/lib/use-tab-intro",
         "lucide-react",
         "react"
       ],
@@ -6086,7 +6105,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1000,
+      "lines": 985,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6105,13 +6124,11 @@
         "@/components/dashboard/CourseLayoutTab",
         "@/components/dashboard/CoursePreview",
         "@/components/dashboard/StaffNotice",
-        "@/components/dashboard/TabIntro",
         "@/components/dashboard/Toast",
         "@/lib/course-time",
         "@/lib/image-resize",
         "@/lib/password",
         "@/lib/unsaved-guard",
-        "@/lib/use-tab-intro",
         "lucide-react",
         "next/navigation",
         "react"
@@ -6869,7 +6886,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 271,
+      "lines": 273,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6899,6 +6916,7 @@
         "react"
       ],
       "usedBy": [
+        "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
@@ -7251,7 +7269,7 @@
     },
     {
       "path": "src/components/dashboard/GettingStartedChecklist.tsx",
-      "lines": 186,
+      "lines": 188,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7292,6 +7310,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
@@ -7374,14 +7393,7 @@
       "imports": [
         "lucide-react"
       ],
-      "usedBy": [
-        "src/app/dashboard/members/page.tsx",
-        "src/app/dashboard/messages/page.tsx",
-        "src/app/dashboard/money/page.tsx",
-        "src/app/dashboard/page.tsx",
-        "src/app/dashboard/schedules/page.tsx",
-        "src/app/dashboard/settings/page.tsx"
-      ]
+      "usedBy": []
     },
     {
       "path": "src/components/dashboard/Toast.tsx",
@@ -7451,7 +7463,7 @@
     },
     {
       "path": "src/components/dashboard/money/PaymentsPanel.tsx",
-      "lines": 178,
+      "lines": 124,
       "purpose": "SD-8 — the Payments half of the Money page.",
       "brain": [],
       "exports": [
@@ -7468,7 +7480,6 @@
       "imports": [
         "./types",
         "@/components/ui/StatusDot",
-        "@/lib/booking-fees",
         "@/lib/booking-status",
         "@/lib/format",
         "lucide-react",
@@ -7633,6 +7644,7 @@
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
         "src/app/admin/system/page.tsx",
+        "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
@@ -7721,6 +7733,7 @@
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
         "src/app/admin/system/page.tsx",
+        "src/app/dashboard/analytics/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx"
       ]
@@ -8553,6 +8566,58 @@
       ]
     },
     {
+      "path": "src/lib/analytics.ts",
+      "lines": 320,
+      "purpose": "AN-1 (Cam 2026-10-01):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "Analytics",
+          "kind": "type"
+        },
+        {
+          "name": "computeAnalytics",
+          "kind": "fn"
+        },
+        {
+          "name": "EVENT_LOG_START",
+          "kind": "const"
+        },
+        {
+          "name": "headline",
+          "kind": "fn"
+        },
+        {
+          "name": "NO_SHOW_GRACE_MIN",
+          "kind": "const"
+        },
+        {
+          "name": "previousRange",
+          "kind": "fn"
+        },
+        {
+          "name": "Range",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./course-time",
+        "./email",
+        "./prisma",
+        "./tee-time-utils",
+        "@prisma/client"
+      ],
+      "usedBy": [
+        "src/app/api/operator/analytics/route.ts",
+        "src/app/dashboard/analytics/page.tsx"
+      ]
+    },
+    {
       "path": "src/lib/api-response.ts",
       "lines": 22,
       "purpose": "Common JSON response helpers to reduce boilerplate in API routes.",
@@ -8932,7 +8997,6 @@
         "src/app/book/BookClient.tsx",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
-        "src/components/dashboard/money/PaymentsPanel.tsx",
         "src/components/dashboard/money/PayoutsPanel.tsx",
         "src/lib/email.ts"
       ]
@@ -9989,6 +10053,7 @@
         "src/app/api/operator/tee-times/route.ts",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/settings/page.tsx",
+        "src/lib/analytics.ts",
         "src/lib/booking-events.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/tee-sheet-engine.ts"
@@ -10263,6 +10328,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
@@ -10653,6 +10719,7 @@
         "src/app/api/preview/send/route.ts",
         "src/lib/agreement-required.ts",
         "src/lib/agreement-sign.ts",
+        "src/lib/analytics.ts",
         "src/lib/call-invite.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
@@ -11931,6 +11998,7 @@
         "src/lib/agreement-gate.ts",
         "src/lib/agreement-required.ts",
         "src/lib/agreement-sign.ts",
+        "src/lib/analytics.ts",
         "src/lib/approval-state.ts",
         "src/lib/birdie/course-context.ts",
         "src/lib/birdie/guardrails.ts",
@@ -12671,6 +12739,7 @@
         "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/manage/[bookingId]/route.ts",
+        "src/lib/analytics.ts",
         "src/lib/booking-events.ts"
       ]
     },
@@ -12894,14 +12963,7 @@
         "./dashboard-visits",
         "react"
       ],
-      "usedBy": [
-        "src/app/dashboard/members/page.tsx",
-        "src/app/dashboard/messages/page.tsx",
-        "src/app/dashboard/money/page.tsx",
-        "src/app/dashboard/page.tsx",
-        "src/app/dashboard/schedules/page.tsx",
-        "src/app/dashboard/settings/page.tsx"
-      ]
+      "usedBy": []
     },
     {
       "path": "src/middleware.ts",
@@ -13518,12 +13580,12 @@
         "src/app/api/manage/[bookingId]/available-times/route.ts",
         "src/app/api/manage/[bookingId]/route.ts",
         "src/app/api/manage/[bookingId]/send-modified-email/route.ts",
-        "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/lib/access-fee.ts",
+        "src/lib/analytics.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/course-closure.ts",
@@ -13585,7 +13647,9 @@
         }
       ],
       "writers": [],
-      "readers": []
+      "readers": [
+        "src/lib/analytics.ts"
+      ]
     },
     {
       "name": "Call",
@@ -14235,6 +14299,7 @@
         "src/app/sitemap.ts",
         "src/lib/agreement-required.ts",
         "src/lib/agreement-sign.ts",
+        "src/lib/analytics.ts",
         "src/lib/birdie/course-context.ts",
         "src/lib/course-closure.ts",
         "src/lib/go-live-preflight.ts",
@@ -14590,6 +14655,7 @@
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/tiers/route.ts",
+        "src/lib/analytics.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/lifecycle.ts",
         "src/lib/member-session.ts"
@@ -15247,7 +15313,8 @@
       "readers": [
         "src/app/api/admin/course-members/route.ts",
         "src/app/api/operator/members/route.ts",
-        "src/app/api/operator/tiers/route.ts"
+        "src/app/api/operator/tiers/route.ts",
+        "src/lib/analytics.ts"
       ]
     },
     {
@@ -15667,11 +15734,11 @@
         "src/app/api/bookings/route.ts",
         "src/app/api/manage/[bookingId]/available-times/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
-        "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/api/preview/[courseId]/tee-times/route.ts",
+        "src/lib/analytics.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts"
@@ -15854,12 +15921,14 @@
   ],
   "orphans": [
     "src/components/CourseCard.tsx",
+    "src/components/dashboard/TabIntro.tsx",
     "src/components/ui/PageHeader.tsx",
     "src/components/ui/SidebarShell.tsx",
     "src/components/ui/StatGroup.tsx",
     "src/lib/api-response.ts",
     "src/lib/data.ts",
     "src/lib/db.ts",
-    "src/lib/seed.ts"
+    "src/lib/seed.ts",
+    "src/lib/use-tab-intro.ts"
   ]
 }

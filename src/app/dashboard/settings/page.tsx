@@ -8,8 +8,6 @@ import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { toast } from '@/components/dashboard/Toast';
 import CourseLayoutTab from '@/components/dashboard/CourseLayoutTab';
 import CoursePreview from '@/components/dashboard/CoursePreview';
-import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
-import { useTabIntro } from '@/lib/use-tab-intro';
 import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
 import { setLeaveGuard, useBackGuard } from '@/lib/unsaved-guard';
 import { downscaleImage } from '@/lib/image-resize';
@@ -171,7 +169,6 @@ function SettingsPageInner() {
   }, [stripeParam, router]);
 
   const [active, setActive] = useState<Section>('Your course');
-  const intro = useTabIntro('settings');
   const [form, setForm] = useState<Record<string,unknown>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -436,7 +433,6 @@ function SettingsPageInner() {
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Settings</h1>
-              <TabIntroButton onClick={intro.show}/>
             </div>
             <p className="text-[13.5px] text-ink-soft mt-2">
               {(form.name as string) || 'Your course'} · {(form.liveStatus as string) === 'live' ? 'live to golfers' : 'not live yet'} · {form.stripeAccountActive ? 'Stripe connected' : 'Stripe not connected'} · {staff.length} staff account{staff.length !== 1 ? 's' : ''} · {photos.length} photo{photos.length !== 1 ? 's' : ''}
@@ -463,17 +459,6 @@ function SettingsPageInner() {
         )}
 
         <div className="max-w-5xl mx-auto px-6 py-6">
-          <TabIntroCard
-            open={intro.open}
-            onDismiss={intro.dismiss}
-            title="This is your Settings."
-            bullets={[
-              'Five sections: your course, booking rules, pricing & cancellation, facilities, and staff & account.',
-              'Each section saves on its own — the Save button only sends the section you are looking at.',
-              'Your course name and address are read-only; ask us and we change them with you.',
-              'Stripe and your payouts moved to Money.',
-            ]}
-          />
           {/* SD-8 review: Payouts was a first-class sub-tab before this run, so
               where it went is said once, above the rail, on every section. */}
           <div className="bg-white border border-line border-l-[3px] border-l-pine rounded-lg px-4 py-3 mb-5 text-[13.5px] text-ink-soft">

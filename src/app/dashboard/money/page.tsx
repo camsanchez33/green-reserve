@@ -9,8 +9,6 @@ import { Loader2, RefreshCw } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { LoadError } from '@/components/dashboard/LoadError';
-import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
-import { useTabIntro } from '@/lib/use-tab-intro';
 import { PaymentsPanel } from '@/components/dashboard/money/PaymentsPanel';
 import { CancellationsPanel } from '@/components/dashboard/money/CancellationsPanel';
 import { PayoutsPanel } from '@/components/dashboard/money/PayoutsPanel';
@@ -51,7 +49,6 @@ function MoneyPageInner() {
   const [roleUnknown, setRoleUnknown] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
-  const intro = useTabIntro('money');
 
   const treatAsStaff = isStaff !== false;
   const tabs = TABS.filter(t => !treatAsStaff || STAFF_TABS.includes(t.key));
@@ -118,10 +115,6 @@ function MoneyPageInner() {
   // With a date asked for but not loaded, show nothing rather than the
   // unfiltered list — the error above says why.
   const paymentRows = dateFilter ? (dated ?? []) : bookings;
-  const nonCancelled = bookings.filter(b => b.status !== 'cancelled');
-  const collectedRevenue = nonCancelled.filter(b => b.paymentStatus === 'paid').reduce((s, b) => s + b.greenFeeTotal + b.cartFeeTotal, 0);
-  const stillToCome = nonCancelled.filter(b => b.paymentStatus !== 'paid').length;
-  const cancelledCount = bookings.filter(b => b.status === 'cancelled').length;
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
@@ -133,10 +126,10 @@ function MoneyPageInner() {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Money</h1>
-                <TabIntroButton onClick={intro.show}/>
               </div>
               <p className="text-[13.5px] text-ink-soft mt-2">
-                ${(collectedRevenue / 100).toFixed(2)} collected · {stillToCome} booking{stillToCome !== 1 ? 's' : ''} still to come · {cancelledCount} cancelled · {course.stripeAccountActive ? 'Stripe connected' : 'Stripe not connected'}
+                {/* AN-1: the money totals moved to Analytics; this line is status only. */}
+                {course.stripeAccountActive ? 'Stripe connected' : 'Stripe not connected'}
               </p>
             </div>
             <button onClick={refresh} className="shrink-0 flex items-center gap-1.5 text-[12.5px] text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
@@ -144,16 +137,6 @@ function MoneyPageInner() {
             </button>
           </div>
 
-          <TabIntroCard
-            open={intro.open}
-            onDismiss={intro.dismiss}
-            title="This is your Money."
-            bullets={[
-              'Payments: green fees, cart fees and GreenReserve’s service fee, per booking.',
-              'Cancellations: who cancelled, when, whether a late fee applied — and your policy.',
-              'Payouts: connect Stripe and open your balance. Payments settle to your own Stripe account on its normal schedule.',
-            ]}
-          />
 
           {/* U-O: tabs are square chips, not a segmented pill. */}
           <div className="flex flex-wrap gap-1.5 mb-5 border-b border-line pb-3">

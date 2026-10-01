@@ -97,7 +97,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
 
   const navItems: { key: OperatorNavKey; label: string; href: string; icon: React.ReactNode; soon?: boolean }[] = [
     { key: 'teesheet',      label: 'Tee Sheet',    href: '/dashboard',               icon: <Calendar className="w-4 h-4"/> },
-    { key: 'analytics',     label: 'Analytics',    href: '/dashboard?tab=analytics', icon: <BarChart2 className="w-4 h-4"/> },
+    { key: 'analytics',     label: 'Analytics',    href: '/dashboard/analytics', icon: <BarChart2 className="w-4 h-4"/> },
     { key: 'tournaments',   label: 'Tournaments',  href: '/dashboard/tournaments',   icon: <Trophy className="w-4 h-4"/>,    soon: true },
     { key: 'outings',       label: 'Outings',      href: '/dashboard/outings',       icon: <PartyPopper className="w-4 h-4"/>, soon: true },
     { key: 'schedule',      label: 'Schedule',     href: '/dashboard/schedules',     icon: <Clock className="w-4 h-4"/> },
@@ -113,7 +113,9 @@ export default function OperatorSidebar({ active, onAlertClick }: {
 
   const STAFF_HIDDEN: OperatorNavKey[] = ['schedule', 'members', 'settings'];
   const groups = [
-    { label: 'Dashboard', keys: ['teesheet', 'analytics'] as OperatorNavKey[] },
+    // AN-1: Analytics carries revenue and customer spend — owner logins only,
+    // the same line the Money tab draws (the API refuses staff too).
+    { label: 'Dashboard', keys: (isStaff ? ['teesheet'] : ['teesheet', 'analytics']) as OperatorNavKey[] },
     // Staff see the money item under Bookings, where Cancellations used to sit.
     { label: 'Bookings',  keys: ((isStaff ? ['money', 'tournaments', 'outings'] : ['tournaments', 'outings']) as OperatorNavKey[]) },
     { label: 'Manage',    keys: ((isStaff ? ['messages'] : ['schedule', 'members', 'money', 'messages', 'settings']) as OperatorNavKey[]).filter(k => !isStaff || !STAFF_HIDDEN.includes(k)) },
@@ -122,7 +124,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   // SD-2: what fits in a thumb row. Staff never see the configuration tabs
   // (SD-1), so their row ends at Messages.
   const mobileKeys: OperatorNavKey[] = isStaff
-    ? ['teesheet', 'money', 'analytics', 'messages']
+    ? ['teesheet', 'money', 'messages']
     : ['teesheet', 'money', 'schedule', 'messages', 'settings'];
   const mobileItems = navItems.filter(n => mobileKeys.includes(n.key) && !n.soon);
 
