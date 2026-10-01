@@ -1,21 +1,18 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Fraunces } from 'next/font/google';
+import { Archivo } from 'next/font/google';
 import './globals.css';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import MainOffset from '@/components/MainOffset';
 
-const inter = Inter({
+// UI-H-1 (HOMEPAGE_SPEC.md, Cam 2026-10-01): the PUBLIC look is one family,
+// Archivo, using its width axis (expanded headlines, condensed labels). It
+// replaced Fraunces + Inter. --font-serif points at the same family in
+// globals.css; the staff look re-points both to its own fonts, unaffected.
+const archivo = Archivo({
   subsets: ['latin'],
-  weight: ['400', '500'],
+  axes: ['wdth'],
   variable: '--font-sans',
-  display: 'swap',
-});
-
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  weight: ['400', '500'],
-  variable: '--font-serif',
   display: 'swap',
 });
 
@@ -47,7 +44,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${fraunces.variable}`}>
+    <html lang="en" className={archivo.variable}>
       <body className="font-sans bg-paper text-ink antialiased">
         <Nav />
         <MainOffset>{children}</MainOffset>

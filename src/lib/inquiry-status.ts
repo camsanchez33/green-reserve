@@ -257,7 +257,8 @@ export function unreviewedResubmit(
 // nobody can aggregate. Both are nullable in the schema: "not recorded" is an
 // honest state and must not masquerade as a category.
 export const INQUIRY_SOURCES = [
-  'Inbound form', 'Cold outreach', 'Referral', 'Event or conference', 'Partner', 'Other',
+  // 'Demo booking' (UI-H-1): opened by the Cal.com webhook from a homepage "Book a demo".
+  'Inbound form', 'Demo booking', 'Cold outreach', 'Referral', 'Event or conference', 'Partner', 'Other',
 ] as const;
 
 export const CLOSED_REASONS = [

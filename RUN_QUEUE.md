@@ -26,11 +26,23 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 ## Queue (run in this order)
 
-- [ ] UI-H-1 — new homepage from the approved plain-background mockup (Cam
-  2026-10-01). Spec, content rules, look and build plan: HOMEPAGE_SPEC.md; mockup
-  docs/design/home/index.html. Includes: Book a demo → Cal.com must create an
-  Inquiry when no token matches (§4.2). Supersedes UI-B and the golf-hole
-  concepts (all rejected, never merged).
+- [x] UI-H-1 — BUILT 2026-10-01: the homepage from the approved plain-background
+  mockup (HOMEPAGE_SPEC.md, docs/design/home/index.html). Archivo replaces Fraunces
+  + Inter for the public look (staff look untouched). Working hero demo (tee sheet +
+  golfer phone) and a See it work section share one client store
+  (components/home/TeeSheetDemo.tsx); "Keep your brand" shows three made-up
+  courses' booking pages with their own photos; FAQ is six general questions (no
+  durations, no contract terms). /demo redirects to Cal.com (metadata
+  source=homepage) or /for-courses when Cal.com is off; the Cal.com webhook now
+  opens a pending inquiry (source "Demo booking") + its call when a new booking
+  matches no inquiry. Old homepage components and the story video are deleted.
+  Local Lighthouse home (mobile, 3 runs): LCP 2.27/2.41/2.41s, TBT ≤61ms, CLS 0.
+- [ ] UI-H-2 — /for-courses in the homepage's language; remove its "1–2 days
+  typical setup time" (no-durations rule). Inner-page nav still says "List your
+  course"; decide with Cam whether it becomes "Book a demo" everywhere.
+- [ ] CAM — Cal.com: add a booking question with identifier `courseName` ("Golf
+  course name") to the demo event, so homepage demo inquiries arrive with the
+  course named (the webhook reads it; without it the inquiry's course is blank).
 
 - [x] DESIGN_SYSTEM_SPEC Phase D1 — Clubhouse tokens, shared UI components, admin sweep, CLAUDE.md design section rewrite — 99cbc9a
 - [x] ADMIN_V2 Phase 1 — full course detail page at /admin/courses/[id] (build in Clubhouse style)

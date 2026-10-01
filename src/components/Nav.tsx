@@ -51,9 +51,9 @@ export default function Nav() {
   // top-left CORNER of the window (edge padding, not the 1180px content column —
   // Cam: "like Salesforce, all the way in that corner"), Operator login top-right. The logo is the traced
   // vector (/brand/logo.svg), so it is sharp at every size and density.
-  // "List your course" is deliberately absent: the hero's own primary button
-  // sits ~200px below it, and two of the same call to action on one screen is
-  // one too many. Operator login's durable home is the footer (§4).
+  // UI-H-1 (HOMEPAGE_SPEC.md, Cam 2026-10-01) adds "Book a demo" top-right: the
+  // approved design repeats it in the nav, hero, See it work and the end band.
+  // On phones Operator login drops to the footer (its durable home, §4).
   if (isHome) {
     return (
       <nav className="absolute top-0 left-0 right-0 z-50">
@@ -65,9 +65,16 @@ export default function Nav() {
           </Link>
           {/* H-2g review: ink-soft, not ink-muted (ink-muted on paper is 3.3:1,
               under the 4.5:1 floor for this size). */}
-          <Link href="/dashboard/login" className="text-ink-soft hover:text-ink text-[13px] sm:text-[15px] font-medium px-3 py-2 -mx-3 transition-colors">
-            Operator login
-          </Link>
+          {/* UI-H-1: Operator login + Book a demo (HOMEPAGE_SPEC.md). /demo
+              redirects to the Cal.com booker, or the inquiry form when it is off. */}
+          <div className="flex items-center gap-4 sm:gap-6">
+            <Link href="/dashboard/login" className="hidden sm:inline text-ink-soft hover:text-ink text-[15px] font-medium transition-colors">
+              Operator login
+            </Link>
+            <a href="/demo" className="inline-flex items-center h-[42px] px-4 rounded-md bg-[#173B2A] hover:bg-[#0F2C1F] text-white text-[15px] font-semibold transition-colors">
+              Book a demo
+            </a>
+          </div>
         </div>
       </nav>
     );
