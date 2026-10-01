@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-357 source files · 197 routes · 94 libraries · 33 models
+362 source files · 201 routes · 95 libraries · 33 models
 
 ## Single sources of truth
 
@@ -54,6 +54,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 548 |
 | `/admin/activity` | admin | client-side | page | `src/app/admin/activity/page.tsx` | 211 |
 | `/admin/broadcasts` | admin | client-side | page | `src/app/admin/broadcasts/page.tsx` | 13 |
+| `/admin/company-documents` | admin | client-side | page | `src/app/admin/company-documents/page.tsx` | 162 |
 | `/admin/courses` | admin | client-side | page | `src/app/admin/courses/page.tsx` | 522 |
 | `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 334 |
 | `/admin/create` | admin | client-side | page | `src/app/admin/create/page.tsx` | 760 |
@@ -75,6 +76,9 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/bootstrap` | admin | secret header | POST | `src/app/api/admin/bootstrap/route.ts` | 31 |
 | `/api/admin/broadcasts` | admin | file | GET POST | `src/app/api/admin/broadcasts/route.ts` | 143 |
 | `/api/admin/change-password` | admin | file | POST | `src/app/api/admin/change-password/route.ts` | 27 |
+| `/api/admin/company-documents` | admin | file | DELETE GET POST | `src/app/api/admin/company-documents/route.ts` | 70 |
+| `/api/admin/company-documents/download` | admin | file | GET | `src/app/api/admin/company-documents/download/route.ts` | 35 |
+| `/api/admin/company-documents/upload` | admin | file | POST | `src/app/api/admin/company-documents/upload/route.ts` | 46 |
 | `/api/admin/course-calls` | admin | file | POST | `src/app/api/admin/course-calls/route.ts` | 115 |
 | `/api/admin/course-detail` | admin | file | GET PATCH | `src/app/api/admin/course-detail/route.ts` | 314 |
 | `/api/admin/course-documents` | admin | file | GET POST | `src/app/api/admin/course-documents/route.ts` | 83 |
@@ -254,21 +258,21 @@ Sorted by how many files import them, so the load-bearing ones are first.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/lib/prisma.ts` | 150 | 15 |  | `prisma` |
-| `src/lib/admin-session.ts` | 49 | 149 |  | `AdminSession`, `AdminSessionUnavailable`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole`, `resolveAdminSession` +5 more |
+| `src/lib/prisma.ts` | 151 | 15 |  | `prisma` |
+| `src/lib/admin-session.ts` | 52 | 149 |  | `AdminSession`, `AdminSessionUnavailable`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole`, `resolveAdminSession` +5 more |
 | `src/lib/email.ts` | 43 | 1796 |  | `BookingEmailData`, `escapeHtml`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail`, `sendAdminSetPasswordEmail`, `sendAdminTwoFactorCode` +50 more |
 | `src/lib/session.ts` | 34 | 80 |  | `ACTIVE_COURSE_COOKIE`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN` |
 | `src/lib/rate-limit.ts` | 33 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
 | `src/lib/auth.ts` | 28 | 202 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffResetToken`, `signStaffToken` +4 more |
 | `src/lib/money.ts` | 27 | 50 | Money conversions, in one place. | `centsToDollars`, `centsToDollarsOr0`, `dollarsToCents`, `dollarsToCentsOr0`, `fmtCents` |
-| `src/lib/format.ts` | 22 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
+| `src/lib/format.ts` | 23 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
 | `src/lib/agreement-required.ts` | 19 | 122 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
 | `src/lib/stripe.ts` | 17 | 87 | Every charge, refund and SetupIntent GreenReserve makes goes through here. | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `MEMBERSHIP_FEE_CENTS`, `refundOnConnectedAccount`, `stripe` |
 | `src/lib/change-requests.ts` | 15 | 149 | Single source of truth for structured "request changes" data (V13b). | `APPROVED_MARKER`, `CATEGORY_LABEL`, `CHANGE_ADDRESSED_PREFIX`, `CHANGE_CATEGORIES`, `ChangeCategoryKey`, `ChangeItem`, `CHANGES_REQUESTED_PREFIX`, `computeOpenChanges` +14 more |
 | `src/lib/course-timeline.ts` | 13 | 165 |  | `AGREEMENT_ACCEPTED_PREFIX`, `AgreementAcceptedPayload`, `CHECKIN_CALL_PREFIX`, `CheckInCallPayload`, `CURRENT_AGREEMENT_VERSION`, `DOCUMENT_UPLOADED_PREFIX`, `DocumentUploadedPayload`, `getCourseTimeline` +20 more |
 | `src/lib/inquiry-call.ts` | 13 | 175 | INQUIRY_CALL_SPEC IC-1 §2 — the discovery-call agenda catalog, and the small derivations the sheet, the detail page and the queue share. | `AGENDA`, `AgendaItem`, `agendaStatus`, `AgendaStatusRow`, `callGate`, `CallLike`, `defaultAgenda`, `DIRECTION_LABEL` +13 more |
 | `src/lib/inquiry-status.ts` | 12 | 465 | Single source of truth for what every inquiry status means and which pipeline segment it belongs to. | `ACTIVE_STATUSES`, `ALIVE_STATUSES`, `ARCHIVED_STATUSES`, `CLOSED_REASONS`, `compareQueue`, `daysSince`, `decodeResubmit`, `diffResubmit` +21 more |
-| `src/lib/admin-fetch.ts` | 10 | 150 | One place that decides what an admin fetch failure MEANS. | `adminErrorMessage`, `adminFetch`, `AdminFetchAction`, `AdminFetchFailure`, `AdminFetchResult`, `LOGIN_SESSION_ENDED` |
+| `src/lib/admin-fetch.ts` | 11 | 150 | One place that decides what an admin fetch failure MEANS. | `adminErrorMessage`, `adminFetch`, `AdminFetchAction`, `AdminFetchFailure`, `AdminFetchResult`, `LOGIN_SESSION_ENDED` |
 | `src/lib/course-time.ts` | 10 | 46 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `todayIn`, `US_TIMEZONES` |
 | `src/lib/admin-session-context.tsx` | 8 | 77 | MP-11a (ADMIN_V4 V4-7, LAW rule 2): | `AdminSessionProvider`, `AdminSessionView`, `isAdminAuthPath`, `useAdminSession` |
 | `src/lib/agreements.ts` | 8 | 118 | AGREEMENT_SPEC AG-1 §2 — versioned agreement documents. | `AgreementDocument`, `currentDocuments`, `currentVersion`, `DOCUMENT_DIR`, `DocumentMeta`, `listVersions`, `loadDocument`, `LoadedDocument` +1 more |
@@ -278,6 +282,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/course-checkin.ts` | 7 | 106 | COURSES_SHEET_SPEC CS-1 §2 — check-in calls with live courses. | `CHECKIN_AGENDA`, `CHECKIN_DUE_WINDOW_DAYS`, `CHECKIN_EVERY_DAYS`, `CHECKIN_FIRST_DAYS`, `CheckinAgendaItem`, `CheckinCallLike`, `CheckinCourseLike`, `checkInSignal` +8 more |
 | `src/lib/member-session.ts` | 7 | 89 |  | `getGolferMembership`, `getMemberSession`, `signMemberMagicToken`, `signMemberSessionToken`, `verifyMemberMagicToken` |
 | `src/lib/preview-token.ts` | 7 | 25 |  | `signPreviewToken`, `verifyPreviewToken` |
+| `src/lib/private-blob.ts` | 7 | 18 | Contracts and signed agreements live in their OWN, private Vercel Blob store (Cam 2026-09-29). | `PRIVATE_STORAGE_MISSING`, `privateBlobToken` |
 | `src/lib/calcom.ts` | 6 | 93 | CAL-1 — Cal.com as the call scheduler, in place of the Google Calendar grid. | `calcomBookingUrl`, `calcomCreatedBy`, `calcomEmbedUrl`, `calcomManageLinks`, `calcomStatus`, `calcomUidOf`, `verifyCalcomSignature` |
 | `src/lib/call-answers.ts` | 6 | 349 | INQUIRY_CALL_SPEC IC-5 — structured discovery-call answers. | `BOOKING_METHOD_OPTIONS`, `CALL_FIELDS`, `CallAnswers`, `callRecapLines`, `DAY_SHORT`, `emptyAnswers`, `FieldSpec`, `FieldType` +19 more |
 | `src/lib/cancel-booking.ts` | 6 | 167 |  | `CancellationOptions`, `performCancellation` |
@@ -291,10 +296,10 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/admin-roles.ts` | 4 | 17 | Role lists, client-safe. | `MANAGER_PLUS`, `OWNER_ONLY`, `SUPPORT_PLUS`, `VIEWER_PLUS` |
 | `src/lib/booking-window.ts` | 4 | 76 | BOOKING WINDOWS (RUN_QUEUE) — how far ahead each audience can see and book the tee sheet. | `dayOffset`, `DEFAULT_MEMBER_WINDOW_DAYS`, `DEFAULT_PUBLIC_WINDOW_DAYS`, `generationHorizonDays`, `lastBookableDate`, `MIN_GENERATION_DAYS`, `outsideWindowBody`, `utcToday` +4 more |
 | `src/lib/call-invite.ts` | 4 | 106 | CALL_SCHEDULING_SPEC SC-2 §1 — the "pick a call time" invite. | `deliverCallInvite`, `INVITE_DAYS`, `inviteAgendaLines`, `InviteSendResult`, `inviteUrl`, `issueCallInvite`, `sendCallInvite`, `sendCallReminders` |
+| `src/lib/company-documents.ts` | 4 | 60 | CO-DOCS (Cam 2026-10-01): | `COMPANY_DOC_CATEGORIES`, `COMPANY_DOC_MAX_BYTES`, `COMPANY_DOC_PREFIX`, `COMPANY_DOC_TYPES`, `CompanyDocCategory`, `companyDocPathOf`, `describeCompanyPath`, `isAllowedCompanyPath` +1 more |
 | `src/lib/demo-courses.ts` | 4 | 4 | Cam: | `DEMO_COURSE_SLUGS` |
 | `src/lib/expenses.ts` | 4 | 77 | EXPENSE TRACKER (RUN_QUEUE "EXPENSE TRACKER / real P&L") — the manual half of the P&L: | `EXPENSE_CADENCE_LABEL`, `EXPENSE_CADENCES`, `EXPENSE_CATEGORIES`, `EXPENSE_CATEGORY_LABEL`, `ExpenseCadence`, `ExpenseCategory`, `isExpenseCadence`, `isExpenseCategory` +3 more |
 | `src/lib/lifecycle.ts` | 4 | 414 |  | `archivePair`, `deleteInquiryOrPair`, `deletePair`, `forceDeleteOrphan`, `ForceDeleteResult`, `LifecycleResult`, `listAcknowledgedOrphans`, `ORPHAN_FLAG` +6 more |
-| `src/lib/private-blob.ts` | 4 | 18 | Contracts and signed agreements live in their OWN, private Vercel Blob store (Cam 2026-09-29). | `PRIVATE_STORAGE_MISSING`, `privateBlobToken` |
 | `src/lib/schedule-service.ts` | 4 | 216 | MP-5d. | `createSchedule`, `deleteSchedule`, `listSchedules`, `ScheduleConflictError`, `ScheduleProductError`, `ScheduleScope`, `setTeeTimeBlocked`, `updateSchedule` |
 | `src/lib/tee-time-utils.ts` | 4 | 36 | Converts a stored tee-time (date "YYYY-MM-DD", time "HH:MM" in the course's local timezone) to a UTC millisecond timestamp. | `teeToUtcMs` |
 | `src/lib/terms.ts` | 4 | 6 | Bump this whenever /terms materially changes so old bookings keep an honest record of which version the golfer actually agreed to. | `CURRENT_TERMS_VERSION` |
@@ -355,15 +360,15 @@ Sorted the same way.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/components/ui/Card.tsx` | 26 | 15 |  | `Card`, `CARD` |
-| `src/components/ui/Eyebrow.tsx` | 23 | 16 |  | `Eyebrow`, `EYEBROW` |
+| `src/components/ui/Card.tsx` | 27 | 15 |  | `Card`, `CARD` |
+| `src/components/ui/Eyebrow.tsx` | 24 | 16 |  | `Eyebrow`, `EYEBROW` |
 | `src/components/ui/StatusDot.tsx` | 22 | 36 |  | `StatusDot` |
 | `src/components/ui/field.ts` | 16 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
-| `src/components/admin/AdminSidebar.tsx` | 13 | 264 |  | `AdminNavKey`, `default (AdminSidebar)` |
+| `src/components/admin/AdminSidebar.tsx` | 14 | 266 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/OperatorSidebar.tsx` | 9 | 271 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
 | `src/components/dashboard/Toast.tsx` | 7 | 69 | SD-2. | `toast`, `Toaster`, `ToastKind` |
+| `src/components/ui/ErrorState.tsx` | 7 | 96 |  | `ErrorBanner`, `LoadFailure` |
 | `src/components/dashboard/TabIntro.tsx` | 6 | 36 |  | `TabIntroButton`, `TabIntroCard` |
-| `src/components/ui/ErrorState.tsx` | 6 | 96 |  | `ErrorBanner`, `LoadFailure` |
 | `src/components/ui/Modal.tsx` | 6 | 141 | MP-9 (ADMIN_V4 V4-6 §4) — the one dialog. | `Modal`, `ModalActions` |
 | `src/components/CourseHeaderBar.tsx` | 5 | 17 | White-label rule: | `CourseHeaderBar` |
 | `src/components/dashboard/LoadError.tsx` | 5 | 16 | SD-10. | `LoadError` |
@@ -374,6 +379,7 @@ Sorted the same way.
 | `src/components/EmptyState.tsx` | 3 | 22 |  | `EmptyState` |
 | `src/components/GolferExitLinks.tsx` | 3 | 24 |  | `GolferExitLinks` |
 | `src/components/TrustNote.tsx` | 2 | 12 |  | `TrustNote` |
+| `src/components/ui/Btn.tsx` | 2 | 27 |  | `Btn` |
 | `src/components/admin/CommandPalette.tsx` | 1 | 248 |  | `default (CommandPalette)` |
 | `src/components/admin/InquiryCallCards.tsx` | 1 | 913 | INQUIRY_CALL_SPEC IC-2 — the two discovery-call cards on the inquiry detail page. | `CallFocus`, `CallRow`, `default (InquiryCallCards)`, `describeCall` |
 | `src/components/admin/OwnerTwoFactorCard.tsx` | 1 | 159 | OWNER TOTP 2FA — the enrolment card on /admin/profile (owner only). | `default (OwnerTwoFactorCard)` |
@@ -390,7 +396,6 @@ Sorted the same way.
 | `src/components/home/TeeSheetDemo.tsx` | 1 | 228 | UI-H-1 (HOMEPAGE_SPEC.md): | `HeroDemo`, `SeeItWorkDemo` |
 | `src/components/MainOffset.tsx` | 1 | 32 |  | `default (MainOffset)` |
 | `src/components/Nav.tsx` | 1 | 130 |  | `default (Nav)` |
-| `src/components/ui/Btn.tsx` | 1 | 27 |  | `Btn` |
 | `src/components/CourseCard.tsx` | 0 | 121 |  | `default (CourseCard)` |
 | `src/components/ui/PageHeader.tsx` | 0 | 18 |  | `PageHeader` |
 | `src/components/ui/SidebarShell.tsx` | 0 | 24 |  | `SidebarShell` |
@@ -404,10 +409,10 @@ without opening anything.
 
 ### AdminAuditLog
 
-8 fields · 0 writer(s) · 0 reader(s)
+8 fields · 1 writer(s) · 0 reader(s)
 
 - fields: `id`, `adminId`, `admin`, `action`, `targetType`, `targetId`, `detail`, `createdAt`
-- writers: **none** — nothing in `src/` writes this model
+- writers: `src/app/api/admin/company-documents/route.ts`
 - readers: **none**
 
 ### AdminUser

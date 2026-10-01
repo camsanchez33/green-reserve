@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 357,
-    "routes": 197,
-    "libs": 94,
+    "files": 362,
+    "routes": 201,
+    "libs": 95,
     "models": 33,
     "orphans": 8,
     "ungatedRoutes": 3
@@ -98,6 +98,37 @@
       "guard": "client-side",
       "imports": [
         "next/navigation",
+        "react"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/admin/company-documents/page.tsx",
+      "lines": 162,
+      "purpose": "CO-DOCS (Cam 2026-10-01):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (CompanyDocumentsPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/admin/company-documents",
+      "kind": "page",
+      "methods": [],
+      "auth": "admin",
+      "guard": "client-side",
+      "imports": [
+        "@/components/admin/AdminSidebar",
+        "@/components/ui/Btn",
+        "@/components/ui/Card",
+        "@/components/ui/ErrorState",
+        "@/components/ui/Eyebrow",
+        "@/lib/admin-fetch",
+        "@/lib/company-documents",
+        "@/lib/format",
+        "@vercel/blob/client",
+        "lucide-react",
         "react"
       ],
       "usedBy": []
@@ -1157,6 +1188,98 @@
         "@/lib/admin-session",
         "@/lib/prisma",
         "bcryptjs",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/company-documents/download/route.ts",
+      "lines": 35,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/company-documents/download",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-session",
+        "@/lib/company-documents",
+        "@/lib/private-blob",
+        "@vercel/blob",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/company-documents/route.ts",
+      "lines": 70,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "DELETE",
+          "kind": "route"
+        },
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/company-documents",
+      "kind": "api",
+      "methods": [
+        "DELETE",
+        "GET",
+        "POST"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-session",
+        "@/lib/company-documents",
+        "@/lib/prisma",
+        "@/lib/private-blob",
+        "@vercel/blob",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/company-documents/upload/route.ts",
+      "lines": 46,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/company-documents/upload",
+      "kind": "api",
+      "methods": [
+        "POST"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-session",
+        "@/lib/company-documents",
+        "@/lib/private-blob",
+        "@vercel/blob/client",
         "next/server"
       ],
       "usedBy": []
@@ -6807,7 +6930,7 @@
     },
     {
       "path": "src/components/admin/AdminSidebar.tsx",
-      "lines": 264,
+      "lines": 266,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6836,6 +6959,7 @@
       ],
       "usedBy": [
         "src/app/admin/activity/page.tsx",
+        "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/page.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/admin/create/page.tsx",
@@ -7424,6 +7548,7 @@
         "react"
       ],
       "usedBy": [
+        "src/app/admin/company-documents/page.tsx",
         "src/components/ui/ErrorState.tsx"
       ]
     },
@@ -7452,6 +7577,7 @@
       ],
       "usedBy": [
         "src/app/admin/activity/page.tsx",
+        "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/_parts/MessagesTab.tsx",
         "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
@@ -7507,6 +7633,7 @@
       ],
       "usedBy": [
         "src/app/admin/activity/page.tsx",
+        "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/admin/employees/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
@@ -7539,6 +7666,7 @@
       ],
       "usedBy": [
         "src/app/admin/activity/page.tsx",
+        "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/_parts/CourseDialogs.tsx",
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
         "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
@@ -7877,6 +8005,7 @@
       "imports": [],
       "usedBy": [
         "src/app/admin/activity/page.tsx",
+        "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/admin/employees/page.tsx",
         "src/app/admin/golfers/page.tsx",
@@ -8045,6 +8174,9 @@
         "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
         "src/app/api/admin/broadcasts/route.ts",
         "src/app/api/admin/change-password/route.ts",
+        "src/app/api/admin/company-documents/download/route.ts",
+        "src/app/api/admin/company-documents/route.ts",
+        "src/app/api/admin/company-documents/upload/route.ts",
         "src/app/api/admin/course-calls/route.ts",
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/course-documents/download/route.ts",
@@ -9311,6 +9443,62 @@
       ]
     },
     {
+      "path": "src/lib/company-documents.ts",
+      "lines": 60,
+      "purpose": "CO-DOCS (Cam 2026-10-01):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "COMPANY_DOC_CATEGORIES",
+          "kind": "const"
+        },
+        {
+          "name": "COMPANY_DOC_MAX_BYTES",
+          "kind": "const"
+        },
+        {
+          "name": "COMPANY_DOC_PREFIX",
+          "kind": "const"
+        },
+        {
+          "name": "COMPANY_DOC_TYPES",
+          "kind": "const"
+        },
+        {
+          "name": "CompanyDocCategory",
+          "kind": "type"
+        },
+        {
+          "name": "companyDocPathOf",
+          "kind": "fn"
+        },
+        {
+          "name": "describeCompanyPath",
+          "kind": "fn"
+        },
+        {
+          "name": "isAllowedCompanyPath",
+          "kind": "fn"
+        },
+        {
+          "name": "isCompanyDocCategory",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/company-documents/page.tsx",
+        "src/app/api/admin/company-documents/download/route.ts",
+        "src/app/api/admin/company-documents/route.ts",
+        "src/app/api/admin/company-documents/upload/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/course-action-queue.ts",
       "lines": 37,
       "purpose": "COURSES_SHEET_SPEC CS-1 §4 — the Overview action queue's course rows for check-in calls.",
@@ -10509,6 +10697,7 @@
       "imports": [],
       "usedBy": [
         "src/app/admin/activity/page.tsx",
+        "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/_parts/CourseDialogs.tsx",
         "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
@@ -11505,6 +11694,7 @@
         "src/app/api/admin/bootstrap/route.ts",
         "src/app/api/admin/broadcasts/route.ts",
         "src/app/api/admin/change-password/route.ts",
+        "src/app/api/admin/company-documents/route.ts",
         "src/app/api/admin/course-calls/route.ts",
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/course-documents/route.ts",
@@ -11676,6 +11866,9 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/api/admin/company-documents/download/route.ts",
+        "src/app/api/admin/company-documents/route.ts",
+        "src/app/api/admin/company-documents/upload/route.ts",
         "src/app/api/admin/course-documents/download/route.ts",
         "src/app/api/admin/course-documents/record/route.ts",
         "src/app/api/admin/course-documents/upload/route.ts",
@@ -12663,7 +12856,9 @@
           "type": "DateTime"
         }
       ],
-      "writers": [],
+      "writers": [
+        "src/app/api/admin/company-documents/route.ts"
+      ],
       "readers": []
     },
     {
