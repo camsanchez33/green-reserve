@@ -8,6 +8,7 @@ import {
   Calendar, Users, DollarSign, Ban,
   Plus, ChevronLeft, ChevronRight, RefreshCw,
   AlertTriangle, X, Loader2, Lock, Eye, CheckCircle,
+  Snowflake,
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -120,6 +121,13 @@ function DashboardPageInner() {
   // attention row for this page load only; nothing is written anywhere.
   const [stillComing, setStillComing] = useState<Set<string>>(new Set());
   // SD-5: the walk-in form is opened on a slot; row actions carry their own busy id.
+  // B-9 frost delay: pick the new first tee time, preview the moves, confirm.
+  type FrostPlan = { moves: { bookingId: string; name: string; players: number; fromTime: string; toTime: string }[]; unplaced: { bookingId: string; name: string; players: number; time: string }[]; blockTeeTimeIds: string[] };
+  const [frostOpen, setFrostOpen] = useState(false);
+  const [frostTime, setFrostTime] = useState('09:00');
+  const [frostPlan, setFrostPlan] = useState<FrostPlan | null>(null);
+  const [frostBusy, setFrostBusy] = useState(false);
+  const [frostErr, setFrostErr] = useState('');
   const [walkInSlot, setWalkInSlot] = useState<TeeTime | null>(null);
   const [rowBusy, setRowBusy] = useState<string | null>(null);
   const [cardModalBooking, setCardModalBooking] = useState<Booking | null>(null);
@@ -616,6 +624,11 @@ function DashboardPageInner() {
                   <button onClick={() => loadTimes(selectedDate)} className="flex items-center gap-1.5 text-[12.5px] text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
                     <RefreshCw className="w-3.5 h-3.5"/>Refresh
                   </button>
+                  {selectedDate >= today() && (
+                    <button onClick={() => { setFrostOpen(true); setFrostPlan(null); setFrostErr(''); }} className="flex items-center gap-1.5 text-[12.5px] text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
+                      <Snowflake className="w-3.5 h-3.5"/>Frost delay
+                    </button>
+                  )}
                   <button onClick={() => setShowAddModal(true)} className="flex items-center gap-1.5 text-[12.5px] bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md transition-colors">
                     <Plus className="w-3.5 h-3.5"/>Add Time
                   </button>
@@ -859,6 +872,62 @@ function DashboardPageInner() {
               <button onClick={() => setShowAddModal(false)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
             </div>
             <AddTeeTimeForm date={selectedDate} onSave={()=>{setShowAddModal(false);loadTimes(selectedDate);}} onCancel={()=>setShowAddModal(false)}/>
+          </div>
+        </div>
+      )}
+
+      {/* ── B-9: Frost delay — preview, then confirm ── */}
+      {frostOpen && (
+        <div className="fixed inset-0 bg-ink/20 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white w-full sm:max-w-md rounded-t-lg sm:rounded-lg shadow-card p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-serif font-medium text-ink text-[17px]">Frost delay — {fmtDate(selectedDate)}</h3>
+              <button onClick={() => setFrostOpen(false)} className="text-ink-muted hover:text-ink" aria-label="Close"><X className="w-5 h-5"/></button>
+            </div>
+            <p className="text-[13px] text-ink-soft mb-4">Every group booked before the new first tee time moves, in tee-time order, to the earliest open time that fits them. The early times are blocked and each moved golfer is emailed. Prices don&apos;t change. Nobody is cancelled.</p>
+            <label className="block text-[12.5px] text-ink-muted mb-1.5">New first tee time</label>
+            <div className="flex gap-2 mb-4">
+              <input type="time" value={frostTime} onChange={e => { setFrostTime(e.target.value); setFrostPlan(null); }} className={iCls + ' flex-1'}/>
+              <button disabled={frostBusy} onClick={async () => {
+                setFrostBusy(true); setFrostErr('');
+                const r = await dfetch<{ plan: FrostPlan }>('/api/operator/frost-delay', { method: 'POST', body: JSON.stringify({ date: selectedDate, newStart: frostTime }) });
+                setFrostBusy(false);
+                if (!r.ok) { setFrostErr(r.error); return; }
+                setFrostPlan(r.data.plan);
+              }} className="px-4 rounded-md border border-line text-[13px] font-semibold text-ink hover:bg-paper disabled:opacity-50">{frostBusy && !frostPlan ? 'Checking…' : 'Preview'}</button>
+            </div>
+            {frostErr && <p className="text-[13px] text-bad mb-3">{frostErr}</p>}
+            {frostPlan && (
+              <div className="mb-4">
+                {frostPlan.moves.length + frostPlan.unplaced.length === 0 ? (
+                  <p className="text-[13px] text-ink-soft">No groups are booked before {fmtTime(frostTime)}. {frostPlan.blockTeeTimeIds.length} empty time{frostPlan.blockTeeTimeIds.length === 1 ? '' : 's'} will be blocked.</p>
+                ) : (
+                  <ul className="divide-y divide-line text-[13px] border-y border-line">
+                    {frostPlan.moves.map(m => (
+                      <li key={m.bookingId} className="flex justify-between py-1.5"><span>{m.name} · {m.players}</span><span className="tabular-nums text-ink-soft">{fmtTime(m.fromTime)} → <b className="text-ink">{fmtTime(m.toTime)}</b></span></li>
+                    ))}
+                    {frostPlan.unplaced.map(u => (
+                      <li key={u.bookingId} className="flex justify-between py-1.5 text-bad"><span>{u.name} · {u.players}</span><span>{fmtTime(u.time)} — no open time fits, call them</span></li>
+                    ))}
+                  </ul>
+                )}
+                <p className="text-[12px] text-ink-muted mt-2">{frostPlan.blockTeeTimeIds.length} time{frostPlan.blockTeeTimeIds.length === 1 ? '' : 's'} before {fmtTime(frostTime)} will be blocked.</p>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <button onClick={() => setFrostOpen(false)} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[13px] font-medium hover:border-line-strong">Cancel</button>
+              <button disabled={!frostPlan || frostBusy || frostPlan.blockTeeTimeIds.length + frostPlan.moves.length === 0} onClick={async () => {
+                setFrostBusy(true); setFrostErr('');
+                const r = await dfetch<{ moved: { emailed: boolean | null }[]; unplaced: unknown[]; blocked: number }>('/api/operator/frost-delay', { method: 'POST', body: JSON.stringify({ date: selectedDate, newStart: frostTime, apply: true }) });
+                setFrostBusy(false);
+                if (!r.ok) { setFrostErr(r.error); return; }
+                const notEmailed = r.data.moved.filter(m => m.emailed !== true).length;
+                toast(`Frost delay set: ${r.data.moved.length} group${r.data.moved.length === 1 ? '' : 's'} moved, ${r.data.blocked} time${r.data.blocked === 1 ? '' : 's'} blocked.${r.data.unplaced.length ? ` ${r.data.unplaced.length} group${r.data.unplaced.length === 1 ? '' : 's'} didn't fit — call them.` : ''}${notEmailed ? ` ${notEmailed} moved golfer${notEmailed === 1 ? ' has' : 's have'} no email on file or the email failed — call them.` : ''}`, r.data.unplaced.length || notEmailed ? 'warn' : 'ok');
+                setFrostOpen(false); setFrostPlan(null); loadTimes(selectedDate);
+              }} className="flex-1 bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[13px] font-semibold disabled:opacity-50">
+                {frostBusy && frostPlan ? 'Applying…' : frostPlan ? `Move ${frostPlan.moves.length} group${frostPlan.moves.length === 1 ? '' : 's'}` : 'Preview first'}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -117,8 +117,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-01 05:49 UTC</span><span>claude/eager-maxwell-qf1pd0 @ 3181984</span>
-    <span>19 uncommitted</span>
+    <span>2026-10-01 05:59 UTC</span><span>claude/eager-maxwell-qf1pd0 @ ddc7f43</span>
+    <span>7 uncommitted</span>
   </div>
 </header>
 <div class="tiles">
@@ -132,7 +132,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M RUN_QUEUE.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/design-guard.baseline.json</code></li><li><code>M src/app/api/operator/analytics/route.ts</code></li><li><code>M src/app/api/operator/tee-times/route.ts</code></li><li><code>M src/app/dashboard/members/page.tsx</code></li><li><code>M src/app/dashboard/messages/page.tsx</code></li><li><code>M src/app/dashboard/money/page.tsx</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/app/dashboard/schedules/page.tsx</code></li><li><code>M src/app/dashboard/settings/page.tsx</code></li><li><code>M src/components/OperatorSidebar.tsx</code></li><li><code>M src/components/dashboard/GettingStartedChecklist.tsx</code></li><li><code>M src/components/dashboard/money/PaymentsPanel.tsx</code></li><li><code>M src/lib/birdie/knowledge-operator.ts</code></li><li><code>?? src/app/dashboard/analytics/</code></li><li><code>?? src/lib/analytics.ts</code></li></ul>
+<ul class="plain"><li><code>M UI_REVISE_SPEC.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/lib/email.ts</code></li><li><code>?? src/app/api/operator/frost-delay/</code></li><li><code>?? src/lib/frost-delay.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -246,6 +246,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">af425f9</td><td class="num">2026-10-01</td><td>AN-1: Analytics tab, and operational tabs stripped to the working UI</td></tr>
 <tr><td class="num">1111104</td><td class="num">2026-10-01</td><td>EV-1: BookingEvent append-only event log</td></tr>
 <tr><td class="num">e707182</td><td class="num">2026-10-01</td><td>Fix: walk-ins no longer arrive checked in; each group is checked in on its own</td></tr>
 <tr><td class="num">67704e9</td><td class="num">2026-10-01</td><td>FLOW-3: golfer course page in the homepage phone's style; calendar pop-up on the tee sheet</td></tr>
@@ -257,7 +258,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">775d18b</td><td class="num">2026-09-30</td><td>CO-DOCS: owner-only Company documents in the private Blob store (#32)</td></tr>
 <tr><td class="num">adba629</td><td class="num">2026-10-01</td><td>CO-DOCS: regenerate the code map</td></tr>
 <tr><td class="num">209eb2a</td><td class="num">2026-10-01</td><td>CO-DOCS: use the shared INPUT_COMPACT class (design-guard)</td></tr>
-<tr><td class="num">ebd77aa</td><td class="num">2026-10-01</td><td>queue/spec update</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

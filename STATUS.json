@@ -1,34 +1,22 @@
 {
-  "generatedAt": "2026-10-01T05:49:56.788Z",
+  "generatedAt": "2026-10-01T05:59:28.863Z",
   "repo": {
-    "head": "3181984",
+    "head": "ddc7f43",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 19,
+    "dirtyCount": 7,
     "dirty": [
-      "M CLAUDE.md",
-      " M RUN_QUEUE.md",
+      "M UI_REVISE_SPEC.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/design-guard.baseline.json",
-      " M src/app/api/operator/analytics/route.ts",
-      " M src/app/api/operator/tee-times/route.ts",
-      " M src/app/dashboard/members/page.tsx",
-      " M src/app/dashboard/messages/page.tsx",
-      " M src/app/dashboard/money/page.tsx",
       " M src/app/dashboard/page.tsx",
-      " M src/app/dashboard/schedules/page.tsx",
-      " M src/app/dashboard/settings/page.tsx",
-      " M src/components/OperatorSidebar.tsx",
-      " M src/components/dashboard/GettingStartedChecklist.tsx",
-      " M src/components/dashboard/money/PaymentsPanel.tsx",
-      " M src/lib/birdie/knowledge-operator.ts",
-      "?? src/app/dashboard/analytics/",
-      "?? src/lib/analytics.ts"
+      " M src/lib/email.ts",
+      "?? src/app/api/operator/frost-delay/",
+      "?? src/lib/frost-delay.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
-    "queueLastCommit": "2026-10-01T05:24:11+00:00",
+    "queueLastCommit": "2026-10-01T05:50:09+00:00",
     "unrecorded": []
   },
   "counts": {
@@ -663,6 +651,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "af425f9",
+      "date": "2026-10-01",
+      "subject": "AN-1: Analytics tab, and operational tabs stripped to the working UI"
+    },
+    {
       "h": "1111104",
       "date": "2026-10-01",
       "subject": "EV-1: BookingEvent append-only event log"
@@ -716,11 +709,6 @@
       "h": "209eb2a",
       "date": "2026-10-01",
       "subject": "CO-DOCS: use the shared INPUT_COMPACT class (design-guard)"
-    },
-    {
-      "h": "ebd77aa",
-      "date": "2026-10-01",
-      "subject": "queue/spec update"
     }
   ]
 }

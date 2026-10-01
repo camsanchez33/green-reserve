@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 367,
-    "routes": 202,
-    "libs": 97,
+    "files": 369,
+    "routes": 203,
+    "libs": 98,
     "models": 34,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -4363,6 +4363,33 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/frost-delay/route.ts",
+      "lines": 31,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/frost-delay",
+      "kind": "api",
+      "methods": [
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/course-time",
+        "@/lib/frost-delay",
+        "@/lib/prisma",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/members/remind-overdue/route.ts",
       "lines": 76,
       "purpose": "",
@@ -5993,7 +6020,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1111,
+      "lines": 1180,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10049,6 +10076,7 @@
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/dashboard/page.tsx",
@@ -10436,7 +10464,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1796,
+      "lines": 1817,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10558,6 +10586,10 @@
         },
         {
           "name": "sendDetailsSubmittedNotification",
+          "kind": "fn"
+        },
+        {
+          "name": "sendFrostDelayEmail",
           "kind": "fn"
         },
         {
@@ -10724,6 +10756,7 @@
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/course-closure.ts",
+        "src/lib/frost-delay.ts",
         "src/lib/refund-booking.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/two-factor.ts"
@@ -10899,7 +10932,49 @@
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
-        "src/components/dashboard/money/PaymentsPanel.tsx"
+        "src/components/dashboard/money/PaymentsPanel.tsx",
+        "src/lib/frost-delay.ts"
+      ]
+    },
+    {
+      "path": "src/lib/frost-delay.ts",
+      "lines": 95,
+      "purpose": "B-9 frost delay (Cam 2026-10-01:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "applyFrostDelay",
+          "kind": "fn"
+        },
+        {
+          "name": "FrostMove",
+          "kind": "type"
+        },
+        {
+          "name": "FrostPlan",
+          "kind": "type"
+        },
+        {
+          "name": "isFrostTime",
+          "kind": "fn"
+        },
+        {
+          "name": "planFrostDelay",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./email",
+        "./format",
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/operator/frost-delay/route.ts"
       ]
     },
     {
@@ -11963,6 +12038,7 @@
         "src/app/api/operator/conditions/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
@@ -12009,6 +12085,7 @@
         "src/lib/claim-tee-time.ts",
         "src/lib/course-closure.ts",
         "src/lib/course-timeline.ts",
+        "src/lib/frost-delay.ts",
         "src/lib/go-live-preflight.ts",
         "src/lib/lifecycle.ts",
         "src/lib/member-session.ts",
@@ -12425,6 +12502,7 @@
         "src/app/api/operator/conditions/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
@@ -13590,6 +13668,7 @@
         "src/lib/checkin-booking.ts",
         "src/lib/course-closure.ts",
         "src/lib/course-metrics.ts",
+        "src/lib/frost-delay.ts",
         "src/lib/lifecycle.ts",
         "src/lib/refund-booking.ts"
       ]
@@ -14278,6 +14357,7 @@
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
@@ -15725,6 +15805,7 @@
       "writers": [
         "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/tee-times/route.ts",
+        "src/lib/frost-delay.ts",
         "src/lib/lifecycle.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts"
@@ -15739,6 +15820,7 @@
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/api/preview/[courseId]/tee-times/route.ts",
         "src/lib/analytics.ts",
+        "src/lib/frost-delay.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts"

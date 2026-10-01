@@ -4,33 +4,21 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-01 05:49 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `3181984` · working tree **19 dirty file(s)**
+Generated 2026-10-01 05:59 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `ddc7f43` · working tree **7 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-### Uncommitted working tree (19 file(s))
+### Uncommitted working tree (7 file(s))
 
-- `M CLAUDE.md`
-- `M RUN_QUEUE.md`
+- `M UI_REVISE_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/design-guard.baseline.json`
-- `M src/app/api/operator/analytics/route.ts`
-- `M src/app/api/operator/tee-times/route.ts`
-- `M src/app/dashboard/members/page.tsx`
-- `M src/app/dashboard/messages/page.tsx`
-- `M src/app/dashboard/money/page.tsx`
 - `M src/app/dashboard/page.tsx`
-- `M src/app/dashboard/schedules/page.tsx`
-- `M src/app/dashboard/settings/page.tsx`
-- `M src/components/OperatorSidebar.tsx`
-- `M src/components/dashboard/GettingStartedChecklist.tsx`
-- `M src/components/dashboard/money/PaymentsPanel.tsx`
-- `M src/lib/birdie/knowledge-operator.ts`
-- `?? src/app/dashboard/analytics/`
-- `?? src/lib/analytics.ts`
+- `M src/lib/email.ts`
+- `?? src/app/api/operator/frost-delay/`
+- `?? src/lib/frost-delay.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -195,6 +183,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `af425f9` 2026-10-01 — AN-1: Analytics tab, and operational tabs stripped to the working UI
 - `1111104` 2026-10-01 — EV-1: BookingEvent append-only event log
 - `e707182` 2026-10-01 — Fix: walk-ins no longer arrive checked in; each group is checked in on its own
 - `67704e9` 2026-10-01 — FLOW-3: golfer course page in the homepage phone's style; calendar pop-up on the tee sheet
@@ -206,7 +195,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `775d18b` 2026-09-30 — CO-DOCS: owner-only Company documents in the private Blob store (#32)
 - `adba629` 2026-10-01 — CO-DOCS: regenerate the code map
 - `209eb2a` 2026-10-01 — CO-DOCS: use the shared INPUT_COMPACT class (design-guard)
-- `ebd77aa` 2026-10-01 — queue/spec update
 
 ---
 
