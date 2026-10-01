@@ -59,7 +59,7 @@ export default function TwoFactorVerifyPage() {
           </p>
         </div>
 
-        <div className="bg-white border border-line rounded-lg p-6">
+        <div className="bg-white rounded-lg shadow-card p-6">
           {error && <div className="bg-white border border-line border-l-[3px] border-l-bad text-bad rounded-md px-3 py-2.5 text-[13.5px] mb-4" role="alert">{error}</div>}
           {resent && !error && <div className="bg-white border border-line border-l-[3px] border-l-ok text-ok rounded-md px-3 py-2.5 text-[13.5px] mb-4" role="status">New code sent.</div>}
 

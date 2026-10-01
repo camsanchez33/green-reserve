@@ -4,7 +4,7 @@ export function StatGroup({ stats }: {
   stats: { label: string; value: string | number; delta?: React.ReactNode }[];
 }) {
   return (
-    <div className="bg-white border border-line rounded-lg flex divide-x divide-line-soft">
+    <div className="bg-white rounded-lg shadow-card flex divide-x divide-line-soft">
       {stats.map(s => (
         <div key={s.label} className="flex-1 px-5 py-4 min-w-0">
           <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mb-1">{s.label}</div>

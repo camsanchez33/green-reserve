@@ -56,7 +56,7 @@ function ResetPasswordContent() {
           <p className="text-xs text-ink-muted mt-1">Course Operator Portal</p>
         </div>
 
-        <div className="bg-white border border-line rounded-lg p-8">
+        <div className="bg-white rounded-lg shadow-card p-8">
           {checking && (
             <div className="text-center py-6">
               <Loader2 className="w-10 h-10 text-pine animate-spin mx-auto mb-4"/>

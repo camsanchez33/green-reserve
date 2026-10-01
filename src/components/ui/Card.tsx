@@ -5,7 +5,9 @@ import React from 'react';
 // is changed here or nowhere (scripts/design-guard.mjs keeps it that way).
 // Padding, overflow and layout stay at the site, in className — cards differ
 // there on purpose. Any other attribute (id, onClick, style, ref) passes through.
-export const CARD = 'bg-white border border-line rounded-lg';
+// FLOW-1 (Cam 2026-10-01): a soft sheet (shadow-card = 1px ring at 6% + a
+// 0 1px 2px lift), not a ruled box — boxes-in-boxes read as "clunky".
+export const CARD = 'bg-white rounded-lg shadow-card';
 
 export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   function Card({ className = '', ...rest }, ref) {

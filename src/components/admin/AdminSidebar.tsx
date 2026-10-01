@@ -2,6 +2,7 @@
 import { useRouter } from 'next/navigation';
 import { SUPPORT_PLUS, MANAGER_PLUS, VIEWER_PLUS, OWNER_ONLY } from '@/lib/admin-roles';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState, useCallback } from 'react';
 import { BarChart2, AlertCircle, Building2, Hammer, Users, Activity, MessageSquare, UserCircle, ChevronLeft, ChevronRight, DollarSign, Search, UserSearch, Wrench, LogOut, FileLock2 } from 'lucide-react';
 import CommandPalette from '@/components/admin/CommandPalette';
@@ -153,7 +154,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   function NavItem({ item, badge }: { item: typeof mainNav[0]; badge?: React.ReactNode }) {
     const isActive = active === item.key;
     const cls = `w-full flex items-center ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-2.5 text-[13px] font-medium transition-colors text-left relative group ${
-      isActive ? 'bg-white/10 text-paper rounded-md' : 'text-[#A9BFAF] hover:text-paper hover:bg-white/10 rounded-md'
+      isActive ? 'bg-pine/[0.07] text-pine font-semibold rounded-md' : 'text-ink-soft hover:text-ink hover:bg-paper rounded-md'
     }`;
     return (
       // MP-8a: a real link — middle-click and cmd-click open a tab, the
@@ -175,19 +176,19 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   }
 
   const inquiriesBadge = pending > 0 ? (
-    <span className="bg-warn text-white text-[10px] px-1.5 py-0.5 font-medium leading-none shrink-0">
+    <span className="bg-warn text-white text-[10px] px-1.5 py-0.5 font-semibold leading-none shrink-0 rounded-full">
       {pending > 99 ? '99+' : pending}
     </span>
   ) : undefined;
 
   const revenueBadge = moneyProblems > 0 ? (
-    <span className="bg-bad text-white text-[10px] px-1.5 py-0.5 font-medium leading-none shrink-0" title={`${moneyProblems} money problem${moneyProblems === 1 ? '' : 's'} — failed charges and open chargebacks`}>
+    <span className="bg-bad text-white text-[10px] px-1.5 py-0.5 font-semibold leading-none shrink-0 rounded-full" title={`${moneyProblems} money problem${moneyProblems === 1 ? '' : 's'} — failed charges and open chargebacks`}>
       {moneyProblems > 99 ? '99+' : moneyProblems}
     </span>
   ) : undefined;
 
   const messagesBadge = unread > 0 ? (
-    <span className="bg-ok text-white text-[10px] px-1.5 py-0.5 font-medium leading-none shrink-0">
+    <span className="bg-ok text-white text-[10px] px-1.5 py-0.5 font-semibold leading-none shrink-0 rounded-full">
       {unread > 99 ? '99+' : unread}
     </span>
   ) : undefined;
@@ -195,23 +196,23 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   return (
     <>
     <CommandPalette/>
-    <div className={`fixed left-0 top-0 h-full ${w} bg-pine flex flex-col z-10 transition-[width] duration-200 ease-in-out`}>
+    <div className={`fixed left-0 top-0 h-full ${w} bg-white border-r border-line flex flex-col z-10 transition-[width] duration-200 ease-in-out`}>
       {/* Wordmark / logo mark */}
-      <div className={`${collapsed ? 'px-0 flex items-center justify-center' : 'px-5'} py-5 border-b border-white/10`}>
+      <div className={`${collapsed ? 'px-0 flex items-center justify-center' : 'px-5'} py-5`}>
         {collapsed ? (
-          <button onClick={openPalette} title="Search (Ctrl+K)" className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-            <Search className="w-4 h-4 text-paper"/>
+          <button onClick={openPalette} title="Search (Ctrl+K)" className="w-7 h-7 rounded-md border border-line flex items-center justify-center hover:bg-paper transition-colors">
+            <Search className="w-4 h-4 text-ink-muted"/>
           </button>
         ) : (
           <>
-            <div className="flex justify-end mb-2">
-              <button onClick={openPalette} title="Search (Ctrl+K)" className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                <Search className="w-3.5 h-3.5 text-[#A9BFAF]"/>
+            {/* FLOW-1: a light rail with the real lockup, as on the homepage —
+                the solid pine slab read as a separate product. */}
+            <div className="flex items-center justify-between gap-2">
+              <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={150} height={28} className="w-[150px] h-auto" />
+              <button onClick={openPalette} title="Search (Ctrl+K)" className="w-7 h-7 rounded-md border border-line flex items-center justify-center hover:bg-paper transition-colors shrink-0">
+                <Search className="w-3.5 h-3.5 text-ink-muted"/>
               </button>
             </div>
-            {/* U-0 (UI_REVISE_SPEC §1b, canvas "Admin · Overview"): the wordmark
-                is set in the staff serif, not the marketing lockup. */}
-            <div className="font-serif text-[17px] text-paper leading-none">GreenReserve</div>
           </>
         )}
       </div>
@@ -227,15 +228,15 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       </nav>
 
       {/* Bottom cluster */}
-      <div className="p-2 border-t border-white/10 space-y-0.5">
+      <div className="p-2 border-t border-line space-y-0.5">
         {!collapsed && (
-          <div className="px-3 pt-1 pb-2 text-[12.5px] text-[#A9BFAF] truncate">{name || 'Signed in'} · {role}</div>
+          <div className="px-3 pt-2 pb-2 text-[12.5px] text-ink-muted truncate">{name || 'Signed in'} · {role}</div>
         )}
         {bottomNav.map(item => <NavItem key={item.key} item={item} />)}
         <button
           onClick={signOut}
           disabled={signingOut}
-          className={`w-full flex items-center ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-2 text-[13px] text-[#A9BFAF] hover:text-paper hover:bg-white/10 rounded-md transition-colors disabled:opacity-50`}
+          className={`w-full flex items-center ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-2 text-[13px] text-ink-muted hover:text-ink hover:bg-paper rounded-md transition-colors disabled:opacity-50`}
           title={collapsed ? 'Sign out' : undefined}
         >
           {collapsed ? (
@@ -245,7 +246,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
           )}
         </button>
         {signOutError && !collapsed && (
-          <p className="px-3 pb-1 text-[11px] text-[#F0B6A6] leading-snug">
+          <p className="px-3 pb-1 text-[11px] text-bad leading-snug">
             Sign-out failed — you are still signed in. Check your connection and try again.
           </p>
         )}
@@ -255,7 +256,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       <button
         onClick={toggle}
         title={`${collapsed ? 'Expand' : 'Collapse'} sidebar ([)`}
-        className="absolute -right-3 top-[72px] w-6 h-6 rounded-full bg-pine border border-white/20 flex items-center justify-center text-[#A9BFAF] hover:text-paper transition-colors z-20"
+        className="absolute -right-3 top-[72px] w-6 h-6 rounded-full bg-white border border-line flex items-center justify-center text-ink-muted hover:text-ink transition-colors z-20"
       >
         {collapsed ? <ChevronRight className="w-3 h-3"/> : <ChevronLeft className="w-3 h-3"/>}
       </button>

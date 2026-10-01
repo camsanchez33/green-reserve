@@ -21,6 +21,10 @@
   --color-warn:        #9A5B13;
   --color-dot-neutral: #B3B6AF;
 
+  /* FLOW-1: a card is a white sheet with a whisper of an edge, not a ruled
+     box — `shadow-card` (a 1px ring at 6% + the allowed 0 1px 2px). */
+  --shadow-card: 0 0 0 1px rgba(20,24,20,.06), 0 1px 2px rgba(20,24,20,.05);
+
   /* Fonts: Archivo everywhere, staff surfaces included (FLOW-1). */
   --font-sans:  'Archivo', system-ui, sans-serif;
   --font-serif: var(--font-sans);

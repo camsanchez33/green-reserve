@@ -88,7 +88,7 @@ function VerifyContent() {
 
   return (
     <div className="min-h-screen bg-paper flex items-center justify-center p-4">
-      <div className="bg-white border border-line rounded-lg p-10 max-w-md w-full text-center">
+      <div className="bg-white rounded-lg shadow-card p-10 max-w-md w-full text-center">
         {status === 'idle' && !urlToken && (
           checkingSession ? (
             <div className="py-4">

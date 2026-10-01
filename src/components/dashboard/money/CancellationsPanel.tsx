@@ -71,7 +71,7 @@ export function CancellationsPanel({ bookings, course, courseLoaded, isStaff, on
 
   return (
     <div className="space-y-6">
-      <div className="bg-white border border-line rounded-lg p-5">
+      <div className="bg-white rounded-lg shadow-card p-5">
         <h2 className="text-[15px] font-medium text-ink mb-1">Cancellation Policy</h2>
         <p className="text-[13.5px] text-ink-soft mb-4">Golfers can cancel free until this many hours before their tee time. After that, the fee below is automatically charged — and refunded if they still show up and check in.</p>
         {/* §1b: attention = a 3px left border in the semantic colour on a white card. */}

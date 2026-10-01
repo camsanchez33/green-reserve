@@ -4,8 +4,9 @@ import React from 'react';
 // Sites used it on div / span / label / p / h3, so `as` keeps the element (and
 // with it htmlFor and the rest); weight and spacing stay in className.
 // `tone="public"` is the marketing/golfer 0.06em variant.
-export const EYEBROW = 'text-[11px] uppercase tracking-[0.1em] text-ink-muted';
-const PUBLIC = 'text-[11px] uppercase tracking-[0.06em] text-ink-muted';
+// FLOW-1: the homepage eyebrow — Archivo condensed, semibold, 0.08em.
+export const EYEBROW = 'text-[11.5px] font-semibold uppercase tracking-[0.08em] text-ink-muted [font-stretch:87.5%]';
+const PUBLIC = 'text-[12px] font-semibold uppercase tracking-[0.08em] text-ink-muted [font-stretch:87.5%]';
 
 type Props = React.AllHTMLAttributes<HTMLElement> & { as?: React.ElementType; tone?: 'staff' | 'public' };
 

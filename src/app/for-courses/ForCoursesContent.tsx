@@ -455,7 +455,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
 
           {/* Private-club reassurance */}
           {form.courseType === 'private' && (
-            <div className="bg-white border border-line rounded-lg px-5 py-4 flex gap-3">
+            <div className="bg-white rounded-lg shadow-card px-5 py-4 flex gap-3">
               <Lock className="w-4 h-4 text-pine shrink-0 mt-0.5" />
               <div className="text-sm text-ink-soft space-y-1.5">
                 <p><span className="font-medium text-ink">Member-only booking.</span> Your tee sheet can be fully private — no public tee times unless you choose to enable outside play.</p>
@@ -668,7 +668,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
 
           {/* Section 3: the call. FB-1: the time is picked on the calendar right
               after submitting (Cal.com), so no time-of-day chips here. */}
-          <div className="bg-white border border-line rounded-lg px-5 py-4 flex gap-3">
+          <div className="bg-white rounded-lg shadow-card px-5 py-4 flex gap-3">
             <Calendar className="w-4 h-4 text-pine shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-ink">Next: a 20-minute call</p>
@@ -709,7 +709,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
           <aside className="mt-12 lg:mt-0 lg:order-first">
             <div className="lg:sticky lg:top-10 space-y-6">
               <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium">Why list with us</p>
-              <div className="bg-white border border-line rounded-lg divide-y divide-line-soft">
+              <div className="bg-white rounded-lg shadow-card divide-y divide-line-soft">
                 {[
                   { stat: '$1.50', label: "Per player, added to the golfer's total" },
                   { stat: '0%', label: 'Commission on green fees' },

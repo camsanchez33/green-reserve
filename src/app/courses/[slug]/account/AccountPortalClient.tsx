@@ -227,7 +227,7 @@ function PortalInner({ params }: { params: Promise<{ slug: string }> }) {
           ) : (
             <div className="space-y-3">
               {data.upcoming.map(b => (
-                <div key={b.id} className="bg-white border border-line rounded-lg p-5 flex items-center justify-between gap-4">
+                <div key={b.id} className="bg-white rounded-lg shadow-card p-5 flex items-center justify-between gap-4">
                   <div className="min-w-0">
                     <div className="font-serif font-medium text-ink text-xl leading-tight">{fmtTime(b.time)}</div>
                     <div className="text-sm text-ink-soft mt-0.5">{fmtDate(b.date)}</div>
@@ -254,7 +254,7 @@ function PortalInner({ params }: { params: Promise<{ slug: string }> }) {
           {data.past.length === 0 ? (
             <p className="text-sm text-ink-faint">No past rounds at {data.course.name} yet.</p>
           ) : (
-            <div className="bg-white border border-line rounded-lg divide-y divide-line-soft">
+            <div className="bg-white rounded-lg shadow-card divide-y divide-line-soft">
               {data.past.map(b => (
                 <div key={b.id} className="px-4 py-3 flex items-center justify-between gap-4">
                   <div className="min-w-0">

@@ -5967,7 +5967,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1205,
+      "lines": 1242,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5987,6 +5987,7 @@
         "@/components/dashboard/LoadError",
         "@/components/dashboard/TabIntro",
         "@/components/dashboard/Toast",
+        "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/lib/booking-status",
         "@/lib/change-requests",
@@ -6957,7 +6958,7 @@
     },
     {
       "path": "src/components/admin/AdminSidebar.tsx",
-      "lines": 266,
+      "lines": 267,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6980,6 +6981,7 @@
         "@/lib/admin-roles",
         "@/lib/admin-session-context",
         "lucide-react",
+        "next/image",
         "next/link",
         "next/navigation",
         "react"
@@ -7581,7 +7583,7 @@
     },
     {
       "path": "src/components/ui/Card.tsx",
-      "lines": 15,
+      "lines": 17,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7627,6 +7629,7 @@
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
         "src/app/admin/system/page.tsx",
+        "src/app/dashboard/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx"
@@ -7670,7 +7673,7 @@
     },
     {
       "path": "src/components/ui/Eyebrow.tsx",
-      "lines": 16,
+      "lines": 17,
       "purpose": "",
       "brain": [],
       "exports": [

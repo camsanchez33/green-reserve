@@ -35,7 +35,7 @@ export default function TermsOfServicePage() {
             <p className="text-ink-muted text-sm mb-10">Version v2026-08 — last updated August 2026</p>
 
             {/* Plain-English summary */}
-            <div className="bg-white border border-line rounded-lg p-6 mb-12">
+            <div className="bg-white rounded-lg shadow-card p-6 mb-12">
               <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">The short version</p>
               <ul className="space-y-2.5 text-sm text-ink-soft leading-relaxed">
                 {[

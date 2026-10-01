@@ -8,7 +8,7 @@ const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2 text-sm te
 
 function SectionCard({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white border border-line rounded-lg p-5">
+    <div className="bg-white rounded-lg shadow-card p-5">
       <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">{title}</div>
       {hint && <p className="text-xs text-ink-faint mb-4">{hint}</p>}
       <div className={hint ? 'space-y-3' : 'space-y-3 mt-4'}>{children}</div>
