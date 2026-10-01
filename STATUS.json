@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-10-01T06:24:10.123Z",
+  "generatedAt": "2026-10-01T06:29:17.459Z",
   "repo": {
-    "head": "b824a91",
+    "head": "2289fac",
     "branch": "claude/eager-maxwell-qf1pd0",
     "dirtyCount": 0,
     "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-10-01T06:24:09+00:00",
+    "queueLastCommit": "2026-10-01T06:29:10+00:00",
     "unrecorded": []
   },
   "counts": {
@@ -24,7 +24,7 @@
   "inFlight": [
     {
       "title": "BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET",
-      "line": 2122,
+      "line": 2135,
       "body": [
         "FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because \"no linked inquiry\" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding them outright. FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() + a \"Force delete permanently\" button per acknowledged orphan — owner-only, typed name confirm, server re-verifies the course is still an orphan before touching anything (refuses if it turns out to have a real inquiry link — this can never be used to route around the doctrine for a real course). This is the mechanism for Cam's DaisyLinks exception, but I have NOT executed it against DaisyLinks yet:",
         "- Last session's raw Prisma script (a read-only check confirming Fake",
@@ -95,14 +95,14 @@
     },
     {
       "title": "SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED",
-      "line": 2325,
+      "line": 2338,
       "hash": "951433d",
       "shipDate": "2026-09-16",
       "ageDays": 14
     },
     {
       "title": "SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box",
-      "line": 2438,
+      "line": 2451,
       "hash": "cfeb2e1",
       "shipDate": "2026-09-17",
       "ageDays": 13
@@ -144,56 +144,56 @@
     },
     {
       "title": "BUG: inquiry submissions send no emails",
-      "line": 2641,
+      "line": 2654,
       "hash": "8b9a046",
       "shipDate": "2026-09-28",
       "ageDays": 2
     },
     {
       "title": "BUG: perf audit crashed on every page",
-      "line": 2666,
+      "line": 2679,
       "hash": "dd7056a",
       "shipDate": "2026-09-29",
       "ageDays": 2
     },
     {
       "title": "RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM).",
-      "line": 2677,
+      "line": 2690,
       "hash": "f57f269",
       "shipDate": "2026-09-29",
       "ageDays": 2
     },
     {
       "title": "RV-2 — review follow-ups, small (from /gr-review 2026-09-29):",
-      "line": 2687,
+      "line": 2700,
       "hash": "0eab366",
       "shipDate": "2026-09-29",
       "ageDays": 2
     },
     {
       "title": "CAL-2 — Cal.com is the ONLY call scheduler",
-      "line": 2908,
+      "line": 2921,
       "hash": "e082dd0",
       "shipDate": "2026-09-29",
       "ageDays": 2
     },
     {
       "title": "BUG: hello@greenreserve.app takes no mail",
-      "line": 2940,
+      "line": 2953,
       "hash": "371ffff",
       "shipDate": "2026-09-29",
       "ageDays": 2
     },
     {
       "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 2958,
+      "line": 2971,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 2
     },
     {
       "title": "UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until r",
-      "line": 2283,
+      "line": 2296,
       "hash": null,
       "shipDate": null,
       "ageDays": null
@@ -277,32 +277,32 @@
     },
     {
       "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)",
-      "line": 1613,
+      "line": 1626,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
-      "line": 1719,
+      "line": 1732,
       "section": "Queue (run in this order)"
     },
     {
       "title": "PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29:",
-      "line": 2782,
+      "line": 2795,
       "section": "Queue (run in this order)"
     },
     {
       "title": "SETUP (Cam 2026-09-29: \"we need to do blob storage, birdie ai … we also need",
-      "line": 2787,
+      "line": 2800,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2982,
+      "line": 2995,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 3156,
+      "line": 3169,
       "section": "Queue (run in this order)"
     }
   ],
@@ -355,37 +355,37 @@
     {
       "item": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
       "note": "CAM: confirm the state before this runs — e",
-      "line": 1719
+      "line": 1732
     },
     {
       "item": "SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box",
       "note": "pending Cam's walk below",
-      "line": 2438
+      "line": 2451
     },
     {
       "item": "BUG: inquiry submissions send no emails",
       "note": "Cam: \"after submitting an inquiry they aren't getting sent an email",
-      "line": 2641
+      "line": 2654
     },
     {
       "item": "CAL-2 — Cal.com is the ONLY call scheduler",
       "note": "Cam: \"there should be no google calendar thing\" and, after setting both env vars and redeploying, \"it is just the same as before\"",
-      "line": 2908
+      "line": 2921
     },
     {
       "item": "BUG: hello@greenreserve.app takes no mail",
       "note": "Cam: \"all emails need to go to thegreenreserve@outlook",
-      "line": 2940
+      "line": 2953
     },
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2958
+      "line": 2971
     },
     {
       "item": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
       "note": "Cam: \"keep going with whatever is next\")",
-      "line": 2982
+      "line": 2995
     }
   ],
   "ideas": {
@@ -653,19 +653,14 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "b824a91",
+      "h": "2289fac",
       "date": "2026-10-01",
-      "subject": "queue/spec update"
+      "subject": "MP-8b: cron run log + Stripe webhook receipts on Admin → System (no migration — CronRunLog already exists)"
     },
     {
-      "h": "9dff4bb",
+      "h": "39cefdd",
       "date": "2026-10-01",
-      "subject": "Remove Close a day from Schedule — weather cancels live on the Tee Sheet's Weather button"
-    },
-    {
-      "h": "a1a160a",
-      "date": "2026-10-01",
-      "subject": "WX-1: Weather button on the Tee Sheet — cancel times (day or window) or delay start"
+      "subject": "WX-1: Weather button — cancel times or delay start (#41)"
     },
     {
       "h": "04f2335",
@@ -711,6 +706,11 @@
       "h": "4a69ffe",
       "date": "2026-10-01",
       "subject": "FLOW-1 (wip): one palette and typeface for every page, staff surfaces included"
+    },
+    {
+      "h": "edd24e7",
+      "date": "2026-10-01",
+      "subject": "SEC-blob-host: only send the private-store token to Vercel Blob's host"
     }
   ]
 }

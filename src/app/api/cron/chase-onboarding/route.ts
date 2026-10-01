@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cronAuthFailure } from '@/lib/cron-auth';
+import { cronRoute } from '@/lib/cron-log';
 import { prisma } from '@/lib/prisma';
 import { sendOnboardingChaseEmail } from '@/lib/email';
 import { getApprovalState } from '@/lib/approval-state';
@@ -35,7 +36,9 @@ function isDue(events: Awaited<ReturnType<typeof getCourseTimeline>>, createdAt:
   return { due: true, nextThreshold };
 }
 
-export async function GET(req: NextRequest) {
+export const GET = cronRoute('chase-onboarding', async (req: NextRequest) => {
+  // cronRoute authorises before logging; the check stays here too so every
+  // cron route is visibly guarded on its own.
   const denied = cronAuthFailure(req);
   if (denied) return denied;
 
@@ -103,4 +106,4 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({ processed: preLive.length + live.length, results });
-}
+});

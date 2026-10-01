@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 371,
+    "files": 372,
     "routes": 204,
-    "libs": 99,
+    "libs": 100,
     "models": 34,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -1004,7 +1004,7 @@
     },
     {
       "path": "src/app/admin/system/page.tsx",
-      "lines": 517,
+      "lines": 532,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2371,7 +2371,7 @@
     },
     {
       "path": "src/app/api/admin/system/route.ts",
-      "lines": 103,
+      "lines": 107,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2393,6 +2393,7 @@
         "@/lib/birdie/guardrails",
         "@/lib/booking-fees",
         "@/lib/calcom",
+        "@/lib/cron-log",
         "@/lib/prisma",
         "next/server"
       ],
@@ -3159,7 +3160,7 @@
     },
     {
       "path": "src/app/api/cron/cancellation-cutoff/route.ts",
-      "lines": 139,
+      "lines": 142,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3178,6 +3179,7 @@
       "imports": [
         "@/lib/booking-events",
         "@/lib/cron-auth",
+        "@/lib/cron-log",
         "@/lib/email",
         "@/lib/prisma",
         "@/lib/stripe",
@@ -3188,7 +3190,7 @@
     },
     {
       "path": "src/app/api/cron/chase-onboarding/route.ts",
-      "lines": 107,
+      "lines": 110,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3209,6 +3211,7 @@
         "@/lib/approval-state",
         "@/lib/course-timeline",
         "@/lib/cron-auth",
+        "@/lib/cron-log",
         "@/lib/email",
         "@/lib/prisma",
         "next/server"
@@ -3217,7 +3220,7 @@
     },
     {
       "path": "src/app/api/cron/generate-tee-times/route.ts",
-      "lines": 14,
+      "lines": 17,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3235,6 +3238,7 @@
       "guard": "file",
       "imports": [
         "@/lib/cron-auth",
+        "@/lib/cron-log",
         "@/lib/tee-sheet-engine",
         "next/server"
       ],
@@ -3242,7 +3246,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 191,
+      "lines": 194,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3264,6 +3268,7 @@
         "@/lib/booking-events",
         "@/lib/call-invite",
         "@/lib/cron-auth",
+        "@/lib/cron-log",
         "@/lib/email",
         "@/lib/prisma",
         "@/lib/stripe",
@@ -3274,7 +3279,7 @@
     },
     {
       "path": "src/app/api/cron/send-reminders/route.ts",
-      "lines": 85,
+      "lines": 88,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3292,6 +3297,7 @@
       "guard": "file",
       "imports": [
         "@/lib/cron-auth",
+        "@/lib/cron-log",
         "@/lib/email",
         "@/lib/money",
         "@/lib/prisma",
@@ -5352,7 +5358,7 @@
     },
     {
       "path": "src/app/api/stripe/webhook/route.ts",
-      "lines": 130,
+      "lines": 134,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5370,6 +5376,7 @@
       "guard": "secret header",
       "imports": [
         "@/lib/access-fee",
+        "@/lib/cron-log",
         "@/lib/prisma",
         "@/lib/refund-booking",
         "@/lib/stripe",
@@ -10366,7 +10373,59 @@
         "src/app/api/cron/chase-onboarding/route.ts",
         "src/app/api/cron/generate-tee-times/route.ts",
         "src/app/api/cron/hourly/route.ts",
-        "src/app/api/cron/send-reminders/route.ts"
+        "src/app/api/cron/send-reminders/route.ts",
+        "src/lib/cron-log.ts"
+      ]
+    },
+    {
+      "path": "src/lib/cron-log.ts",
+      "lines": 128,
+      "purpose": "MP-8b:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "cronHealth",
+          "kind": "fn"
+        },
+        {
+          "name": "CronHealth",
+          "kind": "type"
+        },
+        {
+          "name": "cronRoute",
+          "kind": "fn"
+        },
+        {
+          "name": "lastStripeWebhook",
+          "kind": "fn"
+        },
+        {
+          "name": "logStripeWebhook",
+          "kind": "fn"
+        },
+        {
+          "name": "STRIPE_WEBHOOK_JOB",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./cron-auth",
+        "./prisma",
+        "next/server"
+      ],
+      "usedBy": [
+        "src/app/api/admin/system/route.ts",
+        "src/app/api/cron/cancellation-cutoff/route.ts",
+        "src/app/api/cron/chase-onboarding/route.ts",
+        "src/app/api/cron/generate-tee-times/route.ts",
+        "src/app/api/cron/hourly/route.ts",
+        "src/app/api/cron/send-reminders/route.ts",
+        "src/app/api/stripe/webhook/route.ts"
       ]
     },
     {
@@ -12123,6 +12182,7 @@
         "src/lib/claim-tee-time.ts",
         "src/lib/course-closure.ts",
         "src/lib/course-timeline.ts",
+        "src/lib/cron-log.ts",
         "src/lib/frost-delay.ts",
         "src/lib/go-live-preflight.ts",
         "src/lib/lifecycle.ts",
@@ -15196,8 +15256,12 @@
           "type": "String"
         }
       ],
-      "writers": [],
-      "readers": []
+      "writers": [
+        "src/lib/cron-log.ts"
+      ],
+      "readers": [
+        "src/lib/cron-log.ts"
+      ]
     },
     {
       "name": "Expense",

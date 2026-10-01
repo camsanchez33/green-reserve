@@ -4,12 +4,13 @@ import { prisma } from '@/lib/prisma';
 import { calcomStatus } from '@/lib/calcom';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
 import { ACCESS_FEE_CENTS } from '@/lib/booking-fees';
+import { cronHealth, lastStripeWebhook } from '@/lib/cron-log';
 import vercelConfig from '../../../../../vercel.json';
 
 // MP-8a: System used to be five cards with hardcoded neutral dots and two
 // links that did not reach their target (Sentry → marketing homepage, Vercel →
 // generic dashboard). This returns everything the page can say truthfully
-// without a schema change: project-deep links built from the env the deploy
+// without a schema change (MP-8b adds real cron runs and webhook receipts): project-deep links built from the env the deploy
 // already has, the real cron schedules, and a read-only Platform card — the
 // fee in force, what is deployed, which integrations hold keys. Secrets are
 // never returned; only whether one is set.
@@ -37,15 +38,17 @@ export async function GET() {
   // MP-2d: the nav hides System at MANAGER_PLUS; hiding a link is not a gate, so make the claim true.
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  // We don't log raw Stripe webhook receipts anywhere, so this is a proxy
-  // signal, not a real log: the most recently updated course that has a
-  // Stripe account attached. Good enough for a 30-second sanity check, not
-  // precise — a real webhook-received timestamp needs a schema change.
-  const lastStripeTouch = await prisma.course.findFirst({
-    where: { stripeAccountId: { not: '' } },
-    orderBy: { updatedAt: 'desc' },
-    select: { name: true, updatedAt: true },
-  });
+  // MP-8b: real receipts now (lib/cron-log.ts). The course-updatedAt proxy
+  // stays only as context for deploys that predate the log.
+  const [lastStripeTouch, stripeWebhook, cronRuns] = await Promise.all([
+    prisma.course.findFirst({
+      where: { stripeAccountId: { not: '' } },
+      orderBy: { updatedAt: 'desc' },
+      select: { name: true, updatedAt: true },
+    }),
+    lastStripeWebhook(),
+    cronHealth(CRONS),
+  ]);
 
   const env = process.env;
   const repoOwner = env.VERCEL_GIT_REPO_OWNER || 'camsanchez33';
@@ -79,7 +82,8 @@ export async function GET() {
       sentryIsDeep: !!sentryOrg,
       stripeWebhooks: 'https://dashboard.stripe.com/webhooks',
     },
-    crons: CRONS.map(c => ({ path: c.path, schedule: c.schedule, human: describeSchedule(c.schedule) })),
+    crons: CRONS.map(c => ({ path: c.path, schedule: c.schedule, human: describeSchedule(c.schedule), health: cronRuns.find(r => r.path === c.path) ?? null })),
+    stripeWebhook,
     platform: {
       accessFeeCents: ACCESS_FEE_CENTS,
       env: env.VERCEL_ENV || (env.NODE_ENV === 'production' ? 'production' : 'development'),

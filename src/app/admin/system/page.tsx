@@ -20,13 +20,19 @@ interface SystemData {
     sentry: string; sentryIsDeep: boolean;
     stripeWebhooks: string;
   };
-  crons: { path: string; schedule: string; human: string }[];
+  crons: { path: string; schedule: string; human: string; health: CronHealth | null }[];
+  stripeWebhook?: { at: string; outcome: string; detail: string; error: string } | null;
   calcom?: { state: 'off' } | { state: 'invalid'; raw: string; reason: string } | { state: 'on'; url: string; webhookSecretSet: boolean };
   birdie?: { enabled: boolean; keySet: boolean; flag: boolean; todayReplies: number; dailyCap: number; model: string };
   platform: {
     accessFeeCents: number; env: string; commitSha: string; commitMessage: string; branch: string; publicUrl: string;
     integrations: { stripe: boolean; stripeWebhook: boolean; resend: boolean; twilio: boolean; sentry: boolean; blob: boolean; privateBlob: boolean };
   };
+}
+// MP-8b: from CronRunLog (lib/cron-log.ts).
+interface CronHealth {
+  status: 'ok' | 'bad' | 'warn'; note: string;
+  last: { startedAt: string; finishedAt: string | null; outcome: string; detail: string; error: string } | null;
 }
 interface PlatformStripe {
   balance: { available: number; pending: number; currency: string };
@@ -265,23 +271,32 @@ export default function AdminSystemPage() {
               ) : !loadError && <p className="text-sm text-ink-muted">Loading…</p>}
             </SystemCard>
 
-            <SystemCard icon={<Clock3 className="w-3.5 h-3.5"/>} title="Crons"
+            {/* MP-8b: each job's last recorded run. Red = failed, never finished, or overdue. */}
+            <SystemCard icon={<Clock3 className="w-3.5 h-3.5"/>} title="Crons" tracked
               right={<span className="text-[11px] text-ink-faint">{data ? `${data.crons.length} scheduled` : ''}</span>}>
               {data && data.crons.length > 0 && (
-                <div className="border border-line rounded-md divide-y divide-line-soft mb-3">
-                  {data.crons.map(c => (
-                    <div key={c.path} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
-                      <code className="font-mono text-xs text-ink">{c.path.replace('/api/cron/', '')}</code>
-                      <span className="text-xs text-ink-soft">{c.human}</span>
-                    </div>
-                  ))}
+                <div className="divide-y divide-line-soft mb-3">
+                  {data.crons.map(c => {
+                    const h = c.health;
+                    return (
+                      <div key={c.path} className="py-2 text-sm">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="flex items-center gap-2 min-w-0">
+                            <StatusDot status={h?.status ?? 'neutral'}/>
+                            <code className="font-mono text-xs text-ink">{c.path.replace('/api/cron/', '')}</code>
+                          </span>
+                          <span className="text-xs text-ink-soft">{c.human}</span>
+                        </div>
+                        <div className="pl-[13px] mt-0.5 text-xs text-ink-muted">
+                          {h?.last ? <>Last run {fmtDate(h.last.startedAt)}{h.last.detail ? ` · ${h.last.detail}` : ''}</> : null}
+                          {h?.note ? <div className={h.status === 'bad' ? 'text-bad' : 'text-ink-muted'}>{h.note}</div> : null}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
-              <div className="flex items-center gap-2 mb-2">
-                <StatusDot status="neutral"/>
-                <span className="text-sm text-ink-soft">Schedules are read from <code className="font-mono text-xs">vercel.json</code>; whether each run succeeded is not tracked in-app yet — that needs a CronRunLog table (schema change). Check the Vercel logs.</span>
-              </div>
-              {data && <OutLink href={data.links.vercel} deep={data.links.vercelIsDeep}>Open Vercel</OutLink>}
+              {data && <OutLink href={data.links.vercel} deep={data.links.vercelIsDeep}>Open Vercel logs</OutLink>}
             </SystemCard>
 
             {/* CAL-2: what the public booking page believes, without reading code.
@@ -435,18 +450,18 @@ export default function AdminSystemPage() {
               {data && <OutLink href={data.links.backups}>View backup runs</OutLink>}
             </SystemCard>
 
-            <SystemCard icon={<Zap className="w-3.5 h-3.5"/>} title="Stripe Webhook">
-              <div className="flex items-center gap-2 mb-2">
-                <StatusDot status={p ? (p.integrations.stripeWebhook ? 'neutral' : 'bad') : 'neutral'}/>
+            {/* MP-8b: the last verified event this endpoint received (CronRunLog, job webhook:stripe). */}
+            <SystemCard icon={<Zap className="w-3.5 h-3.5"/>} title="Stripe Webhook" tracked>
+              <div className="flex items-start gap-2 mb-2">
+                <span className="mt-1"><StatusDot status={p && !p.integrations.stripeWebhook ? 'bad' : data?.stripeWebhook ? (data.stripeWebhook.outcome === 'error' ? 'bad' : 'ok') : 'neutral'}/></span>
                 <span className="text-sm text-ink-soft">
                   {p && !p.integrations.stripeWebhook
                     ? <strong className="text-bad">STRIPE_WEBHOOK_SECRET is not set — the webhook cannot be verified and every event is being rejected.</strong>
-                    : data?.lastStripeTouch
-                      ? <>Most recent Stripe-linked course update: <strong className="text-ink">{data.lastStripeTouch.courseName}</strong>, {fmtDate(data.lastStripeTouch.updatedAt)}</>
-                      : 'No Stripe-connected courses yet.'}
+                    : data?.stripeWebhook
+                      ? <>Last event received {fmtDate(data.stripeWebhook.at)}: <code className="font-mono text-xs text-ink">{data.stripeWebhook.detail}</code>{data.stripeWebhook.outcome === 'error' && <span className="block text-bad">The handler failed on it: {data.stripeWebhook.error} — replay it from Stripe once fixed.</span>}</>
+                      : <>No event received since receipts started being logged{data?.lastStripeTouch ? <> (most recent Stripe-linked course update: {data.lastStripeTouch.courseName}, {fmtDate(data.lastStripeTouch.updatedAt)})</> : null}. Stripe only sends events when something happens on a connected account.</>}
                 </span>
               </div>
-              <p className="text-xs text-ink-faint mb-2">Approximate — we don’t log raw webhook receipts, this is the course record’s own updatedAt.</p>
               {data && <OutLink href={data.links.stripeWebhooks}>Open Stripe webhooks</OutLink>}
             </SystemCard>
 
