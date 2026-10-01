@@ -14,6 +14,7 @@ import { LoadFailure, ErrorBanner } from '@/components/ui/ErrorState';
 import { Card } from '@/components/ui/Card';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { Btn } from '@/components/ui/Btn';
+import { INPUT_COMPACT } from '@/components/ui/field';
 import { formatDateTime } from '@/lib/format';
 import { COMPANY_DOC_CATEGORIES, COMPANY_DOC_MAX_BYTES, COMPANY_DOC_TYPES, type CompanyDocCategory } from '@/lib/company-documents';
 
@@ -98,7 +99,7 @@ export default function CompanyDocumentsPage() {
               <label className="text-[13px] text-ink-soft">
                 <span className="block mb-1">Category</span>
                 <select value={category} onChange={e => setCategory(e.target.value as CompanyDocCategory)} disabled={uploading}
-                  className="bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:border-pine/40">
+                  className={INPUT_COMPACT}>
                   {COMPANY_DOC_CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
                 </select>
               </label>
