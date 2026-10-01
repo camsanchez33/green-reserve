@@ -20,7 +20,7 @@ type Payload = {
   startTime?: string;
   endTime?: string;
   attendees?: Attendee[];
-  responses?: { attendeePhoneNumber?: { value?: string } | string };
+  responses?: { attendeePhoneNumber?: { value?: string } | string } & Record<string, unknown>;
   metadata?: Record<string, unknown>;
   rescheduleUid?: string;
 };
@@ -31,6 +31,17 @@ async function timeline(inquiryId: string, status: string, text: string) {
   await prisma.inquiryStatusEvent.create({
     data: { inquiryId, fromStatus: status, toStatus: status, trigger: 'course', actorName: text },
   }).catch(err => console.error('Cal.com timeline event failed:', err));
+}
+
+/** A booking-form answer by any of its likely keys; Cal.com sends `{ value }` or a bare string. */
+function answerOf(p: Payload, keys: string[]): string {
+  const r = (p.responses ?? {}) as Record<string, unknown>;
+  for (const k of keys) {
+    const v = r[k];
+    const s = typeof v === 'string' ? v : (v && typeof v === 'object' && typeof (v as { value?: unknown }).value === 'string') ? (v as { value: string }).value : '';
+    if (s.trim()) return s.trim().slice(0, 200);
+  }
+  return '';
 }
 
 function phoneOf(p: Payload, fallback: string): string {
@@ -143,7 +154,44 @@ export async function POST(req: NextRequest) {
   });
 
   const inquiryId = inq?.id ?? previous?.inquiryId ?? null;
-  if (!inquiryId) return NextResponse.json({ ignored: 'no invite metadata' });
+  if (!inquiryId) {
+    // UI-H-1 (HOMEPAGE_SPEC.md §4.2): a demo booked straight from the homepage
+    // (/demo → Cal.com, tagged metadata.source=homepage) — or any fresh Cal.com
+    // booking that matches no inquiry — opens a pending inquiry with its call,
+    // so it shows in admin instead of living only in Cam's calendar. Only a new
+    // booking (never a reschedule, never an invite-token booking), and inquiry
+    // + call + timeline are one transaction: the uid check above is what makes
+    // a Cal.com retry a no-op, and it only holds once the Call exists.
+    if (event !== 'BOOKING_CREATED' || token || p.rescheduleUid) return NextResponse.json({ ignored: 'no invite metadata' });
+    const who = p.attendees?.[0] ?? {};
+    const email = (who.email || '').trim().slice(0, 200);
+    if (!email) return NextResponse.json({ ignored: 'no attendee email' });
+    const name = (who.name || '').trim().slice(0, 120);
+    const [firstName = '', ...rest] = name.split(/\s+/).filter(Boolean);
+    const courseName = answerOf(p, ['courseName', 'course', 'course_name', 'golfCourse', 'golf_course']);
+    const fromHome = p.metadata?.source === 'homepage';
+    const phone = phoneOf(p, '');
+    const made = await prisma.$transaction(async tx => {
+      const inquiry = await tx.courseInquiry.create({
+        data: {
+          firstName, lastName: rest.join(' '), contactName: name || email, contactTitle: '', email, phone,
+          courseName, address: '', city: '', state: '', zipCode: '', courseType: '', lookingFor: [],
+          source: 'Demo booking',
+          additionalNotes: `Booked a demo on Cal.com${fromHome ? ' from the homepage' : ''} before filling in the inquiry form.`,
+        },
+        select: { id: true, status: true },
+      });
+      const call = await tx.call.create({
+        data: { kind: 'discovery', inquiryId: inquiry.id, scheduledAt: start, durationMin, direction: 'we_call', phone, bookedByCourse: true, createdBy: calcomCreatedBy(uid) },
+        select: { id: true },
+      });
+      await tx.inquiryStatusEvent.create({
+        data: { inquiryId: inquiry.id, fromStatus: inquiry.status, toStatus: inquiry.status, trigger: 'course', actorName: `Booked a demo for ${fmtWhen(start)} on Cal.com${fromHome ? ' from the homepage' : ''}` },
+      });
+      return { inquiry: inquiry.id, call: call.id };
+    });
+    return NextResponse.json({ ok: true, created: made.call, inquiry: made.inquiry });
+  }
   const status = inq?.status ?? (await prisma.courseInquiry.findUnique({ where: { id: inquiryId }, select: { status: true } }))?.status ?? '';
   // A move keeps the number already on the call unless Cal.com sends a new one.
   const phone = phoneOf(p, previous?.phone || inq?.phone || '');

@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 362,
-    "routes": 196,
+    "files": 357,
+    "routes": 197,
     "libs": 94,
     "models": 33,
     "orphans": 8,
@@ -24,7 +24,7 @@
   "files": [
     {
       "path": "src/app/HomeContent.tsx",
-      "lines": 176,
+      "lines": 151,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -40,12 +40,9 @@
       "guard": null,
       "imports": [
         "./home.module.css",
-        "@/components/home/HomeDemo",
-        "@/components/home/HomeFaq",
-        "@/components/home/HomeMotion",
-        "@/components/home/MountNearView",
-        "@/components/home/SeeItWork",
-        "@/components/home/StoryMedia",
+        "@/components/home/TeeSheetDemo",
+        "@/lib/faq",
+        "next/image",
         "next/link"
       ],
       "usedBy": [
@@ -2852,7 +2849,7 @@
     },
     {
       "path": "src/app/api/calcom/webhook/route.ts",
-      "lines": 171,
+      "lines": 219,
       "purpose": "CAL-1 — Cal.com booking webhook.",
       "brain": [],
       "exports": [
@@ -6062,6 +6059,34 @@
       "usedBy": []
     },
     {
+      "path": "src/app/demo/route.ts",
+      "lines": 18,
+      "purpose": "UI-H-1 (HOMEPAGE_SPEC.md §4.2):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "dynamic",
+          "kind": "const"
+        },
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/demo",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "public",
+      "guard": "public",
+      "imports": [
+        "@/lib/calcom",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/for-courses/ForCoursesContent.tsx",
       "lines": 748,
       "purpose": "",
@@ -6168,7 +6193,7 @@
     },
     {
       "path": "src/app/layout.tsx",
-      "lines": 59,
+      "lines": 56,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6687,7 +6712,7 @@
     },
     {
       "path": "src/components/Nav.tsx",
-      "lines": 123,
+      "lines": 130,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7351,163 +7376,17 @@
       ]
     },
     {
-      "path": "src/components/home/HomeDashboardDemo.tsx",
-      "lines": 149,
-      "purpose": "",
+      "path": "src/components/home/TeeSheetDemo.tsx",
+      "lines": 228,
+      "purpose": "UI-H-1 (HOMEPAGE_SPEC.md):",
       "brain": [],
       "exports": [
         {
-          "name": "default (HomeDashboardDemo)",
+          "name": "HeroDemo",
           "kind": "component"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [
-        "@/app/home.module.css",
-        "@/lib/staff-fonts",
-        "react"
-      ],
-      "usedBy": [
-        "src/components/home/SeeItWork.tsx"
-      ]
-    },
-    {
-      "path": "src/components/home/HomeDemo.tsx",
-      "lines": 114,
-      "purpose": "",
-      "brain": [],
-      "exports": [
+        },
         {
-          "name": "default (HomeDemo)",
-          "kind": "component"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [
-        "@/app/home.module.css",
-        "next/image",
-        "react"
-      ],
-      "usedBy": [
-        "src/app/HomeContent.tsx",
-        "src/components/home/SeeItWork.tsx"
-      ]
-    },
-    {
-      "path": "src/components/home/HomeFaq.tsx",
-      "lines": 22,
-      "purpose": "",
-      "brain": [],
-      "exports": [
-        {
-          "name": "default (HomeFaq)",
-          "kind": "component"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [
-        "@/app/home.module.css",
-        "@/lib/faq",
-        "react"
-      ],
-      "usedBy": [
-        "src/app/HomeContent.tsx"
-      ]
-    },
-    {
-      "path": "src/components/home/HomeMotion.tsx",
-      "lines": 69,
-      "purpose": "",
-      "brain": [],
-      "exports": [
-        {
-          "name": "default (HomeMotion)",
-          "kind": "component"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [
-        "@/app/home.module.css",
-        "react"
-      ],
-      "usedBy": [
-        "src/app/HomeContent.tsx"
-      ]
-    },
-    {
-      "path": "src/components/home/MountNearView.tsx",
-      "lines": 23,
-      "purpose": "",
-      "brain": [],
-      "exports": [
-        {
-          "name": "default (MountNearView)",
-          "kind": "component"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [
-        "react"
-      ],
-      "usedBy": [
-        "src/app/HomeContent.tsx"
-      ]
-    },
-    {
-      "path": "src/components/home/SeeItWork.tsx",
-      "lines": 58,
-      "purpose": "",
-      "brain": [],
-      "exports": [
-        {
-          "name": "default (SeeItWork)",
-          "kind": "component"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [
-        "./HomeDashboardDemo",
-        "./HomeDemo",
-        "@/app/home.module.css",
-        "next/dynamic",
-        "react"
-      ],
-      "usedBy": [
-        "src/app/HomeContent.tsx"
-      ]
-    },
-    {
-      "path": "src/components/home/StoryMedia.tsx",
-      "lines": 66,
-      "purpose": "",
-      "brain": [],
-      "exports": [
-        {
-          "name": "default (StoryMedia)",
+          "name": "SeeItWorkDemo",
           "kind": "component"
         }
       ],
@@ -9018,6 +8897,7 @@
         "src/app/api/admin/system/route.ts",
         "src/app/api/calcom/webhook/route.ts",
         "src/app/api/call/[token]/route.ts",
+        "src/app/demo/route.ts",
         "src/app/for-courses/page.tsx"
       ]
     },
@@ -10546,7 +10426,7 @@
     },
     {
       "path": "src/lib/faq.ts",
-      "lines": 29,
+      "lines": 26,
       "purpose": "SD-7:",
       "brain": [],
       "exports": [
@@ -10566,8 +10446,8 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/page.tsx",
-        "src/components/home/HomeFaq.tsx"
+        "src/app/HomeContent.tsx",
+        "src/app/page.tsx"
       ]
     },
     {
@@ -11022,7 +10902,7 @@
     },
     {
       "path": "src/lib/inquiry-status.ts",
-      "lines": 464,
+      "lines": 465,
       "purpose": "Single source of truth for what every inquiry status means and which pipeline segment it belongs to.",
       "brain": [
         "inquiry-statuses",
@@ -12316,8 +12196,7 @@
       ],
       "usedBy": [
         "src/app/admin/layout.tsx",
-        "src/app/dashboard/layout.tsx",
-        "src/components/home/HomeDashboardDemo.tsx"
+        "src/app/dashboard/layout.tsx"
       ]
     },
     {

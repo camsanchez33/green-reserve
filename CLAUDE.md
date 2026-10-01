@@ -150,8 +150,12 @@ All required in Vercel; the full list is in `docs/SHIPPING.md`, the secrets inve
 
 ## Homepage direction — READ `HOMEPAGE_SPEC.md` FIRST (Cam 2026-10-01)
 
-The homepage is being rebuilt from the approved plain-background mockup
-(`docs/design/home/index.html`). Rejected, never revive: Direction B
+The homepage is built from the approved plain-background mockup
+(`docs/design/home/index.html`, UI-H-1): `src/app/HomeContent.tsx` +
+`home.module.css`, with ONE client island, `src/components/home/TeeSheetDemo.tsx`
+(hero demo + See it work share one store). Every "Book a demo" goes to `/demo`
+(→ Cal.com, tagged source=homepage); the Cal.com webhook opens a pending
+"Demo booking" inquiry when a booking matches none. Rejected, never revive: Direction B
 (Figtree/white/pills), the printed-scorecard look, and every golf-hole / aerial
 course background concept. Homepage copy has NO durations and NO contract terms;
 CTAs are Book a demo + Send an inquiry. The spec also lists what is waiting on Cam.
@@ -165,7 +169,7 @@ everywhere; the type, corners and palette depend on **who the page is for**.
 | | PUBLIC look | STAFF look |
 |---|---|---|
 | Where | `/`, `/for-courses`, legal pages, every golfer-facing page (`/courses/[slug]`, `/book`, `/checkin`, `/manage`, `/receipt`, member portal) | `/dashboard/*` and `/admin/*` |
-| Fonts | Fraunces display · Inter body (root layout, `--font-serif` / `--font-sans`) | Newsreader display · Source Sans 3 body (`src/lib/staff-fonts.ts`) |
+| Fonts | Archivo, one variable family with a width axis (root layout `--font-sans`; `--font-serif` points at it). UI-H-1, Cam 2026-10-01 | Newsreader display · Source Sans 3 body (`src/lib/staff-fonts.ts`) |
 | Corners | 8px buttons/inputs (`rounded-md`), 14px cards (`rounded-lg`), pills 999px | **0 everywhere.** `rounded-full` only for avatars, dots, swatches |
 | Paper / ink / line | #F6F4EC / #1C1C18 / #E6E3D7 | #F7F5EF / #1D1F1A / #E3E0D5 |
 | Accent | pine (marketing) · per-course `Course.brandColor` (golfer pages) | course accent (operator) · pine (admin) |
@@ -176,7 +180,7 @@ in `globals.css`, re-points Tailwind's theme variables — `--radius-*` to 0, `-
 `--font-sans` to the staff fonts, the paper/ink/line tokens to the staff palette. Because
 Tailwind v4 utilities resolve through those variables, **write staff pages with the same
 classes as always** (`rounded-md`, `rounded-lg`, `font-serif`, `bg-paper`, `text-ink`); they
-render square and in Newsreader/Source Sans 3 inside the wrapper and rounded/Fraunces/Inter
+render square and in Newsreader/Source Sans 3 inside the wrapper and rounded/Archivo
 outside it. Do not hardcode radii or font-families to force either look.
 
 ### Shared tokens (Tailwind v4, `globals.css` `@theme {}`)
