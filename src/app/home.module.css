@@ -39,7 +39,9 @@
 
 /* HERO — the root nav is absolute over this section; padding-top clears it. */
 .hero { display: grid; grid-template-columns: 46fr 54fr; }
-.heroText { padding: 136px clamp(24px, 4vw, 64px) 72px max(24px, calc((100vw - 1240px) / 2)); }
+/* Centred against the demo column (Cam 2026-10-01: top-aligned read "lop-sided" —
+   the text stopped halfway down while the phone ran on below it). */
+.heroText { padding: 112px clamp(24px, 4vw, 64px) 56px max(24px, calc((100vw - 1240px) / 2)); display: flex; flex-direction: column; justify-content: center; }
 .hero h1 { font-size: clamp(36px, 3.4vw, 50px); line-height: 1.06; margin: 16px 0 18px; }
 .l { white-space: nowrap; }
 .hero p { font-size: 18px; margin: 0 0 28px; max-width: 27em; color: #30352F; }

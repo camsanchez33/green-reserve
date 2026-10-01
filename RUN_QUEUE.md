@@ -49,9 +49,10 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   2026-09-29, Rockland County). Put the legal name into the Terms and operator
   agreement. Waiting on Cam: which business address to publish, and confirming
   the Terms' governing law moves from New Jersey to New York (LLC is NY).
-- [ ] SEC-blob-host — /api/admin/course-documents/download checks only the URL
-  path; add the same host check as companyDocPathOf (lib/company-documents.ts) so
-  the private-store token is only ever sent to *.blob.vercel-storage.com.
+- [x] SEC-blob-host — done 2026-10-01: `isBlobStoreUrl()` in lib/private-blob.ts
+  (https + *.blob.vercel-storage.com) now gates course-documents download AND
+  record (record also handed a client URL to the SDK with the token), and
+  companyDocPathOf uses it.
 - [ ] UI-H-2 — /for-courses in the homepage's language; remove its "1–2 days
   typical setup time" (no-durations rule). Inner-page nav still says "List your
   course"; decide with Cam whether it becomes "Book a demo" everywhere.

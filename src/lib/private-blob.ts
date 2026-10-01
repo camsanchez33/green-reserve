@@ -15,3 +15,18 @@ export function privateBlobToken(): string | undefined {
 
 export const PRIVATE_STORAGE_MISSING =
   'Private file storage for contracts is not set up yet (BLOB_PRIVATE_READ_WRITE_TOKEN). Add the private Blob store in Vercel, then redeploy.';
+
+/**
+ * True only for an https URL on Vercel Blob's own host. `get()` fetches the URL
+ * it is given with the store token as a bearer header, so a URL from a request
+ * must pass this before it reaches the SDK: a path check alone would let
+ * https://attacker.example/course-documents/<id>/x.pdf collect the token.
+ */
+export function isBlobStoreUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return u.protocol === 'https:' && u.hostname.endsWith('.blob.vercel-storage.com');
+  } catch {
+    return false;
+  }
+}

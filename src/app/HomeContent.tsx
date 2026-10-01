@@ -113,14 +113,6 @@ export default function HomeContent() {
         <p>No setup fee and no monthly fee. Golfers pay a small booking fee when they book online. We&apos;ll walk you through the details on a call.</p>
       </section>
 
-      {/* FAQ — the same array as the FAQPage JSON-LD in page.tsx; every answer printed. */}
-      <section className={`${s.col} ${s.faqWrap}`} id="faq">
-        <div><div className={s.eyebrow}>Questions</div><h2 className={s.display}>What courses ask us.</h2></div>
-        <div className={s.faq}>
-          {HOME_FAQ.map(f => <div key={f.q}><h3>{f.q}</h3><p>{f.a}</p></div>)}
-        </div>
-      </section>
-
       {/* SEE IT WORK — the preview before booking a demo (Cam 2026-10-01). */}
       <section className={s.see} id="see">
         <div className={s.col}>
@@ -132,6 +124,14 @@ export default function HomeContent() {
             <a className={s.btn} href={DEMO}>Book a demo <Arrow /></a>
             <span>We&apos;ll show it with your own course&apos;s times and prices.</span>
           </div>
+        </div>
+      </section>
+
+      {/* FAQ — the same array as the FAQPage JSON-LD in page.tsx; every answer printed. Last before the end band (Cam 2026-10-01). */}
+      <section className={`${s.col} ${s.faqWrap}`} id="faq">
+        <div><div className={s.eyebrow}>Questions</div><h2 className={s.display}>What courses ask us.</h2></div>
+        <div className={s.faq}>
+          {HOME_FAQ.map(f => <div key={f.q}><h3>{f.q}</h3><p>{f.a}</p></div>)}
         </div>
       </section>
 

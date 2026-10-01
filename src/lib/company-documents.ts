@@ -7,6 +7,8 @@
 // The repo is PUBLIC, so documents like these must never be committed; this is
 // where they go instead.
 
+import { isBlobStoreUrl } from '@/lib/private-blob';
+
 export const COMPANY_DOC_PREFIX = 'company/';
 
 export const COMPANY_DOC_CATEGORIES = [
@@ -50,9 +52,8 @@ export function describeCompanyPath(pathname: string): { category: CompanyDocCat
  * URL it is given, so a look-alike path on another host must never reach it.
  */
 export function companyDocPathOf(url: string): string | null {
-  let u: URL;
-  try { u = new URL(url); } catch { return null; }
-  if (u.protocol !== 'https:' || !u.hostname.endsWith('.blob.vercel-storage.com')) return null;
+  if (!isBlobStoreUrl(url)) return null;
+  const u = new URL(url);
   let pathname: string;
   try { pathname = decodeURIComponent(u.pathname).replace(/^\/+/, ''); } catch { return null; }
   return isAllowedCompanyPath(pathname) ? pathname : null;
