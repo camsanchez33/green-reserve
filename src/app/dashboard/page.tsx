@@ -786,7 +786,7 @@ function DashboardPageInner() {
                           onClick={() => bookingLifecycle(b, 'paid_offline')}
                           disabled={rowBusy === b.id}
                           className="h-[34px] px-3 text-[12.5px] font-medium border border-ink text-ink hover:bg-paper disabled:opacity-50 transition-colors">
-                          {rowBusy === b.id ? 'Saving…' : 'Paid at counter'}
+                          {rowBusy === b.id ? 'Saving…' : 'Check in · paid at counter'}
                         </button>
                       ) : (
                         <button
@@ -949,7 +949,7 @@ function DashboardPageInner() {
                                 {b.status === 'confirmed' && b.paymentStatus === 'manual' && (
                                   <button onClick={e => { e.stopPropagation(); bookingLifecycle(b, 'paid_offline'); }} disabled={rowBusy === b.id}
                                     className="shrink-0 text-white px-2.5 min-h-[36px] md:min-h-0 py-1 rounded-md text-xs font-medium disabled:opacity-50 transition-colors bg-pine hover:bg-pine-hover">
-                                    {rowBusy === b.id ? 'Saving…' : 'Paid at counter'}
+                                    {rowBusy === b.id ? 'Saving…' : 'Check in · paid at counter'}
                                   </button>
                                 )}
                                 {b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && (
@@ -1062,7 +1062,12 @@ function WalkInForm({ slot, onSave, onCancel }: { slot: TeeTime; onSave: (msg: s
   const [players, setPlayers] = useState(Math.min(2, spots) || 1);
   const [cart, setCart] = useState(slot.cartFee > 0);
   const [source, setSource] = useState<'walk_in' | 'phone'>('walk_in');
-  const [checkInNow, setCheckInNow] = useState(true);
+  // Cam 2026-10-01: "when one person gets checked in it's automatically
+  // checking in other people — this has to be separate." No code path checks
+  // in more than one booking; this box being ON by default did — every walk-in
+  // added to a slot arrived already checked in and paid. Each group is now
+  // checked in on its own row, by choice, unless staff tick this.
+  const [checkInNow, setCheckInNow] = useState(false);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
   const inp = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-full';
@@ -1112,7 +1117,7 @@ function WalkInForm({ slot, onSave, onCancel }: { slot: TeeTime; onSave: (msg: s
       )}
       {source === 'walk_in' && (
         <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
-          <input type="checkbox" checked={checkInNow} onChange={e => setCheckInNow(e.target.checked)} className="accent-pine" />Check in and mark paid at the counter now
+          <input type="checkbox" checked={checkInNow} onChange={e => setCheckInNow(e.target.checked)} className="accent-pine" />They&apos;ve already paid at the counter — check this group in now
         </label>
       )}
       <div className="text-[12.5px] text-ink-muted">Pays at the counter: <b className="text-ink">${total.toFixed(2)}</b> — no card, no booking fee.</div>
