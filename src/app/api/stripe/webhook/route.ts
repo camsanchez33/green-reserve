@@ -4,6 +4,7 @@ import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import { findBookingByStripeId, recordPaymentEvent } from '@/lib/refund-booking';
 import { bookingIdForFeeCharge } from '@/lib/access-fee';
+import { logStripeWebhook } from '@/lib/cron-log';
 
 // MP-6b: this handled exactly ONE event type (account.updated), so the first
 // chargeback was invisible until the bank letter, and a refund issued from the
@@ -112,9 +113,12 @@ export async function POST(req: NextRequest) {
     // A handler bug must not make Stripe retry forever; log with the event id
     // so it can be replayed from the dashboard.
     console.error(JSON.stringify({ ev: 'webhook.handler.fail', eventId: event.id, type: event.type, error: err instanceof Error ? err.message : String(err) }));
+    await logStripeWebhook(event.type, event.id, err instanceof Error ? err.message : String(err));
     return NextResponse.json({ error: 'Handler failed' }, { status: 500 });
   }
 
+  // MP-8b: a real receipt for Admin → System (verified events only).
+  await logStripeWebhook(event.type, event.id);
   return NextResponse.json({ received: true });
 }
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cronAuthFailure } from '@/lib/cron-auth';
+import { cronRoute } from '@/lib/cron-log';
 import { prisma } from '@/lib/prisma';
 import { chargeOnConnectedAccount } from '@/lib/stripe';
 import { recordBookingEventSafe } from '@/lib/booking-events';
@@ -33,7 +34,9 @@ import { sendCallReminders } from '@/lib/call-invite';
  * 6. CALL REMINDERS — SC-3: "Talking tomorrow" to the course 24 h before each
  *    scheduled discovery call, once per call (RateLimit key as the belt).
  */
-export async function GET(req: NextRequest) {
+export const GET = cronRoute('hourly', async (req: NextRequest) => {
+  // cronRoute authorises before logging; the check stays here too so every
+  // cron route is visibly guarded on its own.
   const denied = cronAuthFailure(req);
   if (denied) return denied;
 
@@ -187,4 +190,4 @@ export async function GET(req: NextRequest) {
   try { callReminders = await sendCallReminders(now); } catch (err) { console.error('Call reminders failed:', err); }
 
   return NextResponse.json({ success: true, ...results, agreementPdfs, agreementNotices, callReminders });
-}
+});

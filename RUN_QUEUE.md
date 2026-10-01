@@ -1549,6 +1549,19 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       receipt log (StripeEvent id + type + receivedAt) so the Webhook card
       stops using a course's updatedAt as a proxy; Employees demoted to the
       utility cluster as "Team & access" if Cam agrees.
+      BUILT 2026-10-01 — NO MIGRATION after all: MP-3a already shipped the CronRunLog
+      table and nothing wrote it. lib/cron-log.ts: cronRoute(job, handler) wraps all five
+      /api/cron/* routes (authorises first, so an unauthorised call writes nothing; one row
+      per run: start, finish, ok/error judged from the reply, a one-line count summary;
+      hourly prunes rows older than 90 days). The webhook receipt log uses the SAME table
+      under job `webhook:stripe` (one row per verified event, error recorded when the
+      handler fails) instead of a new StripeEvent table. Admin → System: Crons card shows
+      each job's last run + summary, red when the last run failed, never finished (15 min),
+      or is overdue (1.5× its interval + 10 min); amber "no run recorded yet" until the
+      first run after deploy. Stripe Webhook card shows the last real event. Verified
+      locally: all five crons + a signed test webhook logged; overdue / failed states
+      render red. NOT DONE: "Employees demoted to utility cluster" — waiting on Cam.
+      Box open until a live look at /admin/system a day after deploy.
   - [x] MP-9 (81cb4a4..2000908) — DONE except Btn/PageHeader (below). lib/format.ts
     (16 files' formatters); components/ui/Modal.tsx (dialog role, focus trap,
     Escape, focus return — keyboard-walked) on every admin dialog + the Revenue

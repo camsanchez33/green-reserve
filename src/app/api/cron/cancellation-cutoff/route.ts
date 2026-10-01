@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cronAuthFailure } from '@/lib/cron-auth';
+import { cronRoute } from '@/lib/cron-log';
 import { prisma } from '@/lib/prisma';
 import { chargeOnConnectedAccount } from '@/lib/stripe';
 import { recordBookingEventSafe } from '@/lib/booking-events';
@@ -23,7 +24,9 @@ import { teeToUtcMs } from '@/lib/tee-time-utils';
  * A late-running cron can never double-charge someone who cancelled in the
  * meantime, because status='cancelled' falls out of the candidate filter.
  */
-export async function GET(req: NextRequest) {
+export const GET = cronRoute('cancellation-cutoff', async (req: NextRequest) => {
+  // cronRoute authorises before logging; the check stays here too so every
+  // cron route is visibly guarded on its own.
   const denied = cronAuthFailure(req);
   if (denied) return denied;
 
@@ -135,4 +138,4 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({ success: true, charged, emailedNoPolicy, skippedNoCard, skippedNoConnectedAccount, failed, totalCandidates: candidates.length });
-}
+});

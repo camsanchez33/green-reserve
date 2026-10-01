@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cronAuthFailure } from '@/lib/cron-auth';
+import { cronRoute } from '@/lib/cron-log';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { sendReminderEmail, sendMembershipPaymentLinkEmail } from '@/lib/email';
 
-export async function GET(req: NextRequest) {
+export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
+  // cronRoute authorises before logging; the check stays here too so every
+  // cron route is visibly guarded on its own.
   const denied = cronAuthFailure(req);
   if (denied) return denied;
 
@@ -81,4 +84,4 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({ success: true, sent, total: tomorrowBookings.length, renewalsSent });
-}
+});

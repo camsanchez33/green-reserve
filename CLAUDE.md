@@ -226,6 +226,8 @@ Schedules are in `vercel.json`.
 - `generate-tee-times` — materialises slots from `TeeTimeSchedule`
 - `chase-onboarding` — nudges courses stalled in onboarding
 
+Every cron route is wrapped in `cronRoute(job, handler)` (`src/lib/cron-log.ts`, MP-8b), which writes one `CronRunLog` row per run; Admin → System reads it and goes red on a failed, unfinished or overdue run. A new cron must use the wrapper AND be added to `vercel.json`, or System cannot see it. Stripe webhook receipts land in the same table as job `webhook:stripe`.
+
 ---
 
 ## Known gotchas
