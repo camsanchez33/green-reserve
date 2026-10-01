@@ -360,6 +360,27 @@ export async function sendBookingModifiedEmail(data: {
   await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Updated: ${data.courseName} — ${data.date} at ${data.time}`, html });
 }
 
+// B-9 frost delay: the course pushed the start back and this group moved to a
+// later tee time. Says why, the old and new time, and that the price stands.
+export async function sendFrostDelayEmail(data: {
+  golferName: string; golferEmail: string; courseName: string; date: string;
+  oldTime: string; newTime: string; players: number; bookingId: string; checkInToken: string | null;
+}) {
+  const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : (process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app');
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 6px;color:#111827;font-size:24px;font-weight:700;">Frost delay: your tee time moved</h1>
+    <p style="margin:0 0 22px;color:#4b5563;font-size:15px;">Hi ${escHtml(data.golferName.split(' ')[0] || 'there')}, ${escHtml(data.courseName)} is delaying its first tee times this morning for frost. Your group has been moved to the next open time.</p>
+    <div style="background:#f9fafb;border-radius:4px;padding:20px;margin-bottom:20px;">
+      <p style="margin:0 0 6px;color:#6b7280;font-size:13px;">${escHtml(data.date)} · ${data.players} player${data.players === 1 ? '' : 's'}</p>
+      <p style="margin:0;color:#9ca3af;font-size:15px;text-decoration:line-through;">${escHtml(data.oldTime)}</p>
+      <p style="margin:2px 0 0;color:#111827;font-size:22px;font-weight:700;">${escHtml(data.newTime)}</p>
+    </div>
+    <p style="margin:0 0 18px;color:#4b5563;font-size:14px;">Your price hasn't changed. If the new time doesn't work for your group, call the course and they'll sort it out with you.</p>
+    <a href="${manageUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;">Manage my booking</a>
+  `);
+  await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Frost delay: ${data.courseName} — now ${data.newTime}`, html });
+}
+
 // Fired the moment performCheckIn() successfully charges a golfer for their
 // round at check-in. Itemizes the same numbers as the original booking
 // confirmation, plus the late-cancellation fee refund if one applied.
