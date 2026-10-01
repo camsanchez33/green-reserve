@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 363,
+    "files": 364,
     "routes": 201,
     "libs": 95,
     "models": 33,
@@ -5543,7 +5543,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1749,
+      "lines": 1756,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5967,7 +5967,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1242,
+      "lines": 1245,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5988,6 +5988,7 @@
         "@/components/dashboard/TabIntro",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
+        "@/components/ui/MonthPicker",
         "@/components/ui/StatusDot",
         "@/lib/booking-status",
         "@/lib/change-requests",
@@ -7751,6 +7752,30 @@
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/system/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/ui/MonthPicker.tsx",
+      "lines": 75,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "MonthPicker",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "lucide-react",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/page.tsx"
       ]
     },
     {

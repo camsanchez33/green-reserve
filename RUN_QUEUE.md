@@ -53,6 +53,18 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   (https + *.blob.vercel-storage.com) now gates course-documents download AND
   record (record also handed a client URL to the SDK with the token), and
   companyDocPathOf uses it.
+- [x] BUG walk-in auto check-in — fixed 2026-10-01 (Cam: "when one person gets checked in it's
+  automatically checking in other people"). No code path checks in >1 booking (every action is
+  by booking id; verified). Cause: the walk-in form's "check in and mark paid now" box defaulted
+  ON, so every walk-in added to a slot arrived checked in. Default is now OFF, the label says
+  what it does, and the per-group button reads "Check in · paid at counter". Verified locally:
+  two walk-ins on one slot, checking in one leaves the other confirmed/manual.
+- [x] FLOW-3 — done 2026-10-01: golfer course page in the homepage phone's language — tee
+  times are one sheet with hairline rows (no per-slot boxes), bold one-line times, "4 spots"
+  instead of "Available · 4 spots open", selected row = accent bar; on phones the row is the
+  button. Hero: flat accent (hatch removed), initials crest when no logo, no ", ·" when city
+  is blank. Dashboard sheet date opens a month calendar (`ui/MonthPicker.tsx`, Cam: "a little
+  calendar pop up if needing to go into the future").
 - [x] FLOW-2 — done 2026-10-01 (Cam: "clunky", "why doesn't the dashboard look like the
   greenreserve.app demo"): the operator tee sheet IS the homepage demo — one sheet with its own
   bar (course · Tee sheet · ‹ date ›, date picker, Today), Time / Group / Status columns,
