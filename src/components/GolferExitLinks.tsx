@@ -11,7 +11,7 @@ export function GolferExitLinks({ courseSlug, courseName, accent }: {
       <Link
         href={`/courses/${courseSlug}/account`}
         className="block w-full py-3 rounded-md font-medium text-white text-sm text-center transition-colors"
-        style={{ backgroundColor: accent || '#24513B' }}
+        style={{ backgroundColor: accent || '#173B2A' }}
       >
         View My Bookings
       </Link>

@@ -35,7 +35,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
 }) {
   const router = useRouter();
   const [unreadMessages, setUnreadMessages] = useState(0);
-  const [identity, setIdentity] = useState<CourseIdentity>({ name: '', type: 'public', brandColor: '#24513B', establishedYear: null });
+  const [identity, setIdentity] = useState<CourseIdentity>({ name: '', type: 'public', brandColor: '#173B2A', establishedYear: null });
   const [myCourses, setMyCourses] = useState<MyCourse[]>([]);
   const [switchingCourse, setSwitchingCourse] = useState(false);
   // SD-1: staff run the tee sheet; the configuration tabs are not theirs.
@@ -55,7 +55,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
       .then(r => r.ok ? r.json() : null)
       .then(c => {
         if (!c) return;
-        setIdentity({ id: c.id, name: c.name || '', type: c.type || 'public', brandColor: c.brandColor || '#24513B', establishedYear: c.establishedYear ?? null, slug: c.slug || '', logoUrl: c.logoUrl || '' });
+        setIdentity({ id: c.id, name: c.name || '', type: c.type || 'public', brandColor: c.brandColor || '#173B2A', establishedYear: c.establishedYear ?? null, slug: c.slug || '', logoUrl: c.logoUrl || '' });
       })
       .catch(() => {});
     // Only ever returns >1 row for multi-course operators — staff and

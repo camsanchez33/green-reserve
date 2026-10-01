@@ -113,7 +113,13 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   const counter = collectedB.filter(b => b.paymentStatus === 'paid_offline').reduce((s, b) => s + share(b), 0);
   const outstandingB = pastLive.filter(b => !collectedSet.has(b));
   const outstanding = outstandingB.reduce((s, b) => s + share(b), 0);
-  const upcoming = live.filter(b => !b.passed && !collectedSet.has(b)).reduce((s, b) => s + share(b), 0);
+  const upcomingB = live.filter(b => !b.passed && !collectedSet.has(b));
+  const upcoming = upcomingB.reduce((s, b) => s + share(b), 0);
+  // Review (spec): the Money tab's Pending tiles, now here — upcoming rounds
+  // with a card saved (charged at check-in), and upcoming rounds paid at the
+  // counter / no card needed / cutoff hold already taken.
+  const onCard = upcomingB.filter(b => b.paymentStatus === 'card_on_file' || b.paymentStatus === 'no_payment_method');
+  const awaiting = upcomingB.filter(b => !onCard.includes(b));
   const lateFeesKept = cancelled.filter(b => b.paymentStatus === 'cancellation_fee_charged').reduce((s, b) => s + b.cancellationFeeTotal, 0);
   const holdsHeld = live.filter(b => b.paymentStatus === 'cancellation_fee_charged').reduce((s, b) => s + b.cancellationFeeTotal, 0);
   const grFees = collectedB.filter(b => b.paymentStatus === 'paid').reduce((s, b) => s + b.accessFeeTotal, 0);
@@ -259,13 +265,20 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
       expectedCents: expected, collectedCents: collected, gapCents: expected - collected, gapPct: pct(expected - collected, expected),
       cardCents: card, counterCents: counter, outstandingCents: outstanding, outstandingBookings: outstandingB.length, upcomingCents: upcoming,
       greenCents: greenCollected, cartCents: cartCollected, lateFeesKeptCents: lateFeesKept, holdsHeldCents: holdsHeld, greenReserveFeesCents: grFees,
+      pipeline: {
+        upcomingBookings: upcomingB.length,
+        cardOnFile: { bookings: onCard.length, cents: onCard.reduce((s, b) => s + share(b), 0), noCardRequired: onCard.filter(b => b.paymentStatus === 'no_payment_method').length },
+        awaitingCheckIn: { bookings: awaiting.length, cents: awaiting.reduce((s, b) => s + share(b), 0) },
+        holdsHeldBookings: live.filter(b => b.paymentStatus === 'cancellation_fee_charged').length,
+      },
       roundsPlayed, perRoundCents: roundsPlayed ? Math.round(collected / roundsPlayed) : null,
       perAvailableTeeTimeCents: pastSlotsForSale ? Math.round(collected / pastSlotsForSale) : null,
       bucket: byWeek ? 'week' as const : 'day' as const,
-      series: [...series.entries()].map(([key, v]) => ({ key, expectedCents: v.expected, collectedCents: v.collected, gapCents: v.expected - v.collected })),
+      series: [...series.entries()].map(([key, v]) => ({ key, expectedCents: v.expected, collectedCents: v.collected, gapCents: v.expected - v.collected, gapPct: pct(v.expected - v.collected, v.expected) })),
     },
     utilization: {
       spotsForSale: sale, spotsBooked: bookedSpots, fillPct: pct(bookedSpots, sale),
+      blockedTimes: L.teeTimes.filter(t => t.status === 'blocked').length,
       byDay: [...byDay.entries()].sort().map(([date, r]) => ({ date, sale: r.sale, booked: r.booked, fillPct: pct(r.booked, r.sale) })),
       byDow: byDow.map((r, i) => ({ dow: DOW[i], sale: r.sale, booked: r.booked, fillPct: pct(r.booked, r.sale) })),
       byHour: hours.map(h => ({ hour: h, sale: byHour.get(h)!.sale, booked: byHour.get(h)!.booked, fillPct: pct(byHour.get(h)!.booked, byHour.get(h)!.sale) })),

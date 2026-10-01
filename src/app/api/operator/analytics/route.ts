@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   const range: Range = DATE.test(from) && DATE.test(to) ? { from, to } : { from: addDaysStr(today, -29), to: today };
   if (range.from > range.to) return NextResponse.json({ error: 'The start date is after the end date.' }, { status: 400 });
   const span = (Date.parse(range.to) - Date.parse(range.from)) / 86400000 + 1;
-  if (span > MAX_DAYS) return NextResponse.json({ error: `Pick a range of ${MAX_DAYS} days or fewer.` }, { status: 400 });
+  if (!Number.isFinite(span) || span > MAX_DAYS) return NextResponse.json({ error: `Pick a range of ${MAX_DAYS} days or fewer.` }, { status: 400 });
 
   const current = await computeAnalytics(session.courseId, range);
   const compare = sp.get('compare') === '1'

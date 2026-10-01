@@ -123,11 +123,16 @@ function DashboardPageInner() {
   // SD-5: the walk-in form is opened on a slot; row actions carry their own busy id.
   // B-9 frost delay: pick the new first tee time, preview the moves, confirm.
   type FrostPlan = { moves: { bookingId: string; name: string; players: number; fromTime: string; toTime: string }[]; unplaced: { bookingId: string; name: string; players: number; time: string }[]; blockTeeTimeIds: string[] };
+  const [statusError, setStatusError] = useState(false);
   const [frostOpen, setFrostOpen] = useState(false);
   const [frostTime, setFrostTime] = useState('09:00');
   const [frostPlan, setFrostPlan] = useState<FrostPlan | null>(null);
   const [frostBusy, setFrostBusy] = useState(false);
   const [frostErr, setFrostErr] = useState('');
+  // Review (admin-UX): after applying, anyone staff must call stays on screen
+  // (didn't fit, no email on file, email failed) until they close it.
+  type FrostCall = { name: string; players: number; why: string };
+  const [frostResult, setFrostResult] = useState<{ moved: number; blocked: number; calls: FrostCall[] } | null>(null);
   const [walkInSlot, setWalkInSlot] = useState<TeeTime | null>(null);
   const [rowBusy, setRowBusy] = useState<string | null>(null);
   const [cardModalBooking, setCardModalBooking] = useState<Booking | null>(null);
@@ -273,7 +278,7 @@ function DashboardPageInner() {
   const loadTimes = useCallback(async (date: string) => {
     setLoading(true);
     const r = await dfetch<TeeTime[]>(`/api/operator/tee-times?date=${date}&withBookings=1`);
-    if (r.status === 401) { router.push('/dashboard/login'); return; }
+    if (r.status === 401) { setLoading(false); toast('Your session ended — sign in again.', 'warn'); router.push('/dashboard/login'); return; }
     if (!r.ok) { setTeeTimes([]); setSheetError(r.error); }
     // FLOW-1 fix: the API sends greenFeeCents / cartFeeCents (the columns moved
     // to cents); the sheet, the walk-in total and the revenue line all read
@@ -295,7 +300,10 @@ function DashboardPageInner() {
     // An error body has no `active`, so it used to read as "draft" and put the
     // "your course isn't live" banner on a live course. Keep what we had.
     fetch('/api/operator/courses').then(r => r.ok ? r.json() : null).then(c => {
-      if (!c) return;
+      // Review (admin-UX): say when the status could not be read rather than
+      // silently keeping a possibly stale live/draft/Stripe state.
+      if (!c) { setStatusError(true); return; }
+      setStatusError(false);
       if (c?.name) setCourseName(c.name);
       if (c?.timezone && c.timezone !== DEFAULT_TZ) {
         // SD-3: re-seed the selected day on the course's clock (once, on load).
@@ -307,7 +315,7 @@ function DashboardPageInner() {
       setPageApprovalStatus(c?.pageApprovalStatus === 'approved' || c?.pageApprovalStatus === 'changes_requested' ? c.pageApprovalStatus : 'none');
       setStripeAccountActive(!!c?.stripeAccountActive);
       if (c?.conditions) { setConditions(c.conditions); setConditionsInput(c.conditions); }
-    }).catch(() => {});
+    }).catch(() => setStatusError(true));
   }, []);
 
   async function connectStripeFromChecklist() {
@@ -399,12 +407,12 @@ function DashboardPageInner() {
 
   useEffect(() => {
     fetch('/api/operator/profile').then(r => r.ok ? r.json() : null).then(p => {
-      if (!p) return; // could not load — never guess at a redirect from an error body
+      if (!p) { setStatusError(true); return; } // could not load — never guess at a redirect from an error body
       if (!p.emailVerified) { router.push('/dashboard/verify'); return; }
       if (p.onboardingStep < 3)   { router.push('/dashboard/onboarding'); return; }
       setEmailVerified(!!p.emailVerified);
       setOnboardingStepNum(p.onboardingStep);
-    }).catch(() => {});
+    }).catch(() => setStatusError(true));
     loadCourseStatus();
     fetch('/api/operator/agreement').then(r => r.ok ? r.json() : null).then(d => {
       setAgreementAccepted(!!d?.agreement);
@@ -412,7 +420,7 @@ function DashboardPageInner() {
     }).catch(() => setAgreementChecked(true));
     fetch('/api/operator/sign?status=1').then(r => r.ok ? r.json() : null).then(d => {
       if (d?.status) setAgreementsCount({ signed: d.status.signed, total: d.status.total });
-    }).catch(() => {});
+    }).catch(() => { /* the count is a label on the setup checklist only; the checklist reads "Review & sign" without it */ });
     // Admin can flip a course live while this tab sits open in the
     // background — refresh live/draft status when the operator tabs back in
     // instead of showing whatever was true at page load.
@@ -491,7 +499,7 @@ function DashboardPageInner() {
         )}
         {showChangesModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-sm max-h-[85vh] overflow-y-auto">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-card max-h-[85vh] overflow-y-auto">
               <div className="text-ink font-medium mb-1">What would you like changed?</div>
               <div className="text-xs text-ink-muted mb-3">Check everything that applies — you can add a note for each.</div>
               <div className="space-y-2 mb-3">
@@ -533,6 +541,13 @@ function DashboardPageInner() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+        {statusError && (
+          <div className="bg-warn/5 border-b border-warn/20 px-6 py-2.5 flex items-center gap-2 text-[13px] text-warn">
+            <AlertTriangle className="w-4 h-4 shrink-0"/>
+            <span>We couldn&apos;t load your course&apos;s status (live, Stripe, setup). The tee sheet works; the setup reminders may be out of date.</span>
+            <button onClick={() => { setStatusError(false); loadCourseStatus(); }} className="ml-auto underline font-medium">Retry</button>
           </div>
         )}
         {courseArchived && (
@@ -625,7 +640,7 @@ function DashboardPageInner() {
                     <RefreshCw className="w-3.5 h-3.5"/>Refresh
                   </button>
                   {selectedDate >= today() && (
-                    <button onClick={() => { setFrostOpen(true); setFrostPlan(null); setFrostErr(''); }} className="flex items-center gap-1.5 text-[12.5px] text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
+                    <button onClick={() => { setFrostOpen(true); setFrostPlan(null); setFrostErr(''); setFrostResult(null); }} className="flex items-center gap-1.5 text-[12.5px] text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
                       <Snowflake className="w-3.5 h-3.5"/>Frost delay
                     </button>
                   )}
@@ -716,7 +731,7 @@ function DashboardPageInner() {
                 <div className="flex items-center justify-center py-16 text-ink-muted gap-2">
                   <Loader2 className="w-5 h-5 animate-spin"/>Loading tee times...
                 </div>
-              ) : teeTimes.length === 0 ? (
+              ) : sheetError ? null : teeTimes.length === 0 ? (
                 <div className="text-center py-16">
                   <p className="font-medium text-ink mb-1">No tee times for this date</p>
                   <p className="text-sm text-ink-muted mb-4">Add times manually or check your schedule covers this day</p>
@@ -783,6 +798,14 @@ function DashboardPageInner() {
                                 Walk-in
                               </button>
                             );
+                            // Review (admin-UX): a slot whose groups need more than one tap
+                            // (several groups, a decline, a no-show) says so.
+                            if ((tt.bookings?.length ?? 0) > 0) return (
+                              <button onClick={e => { e.stopPropagation(); setExpandedId(expandedId === tt.id ? null : tt.id); }}
+                                className="w-[72px] text-[12.5px] font-semibold min-h-[40px] md:min-h-0 md:py-1.5 rounded-md text-ink-soft hover:text-ink hover:bg-paper">
+                                {expandedId === tt.id ? 'Close' : 'Open'}
+                              </button>
+                            );
                             return <span className="w-[72px]" aria-hidden="true" />;
                           })()}
                           <button onClick={e => { e.stopPropagation(); toggleBlock(tt); }} disabled={slotBusy === tt.id}
@@ -791,7 +814,7 @@ function DashboardPageInner() {
                           </button>
                           {/* A tee time that has gone off stays on the sheet — deleting it
                               would erase an unfilled slot from Analytics (the API refuses too). */}
-                          {isPast ? <span className="w-[58px]" aria-hidden="true" /> : (
+                          {isPast ? <span className="w-[58px] text-center text-[11.5px] text-ink-faint cursor-help" title="Past tee times stay on the sheet so your reports stay accurate">—</span> : (
                             <button onClick={e => { e.stopPropagation(); deleteTime(tt); }} disabled={slotBusy === tt.id}
                               className="w-[58px] text-[12.5px] min-h-[40px] md:min-h-0 md:py-1.5 rounded-md text-ink-muted hover:text-bad hover:bg-bad/5 transition-colors disabled:opacity-50">
                               Delete
@@ -882,8 +905,22 @@ function DashboardPageInner() {
           <div className="bg-white w-full sm:max-w-md rounded-t-lg sm:rounded-lg shadow-card p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-serif font-medium text-ink text-[17px]">Frost delay — {fmtDate(selectedDate)}</h3>
-              <button onClick={() => setFrostOpen(false)} className="text-ink-muted hover:text-ink" aria-label="Close"><X className="w-5 h-5"/></button>
+              <button onClick={() => setFrostOpen(false)} disabled={frostBusy} className="text-ink-muted hover:text-ink disabled:opacity-40" aria-label="Close"><X className="w-5 h-5"/></button>
             </div>
+            {frostResult ? (
+              <div>
+                <p className="text-[13.5px] text-ink mb-3"><b>Frost delay set.</b> {frostResult.moved} group{frostResult.moved === 1 ? '' : 's'} moved, {frostResult.blocked} time{frostResult.blocked === 1 ? '' : 's'} blocked.</p>
+                {frostResult.calls.length > 0 ? (
+                  <>
+                    <p className="text-[13px] text-bad font-semibold mb-1.5">Call these golfers:</p>
+                    <ul className="divide-y divide-line border-y border-line text-[13px] mb-4">
+                      {frostResult.calls.map((c, i) => <li key={i} className="flex justify-between py-1.5"><span>{c.name} · {c.players}</span><span className="text-ink-soft">{c.why}</span></li>)}
+                    </ul>
+                  </>
+                ) : <p className="text-[13px] text-ink-soft mb-4">Every moved golfer was emailed their new time.</p>}
+                <button onClick={() => { setFrostOpen(false); setFrostResult(null); }} className="w-full bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[13px] font-semibold">Done</button>
+              </div>
+            ) : (<>
             <p className="text-[13px] text-ink-soft mb-4">Every group booked before the new first tee time moves, in tee-time order, to the earliest open time that fits them. The early times are blocked and each moved golfer is emailed. Prices don&apos;t change. Nobody is cancelled.</p>
             <label className="block text-[12.5px] text-ink-muted mb-1.5">New first tee time</label>
             <div className="flex gap-2 mb-4">
@@ -915,19 +952,28 @@ function DashboardPageInner() {
               </div>
             )}
             <div className="flex gap-2">
-              <button onClick={() => setFrostOpen(false)} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[13px] font-medium hover:border-line-strong">Cancel</button>
+              <button onClick={() => setFrostOpen(false)} disabled={frostBusy} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[13px] font-medium hover:border-line-strong disabled:opacity-50">Cancel</button>
               <button disabled={!frostPlan || frostBusy || frostPlan.blockTeeTimeIds.length + frostPlan.moves.length === 0} onClick={async () => {
                 setFrostBusy(true); setFrostErr('');
-                const r = await dfetch<{ moved: { emailed: boolean | null }[]; unplaced: unknown[]; blocked: number }>('/api/operator/frost-delay', { method: 'POST', body: JSON.stringify({ date: selectedDate, newStart: frostTime, apply: true }) });
+                const r = await dfetch<{ moved: { name: string; players: number; toTime: string; emailed: boolean | null }[]; unplaced: { name: string; players: number; time: string }[]; blocked: number }>('/api/operator/frost-delay', { method: 'POST', body: JSON.stringify({ date: selectedDate, newStart: frostTime, apply: true }) });
                 setFrostBusy(false);
                 if (!r.ok) { setFrostErr(r.error); return; }
-                const notEmailed = r.data.moved.filter(m => m.emailed !== true).length;
-                toast(`Frost delay set: ${r.data.moved.length} group${r.data.moved.length === 1 ? '' : 's'} moved, ${r.data.blocked} time${r.data.blocked === 1 ? '' : 's'} blocked.${r.data.unplaced.length ? ` ${r.data.unplaced.length} group${r.data.unplaced.length === 1 ? '' : 's'} didn't fit — call them.` : ''}${notEmailed ? ` ${notEmailed} moved golfer${notEmailed === 1 ? ' has' : 's have'} no email on file or the email failed — call them.` : ''}`, r.data.unplaced.length || notEmailed ? 'warn' : 'ok');
-                setFrostOpen(false); setFrostPlan(null); loadTimes(selectedDate);
+                const calls: FrostCall[] = [
+                  ...r.data.unplaced.map(u => ({ name: u.name, players: u.players, why: `${fmtTime(u.time)} — no open time fit` })),
+                  ...r.data.moved.filter(m => m.emailed !== true).map(m => ({ name: m.name, players: m.players, why: `moved to ${fmtTime(m.toTime)} — ${m.emailed === false ? 'email failed' : 'no email on file'}` })),
+                ];
+                toast(`Frost delay set: ${r.data.moved.length} group${r.data.moved.length === 1 ? '' : 's'} moved.`, calls.length ? 'warn' : 'ok');
+                setFrostPlan(null); setFrostResult({ moved: r.data.moved.length, blocked: r.data.blocked, calls }); loadTimes(selectedDate);
               }} className="flex-1 bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[13px] font-semibold disabled:opacity-50">
-                {frostBusy && frostPlan ? 'Applying…' : frostPlan ? `Move ${frostPlan.moves.length} group${frostPlan.moves.length === 1 ? '' : 's'}` : 'Preview first'}
+                {frostBusy && frostPlan ? 'Applying…' : !frostPlan ? 'Preview first'
+                  : frostPlan.moves.length > 0 ? `Move ${frostPlan.moves.length} group${frostPlan.moves.length === 1 ? '' : 's'}`
+                  : frostPlan.blockTeeTimeIds.length > 0 ? `Block ${frostPlan.blockTeeTimeIds.length} time${frostPlan.blockTeeTimeIds.length === 1 ? '' : 's'}` : 'Nothing to do'}
               </button>
             </div>
+            {frostPlan && frostPlan.moves.length === 0 && frostPlan.blockTeeTimeIds.length === 0 && (
+              <p className="text-[12px] text-ink-muted mt-2">There are no tee times before {fmtTime(frostTime)} to move or block{frostPlan.unplaced.length ? ' — the groups in red have nowhere to go; call them' : ''}.</p>
+            )}
+            </>)}
           </div>
         </div>
       )}
@@ -1105,7 +1151,7 @@ function AddTeeTimeForm({ date, onSave, onCancel }: { date: string; onSave: ()=>
       <div className="flex items-center justify-between py-1">
         <span className="text-sm text-ink">Walking allowed</span>
         <button onClick={() => setWalking(!walking)} className={'relative w-11 h-6 rounded-sm transition-colors ' + (walking ? 'bg-pine' : 'bg-line-strong')}>
-          <span className={'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-sm shadow-sm transition-transform ' + (walking ? 'translate-x-5' : '')}/>
+          <span className={'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-sm shadow-card transition-transform ' + (walking ? 'translate-x-5' : '')}/>
         </button>
       </div>
       <div className="flex gap-3 pt-1">
@@ -1131,7 +1177,7 @@ function CardCheckInModal({ booking, reason, onConfirm, onCancel }: {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const cardStyle = { style: { base: { fontSize: '14px', color: '#1C1C18', '::placeholder': { color: '#98968B' } }, invalid: { color: '#A3452F' } } };
+  const cardStyle = { style: { base: { fontSize: '14px', color: '#141814', '::placeholder': { color: '#979B94' } }, invalid: { color: '#A3452F' } } };
 
   async function handleCharge() {
     if (!stripe || !elements) return;

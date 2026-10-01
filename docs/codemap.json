@@ -3159,7 +3159,7 @@
     },
     {
       "path": "src/app/api/cron/cancellation-cutoff/route.ts",
-      "lines": 138,
+      "lines": 139,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3242,7 +3242,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 190,
+      "lines": 191,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5763,7 +5763,7 @@
     },
     {
       "path": "src/app/dashboard/analytics/page.tsx",
-      "lines": 361,
+      "lines": 423,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -5780,11 +5780,13 @@
       "imports": [
         "@/components/OperatorSidebar",
         "@/components/dashboard/LoadError",
+        "@/components/dashboard/Toast",
         "@/components/ui/Card",
         "@/components/ui/Eyebrow",
         "@/lib/analytics",
         "@/lib/dashboard-fetch",
         "lucide-react",
+        "next/link",
         "react"
       ],
       "usedBy": []
@@ -5942,7 +5944,7 @@
     },
     {
       "path": "src/app/dashboard/money/page.tsx",
-      "lines": 188,
+      "lines": 190,
       "purpose": "SD-8 — Payments and Cancellations were two pages querying the same endpoint, and Payouts was buried in Settings.",
       "brain": [],
       "exports": [
@@ -6020,7 +6022,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1180,
+      "lines": 1226,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7451,6 +7453,7 @@
         "react"
       ],
       "usedBy": [
+        "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/page.tsx",
@@ -8594,7 +8597,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 320,
+      "lines": 333,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -9578,7 +9581,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 395,
+      "lines": 397,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9615,7 +9618,7 @@
     },
     {
       "path": "src/lib/claim-tee-time.ts",
-      "lines": 82,
+      "lines": 93,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10938,7 +10941,7 @@
     },
     {
       "path": "src/lib/frost-delay.ts",
-      "lines": 95,
+      "lines": 107,
       "purpose": "B-9 frost delay (Cam 2026-10-01:",
       "brain": [],
       "exports": [

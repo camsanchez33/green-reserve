@@ -1,6 +1,6 @@
 import { prisma } from './prisma';
 import { stripe, chargeOnConnectedAccount, refundOnConnectedAccount } from './stripe';
-import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
+import { recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
 import { sendCheckInReceiptEmail } from './email';
 import { refundSeparateAccessFee } from './access-fee';
 
@@ -317,10 +317,12 @@ async function chargeBooking(
   }
 
   // ── Record ───────────────────────────────────────────────────────────────
-  // EV-1: a real check-in and its checked_in event commit together, after
-  // Stripe confirmed; stripeId (the round's PaymentIntent) dedupes a retry.
-  await prisma.$transaction(async (tx) => {
-    await tx.booking.update({
+  // EV-1 review (security MEDIUM): money has already moved here, so recording
+  // it is ONE plain update (no interactive transaction that can time out after
+  // the charge) and the checked_in event is written after, best-effort —
+  // stripeId (the round's PaymentIntent) dedupes a retry.
+  {
+    await prisma.booking.update({
       where: { id: bookingId },
       data: {
         paymentStatus: 'paid',
@@ -332,7 +334,7 @@ async function chargeBooking(
       },
     });
     if (mode.recordCheckIn) {
-      await recordBookingEvent(tx, {
+      await recordBookingEventSafe({
         bookingId, courseId: booking.courseId, type: 'checked_in', actor,
         amountCents: booking.totalAmount, playerCount: partialApplied ? (showed as number) : booking.players,
         teeTimeAt: teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time),
@@ -340,7 +342,7 @@ async function chargeBooking(
         metadata: { paidOffline: false, alreadyPaid, cartAddedCents },
       });
     }
-  });
+  }
 
   if (mode.recordCheckIn) {
     await sendCheckInReceiptEmail({

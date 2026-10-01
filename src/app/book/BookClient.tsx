@@ -108,7 +108,7 @@ function TimelineStep({ when, what, last = false, accent }: {
 
 const cardStyle = {
   style: {
-    base: { fontSize: '15px', color: '#1C1C18', '::placeholder': { color: '#98968B' } },
+    base: { fontSize: '15px', color: '#141814', '::placeholder': { color: '#979B94' } },
     invalid: { color: '#A3452F' },
   },
 };
@@ -167,7 +167,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
     }).catch(() => { setLoadError('Something went wrong loading this tee time.'); setLoadingInfo(false); });
   }, [courseSlug, teeTimeId, date]);
 
-  const accent = course?.brand_color || '#24513B';
+  const accent = course?.brand_color || '#173B2A';
 
   if (confirmedData) {
     return (

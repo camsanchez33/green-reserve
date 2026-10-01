@@ -56,7 +56,7 @@ function PayForm({ id, token, info, onPaid }: { id: string; token: string; info:
   return (
     <div>
       <div className="border border-line rounded-md px-3 py-3 bg-paper mb-3 focus-within:border-pine/40 focus-within:ring-2 focus-within:ring-pine/10 transition-all">
-        <CardElement options={{ style: { base: { fontSize: '15px', color: '#1C1C18', '::placeholder': { color: '#98968B' } } } }} />
+        <CardElement options={{ style: { base: { fontSize: '15px', color: '#141814', '::placeholder': { color: '#979B94' } } } }} />
       </div>
       {error && <p className="text-sm text-bad mb-3">{error}</p>}
       <button

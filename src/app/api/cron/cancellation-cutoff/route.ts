@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cronAuthFailure } from '@/lib/cron-auth';
 import { prisma } from '@/lib/prisma';
 import { chargeOnConnectedAccount } from '@/lib/stripe';
-import { recordBookingEvent } from '@/lib/booking-events';
+import { recordBookingEventSafe } from '@/lib/booking-events';
 import { sendCancellationFeeChargedEmail, sendCheckInAvailableEmail } from '@/lib/email';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 
@@ -72,11 +72,12 @@ export async function GET(req: NextRequest) {
         });
         console.log(JSON.stringify({ ev: 'cron.cancelfee.ok', bookingId: booking.id, paymentIntentId: paymentIntent.id }));
 
-        // EV-1: the HOLD and its fee_charged event commit together; the hourly
-        // run and this daily safety net share an idempotency key, so the same
-        // PaymentIntent id dedupes the event if both ever fire.
-        await prisma.$transaction(async (tx) => {
-          await tx.booking.update({
+        // EV-1: the card was charged above, so the hold is recorded with ONE
+        // plain update (no transaction that could time out after the money
+        // moved) and the fee_charged event is written after, best-effort. Both
+        // crons share an idempotency key, so the PaymentIntent id dedupes it.
+        {
+          await prisma.booking.update({
             where: { id: booking.id },
             data: {
               paymentStatus: 'cancellation_fee_charged',
@@ -84,12 +85,12 @@ export async function GET(req: NextRequest) {
               cancellationFeeChargedAt: new Date(),
             },
           });
-          await recordBookingEvent(tx, {
+          await recordBookingEventSafe({
             bookingId: booking.id, courseId: booking.courseId, type: 'fee_charged', actor: { type: 'cron' },
             amountCents: Math.round(booking.cancellationFeeTotal), playerCount: booking.players,
             teeTimeAt: new Date(teeMs), stripeId: paymentIntent.id, metadata: { reason: 'cutoff_hold' },
           });
-        });
+        }
 
         await sendCancellationFeeChargedEmail({
           golferName: booking.golferName,

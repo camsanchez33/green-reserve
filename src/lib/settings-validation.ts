@@ -101,7 +101,7 @@ export function validateSettingsPatch(body: Record<string, unknown>, allowed: st
     }
     if (key === 'brandColor') {
       const s = String(v ?? '').trim();
-      if (!HEX_COLOR.test(s)) return { ok: false, error: 'brandColor must be a six-digit hex colour like #24513B.' };
+      if (!HEX_COLOR.test(s)) return { ok: false, error: 'brandColor must be a six-digit hex colour like #173B2A.' };
       data[key] = s; continue;
     }
     if (URL_FIELDS.has(key)) {

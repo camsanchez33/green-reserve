@@ -219,7 +219,7 @@ function ManagePageInner() {
 
   if (loading) return <div className="min-h-screen bg-paper flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-ink-muted" /></div>;
 
-  const headerStyle = { backgroundColor: info?.brandColor || '#24513B' };
+  const headerStyle = { backgroundColor: info?.brandColor || '#173B2A' };
 
   if (expired) {
     return (

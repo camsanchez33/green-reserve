@@ -14,12 +14,12 @@ export default function OpenGraphImage() {
       <div
         style={{
           width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-          background: '#F6F4EC', padding: '72px 80px', fontFamily: 'Georgia, "Times New Roman", serif', color: '#1C1C18',
+          background: '#FAFAF7', padding: '72px 80px', fontFamily: 'Georgia, "Times New Roman", serif', color: '#141814',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-          <div style={{ width: 22, height: 22, borderRadius: 999, background: '#24513B' }} />
-          <div style={{ fontSize: 30, letterSpacing: 1, color: '#24513B' }}>GreenReserve</div>
+          <div style={{ width: 22, height: 22, borderRadius: 999, background: '#173B2A' }} />
+          <div style={{ fontSize: 30, letterSpacing: 1, color: '#173B2A' }}>GreenReserve</div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
           <div style={{ fontSize: 76, lineHeight: 1.05, letterSpacing: -2, maxWidth: 980 }}>

@@ -53,7 +53,27 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   (https + *.blob.vercel-storage.com) now gates course-documents download AND
   record (record also handed a client URL to the SDK with the token), and
   companyDocPathOf uses it.
-- [x] AN-1 — dashboard refactor + full Analytics tab — built 2026-10-01 (Cam's brief, no
+- [x] REVIEW 2026-10-01 (/gr-review over 4deb485..3e09587 — EV-1, AN-1, B-9, walk-in fix,
+  FLOW-1..3): 4 auditors, 0 critical. ALL findings fixed (Cam: "fix all of them and merge"):
+  SECURITY — frost-delay apply checks the booking is still on its planned source slot (an
+  overlapping second apply inflated playersBooked); bookings made between plan and block are
+  reported; post-Stripe records (check-in, both cutoff crons) back to one plain update + best-effort
+  event (an interactive tx could time out AFTER money moved); analytics range rejects impossible
+  dates (NaN span skipped the 400-day cap). SPEC — walk-ins created checked-in now log checked_in;
+  Analytics gained blocked times, card-on-file / awaiting-check-in counts + $, upcoming count,
+  fill-by-day on screen, per-bucket gap %, CSV on every table. UX — staff/expired-session get a
+  plain panel (no dead Retry); custom range from>to blocked inline; stale data labelled + request
+  sequencing; tee-sheet error no longer shows the empty state; course-status load failures say so;
+  Money never claims "Stripe not connected" from a failed load; frost delay keeps a "call these
+  golfers" list, can't be closed mid-apply, "Block N times" label; "Open" on rows needing a tap;
+  past-row tooltip; CSV toasts. DESIGN — shadows to shadow-card (MonthPicker, golfer modals, toast,
+  admin menu), old-palette hexes → tokens, brand fallback #173B2A, Stripe Elements colours, analytics
+  type roles, admin count chips not pills, stale CLAUDE.md sidebar lines. KEPT AS IS (decision):
+  frost delay blocks an early slot even when a group on it didn't fit — that time can't be played;
+  the group is listed to call.
+- [ ] AN-1 — dashboard refactor + full Analytics tab — built 2026-10-01 (box reopened by
+  /gr-review 2026-10-01: built + reviewed, every finding fixed in the review-fix PR; box closes
+  after a live walk) (Cam's brief, no
   migrations by Cam's OK). Part 0 audit answered in chat. /dashboard/analytics (owner only):
   range Today/7d/30d/Season(Mar 1→)/Custom, compare to previous period, CSV per table;
   Revenue, Utilization (+ day×hour heatmap), Unfilled slots, No-shows (30-min grace),
@@ -3129,6 +3149,8 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   `grep -rn 'bookingEvent\.\(update\|delete\|upsert\)' src` must be empty.
 
 - [ ] EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET
+  NOTE 2026-10-01 (/gr-review): AN-1 (Cam's brief) now reads BookingEvent for one metric —
+  "who cancelled" — on /dashboard/analytics. Everything else EV-2 describes is still unbuilt.
 
   BLOCKED BY DESIGN, not by dependency. EV-1 captures the data; the reports wait
   until a live course says what it opens on a Monday morning. Building reports

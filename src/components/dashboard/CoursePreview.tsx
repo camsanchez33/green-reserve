@@ -23,7 +23,7 @@ export type CoursePreviewProps = {
 const HEX = /^#[0-9a-f]{6}$/i;
 
 export default function CoursePreview(p: CoursePreviewProps) {
-  const accent = HEX.test(p.accent) ? p.accent : '#24513B';
+  const accent = HEX.test(p.accent) ? p.accent : '#173B2A';
   const name = p.name.trim() || 'Your course';
   const typeLabel = p.type === 'semi-private' ? 'Semi-Private' : p.type === 'municipal' ? 'Municipal' : p.type === 'resort' ? 'Resort' : p.type === 'private' ? 'Private Club' : 'Public Course';
   const meta = [[p.city, p.state].filter(Boolean).join(', '), p.holes ? `${p.holes} holes` : null, p.par ? `Par ${p.par}` : null].filter(Boolean).join(' · ');

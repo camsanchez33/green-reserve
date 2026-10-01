@@ -5,7 +5,9 @@
 // is computed or invented in the browser except the CSV text of a table.
 // Charts are plain HTML/CSS bars like the rest of the dashboard: no chart
 // library, so the golfer-page performance budget is untouched.
-import { useCallback, useEffect, useState, Suspense } from 'react';
+import { useCallback, useEffect, useRef, useState, Suspense } from 'react';
+import Link from 'next/link';
+import { toast } from '@/components/dashboard/Toast';
 import { Loader2, Download, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { dfetch } from '@/lib/dashboard-fetch';
@@ -38,9 +40,11 @@ function rangeFor(p: Preset, today: string): { from: string; to: string } {
 }
 
 function downloadCsv(name: string, header: string[], rows: (string | number | null)[][]) {
+  if (rows.length === 0) { toast('Nothing to export — this table is empty for the range.', 'warn'); return; }
   const esc = (v: string | number | null) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
   const blob = new Blob([[header, ...rows].map(r => r.map(esc).join(',')).join('\n')], { type: 'text/csv' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${name}.csv`; a.click(); URL.revokeObjectURL(a.href);
+  toast(`Downloaded ${name}.csv (${rows.length} row${rows.length === 1 ? '' : 's'}).`, 'ok');
 }
 
 function CsvBtn({ onClick }: { onClick: () => void }) {
@@ -52,7 +56,7 @@ function Section({ title, note, children, csv }: { title: string; note?: string;
     <Card className="p-5">
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
-          <h2 className="text-[17px] font-serif font-bold text-ink">{title}</h2>
+          <h2 className="text-[15px] font-semibold text-ink">{title}</h2>
           {note && <p className="text-[12.5px] text-ink-muted mt-1 max-w-[62em]">{note}</p>}
         </div>
         {csv && <CsvBtn onClick={csv} />}
@@ -62,11 +66,16 @@ function Section({ title, note, children, csv }: { title: string; note?: string;
   );
 }
 
+/** A sub-table's label with its own CSV — every table on the page exports. */
+function SubHead({ label, csv }: { label: string; csv: () => void }) {
+  return <div className="flex items-center justify-between mb-2"><Eyebrow>{label}</Eyebrow><CsvBtn onClick={csv} /></div>;
+}
+
 function Stat({ label, value, sub, delta }: { label: string; value: string; sub?: string; delta?: React.ReactNode }) {
   return (
     <div className="min-w-0">
       <Eyebrow>{label}</Eyebrow>
-      <div className="mt-1 text-[24px] leading-none font-serif font-bold text-ink tabular-nums">{value}</div>
+      <div className="mt-1 text-[22px] leading-none font-serif font-medium text-ink tabular-nums">{value}</div>
       {(sub || delta) && <div className="mt-1.5 text-[12.5px] text-ink-soft flex items-center gap-2 flex-wrap">{delta}{sub}</div>}
     </div>
   );
@@ -116,22 +125,49 @@ function AnalyticsInner() {
   const [data, setData] = useState<Data | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  // Review (admin-UX): a refusal is not a failure — a staff login gets a plain
+  // explanation and a way back, never a Retry that can only fail again.
+  const [denied, setDenied] = useState(false);
+  const [signedOut, setSignedOut] = useState(false);
+  const seq = useRef(0); // only the newest request may write state
 
   const load = useCallback(async (p: Preset, c: { from: string; to: string }, cmp: boolean, t: string) => {
+    const mine = ++seq.current;
     setLoading(true); setError('');
     const r = p === 'custom' ? c : t ? rangeFor(p, t) : null;
     const qs = new URLSearchParams({ ...(r ? r : {}), ...(cmp ? { compare: '1' } : {}) });
     const res = await dfetch<Data>(`/api/operator/analytics?${qs}`);
+    if (mine !== seq.current) return; // a newer click superseded this one
     if (res.ok) { setData(res.data); if (!t) setToday(res.data.today); if (!c.from) setCustom({ from: res.data.range.from, to: res.data.range.to }); }
+    else if (res.status === 403) setDenied(true);
+    else if (res.status === 401) setSignedOut(true);
     else setError(res.error);
     setLoading(false);
   }, []);
+  const customInvalid = !!custom.from && !!custom.to && custom.from > custom.to;
 
   useEffect(() => { load('30d', { from: '', to: '' }, true, ''); }, [load]);
 
   const pick = (p: Preset) => { setPreset(p); if (p !== 'custom') load(p, custom, compare, today); };
   const prev = data?.compare?.headline;
   const d = data;
+
+  if (denied || signedOut) return (
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
+      <OperatorSidebar active="analytics" />
+      <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
+        <div className="max-w-xl mx-auto px-6 py-16">
+          <Card className="p-6">
+            <h1 className="text-[20px] font-serif font-medium text-ink">{denied ? 'Analytics is for the course owner' : 'Your session ended'}</h1>
+            <p className="text-[13.5px] text-ink-soft mt-2">{denied
+              ? 'It shows revenue and what each golfer spends, so it opens on the owner’s login only. Ask the owner if you need a number from it.'
+              : 'Sign in again to see your analytics.'}</p>
+            <Link href={denied ? '/dashboard' : '/dashboard/login'} className="inline-flex mt-4 px-4 py-2 rounded-md bg-pine text-white text-[13px] font-semibold hover:bg-pine-hover">{denied ? 'Back to the tee sheet' : 'Sign in'}</Link>
+          </Card>
+        </div>
+      </main>
+    </div>
+  );
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
@@ -142,7 +178,7 @@ function AnalyticsInner() {
             <div>
               <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Analytics</h1>
               <p className="text-[13px] text-ink-muted mt-2">
-                {d ? `${fmtDay(d.range.from)} – ${fmtDay(d.range.to)}${d.compare ? ` · compared with ${fmtDay(d.compare.range.from)} – ${fmtDay(d.compare.range.to)}` : ''} · by tee-time date` : 'Loading…'}
+                {denied || signedOut ? '' : d ? `${fmtDay(d.range.from)} – ${fmtDay(d.range.to)}${d.compare ? ` · compared with ${fmtDay(d.compare.range.from)} – ${fmtDay(d.compare.range.to)}` : ''} · by tee-time date` : 'Loading…'}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -161,12 +197,13 @@ function AnalyticsInner() {
               <input type="date" value={custom.from} onChange={e => setCustom(c => ({ ...c, from: e.target.value }))} className="bg-white border border-line rounded-md px-2.5 py-1.5" />
               <span className="text-ink-muted">to</span>
               <input type="date" value={custom.to} onChange={e => setCustom(c => ({ ...c, to: e.target.value }))} className="bg-white border border-line rounded-md px-2.5 py-1.5" />
-              <button onClick={() => load('custom', custom, compare, today)} disabled={!custom.from || !custom.to}
+              {customInvalid && <span className="text-bad">The start date is after the end date — swap them.</span>}
+              <button onClick={() => load('custom', custom, compare, today)} disabled={!custom.from || !custom.to || customInvalid}
                 className="px-3 py-1.5 rounded-md bg-pine text-white font-semibold disabled:opacity-50">Apply</button>
             </div>
           )}
 
-          {error && <LoadError message={error} onRetry={() => load(preset, custom, compare, today)} />}
+          {error && <LoadError message={d ? `${error} Still showing ${fmtDay(d.range.from)} – ${fmtDay(d.range.to)}.` : error} onRetry={() => load(preset, custom, compare, today)} />}
           {loading && !d && <div className="py-24 text-center text-ink-muted"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}
 
           {d && (
@@ -174,7 +211,7 @@ function AnalyticsInner() {
               {/* ── 1. Revenue ── */}
               <Section title="Revenue"
                 note="Course share only (green, cart, range balls) — GreenReserve's booking fee is the golfer's, not yours. Expected = every non-cancelled booking whose tee time has passed. Cards are charged at check-in; there is no online prepayment."
-                csv={() => downloadCsv(`revenue-${d.range.from}-${d.range.to}`, [d.revenue.bucket === 'week' ? 'Week of' : 'Date', 'Expected', 'Collected', 'Gap'], d.revenue.series.map(r => [r.key, r.expectedCents / 100, r.collectedCents / 100, r.gapCents / 100]))}>
+                csv={() => downloadCsv(`revenue-${d.range.from}-${d.range.to}`, [d.revenue.bucket === 'week' ? 'Week of' : 'Date', 'Expected', 'Collected', 'Gap', 'Gap %'], d.revenue.series.map(r => [r.key, r.expectedCents / 100, r.collectedCents / 100, r.gapCents / 100, r.gapPct]))}>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
                   <Stat label="Collected" value={usd(d.revenue.collectedCents)} delta={<Delta now={d.headline.collectedCents} prev={prev?.collectedCents} unit="pct" />} sub={`of ${usd(d.revenue.expectedCents)} expected`} />
                   <Stat label="Gap" value={usd(d.revenue.gapCents)} sub={d.revenue.gapPct == null ? undefined : `${d.revenue.gapPct}% of expected`} />
@@ -205,7 +242,21 @@ function AnalyticsInner() {
                   <div><Eyebrow>Late fees kept</Eyebrow><div className="font-semibold tabular-nums mt-1">{usd(d.revenue.lateFeesKeptCents)}</div></div>
                   <div><Eyebrow>Holds held now</Eyebrow><div className="font-semibold tabular-nums mt-1">{usd(d.revenue.holdsHeldCents)}</div><div className="text-[11.5px] text-ink-muted">refunded at check-in</div></div>
                 </div>
-                <p className="text-[12px] text-ink-muted mt-3">Still to come in this range: {usd(d.revenue.upcomingCents)}. GreenReserve booking fees golfers paid on top: {usd(d.revenue.greenReserveFeesCents)}.</p>
+                <div className="mt-5 pt-4 border-t border-line">
+                  <SubHead label="Still to come in this range" csv={() => downloadCsv(`revenue-summary-${d.range.from}-${d.range.to}`, ['Measure', 'Bookings', 'Amount'], [
+                    ['Collected — card at check-in', null, d.revenue.cardCents / 100], ['Collected — paid at the counter', null, d.revenue.counterCents / 100],
+                    ['Outstanding (tee time passed)', d.revenue.outstandingBookings, d.revenue.outstandingCents / 100], ['Green fees collected', null, d.revenue.greenCents / 100],
+                    ['Cart collected', null, d.revenue.cartCents / 100], ['Late fees kept', null, d.revenue.lateFeesKeptCents / 100],
+                    ['Holds held now', d.revenue.pipeline.holdsHeldBookings, d.revenue.holdsHeldCents / 100], ['Upcoming — card on file', d.revenue.pipeline.cardOnFile.bookings, d.revenue.pipeline.cardOnFile.cents / 100],
+                    ['Upcoming — awaiting check-in', d.revenue.pipeline.awaitingCheckIn.bookings, d.revenue.pipeline.awaitingCheckIn.cents / 100], ['GreenReserve booking fees (golfer-paid)', null, d.revenue.greenReserveFeesCents / 100],
+                  ])} />
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-[13px]">
+                    <div><div className="text-ink-muted">Upcoming bookings</div><div className="font-semibold tabular-nums">{d.revenue.pipeline.upcomingBookings} · {usd(d.revenue.upcomingCents)}</div></div>
+                    <div><div className="text-ink-muted">Card on file</div><div className="font-semibold tabular-nums">{d.revenue.pipeline.cardOnFile.bookings} · ~{usd(d.revenue.pipeline.cardOnFile.cents)}</div>{d.revenue.pipeline.cardOnFile.noCardRequired > 0 && <div className="text-[11.5px] text-ink-muted">{d.revenue.pipeline.cardOnFile.noCardRequired} no card required</div>}</div>
+                    <div><div className="text-ink-muted">Awaiting check-in</div><div className="font-semibold tabular-nums">{d.revenue.pipeline.awaitingCheckIn.bookings} · ~{usd(d.revenue.pipeline.awaitingCheckIn.cents)}</div></div>
+                    <div><div className="text-ink-muted">GreenReserve fees (golfer-paid)</div><div className="font-semibold tabular-nums">{usd(d.revenue.greenReserveFeesCents)}</div><div className="text-[11.5px] text-ink-muted">{d.revenue.pipeline.holdsHeldBookings} hold{d.revenue.pipeline.holdsHeldBookings === 1 ? '' : 's'} held now</div></div>
+                  </div>
+                </div>
               </Section>
 
               {/* ── 2. Utilization ── */}
@@ -215,18 +266,29 @@ function AnalyticsInner() {
                   <Stat label="Fill rate" value={pctS(d.utilization.fillPct)} delta={<Delta now={d.headline.fillPct} prev={prev?.fillPct} unit="pp" />} />
                   <Stat label="Spots for sale" value={d.utilization.spotsForSale.toLocaleString()} />
                   <Stat label="Spots booked" value={d.utilization.spotsBooked.toLocaleString()} />
+                  <Stat label="Blocked times" value={d.utilization.blockedTimes.toLocaleString()} sub="off the sheet, not for sale" />
                 </div>
+                <Eyebrow className="mb-2">By day</Eyebrow>
+                <div className="flex items-end gap-[2px] h-20 border-b border-line mb-1">
+                  {d.utilization.byDay.map(r => (
+                    <div key={r.date} className="flex-1 h-full flex flex-col justify-end relative group">
+                      <div className="w-full bg-pine/80" style={{ height: `${r.fillPct ?? 0}%` }} />
+                      <div className="pointer-events-none absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap bg-ink text-white text-[11px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 z-10">{fmtDay(r.date)}: {pctS(r.fillPct)} full</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-between text-[11.5px] text-ink-muted mb-5"><span>{d.utilization.byDay[0] && fmtDay(d.utilization.byDay[0].date)}</span><span>{d.utilization.byDay.at(-1) && fmtDay(d.utilization.byDay.at(-1)!.date)}</span></div>
                 <div className="grid lg:grid-cols-2 gap-6">
                   <div>
-                    <Eyebrow className="mb-2">By day of week</Eyebrow>
+                    <SubHead label="By day of week" csv={() => downloadCsv(`fill-by-weekday-${d.range.from}-${d.range.to}`, ['Day', 'Spots for sale', 'Booked', 'Fill %'], d.utilization.byDow.map(r => [r.dow, r.sale, r.booked, r.fillPct]))} />
                     <div className="space-y-1.5">{d.utilization.byDow.map(r => <div key={r.dow} className="flex items-center gap-3 text-[13px]"><span className="w-9 text-ink-muted">{r.dow}</span><Bar value={r.fillPct ?? 0} max={100} /><span className="w-12 text-right tabular-nums font-semibold">{pctS(r.fillPct)}</span></div>)}</div>
                   </div>
                   <div>
-                    <Eyebrow className="mb-2">By hour</Eyebrow>
+                    <SubHead label="By hour" csv={() => downloadCsv(`fill-by-hour-${d.range.from}-${d.range.to}`, ['Hour', 'Spots for sale', 'Booked', 'Fill %'], d.utilization.byHour.map(r => [`${r.hour}:00`, r.sale, r.booked, r.fillPct]))} />
                     <div className="space-y-1.5">{d.utilization.byHour.map(r => <div key={r.hour} className="flex items-center gap-3 text-[13px]"><span className="w-9 text-ink-muted">{fmtHour(r.hour)}</span><Bar value={r.fillPct ?? 0} max={100} /><span className="w-12 text-right tabular-nums font-semibold">{pctS(r.fillPct)}</span></div>)}</div>
                   </div>
                 </div>
-                <Eyebrow className="mt-6 mb-2">Day of week × tee time</Eyebrow>
+                <div className="mt-6"><SubHead label="Day of week × tee time (fill %)" csv={() => downloadCsv(`fill-heatmap-${d.range.from}-${d.range.to}`, ['Day', ...d.utilization.heatmap.hours.map(h => `${h}:00`)], d.utilization.heatmap.rows.map(r => [r.dow, ...r.cells]))} /></div>
                 {d.utilization.heatmap.hours.length === 0 ? <p className="text-[13px] text-ink-muted">No tee times in this range.</p> : (
                   <div className="overflow-x-auto">
                     <table className="text-[11.5px] tabular-nums">
@@ -255,9 +317,9 @@ function AnalyticsInner() {
                   <div className="lg:col-span-2"><Table head={['Date', 'Time', 'Spots open', 'Revenue lost']} empty="No unfilled tee times in this range."
                     rows={[...d.unfilled.rows].reverse().map(r => [fmtDay(r.date), fmtTime(r.time), r.open, usd(r.lostCents)])} /></div>
                   <div>
-                    <Eyebrow className="mb-2">Worst hours</Eyebrow>
+                    <SubHead label="Worst hours" csv={() => downloadCsv(`unfilled-worst-hours-${d.range.from}-${d.range.to}`, ['Hour', 'Slots', 'Open spots', 'Revenue lost'], d.unfilled.worstHours.map(r => [`${r.hour}:00`, r.slots, r.open, r.lostCents / 100]))} />
                     <div className="space-y-1.5 mb-4">{d.unfilled.worstHours.map(r => <div key={r.hour} className="flex justify-between text-[13px]"><span>{fmtHour(r.hour)}</span><span className="tabular-nums text-ink-soft">{r.open} spots · <b className="text-ink">{usd(r.lostCents)}</b></span></div>)}</div>
-                    <Eyebrow className="mb-2">Worst days</Eyebrow>
+                    <SubHead label="Worst days" csv={() => downloadCsv(`unfilled-worst-days-${d.range.from}-${d.range.to}`, ['Day', 'Slots', 'Open spots', 'Revenue lost'], d.unfilled.worstDays.map(r => [r.dow, r.slots, r.open, r.lostCents / 100]))} />
                     <div className="space-y-1.5">{d.unfilled.worstDays.map(r => <div key={r.dow} className="flex justify-between text-[13px]"><span>{r.dow}</span><span className="tabular-nums text-ink-soft">{r.open} spots · <b className="text-ink">{usd(r.lostCents)}</b></span></div>)}</div>
                   </div>
                 </div>
@@ -271,7 +333,7 @@ function AnalyticsInner() {
                   <Stat label="Rate" value={pctS(d.noShows.ratePct)} delta={<Delta now={d.headline.noShowPct} prev={prev?.noShowPct} unit="pp" goodWhenUp={false} />} />
                   <Stat label="Value not collected" value={usd(d.noShows.impactCents)} />
                 </div>
-                <Eyebrow className="mb-2">Repeat no-shows</Eyebrow>
+                <SubHead label="Repeat no-shows" csv={() => downloadCsv(`repeat-no-shows-${d.range.from}-${d.range.to}`, ['Golfer', 'No-shows'], d.noShows.repeat.map(r => [r.name, r.count]))} />
                 <Table head={['Golfer', 'No-shows']} empty="No golfer missed more than once in this range."
                   rows={d.noShows.repeat.map(r => [r.name, r.count])} />
               </Section>
@@ -287,13 +349,13 @@ function AnalyticsInner() {
                 </div>
                 <div className="grid lg:grid-cols-2 gap-6">
                   <div>
-                    <Eyebrow className="mb-2">How far ahead they cancelled</Eyebrow>
+                    <SubHead label="How far ahead they cancelled" csv={() => downloadCsv(`cancellation-lead-${d.range.from}-${d.range.to}`, ['When', 'Cancellations'], [['Under 24 hours', d.cancellations.lead.under24h], ['1-3 days', d.cancellations.lead.d1to3], ['More than 3 days', d.cancellations.lead.over3d], ['Unknown', d.cancellations.lead.unknown]])} />
                     {([['Under 24 hours', d.cancellations.lead.under24h], ['1–3 days', d.cancellations.lead.d1to3], ['More than 3 days', d.cancellations.lead.over3d]] as [string, number][]).map(([l, v]) => (
                       <div key={l} className="flex items-center gap-3 text-[13px] mb-1.5"><span className="w-32 text-ink-soft">{l}</span><Bar value={v} max={Math.max(d.cancellations.count, 1)} /><span className="w-8 text-right tabular-nums font-semibold">{v}</span></div>
                     ))}
                   </div>
                   <div>
-                    <Eyebrow className="mb-2">Who cancelled</Eyebrow>
+                    <SubHead label="Who cancelled" csv={() => downloadCsv(`cancelled-by-${d.range.from}-${d.range.to}`, ['Who', 'Cancellations'], [['Golfer', d.cancellations.byCustomer], ['Staff or GreenReserve', d.cancellations.byStaff], ['Before tracking started', d.cancellations.actorUnknown]])} />
                     {d.cancellations.byCustomer + d.cancellations.byStaff === 0 ? <Tracking since={d.eventLogStart} /> : (
                       <div className="text-[13px] space-y-1">
                         <div className="flex justify-between"><span>The golfer</span><b className="tabular-nums">{d.cancellations.byCustomer}</b></div>

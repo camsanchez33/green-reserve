@@ -8,7 +8,7 @@ export function CourseHeaderBar({ courseName, accent, right }: {
   courseName: string; accent?: string; right?: React.ReactNode;
 }) {
   return (
-    <div className="h-14 flex items-center justify-between gap-4 px-6" style={{ backgroundColor: accent || '#24513B' }}>
+    <div className="h-14 flex items-center justify-between gap-4 px-6" style={{ backgroundColor: accent || '#173B2A' }}>
       <span className="text-white font-serif font-medium text-lg leading-none tracking-tight truncate">{courseName}</span>
       {right && <span className="text-white/70 text-sm shrink-0">{right}</span>}
     </div>

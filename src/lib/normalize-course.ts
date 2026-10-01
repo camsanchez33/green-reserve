@@ -54,7 +54,7 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     member_advance_days:     c.memberAdvanceDays ?? 14,
     has_member_pricing:      !!c.hasMemberPricing,
     late_cancellation_fee:   c.lateCancellationFeeCents != null ? centsToDollarsOr0(c.lateCancellationFeeCents) : 10,
-    brand_color:             c.brandColor ?? '#24513B',
+    brand_color:             c.brandColor ?? '#173B2A',
     gift_card_url:           c.giftCardUrl ?? '',
     hero_photo_url:          c.heroPhotoUrl ?? '',
     photos: Array.isArray(c.photos)
