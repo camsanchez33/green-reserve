@@ -1,7 +1,8 @@
 # HOMEPAGE_HOLE_SPEC — the homepage scrolls down one golf hole (and session handoff)
 
-> **Latest decision (Cam 2026-10-01): NO BALL.** "lets make it where its no ball and kind
-> of zoomed out and just scrolling down the course." The course is a zoomed-out
+> **Latest decision (Cam 2026-10-01): NO BALL, course behind the WHOLE screen.**
+> "lets make it where its no ball and kind of zoomed out and just scrolling down the
+> course" then "no i want it behind the whole screen". The course is a zoomed-out
 > backdrop the view glides down from tee to green as the page scrolls. No ball, no
 > tracer, no shot readout, no "3 · Birdie" ending. Where this file still describes
 > the ball (§1.4, §3 waypoints) it is history only; build what §3a says.
@@ -70,10 +71,12 @@ Live mockup: https://claude.ai/artifact/KU2aJBhanuRQqkbB5fWQdY
 
 - `.course` is `position: fixed` behind everything; `#img` holds the course at
   667×2000 and moves with ONE `transform: translate() scale()` per frame.
-- Zoomed out: scale `k = max(2.2 × viewportHeight / 2000, 0.45 × viewportWidth / 667)`,
-  so about 2.2 screens of hole; the hole sits centred at ~70% of the width, its left
-  and right edges fading into the page colour with a `mask-image` (not a gradient
-  background), and a left-to-right dark wash keeps the words readable.
+- Edge to edge: scale `k = max(viewportWidth / 667, viewportHeight / 2000)` (cover),
+  centred; a left-to-right dark wash (photo scrim) keeps the words readable over the
+  tree side. With the current 667-wide image, cover IS the widest view (≈2.2× on a
+  1440 screen). Cam also wants it more zoomed out: that needs a WIDER image (about
+  3:4, the hole in the middle third, forest on both sides) — swap the file, the code
+  is unchanged. Until then this zoom is the floor.
 - Vertical position is page progress: `translateY = -(scrollY / maxScroll) × (2000k − viewportHeight)`
   — the tee at the top of the page, the green at the very bottom. Eased (lerp .12)
   for a glide; `prefers-reduced-motion` snaps.
