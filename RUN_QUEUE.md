@@ -71,6 +71,11 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   type roles, admin count chips not pills, stale CLAUDE.md sidebar lines. KEPT AS IS (decision):
   frost delay blocks an early slot even when a group on it didn't fit — that time can't be played;
   the group is listed to call.
+- [ ] WX-1 — Weather button on the Tee Sheet (Cam 2026-10-01: "do the weather button with both
+  options", then "remove close a day"). Frost delay → Weather: Cancel times (whole day or a window,
+  fee waived, golfers emailed, times blocked; today's started times left alone) + Delay start (B-9).
+  Schedule's "Close the day" option and the blackouts closeDay branch deleted. PR #41. Box open until
+  a live walk (cancellation email + hold refund need real Resend/Stripe). Detail: UI_REVISE_SPEC B-9.
 - [ ] AN-1 — dashboard refactor + full Analytics tab — built 2026-10-01 (box reopened by
   /gr-review 2026-10-01: built + reviewed, every finding fixed in the review-fix PR; box closes
   after a live walk) (Cam's brief, no

@@ -15,7 +15,7 @@ export type CancellationOptions = {
   notifySlotAlerts?: boolean;
   /** Shown to the golfer so a cancellation they did not ask for is explained. */
   reason?: string;
-  /** SD-5 close-a-day: the COURSE cancelled — refund a late-cancel fee already
+  /** WX-1 weather cancel: the COURSE cancelled — refund a late-cancel fee already
    *  taken (best effort; a failed refund is reported, never blocks the cancel). */
   waiveFee?: boolean;
 };
