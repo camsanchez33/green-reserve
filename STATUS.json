@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-10-01T06:29:17.459Z",
+  "generatedAt": "2026-10-01T06:35:06.733Z",
   "repo": {
-    "head": "2289fac",
+    "head": "483a1ba",
     "branch": "claude/eager-maxwell-qf1pd0",
     "dirtyCount": 0,
     "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-10-01T06:29:10+00:00",
+    "queueLastCommit": "2026-10-01T06:35:05+00:00",
     "unrecorded": []
   },
   "counts": {
@@ -24,7 +24,7 @@
   "inFlight": [
     {
       "title": "BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET",
-      "line": 2135,
+      "line": 2150,
       "body": [
         "FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because \"no linked inquiry\" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding them outright. FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() + a \"Force delete permanently\" button per acknowledged orphan — owner-only, typed name confirm, server re-verifies the course is still an orphan before touching anything (refuses if it turns out to have a real inquiry link — this can never be used to route around the doctrine for a real course). This is the mechanism for Cam's DaisyLinks exception, but I have NOT executed it against DaisyLinks yet:",
         "- Last session's raw Prisma script (a read-only check confirming Fake",
@@ -95,14 +95,14 @@
     },
     {
       "title": "SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED",
-      "line": 2338,
+      "line": 2353,
       "hash": "951433d",
       "shipDate": "2026-09-16",
       "ageDays": 14
     },
     {
       "title": "SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box",
-      "line": 2451,
+      "line": 2466,
       "hash": "cfeb2e1",
       "shipDate": "2026-09-17",
       "ageDays": 13
@@ -144,56 +144,56 @@
     },
     {
       "title": "BUG: inquiry submissions send no emails",
-      "line": 2654,
+      "line": 2669,
       "hash": "8b9a046",
       "shipDate": "2026-09-28",
       "ageDays": 2
     },
     {
       "title": "BUG: perf audit crashed on every page",
-      "line": 2679,
+      "line": 2694,
       "hash": "dd7056a",
       "shipDate": "2026-09-29",
       "ageDays": 2
     },
     {
       "title": "RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM).",
-      "line": 2690,
+      "line": 2705,
       "hash": "f57f269",
       "shipDate": "2026-09-29",
       "ageDays": 2
     },
     {
       "title": "RV-2 — review follow-ups, small (from /gr-review 2026-09-29):",
-      "line": 2700,
+      "line": 2715,
       "hash": "0eab366",
       "shipDate": "2026-09-29",
       "ageDays": 2
     },
     {
       "title": "CAL-2 — Cal.com is the ONLY call scheduler",
-      "line": 2921,
+      "line": 2936,
       "hash": "e082dd0",
       "shipDate": "2026-09-29",
       "ageDays": 2
     },
     {
       "title": "BUG: hello@greenreserve.app takes no mail",
-      "line": 2953,
+      "line": 2968,
       "hash": "371ffff",
       "shipDate": "2026-09-29",
       "ageDays": 2
     },
     {
       "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 2971,
+      "line": 2986,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 2
     },
     {
       "title": "UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until r",
-      "line": 2296,
+      "line": 2311,
       "hash": null,
       "shipDate": null,
       "ageDays": null
@@ -267,42 +267,42 @@
     },
     {
       "title": "MP-8 — chrome + System (split into 8a–8b)",
-      "line": 1528,
+      "line": 1543,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table",
-      "line": 1545,
+      "line": 1560,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)",
-      "line": 1626,
+      "line": 1641,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
-      "line": 1732,
+      "line": 1747,
       "section": "Queue (run in this order)"
     },
     {
       "title": "PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29:",
-      "line": 2795,
+      "line": 2810,
       "section": "Queue (run in this order)"
     },
     {
       "title": "SETUP (Cam 2026-09-29: \"we need to do blob storage, birdie ai … we also need",
-      "line": 2800,
+      "line": 2815,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 2995,
+      "line": 3010,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 3169,
+      "line": 3184,
       "section": "Queue (run in this order)"
     }
   ],
@@ -353,39 +353,44 @@
       "line": 1286
     },
     {
+      "item": "MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE,",
+      "note": "Cam: \"keep going with the queue\")",
+      "line": 1521
+    },
+    {
       "item": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
       "note": "CAM: confirm the state before this runs — e",
-      "line": 1732
+      "line": 1747
     },
     {
       "item": "SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box",
       "note": "pending Cam's walk below",
-      "line": 2451
+      "line": 2466
     },
     {
       "item": "BUG: inquiry submissions send no emails",
       "note": "Cam: \"after submitting an inquiry they aren't getting sent an email",
-      "line": 2654
+      "line": 2669
     },
     {
       "item": "CAL-2 — Cal.com is the ONLY call scheduler",
       "note": "Cam: \"there should be no google calendar thing\" and, after setting both env vars and redeploying, \"it is just the same as before\"",
-      "line": 2921
+      "line": 2936
     },
     {
       "item": "BUG: hello@greenreserve.app takes no mail",
       "note": "Cam: \"all emails need to go to thegreenreserve@outlook",
-      "line": 2953
+      "line": 2968
     },
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 2971
+      "line": 2986
     },
     {
       "item": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
       "note": "Cam: \"keep going with whatever is next\")",
-      "line": 2995
+      "line": 3010
     }
   ],
   "ideas": {
@@ -653,9 +658,14 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "2289fac",
+      "h": "483a1ba",
       "date": "2026-10-01",
-      "subject": "MP-8b: cron run log + Stripe webhook receipts on Admin → System (no migration — CronRunLog already exists)"
+      "subject": "MP-7b: announcements stored once, operator Announcements list, thread close/reopen, reply context, send test to me"
+    },
+    {
+      "h": "b0a1139",
+      "date": "2026-10-01",
+      "subject": "MP-8b: cron run log + Stripe webhook receipts on Admin → System (#42)"
     },
     {
       "h": "39cefdd",
@@ -706,11 +716,6 @@
       "h": "4a69ffe",
       "date": "2026-10-01",
       "subject": "FLOW-1 (wip): one palette and typeface for every page, staff surfaces included"
-    },
-    {
-      "h": "edd24e7",
-      "date": "2026-10-01",
-      "subject": "SEC-blob-host: only send the private-store token to Vercel Blob's host"
     }
   ]
 }

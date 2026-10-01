@@ -6,6 +6,23 @@ import { threadSignal } from '@/lib/thread-signal';
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
+// MP-7b: what an admin needs to answer without a tab hop — who the operator
+// is, whether they use the dashboard, and whether the course is booking.
+async function threadContext(courseId: string) {
+  const since = new Date(Date.now() - 30 * 86_400_000);
+  const [course, lastBooking, bookings30d] = await Promise.all([
+    prisma.course.findUnique({ where: { id: courseId }, select: { firstWentLiveAt: true, operator: { select: { name: true, email: true, phone: true, lastLoginAt: true } } } }),
+    prisma.booking.findFirst({ where: { courseId }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } }),
+    prisma.booking.count({ where: { courseId, createdAt: { gte: since }, status: { in: ['confirmed', 'completed'] } } }),
+  ]);
+  return {
+    operator: course?.operator ?? null,
+    firstWentLiveAt: course?.firstWentLiveAt ?? null,
+    lastBookingAt: lastBooking?.createdAt ?? null,
+    bookings30d,
+  };
+}
+
 // GET /api/admin/messages — thread list (no courseId param)
 // GET /api/admin/messages?courseId=xxx — full thread for that course
 // GET /api/admin/messages?unreadCount=1 — total unread count (for sidebar badge)
@@ -39,12 +56,12 @@ export async function GET(req: NextRequest) {
       // No thread yet — the page still needs to know whether it may start one.
       const course = await prisma.course.findUnique({ where: { id: courseId }, select: { name: true, slug: true, active: true, archivedAt: true } });
       if (!course) return NextResponse.json(null);
-      return NextResponse.json({ id: null, courseId, messages: [], course, inquiryId: null });
+      return NextResponse.json({ id: null, courseId, messages: [], course, inquiryId: null, closedAt: null, context: await threadContext(courseId) });
     }
     // Lets the message list link change-request mirrors back to the inquiry
     // where the structured, addressable version of the ask actually lives.
     const inquiry = await prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId }, select: { id: true } });
-    return NextResponse.json({ ...thread, inquiryId: inquiry?.id ?? null });
+    return NextResponse.json({ ...thread, inquiryId: inquiry?.id ?? null, context: await threadContext(courseId) });
   }
 
   // Thread list. MP-7a: the last few messages come along so the signal can
@@ -82,7 +99,8 @@ export async function GET(req: NextRequest) {
     lastMessage: t.messages[0] ?? null,
     unreadCount: unreadMap.get(t.id) ?? 0,
     updatedAt: t.updatedAt,
-    signal: threadSignal(t.messages, now),
+    closedAt: t.closedAt,
+    signal: threadSignal(t.messages, now, t.closedAt),
   }));
 
   return NextResponse.json(result);
@@ -126,8 +144,8 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // Touch thread updatedAt
-  await prisma.messageThread.update({ where: { id: thread.id }, data: {} });
+  // Touch thread updatedAt; MP-7b: replying reopens a closed thread.
+  await prisma.messageThread.update({ where: { id: thread.id }, data: { closedAt: null } });
 
   // Mark all operator messages in thread as read (admin is viewing)
   await prisma.message.updateMany({
@@ -156,15 +174,23 @@ export async function POST(req: NextRequest) {
 }
 
 // PATCH /api/admin/messages — mark operator messages as read
+// PATCH { courseId, action: 'close' | 'reopen' } — MP-7b: a finished
+// conversation is closed so it stops competing for attention; any new message
+// from either side reopens it.
 export async function PATCH(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const { courseId } = await req.json();
+  const { courseId, action } = await req.json();
   if (!courseId) return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });
 
   const thread = await prisma.messageThread.findUnique({ where: { courseId } });
+  if (action === 'close' || action === 'reopen') {
+    if (!thread) return NextResponse.json({ error: 'There is no conversation with this course yet.' }, { status: 404 });
+    const updated = await prisma.messageThread.update({ where: { id: thread.id }, data: { closedAt: action === 'close' ? new Date() : null } });
+    return NextResponse.json({ success: true, closedAt: updated.closedAt });
+  }
   if (!thread) return NextResponse.json({ success: true });
 
   await prisma.message.updateMany({

@@ -825,7 +825,7 @@
     },
     {
       "path": "src/app/admin/messages/page.tsx",
-      "lines": 602,
+      "lines": 686,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1138,7 +1138,7 @@
     },
     {
       "path": "src/app/api/admin/broadcasts/route.ts",
-      "lines": 143,
+      "lines": 132,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1886,7 +1886,7 @@
     },
     {
       "path": "src/app/api/admin/messages/route.ts",
-      "lines": 177,
+      "lines": 203,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2339,7 +2339,7 @@
     },
     {
       "path": "src/app/api/admin/stats/route.ts",
-      "lines": 481,
+      "lines": 482,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4103,7 +4103,7 @@
     },
     {
       "path": "src/app/api/operator/announcements/route.ts",
-      "lines": 20,
+      "lines": 31,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5951,7 +5951,7 @@
     },
     {
       "path": "src/app/dashboard/messages/page.tsx",
-      "lines": 145,
+      "lines": 189,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5969,6 +5969,8 @@
         "@/components/OperatorSidebar",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/Toast",
+        "@/components/ui/Card",
+        "@/components/ui/Eyebrow",
         "@/lib/dashboard-fetch",
         "@/lib/format",
         "lucide-react",
@@ -6750,7 +6752,7 @@
     },
     {
       "path": "src/components/AnnouncementBanner.tsx",
-      "lines": 45,
+      "lines": 48,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7710,6 +7712,7 @@
         "src/app/admin/set-password/page.tsx",
         "src/app/admin/system/page.tsx",
         "src/app/dashboard/analytics/page.tsx",
+        "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
@@ -7799,6 +7802,7 @@
         "src/app/admin/set-password/page.tsx",
         "src/app/admin/system/page.tsx",
         "src/app/dashboard/analytics/page.tsx",
+        "src/app/dashboard/messages/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx"
       ]
@@ -12947,7 +12951,7 @@
     },
     {
       "path": "src/lib/thread-signal.ts",
-      "lines": 49,
+      "lines": 52,
       "purpose": "MP-7a.",
       "brain": [],
       "exports": [
@@ -13789,6 +13793,7 @@
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/golfers/route.ts",
+        "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/platform-stripe/route.ts",
         "src/app/api/admin/revenue/route.ts",
@@ -15595,7 +15600,6 @@
         }
       ],
       "writers": [
-        "src/app/api/admin/broadcasts/route.ts",
         "src/app/api/admin/messages/route.ts",
         "src/app/api/operator/messages/route.ts",
         "src/lib/submit-change-request.ts"
@@ -15628,6 +15632,10 @@
           "type": "DateTime?"
         },
         {
+          "name": "closedAt",
+          "type": "DateTime?"
+        },
+        {
           "name": "updatedAt",
           "type": "DateTime"
         },
@@ -15645,7 +15653,6 @@
         }
       ],
       "writers": [
-        "src/app/api/admin/broadcasts/route.ts",
         "src/app/api/admin/messages/route.ts",
         "src/app/api/operator/messages/route.ts",
         "src/lib/submit-change-request.ts"

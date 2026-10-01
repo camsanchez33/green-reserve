@@ -132,6 +132,7 @@ export async function GET() {
     prisma.course.findMany({ where: { active: false, archivedAt: null, createdAt: { lt: twoDaysAgo } }, select: { id: true, name: true, createdAt: true }, orderBy: { createdAt: 'asc' }, take: 5 }),
     prisma.course.count({ where: { active: false, archivedAt: null, createdAt: { lt: twoDaysAgo } } }),
     prisma.messageThread.findMany({
+      where: { closedAt: null }, // MP-7b: a closed conversation is not unanswered
       // MP-7a: a few messages, with isBroadcast, so threadSignal can skip
       // announcements — the inbox reads the same rows the same way.
       select: { id: true, courseId: true, course: { select: { name: true } }, messages: { orderBy: { createdAt: 'desc' }, take: 6, select: { senderType: true, senderName: true, createdAt: true, isBroadcast: true } } },

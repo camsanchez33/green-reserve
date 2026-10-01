@@ -68,9 +68,20 @@ export async function POST(req: NextRequest) {
   // invariant b07c6d0 built for exactly this.
   if (!requireRole(session, OWNER_ONLY)) return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
 
-  const { title, body, sendEmail } = await req.json();
+  const { title, body, sendEmail, test } = await req.json();
   if (!title?.trim() || !body?.trim()) {
     return NextResponse.json({ error: 'Title and body are required' }, { status: 400 });
+  }
+
+  // MP-7b: send-test-to-self. Emails ONLY the signed-in admin, records
+  // nothing, reaches no operator — so the email can be read before it goes out.
+  if (test === true) {
+    try {
+      await sendAnnouncementEmail({ operatorName: session.name, operatorEmail: session.email, title: title.trim(), body: body.trim() });
+    } catch (e) {
+      return NextResponse.json({ error: `The test email did not send: ${e instanceof Error ? e.message : String(e)}` }, { status: 502 });
+    }
+    return NextResponse.json({ test: true, sentTo: session.email });
   }
 
   const announcement = await prisma.announcement.create({
@@ -79,33 +90,12 @@ export async function POST(req: NextRequest) {
 
   const { courses, operators } = await recipients();
 
-  // Insert the announcement into every recipient course's thread. (7b stores
-  // it once with per-course read state; until then this is N copies.)
-  let threadInserts = 0;
-  const threadFailures: string[] = [];
-  for (const course of courses) {
-    try {
-      const thread = await prisma.messageThread.upsert({
-        where: { courseId: course.id },
-        create: { courseId: course.id },
-        update: {},
-      });
-      await prisma.message.create({
-        data: {
-          threadId: thread.id,
-          senderType: 'admin',
-          senderId: session.adminId,
-          senderName: session.name,
-          body: `[Announcement] ${title.trim()}\n\n${body.trim()}`,
-          isBroadcast: true,
-        },
-      });
-      threadInserts++;
-    } catch (e) {
-      console.error('Broadcast message insert failed for course', course.id, e);
-      threadFailures.push(course.name);
-    }
-  }
+  // MP-7b: stored ONCE. This used to copy the announcement into every course's
+  // message thread — N rows that reordered the whole admin inbox and replaced
+  // every thread preview with "[Announcement]…". Operators now read it from
+  // the Announcement row: the dashboard banner until dismissed, and the
+  // Announcements list on their Messages page (read state = their dismissal).
+  // Copies posted before this change stay in the threads as history.
 
   // MP-7a: delivery truth. The sends used to fire AFTER the response returned
   // (a serverless function can be frozen mid-flight) and "N emails delivered"
@@ -132,8 +122,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     id: announcement.id,
-    threadInserts,
-    threadFailures,
+    courses: courses.length,
     emailRequested: !!sendEmail,
     emailRecipients: sendEmail ? operators.length : 0,
     emailsSent,
