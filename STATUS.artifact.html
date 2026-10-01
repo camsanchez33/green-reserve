@@ -117,51 +117,41 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-01 06:23 UTC</span><span>claude/eager-maxwell-qf1pd0 @ a1a160a</span>
-    <span>8 uncommitted</span>
+    <span>2026-10-01 06:24 UTC</span><span>claude/eager-maxwell-qf1pd0 @ b824a91</span>
+    <span>tree clean</span>
   </div>
 </header>
-<div class="alarm">
-<div class="lede">1 run has shipped that the queue doesn't know about</div>
-<p class="note">RUN_QUEUE.md was last committed 2026-10-01. These commits appear nowhere in it.</p>
-<ul>
-<li><span class="h">a1a160a</span><span>WX-1: Weather button on the Tee Sheet — cancel times (day or window) or delay start</span></li>
-</ul></div>
 <div class="tiles">
   <div class="tile t-good"><span class="n">219</span><span class="l">Done</span></div>
   <div class="tile t-warn"><span class="n">23</span><span class="l">Awaiting review</span></div>
   <div class="tile t-alarm"><span class="n">1</span><span class="l">In flight</span></div>
-  <div class="tile t-idle"><span class="n">20</span><span class="l">Not started</span></div>
+  <div class="tile t-idle"><span class="n">21</span><span class="l">Not started</span></div>
   <div class="tile t-idle"><span class="n">8</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">15</span><span class="l">Ideas parked</span></div>
 </div>
-<section><h2>Working tree right now</h2>
-<div class="card flag">
-<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M UI_REVISE_SPEC.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/api/operator/blackouts/route.ts</code></li><li><code>M src/app/dashboard/schedules/page.tsx</code></li><li><code>M src/lib/birdie/knowledge-operator.ts</code></li><li><code>M src/lib/cancel-booking.ts</code></li><li><code>M src/lib/weather-cancel.ts</code></li></ul>
-</div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
 <div class="row"><span class="idx">1</span><span class="t">LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed</span><span class="where">:48</span></div>
-<div class="row"><span class="idx">2</span><span class="t">AN-1 — dashboard refactor + full Analytics tab — built 2026-10-01 (box reopened by</span><span class="where">:74</span></div>
-<div class="row"><span class="idx">3</span><span class="t">CAM — Cal.com: add a booking question with identifier `courseName` (&quot;Golf</span><span class="where">:115</span></div>
-<div class="row"><span class="idx">4</span><span class="t">SD-7b — assets, BLOCKED ON CAM: three real dashboard screenshots into</span><span class="where">:513</span></div>
-<div class="row"><span class="idx">5</span><span class="t">MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) —</span><span class="where">:1191</span></div>
-<div class="row"><span class="idx">6</span><span class="t">MP-4 — pipeline reshape (split into 4a/4b/4c)</span><span class="where">:1198</span></div>
-<div class="row"><span class="idx">7</span><span class="t">MP-4f — retire the JSON-in-actorName pattern. Three separate things</span><span class="where">:1281</span></div>
-<div class="row"><span class="idx">8</span><span class="t">MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong</span><span class="where">:1310</span></div>
-<div class="row"><span class="idx">9</span><span class="t">Golfer course directory (`/courses`) — NOT scheduled. If Cam wants</span><span class="where">:1389</span></div>
-<div class="row"><span class="idx">10</span><span class="t">MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today)</span><span class="where">:1426</span></div>
-<div class="row"><span class="idx">11</span><span class="t">MP-7 — comms merge (split into 7a–7b)</span><span class="where">:1498</span></div>
-<div class="row"><span class="idx">12</span><span class="t">MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE,</span><span class="where">:1516</span></div>
-<div class="row"><span class="idx">13</span><span class="t">MP-8 — chrome + System (split into 8a–8b)</span><span class="where">:1523</span></div>
-<div class="row"><span class="idx">14</span><span class="t">MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table</span><span class="where">:1540</span></div>
-<div class="row"><span class="idx">15</span><span class="t">MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)</span><span class="where">:1608</span></div>
-<div class="row"><span class="idx">16</span><span class="t">Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with &quot;TheGre</span><span class="where">:1714</span></div>
-<div class="row"><span class="idx">17</span><span class="t">PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29:</span><span class="where">:2777</span></div>
-<div class="row"><span class="idx">18</span><span class="t">SETUP (Cam 2026-09-29: &quot;we need to do blob storage, birdie ai … we also need</span><span class="where">:2782</span></div>
-<div class="row"><span class="idx">19</span><span class="t">EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)</span><span class="where">:2977</span></div>
-<div class="row"><span class="idx">20</span><span class="t">EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET</span><span class="where">:3151</span></div>
+<div class="row"><span class="idx">2</span><span class="t">WX-1 — Weather button on the Tee Sheet (Cam 2026-10-01: &quot;do the weather button with both</span><span class="where">:74</span></div>
+<div class="row"><span class="idx">3</span><span class="t">AN-1 — dashboard refactor + full Analytics tab — built 2026-10-01 (box reopened by</span><span class="where">:79</span></div>
+<div class="row"><span class="idx">4</span><span class="t">CAM — Cal.com: add a booking question with identifier `courseName` (&quot;Golf</span><span class="where">:120</span></div>
+<div class="row"><span class="idx">5</span><span class="t">SD-7b — assets, BLOCKED ON CAM: three real dashboard screenshots into</span><span class="where">:518</span></div>
+<div class="row"><span class="idx">6</span><span class="t">MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) —</span><span class="where">:1196</span></div>
+<div class="row"><span class="idx">7</span><span class="t">MP-4 — pipeline reshape (split into 4a/4b/4c)</span><span class="where">:1203</span></div>
+<div class="row"><span class="idx">8</span><span class="t">MP-4f — retire the JSON-in-actorName pattern. Three separate things</span><span class="where">:1286</span></div>
+<div class="row"><span class="idx">9</span><span class="t">MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong</span><span class="where">:1315</span></div>
+<div class="row"><span class="idx">10</span><span class="t">Golfer course directory (`/courses`) — NOT scheduled. If Cam wants</span><span class="where">:1394</span></div>
+<div class="row"><span class="idx">11</span><span class="t">MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today)</span><span class="where">:1431</span></div>
+<div class="row"><span class="idx">12</span><span class="t">MP-7 — comms merge (split into 7a–7b)</span><span class="where">:1503</span></div>
+<div class="row"><span class="idx">13</span><span class="t">MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE,</span><span class="where">:1521</span></div>
+<div class="row"><span class="idx">14</span><span class="t">MP-8 — chrome + System (split into 8a–8b)</span><span class="where">:1528</span></div>
+<div class="row"><span class="idx">15</span><span class="t">MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table</span><span class="where">:1545</span></div>
+<div class="row"><span class="idx">16</span><span class="t">MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)</span><span class="where">:1613</span></div>
+<div class="row"><span class="idx">17</span><span class="t">Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with &quot;TheGre</span><span class="where">:1719</span></div>
+<div class="row"><span class="idx">18</span><span class="t">PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29:</span><span class="where">:2782</span></div>
+<div class="row"><span class="idx">19</span><span class="t">SETUP (Cam 2026-09-29: &quot;we need to do blob storage, birdie ai … we also need</span><span class="where">:2787</span></div>
+<div class="row"><span class="idx">20</span><span class="t">EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)</span><span class="where">:2982</span></div>
+<div class="row"><span class="idx">21</span><span class="t">EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET</span><span class="where">:3156</span></div>
 </div></section>
 <section><h2>Revise campaign &mdash; page by page</h2>
 <p class="note">14 pages closed, 8 open. One page in flight at a time.</p>
@@ -181,7 +171,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <p>FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because &quot;no linked inquiry&quot; never becomes false on its own. New listAcknowledgedOrphans() surfaces alrea&hellip;</p>
 <p>- Last session's raw Prisma script (a read-only check confirming Fake</p>
 <p>Fairways existed) got blocked by this sandbox's auto-mode classifier as a potential production-database access outside the app's own authenticated API. That block is almost certainly the intended, correct behavior — a raw script has no place touching real course/booking/ operator data, authorized or not — so I did NOT &hellip;</p>
-<p class="note"><code>RUN_QUEUE.md:2117</code></p></div>
+<p class="note"><code>RUN_QUEUE.md:2122</code></p></div>
 </section>
 <section><h2>Built, not signed off</h2>
 <p class="note">The box is open because <code>/gr-review</code> hasn't run &mdash; not because the code is missing.</p>
@@ -211,7 +201,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="row"><span class="t">UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until r</span><span class="age"></span><span class="where"></span></div>
 </div></section>
 <section><h2>Waiting on you, not on a build</h2>
-<ul class="plain"><li>Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) <span class="where">:48</span></li><li>CAM: three real dashboard screenshots into public/screenshots/ (empty, so the homepage shows three grey placeholder boxes) and a seeded demo course slug for DEMO_COURSE_SLUGS (empt <span class="where">:513</span></li><li>pending Cam's approval for a prod write <span class="where">:856</span></li><li>Cam's approval for a prod backfill <span class="where">:897</span></li><li>pending Cam's approval for a prod write <span class="where">:934</span></li><li>pending Cam's approval for a prod write <span class="where">:983</span></li><li>pending Cam's approval for a prod write <span class="where">:1031</span></li><li>pending Cam's approval for a prod write <span class="where">:1073</span></li><li>Cam's approval) <span class="where">:1281</span></li><li>CAM: confirm the state before this runs — e <span class="where">:1714</span></li><li>pending Cam's walk below <span class="where">:2433</span></li><li>Cam: &quot;after submitting an inquiry they aren't getting sent an email <span class="where">:2636</span></li><li>Cam: &quot;there should be no google calendar thing&quot; and, after setting both env vars and redeploying, &quot;it is just the same as before&quot; <span class="where">:2903</span></li><li>Cam: &quot;all emails need to go to thegreenreserve@outlook <span class="where">:2935</span></li><li>Cam: invite link showed &quot;I can't show my calendar right now&quot; <span class="where">:2953</span></li><li>Cam: &quot;keep going with whatever is next&quot;) <span class="where">:2977</span></li></ul>
+<ul class="plain"><li>Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) <span class="where">:48</span></li><li>CAM: three real dashboard screenshots into public/screenshots/ (empty, so the homepage shows three grey placeholder boxes) and a seeded demo course slug for DEMO_COURSE_SLUGS (empt <span class="where">:518</span></li><li>pending Cam's approval for a prod write <span class="where">:861</span></li><li>Cam's approval for a prod backfill <span class="where">:902</span></li><li>pending Cam's approval for a prod write <span class="where">:939</span></li><li>pending Cam's approval for a prod write <span class="where">:988</span></li><li>pending Cam's approval for a prod write <span class="where">:1036</span></li><li>pending Cam's approval for a prod write <span class="where">:1078</span></li><li>Cam's approval) <span class="where">:1286</span></li><li>CAM: confirm the state before this runs — e <span class="where">:1719</span></li><li>pending Cam's walk below <span class="where">:2438</span></li><li>Cam: &quot;after submitting an inquiry they aren't getting sent an email <span class="where">:2641</span></li><li>Cam: &quot;there should be no google calendar thing&quot; and, after setting both env vars and redeploying, &quot;it is just the same as before&quot; <span class="where">:2908</span></li><li>Cam: &quot;all emails need to go to thegreenreserve@outlook <span class="where">:2940</span></li><li>Cam: invite link showed &quot;I can't show my calendar right now&quot; <span class="where">:2958</span></li><li>Cam: &quot;keep going with whatever is next&quot;) <span class="where">:2982</span></li></ul>
 </section>
 <section><h2>Parked, with triggers</h2><ul class="plain"><li>Role-shaped admin (parked 2026-08-26 — TRIGGER: first employee account provisioned)</li><li>Future admin tabs (from brainstorm 2026-07-09 — each has a TRIGGER, don't build early)</li></ul></section>
 </div></div>
@@ -221,7 +211,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
 <tr><td><code>CLAUDE.md</code></td><td class="num">5</td><td class="num">2026-10-01 &middot; 0d</td></tr>
 <tr><td><code>ARCHITECTURE.md</code></td><td class="num">4</td><td class="num">2026-09-16 &middot; 14d</td></tr>
-<tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-01 &middot; 0d</td></tr>
+<tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">2</td><td class="num">2026-10-01 &middot; 0d</td></tr>
 <tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">1</td><td class="num">2026-09-29 &middot; 1d</td></tr>
 <tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">1</td><td class="num">2026-09-15 &middot; 15d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-30 &middot; 0d</td></tr>
@@ -253,6 +243,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">b824a91</td><td class="num">2026-10-01</td><td>queue/spec update</td></tr>
+<tr><td class="num">9dff4bb</td><td class="num">2026-10-01</td><td>Remove Close a day from Schedule — weather cancels live on the Tee Sheet's Weather button</td></tr>
 <tr><td class="num">a1a160a</td><td class="num">2026-10-01</td><td>WX-1: Weather button on the Tee Sheet — cancel times (day or window) or delay start</td></tr>
 <tr><td class="num">04f2335</td><td class="num">2026-10-01</td><td>Review fixes: security, spec, UX and design findings from /gr-review (#40)</td></tr>
 <tr><td class="num">3e0f34f</td><td class="num">2026-10-01</td><td>B-9: frost delay — move early groups into open slots, block the early times, email golfers</td></tr>
@@ -263,8 +255,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">ffde8a4</td><td class="num">2026-10-01</td><td>FLOW-2: tee sheet matches the homepage demo; soft cards, light admin rail; fix bare $ prices</td></tr>
 <tr><td class="num">06376c0</td><td class="num">2026-10-01</td><td>FLOW-1: one look across the site; /for-courses, setup sheet and /call on the homepage header</td></tr>
 <tr><td class="num">4a69ffe</td><td class="num">2026-10-01</td><td>FLOW-1 (wip): one palette and typeface for every page, staff surfaces included</td></tr>
-<tr><td class="num">edd24e7</td><td class="num">2026-10-01</td><td>SEC-blob-host: only send the private-store token to Vercel Blob's host</td></tr>
-<tr><td class="num">cd43efe</td><td class="num">2026-10-01</td><td>Homepage: centre hero text against the demo; See it work before the FAQ</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
