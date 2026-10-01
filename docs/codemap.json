@@ -104,7 +104,7 @@
     },
     {
       "path": "src/app/admin/company-documents/page.tsx",
-      "lines": 162,
+      "lines": 163,
       "purpose": "CO-DOCS (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -124,6 +124,7 @@
         "@/components/ui/Card",
         "@/components/ui/ErrorState",
         "@/components/ui/Eyebrow",
+        "@/components/ui/field",
         "@/lib/admin-fetch",
         "@/lib/company-documents",
         "@/lib/format",
@@ -7853,6 +7854,7 @@
       "imports": [],
       "usedBy": [
         "src/app/admin/activity/page.tsx",
+        "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/_parts/shared.tsx",
         "src/app/admin/create/page.tsx",
         "src/app/admin/employees/page.tsx",

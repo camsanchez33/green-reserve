@@ -54,7 +54,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 548 |
 | `/admin/activity` | admin | client-side | page | `src/app/admin/activity/page.tsx` | 211 |
 | `/admin/broadcasts` | admin | client-side | page | `src/app/admin/broadcasts/page.tsx` | 13 |
-| `/admin/company-documents` | admin | client-side | page | `src/app/admin/company-documents/page.tsx` | 162 |
+| `/admin/company-documents` | admin | client-side | page | `src/app/admin/company-documents/page.tsx` | 163 |
 | `/admin/courses` | admin | client-side | page | `src/app/admin/courses/page.tsx` | 522 |
 | `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 334 |
 | `/admin/create` | admin | client-side | page | `src/app/admin/create/page.tsx` | 760 |
@@ -363,7 +363,7 @@ Sorted the same way.
 | `src/components/ui/Card.tsx` | 27 | 15 |  | `Card`, `CARD` |
 | `src/components/ui/Eyebrow.tsx` | 24 | 16 |  | `Eyebrow`, `EYEBROW` |
 | `src/components/ui/StatusDot.tsx` | 22 | 36 |  | `StatusDot` |
-| `src/components/ui/field.ts` | 16 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
+| `src/components/ui/field.ts` | 17 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/admin/AdminSidebar.tsx` | 14 | 266 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/OperatorSidebar.tsx` | 9 | 271 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
 | `src/components/dashboard/Toast.tsx` | 7 | 69 | SD-2. | `toast`, `Toaster`, `ToastKind` |
