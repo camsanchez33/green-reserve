@@ -48,8 +48,7 @@
     "eyebrow": 1
   },
   "src/app/dashboard/page.tsx": {
-    "card": 4,
-    "eyebrow": 14,
+    "eyebrow": 10,
     "input": 4
   },
   "src/app/dashboard/reset-password/page.tsx": {
@@ -96,7 +95,7 @@
     "input": 1
   },
   "src/components/dashboard/money/PaymentsPanel.tsx": {
-    "eyebrow": 9
+    "eyebrow": 7
   },
   "src/components/dashboard/money/PayoutsPanel.tsx": {
     "card": 2,

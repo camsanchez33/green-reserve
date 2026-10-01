@@ -3,25 +3,11 @@
 // /dashboard/payments unchanged in behaviour; the bookings now arrive as a
 // prop because Money loads them once for all three tabs.
 import { useState } from 'react';
-import { DollarSign, CreditCard, Clock3, X, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { X, CheckCircle2 } from 'lucide-react';
 import { getBookingStatus, statusDot } from '@/lib/booking-status';
 import { StatusDot } from '@/components/ui/StatusDot';
-import { ACCESS_FEE_PER_PLAYER } from '@/lib/booking-fees';
 import type { MoneyBooking } from './types';
 import { formatTeeTime as fmtTime, formatTeeDate as fmtDate } from '@/lib/format';
-
-function StatCard({ icon, label, value, sub, accent = false }: {
-  icon: React.ReactNode; label: string; value: string | number; sub: string; accent?: boolean;
-}) {
-  return (
-    // U-O (§1b): stat tile = eyebrow / serif 30px / 12.5px note.
-    <div className="bg-white rounded-lg border border-line p-4">
-      <div className={'flex items-center gap-1.5 text-[11px] uppercase tracking-[0.1em] mb-1.5 ' + (accent ? 'text-ok' : 'text-ink-muted')}>{icon}{label}</div>
-      <div className="text-[30px] leading-none font-serif font-medium text-ink tabular-nums">{value}</div>
-      <div className="text-[12.5px] text-ink-soft leading-snug mt-1.5">{sub}</div>
-    </div>
-  );
-}
 
 export function PaymentsPanel({ bookings, dateFilter, onClearDate }: {
   bookings: MoneyBooking[];
@@ -30,22 +16,6 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate }: {
 }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-
-  const nonCancelled = bookings.filter(b => b.status !== 'cancelled');
-  const collected = nonCancelled.filter(b => b.paymentStatus === 'paid');
-  const collectedRevenue = collected.reduce((s, b) => s + b.greenFeeTotal + b.cartFeeTotal, 0);
-  const collectedAccessFees = collected.reduce((s, b) => s + b.accessFeeTotal, 0);
-  const collectedPlayers = collected.reduce((s, b) => s + b.players, 0);
-  const cardOnFile = nonCancelled.filter(b => b.paymentStatus === 'card_on_file' || b.paymentStatus === 'no_payment_method');
-  const expectedCardOnFile = cardOnFile.reduce((s, b) => s + b.greenFeeTotal + b.cartFeeTotal, 0);
-  const noCardCount = cardOnFile.filter(b => b.paymentStatus === 'no_payment_method').length;
-  const awaitingNoFee = nonCancelled.filter(b => b.paymentStatus === 'awaiting_checkin');
-  const expectedAwaitingNoFee = awaitingNoFee.reduce((s, b) => s + b.greenFeeTotal + b.cartFeeTotal, 0);
-  const feesHeld = nonCancelled.filter(b => b.paymentStatus === 'cancellation_fee_charged');
-  const feesHeldAmount = feesHeld.reduce((s, b) => s + b.cancellationFeeTotal, 0);
-  const feesHeldExpectedRevenue = feesHeld.reduce((s, b) => s + b.greenFeeTotal + b.cartFeeTotal, 0);
-  const cancelledWithFee = bookings.filter(b => b.status === 'cancelled' && b.paymentStatus === 'cancellation_fee_charged');
-  const lateFeesKept = cancelledWithFee.reduce((s, b) => s + b.cancellationFeeTotal, 0);
 
   const q = search.trim().toLowerCase();
   const allRows = bookings.filter(b => {
@@ -68,34 +38,10 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate }: {
         </div>
       )}
 
-      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Collected</div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-        <StatCard accent icon={<DollarSign className="w-4 h-4"/>} label="Revenue Collected"
-          value={`$${(collectedRevenue / 100).toFixed(2)}`}
-          sub={`${collected.length} round${collected.length!==1?'s':''} checked in & paid — all yours`}/>
-        {/* SD-8: the figure itself, not just the words. Operators kept asking
-            what "GreenReserve fees" meant on their own ledger. */}
-        <StatCard icon={<CreditCard className="w-4 h-4"/>} label="GreenReserve Fees"
-          value={`$${(collectedAccessFees / 100).toFixed(2)}`}
-          sub={`$${ACCESS_FEE_PER_PLAYER.toFixed(2)}/player, paid by the golfer on top of your price — ${collectedPlayers} player${collectedPlayers!==1?'s':''} so far`}/>
-        <StatCard icon={<CheckCircle2 className="w-4 h-4"/>} label="Late Fees Kept"
-          value={`$${(lateFeesKept / 100).toFixed(2)}`}
-          sub={`${cancelledWithFee.length} late cancel${cancelledWithFee.length!==1?'s':''} — non-refundable`}/>
-      </div>
-
-      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Pending</div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-        <StatCard icon={<Clock3 className="w-4 h-4"/>} label="Card on File"
-          value={`${cardOnFile.length} booking${cardOnFile.length!==1?'s':''}`}
-          sub={`~$${(expectedCardOnFile / 100).toFixed(2)} expected${noCardCount > 0 ? ` · ${noCardCount} no card required` : ' · free cancel window open'}`}/>
-        <StatCard icon={<Clock3 className="w-4 h-4"/>} label="Awaiting Check-In"
-          value={`${awaitingNoFee.length + feesHeld.length} booking${awaitingNoFee.length + feesHeld.length!==1?'s':''}`}
-          sub={`~$${((expectedAwaitingNoFee + feesHeldExpectedRevenue) / 100).toFixed(2)} expected · cancel window closed`}/>
-        <StatCard icon={<AlertCircle className="w-4 h-4"/>} label="Cancellation Fees Held"
-          value={`$${(feesHeldAmount / 100).toFixed(2)}`}
-          sub={`${feesHeld.length} booking${feesHeld.length!==1?'s':''} — charged but refundable if they check in`}/>
-      </div>
-
+      {/* AN-1 (Cam 2026-10-01): the Collected / Pending stat tiles moved to
+          Analytics (Revenue: collected, card vs counter, outstanding, still to
+          come, late fees kept, holds held, GreenReserve fees). This tab is the
+          working ledger: search, filter, the rows. */}
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search golfer name or email..."
           className="w-64 bg-white border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:ring-2 focus:ring-pine/10 focus:border-pine/40 outline-none"/>

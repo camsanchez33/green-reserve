@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { todayIn } from '@/lib/course-time';
+import { todayIn, isPastIn } from '@/lib/course-time';
 import { prisma } from '@/lib/prisma';
 import { dollarsToCentsOr0 } from '@/lib/money';
 import { teeTimeToWire } from '@/lib/schedule-wire';
@@ -106,6 +106,12 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
   // SD-10: Booking.teeTimeId is ON DELETE RESTRICT, so deleting a booked slot
   // threw P2003 → an unhandled 500 the dashboard swallowed. Say it instead.
+  // AN-1: a tee time that has already gone off is history — an unfilled slot
+  // is exactly what Analytics counts as lost revenue, so it can't be deleted.
+  const slot = await prisma.teeTime.findFirst({ where: { id, courseId: session.courseId }, select: { date: true, time: true, course: { select: { timezone: true } } } });
+  if (slot && isPastIn(slot.course.timezone, slot.date, slot.time)) {
+    return NextResponse.json({ error: 'That tee time has already gone off — past tee times stay on the sheet so your reports stay accurate.' }, { status: 409 });
+  }
   const booked = await prisma.booking.count({ where: { teeTimeId: id, courseId: session.courseId, status: { in: ['confirmed', 'completed'] } } });
   if (booked > 0) {
     return NextResponse.json({ error: `This tee time has ${booked} booking${booked === 1 ? '' : 's'} — cancel ${booked === 1 ? 'it' : 'them'} first, or block the time instead.` }, { status: 409 });

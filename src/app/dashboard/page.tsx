@@ -16,8 +16,6 @@ import { dfetch } from '@/lib/dashboard-fetch';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import GettingStartedChecklist from '@/components/dashboard/GettingStartedChecklist';
-import { TabIntroButton, TabIntroCard } from '@/components/dashboard/TabIntro';
-import { useTabIntro } from '@/lib/use-tab-intro';
 import { getBookingStatus, statusDot } from '@/lib/booking-status';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
@@ -47,13 +45,6 @@ type Booking = {
   paidOffline?: boolean;
   checkedInPlayers?: number | null;
 };
-interface AnalyticsData {
-  basis?: string;
-  summary: { totalRevenue: number; totalBookings: number; totalPlayers: number; utilization: number; upcomingBookings?: number; upcomingPlayers?: number; upcomingRevenue?: number };
-  revenueByDay: { date: string; revenue: number; bookings: number }[];
-  utilizationByDow: { dow: number; label: string; pct: number }[];
-}
-
 /* ─── Helpers ──────────────────────────────────────────────────────────── */
 // SD-3: "today" is the COURSE's today (see courseTz inside the component) —
 // this module-level fallback only seeds state before the course has loaded.
@@ -98,7 +89,8 @@ function slotBadge(tt: TeeTime) {
 function DashboardPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [tab, setTab] = useState<'teesheet' | 'analytics'>(searchParams.get('tab') === 'analytics' ? 'analytics' : 'teesheet');
+  // AN-1: Analytics is its own page now; an old ?tab=analytics link goes there.
+  const tab = 'teesheet' as const;
   // SD-3: the course's timezone drives "today" and "now" on this page.
   const [courseTz, setCourseTz] = useState(DEFAULT_TZ);
   const today = () => todayIn(courseTz);
@@ -120,8 +112,6 @@ function DashboardPageInner() {
   const [showAddModal, setShowAddModal]       = useState(false);
   const [showConditions, setShowConditions]   = useState(false);
   const [expandedId, setExpandedId]           = useState<string | null>(null);
-  const [analytics, setAnalytics]             = useState<AnalyticsData | null>(null);
-  const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [conditions, setConditions]       = useState('');
   const [conditionsInput, setConditionsInput] = useState('');
   const [savingConditions, setSavingConditions] = useState(false);
@@ -137,7 +127,6 @@ function DashboardPageInner() {
   // SD-10: failure is never emptiness, and no button stays stuck.
   const [sheetError, setSheetError] = useState('');
   const [slotBusy, setSlotBusy] = useState<string | null>(null);
-  const [analyticsError, setAnalyticsError] = useState('');
   const [search, setSearch] = useState('');
   const [emailVerified, setEmailVerified] = useState(true);
   const [onboardingStepNum, setOnboardingStepNum] = useState(3);
@@ -149,8 +138,6 @@ function DashboardPageInner() {
   const [agreementChecked, setAgreementChecked] = useState(false);
   // AG-2: signed / total signable documents for the checklist count.
   const [agreementsCount, setAgreementsCount] = useState<{ signed: number; total: number } | null>(null);
-  const teesheetIntro = useTabIntro('teesheet');
-  const analyticsIntro = useTabIntro('analytics');
 
   // SD-4: one wording for a check-in result, and it distinguishes a refund
   // that happened from one that failed — the service reports both now.
@@ -265,22 +252,15 @@ function DashboardPageInner() {
     return null;
   }
 
-  const totalSlots = teeTimes.filter(t => t.status !== 'blocked').reduce((s, t) => s + t.playersAvailable, 0);
-  const bookedSlots = teeTimes.reduce((s, t) => s + (t.playersBooked ?? 0), 0);
-  const revenue = teeTimes.reduce((s, t) => s + ((t.playersBooked ?? 0) * (t.greenFee + (t.cartFee || 0))), 0);
-  const blocked = teeTimes.filter(t => t.status === 'blocked').length;
-  // U-O: the page header carries the day's numbers as one sentence. All of it
-  // is read off teeTimes, which is already on the page — nothing new is fetched.
+  // AN-1 (Cam 2026-10-01): the sheet carries ONE line of numbers — the day's
+  // booked and checked-in groups. Every other figure lives on Analytics.
+  const liveGroups = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status !== 'cancelled').length ?? 0), 0);
   const checkedIn = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status === 'completed').length ?? 0), 0);
-  const bookedPct = totalSlots > 0 ? Math.round((bookedSlots / totalSlots) * 100) : 0;
-  // §1b stat tile = eyebrow / serif 30px / 12.5px note. The notes live beside
-  // the tile array so the array's own lines are left exactly as they were.
-  const TILE_NOTES: Record<string, string> = {
-    'Total Slots': 'spots for sale today',
-    'Booked':      `${bookedPct}% of spots taken`,
-    'Expected':    'green + cart, not yet charged',
-    'Blocked':     'times off the sheet',
-  };
+  // When every slot shares one rate the per-row "18 holes · $50 +$10 cart" is
+  // noise: say it once in the header and drop the column.
+  const rateLabel = (t: TeeTime) => `${t.product?.label ? `${t.product.label} · ` : ''}${t.holes} holes · $${t.greenFee}${t.cartFee > 0 ? ` +$${t.cartFee} cart` : ''}`;
+  const rateLabels = new Set(teeTimes.map(rateLabel));
+  const commonRate = teeTimes.length > 0 && rateLabels.size === 1 ? [...rateLabels][0] : null;
 
   const loadTimes = useCallback(async (date: string) => {
     setLoading(true);
@@ -433,20 +413,8 @@ function DashboardPageInner() {
     return () => window.removeEventListener('focus', onFocus);
   }, [router, loadCourseStatus]);
 
-  useEffect(() => {
-    if (tab === 'analytics' && !analytics) {
-      setAnalyticsLoading(true); setAnalyticsError('');
-      // `{error}` used to be handed to setAnalytics and `.summary.totalRevenue` threw — a blank page.
-      dfetch<AnalyticsData>('/api/operator/analytics').then(r => {
-        if (r.ok && r.data?.summary) setAnalytics(r.data);
-        else setAnalyticsError(r.ok ? 'Analytics came back empty — try again.' : r.error);
-        setAnalyticsLoading(false);
-      });
-    }
-  }, [tab, analytics]);
-
   useEffect(() => { loadTimes(selectedDate); }, [selectedDate, loadTimes]);
-  useEffect(() => { setTab(searchParams.get('tab') === 'analytics' ? 'analytics' : 'teesheet'); }, [searchParams]);
+  useEffect(() => { if (searchParams.get('tab') === 'analytics') router.replace('/dashboard/analytics'); }, [searchParams, router]);
 
   async function saveConditions() {
     setSavingConditions(true);
@@ -575,9 +543,13 @@ function DashboardPageInner() {
 
         <div className="max-w-4xl mx-auto px-6 py-6">
 
-          {/* Getting Started checklist — dashboard home only, not analytics */}
-          {tab === 'teesheet' && !courseArchived && (
+          {/* AN-1 (Cam: no "Getting Started" banner on the sheet): it shows only
+              while a step that blocks taking bookings or money is unfinished —
+              verify email, approve the page, connect Stripe, sign the agreement.
+              A fully set-up course never sees it. */}
+          {tab === 'teesheet' && !courseArchived && (!emailVerified || courseDraft || !stripeAccountActive || (agreementChecked && !agreementAccepted)) && (
             <GettingStartedChecklist
+              startCollapsed
               emailVerified={emailVerified}
               onboardingStep={onboardingStepNum}
               courseDraft={courseDraft}
@@ -626,103 +598,16 @@ function DashboardPageInner() {
             </div>
           )}
 
-          {/* ── Analytics ── */}
-          {tab === 'analytics' && (
-            <div>
-              <div className="mb-6">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Analytics</h1>
-                  <TabIntroButton onClick={analyticsIntro.show}/>
-                </div>
-                <p className="text-[13.5px] text-ink-soft mt-2">
-                  {analytics
-                    ? `Last 30 days · ${analytics.summary.totalBookings} rounds · ${analytics.summary.totalPlayers} players · $${analytics.summary.totalRevenue.toFixed(0)} collected · ${analytics.summary.utilization}% of open slots filled`
-                    : 'Last 30 days of rounds, players and revenue.'}
-                </p>
-              </div>
-              <TabIntroCard
-                open={analyticsIntro.open}
-                onDismiss={analyticsIntro.dismiss}
-                title="This is your Analytics."
-                bullets={[
-                  'Revenue, bookings, and players over the last 30 days.',
-                  'The daily revenue chart shows your busiest days at a glance.',
-                  'Utilization by day of week — see which days still have open tee times to fill.',
-                ]}
-              />
-              {analyticsLoading && <div className="text-center py-20 text-ink-muted"><Loader2 className="w-6 h-6 animate-spin mx-auto"/></div>}
-              {!analyticsLoading && analyticsError && <LoadError message={analyticsError} onRetry={() => { setAnalytics(null); setAnalyticsError(''); }} />}
-              {analytics && (
-                <div className="space-y-5">
-                  <div className="bg-white rounded-lg shadow-card p-5">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 divide-x divide-line-soft">
-                      {[
-                        { label:'Revenue',     value:`$${analytics.summary.totalRevenue.toFixed(0)}`, sub:'collected · green + cart', onClick:()=>router.push('/dashboard/money?tab=payments') },
-                        { label:'Rounds',      value:analytics.summary.totalBookings,                 sub:'checked in',      onClick:undefined },
-                        { label:'Players',     value:analytics.summary.totalPlayers,                  sub:'total rounds',    onClick:undefined },
-                        { label:'Utilization', value:`${analytics.summary.utilization}%`,             sub:'open slots filled, last 30 days', onClick:undefined },
-                      ].map(s => (
-                        <button key={s.label} onClick={s.onClick} disabled={!s.onClick}
-                          className={'pl-4 first:pl-0 text-left ' + (s.onClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : 'cursor-default')}>
-                          <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">{s.label}</div>
-                          <div className="text-[30px] leading-none font-serif font-medium text-ink tabular-nums">{s.value}</div>
-                          <div className="text-[12.5px] text-ink-soft mt-1.5">{s.sub}</div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="bg-white rounded-lg shadow-card p-5">
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">Daily Revenue</div>
-                    <div className="flex items-end gap-0.5 h-24">
-                      {analytics.revenueByDay.map(d => {
-                        const max = Math.max(...analytics.revenueByDay.map(x => x.revenue), 1);
-                        const pct = (d.revenue / max) * 100;
-                        return (
-                          <div key={d.date} className="flex-1 group relative flex flex-col justify-end h-full">
-                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-ink text-white text-xs px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10">${d.revenue.toFixed(0)}</div>
-                            <div className="w-full" style={{ height:`${Math.max(pct,2)}%`, background: pct > 0 ? '#24513B' : '#E3E0D5' }}/>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="flex justify-between text-xs text-ink-muted mt-1">
-                      <span>{analytics.revenueByDay[0]?.date}</span>
-                      <span>{analytics.revenueByDay[analytics.revenueByDay.length-1]?.date}</span>
-                    </div>
-                  </div>
-                  <div className="bg-white rounded-lg shadow-card p-5">
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">Utilization by Day</div>
-                    <div className="space-y-2">
-                      {analytics.utilizationByDow.map(d => (
-                        <div key={d.dow} className="flex items-center gap-3">
-                          <span className="text-[13.5px] text-ink-muted w-8">{d.label}</span>
-                          <div className="flex-1 bg-line h-2.5">
-                            <div className="h-2.5 bg-pine" style={{ width:`${d.pct}%` }}/>
-                          </div>
-                          <span className="text-[13.5px] font-medium text-ink w-10 text-right tabular-nums">{d.pct}%</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* ── Tee Sheet ── */}
           {tab === 'teesheet' && (
             <>
               {/* U-O (UI_REVISE_SPEC §1b): page header — serif title, then one
                   sentence carrying the day's numbers, then the day's actions. */}
-              <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Tee Sheet</h1>
-                    <TabIntroButton onClick={teesheetIntro.show}/>
-                  </div>
-                  <p className="text-[13.5px] text-ink-soft mt-2">
-                    {fmtDate(selectedDate)} · {bookedSlots} booked of {totalSlots} spots for sale · {checkedIn} checked in · ${revenue.toFixed(0)} expected
-                    {blocked > 0 ? ` · ${blocked} blocked` : ''}
+                  <h1 className="text-[26px] font-serif font-medium leading-none tracking-tight text-ink">Tee Sheet</h1>
+                  <p className="text-[13.5px] text-ink-soft mt-1.5">
+                    {fmtDate(selectedDate)} · {liveGroups} booked · {checkedIn} checked in{commonRate ? <span className="text-ink-muted"> · {commonRate}</span> : null}
                   </p>
                 </div>
                 <div className="flex gap-2 items-center shrink-0">
@@ -736,38 +621,6 @@ function DashboardPageInner() {
                   </button>
                 </div>
               </div>
-
-              {/* Stats — eyebrow / serif 30px / 12.5px note (§1b) */}
-              <div className="bg-white rounded-lg shadow-card p-5 mb-5">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:divide-x divide-line-soft">
-                  {[
-                    { label:'Total Slots', value:totalSlots,               icon:<Users className="w-4 h-4"/>,     onClick:undefined },
-                    { label:'Booked',      value:bookedSlots,              icon:<Calendar className="w-4 h-4"/>,  onClick:undefined },
-                    { label:'Expected',    value:`$${revenue.toFixed(0)}`, icon:<DollarSign className="w-4 h-4"/>, onClick:()=>router.push(`/dashboard/money?tab=payments&date=${selectedDate}`) },
-                    { label:'Blocked',     value:blocked,                  icon:<Ban className="w-4 h-4"/>,       onClick:undefined },
-                  ].map(s => (
-                    <button key={s.label} onClick={s.onClick} disabled={!s.onClick}
-                      className={'pl-4 first:pl-0 text-left ' + (s.onClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : 'cursor-default')}>
-                      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">{s.icon}{s.label}</div>
-                      <div className="text-[30px] leading-none font-serif font-medium text-ink tabular-nums">{s.value}</div>
-                      <div className="text-[12.5px] text-ink-soft mt-1.5">{TILE_NOTES[s.label]}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Header */}
-              <TabIntroCard
-                open={teesheetIntro.open}
-                onDismiss={teesheetIntro.dismiss}
-                title="This is your Tee Sheet."
-                bullets={[
-                  'See every tee time for the day, and how many spots are still open.',
-                  'Click a tee time to see who’s booked and check them in.',
-                  'Add a walk-in tee time anytime with “Add Time.”',
-                  'Block a time if you don’t want golfers booking it — maintenance, an outing, etc.',
-                ]}
-              />
 
               {sheetError && <LoadError message={sheetError} onRetry={() => loadTimes(selectedDate)} />}
 
@@ -842,7 +695,7 @@ function DashboardPageInner() {
                 <div className="hidden sm:flex items-center gap-4 px-4 py-2 border-b border-line text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-muted [font-stretch:75%]">
                   <span className="w-[76px]">Time</span>
                   <span className="flex-1">Group</span>
-                  <span className="hidden md:inline w-[150px]" aria-hidden="true"/>
+                  {!commonRate && <span className="hidden md:inline w-[150px] text-right">Rate</span>}
                   <span className="w-[110px] text-right">Status</span>
                   <span className="w-[190px]" aria-hidden="true"/>
                 </div>
@@ -870,7 +723,7 @@ function DashboardPageInner() {
                     const isBlocked = tt.status === 'blocked';
                     return (
                     <div key={tt.id}
-                      className={'group px-4 py-2.5 cursor-pointer transition-colors ' + slotRowCls(tt) + (tt.id===nextUpId ? ' shadow-[inset_3px_0_0_var(--color-pine)]' : '') + (isPast && !isBlocked ? ' opacity-50' : '')}
+                      className={'group px-4 py-1.5 cursor-pointer transition-colors ' + slotRowCls(tt) + (tt.id===nextUpId ? ' shadow-[inset_3px_0_0_var(--color-pine)]' : '') + (isPast && !isBlocked ? ' opacity-50' : '')}
                       style={isBlocked ? HATCH : undefined}
                       onClick={() => setExpandedId(expandedId===tt.id?null:tt.id)}>
                       <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-y-2">
@@ -882,9 +735,9 @@ function DashboardPageInner() {
                               : tt.id!==nextUpId && <span className="text-ink-faint">—</span>}
                             {tt.id===nextUpId && <span className={((tt.bookings?.length ?? 0) > 0 && expandedId!==tt.id ? 'ml-2 ' : '') + 'text-[12px] font-semibold text-pine'}>Next up</span>}
                           </span>
-                          <span className="hidden md:inline w-[150px] text-right text-[12.5px] text-ink-muted whitespace-nowrap tabular-nums">
-                            {tt.product?.label ? `${tt.product.label} · ` : ''}{tt.holes} holes · ${tt.greenFee}{tt.cartFee>0?` +$${tt.cartFee} cart`:''}
-                          </span>
+                          {!commonRate && (
+                            <span className="hidden md:inline w-[150px] text-right text-[12.5px] text-ink-muted whitespace-nowrap tabular-nums">{rateLabel(tt)}</span>
+                          )}
                           <span className="sm:w-[110px] text-right whitespace-nowrap text-[13px]">{slotStatus(tt)}</span>
                         </div>
                         <div className="flex items-center justify-end gap-1 sm:ml-4 shrink-0 ml-auto sm:w-[190px]">
@@ -895,7 +748,16 @@ function DashboardPageInner() {
                           {(() => {
                             const live = (tt.bookings ?? []).filter(b => b.status === 'confirmed');
                             const quick = live.length === 1 && live[0].paymentStatus !== 'manual' && !live[0].checkInFailReason && !live[0].noShowAt ? live[0] : null;
+                            // A walk-in / phone group pays at the counter: "Pay" is the
+                            // same per-group paid-at-counter action as in the open row.
+                            const pay = live.length === 1 && live[0].paymentStatus === 'manual' ? live[0] : null;
                             const canWalkIn = !isBlocked && tt.playersBooked < tt.playersAvailable;
+                            if (pay) return (
+                              <button onClick={e => { e.stopPropagation(); bookingLifecycle(pay, 'paid_offline'); }} disabled={rowBusy === pay.id}
+                                className="w-[72px] text-[12.5px] font-semibold min-h-[40px] md:min-h-0 md:py-1.5 rounded-md bg-pine text-white hover:bg-pine-hover transition-colors disabled:opacity-50">
+                                {rowBusy === pay.id ? '…' : 'Pay'}
+                              </button>
+                            );
                             if (quick) return (
                               <button onClick={e => { e.stopPropagation(); checkInBooking(quick); }} disabled={checkingInId === quick.id}
                                 className="w-[72px] text-[12.5px] font-semibold min-h-[40px] md:min-h-0 md:py-1.5 rounded-md bg-pine text-white hover:bg-pine-hover transition-colors disabled:opacity-50">
@@ -914,10 +776,14 @@ function DashboardPageInner() {
                             className="text-[12.5px] px-2.5 min-h-[40px] md:min-h-0 md:py-1.5 rounded-md text-ink-muted hover:text-ink hover:bg-paper transition-colors disabled:opacity-50">
                             {slotBusy === tt.id ? '…' : tt.status==='blocked'?'Unblock':'Block'}
                           </button>
-                          <button onClick={e => { e.stopPropagation(); deleteTime(tt); }} disabled={slotBusy === tt.id}
-                            className="text-[12.5px] px-2.5 min-h-[40px] md:min-h-0 md:py-1.5 rounded-md text-ink-muted hover:text-bad hover:bg-bad/5 transition-colors disabled:opacity-50">
-                            Delete
-                          </button>
+                          {/* A tee time that has gone off stays on the sheet — deleting it
+                              would erase an unfilled slot from Analytics (the API refuses too). */}
+                          {isPast ? <span className="w-[58px]" aria-hidden="true" /> : (
+                            <button onClick={e => { e.stopPropagation(); deleteTime(tt); }} disabled={slotBusy === tt.id}
+                              className="w-[58px] text-[12.5px] min-h-[40px] md:min-h-0 md:py-1.5 rounded-md text-ink-muted hover:text-bad hover:bg-bad/5 transition-colors disabled:opacity-50">
+                              Delete
+                            </button>
+                          )}
                         </div>
                       </div>
                       {expandedId===tt.id && tt.bookings && tt.bookings.length>0 && (

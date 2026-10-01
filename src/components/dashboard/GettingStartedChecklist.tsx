@@ -30,6 +30,8 @@ interface Props {
   /** AG-2: signed / total signable documents; undefined until loaded */
   agreementsSigned?: number;
   agreementsTotal?: number;
+  /** AN-1: on the tee sheet it opens as one line until clicked — the sheet is for running the day. */
+  startCollapsed?: boolean;
 }
 
 // Plain-English steps for a first-time, non-technical operator. Every step's
@@ -38,7 +40,7 @@ interface Props {
 export default function GettingStartedChecklist({
   emailVerified, onboardingStep, courseDraft, pageApprovalStatus, onApprovePage, approvingPage, approveError,
   onRequestChanges, stripeAccountActive, onConnectStripe, connectingStripe, onNavigate,
-  agreementAccepted, onAcceptAgreement, acceptingAgreement, agreementsSigned, agreementsTotal,
+  agreementAccepted, onAcceptAgreement, acceptingAgreement, agreementsSigned, agreementsTotal, startCollapsed = false,
 }: Props) {
   void onAcceptAgreement; // AG-2: acceptance moved to /dashboard/sign; prop kept for callers
   const [visited, setVisited] = useState<Set<string>>(new Set());
@@ -111,7 +113,7 @@ export default function GettingStartedChecklist({
   // stays around (collapsed) as a quiet confirmation rather than vanishing,
   // so there's still a place to see "yes, this all got done." Still
   // reopenable — allDone alone can't permanently lock it collapsed.
-  const showCollapsed = expandedOverride === null ? allDone : !expandedOverride;
+  const showCollapsed = expandedOverride === null ? (allDone || startCollapsed) : !expandedOverride;
 
   if (showCollapsed) {
     return (
@@ -120,8 +122,8 @@ export default function GettingStartedChecklist({
         className="w-full flex items-center justify-between bg-white rounded-lg shadow-card px-4 py-2.5 mb-4 text-left hover:border-line-strong transition-colors"
       >
         <span className="flex items-center gap-2 text-sm text-ink">
-          <CheckCircle className="w-4 h-4 text-ok"/>
-          Getting Started — {doneCount} of {steps.length} done
+          {allDone ? <CheckCircle className="w-4 h-4 text-ok"/> : <span className="w-2 h-2 rounded-full bg-warn" aria-hidden="true"/>}
+          {allDone ? `Getting Started — ${doneCount} of ${steps.length} done` : `Finish setting up — ${doneCount} of ${steps.length} done`}
         </span>
         <ChevronDown className="w-4 h-4 text-ink-muted"/>
       </button>

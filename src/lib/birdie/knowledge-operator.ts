@@ -7,7 +7,7 @@ export type DashboardPage = { key: string; label: string; href: string; does: st
 
 export const DASHBOARD_PAGES: DashboardPage[] = [
   { key: 'teesheet', label: 'Tee Sheet', href: '/dashboard', does: "today's and upcoming tee times, check-ins, walk-ins, blocking a time, closing a day" },
-  { key: 'analytics', label: 'Analytics', href: '/dashboard?tab=analytics', does: 'rounds, revenue and booking trends' },
+  { key: 'analytics', label: 'Analytics', href: '/dashboard/analytics', does: 'revenue collected vs expected, fill rate, unfilled slots, no-shows, cancellations, customers and booking lead time (owner login)' },
   { key: 'cancellations', label: 'Cancellations', href: '/dashboard/money?tab=cancellations', does: 'cancelled bookings, late-cancellation fees and the cancellation policy' },
   { key: 'schedule', label: 'Schedule', href: '/dashboard/schedules', does: 'the templates that generate tee times: days, hours, interval, green fees, member and resident rates, cart fee, blocked days, booking windows, and which round each schedule sells' },
   { key: 'members', label: 'Members', href: '/dashboard/members', does: 'membership tiers, member accounts, dues' },
