@@ -1,5 +1,6 @@
 'use client';
 import { CARD } from '@/components/ui/Card';
+import { MonthPicker } from '@/components/ui/MonthPicker';
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { todayIn, clockIn, DEFAULT_TZ } from '@/lib/course-time';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -816,7 +817,8 @@ function DashboardPageInner() {
                   greenreserve.app demo"): the sheet IS the homepage demo now — one
                   sheet with its own bar (course, date, arrows), Time / Group /
                   Status columns, check-in on the row, and a count underneath. */}
-              <div className={CARD + ' overflow-hidden'}>
+              {/* No overflow-hidden: it would clip the date picker's popover. */}
+              <div className={CARD}>
                 <div className="flex items-center gap-4 px-4 py-2.5 border-b border-line">
                   <b className="text-[15px] font-semibold text-ink truncate">{courseName || 'Tee sheet'}</b>
                   <span className="hidden sm:inline text-[13.5px] font-semibold text-ink pb-0.5 shadow-[inset_0_-2px_0_var(--color-pine)]">Tee sheet</span>
@@ -826,12 +828,8 @@ function DashboardPageInner() {
                       className="w-7 h-7 rounded-md border border-line inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors">
                       <ChevronLeft className="w-4 h-4"/>
                     </button>
-                    {/* The date is also a picker: the native input sits invisibly over it. */}
-                    <label className="relative cursor-pointer whitespace-nowrap font-medium min-w-[92px] text-center">
-                      {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                      <input type="date" value={selectedDate} onChange={e => e.target.value && setSelectedDate(e.target.value)}
-                        aria-label="Pick a date" className="absolute inset-0 opacity-0 cursor-pointer"/>
-                    </label>
+                    <MonthPicker value={selectedDate} onChange={setSelectedDate} today={today()}
+                      label={new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} />
                     <button onClick={() => setSelectedDate(addDays(selectedDate, 1))} aria-label="Next day"
                       className="w-7 h-7 rounded-md border border-line inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors">
                       <ChevronRight className="w-4 h-4"/>
@@ -976,7 +974,7 @@ function DashboardPageInner() {
                 </div>
               )}
                 {!loading && teeTimes.length > 0 && (
-                  <div className="flex justify-end px-4 py-2 border-t border-line bg-paper text-[12.5px] text-ink-muted tabular-nums">
+                  <div className="flex justify-end px-4 py-2 border-t border-line bg-paper rounded-b-lg text-[12.5px] text-ink-muted tabular-nums">
                     {teeTimes.reduce((n, x) => n + (x.bookings?.length ?? 0), 0)} group{teeTimes.reduce((n, x) => n + (x.bookings?.length ?? 0), 0) === 1 ? '' : 's'} booked · {teeTimes.filter(x => x.status !== 'blocked').length} tee times
                   </div>
                 )}

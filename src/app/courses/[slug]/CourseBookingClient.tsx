@@ -548,7 +548,7 @@ export default function CourseDetailPage({
         <div className="relative h-44 sm:h-56 flex items-end overflow-hidden" style={heroStyle}>
           {course.hero_image_url
             ? <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/5" />
-            : <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'repeating-linear-gradient(45deg,rgba(255,255,255,.3) 0,rgba(255,255,255,.3) 1px,transparent 0,transparent 50%)', backgroundSize: '14px 14px' }} />}
+            : null}
           <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 w-full pb-6">
             {course.logo_url && (
               // eslint-disable-next-line @next/next/no-img-element
@@ -675,13 +675,9 @@ export default function CourseDetailPage({
   const heroOverlay = course.hero_image_url ? (
     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/5" />
   ) : (
-    <div
-      className="absolute inset-0 opacity-10"
-      style={{
-        backgroundImage: 'repeating-linear-gradient(45deg,rgba(255,255,255,.3) 0,rgba(255,255,255,.3) 1px,transparent 0,transparent 50%)',
-        backgroundSize: '14px 14px',
-      }}
-    />
+    // FLOW-2: a flat accent, as in the homepage's golfer phone — the diagonal
+    // hatch read as texture for its own sake.
+    null
   );
 
   return (
@@ -815,7 +811,7 @@ export default function CourseDetailPage({
       )}
 
       {/* Course hero */}
-      <div className="relative h-44 sm:h-56 flex items-end overflow-hidden" style={heroStyle}>
+      <div className="relative h-40 sm:h-48 flex items-end overflow-hidden" style={heroStyle}>
         {heroOverlay}
         {memberSession ? (
           <Link
@@ -852,12 +848,19 @@ export default function CourseDetailPage({
                   loading="lazy"
                 />
               )}
+              {/* FLOW-2: no logo → the crest from the homepage phone, the
+                  course's initials in its own colour on white. */}
+              {!course.logo_url && (
+                <span className="h-12 w-12 sm:h-14 sm:w-14 rounded-md bg-white flex items-center justify-center font-extrabold text-[15px] sm:text-[17px] flex-shrink-0" style={{ color: accent }} aria-hidden="true">
+                  {course.name.split(/\s+/).filter(w => /^[A-Za-z]/.test(w)).slice(0, 2).map(w => w[0].toUpperCase()).join('')}
+                </span>
+              )}
               <div>
                 <span className="text-xs font-medium text-white/70 mb-2 inline-block">{typeLabel}</span>
-                <h1 className="text-2xl sm:text-3xl font-serif font-medium text-white leading-tight">{course.name}</h1>
-                <p className="text-white/60 flex items-center gap-1.5 mt-1 text-sm">
+                <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white leading-tight">{course.name}</h1>
+                <p className="text-white/75 flex items-center gap-1.5 mt-1 text-sm">
                   <MapPin size={14} />
-                  {course.city}, {course.state} · {course.holes} holes · Par {course.par}
+                  {[[course.city, course.state].filter(Boolean).join(', '), course.holes ? `${course.holes} holes` : '', course.par ? `Par ${course.par}` : ''].filter(Boolean).join(' · ')}
                 </p>
               </div>
             </div>
@@ -1319,12 +1322,14 @@ export default function CourseDetailPage({
                             <Clock size={11} /> {g.label}
                           </div>
                         )}
-                        <div className="space-y-2">
+                        {/* FLOW-2 (Cam 2026-10-01): one sheet with hairline rows, like the
+                            homepage's golfer phone — not a stack of bordered boxes. */}
+                        <div className="bg-white rounded-lg shadow-card divide-y divide-line overflow-hidden">
                           {g.items.map(t => {
                             const isSel = selectedTime?.id === t.id;
                             const h = holesOf(t);
                             const isFull = t.players_available === 0;
-                            const slotBorder = isSel ? { borderColor: accent, boxShadow: `0 0 0 1px ${accent}` } : { borderColor: '#E6E3D7' };
+                            const slotMark = isSel ? { boxShadow: `inset 3px 0 0 ${accent}` } : undefined;
                             const slotPlayers = Math.min(players, t.players_available || players);
                             const hasMemberRate = !!(t.member_green_fee != null && t.has_member_rate && t.member_green_fee < t.green_fee);
                             const displayGreenFee = hasMemberRate ? t.member_green_fee! : t.green_fee;
@@ -1332,10 +1337,10 @@ export default function CourseDetailPage({
                             const slotTotal = (displayGreenFee + cartFee) * slotPlayers + 1.5 * slotPlayers;
 
                             return (
-                              <div key={t.id} className={`rounded-lg border overflow-hidden transition-all ${isFull ? 'opacity-60' : ''}`} style={slotBorder}>
+                              <div key={t.id} className={`transition-colors ${isFull ? 'opacity-60' : ''}`} style={slotMark}>
                                 <div
-                                  className="w-full flex items-center justify-between gap-4 px-4 sm:px-5 py-3.5"
-                                  style={{ backgroundColor: isSel ? `${accent}0a` : '#fff', cursor: 'pointer' }}
+                                  className="w-full flex items-center justify-between gap-3 sm:gap-4 px-4 sm:px-5 py-3"
+                                  style={{ backgroundColor: isSel ? `${accent}0d` : '#fff', cursor: 'pointer' }}
                                   onClick={isFull ? () => openAlert(t.id) : () => {
                                     const next = isSel ? null : t;
                                     setSelectedTime(next);
@@ -1343,7 +1348,7 @@ export default function CourseDetailPage({
                                   }}
                                 >
                                   <div className="min-w-0">
-                                    <div className="text-xl sm:text-2xl font-serif font-medium tracking-tight text-ink leading-none">
+                                    <div className="text-[19px] sm:text-[22px] font-sans font-bold text-ink leading-none whitespace-nowrap tabular-nums">
                                       {formatTime(t.time)}
                                     </div>
                                     <div className="text-xs mt-1.5 flex items-center gap-1.5 flex-wrap">
@@ -1351,11 +1356,13 @@ export default function CourseDetailPage({
                                         <span className="text-ink-faint">Full</span>
                                       ) : (
                                         <>
-                                          <span className={STATUS_STYLE[t.status] || 'text-ink-muted'}>{STATUS_LABEL[t.status] || 'Available'}</span>
-                                          <span className="text-ink-muted">· {t.players_available} {t.players_available === 1 ? 'spot' : 'spots'} open</span>
+                                          {/* FLOW-2: "4 spots", as on the homepage phone; only a
+                                              non-default status (Limited…) earns a word. */}
+                                          {STATUS_LABEL[t.status] && t.status !== 'available' && <span className={STATUS_STYLE[t.status] || 'text-ink-muted'}>{STATUS_LABEL[t.status]} ·</span>}
+                                          <span className="text-ink-muted">{t.players_available} {t.players_available === 1 ? 'spot' : 'spots'}</span>
                                         </>
                                       )}
-                                      {h !== undefined && <span className="text-ink-muted">· {t.product_label ? `${t.product_label} · ` : ''}{h} holes{t.product_rating ? ` · ${t.product_rating.toFixed(1)} / ${t.product_slope}` : ''}</span>}
+                                      {h !== undefined && <span className="text-ink-muted hidden sm:inline">· {t.product_label ? `${t.product_label} · ` : ''}{h} holes{t.product_rating ? ` · ${t.product_rating.toFixed(1)} / ${t.product_slope}` : ''}</span>}
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-3 sm:gap-5 flex-shrink-0">
@@ -1363,7 +1370,7 @@ export default function CourseDetailPage({
                                       {/* The unit always rides with the number — a bare
                                           "$62" reads as the total, which it never is. */}
                                       <div className="font-medium text-ink whitespace-nowrap">
-                                        ${displayGreenFee}<span className="text-ink-muted font-normal"> / player</span>
+                                        ${displayGreenFee}<span className="text-ink-muted font-normal text-[13px]"> / player</span>
                                       </div>
                                       {hasMemberRate && (
                                         <div className="text-[11px] text-ink-faint">
@@ -1377,7 +1384,7 @@ export default function CourseDetailPage({
                                       </span>
                                     ) : (
                                       <span
-                                        className="inline-flex items-center gap-1 px-3 sm:px-4 py-2 rounded-md text-xs font-medium transition-colors"
+                                        className={`${isSel ? 'inline-flex' : 'hidden sm:inline-flex'} items-center gap-1 px-3 sm:px-4 py-2 rounded-md text-xs font-medium transition-colors`}
                                         style={isSel ? { backgroundColor: accent, color: '#fff' } : { border: `1px solid ${accent}`, color: accent }}
                                       >
                                         {isSel ? <><Check size={12} /> Selected</> : 'Select'}
