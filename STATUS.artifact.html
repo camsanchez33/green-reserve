@@ -117,16 +117,10 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-01 06:10 UTC</span><span>claude/eager-maxwell-qf1pd0 @ 3e09587</span>
-    <span>33 uncommitted</span>
+    <span>2026-10-01 06:20 UTC</span><span>claude/eager-maxwell-qf1pd0 @ 04f2335</span>
+    <span>6 uncommitted</span>
   </div>
 </header>
-<div class="alarm">
-<div class="lede">1 run has shipped that the queue doesn't know about</div>
-<p class="note">RUN_QUEUE.md was last committed 2026-10-01. These commits appear nowhere in it.</p>
-<ul>
-<li><span class="h">3e0f34f</span><span>B-9: frost delay — move early groups into open slots, block the early times, email golfers</span></li>
-</ul></div>
 <div class="tiles">
   <div class="tile t-good"><span class="n">219</span><span class="l">Done</span></div>
   <div class="tile t-warn"><span class="n">23</span><span class="l">Awaiting review</span></div>
@@ -138,7 +132,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M RUN_QUEUE.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/admin/courses/[id]/page.tsx</code></li><li><code>M src/app/api/cron/cancellation-cutoff/route.ts</code></li><li><code>M src/app/api/cron/hourly/route.ts</code></li><li><code>M src/app/api/operator/analytics/route.ts</code></li><li><code>M src/app/book/BookClient.tsx</code></li><li><code>M src/app/checkin/[bookingId]/page.tsx</code></li><li><code>M src/app/courses/[slug]/CourseBookingClient.tsx</code></li><li><code>M src/app/courses/[slug]/account/AccountPortalClient.tsx</code></li><li><code>M src/app/dashboard/analytics/page.tsx</code></li><li><code>M src/app/dashboard/money/page.tsx</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/app/dashboard/settings/page.tsx</code></li><li><code>M src/app/manage/[bookingId]/page.tsx</code></li><li><code>M src/app/membership/[id]/page.tsx</code></li><li><code>M src/app/opengraph-image.tsx</code></li><li><code>M src/components/AnnouncementBanner.tsx</code></li></ul>
+<ul class="plain"><li><code>M UI_REVISE_SPEC.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>?? src/app/api/operator/weather-cancel/</code></li><li><code>?? src/lib/weather-cancel.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -253,6 +247,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-15 &middot; 15d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">04f2335</td><td class="num">2026-10-01</td><td>Review fixes: security, spec, UX and design findings from /gr-review (#40)</td></tr>
 <tr><td class="num">3e0f34f</td><td class="num">2026-10-01</td><td>B-9: frost delay — move early groups into open slots, block the early times, email golfers</td></tr>
 <tr><td class="num">af425f9</td><td class="num">2026-10-01</td><td>AN-1: Analytics tab, and operational tabs stripped to the working UI</td></tr>
 <tr><td class="num">1111104</td><td class="num">2026-10-01</td><td>EV-1: BookingEvent append-only event log</td></tr>
@@ -264,7 +259,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">edd24e7</td><td class="num">2026-10-01</td><td>SEC-blob-host: only send the private-store token to Vercel Blob's host</td></tr>
 <tr><td class="num">cd43efe</td><td class="num">2026-10-01</td><td>Homepage: centre hero text against the demo; See it work before the FAQ</td></tr>
 <tr><td class="num">775d18b</td><td class="num">2026-09-30</td><td>CO-DOCS: owner-only Company documents in the private Blob store (#32)</td></tr>
-<tr><td class="num">adba629</td><td class="num">2026-10-01</td><td>CO-DOCS: regenerate the code map</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

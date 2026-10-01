@@ -8,7 +8,7 @@ import {
   Calendar, Users, DollarSign, Ban,
   Plus, ChevronLeft, ChevronRight, RefreshCw,
   AlertTriangle, X, Loader2, Lock, Eye, CheckCircle,
-  Snowflake,
+  CloudRain,
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -133,6 +133,19 @@ function DashboardPageInner() {
   // (didn't fit, no email on file, email failed) until they close it.
   type FrostCall = { name: string; players: number; why: string };
   const [frostResult, setFrostResult] = useState<{ moved: number; blocked: number; calls: FrostCall[] } | null>(null);
+  // WX-1 weather: one button, two choices — call off play (whole day or a
+  // window) or delay the start (the B-9 frost delay above).
+  type WxGroup = { bookingId: string; name: string; players: number; time: string; noEmail: boolean };
+  type WxPlan = { from: string; to: string; wholeDay: boolean; startedBefore: string | null; groups: WxGroup[]; teeTimeIds: string[] };
+  const [wxMode, setWxMode] = useState<'cancel' | 'delay'>('cancel');
+  const [wxWhole, setWxWhole] = useState(true);
+  const [wxFrom, setWxFrom] = useState('13:00');
+  const [wxTo, setWxTo] = useState('');
+  const [wxReason, setWxReason] = useState('');
+  const [wxPlan, setWxPlan] = useState<WxPlan | null>(null);
+  const [wxBusy, setWxBusy] = useState(false);
+  const [wxErr, setWxErr] = useState('');
+  const [wxResult, setWxResult] = useState<{ cancelled: number; blocked: number; feeRefundsFailed: number; calls: FrostCall[] } | null>(null);
   const [walkInSlot, setWalkInSlot] = useState<TeeTime | null>(null);
   const [rowBusy, setRowBusy] = useState<string | null>(null);
   const [cardModalBooking, setCardModalBooking] = useState<Booking | null>(null);
@@ -640,8 +653,8 @@ function DashboardPageInner() {
                     <RefreshCw className="w-3.5 h-3.5"/>Refresh
                   </button>
                   {selectedDate >= today() && (
-                    <button onClick={() => { setFrostOpen(true); setFrostPlan(null); setFrostErr(''); setFrostResult(null); }} className="flex items-center gap-1.5 text-[12.5px] text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
-                      <Snowflake className="w-3.5 h-3.5"/>Frost delay
+                    <button onClick={() => { setFrostOpen(true); setWxMode('cancel'); setFrostPlan(null); setFrostErr(''); setFrostResult(null); setWxPlan(null); setWxErr(''); setWxResult(null); }} className="flex items-center gap-1.5 text-[12.5px] text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
+                      <CloudRain className="w-3.5 h-3.5"/>Weather
                     </button>
                   )}
                   <button onClick={() => setShowAddModal(true)} className="flex items-center gap-1.5 text-[12.5px] bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md transition-colors">
@@ -899,15 +912,100 @@ function DashboardPageInner() {
         </div>
       )}
 
-      {/* ── B-9: Frost delay — preview, then confirm ── */}
+      {/* ── WX-1 Weather: cancel times, or B-9 delay start — preview, then confirm ── */}
       {frostOpen && (
         <div className="fixed inset-0 bg-ink/20 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white w-full sm:max-w-md rounded-t-lg sm:rounded-lg shadow-card p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-serif font-medium text-ink text-[17px]">Frost delay — {fmtDate(selectedDate)}</h3>
-              <button onClick={() => setFrostOpen(false)} disabled={frostBusy} className="text-ink-muted hover:text-ink disabled:opacity-40" aria-label="Close"><X className="w-5 h-5"/></button>
+              <h3 className="font-serif font-medium text-ink text-[17px]">Weather — {fmtDate(selectedDate)}</h3>
+              <button onClick={() => setFrostOpen(false)} disabled={frostBusy || wxBusy} className="text-ink-muted hover:text-ink disabled:opacity-40" aria-label="Close"><X className="w-5 h-5"/></button>
             </div>
-            {frostResult ? (
+            {!frostResult && !wxResult && (
+              <div role="tablist" className="grid grid-cols-2 gap-1 p-1 bg-paper rounded-md mb-4">
+                {([['cancel', 'Cancel times'], ['delay', 'Delay start']] as const).map(([k, l]) => (
+                  <button key={k} role="tab" aria-selected={wxMode === k} disabled={frostBusy || wxBusy} onClick={() => setWxMode(k)}
+                    className={'py-1.5 rounded-md text-[13px] font-semibold transition-colors disabled:opacity-60 ' + (wxMode === k ? 'bg-white text-ink shadow-card' : 'text-ink-muted hover:text-ink')}>{l}</button>
+                ))}
+              </div>
+            )}
+            {wxMode === 'cancel' ? (wxResult ? (
+              <div>
+                <p className="text-[13.5px] text-ink mb-3"><b>Play called off.</b> {wxResult.cancelled} group{wxResult.cancelled === 1 ? '' : 's'} cancelled with no fee, {wxResult.blocked} time{wxResult.blocked === 1 ? '' : 's'} blocked.</p>
+                {wxResult.feeRefundsFailed > 0 && <p className="text-[13px] text-bad mb-3">{wxResult.feeRefundsFailed} hold fee{wxResult.feeRefundsFailed === 1 ? '' : 's'} could not be refunded automatically — refund {wxResult.feeRefundsFailed === 1 ? 'it' : 'them'} from Money → Cancellations.</p>}
+                {wxResult.calls.length > 0 ? (
+                  <>
+                    <p className="text-[13px] text-bad font-semibold mb-1.5">Call these golfers:</p>
+                    <ul className="divide-y divide-line border-y border-line text-[13px] mb-4">
+                      {wxResult.calls.map((c, i) => <li key={i} className="flex justify-between gap-3 py-1.5"><span>{c.name} · {c.players}</span><span className="text-ink-soft text-right">{c.why}</span></li>)}
+                    </ul>
+                  </>
+                ) : <p className="text-[13px] text-ink-soft mb-4">Every cancelled golfer was emailed.</p>}
+                <button onClick={() => { setFrostOpen(false); setWxResult(null); }} className="w-full bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[13px] font-semibold">Done</button>
+              </div>
+            ) : (<>
+            <p className="text-[13px] text-ink-soft mb-4">Every group in the window is cancelled with no fee — a hold already taken is refunded — and emailed why. The times are blocked so nobody books into the weather.</p>
+            <div className="grid grid-cols-2 gap-1 mb-3 text-[13px]">
+              {([[true, 'Whole day'], [false, 'Part of the day']] as const).map(([v, l]) => (
+                <label key={l} className={'flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer ' + (wxWhole === v ? 'border-pine/40 bg-pine/5 text-ink' : 'border-line text-ink-soft')}>
+                  <input type="radio" name="wx-span" checked={wxWhole === v} onChange={() => { setWxWhole(v); setWxPlan(null); }} className="accent-pine"/>{l}
+                </label>
+              ))}
+            </div>
+            {!wxWhole && (
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div><label className="block text-[12.5px] text-ink-muted mb-1.5">From</label>
+                  <input type="time" value={wxFrom} onChange={e => { setWxFrom(e.target.value); setWxPlan(null); }} className={iCls}/></div>
+                <div><label className="block text-[12.5px] text-ink-muted mb-1.5">To <span className="text-ink-faint">(blank = close)</span></label>
+                  <input type="time" value={wxTo} onChange={e => { setWxTo(e.target.value); setWxPlan(null); }} className={iCls}/></div>
+              </div>
+            )}
+            <label className="block text-[12.5px] text-ink-muted mb-1.5">Note for golfers <span className="text-ink-faint">(optional)</span></label>
+            <div className="flex gap-2 mb-4">
+              <input value={wxReason} maxLength={200} onChange={e => setWxReason(e.target.value)} placeholder="Lightning in the forecast" className={iCls + ' flex-1'}/>
+              <button disabled={wxBusy} onClick={async () => {
+                setWxBusy(true); setWxErr('');
+                const r = await dfetch<{ plan: WxPlan }>('/api/operator/weather-cancel', { method: 'POST', body: JSON.stringify({ date: selectedDate, ...(wxWhole ? {} : { from: wxFrom, to: wxTo || '24:00' }) }) });
+                setWxBusy(false);
+                if (!r.ok) { setWxErr(r.error); return; }
+                setWxPlan(r.data.plan);
+              }} className="px-4 rounded-md border border-line text-[13px] font-semibold text-ink hover:bg-paper disabled:opacity-50">{wxBusy && !wxPlan ? 'Checking…' : 'Preview'}</button>
+            </div>
+            {wxErr && <p className="text-[13px] text-bad mb-3">{wxErr}</p>}
+            {wxPlan && (
+              <div className="mb-4">
+                {wxPlan.groups.length === 0 ? (
+                  <p className="text-[13px] text-ink-soft">No groups are booked in that window.</p>
+                ) : (
+                  <ul className="divide-y divide-line text-[13px] border-y border-line max-h-56 overflow-y-auto">
+                    {wxPlan.groups.map(g => (
+                      <li key={g.bookingId} className="flex justify-between gap-3 py-1.5"><span>{g.name} · {g.players}</span><span className="tabular-nums text-ink-soft">{fmtTime(g.time)}{g.noEmail ? ' · no email, call' : ''}</span></li>
+                    ))}
+                  </ul>
+                )}
+                <p className="text-[12px] text-ink-muted mt-2">{wxPlan.teeTimeIds.length} time{wxPlan.teeTimeIds.length === 1 ? '' : 's'} will be blocked.{wxPlan.startedBefore ? ` Times up to ${fmtTime(wxPlan.startedBefore)} have already gone out and are left alone.` : ''}</p>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <button onClick={() => setFrostOpen(false)} disabled={wxBusy} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[13px] font-medium hover:border-line-strong disabled:opacity-50">Close</button>
+              <button disabled={!wxPlan || wxBusy || wxPlan.teeTimeIds.length === 0} onClick={async () => {
+                if (!wxPlan) return;
+                setWxBusy(true); setWxErr('');
+                const r = await dfetch<{ cancelled: WxGroup[]; failed: (WxGroup & { error: string })[]; feeRefundsFailed: number; blocked: number }>('/api/operator/weather-cancel', { method: 'POST', body: JSON.stringify({ date: selectedDate, ...(wxWhole ? {} : { from: wxFrom, to: wxTo || '24:00' }), reason: wxReason, apply: true }) });
+                setWxBusy(false);
+                if (!r.ok) { setWxErr(r.error); return; }
+                const calls: FrostCall[] = [
+                  ...r.data.failed.map(f => ({ name: f.name, players: f.players, why: `${fmtTime(f.time)} — NOT cancelled: ${f.error}` })),
+                  ...r.data.cancelled.filter(c => c.noEmail).map(c => ({ name: c.name, players: c.players, why: `${fmtTime(c.time)} — cancelled, no email on file` })),
+                ];
+                toast(`Play called off: ${r.data.cancelled.length} group${r.data.cancelled.length === 1 ? '' : 's'} cancelled.`, calls.length ? 'warn' : 'ok');
+                setWxPlan(null); setWxResult({ cancelled: r.data.cancelled.length, blocked: r.data.blocked, feeRefundsFailed: r.data.feeRefundsFailed, calls }); loadTimes(selectedDate);
+              }} className="flex-1 bg-bad hover:bg-bad/90 text-white py-2.5 rounded-md text-[13px] font-semibold disabled:opacity-50">
+                {wxBusy && wxPlan ? 'Cancelling…' : !wxPlan ? 'Preview first'
+                  : wxPlan.groups.length > 0 ? `Cancel ${wxPlan.groups.length} group${wxPlan.groups.length === 1 ? '' : 's'}`
+                  : wxPlan.teeTimeIds.length > 0 ? `Block ${wxPlan.teeTimeIds.length} time${wxPlan.teeTimeIds.length === 1 ? '' : 's'}` : 'Nothing to do'}
+              </button>
+            </div>
+            </>)) : frostResult ? (
               <div>
                 <p className="text-[13.5px] text-ink mb-3"><b>Frost delay set.</b> {frostResult.moved} group{frostResult.moved === 1 ? '' : 's'} moved, {frostResult.blocked} time{frostResult.blocked === 1 ? '' : 's'} blocked.</p>
                 {frostResult.calls.length > 0 ? (

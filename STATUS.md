@@ -4,40 +4,20 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-01 06:10 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `3e09587` · working tree **33 dirty file(s)**
+Generated 2026-10-01 06:20 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `04f2335` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-01**. 1 commit(s) since then are not mentioned anywhere in it:
+None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-| commit | date | subject |
-|---|---|---|
-| `3e0f34f` | 2026-10-01 | B-9: frost delay — move early groups into open slots, block the early times, email golfers |
+### Uncommitted working tree (6 file(s))
 
-**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (33 file(s))
-
-- `M CLAUDE.md`
-- `M RUN_QUEUE.md`
+- `M UI_REVISE_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M src/app/admin/courses/[id]/page.tsx`
-- `M src/app/api/cron/cancellation-cutoff/route.ts`
-- `M src/app/api/cron/hourly/route.ts`
-- `M src/app/api/operator/analytics/route.ts`
-- `M src/app/book/BookClient.tsx`
-- `M src/app/checkin/[bookingId]/page.tsx`
-- `M src/app/courses/[slug]/CourseBookingClient.tsx`
-- `M src/app/courses/[slug]/account/AccountPortalClient.tsx`
-- `M src/app/dashboard/analytics/page.tsx`
-- `M src/app/dashboard/money/page.tsx`
 - `M src/app/dashboard/page.tsx`
-- `M src/app/dashboard/settings/page.tsx`
-- `M src/app/manage/[bookingId]/page.tsx`
-- `M src/app/membership/[id]/page.tsx`
-- `M src/app/opengraph-image.tsx`
-- `M src/components/AnnouncementBanner.tsx`
+- `?? src/app/api/operator/weather-cancel/`
+- `?? src/lib/weather-cancel.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -203,6 +183,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `04f2335` 2026-10-01 — Review fixes: security, spec, UX and design findings from /gr-review (#40)
 - `3e0f34f` 2026-10-01 — B-9: frost delay — move early groups into open slots, block the early times, email golfers
 - `af425f9` 2026-10-01 — AN-1: Analytics tab, and operational tabs stripped to the working UI
 - `1111104` 2026-10-01 — EV-1: BookingEvent append-only event log
@@ -214,7 +195,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `edd24e7` 2026-10-01 — SEC-blob-host: only send the private-store token to Vercel Blob's host
 - `cd43efe` 2026-10-01 — Homepage: centre hero text against the demo; See it work before the FAQ
 - `775d18b` 2026-09-30 — CO-DOCS: owner-only Company documents in the private Blob store (#32)
-- `adba629` 2026-10-01 — CO-DOCS: regenerate the code map
 
 ---
 
