@@ -44,7 +44,7 @@ export function Toaster() {
         <div
           key={t.id}
           role={t.kind === 'ok' ? 'status' : 'alert'}
-          className={'pointer-events-auto flex items-start gap-2.5 px-4 py-3 rounded-md border shadow-lg text-sm ' + (
+          className={'pointer-events-auto flex items-start gap-2.5 px-4 py-3 rounded-md border shadow-card text-sm ' + (
             t.kind === 'ok' ? 'bg-white border-ok/30 text-ink' :
             t.kind === 'warn' ? 'bg-white border-warn/40 text-ink' :
             'bg-white border-bad/40 text-ink'

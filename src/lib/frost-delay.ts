@@ -14,7 +14,7 @@ import { prisma } from './prisma';
 import { sendFrostDelayEmail, PLACEHOLDER_EMAIL_DOMAIN } from './email';
 import { formatTeeTime, formatTeeDate } from './format';
 
-export type FrostMove = { bookingId: string; name: string; players: number; fromTime: string; toTime: string; toTeeTimeId: string };
+export type FrostMove = { bookingId: string; name: string; players: number; fromTime: string; fromTeeTimeId: string; toTime: string; toTeeTimeId: string };
 export type FrostPlan = {
   date: string; newStart: string;
   moves: FrostMove[];
@@ -44,7 +44,7 @@ export async function planFrostDelay(courseId: string, date: string, newStart: s
       const target = later.find(t => (room.get(t.id) ?? 0) >= b.players && t.productId === s.productId && t.holes === s.holes);
       if (!target) { unplaced.push({ bookingId: b.id, name: b.golferName, players: b.players, time: s.time }); continue; }
       room.set(target.id, (room.get(target.id) ?? 0) - b.players);
-      moves.push({ bookingId: b.id, name: b.golferName, players: b.players, fromTime: s.time, toTime: target.time, toTeeTimeId: target.id });
+      moves.push({ bookingId: b.id, name: b.golferName, players: b.players, fromTime: s.time, fromTeeTimeId: s.id, toTime: target.time, toTeeTimeId: target.id });
     }
   }
   return { date, newStart, moves, unplaced, blockTeeTimeIds: early.filter(s => s.status !== 'blocked').map(s => s.id) };
@@ -63,7 +63,11 @@ export async function applyFrostDelay(courseId: string, plan: FrostPlan, courseN
       await prisma.$transaction(async (tx) => {
         const b = await tx.booking.findFirst({ where: { id: m.bookingId, courseId, status: 'confirmed' }, select: { teeTimeId: true, players: true } });
         const to = await tx.teeTime.findFirst({ where: { id: m.toTeeTimeId, courseId }, select: { playersAvailable: true, playersBooked: true, status: true } });
-        if (!b || !to || to.status === 'blocked' || to.playersAvailable - to.playersBooked < b.players) throw new Error('no room');
+        // Review (security MEDIUM): the booking must still be on the slot the
+        // plan moved it FROM — a second, overlapping apply that already moved it
+        // would otherwise decrement the target and re-add it, inflating the count.
+        if (!b || b.teeTimeId !== m.fromTeeTimeId || b.teeTimeId === m.toTeeTimeId) throw new Error('already moved');
+        if (!to || to.status === 'blocked' || to.playersAvailable - to.playersBooked < b.players) throw new Error('no room');
         await tx.booking.update({ where: { id: m.bookingId }, data: { teeTimeId: m.toTeeTimeId } });
         await tx.teeTime.update({ where: { id: b.teeTimeId }, data: { playersBooked: { decrement: b.players } } });
         const booked = to.playersBooked + b.players;
@@ -76,6 +80,14 @@ export async function applyFrostDelay(courseId: string, plan: FrostPlan, courseN
     moved.push({ ...m, emailed: null });
   }
   await prisma.teeTime.updateMany({ where: { id: { in: plan.blockTeeTimeIds }, courseId }, data: { status: 'blocked' } });
+  // Review (security LOW): a golfer who booked an early time after the plan was
+  // read is now sitting on a blocked slot — report them so staff call.
+  const known = new Set([...plan.moves.map(m => m.bookingId), ...plan.unplaced.map(u => u.bookingId)]);
+  const late = await prisma.booking.findMany({
+    where: { courseId, status: 'confirmed', teeTimeId: { in: plan.blockTeeTimeIds }, id: { notIn: [...known] } },
+    select: { id: true, golferName: true, players: true, teeTime: { select: { time: true } } },
+  });
+  for (const b of late) unplaced.push({ bookingId: b.id, name: b.golferName, players: b.players, time: b.teeTime.time });
 
   // Tell each moved golfer. A failed email never undoes a move — the result
   // says who did not get one so staff can call.

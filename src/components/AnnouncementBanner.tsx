@@ -30,7 +30,7 @@ export default function AnnouncementBanner() {
   const firstLine = announcement.body.split('\n')[0];
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-amber-950 px-4 py-2.5 flex items-center gap-3 shadow-lg">
+    <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-amber-950 px-4 py-2.5 flex items-center gap-3">
       <Megaphone className="w-4 h-4 shrink-0"/>
       <div className="flex-1 min-w-0 flex items-baseline gap-2 overflow-hidden">
         <span className="font-black text-sm whitespace-nowrap">{announcement.title}</span>

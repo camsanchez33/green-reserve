@@ -156,7 +156,7 @@ export default function CourseDetailPage() {
                 {dangerOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setDangerOpen(false)} />
-                    <Card className="absolute right-0 top-10 z-20 shadow-lg w-64 py-1.5">
+                    <Card className="absolute right-0 top-10 z-20 shadow-card border border-line w-64 py-1.5">
                       {/* Below ~1200px the header's action row cannot fit, so
                           Take offline / View page / Refresh live here instead.
                           Same handlers, same pending + disabled state —

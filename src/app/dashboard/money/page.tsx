@@ -129,7 +129,9 @@ function MoneyPageInner() {
               </div>
               <p className="text-[13.5px] text-ink-soft mt-2">
                 {/* AN-1: the money totals moved to Analytics; this line is status only. */}
-                {course.stripeAccountActive ? 'Stripe connected' : 'Stripe not connected'}
+                {/* Review (admin-UX): never claim "not connected" from a course that failed to load. */}
+                {courseLoaded ? (course.stripeAccountActive ? 'Stripe connected' : 'Stripe not connected')
+                  : courseError ? <>Stripe status unavailable — <button onClick={loadCourse} className="underline font-medium">retry</button></> : 'Loading…'}
               </p>
             </div>
             <button onClick={refresh} className="shrink-0 flex items-center gap-1.5 text-[12.5px] text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">

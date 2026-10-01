@@ -176,19 +176,19 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   }
 
   const inquiriesBadge = pending > 0 ? (
-    <span className="bg-warn text-white text-[10px] px-1.5 py-0.5 font-semibold leading-none shrink-0 rounded-full">
+    <span className="bg-warn text-white text-[10px] px-1.5 py-0.5 font-semibold leading-none shrink-0 rounded-md">
       {pending > 99 ? '99+' : pending}
     </span>
   ) : undefined;
 
   const revenueBadge = moneyProblems > 0 ? (
-    <span className="bg-bad text-white text-[10px] px-1.5 py-0.5 font-semibold leading-none shrink-0 rounded-full" title={`${moneyProblems} money problem${moneyProblems === 1 ? '' : 's'} — failed charges and open chargebacks`}>
+    <span className="bg-bad text-white text-[10px] px-1.5 py-0.5 font-semibold leading-none shrink-0 rounded-md" title={`${moneyProblems} money problem${moneyProblems === 1 ? '' : 's'} — failed charges and open chargebacks`}>
       {moneyProblems > 99 ? '99+' : moneyProblems}
     </span>
   ) : undefined;
 
   const messagesBadge = unread > 0 ? (
-    <span className="bg-ok text-white text-[10px] px-1.5 py-0.5 font-semibold leading-none shrink-0 rounded-full">
+    <span className="bg-ok text-white text-[10px] px-1.5 py-0.5 font-semibold leading-none shrink-0 rounded-md">
       {unread > 99 ? '99+' : unread}
     </span>
   ) : undefined;

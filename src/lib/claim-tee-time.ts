@@ -56,6 +56,17 @@ export async function claimTeeTime(
           teeTimeAt: teeTimeInstant(teeTime.course.timezone, teeTime.date, teeTime.time),
           metadata: { source: booking.source ?? null },
         });
+        // Review (spec, EV-1 "one row per occurrence"): a counter walk-in created
+        // already checked in and paid is ALSO a check-in — without this row every
+        // "Add + check in" walk-in vanished from the log.
+        if (booking.status === 'completed') {
+          await recordBookingEvent(tx, {
+            bookingId: booking.id, courseId: booking.courseId, type: 'checked_in', actor,
+            amountCents: booking.totalAmount, playerCount: booking.players,
+            teeTimeAt: teeTimeInstant(teeTime.course.timezone, teeTime.date, teeTime.time),
+            metadata: { paidOffline: booking.paidOffline, atBooking: true },
+          });
+        }
 
         const newBooked = teeTime.playersBooked + players;
         await tx.teeTime.update({

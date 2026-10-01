@@ -187,14 +187,14 @@ function PortalInner({ params }: { params: Promise<{ slug: string }> }) {
       <SignIn
         courseName={publicCourse?.name || 'your course'}
         courseSlug={slug}
-        accent={publicCourse?.brand_color || '#24513B'}
+        accent={publicCourse?.brand_color || '#173B2A'}
         prefillEmail={prefillEmail}
         onSignedIn={load}
       />
     );
   }
 
-  const accent = data.course.brandColor || '#24513B';
+  const accent = data.course.brandColor || '#173B2A';
 
   return (
     <div className="min-h-screen bg-paper">

@@ -11,7 +11,7 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
 
 const cardStyle = {
   style: {
-    base: { fontSize: '15px', color: '#1C1C18', '::placeholder': { color: '#98968B' } },
+    base: { fontSize: '15px', color: '#141814', '::placeholder': { color: '#979B94' } },
     invalid: { color: '#A3452F' },
   },
 };
@@ -83,7 +83,7 @@ function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, accent, 
         onClick={handleSubmit}
         disabled={loading || !stripe}
         className="w-full py-3.5 rounded-md font-medium text-white text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-70 disabled:cursor-not-allowed"
-        style={{ backgroundColor: accent || '#24513B' }}
+        style={{ backgroundColor: accent || '#173B2A' }}
       >
         {loading ? <><Loader2 size={16} className="animate-spin" /> Charging…</> : `Check in · pay $${(totalAmount / 100).toFixed(2)}`}
       </button>
@@ -179,7 +179,7 @@ function CheckInPageInner() {
             {token && (
               <a href={`/receipt/${bookingId}?token=${encodeURIComponent(token)}`}
                 className="text-sm font-medium hover:underline mb-6 block"
-                style={{ color: info.brandColor || '#24513B' }}>
+                style={{ color: info.brandColor || '#173B2A' }}>
                 View receipt →
               </a>
             )}
@@ -218,7 +218,7 @@ function CheckInPageInner() {
             <span className="font-medium">Add a cart today?</span>
             <span className="text-ink-muted"> +${(cartAddOn / 100).toFixed(2)} for {info.players} player{info.players === 1 ? '' : 's'}</span>
           </span>
-          <input type="checkbox" checked={addCart} onChange={e => setAddCart(e.target.checked)} className="w-5 h-5" style={{ accentColor: info.brandColor || '#24513B' }} disabled={checkingIn} />
+          <input type="checkbox" checked={addCart} onChange={e => setAddCart(e.target.checked)} className="w-5 h-5" style={{ accentColor: info.brandColor || '#173B2A' }} disabled={checkingIn} />
         </label>
       )}
     </div>
@@ -251,7 +251,7 @@ function CheckInPageInner() {
                 onClick={handleSavedCardCheckIn}
                 disabled={checkingIn}
                 className="w-full py-3.5 rounded-md font-medium text-white text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-70"
-                style={{ backgroundColor: info.brandColor || '#24513B' }}
+                style={{ backgroundColor: info.brandColor || '#173B2A' }}
               >
                 {checkingIn ? <><Loader2 size={16} className="animate-spin" /> Charging your card…</> : `Check in · pay $${(payTotal / 100).toFixed(2)}`}
               </button>

@@ -489,10 +489,10 @@ function SettingsPageInner() {
                 <ImageUpload label="Your logo" kind="logo" value={(form.logoUrl as string)||''} onUploaded={url=>setForm(f=>({...f,logoUrl:url}))} hint="Square works best (a PNG with a transparent background is ideal). Max 8MB — large photos are auto-resized."/>
                 <Field label="Your colour" hint="One accent colour. It tints your dashboard and the buttons on your booking page. Click the swatch to pick.">
                   <div className="flex items-center gap-2">
-                    <input type="color" value={(form.brandColor as string) || '#24513B'} onChange={e => set('brandColor', e.target.value)}
+                    <input type="color" value={(form.brandColor as string) || '#173B2A'} onChange={e => set('brandColor', e.target.value)}
                       className="w-10 h-10 rounded-full border border-line cursor-pointer p-0.5 bg-paper"/>
-                    <input type="text" value={(form.brandColor as string) || '#24513B'} onChange={e => set('brandColor', e.target.value)}
-                      placeholder="#24513B" maxLength={7}
+                    <input type="text" value={(form.brandColor as string) || '#173B2A'} onChange={e => set('brandColor', e.target.value)}
+                      placeholder="#173B2A" maxLength={7}
                       className="bg-paper border border-line rounded-md px-3 py-2.5 text-sm font-mono text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-32"/>
                   </div>
                 </Field>
@@ -511,7 +511,7 @@ function SettingsPageInner() {
                   holes={typeof form.holes === 'number' ? form.holes : null}
                   par={typeof form.par === 'number' ? form.par : null}
                   establishedYear={typeof form.establishedYear === 'number' ? form.establishedYear : null}
-                  accent={(form.brandColor as string) || '#24513B'}
+                  accent={(form.brandColor as string) || '#173B2A'}
                   logoUrl={(form.logoUrl as string) || ''}
                   heroImageUrl={(form.heroImageUrl as string) || ''}
                 />

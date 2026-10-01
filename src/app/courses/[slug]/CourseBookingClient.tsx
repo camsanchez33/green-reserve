@@ -541,7 +541,7 @@ export default function CourseDetailPage({
     // of the course's own accent — never a stock gradient.
     const heroStyle = course.hero_image_url
       ? { backgroundImage: `url(${course.hero_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-      : { backgroundColor: course.brand_color || '#24513B' };
+      : { backgroundColor: course.brand_color || '#173B2A' };
     const amenities = course.amenities ? course.amenities.filter(Boolean) : [];
     return (
       <>
@@ -552,7 +552,7 @@ export default function CourseDetailPage({
           <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 w-full pb-6">
             {course.logo_url && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={course.logo_url} alt={`${course.name} logo`} className="h-12 w-12 rounded-md bg-white object-contain p-1 shadow-lg mb-3" loading="lazy" />
+              <img src={course.logo_url} alt={`${course.name} logo`} className="h-12 w-12 rounded-md bg-white object-contain p-1 shadow-card mb-3" loading="lazy" />
             )}
             <span className="text-xs font-medium text-white/70 mb-1 inline-block">Private Club</span>
             <h1 className="text-2xl sm:text-3xl font-serif font-medium text-white leading-tight">{course.name}</h1>
@@ -599,7 +599,7 @@ export default function CourseDetailPage({
               <Link
                 href={`/courses/${slug}/member`}
                 className="block w-full text-center py-3 px-5 text-white text-sm font-medium rounded-md transition-opacity hover:opacity-90"
-                style={{ backgroundColor: course.brand_color || '#24513B' }}
+                style={{ backgroundColor: course.brand_color || '#173B2A' }}
               >
                 Member sign in
               </Link>
@@ -617,7 +617,7 @@ export default function CourseDetailPage({
     );
   }
 
-  const accent = course.brand_color || '#24513B';
+  const accent = course.brand_color || '#173B2A';
   const typeLabel = TYPE_LABELS[course.type] ?? 'Public';
   const amenities = course.amenities ? course.amenities.filter((s: string) => s.trim()) : [];
   const strip = buildDateStrip();
@@ -735,7 +735,7 @@ export default function CourseDetailPage({
       {/* Request changes modal (preview) — structured categories, V13b */}
       {showPreviewChangesModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl max-h-[85vh] overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-card max-h-[85vh] overflow-y-auto">
             <div className="text-ink font-medium mb-1">What would you like changed?</div>
             <div className="text-xs text-ink-muted mb-3">Check everything that applies — you can add a note for each.</div>
             <div className="space-y-2 mb-3">
@@ -783,7 +783,7 @@ export default function CourseDetailPage({
       {/* Preview modal */}
       {previewModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-sm w-full shadow-xl">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full shadow-card">
             <div className="text-ink font-medium mb-2">Booking disabled in preview</div>
             <p className="text-ink-soft text-sm mb-5">This is a preview page &mdash; bookings are not active yet. Reply to the preview email with any changes you&apos;d like before going live.</p>
             <button
@@ -844,7 +844,7 @@ export default function CourseDetailPage({
                 <img
                   src={course.logo_url}
                   alt={`${course.name} logo`}
-                  className="h-12 w-12 sm:h-16 sm:w-16 rounded-md bg-white object-contain p-1 shadow-lg flex-shrink-0"
+                  className="h-12 w-12 sm:h-16 sm:w-16 rounded-md bg-white object-contain p-1 shadow-card flex-shrink-0"
                   loading="lazy"
                 />
               )}
@@ -1005,7 +1005,7 @@ export default function CourseDetailPage({
                             key={n}
                             onClick={() => { setPlayers(n); setSelectedTime(null); }}
                             className="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-md border text-sm font-medium transition-all"
-                            style={isSel ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: '#E6E3D7', color: '#87867C' }}
+                            style={isSel ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: 'var(--color-line)', color: 'var(--color-ink-muted)' }}
                           >
                             <Users size={13} />
                             {n}
@@ -1026,7 +1026,7 @@ export default function CourseDetailPage({
                             key={o.key}
                             onClick={() => setTodFilter(o.key)}
                             className="py-2 rounded-md border text-xs font-medium transition-all"
-                            style={isSel ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: '#E6E3D7', color: '#87867C' }}
+                            style={isSel ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: 'var(--color-line)', color: 'var(--color-ink-muted)' }}
                           >
                             {o.label}
                           </button>
@@ -1070,7 +1070,7 @@ export default function CourseDetailPage({
                               key={h}
                               onClick={() => setHolesFilter(h)}
                               className="py-2 rounded-md border text-xs font-medium transition-all"
-                              style={isSel ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: '#E6E3D7', color: '#87867C' }}
+                              style={isSel ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: 'var(--color-line)', color: 'var(--color-ink-muted)' }}
                             >
                               {h === 'all' ? 'Any' : h}
                             </button>
@@ -1096,7 +1096,7 @@ export default function CourseDetailPage({
                           <button key={p.id} type="button" aria-pressed={isSel}
                             onClick={() => { setProductFilter(p.id); setSelectedTime(null); }}
                             className="px-3.5 py-2 rounded-md border text-sm font-medium transition-colors"
-                            style={isSel ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: '#E6E3D7', color: '#87867C', backgroundColor: '#fff' }}>
+                            style={isSel ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: 'var(--color-line)', color: 'var(--color-ink-muted)', backgroundColor: '#fff' }}>
                             {p.label}{p.holes ? <span className="font-normal opacity-70"> · {p.holes}</span> : null}
                           </button>
                         );
@@ -1150,8 +1150,8 @@ export default function CourseDetailPage({
                           style={isSelected
                             ? { backgroundColor: accent, color: '#fff' }
                             : isBeyond
-                              ? { backgroundColor: '#fff', border: '1px dashed #E6E3D7', color: '#98968B' }
-                              : { backgroundColor: '#fff', border: '1px solid #E6E3D7', color: '#1C1C18' }}
+                              ? { backgroundColor: '#fff', border: '1px dashed var(--color-line)', color: 'var(--color-ink-faint)' }
+                              : { backgroundColor: '#fff', border: '1px solid var(--color-line)', color: 'var(--color-ink)' }}
                         >
                           <span className="text-[10px] font-medium opacity-70">
                             {isToday ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' })}
@@ -1442,7 +1442,7 @@ export default function CourseDetailPage({
                                               disabled={!ok}
                                               onClick={() => setPlayers(n)}
                                               className="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-md border text-sm font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                                              style={slotPlayers === n && ok ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: '#E6E3D7', color: '#87867C' }}
+                                              style={slotPlayers === n && ok ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: 'var(--color-line)', color: 'var(--color-ink-muted)' }}
                                             >
                                               <Users size={13} />
                                               {n}
@@ -1457,7 +1457,7 @@ export default function CourseDetailPage({
                                       <button
                                         onClick={() => setWithCart(!withCart)}
                                         className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-md border text-sm font-medium transition-colors"
-                                        style={withCart ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: '#E6E3D7', color: '#6E6D64' }}
+                                        style={withCart ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: 'var(--color-line)', color: 'var(--color-ink-soft)' }}
                                       >
                                         <span>Add cart</span>
                                         <span>${t.cart_fee} / player</span>
@@ -1655,7 +1655,7 @@ export default function CourseDetailPage({
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
           onClick={() => { if (!alertSubmitting) { setAlertModal(null); setAlertSent(false); } }}
         >
-          <div className="bg-white rounded-lg max-w-sm w-full p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-lg max-w-sm w-full p-6 shadow-card" onClick={e => e.stopPropagation()}>
             {alertSent ? (
               <div className="text-center py-2">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: `${accent}14`, color: accent }}>
@@ -1726,7 +1726,7 @@ export default function CourseDetailPage({
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
           onClick={() => setDemoModal(false)}
         >
-          <div className="bg-white rounded-lg max-w-sm w-full p-7 shadow-xl" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-lg max-w-sm w-full p-7 shadow-card" onClick={e => e.stopPropagation()}>
             <div className="w-10 h-10 rounded-full bg-pine/10 flex items-center justify-center mx-auto mb-4">
               <Flag size={20} className="text-pine" />
             </div>

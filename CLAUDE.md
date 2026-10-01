@@ -193,10 +193,10 @@ set there. Self-contained public pages that skip the Nav (/for-courses, setup sh
 - Page title: `font-serif text-[30px] leading-none` (existing 22px titles are acceptable until their reskin run lands)
 - Section title: 15px/600 sans · Eyebrow: `text-[11px] uppercase tracking-[0.1em] text-ink-muted` · body 13.5–14px · tables 13.5px
 - Attention: a 3px **left** border in the semantic color on a white card — the only place borders carry color
-- Operator sidebar: white, 1px `line`; course crest + serif name + 10.5px uppercase meta; active item = accent text, 3px left border, paper bg
-- Admin sidebar: `bg-pine`; wordmark serif 17px `paper`; inactive `#A9BFAF`, active `bg-white/10 text-paper`
+- Operator sidebar: white, 1px `line`; course crest + course name (display face) + 10.5px uppercase meta; active item = accent text, 3px left border, paper bg
+- Admin sidebar (FLOW-2): a light rail — white, 1px `line`, the lockup at the top; inactive `text-ink-soft`, active `bg-pine/[0.07] text-pine font-semibold`; count chips `rounded-md` (never 999px pills)
 
-### Rules (both looks)
+### Rules (every page)
 - Status indicators: `<StatusDot status="ok|bad|warn|neutral" label="..."/>` — 5px dot, no pill badges
 - Input class: `bg-paper border border-line rounded-md px-3 py-2.5 text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10`
 - Primary button: `bg-pine hover:bg-pine-hover text-white font-medium rounded-md` (course accent via inline style on operator/golfer surfaces)

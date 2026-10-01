@@ -44,7 +44,7 @@ export function MonthPicker({ value, onChange, today, label }: {
       </button>
       {open && (
         <div role="dialog" aria-label="Pick a date"
-          className="absolute right-0 top-full mt-2 z-30 w-[268px] bg-white rounded-lg shadow-[0_0_0_1px_rgba(20,24,20,.08),0_12px_32px_-12px_rgba(20,24,20,.35)] p-3">
+          className="absolute right-0 top-full mt-2 z-30 w-[268px] bg-white rounded-lg shadow-card border border-line p-3">
           <div className="flex items-center justify-between mb-2">
             <button type="button" onClick={() => shift(-1)} aria-label="Previous month" className="w-7 h-7 rounded-md inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper"><ChevronLeft className="w-4 h-4" /></button>
             <span className="text-[13.5px] font-semibold text-ink">{month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
