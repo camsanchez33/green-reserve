@@ -25,7 +25,7 @@ Live mockup: https://claude.ai/artifact/XBgbV4HHBTuDM4B6sRQEHq
    deep-forest field that runs off the screen's right edge holding a COMPACT tee
    sheet (5 rows, 3 columns, small footer) with the golfer's phone overlapping its
    bottom-left corner and straddling the white/forest edge (never covering a tee
-   time); colour fields, the one photo, the setup band and the end band run edge
+   time); colour fields, the setup band and the end band run edge
    to edge while text stays in a ~1240px column. Cam liked the overlap of the tee
    sheet and phone from the start — keep it.
 
@@ -54,11 +54,15 @@ Live mockup: https://claude.ai/artifact/XBgbV4HHBTuDM4B6sRQEHq
   with your name and colors, and one tee sheet your staff run the day from.";
   under the buttons "Free for courses."
 - Sections, top to bottom: hero (text + product) · Built for the course (three
-  staggered rows, each with its product fragment) · one full-width photo
-  "Golfers see your course, not ours." · How it works (3 steps, no times, on the
+  staggered rows, each with its product fragment) · How it works (3 steps, no times, on the
   forest band) · Price line · FAQ (6 general questions, all printed, no accordion)
   · end band "See it with your course's tee sheet." + CTAs + email.
 
+
+- **No stock photo section, and never "your course, not ours"** (Cam 2026-10-01:
+  "green reserve doesnt have a course so this doesnt even make sense"). The brand
+  point lives in "Keep your brand". Photos appear only inside product mockups,
+  as a course's own header photo.
 
 ## 3. Look (from the mockup)
 
@@ -70,7 +74,7 @@ Live mockup: https://claude.ai/artifact/XBgbV4HHBTuDM4B6sRQEHq
   Green is used for fields, not sprinkled on everything.
 - Buttons 6px radius; ONE primary per area (forest), the second action is a quiet
   grey text link. Product pieces 6–8px radius; only the product pieces and the
-  phone carry a shadow. No gradients except the photo scrim.
+  phone carry a shadow. No gradients except the scrim inside the phone's header photo.
 - Deliberate asymmetry: 40/60 hero, 30/70 section heads, staggered feature rows
   (the middle one indented). No fade-in animations.
 

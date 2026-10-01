@@ -4,11 +4,19 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-01 02:18 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `012373d` · working tree clean
+Generated 2026-10-01 02:23 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `b041370` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
+
+### Uncommitted working tree (2 file(s))
+
+- `M HOMEPAGE_SPEC.md`
+- `M docs/design/home/index.html`
+
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -167,6 +175,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `bc1872d` 2026-09-30 — Homepage spec: back to the plain-background mockup (handoff) (#29)
+- `c5aa601` 2026-10-01 — queue/spec update
 - `012373d` 2026-10-01 — queue/spec update
 - `7fd7385` 2026-10-01 — queue/spec update
 - `1ceecb4` 2026-10-01 — queue/spec update
@@ -177,8 +187,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `8d3b4aa` 2026-09-30 — queue/spec update
 - `aeedc4c` 2026-09-30 — UI-B-1: homepage in Direction B, Figtree for the public look
 - `a9e191d` 2026-09-30 — queue/spec update
-- `4106287` 2026-09-30 — SEC-1: bookings read the card and customer from Stripe, not the request
-- `def2b1d` 2026-09-30 — queue/spec update
 
 ---
 

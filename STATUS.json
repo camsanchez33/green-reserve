@@ -1,10 +1,13 @@
 {
-  "generatedAt": "2026-10-01T02:18:30.871Z",
+  "generatedAt": "2026-10-01T02:23:18.605Z",
   "repo": {
-    "head": "012373d",
+    "head": "b041370",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 0,
-    "dirty": [],
+    "dirtyCount": 2,
+    "dirty": [
+      "M HOMEPAGE_SPEC.md",
+      " M docs/design/home/index.html"
+    ],
     "looksLikeRunInProgress": false
   },
   "drift": {
@@ -628,6 +631,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "bc1872d",
+      "date": "2026-09-30",
+      "subject": "Homepage spec: back to the plain-background mockup (handoff) (#29)"
+    },
+    {
+      "h": "c5aa601",
+      "date": "2026-10-01",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "012373d",
       "date": "2026-10-01",
       "subject": "queue/spec update"
@@ -674,16 +687,6 @@
     },
     {
       "h": "a9e191d",
-      "date": "2026-09-30",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "4106287",
-      "date": "2026-09-30",
-      "subject": "SEC-1: bookings read the card and customer from Stripe, not the request"
-    },
-    {
-      "h": "def2b1d",
       "date": "2026-09-30",
       "subject": "queue/spec update"
     }
