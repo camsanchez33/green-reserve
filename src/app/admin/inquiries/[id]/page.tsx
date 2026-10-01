@@ -207,7 +207,7 @@ function SField({ label, value, amber, span2 }: {
   const empty = !value || value.trim() === '';
   if (empty && !amber) return null;
   return (
-    <div className={'bg-white border border-line rounded-lg px-4 py-3' + (span2 ? ' col-span-2' : '')}>
+    <div className={'bg-white rounded-lg shadow-card px-4 py-3' + (span2 ? ' col-span-2' : '')}>
       <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-0.5">{label}</div>
       {empty
         ? <div className="text-[13px] text-warn font-medium">Not provided</div>
@@ -1980,7 +1980,7 @@ function InquiryDetailInner() {
             <div className="max-w-3xl">
               <Eyebrow className="mb-3">Internal Notes</Eyebrow>
               {inq.adminNotes && (
-                <pre className="text-sm text-ink-soft bg-white border border-line rounded-lg px-4 py-3 mb-3 whitespace-pre-wrap font-sans">
+                <pre className="text-sm text-ink-soft bg-white rounded-lg shadow-card px-4 py-3 mb-3 whitespace-pre-wrap font-sans">
                   {inq.adminNotes}
                 </pre>
               )}

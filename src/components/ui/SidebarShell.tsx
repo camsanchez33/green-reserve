@@ -7,7 +7,7 @@ export function SidebarShell({ variant = 'admin', children, accent }: {
 }) {
   if (variant === 'admin') {
     return (
-      <div className="fixed left-0 top-0 h-full w-56 bg-pine flex flex-col z-10 overflow-y-auto">
+      <div className="fixed left-0 top-0 h-full w-56 bg-white border-r border-line flex flex-col z-10 overflow-y-auto">
         {children}
       </div>
     );

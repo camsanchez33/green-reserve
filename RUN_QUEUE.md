@@ -53,6 +53,14 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   (https + *.blob.vercel-storage.com) now gates course-documents download AND
   record (record also handed a client URL to the SDK with the token), and
   companyDocPathOf uses it.
+- [x] FLOW-2 — done 2026-10-01 (Cam: "clunky", "why doesn't the dashboard look like the
+  greenreserve.app demo"): the operator tee sheet IS the homepage demo — one sheet with its own
+  bar (course · Tee sheet · ‹ date ›, date picker, Today), Time / Group / Status columns,
+  "Check in" on a row with one plain waiting group (same checkInBooking handler), footer count;
+  the 7-day strip and colour legend are gone. Cards are soft sheets (`shadow-card`) not ruled
+  boxes; the admin sidebar is a light rail with the lockup; eyebrows are condensed Archivo.
+  BUG FIXED: the sheet read greenFee/cartFee but the API sends *Cents — every price showed a
+  bare "$" and the walk-in total / expected revenue were NaN.
 - [x] UI-H-2 / FLOW-1 — done 2026-10-01: one look site-wide (CLAUDE.md "Design system").
   Tokens moved to the homepage palette, Archivo everywhere incl. /admin + /dashboard
   (staff fonts no longer load), Tailwind default corners. /for-courses, setup sheet and

@@ -77,7 +77,7 @@ const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm 
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white border border-line rounded-lg p-5">
+    <div className="bg-white rounded-lg shadow-card p-5">
       <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">{title}</div>
       <div className="space-y-4">{children}</div>
     </div>

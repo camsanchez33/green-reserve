@@ -117,7 +117,7 @@ export default function GettingStartedChecklist({
     return (
       <button
         onClick={() => setExpandedOverride(true)}
-        className="w-full flex items-center justify-between bg-white border border-line rounded-lg px-4 py-2.5 mb-4 text-left hover:border-line-strong transition-colors"
+        className="w-full flex items-center justify-between bg-white rounded-lg shadow-card px-4 py-2.5 mb-4 text-left hover:border-line-strong transition-colors"
       >
         <span className="flex items-center gap-2 text-sm text-ink">
           <CheckCircle className="w-4 h-4 text-ok"/>
@@ -129,7 +129,7 @@ export default function GettingStartedChecklist({
   }
 
   return (
-    <div className="bg-white border border-line rounded-lg mb-5 overflow-hidden">
+    <div className="bg-white rounded-lg shadow-card mb-5 overflow-hidden">
       <button onClick={() => setExpandedOverride(false)} className="w-full flex items-center justify-between px-5 py-4 text-left">
         <div>
           <div className="text-[15px] font-serif font-medium text-ink">Getting Started</div>

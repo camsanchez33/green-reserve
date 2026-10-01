@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
           <p className="text-sm text-ink-muted mt-1">Course Operator Portal</p>
         </div>
 
-        <div className="bg-white border border-line rounded-lg p-6">
+        <div className="bg-white rounded-lg shadow-card p-6">
           {sent ? (
             <div className="text-center py-2">
               <div className="w-12 h-12 rounded-md bg-ok/10 flex items-center justify-center mx-auto mb-4">

@@ -591,7 +591,7 @@ export default function CourseDetailPage({
               </div>
             </div>
 
-            <div className="bg-white border border-line rounded-lg p-6 sticky top-20">
+            <div className="bg-white rounded-lg shadow-card p-6 sticky top-20">
               <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-1">Member access</p>
               <p className="text-ink text-sm leading-relaxed mb-5">
                 This is a private club. Tee time booking is reserved for members. Sign in to your member account to view availability and book.

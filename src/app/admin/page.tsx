@@ -165,7 +165,7 @@ function QueueRow({ row, severity, router, expanded, onToggleExpand, fireStatus,
 }) {
   const hasItems = (row.items?.length ?? 0) > 0;
   return (
-    <div className="border border-line-soft hover:border-line rounded-md transition-colors">
+    <div className="bg-paper/70 hover:bg-paper rounded-md transition-colors">
       <div
         onClick={() => (hasItems ? onToggleExpand() : router.push(row.href))}
         className="w-full flex items-center gap-3 px-3 py-2.5 text-left cursor-pointer"
@@ -319,7 +319,7 @@ export default function AdminOverviewPage() {
           {stats && <>
             {/* 1. TOP STRIP — the morning pulse */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <Card onClick={() => router.push('/admin/revenue')} className="p-5 cursor-pointer hover:border-line-strong transition-colors">
+              <Card onClick={() => router.push('/admin/revenue')} className="p-5 cursor-pointer hover:shadow-[0_0_0_1px_rgba(20,24,20,.14),0_1px_2px_rgba(20,24,20,.05)] transition-shadow">
                 <div className="flex items-start justify-between mb-2">
                   <div className="p-2 rounded-md bg-pine/10"><DollarSign className="w-4 h-4 text-pine"/></div>
                 </div>
@@ -336,7 +336,7 @@ export default function AdminOverviewPage() {
                 </div>
               </Card>
 
-              <Card onClick={() => router.push('/admin/messages')} className="p-5 cursor-pointer hover:border-line-strong transition-colors">
+              <Card onClick={() => router.push('/admin/messages')} className="p-5 cursor-pointer hover:shadow-[0_0_0_1px_rgba(20,24,20,.14),0_1px_2px_rgba(20,24,20,.05)] transition-shadow">
                 <div className="flex items-start justify-between mb-2">
                   <div className="p-2 rounded-md bg-paper"><MessageSquare className="w-4 h-4 text-ink-muted"/></div>
                 </div>

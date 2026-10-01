@@ -1,4 +1,5 @@
 'use client';
+import { CARD } from '@/components/ui/Card';
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { todayIn, clockIn, DEFAULT_TZ } from '@/lib/course-time';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -58,19 +59,31 @@ interface AnalyticsData {
 const todayFallback = () => todayIn(DEFAULT_TZ);
 const addDays = (d: string, n: number) => { const dt = new Date(d + 'T12:00:00'); dt.setDate(dt.getDate() + n); return dt.toISOString().split('T')[0]; };
 
-function slotBorderCls(tt: TeeTime) {
-  if (tt.status === 'blocked') return 'bg-paper border-line opacity-60';
-  const avail = tt.playersAvailable - (tt.playersBooked ?? 0);
-  if (avail === 0) return 'bg-bad/5 border-bad/20';
-  if (avail <= 2)  return 'bg-warn/5 border-warn/20';
-  return 'bg-white border-line';
+// FLOW-1 (Cam 2026-10-01: "clunky, doesn't look clean"): the sheet is ONE
+// white sheet with hairline rows, like the homepage demo — not a stack of
+// bordered boxes. A row's state shows in its status text; a blocked row is
+// hatched and faded, and nothing else is tinted.
+function slotRowCls(tt: TeeTime) {
+  if (tt.status === 'blocked') return 'bg-paper opacity-60';
+  return 'bg-white hover:bg-paper/70';
 }
 // U-O (UI_REVISE_SPEC §1b, canvas "Operator · Tee sheet"): a blocked row is
 // hatched rather than merely faded, so "nothing can be booked here" reads at a
 // glance from across the counter. Purely a background — no behavior.
 const HATCH: React.CSSProperties = {
-  backgroundImage: 'repeating-linear-gradient(135deg, #E3E0D5 0 1px, transparent 1px 7px)',
+  backgroundImage: 'repeating-linear-gradient(135deg, #E3E4DE 0 1px, transparent 1px 7px)',
 };
+// FLOW-1: the demo's status column — "Checked in", "2 left", "Full",
+// "4 spots open", or a muted italic "Blocked".
+function slotStatus(tt: TeeTime) {
+  if (tt.status === 'blocked') return <span className="italic text-ink-muted">Blocked</span>;
+  const bs = tt.bookings ?? [];
+  if (bs.length === 0 && (tt.playersBooked ?? 0) === 0) return <span className="text-ink-muted">{tt.playersAvailable} spots open</span>;
+  if (bs.length > 0 && bs.every(b => b.status === 'completed')) {
+    return <span className="inline-flex items-center gap-1.5 font-semibold text-pine"><span className="w-1.5 h-1.5 rounded-full bg-ok"/>Checked in</span>;
+  }
+  return slotBadge(tt);
+}
 function slotBadge(tt: TeeTime) {
   if (tt.status === 'blocked') return <span className="text-xs text-ink-muted">Blocked</span>;
   const booked = tt.playersBooked ?? 0;
@@ -89,7 +102,6 @@ function DashboardPageInner() {
   const [courseTz, setCourseTz] = useState(DEFAULT_TZ);
   const today = () => todayIn(courseTz);
   const [selectedDate, setSelectedDate] = useState(todayFallback());
-  const [dateOffset, setDateOffset]     = useState(0);
   const [teeTimes, setTeeTimes]   = useState<TeeTime[]>([]);
   const [loading, setLoading]     = useState(true);
   const [courseName, setCourseName] = useState('');
@@ -252,7 +264,6 @@ function DashboardPageInner() {
     return null;
   }
 
-  const dates = Array.from({ length: 7 }, (_, i) => addDays(today(), i + dateOffset));
   const totalSlots = teeTimes.filter(t => t.status !== 'blocked').reduce((s, t) => s + t.playersAvailable, 0);
   const bookedSlots = teeTimes.reduce((s, t) => s + (t.playersBooked ?? 0), 0);
   const revenue = teeTimes.reduce((s, t) => s + ((t.playersBooked ?? 0) * (t.greenFee + (t.cartFee || 0))), 0);
@@ -275,7 +286,19 @@ function DashboardPageInner() {
     const r = await dfetch<TeeTime[]>(`/api/operator/tee-times?date=${date}&withBookings=1`);
     if (r.status === 401) { router.push('/dashboard/login'); return; }
     if (!r.ok) { setTeeTimes([]); setSheetError(r.error); }
-    else { setTeeTimes(Array.isArray(r.data) ? r.data : []); setSheetError(''); }
+    // FLOW-1 fix: the API sends greenFeeCents / cartFeeCents (the columns moved
+    // to cents); the sheet, the walk-in total and the revenue line all read
+    // dollars, so every price rendered as a bare "$" and every total as NaN.
+    else {
+      type Raw = TeeTime & { greenFeeCents?: number; cartFeeCents?: number };
+      const rows = (Array.isArray(r.data) ? r.data : []) as Raw[];
+      setTeeTimes(rows.map(tt => ({
+        ...tt,
+        greenFee: typeof tt.greenFeeCents === 'number' ? tt.greenFeeCents / 100 : (tt.greenFee ?? 0),
+        cartFee: typeof tt.cartFeeCents === 'number' ? tt.cartFeeCents / 100 : (tt.cartFee ?? 0),
+      })));
+      setSheetError('');
+    }
     setLoading(false);
   }, [router]);
 
@@ -630,7 +653,7 @@ function DashboardPageInner() {
               {!analyticsLoading && analyticsError && <LoadError message={analyticsError} onRetry={() => { setAnalytics(null); setAnalyticsError(''); }} />}
               {analytics && (
                 <div className="space-y-5">
-                  <div className="bg-white border border-line rounded-lg p-5">
+                  <div className="bg-white rounded-lg shadow-card p-5">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 divide-x divide-line-soft">
                       {[
                         { label:'Revenue',     value:`$${analytics.summary.totalRevenue.toFixed(0)}`, sub:'collected · green + cart', onClick:()=>router.push('/dashboard/money?tab=payments') },
@@ -647,7 +670,7 @@ function DashboardPageInner() {
                       ))}
                     </div>
                   </div>
-                  <div className="bg-white border border-line rounded-lg p-5">
+                  <div className="bg-white rounded-lg shadow-card p-5">
                     <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">Daily Revenue</div>
                     <div className="flex items-end gap-0.5 h-24">
                       {analytics.revenueByDay.map(d => {
@@ -666,7 +689,7 @@ function DashboardPageInner() {
                       <span>{analytics.revenueByDay[analytics.revenueByDay.length-1]?.date}</span>
                     </div>
                   </div>
-                  <div className="bg-white border border-line rounded-lg p-5">
+                  <div className="bg-white rounded-lg shadow-card p-5">
                     <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">Utilization by Day</div>
                     <div className="space-y-2">
                       {analytics.utilizationByDow.map(d => (
@@ -714,7 +737,7 @@ function DashboardPageInner() {
               </div>
 
               {/* Stats — eyebrow / serif 30px / 12.5px note (§1b) */}
-              <div className="bg-white border border-line rounded-lg p-5 mb-5">
+              <div className="bg-white rounded-lg shadow-card p-5 mb-5">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:divide-x divide-line-soft">
                   {[
                     { label:'Total Slots', value:totalSlots,               icon:<Users className="w-4 h-4"/>,     onClick:undefined },
@@ -732,30 +755,6 @@ function DashboardPageInner() {
                 </div>
               </div>
 
-              {/* Date strip */}
-              <div className="bg-white border border-line rounded-lg mb-4 p-3">
-                <div className="flex items-center gap-2">
-                  {/* SD-3: back is never clamped — yesterday's sheet must stay reachable. */}
-                  <button onClick={() => setDateOffset(o => o-7)}
-                    className="p-1.5 rounded-md hover:bg-paper disabled:opacity-30 transition-colors">
-                    <ChevronLeft className="w-4 h-4 text-ink-muted"/>
-                  </button>
-                  {/* Square chips (§1b) — one per day, the selected one solid. */}
-                  <div className="flex gap-1.5 flex-1 overflow-x-auto">
-                    {dates.map(d => (
-                      <button key={d} onClick={() => setSelectedDate(d)}
-                        className={'flex-1 min-w-[70px] py-2 px-1 rounded-md text-center border transition-colors ' + (selectedDate===d ? 'bg-pine text-white border-pine' : 'border-line text-ink-soft hover:bg-paper')}>
-                        <div className="text-[11px] uppercase tracking-[0.1em]">{new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'})}</div>
-                        <div className="text-[15px] font-medium tabular-nums">{new Date(d+'T12:00:00').getDate()}</div>
-                      </button>
-                    ))}
-                  </div>
-                  <button onClick={() => setDateOffset(o => o+7)} className="p-1.5 rounded-md hover:bg-paper transition-colors">
-                    <ChevronRight className="w-4 h-4 text-ink-muted"/>
-                  </button>
-                </div>
-              </div>
-
               {/* Header */}
               <TabIntroCard
                 open={teesheetIntro.open}
@@ -768,10 +767,6 @@ function DashboardPageInner() {
                   'Block a time if you don’t want golfers booking it — maintenance, an outing, etc.',
                 ]}
               />
-              <div className="flex items-baseline gap-2 mb-3">
-                <h2 className="text-[15px] font-medium text-ink">{fmtDate(selectedDate)}</h2>
-                <p className="text-[12.5px] text-ink-muted">{teeTimes.filter(t=>t.status!=='blocked').length} tee times · {teeTimes.filter(t=>(t.playersBooked??0)>0).length} with a booking</p>
-              </div>
 
               {sheetError && <LoadError message={sheetError} onRetry={() => loadTimes(selectedDate)} />}
 
@@ -817,30 +812,56 @@ function DashboardPageInner() {
                 </div>
               )}
 
-              {/* Legend */}
-              <div className="flex flex-wrap gap-4 mb-3 text-[12.5px] text-ink-muted">
-                {([['bg-white border-line','Open'],['bg-warn/5 border-warn/20','Filling'],['bg-bad/5 border-bad/20','Full'],['bg-paper border-line','Blocked']] as [string,string][]).map(([cls,label]) => (
-                  <span key={label} className="flex items-center gap-1.5">
-                    <span className={'w-2.5 h-2.5 border inline-block ' + cls} style={label === 'Blocked' ? HATCH : undefined}/>{label}
-                  </span>
-                ))}
-                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 border border-line bg-white inline-block opacity-50"/>Already played</span>
-              </div>
-
+              {/* FLOW-1 (Cam 2026-10-01: "why does the dashboard not look like the
+                  greenreserve.app demo"): the sheet IS the homepage demo now — one
+                  sheet with its own bar (course, date, arrows), Time / Group /
+                  Status columns, check-in on the row, and a count underneath. */}
+              <div className={CARD + ' overflow-hidden'}>
+                <div className="flex items-center gap-4 px-4 py-2.5 border-b border-line">
+                  <b className="text-[15px] font-semibold text-ink truncate">{courseName || 'Tee sheet'}</b>
+                  <span className="hidden sm:inline text-[13.5px] font-semibold text-ink pb-0.5 shadow-[inset_0_-2px_0_var(--color-pine)]">Tee sheet</span>
+                  <div className="ml-auto flex items-center gap-2 text-[13.5px] text-ink">
+                    {/* SD-3: back is never clamped — yesterday's sheet must stay reachable. */}
+                    <button onClick={() => setSelectedDate(addDays(selectedDate, -1))} aria-label="Previous day"
+                      className="w-7 h-7 rounded-md border border-line inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors">
+                      <ChevronLeft className="w-4 h-4"/>
+                    </button>
+                    {/* The date is also a picker: the native input sits invisibly over it. */}
+                    <label className="relative cursor-pointer whitespace-nowrap font-medium min-w-[92px] text-center">
+                      {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                      <input type="date" value={selectedDate} onChange={e => e.target.value && setSelectedDate(e.target.value)}
+                        aria-label="Pick a date" className="absolute inset-0 opacity-0 cursor-pointer"/>
+                    </label>
+                    <button onClick={() => setSelectedDate(addDays(selectedDate, 1))} aria-label="Next day"
+                      className="w-7 h-7 rounded-md border border-line inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors">
+                      <ChevronRight className="w-4 h-4"/>
+                    </button>
+                    {selectedDate !== today() && (
+                      <button onClick={() => setSelectedDate(today())} className="ml-1 text-[12.5px] font-semibold text-pine hover:underline underline-offset-4">Today</button>
+                    )}
+                  </div>
+                </div>
+                <div className="hidden sm:flex items-center gap-4 px-4 py-2 border-b border-line text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-muted [font-stretch:75%]">
+                  <span className="w-[76px]">Time</span>
+                  <span className="flex-1">Group</span>
+                  <span className="hidden md:inline w-[150px]" aria-hidden="true"/>
+                  <span className="w-[110px] text-right">Status</span>
+                  <span className="w-[190px]" aria-hidden="true"/>
+                </div>
               {loading ? (
                 <div className="flex items-center justify-center py-16 text-ink-muted gap-2">
                   <Loader2 className="w-5 h-5 animate-spin"/>Loading tee times...
                 </div>
               ) : teeTimes.length === 0 ? (
-                <div className="text-center py-16 bg-white rounded-lg border border-dashed border-line">
+                <div className="text-center py-16">
                   <p className="font-medium text-ink mb-1">No tee times for this date</p>
                   <p className="text-sm text-ink-muted mb-4">Add times manually or check your schedule covers this day</p>
                   <button onClick={() => setShowAddModal(true)} className="bg-pine hover:bg-pine-hover text-white px-5 py-2.5 rounded-md text-[12.5px] font-medium transition-colors">Add Tee Time</button>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="divide-y divide-line">
                   {q && visibleTimes.length === 0 && (
-                    <div className="text-center py-10 text-ink-muted text-sm bg-white rounded-lg border border-dashed border-line">
+                    <div className="text-center py-10 text-ink-muted text-sm">
                       No bookings match &quot;{search}&quot; on this date.
                     </div>
                   )}
@@ -851,52 +872,62 @@ function DashboardPageInner() {
                     const isBlocked = tt.status === 'blocked';
                     return (
                     <div key={tt.id}
-                      className={'rounded-lg border p-3 cursor-pointer transition-colors ' + slotBorderCls(tt) + (tt.id===nextUpId ? ' ring-1 ring-pine/40' : '') + (isPast && !isBlocked ? ' opacity-50' : '')}
+                      className={'group px-4 py-2.5 cursor-pointer transition-colors ' + slotRowCls(tt) + (tt.id===nextUpId ? ' shadow-[inset_3px_0_0_var(--color-pine)]' : '') + (isPast && !isBlocked ? ' opacity-50' : '')}
                       style={isBlocked ? HATCH : undefined}
                       onClick={() => setExpandedId(expandedId===tt.id?null:tt.id)}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 min-w-0 flex-wrap">
-                          <span className="font-serif font-medium text-ink text-[17px] leading-none w-20 tabular-nums">{fmtTime(tt.time)}</span>
-                          {tt.id===nextUpId && <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-pine">Next up</span>}
-                          <span className="text-[12.5px] text-ink-muted">{tt.product?.label ? `${tt.product.label} · ` : ''}{tt.holes}h</span>
-                          {slotBadge(tt)}
-                          <span className="text-[12.5px] text-ink-muted tabular-nums">{tt.playersBooked}/{tt.playersAvailable}</span>
-                          <span className="text-[12.5px] font-medium text-ink-soft tabular-nums">${tt.greenFee}{tt.cartFee>0?` +$${tt.cartFee}`:''}</span>
-                          {expandedId!==tt.id && (tt.bookings?.length ?? 0) > 0 && (
-                            <span className="hidden sm:flex items-center gap-1 flex-wrap min-w-0">
-                              {tt.bookings!.slice(0, 3).map(b => (
-                                <span key={b.id} className="text-[11px] px-2 py-0.5 rounded-md bg-white border border-line text-ink-soft whitespace-nowrap">
-                                  {b.golferName} · {b.players}
-                                </span>
-                              ))}
-                              {tt.bookings!.length > 3 && <span className="text-[11px] text-ink-muted">+{tt.bookings!.length - 3} more</span>}
-                            </span>
-                          )}
+                      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-y-2">
+                        <div className="flex basis-full sm:basis-auto flex-1 items-center gap-4 min-w-0">
+                          <span className="font-sans font-bold text-ink text-[15px] leading-none w-[76px] shrink-0 whitespace-nowrap tabular-nums">{fmtTime(tt.time)}</span>
+                          <span className="flex-1 min-w-0 truncate text-[13.5px] text-ink">
+                            {expandedId!==tt.id && (tt.bookings?.length ?? 0) > 0
+                              ? <>{tt.bookings!.slice(0, 3).map(b => `${b.golferName} · ${b.players}`).join(', ')}{tt.bookings!.length > 3 && <span className="text-ink-muted"> +{tt.bookings!.length - 3} more</span>}</>
+                              : tt.id!==nextUpId && <span className="text-ink-faint">—</span>}
+                            {tt.id===nextUpId && <span className={((tt.bookings?.length ?? 0) > 0 && expandedId!==tt.id ? 'ml-2 ' : '') + 'text-[12px] font-semibold text-pine'}>Next up</span>}
+                          </span>
+                          <span className="hidden md:inline w-[150px] text-right text-[12.5px] text-ink-muted whitespace-nowrap tabular-nums">
+                            {tt.product?.label ? `${tt.product.label} · ` : ''}{tt.holes} holes · ${tt.greenFee}{tt.cartFee>0?` +$${tt.cartFee} cart`:''}
+                          </span>
+                          <span className="sm:w-[110px] text-right whitespace-nowrap text-[13px]">{slotStatus(tt)}</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-end gap-1 sm:ml-4 shrink-0 ml-auto sm:w-[190px]">
                           {/* SD-5: a walk-in or phone booking straight onto the slot. */}
-                          {!isBlocked && tt.playersBooked < tt.playersAvailable && (
-                            <button onClick={e => { e.stopPropagation(); setWalkInSlot(tt); }}
-                              className="text-xs px-3 md:px-2 min-h-[40px] md:min-h-0 py-1 rounded-md bg-pine text-white hover:bg-pine-hover transition-colors">
-                              Walk-in
-                            </button>
-                          )}
+                          {/* As in the demo: a group waiting to check in gets the button on
+                              its row. Only the plain case — one group, card on file, no
+                              decline — anything else opens the row (same handler). */}
+                          {(() => {
+                            const live = (tt.bookings ?? []).filter(b => b.status === 'confirmed');
+                            const quick = live.length === 1 && live[0].paymentStatus !== 'manual' && !live[0].checkInFailReason && !live[0].noShowAt ? live[0] : null;
+                            const canWalkIn = !isBlocked && tt.playersBooked < tt.playersAvailable;
+                            if (quick) return (
+                              <button onClick={e => { e.stopPropagation(); checkInBooking(quick); }} disabled={checkingInId === quick.id}
+                                className="w-[72px] text-[12.5px] font-semibold min-h-[40px] md:min-h-0 md:py-1.5 rounded-md bg-pine text-white hover:bg-pine-hover transition-colors disabled:opacity-50">
+                                {checkingInId === quick.id ? '…' : 'Check in'}
+                              </button>
+                            );
+                            if (canWalkIn) return (
+                              <button onClick={e => { e.stopPropagation(); setWalkInSlot(tt); }}
+                                className="w-[72px] text-[12.5px] font-semibold min-h-[40px] md:min-h-0 md:py-1.5 rounded-md border border-line text-ink hover:bg-paper transition-colors">
+                                Walk-in
+                              </button>
+                            );
+                            return <span className="w-[72px]" aria-hidden="true" />;
+                          })()}
                           <button onClick={e => { e.stopPropagation(); toggleBlock(tt); }} disabled={slotBusy === tt.id}
-                            className="text-xs px-3 md:px-2 min-h-[40px] md:min-h-0 py-1 rounded-md border border-line text-ink-soft hover:text-ink hover:border-line-strong transition-colors disabled:opacity-50">
+                            className="text-[12.5px] px-2.5 min-h-[40px] md:min-h-0 md:py-1.5 rounded-md text-ink-muted hover:text-ink hover:bg-paper transition-colors disabled:opacity-50">
                             {slotBusy === tt.id ? '…' : tt.status==='blocked'?'Unblock':'Block'}
                           </button>
                           <button onClick={e => { e.stopPropagation(); deleteTime(tt); }} disabled={slotBusy === tt.id}
-                            className="text-xs px-3 md:px-2 min-h-[40px] md:min-h-0 py-1 rounded-md border border-bad/30 text-bad hover:bg-bad/5 transition-colors disabled:opacity-50">
-                            Del
+                            className="text-[12.5px] px-2.5 min-h-[40px] md:min-h-0 md:py-1.5 rounded-md text-ink-muted hover:text-bad hover:bg-bad/5 transition-colors disabled:opacity-50">
+                            Delete
                           </button>
                         </div>
                       </div>
                       {expandedId===tt.id && tt.bookings && tt.bookings.length>0 && (
-                        <div className="mt-3 pt-3 border-t border-line-soft space-y-1.5">
+                        <div className="mt-2.5 sm:ml-[92px] space-y-1.5">
                           {tt.bookings.map(b => {
                             const bStatus = getBookingStatus(b.status, b.paymentStatus);
                             return (
-                              <div key={b.id} className={'flex items-center justify-between text-[13.5px] bg-white px-3 py-2 border border-line gap-2 ' + (b.checkInFailReason && b.status === 'confirmed' ? 'border-l-[3px] border-l-bad' : '')}>
+                              <div key={b.id} className={'flex items-center justify-between text-[13.5px] bg-paper/60 rounded-md px-3 py-2 gap-2 ' + (b.checkInFailReason && b.status === 'confirmed' ? 'shadow-[inset_3px_0_0_var(--color-bad)]' : '')}>
                                 <div className="flex-1 min-w-0">
                                   <span className="font-medium text-ink">{b.golferName}</span>
                                   <span className="text-ink-muted ml-2">{b.players} player{b.players!==1?'s':''}</span>
@@ -937,13 +968,19 @@ function DashboardPageInner() {
                         </div>
                       )}
                       {expandedId===tt.id && tt.bookings && tt.bookings.length===0 && (
-                        <div className="mt-2 pt-2 border-t border-line-soft text-[12.5px] text-ink-muted">No bookings yet</div>
+                        <div className="mt-2 sm:ml-[92px] text-[12.5px] text-ink-muted">No bookings yet</div>
                       )}
                     </div>
                     );
                   })}
                 </div>
               )}
+                {!loading && teeTimes.length > 0 && (
+                  <div className="flex justify-end px-4 py-2 border-t border-line bg-paper text-[12.5px] text-ink-muted tabular-nums">
+                    {teeTimes.reduce((n, x) => n + (x.bookings?.length ?? 0), 0)} group{teeTimes.reduce((n, x) => n + (x.bookings?.length ?? 0), 0) === 1 ? '' : 's'} booked · {teeTimes.filter(x => x.status !== 'blocked').length} tee times
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>

@@ -243,7 +243,7 @@ export default function MembersPage() {
             ))}
           </div>
 
-          <div className="bg-white border border-line rounded-lg p-6 space-y-5">
+          <div className="bg-white rounded-lg shadow-card p-6 space-y-5">
 
             {/* Step 1 */}
             {wizStep === 1 && (
@@ -403,7 +403,7 @@ export default function MembersPage() {
             <span className="font-medium" style={{ color: createdTier.color }}>{createdTier.name}</span> is live. Anyone you add to it gets member rates automatically at checkout.
           </p>
 
-          <div className="bg-white border border-line rounded-lg p-5 text-left mb-8">
+          <div className="bg-white rounded-lg shadow-card p-5 text-left mb-8">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-3 h-3 rounded-full shrink-0" style={{ background: createdTier.color }}/>
               <span className="font-medium text-ink">{createdTier.name}</span>
@@ -519,7 +519,7 @@ export default function MembersPage() {
 
               <div className="grid lg:grid-cols-2 gap-4">
                 {tiers.map(t => (
-                  <div key={t.id} className="bg-white border border-line rounded-lg p-5">
+                  <div key={t.id} className="bg-white rounded-lg shadow-card p-5">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className="w-3 h-3 rounded-full shrink-0" style={{ background: t.color }}/>

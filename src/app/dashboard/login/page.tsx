@@ -41,7 +41,7 @@ function LoginContent() {
           </div>
         )}
 
-        <div className="bg-white border border-line rounded-lg p-6 space-y-4">
+        <div className="bg-white rounded-lg shadow-card p-6 space-y-4">
           {error && <div className="bg-white border border-line border-l-[3px] border-l-bad text-bad rounded-md px-3 py-2.5 text-[13.5px]" role="alert">{error}</div>}
           <div className="space-y-3">
             <div>

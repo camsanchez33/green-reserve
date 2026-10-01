@@ -175,6 +175,8 @@ Sept 2026) is RETIRED. Every page — homepage, /for-courses, legal, golfer page
 | Paper / ink / line | #FAFAF7 / #141814 / #E3E4DE |
 | Accent | `pine` (#173B2A forest) for GreenReserve; per-course `Course.brandColor` on golfer pages and the operator dashboard |
 
+FLOW-2 (Cam 2026-10-01, "clunky"): cards are soft sheets — `<Card>` / `CARD` is `bg-white rounded-lg shadow-card` (a 6% ring + 0 1px 2px), never a ruled `border border-line` box, and never a box inside a box (inner items are rows with hairlines or a `bg-paper/70` fill). The admin sidebar is a light rail (white, `border-line`, the lockup). The operator tee sheet mirrors the homepage demo (`TeeSheetDemo.tsx`) — change one, check the other.
+
 `.staff-look` (`STAFF_LOOK_CLASS`, src/lib/staff-fonts.ts) still wraps /admin and /dashboard
 but carries no styling — it is only a hook. Never re-add a second palette, font or radius
 set there. Self-contained public pages that skip the Nav (/for-courses, setup sheet,

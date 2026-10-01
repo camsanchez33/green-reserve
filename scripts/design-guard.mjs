@@ -16,7 +16,7 @@ import { join, relative } from 'node:path';
 
 const ROOTS = ['src/app/admin', 'src/components/admin', 'src/app/dashboard', 'src/components/dashboard'];
 const RULES = [
-  { key: 'card', re: /bg-white border border-line rounded-lg/g, use: "<Card> from '@/components/ui/Card' (padding/layout in className)" },
+  { key: 'card', re: /bg-white rounded-lg shadow-card/g, use: "<Card> from '@/components/ui/Card' (padding/layout in className)" },
   { key: 'eyebrow', re: /text-\[11px\] uppercase tracking-\[0\.1em\] text-ink-muted/g, use: "<Eyebrow> from '@/components/ui/Eyebrow' (as=\"span\" etc. keeps the element)" },
   { key: 'input', re: /bg-paper border border-line rounded-md px-3/g, use: "INPUT / INPUT_COMPACT from '@/components/ui/field'" },
 ];
