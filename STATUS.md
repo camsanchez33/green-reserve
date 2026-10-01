@@ -4,11 +4,19 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-01 02:18 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `012373d` · working tree clean
+Generated 2026-10-01 02:30 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `7b92b4f` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
+
+### Uncommitted working tree (2 file(s))
+
+- `M HOMEPAGE_SPEC.md`
+- `M docs/design/home/index.html`
+
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -28,6 +36,14 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
+| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 32d | `7246a62` | `RUN_QUEUE.md:707` |
+| MP-1 | 2026-08-29 | 32d | `41f5ea8` | `RUN_QUEUE.md:737` |
+| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 32d | `4ef11dd` | `RUN_QUEUE.md:772` |
+| MP-2 | 2026-08-29 | 32d | `958f229` | `RUN_QUEUE.md:813` |
+| MP-2b | 2026-08-29 | 31d | `a134af5` | `RUN_QUEUE.md:850` |
+| MP-2c | 2026-08-29 | 31d | `e5b5413` | `RUN_QUEUE.md:899` |
+| MP-2d | 2026-08-29 | 31d | `22d0f68` | `RUN_QUEUE.md:947` |
+| MP-2e | 2026-08-30 | 31d | `bf3bcb2` | `RUN_QUEUE.md:989` |
 | SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED | 2026-09-16 | 14d | `951433d` | `RUN_QUEUE.md:2236` |
 | SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box | 2026-09-17 | 13d | `cfeb2e1` | `RUN_QUEUE.md:2349` |
 | SD-8d — browser Back still discards unsaved Settings edits (from the | 2026-09-28 | 2d | `70a424e` | `RUN_QUEUE.md:542` |
@@ -36,20 +52,12 @@ This is the distinction a raw checkbox count gets wrong.
 | BUG: 56 of 59 email senders report success when Resend rejects the send | 2026-09-29 | 2d | `209e652` | `RUN_QUEUE.md:666` |
 | BUG: inquiry submissions send no emails | 2026-09-28 | 2d | `8b9a046` | `RUN_QUEUE.md:2552` |
 | BUG: perf audit crashed on every page | 2026-09-29 | 2d | `dd7056a` | `RUN_QUEUE.md:2577` |
+| BUG: hello@greenreserve.app takes no mail | 2026-09-29 | 2d | `371ffff` | `RUN_QUEUE.md:2851` |
 | CAL-1 — Cal.com as the call scheduler | 2026-09-29 | 2d | `a5ed9d7` | `RUN_QUEUE.md:2869` |
 | MP-5e part 3 — the Overview relationship feed (notes + settings | 2026-09-29 | 1d | `c6a2142` | `RUN_QUEUE.md:1309` |
 | RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM). | 2026-09-29 | 1d | `f57f269` | `RUN_QUEUE.md:2588` |
 | RV-2 — review follow-ups, small (from /gr-review 2026-09-29): | 2026-09-29 | 1d | `0eab366` | `RUN_QUEUE.md:2598` |
 | CAL-2 — Cal.com is the ONLY call scheduler | 2026-09-29 | 1d | `e082dd0` | `RUN_QUEUE.md:2819` |
-| BUG: hello@greenreserve.app takes no mail | 2026-09-29 | 1d | `371ffff` | `RUN_QUEUE.md:2851` |
-| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | — | — | — | `RUN_QUEUE.md:707` |
-| MP-1 | — | — | — | `RUN_QUEUE.md:737` |
-| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | — | — | — | `RUN_QUEUE.md:772` |
-| MP-2 | — | — | — | `RUN_QUEUE.md:813` |
-| MP-2b | — | — | — | `RUN_QUEUE.md:850` |
-| MP-2c | — | — | — | `RUN_QUEUE.md:899` |
-| MP-2d | — | — | — | `RUN_QUEUE.md:947` |
-| MP-2e | — | — | — | `RUN_QUEUE.md:989` |
 | UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | — | — | — | `RUN_QUEUE.md:2194` |
 
 ## Not started — the actual queue
@@ -167,6 +175,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `7b92b4f` 2026-10-01 — queue/spec update
+- `bc1872d` 2026-09-30 — Homepage spec: back to the plain-background mockup (handoff) (#29)
+- `c5aa601` 2026-10-01 — queue/spec update
 - `012373d` 2026-10-01 — queue/spec update
 - `7fd7385` 2026-10-01 — queue/spec update
 - `1ceecb4` 2026-10-01 — queue/spec update
@@ -176,9 +187,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `fef7f84` 2026-09-30 — Revert "queue/spec update"
 - `8d3b4aa` 2026-09-30 — queue/spec update
 - `aeedc4c` 2026-09-30 — UI-B-1: homepage in Direction B, Figtree for the public look
-- `a9e191d` 2026-09-30 — queue/spec update
-- `4106287` 2026-09-30 — SEC-1: bookings read the card and customer from Stripe, not the request
-- `def2b1d` 2026-09-30 — queue/spec update
 
 ---
 

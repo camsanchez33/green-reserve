@@ -21,11 +21,15 @@ Live mockup: https://claude.ai/artifact/XBgbV4HHBTuDM4B6sRQEHq
    course behind the page (Cam 2026-10-01: "that looks terrible lets go back to
    the plain background").
 3. **Approved: the plain-background mix** (`docs/design/home/index.html`):
-   near-white ground #FAFAF7; a 40/60 hero with the text left and, on the right, a
-   deep-forest field that runs off the screen's right edge holding a COMPACT tee
-   sheet (5 rows, 3 columns, small footer) with the golfer's phone overlapping its
-   bottom-left corner and straddling the white/forest edge (never covering a tee
-   time); colour fields, the one photo, the setup band and the end band run edge
+   near-white ground #FAFAF7; a 46/54 hero, text left; right, a WORKING demo on the
+   plain ground (Cam 2026-10-01: "get rid of the green block behind it and make
+   those interactive") — the staff tee sheet (6 rows, 3 columns, Tee sheet/Bookings
+   tabs, day arrows, Check in buttons on today's due groups) and, overlapping its
+   bottom-left corner, a larger golfer phone (300px: day chips, open times, player
+   stepper, green fee total, Reserve → "You're booked"). Labels "What your staff
+   see" / "What golfers see" and a one-line "Try it" hint. A booking on the phone
+   lands on the sheet as "Rivera · n — Booked online", highlighted. The setup band
+   and the end band run edge
    to edge while text stays in a ~1240px column. Cam liked the overlap of the tee
    sheet and phone from the start — keep it.
 
@@ -53,12 +57,25 @@ Live mockup: https://claude.ai/artifact/XBgbV4HHBTuDM4B6sRQEHq
   your course deserves."; "GreenReserve gives your course an online booking page
   with your name and colors, and one tee sheet your staff run the day from.";
   under the buttons "Free for courses."
-- Sections, top to bottom: hero (text + product) · Built for the course (three
-  staggered rows, each with its product fragment) · one full-width photo
-  "Golfers see your course, not ours." · How it works (3 steps, no times, on the
+- Sections, top to bottom: hero (text + working demo) · Built for the course (three
+  staggered rows, each with its product fragment; "Keep your brand" shows three
+  mini booking pages for made-up courses — Hollow Creek, Stonebridge, Lake Wren —
+  each with its OWN course photo, crest, colour and a Reserve button, not colour
+  swatches) · How it works (3 steps, no times, on the
   forest band) · Price line · FAQ (6 general questions, all printed, no accordion)
-  · end band "See it with your course's tee sheet." + CTAs + email.
+  · **See it work** (Cam wants it as the preview to booking a demo): centred, one
+  screen at a time behind a "What golfers see / What your staff see" toggle, a
+  420px golfer booking page with course-colour swatches, the larger tee sheet, then
+  Book a demo · end band "See it with your course's tee sheet." + CTAs + email.
+- Both demos share ONE state: a booking, check-in or colour change in one shows in
+  the other. Realistic data per day (Sat 4 today with check-in; Sun 5; Mon 6 at the
+  weekday rate $44). Never fake names like Smith/Johnson.
 
+
+- **No stock photo section, and never "your course, not ours"** (Cam 2026-10-01:
+  "green reserve doesnt have a course so this doesnt even make sense"). The brand
+  point lives in "Keep your brand". Photos appear only inside product mockups,
+  as a course's own header photo.
 
 ## 3. Look (from the mockup)
 
@@ -70,15 +87,18 @@ Live mockup: https://claude.ai/artifact/XBgbV4HHBTuDM4B6sRQEHq
   Green is used for fields, not sprinkled on everything.
 - Buttons 6px radius; ONE primary per area (forest), the second action is a quiet
   grey text link. Product pieces 6–8px radius; only the product pieces and the
-  phone carry a shadow. No gradients except the photo scrim.
+  phone carry a shadow. No gradients except the scrim inside the phone's header photo.
 - Deliberate asymmetry: 40/60 hero, 30/70 section heads, staggered feature rows
   (the middle one indented). No fade-in animations.
 
 ## 4. Build plan (next session)
 
 1. **UI-H-1 homepage.** Replace `src/app/HomeContent.tsx` + `home.module.css`
-   with the mockup. Keep it a server component (no new client JS needed — the
-   mockup has none). Archivo via next/font (variable, wdth axis) replacing
+   with the mockup. The page stays a server component; the demo is ONE small
+   client island (the mockup's script is ~6 KB unminified, no libraries) that
+   renders the hero demo and See it work from one state — note the bundle
+   justification in the PR per the perf rules. The old `SeeItWork`/`HomeDemo`
+   components can be retired once this replaces them. Archivo via next/font (variable, wdth axis) replacing
    Fraunces/Inter for the PUBLIC look — check `/for-courses`, legal and golfer
    pages still read right, and that `.staff-look` is untouched. Nav: logo
    top-left corner, Operator login + Book a demo top-right.
