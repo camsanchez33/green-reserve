@@ -1356,7 +1356,7 @@
     },
     {
       "path": "src/app/api/admin/course-documents/download/route.ts",
-      "lines": 54,
+      "lines": 59,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1382,7 +1382,7 @@
     },
     {
       "path": "src/app/api/admin/course-documents/record/route.ts",
-      "lines": 36,
+      "lines": 37,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9446,7 +9446,7 @@
     },
     {
       "path": "src/lib/company-documents.ts",
-      "lines": 60,
+      "lines": 61,
       "purpose": "CO-DOCS (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -9492,7 +9492,9 @@
       "methods": [],
       "auth": null,
       "guard": null,
-      "imports": [],
+      "imports": [
+        "@/lib/private-blob"
+      ],
       "usedBy": [
         "src/app/admin/company-documents/page.tsx",
         "src/app/api/admin/company-documents/download/route.ts",
@@ -11846,12 +11848,16 @@
     },
     {
       "path": "src/lib/private-blob.ts",
-      "lines": 18,
+      "lines": 33,
       "purpose": "Contracts and signed agreements live in their OWN, private Vercel Blob store (Cam 2026-09-29).",
       "brain": [
         "private-file-storage"
       ],
       "exports": [
+        {
+          "name": "isBlobStoreUrl",
+          "kind": "fn"
+        },
         {
           "name": "PRIVATE_STORAGE_MISSING",
           "kind": "const"
@@ -11874,7 +11880,8 @@
         "src/app/api/admin/course-documents/download/route.ts",
         "src/app/api/admin/course-documents/record/route.ts",
         "src/app/api/admin/course-documents/upload/route.ts",
-        "src/lib/agreement-sign.ts"
+        "src/lib/agreement-sign.ts",
+        "src/lib/company-documents.ts"
       ]
     },
     {

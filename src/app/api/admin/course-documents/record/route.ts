@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { head } from '@vercel/blob';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
 import { logDocumentUploaded } from '@/lib/course-timeline';
-import { privateBlobToken, PRIVATE_STORAGE_MISSING } from '@/lib/private-blob';
+import { privateBlobToken, PRIVATE_STORAGE_MISSING, isBlobStoreUrl } from '@/lib/private-blob';
 
 // BLOB-3: step two of a contract upload. The browser has put the PDF into the
 // private store (via ../upload's permit); this records it on the course. The
@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
   const name = typeof body?.name === 'string' ? body.name.slice(0, 200) : 'document.pdf';
   if (!courseId || !url) return NextResponse.json({ error: 'Missing courseId or url' }, { status: 400 });
 
+  if (!isBlobStoreUrl(url)) return NextResponse.json({ error: 'That is not a file in GreenReserve storage — try the upload again.' }, { status: 400 });
   const meta = await head(url, { token }).catch(() => null);
   if (!meta) return NextResponse.json({ error: 'The uploaded file was not found in storage — try the upload again.' }, { status: 400 });
   if (!meta.pathname.startsWith(`course-documents/${courseId}/`) || meta.contentType !== 'application/pdf') {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { get } from '@vercel/blob';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
-import { privateBlobToken, PRIVATE_STORAGE_MISSING } from '@/lib/private-blob';
+import { privateBlobToken, PRIVATE_STORAGE_MISSING, isBlobStoreUrl } from '@/lib/private-blob';
 
 // MP-5a. Signed contracts used to be uploaded as `access: 'public'` Vercel
 // Blobs — readable by anyone who ever saw the URL, forever, with no session
@@ -21,6 +21,9 @@ export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get('url');
   if (!courseId || !url) return NextResponse.json({ error: 'Missing courseId or url' }, { status: 400 });
 
+  // SEC-blob-host: the host as well as the path, or the token goes wherever
+  // the query string points.
+  if (!isBlobStoreUrl(url)) return NextResponse.json({ error: 'Not a valid document URL' }, { status: 400 });
   let pathname: string;
   try {
     pathname = new URL(url).pathname;
@@ -41,7 +44,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Document not found in storage' }, { status: 404 });
   }
 
-  const filename = decodeURIComponent(pathname.slice(expectedPrefix.length)) || 'document.pdf';
+  let filename = pathname.slice(expectedPrefix.length);
+  try { filename = decodeURIComponent(filename); } catch { /* keep it encoded */ }
+  filename ||= 'document.pdf';
   return new NextResponse(result.stream, {
     headers: {
       'Content-Type': 'application/pdf',
