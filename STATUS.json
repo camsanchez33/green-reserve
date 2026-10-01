@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-01T02:23:18.605Z",
+  "generatedAt": "2026-10-01T02:30:25.470Z",
   "repo": {
-    "head": "b041370",
+    "head": "7b92b4f",
     "branch": "claude/eager-maxwell-qf1pd0",
     "dirtyCount": 2,
     "dirty": [
@@ -40,6 +40,62 @@
     }
   ],
   "awaiting": [
+    {
+      "title": "MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin",
+      "line": 707,
+      "hash": "7246a62",
+      "shipDate": "2026-08-29",
+      "ageDays": 32
+    },
+    {
+      "title": "MP-1",
+      "line": 737,
+      "hash": "41f5ea8",
+      "shipDate": "2026-08-29",
+      "ageDays": 32
+    },
+    {
+      "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
+      "line": 772,
+      "hash": "4ef11dd",
+      "shipDate": "2026-08-29",
+      "ageDays": 32
+    },
+    {
+      "title": "MP-2",
+      "line": 813,
+      "hash": "958f229",
+      "shipDate": "2026-08-29",
+      "ageDays": 32
+    },
+    {
+      "title": "MP-2b",
+      "line": 850,
+      "hash": "a134af5",
+      "shipDate": "2026-08-29",
+      "ageDays": 31
+    },
+    {
+      "title": "MP-2c",
+      "line": 899,
+      "hash": "e5b5413",
+      "shipDate": "2026-08-29",
+      "ageDays": 31
+    },
+    {
+      "title": "MP-2d",
+      "line": 947,
+      "hash": "22d0f68",
+      "shipDate": "2026-08-29",
+      "ageDays": 31
+    },
+    {
+      "title": "MP-2e",
+      "line": 989,
+      "hash": "bf3bcb2",
+      "shipDate": "2026-08-30",
+      "ageDays": 31
+    },
     {
       "title": "SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED",
       "line": 2236,
@@ -97,6 +153,13 @@
       "ageDays": 2
     },
     {
+      "title": "BUG: hello@greenreserve.app takes no mail",
+      "line": 2851,
+      "hash": "371ffff",
+      "shipDate": "2026-09-29",
+      "ageDays": 2
+    },
+    {
       "title": "CAL-1 — Cal.com as the call scheduler",
       "line": 2869,
       "hash": "a5ed9d7",
@@ -130,69 +193,6 @@
       "hash": "e082dd0",
       "shipDate": "2026-09-29",
       "ageDays": 1
-    },
-    {
-      "title": "BUG: hello@greenreserve.app takes no mail",
-      "line": 2851,
-      "hash": "371ffff",
-      "shipDate": "2026-09-29",
-      "ageDays": 1
-    },
-    {
-      "title": "MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin",
-      "line": 707,
-      "hash": null,
-      "shipDate": null,
-      "ageDays": null
-    },
-    {
-      "title": "MP-1",
-      "line": 737,
-      "hash": null,
-      "shipDate": null,
-      "ageDays": null
-    },
-    {
-      "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
-      "line": 772,
-      "hash": null,
-      "shipDate": null,
-      "ageDays": null
-    },
-    {
-      "title": "MP-2",
-      "line": 813,
-      "hash": null,
-      "shipDate": null,
-      "ageDays": null
-    },
-    {
-      "title": "MP-2b",
-      "line": 850,
-      "hash": null,
-      "shipDate": null,
-      "ageDays": null
-    },
-    {
-      "title": "MP-2c",
-      "line": 899,
-      "hash": null,
-      "shipDate": null,
-      "ageDays": null
-    },
-    {
-      "title": "MP-2d",
-      "line": 947,
-      "hash": null,
-      "shipDate": null,
-      "ageDays": null
-    },
-    {
-      "title": "MP-2e",
-      "line": 989,
-      "hash": null,
-      "shipDate": null,
-      "ageDays": null
     },
     {
       "title": "UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until r",
@@ -631,6 +631,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "7b92b4f",
+      "date": "2026-10-01",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "bc1872d",
       "date": "2026-09-30",
       "subject": "Homepage spec: back to the plain-background mockup (handoff) (#29)"
@@ -684,11 +689,6 @@
       "h": "aeedc4c",
       "date": "2026-09-30",
       "subject": "UI-B-1: homepage in Direction B, Figtree for the public look"
-    },
-    {
-      "h": "a9e191d",
-      "date": "2026-09-30",
-      "subject": "queue/spec update"
     }
   ]
 }
