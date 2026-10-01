@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 364,
+    "files": 365,
     "routes": 201,
-    "libs": 95,
-    "models": 33,
+    "libs": 96,
+    "models": 34,
     "orphans": 8,
     "ungatedRoutes": 3
   },
@@ -3159,7 +3159,7 @@
     },
     {
       "path": "src/app/api/cron/cancellation-cutoff/route.ts",
-      "lines": 127,
+      "lines": 138,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3176,6 +3176,7 @@
       "auth": "cron",
       "guard": "file",
       "imports": [
+        "@/lib/booking-events",
         "@/lib/cron-auth",
         "@/lib/email",
         "@/lib/prisma",
@@ -3241,7 +3242,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 179,
+      "lines": 190,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3260,6 +3261,7 @@
       "imports": [
         "@/lib/agreement-required",
         "@/lib/agreement-sign",
+        "@/lib/booking-events",
         "@/lib/call-invite",
         "@/lib/cron-auth",
         "@/lib/email",
@@ -4183,7 +4185,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 224,
+      "lines": 242,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4211,6 +4213,7 @@
       "guard": "file",
       "imports": [
         "@/lib/access-fee",
+        "@/lib/booking-events",
         "@/lib/cancel-booking",
         "@/lib/checkin-booking",
         "@/lib/claim-tee-time",
@@ -7928,7 +7931,7 @@
     },
     {
       "path": "src/lib/access-fee.ts",
-      "lines": 131,
+      "lines": 148,
       "purpose": "FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B).",
       "brain": [
         "separate-booking-fee"
@@ -7961,6 +7964,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./booking-events",
         "./prisma",
         "./refund-booking",
         "./stripe",
@@ -8847,6 +8851,54 @@
       ]
     },
     {
+      "path": "src/lib/booking-events.ts",
+      "lines": 85,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "BookingEventInput",
+          "kind": "type"
+        },
+        {
+          "name": "EventActor",
+          "kind": "type"
+        },
+        {
+          "name": "recordBookingEvent",
+          "kind": "fn"
+        },
+        {
+          "name": "recordBookingEventSafe",
+          "kind": "fn"
+        },
+        {
+          "name": "teeTimeInstant",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./course-time",
+        "./prisma",
+        "./tee-time-utils",
+        "@prisma/client"
+      ],
+      "usedBy": [
+        "src/app/api/cron/cancellation-cutoff/route.ts",
+        "src/app/api/cron/hourly/route.ts",
+        "src/app/api/operator/bookings/route.ts",
+        "src/lib/access-fee.ts",
+        "src/lib/cancel-booking.ts",
+        "src/lib/checkin-booking.ts",
+        "src/lib/claim-tee-time.ts"
+      ]
+    },
+    {
       "path": "src/lib/booking-fees.ts",
       "lines": 11,
       "purpose": "",
@@ -9280,7 +9332,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 167,
+      "lines": 187,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9300,6 +9352,7 @@
       "guard": null,
       "imports": [
         "./access-fee",
+        "./booking-events",
         "./email",
         "./prisma",
         "./stripe"
@@ -9434,7 +9487,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 372,
+      "lines": 395,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9458,6 +9511,7 @@
       "guard": null,
       "imports": [
         "./access-fee",
+        "./booking-events",
         "./email",
         "./prisma",
         "./stripe"
@@ -9470,7 +9524,7 @@
     },
     {
       "path": "src/lib/claim-tee-time.ts",
-      "lines": 71,
+      "lines": 82,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9489,6 +9543,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./booking-events",
         "./prisma",
         "@prisma/client"
       ],
@@ -9934,6 +9989,7 @@
         "src/app/api/operator/tee-times/route.ts",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/settings/page.tsx",
+        "src/lib/booking-events.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/tee-sheet-engine.ts"
       ]
@@ -11878,6 +11934,7 @@
         "src/lib/approval-state.ts",
         "src/lib/birdie/course-context.ts",
         "src/lib/birdie/guardrails.ts",
+        "src/lib/booking-events.ts",
         "src/lib/call-invite.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
@@ -12613,7 +12670,8 @@
         "src/app/api/bookings/route.ts",
         "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/hourly/route.ts",
-        "src/app/api/manage/[bookingId]/route.ts"
+        "src/app/api/manage/[bookingId]/route.ts",
+        "src/lib/booking-events.ts"
       ]
     },
     {
@@ -13431,10 +13489,8 @@
         "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/golfer/auth/otp/verify/route.ts",
-        "src/app/api/operator/bookings/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
-        "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/lifecycle.ts",
         "src/lib/refund-booking.ts"
@@ -13475,6 +13531,61 @@
         "src/lib/lifecycle.ts",
         "src/lib/refund-booking.ts"
       ]
+    },
+    {
+      "name": "BookingEvent",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "bookingId",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "type",
+          "type": "BookingEventType"
+        },
+        {
+          "name": "occurredAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "actorType",
+          "type": "EventActorType"
+        },
+        {
+          "name": "actorId",
+          "type": "String?"
+        },
+        {
+          "name": "amountCents",
+          "type": "Int?"
+        },
+        {
+          "name": "playerCount",
+          "type": "Int?"
+        },
+        {
+          "name": "teeTimeAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "stripeId",
+          "type": "String?"
+        },
+        {
+          "name": "metadata",
+          "type": "Json?"
+        }
+      ],
+      "writers": [],
+      "readers": []
     },
     {
       "name": "Call",
@@ -15547,7 +15658,6 @@
       "writers": [
         "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/tee-times/route.ts",
-        "src/lib/cancel-booking.ts",
         "src/lib/lifecycle.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts"

@@ -1,19 +1,35 @@
 {
-  "generatedAt": "2026-10-01T05:15:33.553Z",
+  "generatedAt": "2026-10-01T05:24:10.781Z",
   "repo": {
-    "head": "67704e9",
+    "head": "7ea3961",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 4,
+    "dirtyCount": 21,
     "dirty": [
       "M RUN_QUEUE.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M src/app/dashboard/page.tsx"
+      " M prisma/schema.prisma",
+      " M src/app/api/admin/golfers/route.ts",
+      " M src/app/api/admin/retry-charge/[bookingId]/route.ts",
+      " M src/app/api/admin/tee-sheet/route.ts",
+      " M src/app/api/bookings/cancel/route.ts",
+      " M src/app/api/bookings/route.ts",
+      " M src/app/api/checkin/[bookingId]/route.ts",
+      " M src/app/api/cron/cancellation-cutoff/route.ts",
+      " M src/app/api/cron/hourly/route.ts",
+      " M src/app/api/operator/blackouts/route.ts",
+      " M src/app/api/operator/bookings/route.ts",
+      " M src/lib/access-fee.ts",
+      " M src/lib/cancel-booking.ts",
+      " M src/lib/checkin-booking.ts",
+      " M src/lib/claim-tee-time.ts",
+      " M src/lib/course-closure.ts",
+      "?? prisma/migrations/20261001051815_booking_event_log/"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
-    "queueLastCommit": "2026-10-01T05:13:00+00:00",
+    "queueLastCommit": "2026-10-01T05:15:34+00:00",
     "unrecorded": []
   },
   "counts": {
@@ -297,7 +313,7 @@
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 3100,
+      "line": 3120,
       "section": "Queue (run in this order)"
     }
   ],
@@ -376,6 +392,11 @@
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
       "line": 2922
+    },
+    {
+      "item": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
+      "note": "Cam: \"keep going with whatever is next\")",
+      "line": 2946
     }
   ],
   "ideas": {
@@ -643,6 +664,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "e707182",
+      "date": "2026-10-01",
+      "subject": "Fix: walk-ins no longer arrive checked in; each group is checked in on its own"
+    },
+    {
       "h": "67704e9",
       "date": "2026-10-01",
       "subject": "FLOW-3: golfer course page in the homepage phone's style; calendar pop-up on the tee sheet"
@@ -696,11 +722,6 @@
       "h": "da9aabf",
       "date": "2026-10-01",
       "subject": "CO-DOCS: owner-only Company documents in the private Blob store"
-    },
-    {
-      "h": "62e5d55",
-      "date": "2026-09-30",
-      "subject": "UI-H-1: new homepage from the approved mockup (#31)"
     }
   ]
 }

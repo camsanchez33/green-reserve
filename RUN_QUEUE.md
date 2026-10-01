@@ -2944,6 +2944,26 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   two env vars, redeploy), then its 7a.8 walk.
 
 - [ ] EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)
+  BUILT 2026-10-01 (Cam: "keep going with whatever is next"). Migration
+  20261001051815_booking_event_log is purely additive (2 enums, 1 table, 4 indexes).
+  Helper: src/lib/booking-events.ts (recordBookingEvent = INSERT … ON CONFLICT DO
+  NOTHING via createMany/skipDuplicates, so a duplicate stripeId never aborts the
+  surrounding transaction; recordBookingEventSafe for post-Stripe writes).
+  performCancellation / performCheckIn / collectPayment / claimTeeTime now take a
+  required actor; every caller passes one. Beyond the spec: the FB-3 separate
+  booking fee (lib/access-fee.ts) also logs fee_charged (reason booking_fee_no_show
+  / booking_fee_paid_offline) and fee_refunded (booking_fee_refunded) — without it
+  the log would miss real money; and the paid-offline hold refund logs
+  fee_refunded (hold_refunded_at_checkin). Round refund on cancel logs fee_refunded
+  reason round_refunded_on_cancel.
+  VERIFIED LOCALLY: every migration from scratch on an empty Postgres; app walk —
+  walk-in/phone created → 1 booking_created each (actor staff, amounts + teeTimeAt
+  right); no-show then still-coming → 2 rows, a second still-coming → none; cancel →
+  1 booking_cancelled; paid offline → 1 checked_in {paidOffline:true}. grep for
+  bookingEvent update/delete/upsert is empty.
+  NOT VERIFIABLE HERE (no Stripe in the sandbox): card check-in, the cutoff cron,
+  refunds, golfer online booking/self check-in. Walk VERIFY 1, 3, 4, 7 on prod after
+  deploy, then /api/health + `prisma migrate status`. Box stays open until then.
   (Renamed from A-1 — REVISE_QUEUE.md already owns A-01…A-13.)
 
   WHY: booking rows mutate (confirmed → completed / cancelled), so history is

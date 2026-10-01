@@ -238,7 +238,7 @@ export async function POST(req: NextRequest) {
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Cancelling on a golfer\'s behalf needs manager access.' }, { status: 403 });
   const reason = String(body.reason || '').trim();
   if (!reason) return NextResponse.json({ error: 'A reason is required — the golfer reads it.' }, { status: 400 });
-  const result = await performCancellation(bookingId, { reason: `${reason} (cancelled by GreenReserve support on your behalf)` });
+  const result = await performCancellation(bookingId, { type: 'admin', id: session.adminId }, { reason: `${reason} (cancelled by GreenReserve support on your behalf)` });
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status });
   console.log(`[support] ${session.name} (${session.email}) cancelled booking ${bookingId}: ${reason}`);
   return NextResponse.json({ ok: true, feeCharged: result.feeCharged });

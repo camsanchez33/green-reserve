@@ -1,5 +1,6 @@
 import { prisma } from './prisma';
 import { stripe, chargeOnConnectedAccount, refundOnConnectedAccount } from './stripe';
+import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
 import { sendCheckInReceiptEmail } from './email';
 import { refundSeparateAccessFee } from './access-fee';
 
@@ -93,12 +94,13 @@ async function chargeBooking(
   bookingId: string,
   opts: ChargeOpts | undefined,
   mode: { recordCheckIn: boolean },
+  actor: EventActor,
 ) {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
       teeTime: { select: { date: true, time: true, cartFeeCents: true } },
-      course: { select: { name: true, slug: true, address: true, city: true, state: true, stripeAccountId: true, stripeAccountActive: true } },
+      course: { select: { name: true, slug: true, address: true, city: true, state: true, stripeAccountId: true, stripeAccountActive: true, timezone: true } },
     },
   });
 
@@ -283,11 +285,19 @@ async function chargeBooking(
 
     if (refundPendingFee) {
       try {
-        await refundOnConnectedAccount({
+        const refund = await refundOnConnectedAccount({
           paymentIntentId: booking.cancellationFeeChargeId,
           connectedAccountId: booking.course.stripeAccountId as string,
         });
         feeRefundOk = true;
+        // EV-1: the cutoff HOLD comes back at check-in — reporting nets this
+        // against the cron's fee_charged (reason cutoff_hold).
+        await recordBookingEventSafe({
+          bookingId, courseId: booking.courseId, type: 'fee_refunded', actor,
+          amountCents: refund.amount, playerCount: booking.players,
+          teeTimeAt: teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time),
+          stripeId: refund.id, metadata: { reason: 'hold_refunded_at_checkin' },
+        });
         console.log(JSON.stringify({ ev: `${ev}.fee_refund.ok`, bookingId, cancelFeeChargeId: booking.cancellationFeeChargeId }));
       } catch (err) {
         // The round charge already succeeded -- don't fail over a refund
@@ -307,16 +317,29 @@ async function chargeBooking(
   }
 
   // ── Record ───────────────────────────────────────────────────────────────
-  await prisma.booking.update({
-    where: { id: bookingId },
-    data: {
-      paymentStatus: 'paid',
-      ...(alreadyPaid ? {} : { paidAt: new Date() }),
-      roundPaymentIntentId: paymentIntentId,
-      checkInFailReason: '',
-      // Only a real check-in completes the booking and stamps the arrival.
-      ...(mode.recordCheckIn ? { status: 'completed', checkedInAt: new Date(), ...(partialApplied ? { checkedInPlayers: showed } : {}) } : {}),
-    },
+  // EV-1: a real check-in and its checked_in event commit together, after
+  // Stripe confirmed; stripeId (the round's PaymentIntent) dedupes a retry.
+  await prisma.$transaction(async (tx) => {
+    await tx.booking.update({
+      where: { id: bookingId },
+      data: {
+        paymentStatus: 'paid',
+        ...(alreadyPaid ? {} : { paidAt: new Date() }),
+        roundPaymentIntentId: paymentIntentId,
+        checkInFailReason: '',
+        // Only a real check-in completes the booking and stamps the arrival.
+        ...(mode.recordCheckIn ? { status: 'completed', checkedInAt: new Date(), ...(partialApplied ? { checkedInPlayers: showed } : {}) } : {}),
+      },
+    });
+    if (mode.recordCheckIn) {
+      await recordBookingEvent(tx, {
+        bookingId, courseId: booking.courseId, type: 'checked_in', actor,
+        amountCents: booking.totalAmount, playerCount: partialApplied ? (showed as number) : booking.players,
+        teeTimeAt: teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time),
+        stripeId: paymentIntentId || null,
+        metadata: { paidOffline: false, alreadyPaid, cartAddedCents },
+      });
+    }
   });
 
   if (mode.recordCheckIn) {
@@ -357,8 +380,8 @@ async function chargeBooking(
 }
 
 /** Charge the round AND record the arrival + receipt. Staff and self check-in. */
-export async function performCheckIn(bookingId: string, opts?: ChargeOpts) {
-  return chargeBooking(bookingId, opts, { recordCheckIn: true });
+export async function performCheckIn(bookingId: string, actor: EventActor, opts?: ChargeOpts) {
+  return chargeBooking(bookingId, opts, { recordCheckIn: true }, actor);
 }
 
 /**
@@ -366,6 +389,6 @@ export async function performCheckIn(bookingId: string, opts?: ChargeOpts) {
  * used by admin "Collect payment" on a previously failed charge, where the
  * round may be days away.
  */
-export async function collectPayment(bookingId: string, opts?: ChargeOpts) {
-  return chargeBooking(bookingId, opts, { recordCheckIn: false });
+export async function collectPayment(bookingId: string, actor: EventActor, opts?: ChargeOpts) {
+  return chargeBooking(bookingId, opts, { recordCheckIn: false }, actor);
 }

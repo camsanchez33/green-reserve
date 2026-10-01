@@ -28,7 +28,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
     checkIn = body?.checkIn === true;
   } catch { /* no body — charge only */ }
 
-  const result = checkIn ? await performCheckIn(bookingId) : await collectPayment(bookingId);
+  const result = checkIn ? await performCheckIn(bookingId, { type: 'admin', id: session.adminId }) : await collectPayment(bookingId, { type: 'admin', id: session.adminId });
   if ('error' in result) {
     // Surface a plain-English version, never raw Stripe prose.
     return NextResponse.json({ error: friendlyStripeError(result.error), raw: result.error }, { status: result.status });
