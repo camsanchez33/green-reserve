@@ -71,6 +71,14 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   type roles, admin count chips not pills, stale CLAUDE.md sidebar lines. KEPT AS IS (decision):
   frost delay blocks an early slot even when a group on it didn't fit — that time can't be played;
   the group is listed to call.
+- [ ] SP-A — staff permissions (STAFF_POLICY_SPEC.md Part A). Cam 2026-10-04: course owner decides,
+  per person with presets, "needs to be very extensive". One additive migration (CourseStaff.permissions /
+  preset / permissionsSetAt + StaffPermissionChange audit). Closes the /gr-review 2026-10-04 HIGH (staff
+  could waive/refund fees via Weather). Legacy staff keep today's powers minus weather-cancel and waive.
+- [ ] SP-B — cancellation & card policy (STAFF_POLICY_SPEC.md Part B): fee basis per booking/player,
+  when the late fee is taken (hold at cutoff / late cancel / late cancel or no-show / manual), no-show
+  fee, one describePolicy() for every golfer surface. The card-off switch WAITS ON CAM (spec §B0:
+  every booking saves a card today because GreenReserve's $1.50 fee is collected from it).
 - [ ] WX-1 — Weather button on the Tee Sheet (Cam 2026-10-01: "do the weather button with both
   options", then "remove close a day"). Frost delay → Weather: Cancel times (whole day or a window,
   fee waived, golfers emailed, times blocked; today's started times left alone) + Delay start (B-9).
