@@ -47,7 +47,7 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate }: {
           className="w-64 bg-white border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:ring-2 focus:ring-pine/10 focus:border-pine/40 outline-none"/>
         {/* U-O: filters are square chips, one per filter, not a segmented pill. */}
         <div className="flex flex-wrap gap-1.5">
-          {([['all','All'],['paid','Paid'],['upcoming','Upcoming'],['fee','Fee Charged'],['cancelled','Cancelled']] as [string,string][]).map(([key, label]) => (
+          {([['all','All'],['paid','Paid'],['upcoming','Upcoming'],['fee','Fee charged'],['cancelled','Cancelled']] as [string,string][]).map(([key, label]) => (
             <button key={key} onClick={() => setStatusFilter(key)}
               aria-pressed={statusFilter === key}
               className={'px-3 py-1.5 rounded-md text-[12.5px] font-medium border transition-colors ' + (statusFilter === key ? 'bg-pine text-white border-pine' : 'bg-white text-ink-soft border-line hover:border-line-strong hover:text-ink')}>

@@ -2,7 +2,7 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { CheckCircle } from 'lucide-react';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
@@ -36,7 +36,7 @@ function LoginContent() {
 
         {justVerified && (
           <div className="flex items-center gap-2 bg-white border border-line border-l-[3px] border-l-ok rounded-md px-4 py-3 mb-4 text-ok text-[13.5px]">
-            <CheckCircle className="w-4 h-4 shrink-0"/>Email verified! Sign in to continue setup.
+            <StatusDot status="ok" />Email verified! Sign in to continue setup.
           </div>
         )}
 
@@ -57,7 +57,7 @@ function LoginContent() {
           </div>
           <button onClick={submit} disabled={loading}
             className="w-full bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
           <p className="text-center text-[12.5px] text-ink-soft">
             Don&apos;t have an account? <a href="/for-courses" className="text-pine font-medium hover:underline">Ask a question →</a>

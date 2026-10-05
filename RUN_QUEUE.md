@@ -139,8 +139,13 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     Weather / Add time without icons (row wraps on phones — it used to run off
     the edge), the sheet's own bar keeps only the date controls (course name
     is in the top bar), banner icons and the Stripe padlock gone. Zero behaviour.
-  - [ ] CLUB-3c the other tabs' bodies (Schedule, Members, Money, Messages,
-    Settings, Analytics): page titles to the 30px display, decorative icons out
+  - [x] CLUB-3c the rest of /dashboard — BUILT 2026-10-05: TYPE-3 icon sweep over
+    src/app/dashboard + src/components/dashboard (59 icons removed, 31 status
+    icons → StatusDot, icon-only buttons and the checklist's collapse chevron
+    kept); Analytics deltas keep their direction as +/− now the arrows are gone;
+    Analytics metric values and the Settings preview's tee times moved out of
+    the serif (data never in Garamond); Members titles to 30px; Title Case
+    button labels to sentence case. Zero behaviour.
   - [ ] CLUB-4 /admin + rest
 - [x] UI-H-1 — BUILT 2026-10-01: the homepage from the approved plain-background
   mockup (HOMEPAGE_SPEC.md, docs/design/home/index.html). Archivo replaces Fraunces

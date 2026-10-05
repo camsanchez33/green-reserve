@@ -4,7 +4,8 @@
 // save until the real policy has loaded (SD-10), cancelling still says
 // whether a fee was kept, and the history still carries the amber left edge.
 import { useEffect, useState } from 'react';
-import { XCircle, Undo2 } from 'lucide-react';
+import { StatusDot } from '@/components/ui/StatusDot';
+
 import { dfetch } from '@/lib/dashboard-fetch';
 import { toast } from '@/components/dashboard/Toast';
 import type { MoneyBooking, MoneyCourse } from './types';
@@ -81,7 +82,7 @@ export function CancellationsPanel({ bookings, course, courseLoaded, isStaff, on
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-card p-5">
-        <h2 className="text-[15px] font-medium text-ink mb-1">Cancellation Policy</h2>
+        <h2 className="text-[15px] font-medium text-ink mb-1">Cancellation policy</h2>
         <p className="text-[13.5px] text-ink-soft mb-4">Golfers can cancel free until this many hours before their tee time. When the fee is taken, per-player fees, no-show fees and whether a card is saved are set in Settings → Pricing & cancellation.</p>
         {/* §1b: attention = a 3px left border in the semantic colour on a white card. */}
         {policy.lateCancellationFee > 0 && !course.stripeAccountActive && (
@@ -105,7 +106,7 @@ export function CancellationsPanel({ bookings, course, courseLoaded, isStaff, on
           </div>
           <button onClick={savePolicy} disabled={policySaving || !courseLoaded || isStaff}
             className="bg-pine hover:bg-pine-hover text-white text-[12.5px] font-medium px-4 py-2 rounded-md disabled:opacity-50 transition-colors">
-            {policySaved ? 'Saved' : policySaving ? 'Saving...' : 'Save Policy'}
+            {policySaved ? 'Saved' : policySaving ? 'Saving...' : 'Save policy'}
           </button>
           <span className="text-xs text-ink-muted pb-0.5">
             {isStaff
@@ -137,7 +138,7 @@ export function CancellationsPanel({ bookings, course, courseLoaded, isStaff, on
                   )}
                   <button onClick={() => cancelBooking(b)} disabled={cancelingId === b.id}
                     className="flex items-center gap-1.5 text-[12.5px] px-3 py-1.5 rounded-md border border-bad/30 text-bad hover:bg-bad/5 disabled:opacity-50 transition-colors">
-                    <XCircle className="w-3.5 h-3.5"/>{cancelingId === b.id ? 'Cancelling...' : 'Cancel'}
+                    <StatusDot status="bad" />{cancelingId === b.id ? 'Cancelling...' : 'Cancel'}
                   </button>
                 </div>
                 )}
@@ -158,7 +159,7 @@ export function CancellationsPanel({ bookings, course, courseLoaded, isStaff, on
             {cancelled.map(b => (
               <div key={b.id} className={'bg-white rounded-lg border border-line p-3 flex items-center justify-between ' + (b.paymentStatus === 'cancellation_fee_charged' ? 'border-l-[3px] border-l-warn' : 'opacity-70')}>
                 <div>
-                  <div className="font-medium text-ink text-[13.5px] flex items-center gap-1.5"><Undo2 className="w-3.5 h-3.5 text-ink-muted"/>{b.golferName} <span className="text-ink-muted font-normal">· {b.players} player{b.players !== 1 ? 's' : ''}</span></div>
+                  <div className="font-medium text-ink text-[13.5px] flex items-center gap-1.5">{b.golferName} <span className="text-ink-muted font-normal">· {b.players} player{b.players !== 1 ? 's' : ''}</span></div>
                   <div className="text-[12.5px] text-ink-soft mt-0.5">Tee time: {fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)}</div>
                   <div className="text-[12.5px] mt-0.5">
                     <span className="text-ink-muted">{b.cancelledAt ? `Cancelled ${fmtStamp(b.cancelledAt)}` : 'Cancelled'}</span>

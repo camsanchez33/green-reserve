@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Mail, Smartphone } from 'lucide-react';
+
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-4 py-3 text-center text-2xl font-mono tracking-[0.4em] text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
@@ -51,8 +51,8 @@ export default function TwoFactorVerifyPage() {
           <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Two-factor verification</h1>
           <p className="text-[13.5px] text-ink-soft mt-2 flex items-center gap-1.5">
             {method === 'sms'
-              ? <><Smartphone className="w-3.5 h-3.5 shrink-0"/>We sent a code to your phone{phoneLast4 ? ` ending in ${phoneLast4}` : ''}.</>
-              : <><Mail className="w-3.5 h-3.5 shrink-0"/>We sent a code to your email.</>}
+              ? <>We sent a code to your phone{phoneLast4 ? ` ending in ${phoneLast4}` : ''}.</>
+              : <>We sent a code to your email.</>}
           </p>
         </div>
 
@@ -75,12 +75,12 @@ export default function TwoFactorVerifyPage() {
             <p className="text-[12.5px] text-ink-soft text-center">Didn&apos;t get the code?</p>
             <button onClick={() => resendVia('email')} disabled={resending}
               className={'flex items-center justify-center gap-2 w-full py-2.5 rounded-md text-[13.5px] border transition-colors disabled:opacity-50 ' + (method === 'email' ? 'border-pine/30 text-pine bg-pine/5' : 'border-line text-ink-soft hover:border-line-strong hover:text-ink')}>
-              <Mail className="w-3.5 h-3.5"/>{resending ? 'Sending...' : 'Send to my email'}
+              {resending ? 'Sending...' : 'Send to my email'}
             </button>
             {phoneLast4 && (
               <button onClick={() => resendVia('sms')} disabled={resending}
                 className={'flex items-center justify-center gap-2 w-full py-2.5 rounded-md text-[13.5px] border transition-colors disabled:opacity-50 ' + (method === 'sms' ? 'border-pine/30 text-pine bg-pine/5' : 'border-line text-ink-soft hover:border-line-strong hover:text-ink')}>
-                <Smartphone className="w-3.5 h-3.5"/>{resending ? 'Sending...' : `Send to phone ending in ${phoneLast4}`}
+                {resending ? 'Sending...' : `Send to phone ending in ${phoneLast4}`}
               </button>
             )}
           </div>

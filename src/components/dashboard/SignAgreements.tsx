@@ -7,7 +7,8 @@
 // scrolled to the bottom once (sent as `scrolledToEnd` — cheap evidence of
 // presentation). One button posts everything in one request.
 import { useEffect, useRef, useState } from 'react';
-import { CheckCircle, Loader2, AlertCircle, ChevronRight } from 'lucide-react';
+import { StatusDot } from '@/components/ui/StatusDot';
+import { Loader2 } from 'lucide-react';
 
 type DocDto = {
   document: 'operator_agreement' | 'brand_license' | 'accuracy_attestation';
@@ -50,7 +51,7 @@ function DocPanel({ doc, legalName, checked, onCheck, scrolled, onScrolled, extr
           <div className="text-[11px] text-ink-faint">Version {doc.version} · effective {doc.effectiveAt}</div>
         </div>
         {doc.signed && (
-          <span className="flex items-center gap-1 text-xs text-ok font-medium"><CheckCircle className="w-3.5 h-3.5" />Signed{doc.acceptedVersion && doc.acceptedVersion !== doc.version ? ` (v${doc.acceptedVersion})` : ''}</span>
+          <span className="flex items-center gap-1 text-xs text-ok font-medium"><StatusDot status="ok" />Signed{doc.acceptedVersion && doc.acceptedVersion !== doc.version ? ` (v${doc.acceptedVersion})` : ''}</span>
         )}
       </div>
       {!doc.signed && (
@@ -127,14 +128,14 @@ export default function SignAgreements({ onSigned, continueLabel = 'Sign and con
     return (
       <div>
         <div className="bg-ok/5 border border-ok/20 rounded-md p-4 flex items-start gap-3 mb-4">
-          <CheckCircle className="w-5 h-5 text-ok mt-0.5 shrink-0" />
+          <StatusDot status="ok" />
           <div>
             <div className="font-medium text-ok">Everything is signed</div>
             <div className="text-sm text-ink-soft mt-0.5">{data.status.signed} of {data.status.total} on file for {data.courseName}.</div>
           </div>
         </div>
         <button onClick={onSigned} className="w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] transition-colors flex items-center justify-center gap-2">
-          Continue<ChevronRight className="w-4 h-4" />
+          Continue
         </button>
       </div>
     );
@@ -206,12 +207,12 @@ export default function SignAgreements({ onSigned, continueLabel = 'Sign and con
 
       {error && (
         <div className="bg-bad/5 border border-bad/20 rounded-md p-3 flex items-start gap-2 text-sm text-bad">
-          <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />{error}
+          <StatusDot status="bad" />{error}
         </div>
       )}
       <button onClick={submit} disabled={saving || !ready}
         className="w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 disabled:bg-line-strong transition-colors flex items-center justify-center gap-2">
-        {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Signing…</> : <>{continueLabel}<ChevronRight className="w-4 h-4" /></>}
+        {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Signing…</> : <>{continueLabel}</>}
       </button>
       <p className="text-[11px] text-ink-soft text-center">Signed copies are emailed to {data.signerEmail}. Signing records your IP address and the time.</p>
     </div>

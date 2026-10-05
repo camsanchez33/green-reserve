@@ -1,5 +1,5 @@
 'use client';
-import { MapPin, Bell } from 'lucide-react';
+
 
 // B-6 (UI_REVISE_SPEC §4): a read-only, 380px-wide picture of the course's
 // own booking page, fed from the Settings form state so it changes as the
@@ -25,7 +25,7 @@ const HEX = /^#[0-9a-f]{6}$/i;
 export default function CoursePreview(p: CoursePreviewProps) {
   const accent = HEX.test(p.accent) ? p.accent : '#173B2A';
   const name = p.name.trim() || 'Your course';
-  const typeLabel = p.type === 'semi-private' ? 'Semi-Private' : p.type === 'municipal' ? 'Municipal' : p.type === 'resort' ? 'Resort' : p.type === 'private' ? 'Private Club' : 'Public Course';
+  const typeLabel = p.type === 'semi-private' ? 'Semi-private' : p.type === 'municipal' ? 'Municipal' : p.type === 'resort' ? 'Resort' : p.type === 'private' ? 'Private club' : 'Public course';
   const meta = [[p.city, p.state].filter(Boolean).join(', '), p.holes ? `${p.holes} holes` : null, p.par ? `Par ${p.par}` : null].filter(Boolean).join(' · ');
   const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'GC';
   const slots = [{ time: '7:10 AM', open: 4, fee: 62 }, { time: '7:40 AM', open: 2, fee: 62 }];
@@ -47,7 +47,7 @@ export default function CoursePreview(p: CoursePreviewProps) {
           </div>
           <div className="min-w-0">
             <div className="font-serif font-semibold text-[24px] leading-[1.05] truncate">{name}</div>
-            {meta && <div className="flex items-center gap-1 text-[12px] text-white/80 mt-1 truncate"><MapPin size={11} className="shrink-0" />{meta}</div>}
+            {meta && <div className="flex items-center gap-1 text-[12px] text-white/80 mt-1 truncate">{meta}</div>}
           </div>
         </div>
       </div>
@@ -56,7 +56,7 @@ export default function CoursePreview(p: CoursePreviewProps) {
         {slots.map((s, i) => (
           <div key={s.time} className="border-t border-line py-3 flex items-center justify-between gap-3">
             <div>
-              <div className="font-serif font-semibold text-[22px] leading-none">{s.time}</div>
+              <div className="font-bold text-[21px] leading-none tabular-nums">{s.time}</div>
               <div className="text-[11.5px] text-ink-muted mt-1">{s.open} spots open</div>
             </div>
             <div className="flex items-center gap-3">
@@ -67,10 +67,10 @@ export default function CoursePreview(p: CoursePreviewProps) {
         ))}
         <div className="border-t border-line py-3 flex items-center justify-between gap-3 opacity-60">
           <div>
-            <div className="font-serif font-semibold text-[22px] leading-none line-through">8:40 AM</div>
+            <div className="font-bold text-[21px] leading-none tabular-nums line-through">8:40 AM</div>
             <div className="text-[11.5px] text-ink-muted mt-1">Full</div>
           </div>
-          <span className="inline-flex items-center gap-1 text-[11.5px] text-ink-soft"><Bell size={11} /> Tell me if it opens</span>
+          <span className="inline-flex items-center gap-1 text-[11.5px] text-ink-soft"> Tell me if it opens</span>
         </div>
       </div>
       <div className="px-5 py-3 text-[10.5px] text-ink-faint">Booking by GreenReserve</div>

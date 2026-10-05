@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { US_TIMEZONES } from '@/lib/course-time';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Save, CheckCircle2, AlertCircle, Loader2, KeyRound, Mail, Smartphone, Image as ImageIcon, X } from 'lucide-react';
+import { Save, Loader2, X } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
@@ -15,6 +15,7 @@ import CoursePreview from '@/components/dashboard/CoursePreview';
 import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
 import { setLeaveGuard, useBackGuard } from '@/lib/unsaved-guard';
 import { downscaleImage } from '@/lib/image-resize';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 type Course = Record<string, unknown>;
 // U-O (UI_REVISE_SPEC §3, "Settings: sub-nav on the left naming the existing
@@ -149,7 +150,7 @@ function ImageUpload({ label, kind, value, onUploaded, hint }: { label: string; 
           <img src={value} alt="" className={kind === 'logo' ? 'h-14 w-14 object-contain bg-paper rounded-md p-1 border border-line' : 'h-14 w-24 object-cover rounded-md border border-line'}/>
         ) : (
           <div className="h-14 w-24 rounded-md bg-paper border border-dashed border-line flex items-center justify-center text-ink-faint">
-            <ImageIcon size={16}/>
+            
           </div>
         )}
         <div className="flex flex-col gap-1.5">
@@ -422,7 +423,7 @@ function SettingsPageInner() {
           {!NO_SAVE_BUTTON.includes(active) && (
             <button onClick={save} disabled={saving || !formLoaded || (!dirty && !saved)}
               className="shrink-0 flex items-center gap-2 bg-pine hover:bg-pine-hover text-white px-4 py-2 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
-              <Save className="w-4 h-4"/> {saved ? 'Saved' : saving ? 'Saving...' : dirty ? `Save ${active}` : 'No changes'}
+               {saved ? 'Saved' : saving ? 'Saving...' : dirty ? `Save ${active}` : 'No changes'}
             </button>
           )}
         </div>
@@ -520,7 +521,7 @@ function SettingsPageInner() {
                 </dl>
                 {changeSent ? (
                   <div className="flex items-center gap-2 bg-ok/5 border border-ok/20 text-ok rounded-md px-3 py-2.5 text-[13.5px]">
-                    <CheckCircle2 className="w-4 h-4 shrink-0"/>
+                    <StatusDot status="ok" />
                     Sent. We&apos;ll reply on <a href="/dashboard/messages" className="underline font-medium">Messages</a>.
                   </div>
                 ) : changeOpen ? (
@@ -593,7 +594,7 @@ function SettingsPageInner() {
                 <p className="text-sm text-ink-soft -mt-1">Add up to 8 photos of your course. These appear in the Photos tab on your booking page. Uploads save immediately.</p>
                 {photoErr && (
                   <div className="flex items-center gap-2 bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm">
-                    <AlertCircle className="w-4 h-4 shrink-0"/>{photoErr}
+                    <StatusDot status="bad" />{photoErr}
                   </div>
                 )}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -616,7 +617,7 @@ function SettingsPageInner() {
                         <Loader2 className="w-5 h-5 text-ink-faint animate-spin"/>
                       ) : (
                         <>
-                          <ImageIcon className="w-5 h-5 text-ink-faint mb-1"/>
+                          
                           <span className="text-xs text-ink-faint">Add photo</span>
                         </>
                       )}
@@ -883,17 +884,17 @@ function SettingsPageInner() {
                 <p className="text-sm text-ink-soft">Required on every login. Choose how you&apos;d like to receive your 6-digit code.</p>
                 {error2FA && (
                   <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4"/>{error2FA}
+                    <StatusDot status="bad" />{error2FA}
                   </div>
                 )}
                 <div className="flex gap-2">
                   <button onClick={() => set('twoFactorMethod','email')}
                     className={'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md text-sm font-medium border transition-colors ' + ((form.twoFactorMethod as string) !== 'sms' ? 'bg-pine text-white border-pine' : 'bg-paper text-ink-soft border-line hover:border-pine/40')}>
-                    <Mail className="w-4 h-4"/>Email
+                    Email
                   </button>
                   <button onClick={() => set('twoFactorMethod','sms')}
                     className={'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md text-sm font-medium border transition-colors ' + ((form.twoFactorMethod as string) === 'sms' ? 'bg-pine text-white border-pine' : 'bg-paper text-ink-soft border-line hover:border-pine/40')}>
-                    <Smartphone className="w-4 h-4"/>SMS
+                    SMS
                   </button>
                 </div>
                 {!form.twoFactorPhone && <p className="text-xs text-ink-soft">Add a phone number to enable SMS verification.</p>}
@@ -904,19 +905,19 @@ function SettingsPageInner() {
                 )}
                 <button onClick={save2FA} disabled={saving2FA}
                   className="w-full bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
-                  <Save className="w-4 h-4"/> {saving2FA ? 'Saving...' : saved2FA ? 'Saved' : 'Save 2FA Settings'}
+                   {saving2FA ? 'Saving...' : saved2FA ? 'Saved' : 'Save 2FA settings'}
                 </button>
               </SectionCard>
               <SectionCard title="Change Password">
                 <p className="text-sm text-ink-soft">Update the password for your own login. This doesn&apos;t affect staff accounts.</p>
                 {pwMsg && (
                   <div className="bg-ok/5 border border-ok/20 text-ok rounded-md px-4 py-3 text-sm flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4"/>{pwMsg}
+                    <StatusDot status="ok" />{pwMsg}
                   </div>
                 )}
                 {pwError && (
                   <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4"/>{pwError}
+                    <StatusDot status="bad" />{pwError}
                   </div>
                 )}
                 <Field label="Current Password"><FInput type="password" value={pwForm.currentPassword} onChange={v=>setPwForm(f=>({...f,currentPassword:v}))}/></Field>
@@ -926,11 +927,11 @@ function SettingsPageInner() {
                 <Field label="Confirm New Password"><FInput type="password" value={pwForm.confirmPassword} onChange={v=>setPwForm(f=>({...f,confirmPassword:v}))}/></Field>
                 <button onClick={changePassword} disabled={pwSaving}
                   className="w-full bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
-                  <KeyRound className="w-4 h-4"/> {pwSaving ? 'Updating...' : 'Update Password'}
+                   {pwSaving ? 'Updating...' : 'Update password'}
                 </button>
                 <div className="border-t border-line-soft pt-4 text-center">
                   {resetEmailSent ? (
-                    <p className="text-sm text-ok flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4"/>Check {operatorEmail} for a reset link.</p>
+                    <p className="text-sm text-ok flex items-center justify-center gap-2"><StatusDot status="ok" />Check {operatorEmail} for a reset link.</p>
                   ) : (
                     <>
                       <p className="text-xs text-ink-soft mb-2">Don&apos;t remember your current password?</p>

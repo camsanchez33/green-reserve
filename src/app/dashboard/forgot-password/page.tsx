@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Image from 'next/image';
-import { Mail, CheckCircle } from 'lucide-react';
+
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
@@ -36,9 +36,6 @@ export default function ForgotPasswordPage() {
         <div className="bg-white rounded-lg shadow-card p-6">
           {sent ? (
             <div className="text-center py-2">
-              <div className="w-12 h-12 rounded-md bg-ok/10 flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-6 h-6 text-ok"/>
-              </div>
               <h2 className="text-[24px] font-serif font-semibold leading-none text-ink mb-2">Check your email</h2>
               <p className="text-sm text-ink-soft">
                 If an account exists for <span className="font-medium text-ink">{email}</span>, a reset link is on its way. It expires in 1 hour.
@@ -48,7 +45,7 @@ export default function ForgotPasswordPage() {
           ) : (
             <>
               <div className="flex items-center gap-2 mb-2">
-                <Mail className="w-5 h-5 text-pine"/>
+                
                 <h2 className="text-[24px] font-serif font-semibold leading-none text-ink">Forgot your password?</h2>
               </div>
               <p className="text-sm text-ink-soft mb-5">Enter the email on your account and we&apos;ll send you a reset link.</p>
@@ -58,7 +55,7 @@ export default function ForgotPasswordPage() {
                 onKeyDown={e => e.key === 'Enter' && submit()} className={iCls} autoFocus/>
               <button onClick={submit} disabled={loading || !email}
                 className="mt-4 w-full bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
-                {loading ? 'Sending...' : 'Send Reset Link'}
+                {loading ? 'Sending...' : 'Send reset link'}
               </button>
               <p className="mt-5 text-center text-xs text-ink-soft">
                 <a href="/dashboard/login" className="text-pine font-medium hover:underline">Back to login</a>

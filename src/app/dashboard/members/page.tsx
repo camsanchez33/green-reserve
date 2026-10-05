@@ -1,9 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import {
-  Plus, Trash2, Users, Edit2, Check, X, ArrowLeft, ArrowRight,
-  RefreshCw, UserCheck, UserX, ChevronDown, AlertCircle, CheckCircle2, UserPlus, Mail,
-} from 'lucide-react';
+import { Trash2, Edit2, Check, X, ArrowLeft, RefreshCw, UserCheck, UserX, ChevronDown, Mail } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
@@ -219,8 +216,8 @@ export default function MembersPage() {
           <button onClick={closeWizard} className="flex items-center gap-2 text-sm text-ink-muted hover:text-ink mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4"/>Back to Member Management
           </button>
-          <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mb-1">
-            {editingTier ? 'Edit Membership Tier' : 'New Membership Tier'}
+          <h1 className="text-[30px] font-serif leading-none text-ink mb-2">
+            {editingTier ? 'Edit membership tier' : 'New membership tier'}
           </h1>
           <p className="text-sm text-ink-soft mb-8">
             {editingTier ? 'Update the details of this tier.' : 'Set up a tier in three quick steps. Members assigned to it get these rates automatically at checkout.'}
@@ -366,7 +363,7 @@ export default function MembersPage() {
 
             {tierError && (
               <div className="flex gap-2 items-center text-bad text-sm bg-bad/5 border border-bad/20 rounded-md px-4 py-2">
-                <AlertCircle className="w-4 h-4 shrink-0"/>{tierError}
+                <StatusDot status="bad" />{tierError}
               </div>
             )}
 
@@ -379,12 +376,12 @@ export default function MembersPage() {
               {wizStep < 3 ? (
                 <button onClick={() => setWizStep(s => s + 1)} disabled={!canContinue}
                   className="flex-1 bg-pine hover:bg-pine-hover text-white rounded-md text-sm font-medium disabled:opacity-40 transition-colors py-2.5 flex items-center justify-center gap-2">
-                  Continue<ArrowRight className="w-4 h-4"/>
+                  Continue
                 </button>
               ) : (
                 <button onClick={saveTier} disabled={tierSaving || !tierForm.name?.trim()}
                   className="flex-1 bg-pine hover:bg-pine-hover text-white rounded-md text-sm font-medium disabled:opacity-40 transition-colors py-2.5">
-                  {tierSaving ? 'Saving...' : editingTier ? 'Save Changes' : 'Complete Setup'}
+                  {tierSaving ? 'Saving...' : editingTier ? 'Save changes' : 'Complete setup'}
                 </button>
               )}
             </div>
@@ -401,10 +398,7 @@ export default function MembersPage() {
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="the members list" view="members.view" edit="members.edit" />
         <div className="max-w-lg mx-auto px-6 py-16 text-center">
-          <div className="w-14 h-14 rounded-md bg-ok/10 flex items-center justify-center mx-auto mb-5">
-            <CheckCircle2 className="w-7 h-7 text-ok"/>
-          </div>
-          <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mb-2">Tier Created</h1>
+          <h1 className="text-[30px] font-serif leading-none text-ink mb-3">Tier created</h1>
           <p className="text-sm text-ink-soft mb-8">
             <span className="font-medium" style={{ color: createdTier.color }}>{createdTier.name}</span> is live. Anyone you add to it gets member rates automatically at checkout.
           </p>
@@ -444,7 +438,7 @@ export default function MembersPage() {
           <div className="flex flex-col gap-3">
             <button onClick={() => startAddMember(createdTier.id)}
               className="bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[12.5px] transition-colors flex items-center justify-center gap-2">
-              <UserPlus className="w-4 h-4"/>Add Your First Member
+              Add your first member
             </button>
             <button onClick={() => { setView('list'); setPanel('tiers'); }}
               className="border border-line text-ink-soft hover:border-line-strong py-3 rounded-md font-medium text-[12.5px] transition-colors">
@@ -493,17 +487,17 @@ export default function MembersPage() {
                 <div className="text-[13px] font-semibold text-ink">Your tiers</div>
                 <button onClick={() => openWizard()}
                   className="ml-auto bg-pine hover:bg-pine-hover text-white rounded-md text-[12.5px] font-medium transition-colors px-4 py-2 flex items-center gap-2">
-                  <Plus className="w-4 h-4"/>New Membership Tier
+                  New membership tier
                 </button>
               </div>
 
               {tiers.length === 0 && (
                 <div className="bg-white rounded-lg border border-dashed border-line p-12 text-center">
-                  <Users className="w-8 h-8 text-line-strong mx-auto mb-3"/>
+                  
                   <div className="font-medium text-ink mb-1">No membership tiers yet</div>
                   <p className="text-sm text-ink-soft mb-5">Create your first tier and we&apos;ll walk you through pricing, benefits, and adding members.</p>
                   <button onClick={() => openWizard()} className="bg-pine hover:bg-pine-hover text-white px-5 py-2.5 rounded-md text-[12.5px] font-medium transition-colors inline-flex items-center gap-2">
-                    <Plus className="w-4 h-4"/>Set Up Your First Tier
+                    Set up your first tier
                   </button>
                 </div>
               )}
@@ -554,7 +548,7 @@ export default function MembersPage() {
 
                     <button onClick={() => startAddMember(t.id)}
                       className="mt-4 w-full border border-line text-ink-soft hover:border-line-strong rounded-md text-xs font-medium py-2 flex items-center justify-center gap-1.5 transition-colors">
-                      <UserPlus className="w-3.5 h-3.5"/>Add Member to {t.name}
+                      Add member to {t.name}
                     </button>
                   </div>
                 ))}
@@ -585,7 +579,7 @@ export default function MembersPage() {
                 </button>
                 <button onClick={() => startAddMember()} disabled={tiers.length === 0}
                   className="bg-pine hover:bg-pine-hover text-white rounded-md text-[12.5px] font-medium transition-colors disabled:opacity-40 px-4 py-2 flex items-center gap-2">
-                  <Plus className="w-4 h-4"/>Create New Member
+                  Create new member
                 </button>
               </div>
 
@@ -593,7 +587,7 @@ export default function MembersPage() {
               {addOpen && (
                 <div className="bg-white border border-pine/30 rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-serif font-semibold text-ink text-[17px]">Create New Member</h3>
+                    <h3 className="font-serif font-semibold text-ink text-[17px]">Create new member</h3>
                     <button onClick={() => { setAddOpen(false); setMemberError(''); }} className="text-ink-muted hover:text-ink"><X className="w-4 h-4"/></button>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -631,14 +625,14 @@ export default function MembersPage() {
                   </div>
                   {memberError && (
                     <div className="flex gap-2 items-center text-bad text-sm bg-bad/5 border border-bad/20 rounded-md px-4 py-2 mt-3">
-                      <AlertCircle className="w-4 h-4 shrink-0"/>{memberError}
+                      <StatusDot status="bad" />{memberError}
                     </div>
                   )}
                   <div className="flex gap-3 mt-4">
                     <button onClick={() => { setAddOpen(false); setMemberError(''); }} className="flex-1 border border-line text-ink-soft hover:border-line-strong rounded-md text-[12.5px] font-medium transition-colors py-2.5">Cancel</button>
                     <button onClick={addMember} disabled={memberSaving || !memberForm.email || !memberForm.tierId}
                       className="flex-1 bg-pine hover:bg-pine-hover text-white rounded-md text-[12.5px] font-medium disabled:opacity-40 transition-colors py-2.5">
-                      {memberSaving ? 'Adding...' : 'Add Member'}
+                      {memberSaving ? 'Adding...' : 'Add member'}
                     </button>
                   </div>
                 </div>
@@ -646,7 +640,7 @@ export default function MembersPage() {
 
               {tiers.length === 0 && (
                 <div className="bg-warn/5 border border-warn/20 rounded-lg p-5 flex gap-3 items-center text-sm text-warn">
-                  <AlertCircle className="w-5 h-5 shrink-0"/>
+                  <StatusDot status="bad" />
                   You need at least one tier before adding members.
                   <button onClick={() => openWizard()} className="underline font-medium ml-1">Set up a tier</button>
                 </div>
