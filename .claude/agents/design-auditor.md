@@ -45,7 +45,7 @@ hits and buries the real ones.
 4. **Component substitution.** Places that hand-roll something the design system
    already provides as a shared component. CLAUDE.md names these; find open-coded
    equivalents.
-5. **Icon and emoji policy.** Literal emoji characters in JSX or copy.
+5. **Icon and emoji policy.** Literal emoji characters in JSX or copy, and (TYPE-3) any decorative lucide icon — next to button text, before a heading or value, in a tile, in an empty state, or a check/alert icon used as status instead of `<StatusDot>`. Functional icons (icon-only buttons with aria-label, spinners, close, search, external link, steppers, disclosure, ratings, mobile nav) are fine.
 6. **Typography roles (TYPE-1/TYPE-2, 2026-10-05).** `font-serif` (EB Garamond) only on headlines, course names and dates — never times, buttons, tables or body. NO small uppercase label above a heading (that is a finding, not a style); real labels are sentence case. Sentences in full ink; grey (`text-ink-muted`/`faint`) only on metadata. Page titles, stat numbers — confirm they use the
    prescribed classes rather than approximations.
 

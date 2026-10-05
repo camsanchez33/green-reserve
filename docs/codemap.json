@@ -5617,7 +5617,6 @@
       "auth": "public",
       "guard": "public",
       "imports": [
-        "lucide-react",
         "next",
         "next/link"
       ],
@@ -5625,7 +5624,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1760,
+      "lines": 1758,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5641,6 +5640,7 @@
       "guard": null,
       "imports": [
         "@/components/TrustNote",
+        "@/components/ui/StatusDot",
         "@/lib/booking-fees",
         "@/lib/cancel-policy",
         "@/lib/change-requests",
@@ -5659,7 +5659,7 @@
     },
     {
       "path": "src/app/courses/[slug]/account/AccountPortalClient.tsx",
-      "lines": 286,
+      "lines": 285,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5674,6 +5674,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/ui/StatusDot",
         "lucide-react",
         "next/link",
         "next/navigation",
@@ -5736,7 +5737,7 @@
     },
     {
       "path": "src/app/courses/[slug]/member/page.tsx",
-      "lines": 850,
+      "lines": 843,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6464,7 +6465,7 @@
     },
     {
       "path": "src/app/manage/[bookingId]/page.tsx",
-      "lines": 558,
+      "lines": 559,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6481,6 +6482,7 @@
       "imports": [
         "@/components/CourseHeaderBar",
         "@/components/GolferExitLinks",
+        "@/components/ui/StatusDot",
         "lucide-react",
         "next/link",
         "next/navigation",
@@ -8026,10 +8028,13 @@
         "src/app/admin/page.tsx",
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/system/page.tsx",
+        "src/app/courses/[slug]/CourseBookingClient.tsx",
+        "src/app/courses/[slug]/account/AccountPortalClient.tsx",
         "src/app/courses/[slug]/member/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/app/manage/[bookingId]/page.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
         "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/StaffPermissions.tsx",

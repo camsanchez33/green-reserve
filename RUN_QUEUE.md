@@ -81,10 +81,36 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     on /call moved under the heading; labels sentence case; helper sentences
     ink-soft. Emails and the agreement PDF are out of scope (own template, no
     web fonts). TYPE-2 complete across the site.
-- [ ] TYPE-3 — icons only where they do a job (back arrow, close, search): remove
-  decorative Lucide icons (74 files; ChevronRight / check / sparkle-type ×108),
-  e.g. the icon tiles on admin Overview. Zero behavior. Rewrites CLAUDE.md's
-  "lucide-react icons" rule to "no decorative icons". NEEDS CAM: approve.
+- [ ] TYPE-3 — icons only where they do a job (Cam approved 2026-10-05: "Ok
+  continue", "you have to do all the other pages as well").
+  - [x] golfer + public pages and shared components — BUILT 2026-10-05: icons
+    next to text, icon tiles and empty-state icons removed; small status icons
+    → StatusDot. Kept: icon-only buttons with aria-label, spinners, close,
+    search, external link, steppers, disclosure, ratings. CLAUDE.md rule,
+    design-auditor and a design-guard lucide-import ratchet added.
+  - [ ] /dashboard — folded into the CLUB-3 shell rebuild (below).
+  - [ ] /admin
+- [ ] CLUB — the "club direction" (Cam 2026-10-05, after clubup.com: "see now
+  that is a lot better"). Canvas: https://claude.ai/artifact/D7PTUPXsdE4AGK2mXKst1x
+  (row "Club direction — after ClubUp"). Decisions: the homepage LEADS with
+  what GreenReserve is ("GreenReserve is the online tee sheet and booking page
+  for golf courses."), then "For the course / the counter / the golfer", two
+  feature rows, a pine closing band ("The tee sheet your course deserves.").
+  Heavier Garamond headings; a second, brighter green as DECORATION only
+  (bullets, stripe, active tab, link underline — under 3:1, never text); plain
+  hero with the live tee-sheet demo (aerial/photo hero stays banned); no
+  [PHOTO] placeholders in production. CLAUDE.md rules for 8px buttons, serif
+  weight and the green token are rewritten in the CLUB-1 PR.
+  - [ ] CLUB-0 short form — Cam: "No I think just the short one and book a
+    demo". /for-courses becomes a short "Ask a question" form (name, email,
+    course name, message; phone optional) that still creates a CourseInquiry
+    (empty strings for the rest, no migration); the long form goes away; the
+    setup sheet must ask for every field the inquiry no longer has; dedupe on
+    course name + email. Every "Send an inquiry" CTA becomes "Ask a question".
+  - [ ] CLUB-1 homepage  - [ ] CLUB-2 golfer pages (course photo band, course
+    color buttons)  - [ ] CLUB-3 dashboard shell (tabs across the top, no
+    sidebar on desktop, mobile bar kept; show Cam first)  - [ ] CLUB-4 /admin
+    + rest
 - [x] UI-H-1 — BUILT 2026-10-01: the homepage from the approved plain-background
   mockup (HOMEPAGE_SPEC.md, docs/design/home/index.html). Archivo replaces Fraunces
   + Inter for the public look (staff look untouched). Working hero demo (tee sheet +
