@@ -117,15 +117,20 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-05 23:15 UTC</span><span>claude/eager-maxwell-qf1pd0 @ ce494cc</span>
-    <span>2 uncommitted</span>
+    <span>2026-10-05 23:50 UTC</span><span>claude/eager-maxwell-qf1pd0 @ 69fc911</span>
+    <span>1 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">1 run has shipped that the queue doesn't know about</div>
+<div class="lede">6 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-05. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">c534f1e</span><span>Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)</span></li>
+<li><span class="h">2e6dec2</span><span>Golfer sign-in code can no longer be cracked offline (R-AUTH-001)</span></li>
+<li><span class="h">4f1580c</span><span>&quot;Still coming&quot; sticks: auto no-show never re-marks a cleared booking (R-CRON-001)</span></li>
+<li><span class="h">69cc708</span><span>No-show then cancel: never charge the late fee on top (R-PAY-002, R-BOOK-003)</span></li>
 <li><span class="h">475ff29</span><span>DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)</span></li>
+<li><span class="h">fa48d8f</span><span>CI: run the test scripts on every PR; fix three stale tests</span></li>
 </ul></div>
 <div class="tiles">
   <div class="tile t-good"><span class="n">238</span><span class="l">Done</span></div>
@@ -138,7 +143,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card">
 <h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
+<ul class="plain"><li><code>M REVIEW_LEDGER.md</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -265,18 +270,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 6d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">c534f1e</td><td class="num">2026-10-05</td><td>Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)</td></tr>
+<tr><td class="num">2e6dec2</td><td class="num">2026-10-05</td><td>Golfer sign-in code can no longer be cracked offline (R-AUTH-001)</td></tr>
+<tr><td class="num">4f1580c</td><td class="num">2026-10-05</td><td>&quot;Still coming&quot; sticks: auto no-show never re-marks a cleared booking (R-CRON-001)</td></tr>
+<tr><td class="num">69cc708</td><td class="num">2026-10-05</td><td>No-show then cancel: never charge the late fee on top (R-PAY-002, R-BOOK-003)</td></tr>
+<tr><td class="num">321902b</td><td class="num">2026-10-05</td><td>queue/spec update</td></tr>
 <tr><td class="num">ce494cc</td><td class="num">2026-10-05</td><td>queue/spec update</td></tr>
 <tr><td class="num">475ff29</td><td class="num">2026-10-05</td><td>DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)</td></tr>
+<tr><td class="num">fa48d8f</td><td class="num">2026-10-05</td><td>CI: run the test scripts on every PR; fix three stale tests</td></tr>
 <tr><td class="num">5007cb9</td><td class="num">2026-10-05</td><td>queue/spec update</td></tr>
 <tr><td class="num">189dc3b</td><td class="num">2026-10-05</td><td>queue/spec update</td></tr>
 <tr><td class="num">2e7f6fc</td><td class="num">2026-10-05</td><td>CARD-1: explicit card-at-booking choice in Settings</td></tr>
 <tr><td class="num">10d853c</td><td class="num">2026-10-05</td><td>BIRDIE-B4b: Birdie drafts changes, the operator confirms</td></tr>
-<tr><td class="num">e65d5db</td><td class="num">2026-10-05</td><td>BIRDIE-B4a: Birdie answers from live course data</td></tr>
-<tr><td class="num">17267d1</td><td class="num">2026-10-05</td><td>PERS-1: course photo and logo on golfer pages, plus a note from the course</td></tr>
-<tr><td class="num">58260ec</td><td class="num">2026-10-05</td><td>queue/spec update</td></tr>
-<tr><td class="num">e8b6902</td><td class="num">2026-10-05</td><td>CLUB-5: booking flow in the club look</td></tr>
-<tr><td class="num">e99afbc</td><td class="num">2026-10-05</td><td>CLUB-4b: admin labels in sentence case</td></tr>
-<tr><td class="num">dd0c049</td><td class="num">2026-10-05</td><td>CLUB-4a: admin pages without decorative icons</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
