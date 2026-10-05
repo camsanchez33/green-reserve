@@ -3259,7 +3259,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 227,
+      "lines": 219,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3401,7 +3401,7 @@
     },
     {
       "path": "src/app/api/golfer/auth/otp/request/route.ts",
-      "lines": 41,
+      "lines": 40,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3428,7 +3428,7 @@
     },
     {
       "path": "src/app/api/golfer/auth/otp/verify/route.ts",
-      "lines": 97,
+      "lines": 102,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9740,7 +9740,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 238,
+      "lines": 255,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9763,6 +9763,7 @@
         "./booking-events",
         "./cancel-policy",
         "./email",
+        "./no-show-fee",
         "./prisma",
         "./refund-booking",
         "./stripe"
@@ -11476,7 +11477,7 @@
     },
     {
       "path": "src/lib/golfer-otp.ts",
-      "lines": 70,
+      "lines": 94,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11493,11 +11494,15 @@
           "kind": "fn"
         },
         {
-          "name": "hashOtpCode",
+          "name": "normalizePhone",
           "kind": "fn"
         },
         {
-          "name": "normalizePhone",
+          "name": "OtpChallenge",
+          "kind": "type"
+        },
+        {
+          "name": "otpCodeMatches",
           "kind": "fn"
         },
         {
@@ -11505,15 +11510,15 @@
           "kind": "type"
         },
         {
+          "name": "otpUsedKey",
+          "kind": "fn"
+        },
+        {
           "name": "signOtpChallenge",
           "kind": "fn"
         },
         {
           "name": "verifyOtpChallenge",
-          "kind": "fn"
-        },
-        {
-          "name": "verifyOtpCode",
           "kind": "fn"
         }
       ],
@@ -11523,7 +11528,6 @@
       "auth": null,
       "guard": null,
       "imports": [
-        "bcryptjs",
         "crypto",
         "jose"
       ],
@@ -12188,10 +12192,18 @@
     },
     {
       "path": "src/lib/no-show-fee.ts",
-      "lines": 104,
+      "lines": 135,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B4).",
       "brain": [],
       "exports": [
+        {
+          "name": "dueAutoNoShows",
+          "kind": "fn"
+        },
+        {
+          "name": "liveNoShowCharge",
+          "kind": "fn"
+        },
         {
           "name": "markNoShow",
           "kind": "fn"
@@ -12216,11 +12228,13 @@
         "./prisma",
         "./refund-booking",
         "./stripe",
+        "./tee-time-utils",
         "stripe"
       ],
       "usedBy": [
         "src/app/api/cron/hourly/route.ts",
-        "src/app/api/operator/bookings/route.ts"
+        "src/app/api/operator/bookings/route.ts",
+        "src/lib/cancel-booking.ts"
       ]
     },
     {
@@ -13406,7 +13420,7 @@
     },
     {
       "path": "src/lib/tee-time-utils.ts",
-      "lines": 36,
+      "lines": 41,
       "purpose": "Converts a stored tee-time (date \"YYYY-MM-DD\", time \"HH:MM\" in the course's local timezone) to a UTC millisecond timestamp.",
       "brain": [],
       "exports": [
@@ -13427,7 +13441,8 @@
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/manage/[bookingId]/route.ts",
         "src/lib/analytics.ts",
-        "src/lib/booking-events.ts"
+        "src/lib/booking-events.ts",
+        "src/lib/no-show-fee.ts"
       ]
     },
     {
@@ -14438,7 +14453,8 @@
       ],
       "writers": [],
       "readers": [
-        "src/lib/analytics.ts"
+        "src/lib/analytics.ts",
+        "src/lib/no-show-fee.ts"
       ]
     },
     {

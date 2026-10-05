@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
-import { classifyIdentifier, generateOtpCode, hashOtpCode, signOtpChallenge } from '@/lib/golfer-otp';
+import { classifyIdentifier, generateOtpCode, signOtpChallenge } from '@/lib/golfer-otp';
 import { sendGolferOtpEmail } from '@/lib/email';
 import { sendSmsOtp } from '@/lib/twilio';
 
@@ -22,8 +22,7 @@ export async function POST(req: NextRequest) {
   }
 
   const code = generateOtpCode();
-  const codeHash = await hashOtpCode(code);
-  const challengeToken = await signOtpChallenge(identifier, type, codeHash);
+  const challengeToken = await signOtpChallenge(identifier, type, code);
 
   try {
     if (type === 'email') {

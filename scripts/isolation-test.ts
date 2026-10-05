@@ -17,7 +17,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
-import { hashOtpCode, signOtpChallenge } from '../src/lib/golfer-otp';
+import { signOtpChallenge } from '../src/lib/golfer-otp';
 
 const BASE_URL = process.env.TEST_URL || 'http://localhost:3000';
 const prisma = new PrismaClient();
@@ -86,7 +86,7 @@ async function loginOp(email: string, password: string): Promise<string> {
 const GOLFER_TEST_CODE = '424242';
 
 async function loginGolfer(email: string): Promise<string> {
-  const challengeToken = await signOtpChallenge(email, 'email', await hashOtpCode(GOLFER_TEST_CODE));
+  const challengeToken = await signOtpChallenge(email, 'email', GOLFER_TEST_CODE);
   const res = await fetch(`${BASE_URL}/api/golfer/auth/otp/verify`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -261,6 +261,17 @@ async function main() {
     console.error(`\n❌ Login failed for: ${empty.map(([k]) => k).join(', ')} — the test cannot prove isolation without real sessions.`);
     await cleanup(data);
     process.exit(1);
+  }
+
+  console.log('\n── Golfer sign-in code is single-use ─────────────────────────────');
+  {
+    // R-AUTH-001: one challenge + code signs in once; replaying it is refused.
+    const challengeToken = await signOtpChallenge(`${TS}-golfera@test.local`, 'email', GOLFER_TEST_CODE);
+    const body = { challengeToken, code: GOLFER_TEST_CODE };
+    const first = await api('/api/golfer/auth/otp/verify', { method: 'POST', body });
+    checkStatus('Golfer OTP: first use signs in → 200', first.status, 200);
+    const again = await api('/api/golfer/auth/otp/verify', { method: 'POST', body });
+    checkStatus('Golfer OTP: the same challenge + code again → 400', again.status, 400);
   }
 
   console.log('\n── Auth guard: no credentials ────────────────────────────────────');
