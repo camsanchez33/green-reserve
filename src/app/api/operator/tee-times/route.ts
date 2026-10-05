@@ -30,16 +30,21 @@ export async function GET(req: NextRequest) {
       product: { select: { label: true } },
       ...(withBookings ? { bookings: {
       where: { status: { in: ['confirmed', 'completed'] } }, orderBy: { createdAt: 'asc' },
-      select: { id: true, golferName: true, golferEmail: true, golferPhone: true, players: true, createdAt: true, status: true, paymentStatus: true, totalAmount: true, accessFeeTotal: true, checkInFailReason: true, source: true, noShowAt: true, paidOffline: true, checkedInPlayers: true },
+      select: { id: true, golferName: true, golferEmail: true, golferPhone: true, players: true, createdAt: true, status: true, paymentStatus: true, totalAmount: true, accessFeeTotal: true, checkInFailReason: true, source: true, noShowAt: true, paidOffline: true, checkedInPlayers: true, stripePaymentMethodId: true },
     } } : {}),
     },
   });
 
   // SP-A: contact details only with "See golfer email and phone".
-  if (withBookings && !can(session, 'sheet.golfer_contact')) {
-    return NextResponse.json(teeTimes.map(t => ({ ...t, bookings: (t as { bookings?: { golferEmail: string; golferPhone: string }[] }).bookings?.map(b => ({ ...b, golferEmail: '', golferPhone: '' })) })));
-  }
-  return NextResponse.json(teeTimes);
+  // SP-B: the card's id never leaves the server — the sheet only needs to know
+  // whether there is one (no card → offer "Send pay link").
+  const contact = can(session, 'sheet.golfer_contact');
+  type Row = { golferEmail: string; golferPhone: string; stripePaymentMethodId?: string };
+  return NextResponse.json(teeTimes.map(t => {
+    const bookings = (t as { bookings?: Row[] }).bookings;
+    if (!bookings) return t;
+    return { ...t, bookings: bookings.map(({ stripePaymentMethodId, ...b }) => ({ ...b, hasCard: !!stripePaymentMethodId, ...(contact ? {} : { golferEmail: '', golferPhone: '' }) })) };
+  }));
 }
 
 export async function POST(req: NextRequest) {

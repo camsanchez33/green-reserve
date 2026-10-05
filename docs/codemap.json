@@ -4197,7 +4197,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 268,
+      "lines": 284,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5056,7 +5056,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 133,
+      "lines": 138,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6074,7 +6074,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1332,
+      "lines": 1350,
       "purpose": "",
       "brain": [],
       "exports": [

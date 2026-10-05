@@ -46,6 +46,8 @@ type Booking = {
   noShowAt?: string | null;
   paidOffline?: boolean;
   checkedInPlayers?: number | null;
+  /** SP-B: false when the golfer booked without a card (pay-link course). */
+  hasCard?: boolean;
 };
 /* ─── Helpers ──────────────────────────────────────────────────────────── */
 // SD-3: "today" is the COURSE's today (see courseTz inside the component) —
@@ -220,6 +222,17 @@ function DashboardPageInner() {
     } finally {
       setRowBusy(null);
     }
+  }
+
+  // SP-B (Cam 2026-10-05: "push them to the pay link"): a no-card golfer pays
+  // through their check-in link — round and booking fee together — instead of
+  // at the counter. This (re)sends it.
+  async function sendPayLink(b: Booking) {
+    setRowBusy(b.id);
+    const r = await dfetch<{ sentTo: string }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'send_pay_link' }) });
+    setRowBusy(null);
+    if (!r.ok) { toast(r.error); return; }
+    toast(`Pay link sent to ${r.data.sentTo}. They can check in and pay from their phone.`, 'ok');
   }
 
   async function checkInBooking(b: Booking) {
@@ -874,6 +887,11 @@ function DashboardPageInner() {
                                     className="shrink-0 text-white px-2.5 min-h-[36px] md:min-h-0 py-1 rounded-md text-xs font-medium disabled:opacity-50 transition-colors bg-pine hover:bg-pine-hover">
                                     {rowBusy === b.id ? 'Saving…' : 'Check in · paid at counter'}
                                   </button>
+                                )}
+                                {b.status === 'confirmed' && b.hasCard === false && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && !b.golferEmail.endsWith('@noemail.greenreserve.app') && (
+                                  <button onClick={e => { e.stopPropagation(); sendPayLink(b); }} disabled={rowBusy === b.id}
+                                    title="Email them their link to check in and pay online — the booking fee is collected with the round"
+                                    className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1 disabled:opacity-50">{rowBusy === b.id ? 'Sending…' : 'Send pay link'}</button>
                                 )}
                                 {b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && (
                                   <button

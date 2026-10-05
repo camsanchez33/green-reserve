@@ -6,7 +6,7 @@ import type { PermissionKey } from '@/lib/staff-permissions';
 import { performCancellation } from '@/lib/cancel-booking';
 import { performCheckIn } from '@/lib/checkin-booking';
 import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
-import { sendBookingConfirmation } from '@/lib/email';
+import { sendBookingConfirmation, sendCheckInAvailableEmail, isPlaceholderEmail } from '@/lib/email';
 import { todayIn, isPastIn } from '@/lib/course-time';
 import { randomUUID } from 'crypto';
 import { chargeAccessFeeSeparately, refundSeparateAccessFee, liveSeparateFee, type FeeChargeResult } from '@/lib/access-fee';
@@ -73,12 +73,12 @@ export async function PATCH(req: NextRequest) {
   // SD-5: partial party — how many actually showed (1 .. players-1); absent = all.
   const cip = cipRaw == null ? undefined : Number(cipRaw);
   if (cip !== undefined && (!Number.isInteger(cip) || cip < 1)) return NextResponse.json({ error: 'Invalid headcount.' }, { status: 400 });
-  const ACTIONS = ['cancel', 'checkin', 'no_show', 'still_coming', 'paid_offline'];
+  const ACTIONS = ['cancel', 'checkin', 'no_show', 'still_coming', 'paid_offline', 'send_pay_link'];
   if (!id || !ACTIONS.includes(action)) {
     return NextResponse.json({ error: 'Missing id or unsupported action' }, { status: 400 });
   }
   // SP-A: each counter action is its own permission.
-  const NEEDS: Record<string, PermissionKey> = { cancel: 'sheet.cancel', checkin: 'sheet.checkin', no_show: 'sheet.no_show', still_coming: 'sheet.no_show', paid_offline: 'sheet.counter_payment' };
+  const NEEDS: Record<string, PermissionKey> = { cancel: 'sheet.cancel', checkin: 'sheet.checkin', no_show: 'sheet.no_show', still_coming: 'sheet.no_show', paid_offline: 'sheet.counter_payment', send_pay_link: 'sheet.checkin' };
   const deniedAction = requirePermission(session, NEEDS[action]);
   if (deniedAction) return deniedAction;
   // SP-A: cancelling WITHOUT the late fee refunds a hold already taken — its own permission.
@@ -105,6 +105,22 @@ export async function PATCH(req: NextRequest) {
   // same transaction as the state change.
   const staff: EventActor = { type: 'staff', id: session.staffId ?? session.operatorId };
   const evBase = { bookingId: id as string, courseId: booking.courseId, actor: staff, teeTimeAt: teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time) };
+  // SP-B (Cam 2026-10-05: "push them to the pay link"): a golfer who booked
+  // without a card pays through their check-in link — the round and
+  // GreenReserve's fee in one charge — rather than at the counter, where the
+  // fee can't be collected. Staff can (re)send that link from the sheet.
+  if (action === 'send_pay_link') {
+    const b = await prisma.booking.findUnique({ where: { id }, select: { golferName: true, golferEmail: true, checkInToken: true, status: true, course: { select: { name: true } }, teeTime: { select: { date: true, time: true } } } });
+    if (!b || b.status !== 'confirmed') return NextResponse.json({ error: 'Only a confirmed booking can be sent a pay link.' }, { status: 409 });
+    if (!b.checkInToken) return NextResponse.json({ error: 'This booking has no pay link — check them in at the counter.' }, { status: 409 });
+    if (!b.golferEmail || isPlaceholderEmail(b.golferEmail)) return NextResponse.json({ error: 'There’s no email on this booking to send the link to — check them in at the counter.' }, { status: 409 });
+    try {
+      await sendCheckInAvailableEmail({ golferName: b.golferName, golferEmail: b.golferEmail, courseName: b.course.name, date: b.teeTime.date, time: b.teeTime.time, bookingId: id, checkInToken: b.checkInToken });
+    } catch (err) {
+      return NextResponse.json({ error: `The pay link didn’t send (${err instanceof Error ? err.message : 'email error'}) — try again or check them in at the counter.` }, { status: 502 });
+    }
+    return NextResponse.json({ success: true, sentTo: b.golferEmail });
+  }
   if (action === 'no_show') {
     if (booking.status !== 'confirmed') return NextResponse.json({ error: 'Only a confirmed booking can be marked a no-show.' }, { status: 409 });
     // Review: a no-show now costs the golfer the booking fee, so it can only be
