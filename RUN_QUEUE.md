@@ -26,7 +26,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 ## Queue (run in this order)
 
-- [ ] PERS-1 (MERGED #65) · BIRDIE-B4a (BUILT 2026-10-05 — tools.ts read tools, Haiku→Opus 5.5 escalation on the first tool call, NDJSON stream, isolation tests extended; not yet run against the live model) · PERS-1 detail (BUILT 2026-10-05 — CourseHeaderBar photo+logo on book/confirmation/check-in/manage; Course.confirmationNote migration 20261005170000, Settings field, confirmation screen + all three confirmation-email senders) + BIRDIE-B4 — Cam 2026-10-05 ("golfer facing pages that belong to the
+- [ ] PERS-1 (MERGED #65) · BIRDIE-B4b (BUILT 2026-10-05 — proposals.ts + ConfirmCard, allow-listed routes, birdie.applied log, 14 more isolation checks) · BIRDIE-B4a (MERGED #66, BUILT 2026-10-05 — tools.ts read tools, Haiku→Opus 5.5 escalation on the first tool call, NDJSON stream, isolation tests extended; not yet run against the live model) · PERS-1 detail (BUILT 2026-10-05 — CourseHeaderBar photo+logo on book/confirmation/check-in/manage; Course.confirmationNote migration 20261005170000, Settings field, confirmation screen + all three confirmation-email senders) + BIRDIE-B4 — Cam 2026-10-05 ("golfer facing pages that belong to the
   course can be personalized … the ai should be capable of making changes for the
   course"). Decisions (Cam picked all three recommendations):
   (a) PERS-1 personalization = REUSE what the course already uploads — hero photo,

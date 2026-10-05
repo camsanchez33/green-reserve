@@ -4,23 +4,25 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-05 19:05 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `daa1894` · working tree **9 dirty file(s)**
+Generated 2026-10-05 19:13 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `f553cbe` · working tree **11 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-### Uncommitted working tree (9 file(s))
+### Uncommitted working tree (11 file(s))
 
 - `M BIRDIE_AI_SPEC.md`
+- `M CLAUDE.md`
 - `M RUN_QUEUE.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
 - `M scripts/birdie-isolation-test.ts`
 - `M src/app/api/birdie/chat/route.ts`
 - `M src/components/birdie/BirdieWidget.tsx`
-- `M src/lib/birdie/knowledge-operator.ts`
-- `?? src/lib/birdie/tools.ts`
+- `?? src/components/birdie/ConfirmCard.tsx`
+- `?? src/lib/birdie/proposal-types.ts`
+- `?? src/lib/birdie/proposals.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -69,7 +71,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Not started — the actual queue
 
-1. PERS-1 (MERGED #65) · BIRDIE-B4a (BUILT 2026-10-05 — tools.ts read tools, Haiku→Opus 5.5 escalation on the first tool call, NDJSON stream, isolation tests extended; not yet run aga — `RUN_QUEUE.md:29`
+1. PERS-1 (MERGED #65) · BIRDIE-B4b (BUILT 2026-10-05 — proposals.ts + ConfirmCard, allow-listed routes, birdie.applied log, 14 more isolation checks) · BIRDIE-B4a (MERGED #66, BUILT  — `RUN_QUEUE.md:29`
 2. TYPE-2 — strip the AI tells Cam listed 2026-10-05, zero behavior, one run per — `RUN_QUEUE.md:57`
 3. TYPE-3 — icons only where they do a job (Cam approved 2026-10-05: "Ok — `RUN_QUEUE.md:105`
 4. /dashboard — folded into the CLUB-3 shell rebuild (below). — `RUN_QUEUE.md:112`
@@ -167,6 +169,7 @@ This is the distinction a raw checkbox count gets wrong.
 | `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 4d |
 | `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 6d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-15 | 19d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 0d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-05 | 0d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-29 | 6d |
 | `FB2_COPY_SPEC.md` | 0 | 2026-09-29 | 6d |
@@ -177,7 +180,6 @@ This is the distinction a raw checkbox count gets wrong.
 | `ADMIN_V4_SPEC.md` | 0 | 2026-09-15 | 19d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-09-15 | 19d |
 | `BACKUP_OPS_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-09-15 | 19d |
 | `CODEMAP_SPEC.md` | 0 | 2026-09-15 | 19d |
 | `COURSES_SHEET_SPEC.md` | 0 | 2026-09-15 | 19d |
 | `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-15 | 19d |
@@ -197,6 +199,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `e65d5db` 2026-10-05 — BIRDIE-B4a: Birdie answers from live course data
 - `17267d1` 2026-10-05 — PERS-1: course photo and logo on golfer pages, plus a note from the course
 - `58260ec` 2026-10-05 — queue/spec update
 - `e8b6902` 2026-10-05 — CLUB-5: booking flow in the club look
@@ -208,7 +211,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `d450d70` 2026-10-05 — CLUB-3 (shell, awaiting Cam): dashboard tabs across the top on desktop
 - `4bc7fe0` 2026-10-05 — CLUB-2: golfer course page in the club look
 - `566e11e` 2026-10-05 — CLUB-1: homepage leads with what GreenReserve is; heavier Garamond site-wide
-- `d9e4bed` 2026-10-05 — Regenerate code map after the CLUB-0 review fixes
 
 ---
 

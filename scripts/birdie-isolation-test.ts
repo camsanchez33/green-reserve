@@ -7,6 +7,8 @@ import { sanitizeHistory, MAX_HISTORY_TURNS, MAX_USER_CHARS } from '../src/lib/b
 import { describeCourseContext } from '../src/lib/birdie/course-context';
 import { DASHBOARD_PAGES, OPERATOR_KNOWLEDGE } from '../src/lib/birdie/knowledge-operator';
 import { READ_TOOLS, runReadTool, type ToolContext } from '../src/lib/birdie/tools';
+import { PROPOSE_TOOLS, runProposeTool } from '../src/lib/birdie/proposals';
+import { isProposalCard, PROPOSAL_ROUTES } from '../src/lib/birdie/proposal-types';
 
 let failed = 0;
 function check(label: string, ok: boolean, detail?: string) {
@@ -93,6 +95,30 @@ const badSheet = await runReadTool('get_tee_sheet', { date: "2026-10-05'; DROP T
 check('tools: a malformed tee-sheet date is refused', badSheet.isError);
 const unknown = await runReadTool('update_course', { courseId: 'x' }, allowed);
 check('tools: an unknown tool name is an error', unknown.isError);
+
+// 6. B4b propose-and-confirm: drafts only, allow-listed routes only, permission first.
+const propSrc = readFileSync(new URL('../src/lib/birdie/proposals.ts', import.meta.url), 'utf8');
+check('proposals: no tool accepts a course', PROPOSE_TOOLS.every(t => !/course/i.test(Object.keys((t.input_schema as { properties?: object }).properties ?? {}).join(','))));
+check('proposals: drafting never writes', !/prisma\.\w+\.(create|update|upsert|delete)/.test(propSrc));
+const propReads = [...propSrc.matchAll(/prisma\.(\w+)\.(findMany|findFirst|findUnique|count)\(\{[\s\S]*?where: \{([^}]*)\}/g)];
+check('proposals: every read filters on ctx.courseId', propReads.length > 0 && propReads.every(m => m[3].includes('courseId: ctx.courseId')), `${propReads.length} reads`);
+const paths = [...propSrc.matchAll(/path: '([^']+)'/g)].map(m => m[1]);
+check('proposals: every card calls an allow-listed route', paths.length >= 3 && paths.every(p => p in PROPOSAL_ROUTES), paths.join(','));
+const noEdit: ToolContext = { courseId: 'not-a-real-course', timezone: 'America/New_York', can: k => k !== 'schedule.edit' };
+const deniedProps = await Promise.all(['propose_schedule_change', 'propose_block_day', 'propose_unblock_day'].map(n => runProposeTool(n, { scheduleId: 'x', date: '2030-01-01' }, noEdit)));
+check('proposals: a login without schedule.edit gets an error, never a card', deniedProps.every(o => o.isError && !o.card));
+const canEdit: ToolContext = { ...noEdit, can: () => true };
+const pastDay = await runProposeTool('propose_block_day', { date: '2001-01-01' }, canEdit);
+check('proposals: a past day cannot be blocked', pastDay.isError && !pastDay.card);
+const badDay = await runProposeTool('propose_block_day', { date: 'tomorrow' }, canEdit);
+check('proposals: a malformed day is refused', badDay.isError && !badDay.card);
+const notMine = await runProposeTool('propose_schedule_change', { scheduleId: 'someone-elses-schedule', greenFeeWeekend: 70 }, canEdit);
+check("proposals: another course's schedule id gets no card", notMine.isError && !notMine.card, notMine.content);
+const goodCard = { id: 'a', title: 't', note: 'n', changes: [{ label: 'l', from: 'f', to: 't' }], call: { method: 'PATCH', path: '/api/operator/schedule', body: { id: 'x' } } };
+check('widget: a well-formed card passes', isProposalCard(goodCard));
+check('widget: a card aimed at another route is refused', !isProposalCard({ ...goodCard, call: { method: 'POST', path: '/api/operator/stripe', body: {} } }));
+check('widget: a disallowed method on an allowed route is refused', !isProposalCard({ ...goodCard, call: { method: 'DELETE', path: '/api/operator/schedule', body: {} } }));
+check('widget: junk is refused', !isProposalCard('nope') && !isProposalCard({ ...goodCard, changes: [{ label: 1 }] }));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);
