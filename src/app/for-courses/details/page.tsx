@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, Suspense, useRef, useMemo } from 'rea
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import PlainHeader from '@/components/PlainHeader';
-import { CheckCircle, AlertTriangle, ChevronRight, ArrowLeft, Plus, Trash2, Upload, X } from 'lucide-react';
+import { ArrowLeft, Trash2, Upload, X } from 'lucide-react';
 import { downscaleImage } from '@/lib/image-resize';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -620,7 +620,7 @@ function DetailsForm() {
   if (loadError) return (
     <div className="min-h-screen bg-paper flex items-center justify-center p-6">
       <div className="bg-white rounded-lg p-8 max-w-md w-full text-center border border-line">
-        <AlertTriangle className="w-10 h-10 text-warn mx-auto mb-4" />
+        
         <h1 className="text-[18px] font-serif font-medium tracking-tight text-ink mb-2">Can&apos;t load this link</h1>
         <p className="text-ink-soft text-sm">{loadError}</p>
         <p className="text-ink-soft text-xs mt-4">If you think this is a mistake, reply to the email we sent you.</p>
@@ -631,7 +631,7 @@ function DetailsForm() {
   if (submitted) return (
     <div className="min-h-screen bg-paper flex items-center justify-center p-6">
       <div className="bg-white rounded-lg p-10 max-w-lg w-full text-center border border-line">
-        <CheckCircle className="w-14 h-14 text-ok mx-auto mb-5" />
+        
         <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Thanks — we&apos;ve got it.</h1>
         <p className="text-ink-soft text-sm leading-relaxed">
           We&apos;ll build {courseName}&apos;s booking page with these details and email your login shortly.
@@ -1000,7 +1000,7 @@ function DetailsForm() {
               )}
               {cards.length < 4 && (
                 <label className="flex items-center justify-center gap-2 w-full border border-dashed border-line-strong rounded-md py-4 text-sm text-ink-soft hover:border-pine/40 hover:text-ink cursor-pointer transition-colors">
-                  <Upload className="w-4 h-4" />
+                  
                   {uploading ? 'Uploading…' : cards.length ? 'Add another photo' : 'Upload scorecard photo'}
                   <input type="file" accept="image/*" className="sr-only" disabled={uploading}
                     onChange={e => { const f = e.target.files?.[0]; if (f) handlePhotoUpload(f, 'scorecardPhotos'); e.target.value = ''; }} />
@@ -1145,7 +1145,7 @@ function DetailsForm() {
             {draft.teeSets.length < 8 && (
               <button type="button" onClick={() => set('teeSets', [...draft.teeSets, blankTeeSet()])}
                 className="flex items-center gap-1.5 text-sm text-pine hover:text-pine-hover font-medium transition-colors">
-                <Plus className="w-4 h-4" /> Add another tee set
+                 Add another tee set
               </button>
             )}
             {is27Three9s && nineNamesFor27.length === 0 && (
@@ -1430,7 +1430,7 @@ function DetailsForm() {
             {draft.passes.length < 8 && (
               <button type="button" onClick={() => set('passes', [...draft.passes, blankPass()])}
                 className="flex items-center gap-1.5 text-sm text-pine hover:text-pine-hover font-medium transition-colors">
-                <Plus className="w-4 h-4" /> Add another
+                 Add another
               </button>
             )}
             <p className="text-[11px] text-ink-soft">You can add, edit, or remove tiers anytime after launch.</p>
@@ -1605,7 +1605,7 @@ function DetailsForm() {
                     {fv2.rangeBuckets.length < 5 && (
                       <button type="button" onClick={() => setFv2({ rangeBuckets: [...fv2.rangeBuckets, blankBucket()] })}
                         className="flex items-center gap-1 text-xs text-pine hover:text-pine-hover mt-2 transition-colors">
-                        <Plus className="w-3.5 h-3.5" /> Add size
+                         Add size
                       </button>
                     )}
                   </div>
@@ -1744,7 +1744,7 @@ function DetailsForm() {
                     onChange={e => { const f = e.target.files?.[0]; if (f) handlePhotoUpload(f); e.target.value = ''; }} />
                   <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
                     className="flex items-center gap-2 px-4 py-2.5 border border-line rounded-md text-sm text-ink-muted hover:border-pine/40 hover:text-ink transition-colors disabled:opacity-50">
-                    <Upload className="w-4 h-4" />
+                    
                     {uploading ? 'Uploading...' : 'Upload a photo'}
                   </button>
                   <p className="text-[11px] text-ink-faint mt-1">JPEG, PNG, or WebP · max 8MB each (large photos are auto-resized) · up to 6 photos</p>
@@ -1849,7 +1849,7 @@ function DetailsForm() {
             className="flex-1 flex items-center justify-center gap-2 py-3 bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm disabled:opacity-50 transition-colors"
           >
             {saving ? 'Saving...' : isLast ? 'Submit setup sheet' : (
-              <>Next <ChevronRight className="w-4 h-4" /></>
+              <>Next </>
             )}
           </button>
         </div>

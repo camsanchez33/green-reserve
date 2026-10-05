@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import PlainHeader from '@/components/PlainHeader';
-import { Phone, Check, CalendarClock, Loader2 } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 
 type Booked = { scheduledAt: string; durationMin: number; direction: string; phone: string };
 type Info = {
@@ -99,13 +99,13 @@ export default function CallPage() {
             <Check className="w-5 h-5 text-ok shrink-0 mt-0.5" />
             <div>
               <p className="text-lg font-serif font-medium text-ink">You&apos;re booked for {fmtFull(b.scheduledAt)} ET</p>
-              <p className="text-sm text-ink-soft mt-1 flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" />{b.direction === 'they_call' ? 'You call us — the number is in your email.' : (b.phone || info.phone) ? `We’ll call you at ${b.phone || info.phone}.` : 'We’ll call you — reply with the best number if you have not sent one.'}</p>
+              <p className="text-sm text-ink-soft mt-1 flex items-center gap-1.5">{b.direction === 'they_call' ? 'You call us — the number is in your email.' : (b.phone || info.phone) ? `We’ll call you at ${b.phone || info.phone}.` : 'We’ll call you — reply with the best number if you have not sent one.'}</p>
             </div>
           </div>
         </div>
         {info.calcomManage ? (
           <div className="flex gap-3 flex-wrap">
-            <a href={info.calcomManage.reschedule} target="_blank" rel="noopener noreferrer" className={btnO}><CalendarClock className="w-4 h-4" />Reschedule</a>
+            <a href={info.calcomManage.reschedule} target="_blank" rel="noopener noreferrer" className={btnO}>Reschedule</a>
             <a href={info.calcomManage.cancel} target="_blank" rel="noopener noreferrer" className="text-sm text-ink-muted hover:text-bad px-3 py-3 transition-colors">Cancel the call</a>
           </div>
         ) : (
@@ -134,7 +134,7 @@ export default function CallPage() {
     <Shell>
       {heading}
       <p className="text-sm text-ink-soft flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Taking you to the calendar…</p>
-      <a href={info.calcomUrl} className={btnO + ' mt-4'}><CalendarClock className="w-4 h-4" />Open the calendar</a>
+      <a href={info.calcomUrl} className={btnO + ' mt-4'}>Open the calendar</a>
     </Shell>
   );
 }

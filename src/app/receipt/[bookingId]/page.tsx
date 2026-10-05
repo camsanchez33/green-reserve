@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { Loader2, AlertCircle, Printer, Check } from 'lucide-react';
+import { Loader2, Check } from 'lucide-react';
 import { serviceFeeLabel } from '@/lib/booking-fees';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
@@ -64,7 +64,7 @@ function ReceiptPageInner() {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-lg border border-line p-8 text-center">
-          <AlertCircle size={32} className="text-bad mx-auto mb-4" />
+          
           <h1 className="font-semibold text-ink mb-2">Receipt not found</h1>
           <p className="text-ink-soft text-sm">{error || 'This link is invalid.'}</p>
         </div>
@@ -100,7 +100,7 @@ function ReceiptPageInner() {
               onClick={() => window.print()}
               className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink border border-line rounded-md px-4 py-2 bg-white transition-colors"
             >
-              <Printer size={14} /> Print / Save as PDF
+               Print / Save as PDF
             </button>
           </div>
 

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, Mail } from 'lucide-react';
+
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -21,7 +21,7 @@ export default function ContactPage() {
           href="mailto:thegreenreserve@outlook.com"
           className="inline-flex items-center gap-3 bg-pine hover:bg-pine-hover text-white px-7 py-4 rounded-md font-medium text-sm transition-colors"
         >
-          <Mail size={16} />
+          
           thegreenreserve@outlook.com
         </a>
 
@@ -31,7 +31,7 @@ export default function ContactPage() {
             href="/for-courses"
             className="inline-flex items-center gap-2 text-sm font-medium text-pine hover:text-pine-hover transition-colors"
           >
-            Submit interest form <ArrowRight size={14} />
+            Submit interest form 
           </Link>
         </div>
       </div>

@@ -4,12 +4,13 @@ import { useEffect, useMemo, useState, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, Phone, Globe, Star, Users, Clock, ChevronLeft, ChevronRight, Check, Flag, SlidersHorizontal, ExternalLink, Navigation, Bell, ArrowRight, Eye, CheckCircle } from 'lucide-react';
+import { Phone, Globe, Star, ChevronLeft, ChevronRight, Check, ExternalLink } from 'lucide-react';
 import type { Course, TeeTime } from '@/lib/courses-data';
 import { TrustNote } from '@/components/TrustNote';
 import { ACCESS_FEE_PER_PLAYER, hoursLabel } from '@/lib/booking-fees';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 const TYPE_LABELS: Record<string, string> = {
   public:         'Public',
@@ -560,7 +561,7 @@ export default function CourseDetailPage({
             <span className="text-xs font-medium text-white/70 mb-1 inline-block">Private Club</span>
             <h1 className="text-2xl sm:text-3xl font-serif font-medium text-white leading-tight">{course.name}</h1>
             <p className="text-white/60 flex items-center gap-1.5 mt-1 text-sm">
-              <MapPin size={14} />
+              
               {course.city}, {course.state}
             </p>
           </div>
@@ -695,7 +696,7 @@ export default function CourseDetailPage({
         // check, RUN_QUEUE "review loop doesn't understand already-live").
         <div className="bg-pine/10 border-b border-pine/20">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-2 text-sm flex-wrap">
-            <Eye size={14} className="text-pine shrink-0" />
+            
             <span className="text-ink-soft">
               This course is already live — you&apos;re viewing it as golfers see it. Questions or changes? Message the GreenReserve team from your dashboard, or reply to any of our emails.
             </span>
@@ -705,13 +706,13 @@ export default function CourseDetailPage({
       {previewMode && !course.is_live && (
         <div className="bg-pine/10 border-b border-pine/20">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3 text-sm flex-wrap">
-            <Eye size={14} className="text-pine shrink-0" />
+            
             <span className="text-ink-soft">
               Preview of your GreenReserve page &mdash; not live yet. Booking is disabled.
             </span>
             <div className="flex items-center gap-2 ml-auto">
               {previewApprovalStatus === 'approved' ? (
-                <span className="text-xs text-ok font-medium flex items-center gap-1"><CheckCircle size={14}/>Approved</span>
+                <span className="text-xs text-ok font-medium flex items-center gap-1"><StatusDot status="ok" />Approved</span>
               ) : (
                 <button onClick={approvePreview} disabled={approvingPreview}
                   className="text-xs font-medium text-white bg-pine hover:bg-pine-hover px-3 py-1.5 rounded-md disabled:opacity-50 transition-colors">
@@ -809,7 +810,7 @@ export default function CourseDetailPage({
               This is a live demo of a GreenReserve course page — your course gets one just like it, free.
             </span>
             <Link href="/for-courses" className="text-pine font-medium hover:underline whitespace-nowrap">
-              List your course <ArrowRight size={12} className="inline -mt-0.5" />
+              List your course 
             </Link>
           </div>
         </div>
@@ -863,7 +864,7 @@ export default function CourseDetailPage({
               <div>
                 <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white leading-tight">{course.name}</h1>
                 <p className="text-white/90 flex items-center gap-1.5 mt-1 text-sm">
-                  <MapPin size={14} />
+                  
                   {[typeLabel, [course.city, course.state].filter(Boolean).join(', '), course.holes ? `${course.holes} holes` : '', course.par ? `Par ${course.par}` : ''].filter(Boolean).join(' · ')}
                 </p>
               </div>
@@ -883,7 +884,7 @@ export default function CourseDetailPage({
       {course.conditions && (
         <div className="bg-warn/5 border-b border-warn/20">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-2 text-sm text-warn">
-            <Flag size={14} className="flex-shrink-0" />
+            
             <span><span className="font-medium">Course notice:</span> {course.conditions}</span>
           </div>
         </div>
@@ -899,7 +900,7 @@ export default function CourseDetailPage({
 
           {(course.type === 'member' ? (
             <div className="max-w-md mx-auto bg-white rounded-lg border border-line p-8 text-center">
-              <Phone size={28} className="mx-auto mb-4" style={{ color: accent }} />
+              
               <h2 className="font-serif font-medium text-ink text-xl mb-2">Member-only club</h2>
               <p className="text-ink-soft text-sm mb-5">
                 This is a member-only or invitation-based club. Contact the pro shop for guest access.
@@ -941,7 +942,7 @@ export default function CourseDetailPage({
 
                   <div className="px-5 py-4 flex items-center justify-between">
                     <span className="font-medium text-ink text-sm flex items-center gap-2">
-                      <SlidersHorizontal size={14} /> Filters
+                       Filters
                     </span>
                     {activeFilterCount > 0 && (
                       <button onClick={resetFilters} className="text-xs font-medium transition-opacity hover:opacity-70" style={{ color: accent }}>
@@ -1011,7 +1012,7 @@ export default function CourseDetailPage({
                             className="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-md border text-sm font-medium transition-all"
                             style={isSel ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: 'var(--color-line)', color: 'var(--color-ink-muted)' }}
                           >
-                            <Users size={13} />
+                            
                             {n}
                           </button>
                         );
@@ -1116,7 +1117,7 @@ export default function CourseDetailPage({
                       onClick={() => setFiltersOpen(!filtersOpen)}
                       className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md border border-line bg-white text-sm font-medium text-ink shrink-0"
                     >
-                      <SlidersHorizontal size={14} />
+                      
                       Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
                     </button>
                     {/* Inline player count — saves opening the filter panel just to change players */}
@@ -1127,7 +1128,7 @@ export default function CourseDetailPage({
                         aria-label="Fewer players"
                       >−</button>
                       <div className="flex items-center gap-1 px-1.5">
-                        <Users size={12} className="text-ink-muted" />
+                        
                         <span className="text-sm font-medium text-ink tabular-nums">{players}</span>
                       </div>
                       <button
@@ -1182,7 +1183,7 @@ export default function CourseDetailPage({
                       onClick={() => openAlert()}
                       className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-line bg-white text-ink-soft hover:text-ink transition-colors"
                     >
-                      <Bell size={12} /> Set alert
+                       Set alert
                     </button>
                     {memberSession && (
                       <div className="flex items-center gap-1.5 text-xs text-ink-muted">
@@ -1260,7 +1261,7 @@ export default function CourseDetailPage({
                   </div>
                 ) : filtered.length === 0 ? (
                   <div className="bg-white rounded-lg border border-line text-center py-16 px-6">
-                    <Clock size={24} className="mx-auto mb-4 text-ink-faint" />
+                    
                     {teeTimes.length === 0 ? (
                       <div>
                         <p className="font-serif font-medium text-ink text-xl mb-1.5">Nothing open on {displayDate(selectedDate)}</p>
@@ -1289,7 +1290,7 @@ export default function CourseDetailPage({
                             onClick={() => openAlert()}
                             className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-soft hover:text-ink transition-colors"
                           >
-                            <Bell size={12} /> Tell me if something opens up
+                             Tell me if something opens up
                           </button>
                         </div>
                       </div>
@@ -1323,7 +1324,7 @@ export default function CourseDetailPage({
                       <div key={g.key}>
                         {todFilter === 'all' && (
                           <div className="text-[13px] font-semibold text-ink mb-2 flex items-center gap-1.5">
-                            <Clock size={11} /> {g.label}
+                             {g.label}
                           </div>
                         )}
                         {/* FLOW-2 (Cam 2026-10-01): one sheet with hairline rows, like the
@@ -1384,7 +1385,7 @@ export default function CourseDetailPage({
                                     </div>
                                     {isFull ? (
                                       <span className="inline-flex items-center gap-1 px-3 sm:px-4 py-2 rounded-md text-xs font-medium border border-line text-ink-soft">
-                                        <Bell size={11} /> Tell me if it opens
+                                         Tell me if it opens
                                       </span>
                                     ) : (
                                       <span
@@ -1448,7 +1449,7 @@ export default function CourseDetailPage({
                                               className="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-md border text-sm font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                                               style={slotPlayers === n && ok ? { borderColor: accent, backgroundColor: `${accent}12`, color: accent } : { borderColor: 'var(--color-line)', color: 'var(--color-ink-muted)' }}
                                             >
-                                              <Users size={13} />
+                                              
                                               {n}
                                             </button>
                                           );
@@ -1592,7 +1593,7 @@ export default function CourseDetailPage({
                   {course.address && (
                     <div className="space-y-1.5">
                       <div className="flex items-start gap-3 text-sm text-ink-soft">
-                        <MapPin size={16} className="text-ink-muted mt-0.5 flex-shrink-0" />
+                        
                         {course.address}
                       </div>
                       {directionsUrl && (
@@ -1603,7 +1604,7 @@ export default function CourseDetailPage({
                           className="inline-flex items-center gap-1.5 text-xs font-medium hover:underline ml-7"
                           style={{ color: accent }}
                         >
-                          <Navigation size={12} />
+                          
                           Get directions
                         </a>
                       )}
@@ -1677,7 +1678,7 @@ export default function CourseDetailPage({
             ) : (
               <>
                 <div className="flex items-center gap-2 mb-1.5">
-                  <Bell size={15} style={{ color: accent }} />
+                  
                   <h3 className="font-serif font-medium text-ink text-xl leading-none">Get an alert</h3>
                 </div>
                 <p className="text-sm text-ink mb-5">
@@ -1731,9 +1732,6 @@ export default function CourseDetailPage({
           onClick={() => setDemoModal(false)}
         >
           <div className="bg-white rounded-lg max-w-sm w-full p-7 shadow-card" onClick={e => e.stopPropagation()}>
-            <div className="w-10 h-10 rounded-full bg-pine/10 flex items-center justify-center mx-auto mb-4">
-              <Flag size={20} className="text-pine" />
-            </div>
             <h3 className="font-serif font-medium text-ink text-xl text-center mb-2">Demo course</h3>
             <p className="text-sm text-ink-soft text-center leading-relaxed mb-6">
               Bookings are disabled on this demo page. This is where your golfers would receive their confirmation — with your course name, their tee time, and a check-in link.

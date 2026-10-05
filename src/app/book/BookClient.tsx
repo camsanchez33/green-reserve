@@ -8,7 +8,7 @@ import type { Stripe } from '@stripe/stripe-js';
 import {
   Elements, CardElement, useStripe, useElements,
 } from '@stripe/react-stripe-js';
-import { ChevronLeft, Lock, Loader2, AlertCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { ACCESS_FEE_PER_PLAYER, serviceFeeLabel, hoursLabel } from '@/lib/booking-fees';
 import { TrustNote } from '@/components/TrustNote';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
@@ -260,7 +260,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-lg border border-line p-8 text-center">
-          <AlertCircle className="w-10 h-10 text-bad mx-auto mb-4" />
+          
           <h1 className="font-semibold text-ink mb-2">Can&apos;t complete this booking</h1>
           <p className="text-ink-soft text-sm mb-6">{loadError || 'This tee time is no longer available.'}</p>
           <button
@@ -294,7 +294,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
     <div className="min-h-screen bg-paper">
       <div className="max-w-2xl mx-auto px-4 py-10">
         <button onClick={() => router.back()} className="inline-flex items-center gap-1.5 text-ink-soft hover:text-ink text-sm mb-6 transition-colors">
-          <ChevronLeft size={16} /> Back to tee times
+           Back to tee times
         </button>
 
         <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Confirm Your Tee Time</h1>
@@ -559,7 +559,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
       </button>
       {needsCard && (
       <div className="flex items-center justify-center gap-2 text-ink-muted text-xs">
-        <Lock size={12} />
+        
         <span>Secured by Stripe</span>
       </div>
       )}

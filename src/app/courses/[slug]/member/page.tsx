@@ -1,11 +1,7 @@
 'use client';
 import { use, useEffect, useMemo, useState, FormEvent } from 'react';
 import Link from 'next/link';
-import {
-  ArrowLeft, Clock, LogOut, CreditCard, CalendarDays,
-  ChevronLeft, ChevronRight, Check, AlertCircle, Mail,
-  Loader2,
-} from 'lucide-react';
+import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { StatusDot } from '@/components/ui/StatusDot';
 
@@ -198,22 +194,19 @@ function SignInPanel({
 
           {errorParam === 'invalid' && (
             <div className="flex items-start gap-2 bg-bad/5 border border-bad/20 rounded-md p-3 mb-4 text-sm text-bad">
-              <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
+              <StatusDot status="bad" />
               That sign-in link has expired or is invalid. Request a new one below.
             </div>
           )}
           {errorParam === 'inactive' && (
             <div className="flex items-start gap-2 bg-warn/5 border border-warn/20 rounded-md p-3 mb-4 text-sm text-warn">
-              <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
+              <StatusDot status="bad" />
               Your membership is inactive. Contact the course for assistance.
             </div>
           )}
 
           {sent ? (
             <div className="text-center py-4">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-pine/10 mb-4">
-                <Mail size={22} className="text-pine" />
-              </div>
               <p className="font-semibold text-ink mb-1">Check your email</p>
               <p className="text-sm text-ink">
                 If <strong>{email}</strong> is registered as a member, a sign-in link is on its way.
@@ -245,7 +238,7 @@ function SignInPanel({
               </div>
               {err && (
                 <p className="text-sm text-bad flex items-center gap-1.5">
-                  <AlertCircle size={13} /> {err}
+                  <StatusDot status="bad" /> {err}
                 </p>
               )}
               <button
@@ -396,7 +389,7 @@ function MemberDashboard({
             onClick={handleSignOut}
             className="flex items-center gap-1.5 text-xs text-ink-soft hover:text-ink flex-shrink-0"
           >
-            <LogOut size={13} />
+            
             Sign out
           </button>
         </div>
@@ -417,9 +410,9 @@ function MemberDashboard({
                 }`}
               >
                 {t === 'tee-times' ? (
-                  <><CalendarDays size={14} /> Tee Times</>
+                  <> Tee Times</>
                 ) : (
-                  <><CreditCard size={14} /> Payments</>
+                  <> Payments</>
                 )}
               </button>
             ))}
@@ -443,7 +436,7 @@ function MemberDashboard({
                       disabled={!canPrevMonth}
                       className="p-1 rounded text-ink-muted hover:text-ink-soft disabled:opacity-25"
                     >
-                      <ChevronLeft size={15} />
+                      
                     </button>
                     <span className="text-sm font-medium text-ink">{monthLabel(calMonth)}</span>
                     <button
@@ -453,7 +446,7 @@ function MemberDashboard({
                       disabled={!canNextMonth}
                       className="p-1 rounded text-ink-muted hover:text-ink-soft disabled:opacity-25"
                     >
-                      <ChevronRight size={15} />
+                      
                     </button>
                   </div>
                   <div className="grid grid-cols-7 text-center text-[11px] font-medium text-ink-muted mb-1">
@@ -568,7 +561,7 @@ function MemberDashboard({
                 </div>
               ) : teeTimes.length === 0 ? (
                 <div className="bg-white rounded-lg border border-line text-center py-14 px-6">
-                  <Clock size={28} className="mx-auto mb-3 text-ink-faint" />
+                  
                   <p className="text-ink text-sm">No tee times available for this date.</p>
                 </div>
               ) : (
@@ -576,7 +569,7 @@ function MemberDashboard({
                   {groups.map(g => (
                     <div key={g.key}>
                       <div className="text-[13px] font-semibold text-ink mb-2 flex items-center gap-1.5">
-                        <Clock size={11} /> {g.label}
+                         {g.label}
                       </div>
                       <div className="space-y-2">
                         {g.items.map(t => {

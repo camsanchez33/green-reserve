@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { MapPin, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
 import type { Course } from '@/lib/courses-data';
 
 const TYPE_LABELS: Record<string, string> = {
@@ -69,7 +69,7 @@ export default function CourseCard({ course }: { course: Course }) {
             {course.name}
           </h3>
           <p className="text-ink-muted text-sm mb-3 flex items-center gap-1">
-            <MapPin size={12} className="flex-shrink-0" />
+            
             {course.city}, {course.state}
           </p>
 
