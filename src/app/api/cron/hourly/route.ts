@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { chargeOnConnectedAccount } from '@/lib/stripe';
 import { recordBookingEventSafe } from '@/lib/booking-events';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
-import { holdsAtCutoff } from '@/lib/cancel-policy';
+import { holdsAtCutoff, bookingWindowHours } from '@/lib/cancel-policy';
 import { markNoShow, dueAutoNoShows } from '@/lib/no-show-fee';
 import {
   sendCancellationWarningEmail,
@@ -63,7 +63,8 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
     if (booking.cancellationFeeTotal <= 0) continue;
 
     const teeMs = teeToUtcMs(booking.teeTime.date, booking.teeTime.time, booking.course.timezone);
-    const cutoffMs = teeMs - booking.course.cancellationHours * 3600 * 1000;
+    const windowHours = bookingWindowHours(booking, booking.course);
+    const cutoffMs = teeMs - windowHours * 3600 * 1000;
     const minsToCutoff = (cutoffMs - now.getTime()) / 60000;
 
     if (minsToCutoff >= 45 && minsToCutoff < 75) {
@@ -78,7 +79,7 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
           time: booking.teeTime.time,
           feeAmount: booking.cancellationFeeTotal,
           bookingId: booking.id,
-          cancellationHours: booking.course.cancellationHours,
+          cancellationHours: windowHours,
           checkInToken: booking.checkInToken,
         });
         results.warnings++;

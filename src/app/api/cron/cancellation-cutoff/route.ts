@@ -1,4 +1,4 @@
-import { holdsAtCutoff } from '@/lib/cancel-policy';
+import { holdsAtCutoff, bookingWindowHours } from '@/lib/cancel-policy';
 import { NextRequest, NextResponse } from 'next/server';
 import { cronAuthFailure } from '@/lib/cron-auth';
 import { cronRoute } from '@/lib/cron-log';
@@ -55,7 +55,7 @@ export const GET = cronRoute('cancellation-cutoff', async (req: NextRequest) => 
   for (const booking of candidates) {
     const tz = booking.course.timezone || 'America/New_York';
     const teeMs = teeToUtcMs(booking.teeTime.date, booking.teeTime.time, tz);
-    const cutoffMs = teeMs - booking.course.cancellationHours * 60 * 60 * 1000;
+    const cutoffMs = teeMs - bookingWindowHours(booking, booking.course) * 60 * 60 * 1000;
     if (cutoffMs > now.getTime()) continue; // cancellation window still open — nothing to do yet
 
     // SP-B: only "hold at the cutoff" bookings are held here; a late-cancel-timing

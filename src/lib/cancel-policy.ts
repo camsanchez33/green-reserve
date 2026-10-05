@@ -77,6 +77,17 @@ export const holdsAtCutoff = (b: { lateFeeTimingAtBooking?: string | null }) =>
   (b.lateFeeTimingAtBooking ?? 'hold_at_cutoff') === 'hold_at_cutoff';
 
 /** SP-B: is a late cancellation charged at the moment of cancelling? */
+/**
+ * R-PAY-003: the cancellation window THIS booking was made under — copied onto
+ * the Booking at creation ("the window this golfer agreed to, whatever the
+ * course changes later"). The course's live value only for rows older than the
+ * copy. Every cutoff (the hold, the warning, the manage page, a cancel) uses this.
+ */
+export const bookingWindowHours = (
+  b: { cancellationHoursAtBooking?: number | null },
+  course: { cancellationHours: number },
+): number => b.cancellationHoursAtBooking ?? course.cancellationHours;
+
 export const chargesOnLateCancel = (b: { lateFeeTimingAtBooking?: string | null }) =>
   b.lateFeeTimingAtBooking === 'late_cancel' || b.lateFeeTimingAtBooking === 'late_cancel_or_no_show';
 

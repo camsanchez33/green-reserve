@@ -204,7 +204,7 @@ export async function POST(req: NextRequest) {
         date: booking.teeTime.date, time: booking.teeTime.time, players: booking.players, holes: booking.teeTime.holes,
         greenFeeTotal: booking.greenFeeTotal, cartFeeTotal: booking.cartFeeTotal, accessFeeTotal: booking.accessFeeTotal, totalAmount: booking.totalAmount,
         bookingId: booking.id, appliedRate: booking.appliedRate, rangeBallsTotal: booking.rangeBallsTotal,
-        cancellationFeeTotal: booking.cancellationFeeTotal, cancellationHours: booking.course.cancellationHours ?? 24, confirmationNote: booking.course.confirmationNote,
+        cancellationFeeTotal: booking.cancellationFeeTotal, cancellationHours: booking.cancellationHoursAtBooking ?? booking.course.cancellationHours ?? 24, confirmationNote: booking.course.confirmationNote,
         checkInToken: booking.checkInToken ?? undefined, noCard: !booking.stripePaymentMethodId,
       });
     } catch (err) {
