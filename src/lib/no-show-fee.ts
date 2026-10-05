@@ -17,6 +17,7 @@ import { stripe, chargeOnConnectedAccount } from './stripe';
 import { recordPaymentEvent } from './refund-booking';
 import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
 import { chargeAccessFeeSeparately, type FeeChargeResult } from './access-fee';
+import { teeToUtcMs } from './tee-time-utils';
 
 export type NoShowResult = {
   /** GreenReserve's booking fee. */
@@ -82,6 +83,36 @@ export async function markNoShow(bookingId: string, actor: EventActor, opts: { a
     }
   }
   return { fee, courseFee };
+}
+
+/**
+ * Bookings the hourly cron should mark a no-show now: made under a policy with
+ * automatic no-show, still confirmed, nobody checked in, N minutes past the
+ * tee time. Only the last two days are scanned; anything older was handled.
+ *
+ * R-CRON-001: "still coming" clears noShowAt and refunds both charges, which
+ * used to put the booking straight back in this list with its due time still
+ * past — the next run re-marked it and charged again. Staff have spoken for
+ * that round: a booking with a no_show_cleared event is never auto-marked
+ * again (staff can still mark it by hand).
+ */
+export async function dueAutoNoShows(now: Date): Promise<string[]> {
+  const scanFrom = new Date(now.getTime() - 2 * 86_400_000).toISOString().slice(0, 10);
+  const scanTo = new Date(now.getTime() + 86_400_000).toISOString().slice(0, 10);
+  const candidates = await prisma.booking.findMany({
+    where: { status: 'confirmed', noShowAt: null, checkedInAt: null, autoNoShowMinutesAtBooking: { not: null }, teeTime: { date: { gte: scanFrom, lte: scanTo } } },
+    select: { id: true, autoNoShowMinutesAtBooking: true, teeTime: { select: { date: true, time: true } }, course: { select: { timezone: true } } },
+  });
+  if (!candidates.length) return [];
+  const cleared = new Set((await prisma.bookingEvent.findMany({
+    where: { bookingId: { in: candidates.map(b => b.id) }, type: 'no_show_cleared' },
+    select: { bookingId: true },
+  })).map(e => e.bookingId));
+  return candidates.filter(b => {
+    if (cleared.has(b.id)) return false;
+    const dueMs = teeToUtcMs(b.teeTime.date, b.teeTime.time, b.course.timezone) + (b.autoNoShowMinutesAtBooking ?? 0) * 60_000;
+    return Number.isFinite(dueMs) && dueMs <= now.getTime();
+  }).map(b => b.id);
 }
 
 /** "Still coming": refund the course's no-show charge, if one is live. Never throws. */
