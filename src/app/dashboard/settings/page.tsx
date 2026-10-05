@@ -729,8 +729,32 @@ function SettingsPageInner() {
                   <p className="text-xs text-ink-soft">Only the course owner&apos;s login can change the cancellation policy.</p>
                 </SectionCard>
               ) : (<SectionCard title="Cancellation & card">
-                <Toggle label="Late-cancellation fee" checked={!!form.lateCancellationFee} onChange={() => set('lateCancellationFee', form.lateCancellationFee ? 0 : 10)}/>
-                {!!form.lateCancellationFee && (
+                {/* CARD-1 (Cam 2026-10-05: "a way for the course to not require a card"): the
+                    choice made explicit. Nothing new is stored — "no card" IS both fees at $0
+                    (cardRequired() in lib/cancel-policy), so picking it clears the fees and the
+                    pay-link hours below become the whole policy. */}
+                <Field label="Card at booking">
+                  <div className="space-y-2">
+                    {([
+                      { key: 'card', label: 'Ask for a card at booking', help: 'Lets you charge a late-cancellation or no-show fee. Nothing is charged at booking.' },
+                      { key: 'none', label: 'No card at booking', help: 'Golfers book with their name and email only, then get a link to check in and pay before their round. No late or no-show fees — there would be no card to charge.' },
+                    ] as const).map(o => {
+                      const sel = (o.key === 'card') === formTerms.cardNeeded;
+                      return (
+                        <label key={o.key} className={'flex items-start gap-2.5 px-3 py-2.5 rounded-md border cursor-pointer bg-white ' + (sel ? 'border-pine/40' : 'border-line')}>
+                          <input type="radio" name="card-at-booking" checked={sel} className="mt-0.5 accent-pine"
+                            onChange={() => {
+                              if (o.key === 'none') { set('lateCancellationFee', 0); set('noShowFee', 0); }
+                              else if (!formTerms.cardNeeded) set('lateCancellationFee', 10);
+                            }}/>
+                          <span><span className="block text-sm font-medium text-ink">{o.label}</span><span className="block text-xs text-ink-muted">{o.help}</span></span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </Field>
+                {formTerms.cardNeeded && <Toggle label="Late-cancellation fee" checked={!!form.lateCancellationFee} onChange={() => set('lateCancellationFee', form.lateCancellationFee ? 0 : 10)}/>}
+                {formTerms.cardNeeded && !!form.lateCancellationFee && (
                   <>
                     <div className="grid sm:grid-cols-2 gap-3">
                       <Field label="Fee ($)">
@@ -758,8 +782,8 @@ function SettingsPageInner() {
                     </Field>
                   </>
                 )}
-                <Toggle label="No-show fee" checked={!!form.noShowFee} onChange={() => set('noShowFee', form.noShowFee ? 0 : 20)}/>
-                {!!form.noShowFee && (
+                {formTerms.cardNeeded && <Toggle label="No-show fee" checked={!!form.noShowFee} onChange={() => set('noShowFee', form.noShowFee ? 0 : 20)}/>}
+                {formTerms.cardNeeded && !!form.noShowFee && (
                   <div className="grid sm:grid-cols-2 gap-3">
                     <Field label="No-show fee ($)" hint="Charged when a group never shows. Under “cancel late or don’t show” this replaces the late fee for a no-show.">
                       <FInput value={form.noShowFee as number} onChange={v=>set('noShowFee',Number(v))} type="number" step="0.01"/>
@@ -778,8 +802,8 @@ function SettingsPageInner() {
                     <FInput value={form.autoNoShowMinutes as number} onChange={v=>set('autoNoShowMinutes',Number(v))} type="number"/>
                   </Field>
                 )}
-                <Field label={formTerms.cardNeeded ? 'Check-in reminder (hours before the round)' : 'Pay link (hours before the round)'} hint={formTerms.cardNeeded ? 'Golfers get their check-in link this many hours before their tee time.' : 'With no fees there is no card at booking — golfers get a link this many hours before their round to check in and pay.'}>
-                  <FInput value={form.checkInWindowHours as number} onChange={v=>set('checkInWindowHours',Number(v))} type="number"/>
+                <Field label={formTerms.cardNeeded ? 'Check-in reminder (hours before the round)' : 'Pay link (hours before the round)'} hint={formTerms.cardNeeded ? 'Golfers get their check-in link this many hours before their tee time.' : 'Golfers get a link this many hours before their tee time to check in and pay.'}>
+                  <FInput value={(form.checkInWindowHours ?? 3) as number} onChange={v=>set('checkInWindowHours',Number(v))} type="number"/>
                 </Field>
                 <Field label="Rain check policy"><FInput value={form.rainCheckPolicy as string} onChange={v=>set('rainCheckPolicy',v)} placeholder="e.g. Rain checks issued for 9+ holes of rain"/></Field>
                 <div className="bg-paper/70 rounded-md p-4">

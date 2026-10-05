@@ -6199,7 +6199,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 967,
+      "lines": 991,
       "purpose": "",
       "brain": [],
       "exports": [
