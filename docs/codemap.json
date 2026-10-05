@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 379,
+    "files": 382,
     "routes": 204,
-    "libs": 106,
+    "libs": 108,
     "models": 35,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -2842,7 +2842,7 @@
     },
     {
       "path": "src/app/api/birdie/chat/route.ts",
-      "lines": 204,
+      "lines": 246,
       "purpose": "BIRDIE_AI_SPEC B1 — the one endpoint.",
       "brain": [],
       "exports": [
@@ -2857,13 +2857,18 @@
         {
           "name": "POST",
           "kind": "route"
+        },
+        {
+          "name": "PUT",
+          "kind": "route"
         }
       ],
       "route": "/api/birdie/chat",
       "kind": "api",
       "methods": [
         "GET",
-        "POST"
+        "POST",
+        "PUT"
       ],
       "auth": "operator",
       "guard": "file",
@@ -2871,6 +2876,8 @@
         "@/lib/birdie/course-context",
         "@/lib/birdie/guardrails",
         "@/lib/birdie/knowledge-operator",
+        "@/lib/birdie/proposal-types",
+        "@/lib/birdie/proposals",
         "@/lib/birdie/tools",
         "@/lib/course-time",
         "@/lib/prisma",
@@ -7257,7 +7264,7 @@
     },
     {
       "path": "src/components/birdie/BirdieWidget.tsx",
-      "lines": 184,
+      "lines": 189,
       "purpose": "BIRDIE_AI_SPEC B1 — the floating Birdie button and chat panel for the operator dashboard.",
       "brain": [],
       "exports": [
@@ -7272,6 +7279,8 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./ConfirmCard",
+        "@/lib/birdie/proposal-types",
         "@/lib/unsaved-guard",
         "lucide-react",
         "next/image",
@@ -7280,6 +7289,31 @@
       ],
       "usedBy": [
         "src/components/OperatorSidebar.tsx"
+      ]
+    },
+    {
+      "path": "src/components/birdie/ConfirmCard.tsx",
+      "lines": 85,
+      "purpose": "BIRDIE_AI_SPEC B4b — a change Birdie drafted, waiting on the operator.",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ConfirmCard",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/StatusDot",
+        "@/lib/birdie/proposal-types",
+        "react"
+      ],
+      "usedBy": [
+        "src/components/birdie/BirdieWidget.tsx"
       ]
     },
     {
@@ -8045,6 +8079,7 @@
         "src/app/manage/[bookingId]/page.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
         "src/components/admin/InquiryCallCards.tsx",
+        "src/components/birdie/ConfirmCard.tsx",
         "src/components/dashboard/AgreementNotice.tsx",
         "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/GettingStartedChecklist.tsx",
@@ -9100,6 +9135,86 @@
       ]
     },
     {
+      "path": "src/lib/birdie/proposal-types.ts",
+      "lines": 30,
+      "purpose": "BIRDIE_AI_SPEC B4b — the confirm-card shape, shared by the server (which builds cards in proposals.ts) and the widget (which shows them and makes the call).",
+      "brain": [],
+      "exports": [
+        {
+          "name": "isProposalCard",
+          "kind": "fn"
+        },
+        {
+          "name": "PROPOSAL_ROUTES",
+          "kind": "const"
+        },
+        {
+          "name": "ProposalCall",
+          "kind": "type"
+        },
+        {
+          "name": "ProposalCard",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/birdie/chat/route.ts",
+        "src/components/birdie/BirdieWidget.tsx",
+        "src/components/birdie/ConfirmCard.tsx",
+        "src/lib/birdie/proposals.ts"
+      ]
+    },
+    {
+      "path": "src/lib/birdie/proposals.ts",
+      "lines": 201,
+      "purpose": "BIRDIE_AI_SPEC B4b (Cam 2026-10-05) — propose-and-confirm CHANGES.",
+      "brain": [],
+      "exports": [
+        {
+          "name": "isProposeTool",
+          "kind": "fn"
+        },
+        {
+          "name": "ProposalCard",
+          "kind": "reexport"
+        },
+        {
+          "name": "ProposalOutcome",
+          "kind": "type"
+        },
+        {
+          "name": "PROPOSE_TOOLS",
+          "kind": "const"
+        },
+        {
+          "name": "runProposeTool",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "../course-time",
+        "../prisma",
+        "../schedule-service",
+        "./proposal-types",
+        "./tools",
+        "@anthropic-ai/sdk"
+      ],
+      "usedBy": [
+        "src/app/api/birdie/chat/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/birdie/tools.ts",
       "lines": 182,
       "purpose": "BIRDIE_AI_SPEC B4a (Cam 2026-10-05) — live-data READ tools for the operator persona.",
@@ -9137,7 +9252,8 @@
         "@anthropic-ai/sdk"
       ],
       "usedBy": [
-        "src/app/api/birdie/chat/route.ts"
+        "src/app/api/birdie/chat/route.ts",
+        "src/lib/birdie/proposals.ts"
       ]
     },
     {
@@ -10367,6 +10483,7 @@
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/lib/analytics.ts",
+        "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/booking-events.ts",
         "src/lib/public-tee-times.ts",
@@ -12465,6 +12582,7 @@
         "src/lib/approval-state.ts",
         "src/lib/birdie/course-context.ts",
         "src/lib/birdie/guardrails.ts",
+        "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/booking-events.ts",
         "src/lib/call-invite.ts",
@@ -12797,6 +12915,7 @@
         "src/app/api/admin/tee-sheet/route.ts",
         "src/app/api/operator/schedule/route.ts",
         "src/app/api/operator/tee-times/route.ts",
+        "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts"
       ]
     },
@@ -14014,6 +14133,7 @@
       ],
       "readers": [
         "src/app/api/operator/blackouts/route.ts",
+        "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/weather-cancel.ts"
@@ -14246,6 +14366,7 @@
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/lib/access-fee.ts",
         "src/lib/analytics.ts",
+        "src/lib/birdie/proposals.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/course-closure.ts",

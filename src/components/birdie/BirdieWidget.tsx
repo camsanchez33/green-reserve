@@ -8,8 +8,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { X, Send, ArrowRight } from 'lucide-react';
 import { confirmLeave } from '@/lib/unsaved-guard';
+import { ConfirmCard } from './ConfirmCard';
+import { isProposalCard, type ProposalCard } from '@/lib/birdie/proposal-types';
 
-type Turn = { role: 'user' | 'assistant'; content: string; pending?: boolean; error?: boolean; status?: string };
+type Turn = { role: 'user' | 'assistant'; content: string; pending?: boolean; error?: boolean; status?: string; cards?: ProposalCard[] };
 type Meta = { enabled: boolean; greeting: string; chips: string[]; helpsWith: string };
 
 const OPEN_KEY = 'birdie:open';
@@ -105,10 +107,13 @@ export default function BirdieWidget() {
       let acc = '';
       let buf = '';
       let status = '';
+      const cards: ProposalCard[] = [];
       const apply = (line: string) => {
         if (!line.trim()) return;
         try {
           const ev = JSON.parse(line) as { t?: string; d?: unknown };
+          // B4b: a drafted change — rendered as a confirm card, never applied here.
+          if (ev.t === 'card') { if (isProposalCard(ev.d)) cards.push(ev.d); return; }
           if (typeof ev.d !== 'string') return;
           if (ev.t === 'text') { acc += ev.d; status = ''; }
           else if (ev.t === 'status') status = ev.d;
@@ -121,10 +126,10 @@ export default function BirdieWidget() {
         const lines = buf.split('\n');
         buf = lines.pop() ?? '';
         lines.forEach(apply);
-        setTurns([...history, { role: 'assistant', content: acc, status, pending: true }]);
+        setTurns([...history, { role: 'assistant', content: acc, status, pending: true, cards: [...cards] }]);
       }
       apply(buf + dec.decode());
-      setTurns([...history, { role: 'assistant', content: acc || "…I didn't get a reply. Ask again?" , error: !acc }]);
+      setTurns([...history, { role: 'assistant', content: acc || (cards.length ? '' : "…I didn't get a reply. Ask again?"), error: !acc && !cards.length, cards }]);
     } catch (err) {
       if ((err as { name?: string }).name === 'AbortError') return;
       setTurns([...history, { role: 'assistant', content: 'Network error — Birdie could not answer. Check your connection and try again.', error: true }]);
@@ -167,7 +172,7 @@ export default function BirdieWidget() {
             {turns.map((t, i) => (
               <div key={i} className={t.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
                 <div className={'max-w-[88%] text-sm whitespace-pre-wrap leading-relaxed rounded-md px-3 py-2 ' + (t.role === 'user' ? 'bg-pine text-white' : t.error ? 'bg-bad/5 border border-bad/20 text-bad' : 'bg-paper text-ink')}>
-                  {t.role === 'assistant' && !t.content && t.pending ? <span className="text-ink-muted">{t.status || 'Birdie is thinking…'}</span> : t.role === 'assistant' ? <>{renderReply(t.content)}{t.pending && t.status ? <span className="block mt-1 text-ink-muted">{t.status}</span> : null}</> : t.content}
+                  {t.role === 'assistant' && !t.content && t.pending ? <span className="text-ink-muted">{t.status || 'Birdie is thinking…'}</span> : t.role === 'assistant' ? <>{renderReply(t.content)}{t.pending && t.status ? <span className="block mt-1 text-ink-muted">{t.status}</span> : null}{t.cards?.map(c => <ConfirmCard key={c.id} card={c} />)}</> : t.content}
                 </div>
               </div>
             ))}

@@ -77,7 +77,24 @@ The pro-shop owner's guide dog. Tools/knowledge:
 - The reply stream is NDJSON events ({"t":"text"} / {"t":"status"}) so B4b can
   add confirm cards on the same channel.
 
-## Phase B4 — Operator ACTIONS (propose-and-confirm, later)
+## Phase B4b — propose-and-confirm CHANGES (BUILT 2026-10-05)
+- Tools in `src/lib/birdie/proposals.ts`: propose_schedule_change (first/last
+  tee, interval, days, weekday/weekend green fee, cart fee, run/pause),
+  propose_block_day, propose_unblock_day. Each validates against the course's
+  real rows (session courseId) and the login's `schedule.edit`, and returns a
+  CARD (old → new, a note on what it does NOT touch, and the exact call the
+  Schedule page would make). Drafting never writes.
+- `src/components/birdie/ConfirmCard.tsx`: Confirm calls that same route from
+  the browser (PATCH /api/operator/schedule, POST/DELETE /api/operator/blackouts
+  — the only allow-listed calls, checked by `isProposalCard` in
+  `proposal-types.ts`), so the route's permission + agreement + validation are
+  the control. Outcome logged via PUT /api/birdie/chat (`birdie.applied`).
+  At most two cards per turn.
+- Never: money movement, refunds, the cancellation policy, Stripe, staff,
+  members, course details, cancelling bookings — no tool exists; the prompt
+  says so.
+
+## Phase B4 — Operator ACTIONS (original plan)
 - "Change my weekend rate to $70" → Birdie drafts the change and shows a
   confirm card (old value → new value); NOTHING happens without the
   operator clicking Confirm; every applied change hits the same validated

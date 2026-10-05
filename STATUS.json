@@ -1,24 +1,26 @@
 {
-  "generatedAt": "2026-10-05T19:05:18.023Z",
+  "generatedAt": "2026-10-05T19:13:24.052Z",
   "repo": {
-    "head": "daa1894",
+    "head": "f553cbe",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 9,
+    "dirtyCount": 11,
     "dirty": [
       "M BIRDIE_AI_SPEC.md",
+      " M CLAUDE.md",
       " M RUN_QUEUE.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
       " M scripts/birdie-isolation-test.ts",
       " M src/app/api/birdie/chat/route.ts",
       " M src/components/birdie/BirdieWidget.tsx",
-      " M src/lib/birdie/knowledge-operator.ts",
-      "?? src/lib/birdie/tools.ts"
+      "?? src/components/birdie/ConfirmCard.tsx",
+      "?? src/lib/birdie/proposal-types.ts",
+      "?? src/lib/birdie/proposals.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
-    "queueLastCommit": "2026-10-05T18:57:04+00:00",
+    "queueLastCommit": "2026-10-05T19:05:28+00:00",
     "unrecorded": []
   },
   "counts": {
@@ -211,7 +213,7 @@
   ],
   "next": [
     {
-      "title": "PERS-1 (MERGED #65) · BIRDIE-B4a (BUILT 2026-10-05 — tools.ts read tools, Haiku→Opus 5.5 escalation on the first tool call, NDJSON stream, isolation tests extended; not yet run against the live model)",
+      "title": "PERS-1 (MERGED #65) · BIRDIE-B4b (BUILT 2026-10-05 — proposals.ts + ConfirmCard, allow-listed routes, birdie.applied log, 14 more isolation checks) · BIRDIE-B4a (MERGED #66, BUILT 2026-10-05 — tools.t",
       "line": 29,
       "section": "Queue (run in this order)"
     },
@@ -549,6 +551,12 @@
       "ageDays": 19
     },
     {
+      "file": "BIRDIE_AI_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-05",
+      "ageDays": 0
+    },
+    {
       "file": "HOMEPAGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-05",
@@ -604,12 +612,6 @@
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
-    },
-    {
-      "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-15",
       "ageDays": 19
@@ -714,6 +716,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "e65d5db",
+      "date": "2026-10-05",
+      "subject": "BIRDIE-B4a: Birdie answers from live course data"
+    },
+    {
       "h": "17267d1",
       "date": "2026-10-05",
       "subject": "PERS-1: course photo and logo on golfer pages, plus a note from the course"
@@ -767,11 +774,6 @@
       "h": "566e11e",
       "date": "2026-10-05",
       "subject": "CLUB-1: homepage leads with what GreenReserve is; heavier Garamond site-wide"
-    },
-    {
-      "h": "d9e4bed",
-      "date": "2026-10-05",
-      "subject": "Regenerate code map after the CLUB-0 review fixes"
     }
   ]
 }
