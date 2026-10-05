@@ -45,7 +45,8 @@ function MessagesContent() {
 
   async function markRead(id: string) {
     const r = await dfetch('/api/operator/announcements/dismiss', { method: 'POST', body: JSON.stringify({ announcementId: id }) });
-    if (r.ok) setAnnouncements(list => list.map(a => a.id === id ? { ...a, read: true } : a));
+    // Seeing one marks it and everything older as seen (the dismiss route does the same).
+    if (r.ok) setAnnouncements(list => { const at = list.find(a => a.id === id)?.createdAt ?? ''; return list.map(a => a.id === id || a.createdAt <= at ? { ...a, read: true } : a); });
     else toast(r.error);
   }
 

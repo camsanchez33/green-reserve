@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 377,
+    "files": 378,
     "routes": 204,
-    "libs": 104,
+    "libs": 105,
     "models": 35,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -4086,7 +4086,7 @@
     },
     {
       "path": "src/app/api/operator/announcements/dismiss/route.ts",
-      "lines": 21,
+      "lines": 31,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4103,6 +4103,7 @@
       "auth": "operator",
       "guard": "file",
       "imports": [
+        "@/lib/announcement-audience",
         "@/lib/prisma",
         "@/lib/session",
         "next/server"
@@ -4111,7 +4112,7 @@
     },
     {
       "path": "src/app/api/operator/announcements/route.ts",
-      "lines": 31,
+      "lines": 42,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4128,6 +4129,7 @@
       "auth": "operator",
       "guard": "file",
       "imports": [
+        "@/lib/announcement-audience",
         "@/lib/prisma",
         "@/lib/session",
         "next/server"
@@ -5967,7 +5969,7 @@
     },
     {
       "path": "src/app/dashboard/messages/page.tsx",
-      "lines": 192,
+      "lines": 193,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8751,6 +8753,30 @@
       "usedBy": [
         "src/app/api/operator/analytics/route.ts",
         "src/app/dashboard/analytics/page.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/announcement-audience.ts",
+      "lines": 18,
+      "purpose": "Cam 2026-10-05:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "announcementsSince",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/operator/announcements/dismiss/route.ts",
+        "src/app/api/operator/announcements/route.ts"
       ]
     },
     {
@@ -12368,6 +12394,7 @@
         "src/lib/agreement-required.ts",
         "src/lib/agreement-sign.ts",
         "src/lib/analytics.ts",
+        "src/lib/announcement-audience.ts",
         "src/lib/approval-state.ts",
         "src/lib/birdie/course-context.ts",
         "src/lib/birdie/guardrails.ts",
@@ -13853,6 +13880,7 @@
       ],
       "readers": [
         "src/app/api/admin/broadcasts/route.ts",
+        "src/app/api/operator/announcements/dismiss/route.ts",
         "src/app/api/operator/announcements/route.ts"
       ]
     },
@@ -14885,6 +14913,7 @@
         "src/lib/agreement-required.ts",
         "src/lib/agreement-sign.ts",
         "src/lib/analytics.ts",
+        "src/lib/announcement-audience.ts",
         "src/lib/birdie/course-context.ts",
         "src/lib/course-closure.ts",
         "src/lib/go-live-preflight.ts",

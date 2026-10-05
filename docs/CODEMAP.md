@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-377 source files · 204 routes · 104 libraries · 35 models
+378 source files · 204 routes · 105 libraries · 35 models
 
 ## Single sources of truth
 
@@ -176,8 +176,8 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/active-course` | operator | file | POST | `src/app/api/operator/active-course/route.ts` | 30 |
 | `/api/operator/agreement` | operator | file | GET POST | `src/app/api/operator/agreement/route.ts` | 37 |
 | `/api/operator/analytics` | operator | file | GET | `src/app/api/operator/analytics/route.ts` | 35 |
-| `/api/operator/announcements` | operator | file | GET | `src/app/api/operator/announcements/route.ts` | 31 |
-| `/api/operator/announcements/dismiss` | operator | file | POST | `src/app/api/operator/announcements/dismiss/route.ts` | 21 |
+| `/api/operator/announcements` | operator | file | GET | `src/app/api/operator/announcements/route.ts` | 42 |
+| `/api/operator/announcements/dismiss` | operator | file | POST | `src/app/api/operator/announcements/dismiss/route.ts` | 31 |
 | `/api/operator/approve-page` | operator | file | POST | `src/app/api/operator/approve-page/route.ts` | 65 |
 | `/api/operator/blackouts` | operator | file | DELETE GET POST | `src/app/api/operator/blackouts/route.ts` | 47 |
 | `/api/operator/bookings` | operator | file | GET PATCH POST | `src/app/api/operator/bookings/route.ts` | 284 |
@@ -233,7 +233,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 73 |
 | `/dashboard/login` | operator | entry | page | `src/app/dashboard/login/page.tsx` | 79 |
 | `/dashboard/members` | operator | middleware | page | `src/app/dashboard/members/page.tsx` | 719 |
-| `/dashboard/messages` | operator | middleware | page | `src/app/dashboard/messages/page.tsx` | 192 |
+| `/dashboard/messages` | operator | middleware | page | `src/app/dashboard/messages/page.tsx` | 193 |
 | `/dashboard/money` | operator | middleware | page | `src/app/dashboard/money/page.tsx` | 183 |
 | `/dashboard/onboarding` | operator | **NONE FOUND** | page | `src/app/dashboard/onboarding/page.tsx` | 319 |
 | `/dashboard/outings` | operator | middleware | page | `src/app/dashboard/outings/page.tsx` | 28 |
@@ -261,7 +261,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/lib/prisma.ts` | 159 | 15 |  | `prisma` |
+| `src/lib/prisma.ts` | 160 | 15 |  | `prisma` |
 | `src/lib/admin-session.ts` | 52 | 149 |  | `AdminSession`, `AdminSessionUnavailable`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole`, `resolveAdminSession` +5 more |
 | `src/lib/email.ts` | 46 | 1822 |  | `BookingEmailData`, `escapeHtml`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail`, `sendAdminSetPasswordEmail`, `sendAdminTwoFactorCode` +51 more |
 | `src/lib/session.ts` | 36 | 99 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN` |
@@ -326,6 +326,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/unsaved-guard.ts` | 3 | 95 | SD-8b — leaving a dashboard page with unsaved edits. | `confirmLeave`, `setLeaveGuard`, `useBackGuard` |
 | `src/lib/agreement-sign.ts` | 2 | 203 | AGREEMENT_SPEC AG-2 — the signing service. | `deliverAgreementPdfs`, `recordSigning`, `retryMissingAgreementPdfs`, `SignInput`, `SignResult` |
 | `src/lib/analytics.ts` | 2 | 333 | AN-1 (Cam 2026-10-01): | `Analytics`, `computeAnalytics`, `EVENT_LOG_START`, `headline`, `NO_SHOW_GRACE_MIN`, `previousRange`, `Range` |
+| `src/lib/announcement-audience.ts` | 2 | 18 | Cam 2026-10-05: | `announcementsSince` |
 | `src/lib/birdie/guardrails.ts` | 2 | 74 | BIRDIE_AI_SPEC B1 — scope, caps and the kill switch. | `BIRDIE_MODEL`, `birdieEnabled`, `BirdieTurn`, `birdieUsageToday`, `checkCaps`, `logConversation`, `MAX_HISTORY_TURNS`, `MAX_REPLY_TOKENS` +4 more |
 | `src/lib/booking-status.ts` | 2 | 77 | Single source of truth for what to show a user (operator, staff, or golfer) given a booking's current status + paymentStatus pair. | `BookingStatusInfo`, `getBookingStatus`, `statusDot`, `StatusTone` |
 | `src/lib/calcom-url.ts` | 2 | 21 | The prefilled Cal.com booking link — no server-only imports, so the /for-courses thanks page can build it in the browser (FB-1 review) as well as the server routes (via lib/calcom.ts). | `calcomEmbedUrl` |
@@ -456,11 +457,11 @@ without opening anything.
 
 ### Announcement
 
-7 fields · 1 writer(s) · 2 reader(s)
+7 fields · 1 writer(s) · 3 reader(s)
 
 - fields: `id`, `title`, `body`, `emailSent`, `sentById`, `createdAt`, `dismissals`
 - writers: `src/app/api/admin/broadcasts/route.ts`
-- readers: `src/app/api/admin/broadcasts/route.ts`, `src/app/api/operator/announcements/route.ts`
+- readers: `src/app/api/admin/broadcasts/route.ts`, `src/app/api/operator/announcements/dismiss/route.ts`, `src/app/api/operator/announcements/route.ts`
 
 ### AnnouncementDismissal
 
@@ -512,11 +513,11 @@ without opening anything.
 
 ### Course
 
-111 fields · 13 writer(s) · 60 reader(s)
+111 fields · 13 writer(s) · 61 reader(s)
 
 - fields: `id`, `slug`, `name`, `type`, `city`, `state`, `zipCode`, `address`, `phone`, `website`, `bookingUrl`, `holes`, `par`, `yardage`, `slope`, `courseRating`, `description`, `amenities`, `walkingAllowed`, `walkingNote`, `cartRequired`, `dresscode`, `minPlayers`, `maxPlayers`, `cancellationHours`, `checkInWindowHours`, `lateCancellationFeeCents`, `lateFeeBasis`, `lateFeeTiming`, `noShowFeeCents`, `noShowFeeBasis`, `autoNoShowMinutes`, `timezone`, `rainCheckPolicy`, `publicAdvanceDays`, `memberAdvanceDays`, `hasMemberPricing`, `hasResidentPricing`, `residentCounty`, `residentState`, `residentProofRequired`, `hasCaddies`, `caddieType`, `caddieLooperRateCents`, `caddieForeRateCents`, `caddieNote`, `hasDrivingRange`, `drivingRangeType`, `rangeBallsFree`, `rangeBallsSmallPriceCents`, `rangeBallsMediumPriceCents`, `rangeBallsLargePriceCents`, `hasPuttingGreen`, `hasShortGameArea`, `hasProShop`, `proShopPhone`, `restaurantType`, `hasCartGirl`, `tournamentFrequency`, `hasLessons`, `hasClubRental`, `clubRentalRateCents`, `hasPushCartRental`, `pushCartRateCents`, `hasBagStorage`, `hasLockerRoom`, `hasGpsCarts`, `hasTournaments`, `stripeAccountId`, `stripeAccountActive`, `rating`, `reviewCount`, `imageGradient`, `brandColor`, `establishedYear`, `logoUrl`, `heroImageUrl`, `featured`, `active`, `liveStatus`, `firstWentLiveAt`, `offlineAt`, `welcomeEmailSentAt`, `adminNotes`, `archivedAt`, `archivedBy`, `createdAt`, `updatedAt`, `operatorId`, `operator`, `conditions`, `conditionsUpdatedAt`, `giftCardUrl`, `heroPhotoUrl`, `teeTimes`, `bookings`, `schedules`, `blackouts`, `memberships`, `membershipTiers`, `staff`, `teeSets`, `thread`, `photos`, `teeTimeAlerts`, `nines`, `nextCheckInAt`, `calls`, `legalName`, `agreements`, `courseProducts`
 - writers: `src/app/api/admin/course-calls/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/course-settings/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/operator/conditions/route.ts`, `src/app/api/operator/courses/route.ts`, `src/app/api/operator/settings/route.ts`, `src/app/api/operator/stripe/callback/route.ts`, `src/app/api/operator/stripe/connect/route.ts`, `src/app/api/operator/upload/route.ts`, `src/app/api/stripe/webhook/route.ts`, `src/lib/agreement-sign.ts`, `src/lib/lifecycle.ts`
-- readers: `src/app/api/admin/activity/route.ts`, `src/app/api/admin/broadcasts/route.ts`, `src/app/api/admin/course-calls/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/course-documents/route.ts`, `src/app/api/admin/course-settings/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/messages/route.ts`, `src/app/api/admin/revenue/route.ts`, `src/app/api/admin/search/route.ts` +48 more (see `docs/codemap.json`)
+- readers: `src/app/api/admin/activity/route.ts`, `src/app/api/admin/broadcasts/route.ts`, `src/app/api/admin/course-calls/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/course-documents/route.ts`, `src/app/api/admin/course-settings/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/messages/route.ts`, `src/app/api/admin/revenue/route.ts`, `src/app/api/admin/search/route.ts` +49 more (see `docs/codemap.json`)
 
 ### CourseInquiry
 
