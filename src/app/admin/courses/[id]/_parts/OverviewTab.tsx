@@ -204,7 +204,7 @@ export function OverviewTab() {
                   ].map(({ label, value, color }) => (
                     <Card key={label} className="p-5">
                       <Eyebrow className="mb-2">{label}</Eyebrow>
-                      <div className={'text-[28px] font-serif font-medium leading-none ' + color}>{value}</div>
+                      <div className={'text-[28px] font-serif font-semibold leading-none ' + color}>{value}</div>
                       {label === 'Bookings (30d)' && (
                         <div className={'text-xs font-medium mt-1.5 ' + (trend.direction === 'up' ? 'text-ok' : trend.direction === 'down' ? 'text-bad' : 'text-ink-muted')}>
                           {trend.pct === null ? 'no prior period' : `${trend.pct > 0 ? '+' : ''}${trend.pct.toFixed(0)}% vs prior 30d`}

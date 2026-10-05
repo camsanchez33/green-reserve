@@ -46,7 +46,7 @@ export default function CoursePreview(p: CoursePreviewProps) {
               : initials}
           </div>
           <div className="min-w-0">
-            <div className="font-serif font-medium text-[24px] leading-[1.05] truncate">{name}</div>
+            <div className="font-serif font-semibold text-[24px] leading-[1.05] truncate">{name}</div>
             {meta && <div className="flex items-center gap-1 text-[12px] text-white/80 mt-1 truncate"><MapPin size={11} className="shrink-0" />{meta}</div>}
           </div>
         </div>
@@ -56,7 +56,7 @@ export default function CoursePreview(p: CoursePreviewProps) {
         {slots.map((s, i) => (
           <div key={s.time} className="border-t border-line py-3 flex items-center justify-between gap-3">
             <div>
-              <div className="font-serif font-medium text-[22px] leading-none">{s.time}</div>
+              <div className="font-serif font-semibold text-[22px] leading-none">{s.time}</div>
               <div className="text-[11.5px] text-ink-muted mt-1">{s.open} spots open</div>
             </div>
             <div className="flex items-center gap-3">
@@ -67,7 +67,7 @@ export default function CoursePreview(p: CoursePreviewProps) {
         ))}
         <div className="border-t border-line py-3 flex items-center justify-between gap-3 opacity-60">
           <div>
-            <div className="font-serif font-medium text-[22px] leading-none line-through">8:40 AM</div>
+            <div className="font-serif font-semibold text-[22px] leading-none line-through">8:40 AM</div>
             <div className="text-[11.5px] text-ink-muted mt-1">Full</div>
           </div>
           <span className="inline-flex items-center gap-1 text-[11.5px] text-ink-soft"><Bell size={11} /> Tell me if it opens</span>

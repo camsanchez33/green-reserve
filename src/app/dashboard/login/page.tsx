@@ -30,7 +30,7 @@ function LoginContent() {
         {/* U-O (UI_REVISE_SPEC §1b, canvas "Sign in + 2FA"): eyebrow, serif
             title, one plain sentence — the mark drops to the footer line. */}
         <div className="mb-6">
-          <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Sign in</h1>
+          <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Sign in</h1>
           <p className="text-[13.5px] text-ink-soft mt-2">Your tee sheet, your bookings and your settings.</p>
         </div>
 
@@ -60,7 +60,7 @@ function LoginContent() {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
           <p className="text-center text-[12.5px] text-ink-soft">
-            Don&apos;t have an account? <a href="/for-courses" className="text-pine font-medium hover:underline">Submit an inquiry →</a>
+            Don&apos;t have an account? <a href="/for-courses" className="text-pine font-medium hover:underline">Ask a question →</a>
           </p>
         </div>
 

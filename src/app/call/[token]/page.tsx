@@ -76,7 +76,7 @@ export default function CallPage() {
 
   const heading = (
     <div className="mb-8">
-      <h1 className="text-2xl sm:text-3xl font-serif font-medium tracking-tight text-ink mb-2">Book a call with GreenReserve</h1>
+      <h1 className="text-2xl sm:text-3xl font-serif font-semibold tracking-tight text-ink mb-2">Book a call with GreenReserve</h1>
       <p className="text-[15px] font-semibold text-ink mb-1">{info.courseName}</p>
       {!info.booked && (
         <p className="text-sm text-ink-soft">{info.durationMin} minutes · we&apos;ll call you{info.phone ? <> at {info.phone}</> : null}</p>
@@ -98,7 +98,7 @@ export default function CallPage() {
           <div className="flex items-start gap-3">
             <Check className="w-5 h-5 text-ok shrink-0 mt-0.5" />
             <div>
-              <p className="text-lg font-serif font-medium text-ink">You&apos;re booked for {fmtFull(b.scheduledAt)} ET</p>
+              <p className="text-lg font-serif font-semibold text-ink">You&apos;re booked for {fmtFull(b.scheduledAt)} ET</p>
               <p className="text-sm text-ink-soft mt-1 flex items-center gap-1.5">{b.direction === 'they_call' ? 'You call us — the number is in your email.' : (b.phone || info.phone) ? `We’ll call you at ${b.phone || info.phone}.` : 'We’ll call you — reply with the best number if you have not sent one.'}</p>
             </div>
           </div>

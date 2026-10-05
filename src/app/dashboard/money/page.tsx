@@ -113,7 +113,7 @@ function MoneyPageInner() {
           <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Money</h1>
+                <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Money</h1>
               </div>
               <p className="text-[13.5px] text-ink-soft mt-2">
                 {/* AN-1: the money totals moved to Analytics; this line is status only. */}

@@ -184,7 +184,7 @@ function SignInPanel({
 
         <div className="bg-white rounded-lg border border-line p-8">
           <div className="mb-6">
-            <h1 className="text-2xl font-serif font-medium tracking-tight text-ink mt-1">
+            <h1 className="text-2xl font-serif font-semibold tracking-tight text-ink mt-1">
               Sign in to your account
             </h1>
             <p className="text-sm text-ink mt-1">
@@ -544,7 +544,7 @@ function MemberDashboard({
               </div>
 
               <div className="flex items-baseline justify-between mb-4">
-                <h2 className="font-serif font-medium tracking-tight text-ink text-xl">
+                <h2 className="font-serif font-semibold tracking-tight text-ink text-xl">
                   Tee times for{' '}
                   <span className="text-pine">{displayDate(selectedDate)}</span>
                 </h2>
@@ -590,7 +590,7 @@ function MemberDashboard({
                               }`}
                             >
                               <div className="min-w-0">
-                                <div className="text-lg sm:text-xl font-serif font-medium tracking-tight text-ink">
+                                <div className="text-lg sm:text-xl font-serif font-semibold tracking-tight text-ink">
                                   {formatTime(t.time)}
                                 </div>
                                 <div className="text-xs mt-0.5 flex items-center gap-1.5 flex-wrap">
@@ -651,7 +651,7 @@ function MemberDashboard({
               <div className="space-y-6">
                 {/* Membership status card */}
                 <div className="bg-white rounded-lg border border-line p-6">
-                  <h2 className="font-serif font-medium text-ink text-lg mb-4">Membership</h2>
+                  <h2 className="font-serif font-semibold text-ink text-lg mb-4">Membership</h2>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     <div>
                       <div className="text-[13px] font-semibold text-ink mb-0.5">
@@ -706,7 +706,7 @@ function MemberDashboard({
                 {/* Payment records */}
                 <div className="bg-white rounded-lg border border-line">
                   <div className="px-6 py-4 border-b border-line">
-                    <h2 className="font-serif font-medium text-ink text-lg">Payment history</h2>
+                    <h2 className="font-serif font-semibold text-ink text-lg">Payment history</h2>
                   </div>
                   {paymentsData.records.length === 0 ? (
                     <div className="px-6 py-10 text-center text-sm text-ink">
@@ -770,7 +770,7 @@ function MemberDashboard({
                 <div className="text-[13px] text-ink-muted">
                   Total
                 </div>
-                <div className="font-serif font-medium text-ink text-xl leading-tight">
+                <div className="font-serif font-semibold text-ink text-xl leading-tight">
                   ${(selectedTime.member_green_fee * players + 1.5 * players).toFixed(2)}
                 </div>
               </div>

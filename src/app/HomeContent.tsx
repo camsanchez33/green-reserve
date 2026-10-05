@@ -8,7 +8,10 @@ import s from './home.module.css';
 // plain-background mockup (docs/design/home/index.html). Rejected and never to
 // return: Direction B, the printed scorecard, every golf-hole / aerial-course
 // background, and the stock photo "your course, not ours" section. Copy rules:
-// NO durations and NO contract terms; CTAs are Book a demo + Send an inquiry.
+// NO durations and NO contract terms; CTAs are Book a demo + Ask a question.
+// CLUB-1 (Cam 2026-10-05, after clubup.com): the page LEADS with what
+// GreenReserve is, then who it is for, then the proof. Heavier Garamond and a
+// fairway-green accent used as decoration only (rules, the stripe, underlines).
 // Fee copy stays behind LQ-2: "a small booking fee", never "keep 100%".
 //
 // A server component; the only client JS is the demo island (TeeSheetDemo).
@@ -24,6 +27,12 @@ const COURSES = [
   { name: 'Lake Wren', where: 'Traverse City, MI', crest: 'LW', color: '#23395B', photo: '/home/course-lake-wren.jpg', t: '9:20', meta: '3 spots · $64' },
 ];
 
+const WHO = [
+  { h: 'For the course', p: 'Your own booking page with your name, colors and photos. You set the times, prices, member rates and cancellation policy.' },
+  { h: 'For the counter', p: 'Every booking on one sheet: online, phone and walk-in. Check groups in, take payment, and call off a stormy afternoon in one step.' },
+  { h: 'For the golfer', p: 'Book from your course’s website in a minute, get a confirmation email, and check in or pay online before the round.' },
+];
+
 const STEPS = [
   { h: 'Tell us about your course', p: 'A short call about your tee sheet and how you take bookings today.' },
   { h: 'We build it', p: 'Your booking page and tee sheet, set up with your times and prices.' },
@@ -36,16 +45,25 @@ export default function HomeContent() {
       {/* HERO — text left, the working demo right, on the plain ground. */}
       <section className={s.hero}>
         <div className={s.heroText}>
-          <h1 className={s.display}><span className={s.l}>The tee sheet</span> <span className={s.l}>your course deserves.</span></h1>
-          <p>GreenReserve gives your course an online booking page with your name and colors, and one tee sheet your staff run the day from.</p>
+          <h1 className={s.display}>GreenReserve is the online tee sheet and booking page for golf courses.</h1>
+          <p>Golfers book tee times from a button on your own website. Your staff run online, phone and walk-in bookings, check-in and payment from one sheet.</p>
           <div className={s.cta}>
             <a className={s.btn} href={DEMO}>Book a demo <Arrow /></a>
-            <Link className={s.quiet} href={INQUIRY}>Send an inquiry</Link>
+            <Link className={s.quiet} href={INQUIRY}>Ask a question</Link>
           </div>
           <div className={s.trust}>Free for courses.</div>
         </div>
         <HeroDemo />
       </section>
+
+      {/* WHO IT IS FOR — CLUB-1: one line per side of the business. */}
+      <section className={`${s.col} ${s.who}`}>
+        <h2 className={s.display}>One system for the course, the counter and the golfer.</h2>
+        <div className={s.whoGrid}>
+          {WHO.map(w => <div key={w.h}><h3 className={s.display}>{w.h}</h3><p>{w.p}</p></div>)}
+        </div>
+      </section>
+      <div className={s.stripe} aria-hidden="true" />
 
       {/* BUILT FOR THE COURSE — three staggered rows, each with its proof. */}
       <section className={`${s.built} ${s.col}`}>
@@ -135,10 +153,10 @@ export default function HomeContent() {
       {/* END */}
       <section className={s.end}>
         <div className={`${s.col} ${s.endIn}`}>
-          <div><h2 className={s.display}>See it with your course&apos;s tee sheet.</h2><span className={s.mail}>Or email thegreenreserve@outlook.com</span></div>
+          <div><h2 className={s.display}>The tee sheet your course deserves.</h2><span className={s.mail}>Or email thegreenreserve@outlook.com</span></div>
           <div className={s.cta}>
             <a className={`${s.btn} ${s.light}`} href={DEMO}>Book a demo <Arrow /></a>
-            <Link className={`${s.quiet} ${s.onDark}`} href={INQUIRY}>Send an inquiry</Link>
+            <Link className={`${s.quiet} ${s.onDark}`} href={INQUIRY}>Ask a question</Link>
           </div>
         </div>
       </section>

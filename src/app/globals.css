@@ -19,6 +19,9 @@
   --color-ok:          #3D7A55;
   --color-bad:         #A3452F;
   --color-warn:        #9A5B13;
+  /* CLUB-1: fairway green — DECORATION ONLY (rules, stripes, underlines, the
+     active tab). 2.9:1 on paper: never text, never the only state signal. */
+  --color-fairway:     #3BAA6B;
   --color-dot-neutral: #B3B6AF;
 
   /* FLOW-1: a card is a white sheet with a whisper of an edge, not a ruled
@@ -34,13 +37,14 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 /* TYPE-1: `font-serif` is the site's DISPLAY face — EB Garamond (it was
-   Archivo widened under FLOW-1; before that Fraunces, then Newsreader). Used
+   Archivo widened under FLOW-1; before that Fraunces, then Newsreader). CLUB-1
+   (Cam 2026-10-05, after ClubUp): semibold, so headlines carry weight. Used
    for headlines, course names and dates only: never times, buttons, tables or
    body copy, which stay Libre Franklin. Lining figures so a date or an amount
    in a heading doesn't drop below the line. Base layer, so any tracking-*
    utility still wins over the letter-spacing. */
 @layer base {
-  .font-serif { font-weight: 500; letter-spacing: -0.005em; font-variant-numeric: lining-nums; }
+  .font-serif { font-weight: 600; letter-spacing: -0.005em; font-variant-numeric: lining-nums; }
 }
 
 /* MP-9 (ADMIN_V4 V4-6 §5): one keyboard focus ring, everywhere. Admin had

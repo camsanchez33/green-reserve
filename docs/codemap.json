@@ -24,7 +24,7 @@
   "files": [
     {
       "path": "src/app/HomeContent.tsx",
-      "lines": 148,
+      "lines": 166,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3533,7 +3533,7 @@
     },
     {
       "path": "src/app/api/inquiries/details/route.ts",
-      "lines": 141,
+      "lines": 155,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3570,7 +3570,7 @@
     },
     {
       "path": "src/app/api/inquiries/route.ts",
-      "lines": 286,
+      "lines": 296,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6326,7 +6326,7 @@
     },
     {
       "path": "src/app/for-courses/ForCoursesContent.tsx",
-      "lines": 753,
+      "lines": 595,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6378,7 +6378,7 @@
     },
     {
       "path": "src/app/for-courses/details/page.tsx",
-      "lines": 1893,
+      "lines": 1946,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10745,7 +10745,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1822,
+      "lines": 1821,
       "purpose": "",
       "brain": [],
       "exports": [

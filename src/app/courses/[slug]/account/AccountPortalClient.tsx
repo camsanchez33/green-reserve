@@ -78,7 +78,7 @@ function SignIn({ courseName, courseSlug, accent, prefillEmail, onSignedIn }: {
         <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-5" style={{ backgroundColor: accent + '14', color: accent }}>
           
         </div>
-        <h1 className="text-[20px] font-serif font-medium text-ink mb-1">Sign in to {courseName}</h1>
+        <h1 className="text-[20px] font-serif font-semibold text-ink mb-1">Sign in to {courseName}</h1>
         <p className="text-sm text-ink-soft mb-6">View and manage your tee times here.</p>
 
         {step === 'identifier' ? (
@@ -203,7 +203,7 @@ function PortalInner({ params }: { params: Promise<{ slug: string }> }) {
             <Link href={`/courses/${slug}`} className="text-xs text-ink-soft hover:text-ink flex items-center gap-1 mb-1.5 transition-colors">
               <ArrowLeft size={12} /> {data.course.name}
             </Link>
-            <h1 className="text-[20px] font-serif font-medium text-ink">Hi, {data.golfer.firstName}</h1>
+            <h1 className="text-[20px] font-serif font-semibold text-ink">Hi, {data.golfer.firstName}</h1>
           </div>
           <button onClick={signOut} className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink transition-colors">
              Sign out
@@ -228,7 +228,7 @@ function PortalInner({ params }: { params: Promise<{ slug: string }> }) {
               {data.upcoming.map(b => (
                 <div key={b.id} className="bg-white rounded-lg shadow-card p-5 flex items-center justify-between gap-4">
                   <div className="min-w-0">
-                    <div className="font-serif font-medium text-ink text-xl leading-tight">{fmtTime(b.time)}</div>
+                    <div className="font-serif font-semibold text-ink text-xl leading-tight">{fmtTime(b.time)}</div>
                     <div className="text-sm text-ink-soft mt-0.5">{fmtDate(b.date)}</div>
                     <div className="text-xs text-ink-muted mt-1">{b.players} player{b.players !== 1 ? 's' : ''} &middot; {dollars(b.totalAmount)} at check-in</div>
                   </div>

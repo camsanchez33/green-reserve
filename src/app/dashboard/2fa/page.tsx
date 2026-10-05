@@ -48,7 +48,7 @@ export default function TwoFactorVerifyPage() {
         {/* U-O (§1b, canvas "Sign in + 2FA"): same header shape as the sign-in
             board — eyebrow, serif title, one sentence saying where the code went. */}
         <div className="mb-6">
-          <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Two-factor verification</h1>
+          <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Two-factor verification</h1>
           <p className="text-[13.5px] text-ink-soft mt-2 flex items-center gap-1.5">
             {method === 'sms'
               ? <><Smartphone className="w-3.5 h-3.5 shrink-0"/>We sent a code to your phone{phoneLast4 ? ` ending in ${phoneLast4}` : ''}.</>

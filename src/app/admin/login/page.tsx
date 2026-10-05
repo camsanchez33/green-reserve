@@ -69,7 +69,7 @@ export default function AdminLoginPage() {
         </div>
 
         <Card className="p-8">
-          <h1 className="text-[22px] font-serif font-medium text-ink mb-1">Sign in</h1>
+          <h1 className="text-[22px] font-serif font-semibold text-ink mb-1">Sign in</h1>
           <p className="text-sm text-ink-soft mb-6">Admin console access</p>
 
           {sessionEnded && (

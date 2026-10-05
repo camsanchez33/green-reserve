@@ -25,7 +25,7 @@ export function CourseDialogs() {
         const plural = impact.bookings === 1 ? '' : 's';
         return (
           <Modal size="md" pad="p-6" title={`${impact.bookings} golfer booking${plural} still standing`} onClose={() => { setClosurePrompt(null); setClosureError(''); }} dismissable={!busy}
-            titleNode={<h3 className="font-serif font-medium text-ink mb-2">
+            titleNode={<h3 className="font-serif font-semibold text-ink mb-2">
                 {impact.bookings} golfer booking{plural} {impact.bookings === 1 ? 'is' : 'are'} still standing
               </h3>}>
               <p className="text-sm text-ink-soft mb-3">
@@ -73,7 +73,7 @@ export function CourseDialogs() {
           triggers is described honestly — unsold slots go, sold ones stay. */}
       {schedDeleteTarget && (
         <Modal size="sm" pad="p-6" title="Delete this schedule?" onClose={() => { setSchedDeleteTarget(null); setSchedDeleteError(''); }} dismissable={!schedDeleteBusy}
-          titleNode={<h3 className="font-serif font-medium text-ink mb-2">Delete this schedule?</h3>}>
+          titleNode={<h3 className="font-serif font-semibold text-ink mb-2">Delete this schedule?</h3>}>
             <p className="text-sm text-ink-soft mb-2">
               The tee sheet is rebuilt straight away, so the times this schedule was creating stop being bookable.
             </p>
@@ -104,7 +104,7 @@ export function CourseDialogs() {
           emailed the reason. Full unless an amount is given. */}
       {refundTarget && (
         <Modal size="sm" pad="p-6" title={`Refund ${refundTarget.golferName}`} onClose={() => setRefundTarget(null)} dismissable={!refundBusy}
-          titleNode={<h3 className="font-serif font-medium text-ink mb-1">Refund {refundTarget.golferName}</h3>}>
+          titleNode={<h3 className="font-serif font-semibold text-ink mb-1">Refund {refundTarget.golferName}</h3>}>
             <p className="text-sm text-ink-soft mb-4">
               {fmtMoney(refundTarget.amount)} was charged for {fmtDate(refundTarget.date)}. The money goes back to the card they paid with; the course&apos;s payout and GreenReserve&apos;s fee are both reduced.
             </p>
@@ -132,7 +132,7 @@ export function CourseDialogs() {
       {/* Send Preview confirm — lists both things being sent + recipient (RUN_QUEUE "Send Preview = one combined send") */}
       {showPreviewConfirm && detail?.course.operator && (
         <Modal size="sm" pad="p-6" title="Send preview + dashboard access?" onClose={() => setShowPreviewConfirm(false)}
-          titleNode={<h3 className="font-serif font-medium text-ink mb-2">Send preview + dashboard access?</h3>}>
+          titleNode={<h3 className="font-serif font-semibold text-ink mb-2">Send preview + dashboard access?</h3>}>
             <p className="text-sm text-ink-soft mb-2">
               Sends ONE email to <strong>{detail.course.operator.name}</strong> at <strong>{detail.course.operator.email}</strong> containing:
             </p>
@@ -157,7 +157,7 @@ export function CourseDialogs() {
       {manualSlot && (
         <Modal size="sm" pad="p-6" title="Add Manual Booking" onClose={() => setManualSlot(null)}
           titleNode={<div className="flex items-center justify-between mb-5">
-              <h3 className="font-serif font-medium text-ink">Add Manual Booking</h3>
+              <h3 className="font-serif font-semibold text-ink">Add Manual Booking</h3>
               <button
                 onClick={() => setManualSlot(null)}
                 className="text-ink-muted hover:text-ink w-8 h-8 flex items-center justify-center rounded-md hover:bg-paper transition-colors"

@@ -632,7 +632,7 @@ function DashboardPageInner() {
           {agreementChecked && !agreementAccepted && !courseDraft && !courseArchived && (
             <div className="fixed inset-0 bg-ink/40 flex items-center justify-center z-50 px-4">
               <div className="bg-white rounded-lg border border-line max-w-md w-full p-6">
-                <h2 className="text-[18px] font-serif font-medium text-ink mb-2">Please sign the Operator Agreement</h2>
+                <h2 className="text-[18px] font-serif font-semibold text-ink mb-2">Please sign the Operator Agreement</h2>
                 <p className="text-sm text-ink-soft mb-5">
                   We&apos;ve updated our terms since {courseName || 'your course'} went live. Please review and accept the Operator Agreement to keep your account in good standing — this doesn&apos;t affect your live status.
                 </p>
@@ -658,7 +658,7 @@ function DashboardPageInner() {
                   sentence carrying the day's numbers, then the day's actions. */}
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <div className="min-w-0">
-                  <h1 className="text-[26px] font-serif font-medium leading-none tracking-tight text-ink">Tee Sheet</h1>
+                  <h1 className="text-[26px] font-serif font-semibold leading-none tracking-tight text-ink">Tee Sheet</h1>
                   <p className="text-[13.5px] text-ink-soft mt-1.5">
                     {fmtDate(selectedDate)} · {liveGroups} booked · {checkedIn} checked in{commonRate ? <span className="text-ink-muted"> · {commonRate}</span> : null}
                   </p>
@@ -930,7 +930,7 @@ function DashboardPageInner() {
         <div className="fixed inset-0 bg-ink/20 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white border border-line w-full sm:max-w-sm rounded-t-lg sm:rounded-lg p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-serif font-medium text-ink text-[17px]">Add Tee Time — {fmtDate(selectedDate)}</h3>
+              <h3 className="font-serif font-semibold text-ink text-[17px]">Add Tee Time — {fmtDate(selectedDate)}</h3>
               <button onClick={() => setShowAddModal(false)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
             </div>
             <AddTeeTimeForm date={selectedDate} onSave={()=>{setShowAddModal(false);loadTimes(selectedDate);}} onCancel={()=>setShowAddModal(false)}/>
@@ -943,7 +943,7 @@ function DashboardPageInner() {
         <div className="fixed inset-0 bg-ink/20 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white w-full sm:max-w-md rounded-t-lg sm:rounded-lg shadow-card p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-serif font-medium text-ink text-[17px]">Weather — {fmtDate(selectedDate)}</h3>
+              <h3 className="font-serif font-semibold text-ink text-[17px]">Weather — {fmtDate(selectedDate)}</h3>
               <button onClick={() => setFrostOpen(false)} disabled={frostBusy || wxBusy} className="text-ink-muted hover:text-ink disabled:opacity-40" aria-label="Close"><X className="w-5 h-5"/></button>
             </div>
             {!frostResult && !wxResult && (
@@ -1114,7 +1114,7 @@ function DashboardPageInner() {
         <div className="fixed inset-0 bg-ink/20 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white border border-line w-full sm:max-w-sm rounded-t-lg sm:rounded-lg p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-serif font-medium text-ink text-[17px]">Walk-in — {fmtTime(walkInSlot.time)}</h3>
+              <h3 className="font-serif font-semibold text-ink text-[17px]">Walk-in — {fmtTime(walkInSlot.time)}</h3>
               <button onClick={() => setWalkInSlot(null)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
             </div>
             <WalkInForm slot={walkInSlot} onSave={(msg) => { setWalkInSlot(null); toast(msg, 'ok'); loadTimes(selectedDate); }} onCancel={() => setWalkInSlot(null)} />
@@ -1136,7 +1136,7 @@ function DashboardPageInner() {
         <div className="fixed inset-0 bg-ink/20 z-50 flex items-center justify-center p-4">
           <div className="bg-white border border-line w-full max-w-sm rounded-lg p-6">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-serif font-medium text-ink text-[17px]">Course Alert</h3>
+              <h3 className="font-serif font-semibold text-ink text-[17px]">Course Alert</h3>
               <button onClick={() => setShowConditions(false)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
             </div>
             <p className="text-sm text-ink-soft mb-3">Shown as a banner to golfers before they book. Leave blank to clear.</p>
@@ -1327,7 +1327,7 @@ function CardCheckInModal({ booking, reason, onConfirm, onCancel }: {
     <div className="bg-white border border-line w-full max-w-sm rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="font-serif font-medium text-ink text-[17px]">{reason ? 'Retry with a new card' : 'Check In'} — {booking.golferName}</h3>
+          <h3 className="font-serif font-semibold text-ink text-[17px]">{reason ? 'Retry with a new card' : 'Check In'} — {booking.golferName}</h3>
           <p className="text-xs text-ink-soft mt-0.5">Enter golfer&apos;s card to charge ${(booking.totalAmount / 100).toFixed(2)}</p>
         </div>
         <button onClick={onCancel} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>

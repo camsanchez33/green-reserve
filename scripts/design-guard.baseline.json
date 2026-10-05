@@ -191,9 +191,9 @@
     "lucide": 4
   },
   "src/app/for-courses/ForCoursesContent.tsx": {
-    "card": 3,
+    "card": 1,
     "input": 3,
-    "lucide": 3
+    "lucide": 1
   },
   "src/app/for-courses/details/page.tsx": {
     "input": 2,

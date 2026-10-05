@@ -559,7 +559,7 @@ export default function CourseDetailPage({
               <img src={course.logo_url} alt={`${course.name} logo`} className="h-12 w-12 rounded-md bg-white object-contain p-1 shadow-card mb-3" loading="lazy" />
             )}
             <span className="text-xs font-medium text-white/70 mb-1 inline-block">Private Club</span>
-            <h1 className="text-2xl sm:text-3xl font-serif font-medium text-white leading-tight">{course.name}</h1>
+            <h1 className="text-2xl sm:text-3xl font-serif font-semibold text-white leading-tight">{course.name}</h1>
             <p className="text-white/60 flex items-center gap-1.5 mt-1 text-sm">
               
               {course.city}, {course.state}
@@ -809,9 +809,9 @@ export default function CourseDetailPage({
             <span className="text-ink-soft">
               This is a live demo of a GreenReserve course page — your course gets one just like it, free.
             </span>
-            <Link href="/for-courses" className="text-pine font-medium hover:underline whitespace-nowrap">
-              List your course 
-            </Link>
+            <a href="/demo" className="text-pine font-medium hover:underline whitespace-nowrap">
+              Book a demo
+            </a>
           </div>
         </div>
       )}
@@ -901,7 +901,7 @@ export default function CourseDetailPage({
           {(course.type === 'member' ? (
             <div className="max-w-md mx-auto bg-white rounded-lg border border-line p-8 text-center">
               
-              <h2 className="font-serif font-medium text-ink text-xl mb-2">Member-only club</h2>
+              <h2 className="font-serif font-semibold text-ink text-xl mb-2">Member-only club</h2>
               <p className="text-ink-soft text-sm mb-5">
                 This is a member-only or invitation-based club. Contact the pro shop for guest access.
               </p>
@@ -1171,7 +1171,7 @@ export default function CourseDetailPage({
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                   <div className="flex items-baseline gap-3 flex-wrap">
-                    <h2 className="font-serif font-medium tracking-tight text-ink text-xl">
+                    <h2 className="font-serif font-semibold tracking-tight text-ink text-xl">
                       Tee times for <span style={{ color: accent }}>{displayDate(selectedDate)}</span>
                     </h2>
                     {!loadingTimes && teeTimes.length > 0 && (
@@ -1264,7 +1264,7 @@ export default function CourseDetailPage({
                     
                     {teeTimes.length === 0 ? (
                       <div>
-                        <p className="font-serif font-medium text-ink text-xl mb-1.5">Nothing open on {displayDate(selectedDate)}</p>
+                        <p className="font-serif font-semibold text-ink text-xl mb-1.5">Nothing open on {displayDate(selectedDate)}</p>
                         <p className="text-ink text-sm mb-5">Every slot for this date is taken.</p>
                         {/* B-4: nearest fits — the two closest dates with room for this party. */}
                         {searchingNext ? (
@@ -1296,7 +1296,7 @@ export default function CourseDetailPage({
                       </div>
                     ) : (
                       <div>
-                        <p className="font-serif font-medium text-ink text-xl mb-1.5">No times match your filters</p>
+                        <p className="font-serif font-semibold text-ink text-xl mb-1.5">No times match your filters</p>
                         <p className="text-ink text-sm mb-5">There are tee times on this date — your filters rule them all out.</p>
                         {/* B-4: same day, smaller party. */}
                         {bestFewer > 0 && (
@@ -1630,7 +1630,7 @@ export default function CourseDetailPage({
           {/* Photos — a section under the sheet (B-1), not a tab */}
           {hasPhotos && (
             <section id="photos" className="mt-14 scroll-mt-6">
-              <h2 className="font-serif font-medium tracking-tight text-ink text-xl mb-4">Photos</h2>
+              <h2 className="font-serif font-semibold tracking-tight text-ink text-xl mb-4">Photos</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {coursePhotos.map(p => (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -1666,7 +1666,7 @@ export default function CourseDetailPage({
                 <div className="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: `${accent}14`, color: accent }}>
                   <Check size={20} />
                 </div>
-                <p className="font-serif font-medium text-ink text-xl mb-1.5">Alert set</p>
+                <p className="font-serif font-semibold text-ink text-xl mb-1.5">Alert set</p>
                 <p className="text-sm text-ink mb-5">We&apos;ll email you when a spot opens up at {course.name}.</p>
                 <button
                   onClick={() => { setAlertModal(null); setAlertSent(false); }}
@@ -1679,7 +1679,7 @@ export default function CourseDetailPage({
               <>
                 <div className="flex items-center gap-2 mb-1.5">
                   
-                  <h3 className="font-serif font-medium text-ink text-xl leading-none">Get an alert</h3>
+                  <h3 className="font-serif font-semibold text-ink text-xl leading-none">Get an alert</h3>
                 </div>
                 <p className="text-sm text-ink mb-5">
                   {alertModal.teeTimeId
@@ -1732,16 +1732,16 @@ export default function CourseDetailPage({
           onClick={() => setDemoModal(false)}
         >
           <div className="bg-white rounded-lg max-w-sm w-full p-7 shadow-card" onClick={e => e.stopPropagation()}>
-            <h3 className="font-serif font-medium text-ink text-xl text-center mb-2">Demo course</h3>
+            <h3 className="font-serif font-semibold text-ink text-xl text-center mb-2">Demo course</h3>
             <p className="text-sm text-ink-soft text-center leading-relaxed mb-6">
               Bookings are disabled on this demo page. This is where your golfers would receive their confirmation — with your course name, their tee time, and a check-in link.
             </p>
-            <Link
-              href="/for-courses"
+            <a
+              href="/demo"
               className="block w-full text-center py-3 bg-pine hover:bg-pine-hover text-white text-sm font-medium rounded-md transition-colors mb-3"
             >
-              List your course for free
-            </Link>
+              Book a demo
+            </a>
             <button
               onClick={() => setDemoModal(false)}
               className="block w-full text-center py-3 text-sm text-ink-soft hover:text-ink transition-colors"

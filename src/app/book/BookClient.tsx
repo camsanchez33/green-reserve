@@ -86,7 +86,7 @@ function StepHeading({ n, title, note }: { n: number; title: string; note?: stri
         {n}
       </span>
       <div>
-        <h2 className="font-serif font-medium text-ink text-lg leading-none">{title}</h2>
+        <h2 className="font-serif font-semibold text-ink text-lg leading-none">{title}</h2>
         {note && <p className="text-xs text-ink mt-1">{note}</p>}
       </div>
     </div>
@@ -180,7 +180,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
           <CourseHeaderBar courseName={confirmedData.courseName} accent={accent} />
           <div className="p-8 text-center">
-            <h1 className="text-[26px] font-serif font-medium tracking-tight text-ink mb-2">You&apos;re all set</h1>
+            <h1 className="text-[26px] font-serif font-semibold tracking-tight text-ink mb-2">You&apos;re all set</h1>
             <p className="text-ink-soft mb-6 text-sm">
               {confirmedData.noCard
                 ? <>Your spot is reserved — <strong className="text-ink">no card required</strong>. Pay at the course or use the check-in link in your confirmation email.</>
@@ -297,7 +297,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
            Back to tee times
         </button>
 
-        <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Confirm Your Tee Time</h1>
+        <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mb-2">Confirm Your Tee Time</h1>
         <p className="text-ink-soft text-sm mb-8">
           {terms.cardNeeded
             ? <>Save your card to lock in your tee time at {course.name} — you won&apos;t be charged today.</>
@@ -374,7 +374,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 <div className="border-t border-line pt-3 space-y-1.5">
                   <div className="flex justify-between items-baseline">
                     <span className="font-medium text-ink">You&apos;ll pay at check-in</span>
-                    <span className="font-serif font-medium text-ink text-xl leading-none">${total.toFixed(2)}</span>
+                    <span className="font-serif font-semibold text-ink text-xl leading-none">${total.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-baseline">
                     <span className="text-ink-muted">Charged today</span>

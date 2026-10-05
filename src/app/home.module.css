@@ -13,6 +13,8 @@
   --line: #E3E4DE;
   --sage: #D6E0D1;
   --due: #9A5B13;
+  /* CLUB-1: decoration only (rules, stripe, underlines) — under 3:1 on paper, never text. */
+  --fairway: #3BAA6B;
   --paper: #FFFFFF;
   --lift: 0 1px 2px rgba(20,24,20,.06), 0 24px 48px -24px rgba(20,24,20,.35);
   background: var(--ground); color: var(--ink);
@@ -24,15 +26,15 @@
 .root a { color: inherit; }
 .root :focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
 .col { width: min(1240px, 100% - 48px); margin-inline: auto; }
-.display { font-family: var(--font-serif); font-weight: 500; letter-spacing: -.01em; font-variant-numeric: lining-nums; }
+.display { font-family: var(--font-serif); font-weight: 600; letter-spacing: -.01em; font-variant-numeric: lining-nums; }
 .btn { display: inline-flex; align-items: center; gap: 10px; height: 50px; padding: 0 22px; border-radius: 6px; background: var(--forest); color: #fff !important; font-weight: 600; font-size: 16px; text-decoration: none; }
 .btn:hover { background: #0F2C1F; }
 .btn.light { background: #fff; color: var(--forest) !important; }
 .btn.light:hover { background: var(--sage); }
 .cta { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
-.quiet { font-size: 15.5px; font-weight: 500; color: var(--ink) !important; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 4px; }
+.quiet { font-size: 15.5px; font-weight: 600; color: var(--ink) !important; text-decoration: underline; text-decoration-color: var(--fairway); text-decoration-thickness: 2px; text-underline-offset: 5px; }
 .quiet:hover { color: var(--forest) !important; text-decoration-color: currentColor; }
-.quiet.onDark { color: #fff !important; text-decoration-color: rgba(255,255,255,.4); }
+.quiet.onDark { color: #fff !important; text-decoration-color: var(--fairway); }
 .quiet.onDark:hover { color: #fff !important; }
 .lead { margin: 16px 0 0; font-size: 18px; max-width: 30em; }
 
@@ -41,8 +43,7 @@
 /* Centred against the demo column (Cam 2026-10-01: top-aligned read "lop-sided" —
    the text stopped halfway down while the phone ran on below it). */
 .heroText { padding: 112px clamp(24px, 4vw, 64px) 56px max(24px, calc((100vw - 1240px) / 2)); display: flex; flex-direction: column; justify-content: center; }
-.hero h1 { font-size: clamp(40px, 3.8vw, 56px); line-height: 1.04; margin: 0 0 18px; }
-.l { white-space: nowrap; }
+.hero h1 { font-size: clamp(36px, 3.5vw, 54px); line-height: 1.05; margin: 0 0 20px; color: var(--forest); max-width: 15em; }
 .hero p { font-size: 18px; margin: 0 0 28px; max-width: 27em; }
 .trust { margin-top: 14px; font-size: 15px; }
 
@@ -129,13 +130,22 @@
 .again { margin-top: 14px; font: inherit; font-size: 13.5px; font-weight: 600; color: var(--acc); background: none; border: 0; padding: 0; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 
 /* BUILT FOR THE COURSE */
+.who { padding-block: 112px 0; }
+.who h2 { font-size: clamp(30px, 3.2vw, 46px); line-height: 1.05; color: var(--forest); max-width: 20em; }
+.whoGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 48px; margin-top: 44px; }
+.whoGrid > div { border-top: 2px solid var(--fairway); padding-top: 20px; }
+.whoGrid h3 { font-size: 28px; line-height: 1.1; margin-bottom: 10px; }
+.whoGrid p { margin: 0; }
+.stripe { height: 6px; background: var(--fairway); margin-top: 96px; transform: skewY(-0.6deg); }
 .built { padding-block: 120px 96px; }
 .builtGrid { display: grid; grid-template-columns: 30fr 70fr; gap: 64px; }
 .built h2 { font-size: clamp(30px, 3.2vw, 44px); line-height: 1.06; }
 .rows { display: flex; flex-direction: column; }
 .row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 48px; align-items: center; padding-block: 40px; border-top: 1px solid var(--line); }
 .row:nth-child(2) { margin-left: 8%; }
-.row h3 { font-size: 24px; font-stretch: 112%; font-weight: 700; letter-spacing: -.01em; margin-bottom: 8px; }
+.row h3 { font-family: var(--font-serif); font-size: 28px; font-weight: 600; line-height: 1.1; margin-bottom: 8px; color: var(--forest); }
+/* CLUB-1: section headlines in pine on the paper ground (white on the bands). */
+.built h2, .priceLine h2, .see h2, .faqWrap h2 { color: var(--forest); }
 .row p { margin: 0; }
 .frag { justify-self: start; min-width: 0; max-width: 100%; }
 .site { width: 330px; max-width: 100%; background: var(--paper); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
@@ -171,7 +181,7 @@
 .steps { list-style: none; margin: 0; padding: 0; }
 .steps li { padding-block: 20px; border-top: 1px solid rgba(255,255,255,.2); }
 .steps li:first-child { border-top: 0; padding-top: 4px; }
-.steps h3 { font-size: 21px; font-weight: 600; margin: 0 0 4px; }
+.steps h3 { font-family: var(--font-serif); font-size: 26px; font-weight: 600; line-height: 1.1; margin: 0 0 6px; }
 .steps p { margin: 0; font-size: 16px; line-height: 1.5; }
 
 /* PRICE */
@@ -210,7 +220,6 @@
 .end h2 { font-size: clamp(30px, 3.6vw, 48px); line-height: 1.06; max-width: 14em; }
 .mail { display: block; margin-top: 12px; font-size: 15px; }
 
-@media (max-width: 1180px) { .l { white-space: normal; } }
 @media (max-width: 1000px) {
   .hero { grid-template-columns: 1fr; }
   .heroText { padding: 112px 24px 40px; }
@@ -222,7 +231,9 @@
   .see { padding-block: 72px; }
   .seg button { padding: 9px 12px; font-size: 13.5px; }
   .priceLine { grid-template-columns: 1fr; gap: 16px; padding-block: 64px; }
-  .builtGrid, .setupGrid, .faqWrap { grid-template-columns: 1fr; gap: 28px; }
+  .builtGrid, .setupGrid, .faqWrap, .whoGrid { grid-template-columns: 1fr; gap: 28px; }
+  .who { padding-block: 72px 0; }
+  .stripe { margin-top: 64px; }
   .row { grid-template-columns: 1fr; gap: 20px; }
   .row:nth-child(2) { margin-left: 0; }
   .faq { grid-template-columns: 1fr; }

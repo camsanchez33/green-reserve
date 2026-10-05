@@ -213,7 +213,7 @@ export default function SchedulesPage() {
           {/* U-O (§1b): serif title + one sentence of this page's numbers. */}
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Schedule</h1>
+              <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Schedule</h1>
             </div>
             <p className="text-[13.5px] text-ink-soft mt-2">
               {schedules.length} schedule{schedules.length !== 1 ? 's' : ''} · {schedules.filter(s => s.active).length} running · {schedules.filter(s => !s.active).length} paused
@@ -358,7 +358,7 @@ export default function SchedulesPage() {
           <div className="fixed inset-0 bg-ink/20 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div className="bg-white border border-line w-full sm:max-w-xl rounded-t-lg sm:rounded-lg max-h-[92vh] overflow-y-auto pb-[env(safe-area-inset-bottom)] sm:pb-0">
               <div className="sticky top-0 bg-white px-5 pt-5 pb-4 border-b border-line flex items-center justify-between z-10">
-                <span className="font-serif font-medium text-ink text-[17px]">{editId ? 'Edit Schedule' : 'New Schedule'}</span>
+                <span className="font-serif font-semibold text-ink text-[17px]">{editId ? 'Edit Schedule' : 'New Schedule'}</span>
                 <button onClick={() => { setShowAdd(false); setEditId(null); }} className="text-ink-muted hover:text-ink transition-colors"><X className="w-5 h-5"/></button>
               </div>
               <div className="px-5 py-4 space-y-4">

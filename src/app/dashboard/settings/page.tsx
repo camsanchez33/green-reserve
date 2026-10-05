@@ -413,7 +413,7 @@ function SettingsPageInner() {
         <div className="bg-white border-b border-line px-6 py-4 flex flex-wrap items-start justify-between gap-3 sticky top-0 z-10">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Settings</h1>
+              <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Settings</h1>
             </div>
             <p className="text-[13.5px] text-ink-soft mt-2">
               {(form.name as string) || 'Your course'} · {(form.liveStatus as string) === 'live' ? 'live to golfers' : 'not live yet'} · {form.stripeAccountActive ? 'Stripe connected' : 'Stripe not connected'} · {staffCount} staff account{staffCount !== 1 ? 's' : ''} · {photos.length} photo{photos.length !== 1 ? 's' : ''}

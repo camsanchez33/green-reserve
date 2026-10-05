@@ -14,7 +14,7 @@ export default function NotFound() {
           loading="lazy"
           className="mx-auto mb-6"
         />
-        <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">
+        <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mb-2">
           We couldn&apos;t find that page
         </h1>
         <p className="text-ink-soft text-sm mb-6">

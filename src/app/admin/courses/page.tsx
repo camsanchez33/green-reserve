@@ -415,7 +415,7 @@ function CoursesContent() {
           )}
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-[30px] leading-none font-serif font-medium text-ink">Courses</h1>
+              <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Courses</h1>
               <p className="text-[13.5px] text-ink-soft mt-2">
                 {loadError ? '—' : view === 'archived'
                   ? `${filtered.length} archived`

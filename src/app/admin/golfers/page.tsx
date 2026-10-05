@@ -185,7 +185,7 @@ function GolfersInner() {
       <div className="admin-content flex-1 min-h-screen">
         <div className="px-8 py-7 max-w-5xl">
           <div className="mb-6">
-            <h1 className="text-[30px] leading-none font-serif font-medium text-ink">{inRecord ? 'Golfer record' : 'Golfer lookup'}</h1>
+            <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">{inRecord ? 'Golfer record' : 'Golfer lookup'}</h1>
           </div>
 
           {inRecord ? (
@@ -232,7 +232,7 @@ function GolfersInner() {
                     ].map(c => (
                       <Card key={c.label} className="p-4">
                         <Eyebrow className="mb-1">{c.label}</Eyebrow>
-                        <div className={'text-[22px] font-serif font-medium leading-none tabular-nums ' + c.tone}>{c.value}</div>
+                        <div className={'text-[22px] font-serif font-semibold leading-none tabular-nums ' + c.tone}>{c.value}</div>
                         {c.sub && <div className="text-[11px] text-ink-faint mt-1">{c.sub}</div>}
                       </Card>
                     ))}
@@ -409,7 +409,7 @@ function GolfersInner() {
       {cancelTarget && (
         <Modal size="sm" pad="p-6" dismissable={!busy} onClose={() => setCancelTarget(null)}
           title={`Cancel ${cancelTarget.courseName} for ${detail?.firstName ?? 'this golfer'}?`}
-          titleNode={<h3 className="font-serif font-medium text-ink mb-1">Cancel {cancelTarget.courseName} for {detail?.firstName}?</h3>}>
+          titleNode={<h3 className="font-serif font-semibold text-ink mb-1">Cancel {cancelTarget.courseName} for {detail?.firstName}?</h3>}>
             <p className="text-sm text-ink-soft mb-3">
               {cancelTarget.teeDate} at {cancelTarget.teeTime}. {cancelTarget.paymentStatus === 'paid'
                 ? 'The round was already paid — it is refunded as part of the cancellation.'
@@ -431,7 +431,7 @@ function GolfersInner() {
       {refundTarget && (
         <Modal size="sm" pad="p-6" dismissable={!busy} onClose={() => setRefundTarget(null)}
           title={`Refund ${detail?.firstName ?? 'this golfer'}`}
-          titleNode={<h3 className="font-serif font-medium text-ink mb-1">Refund {detail?.firstName}</h3>}>
+          titleNode={<h3 className="font-serif font-semibold text-ink mb-1">Refund {detail?.firstName}</h3>}>
             <p className="text-sm text-ink-soft mb-4">
               {fmtMoney(refundTarget.totalAmount)} was charged for {refundTarget.courseName}, {refundTarget.teeDate}{refundTarget.refundedTotal > 0 ? ` · ${fmtMoney(refundTarget.refundedTotal)} already refunded` : ''}. It goes back to the card they paid with; the course&apos;s payout and GreenReserve&apos;s fee are both reduced.
             </p>

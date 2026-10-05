@@ -74,7 +74,7 @@ function SetPasswordForm() {
     return (
       <div className="text-center">
         <CheckCircle className="w-10 h-10 text-ok mx-auto mb-4" />
-        <h2 className="font-serif text-xl font-medium text-ink mb-2">Password set</h2>
+        <h2 className="font-serif text-xl font-semibold text-ink mb-2">Password set</h2>
         <p className="text-ink-soft text-sm mb-6">Your account is ready.</p>
         <button
           onClick={() => router.push(signInUrl)}
@@ -88,7 +88,7 @@ function SetPasswordForm() {
 
   return (
     <>
-      <h1 className="font-serif text-xl font-medium text-ink mb-1">Set your password</h1>
+      <h1 className="font-serif text-xl font-semibold text-ink mb-1">Set your password</h1>
       <p className="text-ink-soft text-sm mb-6">Choose a password for your GreenReserve admin account.</p>
 
       {needsNewLink && (

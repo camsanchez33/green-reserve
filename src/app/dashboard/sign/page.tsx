@@ -15,7 +15,7 @@ export default function SignPage() {
           <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={190} height={36} priority className="w-[190px] max-w-full h-auto mx-auto" />
         </div>
         <div className="bg-white rounded-lg shadow-card p-6">
-          <h2 className="text-[24px] font-serif font-medium leading-none text-ink mb-1">Sign the agreements</h2>
+          <h2 className="text-[24px] font-serif font-semibold leading-none text-ink mb-1">Sign the agreements</h2>
           <p className="text-sm text-ink-soft mb-6">The terms every course on GreenReserve operates under. Read each one to the end, then sign once.</p>
           <SignAgreements onSigned={() => router.push('/dashboard')} continueLabel="Sign and return to the dashboard" />
         </div>

@@ -11,7 +11,7 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-paper">
       <div className="max-w-2xl mx-auto px-6 py-24">
-        <h1 className="text-3xl sm:text-4xl font-serif font-medium tracking-tight text-ink mb-4">Get in touch</h1>
+        <h1 className="text-3xl sm:text-4xl font-serif font-semibold tracking-tight text-ink mb-4">Get in touch</h1>
         <p className="text-ink-soft text-base leading-relaxed mb-10">
           We&apos;re a small team and respond to every message. Whether you have a question about
           listing your course, a booking issue, or just want to learn more — email us directly.
@@ -31,7 +31,7 @@ export default function ContactPage() {
             href="/for-courses"
             className="inline-flex items-center gap-2 text-sm font-medium text-pine hover:text-pine-hover transition-colors"
           >
-            Submit interest form 
+            Ask a question
           </Link>
         </div>
       </div>

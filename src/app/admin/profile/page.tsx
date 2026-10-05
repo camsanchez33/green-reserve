@@ -52,7 +52,7 @@ export default function ProfilePage() {
         <div className="px-8 py-7 max-w-xl">
 
           <div className="mb-6">
-            <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">My profile</h1>
+            <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink">My profile</h1>
             <p className="text-sm text-ink-soft mt-0.5">Account details and password</p>
           </div>
 

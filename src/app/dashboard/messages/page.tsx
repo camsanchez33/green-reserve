@@ -93,7 +93,7 @@ function MessagesContent() {
         <div className="px-6 py-4 border-b border-line shrink-0 bg-white">
           {/* U-O (§1b): serif title + one sentence of this thread's numbers. */}
           <div className="flex items-center gap-2">
-            <h1 className="text-[30px] font-serif font-medium tracking-tight text-ink leading-none">Messages</h1>
+            <h1 className="text-[30px] font-serif font-semibold tracking-tight text-ink leading-none">Messages</h1>
           </div>
           <div className="text-[13.5px] text-ink-soft mt-2">
             Your conversation with the GreenReserve team

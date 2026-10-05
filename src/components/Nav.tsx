@@ -99,9 +99,9 @@ export default function Nav() {
               {l.label}
             </Link>
           ))}
-          <Link href="/for-courses" className="ml-3 bg-pine hover:bg-pine-hover text-white text-[15px] font-semibold px-4 h-[42px] inline-flex items-center rounded-md transition-colors">
-            List your course
-          </Link>
+          <a href="/demo" className="ml-3 bg-pine hover:bg-pine-hover text-white text-[15px] font-semibold px-4 h-[42px] inline-flex items-center rounded-md transition-colors">
+            Book a demo
+          </a>
         </div>
 
         <button
@@ -120,7 +120,7 @@ export default function Nav() {
             {links.map(l => (
               <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="text-ink-soft hover:text-ink text-sm py-2">{l.label}</Link>
             ))}
-            <Link href="/for-courses" onClick={() => setOpen(false)} className="mt-2 bg-pine text-white text-sm font-semibold px-4 py-2.5 rounded-md text-center">List your course</Link>
+            <a href="/demo" onClick={() => setOpen(false)} className="mt-2 bg-pine text-white text-sm font-semibold px-4 py-2.5 rounded-md text-center">Book a demo</a>
           </div>
         </div>
       )}

@@ -77,6 +77,19 @@ type Draft = {
   scorecardPhotos: string[];
   additionalNotes: string;
   branch: BranchAnswers;
+  // CLUB-0: the short "Ask a question" form only collects name, email, course
+  // and town — whatever the inquiry is missing is asked for here, on step 1,
+  // and written onto the inquiry when the sheet is submitted.
+  contactFill: ContactFill;
+};
+
+type ContactFill = { contactTitle: string; phone: string; address: string; zipCode: string; courseType: string; currentBookingMethod: string };
+const blankContactFill = (): ContactFill => ({ contactTitle: '', phone: '', address: '', zipCode: '', courseType: '', currentBookingMethod: '' });
+const CONTACT_FILL_KEYS = ['contactTitle', 'phone', 'address', 'zipCode', 'courseType', 'currentBookingMethod'] as const;
+const CONTACT_FILL_REQUIRED: (keyof ContactFill)[] = ['phone', 'address', 'zipCode', 'courseType'];
+const CONTACT_FILL_LABEL: Record<keyof ContactFill, string> = {
+  contactTitle: 'Your title', phone: 'Phone', address: 'Street address', zipCode: 'ZIP code',
+  courseType: 'Public or private?', currentBookingMethod: 'How do you take tee times today?',
 };
 
 type BucketRow = { label: string; price: string; balls: string; };
@@ -158,6 +171,7 @@ const initDraft: Draft = {
   website: '', description: '', photos: [], scorecardPhotos: [],
   additionalNotes: '',
   branch: { passes: '', public_fees: '', member_rate: '', outings: '' },
+  contactFill: blankContactFill(),
 };
 
 type SectionId = 'basics' | 'playability' | 'tee_sets' | 'schedule' | 'fees' | 'passes' | 'member' | 'public_fees' | 'member_rate' | 'outings' | 'cancellation' | 'facilities' | 'about' | 'notes';
@@ -354,6 +368,8 @@ function DetailsForm() {
   const [showAll, setShowAll] = useState(false);
   const [callRecap, setCallRecap] = useState<string[]>([]);
   const [contact, setContact] = useState<Record<string, string> | null>(null);
+  // CLUB-0: contact fields the inquiry does not have yet — asked for on step 1.
+  const [missingContact, setMissingContact] = useState<(keyof ContactFill)[]>([]);
   const sections = useMemo(
     () => (showAll ? allSections : allSections.filter(sec => !callNo.includes(sec.id))),
     [allSections, callNo, showAll],
@@ -407,7 +423,9 @@ function DetailsForm() {
         const ca: Record<string, string> = d.callAnswers && typeof d.callAnswers === 'object' ? d.callAnswers : {};
         setCallAnswers(ca);
         setAllSections(buildSections(ct));
-        setContact(d.contact && typeof d.contact === 'object' ? d.contact as Record<string, string> : null);
+        const c: Record<string, string> = d.contact && typeof d.contact === 'object' ? d.contact as Record<string, string> : {};
+        setContact(d.contact && typeof d.contact === 'object' ? c : null);
+        setMissingContact(CONTACT_FILL_KEYS.filter(k => !String((k === 'courseType' ? d.courseType : c[k]) ?? '').trim()));
         setCallRecap(Array.isArray(d.callRecap) ? (d.callRecap as unknown[]).filter((x): x is string => typeof x === 'string') : []);
         // IC-5 §4: the call's structured answers fill empty keys only.
         const pre: Record<string, unknown> = d.prefill && typeof d.prefill === 'object' ? d.prefill : {};
@@ -490,7 +508,13 @@ function DetailsForm() {
           nine27ParsPerNine: (saved.nine27ParsPerNine && typeof saved.nine27ParsPerNine === 'object') ? saved.nine27ParsPerNine : {},
           course36ParsPerCourse: (saved.course36ParsPerCourse && typeof saved.course36ParsPerCourse === 'object') ? saved.course36ParsPerCourse : {},
           branch: deriveBranch(saved.branch, n, ca, preBranch),
+          contactFill: { ...blankContactFill(), ...((saved.contactFill && typeof saved.contactFill === 'object') ? saved.contactFill : {}) },
         }));
+        // A course type picked on an earlier visit shapes the sections like one on file.
+        if (!d.courseType && saved.contactFill && (saved.contactFill.courseType === 'public' || saved.contactFill.courseType === 'private')) {
+          setCourseType(saved.contactFill.courseType);
+          setAllSections(buildSections(saved.contactFill.courseType));
+        }
       })
       .catch(e => setLoadError(e.message))
       .finally(() => setLoading(false));
@@ -499,6 +523,10 @@ function DetailsForm() {
   const filled = (v: unknown) => v !== '' && v !== null && v !== undefined;
 
   const validateSection = (id: SectionId): string => {
+    if (id === 'basics') {
+      const need = missingContact.filter(k => CONTACT_FILL_REQUIRED.includes(k) && !draft.contactFill[k].trim());
+      if (need.length) return `Please add your ${need.map(k => k === 'courseType' ? 'course type' : CONTACT_FILL_LABEL[k].toLowerCase()).join(', ')} under Your details.`;
+    }
     if (id === 'schedule') {
       if (draft.daysOpen.length === 0) return 'Pick the days you are open.';
       if (!draft.firstTeeTime || !draft.lastTeeTime) return 'Enter your first and last tee times.';
@@ -621,7 +649,7 @@ function DetailsForm() {
     <div className="min-h-screen bg-paper flex items-center justify-center p-6">
       <div className="bg-white rounded-lg p-8 max-w-md w-full text-center border border-line">
         
-        <h1 className="text-[18px] font-serif font-medium tracking-tight text-ink mb-2">Can&apos;t load this link</h1>
+        <h1 className="text-[18px] font-serif font-semibold tracking-tight text-ink mb-2">Can&apos;t load this link</h1>
         <p className="text-ink-soft text-sm">{loadError}</p>
         <p className="text-ink-soft text-xs mt-4">If you think this is a mistake, reply to the email we sent you.</p>
       </div>
@@ -632,7 +660,7 @@ function DetailsForm() {
     <div className="min-h-screen bg-paper flex items-center justify-center p-6">
       <div className="bg-white rounded-lg p-10 max-w-lg w-full text-center border border-line">
         
-        <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Thanks — we&apos;ve got it.</h1>
+        <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mb-2">Thanks — we&apos;ve got it.</h1>
         <p className="text-ink-soft text-sm leading-relaxed">
           We&apos;ll build {courseName}&apos;s booking page with these details and email your login shortly.
           You&apos;ll be able to fine-tune everything before going live.
@@ -1800,6 +1828,31 @@ function DetailsForm() {
               <dt className="text-ink-muted">Address</dt><dd className="text-ink">{[contact.address, contact.city, [contact.state, contact.zipCode].filter(Boolean).join(' ')].filter(Boolean).join(', ')}</dd>
             </dl>
             <p className="text-[11.5px] text-ink-soft mt-2">Already on file — nothing to re-type. Something wrong? Reply to our email and we&apos;ll fix it.</p>
+            {missingContact.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-line space-y-3">
+                <p className="text-[13px] text-ink">A few things we don&apos;t have yet:</p>
+                {missingContact.map(k => k === 'courseType' ? (
+                  <div key={k}>
+                    <p className="text-[13px] font-semibold text-ink mb-1.5">{CONTACT_FILL_LABEL[k]}</p>
+                    <div className="flex gap-2">
+                      {(['public', 'private'] as const).map(t => (
+                        <button key={t} type="button"
+                          onClick={() => { setDraft(dr => ({ ...dr, contactFill: { ...dr.contactFill, courseType: t } })); setCourseType(t); setAllSections(buildSections(t)); }}
+                          className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${draft.contactFill.courseType === t ? 'border-pine bg-pine/[0.06] text-pine' : 'border-line bg-paper text-ink'}`}>
+                          {t === 'public' ? 'Public' : 'Private'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <label key={k} className="block">
+                    <span className="block text-[13px] font-semibold text-ink mb-1.5">{CONTACT_FILL_LABEL[k]}{CONTACT_FILL_REQUIRED.includes(k) ? '' : ' (optional)'}</span>
+                    <input className={inp} value={draft.contactFill[k]} maxLength={k === 'address' ? 200 : 120}
+                      onChange={e => { const v = e.target.value; setDraft(dr => ({ ...dr, contactFill: { ...dr.contactFill, [k]: v } })); }} />
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
         )}
         {activeIdx === 0 && callRecap.length > 0 && (
@@ -1811,7 +1864,7 @@ function DetailsForm() {
         )}
 
         <div className="bg-white rounded-lg border border-line p-6 mb-5">
-          <h2 className="text-[18px] font-serif font-medium tracking-tight text-ink mb-5">
+          <h2 className="text-[18px] font-serif font-semibold tracking-tight text-ink mb-5">
             {section?.title}
             {section?.optional && <span className="ml-2 align-middle text-[12px] font-sans font-normal text-ink-muted">Optional</span>}
           </h2>

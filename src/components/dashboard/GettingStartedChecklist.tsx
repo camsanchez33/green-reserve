@@ -134,7 +134,7 @@ export default function GettingStartedChecklist({
     <div className="bg-white rounded-lg shadow-card mb-5 overflow-hidden">
       <button onClick={() => setExpandedOverride(false)} className="w-full flex items-center justify-between px-5 py-4 text-left">
         <div>
-          <div className="text-[15px] font-serif font-medium text-ink">Getting Started</div>
+          <div className="text-[15px] font-serif font-semibold text-ink">Getting Started</div>
           <div className="text-xs text-ink-muted mt-0.5">{doneCount} of {steps.length} done</div>
         </div>
         <ChevronRight className="w-4 h-4 text-ink-faint"/>

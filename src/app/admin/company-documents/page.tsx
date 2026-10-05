@@ -89,7 +89,7 @@ export default function CompanyDocumentsPage() {
       <div className="admin-content flex-1 min-h-screen">
         <div className="px-8 py-7 max-w-3xl">
           <div className="mb-7">
-            <h1 className="text-[30px] leading-none font-serif font-medium text-ink">Company documents</h1>
+            <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Company documents</h1>
             <p className="text-[13.5px] text-ink-soft mt-2">GreenReserve LLC&apos;s own paperwork: formation, tax, banking, insurance and contracts. Stored privately and visible only to the owner. Never put these in the code repository; it is public.</p>
           </div>
 

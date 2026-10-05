@@ -77,7 +77,7 @@ export default function CourseDetailPage() {
             </button>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2.5 mb-0.5">
-                <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink truncate">{c.name}</h1>
+                <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink truncate">{c.name}</h1>
               </div>
               <div className="flex items-center gap-3 flex-wrap">
                 <span title={detail.health.reason}><StatusDot status={detail.health.dot} label={detail.health.label} /></span>

@@ -110,7 +110,7 @@ function RevenueChart({ data, gran }: { data: TickerPoint[]; gran: Gran }) {
             <div>
               <Eyebrow>{copy.period} — GR Fees</Eyebrow>
               <div className="flex items-baseline gap-2">
-                <div className="text-xl font-serif font-medium text-ok">{fmtMoney(latest.fees)}</div>
+                <div className="text-xl font-serif font-semibold text-ok">{fmtMoney(latest.fees)}</div>
                 <Trend current={latest.fees} prev={latest.ghostFees} suffix={copy.suffix}/>
               </div>
             </div>
@@ -118,7 +118,7 @@ function RevenueChart({ data, gran }: { data: TickerPoint[]; gran: Gran }) {
               <div>
                 <Eyebrow>{copy.period} — Gross</Eyebrow>
                 <div className="flex items-baseline gap-2">
-                  <div className="text-xl font-serif font-medium text-ink">{fmtMoney(latest.gross)}</div>
+                  <div className="text-xl font-serif font-semibold text-ink">{fmtMoney(latest.gross)}</div>
                   <Trend current={latest.gross} prev={latest.ghostGross} suffix={copy.suffix}/>
                 </div>
               </div>
@@ -296,7 +296,7 @@ export default function AdminOverviewPage() {
         <div className="px-8 py-7">
           <div className="flex items-center justify-between mb-7">
             <div>
-              <h1 className="text-[30px] leading-none font-serif font-medium text-ink">Platform Overview</h1>
+              <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Platform Overview</h1>
               <p className="text-[13.5px] text-ink-soft mt-2">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                 {lastUpdated && <span className="text-ink-faint"> · updated {fmtAgo(lastUpdated, Date.now())}</span>}
@@ -323,7 +323,7 @@ export default function AdminOverviewPage() {
                 <div className="flex items-start justify-between mb-2">
                   <div className="p-2 rounded-md bg-pine/10"><DollarSign className="w-4 h-4 text-pine"/></div>
                 </div>
-                <div className="text-[30px] leading-none font-serif font-medium text-pine mb-1">{fmtMoney(stats.topStrip.feesToday)}</div>
+                <div className="text-[30px] leading-none font-serif font-semibold text-pine mb-1">{fmtMoney(stats.topStrip.feesToday)}</div>
                 <Eyebrow>GreenReserve fees today</Eyebrow>
                 <div className="flex items-center gap-3 mt-2 text-xs text-ink-faint">
                   {/* U-A: the fee is per PLAYER — say players first, never derive them from bookings. */}
@@ -340,7 +340,7 @@ export default function AdminOverviewPage() {
                 <div className="flex items-start justify-between mb-2">
                   <div className="p-2 rounded-md bg-paper"><MessageSquare className="w-4 h-4 text-ink-muted"/></div>
                 </div>
-                <div className="text-[30px] leading-none font-serif font-medium text-ink mb-1">{isSupportPlus ? stats.topStrip.unreadMessages : '—'}</div>
+                <div className="text-[30px] leading-none font-serif font-semibold text-ink mb-1">{isSupportPlus ? stats.topStrip.unreadMessages : '—'}</div>
                 <Eyebrow>Unread</Eyebrow>
                 <div className="text-xs text-ink-faint mt-2">
                   {!isSupportPlus ? 'Requires support access' : stats.topStrip.unreadNewestSender ? `Newest: ${stats.topStrip.unreadNewestSender}` : 'All caught up'}
@@ -454,7 +454,7 @@ export default function AdminOverviewPage() {
               <div onClick={() => router.push('/admin/courses')} className="p-5 cursor-pointer hover:bg-paper transition-colors flex items-center justify-between">
                 <div>
                   <Eyebrow className="mb-1">Live courses</Eyebrow>
-                  <div className="text-xl font-serif font-medium text-ink">{stats.thirtyDay.activeCourses}</div>
+                  <div className="text-xl font-serif font-semibold text-ink">{stats.thirtyDay.activeCourses}</div>
                   <div className="text-xs text-ink-faint mt-0.5">{stats.thirtyDay.archivedCourses > 0 ? `${stats.thirtyDay.totalCourses} active · ${stats.thirtyDay.archivedCourses} archived` : `${stats.thirtyDay.totalCourses} total`}</div>
                 </div>
                 <Trend current={stats.thirtyDay.newCourses30d} prev={stats.thirtyDay.newCoursesPrev30d}/>
@@ -462,14 +462,14 @@ export default function AdminOverviewPage() {
               <div onClick={() => router.push('/admin/activity')} className="p-5 cursor-pointer hover:bg-paper transition-colors flex items-center justify-between">
                 <div>
                   <Eyebrow className="mb-1">Bookings (30d)</Eyebrow>
-                  <div className="text-xl font-serif font-medium text-ink">{stats.thirtyDay.bookings30d}</div>
+                  <div className="text-xl font-serif font-semibold text-ink">{stats.thirtyDay.bookings30d}</div>
                 </div>
                 <Trend current={stats.thirtyDay.bookings30d} prev={stats.thirtyDay.bookingsPrev30d}/>
               </div>
               <div onClick={() => router.push('/admin/activity')} className="p-5 cursor-pointer hover:bg-paper transition-colors flex items-center justify-between">
                 <div>
                   <Eyebrow className="mb-1">GreenReserve fees (30d)</Eyebrow>
-                  <div className="text-xl font-serif font-medium text-ok">{fmtMoney(stats.thirtyDay.fees30d)}</div>
+                  <div className="text-xl font-serif font-semibold text-ok">{fmtMoney(stats.thirtyDay.fees30d)}</div>
                 </div>
                 <Trend current={stats.thirtyDay.fees30d} prev={stats.thirtyDay.feesPrev30d}/>
               </div>

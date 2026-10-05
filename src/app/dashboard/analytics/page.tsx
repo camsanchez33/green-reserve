@@ -75,7 +75,7 @@ function Stat({ label, value, sub, delta }: { label: string; value: string; sub?
   return (
     <div className="min-w-0">
       <Eyebrow>{label}</Eyebrow>
-      <div className="mt-1 text-[22px] leading-none font-serif font-medium text-ink tabular-nums">{value}</div>
+      <div className="mt-1 text-[22px] leading-none font-serif font-semibold text-ink tabular-nums">{value}</div>
       {(sub || delta) && <div className="mt-1.5 text-[12.5px] text-ink-soft flex items-center gap-2 flex-wrap">{delta}{sub}</div>}
     </div>
   );
@@ -158,7 +158,7 @@ function AnalyticsInner() {
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <div className="max-w-xl mx-auto px-6 py-16">
           <Card className="p-6">
-            <h1 className="text-[20px] font-serif font-medium text-ink">{denied ? 'Your login doesn’t include Analytics' : 'Your session ended'}</h1>
+            <h1 className="text-[20px] font-serif font-semibold text-ink">{denied ? 'Your login doesn’t include Analytics' : 'Your session ended'}</h1>
             <p className="text-[13.5px] text-ink-soft mt-2">{denied
               ? 'It shows revenue and what each golfer spends. The course owner can turn on “See analytics” for you in Settings → Staff & permissions.'
               : 'Sign in again to see your analytics.'}</p>
@@ -176,7 +176,7 @@ function AnalyticsInner() {
         <div className="max-w-6xl mx-auto px-6 py-6">
           <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
             <div>
-              <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Analytics</h1>
+              <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Analytics</h1>
               <p className="text-[13px] text-ink-soft mt-2">
                 {denied || signedOut ? '' : d ? `${fmtDay(d.range.from)} – ${fmtDay(d.range.to)}${d.compare ? ` · compared with ${fmtDay(d.compare.range.from)} – ${fmtDay(d.compare.range.to)}` : ''} · by tee-time date` : 'Loading…'}
               </p>
