@@ -404,7 +404,7 @@ function SettingsPageInner() {
   const dresscodes = (form.dresscode as string[])||[];
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="settings"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="these settings" edit="settings.edit" />
