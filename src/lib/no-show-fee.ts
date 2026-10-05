@@ -27,7 +27,7 @@ export type NoShowResult = {
 };
 
 /** The live (charged, not refunded) course no-show charge, from the ledger. */
-async function liveNoShowCharge(bookingId: string): Promise<{ stripeId: string; amountCents: number } | null> {
+export async function liveNoShowCharge(bookingId: string): Promise<{ stripeId: string; amountCents: number } | null> {
   const events = await prisma.paymentEvent.findMany({ where: { bookingId, kind: { in: ['no_show_fee', 'no_show_fee_refunded'] } }, orderBy: { createdAt: 'desc' } });
   const last = events[0];
   return last && last.kind === 'no_show_fee' ? { stripeId: last.stripeId, amountCents: last.amountCents } : null;

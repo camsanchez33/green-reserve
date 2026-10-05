@@ -9739,7 +9739,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 238,
+      "lines": 255,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9762,6 +9762,7 @@
         "./booking-events",
         "./cancel-policy",
         "./email",
+        "./no-show-fee",
         "./prisma",
         "./refund-booking",
         "./stripe"
@@ -12191,6 +12192,10 @@
           "kind": "fn"
         },
         {
+          "name": "liveNoShowCharge",
+          "kind": "fn"
+        },
+        {
           "name": "markNoShow",
           "kind": "fn"
         },
@@ -12219,7 +12224,8 @@
       ],
       "usedBy": [
         "src/app/api/cron/hourly/route.ts",
-        "src/app/api/operator/bookings/route.ts"
+        "src/app/api/operator/bookings/route.ts",
+        "src/lib/cancel-booking.ts"
       ]
     },
     {
@@ -13405,7 +13411,7 @@
     },
     {
       "path": "src/lib/tee-time-utils.ts",
-      "lines": 36,
+      "lines": 41,
       "purpose": "Converts a stored tee-time (date \"YYYY-MM-DD\", time \"HH:MM\" in the course's local timezone) to a UTC millisecond timestamp.",
       "brain": [],
       "exports": [
