@@ -152,7 +152,10 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     rail keeps its nav icons because its collapsed mode is icon-only; trend
     deltas on Overview/Revenue show +/− instead of arrow icons; Overview and
     Revenue figures moved out of the serif. Zero behaviour.
-  - [ ] CLUB-4b /admin Title Case labels → sentence case; any remaining pages
+  - [x] CLUB-4b /admin labels — BUILT 2026-10-05: Title Case buttons, headings and
+    display labels to sentence case (Send preview, Go live, Season pass, Add
+    booking…); Profile / course / Manual build titles to the 30px display.
+    Login pages keep their 22px card titles. Zero behaviour.
 - [x] UI-H-1 — BUILT 2026-10-01: the homepage from the approved plain-background
   mockup (HOMEPAGE_SPEC.md, docs/design/home/index.html). Archivo replaces Fraunces
   + Inter for the public look (staff look untouched). Working hero demo (tee sheet +

@@ -280,7 +280,7 @@ export function SetupTab() {
                 disabled={setupSaving}
                 className="bg-pine hover:bg-pine-hover disabled:opacity-50 text-white px-5 py-2.5 rounded-md text-[12.5px] font-medium transition-colors"
               >
-                {setupSaving ? 'Saving...' : 'Save Settings'}
+                {setupSaving ? 'Saving...' : 'Save settings'}
               </button>
             </div>
             );

@@ -73,8 +73,8 @@ type TickerPoint = { t: number; gross: number; fees: number; ghostGross: number;
 
 const GRAN_COPY: Record<Gran, { period: string; periodLower: string; suffix: string; start: string; now: string }> = {
   day:   { period: 'Today',     periodLower: 'today',      suffix: 'vs yesterday, same time', start: '12am',  now: 'Now' },
-  week:  { period: 'This Week', periodLower: 'this week',  suffix: 'vs last week, same day',  start: 'Mon',   now: 'Today' },
-  month: { period: 'This Month', periodLower: 'this month', suffix: 'vs last month, same day', start: '1st',  now: 'Today' },
+  week:  { period: 'This week', periodLower: 'this week',  suffix: 'vs last week, same day',  start: 'Mon',   now: 'Today' },
+  month: { period: 'This month', periodLower: 'this month', suffix: 'vs last month, same day', start: '1st',  now: 'Today' },
 };
 
 function RevenueChart({ data, gran }: { data: TickerPoint[]; gran: Gran }) {
