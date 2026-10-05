@@ -39,8 +39,13 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   a real form label or table header; (b) sentences in full ink — `text-ink-muted`
   (839) / `text-ink-faint` (337) only on metadata (timestamps, "updated…", counts),
   never on a sentence someone must read; (c) no box inside a box — inner items are
-  rows. Rewrites the Eyebrow line of CLAUDE.md's type scale. NEEDS CAM: approve
-  before the first run.
+  rows. Rewrites the Eyebrow line of CLAUDE.md's type scale. Approved by Cam
+  2026-10-05 ("go ahead with TYPE-2 starting on the homepage").
+  - [x] homepage — BUILT 2026-10-05: six section labels removed (hero, Built for
+    the course, How it works, Price, See it work, Questions); demo captions and
+    table headers sentence case in ink; every homepage sentence full ink (lead,
+    hero, rows, price, FAQ, steps, links). Zero behavior.
+  - [ ] golfer pages  - [ ] /dashboard  - [ ] /admin
 - [ ] TYPE-3 — icons only where they do a job (back arrow, close, search): remove
   decorative Lucide icons (74 files; ChevronRight / check / sparkle-type ×108),
   e.g. the icon tiles on admin Overview. Zero behavior. Rewrites CLAUDE.md's

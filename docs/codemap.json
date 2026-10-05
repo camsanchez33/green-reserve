@@ -24,7 +24,7 @@
   "files": [
     {
       "path": "src/app/HomeContent.tsx",
-      "lines": 151,
+      "lines": 148,
       "purpose": "",
       "brain": [],
       "exports": [
