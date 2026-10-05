@@ -6981,7 +6981,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 282,
+      "lines": 244,
       "purpose": "",
       "brain": [],
       "exports": [

@@ -193,13 +193,13 @@ export default function MembersPage() {
 
   // SP-A: a login without "members.view" sees only why — never a working page whose every action is refused.
   if (pageAccess.loaded && !pageAccess.can('members.view')) return (
-    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="members"/>
       <main className="flex-1 md:overflow-y-auto"><StaffNotice what="the members list" view="members.view" /></main>
     </div>
   );
   if (loading) return (
-    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="members"/>
       <main className="flex-1 flex items-center justify-center">
         {loadError && <div className="px-6 pt-6"><LoadError message={loadError} onRetry={loadAll} /></div>}
@@ -210,7 +210,7 @@ export default function MembersPage() {
 
   /* ── Wizard view ── */
   if (view === 'wizard') return (
-    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="members"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="the members list" view="members.view" edit="members.edit" />
@@ -396,7 +396,7 @@ export default function MembersPage() {
 
   /* ── Complete view ── */
   if (view === 'complete' && createdTier) return (
-    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="members"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="the members list" view="members.view" edit="members.edit" />
@@ -458,7 +458,7 @@ export default function MembersPage() {
 
   /* ── List view ── */
   return (
-    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="members"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="the members list" view="members.view" edit="members.edit" />

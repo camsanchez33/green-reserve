@@ -1,19 +1,28 @@
 {
-  "generatedAt": "2026-10-05T14:58:10.019Z",
+  "generatedAt": "2026-10-05T15:09:36.242Z",
   "repo": {
-    "head": "9e84be9",
+    "head": "4a38281",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 4,
+    "dirtyCount": 13,
     "dirty": [
-      "M RUN_QUEUE.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
       " M scripts/design-guard.baseline.json",
-      " M src/app/courses/[slug]/CourseBookingClient.tsx"
+      " M src/app/dashboard/analytics/page.tsx",
+      " M src/app/dashboard/members/page.tsx",
+      " M src/app/dashboard/messages/page.tsx",
+      " M src/app/dashboard/money/page.tsx",
+      " M src/app/dashboard/outings/page.tsx",
+      " M src/app/dashboard/page.tsx",
+      " M src/app/dashboard/schedules/page.tsx",
+      " M src/app/dashboard/settings/page.tsx",
+      " M src/app/dashboard/tournaments/page.tsx",
+      " M src/components/OperatorSidebar.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
-    "queueLastCommit": "2026-10-05T14:49:01+00:00",
+    "queueLastCommit": "2026-10-05T14:58:15+00:00",
     "unrecorded": []
   },
   "counts": {
@@ -714,6 +723,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "4bc7fe0",
+      "date": "2026-10-05",
+      "subject": "CLUB-2: golfer course page in the club look"
+    },
+    {
       "h": "566e11e",
       "date": "2026-10-05",
       "subject": "CLUB-1: homepage leads with what GreenReserve is; heavier Garamond site-wide"
@@ -767,11 +781,6 @@
       "h": "7db1f2c",
       "date": "2026-10-05",
       "subject": "TYPE-2 golfer pages + homepage steps without numbers"
-    },
-    {
-      "h": "4f893bb",
-      "date": "2026-10-05",
-      "subject": "TYPE-2 homepage: no labels above headings, sentences in full ink"
     }
   ]
 }

@@ -4,18 +4,27 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-05 14:58 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `9e84be9` · working tree **4 dirty file(s)**
+Generated 2026-10-05 15:09 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `4a38281` · working tree **13 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-### Uncommitted working tree (4 file(s))
+### Uncommitted working tree (13 file(s))
 
-- `M RUN_QUEUE.md`
+- `M docs/CODEMAP.md`
 - `M docs/codemap.json`
 - `M scripts/design-guard.baseline.json`
-- `M src/app/courses/[slug]/CourseBookingClient.tsx`
+- `M src/app/dashboard/analytics/page.tsx`
+- `M src/app/dashboard/members/page.tsx`
+- `M src/app/dashboard/messages/page.tsx`
+- `M src/app/dashboard/money/page.tsx`
+- `M src/app/dashboard/outings/page.tsx`
+- `M src/app/dashboard/page.tsx`
+- `M src/app/dashboard/schedules/page.tsx`
+- `M src/app/dashboard/settings/page.tsx`
+- `M src/app/dashboard/tournaments/page.tsx`
+- `M src/components/OperatorSidebar.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -193,6 +202,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `4bc7fe0` 2026-10-05 — CLUB-2: golfer course page in the club look
 - `566e11e` 2026-10-05 — CLUB-1: homepage leads with what GreenReserve is; heavier Garamond site-wide
 - `d9e4bed` 2026-10-05 — Regenerate code map after the CLUB-0 review fixes
 - `90ab223` 2026-10-05 — CLUB-0 security review fixes: escape setup-sheet emails, clean intake fields
@@ -204,7 +214,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `ae8c291` 2026-10-05 — TYPE-2 /dashboard: sentence-case labels, no eyebrows, darker helper text
 - `53104dd` 2026-10-05 — TYPE-2 guards + shared label: no uppercase eyebrows anywhere
 - `7db1f2c` 2026-10-05 — TYPE-2 golfer pages + homepage steps without numbers
-- `4f893bb` 2026-10-05 — TYPE-2 homepage: no labels above headings, sentences in full ink
 
 ---
 

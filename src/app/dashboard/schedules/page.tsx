@@ -199,13 +199,13 @@ export default function SchedulesPage() {
 
   // SP-A: a login without "schedule.view" sees only why — never a working page whose every action is refused.
   if (pageAccess.loaded && !pageAccess.can('schedule.view')) return (
-    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="schedule"/>
       <main className="flex-1 md:overflow-y-auto"><StaffNotice what="the schedule" view="schedule.view" /></main>
     </div>
   );
   return (
-    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="schedule"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="the schedule" view="schedule.view" edit="schedule.edit" />

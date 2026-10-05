@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
   Calendar, BarChart2, Clock, Users, Settings, LogOut, XCircle,
-  Trophy, PartyPopper, DollarSign, AlertTriangle, MessageSquare,
+  Trophy, PartyPopper, DollarSign, MessageSquare,
 } from 'lucide-react';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
@@ -23,12 +23,6 @@ interface CourseIdentity {
 }
 interface MyCourse { id: string; name: string; slug: string; active: boolean; liveStatus: string; }
 
-// U-0 (UI_REVISE_SPEC §1b): active item = accent text, 3px left border in the
-// accent, paper background. The tint wash is gone.
-function accentActive(color: string) {
-  return { borderLeft: `3px solid ${color}`, backgroundColor: 'var(--color-paper)', color, fontWeight: 600 };
-}
-const initialsOf = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'GR';
 
 export default function OperatorSidebar({ active, onAlertClick }: {
   active: OperatorNavKey;
@@ -99,7 +93,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   const meta = [establishedYear ? `Est. ${establishedYear}` : null, typeLabel].filter(Boolean).join(' · ');
 
   const navItems: { key: OperatorNavKey; label: string; href: string; icon: React.ReactNode; soon?: boolean }[] = [
-    { key: 'teesheet',      label: 'Tee Sheet',    href: '/dashboard',               icon: <Calendar className="w-4 h-4"/> },
+    { key: 'teesheet',      label: 'Tee sheet',    href: '/dashboard',               icon: <Calendar className="w-4 h-4"/> },
     { key: 'analytics',     label: 'Analytics',    href: '/dashboard/analytics', icon: <BarChart2 className="w-4 h-4"/> },
     { key: 'tournaments',   label: 'Tournaments',  href: '/dashboard/tournaments',   icon: <Trophy className="w-4 h-4"/>,    soon: true },
     { key: 'outings',       label: 'Outings',      href: '/dashboard/outings',       icon: <PartyPopper className="w-4 h-4"/>, soon: true },
@@ -127,11 +121,6 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     messages: access.can('messages.use'),
     settings: access.can('settings.edit'),
   } as Record<string, boolean>)[k] !== false;
-  const groups = [
-    { label: 'Dashboard', keys: (['teesheet', 'analytics'] as OperatorNavKey[]).filter(visible) },
-    { label: 'Bookings',  keys: (['tournaments', 'outings'] as OperatorNavKey[]).filter(visible) },
-    { label: 'Manage',    keys: (['schedule', 'members', 'money', 'messages', 'settings'] as OperatorNavKey[]).filter(visible) },
-  ];
 
   // SD-2: what fits in a thumb row.
   const mobileKeys: OperatorNavKey[] = (['teesheet', 'money', 'schedule', 'messages', 'settings'] as OperatorNavKey[]).filter(visible);
@@ -191,91 +180,64 @@ export default function OperatorSidebar({ active, onAlertClick }: {
       })}
     </nav>
 
-    <aside className="hidden md:flex w-56 shrink-0 bg-white border-r border-line flex-col h-full overflow-y-auto">
-      {/* U-0 (UI_REVISE_SPEC §1b, canvas "Operator · Tee sheet"): the rail is
-          the course's room. Crest (logo, or initials in the accent), serif
-          name, one meta line (sentence case since TYPE-2). GreenReserve moves to the footer. */}
-      <div className="px-4 py-4 border-b border-line">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 shrink-0 bg-white border border-line flex items-center justify-center overflow-hidden font-semibold text-[13px]" style={{ color: brandColor }} aria-hidden="true">
-            {logoUrl
-              // eslint-disable-next-line @next/next/no-img-element
-              ? <img src={logoUrl} alt="" className="w-full h-full object-contain" />
-              : initialsOf(name)}
-          </div>
-          <div className="min-w-0">
-            <div className="font-serif text-[16px] text-ink leading-[1.1] truncate">{name || 'Your course'}</div>
-            {meta && <div className="text-[12px] text-ink-muted mt-1 truncate">{meta}</div>}
-          </div>
+    {/* CLUB-3 (Cam 2026-10-05, after clubup.com): on desktop the 224px rail is
+        gone — the course's name and the tabs run across the top in the course's
+        own colour, the active tab underlined in fairway (decoration only; the
+        white weight and aria-current carry the state). Below md the strip and
+        bottom bar above are unchanged. Tournaments and Outings are "Soon"
+        placeholders and stay off the bar until they exist. */}
+    <header className="hidden md:block shrink-0" style={{ backgroundColor: brandColor }}>
+      <div className="flex items-end gap-8 px-6 lg:px-8 h-16 text-white">
+        <div className="self-center flex items-center gap-3 min-w-0 shrink-0">
+          {logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt="" className="w-9 h-9 rounded-md bg-white object-contain p-0.5" />
+          )}
+          <span className="font-serif text-[24px] leading-none truncate max-w-[260px]" title={meta}>{name || 'Your course'}</span>
         </div>
-        {myCourses.length > 1 && (
-          <select
-            value={identity.id || ''}
-            onChange={e => switchCourse(e.target.value)}
-            disabled={switchingCourse}
-            className="mt-2 w-full bg-paper border border-line rounded-md px-2 py-1.5 text-[11.5px] text-ink-soft disabled:opacity-50"
-          >
-            {myCourses.map(c => (
-              <option key={c.id} value={c.id}>{c.name}{c.active && c.liveStatus === 'live' ? '' : ' (draft)'}</option>
-            ))}
-          </select>
-        )}
-      </div>
-
-      <nav className="flex-1 py-3 overflow-y-auto">
-        {groups.map(g => (
-          <div key={g.label} className="mb-1">
-            <div className="text-[12px] font-semibold text-ink-muted px-4 py-1.5">{g.label}</div>
-            {navItems.filter(n => g.keys.includes(n.key)).map(item => {
-              const isActive = active === item.key;
-              const base = 'w-full flex items-center gap-2.5 px-4 py-2.5 text-[13.5px] font-medium transition-colors text-left border-l-[3px]';
-              if (item.soon) return (
-                <div key={item.key} className={base + ' border-transparent text-ink-faint cursor-default'}>
-                  {item.icon}<span className="flex-1">{item.label}</span>
-                  <span className="text-[11px] font-medium text-ink-muted">Soon</span>
-                </div>
-              );
-              if (isActive) return (
-                <button key={item.key} onClick={() => { if (confirmLeave()) router.push(item.href); }} className={base} style={accentActive(brandColor)}>
-                  {item.icon}<span className="flex-1">{item.label}</span>
-                  {item.key === 'messages' && unreadMessages > 0 && (
-                    <span className="text-[10px] font-medium leading-none" style={{ color: brandColor }}>{unreadMessages > 99 ? '99+' : unreadMessages}</span>
-                  )}
-                </button>
-              );
-              return (
-                <button key={item.key} onClick={() => { if (confirmLeave()) router.push(item.href); }} className={base + ' border-transparent text-ink-soft hover:text-ink hover:bg-line-soft/60'}>
-                  {item.icon}<span className="flex-1">{item.label}</span>
-                  {item.key === 'messages' && unreadMessages > 0 && (
-                    <span className="text-[10px] font-medium text-ok leading-none">{unreadMessages > 99 ? '99+' : unreadMessages}</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        ))}
-        <div className="px-4 pt-1">
-          {/* SD-8b review: this is the FOURTH router.push in this file and the
-              first fix missed it. Settings passes no onAlertClick, so on the one
-              page that holds unsaved edits this button always took the
-              navigating branch. */}
+        <nav aria-label="Dashboard" className="flex items-end gap-1 min-w-0 overflow-x-auto">
+          {navItems.filter(n => !n.soon && visible(n.key)).map(item => {
+            const isActive = active === item.key;
+            return (
+              <button
+                key={item.key}
+                onClick={() => { if (confirmLeave()) router.push(item.href); }}
+                aria-current={isActive ? 'page' : undefined}
+                className={'shrink-0 px-3 pb-[13px] pt-2 text-[14px] font-semibold border-b-[3px] transition-opacity whitespace-nowrap ' + (isActive ? 'border-fairway opacity-100' : 'border-transparent opacity-80 hover:opacity-100')}
+              >
+                {item.label}
+                {item.key === 'messages' && unreadMessages > 0 && (
+                  <span className="ml-1.5 text-[12px] font-medium">({unreadMessages > 99 ? '99+' : unreadMessages})</span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+        <div className="ml-auto self-center flex items-center gap-4 text-[13px] shrink-0">
+          {myCourses.length > 1 && (
+            <select
+              value={identity.id || ''}
+              onChange={e => switchCourse(e.target.value)}
+              disabled={switchingCourse}
+              aria-label="Switch course"
+              className="max-w-[180px] bg-white/10 border border-white/30 rounded-md px-2 py-1.5 text-[12.5px] text-white disabled:opacity-50 [&>option]:text-ink"
+            >
+              {myCourses.map(c => (
+                <option key={c.id} value={c.id}>{c.name}{c.active && c.liveStatus === 'live' ? '' : ' (draft)'}</option>
+              ))}
+            </select>
+          )}
+          {/* SD-8b: Settings passes no onAlertClick, so this navigates (guarded). */}
           <button onClick={() => { if (onAlertClick) { onAlertClick(); return; } if (confirmLeave()) router.push('/dashboard'); }}
-            className="w-full flex items-center gap-2.5 py-2 text-[12px] text-warn hover:text-ink transition-colors text-left">
-            <AlertTriangle className="w-3.5 h-3.5"/><span>Course alert</span>
-          </button>
+            className="opacity-85 hover:opacity-100 transition-opacity">Course alert</button>
+          {slug && (
+            <a href={'/courses/' + slug} target="_blank" rel="noopener" className="opacity-85 hover:opacity-100 transition-opacity">Your page ↗</a>
+          )}
+          <button onClick={logout} className="opacity-85 hover:opacity-100 transition-opacity">Sign out</button>
         </div>
-      </nav>
-
-      <div className="px-4 py-3.5 border-t border-line space-y-1.5 text-[12.5px]">
-        {slug && (
-          <a href={'/courses/' + slug} target="_blank" rel="noopener" className="block text-ink-soft hover:text-ink transition-colors">View your course page ↗</a>
-        )}
-        <div className="text-ink-muted">Powered by GreenReserve</div>
-        <button onClick={logout} className="flex items-center gap-2 pt-1 text-ink-soft hover:text-bad transition-colors text-left">
-          <LogOut className="w-3.5 h-3.5"/>Sign out
-        </button>
       </div>
-    </aside>
+      <div className="h-1 bg-fairway" aria-hidden="true" />
+    </header>
     </>
   );
 }
