@@ -34,6 +34,7 @@ interface FullThread {
   context: {
     operator: { name: string; email: string; phone: string; lastLoginAt: string | null } | null;
     firstWentLiveAt: string | null; lastBookingAt: string | null; bookings30d: number;
+    openItems?: { changeRequests: number; failedCharges: number; inquiryId: string | null };
   } | null;
 }
 interface Broadcast {
@@ -331,6 +332,15 @@ function MessagesContent() {
                       )}
                       <span>{thread.context.operator?.lastLoginAt ? `Last dashboard login ${fmtTime(thread.context.operator.lastLoginAt)}` : 'Never logged in'}</span>
                       <span>{thread.context.bookings30d} booking{thread.context.bookings30d === 1 ? '' : 's'} in 30 days{thread.context.lastBookingAt ? ` · last ${fmtTime(thread.context.lastBookingAt)}` : ''}</span>
+                      {thread.context.openItems && (thread.context.openItems.changeRequests > 0 || thread.context.openItems.failedCharges > 0) ? (
+                        <span className="text-warn">
+                          {thread.context.openItems.changeRequests > 0 && (thread.context.openItems.inquiryId
+                            ? <button onClick={() => router.push(`/admin/inquiries/${thread.context!.openItems!.inquiryId}`)} className="hover:underline">{thread.context.openItems.changeRequests} open change request{thread.context.openItems.changeRequests === 1 ? '' : 's'}</button>
+                            : <>{thread.context.openItems.changeRequests} open change request{thread.context.openItems.changeRequests === 1 ? '' : 's'}</>)}
+                          {thread.context.openItems.changeRequests > 0 && thread.context.openItems.failedCharges > 0 ? ' · ' : ''}
+                          {thread.context.openItems.failedCharges > 0 && <button onClick={() => router.push('/admin/revenue')} className="hover:underline">{thread.context.openItems.failedCharges} failed charge{thread.context.openItems.failedCharges === 1 ? '' : 's'}</button>}
+                        </span>
+                      ) : <span>No open items</span>}
                       <span>{thread.context.firstWentLiveAt ? `Live since ${new Date(thread.context.firstWentLiveAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : 'Never gone live'}</span>
                     </div>
                   )}

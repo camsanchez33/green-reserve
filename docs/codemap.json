@@ -826,7 +826,7 @@
     },
     {
       "path": "src/app/admin/messages/page.tsx",
-      "lines": 686,
+      "lines": 696,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1005,7 +1005,7 @@
     },
     {
       "path": "src/app/admin/system/page.tsx",
-      "lines": 532,
+      "lines": 537,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1888,7 +1888,7 @@
     },
     {
       "path": "src/app/api/admin/messages/route.ts",
-      "lines": 203,
+      "lines": 211,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1916,7 +1916,9 @@
       "guard": "file",
       "imports": [
         "@/lib/admin-session",
+        "@/lib/change-requests",
         "@/lib/email",
+        "@/lib/money-problems",
         "@/lib/prisma",
         "@/lib/thread-signal",
         "next/server"
@@ -5965,7 +5967,7 @@
     },
     {
       "path": "src/app/dashboard/messages/page.tsx",
-      "lines": 189,
+      "lines": 192,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6074,7 +6076,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1350,
+      "lines": 1357,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6773,7 +6775,7 @@
     },
     {
       "path": "src/components/AnnouncementBanner.tsx",
-      "lines": 48,
+      "lines": 49,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6788,6 +6790,8 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/dashboard/Toast",
+        "@/lib/dashboard-fetch",
         "lucide-react",
         "react"
       ],
@@ -7550,6 +7554,7 @@
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/settings/page.tsx",
+        "src/components/AnnouncementBanner.tsx",
         "src/components/OperatorSidebar.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx"
@@ -9529,7 +9534,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 235,
+      "lines": 238,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9751,6 +9756,7 @@
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/inquiries/route.ts",
+        "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/courses/route.ts",
@@ -10527,7 +10533,7 @@
     },
     {
       "path": "src/lib/cron-log.ts",
-      "lines": 128,
+      "lines": 136,
       "purpose": "MP-8b:",
       "brain": [],
       "exports": [
@@ -10604,6 +10610,7 @@
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/components/AnnouncementBanner.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx"
       ]
@@ -11896,6 +11903,7 @@
         "./prisma"
       ],
       "usedBy": [
+        "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/revenue/route.ts"
       ]
@@ -13459,7 +13467,7 @@
     },
     {
       "path": "src/lib/weather-cancel.ts",
-      "lines": 88,
+      "lines": 89,
       "purpose": "WX-1 weather cancel (Cam 2026-10-01:",
       "brain": [],
       "exports": [

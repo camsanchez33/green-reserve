@@ -38,6 +38,14 @@ function judge(status: number, body: unknown): { outcome: 'ok' | 'error'; error:
   const count = (v: unknown) => (typeof v === 'number' ? v : Array.isArray(v) ? v.length : 0);
   const n = count(b.errorCount) || count(b.failed);
   if (n > 0) return { outcome: 'error', error: `${n} item${n === 1 ? '' : 's'} failed` };
+  // Review 2026-10-04: one level down too — the hourly job reports its call
+  // reminders and agreement notices as nested objects ({ failed: 2 }), which
+  // could never turn the dot red.
+  for (const [k, v] of Object.entries(b)) {
+    if (!v || typeof v !== 'object' || Array.isArray(v)) continue;
+    const m = count((v as Record<string, unknown>).failed) || count((v as Record<string, unknown>).errorCount);
+    if (m > 0) return { outcome: 'error', error: `${k}: ${m} failed` };
+  }
   return { outcome: 'ok', error: '' };
 }
 

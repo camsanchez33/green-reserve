@@ -1018,7 +1018,14 @@ function DashboardPageInner() {
                 setWxBusy(true); setWxErr('');
                 const r = await dfetch<{ cancelled: WxGroup[]; failed: (WxGroup & { error: string })[]; feeRefundsFailed: number; blocked: number }>('/api/operator/weather-cancel', { method: 'POST', body: JSON.stringify({ date: selectedDate, ...(wxWhole ? {} : { from: wxFrom, to: wxTo || '24:00' }), reason: wxReason, apply: true }) });
                 setWxBusy(false);
-                if (!r.ok) { setWxErr(r.error); return; }
+                if (!r.ok) {
+                  // Review 2026-10-04: a failure partway used to read "Nothing was changed" —
+                  // some groups may already be cancelled and emailed. Say so and refresh.
+                  setWxErr(r.status >= 500 || r.status === 0
+                    ? `The cancellation stopped partway${r.status ? ` (error ${r.status})` : ''}. Some groups may already be cancelled and emailed — the sheet has been refreshed; check it, then run Weather again for any still booked.`
+                    : r.error);
+                  loadTimes(selectedDate); return;
+                }
                 const calls: FrostCall[] = [
                   ...r.data.failed.map(f => ({ name: f.name, players: f.players, why: `${fmtTime(f.time)} — NOT cancelled: ${f.error}` })),
                   ...r.data.cancelled.filter(c => c.noEmail).map(c => ({ name: c.name, players: c.players, why: `${fmtTime(c.time)} — cancelled, no email on file` })),

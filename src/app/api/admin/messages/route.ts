@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
 import { sendMessageNotificationEmail } from '@/lib/email';
 import { threadSignal } from '@/lib/thread-signal';
+import { computeOpenChanges } from '@/lib/change-requests';
+import { FAILED_CHARGE_WHERE } from '@/lib/money-problems';
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
@@ -10,16 +12,22 @@ const ONE_HOUR_MS = 60 * 60 * 1000;
 // is, whether they use the dashboard, and whether the course is booking.
 async function threadContext(courseId: string) {
   const since = new Date(Date.now() - 30 * 86_400_000);
-  const [course, lastBooking, bookings30d] = await Promise.all([
+  const [course, lastBooking, bookings30d, inquiry, failedCharges] = await Promise.all([
     prisma.course.findUnique({ where: { id: courseId }, select: { firstWentLiveAt: true, operator: { select: { name: true, email: true, phone: true, lastLoginAt: true } } } }),
     prisma.booking.findFirst({ where: { courseId }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } }),
     prisma.booking.count({ where: { courseId, createdAt: { gte: since }, status: { in: ['confirmed', 'completed'] } } }),
+    // Review 2026-10-04 (MP-7b "open items"): what is waiting on someone — the
+    // same derivations the course page's Overview uses, never a second one.
+    prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId }, select: { id: true, events: { select: { actorName: true, fromStatus: true, toStatus: true, createdAt: true } } } }),
+    prisma.booking.count({ where: { courseId, ...FAILED_CHARGE_WHERE } }),
   ]);
+  const openChanges = inquiry ? computeOpenChanges(inquiry.events).length : 0;
   return {
     operator: course?.operator ?? null,
     firstWentLiveAt: course?.firstWentLiveAt ?? null,
     lastBookingAt: lastBooking?.createdAt ?? null,
     bookings30d,
+    openItems: { changeRequests: openChanges, failedCharges, inquiryId: inquiry?.id ?? null },
   };
 }
 

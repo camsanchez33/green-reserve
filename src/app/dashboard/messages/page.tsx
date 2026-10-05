@@ -33,6 +33,9 @@ function MessagesContent() {
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
   const [annError, setAnnError] = useState('');
   const [openAnn, setOpenAnn] = useState<string | null>(null);
+  // Review 2026-10-04: "show all" is its own state — sharing it with the open item
+  // collapsed the list the moment the 4th announcement was opened.
+  const [showAllAnn, setShowAllAnn] = useState(false);
 
   const loadAnnouncements = useCallback(async () => {
     const r = await dfetch<AnnouncementItem[]>('/api/operator/announcements?all=1');
@@ -106,7 +109,7 @@ function MessagesContent() {
                 {announcements.some(a => !a.read) && <span className="text-[11px] text-pine font-semibold">{announcements.filter(a => !a.read).length} new</span>}
               </div>
               <ul className="divide-y divide-line">
-                {announcements.slice(0, openAnn === 'all' ? undefined : 3).map(a => (
+                {announcements.slice(0, showAllAnn ? undefined : 3).map(a => (
                   <li key={a.id} className="px-4 py-2.5">
                     <button onClick={() => { setOpenAnn(o => o === a.id ? null : a.id); if (!a.read) markRead(a.id); }} className="w-full flex items-baseline justify-between gap-3 text-left">
                       <span className={'text-[13.5px] truncate ' + (a.read ? 'text-ink-soft' : 'text-ink font-semibold')}>{a.title}</span>
@@ -116,8 +119,8 @@ function MessagesContent() {
                   </li>
                 ))}
               </ul>
-              {announcements.length > 3 && openAnn !== 'all' && (
-                <button onClick={() => setOpenAnn('all')} className="w-full px-4 py-2 text-[12.5px] font-semibold text-pine hover:underline underline-offset-4 text-left border-t border-line">Show all {announcements.length}</button>
+              {announcements.length > 3 && !showAllAnn && (
+                <button onClick={() => setShowAllAnn(true)} className="w-full px-4 py-2 text-[12.5px] font-semibold text-pine hover:underline underline-offset-4 text-left border-t border-line">Show all {announcements.length}</button>
               )}
             </Card>
           )}
