@@ -200,8 +200,10 @@ cancellation policy then we uphold that policy with our fee as well."
 - **"We uphold that policy with our fee as well":** whenever the course's policy charges the golfer (late
   cancel, no-show), GreenReserve's fee for that booking is charged at the same moment, to the same card.
 - Accepted cost: a no-card booking that never shows owes nothing to anyone. A no-card round paid at the
-  counter has no card for GreenReserve's fee — **follow-up for Cam:** invoice the course for those fees, or
-  steer such courses to the pay link. Not built until Cam says which.
+  counter has no card for GreenReserve's fee. **Decided (Cam 2026-10-05): "push them to the pay link"** —
+  golfer copy leads with the link (in the confirmation email, re-sent `checkInWindowHours` before the round),
+  and the tee sheet has **Send pay link** on every no-card booking so a golfer at the counter pays from their
+  phone (round + booking fee in one charge). The counter card modal still works for those who won't.
 
 ### B1. What exists today
 

@@ -114,7 +114,7 @@ export function describePolicy(p: CancelPolicy): { headline: string; lines: stri
   if (card) {
     lines.push('Your card is saved at booking. Nothing else is charged until you play.');
   } else {
-    lines.push(`No card needed to book. You’ll get a link ${hours(p.checkInWindowHours)} before your round to check in and pay, or pay at the course.`);
+    lines.push(`No card needed to book. Check in and pay online with the link in your confirmation email — we’ll send it again ${hours(p.checkInWindowHours)} before your round.`);
   }
   const headline = late
     ? `Free cancellation until ${hours(p.cancellationHours)} before · then ${money(p.lateCancellationFeeCents)}${basis(p.lateFeeBasis)}`
