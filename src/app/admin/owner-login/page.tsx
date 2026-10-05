@@ -122,7 +122,7 @@ export default function OwnerLoginPage() {
                   autoComplete="one-time-code"
                   className={iCls + ' text-center text-xl font-mono tracking-[0.25em]'}
                 /></label>
-                {method === 'totp' && <p className="text-[11px] text-ink-faint mt-1.5">Lost the phone? A recovery code (xxxx-xxxx) works once.</p>}
+                {method === 'totp' && <p className="text-[11px] text-ink-soft mt-1.5">Lost the phone? A recovery code (xxxx-xxxx) works once.</p>}
               </div>
               <button type="submit" disabled={loading || code.length < 6}
                 className="w-full bg-pine hover:bg-pine-hover disabled:opacity-50 text-white text-[12.5px] font-medium py-2.5 rounded-md transition-colors">
@@ -136,7 +136,7 @@ export default function OwnerLoginPage() {
           )}
         </Card>
 
-        <p className="text-center text-[12px] text-ink-faint mt-4">
+        <p className="text-center text-[12px] text-ink-soft mt-4">
           Not an owner?{' '}
           <Link href="/admin/login" className="text-pine hover:underline">Standard login</Link>
         </p>

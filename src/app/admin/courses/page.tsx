@@ -165,7 +165,7 @@ function CoursesContent() {
   if (!adminReady) return null;
 
   // ── the sheet ────────────────────────────────────────────────────────
-  const thCls = 'text-[10px] uppercase tracking-[0.06em] text-ink-muted font-medium text-left px-3 py-2 whitespace-nowrap';
+  const thCls = 'text-[12.5px] font-semibold text-ink-muted font-medium text-left px-3 py-2 whitespace-nowrap';
   const tdCls = 'px-3 py-2.5 align-top';
   type RowMode = 'getting_live' | 'live' | 'archived';
 

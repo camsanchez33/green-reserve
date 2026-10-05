@@ -208,7 +208,7 @@ function SField({ label, value, amber, span2 }: {
   if (empty && !amber) return null;
   return (
     <div className={'bg-white rounded-lg shadow-card px-4 py-3' + (span2 ? ' col-span-2' : '')}>
-      <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-0.5">{label}</div>
+      <div className="text-[13px] font-semibold text-ink mb-0.5">{label}</div>
       {empty
         ? <div className="text-[13px] text-warn font-medium">Not provided</div>
         : <div className="text-ink text-sm whitespace-pre-wrap">{value}</div>
@@ -908,7 +908,7 @@ function InquiryDetailInner() {
               <MoreMenu open={moreOpen} onToggle={() => setMoreOpen(v => !v)} onClose={() => setMoreOpen(false)}>
                 {!isArchived && (
                   <div className="px-2 py-1.5">
-                    <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Override stage</div>
+                    <div className="text-[13px] font-semibold text-ink mb-1">Override stage</div>
                     <select
                       value={stageOverride}
                       onChange={e => {
@@ -1059,7 +1059,7 @@ function InquiryDetailInner() {
                       <ArchiveRestore className="w-3.5 h-3.5" />Restore to previous stage
                     </button>
                     {inq.builtCourseId ? (
-                      <p className="px-2 py-2 text-[11px] text-ink-faint leading-relaxed">
+                      <p className="px-2 py-2 text-[11px] text-ink-soft leading-relaxed">
                         Courses are archived, never deleted — booking and payment history is retained.
                       </p>
                     ) : (
@@ -1134,7 +1134,7 @@ function InquiryDetailInner() {
                           className="mt-1 shrink-0"
                         />
                         <span className="min-w-0 flex-1">
-                          <span className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted">{d.label}</span>
+                          <span className="block text-[13px] font-semibold text-ink">{d.label}</span>
                           <span className="block text-xs text-ink-faint line-through truncate">{d.from || 'blank'}</span>
                           <span className="block text-xs text-ink font-medium truncate">{d.to}</span>
                         </span>
@@ -1216,7 +1216,7 @@ function InquiryDetailInner() {
                               </button>
                             </div>
                           ))}
-                          <p className="text-xs text-ink-faint">Once every item is addressed, the primary action becomes &ldquo;Send Updated Preview.&rdquo;</p>
+                          <p className="text-xs text-ink-soft">Once every item is addressed, the primary action becomes &ldquo;Send Updated Preview.&rdquo;</p>
                         </div>
                       )}
                     </div>
@@ -1380,7 +1380,7 @@ function InquiryDetailInner() {
                     ['courseName', 'Course name'], ['city', 'City'], ['state', 'State'],
                   ] as [string, string][]).map(([field, label]) => (
                     <div key={field}>
-                      <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">{label}</span>
+                      <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1">{label}</span>
                       <input value={contactEdits[field] ?? ''} onChange={e => setContactEdits(p => ({ ...p, [field]: e.target.value }))} className={iCls} /></label>
                     </div>
                   ))}
@@ -1394,11 +1394,11 @@ function InquiryDetailInner() {
                   </Card>
                   <div className="grid grid-cols-2 gap-3">
                     <Card className="px-4 py-3">
-                      <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">City / State</div>
+                      <div className="text-[13px] font-semibold text-ink mb-1">City / State</div>
                       <div className="text-ink font-medium">{inq.city}, {inq.state}</div>
                     </Card>
                     <Card className="px-4 py-3">
-                      <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Course type</div>
+                      <div className="text-[13px] font-semibold text-ink mb-1">Course type</div>
                       <div className="text-ink font-medium capitalize">{inq.courseType}</div>
                     </Card>
                     {/* MP-4c: which channel this lead came from — the
@@ -1406,7 +1406,7 @@ function InquiryDetailInner() {
                         "Not recorded" stays a real, visible state; it must
                         never be silently folded into a category. */}
                     <Card className="col-span-2 px-4 py-3">
-                      <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Source</div>
+                      <div className="text-[13px] font-semibold text-ink mb-1">Source</div>
                       <select
                         value={inq.source || ''}
                         disabled={processing}
@@ -1419,18 +1419,18 @@ function InquiryDetailInner() {
                     </Card>
                     {inq.website && (
                       <Card className="col-span-2 px-4 py-3">
-                        <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Website</div>
+                        <div className="text-[13px] font-semibold text-ink mb-1">Website</div>
                         <a href={inq.website} target="_blank" rel="noreferrer" className="text-pine hover:underline text-sm">{inq.website}</a>
                       </Card>
                     )}
                     {inq.address && (
                       <Card className="col-span-2 px-4 py-3">
-                        <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Address</div>
+                        <div className="text-[13px] font-semibold text-ink mb-1">Address</div>
                         <div className="text-ink text-sm">{inq.address}{inq.zipCode ? ', ' + inq.zipCode : ''}</div>
                       </Card>
                     )}
                     <Card className="col-span-2 px-4 py-3">
-                      <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Submitted</div>
+                      <div className="text-[13px] font-semibold text-ink mb-1">Submitted</div>
                       <div className="text-ink text-sm">{fmtDate(inq.createdAt)}</div>
                     </Card>
                   </div>
@@ -1451,7 +1451,7 @@ function InquiryDetailInner() {
                   <div className="grid grid-cols-2 gap-3">
                     {rows.map(([label, val]) => (
                       <Card key={label} className="px-4 py-3">
-                        <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-0.5">{label}</div>
+                        <div className="text-[13px] font-semibold text-ink mb-0.5">{label}</div>
                         <div className="text-ink font-medium">{val}</div>
                       </Card>
                     ))}
@@ -1467,19 +1467,19 @@ function InquiryDetailInner() {
               )}
               {inq.lookingFor && inq.lookingFor.length > 0 && (
                 <Card className="px-4 py-3">
-                  <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Looking for</div>
+                  <div className="text-[13px] font-semibold text-ink mb-1">Looking for</div>
                   <div className="text-ink font-medium">{inq.lookingFor.join(', ')}</div>
                 </Card>
               )}
               {inq.additionalNotes && (
                 <Card className="px-4 py-3">
-                  <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Additional notes</div>
+                  <div className="text-[13px] font-semibold text-ink mb-1">Additional notes</div>
                   <div className="text-ink text-sm">{inq.additionalNotes}</div>
                 </Card>
               )}
               {inq.pricingNotes && (
                 <Card className="px-4 py-3">
-                  <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Pricing notes</div>
+                  <div className="text-[13px] font-semibold text-ink mb-1">Pricing notes</div>
                   <div className="text-ink text-sm">{inq.pricingNotes}</div>
                 </Card>
               )}
@@ -1490,7 +1490,7 @@ function InquiryDetailInner() {
                 if (entries.length === 0) return null;
                 return (
                   <div>
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-warn mb-2">Form answers</div>
+                    <div className="text-[13px] font-semibold text-warn mb-2">Form answers</div>
                     <div className="grid grid-cols-2 gap-3">
                       {entries.map(([k, v]) => (
                         <div key={k} className="bg-warn/5 border border-warn/20 rounded-lg px-4 py-3">
@@ -1507,7 +1507,7 @@ function InquiryDetailInner() {
                (!inq.lookingFor || inq.lookingFor.length === 0) &&
                !inq.additionalNotes && !inq.pricingNotes &&
                (!inq.needsJson || inq.needsJson === '{}' || inq.needsJson === '') && (
-                <p className="text-sm text-ink-faint text-center py-10">No inquiry answers on record.</p>
+                <p className="text-sm text-ink-soft text-center py-10">No inquiry answers on record.</p>
               )}
             </div>
           )}
@@ -1539,10 +1539,10 @@ function InquiryDetailInner() {
           {activeTab === 'sheet' && (
             <div className="max-w-3xl space-y-7">
               {!inq.detailsJson && (
-                <p className="text-sm text-ink-faint text-center py-10">No sheet submitted yet.</p>
+                <p className="text-sm text-ink-soft text-center py-10">No sheet submitted yet.</p>
               )}
               {inq.detailsJson && !hasSheet && (
-                <p className="text-sm text-ink-faint text-center py-10">Sheet submitted but appears empty.</p>
+                <p className="text-sm text-ink-soft text-center py-10">Sheet submitted but appears empty.</p>
               )}
 
               {hasSheet && (
@@ -1592,7 +1592,7 @@ function InquiryDetailInner() {
                       {shLayout27 === 'three_9s' && (
                         <>
                           <Card className="col-span-2 px-4 py-3">
-                            <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Nine names</div>
+                            <div className="text-[13px] font-semibold text-ink mb-1">Nine names</div>
                             {shNine27Names.every(n => !n.trim())
                               ? <div className="text-[13px] text-warn font-medium">Not provided</div>
                               : <div className="flex gap-2 flex-wrap">
@@ -1605,7 +1605,7 @@ function InquiryDetailInner() {
                           {/* V7: structured combos */}
                           {Array.isArray(sd.nine27CombosEnabled) && (sd.nine27CombosEnabled as string[]).length > 0 ? (
                             <Card className="col-span-2 px-4 py-3">
-                              <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">18-hole combos offered</div>
+                              <div className="text-[13px] font-semibold text-ink mb-1.5">18-hole combos offered</div>
                               <div className="flex gap-2 flex-wrap">
                                 {(sd.nine27CombosEnabled as string[]).map(k => (
                                   <span key={k} className="bg-paper border border-line px-2.5 py-1 rounded-md text-sm text-ink">
@@ -1623,7 +1623,7 @@ function InquiryDetailInner() {
                           {/* V7: par per nine */}
                           {sd.nine27ParsPerNine && Object.keys(sd.nine27ParsPerNine as object).length > 0 && (
                             <Card className="col-span-2 px-4 py-3">
-                              <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Par per nine</div>
+                              <div className="text-[13px] font-semibold text-ink mb-1.5">Par per nine</div>
                               <div className="flex gap-3 flex-wrap">
                                 {Object.entries(sd.nine27ParsPerNine as Record<string, string>).map(([name, par]) => (
                                   <span key={name} className="text-sm text-ink"><span className="text-ink-muted">{name}:</span> {par}</span>
@@ -1655,7 +1655,7 @@ function InquiryDetailInner() {
                       <SField label="36-hole layout" value={LAYOUT36_LABELS[shLayout36] || null} amber />
                       {shCourse36Names.length > 0 && (
                         <Card className="col-span-2 px-4 py-3">
-                          <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Course names</div>
+                          <div className="text-[13px] font-semibold text-ink mb-1">Course names</div>
                           {shCourse36Names.every(n => !n.trim())
                             ? <div className="text-[13px] text-warn font-medium">Not provided</div>
                             : <div className="flex gap-2 flex-wrap">
@@ -1673,7 +1673,7 @@ function InquiryDetailInner() {
                   {shScorecards.length > 0 && (
                     <div>
                       <Eyebrow className="mb-2">Scorecard ({shScorecards.length})</Eyebrow>
-                      <p className="text-xs text-ink-muted mb-2">Enter the tee sets from this when building — the course sent the card instead of typing them.</p>
+                      <p className="text-xs text-ink-soft mb-2">Enter the tee sets from this when building — the course sent the card instead of typing them.</p>
                       <div className="flex gap-2 flex-wrap">
                         {shScorecards.map((url, i) => (
                           <a key={url} href={url} target="_blank" rel="noreferrer">
@@ -1693,7 +1693,7 @@ function InquiryDetailInner() {
                           <thead>
                             <tr className="border-b border-line bg-paper">
                               {['Name', 'Color', 'Designation', 'Yardage', 'Par', 'Rating / Slope'].map(h => (
-                                <th key={h} className="px-4 py-2.5 text-left text-[10px] uppercase tracking-[0.1em] text-ink-muted font-medium">{h}</th>
+                                <th key={h} className="px-4 py-2.5 text-left text-[13px] font-semibold text-ink font-medium">{h}</th>
                               ))}
                             </tr>
                           </thead>
@@ -1762,7 +1762,7 @@ function InquiryDetailInner() {
                           const isResident = p.type === 'resident_card' || p.type === 'resident_rate';
                           return (
                             <Card key={i} className="px-4 py-3">
-                              <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">
+                              <div className="text-[13px] font-semibold text-ink mb-1">
                                 {PASS_TYPE_LABEL[String(p.type || '')] || String(p.type || 'Pass')}
                               </div>
                               <div className="text-sm font-medium text-ink mb-2">{String(p.name || 'Unnamed')}</div>
@@ -1795,7 +1795,7 @@ function InquiryDetailInner() {
                     )}
                     {noCancel && (
                       <Card className="col-span-2 px-4 py-3">
-                        <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-0.5">Note</div>
+                        <div className="text-[13px] font-semibold text-ink mb-0.5">Note</div>
                         <div className="text-sm text-ink-soft">No cancellation policy — golfers pay at the course (no card required at booking).</div>
                       </Card>
                     )}
@@ -1832,7 +1832,7 @@ function InquiryDetailInner() {
                     <SField label="Additional notes" value={sd.additionalNotes ? String(sd.additionalNotes) : null} />
                     {shPhotos.length > 0 && (
                       <div className="col-span-2">
-                        <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Photos ({shPhotos.length})</div>
+                        <div className="text-[13px] font-semibold text-ink mb-1.5">Photos ({shPhotos.length})</div>
                         <div className="flex gap-2 flex-wrap">
                           {shPhotos.map((url, i) => (
                             <a key={i} href={url} target="_blank" rel="noreferrer">
@@ -1867,7 +1867,7 @@ function InquiryDetailInner() {
                     };
                     return (
                       <Card className="p-4">
-                        <div className={'text-[11px] uppercase tracking-[0.1em] mb-3 ' + (allGood ? 'text-ok' : 'text-warn')}>
+                        <div className={'text-[12.5px] font-semibold mb-3 ' + (allGood ? 'text-ok' : 'text-warn')}>
                           {allGood ? 'Ready to Build' : 'Build Checklist'}
                         </div>
                         <div className="space-y-2">
@@ -1955,7 +1955,7 @@ function InquiryDetailInner() {
                                     <span>{STATUS_LABEL[ev.fromStatus] || ev.fromStatus}</span>
                                     <span className="text-ink-muted mx-1.5">→</span>
                                     <span className="font-medium">{STATUS_LABEL[ev.toStatus] || ev.toStatus}</span>
-                                    {isOverride && <span className="ml-2 text-[10px] uppercase tracking-wide text-warn">Manual override</span>}
+                                    {isOverride && <span className="ml-2 text-[12.5px] font-semibold text-warn">Manual override</span>}
                                   </>
                                 ) : (resubText || changeDesc || ev.actorName || 'Update')}
                             </div>
@@ -1985,7 +1985,7 @@ function InquiryDetailInner() {
                 </pre>
               )}
               {!inq.adminNotes && (
-                <p className="text-sm text-ink-faint mb-3">Nothing written down yet.</p>
+                <p className="text-sm text-ink-soft mb-3">Nothing written down yet.</p>
               )}
               <div className="flex gap-2">
                 <textarea
@@ -2034,7 +2034,7 @@ function InquiryDetailInner() {
               <p className="text-sm text-ink-soft mb-3">
                 This cannot be undone — the inquiry and its history are gone for good.
               </p>
-              <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-bad mb-1">Type &quot;{expected}&quot; to confirm</span>
+              <label className="block"><span className="block text-[13px] font-semibold text-bad mb-1">Type &quot;{expected}&quot; to confirm</span>
               <input value={deleteCourseConfirm} onChange={e => setDeleteCourseConfirm(e.target.value)}
                 className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50 mb-1"/></label>
               <ModalActions working={working} onCancel={close} onConfirm={() => fire(deleteInquiry)} confirmLabel="Delete permanently" danger
@@ -2071,12 +2071,12 @@ function InquiryDetailInner() {
           return (
             <ModalShell title="Reject this inquiry?" danger onClose={close}>
               <p className="text-sm text-ink-soft mb-3">Moves it to Closed.</p>
-              <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Why are we losing this one?</span>
+              <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1">Why are we losing this one?</span>
               <select value={rejectReason} onChange={e => { setRejectReason(e.target.value); setRejectNotify(e.target.value !== 'Duplicate'); }} className={iCls}>
                 <option value="">Pick a reason&hellip;</option>
                 {CLOSED_REASONS.map(r => <option key={r} value={r}>{r}</option>)}
               </select></label>
-              <p className="text-[11px] text-ink-faint mt-1.5">
+              <p className="text-[11px] text-ink-soft mt-1.5">
                 Stored on the inquiry and named in the timeline — this is the only place &quot;why do we lose leads&quot; ever gets answered.
               </p>
               <label className="flex items-start gap-2 mt-4 cursor-pointer">
@@ -2109,7 +2109,7 @@ function InquiryDetailInner() {
                 It drops out of the work queue until this date, then comes back as an overdue follow-up.
                 If the course fills the interest form again in the meantime, the snooze breaks and it returns straight away.
               </p>
-              <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Come back on</span>
+              <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1">Come back on</span>
               <input type="date" value={snoozeDate} min={plus(1)} onChange={e => setSnoozeDate(e.target.value)} className={iCls} /></label>
               <div className="flex items-center gap-2 mt-2">
                 {[7, 14, 30, 90].map(d => (
@@ -2179,7 +2179,7 @@ function InquiryDetailInner() {
                 <li>Emails a welcome message + temporary password to <strong>{inq.email}</strong></li>
                 <li>Attempts to create a Stripe Connect account for the course</li>
               </ul>
-              <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-bad mb-1">Type BUILD to confirm</span>
+              <label className="block"><span className="block text-[13px] font-semibold text-bad mb-1">Type BUILD to confirm</span>
               <input value={buildConfirmText} onChange={e => setBuildConfirmText(e.target.value)}
                 className="w-full bg-paper border border-bad/30 rounded-md px-3 py-2 text-sm outline-none focus:border-bad/50" placeholder="BUILD"/></label>
               <ModalActions working={working} onCancel={close} onConfirm={() => fire(() => action('build_course'))} confirmLabel="Build & Email" danger disabled={!canConfirm || processing}/>
@@ -2199,9 +2199,9 @@ function InquiryDetailInner() {
           const canConfirm = !!goLiveChecks && !blocked && (allOk || goLiveOverride.trim().toLowerCase() === inq.courseName.trim().toLowerCase());
           return (
             <ModalShell title={`Go live: ${inq.courseName}?`} danger={!!goLiveChecks && !allOk} onClose={close}>
-              <p className="text-xs text-ink-muted mb-3">Makes the course bookable by golfers immediately.</p>
+              <p className="text-xs text-ink-soft mb-3">Makes the course bookable by golfers immediately.</p>
               {!goLiveChecks ? (
-                <p className="text-xs text-ink-faint">Checking readiness…</p>
+                <p className="text-xs text-ink-soft">Checking readiness…</p>
               ) : (
                 <div className="space-y-1.5 mb-1">
                   {goLiveChecks.map(c => (
@@ -2232,7 +2232,7 @@ function InquiryDetailInner() {
               )}
               {!blocked && goLiveChecks && advisoryFailing.length > 0 && (
                 <div className="mt-3">
-                  <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-bad mb-1">
+                  <label className="block"><span className="block text-[13px] font-semibold text-bad mb-1">
                     Type &quot;{inq.courseName}&quot; to override and go live anyway
                   </span>
                   <input value={goLiveOverride} onChange={e => setGoLiveOverride(e.target.value)}

@@ -108,7 +108,7 @@ export function OverviewTab() {
 
                 {c.adminNotes && c.adminNotes.startsWith('[BUILD NOTES]') && (
                   <div className="bg-warn/5 border border-warn/20 rounded-lg px-5 py-4">
-                    <div className="text-[11px] uppercase tracking-[0.1em] text-warn mb-2">Needs review</div>
+                    <div className="text-[13px] font-semibold text-warn mb-2">Needs review</div>
                     <ul className="space-y-1">
                       {c.adminNotes.replace('[BUILD NOTES]\n', '').split('\n').filter(Boolean).map((line, i) => (
                         <li key={i} className="text-sm text-ink-soft">{line.replace(/^• /, '')}</li>
@@ -127,7 +127,7 @@ export function OverviewTab() {
                 {detail.configDrift && detail.configDrift.length > 0 && (
                   <div className="bg-white border border-warn/30 rounded-lg p-5">
                     <div className="flex items-center justify-between mb-1">
-                      <div className="text-[11px] uppercase tracking-[0.1em] text-warn">
+                      <div className="text-[13px] font-semibold text-warn">
                         Setup sheet disagrees with the live course
                       </div>
                       <span className="text-[11px] text-ink-faint">
@@ -139,9 +139,9 @@ export function OverviewTab() {
                     </p>
                     <div className="border border-line rounded-md divide-y divide-line">
                       <div className="grid grid-cols-[1fr_1fr_1fr] gap-3 px-3 py-2 bg-paper">
-                        <span className="text-[10px] uppercase tracking-[0.1em] text-ink-muted">Field</span>
-                        <span className="text-[10px] uppercase tracking-[0.1em] text-ink-muted">They told us</span>
-                        <span className="text-[10px] uppercase tracking-[0.1em] text-ink-muted">Golfers see</span>
+                        <span className="text-[13px] font-semibold text-ink">Field</span>
+                        <span className="text-[13px] font-semibold text-ink">They told us</span>
+                        <span className="text-[13px] font-semibold text-ink">Golfers see</span>
                       </div>
                       {detail.configDrift.map(d2 => (
                         <div key={d2.field} className="grid grid-cols-[1fr_1fr_1fr] gap-3 px-3 py-2">
@@ -245,13 +245,13 @@ export function OverviewTab() {
                   <Card className="p-5">
                     <Eyebrow className="mb-3">Relationship</Eyebrow>
                     {detail.relationship.feed.length === 0 ? (
-                      <p className="text-sm text-ink-muted">Nothing recorded yet — notes, messages, calls and pipeline moves will show here.</p>
+                      <p className="text-sm text-ink-soft">Nothing recorded yet — notes, messages, calls and pipeline moves will show here.</p>
                     ) : (
                       <div className="divide-y divide-line-soft">
                         {detail.relationship.feed.map((f, i) => (
                           <div key={i} className="py-2 grid grid-cols-[88px_76px_minmax(0,1fr)] gap-3 text-[13.5px]">
                             <span className="text-ink-muted tabular-nums">{fmtDate(f.at)}</span>
-                            <span className="text-[11px] uppercase tracking-[0.1em] text-ink-faint pt-0.5">{f.kind}</span>
+                            <span className="text-[13px] font-semibold text-ink pt-0.5">{f.kind}</span>
                             <span className="text-ink min-w-0 break-words">{f.text}{f.by ? <span className="text-ink-muted"> · {f.by}</span> : null}</span>
                           </div>
                         ))}

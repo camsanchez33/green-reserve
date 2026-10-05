@@ -35,7 +35,7 @@ type Props = {
 
 const H = { 'Content-Type': 'application/json' };
 const iCls = `${INPUT_COMPACT} w-full`;
-const lbl = 'block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1';
+const lbl = 'block text-[13px] font-semibold text-ink mb-1';
 const btnP = 'bg-pine hover:bg-pine-hover disabled:opacity-50 text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
 const btnO = 'bg-paper hover:bg-line border border-line text-ink disabled:opacity-50 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
 const LENGTHS = [15, 20, 30, 45];
@@ -296,7 +296,7 @@ function LogCard({ call, courseId, first, busy, setBusy, setError, setNotice, fo
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-sm font-medium text-ink">{open ? 'Log the check-in' : 'Check-in call set'}</div>
-          <p className="text-xs text-ink-muted mt-0.5">{header}</p>
+          <p className="text-xs text-ink-soft mt-0.5">{header}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {!open && <button onClick={onForceOpen} className="text-xs font-medium text-pine hover:underline">Log it now</button>}

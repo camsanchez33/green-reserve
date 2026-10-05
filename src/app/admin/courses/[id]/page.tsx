@@ -211,7 +211,7 @@ export default function CourseDetailPage() {
                           became a course is archive-only, never permanently
                           deleted, from here or the API. No delete button. */}
                       <div className="border-t border-line-soft my-1.5" />
-                      <p className="px-3 py-2 text-[11px] text-ink-faint leading-relaxed">
+                      <p className="px-3 py-2 text-[11px] text-ink-soft leading-relaxed">
                         Courses are archived, never deleted — booking and payment history is retained.
                       </p>
                     </Card>

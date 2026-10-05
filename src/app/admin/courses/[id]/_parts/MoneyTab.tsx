@@ -62,7 +62,7 @@ export function MoneyTab() {
 
               {!txLoading && txItems.length > 0 && (
                 <Card className="overflow-hidden">
-                  <div className="px-5 py-2.5 border-b border-line-soft bg-paper/50 grid grid-cols-[1fr_1fr_90px_80px_100px_90px] gap-3 text-[10px] uppercase tracking-[0.1em] text-ink-muted">
+                  <div className="px-5 py-2.5 border-b border-line-soft bg-paper/50 grid grid-cols-[1fr_1fr_90px_80px_100px_90px] gap-3 text-[13px] font-semibold text-ink">
                     <span>Golfer</span>
                     <span>Detail</span>
                     <span>Amount</span>

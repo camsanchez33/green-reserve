@@ -69,8 +69,12 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     ink); "Course operator portal" above Sign in / Two-factor and the labels
     above the Outings / Tournaments headings are gone; helper sentences are
     ink-soft (grey kept for hash, photo count, examples). Zero behavior.
-  - [ ] /admin  - [ ] public leftovers (for-courses, call, contact, legal,
-    not-found)
+  - [x] /admin — BUILT 2026-10-05: every uppercase label (form labels, table
+    headers, card titles, the action-queue groups "Money broken" / "Stalled",
+    warn/bad notes) is sentence case; "Support" above Golfer lookup and
+    "Admin" above Revenue are gone; helper sentences are ink-soft (grey kept
+    for IDs, hashes and tabular metadata). Zero behavior.
+  - [ ] public leftovers (for-courses, call, contact, legal, not-found)
 - [ ] TYPE-3 — icons only where they do a job (back arrow, close, search): remove
   decorative Lucide icons (74 files; ChevronRight / check / sparkle-type ×108),
   e.g. the icon tiles on admin Overview. Zero behavior. Rewrites CLAUDE.md's

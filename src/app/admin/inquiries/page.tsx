@@ -401,7 +401,7 @@ function InquiriesListInner() {
   // next call 150 · still need 250 · in stage 86 · inquired 96 · action 72.
   // Below xl the Still-need column hides; below lg In-stage and Inquired do.
   type RowMode = 'queue' | 'flat' | 'closed';
-  const thCls = 'text-[10px] uppercase tracking-[0.06em] text-ink-muted font-medium text-left px-3 py-2 whitespace-nowrap';
+  const thCls = 'text-[12.5px] font-semibold text-ink-muted font-medium text-left px-3 py-2 whitespace-nowrap';
   const tdCls = 'px-3 py-2.5 align-top';
   const now = new Date();
 
@@ -894,7 +894,7 @@ function InquiriesListInner() {
                 {isArchive ? `Archive ${targets.length} inquir${targets.length === 1 ? 'y' : 'ies'}?` : `Send setup sheet to ${targets.length} contact${targets.length === 1 ? '' : 's'}?`}
               </div>}
             onClose={() => { setBulkPreview(null); setBulkConfirmText(''); }}>
-              <p className="text-xs text-ink-muted mb-3">
+              <p className="text-xs text-ink-soft mb-3">
                 {isArchive
                   ? (withCourse > 0
                     ? `Closes each out. ${withCourse} of these have a built course — archiving takes that course offline too (restorable). The rest have no course yet, so they're marked rejected. Nothing is deleted, and no email is sent. A course with upcoming golfer bookings is skipped here — close it from its own page, where you can cancel and notify them.`
@@ -912,7 +912,7 @@ function InquiriesListInner() {
               </div>
               {isArchive && (
                 <div className="mb-4">
-                  <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Type ARCHIVE to confirm</span>
+                  <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1">Type ARCHIVE to confirm</span>
                   <input
                     value={bulkConfirmText}
                     onChange={e => setBulkConfirmText(e.target.value)}
@@ -951,8 +951,8 @@ function InquiriesListInner() {
           <Modal title={`Permanently delete "${deleteTarget.name}"?`}
             titleNode={<div className="text-sm font-medium text-ink mb-1">Permanently delete &quot;{deleteTarget.name}&quot;?</div>}
             onClose={() => { setDeleteTarget(null); setDeleteConfirmText(''); }}>
-              <p className="text-xs text-ink-muted mb-3">This cannot be undone — the inquiry and its history are gone for good.</p>
-              <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Type &quot;{deleteTarget.name}&quot; to confirm</span>
+              <p className="text-xs text-ink-soft mb-3">This cannot be undone — the inquiry and its history are gone for good.</p>
+              <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1">Type &quot;{deleteTarget.name}&quot; to confirm</span>
               <input
                 value={deleteConfirmText}
                 onChange={e => setDeleteConfirmText(e.target.value)}

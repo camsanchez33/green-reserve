@@ -185,7 +185,6 @@ function GolfersInner() {
       <div className="admin-content flex-1 min-h-screen">
         <div className="px-8 py-7 max-w-5xl">
           <div className="mb-6">
-            <Eyebrow as="p" className="mb-1">Support</Eyebrow>
             <h1 className="text-[30px] leading-none font-serif font-medium text-ink">{inRecord ? 'Golfer record' : 'Golfer lookup'}</h1>
           </div>
 
@@ -326,7 +325,7 @@ function GolfersInner() {
                       })}
                     </div>
                   )}
-                  {!canMoveMoney && <p className="text-[11px] text-ink-faint">Cancelling or refunding on a golfer&apos;s behalf needs manager access.</p>}
+                  {!canMoveMoney && <p className="text-[11px] text-ink-soft">Cancelling or refunding on a golfer&apos;s behalf needs manager access.</p>}
                 </div>
               )}
             </div>

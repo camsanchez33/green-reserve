@@ -65,9 +65,9 @@ export function SetupTab() {
                 </p>
                 {remindersError && <p className="text-xs text-bad mb-3">{remindersError}</p>}
                 {detail.timeline === null ? (
-                  <p className="text-xs text-ink-faint">No linked inquiry — reminders can&apos;t be tracked for this course.</p>
+                  <p className="text-xs text-ink-soft">No linked inquiry — reminders can&apos;t be tracked for this course.</p>
                 ) : reminderEvents.length === 0 ? (
-                  <p className="text-xs text-ink-faint">No reminders sent yet.</p>
+                  <p className="text-xs text-ink-soft">No reminders sent yet.</p>
                 ) : (
                   <ul className="space-y-1.5">
                     {reminderEvents.slice(0, 5).map((e, i) => (
@@ -209,13 +209,13 @@ export function SetupTab() {
                 ) : (
                   <div className="space-y-4">
                     <div>
-                      <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Nines</div>
+                      <div className="text-[13px] font-semibold text-ink mb-1.5">Nines</div>
                       <div className="flex flex-wrap gap-2">
                         {detail.layout.nines.map(n => <span key={n.id} className="text-xs text-ink bg-paper border border-line rounded-md px-2 py-1">{n.name} <span className="text-ink-muted">· par {n.par}</span></span>)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Products golfers can book</div>
+                      <div className="text-[13px] font-semibold text-ink mb-1.5">Products golfers can book</div>
                       <div className="border border-line rounded-md divide-y divide-line-soft">
                         {detail.layout.products.map(pr => (
                           <div key={pr.id} className={'px-3 py-2 ' + (pr.active ? '' : 'opacity-60')}>
@@ -233,7 +233,7 @@ export function SetupTab() {
                     </div>
                     {detail.layout.teeSets.length > 0 && (
                       <div>
-                        <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Tee sets</div>
+                        <div className="text-[13px] font-semibold text-ink mb-1.5">Tee sets</div>
                         <div className="text-xs text-ink-soft space-y-0.5">
                           {detail.layout.teeSets.map(t => (
                             <div key={t.id}>{t.name} — {t.yardage ? `${t.yardage}y` : 'no yardage'}{t.rating ? ` · ${t.rating}/${t.slope}` : ''}{t.perNine.length > 0 ? ` · ${t.perNine.map(y => `${y.nine} ${y.yardage}y`).join(', ')}` : ''}</div>

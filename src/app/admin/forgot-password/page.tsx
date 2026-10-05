@@ -57,7 +57,7 @@ export default function AdminForgotPasswordPage() {
                 className="mt-4 w-full bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
                 {loading ? 'Sending...' : 'Send Reset Link'}
               </button>
-              <p className="mt-5 text-center text-xs text-ink-muted">
+              <p className="mt-5 text-center text-xs text-ink-soft">
                 <a href="/admin/login" className="text-pine font-medium hover:underline">Back to login</a>
               </p>
             </>

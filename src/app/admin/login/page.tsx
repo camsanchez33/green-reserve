@@ -141,10 +141,10 @@ export default function AdminLoginPage() {
           </form>
         </Card>
 
-        <p className="mt-5 text-center text-xs text-ink-muted">
+        <p className="mt-5 text-center text-xs text-ink-soft">
           Owner? <a href="/admin/owner-login" className="text-pine font-medium hover:underline">Owner sign-in →</a>
         </p>
-        <p className="mt-2 text-center text-xs text-ink-muted">
+        <p className="mt-2 text-center text-xs text-ink-soft">
           Course operator? <a href="/dashboard/login" className="text-pine font-medium hover:underline">Sign in at your dashboard →</a>
         </p>
       </div>
