@@ -2,7 +2,7 @@ import { prisma } from './prisma';
 import { sendCancellationEmail, sendTeeTimeAlertEmail } from './email';
 import { refundOnConnectedAccount, chargeOnConnectedAccount } from './stripe';
 import { refundSeparateAccessFee, chargeAccessFeeSeparately } from './access-fee';
-import { chargesOnLateCancel } from './cancel-policy';
+import { chargesOnLateCancel, bookingWindowHours } from './cancel-policy';
 import { recordPaymentEvent } from './refund-booking';
 import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
 
@@ -99,7 +99,7 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
   let lateFee: { id: string } | null = null;
   let lateFeeChargeFailed = '';
   const teeAt = teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time);
-  const windowHours = booking.cancellationHoursAtBooking ?? booking.course.cancellationHours;
+  const windowHours = bookingWindowHours(booking, booking.course);
   const isLate = !!teeAt && teeAt.getTime() - windowHours * 3600_000 <= Date.now();
   if (!waiveFee && !feeAlreadyCharged && isLate && booking.cancellationFeeTotal > 0 && chargesOnLateCancel(booking)) {
     if (!booking.stripeCustomerId || !booking.stripePaymentMethodId) lateFeeChargeFailed = 'no card on file';

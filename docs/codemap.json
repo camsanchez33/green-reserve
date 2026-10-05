@@ -3259,7 +3259,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 226,
+      "lines": 227,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3741,7 +3741,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/route.ts",
-      "lines": 79,
+      "lines": 81,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3759,6 +3759,7 @@
       "guard": "file",
       "imports": [
         "@/lib/auth",
+        "@/lib/cancel-policy",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/tee-time-utils",
@@ -9777,10 +9778,14 @@
     },
     {
       "path": "src/lib/cancel-policy.ts",
-      "lines": 124,
+      "lines": 135,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B).",
       "brain": [],
       "exports": [
+        {
+          "name": "bookingWindowHours",
+          "kind": "fn"
+        },
         {
           "name": "CancelPolicy",
           "kind": "type"
@@ -9848,6 +9853,7 @@
         "src/app/api/bookings/route.ts",
         "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/hourly/route.ts",
+        "src/app/api/manage/[bookingId]/route.ts",
         "src/app/book/BookClient.tsx",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/app/dashboard/settings/page.tsx",

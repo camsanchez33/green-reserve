@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { getGolferSession } from '@/lib/auth';
+import { bookingWindowHours } from '@/lib/cancel-policy';
 
 const TOKEN_GRACE_MS = 24 * 60 * 60 * 1000; // 24h after tee time
 
@@ -46,7 +47,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     return NextResponse.json({ error: 'expired' }, { status: 410 });
   }
 
-  const cutoffMs = teeMs - booking.course.cancellationHours * 60 * 60 * 1000;
+  const windowHours = bookingWindowHours(booking, booking.course);
+  const cutoffMs = teeMs - windowHours * 60 * 60 * 1000;
   const windowOpen = Date.now() < cutoffMs;
 
   return NextResponse.json({
@@ -68,7 +70,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     rangeBallsTotal: booking.rangeBallsTotal,
     accessFeeTotal: booking.accessFeeTotal,
     totalAmount: booking.totalAmount,
-    cancellationHours: booking.course.cancellationHours,
+    cancellationHours: windowHours,
     cancellationFeeTotal: booking.cancellationFeeTotal,
     cancellationFeeCharged: booking.paymentStatus === 'cancellation_fee_charged',
     status: booking.status,
