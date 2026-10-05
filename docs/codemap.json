@@ -6430,7 +6430,7 @@
     },
     {
       "path": "src/app/layout.tsx",
-      "lines": 56,
+      "lines": 60,
       "purpose": "",
       "brain": [],
       "exports": [

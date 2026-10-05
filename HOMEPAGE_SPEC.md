@@ -79,7 +79,8 @@ Live mockup: https://claude.ai/artifact/XBgbV4HHBTuDM4B6sRQEHq
 
 ## 3. Look (from the mockup)
 
-- Type: Archivo only, using its width axis — 118 for headlines (700), 100 for
+- Type: SUPERSEDED 2026-10-05 by TYPE-1 — headlines EB Garamond (`--font-serif`), everything else Libre Franklin (`--font-sans`). The original rule follows for history.
+  Type: Archivo only, using its width axis — 118 for headlines (700), 100 for
   body, 75–87.5 for table labels and eyebrows. Hero H1 on two lines on desktop
   (`white-space: nowrap` per line above 1180px).
 - Palette: ground #FAFAF7, forest #173B2A (fields, primary button), ink #141814,

@@ -26,6 +26,25 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 ## Queue (run in this order)
 
+- [x] TYPE-1 — BUILT 2026-10-05 (Cam: "the font is all so blocky looks ai" … "EB
+  garamond"): EB Garamond is the display face (`font-serif`, headlines / course
+  names / dates only, 500, lining figures), Libre Franklin is everything else
+  (`font-sans`). Archivo is no longer loaded. Changed: layout.tsx (next/font, two
+  variables), globals.css (@theme fonts + `.font-serif` base rule), home.module.css
+  (`.display`). Zero behavior. The Design canvas that chose it (Cam's /design
+  brief, "not AI slop"): https://claude.ai/artifact/D7PTUPXsdE4AGK2mXKst1x
+- [ ] TYPE-2 — strip the AI tells Cam listed 2026-10-05, zero behavior, one run per
+  area (homepage → golfer pages → /dashboard → /admin): (a) delete the small
+  uppercase label above headings (`<Eyebrow>` / `EYEBROW`, 177 uses) unless it is
+  a real form label or table header; (b) sentences in full ink — `text-ink-muted`
+  (839) / `text-ink-faint` (337) only on metadata (timestamps, "updated…", counts),
+  never on a sentence someone must read; (c) no box inside a box — inner items are
+  rows. Rewrites the Eyebrow line of CLAUDE.md's type scale. NEEDS CAM: approve
+  before the first run.
+- [ ] TYPE-3 — icons only where they do a job (back arrow, close, search): remove
+  decorative Lucide icons (74 files; ChevronRight / check / sparkle-type ×108),
+  e.g. the icon tiles on admin Overview. Zero behavior. Rewrites CLAUDE.md's
+  "lucide-react icons" rule to "no decorative icons". NEEDS CAM: approve.
 - [x] UI-H-1 — BUILT 2026-10-01: the homepage from the approved plain-background
   mockup (HOMEPAGE_SPEC.md, docs/design/home/index.html). Archivo replaces Fraunces
   + Inter for the public look (staff look untouched). Working hero demo (tee sheet +
