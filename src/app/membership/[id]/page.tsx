@@ -66,7 +66,7 @@ function PayForm({ id, token, info, onPaid }: { id: string; token: string; info:
       >
         {submitting ? 'Processing…' : `Pay $${info.total.toFixed(2)}`}
       </button>
-      <p className="text-center text-xs text-ink-muted mt-3">
+      <p className="text-center text-xs text-ink mt-3">
         Secure payment — goes directly to {info.courseName}.
       </p>
     </div>
@@ -96,7 +96,7 @@ function MembershipPayInner({ params }: { params: Promise<{ id: string }> }) {
         <div className="text-center">
           <Flag size={40} className="mx-auto mb-4 text-pine" />
           <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Link Not Valid</h1>
-          <p className="text-ink-muted text-sm">This payment link is invalid or expired. Contact your course for a new one.</p>
+          <p className="text-ink text-sm">This payment link is invalid or expired. Contact your course for a new one.</p>
         </div>
       </div>
     );
@@ -127,7 +127,7 @@ function MembershipPayInner({ params }: { params: Promise<{ id: string }> }) {
             <span className="font-medium text-ink">{info.courseName}</span> is active
             {expiryLabel(exp) ? <> through <span className="font-medium text-ink">{expiryLabel(exp)}</span></> : null}.
           </p>
-          {paid && <p className="text-ink-muted text-xs mt-3">A receipt was emailed to you.</p>}
+          {paid && <p className="text-ink text-xs mt-3">A receipt was emailed to you.</p>}
         </div>
       </div>
     );
@@ -144,7 +144,7 @@ function MembershipPayInner({ params }: { params: Promise<{ id: string }> }) {
             )}
             <div>
               <h1 className="font-semibold text-ink text-lg leading-tight">{info.courseName}</h1>
-              <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted mt-0.5">Membership dues</p>
+              <p className="text-[13px] text-ink mt-0.5">Membership dues</p>
             </div>
           </div>
 
@@ -176,7 +176,7 @@ function MembershipPayInner({ params }: { params: Promise<{ id: string }> }) {
                 <PayForm id={id} token={token} info={info} onPaid={(expiresAt, amount) => setPaid({ expiresAt, amount })} />
               </Elements>
             ) : (
-              <p className="text-sm text-ink-muted text-center py-4">
+              <p className="text-sm text-ink text-center py-4">
                 Online payment isn&apos;t available yet — please pay at the pro shop.
               </p>
             )}

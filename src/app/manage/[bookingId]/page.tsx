@@ -89,7 +89,7 @@ function ActionCard({ icon, title, subtitle, onClick, tone = 'neutral' }: {
       <span className={`mt-0.5 shrink-0 ${bad ? 'text-bad' : 'text-ink-muted'}`}>{icon}</span>
       <span className="min-w-0 flex-1">
         <span className={`block font-medium text-sm ${bad ? 'text-bad' : 'text-ink'}`}>{title}</span>
-        <span className="block text-xs text-ink-muted mt-0.5 leading-relaxed">{subtitle}</span>
+        <span className="block text-xs text-ink mt-0.5 leading-relaxed">{subtitle}</span>
       </span>
       <ChevronRight size={15} className={`mt-0.5 shrink-0 ${bad ? 'text-bad/60' : 'text-ink-faint'}`} />
     </button>
@@ -260,7 +260,7 @@ function ManagePageInner() {
               ? <div className="bg-warn/5 border border-warn/20 rounded-md p-4 mb-4 text-left"><p className="text-warn text-sm font-medium">Late-cancellation fee applied</p><p className="text-ink-soft text-xs mt-1">A {dollars(info.cancellationFeeTotal)} fee was charged — this cancellation came after the free-cancel window closed. Non-refundable.</p></div>
               : <div className="bg-ok/5 border border-ok/20 rounded-md p-4 mb-4 text-left"><p className="text-ok text-sm font-medium">No charge — your card has been released</p></div>
             }
-            <p className="text-xs text-ink-muted mb-6">A confirmation email has been sent to you.</p>
+            <p className="text-xs text-ink mb-6">A confirmation email has been sent to you.</p>
             <GolferExitLinks courseSlug={info.courseSlug} courseName={info.courseName} accent={info.brandColor} />
           </div>
         </div>
@@ -285,7 +285,7 @@ function ManagePageInner() {
                 <PriceBreakdown greenFeeTotal={modifyResult.greenFeeTotal} cartFeeTotal={modifyResult.cartFeeTotal} rangeBallsTotal={modifyResult.rangeBallsTotal} accessFeeTotal={modifyResult.accessFeeTotal} totalAmount={modifyResult.totalAmount} players={modifyResult.players} />
               </div>
             </div>
-            <button onClick={() => setView('main')} className="text-sm text-ink-muted underline underline-offset-2 mb-5 block">Back to booking</button>
+            <button onClick={() => setView('main')} className="text-sm text-ink-soft hover:text-ink underline underline-offset-2 mb-5 block">Back to booking</button>
             <GolferExitLinks courseSlug={info.courseSlug} courseName={info.courseName} accent={info.brandColor} />
           </div>
         </div>
@@ -326,11 +326,11 @@ function ManagePageInner() {
             <span className="text-white font-medium">Choose a new time</span>
           </div>
           <div className="p-6">
-            <p className="text-ink-muted text-sm mb-4">{fmtDate(info.date)} &middot; {info.players} player{info.players !== 1 ? 's' : ''}</p>
+            <p className="text-ink text-sm mb-4">{fmtDate(info.date)} &middot; {info.players} player{info.players !== 1 ? 's' : ''}</p>
             {slotsLoading && <div className="py-8 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-ink-muted" /></div>}
             {!slotsLoading && swapError && <p className="text-bad text-sm">{swapError}</p>}
             {!slotsLoading && !swapError && slots.length === 0 && (
-              <p className="text-ink-muted text-sm text-center py-6">No other times available for this date.</p>
+              <p className="text-ink text-sm text-center py-6">No other times available for this date.</p>
             )}
             {!slotsLoading && slots.length > 0 && (
               <div className="space-y-2">
@@ -350,7 +350,7 @@ function ManagePageInner() {
                       <div className="text-right">
                         <span className="font-medium text-ink" style={isSelected ? { color: info.brandColor } : undefined}>{dollars(slot.greenFee * info.players)}</span>
                         {slot.greenFee !== info.greenFeeTotal / info.players && (
-                          <span className="block text-[11px] text-ink-muted">vs {dollars(info.greenFeeTotal)}</span>
+                          <span className="block text-[11px] text-ink">vs {dollars(info.greenFeeTotal)}</span>
                         )}
                       </div>
                     </button>
@@ -373,7 +373,7 @@ function ManagePageInner() {
                   </div>
                 </div>
                 {swapError && <p className="text-bad text-xs">{swapError}</p>}
-                <p className="text-[11px] text-ink-muted text-center leading-snug">
+                <p className="text-[11px] text-ink text-center leading-snug">
                   By confirming, you agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink">Terms of Service</a> and this course&apos;s cancellation policy.
                 </p>
                 <button
@@ -410,7 +410,7 @@ function ManagePageInner() {
             <span className="text-white font-medium">Change party size</span>
           </div>
           <div className="p-6">
-            <p className="text-ink-muted text-sm mb-5">{fmtDate(info.date)} at {fmtTime(info.time)}</p>
+            <p className="text-ink text-sm mb-5">{fmtDate(info.date)} at {fmtTime(info.time)}</p>
 
             <div className="flex items-center gap-3 mb-6">
               <button
@@ -431,9 +431,9 @@ function ManagePageInner() {
 
             {selectedPlayers !== info.players && (
               <div className="border border-line rounded-md p-4 mb-4 space-y-2">
-                <p className="text-xs text-ink-muted uppercase tracking-[0.06em] font-medium">Updated pricing</p>
+                <p className="text-[15px] font-semibold text-ink">Updated pricing</p>
                 <PriceBreakdown greenFeeTotal={newGreen} cartFeeTotal={newCart} rangeBallsTotal={info.rangeBallsTotal} accessFeeTotal={newAccess} totalAmount={newTotal} players={selectedPlayers} />
-                <p className="text-xs text-ink-muted">
+                <p className="text-xs text-ink">
                   {newTotal > info.totalAmount ? `+${dollars(newTotal - info.totalAmount)} vs current` : newTotal < info.totalAmount ? `−${dollars(info.totalAmount - newTotal)} vs current` : 'Same total'}
                 </p>
               </div>
@@ -441,7 +441,7 @@ function ManagePageInner() {
 
             {playersError && <p className="text-bad text-sm mb-3">{playersError}</p>}
 
-            <p className="text-[11px] text-ink-muted text-center leading-snug mb-3">
+            <p className="text-[11px] text-ink text-center leading-snug mb-3">
               By confirming, you agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink">Terms of Service</a> and this course&apos;s cancellation policy.
             </p>
             <button

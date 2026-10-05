@@ -25,9 +25,9 @@ const COURSES = [
 ];
 
 const STEPS = [
-  { n: '01', h: 'Tell us about your course', p: 'A short call about your tee sheet and how you take bookings today.' },
-  { n: '02', h: 'We build it', p: 'Your booking page and tee sheet, set up with your times and prices.' },
-  { n: '03', h: 'Go live', p: 'Add the button to your website. Golfers start booking.' },
+  { h: 'Tell us about your course', p: 'A short call about your tee sheet and how you take bookings today.' },
+  { h: 'We build it', p: 'Your booking page and tee sheet, set up with your times and prices.' },
+  { h: 'Go live', p: 'Add the button to your website. Golfers start booking.' },
 ];
 
 export default function HomeContent() {
@@ -99,7 +99,7 @@ export default function HomeContent() {
           </div>
           <ol className={s.steps}>
             {STEPS.map(st => (
-              <li key={st.n}><div className={s.n}>{st.n}</div><h3>{st.h}</h3><p>{st.p}</p></li>
+              <li key={st.h}><h3>{st.h}</h3><p>{st.p}</p></li>
             ))}
           </ol>
         </div>

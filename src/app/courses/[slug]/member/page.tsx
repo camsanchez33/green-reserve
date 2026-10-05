@@ -180,7 +180,7 @@ function SignInPanel({
       <div className="max-w-md mx-auto w-full px-4 py-16">
         <Link
           href={`/courses/${slug}`}
-          className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink-soft mb-8"
+          className="inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink mb-8"
         >
           <ArrowLeft size={14} />
           Back to course
@@ -188,13 +188,10 @@ function SignInPanel({
 
         <div className="bg-white rounded-lg border border-line p-8">
           <div className="mb-6">
-            <span className="text-xs font-medium uppercase tracking-[0.06em] text-pine">
-              Member Portal
-            </span>
             <h1 className="text-2xl font-serif font-medium tracking-tight text-ink mt-1">
               Sign in to your account
             </h1>
-            <p className="text-sm text-ink-muted mt-1">
+            <p className="text-sm text-ink mt-1">
               Enter your email — we&apos;ll send you a one-click sign-in link.
             </p>
           </div>
@@ -218,7 +215,7 @@ function SignInPanel({
                 <Mail size={22} className="text-pine" />
               </div>
               <p className="font-semibold text-ink mb-1">Check your email</p>
-              <p className="text-sm text-ink-muted">
+              <p className="text-sm text-ink">
                 If <strong>{email}</strong> is registered as a member, a sign-in link is on its way.
                 It expires in 15 minutes.
               </p>
@@ -397,7 +394,7 @@ function MemberDashboard({
           </div>
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-ink-soft flex-shrink-0"
+            className="flex items-center gap-1.5 text-xs text-ink-soft hover:text-ink flex-shrink-0"
           >
             <LogOut size={13} />
             Sign out
@@ -459,7 +456,7 @@ function MemberDashboard({
                       <ChevronRight size={15} />
                     </button>
                   </div>
-                  <div className="grid grid-cols-7 text-center text-[10px] font-medium text-ink-muted uppercase mb-1">
+                  <div className="grid grid-cols-7 text-center text-[11px] font-medium text-ink-muted mb-1">
                     {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
                       <div key={i}>{d}</div>
                     ))}
@@ -494,7 +491,7 @@ function MemberDashboard({
 
                 {/* Players */}
                 <div className="px-4 py-4">
-                  <div className="text-xs font-medium text-ink-muted uppercase tracking-[0.06em] mb-2">
+                  <div className="text-[13px] font-semibold text-ink mb-2">
                     Players
                   </div>
                   <div className="flex gap-1.5">
@@ -572,13 +569,13 @@ function MemberDashboard({
               ) : teeTimes.length === 0 ? (
                 <div className="bg-white rounded-lg border border-line text-center py-14 px-6">
                   <Clock size={28} className="mx-auto mb-3 text-ink-faint" />
-                  <p className="text-ink-muted text-sm">No tee times available for this date.</p>
+                  <p className="text-ink text-sm">No tee times available for this date.</p>
                 </div>
               ) : (
                 <div className="space-y-6">
                   {groups.map(g => (
                     <div key={g.key}>
-                      <div className="text-xs font-medium text-ink-muted uppercase tracking-[0.06em] mb-2 flex items-center gap-1.5">
+                      <div className="text-[13px] font-semibold text-ink mb-2 flex items-center gap-1.5">
                         <Clock size={11} /> {g.label}
                       </div>
                       <div className="space-y-2">
@@ -664,7 +661,7 @@ function MemberDashboard({
                   <h2 className="font-serif font-medium text-ink text-lg mb-4">Membership</h2>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     <div>
-                      <div className="text-xs font-medium uppercase tracking-[0.06em] text-ink-muted mb-0.5">
+                      <div className="text-[13px] font-semibold text-ink mb-0.5">
                         Tier
                       </div>
                       <div className="font-semibold text-ink text-sm">
@@ -672,14 +669,14 @@ function MemberDashboard({
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs font-medium uppercase tracking-[0.06em] text-ink-muted mb-0.5">
+                      <div className="text-[13px] font-semibold text-ink mb-0.5">
                         Status
                       </div>
                       <PaymentStatusBadge status={paymentsData.membership.paymentStatus} />
                     </div>
                     {paymentsData.membership.expiresAt && (
                       <div>
-                        <div className="text-xs font-medium uppercase tracking-[0.06em] text-ink-muted mb-0.5">
+                        <div className="text-[13px] font-semibold text-ink mb-0.5">
                           Expires
                         </div>
                         <div className="font-semibold text-ink text-sm">
@@ -692,7 +689,7 @@ function MemberDashboard({
                     )}
                     {paymentsData.membership.annualFee > 0 && (
                       <div>
-                        <div className="text-xs font-medium uppercase tracking-[0.06em] text-ink-muted mb-0.5">
+                        <div className="text-[13px] font-semibold text-ink mb-0.5">
                           Annual dues
                         </div>
                         <div className="font-semibold text-ink text-sm">
@@ -702,7 +699,7 @@ function MemberDashboard({
                     )}
                     {paymentsData.membership.initiationFee > 0 && (
                       <div>
-                        <div className="text-xs font-medium uppercase tracking-[0.06em] text-ink-muted mb-0.5">
+                        <div className="text-[13px] font-semibold text-ink mb-0.5">
                           Initiation fee
                         </div>
                         <div className="font-semibold text-ink text-sm">
@@ -719,7 +716,7 @@ function MemberDashboard({
                     <h2 className="font-serif font-medium text-ink text-lg">Payment history</h2>
                   </div>
                   {paymentsData.records.length === 0 ? (
-                    <div className="px-6 py-10 text-center text-sm text-ink-muted">
+                    <div className="px-6 py-10 text-center text-sm text-ink">
                       No payment records yet.
                     </div>
                   ) : (
@@ -751,7 +748,7 @@ function MemberDashboard({
                 </div>
               </div>
             ) : (
-              <div className="text-center py-10 text-sm text-ink-muted">
+              <div className="text-center py-10 text-sm text-ink">
                 Unable to load payment data.
               </div>
             )}
@@ -777,7 +774,7 @@ function MemberDashboard({
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <div className="text-[10px] font-medium text-ink-muted uppercase tracking-[0.06em]">
+                <div className="text-[13px] text-ink-muted">
                   Total
                 </div>
                 <div className="font-serif font-medium text-ink text-xl leading-tight">

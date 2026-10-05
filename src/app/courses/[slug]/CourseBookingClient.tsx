@@ -514,7 +514,7 @@ export default function CourseDetailPage({
         <div className="text-center">
           <Image src="/brand/golfer.svg" unoptimized alt="" width={56} height={69} className="mx-auto mb-4" />
           <h1 className="text-2xl font-semibold text-ink mb-2">We couldn&apos;t find that course.</h1>
-          <p className="text-ink-muted text-sm mt-2">Please use the booking link on your course&apos;s website, or contact <a href="mailto:thegreenreserve@outlook.com" className="text-pine hover:underline">thegreenreserve@outlook.com</a>.</p>
+          <p className="text-ink text-sm mt-2">Please use the booking link on your course&apos;s website, or contact <a href="mailto:thegreenreserve@outlook.com" className="text-pine hover:underline">thegreenreserve@outlook.com</a>.</p>
           <Link href="/" className="mt-6 inline-block text-sm text-pine hover:underline">← Back to home</Link>
         </div>
       </div>
@@ -576,7 +576,7 @@ export default function CourseDetailPage({
               )}
               {amenities.length > 0 && (
                 <div className="mb-8">
-                  <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-3">Amenities</p>
+                  <p className="text-[15px] font-semibold text-ink mb-3">Amenities</p>
                   <div className="flex flex-wrap gap-2">
                     {amenities.map((a: string) => (
                       <span key={a} className="text-xs text-ink-soft border border-line rounded-md px-2.5 py-1">{a}</span>
@@ -584,8 +584,8 @@ export default function CourseDetailPage({
                   </div>
                 </div>
               )}
-              <div className="flex flex-wrap gap-4 text-sm text-ink-muted">
-                {course.phone && <span><span className="text-ink-faint">Phone</span> · {course.phone}</span>}
+              <div className="flex flex-wrap gap-4 text-sm text-ink">
+                {course.phone && <span><span className="text-ink-muted">Phone</span> · {course.phone}</span>}
                 {course.website && (
                   <a href={course.website} target="_blank" rel="noopener noreferrer" className="text-pine hover:underline">
                     Website
@@ -595,7 +595,7 @@ export default function CourseDetailPage({
             </div>
 
             <div className="bg-white rounded-lg shadow-card p-6 sticky top-20">
-              <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-1">Member access</p>
+              <p className="text-[15px] font-semibold text-ink mb-1">Member access</p>
               <p className="text-ink text-sm leading-relaxed mb-5">
                 This is a private club. Tee time booking is reserved for members. Sign in to your member account to view availability and book.
               </p>
@@ -606,7 +606,7 @@ export default function CourseDetailPage({
               >
                 Member sign in
               </Link>
-              <p className="text-center text-xs text-ink-faint mt-4">
+              <p className="text-center text-xs text-ink mt-4">
                 Not a member? Contact the club directly.
               </p>
             </div>
@@ -742,7 +742,7 @@ export default function CourseDetailPage({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-card max-h-[85vh] overflow-y-auto">
             <div className="text-ink font-medium mb-1">What would you like changed?</div>
-            <div className="text-xs text-ink-muted mb-3">Check everything that applies — you can add a note for each.</div>
+            <div className="text-xs text-ink mb-3">Check everything that applies — you can add a note for each.</div>
             <div className="space-y-2 mb-3">
               {CHANGE_CATEGORIES.map(cat => {
                 const checked = previewChangesChecked.has(cat.key);
@@ -769,7 +769,7 @@ export default function CourseDetailPage({
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => { setShowPreviewChangesModal(false); setPreviewChangesChecked(new Set()); setPreviewChangesDetails({}); setPreviewChangesError(''); }}
-                className="text-xs text-ink-muted hover:text-ink px-3 py-2"
+                className="text-xs text-ink-soft hover:text-ink px-3 py-2"
               >
                 Cancel
               </button>
@@ -861,11 +861,10 @@ export default function CourseDetailPage({
                 </span>
               )}
               <div>
-                <span className="text-xs font-medium text-white/70 mb-2 inline-block">{typeLabel}</span>
                 <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white leading-tight">{course.name}</h1>
-                <p className="text-white/75 flex items-center gap-1.5 mt-1 text-sm">
+                <p className="text-white/90 flex items-center gap-1.5 mt-1 text-sm">
                   <MapPin size={14} />
-                  {[[course.city, course.state].filter(Boolean).join(', '), course.holes ? `${course.holes} holes` : '', course.par ? `Par ${course.par}` : ''].filter(Boolean).join(' · ')}
+                  {[typeLabel, [course.city, course.state].filter(Boolean).join(', '), course.holes ? `${course.holes} holes` : '', course.par ? `Par ${course.par}` : ''].filter(Boolean).join(' · ')}
                 </p>
               </div>
             </div>
@@ -970,7 +969,7 @@ export default function CourseDetailPage({
                         <ChevronRight size={16} />
                       </button>
                     </div>
-                    <div className="grid grid-cols-7 text-center text-[10px] font-medium text-ink-muted uppercase mb-1">
+                    <div className="grid grid-cols-7 text-center text-[11px] font-medium text-ink-muted mb-1">
                       {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <div key={i}>{d}</div>)}
                     </div>
                     <div className="grid grid-cols-7 gap-0.5">
@@ -1001,7 +1000,7 @@ export default function CourseDetailPage({
 
                   {/* Players */}
                   <div className="px-5 py-4">
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2">Players</div>
+                    <div className="text-[13px] font-semibold text-ink mb-2">Players</div>
                     <div className="flex gap-1.5">
                       {[1, 2, 3, 4].map(n => {
                         const isSel = players === n;
@@ -1022,7 +1021,7 @@ export default function CourseDetailPage({
 
                   {/* Time of day */}
                   <div className="px-5 py-4">
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2">Time of Day</div>
+                    <div className="text-[13px] font-semibold text-ink mb-2">Time of day</div>
                     <div className="grid grid-cols-2 gap-1.5">
                       {TOD_OPTIONS.map(o => {
                         const isSel = todFilter === o.key;
@@ -1044,7 +1043,7 @@ export default function CourseDetailPage({
                   {priceBounds && priceBounds.min < priceBounds.max && (
                     <div className="px-5 py-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium">Max Price</span>
+                        <span className="text-[13px] font-semibold text-ink">Max price</span>
                         <span className="text-xs font-medium text-ink">${maxPrice ?? priceBounds.max}</span>
                       </div>
                       <input
@@ -1066,7 +1065,7 @@ export default function CourseDetailPage({
                   {/* Holes */}
                   {hasHolesData && (
                     <div className="px-5 py-4">
-                      <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2">Holes</div>
+                      <div className="text-[13px] font-semibold text-ink mb-2">Holes</div>
                       <div className="grid grid-cols-3 gap-1.5">
                         {(['all', '9', '18'] as const).map(h => {
                           const isSel = holesFilter === h;
@@ -1093,7 +1092,7 @@ export default function CourseDetailPage({
                 {/* L2: product selector — only when the day sells more than one product. */}
                 {dayProducts.length > 1 && (
                   <div className="mb-4">
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2">Which round</div>
+                    <div className="text-[13px] font-semibold text-ink mb-2">Which round</div>
                     <div className="flex flex-wrap gap-2" role="group" aria-label="Which round">
                       {[{ id: 'all', label: 'All', holes: undefined as number | undefined }, ...dayProducts].map(p => {
                         const isSel = productActive === p.id;
@@ -1265,10 +1264,10 @@ export default function CourseDetailPage({
                     {teeTimes.length === 0 ? (
                       <div>
                         <p className="font-serif font-medium text-ink text-xl mb-1.5">Nothing open on {displayDate(selectedDate)}</p>
-                        <p className="text-ink-muted text-sm mb-5">Every slot for this date is taken.</p>
+                        <p className="text-ink text-sm mb-5">Every slot for this date is taken.</p>
                         {/* B-4: nearest fits — the two closest dates with room for this party. */}
                         {searchingNext ? (
-                          <p className="text-xs text-ink-faint">Looking for the nearest open dates…</p>
+                          <p className="text-xs text-ink">Looking for the nearest open dates…</p>
                         ) : nearestDates.length > 0 ? (
                           <div className="flex flex-wrap justify-center gap-2">
                             {nearestDates.map((ds, i) => (
@@ -1283,12 +1282,12 @@ export default function CourseDetailPage({
                             ))}
                           </div>
                         ) : (
-                          <p className="text-xs text-ink-faint">Nothing with room for {players} in the next week.</p>
+                          <p className="text-xs text-ink">Nothing with room for {players} in the next week.</p>
                         )}
                         <div className="mt-5">
                           <button
                             onClick={() => openAlert()}
-                            className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-muted hover:text-ink transition-colors"
+                            className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-soft hover:text-ink transition-colors"
                           >
                             <Bell size={12} /> Tell me if something opens up
                           </button>
@@ -1297,7 +1296,7 @@ export default function CourseDetailPage({
                     ) : (
                       <div>
                         <p className="font-serif font-medium text-ink text-xl mb-1.5">No times match your filters</p>
-                        <p className="text-ink-muted text-sm mb-5">There are tee times on this date — your filters rule them all out.</p>
+                        <p className="text-ink text-sm mb-5">There are tee times on this date — your filters rule them all out.</p>
                         {/* B-4: same day, smaller party. */}
                         {bestFewer > 0 && (
                           <button
@@ -1323,7 +1322,7 @@ export default function CourseDetailPage({
                     {groups.map(g => (
                       <div key={g.key}>
                         {todFilter === 'all' && (
-                          <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2 flex items-center gap-1.5">
+                          <div className="text-[13px] font-semibold text-ink mb-2 flex items-center gap-1.5">
                             <Clock size={11} /> {g.label}
                           </div>
                         )}
@@ -1437,7 +1436,7 @@ export default function CourseDetailPage({
                                     <div className="space-y-4">
                                     {/* Party size */}
                                     <div>
-                                      <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2">Players</div>
+                                      <div className="text-[13px] font-semibold text-ink mb-2">Players</div>
                                       <div className="flex gap-1.5">
                                         {([1, 2, 3, 4] as const).map(n => {
                                           const ok = n <= t.players_available;
@@ -1561,7 +1560,7 @@ export default function CourseDetailPage({
                       { label: 'State', value: course.state },
                     ].map(f => (
                       <div key={f.label}>
-                        <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-0.5">{f.label}</div>
+                        <div className="text-[13px] font-semibold text-ink mb-0.5">{f.label}</div>
                         <div className="text-ink font-medium text-sm">{f.value}</div>
                       </div>
                     ))}
@@ -1667,7 +1666,7 @@ export default function CourseDetailPage({
                   <Check size={20} />
                 </div>
                 <p className="font-serif font-medium text-ink text-xl mb-1.5">Alert set</p>
-                <p className="text-sm text-ink-muted mb-5">We&apos;ll email you when a spot opens up at {course.name}.</p>
+                <p className="text-sm text-ink mb-5">We&apos;ll email you when a spot opens up at {course.name}.</p>
                 <button
                   onClick={() => { setAlertModal(null); setAlertSent(false); }}
                   className="w-full py-2.5 rounded-md border border-line text-sm font-medium text-ink-soft hover:text-ink transition-colors"
@@ -1681,7 +1680,7 @@ export default function CourseDetailPage({
                   <Bell size={15} style={{ color: accent }} />
                   <h3 className="font-serif font-medium text-ink text-xl leading-none">Get an alert</h3>
                 </div>
-                <p className="text-sm text-ink-muted mb-5">
+                <p className="text-sm text-ink mb-5">
                   {alertModal.teeTimeId
                     ? `We'll notify you if this time opens up on ${displayDate(alertModal.date)}.`
                     : `We'll notify you when a tee time matching your current filters is available on ${displayDate(alertModal.date)}.`}
@@ -1747,7 +1746,7 @@ export default function CourseDetailPage({
             </Link>
             <button
               onClick={() => setDemoModal(false)}
-              className="block w-full text-center py-3 text-sm text-ink-muted hover:text-ink transition-colors"
+              className="block w-full text-center py-3 text-sm text-ink-soft hover:text-ink transition-colors"
             >
               Keep exploring
             </button>
