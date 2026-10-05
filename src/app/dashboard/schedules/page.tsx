@@ -253,14 +253,14 @@ export default function SchedulesPage() {
               {schedules.length === 0 ? (
                 <div className="text-center py-16 bg-white rounded-lg border border-dashed border-line">
                   <div className="font-medium text-ink mb-1">No schedules yet</div>
-                  <p className="text-sm text-ink-muted mb-4">Create a schedule to auto-generate tee times daily</p>
+                  <p className="text-sm text-ink-soft mb-4">Create a schedule to auto-generate tee times daily</p>
                   <button onClick={openAdd} className="bg-pine hover:bg-pine-hover text-white px-5 py-2.5 rounded-md text-[12.5px] font-medium transition-colors">Add Your First Schedule</button>
                 </div>
               ) : (
               <div className="bg-white border border-line overflow-x-auto">
                 <table className="w-full text-[13.5px]">
                   <thead>
-                    <tr className="text-[11px] uppercase tracking-[0.1em] text-ink-muted border-b border-line">
+                    <tr className="text-[13px] font-semibold text-ink border-b border-line">
                       <th className="text-left font-medium px-4 py-2.5">Band</th>
                       <th className="text-right font-medium px-3 py-2.5">Weekday</th>
                       <th className="text-right font-medium px-3 py-2.5">Weekend</th>
@@ -276,7 +276,7 @@ export default function SchedulesPage() {
                       <React.Fragment key={g.key}>
                         {scheduleGroups.length > 1 && (
                           <tr className="bg-paper">
-                            <td colSpan={99} className="px-4 py-2 text-[11px] uppercase tracking-[0.1em] text-ink-muted">
+                            <td colSpan={99} className="px-4 py-2 text-[13px] font-semibold text-ink">
                               {g.title}{g.holes ? ` · ${g.holes} holes` : ''}{g.rows.length === 0 ? ' · no schedule yet — it generates no tee times' : ''}
                             </td>
                           </tr>
@@ -313,10 +313,10 @@ export default function SchedulesPage() {
               <div className="space-y-4">
                 {/* Blocks */}
                 <div className="bg-white border border-line p-4">
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Blocked days</div>
+                  <div className="text-[13px] font-semibold text-ink mb-2">Blocked days</div>
                   {blackoutError && <p className="text-xs text-bad mb-2">{blackoutError} <button onClick={loadBlackouts} className="underline">Retry</button></p>}
                   {blackoutError ? null : blackouts.length === 0 ? (
-                    <p className="text-[12.5px] text-ink-muted mb-3">No days blocked.</p>
+                    <p className="text-[12.5px] text-ink-soft mb-3">No days blocked.</p>
                   ) : (
                     <ul className="divide-y divide-line-soft mb-3">
                       {blackouts.map(b => (
@@ -334,14 +334,14 @@ export default function SchedulesPage() {
                     <input type="date" value={blackoutForm.date} onChange={e => setBlackoutForm(f => ({ ...f, date: e.target.value }))} className={iCls}/>
                     <input type="text" value={blackoutForm.reason} onChange={e => setBlackoutForm(f => ({ ...f, reason: e.target.value }))} placeholder="Reason (outing, maintenance…)" className={iCls}/>
                     {/* WX-1: cancelling bookings for weather lives on the Tee Sheet (Weather), not here. */}
-                    <p className="text-[12px] text-ink-muted">Booked times stay. To cancel bookings for weather, use <b className="font-medium text-ink-soft">Weather</b> on the Tee Sheet.</p>
+                    <p className="text-[12px] text-ink-soft">Booked times stay. To cancel bookings for weather, use <b className="font-medium text-ink-soft">Weather</b> on the Tee Sheet.</p>
                     <button onClick={addBlackout} disabled={blackoutBusy || !blackoutForm.date} className="w-full border border-ink text-ink py-2 text-[12.5px] font-medium hover:bg-paper disabled:opacity-40 transition-colors">{blackoutBusy ? 'Working…' : 'Block this day'}</button>
                   </div>
                 </div>
 
                 {/* Booking windows — read here, edited in Settings */}
                 <div className="bg-white border border-line p-4">
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">Booking windows</div>
+                  <div className="text-[13px] font-semibold text-ink mb-2">Booking windows</div>
                   {windowsError && <p className="text-xs text-bad mb-2">{windowsError} <button onClick={loadWindows} className="underline">Retry</button></p>}
                   <div className="text-[13px] text-ink space-y-1">
                     <div className="flex justify-between"><span className="text-ink-soft">Public can book</span><span className="tabular-nums">{windows.publicAdvanceDays != null ? `${windows.publicAdvanceDays} days ahead` : '—'}</span></div>
@@ -365,16 +365,16 @@ export default function SchedulesPage() {
                 {productsError && <p className="text-xs text-bad">{productsError} <button onClick={loadProducts} className="underline">Retry</button></p>}
                 {activeProducts.length > 0 && (
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Which round</label>
+                    <label className="text-[13px] font-semibold text-ink block mb-1.5">Which round</label>
                     <select value={form.productId} onChange={e=>set('productId',e.target.value)} className={iCls}>
                       <option value="">Select…</option>
                       {activeProducts.map(p => <option key={p.id} value={p.id}>{p.label} · {p.holes} holes</option>)}
                     </select>
-                    <p className="text-[11px] text-ink-faint mt-1">Each schedule sells one round. Two rounds that share a nine can&apos;t run at the same time — the save will say so.</p>
+                    <p className="text-[11px] text-ink-soft mt-1">Each schedule sells one round. Two rounds that share a nine can&apos;t run at the same time — the save will say so.</p>
                   </div>
                 )}
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Tier Name</label>
+                  <label className="text-[13px] font-semibold text-ink block mb-1.5">Tier name</label>
                   <select value={form.tierName} onChange={e=>set('tierName',e.target.value)} className={iCls}>
                     <option value="standard">Standard</option>
                     <option value="twilight">Twilight</option>
@@ -384,7 +384,7 @@ export default function SchedulesPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Days of Week</label>
+                  <label className="text-[13px] font-semibold text-ink block mb-1.5">Days of week</label>
                   <div className="flex gap-1.5 flex-wrap">
                     {DAYS.map((d,i) => (
                       <button key={i} onClick={() => toggleDay(i)}
@@ -400,26 +400,26 @@ export default function SchedulesPage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div><label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Start Time</label><input type="time" value={form.startTime} onChange={e=>set('startTime',e.target.value)} className={iCls}/></div>
-                  <div><label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">End Time</label><input type="time" value={form.endTime} onChange={e=>set('endTime',e.target.value)} className={iCls}/></div>
+                  <div><label className="text-[13px] font-semibold text-ink block mb-1.5">Start time</label><input type="time" value={form.startTime} onChange={e=>set('startTime',e.target.value)} className={iCls}/></div>
+                  <div><label className="text-[13px] font-semibold text-ink block mb-1.5">End time</label><input type="time" value={form.endTime} onChange={e=>set('endTime',e.target.value)} className={iCls}/></div>
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Interval (min)</label>
+                    <label className="text-[13px] font-semibold text-ink block mb-1.5">Interval (min)</label>
                     <select value={form.intervalMinutes} onChange={e=>set('intervalMinutes',Number(e.target.value))} className={iCls}>
                       {[6,7,8,9,10,12,15,20].map(m=><option key={m} value={m}>{m} min</option>)}
                     </select>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className={form.productId ? 'hidden' : ''}><label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Holes</label><select value={form.holes} onChange={e=>set('holes',Number(e.target.value))} className={iCls}><option value={9}>9 holes</option><option value={18}>18 holes</option></select></div>
-                  <div><label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Cart Fee ($)</label><input type="number" value={form.cartFee} onChange={e=>set('cartFee',Number(e.target.value))} className={iCls} min={0}/></div>
+                  <div className={form.productId ? 'hidden' : ''}><label className="text-[13px] font-semibold text-ink block mb-1.5">Holes</label><select value={form.holes} onChange={e=>set('holes',Number(e.target.value))} className={iCls}><option value={9}>9 holes</option><option value={18}>18 holes</option></select></div>
+                  <div><label className="text-[13px] font-semibold text-ink block mb-1.5">Cart fee ($)</label><input type="number" value={form.cartFee} onChange={e=>set('cartFee',Number(e.target.value))} className={iCls} min={0}/></div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div><label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Green Fee — Weekday ($)</label><input type="number" value={form.greenFeeWeekday} onChange={e=>set('greenFeeWeekday',Number(e.target.value))} className={iCls} min={0}/></div>
-                  <div><label className="text-[11px] uppercase tracking-[0.1em] text-ink-muted block mb-1.5">Green Fee — Weekend ($)</label><input type="number" value={form.greenFeeWeekend} onChange={e=>set('greenFeeWeekend',Number(e.target.value))} className={iCls} min={0}/></div>
+                  <div><label className="text-[13px] font-semibold text-ink block mb-1.5">Green fee — weekday ($)</label><input type="number" value={form.greenFeeWeekday} onChange={e=>set('greenFeeWeekday',Number(e.target.value))} className={iCls} min={0}/></div>
+                  <div><label className="text-[13px] font-semibold text-ink block mb-1.5">Green fee — weekend ($)</label><input type="number" value={form.greenFeeWeekend} onChange={e=>set('greenFeeWeekend',Number(e.target.value))} className={iCls} min={0}/></div>
                 </div>
                 {hasMember && (
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.1em] text-ok block mb-1.5">Member Rate (optional)</label>
+                    <label className="text-[13px] font-semibold text-ok block mb-1.5">Member rate (optional)</label>
                     <div className="grid grid-cols-2 gap-3">
                       <input type="number" placeholder="Weekday $" value={form.memberRateWeekday} onChange={e=>set('memberRateWeekday',e.target.value)} className={iCls} min={0}/>
                       <input type="number" placeholder="Weekend $" value={form.memberRateWeekend} onChange={e=>set('memberRateWeekend',e.target.value)} className={iCls} min={0}/>
@@ -428,7 +428,7 @@ export default function SchedulesPage() {
                 )}
                 {hasResident && (
                   <div>
-                    <label className="text-[11px] uppercase tracking-[0.1em] text-pine block mb-1.5">Resident Rate (optional)</label>
+                    <label className="text-[13px] font-semibold text-pine block mb-1.5">Resident rate (optional)</label>
                     <div className="grid grid-cols-2 gap-3">
                       <input type="number" placeholder="Weekday $" value={form.residentRateWeekday} onChange={e=>set('residentRateWeekday',e.target.value)} className={iCls} min={0}/>
                       <input type="number" placeholder="Weekend $" value={form.residentRateWeekend} onChange={e=>set('residentRateWeekend',e.target.value)} className={iCls} min={0}/>

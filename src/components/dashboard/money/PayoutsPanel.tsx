@@ -43,7 +43,7 @@ export function PayoutsPanel({ course, stripeParam, onConnected }: {
   return (
     <div className="space-y-5 max-w-2xl">
       <div className="bg-white rounded-lg shadow-card p-5">
-        <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">Payouts (Stripe)</div>
+        <div className="text-[15px] font-semibold text-ink mb-4">Payouts (Stripe)</div>
         <div className="space-y-4">
           {/* SD-8 review: Stripe returns four states and only two were spoken
               for — someone who abandoned onboarding mid-flow ('refresh') or
@@ -114,7 +114,7 @@ export function PayoutsPanel({ course, stripeParam, onConnected }: {
       {/* SD-8: the one number every operator asks about, written down where the
           money lives instead of only in the onboarding email. */}
       <div className="bg-white rounded-lg shadow-card p-5">
-        <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">What GreenReserve takes</div>
+        <div className="text-[15px] font-semibold text-ink mb-3">What GreenReserve takes</div>
         <p className="text-[13.5px] text-ink-soft">
           <span className="font-medium text-ink">${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player</span>, charged to the <span className="font-medium text-ink">golfer</span> on top of your price, in the same card payment as your green fee. You keep 100% of your green and cart fees. Stripe&apos;s normal card-processing fee applies to the payment, like any card you take; GreenReserve charges you nothing on top of it.
         </p>

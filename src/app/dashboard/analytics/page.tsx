@@ -57,7 +57,7 @@ function Section({ title, note, children, csv }: { title: string; note?: string;
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
           <h2 className="text-[15px] font-semibold text-ink">{title}</h2>
-          {note && <p className="text-[12.5px] text-ink-muted mt-1 max-w-[62em]">{note}</p>}
+          {note && <p className="text-[12.5px] text-ink-soft mt-1 max-w-[62em]">{note}</p>}
         </div>
         {csv && <CsvBtn onClick={csv} />}
       </div>
@@ -106,11 +106,11 @@ function Bar({ value, max, tone = 'pine' }: { value: number; max: number; tone?:
 }
 
 function Table({ head, rows, empty }: { head: string[]; rows: React.ReactNode[][]; empty: string }) {
-  if (rows.length === 0) return <p className="text-[13px] text-ink-muted py-3">{empty}</p>;
+  if (rows.length === 0) return <p className="text-[13px] text-ink-soft py-3">{empty}</p>;
   return (
     <div className="overflow-x-auto max-h-[340px] overflow-y-auto">
       <table className="w-full text-[13px]">
-        <thead className="sticky top-0 bg-white"><tr className="text-left">{head.map((h, i) => <th key={h} className={'py-2 pr-4 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-muted [font-stretch:75%] border-b border-line ' + (i > 0 ? 'text-right' : '')}>{h}</th>)}</tr></thead>
+        <thead className="sticky top-0 bg-white"><tr className="text-left">{head.map((h, i) => <th key={h} className={'py-2 pr-4 text-[12.5px] font-semibold text-ink border-b border-line ' + (i > 0 ? 'text-right' : '')}>{h}</th>)}</tr></thead>
         <tbody className="divide-y divide-line-soft">{rows.map((r, i) => <tr key={i}>{r.map((c, j) => <td key={j} className={'py-1.5 pr-4 tabular-nums ' + (j > 0 ? 'text-right' : 'text-ink')}>{c}</td>)}</tr>)}</tbody>
       </table>
     </div>
@@ -177,7 +177,7 @@ function AnalyticsInner() {
           <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
             <div>
               <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Analytics</h1>
-              <p className="text-[13px] text-ink-muted mt-2">
+              <p className="text-[13px] text-ink-soft mt-2">
                 {denied || signedOut ? '' : d ? `${fmtDay(d.range.from)} – ${fmtDay(d.range.to)}${d.compare ? ` · compared with ${fmtDay(d.compare.range.from)} – ${fmtDay(d.compare.range.to)}` : ''} · by tee-time date` : 'Loading…'}
               </p>
             </div>
@@ -289,7 +289,7 @@ function AnalyticsInner() {
                   </div>
                 </div>
                 <div className="mt-6"><SubHead label="Day of week × tee time (fill %)" csv={() => downloadCsv(`fill-heatmap-${d.range.from}-${d.range.to}`, ['Day', ...d.utilization.heatmap.hours.map(h => `${h}:00`)], d.utilization.heatmap.rows.map(r => [r.dow, ...r.cells]))} /></div>
-                {d.utilization.heatmap.hours.length === 0 ? <p className="text-[13px] text-ink-muted">No tee times in this range.</p> : (
+                {d.utilization.heatmap.hours.length === 0 ? <p className="text-[13px] text-ink-soft">No tee times in this range.</p> : (
                   <div className="overflow-x-auto">
                     <table className="text-[11.5px] tabular-nums">
                       <thead><tr><th />{d.utilization.heatmap.hours.map(h => <th key={h} className="px-1 pb-1 font-semibold text-ink-muted">{fmtHour(h)}</th>)}</tr></thead>
@@ -382,7 +382,7 @@ function AnalyticsInner() {
                     <Table head={['Golfer', 'Spend', 'Bookings']} empty="No identified customers yet." rows={d.customers.topBySpend.map(r => [r.name, usd(r.spendCents), r.rounds])} /></div>
                 </div>
                 <p className="text-[12.5px] text-ink-soft mt-4">Members today: <b className="text-ink">{d.customers.members.active}</b> active of {d.customers.members.onFile} on file, across {d.customers.members.tiers} tier{d.customers.members.tiers === 1 ? '' : 's'}.</p>
-                <p className="text-[12.5px] text-ink-muted mt-1">Unidentified: {d.customers.unidentifiedBookings} booking{d.customers.unidentifiedBookings === 1 ? '' : 's'} ({d.customers.unidentifiedPlayers} players) — walk-ins with no email or phone. Take a phone number at the counter to count them.</p>
+                <p className="text-[12.5px] text-ink-soft mt-1">Unidentified: {d.customers.unidentifiedBookings} booking{d.customers.unidentifiedBookings === 1 ? '' : 's'} ({d.customers.unidentifiedPlayers} players) — walk-ins with no email or phone. Take a phone number at the counter to count them.</p>
               </Section>
 
               {/* ── 7. Booking behaviour ── */}
@@ -405,7 +405,7 @@ function AnalyticsInner() {
                     {([['Online', d.behavior.channel.online ?? 0], ['Walk-in', d.behavior.channel.walk_in ?? 0], ['Phone (staff)', d.behavior.channel.phone ?? 0]] as [string, number][]).map(([l, v]) => (
                       <div key={l} className="flex items-center gap-3 text-[13px] mb-1.5"><span className="w-24 text-ink-soft">{l}</span><Bar value={v} max={Math.max(d.behavior.bookings, 1)} /><span className="w-10 text-right tabular-nums font-semibold">{v}</span></div>
                     ))}
-                    <p className="text-[11.5px] text-ink-muted mt-2">Bookings GreenReserve support made for you count as online before {fmtDay(d.eventLogStart)}.</p>
+                    <p className="text-[11.5px] text-ink-soft mt-2">Bookings GreenReserve support made for you count as online before {fmtDay(d.eventLogStart)}.</p>
                   </div>
                 </div>
               </Section>

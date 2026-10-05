@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Mail, Smartphone, ShieldCheck } from 'lucide-react';
+import { Mail, Smartphone } from 'lucide-react';
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-4 py-3 text-center text-2xl font-mono tracking-[0.4em] text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
@@ -48,10 +48,7 @@ export default function TwoFactorVerifyPage() {
         {/* U-O (§1b, canvas "Sign in + 2FA"): same header shape as the sign-in
             board — eyebrow, serif title, one sentence saying where the code went. */}
         <div className="mb-6">
-          <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-pine"/>Course operator portal
-          </div>
-          <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink mt-2">Two-factor verification</h1>
+          <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Two-factor verification</h1>
           <p className="text-[13.5px] text-ink-soft mt-2 flex items-center gap-1.5">
             {method === 'sms'
               ? <><Smartphone className="w-3.5 h-3.5 shrink-0"/>We sent a code to your phone{phoneLast4 ? ` ending in ${phoneLast4}` : ''}.</>
@@ -63,7 +60,7 @@ export default function TwoFactorVerifyPage() {
           {error && <div className="bg-white border border-line border-l-[3px] border-l-bad text-bad rounded-md px-3 py-2.5 text-[13.5px] mb-4" role="alert">{error}</div>}
           {resent && !error && <div className="bg-white border border-line border-l-[3px] border-l-ok text-ok rounded-md px-3 py-2.5 text-[13.5px] mb-4" role="status">New code sent.</div>}
 
-          <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">6-Digit Code</label>
+          <label className="block text-[13px] font-semibold text-ink mb-1.5">6-digit code</label>
           <input type="text" inputMode="numeric" maxLength={6} value={code}
             onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
             onKeyDown={e => e.key === 'Enter' && submit()}
@@ -75,7 +72,7 @@ export default function TwoFactorVerifyPage() {
           </button>
 
           <div className="mt-5 space-y-2">
-            <p className="text-[12.5px] text-ink-muted text-center">Didn&apos;t get the code?</p>
+            <p className="text-[12.5px] text-ink-soft text-center">Didn&apos;t get the code?</p>
             <button onClick={() => resendVia('email')} disabled={resending}
               className={'flex items-center justify-center gap-2 w-full py-2.5 rounded-md text-[13.5px] border transition-colors disabled:opacity-50 ' + (method === 'email' ? 'border-pine/30 text-pine bg-pine/5' : 'border-line text-ink-soft hover:border-line-strong hover:text-ink')}>
               <Mail className="w-3.5 h-3.5"/>{resending ? 'Sending...' : 'Send to my email'}
@@ -87,7 +84,7 @@ export default function TwoFactorVerifyPage() {
               </button>
             )}
           </div>
-          <p className="mt-5 text-center text-[12.5px] text-ink-muted">
+          <p className="mt-5 text-center text-[12.5px] text-ink-soft">
             <a href="/dashboard/login" className="text-pine font-medium hover:underline">Back to login</a>
           </p>
         </div>

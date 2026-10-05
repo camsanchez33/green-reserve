@@ -136,8 +136,8 @@ export function StaffPermissions({ onCount }: { onCount?: (n: number) => void })
         </div>
       )}
 
-      {staff === null && !loadError && <p className="text-[13.5px] text-ink-muted">Loading…</p>}
-      {staff && staff.length === 0 && <p className="text-[13.5px] text-ink-muted">No staff yet — add your first person below.</p>}
+      {staff === null && !loadError && <p className="text-[13.5px] text-ink-soft">Loading…</p>}
+      {staff && staff.length === 0 && <p className="text-[13.5px] text-ink-soft">No staff yet — add your first person below.</p>}
 
       {staff && staff.length > 0 && (
         <ul className="divide-y divide-line border-y border-line">
@@ -230,7 +230,7 @@ export function StaffPermissions({ onCount }: { onCount?: (n: number) => void })
             </label>
           ))}
         </div>
-        <p className="text-[12px] text-ink-muted mb-3">You can fine-tune their permissions after adding them.</p>
+        <p className="text-[12px] text-ink-soft mb-3">You can fine-tune their permissions after adding them.</p>
         {addError && <p className="text-[13px] text-bad mb-2">{addError}</p>}
         <button onClick={add} disabled={adding || !newStaff.name.trim() || !newStaff.email.trim()}
           className="w-full bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors">

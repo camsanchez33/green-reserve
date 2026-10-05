@@ -63,8 +63,14 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     WCAG for text; now 4.5:1 on paper); design-guard ratchets `uppercase` and
     `<Eyebrow>` down across ALL of src (it used to require the eyebrow class);
     design-auditor checks TYPE-1/TYPE-2.
-  - [ ] /dashboard  - [ ] /admin  - [ ] public leftovers (for-courses, call,
-    contact, legal, not-found)
+  - [x] /dashboard — BUILT 2026-10-05: every uppercase label (forms, table
+    headers, dt, card titles, the sidebar groups, "Soon", the course meta) is
+    sentence case; the tee-sheet header row matches TeeSheetDemo (12.5px/600
+    ink); "Course operator portal" above Sign in / Two-factor and the labels
+    above the Outings / Tournaments headings are gone; helper sentences are
+    ink-soft (grey kept for hash, photo count, examples). Zero behavior.
+  - [ ] /admin  - [ ] public leftovers (for-courses, call, contact, legal,
+    not-found)
 - [ ] TYPE-3 — icons only where they do a job (back arrow, close, search): remove
   decorative Lucide icons (74 files; ChevronRight / check / sparkle-type ×108),
   e.g. the icon tiles on admin Overview. Zero behavior. Rewrites CLAUDE.md's

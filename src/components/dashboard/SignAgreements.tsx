@@ -21,7 +21,7 @@ type SignDto = {
 };
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
-const lbl = 'block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5';
+const lbl = 'block text-[13px] font-semibold text-ink mb-1.5';
 
 function DocPanel({ doc, legalName, checked, onCheck, scrolled, onScrolled, extra }: {
   doc: DocDto; legalName: string; checked: boolean; onCheck: (v: boolean) => void;
@@ -57,7 +57,7 @@ function DocPanel({ doc, legalName, checked, onCheck, scrolled, onScrolled, extr
         <>
           {doc.summary.length > 0 && (
             <div className="px-4 py-3 border-b border-line-soft">
-              <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">The short version</div>
+              <div className="text-[13px] font-semibold text-ink mb-1.5">The short version</div>
               <ul className="space-y-1 text-[13px] text-ink-soft leading-relaxed">
                 {doc.summary.map((s, i) => <li key={i} className="flex gap-2"><span className="text-ink-faint" aria-hidden="true">—</span><span>{s}</span></li>)}
               </ul>
@@ -70,7 +70,7 @@ function DocPanel({ doc, legalName, checked, onCheck, scrolled, onScrolled, extr
             dangerouslySetInnerHTML={{ __html: doc.html }}
           />
           <div className="px-4 py-3 border-t border-line bg-white">
-            {!scrolled && <p className="text-[11px] text-ink-faint mb-2">Scroll to the end of the document to enable the checkbox.</p>}
+            {!scrolled && <p className="text-[11px] text-ink-soft mb-2">Scroll to the end of the document to enable the checkbox.</p>}
             <label className={'flex items-start gap-2.5 text-sm select-none ' + (scrolled ? 'text-ink cursor-pointer' : 'text-ink-faint cursor-not-allowed')}>
               <input type="checkbox" checked={checked} disabled={!scrolled} onChange={e => onCheck(e.target.checked)} className="w-4 h-4 mt-0.5 accent-pine rounded shrink-0" />
               <span>{statement}</span>
@@ -167,7 +167,7 @@ export default function SignAgreements({ onSigned, continueLabel = 'Sign and con
         <div className="sm:col-span-3">
           <label className={lbl}>Course legal name</label>
           <input value={legalName} onChange={e => setLegalName(e.target.value)} placeholder="e.g. Hollow Creek Golf Club LLC" className={iCls} />
-          <p className="text-[11px] text-ink-faint mt-1">The entity that runs {data.courseName} — as it appears on your bank account or business registration.</p>
+          <p className="text-[11px] text-ink-soft mt-1">The entity that runs {data.courseName} — as it appears on your bank account or business registration.</p>
         </div>
         <div className="sm:col-span-2">
           <label className={lbl}>Your name</label>
@@ -213,7 +213,7 @@ export default function SignAgreements({ onSigned, continueLabel = 'Sign and con
         className="w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 disabled:bg-line-strong transition-colors flex items-center justify-center gap-2">
         {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Signing…</> : <>{continueLabel}<ChevronRight className="w-4 h-4" /></>}
       </button>
-      <p className="text-[11px] text-ink-faint text-center">Signed copies are emailed to {data.signerEmail}. Signing records your IP address and the time.</p>
+      <p className="text-[11px] text-ink-soft text-center">Signed copies are emailed to {data.signerEmail}. Signing records your IP address and the time.</p>
     </div>
   );
 }

@@ -95,8 +95,8 @@ export default function OperatorSidebar({ active, onAlertClick }: {
 
   const { brandColor, name, type, establishedYear, slug, logoUrl } = identity;
   const moneyOnlyCancellations = isStaff && !access.can('money.payments') && !access.can('money.payouts');
-  const typeLabel = type === 'semi-private' ? 'Semi-Private' : type === 'municipal' ? 'Municipal' : type === 'resort' ? 'Resort' : 'Public Course';
-  const meta = [establishedYear ? `Est. ${establishedYear}` : null, typeLabel].filter(Boolean).join(' · ').toUpperCase();
+  const typeLabel = type === 'semi-private' ? 'Semi-private' : type === 'municipal' ? 'Municipal' : type === 'resort' ? 'Resort' : 'Public course';
+  const meta = [establishedYear ? `Est. ${establishedYear}` : null, typeLabel].filter(Boolean).join(' · ');
 
   const navItems: { key: OperatorNavKey; label: string; href: string; icon: React.ReactNode; soon?: boolean }[] = [
     { key: 'teesheet',      label: 'Tee Sheet',    href: '/dashboard',               icon: <Calendar className="w-4 h-4"/> },
@@ -150,7 +150,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     <header className="md:hidden bg-white border-b border-line px-4 py-2.5 flex items-center gap-3">
       <div className="flex-1 min-w-0">
         <div className="font-serif text-[14px] text-ink leading-snug truncate">{name || 'GreenReserve'}</div>
-        {name && <div className="text-[10px] text-ink-muted uppercase tracking-[0.05em] truncate">{meta}</div>}
+        {name && <div className="text-[11.5px] text-ink-muted truncate">{meta}</div>}
       </div>
       {myCourses.length > 1 && (
         <select
@@ -194,7 +194,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     <aside className="hidden md:flex w-56 shrink-0 bg-white border-r border-line flex-col h-full overflow-y-auto">
       {/* U-0 (UI_REVISE_SPEC §1b, canvas "Operator · Tee sheet"): the rail is
           the course's room. Crest (logo, or initials in the accent), serif
-          name, one uppercase meta line. GreenReserve moves to the footer. */}
+          name, one meta line (sentence case since TYPE-2). GreenReserve moves to the footer. */}
       <div className="px-4 py-4 border-b border-line">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 shrink-0 bg-white border border-line flex items-center justify-center overflow-hidden font-semibold text-[13px]" style={{ color: brandColor }} aria-hidden="true">
@@ -205,7 +205,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
           </div>
           <div className="min-w-0">
             <div className="font-serif text-[16px] text-ink leading-[1.1] truncate">{name || 'Your course'}</div>
-            {meta && <div className="text-[10.5px] text-ink-muted uppercase tracking-[0.1em] mt-1 truncate">{meta}</div>}
+            {meta && <div className="text-[12px] text-ink-muted mt-1 truncate">{meta}</div>}
           </div>
         </div>
         {myCourses.length > 1 && (
@@ -225,14 +225,14 @@ export default function OperatorSidebar({ active, onAlertClick }: {
       <nav className="flex-1 py-3 overflow-y-auto">
         {groups.map(g => (
           <div key={g.label} className="mb-1">
-            <div className="text-[10px] font-medium text-ink-faint uppercase tracking-[0.1em] px-4 py-1.5">{g.label}</div>
+            <div className="text-[12px] font-semibold text-ink-muted px-4 py-1.5">{g.label}</div>
             {navItems.filter(n => g.keys.includes(n.key)).map(item => {
               const isActive = active === item.key;
               const base = 'w-full flex items-center gap-2.5 px-4 py-2.5 text-[13.5px] font-medium transition-colors text-left border-l-[3px]';
               if (item.soon) return (
                 <div key={item.key} className={base + ' border-transparent text-ink-faint cursor-default'}>
                   {item.icon}<span className="flex-1">{item.label}</span>
-                  <span className="text-[9px] font-medium uppercase tracking-wide text-ink-faint">Soon</span>
+                  <span className="text-[11px] font-medium text-ink-muted">Soon</span>
                 </div>
               );
               if (isActive) return (

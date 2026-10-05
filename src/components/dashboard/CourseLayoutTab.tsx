@@ -9,8 +9,8 @@ const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2 text-sm te
 function SectionCard({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="bg-white rounded-lg shadow-card p-5">
-      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">{title}</div>
-      {hint && <p className="text-xs text-ink-faint mb-4">{hint}</p>}
+      <div className="text-[13px] font-semibold text-ink mb-1">{title}</div>
+      {hint && <p className="text-xs text-ink-soft mb-4">{hint}</p>}
       <div className={hint ? 'space-y-3' : 'space-y-3 mt-4'}>{children}</div>
     </div>
   );
@@ -162,7 +162,7 @@ function NinesSection({ nines, setNines, products }: { nines: Nine[]; setNines: 
       )}
       {errorId === 'new' && <p className="text-xs text-bad">{errorMsg}</p>}
       {nines.length > 0 && products.length === 0 && (
-        <p className="text-xs text-ink-faint pt-1">Next: set up Bookable Products below to define which combos golfers can book.</p>
+        <p className="text-xs text-ink-soft pt-1">Next: set up Bookable Products below to define which combos golfers can book.</p>
       )}
     </SectionCard>
   );
@@ -225,7 +225,7 @@ function ProductsSection({ products, setProducts, nines }: { products: CoursePro
   return (
     <SectionCard title="Bookable Products" hint="What a golfer actually books — e.g. &quot;North + South&quot; as an 18-hole round.">
       {nines.length === 0 && products.length === 0 ? (
-        <p className="text-sm text-ink-faint">Add at least one nine above before setting up products.</p>
+        <p className="text-sm text-ink-soft">Add at least one nine above before setting up products.</p>
       ) : (
         <>
           {products.map(product => (
@@ -274,7 +274,7 @@ function ProductsSection({ products, setProducts, nines }: { products: CoursePro
                   </span>
                 </div>
               ) : (
-                <p className="text-xs text-ink-faint">Every active round has a schedule. Change hours and rotation in <Link href="/dashboard/schedules" className="text-pine hover:underline">Schedules</Link>.</p>
+                <p className="text-xs text-ink-soft">Every active round has a schedule. Change hours and rotation in <Link href="/dashboard/schedules" className="text-pine hover:underline">Schedules</Link>.</p>
               );
             })()
           )}
@@ -404,7 +404,7 @@ function TeeSetsSection({ teeSets, setTeeSets, nines, products }: {
 
           {nines.length > 0 && (
             <div>
-              <div className="text-[10px] uppercase tracking-[0.1em] text-ink-faint mb-1.5">Per-nine yardage</div>
+              <div className="text-[13px] font-semibold text-ink mb-1.5">Per-nine yardage</div>
               <div className="flex flex-wrap gap-2">
                 {nines.map(nine => {
                   const row = teeSet.nineYardages.find(y => y.nineId === nine.id);
@@ -423,7 +423,7 @@ function TeeSetsSection({ teeSets, setTeeSets, nines, products }: {
 
           {products.length > 0 && (
             <div>
-              <div className="text-[10px] uppercase tracking-[0.1em] text-ink-faint mb-1.5">Per-product rating / slope</div>
+              <div className="text-[13px] font-semibold text-ink mb-1.5">Per-product rating / slope</div>
               <div className="flex flex-wrap gap-3">
                 {products.map(product => {
                   const row = teeSet.productRatings.find(r => r.courseProductId === product.id);

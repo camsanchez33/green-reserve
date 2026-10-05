@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={190} height={36} priority className="w-[190px] max-w-full h-auto mx-auto" />
-          <p className="text-sm text-ink-muted mt-1">Course Operator Portal</p>
+          <p className="text-sm text-ink-soft mt-1">Course operator portal</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-card p-6">
@@ -53,14 +53,14 @@ export default function ForgotPasswordPage() {
               </div>
               <p className="text-sm text-ink-soft mb-5">Enter the email on your account and we&apos;ll send you a reset link.</p>
               {error && <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-3 py-2.5 text-sm mb-4">{error}</div>}
-              <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Email</label>
+              <label className="block text-[13px] font-semibold text-ink mb-1.5">Email</label>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && submit()} className={iCls} autoFocus/>
               <button onClick={submit} disabled={loading || !email}
                 className="mt-4 w-full bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
                 {loading ? 'Sending...' : 'Send Reset Link'}
               </button>
-              <p className="mt-5 text-center text-xs text-ink-muted">
+              <p className="mt-5 text-center text-xs text-ink-soft">
                 <a href="/dashboard/login" className="text-pine font-medium hover:underline">Back to login</a>
               </p>
             </>

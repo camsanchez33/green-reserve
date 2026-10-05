@@ -181,7 +181,7 @@ function OnboardingInner() {
 
             <div className="space-y-5">
               <div>
-                <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Description <span className="normal-case text-ink-faint">(optional)</span></label>
+                <label className="block text-[13px] font-semibold text-ink mb-1.5">Description <span className="font-normal text-ink-muted">(optional)</span></label>
                 <textarea value={details.description} onChange={e => set('description', e.target.value)}
                   rows={3} placeholder="Tell golfers what makes your course special..."
                   className={iCls + ' resize-none'}/>
@@ -189,24 +189,24 @@ function OnboardingInner() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Holes</label>
+                  <label className="block text-[13px] font-semibold text-ink mb-1.5">Holes</label>
                   <input type="number" value={details.holes} onChange={e => set('holes', Number(e.target.value))} placeholder="18" className={iCls}/>
                   <p className="text-xs text-ink-faint mt-1">9, 18, 27, 36, etc.</p>
                 </div>
                 <div>
-                  <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Par</label>
+                  <label className="block text-[13px] font-semibold text-ink mb-1.5">Par</label>
                   <input type="number" value={details.par} onChange={e => set('par', Number(e.target.value))} className={iCls}/>
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted">Tee Sets <span className="normal-case text-ink-faint">(optional)</span></label>
+                  <label className="block text-[13px] font-semibold text-ink">Tee sets <span className="font-normal text-ink-muted">(optional)</span></label>
                   <button onClick={addTee} className="text-xs font-medium text-pine hover:text-pine-hover flex items-center gap-1 transition-colors">
                     <Plus className="w-3.5 h-3.5"/>Add tee
                   </button>
                 </div>
-                <p className="text-xs text-ink-faint mb-3">List your tee boxes (Black, Blue, White, Red…) with yardage, rating, and slope. Leave blank to skip.</p>
+                <p className="text-xs text-ink-soft mb-3">List your tee boxes (Black, Blue, White, Red…) with yardage, rating, and slope. Leave blank to skip.</p>
                 <div className="space-y-2">
                   {teeSets.map(t => (
                     <div key={t.id} className="grid grid-cols-[1.2fr_1fr_1fr_1fr_auto] gap-2 items-center">
@@ -274,7 +274,7 @@ function OnboardingInner() {
                   className="w-full bg-[#635bff] hover:bg-[#564fe0] text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
                   {connecting ? <><Loader2 className="w-4 h-4 animate-spin"/>Connecting...</> : 'Connect with Stripe'}
                 </button>
-                <p className="text-xs text-ink-faint mt-2 text-center">You&apos;ll be redirected to Stripe to verify your bank details, then brought back here.</p>
+                <p className="text-xs text-ink-soft mt-2 text-center">You&apos;ll be redirected to Stripe to verify your bank details, then brought back here.</p>
               </>
             )}
 
@@ -297,7 +297,7 @@ function OnboardingInner() {
             </div>
             <h2 className="text-[30px] font-serif font-medium leading-none text-ink mb-2">Setup complete</h2>
             <p className="text-sm text-ink-soft mb-2">Your course details are saved and payments are connected. GreenReserve will review everything and take your course live — usually within 1 business day.</p>
-            <p className="text-xs text-ink-muted mb-6">We&apos;ll email you a full walkthrough of your dashboard once you&apos;re live.</p>
+            <p className="text-xs text-ink-soft mb-6">We&apos;ll email you a full walkthrough of your dashboard once you&apos;re live.</p>
             <button onClick={() => router.push('/dashboard')}
               className="w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] transition-colors">
               Go to Dashboard

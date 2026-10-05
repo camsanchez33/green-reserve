@@ -752,7 +752,7 @@ function DashboardPageInner() {
                     )}
                   </div>
                 </div>
-                <div className="hidden sm:flex items-center gap-4 px-4 py-2 border-b border-line text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-muted [font-stretch:75%]">
+                <div className="hidden sm:flex items-center gap-4 px-4 py-2 border-b border-line text-[12.5px] font-semibold text-ink">
                   <span className="w-[76px]">Time</span>
                   <span className="flex-1">Group</span>
                   {!commonRate && <span className="hidden md:inline w-[150px] text-right">Rate</span>}
@@ -766,7 +766,7 @@ function DashboardPageInner() {
               ) : sheetError ? null : teeTimes.length === 0 ? (
                 <div className="text-center py-16">
                   <p className="font-medium text-ink mb-1">No tee times for this date</p>
-                  <p className="text-sm text-ink-muted mb-4">Add times manually or check your schedule covers this day</p>
+                  <p className="text-sm text-ink-soft mb-4">Add times manually or check your schedule covers this day</p>
                   {access.can('sheet.edit_times') && <button onClick={() => setShowAddModal(true)} className="bg-pine hover:bg-pine-hover text-white px-5 py-2.5 rounded-md text-[12.5px] font-medium transition-colors">Add Tee Time</button>}
                 </div>
               ) : (
@@ -866,10 +866,10 @@ function DashboardPageInner() {
                                   <span className="font-medium text-ink">{b.golferName}</span>
                                   <span className="text-ink-muted ml-2">{b.players} player{b.players!==1?'s':''}</span>
                                   {(b.source === 'walk_in' || b.source === 'phone') && (
-                                    <span className="ml-2 text-[10px] font-medium uppercase tracking-[0.1em] text-ink-muted">{b.source === 'phone' ? 'Phone' : 'Walk-in'}</span>
+                                    <span className="ml-2 text-[12px] font-medium text-ink-muted">{b.source === 'phone' ? 'Phone' : 'Walk-in'}</span>
                                   )}
                                   {b.noShowAt && b.status === 'confirmed' && (
-                                    <span className="ml-2 text-[10px] font-medium uppercase tracking-[0.1em] text-bad">No-show</span>
+                                    <span className="ml-2 text-[12px] font-medium text-bad">No-show</span>
                                   )}
                                   {access.can('sheet.golfer_contact') && <div className="text-[12.5px] text-ink-muted truncate">{b.golferEmail.endsWith('@noemail.greenreserve.app') ? (b.golferPhone || 'no contact on file') : b.golferEmail}</div>}
                                 </div>
@@ -1008,7 +1008,7 @@ function DashboardPageInner() {
                     ))}
                   </ul>
                 )}
-                <p className="text-[12px] text-ink-muted mt-2">{wxPlan.teeTimeIds.length} time{wxPlan.teeTimeIds.length === 1 ? '' : 's'} will be blocked.{wxPlan.startedBefore ? ` Times up to ${fmtTime(wxPlan.startedBefore)} have already gone out and are left alone.` : ''}</p>
+                <p className="text-[12px] text-ink-soft mt-2">{wxPlan.teeTimeIds.length} time{wxPlan.teeTimeIds.length === 1 ? '' : 's'} will be blocked.{wxPlan.startedBefore ? ` Times up to ${fmtTime(wxPlan.startedBefore)} have already gone out and are left alone.` : ''}</p>
               </div>
             )}
             <div className="flex gap-2">
@@ -1079,7 +1079,7 @@ function DashboardPageInner() {
                     ))}
                   </ul>
                 )}
-                <p className="text-[12px] text-ink-muted mt-2">{frostPlan.blockTeeTimeIds.length} time{frostPlan.blockTeeTimeIds.length === 1 ? '' : 's'} before {fmtTime(frostTime)} will be blocked.</p>
+                <p className="text-[12px] text-ink-soft mt-2">{frostPlan.blockTeeTimeIds.length} time{frostPlan.blockTeeTimeIds.length === 1 ? '' : 's'} before {fmtTime(frostTime)} will be blocked.</p>
               </div>
             )}
             <div className="flex gap-2">
@@ -1102,7 +1102,7 @@ function DashboardPageInner() {
               </button>
             </div>
             {frostPlan && frostPlan.moves.length === 0 && frostPlan.blockTeeTimeIds.length === 0 && (
-              <p className="text-[12px] text-ink-muted mt-2">There are no tee times before {fmtTime(frostTime)} to move or block{frostPlan.unplaced.length ? ' — the groups in red have nowhere to go; call them' : ''}.</p>
+              <p className="text-[12px] text-ink-soft mt-2">There are no tee times before {fmtTime(frostTime)} to move or block{frostPlan.unplaced.length ? ' — the groups in red have nowhere to go; call them' : ''}.</p>
             )}
             </>)}
           </div>
@@ -1205,21 +1205,21 @@ function WalkInForm({ slot, onSave, onCancel }: { slot: TeeTime; onSave: (msg: s
         ))}
       </div>
       <div>
-        <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">Name</label>
+        <label className="block text-[13px] font-semibold text-ink mb-1">Name</label>
         <input value={name} onChange={e => setName(e.target.value)} placeholder="Golfer’s name" autoFocus className={inp} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">Phone <span className="normal-case tracking-normal text-ink-faint">(optional)</span></label>
+          <label className="block text-[13px] font-semibold text-ink mb-1">Phone <span className="font-normal text-ink-muted">(optional)</span></label>
           <input value={phone} onChange={e => setPhone(e.target.value)} className={inp} />
         </div>
         <div>
-          <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">Players <span className="normal-case tracking-normal text-ink-faint">({spots} open)</span></label>
+          <label className="block text-[13px] font-semibold text-ink mb-1">Players <span className="font-normal text-ink-muted">({spots} open)</span></label>
           <input type="number" min={1} max={Math.max(1, spots)} value={players} onChange={e => setPlayers(Math.max(1, Math.min(Math.max(1, spots), Number(e.target.value) || 1)))} className={inp} />
         </div>
       </div>
       <div>
-        <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1">Email <span className="normal-case tracking-normal text-ink-faint">(optional — sends a confirmation with a check-in link)</span></label>
+        <label className="block text-[13px] font-semibold text-ink mb-1">Email <span className="font-normal text-ink-muted">(optional — sends a confirmation with a check-in link)</span></label>
         <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inp} />
       </div>
       {slot.cartFee > 0 && (
@@ -1271,13 +1271,13 @@ function AddTeeTimeForm({ date, onSave, onCancel }: { date: string; onSave: ()=>
     <div className="space-y-3">
       {err && <p className="text-xs text-bad bg-bad/5 border border-bad/20 rounded-md px-3 py-2">{err}</p>}
       <div className="grid grid-cols-2 gap-3">
-        <div><label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Time</label><input type="time" value={time} onChange={e=>setTime(e.target.value)} className={inp}/></div>
-        <div><label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Holes</label><select value={holes} onChange={e=>setHoles(Number(e.target.value))} className={inp}><option value={9}>9</option><option value={18}>18</option></select></div>
+        <div><label className="block text-[13px] font-semibold text-ink mb-1.5">Time</label><input type="time" value={time} onChange={e=>setTime(e.target.value)} className={inp}/></div>
+        <div><label className="block text-[13px] font-semibold text-ink mb-1.5">Holes</label><select value={holes} onChange={e=>setHoles(Number(e.target.value))} className={inp}><option value={9}>9</option><option value={18}>18</option></select></div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div><label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Slots</label><input type="number" value={players} min={1} max={8} onChange={e=>setPlayers(Number(e.target.value))} className={inp}/></div>
-        <div><label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Green $</label><input type="number" value={greenFee} min={0} onChange={e=>setGreenFee(Number(e.target.value))} className={inp}/></div>
-        <div><label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Cart $</label><input type="number" value={cartFee} min={0} onChange={e=>setCartFee(Number(e.target.value))} className={inp}/></div>
+        <div><label className="block text-[13px] font-semibold text-ink mb-1.5">Slots</label><input type="number" value={players} min={1} max={8} onChange={e=>setPlayers(Number(e.target.value))} className={inp}/></div>
+        <div><label className="block text-[13px] font-semibold text-ink mb-1.5">Green $</label><input type="number" value={greenFee} min={0} onChange={e=>setGreenFee(Number(e.target.value))} className={inp}/></div>
+        <div><label className="block text-[13px] font-semibold text-ink mb-1.5">Cart $</label><input type="number" value={cartFee} min={0} onChange={e=>setCartFee(Number(e.target.value))} className={inp}/></div>
       </div>
       <div className="flex items-center justify-between py-1">
         <span className="text-sm text-ink">Walking allowed</span>
@@ -1328,7 +1328,7 @@ function CardCheckInModal({ booking, reason, onConfirm, onCancel }: {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="font-serif font-medium text-ink text-[17px]">{reason ? 'Retry with a new card' : 'Check In'} — {booking.golferName}</h3>
-          <p className="text-xs text-ink-muted mt-0.5">Enter golfer&apos;s card to charge ${(booking.totalAmount / 100).toFixed(2)}</p>
+          <p className="text-xs text-ink-soft mt-0.5">Enter golfer&apos;s card to charge ${(booking.totalAmount / 100).toFixed(2)}</p>
         </div>
         <button onClick={onCancel} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
       </div>
@@ -1338,7 +1338,7 @@ function CardCheckInModal({ booking, reason, onConfirm, onCancel }: {
         </div>
       )}
       <div className="mb-4">
-        <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Card Details</label>
+        <label className="block text-[13px] font-semibold text-ink mb-1.5">Card details</label>
         <div className="w-full px-4 py-3.5 rounded-md border border-line bg-paper focus-within:border-pine/40 transition-colors">
           <CardElement options={cardStyle}/>
         </div>
