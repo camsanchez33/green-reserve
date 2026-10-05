@@ -3259,7 +3259,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 226,
+      "lines": 218,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -12182,10 +12182,14 @@
     },
     {
       "path": "src/lib/no-show-fee.ts",
-      "lines": 104,
+      "lines": 135,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B4).",
       "brain": [],
       "exports": [
+        {
+          "name": "dueAutoNoShows",
+          "kind": "fn"
+        },
         {
           "name": "markNoShow",
           "kind": "fn"
@@ -12210,6 +12214,7 @@
         "./prisma",
         "./refund-booking",
         "./stripe",
+        "./tee-time-utils",
         "stripe"
       ],
       "usedBy": [
@@ -13421,7 +13426,8 @@
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/manage/[bookingId]/route.ts",
         "src/lib/analytics.ts",
-        "src/lib/booking-events.ts"
+        "src/lib/booking-events.ts",
+        "src/lib/no-show-fee.ts"
       ]
     },
     {
@@ -14432,7 +14438,8 @@
       ],
       "writers": [],
       "readers": [
-        "src/lib/analytics.ts"
+        "src/lib/analytics.ts",
+        "src/lib/no-show-fee.ts"
       ]
     },
     {
