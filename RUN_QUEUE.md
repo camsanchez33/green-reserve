@@ -152,6 +152,11 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     rail keeps its nav icons because its collapsed mode is icon-only; trend
     deltas on Overview/Revenue show +/− instead of arrow icons; Overview and
     Revenue figures moved out of the serif. Zero behaviour.
+  - [x] CLUB-5 booking flow (/book, /checkin, /manage) — BUILT 2026-10-05: titles
+    to the 30–34px display, numbered step circles gone ("drop the numbers"),
+    the total and the player count out of the serif, Title Case labels to
+    sentence case, the duplicate "No charge until check-in" line shown only
+    when no card is asked for. Zero behaviour.
   - [x] CLUB-4b /admin labels — BUILT 2026-10-05: Title Case buttons, headings and
     display labels to sentence case (Send preview, Go live, Season pass, Add
     booking…); Profile / course / Manual build titles to the 30px display.
