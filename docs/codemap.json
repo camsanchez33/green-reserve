@@ -9739,7 +9739,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 238,
+      "lines": 255,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9762,6 +9762,7 @@
         "./booking-events",
         "./cancel-policy",
         "./email",
+        "./no-show-fee",
         "./prisma",
         "./refund-booking",
         "./stripe"
@@ -12187,6 +12188,10 @@
       "brain": [],
       "exports": [
         {
+          "name": "liveNoShowCharge",
+          "kind": "fn"
+        },
+        {
           "name": "markNoShow",
           "kind": "fn"
         },
@@ -12214,7 +12219,8 @@
       ],
       "usedBy": [
         "src/app/api/cron/hourly/route.ts",
-        "src/app/api/operator/bookings/route.ts"
+        "src/app/api/operator/bookings/route.ts",
+        "src/lib/cancel-booking.ts"
       ]
     },
     {

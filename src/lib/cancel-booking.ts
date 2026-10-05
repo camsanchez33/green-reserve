@@ -5,6 +5,7 @@ import { refundSeparateAccessFee, chargeAccessFeeSeparately } from './access-fee
 import { chargesOnLateCancel } from './cancel-policy';
 import { recordPaymentEvent } from './refund-booking';
 import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
+import { liveNoShowCharge, refundNoShowFee } from './no-show-fee';
 
 export type CancellationOptions = {
   /**
@@ -92,6 +93,18 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
     }
   }
 
+  // R-PAY-002 / R-BOOK-003: a no-show already took the course's charge (under
+  // "cancel late or don't show" it IS the late fee). Cancelling afterwards must
+  // never charge the late fee on top — describePolicy promises "never both".
+  // The no-show charge stands as the fee kept; a waived (weather) cancel gives
+  // it back, like any other fee the course waives.
+  let noShowCharge = booking.noShowAt ? await liveNoShowCharge(bookingId) : null;
+  if (noShowCharge && waiveFee) {
+    const r = await refundNoShowFee(bookingId, 'cancellation (fee waived)');
+    if (r.refunded) noShowCharge = null;
+    else if (r.error) feeRefundFailed = feeRefundFailed || `no-show fee: ${r.error}`;
+  }
+
   // SP-B: under "only if they cancel late" / "cancel late or don't show" nothing
   // was held at the cutoff — a cancellation inside the window charges the late
   // fee NOW. Best effort: a failed charge is recorded and reported, and never
@@ -101,7 +114,7 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
   const teeAt = teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time);
   const windowHours = booking.cancellationHoursAtBooking ?? booking.course.cancellationHours;
   const isLate = !!teeAt && teeAt.getTime() - windowHours * 3600_000 <= Date.now();
-  if (!waiveFee && !feeAlreadyCharged && isLate && booking.cancellationFeeTotal > 0 && chargesOnLateCancel(booking)) {
+  if (!waiveFee && !feeAlreadyCharged && !noShowCharge && isLate && booking.cancellationFeeTotal > 0 && chargesOnLateCancel(booking)) {
     if (!booking.stripeCustomerId || !booking.stripePaymentMethodId) lateFeeChargeFailed = 'no card on file';
     else if (!booking.course.stripeAccountId || !booking.course.stripeAccountActive) lateFeeChargeFailed = 'the course’s Stripe account is not connected';
     else {
@@ -158,7 +171,7 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
       bookingId, courseId: booking.courseId, type: 'booking_cancelled', actor,
       amountCents: feeAlreadyCharged ? booking.cancellationFeeTotal : 0, playerCount: booking.players,
       teeTimeAt: teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time),
-      metadata: { feeKept: feeAlreadyCharged, roundRefunded, ...(opts.reason ? { reason: opts.reason } : {}) },
+      metadata: { feeKept: feeAlreadyCharged, roundRefunded, ...(noShowCharge ? { noShowFeeKept: noShowCharge.amountCents } : {}), ...(opts.reason ? { reason: opts.reason } : {}) },
     });
   });
 
@@ -211,8 +224,9 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
     date: booking.teeTime.date,
     time: booking.teeTime.time,
     players: booking.players,
-    feeCharged: feeAlreadyCharged,
-    feeAmount: feeAlreadyCharged ? booking.cancellationFeeTotal : 0,
+    // A kept no-show charge is a fee kept — never "you weren't charged anything".
+    feeCharged: feeAlreadyCharged || !!noShowCharge,
+    feeAmount: feeAlreadyCharged ? booking.cancellationFeeTotal : (noShowCharge?.amountCents ?? 0),
     bookingId: booking.id,
     reason,
   }).catch(console.error);
@@ -230,8 +244,11 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
   // fee, GreenReserve's fee is charged with it. A free or waived cancel keeps
   // nothing — any booking fee charged on its own (a no-show then cancelled) is
   // refunded, as FB-3 did. Neither ever blocks the cancellation.
-  if (feeAlreadyCharged && !waiveFee) await chargeAccessFeeSeparately(bookingId, { why: 'late_cancel', actor: 'system' });
+  // A kept no-show charge keeps the booking fee charged with it (markNoShow).
+  if (noShowCharge && !waiveFee) await chargeAccessFeeSeparately(bookingId, { why: 'no_show', actor: 'system' });
+  else if (feeAlreadyCharged && !waiveFee) await chargeAccessFeeSeparately(bookingId, { why: 'late_cancel', actor: 'system' });
   else await refundSeparateAccessFee(bookingId, 'booking cancelled', 'system');
 
-  return { success: true, feeCharged: feeAlreadyCharged, roundRefunded, feeRefundFailed, lateFeeChargeFailed } as const;
+  // A kept no-show charge reads as a fee kept on every screen, as in the email.
+  return { success: true, feeCharged: feeAlreadyCharged || !!noShowCharge, roundRefunded, feeRefundFailed, lateFeeChargeFailed } as const;
 }
