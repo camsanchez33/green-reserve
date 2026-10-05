@@ -4,7 +4,7 @@
 // grown to 2,700 lines and 52 useState in one component. Moved verbatim; state
 // and handlers come from useCourseDetail() via useCourse().
 
-import { X, MessageSquare, Send } from 'lucide-react';
+import { X, Send } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { useCourse } from './context';
 
@@ -24,7 +24,7 @@ export function MessagesTab() {
                   )}
                   {!msgLoading && !thr.error && (!msgThread || msgThread.messages.length === 0) && (
                     <div className="py-8 text-center">
-                      <MessageSquare className="w-8 h-8 text-ink-muted mx-auto mb-2" />
+                      
                       <div className="text-sm text-ink-muted">No messages yet. Start the conversation below.</div>
                     </div>
                   )}
@@ -35,7 +35,7 @@ export function MessagesTab() {
                         <div className="max-w-[70%]">
                           {msg.isBroadcast && (
                             <div className="text-[10px] text-ink-muted mb-1 flex items-center gap-1">
-                              <Send className="w-3 h-3" /> Announcement
+                               Announcement
                             </div>
                           )}
                           <div className={
@@ -81,7 +81,7 @@ export function MessagesTab() {
                       onClick={sendCourseMessage}
                       className="flex items-center gap-1.5 px-4 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white text-sm font-medium rounded-md transition-colors shrink-0"
                     >
-                      <Send className="w-3.5 h-3.5" />{msgSending ? 'Sending…' : 'Send'}
+                      {msgSending ? 'Sending…' : 'Send'}
                     </button>
                   </div>
                   <div className="text-[10px] text-ink-faint mt-1.5">⌘/Ctrl + Enter to send · <button onClick={() => window.open('/admin/messages?courseId=' + courseId, '_blank')} className="text-pine hover:underline">Open full view</button></div>

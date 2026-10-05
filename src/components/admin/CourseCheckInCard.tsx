@@ -6,7 +6,7 @@
 // the next check-in date defaulting to +90 days). Owns its pending/error
 // state (no-silent-failures) and calls POST /api/admin/course-calls.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Phone, CalendarClock, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import {
   CHECKIN_AGENDA, CHECKIN_EVERY_DAYS, checkInSignal, scheduledCheckIn, lastContact, fmtLastContact,
   type CheckinCallLike,
@@ -95,7 +95,7 @@ export default function CourseCheckInCard({ courseId, operatorName, phone, nextC
       <div className="flex items-start justify-between gap-3 mb-1">
         <div>
           <Eyebrow className="flex items-center gap-2">
-            <Phone className={'w-3.5 h-3.5 ' + (signal.state === 'overdue' ? 'text-bad' : signal.state === 'due' ? 'text-warn' : 'text-pine')} />Next check-in
+            Next check-in
           </Eyebrow>
           <div className={'text-sm font-medium mt-1 ' + (signal.state === 'overdue' ? 'text-bad' : signal.state === 'due' ? 'text-warn' : 'text-ink')}>{stateLine}</div>
           <div className="text-xs text-ink-muted mt-0.5">{fmtLastContact(last)}</div>
@@ -145,7 +145,7 @@ function ScheduleCard({ courseId, first, phone, nextCheckInAt, busy, setBusy, se
   if (!open) {
     return (
       <div className="mt-3 flex items-center gap-3">
-        <button onClick={onOpen} className={btnO}><CalendarClock className="w-3.5 h-3.5" />Turn it into a call</button>
+        <button onClick={onOpen} className={btnO}>Turn it into a call</button>
         <span className="text-xs text-ink-faint">A date is set but no call is on the books yet.</span>
       </div>
     );
@@ -220,8 +220,8 @@ function ScheduleCard({ courseId, first, phone, nextCheckInAt, busy, setBusy, se
       )}
       <div className="flex items-center gap-2">
         {dateOnly
-          ? <button onClick={setDateOnlyNow} disabled={busy} className={btnP}><CalendarClock className="w-3.5 h-3.5" />{busy ? 'Saving…' : 'Set the date'}</button>
-          : <button onClick={schedule} disabled={busy || !iso} className={btnP}><CalendarClock className="w-3.5 h-3.5" />{busy ? 'Saving…' : 'Schedule check-in'}</button>}
+          ? <button onClick={setDateOnlyNow} disabled={busy} className={btnP}>{busy ? 'Saving…' : 'Set the date'}</button>
+          : <button onClick={schedule} disabled={busy || !iso} className={btnP}>{busy ? 'Saving…' : 'Schedule check-in'}</button>}
       </div>
     </div>
   );
@@ -324,7 +324,7 @@ function LogCard({ call, courseId, first, busy, setBusy, setError, setNotice, fo
                 <div><label className="block"><span className={lbl}>Time (ET)</span><input type="time" value={reTime} onChange={e => setReTime(e.target.value)} className={iCls} disabled={busy} /></label></div>
               </div>
               <textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notes (optional)" className={iCls + ' mb-3'} disabled={busy} />
-              <button onClick={noAnswer} disabled={busy || !easternToIso(reDate, reTime)} className={btnP}><CalendarClock className="w-3.5 h-3.5" />{busy ? 'Saving…' : 'Reschedule'}</button>
+              <button onClick={noAnswer} disabled={busy || !easternToIso(reDate, reTime)} className={btnP}>{busy ? 'Saving…' : 'Reschedule'}</button>
             </div>
           ) : (
             <div>
@@ -346,7 +346,7 @@ function LogCard({ call, courseId, first, busy, setBusy, setError, setNotice, fo
                   <input type="date" value={nextDate} onChange={e => setNextDate(e.target.value)} className={iCls} disabled={busy} /></label>
                 </div>
                 <span className="text-[11px] text-ink-faint pb-2.5">defaults to {CHECKIN_EVERY_DAYS} days out</span>
-                <button onClick={saveTalked} disabled={busy} className={btnP + ' ml-auto'}><Check className="w-3.5 h-3.5" />{busy ? 'Saving…' : 'Save'}</button>
+                <button onClick={saveTalked} disabled={busy} className={btnP + ' ml-auto'}>{busy ? 'Saving…' : 'Save'}</button>
               </div>
             </div>
           )}

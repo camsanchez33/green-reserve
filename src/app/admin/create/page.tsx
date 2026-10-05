@@ -1,11 +1,12 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CheckCircle, Copy, ChevronRight, ArrowLeft, Eye, Globe, Lock } from 'lucide-react';
+import { Copy, ArrowLeft, Globe, Lock } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { Card } from '@/components/ui/Card';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { INPUT } from '@/components/ui/field';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 const iCls = `${INPUT} w-full`;
 const H = () => ({ 'Content-Type': 'application/json' });
@@ -306,7 +307,7 @@ function WizardContent() {
             <Card className="p-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 rounded-md bg-ok/10 flex items-center justify-center shrink-0">
-                  <CheckCircle className="w-5 h-5 text-ok"/>
+                  <StatusDot status="ok" />
                 </div>
                 <div>
                   <div className="font-serif font-semibold text-ink text-lg">Course created!</div>
@@ -352,7 +353,7 @@ function WizardContent() {
                 {result.courseId && (
                   <button onClick={() => router.push(`/admin/courses/${result.courseId}`)}
                     className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-pine hover:bg-pine-hover text-white rounded-md text-[12.5px] font-medium transition-colors">
-                    <Eye className="w-4 h-4"/>View in admin
+                    View in admin
                   </button>
                 )}
                 <button onClick={reset}
@@ -386,7 +387,7 @@ function WizardContent() {
               <div key={s.n} className="flex items-center shrink-0">
                 <div className="flex items-center gap-2">
                   <div className={'w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-colors ' + (step >= s.n ? 'bg-pine text-white' : 'bg-paper border border-line text-ink-muted')}>
-                    {step > s.n ? <CheckCircle className="w-4 h-4"/> : s.n}
+                    {step > s.n ? <StatusDot status="ok" /> : s.n}
                   </div>
                   <span className={'text-xs font-medium hidden sm:block ' + (step === s.n ? 'text-ink' : step > s.n ? 'text-ok' : 'text-ink-muted')}>{s.label}</span>
                 </div>
@@ -422,7 +423,7 @@ function WizardContent() {
               </Card>
               <button onClick={() => setStep(2)}
                 className="w-full py-3 bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-[12.5px] transition-colors flex items-center justify-center gap-2">
-                Continue <ChevronRight className="w-4 h-4"/>
+                Continue 
               </button>
             </div>
           )}
@@ -496,7 +497,7 @@ function WizardContent() {
                 <button
                   onClick={() => { setStep2Attempted(true); if (step2Valid) setStep(3); }}
                   className="flex-1 py-3 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white font-medium rounded-md text-[12.5px] transition-colors flex items-center justify-center gap-2">
-                  Fees <ChevronRight className="w-4 h-4"/>
+                  Fees 
                 </button>
               </div>
             </div>
@@ -636,7 +637,7 @@ function WizardContent() {
                 <button
                   onClick={() => { setStep3Attempted(true); if (step3Valid) setStep(4); }}
                   className="flex-1 py-3 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white font-medium rounded-md text-[12.5px] transition-colors flex items-center justify-center gap-2">
-                  Operator <ChevronRight className="w-4 h-4"/>
+                  Operator 
                 </button>
               </div>
             </div>
@@ -676,7 +677,7 @@ function WizardContent() {
                 <button
                   onClick={() => { setStep4Attempted(true); if (step4Valid) setStep(5); }}
                   className="flex-1 py-3 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white font-medium rounded-md text-[12.5px] transition-colors flex items-center justify-center gap-2">
-                  Review <ChevronRight className="w-4 h-4"/>
+                  Review 
                 </button>
               </div>
             </div>

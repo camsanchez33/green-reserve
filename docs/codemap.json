@@ -74,7 +74,6 @@
         "@/components/ui/field",
         "@/lib/admin-fetch",
         "@/lib/format",
-        "lucide-react",
         "next/navigation",
         "react"
       ],
@@ -281,7 +280,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/RecordsTab.tsx",
-      "lines": 166,
+      "lines": 167,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -301,6 +300,7 @@
         "@/components/admin/CourseCheckInCard",
         "@/components/ui/Card",
         "@/components/ui/Eyebrow",
+        "@/components/ui/StatusDot",
         "@/lib/format",
         "lucide-react"
       ],
@@ -579,7 +579,7 @@
     },
     {
       "path": "src/app/admin/create/page.tsx",
-      "lines": 760,
+      "lines": 761,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -597,6 +597,7 @@
         "@/components/admin/AdminSidebar",
         "@/components/ui/Card",
         "@/components/ui/Eyebrow",
+        "@/components/ui/StatusDot",
         "@/components/ui/field",
         "lucide-react",
         "next/navigation",
@@ -637,7 +638,7 @@
     },
     {
       "path": "src/app/admin/forgot-password/page.tsx",
-      "lines": 70,
+      "lines": 67,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -655,7 +656,6 @@
         "@/components/ui/Card",
         "@/components/ui/Eyebrow",
         "@/components/ui/field",
-        "lucide-react",
         "next/image",
         "react"
       ],
@@ -697,7 +697,7 @@
     },
     {
       "path": "src/app/admin/inquiries/[id]/page.tsx",
-      "lines": 2266,
+      "lines": 2262,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -826,7 +826,7 @@
     },
     {
       "path": "src/app/admin/messages/page.tsx",
-      "lines": 696,
+      "lines": 695,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -877,7 +877,6 @@
         "@/components/ui/Card",
         "@/components/ui/Eyebrow",
         "@/components/ui/field",
-        "lucide-react",
         "next/image",
         "next/link",
         "next/navigation",
@@ -887,7 +886,7 @@
     },
     {
       "path": "src/app/admin/page.tsx",
-      "lines": 548,
+      "lines": 544,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -938,14 +937,13 @@
         "@/components/ui/Eyebrow",
         "@/components/ui/field",
         "@/lib/admin-session-context",
-        "lucide-react",
         "react"
       ],
       "usedBy": []
     },
     {
       "path": "src/app/admin/revenue/page.tsx",
-      "lines": 909,
+      "lines": 905,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -996,7 +994,6 @@
         "@/components/ui/Eyebrow",
         "@/components/ui/field",
         "@/lib/password",
-        "lucide-react",
         "next/image",
         "next/navigation",
         "react"
@@ -1005,7 +1002,7 @@
     },
     {
       "path": "src/app/admin/system/page.tsx",
-      "lines": 537,
+      "lines": 536,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7123,7 +7120,7 @@
     },
     {
       "path": "src/components/admin/CommandPalette.tsx",
-      "lines": 248,
+      "lines": 236,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7187,7 +7184,7 @@
     },
     {
       "path": "src/components/admin/InquiryCallCards.tsx",
-      "lines": 913,
+      "lines": 914,
       "purpose": "INQUIRY_CALL_SPEC IC-2 — the two discovery-call cards on the inquiry detail page.",
       "brain": [],
       "exports": [
@@ -7215,6 +7212,7 @@
       "guard": null,
       "imports": [
         "@/components/ui/Card",
+        "@/components/ui/StatusDot",
         "@/components/ui/field",
         "@/lib/call-answers",
         "@/lib/inquiry-call",
@@ -8018,9 +8016,11 @@
         "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
         "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
+        "src/app/admin/courses/[id]/_parts/RecordsTab.tsx",
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
         "src/app/admin/courses/[id]/page.tsx",
         "src/app/admin/courses/page.tsx",
+        "src/app/admin/create/page.tsx",
         "src/app/admin/employees/page.tsx",
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
@@ -8040,6 +8040,7 @@
         "src/app/dashboard/settings/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
+        "src/components/admin/InquiryCallCards.tsx",
         "src/components/dashboard/AgreementNotice.tsx",
         "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/GettingStartedChecklist.tsx",

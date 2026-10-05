@@ -2,7 +2,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { CheckCircle } from 'lucide-react';
+
 import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { Card } from '@/components/ui/Card';
@@ -73,7 +73,7 @@ function SetPasswordForm() {
   if (done) {
     return (
       <div className="text-center">
-        <CheckCircle className="w-10 h-10 text-ok mx-auto mb-4" />
+        
         <h2 className="font-serif text-xl font-semibold text-ink mb-2">Password set</h2>
         <p className="text-ink-soft text-sm mb-6">Your account is ready.</p>
         <button

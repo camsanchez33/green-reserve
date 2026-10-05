@@ -4,7 +4,7 @@
 // grown to 2,700 lines and 52 useState in one component. Moved verbatim; state
 // and handlers come from useCourseDetail() via useCourse().
 
-import { Calendar, Ban, Plus, X, Trash2, Pencil } from 'lucide-react';
+import { X, Trash2 } from 'lucide-react';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { formatMoney as fmtMoney } from '@/lib/format';
 import { Card } from '@/components/ui/Card';
@@ -20,7 +20,7 @@ export function OperateTab() {
               {/* Tee sheet */}
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <Calendar className="w-4 h-4 text-ink-muted" />
+                  
                   <input
                     type="date"
                     value={tsDate}
@@ -75,14 +75,14 @@ export function OperateTab() {
                             disabled={busy || slot.status === 'blocked'}
                             className="text-xs px-2.5 py-1 bg-pine hover:bg-pine-hover text-white rounded-md flex items-center gap-1 transition-colors disabled:opacity-50"
                           >
-                            <Plus className="w-3 h-3" />Add
+                            Add
                           </button>
                           <button
                             onClick={() => blockSlot(slot.id, slot.status !== 'blocked')}
                             disabled={busy}
                             className={'text-xs px-2.5 py-1 rounded-md flex items-center gap-1 border transition-colors disabled:opacity-50 ' + (slot.status === 'blocked' ? 'border-ok/20 text-ok bg-ok/5 hover:bg-ok/10' : 'border-bad/20 text-bad bg-bad/5 hover:bg-bad/10')}
                           >
-                            <Ban className="w-3 h-3" />{busy ? 'Working…' : slot.status === 'blocked' ? 'Unblock' : 'Block'}
+                            {busy ? 'Working…' : slot.status === 'blocked' ? 'Unblock' : 'Block'}
                           </button>
                         </div>
                       </div>
@@ -136,7 +136,7 @@ export function OperateTab() {
                       onClick={() => { setSchedMsg(null); setShowAddSched(true); }}
                       className="flex items-center gap-1.5 text-xs font-medium text-pine hover:text-pine-hover transition-colors"
                     >
-                      <Plus className="w-3.5 h-3.5" />Add schedule
+                      Add schedule
                     </button>
                   )}
                 </div>
@@ -201,7 +201,7 @@ export function OperateTab() {
                             title="Edit schedule"
                             className="text-ink-muted hover:text-pine transition-colors p-1.5 rounded-md hover:bg-pine/5 disabled:opacity-40"
                           >
-                            <Pencil className="w-4 h-4" />
+                            
                           </button>
                           <button
                             onClick={() => { setSchedDeleteError(''); setSchedDeleteTarget(s.id); }}

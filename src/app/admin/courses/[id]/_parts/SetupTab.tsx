@@ -4,7 +4,7 @@
 // grown to 2,700 lines and 52 useState in one component. Moved verbatim; state
 // and handlers come from useCourseDetail() via useCourse().
 
-import { CheckCircle, Pause, Play } from 'lucide-react';
+import { Pause } from 'lucide-react';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { formatDate as fmtDate } from '@/lib/format';
 import { Card } from '@/components/ui/Card';
@@ -35,7 +35,7 @@ export function SetupTab() {
                     return (
                       <div key={s.key} className="flex items-center gap-3">
                         {s.done
-                          ? <CheckCircle className="w-4 h-4 text-ok shrink-0" />
+                          ? <StatusDot status="ok" />
                           : <span className={'w-4 h-4 rounded-full border shrink-0 ' + (legacyGap ? 'border-warn bg-warn/10' : 'border-line-strong')} />}
                         <span className={'text-sm flex-1 ' + (s.done ? 'text-ink' : legacyGap ? 'text-warn font-medium' : 'text-ink-muted')}>
                           {s.label}{legacyGap ? ' — legacy' : ''}
@@ -56,7 +56,7 @@ export function SetupTab() {
                     disabled={remindersBusy || detail.timeline === null}
                     className={'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors disabled:opacity-50 ' + (detail.remindersPaused ? 'bg-ok/5 text-ok border-ok/20 hover:bg-ok/10' : 'bg-paper text-ink-soft border-line hover:text-warn hover:border-warn/30')}
                   >
-                    {detail.remindersPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
+                    
                     {detail.remindersPaused ? 'Resume reminders' : 'Pause reminders'}
                   </button>
                 </div>

@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Image from 'next/image';
-import { Mail, CheckCircle } from 'lucide-react';
+
 import { Card } from '@/components/ui/Card';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { INPUT } from '@/components/ui/field';
@@ -33,9 +33,6 @@ export default function AdminForgotPasswordPage() {
         <Card className="p-6">
           {sent ? (
             <div className="text-center py-2">
-              <div className="w-12 h-12 rounded-full bg-ok/10 flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-6 h-6 text-ok"/>
-              </div>
               <h2 className="text-[17px] font-serif font-semibold text-ink mb-2">Check your email</h2>
               <p className="text-sm text-ink-soft">
                 If an admin account exists for <span className="font-medium text-ink">{email}</span>, a reset link is on its way. It expires in 24 hours.
@@ -45,7 +42,7 @@ export default function AdminForgotPasswordPage() {
           ) : (
             <>
               <div className="flex items-center gap-2 mb-2">
-                <Mail className="w-5 h-5 text-pine"/>
+                
                 <h2 className="text-[17px] font-serif font-semibold text-ink">Forgot your password?</h2>
               </div>
               <p className="text-sm text-ink-soft mb-5">Enter the email on your admin account and we&apos;ll send you a reset link.</p>

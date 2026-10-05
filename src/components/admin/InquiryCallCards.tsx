@@ -11,7 +11,8 @@
 // two things only it can do: run `request_details` (so the Setup-sheet result
 // box shows) and open the Reject drawer.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Phone, PhoneOff, CalendarClock, Check, AlertTriangle, ChevronDown, ChevronRight, RotateCw, Send } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import { StatusDot } from '@/components/ui/StatusDot';
 import {
   AGENDA, agendaStatus, defaultAgenda, nextCall, overdueCall, latestCall, parseJson,
   fmtCallTime, easternToIso, easternParts, OUTCOME_LABEL, DIRECTION_LABEL,
@@ -110,7 +111,7 @@ function SkipInline({ inquiryId, contactFirst, busy, setBusy, onDone, onError, o
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} disabled={busy} className={btnO}>
-        <PhoneOff className="w-3.5 h-3.5" />Skip the call
+        Skip the call
       </button>
     );
   }
@@ -180,7 +181,7 @@ export default function InquiryCallCards({ inquiry, processing, onRefresh, onReq
   } else if (talked && !forceSetup) {
     body = (
       <div className="flex items-center gap-3 text-sm text-ink">
-        <Phone className="w-4 h-4 text-ok shrink-0" />
+        <StatusDot status="ok" />
         <span>Call logged — {fmtCallTime(talked.scheduledAt)} · Talked · {talked.durationMin} min.</span>
         <button onClick={() => setForceSetup(true)} className="text-xs font-medium text-pine hover:underline ml-auto">Set up another call</button>
       </div>
@@ -188,7 +189,7 @@ export default function InquiryCallCards({ inquiry, processing, onRefresh, onReq
   } else if (skipped && !forceSetup) {
     body = (
       <div className="flex items-center gap-3 text-sm text-ink">
-        <PhoneOff className="w-4 h-4 text-ink-muted shrink-0" />
+        <StatusDot status="neutral" />
         <span>Call skipped — {inquiry.callSkippedReason}</span>
         <button onClick={() => setForceSetup(true)} className="text-xs font-medium text-pine hover:underline ml-auto">Set one up anyway</button>
       </div>
@@ -287,7 +288,7 @@ function SetupCard({ inquiry, sheet, needs, calls, disabled, busy, setBusy, setE
     <div>
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
-          <div className="flex items-center gap-2 text-sm font-medium text-ink"><Phone className="w-4 h-4 text-pine" />Set up the call</div>
+          <div className="text-sm font-medium text-ink">Set up the call</div>
           <p className="text-xs text-ink-soft mt-0.5">Required before the draft course is built — you can send the setup sheet before or after.</p>
         </div>
       </div>
@@ -300,10 +301,10 @@ function SetupCard({ inquiry, sheet, needs, calls, disabled, busy, setBusy, setE
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <button type="button" onClick={bookOnCalcom} disabled={disabled} className={btnO}>
-            <CalendarClock className="w-3.5 h-3.5" />Book on Cal.com
+            Book on Cal.com
           </button>
           <button type="button" onClick={sendLink} disabled={disabled} className={btnO}>
-            <Send className="w-3.5 h-3.5" />{busy ? 'Sending…' : inviteDay ? 'Resend the link' : 'Send a booking link'}
+            {busy ? 'Sending…' : inviteDay ? 'Resend the link' : 'Send a booking link'}
           </button>
         </div>
       </div>
@@ -358,7 +359,7 @@ function SetupCard({ inquiry, sheet, needs, calls, disabled, busy, setBusy, setE
         <div className="ml-auto flex items-center gap-2 flex-wrap justify-end">
           {!skipOpen && (
             <button type="button" onClick={submit} disabled={disabled || !iso} className={btnP}>
-              <CalendarClock className="w-3.5 h-3.5" />{busy ? 'Saving…' : 'Set up call'}
+              {busy ? 'Saving…' : 'Set up call'}
             </button>
           )}
           {showSkip && (
@@ -536,7 +537,7 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 text-sm font-medium text-ink">
-            <Phone className={'w-4 h-4 ' + (overdue ? 'text-warn' : 'text-pine')} />
+            <StatusDot status={overdue ? 'warn' : 'ok'} />
             {open ? 'Log the call' : 'Call set up'}
           </div>
           <p className="text-xs text-ink-soft mt-0.5">{header}{overdue ? ' · went by without a log' : ''}</p>
@@ -577,7 +578,7 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
               <textarea rows={2} value={notes} onChange={e => setNotesDirty(e.target.value)} placeholder="Notes (optional) — left a voicemail, wrong number…" className={iCls + ' mb-3'} disabled={disabled} />
               <div className="flex items-center gap-2">
                 <button onClick={noAnswerReschedule} disabled={disabled || !easternToIso(reDate, reTime)} className={btnP}>
-                  <CalendarClock className="w-3.5 h-3.5" />{busy ? 'Saving…' : 'Reschedule'}
+                  {busy ? 'Saving…' : 'Reschedule'}
                 </button>
               </div>
             </div>
@@ -594,7 +595,7 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
                   <textarea rows={3} value={notes} onChange={e => setNotesDirty(e.target.value)} placeholder="Why it isn't a fit" className={iCls + ' mb-3'} disabled={disabled} /></label>
                   <div className="flex items-center gap-2 flex-wrap pt-3 border-t border-line-soft">
                     <button onClick={notAFit} disabled={disabled} className="bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 disabled:opacity-50 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors">
-                      <AlertTriangle className="w-3.5 h-3.5" />{busy ? 'Saving…' : 'Save and close as not a fit'}
+                      {busy ? 'Saving…' : 'Save and close as not a fit'}
                     </button>
                   </div>
                 </>
@@ -756,17 +757,17 @@ function CallGuide({ inquiry, answers, setItem, notes, setNotes, draftState, onR
         {!sheetAlreadySent ? (
           preview ? (
             <>
-              <button onClick={onSend} disabled={disabled} className={btnP}><Send className="w-3.5 h-3.5" />{busy ? 'Sending…' : `Send to ${contactFirst}`}</button>
+              <button onClick={onSend} disabled={disabled} className={btnP}>{busy ? 'Sending…' : `Send to ${contactFirst}`}</button>
               <button onClick={() => setPreview(false)} disabled={disabled} className={btnO}>Back</button>
             </>
           ) : (
             <>
-              <button onClick={() => setPreview(true)} disabled={disabled} className={btnP}><Check className="w-3.5 h-3.5" />End call → Send setup sheet</button>
+              <button onClick={() => setPreview(true)} disabled={disabled} className={btnP}>End call → Send setup sheet</button>
               <button onClick={onSaveOnly} disabled={disabled} className={btnO}>Save, don&apos;t send yet</button>
             </>
           )
         ) : (
-          <button onClick={onSaveOnly} disabled={disabled} className={btnP}><Check className="w-3.5 h-3.5" />{busy ? 'Saving…' : 'Save'}</button>
+          <button onClick={onSaveOnly} disabled={disabled} className={btnP}>{busy ? 'Saving…' : 'Save'}</button>
         )}
       </div>
     </div>
@@ -781,7 +782,7 @@ function DraftStatus({ state, onRetry }: { state: { status: 'idle' | 'saving' | 
   return (
     <span className="text-[11px] text-bad shrink-0 flex items-center gap-1.5" title={state.err}>
       Not saved
-      <button type="button" onClick={onRetry} className="inline-flex items-center gap-1 font-medium hover:underline"><RotateCw className="w-3 h-3" />retry</button>
+      <button type="button" onClick={onRetry} className="inline-flex items-center gap-1 font-medium hover:underline">retry</button>
     </span>
   );
 }

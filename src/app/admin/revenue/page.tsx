@@ -1,10 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  RefreshCw, AlertTriangle, X, Plus, Pencil, Trash2, TrendingUp, TrendingDown, Minus,
-  RotateCw, CheckCircle2, Search, ChevronUp, ChevronDown, Download, Landmark, ExternalLink,
-} from 'lucide-react';
+import { X, Plus, Pencil, Trash2, Search, ChevronUp, ChevronDown, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -96,10 +93,9 @@ function DeltaBadge({ delta, goodWhenUp = true }: { delta?: Delta; goodWhenUp?: 
   }
   const good = delta.direction === 'flat' ? null : (delta.direction === 'up') === goodWhenUp;
   const color = good === null ? 'text-ink-muted' : good ? 'text-ok' : 'text-bad';
-  const Icon = delta.direction === 'up' ? TrendingUp : delta.direction === 'down' ? TrendingDown : Minus;
   return (
     <span className={`inline-flex items-center gap-1 text-[11px] font-medium ${color}`}>
-      <Icon className="w-3 h-3" />{delta.pct >= 0 ? '+' : ''}{delta.pct.toFixed(0)}% vs prior
+      {delta.pct >= 0 ? '+' : ''}{delta.pct.toFixed(0)}% vs prior
     </span>
   );
 }
@@ -350,7 +346,7 @@ export default function RevenuePage() {
               </div>
               <button onClick={() => load(period, customFrom, customTo)}
                 className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors">
-                <RefreshCw className="w-4 h-4"/>Refresh
+                Refresh
               </button>
             </div>
           </div>
@@ -367,7 +363,7 @@ export default function RevenuePage() {
 
           {error && (
             <div className="bg-bad/5 border border-bad/20 rounded-lg px-4 py-3 text-sm text-bad mb-5 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0"/>{error}
+              <StatusDot status="warn" />{error}
             </div>
           )}
 
@@ -375,7 +371,7 @@ export default function RevenuePage() {
               support-level page. Say so — otherwise the P&L silently vanishes. */}
           {data?.ownerMfaRequired && (
             <div className="bg-warn/5 border border-warn/20 rounded-lg px-4 py-3 text-sm text-ink mb-5 flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0 text-warn mt-0.5"/>
+              <StatusDot status="warn" />
               <span>
                 Owner sections (expenses, net P&amp;L, Stripe balance) are hidden — this session
                 was not verified with a second factor.{' '}
@@ -393,7 +389,7 @@ export default function RevenuePage() {
             <div className={'border rounded-lg p-5 mb-6 ' + (hasProblems ? 'bg-bad/5 border-bad/20' : 'bg-white border-line')}>
               <div className="flex items-center justify-between gap-3 mb-1">
                 <div className="flex items-center gap-2">
-                  {hasProblems ? <AlertTriangle className="w-4 h-4 text-bad"/> : <CheckCircle2 className="w-4 h-4 text-ok"/>}
+                  {hasProblems ? <StatusDot status="bad" /> : <StatusDot status="ok" />}
                   <span className={'text-sm font-medium ' + (hasProblems ? 'text-bad' : 'text-ink')}>
                     {hasProblems ? 'Money problems' : 'No money problems'}
                   </span>
@@ -485,7 +481,7 @@ export default function RevenuePage() {
                             <div className="text-sm font-medium text-ink tabular-nums mb-1.5">{fmtMoney(p.amount)}</div>
                             <button onClick={() => retryCharge(p)} disabled={retryingId === p.bookingId}
                               className="inline-flex items-center gap-1 text-[11px] font-medium text-white bg-pine hover:bg-pine-hover disabled:opacity-50 px-2.5 py-1 rounded-md transition-colors">
-                              <RotateCw className={'w-3 h-3 ' + (retryingId === p.bookingId ? 'animate-spin' : '')}/>{retryingId === p.bookingId ? 'Retrying…' : 'Retry charge'}
+                              {retryingId === p.bookingId ? 'Retrying…' : 'Retry charge'}
                             </button>
                           </div>
                         </div>
@@ -542,7 +538,7 @@ export default function RevenuePage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <Eyebrow className="mb-1">Fees collected · {data?.period.label}</Eyebrow>
-                  <div className="text-[34px] font-serif font-semibold text-ink tabular-nums leading-none">{fmtMoney(pnl.feesCollected)}</div>
+                  <div className="text-[34px] font-semibold text-ink tabular-nums leading-none">{fmtMoney(pnl.feesCollected)}</div>
                   <div className="mt-2 flex items-center gap-3 flex-wrap">
                     <DeltaBadge delta={pnl.feesCollectedDelta}/>
                     <span className="text-[11px] text-ink-muted">{fmtCount(pnl.collectedRounds)} round{pnl.collectedRounds === 1 ? '' : 's'} checked in and paid</span>
@@ -563,7 +559,7 @@ export default function RevenuePage() {
                 {isOwner && (
                   <button onClick={openDrawer}
                     className="flex items-center gap-1.5 text-[12px] font-medium text-ink-soft hover:text-ink px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
-                    <Pencil className="w-3.5 h-3.5"/>Manage expenses
+                    Manage expenses
                   </button>
                 )}
               </div>
@@ -679,7 +675,7 @@ export default function RevenuePage() {
                   </div>
                   <button onClick={exportCsv} disabled={rows.length === 0}
                     className="flex items-center gap-1.5 text-[12px] font-medium text-ink-soft hover:text-ink px-3 py-2 rounded-md border border-line hover:border-line-strong disabled:opacity-40 transition-colors">
-                    <Download className="w-3.5 h-3.5"/>Export CSV
+                    Export CSV
                   </button>
                   {/* MP-6c: the ledger, one row per charge / late fee / refund across
                       every course in the period — for an accountant. Manager+. */}
@@ -687,7 +683,7 @@ export default function RevenuePage() {
                     <a href={`/api/admin/transactions/export?from=${data.period.from}&to=${data.period.to}`}
                       className="flex items-center gap-1.5 text-[12px] font-medium text-ink-soft hover:text-ink px-3 py-2 rounded-md border border-line hover:border-line-strong transition-colors"
                       title="Every charge, late fee and refund in this period, one row each">
-                      <Download className="w-3.5 h-3.5"/>Export transactions
+                      Export transactions
                     </a>
                   )}
                 </div>
@@ -745,7 +741,7 @@ export default function RevenuePage() {
             <Card className="p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <Landmark className="w-4 h-4 text-pine"/>
+                  
                   <Eyebrow as="span">Platform Stripe account</Eyebrow>
                 </div>
                 <a href="https://dashboard.stripe.com/balance" target="_blank" rel="noopener noreferrer"
@@ -758,14 +754,14 @@ export default function RevenuePage() {
                 <div className="grid grid-cols-2 gap-6">
                   <div>
                     <div className="text-[11px] text-ink-muted mb-0.5">Available balance</div>
-                    <div className="text-xl font-serif font-semibold text-ink tabular-nums">{fmtMoney(platform.balance.available)}</div>
+                    <div className="text-xl font-semibold text-ink tabular-nums">{fmtMoney(platform.balance.available)}</div>
                     <div className="text-[11px] text-ink-faint mt-0.5">{fmtMoney(platform.balance.pending)} pending</div>
                   </div>
                   <div>
                     <div className="text-[11px] text-ink-muted mb-0.5">Next payout</div>
                     {platform.nextPayout ? (
                       <>
-                        <div className="text-xl font-serif font-semibold text-ink tabular-nums">{fmtMoney(platform.nextPayout.amount)}</div>
+                        <div className="text-xl font-semibold text-ink tabular-nums">{fmtMoney(platform.nextPayout.amount)}</div>
                         <div className="text-[11px] text-ink-faint mt-0.5">{platform.nextPayout.arrivalDate} · {platform.nextPayout.status}</div>
                       </>
                     ) : <div className="text-sm text-ink-faint mt-1">None scheduled</div>}
@@ -850,7 +846,7 @@ export default function RevenuePage() {
                 <div className="flex items-center gap-2">
                   <button onClick={saveExpense} disabled={savingExpense}
                     className="flex items-center gap-1.5 bg-pine hover:bg-pine-hover disabled:opacity-50 text-white text-[12.5px] font-medium px-3 py-1.5 rounded-md transition-colors">
-                    <Plus className="w-3.5 h-3.5"/>{savingExpense ? 'Saving…' : editing ? 'Save changes' : 'Add'}
+                    {savingExpense ? 'Saving…' : editing ? 'Save changes' : 'Add'}
                   </button>
                   {editing && <button onClick={resetDraft} className="text-[12px] text-ink-muted hover:text-ink">Cancel</button>}
                 </div>

@@ -146,7 +146,13 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     Analytics metric values and the Settings preview's tee times moved out of
     the serif (data never in Garamond); Members titles to 30px; Title Case
     button labels to sentence case. Zero behaviour.
-  - [ ] CLUB-4 /admin + rest
+  - [x] CLUB-4a /admin icons — BUILT 2026-10-05: TYPE-3 sweep over src/app/admin +
+    src/components/admin (~150 decorative icons out, status icons → StatusDot,
+    System card header icons and command-palette type icons gone); the admin
+    rail keeps its nav icons because its collapsed mode is icon-only; trend
+    deltas on Overview/Revenue show +/− instead of arrow icons; Overview and
+    Revenue figures moved out of the serif. Zero behaviour.
+  - [ ] CLUB-4b /admin Title Case labels → sentence case; any remaining pages
 - [x] UI-H-1 — BUILT 2026-10-01: the homepage from the approved plain-background
   mockup (HOMEPAGE_SPEC.md, docs/design/home/index.html). Archivo replaces Fraunces
   + Inter for the public look (staff look untouched). Working hero demo (tee sheet +

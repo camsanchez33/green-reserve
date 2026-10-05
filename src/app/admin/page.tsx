@@ -1,10 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  LineChart, AlertCircle, DollarSign, RefreshCw, MessageSquare, Clock3,
-  ArrowUpRight, ArrowDownRight, Minus, ChevronRight, CheckCircle2,
-} from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-roles';
@@ -64,10 +61,9 @@ function Trend({ current, prev, suffix = 'vs prior 30d' }: { current: number | n
   const delta = ((current - prev) / prev) * 100;
   const up = delta >= 0;
   const cls = up ? 'text-ok' : 'text-bad';
-  const Icon = up ? ArrowUpRight : ArrowDownRight;
   return (
     <span className={`flex items-center gap-0.5 text-[11px] font-medium ${cls}`}>
-      <Icon className="w-3 h-3"/>{Math.abs(delta).toFixed(0)}% {suffix}
+      {up ? '+' : '−'}{Math.abs(delta).toFixed(0)}% {suffix}
     </span>
   );
 }
@@ -110,7 +106,7 @@ function RevenueChart({ data, gran }: { data: TickerPoint[]; gran: Gran }) {
             <div>
               <Eyebrow>{copy.period} — GR Fees</Eyebrow>
               <div className="flex items-baseline gap-2">
-                <div className="text-xl font-serif font-semibold text-ok">{fmtMoney(latest.fees)}</div>
+                <div className="text-xl font-semibold tabular-nums text-ok">{fmtMoney(latest.fees)}</div>
                 <Trend current={latest.fees} prev={latest.ghostFees} suffix={copy.suffix}/>
               </div>
             </div>
@@ -118,7 +114,7 @@ function RevenueChart({ data, gran }: { data: TickerPoint[]; gran: Gran }) {
               <div>
                 <Eyebrow>{copy.period} — Gross</Eyebrow>
                 <div className="flex items-baseline gap-2">
-                  <div className="text-xl font-serif font-semibold text-ink">{fmtMoney(latest.gross)}</div>
+                  <div className="text-xl font-semibold tabular-nums text-ink">{fmtMoney(latest.gross)}</div>
                   <Trend current={latest.gross} prev={latest.ghostGross} suffix={copy.suffix}/>
                 </div>
               </div>
@@ -178,7 +174,7 @@ function QueueRow({ row, severity, router, expanded, onToggleExpand, fireStatus,
         </div>
         {row.fire && canFire && (
           fireStatus === 'success' ? (
-            <span className="shrink-0 text-xs font-medium text-ok flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/>Sent</span>
+            <span className="shrink-0 text-xs font-medium text-ok flex items-center gap-1"><StatusDot status="ok" />Sent</span>
           ) : (
             <button
               onClick={e => { e.stopPropagation(); onFire(); }}
@@ -190,7 +186,7 @@ function QueueRow({ row, severity, router, expanded, onToggleExpand, fireStatus,
           )
         )}
         <button onClick={e => { e.stopPropagation(); router.push(row.href); }} className="shrink-0 text-xs font-medium text-pine">{row.actionLabel}</button>
-        <ChevronRight className={`w-3.5 h-3.5 text-ink-faint shrink-0 transition-transform ${hasItems && expanded ? 'rotate-90' : ''}`}/>
+        <ChevronRight aria-hidden="true" className={`w-3.5 h-3.5 text-ink-faint shrink-0 transition-transform ${hasItems && expanded ? 'rotate-90' : ''}`}/>
       </div>
       {/* RV-2: a failed quick action says why — a 409 (already approved) can never succeed on retry. */}
       {fireStatus === 'error' && fireError && (
@@ -296,14 +292,14 @@ export default function AdminOverviewPage() {
         <div className="px-8 py-7">
           <div className="flex items-center justify-between mb-7">
             <div>
-              <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Platform Overview</h1>
+              <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Platform overview</h1>
               <p className="text-[13.5px] text-ink-soft mt-2">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                 {lastUpdated && <span className="text-ink-faint"> · updated {fmtAgo(lastUpdated, Date.now())}</span>}
               </p>
             </div>
             <button onClick={loadStats} disabled={loading} className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors disabled:opacity-50">
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}/>Refresh
+              {loading ? 'Refreshing…' : 'Refresh'}
             </button>
           </div>
 
@@ -321,9 +317,9 @@ export default function AdminOverviewPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <Card onClick={() => router.push('/admin/revenue')} className="p-5 cursor-pointer hover:shadow-[0_0_0_1px_rgba(20,24,20,.14),0_1px_2px_rgba(20,24,20,.05)] transition-shadow">
                 <div className="flex items-start justify-between mb-2">
-                  <div className="p-2 rounded-md bg-pine/10"><DollarSign className="w-4 h-4 text-pine"/></div>
+                  
                 </div>
-                <div className="text-[30px] leading-none font-serif font-semibold text-pine mb-1">{fmtMoney(stats.topStrip.feesToday)}</div>
+                <div className="text-[30px] leading-none font-semibold tabular-nums text-pine mb-1">{fmtMoney(stats.topStrip.feesToday)}</div>
                 <Eyebrow>GreenReserve fees today</Eyebrow>
                 <div className="flex items-center gap-3 mt-2 text-xs text-ink-faint">
                   {/* U-A: the fee is per PLAYER — say players first, never derive them from bookings. */}
@@ -338,9 +334,9 @@ export default function AdminOverviewPage() {
 
               <Card onClick={() => router.push('/admin/messages')} className="p-5 cursor-pointer hover:shadow-[0_0_0_1px_rgba(20,24,20,.14),0_1px_2px_rgba(20,24,20,.05)] transition-shadow">
                 <div className="flex items-start justify-between mb-2">
-                  <div className="p-2 rounded-md bg-paper"><MessageSquare className="w-4 h-4 text-ink-muted"/></div>
+                  
                 </div>
-                <div className="text-[30px] leading-none font-serif font-semibold text-ink mb-1">{isSupportPlus ? stats.topStrip.unreadMessages : '—'}</div>
+                <div className="text-[30px] leading-none font-semibold tabular-nums text-ink mb-1">{isSupportPlus ? stats.topStrip.unreadMessages : '—'}</div>
                 <Eyebrow>Unread</Eyebrow>
                 <div className="text-xs text-ink-faint mt-2">
                   {!isSupportPlus ? 'Requires support access' : stats.topStrip.unreadNewestSender ? `Newest: ${stats.topStrip.unreadNewestSender}` : 'All caught up'}
@@ -349,7 +345,7 @@ export default function AdminOverviewPage() {
 
               <Card className="p-5">
                 <div className="flex items-start justify-between mb-2">
-                  <div className="p-2 rounded-md bg-paper"><Clock3 className="w-4 h-4 text-ink-muted"/></div>
+                  
                 </div>
                 <Eyebrow className="mb-2">Waiting</Eyebrow>
                 <div className="space-y-1.5">
@@ -376,13 +372,13 @@ export default function AdminOverviewPage() {
             {/* 2. ACTION QUEUE — blockers + stalls only */}
             <Card className="p-5 mb-6">
               <div className="flex items-center gap-2 mb-3">
-                <AlertCircle className="w-3.5 h-3.5 text-warn"/>
+                <StatusDot status="warn" />
                 <Eyebrow>Action queue</Eyebrow>
               </div>
 
               {stats.actionQueue.redCount === 0 && stats.actionQueue.amberCount === 0 ? (
                 <div className="flex items-center gap-2 text-sm text-ok py-2">
-                  <CheckCircle2 className="w-4 h-4 shrink-0"/>
+                  <StatusDot status="ok" />
                   <span>All clear — nothing stuck.</span>
                 </div>
               ) : (
@@ -399,7 +395,7 @@ export default function AdminOverviewPage() {
                       </div>
                       {stats.actionQueue.redCount > stats.actionQueue.red.length && (
                         <button onClick={() => router.push('/admin/revenue')} className="text-xs text-ink-muted hover:text-ink mt-2 flex items-center gap-1">
-                          View all {stats.actionQueue.redCount} <ChevronRight className="w-3 h-3"/>
+                          View all {stats.actionQueue.redCount} 
                         </button>
                       )}
                     </div>
@@ -416,7 +412,7 @@ export default function AdminOverviewPage() {
                       </div>
                       {stats.actionQueue.amberCount > stats.actionQueue.amber.length && (
                         <button onClick={() => router.push('/admin/inquiries')} className="text-xs text-ink-muted hover:text-ink mt-2 flex items-center gap-1">
-                          View all {stats.actionQueue.amberCount} <ChevronRight className="w-3 h-3"/>
+                          View all {stats.actionQueue.amberCount} 
                         </button>
                       )}
                     </div>
@@ -429,7 +425,7 @@ export default function AdminOverviewPage() {
             <Card className="p-6 mb-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <LineChart className="w-4 h-4 text-ink-muted"/>
+                  
                   <Eyebrow>Revenue</Eyebrow>
                 </div>
                 <div className="flex gap-1 bg-paper border border-line rounded-md p-0.5">
@@ -454,7 +450,7 @@ export default function AdminOverviewPage() {
               <div onClick={() => router.push('/admin/courses')} className="p-5 cursor-pointer hover:bg-paper transition-colors flex items-center justify-between">
                 <div>
                   <Eyebrow className="mb-1">Live courses</Eyebrow>
-                  <div className="text-xl font-serif font-semibold text-ink">{stats.thirtyDay.activeCourses}</div>
+                  <div className="text-xl font-semibold tabular-nums text-ink">{stats.thirtyDay.activeCourses}</div>
                   <div className="text-xs text-ink-faint mt-0.5">{stats.thirtyDay.archivedCourses > 0 ? `${stats.thirtyDay.totalCourses} active · ${stats.thirtyDay.archivedCourses} archived` : `${stats.thirtyDay.totalCourses} total`}</div>
                 </div>
                 <Trend current={stats.thirtyDay.newCourses30d} prev={stats.thirtyDay.newCoursesPrev30d}/>
@@ -462,14 +458,14 @@ export default function AdminOverviewPage() {
               <div onClick={() => router.push('/admin/activity')} className="p-5 cursor-pointer hover:bg-paper transition-colors flex items-center justify-between">
                 <div>
                   <Eyebrow className="mb-1">Bookings (30d)</Eyebrow>
-                  <div className="text-xl font-serif font-semibold text-ink">{stats.thirtyDay.bookings30d}</div>
+                  <div className="text-xl font-semibold tabular-nums text-ink">{stats.thirtyDay.bookings30d}</div>
                 </div>
                 <Trend current={stats.thirtyDay.bookings30d} prev={stats.thirtyDay.bookingsPrev30d}/>
               </div>
               <div onClick={() => router.push('/admin/activity')} className="p-5 cursor-pointer hover:bg-paper transition-colors flex items-center justify-between">
                 <div>
                   <Eyebrow className="mb-1">GreenReserve fees (30d)</Eyebrow>
-                  <div className="text-xl font-serif font-semibold text-ok">{fmtMoney(stats.thirtyDay.fees30d)}</div>
+                  <div className="text-xl font-semibold tabular-nums text-ok">{fmtMoney(stats.thirtyDay.fees30d)}</div>
                 </div>
                 <Trend current={stats.thirtyDay.fees30d} prev={stats.thirtyDay.feesPrev30d}/>
               </div>
@@ -537,7 +533,7 @@ export default function AdminOverviewPage() {
 
             {/* Systems — one dot, detail lives on /admin/system */}
             <button onClick={() => router.push('/admin/system')} className="flex items-center gap-2 px-1 py-2 text-xs text-ink-faint hover:text-ink-soft transition-colors">
-              <StatusDot status="neutral"/>Systems<ChevronRight className="w-3 h-3"/>
+              <StatusDot status="neutral"/>Systems
             </button>
           </>}
         </div>

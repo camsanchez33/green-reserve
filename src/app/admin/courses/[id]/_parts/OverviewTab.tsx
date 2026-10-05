@@ -8,7 +8,7 @@ import CourseCheckInCard from '@/components/admin/CourseCheckInCard';
 import { setupProgress } from '@/lib/course-setup';
 import { nextCall, overdueCall, fmtCallTime } from '@/lib/inquiry-call';
 import Link from 'next/link';
-import { Mail, Phone, AlertTriangle, Check } from 'lucide-react';
+import { Phone, Check } from 'lucide-react';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { periodDelta, lastBookingLabel } from '@/lib/course-metrics';
 import { formatDate as fmtDate, formatMoney as fmtMoney, formatTeeTime as fmtTime } from '@/lib/format';
@@ -82,7 +82,7 @@ export function OverviewTab() {
                       {reminderNudgeError && <p className="text-xs mt-2 text-bad">{reminderNudgeError}</p>}
                       {(dNext || dMissed) && detail.origin && (
                         <div className="mt-3 pt-3 border-t border-line-soft flex items-center gap-2 text-xs">
-                          <Phone className={'w-3.5 h-3.5 ' + (dMissed && !dNext ? 'text-warn' : 'text-pine')} />
+                          
                           {dNext
                             ? <span className="text-ink">Discovery call {fmtCallTime(dNext.scheduledAt)} · {dNext.durationMin} min</span>
                             : <span className="text-warn">Discovery call went by {dMissed ? fmtCallTime(dMissed.scheduledAt) : ''} without a log</span>}
@@ -283,7 +283,7 @@ export function OverviewTab() {
                     </Link>
                   ) : (
                     <div className="flex items-center gap-2 text-sm text-bad font-medium">
-                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />No linked inquiry — origin record missing
+                      <StatusDot status="warn" />No linked inquiry — origin record missing
                     </div>
                   )}
                 </div>
@@ -293,11 +293,11 @@ export function OverviewTab() {
                     <div className="font-medium text-ink mb-2">{c.operator.name}</div>
                     <div className="space-y-1.5 mb-3">
                       <a href={'mailto:' + c.operator.email} className="flex items-center gap-2 text-sm text-ink-soft hover:text-pine transition-colors">
-                        <Mail className="w-3.5 h-3.5 text-ink-muted shrink-0" />{c.operator.email}
+                        {c.operator.email}
                       </a>
                       {c.operator.phone && (
                         <a href={'tel:' + c.operator.phone} className="flex items-center gap-2 text-sm text-ink-soft hover:text-pine transition-colors">
-                          <Phone className="w-3.5 h-3.5 text-ink-muted shrink-0" />{c.operator.phone}
+                          {c.operator.phone}
                         </a>
                       )}
                     </div>

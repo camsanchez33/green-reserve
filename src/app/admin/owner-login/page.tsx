@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck } from 'lucide-react';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card } from '@/components/ui/Card';
@@ -79,7 +79,7 @@ export default function OwnerLoginPage() {
 
         <Card className="p-8">
           <div className="flex items-center gap-2 mb-1">
-            <ShieldCheck className="w-4 h-4 text-pine" />
+            
             <h1 className="text-[22px] font-serif font-semibold text-ink">Owner sign in</h1>
           </div>
           <p className="text-sm text-ink-soft mb-6">

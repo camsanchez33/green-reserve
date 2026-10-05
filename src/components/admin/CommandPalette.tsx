@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Building2, AlertCircle, User, Users, LayoutDashboard, ArrowRight } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 interface SearchResult {
   type: 'course' | 'inquiry' | 'golfer' | 'guest' | 'employee' | 'nav';
@@ -24,14 +24,6 @@ function saveRecent(item: SearchResult) {
   localStorage.setItem(RECENTS_KEY, JSON.stringify([item, ...prev].slice(0, MAX_RECENTS)));
 }
 
-const TYPE_ICON: Record<SearchResult['type'], React.ReactNode> = {
-  course:   <Building2 className="w-3.5 h-3.5 text-ink-muted"/>,
-  inquiry:  <AlertCircle className="w-3.5 h-3.5 text-warn"/>,
-  golfer:   <User className="w-3.5 h-3.5 text-pine"/>,
-  guest:    <User className="w-3.5 h-3.5 text-ink-muted"/>,
-  employee: <Users className="w-3.5 h-3.5 text-ink-muted"/>,
-  nav:      <LayoutDashboard className="w-3.5 h-3.5 text-ink-faint"/>,
-};
 
 const TYPE_LABEL: Record<SearchResult['type'], string> = {
   course:   'Course',
@@ -219,15 +211,11 @@ export default function CommandPalette() {
                   onMouseEnter={() => setSelectedIdx(idx)}
                 >
                   <div className="w-6 h-6 rounded-md bg-paper border border-line flex items-center justify-center shrink-0">
-                    {TYPE_ICON[item.type]}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-ink truncate">{item.label}</div>
                     <div className="text-[11px] text-ink-muted truncate">{TYPE_LABEL[item.type]} · {item.sub}</div>
                   </div>
-                  {idx === selectedIdx && (
-                    <ArrowRight className="w-3.5 h-3.5 text-ink-faint shrink-0"/>
-                  )}
                 </button>
               ))}
             </>

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, RefreshCw, Lock, Copy, KeyRound } from 'lucide-react';
+import { Copy } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -207,7 +207,7 @@ export default function EmployeesPage() {
               <p className="text-[13.5px] text-ink-soft mt-2">Admin account management</p>
             </div>
             <button onClick={load} className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors">
-              <RefreshCw className="w-4 h-4"/>Refresh
+              Refresh
             </button>
           </div>
 
@@ -228,7 +228,7 @@ export default function EmployeesPage() {
           {isOwner && (
             <Card className="p-5 mb-6">
               <div className="flex items-center gap-2 mb-4">
-                <Plus className="w-4 h-4 text-pine"/>
+                
                 <span className="text-sm font-medium text-ink">Add employee</span>
               </div>
               {createError && (
@@ -326,7 +326,7 @@ export default function EmployeesPage() {
                                 className="flex items-center gap-1 text-xs text-ink-soft hover:text-ink px-2 py-1 rounded hover:bg-paper border border-line hover:border-line-strong transition-colors disabled:opacity-50"
                                 title="Generate new temp password"
                               >
-                                <KeyRound className="w-3 h-3" />Reset pwd
+                                Reset pwd
                               </button>
                               <button
                                 onClick={() => toggleActive(admin)}
@@ -367,7 +367,7 @@ export default function EmployeesPage() {
           {/* Change own password */}
           <Card className="p-5">
             <div className="flex items-center gap-2 mb-4">
-              <Lock className="w-4 h-4 text-pine"/>
+              
               <span className="text-sm font-medium text-ink">Change your password</span>
             </div>
             {cpError && (

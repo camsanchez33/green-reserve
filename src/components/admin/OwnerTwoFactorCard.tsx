@@ -4,7 +4,7 @@
 // the ten recovery codes, shown exactly once → done. "Regenerate codes"
 // needs a current code and invalidates all ten.
 import { useEffect, useState } from 'react';
-import { ShieldCheck, Copy, Check, KeyRound } from 'lucide-react';
+import { Copy } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { INPUT_COMPACT } from '@/components/ui/field';
@@ -73,7 +73,7 @@ export default function OwnerTwoFactorCard({ mfaSession }: { mfaSession: boolean
   return (
     <Card className="p-5 mb-5">
       <div className="flex items-center gap-2 mb-1">
-        <ShieldCheck className="w-4 h-4 text-pine" />
+        
         <span className="text-sm font-medium text-ink">Two-factor authentication</span>
       </div>
       <p className="text-xs text-ink-soft mb-4">An authenticator app on your phone replaces the emailed code. Once set up, the owner login requires it — holding the inbox is no longer enough.</p>
@@ -142,13 +142,13 @@ export default function OwnerTwoFactorCard({ mfaSession }: { mfaSession: boolean
 
       {codes && (
         <div>
-          <div className="flex items-center gap-2 text-sm font-medium text-ink mb-1"><KeyRound className="w-4 h-4 text-pine" />Your recovery codes</div>
+          <div className="flex items-center gap-2 text-sm font-medium text-ink mb-1">Your recovery codes</div>
           <p className="text-sm text-ink-soft mb-3">Save these in KeePassXC now. Each works once, in place of the app code, if the phone is lost. <b className="text-ink">They are shown only this once.</b></p>
           <div className="grid grid-cols-2 gap-x-6 gap-y-1 bg-paper border border-line rounded-md px-4 py-3 font-mono text-sm select-all">
             {codes.map(c => <span key={c}>{c}</span>)}
           </div>
           <div className="flex items-center gap-2 mt-3">
-            <button onClick={copyAll} className={btnO}>{copied ? <span className="inline-flex items-center gap-1.5"><Check className="w-3.5 h-3.5" />Copied</span> : <span className="inline-flex items-center gap-1.5"><Copy className="w-3.5 h-3.5" />Copy all</span>}</button>
+            <button onClick={copyAll} className={btnO}>{copied ? <span className="inline-flex items-center gap-1.5">Copied</span> : <span className="inline-flex items-center gap-1.5"><Copy className="w-3.5 h-3.5" />Copy all</span>}</button>
             <button onClick={() => setCodes(null)} className={btnP}>I saved them</button>
           </div>
         </div>
