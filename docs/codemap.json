@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 375,
+    "files": 377,
     "routes": 204,
-    "libs": 102,
+    "libs": 104,
     "models": 35,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -2907,7 +2907,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 394,
+      "lines": 402,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2931,6 +2931,7 @@
       "imports": [
         "@/lib/auth",
         "@/lib/booking-window",
+        "@/lib/cancel-policy",
         "@/lib/claim-tee-time",
         "@/lib/course-time",
         "@/lib/demo-courses",
@@ -3162,7 +3163,7 @@
     },
     {
       "path": "src/app/api/cron/cancellation-cutoff/route.ts",
-      "lines": 142,
+      "lines": 145,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3180,6 +3181,7 @@
       "guard": "file",
       "imports": [
         "@/lib/booking-events",
+        "@/lib/cancel-policy",
         "@/lib/cron-auth",
         "@/lib/cron-log",
         "@/lib/email",
@@ -3248,7 +3250,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 194,
+      "lines": 226,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3269,9 +3271,11 @@
         "@/lib/agreement-sign",
         "@/lib/booking-events",
         "@/lib/call-invite",
+        "@/lib/cancel-policy",
         "@/lib/cron-auth",
         "@/lib/cron-log",
         "@/lib/email",
+        "@/lib/no-show-fee",
         "@/lib/prisma",
         "@/lib/stripe",
         "@/lib/tee-time-utils",
@@ -4193,7 +4197,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 266,
+      "lines": 268,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4227,6 +4231,7 @@
         "@/lib/claim-tee-time",
         "@/lib/course-time",
         "@/lib/email",
+        "@/lib/no-show-fee",
         "@/lib/prisma",
         "@/lib/session",
         "@/lib/staff-permissions",
@@ -4811,7 +4816,7 @@
     },
     {
       "path": "src/app/api/operator/settings/route.ts",
-      "lines": 119,
+      "lines": 121,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5415,7 +5420,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 563,
+      "lines": 578,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5445,8 +5450,10 @@
         "@/components/CourseHeaderBar",
         "@/components/TrustNote",
         "@/lib/booking-fees",
+        "@/lib/cancel-policy",
         "@stripe/react-stripe-js",
         "@stripe/stripe-js",
+        "@stripe/stripe-js/pure",
         "lucide-react",
         "next/navigation",
         "react"
@@ -5614,7 +5621,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1756,
+      "lines": 1761,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5631,6 +5638,7 @@
       "imports": [
         "@/components/TrustNote",
         "@/lib/booking-fees",
+        "@/lib/cancel-policy",
         "@/lib/change-requests",
         "@/lib/courses-data",
         "@/lib/demo-courses",
@@ -6180,7 +6188,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 903,
+      "lines": 958,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6201,6 +6209,8 @@
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/StaffPermissions",
         "@/components/dashboard/Toast",
+        "@/components/ui/Eyebrow",
+        "@/lib/cancel-policy",
         "@/lib/course-time",
         "@/lib/image-resize",
         "@/lib/password",
@@ -7849,6 +7859,7 @@
         "src/app/admin/system/page.tsx",
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/messages/page.tsx",
+        "src/app/dashboard/settings/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",
         "src/components/dashboard/StaffPermissions.tsx"
@@ -8062,7 +8073,7 @@
     },
     {
       "path": "src/lib/access-fee.ts",
-      "lines": 148,
+      "lines": 151,
       "purpose": "FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B).",
       "brain": [
         "separate-booking-fee"
@@ -8105,7 +8116,8 @@
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/cancel-booking.ts",
-        "src/lib/checkin-booking.ts"
+        "src/lib/checkin-booking.ts",
+        "src/lib/no-show-fee.ts"
       ]
     },
     {
@@ -9007,7 +9019,7 @@
     },
     {
       "path": "src/lib/birdie/knowledge-operator.ts",
-      "lines": 59,
+      "lines": 64,
       "purpose": "BIRDIE_AI_SPEC B1 — the operator knowledge pack.",
       "brain": [],
       "exports": [
@@ -9080,6 +9092,7 @@
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/claim-tee-time.ts",
+        "src/lib/no-show-fee.ts",
         "src/lib/weather-cancel.ts"
       ]
     },
@@ -9516,7 +9529,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 187,
+      "lines": 235,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9537,8 +9550,10 @@
       "imports": [
         "./access-fee",
         "./booking-events",
+        "./cancel-policy",
         "./email",
         "./prisma",
+        "./refund-booking",
         "./stripe"
       ],
       "usedBy": [
@@ -9548,6 +9563,86 @@
         "src/app/api/operator/bookings/route.ts",
         "src/lib/course-closure.ts",
         "src/lib/weather-cancel.ts"
+      ]
+    },
+    {
+      "path": "src/lib/cancel-policy.ts",
+      "lines": 124,
+      "purpose": "SP-B (STAFF_POLICY_SPEC Part B).",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CancelPolicy",
+          "kind": "type"
+        },
+        {
+          "name": "cardRequired",
+          "kind": "fn"
+        },
+        {
+          "name": "chargesNoShow",
+          "kind": "fn"
+        },
+        {
+          "name": "chargesOnLateCancel",
+          "kind": "fn"
+        },
+        {
+          "name": "describePolicy",
+          "kind": "fn"
+        },
+        {
+          "name": "FeeBasis",
+          "kind": "type"
+        },
+        {
+          "name": "holdsAtCutoff",
+          "kind": "fn"
+        },
+        {
+          "name": "isFeeBasis",
+          "kind": "fn"
+        },
+        {
+          "name": "isLateFeeTiming",
+          "kind": "fn"
+        },
+        {
+          "name": "LATE_FEE_TIMINGS",
+          "kind": "const"
+        },
+        {
+          "name": "LateFeeTiming",
+          "kind": "type"
+        },
+        {
+          "name": "lateFeeTotalCents",
+          "kind": "fn"
+        },
+        {
+          "name": "noShowTotalCents",
+          "kind": "fn"
+        },
+        {
+          "name": "policyFrom",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/bookings/route.ts",
+        "src/app/api/cron/cancellation-cutoff/route.ts",
+        "src/app/api/cron/hourly/route.ts",
+        "src/app/book/BookClient.tsx",
+        "src/app/courses/[slug]/CourseBookingClient.tsx",
+        "src/app/dashboard/settings/page.tsx",
+        "src/lib/cancel-booking.ts",
+        "src/lib/normalize-course.ts"
       ]
     },
     {
@@ -10329,7 +10424,7 @@
     },
     {
       "path": "src/lib/course-wire.ts",
-      "lines": 56,
+      "lines": 57,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10612,7 +10707,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1817,
+      "lines": 1822,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11869,8 +11964,45 @@
       ]
     },
     {
+      "path": "src/lib/no-show-fee.ts",
+      "lines": 104,
+      "purpose": "SP-B (STAFF_POLICY_SPEC Part B4).",
+      "brain": [],
+      "exports": [
+        {
+          "name": "markNoShow",
+          "kind": "fn"
+        },
+        {
+          "name": "NoShowResult",
+          "kind": "type"
+        },
+        {
+          "name": "refundNoShowFee",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./access-fee",
+        "./booking-events",
+        "./prisma",
+        "./refund-booking",
+        "./stripe",
+        "stripe"
+      ],
+      "usedBy": [
+        "src/app/api/cron/hourly/route.ts",
+        "src/app/api/operator/bookings/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/normalize-course.ts",
-      "lines": 66,
+      "lines": 69,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11885,6 +12017,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./cancel-policy",
         "./money"
       ],
       "usedBy": [
@@ -12243,6 +12376,7 @@
         "src/lib/lifecycle.ts",
         "src/lib/member-session.ts",
         "src/lib/money-problems.ts",
+        "src/lib/no-show-fee.ts",
         "src/lib/public-course.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/rate-limit.ts",
@@ -12425,7 +12559,7 @@
     },
     {
       "path": "src/lib/refund-booking.ts",
-      "lines": 131,
+      "lines": 133,
       "purpose": "MP-6b.",
       "brain": [],
       "exports": [
@@ -12464,7 +12598,9 @@
       "usedBy": [
         "src/app/api/admin/refund/route.ts",
         "src/app/api/stripe/webhook/route.ts",
-        "src/lib/access-fee.ts"
+        "src/lib/access-fee.ts",
+        "src/lib/cancel-booking.ts",
+        "src/lib/no-show-fee.ts"
       ]
     },
     {
@@ -12694,7 +12830,7 @@
     },
     {
       "path": "src/lib/settings-validation.ts",
-      "lines": 130,
+      "lines": 141,
       "purpose": "SD-1.",
       "brain": [],
       "exports": [
@@ -12965,6 +13101,7 @@
         "src/lib/access-fee.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
+        "src/lib/no-show-fee.ts",
         "src/lib/platform-stripe.ts",
         "src/lib/refund-booking.ts"
       ]
@@ -13919,6 +14056,18 @@
           "type": "Boolean"
         },
         {
+          "name": "lateFeeTimingAtBooking",
+          "type": "String?"
+        },
+        {
+          "name": "noShowFeeTotal",
+          "type": "Int"
+        },
+        {
+          "name": "autoNoShowMinutesAtBooking",
+          "type": "Int?"
+        },
+        {
           "name": "source",
           "type": "String"
         },
@@ -13996,6 +14145,7 @@
         "src/lib/course-metrics.ts",
         "src/lib/frost-delay.ts",
         "src/lib/lifecycle.ts",
+        "src/lib/no-show-fee.ts",
         "src/lib/refund-booking.ts",
         "src/lib/weather-cancel.ts"
       ]
@@ -14321,6 +14471,26 @@
         {
           "name": "lateCancellationFeeCents",
           "type": "Int"
+        },
+        {
+          "name": "lateFeeBasis",
+          "type": "String"
+        },
+        {
+          "name": "lateFeeTiming",
+          "type": "String"
+        },
+        {
+          "name": "noShowFeeCents",
+          "type": "Int"
+        },
+        {
+          "name": "noShowFeeBasis",
+          "type": "String"
+        },
+        {
+          "name": "autoNoShowMinutes",
+          "type": "Int?"
         },
         {
           "name": "timezone",
@@ -15950,7 +16120,8 @@
         "src/app/api/admin/transactions/export/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
-        "src/lib/money-problems.ts"
+        "src/lib/money-problems.ts",
+        "src/lib/no-show-fee.ts"
       ]
     },
     {

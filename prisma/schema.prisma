@@ -70,6 +70,14 @@ model Course {
   // conversion dangerous. Both are cents now.
   // courseRating and rating below are NOT money and stay Float.
   lateCancellationFeeCents Int             @default(1000)
+  /// SP-B (STAFF_POLICY_SPEC Part B): the course's cancellation & card policy.
+  /// Card at booking is derived: required only when a late or no-show fee is set.
+  lateFeeBasis          String             @default("booking") // "booking" | "player"
+  lateFeeTiming         String             @default("hold_at_cutoff") // "hold_at_cutoff" | "late_cancel" | "late_cancel_or_no_show"
+  noShowFeeCents        Int                @default(0)
+  noShowFeeBasis        String             @default("booking") // "booking" | "player"
+  /// Minutes after the tee time with nobody checked in before a booking is marked a no-show automatically. Null = off.
+  autoNoShowMinutes     Int?
   timezone              String             @default("America/New_York")
   rainCheckPolicy       String             @default("")
   publicAdvanceDays     Int                @default(7)
@@ -468,6 +476,11 @@ model Booking {
   // free" — MP-1 #6 clears the amount on a free cancel, which fixed the
   // symptom; this records the state instead of inferring it from a zero.
   cancellationFeeApplies   Boolean        @default(false)
+  /// SP-B: the course's policy copied at booking — a later policy change never reaches this booking.
+  /// Null (bookings made before SP-B) behaves as "hold_at_cutoff", exactly as before.
+  lateFeeTimingAtBooking   String?
+  noShowFeeTotal           Int            @default(0)
+  autoNoShowMinutesAtBooking Int?
   /// SD-5 lifecycle: 'online' | 'walk_in' | 'phone' — walk-ins and phone
   /// bookings are entered at the counter and pay there (paymentStatus 'manual').
   source                   String         @default("online")

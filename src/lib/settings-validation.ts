@@ -40,6 +40,10 @@ const ENUMS: Record<string, string[]> = {
   type: ['public', 'private', 'semi-private', 'municipal', 'resort'],
   walkingAllowed: ['always', 'weekdays', 'after12', 'never'],
   // SD-3: the course's clock — one of the US zones the settings page offers.
+  // SP-B: the cancellation & card policy (lib/cancel-policy).
+  lateFeeBasis: ['booking', 'player'],
+  noShowFeeBasis: ['booking', 'player'],
+  lateFeeTiming: ['hold_at_cutoff', 'late_cancel', 'late_cancel_or_no_show'],
   timezone: ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Phoenix', 'America/Los_Angeles', 'America/Anchorage', 'Pacific/Honolulu'],
 };
 const BOOLEANS = new Set([
@@ -81,6 +85,13 @@ export function validateSettingsPatch(body: Record<string, unknown>, allowed: st
       const n = Number(v);
       const [lo, hi] = FLOAT_RANGES[key];
       if (!Number.isFinite(n) || n < lo || n > hi) return { ok: false, error: `${key} must be a number between ${lo} and ${hi}.` };
+      data[key] = n; continue;
+    }
+    // SP-B: automatic no-show — off (null / blank / 0) or minutes after the tee time.
+    if (key === 'autoNoShowMinutes') {
+      if (v === null || v === '' || v === 0 || v === '0') { data[key] = null; continue; }
+      const n = Number(v);
+      if (!Number.isInteger(n) || n < 10 || n > 600) return { ok: false, error: 'Automatic no-show must be between 10 and 600 minutes after the tee time.' };
       data[key] = n; continue;
     }
     if (BOOLEANS.has(key)) { data[key] = v === true || v === 'true'; continue; }

@@ -82,7 +82,7 @@ export function CancellationsPanel({ bookings, course, courseLoaded, isStaff, on
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-card p-5">
         <h2 className="text-[15px] font-medium text-ink mb-1">Cancellation Policy</h2>
-        <p className="text-[13.5px] text-ink-soft mb-4">Golfers can cancel free until this many hours before their tee time. After that, the fee below is automatically charged — and refunded if they still show up and check in.</p>
+        <p className="text-[13.5px] text-ink-soft mb-4">Golfers can cancel free until this many hours before their tee time. When the fee is taken, per-player fees, no-show fees and whether a card is saved are set in Settings → Pricing & cancellation.</p>
         {/* §1b: attention = a 3px left border in the semantic colour on a white card. */}
         {policy.lateCancellationFee > 0 && !course.stripeAccountActive && (
           <div className="flex items-start gap-2 bg-white border border-line border-l-[3px] border-l-warn rounded-md px-3 py-2.5 mb-4 text-[12.5px] text-warn">

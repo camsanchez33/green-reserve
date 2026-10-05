@@ -69,6 +69,8 @@ export interface BookingEmailData {
   rangeBallsTotal?: number; cancellationFeeTotal?: number; cancellationHours?: number;
   checkInToken?: string;
   noCard?: boolean; // true for no-fee-policy courses where no card was collected
+  /** SP-B: describePolicy(policy).lines — the exact terms the golfer booked under. */
+  policyLines?: string[];
 }
 
 // SD-5: a walk-in entered without an email gets a placeholder address so the
@@ -125,7 +127,9 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
     totalRow = `<tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">Estimated total at check-in</span><br><span style="color:#111827;font-size:20px;font-weight:700;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>`;
     policyBox = `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;padding:16px;margin-bottom:24px;">
       <p style="margin:0 0 4px;color:#1e3a8a;font-size:13px;font-weight:700;">Cancellation policy</p>
-      <p style="margin:0;color:#1e40af;font-size:13px;">Cancel any time up to ${hoursLabel(cancellationHours)} before your tee time at no charge. After that, a $${(cancellationFee / 100).toFixed(2)} late-cancellation fee will be charged to your card — it&rsquo;s refunded in full when you check in and pay for your round.</p>
+      ${data.policyLines?.length
+        ? data.policyLines.map(l => `<p style="margin:0 0 4px;color:#1e40af;font-size:13px;">${escapeHtml(l)}</p>`).join('')
+        : `<p style="margin:0;color:#1e40af;font-size:13px;">Cancel any time up to ${hoursLabel(cancellationHours)} before your tee time at no charge. After that, a $${(cancellationFee / 100).toFixed(2)} late-cancellation fee will be charged to your card — it&rsquo;s refunded in full when you check in and pay for your round.</p>`}
     </div>`;
     ctaButtons = `
       ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}
@@ -138,6 +142,7 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
     totalRow = `<tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">Estimated total at check-in</span><br><span style="color:#111827;font-size:20px;font-weight:700;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>`;
     policyBox = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:16px;margin-bottom:24px;">
       <p style="margin:0;color:#166534;font-size:13px;font-weight:600;">&#10003; Free cancellation any time — this course has no late-cancellation fee.</p>
+      ${(data.policyLines ?? []).filter(l => /no-show/i.test(l)).map(l => `<p style="margin:4px 0 0;color:#166534;font-size:13px;">${escapeHtml(l)}</p>`).join('')}
     </div>`;
     ctaButtons = `
       ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}

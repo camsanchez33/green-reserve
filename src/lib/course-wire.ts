@@ -15,6 +15,7 @@ import { centsToDollarsOr0, dollarsToCentsOr0 } from './money';
 /** wire field name -> cents column name */
 const MONEY_FIELDS = {
   lateCancellationFee:   'lateCancellationFeeCents',
+  noShowFee:             'noShowFeeCents', // SP-B
   caddieLooperRate:      'caddieLooperRateCents',
   caddieForeRate:        'caddieForeRateCents',
   rangeBallsSmallPrice:  'rangeBallsSmallPriceCents',

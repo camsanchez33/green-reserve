@@ -1,0 +1,123 @@
+// SP-B (STAFF_POLICY_SPEC Part B). A course's cancellation & card policy, the
+// fee arithmetic, and the ONE function that turns it into words a golfer reads.
+// The course page, the booking page, the confirmation email, the check-in page
+// and the owner's live preview all call describePolicy(), so the terms a golfer
+// is shown can never disagree with each other or with what gets charged.
+//
+// Card at booking is derived, never stored: a card is asked for only when there
+// is something to charge it for — a late fee or a no-show fee (Cam 2026-10-05).
+// Client-safe: no Node or Prisma imports.
+
+export type LateFeeTiming = 'hold_at_cutoff' | 'late_cancel' | 'late_cancel_or_no_show';
+export type FeeBasis = 'booking' | 'player';
+
+export interface CancelPolicy {
+  cancellationHours: number;
+  lateCancellationFeeCents: number;
+  lateFeeBasis: FeeBasis;
+  lateFeeTiming: LateFeeTiming;
+  noShowFeeCents: number;
+  noShowFeeBasis: FeeBasis;
+  autoNoShowMinutes: number | null;
+  /** Hours before the round the pay-link / check-in email goes out. */
+  checkInWindowHours: number;
+}
+
+export const LATE_FEE_TIMINGS: { key: LateFeeTiming; label: string; help: string }[] = [
+  { key: 'hold_at_cutoff', label: 'Hold at the cutoff, refunded at check-in', help: 'When free cancellation ends, the fee is charged as a hold. It comes back when they check in; cancelling late keeps it.' },
+  { key: 'late_cancel', label: 'Only if they cancel late', help: 'Nothing is charged at the cutoff. The fee is charged the moment they cancel inside the window.' },
+  { key: 'late_cancel_or_no_show', label: 'If they cancel late or don’t show', help: 'As above, and a group that never shows is charged too.' },
+];
+
+const TIMINGS = new Set<string>(LATE_FEE_TIMINGS.map(t => t.key));
+export const isLateFeeTiming = (v: unknown): v is LateFeeTiming => typeof v === 'string' && TIMINGS.has(v);
+export const isFeeBasis = (v: unknown): v is FeeBasis => v === 'booking' || v === 'player';
+
+/** Read a Course row (or a wire object) into a policy, with today's defaults. */
+export function policyFrom(c: Partial<Record<keyof CancelPolicy, unknown>>): CancelPolicy {
+  const int = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.round(v)) : d);
+  return {
+    cancellationHours: int(c.cancellationHours, 24),
+    lateCancellationFeeCents: int(c.lateCancellationFeeCents, 0),
+    lateFeeBasis: isFeeBasis(c.lateFeeBasis) ? c.lateFeeBasis : 'booking',
+    lateFeeTiming: isLateFeeTiming(c.lateFeeTiming) ? c.lateFeeTiming : 'hold_at_cutoff',
+    noShowFeeCents: int(c.noShowFeeCents, 0),
+    noShowFeeBasis: isFeeBasis(c.noShowFeeBasis) ? c.noShowFeeBasis : 'booking',
+    autoNoShowMinutes: typeof c.autoNoShowMinutes === 'number' && c.autoNoShowMinutes > 0 ? Math.round(c.autoNoShowMinutes) : null,
+    checkInWindowHours: int(c.checkInWindowHours, 3),
+  };
+}
+
+/** A card is needed only when the policy can charge one. */
+export function cardRequired(p: CancelPolicy): boolean {
+  return p.lateCancellationFeeCents > 0 || p.noShowFeeCents > 0;
+}
+
+/** Whether a no-show is charged under this policy (and so whether auto no-show can charge). */
+export function chargesNoShow(p: CancelPolicy): boolean {
+  return p.noShowFeeCents > 0 || (p.lateCancellationFeeCents > 0 && p.lateFeeTiming === 'late_cancel_or_no_show');
+}
+
+export const lateFeeTotalCents = (p: CancelPolicy, players: number) =>
+  p.lateCancellationFeeCents * (p.lateFeeBasis === 'player' ? Math.max(1, players) : 1);
+
+/**
+ * The no-show charge for a booking: the separate no-show fee when set, else —
+ * under "cancel late or don't show" — the late fee. Never both.
+ */
+export function noShowTotalCents(p: CancelPolicy, players: number): number {
+  if (p.noShowFeeCents > 0) return p.noShowFeeCents * (p.noShowFeeBasis === 'player' ? Math.max(1, players) : 1);
+  if (p.lateFeeTiming === 'late_cancel_or_no_show') return lateFeeTotalCents(p, players);
+  return 0;
+}
+
+/** SP-B: does this booking take its late fee as a hold at the cutoff? Bookings made
+ *  before SP-B carry no timing and behave exactly as before (yes). */
+export const holdsAtCutoff = (b: { lateFeeTimingAtBooking?: string | null }) =>
+  (b.lateFeeTimingAtBooking ?? 'hold_at_cutoff') === 'hold_at_cutoff';
+
+/** SP-B: is a late cancellation charged at the moment of cancelling? */
+export const chargesOnLateCancel = (b: { lateFeeTimingAtBooking?: string | null }) =>
+  b.lateFeeTimingAtBooking === 'late_cancel' || b.lateFeeTimingAtBooking === 'late_cancel_or_no_show';
+
+const money = (cents: number) => `$${(cents / 100).toFixed(cents % 100 === 0 ? 0 : 2)}`;
+const basis = (b: FeeBasis) => (b === 'player' ? ' per player' : '');
+const hours = (h: number) => (h === 1 ? '1 hour' : `${h} hours`);
+
+/**
+ * What the golfer reads, as short sentences. `headline` is one line for tight
+ * spaces (the booking summary); `lines` is the full terms.
+ */
+export function describePolicy(p: CancelPolicy): { headline: string; lines: string[]; cardNeeded: boolean } {
+  const lines: string[] = [];
+  const card = cardRequired(p);
+  const late = p.lateCancellationFeeCents > 0;
+  if (late) {
+    const fee = `${money(p.lateCancellationFeeCents)}${basis(p.lateFeeBasis)}`;
+    lines.push(`Free cancellation until ${hours(p.cancellationHours)} before your tee time.`);
+    if (p.lateFeeTiming === 'hold_at_cutoff') {
+      lines.push(`After that, a ${fee} hold is charged to your card. It’s refunded when you check in, and kept if you cancel late or don’t show.`);
+    } else if (p.lateFeeTiming === 'late_cancel') {
+      lines.push(`Cancel after that and a ${fee} late-cancellation fee is charged to your card.`);
+    } else {
+      lines.push(`Cancel after that, or don’t show, and a ${fee} fee is charged to your card.`);
+    }
+  } else {
+    lines.push('Cancel any time before your tee time at no charge.');
+  }
+  if (p.noShowFeeCents > 0) {
+    lines.push(`If you don’t show, a ${money(p.noShowFeeCents)}${basis(p.noShowFeeBasis)} no-show fee is charged to your card.`);
+  }
+  if (p.autoNoShowMinutes && chargesNoShow(p)) {
+    lines.push(`A group not checked in ${p.autoNoShowMinutes} minutes after its tee time counts as a no-show.`);
+  }
+  if (card) {
+    lines.push('Your card is saved at booking. Nothing else is charged until you play.');
+  } else {
+    lines.push(`No card needed to book. You’ll get a link ${hours(p.checkInWindowHours)} before your round to check in and pay, or pay at the course.`);
+  }
+  const headline = late
+    ? `Free cancellation until ${hours(p.cancellationHours)} before · then ${money(p.lateCancellationFeeCents)}${basis(p.lateFeeBasis)}`
+    : card ? 'Free cancellation · card saved for no-shows' : 'Free cancellation · no card needed';
+  return { headline, lines, cardNeeded: card };
+}

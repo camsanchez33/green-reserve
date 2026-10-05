@@ -1,4 +1,5 @@
 'use client';
+import { describePolicy, policyFrom, type CancelPolicy } from '@/lib/cancel-policy';
 import { useEffect, useMemo, useState, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -117,6 +118,8 @@ type CourseWithBrand = Course & {
   // always sent these; the type just never named them.
   cancellation_hours?: number;
   late_cancellation_fee?: number;
+  /** SP-B: the full policy (cents) — describePolicy() words. */
+  cancel_policy?: CancelPolicy;
   brand_color?: string;
   gift_card_url?: string;
   photos?: { id: string; url: string; sortOrder: number }[];
@@ -665,6 +668,8 @@ export default function CourseDetailPage({
   // B-1: the trust line's policy facts, from the course itself.
   const cancelHours = course.cancellation_hours ?? 24;
   const hasLateFee = (course.late_cancellation_fee ?? 0) > 0;
+  // SP-B: a card is asked for only when the policy can charge one.
+  const cardNeeded = describePolicy(course.cancel_policy ?? policyFrom({ cancellationHours: cancelHours, lateCancellationFeeCents: Math.round((course.late_cancellation_fee ?? 0) * 100) })).cardNeeded;
   const directionsUrl = course.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(course.address)}` : '';
 
   // Public look: a real photo when the course has one, otherwise a flat tint
@@ -1199,7 +1204,7 @@ export default function CourseDetailPage({
                     ? (selectedTime
                         ? <>Cancel free until <b className="text-ink font-medium">{deadlineLabel(selectedDate, selectedTime.time, cancelHours)}</b> (course time).</>
                         : <>Cancel free until {hoursLabel(cancelHours)} before your tee time.</>)
-                    : <>No card needed — cancel any time.</>}
+                    : cardNeeded ? <>Cancel any time — a card is saved for no-shows.</> : <>No card needed — cancel any time.</>}
                   {' '}${ACCESS_FEE_PER_PLAYER.toFixed(2)}/player booking fee.
                 </p>
 

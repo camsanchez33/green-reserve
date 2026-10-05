@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isPastIn } from '@/lib/course-time';
 import Stripe from 'stripe';
+import { describePolicy, policyFrom, cardRequired, lateFeeTotalCents, noShowTotalCents as noShowFeeCents } from '@/lib/cancel-policy';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { centsToDollars } from '@/lib/money';
@@ -198,29 +199,32 @@ export async function POST(req: NextRequest) {
   const totalCents     = greenFeeTotal + cartFeeTotal + rangeBallsTotal + accessFeeTotal;
   // MP-3 B2b: also cents now. Booking.cancellationFeeTotal and
   // Course.lateCancellationFeeCents finally hold the same fee in the same unit.
-  const cancellationFeeTotal = teeTimeFull.course.lateCancellationFeeCents || 0;
+  // SP-B: the course's policy decides the fee (per booking or per player), the
+  // timing, the no-show fee — and whether a card is asked for at all. All of it
+  // is copied onto the booking so a later policy change never reaches it.
+  const policy = policyFrom(teeTimeFull.course);
+  const needsCard = cardRequired(policy);
+  const cancellationFeeTotal = lateFeeTotalCents(policy, players);
+  const noShowFeeTotal = noShowFeeCents(policy, players);
 
   // Stripe card attachment — happens BEFORE the claim transaction so the DB
   // transaction stays pure (no network I/O). If the claim subsequently fails,
   // the card is attached to the customer but no booking exists — harmless.
   let savedCustomerId = '';
   let savedPaymentMethodId = '';
-  // FB-3 (Cam 2026-09-29): every online booking saves a card — the booking fee
-  // is charged to it on a no-show or a round paid at the counter. Enforced here,
-  // not only on the page (a cached page from before the change sends noCard).
-  // The card lives on the PLATFORM Customer, so it is kept whether or not the
-  // course's own Stripe account is active yet (that used to drop it silently).
+  // SP-B (Cam 2026-10-05, reverses FB-3's "every booking saves a card"): a
+  // card is required only when the course's policy can charge it — a late or a
+  // no-show fee. Otherwise the golfer books with no card and pays at check-in
+  // (the pay-link email at checkInWindowHours), and GreenReserve's fee is
+  // collected then. Enforced here, not only on the page.
   // SEC-1: the card and customer are read from STRIPE, never from the request.
-  // The page used to post customerId + paymentMethodId and this route attached
-  // one to the other — so anyone holding a cus_ id could attach their own card
-  // to someone else's Customer and make it the default. Now the page posts only
-  // the SetupIntent it just confirmed; the SetupIntent (created server-side in
-  // ./setup-intent) names its own customer and payment method.
-  if (typeof setupIntentId !== 'string' || !/^seti_[A-Za-z0-9]+$/.test(setupIntentId)) {
+  // The page posts only the SetupIntent it just confirmed; the SetupIntent
+  // (created server-side in ./setup-intent) names its own customer and card.
+  if (needsCard && (typeof setupIntentId !== 'string' || !/^seti_[A-Za-z0-9]+$/.test(setupIntentId))) {
     return NextResponse.json({ error: 'Please add a card to hold your tee time — you won’t be charged today. If this page looks out of date, refresh it.' }, { status: 400 });
   }
-  try {
-    const si = await stripe.setupIntents.retrieve(setupIntentId, { expand: ['payment_method'] });
+  if (needsCard) try {
+    const si = await stripe.setupIntents.retrieve(setupIntentId as string, { expand: ['payment_method'] });
     const siCustomer = typeof si.customer === 'string' ? si.customer : si.customer?.id;
     const pm = si.payment_method && typeof si.payment_method !== 'string' ? si.payment_method : null;
     if (si.status !== 'succeeded' || !siCustomer || !pm) {
@@ -271,6 +275,9 @@ export async function POST(req: NextRequest) {
       // SD-5: the window this golfer agreed to, whatever the course changes later.
       source:           'online',
       cancellationHoursAtBooking: teeTimeFull.course.cancellationHours,
+      lateFeeTimingAtBooking: policy.lateFeeTiming,
+      noShowFeeTotal,
+      autoNoShowMinutesAtBooking: policy.autoNoShowMinutes,
       termsAcceptedAt:  new Date(),
       termsVersion:     CURRENT_TERMS_VERSION,
     }, { type: 'golfer', id: golferSession?.golferId ?? null });
@@ -316,6 +323,7 @@ export async function POST(req: NextRequest) {
       bookingId: claimed.id,
       checkInToken: claimed.checkInToken || undefined,
       noCard: !savedPaymentMethodId,
+      policyLines: describePolicy(policy).lines,
     };
     await sendBookingConfirmation(emailData);
     if (teeTimeFull.course.operator?.email) {

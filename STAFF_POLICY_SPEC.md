@@ -287,6 +287,21 @@ Every route in A5 gated; the 200/403 matrix was run for owner, Manager, Front de
 and matched A2/A3 cell for cell (Legacy: everything it had, 403 on weather-cancel apply and waive). Single
 cancel gained "Cancel, no fee" (sheet.waive_fee) on Money → Cancellations. Live walk pending.
 
+## Built — Part B (2026-10-05)
+
+Migration `cancellation_policy` (additive). `src/lib/cancel-policy.ts` (policy, card rule, fee maths,
+`describePolicy`), `src/lib/no-show-fee.ts` (one mark-a-no-show path for staff and the cron, plus the
+"still coming" refund). Booking asks for a card only when required (Stripe JS loads only then, via
+`@stripe/stripe-js/pure`); the policy is copied onto the booking. Crons hold only `hold_at_cutoff`
+bookings; late-cancel timings charge at the cancellation; GreenReserve's fee follows any course fee (and
+the old "refund our fee on every cancel" now applies only to free/waived cancels); automatic no-show in
+the hourly cron. Owner screen: Settings → Pricing & cancellation → Cancellation & card with a live
+"What golfers will see" preview; the course page, booking page, confirmation email, Money page and Birdie
+use the same wording. Verified locally: policy save/validation/owner-only; card refused/omitted per
+policy; terms copied onto the booking; automatic no-show marked by the hourly cron; a late cancel with no
+card cancels and records the failed fee. Stripe charge calls can't run locally — verified to the call
+site; a live walk on a test course with real cards is the final check.
+
 ## Build order
 
 1. **A — permissions** (migration A4, lib, route gates, Settings screen, sidebar/sheet,

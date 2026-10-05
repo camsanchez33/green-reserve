@@ -40,6 +40,8 @@ async function logFeeEvent(bookingId: string, type: 'fee_charged' | 'fee_refunde
   });
 }
 
+const WHY_LABEL = { no_show: 'no-show', paid_offline: 'paid at the course', late_cancel: 'late cancellation' } as const;
+
 export type FeeChargeResult =
   | { ok: true; charged: true; amountCents: number; paymentIntentId: string }
   | { ok: true; charged: false; reason: string }
@@ -66,9 +68,10 @@ export async function bookingIdForFeeCharge(paymentIntentId: string): Promise<st
  * partial party (same rule as check-in). Never throws.
  */
 export async function chargeAccessFeeSeparately(bookingId: string, opts: {
-  why: 'paid_offline' | 'no_show';
+  /** SP-B adds late_cancel: when the course's policy keeps a late fee, ours follows it (Cam 2026-10-05). */
+  why: 'paid_offline' | 'no_show' | 'late_cancel';
   players?: number;
-  actor: 'operator' | 'admin';
+  actor: 'operator' | 'admin' | 'system';
   actorName?: string;
 }): Promise<FeeChargeResult> {
   const b = await prisma.booking.findUnique({
@@ -104,7 +107,7 @@ export async function chargeAccessFeeSeparately(bookingId: string, opts: {
       payment_method: b.stripePaymentMethodId,
       off_session: true,
       confirm: true,
-      description: `GreenReserve booking fee — ${n} player${n === 1 ? '' : 's'} (${opts.why === 'no_show' ? 'no-show' : 'paid at the course'})`,
+      description: `GreenReserve booking fee — ${n} player${n === 1 ? '' : 's'} (${WHY_LABEL[opts.why]})`,
       statement_descriptor_suffix: 'BOOKING FEE',
       metadata: { bookingId, courseId: b.courseId, kind: 'access_fee', why: opts.why },
     }, { idempotencyKey: `accessfee-${bookingId}-${attempt}-${amountCents}` });
@@ -119,7 +122,7 @@ export async function chargeAccessFeeSeparately(bookingId: string, opts: {
     await recordPaymentEvent({ bookingId, kind: 'charge_failed', amountCents, stripeId: pi.id, actor: opts.actor, actorName: opts.actorName, detail: `GreenReserve fee: payment ${pi.status}` }).catch(() => {});
     return { ok: false, error: `The booking fee charge is ${pi.status}.` };
   }
-  await recordPaymentEvent({ bookingId, kind: 'fee_charged', amountCents, stripeId: pi.id, actor: opts.actor, actorName: opts.actorName, detail: `GreenReserve fee charged separately (${opts.why === 'no_show' ? 'no-show' : 'paid at the course'})` });
+  await recordPaymentEvent({ bookingId, kind: 'fee_charged', amountCents, stripeId: pi.id, actor: opts.actor, actorName: opts.actorName, detail: `GreenReserve fee charged separately (${WHY_LABEL[opts.why]})` });
   await prisma.booking.update({ where: { id: bookingId }, data: { stripePaymentIntentId: pi.id } });
   await logFeeEvent(bookingId, 'fee_charged', amountCents, pi.id, opts.actor, opts.actorName, `booking_fee_${opts.why}`);
   return { ok: true, charged: true, amountCents, paymentIntentId: pi.id };

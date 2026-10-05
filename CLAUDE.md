@@ -13,7 +13,7 @@ GreenReserve is an OpenTable-style golf tee sheet platform. Golf courses list fo
 ### Payment flow (deferred, not immediate)
 - Golfers save a card at booking via Stripe SetupIntent — **nothing is charged at booking time**
 - Charge happens at **check-in** via direct Stripe charge against the saved PaymentMethod
-- Every online booking saves a card (FB-3, Cam 2026-09-29) — GreenReserve's $1.50 fee is charged to it on a no-show or a counter-paid round, so a course with no cancellation fee still collects a card. Whether a course may turn the card off is an open decision (STAFF_POLICY_SPEC §B0)
+- SP-B (Cam 2026-10-05, reverses FB-3's "every booking saves a card"): a card is asked for at booking ONLY when the course's policy can charge it — a late fee or a no-show fee (`cardRequired()` in `src/lib/cancel-policy.ts`). No fees → no card; the golfer gets the pay link `checkInWindowHours` before the round (paymentStatus `no_payment_method`). GreenReserve's $1.50 is collected when the golfer pays, and is charged ALONG WITH any late or no-show fee the course's policy charges. The policy (fee per booking/player, timing, no-show fee, auto no-show) is copied onto the Booking at creation; `describePolicy()` is the ONLY source of golfer-facing policy wording
 - Cancellation-window hold: the moment a booking's cancellation cutoff passes, the `hourly` cron charges the fee (the daily `cancellation-cutoff` is a safety net) to the saved card for EVERY still-confirmed booking at a fee-policy course. It is a hold, not a no-show penalty — it is refunded at check-in. No-fee courses get a check-in reminder email instead.
 - Cancelling after the window keeps that fee (non-refundable)
 
@@ -22,7 +22,9 @@ GreenReserve is an OpenTable-style golf tee sheet platform. Golf courses list fo
 confirmed → (check-in) → completed
 confirmed → (cancel before window) → cancelled (no charge)
 confirmed → (cancel after window) → cancelled (fee charged, non-refundable)
-confirmed → (cutoff passes, hourly cron) → hold fee charged, still confirmed; refunded at check-in
+confirmed → (cutoff passes, hourly cron) → hold fee charged, still confirmed; refunded at check-in   [timing hold_at_cutoff only]
+confirmed → (late cancel, timing late_cancel / late_cancel_or_no_show) → cancelled, late fee + GreenReserve fee charged then
+confirmed → (no-show: staff, or auto N min after tee time) → noShowAt set, no-show fee + GreenReserve fee charged; "still coming" refunds both
 confirmed → (staff marks no-show) → noShowAt set, still confirmed (reversible: "still coming")
 confirmed → (staff "paid offline") → completed, paymentStatus paid_offline, no Stripe charge
 ```

@@ -4,9 +4,11 @@ import { US_TIMEZONES } from '@/lib/course-time';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Save, CheckCircle2, AlertCircle, Loader2, KeyRound, Mail, Smartphone, Image as ImageIcon, X } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { Eyebrow } from '@/components/ui/Eyebrow';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { StaffPermissions } from '@/components/dashboard/StaffPermissions';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
+import { describePolicy, policyFrom, LATE_FEE_TIMINGS } from '@/lib/cancel-policy';
 import { toast } from '@/components/dashboard/Toast';
 import CourseLayoutTab from '@/components/dashboard/CourseLayoutTab';
 import CoursePreview from '@/components/dashboard/CoursePreview';
@@ -36,7 +38,7 @@ type Section = typeof SECTIONS[number];
 const NO_SAVE_BUTTON: Section[] = ['Staff & account'];
 // SP-A: the cancellation policy is the owner's alone — a staff login with
 // "Edit course settings" never sends these (the API refuses them too).
-const POLICY_FIELDS = ['cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy'];
+const POLICY_FIELDS = ['cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes'];
 
 // SD-8: Save used to PATCH the WHOLE form, so saving a dress-code chip also
 // re-sent every facility toggle and every price — two people editing different
@@ -54,6 +56,7 @@ const SECTION_FIELDS: Record<Section, string[]> = {
   'Pricing & cancellation': [
     'hasMemberPricing', 'hasResidentPricing', 'residentCounty', 'residentState', 'residentProofRequired',
     'cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy',
+    'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes',
   ],
   'Facilities': [
     'hasDrivingRange', 'drivingRangeType', 'rangeBallsFree', 'hasPuttingGreen', 'hasShortGameArea',
@@ -190,6 +193,15 @@ function SettingsPageInner() {
   const [formError, setFormError] = useState('');
   const [staffCount, setStaffCount] = useState(0);
   const isStaffLogin = useDashboardAccess().isStaff;
+  // SP-B: the policy as currently on screen, in golfers' words.
+  const cents = (v: unknown) => Math.round(Number(v || 0) * 100);
+  const formTerms = describePolicy(policyFrom({
+    cancellationHours: Number(form.cancellationHours ?? 24), lateCancellationFeeCents: cents(form.lateCancellationFee),
+    lateFeeBasis: form.lateFeeBasis, lateFeeTiming: form.lateFeeTiming,
+    noShowFeeCents: cents(form.noShowFee), noShowFeeBasis: form.noShowFeeBasis,
+    autoNoShowMinutes: form.autoNoShowMinutes ? Number(form.autoNoShowMinutes) : null,
+    checkInWindowHours: Number(form.checkInWindowHours ?? 3),
+  }));
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState('');
@@ -700,29 +712,72 @@ function SettingsPageInner() {
           {/* ── Cancellation ── */}
           {active==='Pricing & cancellation' && (
             <div className="space-y-5">
+              {/* SP-B: the course's cancellation & card policy. The preview is
+                  describePolicy() — word for word what golfers are shown. */}
               {isStaffLogin ? (
-                <SectionCard title="Cancellation">
-                  <p className="text-sm text-ink-soft">Free cancellation until {String(form.cancellationHours ?? 24)} hours before the tee time{form.lateCancellationFee ? `, then a $${Number(form.lateCancellationFee).toFixed(2)} late fee` : ', with no late fee'}. Only the course owner&apos;s login can change the cancellation policy.</p>
+                <SectionCard title="Cancellation & card">
+                  <ul className="space-y-1 text-sm text-ink-soft">{formTerms.lines.map((l, i) => <li key={i}>{l}</li>)}</ul>
+                  <p className="text-xs text-ink-muted">Only the course owner&apos;s login can change the cancellation policy.</p>
                 </SectionCard>
-              ) : (<SectionCard title="Cancellation">
-                <Toggle label="Cancellation fee" checked={!!form.lateCancellationFee} onChange={() => set('lateCancellationFee', form.lateCancellationFee ? 0 : 10)}/>
+              ) : (<SectionCard title="Cancellation & card">
+                <Toggle label="Late-cancellation fee" checked={!!form.lateCancellationFee} onChange={() => set('lateCancellationFee', form.lateCancellationFee ? 0 : 10)}/>
                 {!!form.lateCancellationFee && (
                   <>
-                    <Field label="Free cancellation window (hours)" hint="Golfers can cancel free up to this many hours before their tee time.">
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <Field label="Fee ($)">
+                        <FInput value={form.lateCancellationFee as number} onChange={v=>set('lateCancellationFee',Number(v))} type="number" step="0.01"/>
+                      </Field>
+                      <Field label="Charged">
+                        <select value={(form.lateFeeBasis as string) || 'booking'} onChange={e=>set('lateFeeBasis',e.target.value)} className={iCls}>
+                          <option value="booking">Per booking</option>
+                          <option value="player">Per player</option>
+                        </select>
+                      </Field>
+                    </div>
+                    <Field label="Free cancellation until (hours before the tee time)">
                       <FInput value={form.cancellationHours as number} onChange={v=>set('cancellationHours',Number(v))} type="number"/>
                     </Field>
-                    <Field label="Late cancellation fee ($)" hint="Charged automatically when the free window closes and the golfer hasn't cancelled.">
-                      <FInput value={form.lateCancellationFee as number} onChange={v=>set('lateCancellationFee',Number(v))} type="number"/>
+                    <Field label="When the fee is taken">
+                      <div className="space-y-2">
+                        {LATE_FEE_TIMINGS.map(t => (
+                          <label key={t.key} className={'flex items-start gap-2.5 px-3 py-2.5 rounded-md border cursor-pointer bg-white ' + (((form.lateFeeTiming as string) || 'hold_at_cutoff') === t.key ? 'border-pine/40' : 'border-line')}>
+                            <input type="radio" name="late-fee-timing" checked={((form.lateFeeTiming as string) || 'hold_at_cutoff') === t.key} onChange={() => set('lateFeeTiming', t.key)} className="mt-0.5 accent-pine"/>
+                            <span><span className="block text-sm font-medium text-ink">{t.label}</span><span className="block text-xs text-ink-muted">{t.help}</span></span>
+                          </label>
+                        ))}
+                      </div>
                     </Field>
                   </>
                 )}
-                {!form.lateCancellationFee && (
-                  <p className="text-xs text-ink-muted">No fee — golfers get a same-day check-in reminder and pay at the course. No card is collected at booking.</p>
+                <Toggle label="No-show fee" checked={!!form.noShowFee} onChange={() => set('noShowFee', form.noShowFee ? 0 : 20)}/>
+                {!!form.noShowFee && (
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <Field label="No-show fee ($)" hint="Charged when a group never shows. Under “cancel late or don’t show” this replaces the late fee for a no-show.">
+                      <FInput value={form.noShowFee as number} onChange={v=>set('noShowFee',Number(v))} type="number" step="0.01"/>
+                    </Field>
+                    <Field label="Charged">
+                      <select value={(form.noShowFeeBasis as string) || 'booking'} onChange={e=>set('noShowFeeBasis',e.target.value)} className={iCls}>
+                        <option value="booking">Per booking</option>
+                        <option value="player">Per player</option>
+                      </select>
+                    </Field>
+                  </div>
                 )}
-                <Field label="Check-in reminder window (hours)" hint="Golfers receive a check-in email this many hours before their tee time. They can check in online or at the clubhouse when they arrive.">
+                <Toggle label="Mark no-shows automatically" checked={!!form.autoNoShowMinutes} onChange={() => set('autoNoShowMinutes', form.autoNoShowMinutes ? null : 30)}/>
+                {!!form.autoNoShowMinutes && (
+                  <Field label="Minutes after the tee time with nobody checked in" hint="Checked every hour. Staff can undo it with “Still coming”, which refunds what it charged.">
+                    <FInput value={form.autoNoShowMinutes as number} onChange={v=>set('autoNoShowMinutes',Number(v))} type="number"/>
+                  </Field>
+                )}
+                <Field label={formTerms.cardNeeded ? 'Check-in reminder (hours before the round)' : 'Pay link (hours before the round)'} hint={formTerms.cardNeeded ? 'Golfers get their check-in link this many hours before their tee time.' : 'With no fees there is no card at booking — golfers get a link this many hours before their round to check in and pay.'}>
                   <FInput value={form.checkInWindowHours as number} onChange={v=>set('checkInWindowHours',Number(v))} type="number"/>
                 </Field>
                 <Field label="Rain check policy"><FInput value={form.rainCheckPolicy as string} onChange={v=>set('rainCheckPolicy',v)} placeholder="e.g. Rain checks issued for 9+ holes of rain"/></Field>
+                <div className="bg-paper/70 rounded-md p-4">
+                  <Eyebrow className="mb-2">What golfers will see</Eyebrow>
+                  <ul className="space-y-1 text-sm text-ink">{formTerms.lines.map((l, i) => <li key={i}>{l}</li>)}</ul>
+                  <p className="text-xs text-ink-muted mt-2">{formTerms.cardNeeded ? 'A card is saved at booking because a fee above can be charged.' : 'No card is asked for at booking — there is nothing to charge it for.'} Weather and course-closed cancellations are always free.</p>
+                </div>
               </SectionCard>)}
             </div>
           )}
