@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import PlainHeader from '@/components/PlainHeader';
-import { ArrowLeft, Calendar, CheckCircle, Globe, HelpCircle, Lock, Mail } from 'lucide-react';
+import { ArrowLeft, Globe, Lock } from 'lucide-react';
 import { calcomEmbedUrl } from '@/lib/calcom-url';
 
 const STATES = [
@@ -244,7 +244,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
 
         {signinStep === 'ask' && (
           <>
-            <HelpCircle className="w-12 h-12 text-pine mx-auto mb-5" />
+            
             <h1 className="text-2xl sm:text-3xl font-serif font-medium tracking-tight text-ink mb-2 text-center">
               Are you trying to sign in?
             </h1>
@@ -275,7 +275,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
 
         {signinStep === 'code' && (
           <>
-            <Mail className="w-12 h-12 text-pine mx-auto mb-5" />
+            
             <h1 className="text-2xl sm:text-3xl font-serif font-medium tracking-tight text-ink mb-2 text-center">
               Check your email.
             </h1>
@@ -329,7 +329,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
 
         {signinStep === 'done' && signinResult && (
           <>
-            <CheckCircle className="w-12 h-12 text-ok mx-auto mb-5" />
+            
             {signinResult.hasAccount && !signinResult.needsSetup ? (
               <>
                 <h1 className="text-2xl sm:text-3xl font-serif font-medium tracking-tight text-ink mb-2 text-center">
@@ -384,7 +384,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
   if (submitted) return (
     <div className="min-h-screen bg-paper flex items-center justify-center p-6">
       <div className="bg-white rounded-lg p-10 max-w-lg w-full border border-line">
-        <CheckCircle className="w-12 h-12 text-ok mx-auto mb-5" />
+        
         {/* IF-1 §3: the next step is a call, not a wait. The booking link in
             the email arrives with CALL_SCHEDULING_SPEC SC-2; until then the
             button below is the way to pick a time. */}
@@ -406,7 +406,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-sm transition-colors mb-3"
           >
-            <Calendar className="w-4 h-4" />
+            
             Pick a call time
           </a>
         ) : (
@@ -455,7 +455,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
           {/* Private-club reassurance */}
           {form.courseType === 'private' && (
             <div className="bg-white rounded-lg shadow-card px-5 py-4 flex gap-3">
-              <Lock className="w-4 h-4 text-pine shrink-0 mt-0.5" />
+              
               <div className="text-sm text-ink-soft space-y-1.5">
                 <p><span className="font-medium text-ink">Member-only booking.</span> Your tee sheet can be fully private — no public tee times unless you choose to enable outside play.</p>
                 <p><span className="font-medium text-ink">Your member data stays yours.</span> Member information is scoped to your club and is never shared, aggregated, or marketed to by GreenReserve.</p>
@@ -668,7 +668,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
           {/* Section 3: the call. FB-1: the time is picked on the calendar right
               after submitting (Cal.com), so no time-of-day chips here. */}
           <div className="bg-white rounded-lg shadow-card px-5 py-4 flex gap-3">
-            <Calendar className="w-4 h-4 text-pine shrink-0 mt-0.5" />
+            
             <div>
               <p className="text-sm font-medium text-ink">Next: a 20-minute call</p>
               <p className="text-xs text-ink-soft mt-0.5">Right after you submit, you&apos;ll pick a time on our calendar. We&apos;ll go through your green fees, your tee sheet, and what going live looks like.</p>

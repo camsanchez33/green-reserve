@@ -2,9 +2,10 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { XCircle, AlertCircle, Loader2, MapPin, Calendar, Clock, Users, ChevronRight, ArrowLeft } from 'lucide-react';
+import { XCircle, Loader2, Clock, Users, ArrowLeft } from 'lucide-react';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 type BookingInfo = {
   bookingId: string;
@@ -91,7 +92,7 @@ function ActionCard({ icon, title, subtitle, onClick, tone = 'neutral' }: {
         <span className={`block font-medium text-sm ${bad ? 'text-bad' : 'text-ink'}`}>{title}</span>
         <span className="block text-xs text-ink mt-0.5 leading-relaxed">{subtitle}</span>
       </span>
-      <ChevronRight size={15} className={`mt-0.5 shrink-0 ${bad ? 'text-bad/60' : 'text-ink-faint'}`} />
+      
     </button>
   );
 }
@@ -225,7 +226,7 @@ function ManagePageInner() {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-lg border border-line p-8 text-center">
-          <Clock size={36} className="text-ink-muted mx-auto mb-4" />
+          
           <h1 className="font-semibold text-ink mb-2">This link has expired</h1>
           <p className="text-ink-soft text-sm">Booking links expire 24 hours after your tee time. Contact the course directly for assistance.</p>
         </div>
@@ -237,7 +238,7 @@ function ManagePageInner() {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-lg border border-line p-8 text-center">
-          <AlertCircle size={36} className="text-bad mx-auto mb-4" />
+          
           <h1 className="font-semibold text-ink mb-2">Link not recognized</h1>
           <p className="text-ink-soft text-sm">{errorMsg}</p>
         </div>
@@ -473,10 +474,10 @@ function ManagePageInner() {
 
           {/* Details */}
           <div className="bg-paper rounded-md border border-line p-5 mb-5 space-y-3">
-            <div className="flex items-center gap-2.5 text-sm"><Calendar size={15} className="text-ink-muted shrink-0" /><span className="text-ink font-medium">{fmtDate(info.date)}</span></div>
-            <div className="flex items-center gap-2.5 text-sm"><Clock size={15} className="text-ink-muted shrink-0" /><span className="text-ink font-medium">{fmtTime(info.time)} &middot; {info.productLabel ? `${info.productLabel} · ` : ''}{info.holes} holes</span></div>
-            <div className="flex items-center gap-2.5 text-sm"><Users size={15} className="text-ink-muted shrink-0" /><span className="text-ink font-medium">{info.players} player{info.players !== 1 ? 's' : ''}</span></div>
-            <div className="flex items-start gap-2.5 text-sm"><MapPin size={15} className="text-ink-muted shrink-0 mt-0.5" /><span className="text-ink-soft">{info.courseAddress}</span></div>
+            <div className="flex items-center gap-2.5 text-sm"><span className="text-ink font-medium">{fmtDate(info.date)}</span></div>
+            <div className="flex items-center gap-2.5 text-sm"><span className="text-ink font-medium">{fmtTime(info.time)} &middot; {info.productLabel ? `${info.productLabel} · ` : ''}{info.holes} holes</span></div>
+            <div className="flex items-center gap-2.5 text-sm"><span className="text-ink font-medium">{info.players} player{info.players !== 1 ? 's' : ''}</span></div>
+            <div className="flex items-start gap-2.5 text-sm"><span className="text-ink-soft">{info.courseAddress}</span></div>
             <div className="border-t border-line pt-3">
               <PriceBreakdown greenFeeTotal={info.greenFeeTotal} cartFeeTotal={info.cartFeeTotal} rangeBallsTotal={info.rangeBallsTotal} accessFeeTotal={info.accessFeeTotal} totalAmount={info.totalAmount} players={info.players} />
             </div>
@@ -524,7 +525,7 @@ function ManagePageInner() {
           {view === 'cancel-confirm' && (
             <div className={`rounded-md border p-5 space-y-4 mt-4 ${info.windowOpen ? 'border-ok/30 bg-ok/5' : 'border-bad/30 bg-bad/5'}`}>
               <div className="flex items-start gap-2">
-                <XCircle size={16} className={`shrink-0 mt-0.5 ${info.windowOpen ? 'text-ok' : 'text-bad'}`} />
+                <StatusDot status="ok" />
                 <p className="text-sm text-ink">{confirmCancelMsg}</p>
               </div>
               {cancelError && <p className="text-bad text-xs">{cancelError}</p>}

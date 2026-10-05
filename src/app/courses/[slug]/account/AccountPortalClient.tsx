@@ -2,9 +2,8 @@
 import { use, useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import {
-  Loader2, AlertCircle, CheckCircle, Mail, ArrowLeft, LogOut, Receipt,
-} from 'lucide-react';
+import { Loader2, ArrowLeft, Receipt } from 'lucide-react';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 type PortalBooking = {
   id: string; date: string; time: string; holes?: number;
@@ -77,7 +76,7 @@ function SignIn({ courseName, courseSlug, accent, prefillEmail, onSignedIn }: {
     <div className="min-h-screen bg-paper flex items-center justify-center px-4">
       <div className="max-w-sm w-full bg-white rounded-lg border border-line p-8">
         <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-5" style={{ backgroundColor: accent + '14', color: accent }}>
-          <Mail className="w-6 h-6" />
+          
         </div>
         <h1 className="text-[20px] font-serif font-medium text-ink mb-1">Sign in to {courseName}</h1>
         <p className="text-sm text-ink-soft mb-6">View and manage your tee times here.</p>
@@ -175,7 +174,7 @@ function PortalInner({ params }: { params: Promise<{ slug: string }> }) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="max-w-sm w-full bg-white rounded-lg border border-line p-8 text-center">
-          <AlertCircle className="w-8 h-8 text-bad mx-auto mb-3" />
+          
           <p className="text-ink-soft text-sm">{error}</p>
         </div>
       </div>
@@ -207,7 +206,7 @@ function PortalInner({ params }: { params: Promise<{ slug: string }> }) {
             <h1 className="text-[20px] font-serif font-medium text-ink">Hi, {data.golfer.firstName}</h1>
           </div>
           <button onClick={signOut} className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink transition-colors">
-            <LogOut size={14} /> Sign out
+             Sign out
           </button>
         </div>
       </div>
@@ -215,7 +214,7 @@ function PortalInner({ params }: { params: Promise<{ slug: string }> }) {
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
         {data.membership && (
           <div className="rounded-md px-4 py-3 flex items-center gap-2 text-sm" style={{ backgroundColor: accent + '0d', color: accent }}>
-            <CheckCircle size={16} />
+            <StatusDot status="ok" />
             <span>Member &mdash; {data.membership.tierName}</span>
           </div>
         )}
@@ -263,7 +262,7 @@ function PortalInner({ params }: { params: Promise<{ slug: string }> }) {
                   </div>
                   {b.checkInToken && (
                     <Link href={`/receipt/${b.id}?token=${b.checkInToken}`} className="flex items-center gap-1 text-xs shrink-0 transition-opacity hover:opacity-70" style={{ color: accent }}>
-                      <Receipt size={13} /> Receipt
+                       Receipt
                     </Link>
                   )}
                 </div>

@@ -2,7 +2,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
@@ -74,7 +74,7 @@ function AcceptInviteInner() {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center p-4">
         <div className="w-full max-w-md bg-white rounded-lg border border-line p-8 text-center">
-          <AlertCircle className="w-10 h-10 text-bad mx-auto mb-4" />
+          
           <h1 className="font-semibold text-ink mb-2">Can&apos;t open this invite</h1>
           <p className="text-ink-soft text-sm mb-6">{loadError}</p>
           <Link href={`/courses/${slug}/account`} className="inline-block px-5 py-2.5 rounded-md text-sm font-medium text-white bg-pine hover:bg-pine-hover transition-colors">

@@ -22,6 +22,9 @@ const RULES = [
   { key: 'uppercase', re: /\buppercase\b|<Eyebrow\b/g, use: "no small uppercase label (TYPE-2) — if it sits above a heading, delete it; a real label is sentence case: text-[13px] font-semibold text-ink" },
   { key: 'input', re: /bg-paper border border-line rounded-md px-3/g, use: "INPUT / INPUT_COMPACT from '@/components/ui/field'" },
 ];
+// TYPE-3 (2026-10-05): icons only where they do a job. Counts the names a
+// file imports from lucide-react, so decoration can't creep back in.
+RULES.push({ key: 'lucide', count: src => (src.match(/import\s*\{([^}]*)\}\s*from\s*'lucide-react'/g) || []).reduce((n, m) => n + m.replace(/^[^{]*\{|\}[^}]*$/g, '').split(',').filter(x => x.trim()).length, 0), use: "no decorative icons (TYPE-3) — keep lucide only for icon-only buttons with aria-label, spinners, close, search, external link, steppers, disclosure, ratings, the mobile nav" });
 const BASELINE = 'scripts/design-guard.baseline.json';
 
 function* walk(dir) {
@@ -36,7 +39,7 @@ const counts = {};
 for (const root of ROOTS) for (const file of walk(root)) {
   const src = readFileSync(file, 'utf8');
   for (const r of RULES) {
-    const n = (src.match(r.re) || []).length;
+    const n = r.count ? r.count(src) : (src.match(r.re) || []).length;
     if (n) (counts[relative('.', file)] ??= {})[r.key] = n;
   }
 }

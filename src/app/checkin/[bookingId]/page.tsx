@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { Loader2, AlertCircle, MapPin, Lock } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
@@ -91,7 +91,7 @@ function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, accent, 
         Prefer to pay in person? Skip this and check in at the pro shop.
       </p>
       <div className="flex items-center justify-center gap-2 text-ink-muted text-xs">
-        <Lock size={12} /><span>Secure checkout powered by Stripe</span>
+        <span>Secure checkout powered by Stripe</span>
       </div>
     </div>
   );
@@ -144,7 +144,7 @@ function CheckInPageInner() {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-lg border border-line p-8 text-center">
-          <AlertCircle className="w-10 h-10 text-bad mx-auto mb-4" />
+          
           <h1 className="font-semibold text-ink mb-2">Can&apos;t check in</h1>
           <p className="text-ink-soft text-sm">{error}</p>
         </div>
@@ -239,7 +239,7 @@ function CheckInPageInner() {
           {summary}
 
           <div className="flex items-start gap-2 text-xs text-ink-muted mb-6">
-            <MapPin size={14} className="shrink-0 mt-0.5" />
+            
             <span>{info.courseAddress}</span>
           </div>
 

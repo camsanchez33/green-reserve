@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { CheckCircle2, Flag, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
@@ -94,7 +94,7 @@ function MembershipPayInner({ params }: { params: Promise<{ id: string }> }) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="text-center">
-          <Flag size={40} className="mx-auto mb-4 text-pine" />
+          
           <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Link Not Valid</h1>
           <p className="text-ink text-sm">This payment link is invalid or expired. Contact your course for a new one.</p>
         </div>
@@ -118,7 +118,7 @@ function MembershipPayInner({ params }: { params: Promise<{ id: string }> }) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="bg-white rounded-lg border border-line p-8 max-w-md w-full text-center">
-          <CheckCircle2 size={44} className="mx-auto mb-4 text-ok" />
+          
           <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">
             {paid ? 'Payment received' : 'Already paid'}
           </h1>

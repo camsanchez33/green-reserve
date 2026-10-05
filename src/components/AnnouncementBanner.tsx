@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { X, Megaphone } from 'lucide-react';
+import { X } from 'lucide-react';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { toast } from '@/components/dashboard/Toast';
 
@@ -34,7 +34,7 @@ export default function AnnouncementBanner() {
   // white, a hairline, pine accent. The full text lives on Messages.
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-line px-4 py-2.5 flex items-center gap-3 text-ink">
-      <Megaphone className="w-4 h-4 shrink-0 text-pine"/>
+      
       <div className="flex-1 min-w-0 flex items-baseline gap-2 overflow-hidden">
         <span className="font-semibold text-[13.5px] whitespace-nowrap">{announcement.title}</span>
         {firstLine && <span className="text-[13px] text-ink-soft truncate">{firstLine}</span>}
