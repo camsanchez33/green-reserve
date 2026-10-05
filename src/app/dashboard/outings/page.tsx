@@ -10,7 +10,6 @@ export default function OutingsPage() {
       <OperatorSidebar active="outings"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <div className="max-w-2xl mx-auto px-6 py-16 text-center">
-          <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">Outings</div>
           <Image src="/brand/golfer.svg" unoptimized alt="" width={64} height={79} className="mx-auto mb-5" />
           <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink mb-3">Outings are on the way.</h1>
           <p className="text-[13.5px] text-ink-soft leading-relaxed mb-8">

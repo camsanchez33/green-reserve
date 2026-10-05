@@ -227,22 +227,22 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 150 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 850 |
 | `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1357 |
-| `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 102 |
+| `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 99 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 423 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
 | `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 73 |
-| `/dashboard/login` | operator | entry | page | `src/app/dashboard/login/page.tsx` | 79 |
+| `/dashboard/login` | operator | entry | page | `src/app/dashboard/login/page.tsx` | 78 |
 | `/dashboard/members` | operator | middleware | page | `src/app/dashboard/members/page.tsx` | 719 |
 | `/dashboard/messages` | operator | middleware | page | `src/app/dashboard/messages/page.tsx` | 193 |
 | `/dashboard/money` | operator | middleware | page | `src/app/dashboard/money/page.tsx` | 183 |
 | `/dashboard/onboarding` | operator | **NONE FOUND** | page | `src/app/dashboard/onboarding/page.tsx` | 319 |
-| `/dashboard/outings` | operator | middleware | page | `src/app/dashboard/outings/page.tsx` | 28 |
+| `/dashboard/outings` | operator | middleware | page | `src/app/dashboard/outings/page.tsx` | 27 |
 | `/dashboard/payments` | operator | middleware | page | `src/app/dashboard/payments/page.tsx` | 18 |
 | `/dashboard/reset-password` | operator | entry | page | `src/app/dashboard/reset-password/page.tsx` | 124 |
 | `/dashboard/schedules` | operator | middleware | page | `src/app/dashboard/schedules/page.tsx` | 457 |
 | `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 958 |
 | `/dashboard/sign` | operator | middleware | page | `src/app/dashboard/sign/page.tsx` | 26 |
-| `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 28 |
+| `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 27 |
 | `/dashboard/verify` | operator | token | page | `src/app/dashboard/verify/page.tsx` | 157 |
 | `/demo` | public | public | GET | `src/app/demo/route.ts` | 18 |
 | `/for-courses` | public | public | page | `src/app/for-courses/page.tsx` | 15 |

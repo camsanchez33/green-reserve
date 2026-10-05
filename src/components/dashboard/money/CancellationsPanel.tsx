@@ -92,13 +92,13 @@ export function CancellationsPanel({ bookings, course, courseLoaded, isStaff, on
         )}
         <div className="flex flex-wrap items-end gap-3">
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Free Cancel Window (hours)</label>
+            <label className="block text-[13px] font-semibold text-ink mb-1.5">Free cancel window (hours)</label>
             <input type="number" min={0} value={policy.cancellationHours} disabled={isStaff}
               onChange={e => setField('cancellationHours', Number(e.target.value))}
               className={iCls + ' w-32 disabled:opacity-60'}/>
           </div>
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Late-Cancel Fee ($)</label>
+            <label className="block text-[13px] font-semibold text-ink mb-1.5">Late-cancel fee ($)</label>
             <input type="number" min={0} step="0.01" value={policy.lateCancellationFee} disabled={isStaff}
               onChange={e => setField('lateCancellationFee', Number(e.target.value))}
               className={iCls + ' w-32 disabled:opacity-60'}/>
@@ -116,7 +116,7 @@ export function CancellationsPanel({ bookings, course, courseLoaded, isStaff, on
       </div>
 
       <div>
-        <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Upcoming Bookings ({upcoming.length})</div>
+        <div className="text-[15px] font-semibold text-ink mb-3">Upcoming bookings ({upcoming.length})</div>
         {upcoming.length === 0 ? (
           <div className="text-center py-10 bg-white rounded-lg border border-dashed border-line text-ink-muted text-sm">No upcoming confirmed bookings.</div>
         ) : (
@@ -148,7 +148,7 @@ export function CancellationsPanel({ bookings, course, courseLoaded, isStaff, on
       </div>
 
       <div>
-        <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-3">Cancellation History ({cancelled.length})</div>
+        <div className="text-[15px] font-semibold text-ink mb-3">Cancellation history ({cancelled.length})</div>
         {cancelled.length === 0 ? (
           <div className="text-center py-10 bg-white rounded-lg border border-dashed border-line text-ink-muted text-sm">No cancellations yet.</div>
         ) : (

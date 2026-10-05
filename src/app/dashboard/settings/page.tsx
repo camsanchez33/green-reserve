@@ -83,7 +83,7 @@ const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="bg-white rounded-lg shadow-card p-5">
-      <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-4">{title}</div>
+      <div className="text-[15px] font-semibold text-ink mb-4">{title}</div>
       <div className="space-y-4">{children}</div>
     </div>
   );
@@ -91,9 +91,9 @@ function SectionCard({ title, children }: { title: string; children: React.React
 function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
   return (
     <div>
-      <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">{label}</label>
+      <label className="block text-[13px] font-semibold text-ink mb-1.5">{label}</label>
       {children}
-      {hint && <p className="text-[12.5px] text-ink-faint mt-1">{hint}</p>}
+      {hint && <p className="text-[12.5px] text-ink-soft mt-1">{hint}</p>}
     </div>
   );
 }
@@ -142,7 +142,7 @@ function ImageUpload({ label, kind, value, onUploaded, hint }: { label: string; 
 
   return (
     <div>
-      <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">{label}</label>
+      <label className="block text-[13px] font-semibold text-ink mb-1.5">{label}</label>
       <div className="flex items-center gap-4">
         {value ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -160,7 +160,7 @@ function ImageUpload({ label, kind, value, onUploaded, hint }: { label: string; 
           {value && <button onClick={remove} disabled={busy} className="text-xs text-ink-faint hover:text-bad text-left transition-colors">Remove</button>}
         </div>
       </div>
-      <p className="text-xs text-ink-faint mt-1.5">{hint}</p>
+      <p className="text-xs text-ink-soft mt-1.5">{hint}</p>
       {err && <p className="text-xs text-bad mt-1">{err}</p>}
     </div>
   );
@@ -483,7 +483,7 @@ function SettingsPageInner() {
                   Read-only; it saves nothing. Sticky beside the fields on wide
                   screens, below them otherwise. */}
               <div className="xl:sticky xl:top-6">
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-2">What golfers see</div>
+                <div className="text-[13px] font-semibold text-ink mb-2">What golfers see</div>
                 <CoursePreview
                   name={(form.name as string) || ''}
                   type={(form.type as string) || 'public'}
@@ -496,7 +496,7 @@ function SettingsPageInner() {
                   logoUrl={(form.logoUrl as string) || ''}
                   heroImageUrl={(form.heroImageUrl as string) || ''}
                 />
-                <p className="text-[12px] text-ink-muted mt-2">Updates as you type. The real page shows your live tee times and prices.</p>
+                <p className="text-[12px] text-ink-soft mt-2">Updates as you type. The real page shows your live tee times and prices.</p>
               </div>
             </div>
           )}
@@ -509,12 +509,12 @@ function SettingsPageInner() {
                 <dl className="divide-y divide-line-soft border border-line rounded-md">
                   {IDENTITY_ROWS.map(r => (
                     <div key={r.key} className="flex items-baseline gap-3 px-3 py-2.5">
-                      <dt className="w-28 shrink-0 text-[11px] uppercase tracking-[0.1em] text-ink-muted">{r.label}</dt>
+                      <dt className="w-28 shrink-0 text-[13px] font-semibold text-ink">{r.label}</dt>
                       <dd className="text-sm text-ink min-w-0 break-words">{(form[r.key] as string) || <span className="text-ink-faint">Not set</span>}</dd>
                     </div>
                   ))}
                   <div className="flex items-baseline gap-3 px-3 py-2.5">
-                    <dt className="w-28 shrink-0 text-[11px] uppercase tracking-[0.1em] text-ink-muted">Status</dt>
+                    <dt className="w-28 shrink-0 text-[13px] font-semibold text-ink">Status</dt>
                     <dd className="text-sm text-ink capitalize">{(form.liveStatus as string) === 'live' ? 'Live to golfers' : `${(form.liveStatus as string) || 'draft'} — not live yet`}</dd>
                   </div>
                 </dl>
@@ -580,7 +580,7 @@ function SettingsPageInner() {
                   <Field label="Slope"><FInput value={form.slope as number} onChange={v=>set('slope',Number(v))} type="number"/></Field>
                   <Field label="Course Rating"><FInput value={form.courseRating as number} onChange={v=>set('courseRating',Number(v))} type="number" step="0.1"/></Field>
                 </div>
-                <p className="text-xs text-ink-faint">Standard fallback fields for a simple 18-hole (or 9-hole) course. For 27+ hole layouts with combos, set up Nines and Products below.</p>
+                <p className="text-xs text-ink-soft">Standard fallback fields for a simple 18-hole (or 9-hole) course. For 27+ hole layouts with combos, set up Nines and Products below.</p>
               </SectionCard>
               <CourseLayoutTab />
             </div>
@@ -717,7 +717,7 @@ function SettingsPageInner() {
               {isStaffLogin ? (
                 <SectionCard title="Cancellation & card">
                   <ul className="space-y-1 text-sm text-ink-soft">{formTerms.lines.map((l, i) => <li key={i}>{l}</li>)}</ul>
-                  <p className="text-xs text-ink-muted">Only the course owner&apos;s login can change the cancellation policy.</p>
+                  <p className="text-xs text-ink-soft">Only the course owner&apos;s login can change the cancellation policy.</p>
                 </SectionCard>
               ) : (<SectionCard title="Cancellation & card">
                 <Toggle label="Late-cancellation fee" checked={!!form.lateCancellationFee} onChange={() => set('lateCancellationFee', form.lateCancellationFee ? 0 : 10)}/>
@@ -776,7 +776,7 @@ function SettingsPageInner() {
                 <div className="bg-paper/70 rounded-md p-4">
                   <Eyebrow className="mb-2">What golfers will see</Eyebrow>
                   <ul className="space-y-1 text-sm text-ink">{formTerms.lines.map((l, i) => <li key={i}>{l}</li>)}</ul>
-                  <p className="text-xs text-ink-muted mt-2">{formTerms.cardNeeded ? 'A card is saved at booking because a fee above can be charged.' : 'No card is asked for at booking — there is nothing to charge it for.'} Weather and course-closed cancellations are always free.</p>
+                  <p className="text-xs text-ink-soft mt-2">{formTerms.cardNeeded ? 'A card is saved at booking because a fee above can be charged.' : 'No card is asked for at booking — there is nothing to charge it for.'} Weather and course-closed cancellations are always free.</p>
                 </div>
               </SectionCard>)}
             </div>
@@ -896,7 +896,7 @@ function SettingsPageInner() {
                     <Smartphone className="w-4 h-4"/>SMS
                   </button>
                 </div>
-                {!form.twoFactorPhone && <p className="text-xs text-ink-muted">Add a phone number to enable SMS verification.</p>}
+                {!form.twoFactorPhone && <p className="text-xs text-ink-soft">Add a phone number to enable SMS verification.</p>}
                 {(form.twoFactorMethod as string) === 'sms' && (
                   <Field label="Phone number for codes">
                     <FInput value={form.twoFactorPhone as string} onChange={v=>set('twoFactorPhone',v)} type="tel" placeholder="+1 (201) 555-0100"/>
@@ -933,7 +933,7 @@ function SettingsPageInner() {
                     <p className="text-sm text-ok flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4"/>Check {operatorEmail} for a reset link.</p>
                   ) : (
                     <>
-                      <p className="text-xs text-ink-muted mb-2">Don&apos;t remember your current password?</p>
+                      <p className="text-xs text-ink-soft mb-2">Don&apos;t remember your current password?</p>
                       <button onClick={emailResetLinkInstead} disabled={emailingReset||!operatorEmail} className="text-sm font-medium text-pine hover:underline disabled:opacity-50">
                         {emailingReset ? 'Sending...' : 'Email me a reset link instead'}
                       </button>

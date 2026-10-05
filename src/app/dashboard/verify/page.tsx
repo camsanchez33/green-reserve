@@ -133,7 +133,7 @@ function VerifyContent() {
               <CheckCircle className="w-8 h-8 text-ok"/>
             </div>
             <h2 className="text-[24px] font-serif font-medium leading-none text-ink">Email verified</h2>
-            <p className="text-ink-muted text-sm mt-2">Redirecting to setup...</p>
+            <p className="text-ink-soft text-sm mt-2">Redirecting to setup...</p>
           </div>
         )}
         {status === 'error' && (
@@ -142,7 +142,7 @@ function VerifyContent() {
               <XCircle className="w-8 h-8 text-bad"/>
             </div>
             <p className="text-bad font-medium mb-2">Verification failed.</p>
-            <p className="text-ink-muted text-sm mb-4">The link may have expired or already been used.</p>
+            <p className="text-ink-soft text-sm mb-4">The link may have expired or already been used.</p>
             <button onClick={() => router.push('/dashboard/login')} className="text-pine underline text-sm">Go to login</button>
           </div>
         )}

@@ -197,9 +197,9 @@ set there. Self-contained public pages that skip the Nav (/for-courses, setup sh
 ### Staff-page type scale (§1b — sizes still apply; fonts are TYPE-1's since 2026-10-05)
 - Page title: `font-serif text-[30px] leading-none` (existing 22px titles are acceptable until their reskin run lands)
 - Section title: 15px/600 sans · body 13.5–14px · tables 13.5px
-- TYPE-2 (Cam 2026-10-05, "the small sub headings above the main heading is such an ai thing"): NO small uppercase label above a heading — the heading says it. Real form labels and table headers stay, in sentence case. Sentences are full ink; `text-ink-muted` / `text-ink-faint` only on metadata (timestamps, "updated…", counts). Being swept one area per run (homepage and golfer pages done 2026-10-05; /dashboard, /admin next) — never add a new `<Eyebrow>`
+- TYPE-2 (Cam 2026-10-05, "the small sub headings above the main heading is such an ai thing"): NO small uppercase label above a heading — the heading says it. Real form labels and table headers stay, in sentence case. Sentences are full ink; `text-ink-muted` / `text-ink-faint` only on metadata (timestamps, "updated…", counts). Being swept one area per run (homepage, golfer pages and /dashboard done 2026-10-05; /admin and the public leftovers next) — never add a new `<Eyebrow>`
 - Attention: a 3px **left** border in the semantic color on a white card — the only place borders carry color
-- Operator sidebar: white, 1px `line`; course crest + course name (display face) + 10.5px uppercase meta; active item = accent text, 3px left border, paper bg
+- Operator sidebar: white, 1px `line`; course crest + course name (display face) + 12px sentence-case meta (TYPE-2); active item = accent text, 3px left border, paper bg
 - Admin sidebar (FLOW-2): a light rail — white, 1px `line`, the lockup at the top; inactive `text-ink-soft`, active `bg-pine/[0.07] text-pine font-semibold`; count chips `rounded-md` (never 999px pills)
 
 ### Rules (every page)

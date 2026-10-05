@@ -5791,7 +5791,7 @@
     },
     {
       "path": "src/app/dashboard/2fa/page.tsx",
-      "lines": 102,
+      "lines": 99,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5915,7 +5915,7 @@
     },
     {
       "path": "src/app/dashboard/login/page.tsx",
-      "lines": 79,
+      "lines": 78,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6055,7 +6055,7 @@
     },
     {
       "path": "src/app/dashboard/outings/page.tsx",
-      "lines": 28,
+      "lines": 27,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6251,7 +6251,7 @@
     },
     {
       "path": "src/app/dashboard/tournaments/page.tsx",
-      "lines": 28,
+      "lines": 27,
       "purpose": "",
       "brain": [],
       "exports": [

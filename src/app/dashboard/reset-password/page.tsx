@@ -53,7 +53,7 @@ function ResetPasswordContent() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={190} height={36} priority className="w-[190px] max-w-full h-auto mx-auto" />
-          <p className="text-xs text-ink-muted mt-1">Course Operator Portal</p>
+          <p className="text-xs text-ink-soft mt-1">Course operator portal</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-card p-8">
@@ -86,12 +86,12 @@ function ResetPasswordContent() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">New Password</label>
+                  <label className="block text-[13px] font-semibold text-ink mb-1.5">New password</label>
                   <input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} className={iCls}/>
-                  <p className="text-xs text-ink-faint mt-1.5">{PASSWORD_REQUIREMENTS_HINT}</p>
+                  <p className="text-xs text-ink-soft mt-1.5">{PASSWORD_REQUIREMENTS_HINT}</p>
                 </div>
                 <div>
-                  <label className="block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Confirm Password</label>
+                  <label className="block text-[13px] font-semibold text-ink mb-1.5">Confirm password</label>
                   <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} className={iCls}/>
                 </div>
               </div>

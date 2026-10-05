@@ -37,7 +37,7 @@ export default function CoursePreview(p: CoursePreviewProps) {
         {p.heroImageUrl
           ? <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/5" />
           : <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'repeating-linear-gradient(45deg,rgba(255,255,255,.3) 0,rgba(255,255,255,.3) 1px,transparent 0,transparent 50%)', backgroundSize: '14px 14px' }} />}
-        <div className="absolute top-3 left-5 text-[10px] uppercase tracking-[0.12em] text-white/85">{p.establishedYear ? `Est. ${p.establishedYear} · ` : ''}{typeLabel}</div>
+        <div className="absolute top-3 left-5 text-[12px] text-white/90">{p.establishedYear ? `Est. ${p.establishedYear} · ` : ''}{typeLabel}</div>
         <div className="relative flex items-end gap-3">
           <div className="w-11 h-11 shrink-0 rounded-md bg-white flex items-center justify-center overflow-hidden text-[13px] font-semibold" style={{ color: accent }}>
             {p.logoUrl

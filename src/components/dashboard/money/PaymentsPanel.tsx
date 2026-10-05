@@ -67,13 +67,13 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate }: {
           <table className="w-full text-[13.5px]">
             <thead>
               <tr className="text-left border-b border-line">
-                <th className="px-4 py-3 text-[11px] uppercase tracking-[0.1em] text-ink-muted font-medium">Golfer</th>
-                <th className="px-4 py-3 text-[11px] uppercase tracking-[0.1em] text-ink-muted font-medium">Booked</th>
-                <th className="px-4 py-3 text-[11px] uppercase tracking-[0.1em] text-ink-muted font-medium">Tee Time</th>
-                <th className="px-4 py-3 text-[11px] uppercase tracking-[0.1em] text-ink-muted font-medium text-right">Green + Cart</th>
-                <th className="px-4 py-3 text-[11px] uppercase tracking-[0.1em] text-ink-muted font-medium text-right">Fee Held</th>
-                <th className="px-4 py-3 text-[11px] uppercase tracking-[0.1em] text-ink-muted font-medium text-right">Total</th>
-                <th className="px-4 py-3 text-[11px] uppercase tracking-[0.1em] text-ink-muted font-medium">Status</th>
+                <th className="px-4 py-3 text-[13px] font-semibold text-ink font-medium">Golfer</th>
+                <th className="px-4 py-3 text-[13px] font-semibold text-ink font-medium">Booked</th>
+                <th className="px-4 py-3 text-[13px] font-semibold text-ink font-medium">Tee time</th>
+                <th className="px-4 py-3 text-[13px] font-semibold text-ink font-medium text-right">Green + cart</th>
+                <th className="px-4 py-3 text-[13px] font-semibold text-ink font-medium text-right">Fee held</th>
+                <th className="px-4 py-3 text-[13px] font-semibold text-ink font-medium text-right">Total</th>
+                <th className="px-4 py-3 text-[13px] font-semibold text-ink font-medium">Status</th>
               </tr>
             </thead>
             <tbody>

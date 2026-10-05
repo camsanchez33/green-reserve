@@ -34,7 +34,7 @@ interface Member {
 /* ─── Helpers ──────────────────────────────────────────────────────────────── */
 const TIER_COLORS = ['#10b981','#3b82f6','#8b5cf6','#f59e0b','#f43f5e','#14b8a6','#94a3b8'];
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
-const lblCls = 'block text-[11px] uppercase tracking-[0.1em] text-ink-muted mb-1.5';
+const lblCls = 'block text-[13px] font-semibold text-ink mb-1.5';
 const addMonthsISO = (months: number) => { const d = new Date(); d.setMonth(d.getMonth() + months); return d.toISOString().slice(0, 10); };
 
 const emptyTier = (): Partial<Tier> => ({
@@ -242,7 +242,7 @@ export default function MembersPage() {
                   )}>
                     {wizStep > s.n ? <Check className="w-3 h-3"/> : s.n}
                   </span>
-                  <span className={'text-xs font-medium uppercase tracking-[0.1em] ' + (wizStep >= s.n ? 'text-ink' : 'text-ink-faint')}>{s.label}</span>
+                  <span className={'text-[13px] font-semibold ' + (wizStep >= s.n ? 'text-ink' : 'text-ink-faint')}>{s.label}</span>
                 </button>
                 {i < WIZARD_STEPS.length - 1 && <div className="w-4 h-px bg-line shrink-0"/>}
               </div>
@@ -257,7 +257,7 @@ export default function MembersPage() {
                 <div>
                   <label className={lblCls}>Tier Name *</label>
                   <input autoFocus className={iCls} value={tierForm.name ?? ''} onChange={e => setTF('name', e.target.value)} placeholder="e.g. Full Member, Senior, Junior"/>
-                  <p className="text-xs text-ink-faint mt-1.5">This is what staff and members will see on bookings.</p>
+                  <p className="text-xs text-ink-soft mt-1.5">This is what staff and members will see on bookings.</p>
                 </div>
                 <div>
                   <label className={lblCls}>Color</label>
@@ -266,7 +266,7 @@ export default function MembersPage() {
                       <button key={c} onClick={() => setTF('color', c)} className={'w-8 h-8 rounded-full border-2 transition-all ' + (tierForm.color === c ? 'border-ink scale-110' : 'border-transparent')} style={{ background: c }}/>
                     ))}
                   </div>
-                  <p className="text-xs text-ink-faint mt-1.5">Used to tag members of this tier across the tee sheet.</p>
+                  <p className="text-xs text-ink-soft mt-1.5">Used to tag members of this tier across the tee sheet.</p>
                 </div>
               </>
             )}
@@ -284,7 +284,7 @@ export default function MembersPage() {
                       </button>
                     ))}
                   </div>
-                  <p className="text-xs text-ink-faint mt-1.5">
+                  <p className="text-xs text-ink-soft mt-1.5">
                     {pricingMode === 'flat'
                       ? 'Set exact dollar amounts. Overrides the standard tee time price for members of this tier. Leave a field blank to inherit standard pricing.'
                       : 'Apply a percentage off the standard rate for every booking.'}
@@ -490,7 +490,7 @@ export default function MembersPage() {
           {panel === 'tiers' && (
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="text-[11px] uppercase tracking-[0.1em] text-ink-muted">Your Tiers</div>
+                <div className="text-[13px] font-semibold text-ink">Your tiers</div>
                 <button onClick={() => openWizard()}
                   className="ml-auto bg-pine hover:bg-pine-hover text-white rounded-md text-[12.5px] font-medium transition-colors px-4 py-2 flex items-center gap-2">
                   <Plus className="w-4 h-4"/>New Membership Tier
@@ -622,7 +622,7 @@ export default function MembersPage() {
                     <div>
                       <label className={lblCls}>Expires</label>
                       <input type="date" className={iCls} value={memberForm.expiresAt} onChange={e => setMemberForm(f => ({ ...f, expiresAt: e.target.value }))}/>
-                      <p className="text-xs text-ink-faint mt-1">Auto-set from the tier&apos;s term — adjust if needed.</p>
+                      <p className="text-xs text-ink-soft mt-1">Auto-set from the tier&apos;s term — adjust if needed.</p>
                     </div>
                     <div className="col-span-2">
                       <label className={lblCls}>Internal notes</label>
