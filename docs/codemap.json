@@ -3401,7 +3401,7 @@
     },
     {
       "path": "src/app/api/golfer/auth/otp/request/route.ts",
-      "lines": 41,
+      "lines": 40,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3428,7 +3428,7 @@
     },
     {
       "path": "src/app/api/golfer/auth/otp/verify/route.ts",
-      "lines": 97,
+      "lines": 102,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11471,7 +11471,7 @@
     },
     {
       "path": "src/lib/golfer-otp.ts",
-      "lines": 70,
+      "lines": 94,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11488,11 +11488,15 @@
           "kind": "fn"
         },
         {
-          "name": "hashOtpCode",
+          "name": "normalizePhone",
           "kind": "fn"
         },
         {
-          "name": "normalizePhone",
+          "name": "OtpChallenge",
+          "kind": "type"
+        },
+        {
+          "name": "otpCodeMatches",
           "kind": "fn"
         },
         {
@@ -11500,15 +11504,15 @@
           "kind": "type"
         },
         {
+          "name": "otpUsedKey",
+          "kind": "fn"
+        },
+        {
           "name": "signOtpChallenge",
           "kind": "fn"
         },
         {
           "name": "verifyOtpChallenge",
-          "kind": "fn"
-        },
-        {
-          "name": "verifyOtpCode",
           "kind": "fn"
         }
       ],
@@ -11518,7 +11522,6 @@
       "auth": null,
       "guard": null,
       "imports": [
-        "bcryptjs",
         "crypto",
         "jose"
       ],
