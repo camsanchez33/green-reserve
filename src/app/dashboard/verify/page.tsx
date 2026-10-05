@@ -99,7 +99,7 @@ function VerifyContent() {
               <div className="w-16 h-16 bg-pine/10 rounded-md flex items-center justify-center mx-auto mb-5">
                 <Mail className="w-8 h-8 text-pine"/>
               </div>
-              <h1 className="text-[30px] font-serif font-medium leading-none text-ink mb-2">We sent a link to {email || 'your inbox'}</h1>
+              <h1 className="text-[30px] font-serif font-semibold leading-none text-ink mb-2">We sent a link to {email || 'your inbox'}</h1>
               <p className="text-sm text-ink-soft mb-6">
                 {courseIsLive
                   ? 'Click the link in that email to confirm it\'s you. Your course is already live — this just secures your account.'
@@ -132,7 +132,7 @@ function VerifyContent() {
             <div className="w-16 h-16 bg-ok/10 rounded-md flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-ok"/>
             </div>
-            <h2 className="text-[24px] font-serif font-medium leading-none text-ink">Email verified</h2>
+            <h2 className="text-[24px] font-serif font-semibold leading-none text-ink">Email verified</h2>
             <p className="text-ink-soft text-sm mt-2">Redirecting to setup...</p>
           </div>
         )}

@@ -159,11 +159,11 @@ The homepage is built from the approved plain-background mockup
 (`docs/design/home/index.html`, UI-H-1): `src/app/HomeContent.tsx` +
 `home.module.css`, with ONE client island, `src/components/home/TeeSheetDemo.tsx`
 (hero demo + See it work share one store). Every "Book a demo" goes to `/demo`
-(→ Cal.com, tagged source=homepage); the Cal.com webhook opens a pending
+(→ Cal.com, tagged source=homepage); "Ask a question" goes to the short form at `/for-courses` (CLUB-0 — the long inquiry form is gone); the Cal.com webhook opens a pending
 "Demo booking" inquiry when a booking matches none. Rejected, never revive: Direction B
 (Figtree/white/pills), the printed-scorecard look, and every golf-hole / aerial
 course background concept. Homepage copy has NO durations and NO contract terms;
-CTAs are Book a demo + Send an inquiry. The spec also lists what is waiting on Cam.
+CTAs are Book a demo + Ask a question. CLUB-1 (Cam 2026-10-05, after clubup.com): the page LEADS with what GreenReserve is ("GreenReserve is the online tee sheet and booking page for golf courses."), then who it's for, then the proof; "The tee sheet your course deserves." closes the page. The spec also lists what is waiting on Cam.
 
 ## Design system — ONE look for every page (FLOW-1, Cam 2026-10-01)
 
@@ -175,10 +175,10 @@ Sept 2026) is RETIRED. Every page — homepage, /for-courses, legal, golfer page
 
 | | Every page |
 |---|---|
-| Fonts | TYPE-1 (Cam 2026-10-05, "the font is all so blocky looks ai"): `font-serif` = **EB Garamond** (500, lining figures) — the display face, for headlines, course names and dates ONLY; `font-sans` = **Libre Franklin** for everything else — times, buttons, tables, body. Never set times or data in the serif. Both via next/font in layout.tsx. Archivo, Newsreader and Source Sans 3 are no longer loaded |
+| Fonts | TYPE-1 (Cam 2026-10-05, "the font is all so blocky looks ai"): `font-serif` = **EB Garamond** (600 since CLUB-1 — Cam 2026-10-05 after clubup.com: headlines carry weight; lining figures) — the display face, for headlines, course names and dates ONLY; `font-sans` = **Libre Franklin** for everything else — times, buttons, tables, body. Never set times or data in the serif. Both via next/font in layout.tsx. Archivo, Newsreader and Source Sans 3 are no longer loaded |
 | Corners | Tailwind defaults: `rounded-md` 6px buttons/inputs, `rounded-lg` 8px cards; `rounded-full` avatars/dots/swatches |
 | Paper / ink / line | #FAFAF7 / #141814 / #E3E4DE |
-| Accent | `pine` (#173B2A forest) for GreenReserve; per-course `Course.brandColor` on golfer pages and the operator dashboard |
+| Accent | `pine` (#173B2A forest) for GreenReserve; per-course `Course.brandColor` on golfer pages and the operator dashboard. CLUB-1: `fairway` (#3BAA6B) is a second, DECORATION-ONLY green — rules, the slanted stripe, link underlines, the active tab. It is 2.9:1 on paper, so never text and never the only signal |
 
 FLOW-2 (Cam 2026-10-01, "clunky"): cards are soft sheets — `<Card>` / `CARD` is `bg-white rounded-lg shadow-card` (a 6% ring + 0 1px 2px), never a ruled `border border-line` box, and never a box inside a box (inner items are rows with hairlines or a `bg-paper/70` fill). The admin sidebar is a light rail (white, `border-line`, the lockup). The operator tee sheet mirrors the homepage demo (`TeeSheetDemo.tsx`) — change one, check the other.
 

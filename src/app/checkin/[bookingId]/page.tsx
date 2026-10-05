@@ -161,7 +161,7 @@ function CheckInPageInner() {
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
           <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
           <div className="p-8 text-center">
-            <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">You&apos;re checked in!</h1>
+            <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mb-2">You&apos;re checked in!</h1>
             <p className="text-ink-soft mb-6 text-sm">${(charged / 100).toFixed(2)} was charged to your card. Enjoy your round.</p>
             {result?.feeRefunded && (
               <div className="bg-ok/5 border border-ok/20 rounded-md p-4 mb-6 text-left">
@@ -208,7 +208,7 @@ function CheckInPageInner() {
         {/* The number they're about to pay is the biggest thing on the card. */}
         <div className="flex justify-between items-baseline border-t border-line pt-3">
           <span className="font-medium text-ink">Total</span>
-          <span className="font-serif font-medium text-ink text-2xl leading-none">${(payTotal / 100).toFixed(2)}</span>
+          <span className="font-serif font-semibold text-ink text-2xl leading-none">${(payTotal / 100).toFixed(2)}</span>
         </div>
       </div>
       {/* B-5: a cart for a booking that has none, priced at the tee time's cart fee. */}
@@ -229,7 +229,7 @@ function CheckInPageInner() {
       <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
         <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
         <div className="p-8">
-          <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-1">Check in, {info.golferName.split(' ')[0]}?</h1>
+          <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mb-1">Check in, {info.golferName.split(' ')[0]}?</h1>
           <p className="text-ink-soft text-sm mb-6">
             {info.hasCard
               ? 'Confirm your round and pay now — no need to stop at the pro shop.'

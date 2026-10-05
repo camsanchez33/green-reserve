@@ -95,7 +95,7 @@ function MembershipPayInner({ params }: { params: Promise<{ id: string }> }) {
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="text-center">
           
-          <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Link Not Valid</h1>
+          <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mb-2">Link Not Valid</h1>
           <p className="text-ink text-sm">This payment link is invalid or expired. Contact your course for a new one.</p>
         </div>
       </div>
@@ -119,7 +119,7 @@ function MembershipPayInner({ params }: { params: Promise<{ id: string }> }) {
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="bg-white rounded-lg border border-line p-8 max-w-md w-full text-center">
           
-          <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">
+          <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mb-2">
             {paid ? 'Payment received' : 'Already paid'}
           </h1>
           <p className="text-ink-soft text-sm">

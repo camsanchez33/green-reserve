@@ -334,7 +334,7 @@ export default function RevenuePage() {
           {/* Header + one period picker that rules the whole page */}
           <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
             <div>
-              <h1 className="text-[30px] leading-none font-serif font-medium text-ink">Revenue</h1>
+              <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Revenue</h1>
               {/* U-A (UI_REVISE_SPEC §3): say whose money this page counts. Courses
                   collect their green fees on their own Stripe accounts; none of that is on this page. */}
               <p className="text-[13.5px] text-ink-soft mt-2">GreenReserve&rsquo;s money — not the courses&rsquo;.</p>
@@ -542,7 +542,7 @@ export default function RevenuePage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <Eyebrow className="mb-1">Fees collected · {data?.period.label}</Eyebrow>
-                  <div className="text-[34px] font-serif font-medium text-ink tabular-nums leading-none">{fmtMoney(pnl.feesCollected)}</div>
+                  <div className="text-[34px] font-serif font-semibold text-ink tabular-nums leading-none">{fmtMoney(pnl.feesCollected)}</div>
                   <div className="mt-2 flex items-center gap-3 flex-wrap">
                     <DeltaBadge delta={pnl.feesCollectedDelta}/>
                     <span className="text-[11px] text-ink-muted">{fmtCount(pnl.collectedRounds)} round{pnl.collectedRounds === 1 ? '' : 's'} checked in and paid</span>
@@ -583,7 +583,7 @@ export default function RevenuePage() {
                           {pnl.netDeltaAbs >= 0 ? '+' : ''}{fmtMoney(pnl.netDeltaAbs)} vs prior
                         </span>
                       )}
-                      <span className={'text-lg font-serif font-medium tabular-nums ' + ((pnl.net ?? 0) >= 0 ? 'text-ink' : 'text-bad')}>{fmtMoney(pnl.net ?? 0)}</span>
+                      <span className={'text-lg font-serif font-semibold tabular-nums ' + ((pnl.net ?? 0) >= 0 ? 'text-ink' : 'text-bad')}>{fmtMoney(pnl.net ?? 0)}</span>
                     </div>
                   </div>
                   {pnl.stripeUnavailable && (
@@ -758,14 +758,14 @@ export default function RevenuePage() {
                 <div className="grid grid-cols-2 gap-6">
                   <div>
                     <div className="text-[11px] text-ink-muted mb-0.5">Available balance</div>
-                    <div className="text-xl font-serif font-medium text-ink tabular-nums">{fmtMoney(platform.balance.available)}</div>
+                    <div className="text-xl font-serif font-semibold text-ink tabular-nums">{fmtMoney(platform.balance.available)}</div>
                     <div className="text-[11px] text-ink-faint mt-0.5">{fmtMoney(platform.balance.pending)} pending</div>
                   </div>
                   <div>
                     <div className="text-[11px] text-ink-muted mb-0.5">Next payout</div>
                     {platform.nextPayout ? (
                       <>
-                        <div className="text-xl font-serif font-medium text-ink tabular-nums">{fmtMoney(platform.nextPayout.amount)}</div>
+                        <div className="text-xl font-serif font-semibold text-ink tabular-nums">{fmtMoney(platform.nextPayout.amount)}</div>
                         <div className="text-[11px] text-ink-faint mt-0.5">{platform.nextPayout.arrivalDate} · {platform.nextPayout.status}</div>
                       </>
                     ) : <div className="text-sm text-ink-faint mt-1">None scheduled</div>}
@@ -826,7 +826,7 @@ export default function RevenuePage() {
       {drawerOpen && (
         <Modal variant="drawer" title="Operating expenses" onClose={() => setDrawerOpen(false)}
           titleNode={<div className="bg-paper border-b border-line px-5 py-4 flex items-center justify-between">
-              <h2 className="text-[15px] font-serif font-medium text-ink">Operating expenses</h2>
+              <h2 className="text-[15px] font-serif font-semibold text-ink">Operating expenses</h2>
               <button onClick={() => setDrawerOpen(false)} aria-label="Close" className="text-ink-muted hover:text-ink"><X className="w-4 h-4"/></button>
             </div>}>
             <div className="p-5 space-y-5">

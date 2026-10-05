@@ -649,7 +649,7 @@ function DetailsForm() {
     <div className="min-h-screen bg-paper flex items-center justify-center p-6">
       <div className="bg-white rounded-lg p-8 max-w-md w-full text-center border border-line">
         
-        <h1 className="text-[18px] font-serif font-medium tracking-tight text-ink mb-2">Can&apos;t load this link</h1>
+        <h1 className="text-[18px] font-serif font-semibold tracking-tight text-ink mb-2">Can&apos;t load this link</h1>
         <p className="text-ink-soft text-sm">{loadError}</p>
         <p className="text-ink-soft text-xs mt-4">If you think this is a mistake, reply to the email we sent you.</p>
       </div>
@@ -660,7 +660,7 @@ function DetailsForm() {
     <div className="min-h-screen bg-paper flex items-center justify-center p-6">
       <div className="bg-white rounded-lg p-10 max-w-lg w-full text-center border border-line">
         
-        <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Thanks — we&apos;ve got it.</h1>
+        <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mb-2">Thanks — we&apos;ve got it.</h1>
         <p className="text-ink-soft text-sm leading-relaxed">
           We&apos;ll build {courseName}&apos;s booking page with these details and email your login shortly.
           You&apos;ll be able to fine-tune everything before going live.
@@ -1864,7 +1864,7 @@ function DetailsForm() {
         )}
 
         <div className="bg-white rounded-lg border border-line p-6 mb-5">
-          <h2 className="text-[18px] font-serif font-medium tracking-tight text-ink mb-5">
+          <h2 className="text-[18px] font-serif font-semibold tracking-tight text-ink mb-5">
             {section?.title}
             {section?.optional && <span className="ml-2 align-middle text-[12px] font-sans font-normal text-ink-muted">Optional</span>}
           </h2>

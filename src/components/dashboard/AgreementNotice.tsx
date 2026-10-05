@@ -38,7 +38,7 @@ export default function AgreementNotice() {
     return (
       <div className="fixed inset-0 bg-ink/40 flex items-center justify-center z-50 px-4 overflow-y-auto">
         <div className="bg-white rounded-lg border border-line max-w-xl w-full p-6 my-8">
-          <h2 className="text-[18px] font-serif font-medium text-ink mb-1">The Operator Agreement changed on {fmt(re.effectiveAt)}</h2>
+          <h2 className="text-[18px] font-serif font-semibold text-ink mb-1">The Operator Agreement changed on {fmt(re.effectiveAt)}</h2>
           <p className="text-sm text-ink-soft mb-4">
             {re.overdue
               ? <>The deadline to sign was {fmt(re.reacceptBy)}. Until you sign, course settings are read-only — bookings and check-ins keep working.</>

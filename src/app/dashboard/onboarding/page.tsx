@@ -176,7 +176,7 @@ function OnboardingInner() {
         {/* Step 1 — Course Details */}
         {step === 1 && (
           <div className="bg-white rounded-lg shadow-card p-6">
-            <h2 className="text-[24px] font-serif font-medium leading-none text-ink mb-1">A few details about the course</h2>
+            <h2 className="text-[24px] font-serif font-semibold leading-none text-ink mb-1">A few details about the course</h2>
             <p className="text-sm text-ink-soft mb-6">Your contact info and address are already on file from your setup sheet. This is just the playing details.</p>
 
             <div className="space-y-5">
@@ -232,7 +232,7 @@ function OnboardingInner() {
         {/* Step 2 — Sign (AG-2) */}
         {step === 2 && (
           <div className="bg-white rounded-lg shadow-card p-6">
-            <h2 className="text-[24px] font-serif font-medium leading-none text-ink mb-1 flex items-center gap-2">
+            <h2 className="text-[24px] font-serif font-semibold leading-none text-ink mb-1 flex items-center gap-2">
               <PenLine className="w-5 h-5 text-pine"/>Sign the agreements
             </h2>
             <p className="text-sm text-ink-soft mb-6">The terms every course on GreenReserve operates under. Read each one to the end, then sign once — signed copies are emailed to you.</p>
@@ -243,7 +243,7 @@ function OnboardingInner() {
         {/* Step 3 — Connect Payments */}
         {step === 3 && (
           <div className="bg-white rounded-lg shadow-card p-6">
-            <h2 className="text-[24px] font-serif font-medium leading-none text-ink mb-1 flex items-center gap-2">
+            <h2 className="text-[24px] font-serif font-semibold leading-none text-ink mb-1 flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-pine"/>Connect your payments
             </h2>
             <p className="text-sm text-ink-soft mb-6">
@@ -295,7 +295,7 @@ function OnboardingInner() {
             <div className="w-14 h-14 rounded-md bg-ok/10 flex items-center justify-center mx-auto mb-5">
               <CheckCircle className="w-7 h-7 text-ok"/>
             </div>
-            <h2 className="text-[30px] font-serif font-medium leading-none text-ink mb-2">Setup complete</h2>
+            <h2 className="text-[30px] font-serif font-semibold leading-none text-ink mb-2">Setup complete</h2>
             <p className="text-sm text-ink-soft mb-2">Your course details are saved and payments are connected. GreenReserve will review everything and take your course live — usually within 1 business day.</p>
             <p className="text-xs text-ink-soft mb-6">We&apos;ll email you a full walkthrough of your dashboard once you&apos;re live.</p>
             <button onClick={() => router.push('/dashboard')}

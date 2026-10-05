@@ -253,7 +253,7 @@ function MessagesContent() {
         <div className="w-72 shrink-0 border-r border-line flex flex-col bg-white overflow-hidden">
           <div className="px-4 py-4 border-b border-line shrink-0">
             <div className="flex items-center justify-between mb-3">
-              <h1 className="text-[15px] font-serif font-medium text-ink">Messages</h1>
+              <h1 className="text-[15px] font-serif font-semibold text-ink">Messages</h1>
               {waitingCount > 0 && (
                 <span className="text-[11px] text-warn font-medium">{waitingCount} waiting on you</span>
               )}
@@ -540,7 +540,7 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
       <div className="px-8 py-7 max-w-3xl">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-[18px] font-serif font-medium tracking-tight text-ink">Announcements</h2>
+            <h2 className="text-[18px] font-serif font-semibold tracking-tight text-ink">Announcements</h2>
             <p className="text-sm text-ink-soft mt-0.5">
               Shown on every live course&apos;s dashboard{reach ? ` — ${reach.courses} course${reach.courses === 1 ? '' : 's'}, ${reach.operators} operator${reach.operators === 1 ? '' : 's'} right now` : ''}.
             </p>

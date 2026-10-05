@@ -43,7 +43,7 @@ export default function OperatorAgreementPage() {
           </aside>
 
           <div>
-            <h1 className="text-3xl sm:text-4xl font-serif font-medium tracking-tight text-ink mb-3">{doc.title}</h1>
+            <h1 className="text-3xl sm:text-4xl font-serif font-semibold tracking-tight text-ink mb-3">{doc.title}</h1>
             <p className="text-ink-soft text-sm mb-10">Version v{doc.version} — last updated {updated}</p>
 
             {/* Plain-English summary — from the document's own front matter */}

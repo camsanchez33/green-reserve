@@ -30,7 +30,7 @@ export default function PrivacyPolicyPage() {
           </aside>
 
           <div>
-            <h1 className="text-3xl sm:text-4xl font-serif font-medium tracking-tight text-ink mb-3">Privacy Policy</h1>
+            <h1 className="text-3xl sm:text-4xl font-serif font-semibold tracking-tight text-ink mb-3">Privacy Policy</h1>
             <p className="text-ink-soft text-sm mb-10">Version v2026-08 — last updated August 2026</p>
 
             {/* Plain-English summary */}

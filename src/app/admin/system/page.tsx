@@ -211,7 +211,7 @@ export default function AdminSystemPage() {
             </div>
           )}
           <div className="mb-7">
-            <h1 className="text-[30px] leading-none font-serif font-medium text-ink">System</h1>
+            <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">System</h1>
             <p className="text-[13.5px] text-ink-soft mt-2">30-second health check — what is deployed, what runs on a schedule, where to look when something breaks.</p>
             <div className="flex items-center gap-4 mt-2.5">
               <StatusDot status="ok" label="Tracked here" />

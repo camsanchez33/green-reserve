@@ -9,7 +9,7 @@ export function CourseHeaderBar({ courseName, accent, right }: {
 }) {
   return (
     <div className="h-14 flex items-center justify-between gap-4 px-6" style={{ backgroundColor: accent || '#173B2A' }}>
-      <span className="text-white font-serif font-medium text-lg leading-none tracking-tight truncate">{courseName}</span>
+      <span className="text-white font-serif font-semibold text-lg leading-none tracking-tight truncate">{courseName}</span>
       {right && <span className="text-white/70 text-sm shrink-0">{right}</span>}
     </div>
   );

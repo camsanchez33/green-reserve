@@ -65,7 +65,7 @@ export default function CourseCard({ course }: { course: Course }) {
 
         {/* Body */}
         <div className="p-5">
-          <h3 className="font-serif font-medium text-ink text-lg leading-tight mb-1 line-clamp-1">
+          <h3 className="font-serif font-semibold text-ink text-lg leading-tight mb-1 line-clamp-1">
             {course.name}
           </h3>
           <p className="text-ink-muted text-sm mb-3 flex items-center gap-1">
@@ -98,7 +98,7 @@ export default function CourseCard({ course }: { course: Course }) {
             ) : course.base_green_fee > 0 ? (
               <div>
                 <span className="text-[12px] text-ink-muted">From</span>
-                <div className="font-serif font-medium text-ink text-xl leading-tight">
+                <div className="font-serif font-semibold text-ink text-xl leading-tight">
                   ${course.base_green_fee}
                   <span className="text-ink-muted font-sans font-normal text-xs ml-1">/ player</span>
                 </div>

@@ -219,7 +219,7 @@ export default function MembersPage() {
           <button onClick={closeWizard} className="flex items-center gap-2 text-sm text-ink-muted hover:text-ink mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4"/>Back to Member Management
           </button>
-          <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-1">
+          <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mb-1">
             {editingTier ? 'Edit Membership Tier' : 'New Membership Tier'}
           </h1>
           <p className="text-sm text-ink-soft mb-8">
@@ -404,7 +404,7 @@ export default function MembersPage() {
           <div className="w-14 h-14 rounded-md bg-ok/10 flex items-center justify-center mx-auto mb-5">
             <CheckCircle2 className="w-7 h-7 text-ok"/>
           </div>
-          <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Tier Created</h1>
+          <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mb-2">Tier Created</h1>
           <p className="text-sm text-ink-soft mb-8">
             <span className="font-medium" style={{ color: createdTier.color }}>{createdTier.name}</span> is live. Anyone you add to it gets member rates automatically at checkout.
           </p>
@@ -468,7 +468,7 @@ export default function MembersPage() {
           <div className="max-w-6xl mx-auto px-6 py-4 flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Members</h1>
+                <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Members</h1>
               </div>
             </div>
             <div className="shrink-0 flex gap-1.5">
@@ -593,7 +593,7 @@ export default function MembersPage() {
               {addOpen && (
                 <div className="bg-white border border-pine/30 rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-serif font-medium text-ink text-[17px]">Create New Member</h3>
+                    <h3 className="font-serif font-semibold text-ink text-[17px]">Create New Member</h3>
                     <button onClick={() => { setAddOpen(false); setMemberError(''); }} className="text-ink-muted hover:text-ink"><X className="w-4 h-4"/></button>
                   </div>
                   <div className="grid grid-cols-2 gap-4">

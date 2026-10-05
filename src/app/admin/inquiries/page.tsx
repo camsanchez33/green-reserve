@@ -687,7 +687,7 @@ function InquiriesListInner() {
           {/* Title + pipeline summary, search + refresh */}
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h1 className="text-[30px] leading-none font-serif font-medium text-ink">Inquiries</h1>
+              <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Inquiries</h1>
               <p className="text-[13.5px] text-ink-soft mt-2">
                 {activeCount} active · {needsYouCount} needs you · {callsThisWeek} call{callsThisWeek === 1 ? '' : 's'} this week · {liveAllTimeCount} live all-time · {closedCount} closed
               </p>

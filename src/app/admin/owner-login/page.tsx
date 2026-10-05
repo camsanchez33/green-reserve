@@ -80,7 +80,7 @@ export default function OwnerLoginPage() {
         <Card className="p-8">
           <div className="flex items-center gap-2 mb-1">
             <ShieldCheck className="w-4 h-4 text-pine" />
-            <h1 className="text-[22px] font-serif font-medium text-ink">Owner sign in</h1>
+            <h1 className="text-[22px] font-serif font-semibold text-ink">Owner sign in</h1>
           </div>
           <p className="text-sm text-ink-soft mb-6">
             {step === 'credentials' ? 'Secure access with a second factor' : method === 'totp' ? 'Enter the 6-digit code from your authenticator app — or a recovery code' : `Check ${email} for a 6-digit code`}

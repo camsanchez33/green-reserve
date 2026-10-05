@@ -309,7 +309,7 @@ function WizardContent() {
                   <CheckCircle className="w-5 h-5 text-ok"/>
                 </div>
                 <div>
-                  <div className="font-serif font-medium text-ink text-lg">Course created!</div>
+                  <div className="font-serif font-semibold text-ink text-lg">Course created!</div>
                   <div className={'text-xs mt-0.5 ' + (result.emailSent ? 'text-ok' : 'text-bad')}>
                     {result.emailSent ? 'Welcome email sent to operator' : 'Email failed — share credentials manually'}
                   </div>
@@ -373,7 +373,7 @@ function WizardContent() {
       <div className="admin-content flex-1 min-h-screen">
         <div className="px-8 py-7 max-w-2xl">
           <div className="mb-7">
-            <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink">Add New Course</h1>
+            <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink">Add New Course</h1>
             <p className="text-sm text-ink-soft mt-0.5">
               {inquiryId ? 'Pre-filled from inquiry · ' : ''}Create an operator account and course page
             </p>

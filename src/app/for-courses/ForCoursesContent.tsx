@@ -216,7 +216,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
         {signinStep === 'ask' && (
           <>
             
-            <h1 className="text-2xl sm:text-3xl font-serif font-medium tracking-tight text-ink mb-2 text-center">
+            <h1 className="text-2xl sm:text-3xl font-serif font-semibold tracking-tight text-ink mb-2 text-center">
               Are you trying to sign in?
             </h1>
             <p className="text-ink-soft text-center mb-8 text-sm">
@@ -247,7 +247,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
         {signinStep === 'code' && (
           <>
             
-            <h1 className="text-2xl sm:text-3xl font-serif font-medium tracking-tight text-ink mb-2 text-center">
+            <h1 className="text-2xl sm:text-3xl font-serif font-semibold tracking-tight text-ink mb-2 text-center">
               Check your email.
             </h1>
             {/* Deliberately does not print the address. They typed it to get
@@ -303,7 +303,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
             
             {signinResult.hasAccount && !signinResult.needsSetup ? (
               <>
-                <h1 className="text-2xl sm:text-3xl font-serif font-medium tracking-tight text-ink mb-2 text-center">
+                <h1 className="text-2xl sm:text-3xl font-serif font-semibold tracking-tight text-ink mb-2 text-center">
                   That&apos;s you. Here&apos;s the door.
                 </h1>
                 <p className="text-ink-soft text-center mb-8 text-sm">
@@ -327,7 +327,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
                  end dressed as an answer, so say the true thing instead. The
                  route has already written it to the activity ledger. */
               <>
-                <h1 className="text-2xl sm:text-3xl font-serif font-medium tracking-tight text-ink mb-2 text-center">
+                <h1 className="text-2xl sm:text-3xl font-serif font-semibold tracking-tight text-ink mb-2 text-center">
                   That&apos;s you &mdash; but your login isn&apos;t ready yet.
                 </h1>
                 <p className="text-ink-soft text-center mb-8 text-sm">
@@ -359,7 +359,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
         {/* IF-1 §3: the next step is a call, not a wait. The booking link in
             the email arrives with CALL_SCHEDULING_SPEC SC-2; until then the
             button below is the way to pick a time. */}
-        <h1 className="text-2xl sm:text-3xl font-serif font-medium tracking-tight text-ink mb-2 text-center">Thanks — we&apos;ll reply by email.</h1>
+        <h1 className="text-2xl sm:text-3xl font-serif font-semibold tracking-tight text-ink mb-2 text-center">Thanks — we&apos;ll reply by email.</h1>
         <p className="text-ink-soft text-center mb-8 text-sm">
           Your question about <span className="font-medium text-ink">{submittedName}</span> is with us, and we&apos;ll answer at <span className="font-medium text-ink">{submittedEmail}</span>.
           If you&apos;d rather see GreenReserve working, book a demo below.
@@ -557,7 +557,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
                   { stat: '$0', label: 'Setup or monthly fee' },
                 ].map(({ stat, label }) => (
                   <div key={stat} className="px-5 py-4">
-                    <div className="text-2xl font-serif font-medium text-ink leading-none mb-1.5">{stat}</div>
+                    <div className="text-2xl font-serif font-semibold text-ink leading-none mb-1.5">{stat}</div>
                     <div className="text-[12.5px] text-ink-muted">{label}</div>
                   </div>
                 ))}

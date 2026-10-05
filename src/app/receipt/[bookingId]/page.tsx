@@ -117,7 +117,7 @@ function ReceiptPageInner() {
               {/* Status + title */}
               <div className="mb-5">
                 <StatusDot status={isCompleted ? 'ok' : isCancelled ? 'bad' : 'neutral'} label={statusLabel} />
-                <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mt-3 mb-1">{data.courseName}</h1>
+                <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mt-3 mb-1">{data.courseName}</h1>
                 {data.courseLocation && <p className="text-ink text-sm">{data.courseLocation}</p>}
               </div>
 
@@ -160,7 +160,7 @@ function ReceiptPageInner() {
                 )}
                 <div className="flex justify-between items-baseline px-4 py-3.5 bg-paper">
                   <span className="font-medium text-ink">{totalLabel}</span>
-                  <span className="font-serif font-medium text-ink text-xl leading-none">{dollars(data.totalAmount)}</span>
+                  <span className="font-serif font-semibold text-ink text-xl leading-none">{dollars(data.totalAmount)}</span>
                 </div>
               </div>
 

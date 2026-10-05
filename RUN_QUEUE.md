@@ -117,7 +117,15 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     (empty strings for the rest, no migration); the long form goes away; the
     setup sheet must ask for every field the inquiry no longer has; dedupe on
     course name + email. Every "Send an inquiry" CTA becomes "Ask a question".
-  - [ ] CLUB-1 homepage  - [ ] CLUB-2 golfer pages (course photo band, course
+  - [x] CLUB-1 homepage — BUILT 2026-10-05: leads with "GreenReserve is the
+    online tee sheet and booking page for golf courses."; "One system for the
+    course, the counter and the golfer." with three columns under fairway
+    rules; the slanted fairway stripe; feature-row and step headings in
+    Garamond; "The tee sheet your course deserves." closes the page; the live
+    tee-sheet demo stays the hero product shot (no photo placeholders).
+    Garamond is semibold site-wide (.font-serif 600, `font-serif font-medium`
+    → semibold in 59 files); `fairway` token added (decoration only).
+  - [ ] CLUB-2 golfer pages (course photo band, course
     color buttons)  - [ ] CLUB-3 dashboard shell (tabs across the top, no
     sidebar on desktop, mobile bar kept; show Cam first)  - [ ] CLUB-4 /admin
     + rest
