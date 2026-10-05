@@ -156,8 +156,8 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/golfer/memberships` | golfer | file | GET POST | `src/app/api/golfer/memberships/route.ts` | 29 |
 | `/api/golfer/profile` | golfer | file | GET | `src/app/api/golfer/profile/route.ts` | 14 |
 | `/api/health` | public | public | GET | `src/app/api/health/route.ts` | 21 |
-| `/api/inquiries` | public | public | POST | `src/app/api/inquiries/route.ts` | 286 |
-| `/api/inquiries/details` | public | token | GET PATCH POST | `src/app/api/inquiries/details/route.ts` | 141 |
+| `/api/inquiries` | public | public | POST | `src/app/api/inquiries/route.ts` | 291 |
+| `/api/inquiries/details` | public | token | GET PATCH POST | `src/app/api/inquiries/details/route.ts` | 155 |
 | `/api/inquiries/signin-code` | public | public | POST | `src/app/api/inquiries/signin-code/route.ts` | 132 |
 | `/api/inquiries/signin-verify` | public | public | POST | `src/app/api/inquiries/signin-verify/route.ts` | 113 |
 | `/api/inquiries/upload` | public | token | POST | `src/app/api/inquiries/upload/route.ts` | 48 |
@@ -246,7 +246,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/verify` | operator | token | page | `src/app/dashboard/verify/page.tsx` | 157 |
 | `/demo` | public | public | GET | `src/app/demo/route.ts` | 18 |
 | `/for-courses` | public | public | page | `src/app/for-courses/page.tsx` | 15 |
-| `/for-courses/details` | public | token | page | `src/app/for-courses/details/page.tsx` | 1893 |
+| `/for-courses/details` | public | token | page | `src/app/for-courses/details/page.tsx` | 1946 |
 | `/manage/[bookingId]` | golfer | token | page | `src/app/manage/[bookingId]/page.tsx` | 559 |
 | `/membership/[id]` | public | token | page | `src/app/membership/[id]/page.tsx` | 197 |
 | `/operator-agreement` | public | public | page | `src/app/operator-agreement/page.tsx` | 82 |
@@ -263,7 +263,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 |---|---|---|---|---|
 | `src/lib/prisma.ts` | 160 | 15 |  | `prisma` |
 | `src/lib/admin-session.ts` | 52 | 149 |  | `AdminSession`, `AdminSessionUnavailable`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole`, `resolveAdminSession` +5 more |
-| `src/lib/email.ts` | 46 | 1822 |  | `BookingEmailData`, `escapeHtml`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail`, `sendAdminSetPasswordEmail`, `sendAdminTwoFactorCode` +51 more |
+| `src/lib/email.ts` | 46 | 1821 |  | `BookingEmailData`, `escapeHtml`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail`, `sendAdminSetPasswordEmail`, `sendAdminTwoFactorCode` +51 more |
 | `src/lib/session.ts` | 36 | 99 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN` |
 | `src/lib/rate-limit.ts` | 33 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
 | `src/lib/auth.ts` | 28 | 202 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffResetToken`, `signStaffToken` +4 more |

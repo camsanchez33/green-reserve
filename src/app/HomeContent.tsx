@@ -40,7 +40,7 @@ export default function HomeContent() {
           <p>GreenReserve gives your course an online booking page with your name and colors, and one tee sheet your staff run the day from.</p>
           <div className={s.cta}>
             <a className={s.btn} href={DEMO}>Book a demo <Arrow /></a>
-            <Link className={s.quiet} href={INQUIRY}>Send an inquiry</Link>
+            <Link className={s.quiet} href={INQUIRY}>Ask a question</Link>
           </div>
           <div className={s.trust}>Free for courses.</div>
         </div>
@@ -138,7 +138,7 @@ export default function HomeContent() {
           <div><h2 className={s.display}>See it with your course&apos;s tee sheet.</h2><span className={s.mail}>Or email thegreenreserve@outlook.com</span></div>
           <div className={s.cta}>
             <a className={`${s.btn} ${s.light}`} href={DEMO}>Book a demo <Arrow /></a>
-            <Link className={`${s.quiet} ${s.onDark}`} href={INQUIRY}>Send an inquiry</Link>
+            <Link className={`${s.quiet} ${s.onDark}`} href={INQUIRY}>Ask a question</Link>
           </div>
         </div>
       </section>

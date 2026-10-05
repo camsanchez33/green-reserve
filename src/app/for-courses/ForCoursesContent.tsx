@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import PlainHeader from '@/components/PlainHeader';
-import { ArrowLeft, Globe, Lock } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { calcomEmbedUrl } from '@/lib/calcom-url';
 
 const STATES = [
@@ -13,31 +13,21 @@ const STATES = [
   'SD','TN','TX','UT','VT','VA','WA','WV','WI','WY',
 ];
 // INQUIRY_FORM_SPEC IF-1: the form asks only what the discovery call can't.
-const TITLE_OPTIONS = ['General Manager', 'Head Professional', 'Owner', 'Superintendent', 'Other'];
-const BOOKING_TODAY_OPTIONS = ['Phone and a paper sheet', 'Phone and a spreadsheet', 'GolfNow or a similar site', 'Our own website', 'Something else'];
-type CourseType = 'public' | 'private';
 // FB-1 (Cam 2026-09-29): Public / Private only. A semi-private club signs up as
 // Public and turns on member passes during setup.
-const COURSE_TYPES: CourseType[] = ['public', 'private'];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 type FormData = {
   firstName: string; lastName: string;
-  contactTitle: string; contactTitleOther: string;
   email: string; phone: string;
-  courseName: string; address: string; city: string; state: string;
-  courseType: CourseType;
-  bookingToday: string;
+  courseName: string; city: string; state: string;
   notes: string;
 };
 
 const init: FormData = {
   firstName: '', lastName: '',
-  contactTitle: '', contactTitleOther: '',
   email: '', phone: '',
-  courseName: '', address: '', city: '', state: '',
-  courseType: 'public',
-  bookingToday: '',
+  courseName: '', city: '', state: '',
   notes: '',
 };
 
@@ -89,33 +79,18 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const formRef = useRef<HTMLDivElement>(null);
 
-  // PERF-1: ?type= is read here, once, from the URL — not with
-  // useSearchParams(), which made Next skip server-rendering this whole page:
-  // the HTML shipped an empty Suspense boundary, the form appeared only after
-  // JS ran, and the footer jumped 2,000px down (CLS 0.26, LCP 3.6s).
-  useEffect(() => {
-    const t = new URLSearchParams(window.location.search).get('type');
-    if (t && (COURSE_TYPES as string[]).includes(t)) setType(t as CourseType);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const set = (k: keyof FormData, v: string) => setForm(f => ({ ...f, [k]: v }));
-  const setType = (t: CourseType) => setForm(f => ({ ...f, courseType: t }));
 
   const validateAll = (): Record<string, string> => {
     const errs: Record<string, string> = {};
     if (!form.firstName.trim()) errs.firstName = 'First name is required';
     if (!form.lastName.trim()) errs.lastName = 'Last name is required';
-    if (!form.contactTitle) errs.contactTitle = 'Please select your title or role';
-    if (form.contactTitle === 'Other' && !form.contactTitleOther.trim()) errs.contactTitleOther = 'Please enter your title';
     if (!form.email.trim()) errs.email = 'Email is required';
     else if (!EMAIL_RE.test(form.email.trim())) errs.email = 'Enter a valid email address (e.g. you@course.com)';
-    if (!form.phone.trim()) errs.phone = 'Phone number is required';
     if (!form.courseName.trim()) errs.courseName = 'Course name is required';
-    if (!form.address.trim()) errs.address = 'Street address is required';
     if (!form.city.trim()) errs.city = 'City is required';
     if (!form.state) errs.state = 'State is required';
-    if (!form.bookingToday) errs.bookingToday = 'Tell us how you take tee times today';
+    if (!form.notes.trim()) errs.notes = 'What would you like to ask?';
     return errs;
   };
 
@@ -139,18 +114,14 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
     }
     setFieldErrors({});
     setSubmitting(true); setServerError('');
-    const contactTitle = form.contactTitle === 'Other' ? form.contactTitleOther.trim() : form.contactTitle;
 
     const res = await fetch('/api/inquiries', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         firstName: form.firstName, lastName: form.lastName,
-        contactTitle,
         email: form.email, phone: form.phone,
-        courseName: form.courseName, address: form.address, city: form.city, state: form.state,
-        courseType: form.courseType,
-        currentBookingMethod: form.bookingToday,
+        courseName: form.courseName, city: form.city, state: form.state,
         additionalNotes: form.notes,
         // honeypot (always empty for real users; bots fill it)
         hp: honeypotRef.current?.value ?? '',
@@ -388,12 +359,11 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
         {/* IF-1 §3: the next step is a call, not a wait. The booking link in
             the email arrives with CALL_SCHEDULING_SPEC SC-2; until then the
             button below is the way to pick a time. */}
-        <h1 className="text-2xl sm:text-3xl font-serif font-medium tracking-tight text-ink mb-2 text-center">Thanks — check your email.</h1>
-        <p className="text-ink-soft text-center mb-3 text-sm">
-          We&apos;ve sent <span className="font-medium text-ink">{submittedEmail}</span> a confirmation for <span className="font-medium text-ink">{submittedName}</span>.
-          Next is a 20-minute call — pick a time below. On it we&apos;ll go through your green fees, your tee sheet, and what going live looks like.
+        <h1 className="text-2xl sm:text-3xl font-serif font-medium tracking-tight text-ink mb-2 text-center">Thanks — we&apos;ll reply by email.</h1>
+        <p className="text-ink-soft text-center mb-8 text-sm">
+          Your question about <span className="font-medium text-ink">{submittedName}</span> is with us, and we&apos;ll answer at <span className="font-medium text-ink">{submittedEmail}</span>.
+          If you&apos;d rather see GreenReserve working, book a demo below.
         </p>
-        <p className="text-ink-soft text-center mb-8 text-sm">Most courses are live within a week of that call.</p>
 
         {/* FB-1: this used to link a Calendly page that was never set up. Now
             the Cal.com booker, prefilled with what they typed; the booking is
@@ -407,12 +377,11 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
             className="flex items-center justify-center gap-2 w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-sm transition-colors mb-3"
           >
             
-            Pick a call time
+            Book a demo
           </a>
         ) : (
-          <p className="text-center text-sm text-ink-soft mb-3">The email has a link to pick your call time.</p>
+          <p className="text-center text-sm text-ink-soft mb-3">The email has a link to book a demo.</p>
         )}
-        <p className="text-center text-xs text-ink-soft">20 minutes, at a time that works for you.</p>
         {/* Cam 2026-09-16: a course that already has a page can't be created
             again — its details change in the dashboard. This line is shown to
             EVERY submitter, not only to the ones whose course is already
@@ -442,7 +411,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
         <Link href="/" className="inline-flex items-center gap-1.5 text-ink-muted hover:text-ink transition-colors text-sm">
           <ArrowLeft size={14} /> Back
         </Link>
-        <h1 className="mt-6 text-ink text-[34px] sm:text-[46px] leading-[1.05] font-serif font-bold tracking-[-0.02em]">Get your course listed</h1>
+        <h1 className="mt-6 text-ink text-[34px] sm:text-[46px] leading-[1.05] font-serif font-bold tracking-[-0.02em]">Ask a question</h1>
         <p className="mt-3 text-ink-soft text-[17px] max-w-[40em]">Free to list. $0 / month. Golfers pay our $1.50 per player — added to their total, not taken from your green fee.</p>
       </div>
 
@@ -451,18 +420,6 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
 
           {/* The form */}
           <div ref={formRef} className="space-y-8 lg:order-last">
-
-          {/* Private-club reassurance */}
-          {form.courseType === 'private' && (
-            <div className="bg-white rounded-lg shadow-card px-5 py-4 flex gap-3">
-              
-              <div className="text-sm text-ink-soft space-y-1.5">
-                <p><span className="font-medium text-ink">Member-only booking.</span> Your tee sheet can be fully private — no public tee times unless you choose to enable outside play.</p>
-                <p><span className="font-medium text-ink">Your member data stays yours.</span> Member information is scoped to your club and is never shared, aggregated, or marketed to by GreenReserve.</p>
-                <p><span className="font-medium text-ink">Private sign-in portal.</span> Member login is specific to your club — members can&apos;t browse or access any other course.</p>
-              </div>
-            </div>
-          )}
 
           {/* Honeypot — hidden from humans, read by bots. FB-1: it used to be
               labelled "Website" / name="_website", which browser autofill and
@@ -474,96 +431,54 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
             <input ref={honeypotRef} id="gr-hp-q7" name="gr_hp_q7" type="text" tabIndex={-1} autoComplete="new-password" data-1p-ignore data-lpignore="true" defaultValue=""/>
           </div>
 
-          {/* Section 1: You */}
-          <div>
-            <p className="text-[15px] font-semibold text-ink mb-4">Contact info</p>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
                 <div id="fld-firstName">
-                  <Label text="First name" required />
-                  <input
-                    className={fieldErrors.firstName ? inpErr : inp}
-                    value={form.firstName}
-                    onChange={e => set('firstName', e.target.value)}
-                    onBlur={() => blurField('firstName')}
-                    placeholder="John"
-                    autoComplete="given-name"
-                  />
-                  <FieldError msg={fieldErrors.firstName}/>
-                </div>
-                <div id="fld-lastName">
-                  <Label text="Last name" required />
-                  <input
-                    className={fieldErrors.lastName ? inpErr : inp}
-                    value={form.lastName}
-                    onChange={e => set('lastName', e.target.value)}
-                    onBlur={() => blurField('lastName')}
-                    placeholder="Smith"
-                    autoComplete="family-name"
-                  />
-                  <FieldError msg={fieldErrors.lastName}/>
-                </div>
+                <Label text="First name" required />
+                <input
+                  className={fieldErrors.firstName ? inpErr : inp}
+                  value={form.firstName}
+                  onChange={e => set('firstName', e.target.value)}
+                  onBlur={() => blurField('firstName')}
+                  autoComplete="given-name"
+                />
+                <FieldError msg={fieldErrors.firstName}/>
               </div>
-              <div id="fld-contactTitle">
-                <Label text="Title / role" required />
-                <select
-                  className={fieldErrors.contactTitle ? selErr : sel}
-                  value={form.contactTitle}
-                  onChange={e => set('contactTitle', e.target.value)}
-                  onBlur={() => blurField('contactTitle')}
-                >
-                  <option value="">Select...</option>
-                  {TITLE_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-                <FieldError msg={fieldErrors.contactTitle}/>
-                {form.contactTitle === 'Other' && (
-                  <div id="fld-contactTitleOther" className="mt-2">
-                    <input
-                      className={fieldErrors.contactTitleOther ? inpErr : inp}
-                      value={form.contactTitleOther}
-                      onChange={e => set('contactTitleOther', e.target.value)}
-                      onBlur={() => blurField('contactTitleOther')}
-                      placeholder="Your title or role"
-                    />
-                    <FieldError msg={fieldErrors.contactTitleOther}/>
-                  </div>
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div id="fld-email">
-                  <Label text="Email" required />
-                  <input
-                    type="email"
-                    className={fieldErrors.email ? inpErr : inp}
-                    value={form.email}
-                    onChange={e => set('email', e.target.value)}
-                    onBlur={() => blurField('email')}
-                    placeholder="you@course.com"
-                    autoComplete="email"
-                  />
-                  <FieldError msg={fieldErrors.email}/>
-                </div>
-                <div id="fld-phone">
-                  <Label text="Phone" required />
-                  <input
-                    type="tel"
-                    className={fieldErrors.phone ? inpErr : inp}
-                    value={form.phone}
-                    onChange={e => set('phone', e.target.value)}
-                    onBlur={() => blurField('phone')}
-                    placeholder="(201) 555-0100"
-                    autoComplete="tel"
-                  />
-                  <FieldError msg={fieldErrors.phone}/>
-                </div>
+              <div id="fld-lastName">
+                <Label text="Last name" required />
+                <input
+                  className={fieldErrors.lastName ? inpErr : inp}
+                  value={form.lastName}
+                  onChange={e => set('lastName', e.target.value)}
+                  onBlur={() => blurField('lastName')}
+                  autoComplete="family-name"
+                />
+                <FieldError msg={fieldErrors.lastName}/>
               </div>
             </div>
-          </div>
-
-          {/* Section 2: Your course */}
-          <div>
-            <p className="text-[15px] font-semibold text-ink mb-4">Course information</p>
-            <div className="space-y-4">
+              <div id="fld-email">
+                <Label text="Email" required />
+                <input
+                  className={fieldErrors.email ? inpErr : inp}
+                  value={form.email}
+                  onChange={e => set('email', e.target.value)}
+                  onBlur={() => blurField('email')}
+                  type="email" autoComplete="email" inputMode="email"
+                  placeholder="you@course.com"
+                />
+                <FieldError msg={fieldErrors.email}/>
+              </div>
+              <div id="fld-phone">
+                <Label text="Phone (optional)" />
+                <input
+                  className={fieldErrors.phone ? inpErr : inp}
+                  value={form.phone}
+                  onChange={e => set('phone', e.target.value)}
+                  onBlur={() => blurField('phone')}
+                  type="tel" autoComplete="tel"
+                />
+                <FieldError msg={fieldErrors.phone}/>
+              </div>
               <div id="fld-courseName">
                 <Label text="Course name" required />
                 <input
@@ -571,120 +486,50 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
                   value={form.courseName}
                   onChange={e => set('courseName', e.target.value)}
                   onBlur={() => blurField('courseName')}
-                  placeholder="Pebble Beach Golf Links"
                   autoComplete="organization"
                 />
                 <FieldError msg={fieldErrors.courseName}/>
               </div>
-              <div id="fld-address">
-                <Label text="Street address" required />
+            <div className="grid grid-cols-2 gap-3">
+              <div id="fld-city">
+                <Label text="City" required />
                 <input
-                  className={fieldErrors.address ? inpErr : inp}
-                  value={form.address}
-                  onChange={e => set('address', e.target.value)}
-                  onBlur={() => blurField('address')}
-                  placeholder="1700 17-Mile Drive"
-                  autoComplete="street-address"
+                  className={fieldErrors.city ? inpErr : inp}
+                  value={form.city}
+                  onChange={e => set('city', e.target.value)}
+                  onBlur={() => blurField('city')}
+                  autoComplete="address-level2"
                 />
-                <FieldError msg={fieldErrors.address}/>
+                <FieldError msg={fieldErrors.city}/>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div id="fld-city">
-                  <Label text="City" required />
-                  <input
-                    className={fieldErrors.city ? inpErr : inp}
-                    value={form.city}
-                    onChange={e => set('city', e.target.value)}
-                    onBlur={() => blurField('city')}
-                    placeholder="Pebble Beach"
-                    autoComplete="address-level2"
-                  />
-                  <FieldError msg={fieldErrors.city}/>
-                </div>
-                <div id="fld-state">
-                  <Label text="State" required />
-                  <select
-                    className={fieldErrors.state ? selErr : sel}
-                    value={form.state}
-                    onChange={e => set('state', e.target.value)}
-                    onBlur={() => blurField('state')}
-                    autoComplete="address-level1"
-                  >
-                    <option value="">Select...</option>
-                    {STATES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  <FieldError msg={fieldErrors.state}/>
-                </div>
-              </div>
-
-              {/* Course type — two cards (FB-1) */}
-              <div id="fld-courseType">
-                <Label text="Course type" required />
-                <div className="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
-                  {([
-                    { value: 'public' as const, label: 'Public', Icon: Globe, desc: 'Open to all golfers — members welcome too.' },
-                    { value: 'private' as const, label: 'Private', Icon: Lock, desc: 'Member-controlled access.' },
-                  ] as const).map(({ value, label, Icon, desc }) => {
-                    const active = form.courseType === value;
-                    return (
-                      <button
-                        key={value}
-                        type="button"
-                        aria-pressed={active}
-                        onClick={() => setType(value)}
-                        className={
-                          'text-left p-4 rounded-lg border-2 transition-colors ' +
-                          (active ? 'border-pine bg-pine/5' : 'border-line hover:border-pine/30 bg-white')
-                        }
-                      >
-                        <div className={'flex items-center gap-2 mb-1.5 ' + (active ? 'text-pine' : 'text-ink-soft')}>
-                          <Icon className="w-4 h-4" />
-                          <span className="text-[13px] font-medium text-ink">{label}</span>
-                        </div>
-                        <p className="text-xs text-ink-soft leading-relaxed">{desc}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* The one fact that changes how the call opens. Lands in CourseInquiry.currentBookingMethod. */}
-              <div id="fld-bookingToday">
-                <Label text="How do you take tee times today?" required />
+              <div id="fld-state">
+                <Label text="State" required />
                 <select
-                  className={fieldErrors.bookingToday ? selErr : sel}
-                  value={form.bookingToday}
-                  onChange={e => set('bookingToday', e.target.value)}
-                  onBlur={() => blurField('bookingToday')}
+                  className={fieldErrors.state ? selErr : sel}
+                  value={form.state}
+                  onChange={e => set('state', e.target.value)}
+                  onBlur={() => blurField('state')}
+                  autoComplete="address-level1"
                 >
                   <option value="">Select...</option>
-                  {BOOKING_TODAY_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                  {STATES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
-                <FieldError msg={fieldErrors.bookingToday}/>
+                <FieldError msg={fieldErrors.state}/>
               </div>
             </div>
-          </div>
-
-          {/* Section 3: the call. FB-1: the time is picked on the calendar right
-              after submitting (Cal.com), so no time-of-day chips here. */}
-          <div className="bg-white rounded-lg shadow-card px-5 py-4 flex gap-3">
-            
-            <div>
-              <p className="text-sm font-medium text-ink">Next: a 20-minute call</p>
-              <p className="text-xs text-ink-soft mt-0.5">Right after you submit, you&apos;ll pick a time on our calendar. We&apos;ll go through your green fees, your tee sheet, and what going live looks like.</p>
+            <div id="fld-notes">
+              <Label text="Your question" required />
+              <textarea
+                rows={5}
+                maxLength={2000}
+                className={fieldErrors.notes ? inpErr : inp}
+                value={form.notes}
+                onChange={e => set('notes', e.target.value)}
+                onBlur={() => blurField('notes')}
+                placeholder="Ask us anything — how it works with your tee sheet, pricing, members, getting set up."
+              />
+              <FieldError msg={fieldErrors.notes}/>
             </div>
-          </div>
-
-          {/* Section 4: Optional notes */}
-          <div>
-            <p className="text-[15px] font-semibold text-ink mb-4">Anything else you&apos;d like to tell us? <span className="normal-case tracking-normal font-normal text-ink-faint">(optional)</span></p>
-            <textarea
-              rows={3}
-              className={inp}
-              value={form.notes}
-              onChange={e => set('notes', e.target.value)}
-              placeholder="Special setup, software you're replacing, timeline — whatever's useful."
-            />
           </div>
 
           {serverError && <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm">{serverError}</div>}
@@ -694,13 +539,10 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
             disabled={submitting}
             className="w-full bg-pine hover:bg-pine-hover text-white py-3.5 rounded-md font-medium text-sm disabled:opacity-50 transition-colors"
           >
-            {submitting ? 'Submitting...' : 'Submit'}
+            {submitting ? 'Sending…' : 'Send your question'}
           </button>
           <p className="text-center text-ink-soft text-xs">
-            We review every submission and reply within 1 business day.
-          </p>
-          <p className="text-center text-ink-soft text-xs">
-            No account is created — this just sends us an inquiry.
+            We reply by email. Want to see it instead? <a href="/demo" className="text-ink underline underline-offset-2">Book a demo</a>.
           </p>
           </div>
 

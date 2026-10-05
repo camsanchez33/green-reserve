@@ -79,6 +79,7 @@ export async function GET(req: NextRequest) {
     contact: {
       contactName: inquiry.contactName, contactTitle: inquiry.contactTitle, email: inquiry.email, phone: inquiry.phone,
       courseName: inquiry.courseName, address: inquiry.address, city: inquiry.city, state: inquiry.state, zipCode: inquiry.zipCode,
+      currentBookingMethod: inquiry.currentBookingMethod,
     },
   });
 }
@@ -108,9 +109,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Please complete your tee sheet schedule before submitting: ${missing.join(', ')}.` }, { status: 400 });
   }
 
+  // CLUB-0: the short "Ask a question" form leaves most contact columns empty;
+  // the sheet asks for them (details.contactFill). Fill only what is still
+  // empty on the inquiry — never overwrite what the course or an admin set.
+  const fill = (details.contactFill && typeof details.contactFill === 'object' ? details.contactFill : {}) as Record<string, unknown>;
+  const str = (v: unknown, max: number) => (typeof v === 'string' ? v.replace(/[\r\n]+/g, ' ').trim().slice(0, max) : '');
+  const contactData: Record<string, string> = {};
+  const fillIfEmpty = (col: 'contactTitle' | 'phone' | 'address' | 'zipCode' | 'currentBookingMethod', max: number) => {
+    const v = str(fill[col], max);
+    if (v && !String(inquiry[col] ?? '').trim()) contactData[col] = v;
+  };
+  fillIfEmpty('contactTitle', 120); fillIfEmpty('phone', 40); fillIfEmpty('address', 200); fillIfEmpty('zipCode', 20); fillIfEmpty('currentBookingMethod', 80);
+  if (!inquiry.courseType && (fill.courseType === 'public' || fill.courseType === 'private')) contactData.courseType = fill.courseType;
+
   await prisma.courseInquiry.update({
     where: { id: inquiry.id },
-    data: { detailsJson: JSON.stringify(details), status: 'details_submitted' },
+    data: { detailsJson: JSON.stringify(details), status: 'details_submitted', ...contactData },
   });
 
   await prisma.inquiryStatusEvent.create({

@@ -54,14 +54,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Too many submissions from this connection — try again in an hour, or email thegreenreserve@outlook.com.' }, { status: 429 });
   }
 
-  const required = ['firstName', 'lastName', 'contactTitle', 'email', 'phone', 'courseName', 'city', 'state', 'courseType', 'currentBookingMethod'];
+  // CLUB-0 (Cam 2026-10-05: "just the short one and book a demo"): the form is
+  // now a short "Ask a question" — name, email, course and town, plus a
+  // message and an optional phone. Everything else the pipeline needs is asked
+  // for on the setup sheet (api/inquiries/details fills the empty columns).
+  const required = ['firstName', 'lastName', 'email', 'courseName', 'city', 'state'];
   for (const field of required) {
     if (typeof body[field] !== 'string' || !(body[field] as string).trim()) return NextResponse.json({ error: `Missing: ${field}` }, { status: 400 });
   }
   const optStr = (v: unknown, max = 4000) => (typeof v === 'string' ? v.slice(0, max) : '');
-  if (!COURSE_TYPES.has(String(body.courseType))) return NextResponse.json({ error: 'Invalid: courseType' }, { status: 400 });
+  if (body.courseType != null && body.courseType !== '' && !COURSE_TYPES.has(String(body.courseType))) return NextResponse.json({ error: 'Invalid: courseType' }, { status: 400 });
   if (body.courseType === 'semi-private') body.courseType = 'public';
-  const currentBookingMethod = String(body.currentBookingMethod).trim().slice(0, 80);
+  const currentBookingMethod = optStr(body.currentBookingMethod, 80).trim();
   const callPreference = callPreferenceFrom(body.callPreference);
   const needsJson = callPreference ? JSON.stringify({ callPreference }) : '';
 
@@ -200,10 +204,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   }
   const firstName = (body.firstName as string).trim();
-  const contactTitle = (body.contactTitle as string).trim().slice(0, 120);
-  const phone = (body.phone as string).trim().slice(0, 40);
-  const courseType = body.courseType as string;
-  const additionalNotes = optStr(body.additionalNotes);
+  const contactTitle = optStr(body.contactTitle, 120).trim();
+  const phone = optStr(body.phone, 40).replace(/[\r\n]+/g, ' ').trim();
+  const courseType = optStr(body.courseType, 20);
+  // The question itself. Capped; escaped where it is rendered (email.ts escHtml).
+  const additionalNotes = optStr(body.additionalNotes, 2000);
   const inquiry = await prisma.courseInquiry.create({
     data: {
       firstName,

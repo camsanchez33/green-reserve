@@ -31,7 +31,7 @@ export default function ContactPage() {
             href="/for-courses"
             className="inline-flex items-center gap-2 text-sm font-medium text-pine hover:text-pine-hover transition-colors"
           >
-            Submit interest form 
+            Ask a question
           </Link>
         </div>
       </div>

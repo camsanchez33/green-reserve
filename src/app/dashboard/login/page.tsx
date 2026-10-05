@@ -60,7 +60,7 @@ function LoginContent() {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
           <p className="text-center text-[12.5px] text-ink-soft">
-            Don&apos;t have an account? <a href="/for-courses" className="text-pine font-medium hover:underline">Submit an inquiry →</a>
+            Don&apos;t have an account? <a href="/for-courses" className="text-pine font-medium hover:underline">Ask a question →</a>
           </p>
         </div>
 

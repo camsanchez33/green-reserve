@@ -809,9 +809,9 @@ export default function CourseDetailPage({
             <span className="text-ink-soft">
               This is a live demo of a GreenReserve course page — your course gets one just like it, free.
             </span>
-            <Link href="/for-courses" className="text-pine font-medium hover:underline whitespace-nowrap">
-              List your course 
-            </Link>
+            <a href="/demo" className="text-pine font-medium hover:underline whitespace-nowrap">
+              Book a demo
+            </a>
           </div>
         </div>
       )}
@@ -1736,12 +1736,12 @@ export default function CourseDetailPage({
             <p className="text-sm text-ink-soft text-center leading-relaxed mb-6">
               Bookings are disabled on this demo page. This is where your golfers would receive their confirmation — with your course name, their tee time, and a check-in link.
             </p>
-            <Link
-              href="/for-courses"
+            <a
+              href="/demo"
               className="block w-full text-center py-3 bg-pine hover:bg-pine-hover text-white text-sm font-medium rounded-md transition-colors mb-3"
             >
-              List your course for free
-            </Link>
+              Book a demo
+            </a>
             <button
               onClick={() => setDemoModal(false)}
               className="block w-full text-center py-3 text-sm text-ink-soft hover:text-ink transition-colors"

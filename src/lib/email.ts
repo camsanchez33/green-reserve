@@ -972,17 +972,17 @@ export async function sendInquiryNotification(data: {
   inviteNote?: string | null;
 }) {
   const html = baseTemplate(`
-    <h2 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:700;">New Course Inquiry ⛳</h2>
-    <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">A new course has submitted interest on GreenReserve.</p>
+    <h2 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:700;">New question from a course</h2>
+    <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">Sent from the Ask a question form. Reply to them by email; they also got a link to book a demo.</p>
     <div style="background:#f9fafb;border-radius:4px;padding:20px;margin-bottom:20px;">
       <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#111827;">${escHtml(data.courseName)}</p>
-      <p style="margin:0 0 4px;color:#6b7280;font-size:14px;">${escHtml(data.city)}, ${escHtml(data.state)} · ${escHtml(data.courseType)}</p>
-      <p style="margin:0 0 12px;color:#6b7280;font-size:14px;">Current booking: ${escHtml(data.currentBookingMethod)}</p>
-      <p style="margin:0 0 4px;color:#374151;font-size:14px;"><strong>Contact:</strong> ${escHtml(data.contactName)} — ${escHtml(data.contactTitle)}</p>
+      <p style="margin:0 0 12px;color:#6b7280;font-size:14px;">${escHtml(data.city)}, ${escHtml(data.state)}${data.courseType ? ` · ${escHtml(data.courseType)}` : ''}</p>
+      ${data.currentBookingMethod ? `<p style="margin:0 0 12px;color:#6b7280;font-size:14px;">Current booking: ${escHtml(data.currentBookingMethod)}</p>` : ''}
+      <p style="margin:0 0 4px;color:#374151;font-size:14px;"><strong>Contact:</strong> ${escHtml(data.contactName)}${data.contactTitle ? ` — ${escHtml(data.contactTitle)}` : ''}</p>
       <p style="margin:0 0 4px;color:#374151;font-size:14px;"><strong>Email:</strong> ${escHtml(data.email)}</p>
-      <p style="margin:0 0 4px;color:#374151;font-size:14px;"><strong>Phone:</strong> ${escHtml(data.phone)}</p>
+      ${data.phone ? `<p style="margin:0 0 4px;color:#374151;font-size:14px;"><strong>Phone:</strong> ${escHtml(data.phone)}</p>` : ''}
       ${data.greenFeeRange ? `<p style="margin:8px 0 0;color:#374151;font-size:14px;"><strong>Fee range:</strong> ${escHtml(data.greenFeeRange)}</p>` : ''}
-      ${data.additionalNotes ? `<p style="margin:8px 0 0;color:#374151;font-size:14px;"><strong>Notes:</strong> ${escHtml(data.additionalNotes)}</p>` : ''}
+      ${data.additionalNotes ? `<p style="margin:8px 0 0;color:#374151;font-size:14px;white-space:pre-wrap;"><strong>Their question:</strong> ${escHtml(data.additionalNotes)}</p>` : ''}
       ${data.inviteNote ? `<p style="margin:12px 0 0;color:#A3452F;font-size:13px;"><strong>Call invite not sent:</strong> ${escHtml(data.inviteNote)} — send it from the inquiry page.</p>` : ''}
     </div>
     <a href="${process.env.NEXT_PUBLIC_URL}/admin" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;">
@@ -993,7 +993,7 @@ export async function sendInquiryNotification(data: {
   await getResend().emails.send({
     from: FROM,
     to: 'thegreenreserve@outlook.com',
-    subject: `New inquiry: ${data.courseName} — ${data.city}, ${data.state}`,
+    subject: `Question from ${data.courseName} — ${data.city}, ${data.state}`,
     html,
   });
 }
@@ -1011,14 +1011,13 @@ export async function sendInquiryConfirmation(data: {
   const html = baseTemplate(`
     <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">Got it, ${escHtml(data.firstName)}.</h1>
     <p style="margin:0 0 20px;color:#6b7280;font-size:15px;">
-      Thanks for reaching out about <strong>${escHtml(data.courseName)}</strong>. The next step is a 20-minute call:
-      we'll go through your green fees, your tee sheet, and what going live looks like. Most courses are live
-      within a week of that call.
+      Thanks for your question about <strong>${escHtml(data.courseName)}</strong> — we'll reply to this address.
+      If you'd rather see GreenReserve working, book a demo: we'll walk through your tee sheet, your green fees
+      and what going live looks like.
     </p>
     <a href="${INQUIRY_CALL_URL}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:12px;">
-      Pick a call time
+      Book a demo
     </a>
-    <p style="margin:0 0 24px;color:#9ca3af;font-size:12px;text-align:center;">20 minutes, at a time that works for you.</p>
     <p style="margin:16px 0 0;color:#9ca3af;font-size:12px;text-align:center;">
       Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#6b7280;">thegreenreserve@outlook.com</a>.
     </p>
@@ -1026,7 +1025,7 @@ export async function sendInquiryConfirmation(data: {
   await getResend().emails.send({
     from: FROM,
     to: data.email,
-    subject: `We received your GreenReserve inquiry — ${data.courseName}`,
+    subject: `We got your question — ${data.courseName}`,
     html,
   });
 }

@@ -101,8 +101,18 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   hero with the live tee-sheet demo (aerial/photo hero stays banned); no
   [PHOTO] placeholders in production. CLAUDE.md rules for 8px buttons, serif
   weight and the green token are rewritten in the CLUB-1 PR.
-  - [ ] CLUB-0 short form — Cam: "No I think just the short one and book a
-    demo". /for-courses becomes a short "Ask a question" form (name, email,
+  - [x] CLUB-0 short form — BUILT 2026-10-05 (Cam: "No I think just the short one and book a
+    demo"). /for-courses is "Ask a question": first/last name, email, phone
+    (optional), course name, city, state, the question. It still creates a
+    CourseInquiry (blank title/phone/address/zip/type/booking method — no
+    migration; dedupe still course name + city + state, so the already-built
+    flow is unchanged) and the call invite. The setup sheet's step 1 now asks
+    for every contact field the inquiry is missing (phone, address, ZIP and
+    public/private required) and the POST fills only EMPTY inquiry columns.
+    Emails: admin alert reads "New question from a course" and shows the
+    question; the course's confirmation says we'll reply and offers Book a
+    demo. Nav/course-page/contact/login CTAs now say Book a demo or Ask a
+    question. Was: /for-courses becomes a short "Ask a question" form (name, email,
     course name, message; phone optional) that still creates a CourseInquiry
     (empty strings for the rest, no migration); the long form goes away; the
     setup sheet must ask for every field the inquiry no longer has; dedupe on
