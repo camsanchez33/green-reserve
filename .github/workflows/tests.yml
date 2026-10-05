@@ -1,0 +1,93 @@
+name: Tests
+
+# REVIEW_SPEC Phase 0 (Cam 2026-10-05: "add the tests to CI"). Until this file,
+# the scripts/*-test.ts suite existed but nothing ran it, and three of them had
+# quietly gone stale. Every PR now runs:
+#   1. every pure script (any scripts/*-test.ts not listed in SERVER_TESTS)
+#   2. a production build, started against a throwaway Postgres
+#   3. the server-backed scripts against it: tenant isolation, booking concurrency
+# load-test.ts is NOT here on purpose: its p95 budget measures the runner, not
+# the code. Run it by hand (see its header).
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  tests:
+    name: Test scripts
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: greenreserve
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # Throwaway values for a throwaway database — no real secret belongs here.
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/greenreserve
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/greenreserve
+      JWT_SECRET: ci-only-not-a-real-secret-0123456789abcdef
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+      TEST_URL: http://localhost:3000
+      SERVER_TESTS: "isolation-test.ts concurrency-test.ts load-test.ts"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply every migration from scratch
+        run: npx prisma migrate deploy
+
+      - name: Pure test scripts
+        run: |
+          failed=""
+          for f in scripts/*-test.ts; do
+            case " $SERVER_TESTS " in *" $(basename "$f") "*) continue ;; esac
+            echo "::group::$f"
+            if npx tsx "$f"; then echo "PASS $f"; else failed="$failed $f"; fi
+            echo "::endgroup::"
+          done
+          if [ -n "$failed" ]; then echo "::error::Failed:$failed"; exit 1; fi
+
+      - name: Build
+        run: npx next build
+
+      - name: Start the app
+        run: |
+          npx next start -p 3000 > next.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3000/api/health && exit 0
+            sleep 2
+          done
+          echo "::error::App did not answer /api/health within 60s"
+          cat next.log
+          exit 1
+
+      - name: Tenant isolation
+        run: npx tsx scripts/isolation-test.ts
+
+      - name: Booking concurrency
+        run: npx tsx scripts/concurrency-test.ts
+
+      - name: Server log
+        if: failure()
+        run: tail -200 next.log || true
