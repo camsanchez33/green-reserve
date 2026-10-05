@@ -166,7 +166,7 @@
   },
   "src/app/dashboard/page.tsx": {
     "input": 4,
-    "lucide": 15
+    "lucide": 4
   },
   "src/app/dashboard/reset-password/page.tsx": {
     "card": 1,

@@ -6079,7 +6079,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1357,
+      "lines": 1351,
       "purpose": "",
       "brain": [],
       "exports": [
