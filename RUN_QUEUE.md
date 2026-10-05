@@ -131,8 +131,11 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     rule (no shadow card), About/Contact as ruled sections (no boxes, empty
     Contact and blank facts hidden), decorative Phone/Globe/Check icons gone.
     Zero behaviour change. Booking flow pages (/book, confirmation) still to follow.
-  - [ ] CLUB-3 dashboard shell (tabs across the top, no sidebar on desktop,
-    mobile bar kept; show Cam first)
+  - [x] CLUB-3a dashboard shell — BUILT 2026-10-05, Cam approved the screenshots
+    ("Go"): course-coloured top bar with tabs on desktop, fairway underline +
+    rule, Soon placeholders off the bar; phones unchanged.
+  - [ ] CLUB-3b tee sheet body to match TeeSheetDemo (drop Refresh/Weather/Add
+    icons, no boxed card) and the other tabs' bodies
   - [ ] CLUB-4 /admin + rest
 - [x] UI-H-1 — BUILT 2026-10-01: the homepage from the approved plain-background
   mockup (HOMEPAGE_SPEC.md, docs/design/home/index.html). Archivo replaces Fraunces

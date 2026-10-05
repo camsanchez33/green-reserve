@@ -199,7 +199,7 @@ set there. Self-contained public pages that skip the Nav (/for-courses, setup sh
 - Section title: 15px/600 sans · body 13.5–14px · tables 13.5px
 - TYPE-2 (Cam 2026-10-05, "the small sub headings above the main heading is such an ai thing"): NO small uppercase label above a heading — the heading says it. Real form labels and table headers stay, in sentence case. Sentences are full ink; `text-ink-muted` / `text-ink-faint` only on metadata (timestamps, "updated…", counts). Swept across every page 2026-10-05 (emails and the agreement PDF excepted) — design-guard ratchets `uppercase` and `<Eyebrow>` down; never add one
 - Attention: a 3px **left** border in the semantic color on a white card — the only place borders carry color
-- Operator sidebar: white, 1px `line`; course crest + course name (display face) + 12px sentence-case meta (TYPE-2); active item = accent text, 3px left border, paper bg
+- Operator nav (CLUB-3, Cam 2026-10-05): NO left rail on desktop — a top bar in the course's `brandColor` (`OperatorSidebar.tsx`, name kept): course name in the display face, the tabs, Course alert / Your page / Sign out on the right, active tab underlined in `fairway`, a 4px fairway rule beneath. "Soon" placeholders (Tournaments, Outings) stay off the bar. Below md the slim strip + bottom tab bar are unchanged. Every dashboard page wrapper is `flex flex-col` (never `md:flex-row`)
 - Admin sidebar (FLOW-2): a light rail — white, 1px `line`, the lockup at the top; inactive `text-ink-soft`, active `bg-pine/[0.07] text-pine font-semibold`; count chips `rounded-md` (never 999px pills)
 
 ### Rules (every page)
