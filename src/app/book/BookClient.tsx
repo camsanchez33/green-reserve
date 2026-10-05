@@ -39,6 +39,10 @@ export type CourseInfo = {
   /** SP-B: the full policy (cents). Older payloads fall back to the two fields above. */
   cancel_policy?: CancelPolicy;
   brand_color?: string;
+  /** PERS-1: the course's own uploads, shown in the header band. */
+  hero_image_url?: string; logo_url?: string;
+  /** PERS-1: optional note shown once the tee time is confirmed. */
+  confirmation_note?: string;
 };
 type GolferProfile = { firstName: string; lastName: string; email: string; phone: string };
 type ConfirmedData = {
@@ -174,7 +178,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
-          <CourseHeaderBar courseName={confirmedData.courseName} accent={accent} />
+          <CourseHeaderBar courseName={confirmedData.courseName} accent={accent} photoUrl={course?.hero_image_url} logoUrl={course?.logo_url} />
           <div className="p-8 text-center">
             <h1 className="text-[34px] font-serif leading-none text-ink mb-3">You&apos;re all set</h1>
             <p className="text-ink-soft mb-6 text-sm">
@@ -182,6 +186,14 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 ? <>Your spot is reserved — <strong className="text-ink">no card required</strong>. Pay at the course or use the check-in link in your confirmation email.</>
                 : <>Your card is on file but <strong className="text-ink">nothing has been charged</strong>. We&apos;ll email you a reminder to check in and pay before your round.</>}
             </p>
+
+            {/* PERS-1: the course's own note, in its own words — left-aligned, its colour on the rule. */}
+            {course?.confirmation_note && (
+              <div className="text-left mb-6 pl-4 border-l-[3px]" style={{ borderColor: accent }}>
+                <div className="text-[13px] font-semibold text-ink mb-1">From {confirmedData.courseName}</div>
+                <p className="text-sm text-ink whitespace-pre-line">{course.confirmation_note}</p>
+              </div>
+            )}
 
             {/* What happens next — the same three facts the policy copy already
                 states, laid out in the order they actually happen. */}
@@ -237,7 +249,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
               className="inline-flex items-center justify-center w-full py-3.5 rounded-md font-medium text-white text-sm mb-3 transition-colors"
               style={{ backgroundColor: accent }}
             >
-              View My Bookings
+              View my bookings
             </button>
             <button onClick={() => router.push(`/courses/${courseSlug}`)} className="text-sm text-ink-soft hover:text-ink transition-colors">
               Back to {confirmedData.courseName}
@@ -302,7 +314,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
 
         <div className="grid gap-6">
           <div className="bg-white rounded-lg border border-line overflow-hidden">
-            <CourseHeaderBar courseName={course.name} accent={accent} />
+            <CourseHeaderBar courseName={course.name} accent={accent} photoUrl={course.hero_image_url} logoUrl={course.logo_url} />
             <div className="p-6 space-y-3 text-sm">
               <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{displayDate(date)}</span></div>
               <div className="flex justify-between"><span className="text-ink-muted">Tee time</span><span className="font-medium text-ink">{formatTime(teeTime.time)}</span></div>

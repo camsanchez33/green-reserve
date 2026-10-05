@@ -1,27 +1,42 @@
 {
-  "generatedAt": "2026-10-05T16:54:36.653Z",
+  "generatedAt": "2026-10-05T18:56:56.467Z",
   "repo": {
-    "head": "dc7d524",
+    "head": "58260ec",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 5,
+    "dirtyCount": 20,
     "dirty": [
-      "M RUN_QUEUE.md",
+      "M CLAUDE.md",
+      " M RUN_QUEUE.md",
+      " M docs/CODEMAP.md",
       " M docs/codemap.json",
+      " M prisma/schema.prisma",
+      " M src/app/api/admin/golfers/route.ts",
+      " M src/app/api/bookings/route.ts",
+      " M src/app/api/checkin/[bookingId]/route.ts",
+      " M src/app/api/manage/[bookingId]/route.ts",
+      " M src/app/api/operator/bookings/route.ts",
+      " M src/app/api/operator/settings/route.ts",
       " M src/app/book/BookClient.tsx",
       " M src/app/checkin/[bookingId]/page.tsx",
-      " M src/app/manage/[bookingId]/page.tsx"
+      " M src/app/dashboard/settings/page.tsx",
+      " M src/app/manage/[bookingId]/page.tsx",
+      " M src/components/CourseHeaderBar.tsx",
+      " M src/lib/email.ts",
+      " M src/lib/normalize-course.ts",
+      " M src/lib/settings-validation.ts",
+      "?? prisma/migrations/20261005170000_confirmation_note/"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
-    "queueLastCommit": "2026-10-05T16:48:10+00:00",
+    "queueLastCommit": "2026-10-05T18:52:03+00:00",
     "unrecorded": []
   },
   "counts": {
     "runDone": 238,
     "runAwaiting": 23,
     "runInFlight": 1,
-    "runNotStarted": 28,
+    "runNotStarted": 29,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -30,7 +45,7 @@
   "inFlight": [
     {
       "title": "BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET",
-      "line": 2315,
+      "line": 2336,
       "body": [
         "FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because \"no linked inquiry\" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding them outright. FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() + a \"Force delete permanently\" button per acknowledged orphan — owner-only, typed name confirm, server re-verifies the course is still an orphan before touching anything (refuses if it turns out to have a real inquiry link — this can never be used to route around the doctrine for a real course). This is the mechanism for Cam's DaisyLinks exception, but I have NOT executed it against DaisyLinks yet:",
         "- Last session's raw Prisma script (a read-only check confirming Fake",
@@ -45,161 +60,161 @@
   "awaiting": [
     {
       "title": "MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin",
-      "line": 961,
+      "line": 982,
       "hash": "7246a62",
       "shipDate": "2026-08-29",
       "ageDays": 36
     },
     {
       "title": "MP-1",
-      "line": 991,
+      "line": 1012,
       "hash": "41f5ea8",
       "shipDate": "2026-08-29",
       "ageDays": 36
     },
     {
       "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
-      "line": 1026,
+      "line": 1047,
       "hash": "4ef11dd",
       "shipDate": "2026-08-29",
       "ageDays": 36
     },
     {
       "title": "MP-2",
-      "line": 1067,
+      "line": 1088,
       "hash": "958f229",
       "shipDate": "2026-08-29",
       "ageDays": 36
     },
     {
       "title": "MP-2b",
-      "line": 1104,
+      "line": 1125,
       "hash": "a134af5",
       "shipDate": "2026-08-29",
       "ageDays": 36
     },
     {
       "title": "MP-2c",
-      "line": 1153,
+      "line": 1174,
       "hash": "e5b5413",
       "shipDate": "2026-08-29",
       "ageDays": 36
     },
     {
       "title": "MP-2d",
-      "line": 1201,
+      "line": 1222,
       "hash": "22d0f68",
       "shipDate": "2026-08-29",
       "ageDays": 36
     },
     {
       "title": "MP-2e",
-      "line": 1243,
+      "line": 1264,
       "hash": "bf3bcb2",
       "shipDate": "2026-08-30",
       "ageDays": 36
     },
     {
       "title": "SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED",
-      "line": 2518,
+      "line": 2539,
       "hash": "951433d",
       "shipDate": "2026-09-16",
       "ageDays": 19
     },
     {
       "title": "SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box",
-      "line": 2631,
+      "line": 2652,
       "hash": "cfeb2e1",
       "shipDate": "2026-09-17",
       "ageDays": 18
     },
     {
       "title": "SD-8d — browser Back still discards unsaved Settings edits (from the",
-      "line": 796,
+      "line": 817,
       "hash": "70a424e",
       "shipDate": "2026-09-28",
       "ageDays": 7
     },
     {
       "title": "SD-8e — status is rendered as bare coloured text where the design",
-      "line": 822,
+      "line": 843,
       "hash": "9d6dc6a",
       "shipDate": "2026-09-29",
       "ageDays": 6
     },
     {
       "title": "SD-9c — auth: (1) staff password recovery — CourseStaff has no reset",
-      "line": 899,
+      "line": 920,
       "hash": "0d84aaf",
       "shipDate": "2026-09-29",
       "ageDays": 6
     },
     {
       "title": "BUG: 56 of 59 email senders report success when Resend rejects the send",
-      "line": 920,
+      "line": 941,
       "hash": "209e652",
       "shipDate": "2026-09-29",
       "ageDays": 6
     },
     {
       "title": "MP-5e part 3 — the Overview relationship feed (notes + settings",
-      "line": 1563,
+      "line": 1584,
       "hash": "c6a2142",
       "shipDate": "2026-09-29",
       "ageDays": 6
     },
     {
       "title": "BUG: inquiry submissions send no emails",
-      "line": 2834,
+      "line": 2855,
       "hash": "8b9a046",
       "shipDate": "2026-09-28",
       "ageDays": 6
     },
     {
       "title": "BUG: perf audit crashed on every page",
-      "line": 2859,
+      "line": 2880,
       "hash": "dd7056a",
       "shipDate": "2026-09-29",
       "ageDays": 6
     },
     {
       "title": "RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM).",
-      "line": 2870,
+      "line": 2891,
       "hash": "f57f269",
       "shipDate": "2026-09-29",
       "ageDays": 6
     },
     {
       "title": "RV-2 — review follow-ups, small (from /gr-review 2026-09-29):",
-      "line": 2880,
+      "line": 2901,
       "hash": "0eab366",
       "shipDate": "2026-09-29",
       "ageDays": 6
     },
     {
       "title": "CAL-2 — Cal.com is the ONLY call scheduler",
-      "line": 3101,
+      "line": 3122,
       "hash": "e082dd0",
       "shipDate": "2026-09-29",
       "ageDays": 6
     },
     {
       "title": "BUG: hello@greenreserve.app takes no mail",
-      "line": 3133,
+      "line": 3154,
       "hash": "371ffff",
       "shipDate": "2026-09-29",
       "ageDays": 6
     },
     {
       "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 3151,
+      "line": 3172,
       "hash": "a5ed9d7",
       "shipDate": "2026-09-29",
       "ageDays": 6
     },
     {
       "title": "UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until r",
-      "line": 2476,
+      "line": 2497,
       "hash": null,
       "shipDate": null,
       "ageDays": null
@@ -207,143 +222,148 @@
   ],
   "next": [
     {
+      "title": "PERS-1 (BUILT 2026-10-05 — CourseHeaderBar photo+logo on book/confirmation/check-in/manage; Course.confirmationNote migration 20261005170000, Settings field, confirmation screen + all three confirmati",
+      "line": 29,
+      "section": "Queue (run in this order)"
+    },
+    {
       "title": "TYPE-2 — strip the AI tells Cam listed 2026-10-05, zero behavior, one run per",
-      "line": 36,
+      "line": 57,
       "section": "Queue (run in this order)"
     },
     {
       "title": "TYPE-3 — icons only where they do a job (Cam approved 2026-10-05: \"Ok",
-      "line": 84,
+      "line": 105,
       "section": "Queue (run in this order)"
     },
     {
       "title": "/dashboard — folded into the CLUB-3 shell rebuild (below).",
-      "line": 91,
+      "line": 112,
       "section": "Queue (run in this order)"
     },
     {
       "title": "/admin",
-      "line": 92,
+      "line": 113,
       "section": "Queue (run in this order)"
     },
     {
       "title": "CLUB — the \"club direction\" (Cam 2026-10-05, after clubup.com: \"see now",
-      "line": 93,
+      "line": 114,
       "section": "Queue (run in this order)"
     },
     {
       "title": "LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed",
-      "line": 183,
+      "line": 204,
       "section": "Queue (run in this order)"
     },
     {
       "title": "SP-A — staff permissions (STAFF_POLICY_SPEC.md Part A). Cam 2026-10-04: course owner decides,",
-      "line": 220,
+      "line": 241,
       "section": "Queue (run in this order)"
     },
     {
       "title": "SP-B — cancellation & card policy (STAFF_POLICY_SPEC.md Part B): fee basis per booking/player,",
-      "line": 229,
+      "line": 250,
       "section": "Queue (run in this order)"
     },
     {
       "title": "WX-1 — Weather button on the Tee Sheet (Cam 2026-10-01: \"do the weather button with both",
-      "line": 239,
+      "line": 260,
       "section": "Queue (run in this order)"
     },
     {
       "title": "AN-1 — dashboard refactor + full Analytics tab — built 2026-10-01 (box reopened by",
-      "line": 244,
+      "line": 265,
       "section": "Queue (run in this order)"
     },
     {
       "title": "CAM — Cal.com: add a booking question with identifier `courseName` (\"Golf",
-      "line": 285,
+      "line": 306,
       "section": "Queue (run in this order)"
     },
     {
       "title": "SD-7b — assets, BLOCKED ON CAM: three real dashboard screenshots into",
-      "line": 683,
+      "line": 704,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) —",
-      "line": 1361,
+      "line": 1382,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-4 — pipeline reshape (split into 4a/4b/4c)",
-      "line": 1368,
+      "line": 1389,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-4f — retire the JSON-in-actorName pattern. Three separate things",
-      "line": 1451,
+      "line": 1472,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong",
-      "line": 1480,
+      "line": 1501,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Golfer course directory (`/courses`) — NOT scheduled. If Cam wants",
-      "line": 1559,
+      "line": 1580,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today)",
-      "line": 1596,
+      "line": 1617,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-7 — comms merge (split into 7a–7b)",
-      "line": 1668,
+      "line": 1689,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE,",
-      "line": 1686,
+      "line": 1707,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-8 — chrome + System (split into 8a–8b)",
-      "line": 1708,
+      "line": 1729,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table",
-      "line": 1725,
+      "line": 1746,
       "section": "Queue (run in this order)"
     },
     {
       "title": "MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)",
-      "line": 1806,
+      "line": 1827,
       "section": "Queue (run in this order)"
     },
     {
       "title": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
-      "line": 1912,
+      "line": 1933,
       "section": "Queue (run in this order)"
     },
     {
       "title": "PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29:",
-      "line": 2975,
+      "line": 2996,
       "section": "Queue (run in this order)"
     },
     {
       "title": "SETUP (Cam 2026-09-29: \"we need to do blob storage, birdie ai … we also need",
-      "line": 2980,
+      "line": 3001,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
-      "line": 3175,
+      "line": 3196,
       "section": "Queue (run in this order)"
     },
     {
       "title": "EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET",
-      "line": 3349,
+      "line": 3370,
       "section": "Queue (run in this order)"
     }
   ],
@@ -351,87 +371,87 @@
     {
       "item": "LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed",
       "note": "Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY)",
-      "line": 183
+      "line": 204
     },
     {
       "item": "SD-7b — assets, BLOCKED ON CAM: three real dashboard screenshots into",
       "note": "CAM: three real dashboard screenshots into public/screenshots/ (empty, so the homepage shows three grey placeholder boxes) and a seeded demo course slug for DEMO_COURSE_SLUGS (empt",
-      "line": 683
+      "line": 704
     },
     {
       "item": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
       "note": "pending Cam's approval for a prod write",
-      "line": 1026
+      "line": 1047
     },
     {
       "item": "MP-2",
       "note": "Cam's approval for a prod backfill",
-      "line": 1067
+      "line": 1088
     },
     {
       "item": "MP-2b",
       "note": "pending Cam's approval for a prod write",
-      "line": 1104
+      "line": 1125
     },
     {
       "item": "MP-2c",
       "note": "pending Cam's approval for a prod write",
-      "line": 1153
+      "line": 1174
     },
     {
       "item": "MP-2d",
       "note": "pending Cam's approval for a prod write",
-      "line": 1201
+      "line": 1222
     },
     {
       "item": "MP-2e",
       "note": "pending Cam's approval for a prod write",
-      "line": 1243
+      "line": 1264
     },
     {
       "item": "MP-4f — retire the JSON-in-actorName pattern. Three separate things",
       "note": "Cam's approval)",
-      "line": 1451
+      "line": 1472
     },
     {
       "item": "MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE,",
       "note": "Cam: \"keep going with the queue\")",
-      "line": 1686
+      "line": 1707
     },
     {
       "item": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
       "note": "CAM: confirm the state before this runs — e",
-      "line": 1912
+      "line": 1933
     },
     {
       "item": "SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box",
       "note": "pending Cam's walk below",
-      "line": 2631
+      "line": 2652
     },
     {
       "item": "BUG: inquiry submissions send no emails",
       "note": "Cam: \"after submitting an inquiry they aren't getting sent an email",
-      "line": 2834
+      "line": 2855
     },
     {
       "item": "CAL-2 — Cal.com is the ONLY call scheduler",
       "note": "Cam: \"there should be no google calendar thing\" and, after setting both env vars and redeploying, \"it is just the same as before\"",
-      "line": 3101
+      "line": 3122
     },
     {
       "item": "BUG: hello@greenreserve.app takes no mail",
       "note": "Cam: \"all emails need to go to thegreenreserve@outlook",
-      "line": 3133
+      "line": 3154
     },
     {
       "item": "CAL-1 — Cal.com as the call scheduler",
       "note": "Cam: invite link showed \"I can't show my calendar right now\"",
-      "line": 3151
+      "line": 3172
     },
     {
       "item": "EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)",
       "note": "Cam: \"keep going with whatever is next\")",
-      "line": 3175
+      "line": 3196
     }
   ],
   "ideas": {
@@ -705,6 +725,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "58260ec",
+      "date": "2026-10-05",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "e8b6902",
+      "date": "2026-10-05",
+      "subject": "CLUB-5: booking flow in the club look"
+    },
+    {
       "h": "e99afbc",
       "date": "2026-10-05",
       "subject": "CLUB-4b: admin labels in sentence case"
@@ -753,16 +783,6 @@
       "h": "90ab223",
       "date": "2026-10-05",
       "subject": "CLUB-0 security review fixes: escape setup-sheet emails, clean intake fields"
-    },
-    {
-      "h": "bd6b3ff",
-      "date": "2026-10-05",
-      "subject": "CLUB-0: short \"Ask a question\" form replaces the long inquiry form"
-    },
-    {
-      "h": "76d5fa7",
-      "date": "2026-10-05",
-      "subject": "TYPE-3 guards: no decorative icons rule, auditor line, lucide ratchet"
     }
   ]
 }

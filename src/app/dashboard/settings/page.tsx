@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef, Suspense } from 'react';
+import { INPUT } from '@/components/ui/field';
 import { US_TIMEZONES } from '@/lib/course-time';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Save, Loader2, X } from 'lucide-react';
@@ -47,7 +48,7 @@ const POLICY_FIELDS = ['cancellationHours', 'lateCancellationFee', 'checkInWindo
 // Each section now sends only its own fields.
 const SECTION_FIELDS: Record<Section, string[]> = {
   'Your course': [
-    'brandColor', 'phone', 'website', 'type', 'establishedYear', 'description', 'giftCardUrl',
+    'brandColor', 'phone', 'website', 'type', 'establishedYear', 'description', 'giftCardUrl', 'confirmationNote',
     'holes', 'par', 'yardage', 'slope', 'courseRating',
   ],
   'Booking rules': [
@@ -479,6 +480,13 @@ function SettingsPageInner() {
                   </div>
                 </Field>
                 <ImageUpload label="Your course photo" kind="hero" value={(form.heroImageUrl as string)||''} onUploaded={url=>setForm(f=>({...f,heroImageUrl:url}))} hint="A wide landscape shot — it sits behind your course name as the banner. Max 8MB — large photos are auto-resized."/>
+                {/* PERS-1: the golfer's checkout, confirmation, check-in and manage pages wear the photo,
+                    logo and colour above automatically. This note is the one thing they add. */}
+                <Field label="A note for golfers after they book" hint="Optional. Shown on the confirmation page and in the confirmation email — e.g. where to check in or park. 400 characters.">
+                  <textarea value={(form.confirmationNote as string) || ''} onChange={e => set('confirmationNote', e.target.value)} rows={3} maxLength={400}
+                    placeholder="Check in at the pro shop 15 minutes before your tee time. Carts are behind the clubhouse."
+                    className={INPUT + ' w-full'}/>
+                </Field>
               </SectionCard>
               {/* B-6: the live preview — the form state, drawn as the golfer's page.
                   Read-only; it saves nothing. Sticky beside the fields on wide

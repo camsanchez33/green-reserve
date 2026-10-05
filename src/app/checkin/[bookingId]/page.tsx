@@ -17,7 +17,7 @@ const cardStyle = {
 };
 
 type CheckInInfo = {
-  golferName: string; courseName: string; courseSlug: string; courseAddress: string; brandColor: string;
+  golferName: string; courseName: string; courseSlug: string; courseAddress: string; brandColor: string; heroImageUrl?: string; logoUrl?: string;
   date: string; time: string; players: number; holes: number; productLabel?: string | null; status: string;
   totalAmount: number; greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number;
   hasCard: boolean;
@@ -159,7 +159,7 @@ function CheckInPageInner() {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
-          <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
+          <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
           <div className="p-8 text-center">
             <h1 className="text-[30px] font-serif leading-none text-ink mb-3">You&apos;re checked in!</h1>
             <p className="text-ink-soft mb-6 text-sm">${(charged / 100).toFixed(2)} was charged to your card. Enjoy your round.</p>
@@ -227,7 +227,7 @@ function CheckInPageInner() {
   return (
     <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
       <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
-        <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
+        <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
         <div className="p-8">
           <h1 className="text-[30px] font-serif leading-none text-ink mb-2">Check in, {info.golferName.split(' ')[0]}?</h1>
           <p className="text-ink-soft text-sm mb-6">

@@ -25,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
       course: {
         select: {
           name: true, slug: true, address: true, city: true, state: true,
-          timezone: true, cancellationHours: true, brandColor: true,
+          timezone: true, cancellationHours: true, brandColor: true, heroImageUrl: true, logoUrl: true,
         },
       },
     },
@@ -56,6 +56,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     courseSlug: booking.course.slug,
     courseAddress: `${booking.course.address}, ${booking.course.city}, ${booking.course.state}`,
     brandColor: booking.course.brandColor,
+    heroImageUrl: booking.course.heroImageUrl || '',
+    logoUrl: booking.course.logoUrl || '',
     date: booking.teeTime.date,
     time: booking.teeTime.time,
     holes: booking.teeTime.holes,

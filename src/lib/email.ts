@@ -71,6 +71,8 @@ export interface BookingEmailData {
   noCard?: boolean; // true for no-fee-policy courses where no card was collected
   /** SP-B: describePolicy(policy).lines — the exact terms the golfer booked under. */
   policyLines?: string[];
+  /** PERS-1: the course's optional note to golfers (Settings → Your course). */
+  confirmationNote?: string | null;
 }
 
 // SD-5: a walk-in entered without an email gets a placeholder address so the
@@ -162,7 +164,7 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
     ${policyBox}
     <div style="background:#fefce8;border:1px solid #fde68a;border-radius:4px;padding:16px;margin-bottom:24px;">
       <p style="margin:0;color:#92400e;font-size:13px;font-weight:600;">&#128205; ${data.courseAddress}</p>
-      <p style="margin:8px 0 0;color:#92400e;font-size:12px;">Arrive 15 minutes early and check in at the pro shop.</p>
+      <p style="margin:8px 0 0;color:#92400e;font-size:12px;${data.confirmationNote ? 'white-space:pre-line;' : ''}">${data.confirmationNote ? escapeHtml(data.confirmationNote) : 'Arrive 15 minutes early and check in at the pro shop.'}</p>
     </div>
     ${ctaButtons}
     ${data.checkInToken ? `<p style="margin:0 0 8px;text-align:center;"><a href="${process.env.NEXT_PUBLIC_URL}/receipt/${data.bookingId}?token=${data.checkInToken}" style="color:#71717a;font-size:12px;text-decoration:underline;">View booking confirmation</a></p>` : ''}

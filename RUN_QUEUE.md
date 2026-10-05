@@ -26,6 +26,27 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 ## Queue (run in this order)
 
+- [ ] PERS-1 (BUILT 2026-10-05 — CourseHeaderBar photo+logo on book/confirmation/check-in/manage; Course.confirmationNote migration 20261005170000, Settings field, confirmation screen + all three confirmation-email senders) + BIRDIE-B4 — Cam 2026-10-05 ("golfer facing pages that belong to the
+  course can be personalized … the ai should be capable of making changes for the
+  course"). Decisions (Cam picked all three recommendations):
+  (a) PERS-1 personalization = REUSE what the course already uploads — hero photo,
+      logo, brand colour — on every course-owned golfer page (book, confirmation,
+      check-in, manage), plus ONE optional new field: a short "note from the
+      course" shown on the confirmation page and in the confirmation email
+      (additive nullable column). No per-page photos, no page builder.
+  (b) BIRDIE-B4a live-data READ tools for the operator persona: analytics (the
+      same src/lib/analytics.ts numbers as the Analytics tab, owner/`analytics.view`
+      only), schedules + blocked days, the day's bookings. Tool results are
+      scoped by session.courseId and filtered by session.permissions.
+  (c) BIRDIE-B4b propose-and-confirm CHANGES: Birdie drafts, a confirm card shows
+      old → new, the operator's click calls the SAME API route the page uses (its
+      own requirePermission + validation), and the change is logged. Allowlist:
+      schedule edits, block/unblock a day, tee-time rates. NEVER: money, refunds,
+      cancellation policy, Stripe, staff/permissions. Booked times are never
+      touched and the card says so.
+  (d) Model: keep the cheap model for plain how-to turns; a stronger model only
+      for turns that use tools (cost per data question goes up).
+
 - [x] TYPE-1 — BUILT 2026-10-05 (Cam: "the font is all so blocky looks ai" … "EB
   garamond"): EB Garamond is the display face (`font-serif`, headlines / course
   names / dates only, 500, lining figures), Libre Franklin is everything else

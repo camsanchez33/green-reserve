@@ -2906,7 +2906,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 402,
+      "lines": 403,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3031,7 +3031,7 @@
     },
     {
       "path": "src/app/api/checkin/[bookingId]/route.ts",
-      "lines": 78,
+      "lines": 80,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3731,7 +3731,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/route.ts",
-      "lines": 77,
+      "lines": 79,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4198,7 +4198,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 284,
+      "lines": 285,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4817,7 +4817,7 @@
     },
     {
       "path": "src/app/api/operator/settings/route.ts",
-      "lines": 121,
+      "lines": 123,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5421,7 +5421,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 574,
+      "lines": 586,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6189,7 +6189,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 959,
+      "lines": 967,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6212,6 +6212,7 @@
         "@/components/dashboard/Toast",
         "@/components/ui/Eyebrow",
         "@/components/ui/StatusDot",
+        "@/components/ui/field",
         "@/lib/cancel-policy",
         "@/lib/course-time",
         "@/lib/image-resize",
@@ -6462,7 +6463,7 @@
     },
     {
       "path": "src/app/manage/[bookingId]/page.tsx",
-      "lines": 559,
+      "lines": 560,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6825,7 +6826,7 @@
     },
     {
       "path": "src/components/CourseHeaderBar.tsx",
-      "lines": 17,
+      "lines": 46,
       "purpose": "White-label rule:",
       "brain": [],
       "exports": [
@@ -8088,6 +8089,7 @@
         "src/app/admin/profile/page.tsx",
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
+        "src/app/dashboard/settings/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",
@@ -10756,7 +10758,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1821,
+      "lines": 1823,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -12052,7 +12054,7 @@
     },
     {
       "path": "src/lib/normalize-course.ts",
-      "lines": 69,
+      "lines": 70,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14723,6 +14725,10 @@
         {
           "name": "heroImageUrl",
           "type": "String"
+        },
+        {
+          "name": "confirmationNote",
+          "type": "String?"
         },
         {
           "name": "featured",
