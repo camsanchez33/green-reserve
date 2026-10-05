@@ -46,7 +46,7 @@ export default function CourseCard({ course }: { course: Course }) {
           {/* Top row: special badge + holes */}
           <div className="relative flex items-center justify-between">
             {specialBadge ? (
-              <span className="text-[10px] font-medium uppercase tracking-[0.06em] px-2.5 py-1 rounded-full bg-white/90 text-ink">
+              <span className="text-[11.5px] font-medium px-2.5 py-1 rounded-full bg-white/90 text-ink">
                 {specialBadge}
               </span>
             ) : <span />}
@@ -57,7 +57,7 @@ export default function CourseCard({ course }: { course: Course }) {
 
           {/* Bottom row: type label */}
           <div className="relative">
-            <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-white/80">
+            <span className="text-[12px] font-medium text-white/90">
               {typeLabel}
             </span>
           </div>
@@ -92,12 +92,12 @@ export default function CourseCard({ course }: { course: Course }) {
           <div className="flex items-center justify-between pt-3 border-t border-line-soft">
             {membersOnly ? (
               <div>
-                <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Access</span>
+                <span className="text-[12px] text-ink-muted">Access</span>
                 <div className="font-medium text-ink-soft text-sm">Members only</div>
               </div>
             ) : course.base_green_fee > 0 ? (
               <div>
-                <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">From</span>
+                <span className="text-[12px] text-ink-muted">From</span>
                 <div className="font-serif font-medium text-ink text-xl leading-tight">
                   ${course.base_green_fee}
                   <span className="text-ink-muted font-sans font-normal text-xs ml-1">/ player</span>
@@ -105,7 +105,7 @@ export default function CourseCard({ course }: { course: Course }) {
               </div>
             ) : (
               <div>
-                <span className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">Rates</span>
+                <span className="text-[12px] text-ink-muted">Rates</span>
                 <div className="font-medium text-ink-soft text-sm">On request</div>
               </div>
             )}

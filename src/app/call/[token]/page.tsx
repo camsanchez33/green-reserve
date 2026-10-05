@@ -63,7 +63,7 @@ export default function CallPage() {
   const goTo = info && !info.booked ? info.calcomUrl : null;
   useEffect(() => { if (goTo) window.location.replace(goTo); }, [goTo]);
 
-  if (loadState === 'loading') return <Shell><p className="text-sm text-ink-muted flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</p></Shell>;
+  if (loadState === 'loading') return <Shell><p className="text-sm text-ink-soft flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</p></Shell>;
   if (loadState === 'invalid') return <Shell><Notice tone="bad">This link is not valid. Reply to the email we sent you and we&apos;ll send a fresh one.</Notice></Shell>;
   if (loadState === 'expired') return <Shell><Notice tone="warn">This link has expired. Reply to the email we sent you, or write to {CONTACT}, and we&apos;ll send a fresh one.</Notice></Shell>;
   if (loadState === 'closed') return <Shell><Notice tone="warn">This inquiry is no longer open. If that&apos;s a surprise, write to {CONTACT}.</Notice></Shell>;
@@ -76,8 +76,8 @@ export default function CallPage() {
 
   const heading = (
     <div className="mb-8">
-      <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2">{info.courseName}</p>
       <h1 className="text-2xl sm:text-3xl font-serif font-medium tracking-tight text-ink mb-2">Book a call with GreenReserve</h1>
+      <p className="text-[15px] font-semibold text-ink mb-1">{info.courseName}</p>
       {!info.booked && (
         <p className="text-sm text-ink-soft">{info.durationMin} minutes · we&apos;ll call you{info.phone ? <> at {info.phone}</> : null}</p>
       )}

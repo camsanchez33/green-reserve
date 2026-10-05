@@ -17,7 +17,7 @@ export default function NotFound() {
         <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">
           We couldn&apos;t find that page
         </h1>
-        <p className="text-ink-muted text-sm mb-6">
+        <p className="text-ink-soft text-sm mb-6">
           The page you&apos;re looking for doesn&apos;t exist or may have moved.
         </p>
         <Link href="/" className="text-sm text-pine hover:underline font-medium">

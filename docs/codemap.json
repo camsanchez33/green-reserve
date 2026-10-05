@@ -5598,7 +5598,7 @@
     },
     {
       "path": "src/app/contact/page.tsx",
-      "lines": 42,
+      "lines": 41,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6325,7 +6325,7 @@
     },
     {
       "path": "src/app/for-courses/ForCoursesContent.tsx",
-      "lines": 754,
+      "lines": 753,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6570,7 +6570,7 @@
     },
     {
       "path": "src/app/operator-agreement/page.tsx",
-      "lines": 83,
+      "lines": 82,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6652,7 +6652,7 @@
     },
     {
       "path": "src/app/privacy/page.tsx",
-      "lines": 250,
+      "lines": 249,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6752,7 +6752,7 @@
     },
     {
       "path": "src/app/terms/page.tsx",
-      "lines": 193,
+      "lines": 192,
       "purpose": "",
       "brain": [],
       "exports": [

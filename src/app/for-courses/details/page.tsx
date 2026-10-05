@@ -292,7 +292,7 @@ const sel = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm t
 
 function Label({ text, sub }: { text: string; sub?: string }) {
   return (
-    <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-1.5">
+    <label className="block text-[13px] font-semibold text-ink mb-1.5">
       {text}{sub && <span className="normal-case tracking-normal font-normal text-ink-faint ml-1">{sub}</span>}
     </label>
   );
@@ -622,8 +622,8 @@ function DetailsForm() {
       <div className="bg-white rounded-lg p-8 max-w-md w-full text-center border border-line">
         <AlertTriangle className="w-10 h-10 text-warn mx-auto mb-4" />
         <h1 className="text-[18px] font-serif font-medium tracking-tight text-ink mb-2">Can&apos;t load this link</h1>
-        <p className="text-ink-muted text-sm">{loadError}</p>
-        <p className="text-ink-faint text-xs mt-4">If you think this is a mistake, reply to the email we sent you.</p>
+        <p className="text-ink-soft text-sm">{loadError}</p>
+        <p className="text-ink-soft text-xs mt-4">If you think this is a mistake, reply to the email we sent you.</p>
       </div>
     </div>
   );
@@ -633,7 +633,7 @@ function DetailsForm() {
       <div className="bg-white rounded-lg p-10 max-w-lg w-full text-center border border-line">
         <CheckCircle className="w-14 h-14 text-ok mx-auto mb-5" />
         <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Thanks — we&apos;ve got it.</h1>
-        <p className="text-ink-muted text-sm leading-relaxed">
+        <p className="text-ink-soft text-sm leading-relaxed">
           We&apos;ll build {courseName}&apos;s booking page with these details and email your login shortly.
           You&apos;ll be able to fine-tune everything before going live.
         </p>
@@ -669,7 +669,7 @@ function DetailsForm() {
               </div>
               {parHidden ? (
                 <div className="flex items-end pb-1.5">
-                  <p className="text-[11px] text-ink-faint leading-snug">Par is set per nine in the Playability step.</p>
+                  <p className="text-[11px] text-ink-soft leading-snug">Par is set per nine in the Playability step.</p>
                 </div>
               ) : (
                 <div>
@@ -690,7 +690,7 @@ function DetailsForm() {
                   {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
-              {draft.seasonOpen && !draft.seasonClose && <p className="text-[11px] text-ink-faint mt-1">Select a closing month too.</p>}
+              {draft.seasonOpen && !draft.seasonClose && <p className="text-[11px] text-ink-soft mt-1">Select a closing month too.</p>}
             </div>
           </div>
         );
@@ -702,7 +702,7 @@ function DetailsForm() {
         // 9-hole course
         if (h === '9') return (
           <div className="space-y-4">
-            <p className="text-sm text-ink-muted">Since you have a 9-hole course, golfers can always book that single loop. We just need to know about replaying.</p>
+            <p className="text-sm text-ink-soft">Since you have a 9-hole course, golfers can always book that single loop. We just need to know about replaying.</p>
             <div>
               <Label text="Can golfers replay for a full 18?" />
               <YesNo value={draft.nineReplay} onChange={v => set('nineReplay', v)} />
@@ -713,7 +713,7 @@ function DetailsForm() {
                   <Label text="18-hole (replay) rate" sub="(optional — leave blank if same as 2× the 9-hole rate)" />
                   <DollarInput value={draft.nineReplayFee} onChange={v => set('nineReplayFee', v)} placeholder="0.00" />
                 </div>
-                <p className="text-[11px] text-ink-faint">You can change this anytime after launch.</p>
+                <p className="text-[11px] text-ink-soft">You can change this anytime after launch.</p>
               </div>
             )}
           </div>
@@ -774,7 +774,7 @@ function DetailsForm() {
                       </div>
                       <div>
                         <Label text="Which 18-hole combos do you offer?" />
-                        <p className="text-[11px] text-ink-faint mb-2">Turn on the pairings you actually play as 18.</p>
+                        <p className="text-[11px] text-ink-soft mb-2">Turn on the pairings you actually play as 18.</p>
                         <div className="space-y-2">
                           {comboPairs.map(({ key, label }) => {
                             const enabled = draft.nine27CombosEnabled.includes(key);
@@ -811,7 +811,7 @@ function DetailsForm() {
                     <Label text="Can each nine be booked individually?" />
                     <YesNo value={draft.nine27BookableAlone} onChange={v => set('nine27BookableAlone', v)} />
                     {draft.nine27BookableAlone === 'yes' && (
-                      <p className="text-[11px] text-ink-faint mt-1">We&apos;ll note that for our team. Booking-sheet support for rotating nine combos is a future feature — flagged as a build note.</p>
+                      <p className="text-[11px] text-ink-soft mt-1">We&apos;ll note that for our team. Booking-sheet support for rotating nine combos is a future feature — flagged as a build note.</p>
                     )}
                   </div>
                 </div>
@@ -820,7 +820,7 @@ function DetailsForm() {
 
             {draft.layout27 === '18_plus_9' && (
               <div className="space-y-4 pl-3 border-l-2 border-pine/20">
-                <p className="text-sm text-ink-muted">The main 18-hole course works like any 18-hole setup. Tell us about the separate 9 below.</p>
+                <p className="text-sm text-ink-soft">The main 18-hole course works like any 18-hole setup. Tell us about the separate 9 below.</p>
                 <div>
                   <Label text="Can golfers book 9 holes on the main course?" />
                   <YesNo value={draft.nineHoleSupport} onChange={v => set('nineHoleSupport', v)} />
@@ -859,7 +859,7 @@ function DetailsForm() {
                   <Label text="Can the separate 9 be booked individually?" />
                   <YesNo value={draft.separate9Bookable} onChange={v => set('separate9Bookable', v)} />
                 </div>
-                <p className="text-[11px] text-ink-faint">You can change rates anytime after launch.</p>
+                <p className="text-[11px] text-ink-soft">You can change rates anytime after launch.</p>
               </div>
             )}
           </div>
@@ -894,7 +894,7 @@ function DetailsForm() {
                       }} placeholder={['North Course','South Course'][ni]} />
                     ))}
                   </div>
-                  <p className="text-[11px] text-ink-faint">Each 18 gets its own front/back nine tee-set yardages in the next step.</p>
+                  <p className="text-[11px] text-ink-soft">Each 18 gets its own front/back nine tee-set yardages in the next step.</p>
                 </div>
               );
             })()}
@@ -922,7 +922,7 @@ function DetailsForm() {
                 </div>
               </div>
             )}
-            <p className="text-[11px] text-ink-faint">You can change rates anytime after launch.</p>
+            <p className="text-[11px] text-ink-soft">You can change rates anytime after launch.</p>
           </div>
         );
 
@@ -954,7 +954,7 @@ function DetailsForm() {
                     <DollarInput value={draft.nineHoleFee} onChange={v => set('nineHoleFee', v)} placeholder="25.00" />
                   </div>
                 </div>
-                <p className="text-[11px] text-ink-faint">You can change 9-hole pricing anytime after launch.</p>
+                <p className="text-[11px] text-ink-soft">You can change 9-hole pricing anytime after launch.</p>
               </div>
             )}
           </div>
@@ -1014,7 +1014,7 @@ function DetailsForm() {
               )}
             </div>
             {showGrid && (<>
-            <p className="text-sm text-ink-muted">{descLabel}</p>
+            <p className="text-sm text-ink-soft">{descLabel}</p>
             <div className="space-y-4">
               {draft.teeSets.map((ts, i) => (
                 <div key={i} className="bg-paper border border-line rounded-md p-4 space-y-3">
@@ -1105,7 +1105,7 @@ function DetailsForm() {
                   {/* Per-combo ratings (27-hole three 9s only) */}
                   {is27Three9s && draft.nine27CombosEnabled.length > 0 && (
                     <div>
-                      <p className="text-[10px] uppercase tracking-[0.06em] text-ink-muted mb-2">Rating / slope per combo (optional)</p>
+                      <p className="text-[13px] font-semibold text-ink mb-2">Rating / slope per combo (optional)</p>
                       <div className="space-y-2">
                         <div className="grid grid-cols-3 gap-2">
                           <span className="text-[10px] text-ink-faint">Combo</span>
@@ -1167,7 +1167,7 @@ function DetailsForm() {
                   <input type="number" min="1" max="365" className={inp + ' w-24'} value={draft.publicAdvanceDays} onChange={e => set('publicAdvanceDays', e.target.value)} />
                   <span className="text-sm text-ink-soft">days</span>
                 </div>
-                <p className="text-[11px] text-ink-faint mt-1">Most public courses open 7 to 14 days out.</p>
+                <p className="text-[11px] text-ink-soft mt-1">Most public courses open 7 to 14 days out.</p>
               </div>
               {(courseType === 'private' || draft.branch.passes === 'yes') && (
                 <div>
@@ -1176,7 +1176,7 @@ function DetailsForm() {
                     <input type="number" min="1" max="365" className={inp + ' w-24'} value={draft.memberAdvanceDays} onChange={e => set('memberAdvanceDays', e.target.value)} />
                     <span className="text-sm text-ink-soft">days</span>
                   </div>
-                  <p className="text-[11px] text-ink-faint mt-1">Members usually get a head start. You can set this per tier later.</p>
+                  <p className="text-[11px] text-ink-soft mt-1">Members usually get a head start. You can set this per tier later.</p>
                 </div>
               )}
             </div>
@@ -1207,7 +1207,7 @@ function DetailsForm() {
                 {['7','8','9','10','12','15'].map(v => <option key={v} value={v}>{v} minutes</option>)}
               </select>
             </div>
-            <p className="text-[11px] text-ink-faint">You can change hours and days anytime after launch.</p>
+            <p className="text-[11px] text-ink-soft">You can change hours and days anytime after launch.</p>
           </div>
         );
 
@@ -1248,7 +1248,7 @@ function DetailsForm() {
                 <option value="no">No — cart required</option>
               </select>
             </div>
-            <p className="text-[11px] text-ink-faint">You can adjust all pricing anytime after launch.</p>
+            <p className="text-[11px] text-ink-soft">You can adjust all pricing anytime after launch.</p>
           </div>
         );
 
@@ -1263,7 +1263,7 @@ function DetailsForm() {
         };
         return (
           <div className="space-y-5">
-            <p className="text-sm text-ink-muted">Add all your membership tiers, season passes, resident cards, and punch cards. Include resident rates if you offer them without a separate card. Add as many as you need.</p>
+            <p className="text-sm text-ink-soft">Add all your membership tiers, season passes, resident cards, and punch cards. Include resident rates if you offer them without a separate card. Add as many as you need.</p>
             <div className="space-y-4">
               {draft.passes.map((p, i) => (
                 <div key={i} className="bg-paper border border-line rounded-md p-4 space-y-3">
@@ -1354,7 +1354,7 @@ function DetailsForm() {
                               <Label text="Cart included?" />
                               <YesNo value={p.perRoundCartIncluded} onChange={v => updatePass(i, { perRoundCartIncluded: v })} />
                             </div>
-                            <p className="text-[11px] text-ink-faint">You can change member rates anytime after launch.</p>
+                            <p className="text-[11px] text-ink-soft">You can change member rates anytime after launch.</p>
                           </div>
                         )}
                       </div>
@@ -1433,7 +1433,7 @@ function DetailsForm() {
                 <Plus className="w-4 h-4" /> Add another
               </button>
             )}
-            <p className="text-[11px] text-ink-faint">You can add, edit, or remove tiers anytime after launch.</p>
+            <p className="text-[11px] text-ink-soft">You can add, edit, or remove tiers anytime after launch.</p>
           </div>
         );
       }
@@ -1445,14 +1445,14 @@ function DetailsForm() {
               <Label text="Protected tee time windows" sub="(optional)" />
               <textarea rows={2} className={inp} value={draft.protectedTimes} onChange={e => set('protectedTimes', e.target.value)} placeholder="e.g. Weekday mornings before 10am are reserved for members" />
             </div>
-            <p className="text-[11px] text-ink-faint">These can be adjusted anytime after launch.</p>
+            <p className="text-[11px] text-ink-soft">These can be adjusted anytime after launch.</p>
           </div>
         );
 
       case 'public_fees':
         return (
           <div className="space-y-4">
-            <p className="text-sm text-ink-muted">Rates for non-member public tee times.</p>
+            <p className="text-sm text-ink-soft">Rates for non-member public tee times.</p>
             <div>
               <Label text="Public green fee" />
               <DollarInput value={draft.publicGreenFee} onChange={v => set('publicGreenFee', v)} placeholder="95.00" />
@@ -1461,26 +1461,26 @@ function DetailsForm() {
               <Label text="When can the public book?" sub="(optional)" />
               <input className={inp} value={draft.publicWindow} onChange={e => set('publicWindow', e.target.value)} placeholder="e.g. Afternoons after 1pm on weekdays" />
             </div>
-            <p className="text-[11px] text-ink-faint">You can adjust public access anytime after launch.</p>
+            <p className="text-[11px] text-ink-soft">You can adjust public access anytime after launch.</p>
           </div>
         );
 
       case 'member_rate':
         return (
           <div className="space-y-4">
-            <p className="text-sm text-ink-muted">Members are charged per round when they book through GreenReserve.</p>
+            <p className="text-sm text-ink-soft">Members are charged per round when they book through GreenReserve.</p>
             <div>
               <Label text="Member rate per round" />
               <DollarInput value={draft.memberRate} onChange={v => set('memberRate', v)} placeholder="35.00" />
             </div>
-            <p className="text-[11px] text-ink-faint">You can change this rate anytime after launch.</p>
+            <p className="text-[11px] text-ink-soft">You can change this rate anytime after launch.</p>
           </div>
         );
 
       case 'outings':
         return (
           <div className="space-y-4">
-            <p className="text-sm text-ink-muted">Tell us about your outside events so we can plan around them.</p>
+            <p className="text-sm text-ink-soft">Tell us about your outside events so we can plan around them.</p>
             <div>
               <Label text="How often do you host outside outings or tournaments?" />
               <select className={sel} value={draft.outingsVolume} onChange={e => set('outingsVolume', e.target.value)}>
@@ -1532,18 +1532,18 @@ function DetailsForm() {
                     <input type="number" min="0" max="168" className={inp + ' w-24'} value={draft.cancellationHours} onChange={e => set('cancellationHours', e.target.value)} />
                     <span className="text-sm text-ink-soft">hours before tee time</span>
                   </div>
-                  <p className="text-[11px] text-ink-faint mt-1">e.g. 24 means golfers can cancel up to 24 hours before their tee time for free.</p>
+                  <p className="text-[11px] text-ink-soft mt-1">e.g. 24 means golfers can cancel up to 24 hours before their tee time for free.</p>
                 </div>
                 <div>
                   <Label text="Late cancellation fee" />
                   <DollarInput value={draft.lateFee} onChange={v => set('lateFee', v)} placeholder="25.00" />
                 </div>
-                <p className="text-[11px] text-ink-faint">The window and fee can be changed anytime after launch.</p>
+                <p className="text-[11px] text-ink-soft">The window and fee can be changed anytime after launch.</p>
               </>
             )}
 
             {!hasPolicy && !noPolicy && (
-              <p className="text-[11px] text-ink-faint">Select an option above to continue.</p>
+              <p className="text-[11px] text-ink-soft">Select an option above to continue.</p>
             )}
           </div>
         );
@@ -1758,7 +1758,7 @@ function DetailsForm() {
       case 'notes':
         return (
           <div className="space-y-4">
-            <p className="text-sm text-ink-muted">Anything else we should know? Timeline, software you&apos;re replacing, special setup — whatever&apos;s useful. This goes directly to our team.</p>
+            <p className="text-sm text-ink-soft">Anything else we should know? Timeline, software you&apos;re replacing, special setup — whatever&apos;s useful. This goes directly to our team.</p>
             <textarea rows={4} className={inp} value={draft.additionalNotes} onChange={e => set('additionalNotes', e.target.value)} placeholder="Optional" />
           </div>
         );
@@ -1783,7 +1783,7 @@ function DetailsForm() {
 
       <div className="max-w-lg mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
-          <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium">
+          <p className="text-[13px] font-semibold text-ink">
             Step {activeIdx + 1} of {sections.length}
           </p>
           <p className="text-[11px] text-ink-faint">{Math.round(progress)}% complete</p>
@@ -1791,7 +1791,7 @@ function DetailsForm() {
 
         {activeIdx === 0 && contact && (
           <div className="bg-white rounded-lg border border-line px-5 py-4 mb-4">
-            <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2">Your details</p>
+            <p className="text-[13px] font-semibold text-ink mb-2">Your details</p>
             <dl className="grid grid-cols-[110px_1fr] gap-x-3 gap-y-1 text-[13px]">
               <dt className="text-ink-muted">Contact</dt><dd className="text-ink">{contact.contactName}{contact.contactTitle ? ` · ${contact.contactTitle}` : ''}</dd>
               <dt className="text-ink-muted">Email</dt><dd className="text-ink break-all">{contact.email}</dd>
@@ -1799,24 +1799,24 @@ function DetailsForm() {
               <dt className="text-ink-muted">Course</dt><dd className="text-ink">{contact.courseName}</dd>
               <dt className="text-ink-muted">Address</dt><dd className="text-ink">{[contact.address, contact.city, [contact.state, contact.zipCode].filter(Boolean).join(' ')].filter(Boolean).join(', ')}</dd>
             </dl>
-            <p className="text-[11.5px] text-ink-faint mt-2">Already on file — nothing to re-type. Something wrong? Reply to our email and we&apos;ll fix it.</p>
+            <p className="text-[11.5px] text-ink-soft mt-2">Already on file — nothing to re-type. Something wrong? Reply to our email and we&apos;ll fix it.</p>
           </div>
         )}
         {activeIdx === 0 && callRecap.length > 0 && (
           <div className="bg-white rounded-lg border border-line px-5 py-4 mb-4">
-            <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-2">From our call</p>
+            <p className="text-[13px] font-semibold text-ink mb-2">From our call</p>
             <ul className="list-disc pl-5 space-y-1 text-[13px] text-ink-soft">{callRecap.map(l => <li key={l}>{l}</li>)}</ul>
-            <p className="text-[11.5px] text-ink-faint mt-2">This sheet only asks what applies to you. Something off? Reply to our email.</p>
+            <p className="text-[11.5px] text-ink-soft mt-2">This sheet only asks what applies to you. Something off? Reply to our email.</p>
           </div>
         )}
 
         <div className="bg-white rounded-lg border border-line p-6 mb-5">
           <h2 className="text-[18px] font-serif font-medium tracking-tight text-ink mb-5">
             {section?.title}
-            {section?.optional && <span className="ml-2 align-middle text-[11px] font-sans uppercase tracking-[0.06em] text-ink-faint">Optional</span>}
+            {section?.optional && <span className="ml-2 align-middle text-[12px] font-sans font-normal text-ink-muted">Optional</span>}
           </h2>
           {section && (SECTION_PREFILL_KEYS[section.id] || []).some(k => prefilled.includes(k)) && (
-            <p className="text-[12.5px] text-ink-muted leading-relaxed -mt-2 mb-3">Pre-filled from your call — change anything that&apos;s off.</p>
+            <p className="text-[12.5px] text-ink-soft leading-relaxed -mt-2 mb-3">Pre-filled from your call — change anything that&apos;s off.</p>
           )}
           {section && (SECTION_CALL_KEYS[section.id] || []).filter(k => callAnswers[k]).map(k => (
             <p key={k} className="text-[12.5px] text-ink-muted leading-relaxed -mt-2 mb-4">
@@ -1830,7 +1830,7 @@ function DetailsForm() {
             </div>
           )}
           {section && isBranchKey(section.id) && draft.branch[section.id] === 'no' && (
-            <p className="text-sm text-ink-muted">Nothing to set up here — press Next.</p>
+            <p className="text-sm text-ink-soft">Nothing to set up here — press Next.</p>
           )}
           {section && (!isBranchKey(section.id) || draft.branch[section.id] === 'yes') && renderSection(section.id)}
         </div>
@@ -1854,7 +1854,7 @@ function DetailsForm() {
           </button>
         </div>
         {section?.id === 'cancellation' && !draft.cancellationPolicy && (
-          <p className="text-[11px] text-ink-faint text-center mt-2">Select Yes or No above to continue.</p>
+          <p className="text-[11px] text-ink-soft text-center mt-2">Select Yes or No above to continue.</p>
         )}
         {!showAll && skippedCount > 0 && (
           <p className="text-center mt-4">
@@ -1875,7 +1875,7 @@ function DetailsForm() {
               className="text-sm font-medium text-pine hover:text-pine-hover underline underline-offset-2 disabled:opacity-50 transition-colors">
               Submit now — we&apos;ll cover the rest together
             </button>
-            <p className="text-[11px] text-ink-faint">Everything we need to build your page is done. The optional steps can wait for a follow-up call, or reply to our email.</p>
+            <p className="text-[11px] text-ink-soft">Everything we need to build your page is done. The optional steps can wait for a follow-up call, or reply to our email.</p>
           </div>
         )}
       </div>

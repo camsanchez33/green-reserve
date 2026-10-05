@@ -11,7 +11,6 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-paper">
       <div className="max-w-2xl mx-auto px-6 py-24">
-        <p className="text-[11px] uppercase tracking-[0.06em] text-pine font-medium mb-3">Contact</p>
         <h1 className="text-3xl sm:text-4xl font-serif font-medium tracking-tight text-ink mb-4">Get in touch</h1>
         <p className="text-ink-soft text-base leading-relaxed mb-10">
           We&apos;re a small team and respond to every message. Whether you have a question about
@@ -27,7 +26,7 @@ export default function ContactPage() {
         </a>
 
         <div className="mt-16 border-t border-line pt-10">
-          <p className="text-ink-muted text-sm mb-6">Interested in listing your course?</p>
+          <p className="text-ink-soft text-sm mb-6">Interested in listing your course?</p>
           <Link
             href="/for-courses"
             className="inline-flex items-center gap-2 text-sm font-medium text-pine hover:text-pine-hover transition-colors"
