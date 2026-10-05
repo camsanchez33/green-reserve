@@ -134,8 +134,13 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   - [x] CLUB-3a dashboard shell — BUILT 2026-10-05, Cam approved the screenshots
     ("Go"): course-coloured top bar with tabs on desktop, fairway underline +
     rule, Soon placeholders off the bar; phones unchanged.
-  - [ ] CLUB-3b tee sheet body to match TeeSheetDemo (drop Refresh/Weather/Add
-    icons, no boxed card) and the other tabs' bodies
+  - [x] CLUB-3b tee sheet — BUILT 2026-10-05: the day is the title (38px
+    Garamond "Monday, October 5"), counts on one line under it, Refresh /
+    Weather / Add time without icons (row wraps on phones — it used to run off
+    the edge), the sheet's own bar keeps only the date controls (course name
+    is in the top bar), banner icons and the Stripe padlock gone. Zero behaviour.
+  - [ ] CLUB-3c the other tabs' bodies (Schedule, Members, Money, Messages,
+    Settings, Analytics): page titles to the 30px display, decorative icons out
   - [ ] CLUB-4 /admin + rest
 - [x] UI-H-1 — BUILT 2026-10-01: the homepage from the approved plain-background
   mockup (HOMEPAGE_SPEC.md, docs/design/home/index.html). Archivo replaces Fraunces

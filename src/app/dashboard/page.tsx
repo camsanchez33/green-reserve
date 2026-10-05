@@ -5,10 +5,7 @@ import { useEffect, useState, useCallback, Suspense } from 'react';
 import { todayIn, clockIn, DEFAULT_TZ } from '@/lib/course-time';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  Calendar, Users, DollarSign, Ban,
-  Plus, ChevronLeft, ChevronRight, RefreshCw,
-  AlertTriangle, X, Loader2, Lock, Eye, CheckCircle,
-  CloudRain,
+  ChevronLeft, ChevronRight, X, Loader2,
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -502,11 +499,10 @@ function DashboardPageInner() {
         {courseDraft && !courseArchived && (
           <div className="bg-pine/5 border-b border-pine/20 px-6 py-3">
             <div className="flex items-center gap-2 text-sm text-ink-soft flex-wrap">
-              <Eye className="w-4 h-4 shrink-0 text-pine"/>
-              <span>Your course isn&apos;t live yet &mdash; golfers can&apos;t book until you approve the page.</span>
+                            <span>Your course isn&apos;t live yet &mdash; golfers can&apos;t book until you approve the page.</span>
               <div className="flex items-center gap-2 ml-auto">
                 {pageApprovalStatus === 'approved' ? (
-                  <span className="text-xs text-ok font-medium flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5"/>You approved this page</span>
+                  <span className="text-xs text-ink font-medium inline-flex items-center gap-1.5"><span className="w-[5px] h-[5px] rounded-full bg-ok" aria-hidden="true"/>You approved this page</span>
                 ) : (
                   <button onClick={approvePage} disabled={approvingPage}
                     className="text-xs font-medium text-white bg-pine hover:bg-pine-hover px-3 py-1.5 rounded-md disabled:opacity-50 transition-colors">
@@ -575,20 +571,17 @@ function DashboardPageInner() {
         )}
         {statusError && (
           <div className="bg-warn/5 border-b border-warn/20 px-6 py-2.5 flex items-center gap-2 text-[13px] text-warn">
-            <AlertTriangle className="w-4 h-4 shrink-0"/>
             <span>We couldn&apos;t load your course&apos;s status (live, Stripe, setup). The tee sheet works; the setup reminders may be out of date.</span>
             <button onClick={() => { setStatusError(false); loadCourseStatus(); }} className="ml-auto underline font-medium">Retry</button>
           </div>
         )}
         {courseArchived && (
           <div className="bg-bad/5 border-b border-bad/20 px-6 py-3 flex items-center gap-2 text-sm text-bad">
-            <AlertTriangle className="w-4 h-4 shrink-0"/>
             <span>This course has been archived. The public booking page is offline. Contact GreenReserve support to restore it.</span>
           </div>
         )}
         {conditions && (
           <div className="bg-warn/10 border-b border-warn/20 px-6 py-2 flex items-center gap-2 text-sm font-medium text-warn">
-            <AlertTriangle className="w-4 h-4 shrink-0"/>
             <span>Course alert: {conditions}</span>
             <button onClick={() => setShowConditions(true)} className="ml-auto underline text-xs">Update</button>
           </div>
@@ -658,25 +651,28 @@ function DashboardPageInner() {
                   sentence carrying the day's numbers, then the day's actions. */}
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <div className="min-w-0">
-                  <h1 className="text-[26px] font-serif font-semibold leading-none tracking-tight text-ink">Tee Sheet</h1>
-                  <p className="text-[13.5px] text-ink-soft mt-1.5">
-                    {fmtDate(selectedDate)} · {liveGroups} booked · {checkedIn} checked in{commonRate ? <span className="text-ink-muted"> · {commonRate}</span> : null}
+                  {/* CLUB-3b: the day is the title (the course name lives in the top bar). */}
+                  <h1 className="text-[30px] sm:text-[38px] font-serif leading-none text-ink">
+                    {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                  </h1>
+                  <p className="text-[14px] text-ink mt-2">
+                    {liveGroups} booked · {checkedIn} checked in{commonRate ? <span className="text-ink-muted"> · {commonRate}</span> : null}
                   </p>
                 </div>
-                <div className="flex gap-2 items-center shrink-0">
+                <div className="flex flex-wrap gap-2 items-center">
                   <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Find golfer..."
                     className="w-36 sm:w-44 bg-white border border-line rounded-md px-3 py-1.5 text-[13.5px] text-ink placeholder-ink-faint focus:ring-2 focus:ring-pine/10 focus:border-pine/40 outline-none"/>
-                  <button onClick={() => loadTimes(selectedDate)} className="flex items-center gap-1.5 text-[12.5px] text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
-                    <RefreshCw className="w-3.5 h-3.5"/>Refresh
+                  <button onClick={() => loadTimes(selectedDate)} className="text-[13px] font-medium text-ink bg-white px-3.5 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
+                    Refresh
                   </button>
                   {selectedDate >= today() && wxTabs.length > 0 && (
-                    <button onClick={() => { setFrostOpen(true); setWxMode(wxTabs[0][0]); setFrostPlan(null); setFrostErr(''); setFrostResult(null); setWxPlan(null); setWxErr(''); setWxResult(null); }} className="flex items-center gap-1.5 text-[12.5px] text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
-                      <CloudRain className="w-3.5 h-3.5"/>Weather
+                    <button onClick={() => { setFrostOpen(true); setWxMode(wxTabs[0][0]); setFrostPlan(null); setFrostErr(''); setFrostResult(null); setWxPlan(null); setWxErr(''); setWxResult(null); }} className="text-[13px] font-medium text-ink bg-white px-3.5 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
+                      Weather
                     </button>
                   )}
                   {access.can('sheet.edit_times') && (
-                  <button onClick={() => setShowAddModal(true)} className="flex items-center gap-1.5 text-[12.5px] bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md transition-colors">
-                    <Plus className="w-3.5 h-3.5"/>Add Time
+                  <button onClick={() => setShowAddModal(true)} className="text-[13px] font-semibold bg-pine hover:bg-pine-hover text-white px-3.5 py-1.5 rounded-md transition-colors">
+                    Add time
                   </button>
                   )}
                 </div>
@@ -733,9 +729,7 @@ function DashboardPageInner() {
               {/* No overflow-hidden: it would clip the date picker's popover. */}
               <div className={CARD}>
                 <div className="flex items-center gap-4 px-4 py-2.5 border-b border-line">
-                  <b className="text-[15px] font-semibold text-ink truncate">{courseName || 'Tee sheet'}</b>
-                  <span className="hidden sm:inline text-[13.5px] font-semibold text-ink pb-0.5 shadow-[inset_0_-2px_0_var(--color-pine)]">Tee sheet</span>
-                  <div className="ml-auto flex items-center gap-2 text-[13.5px] text-ink">
+                  <div className="flex items-center gap-2 text-[13.5px] text-ink">
                     {/* SD-3: back is never clamped — yesterday's sheet must stay reachable. */}
                     <button onClick={() => setSelectedDate(addDays(selectedDate, -1))} aria-label="Previous day"
                       className="w-7 h-7 rounded-md border border-line inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors">
@@ -767,7 +761,7 @@ function DashboardPageInner() {
                 <div className="text-center py-16">
                   <p className="font-medium text-ink mb-1">No tee times for this date</p>
                   <p className="text-sm text-ink-soft mb-4">Add times manually or check your schedule covers this day</p>
-                  {access.can('sheet.edit_times') && <button onClick={() => setShowAddModal(true)} className="bg-pine hover:bg-pine-hover text-white px-5 py-2.5 rounded-md text-[12.5px] font-medium transition-colors">Add Tee Time</button>}
+                  {access.can('sheet.edit_times') && <button onClick={() => setShowAddModal(true)} className="bg-pine hover:bg-pine-hover text-white px-5 py-2.5 rounded-md text-[12.5px] font-medium transition-colors">Add tee time</button>}
                 </div>
               ) : (
                 <div className="divide-y divide-line">
@@ -930,7 +924,7 @@ function DashboardPageInner() {
         <div className="fixed inset-0 bg-ink/20 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white border border-line w-full sm:max-w-sm rounded-t-lg sm:rounded-lg p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-serif font-semibold text-ink text-[17px]">Add Tee Time — {fmtDate(selectedDate)}</h3>
+              <h3 className="font-serif font-semibold text-ink text-[17px]">Add a tee time — {fmtDate(selectedDate)}</h3>
               <button onClick={() => setShowAddModal(false)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
             </div>
             <AddTeeTimeForm date={selectedDate} onSave={()=>{setShowAddModal(false);loadTimes(selectedDate);}} onCancel={()=>setShowAddModal(false)}/>
@@ -1349,7 +1343,7 @@ function CardCheckInModal({ booking, reason, onConfirm, onCancel }: {
         {loading ? <><Loader2 className="w-4 h-4 animate-spin"/>Charging…</> : `Charge $${(booking.totalAmount / 100).toFixed(2)}`}
       </button>
       <div className="flex items-center justify-center gap-1.5 text-ink-muted text-xs">
-        <Lock className="w-3 h-3"/><span>Powered by Stripe</span>
+        <span>Powered by Stripe</span>
       </div>
     </div>
   );
