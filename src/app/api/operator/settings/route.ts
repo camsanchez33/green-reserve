@@ -38,7 +38,7 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json();
   // SP-A: the cancellation & card policy is the owner's alone (STAFF_POLICY_SPEC
   // A2) — a staff login with "Edit course settings" can change everything else.
-  const OWNER_ONLY_FIELDS = ['cancellationHours', 'checkInWindowHours', 'rainCheckPolicy', 'lateCancellationFee', 'twoFactorMethod', 'twoFactorPhone'];
+  const OWNER_ONLY_FIELDS = ['cancellationHours', 'checkInWindowHours', 'rainCheckPolicy', 'lateCancellationFee', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes', 'twoFactorMethod', 'twoFactorPhone'];
   if (session.isStaff && OWNER_ONLY_FIELDS.some(k => k in body)) {
     return NextResponse.json({ error: 'The cancellation policy can only be changed from the course owner’s login.' }, { status: 403 });
   }
@@ -55,6 +55,8 @@ export async function PATCH(req: NextRequest) {
     'hasResidentPricing','residentCounty','residentState','residentProofRequired',
     'walkingAllowed','walkingNote','cartRequired',
     'cancellationHours','checkInWindowHours','rainCheckPolicy','publicAdvanceDays','timezone',
+    // SP-B: the cancellation & card policy (money: noShowFee goes through courseMoneyFromWire below).
+    'lateFeeBasis','lateFeeTiming','noShowFeeBasis','autoNoShowMinutes',
     'dresscode','minPlayers','maxPlayers',
     'hasDrivingRange','drivingRangeType','rangeBallsFree','hasPuttingGreen','hasShortGameArea',
     'hasProShop','proShopPhone','restaurantType','hasCartGirl','hasLessons','hasClubRental',
@@ -84,10 +86,10 @@ export async function PATCH(req: NextRequest) {
     // tight ceiling. The rest are ancillary rates shown to golfers and never
     // charged here — a caddie at a top club can legitimately exceed $500, so
     // they get a loose ceiling that still rules out nonsense.
-    const isCharge = k === 'lateCancellationFeeCents';
+    const isCharge = k === 'lateCancellationFeeCents' || k === 'noShowFeeCents';
     const max = isCharge ? 50000 : 500000;
     if (!Number.isFinite(c) || c < 0 || c > max) {
-      const label = isCharge ? 'Late-cancellation fee' : 'That rate';
+      const label = k === 'noShowFeeCents' ? 'No-show fee' : isCharge ? 'Late-cancellation fee' : 'That rate';
       return NextResponse.json({ error: `${label} must be between $0 and $${(max / 100).toLocaleString()}.` }, { status: 400 });
     }
   }

@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma';
 import { chargeOnConnectedAccount } from '@/lib/stripe';
 import { recordBookingEventSafe } from '@/lib/booking-events';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
+import { holdsAtCutoff } from '@/lib/cancel-policy';
+import { markNoShow } from '@/lib/no-show-fee';
 import {
   sendCancellationWarningEmail,
   sendCancellationFeeChargedEmail,
@@ -41,7 +43,7 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
   if (denied) return denied;
 
   const now = new Date();
-  const results = { warnings: 0, charged: 0, checkIns: 0, failed: 0 };
+  const results = { warnings: 0, charged: 0, checkIns: 0, autoNoShows: 0, failed: 0 };
 
   // ─── 1 & 2: Fee-policy bookings (card on file, fee > 0) ─────────────────────
   const feeBookings = await prisma.booking.findMany({
@@ -86,6 +88,9 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
       }
     } else if (cutoffMs <= now.getTime()) {
       // ── Charge (cutoff passed) ──
+      // SP-B: only "hold at the cutoff" bookings are charged here. Under "only if
+      // they cancel late" the fee is charged by the cancellation itself.
+      if (!holdsAtCutoff(booking)) continue;
       if (!booking.stripeCustomerId || !booking.stripePaymentMethodId) continue;
       if (!booking.course.stripeAccountActive || !booking.course.stripeAccountId) continue;
 
@@ -144,7 +149,9 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
   // 'card_on_file' with a $0 hold fee — section 2 skips those, and they need
   // this reminder exactly as the old no-card bookings did.
   const noCardBookings = await prisma.booking.findMany({
-    where: { status: 'confirmed', OR: [{ paymentStatus: 'no_payment_method' }, { paymentStatus: 'card_on_file', cancellationFeeTotal: { lte: 0 } }] },
+    // SP-B: plus card-on-file bookings whose late fee is charged on a late cancel
+    // (no hold at the cutoff) — they need the check-in link exactly like these.
+    where: { status: 'confirmed', OR: [{ paymentStatus: 'no_payment_method' }, { paymentStatus: 'card_on_file', cancellationFeeTotal: { lte: 0 } }, { paymentStatus: 'card_on_file', lateFeeTimingAtBooking: { in: ['late_cancel', 'late_cancel_or_no_show'] } }] },
     include: {
       teeTime: { select: { date: true, time: true } },
       course: { select: { name: true, timezone: true, checkInWindowHours: true } },
@@ -173,6 +180,31 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
       results.checkIns++;
     } catch (err) {
       console.error(`Check-in email failed for booking ${booking.id}:`, err);
+      results.failed++;
+    }
+  }
+
+  // ─── 3b: Automatic no-show (SP-B) ────────────────────────────────────────────
+  // Cam 2026-10-05: "if the player never checked in then it could be a no show".
+  // A booking made under a policy with automatic no-show, still confirmed and
+  // nobody checked in N minutes after its tee time, is marked a no-show through
+  // the same helper the counter uses (lib/no-show-fee) — same charges, same
+  // "still coming" undo. Runs hourly, so a mark can land up to an hour after N.
+  // Only the last two days are scanned; anything older was handled already.
+  const scanFrom = new Date(now.getTime() - 2 * 86_400_000).toISOString().slice(0, 10);
+  const scanTo = new Date(now.getTime() + 86_400_000).toISOString().slice(0, 10);
+  const noShowCandidates = await prisma.booking.findMany({
+    where: { status: 'confirmed', noShowAt: null, checkedInAt: null, autoNoShowMinutesAtBooking: { not: null }, teeTime: { date: { gte: scanFrom, lte: scanTo } } },
+    select: { id: true, autoNoShowMinutesAtBooking: true, teeTime: { select: { date: true, time: true } }, course: { select: { timezone: true } } },
+  });
+  for (const b of noShowCandidates) {
+    const dueMs = teeToUtcMs(b.teeTime.date, b.teeTime.time, b.course.timezone) + (b.autoNoShowMinutesAtBooking ?? 0) * 60_000;
+    if (!Number.isFinite(dueMs) || dueMs > now.getTime()) continue;
+    try {
+      await markNoShow(b.id, { type: 'cron' }, { auto: true });
+      results.autoNoShows++;
+    } catch (err) {
+      console.error(`Automatic no-show failed for booking ${b.id}:`, err);
       results.failed++;
     }
   }

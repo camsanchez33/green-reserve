@@ -84,6 +84,11 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   when the late fee is taken (hold at cutoff / late cancel / late cancel or no-show / manual), no-show
   fee, one describePolicy() for every golfer surface. The card-off switch WAITS ON CAM (spec §B0:
   every booking saves a card today because GreenReserve's $1.50 fee is collected from it).
+  DECIDED Cam 2026-10-05 (spec B0/B2): card only when a late or no-show fee exists; our fee is collected
+  when they pay and charged with any course fee; timings hold / late cancel / late cancel or no-show; no-show
+  fee + automatic no-show; no-fee courses book with no card and get the pay link. BUILT 2026-10-05 (see the
+  spec's "Built — Part B"). FOLLOW-UP FOR CAM: a no-card round paid at the counter has no card for our fee —
+  invoice the course, or steer to the pay link. Box open until a live walk with real cards.
 - [ ] WX-1 — Weather button on the Tee Sheet (Cam 2026-10-01: "do the weather button with both
   options", then "remove close a day"). Frost delay → Weather: Cancel times (whole day or a window,
   fee waived, golfers emailed, times blocked; today's started times left alone) + Delay start (B-9).

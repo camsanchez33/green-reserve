@@ -1,3 +1,4 @@
+import { policyFrom } from './cancel-policy';
 import { centsToDollarsOr0 } from './money';
 /**
  * Maps a Prisma Course row (camelCase) onto the snake_case shape the golfer-facing
@@ -54,6 +55,8 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     member_advance_days:     c.memberAdvanceDays ?? 14,
     has_member_pricing:      !!c.hasMemberPricing,
     late_cancellation_fee:   c.lateCancellationFeeCents != null ? centsToDollarsOr0(c.lateCancellationFeeCents) : 10,
+    // SP-B: the full cancellation & card policy, in cents — describePolicy() turns it into the golfer's words.
+    cancel_policy:           policyFrom({ cancellationHours: c.cancellationHours, lateCancellationFeeCents: c.lateCancellationFeeCents ?? 1000, lateFeeBasis: c.lateFeeBasis, lateFeeTiming: c.lateFeeTiming, noShowFeeCents: c.noShowFeeCents, noShowFeeBasis: c.noShowFeeBasis, autoNoShowMinutes: c.autoNoShowMinutes, checkInWindowHours: c.checkInWindowHours }),
     brand_color:             c.brandColor ?? '#173B2A',
     gift_card_url:           c.giftCardUrl ?? '',
     hero_photo_url:          c.heroPhotoUrl ?? '',

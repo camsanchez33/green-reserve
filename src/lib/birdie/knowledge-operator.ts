@@ -35,11 +35,16 @@ export const OPERATOR_KNOWLEDGE = `
 - "Apply to Tee Sheet" rebuilds the next 8 days of open times from the schedules right now.
 
 ## Cancellation policy (/dashboard/settings)
-- Settings holds the cancellation window (hours before the tee time) and the late-cancellation fee. Golfers who cancel inside the window are charged the fee automatically; it is refunded if they still check in.
-- Courses with no fee do not collect a card at booking.
+- Settings → Pricing & cancellation → "Cancellation & card" (owner login only) sets the policy, with a live preview of exactly what golfers read:
+  - Late-cancellation fee: off, or an amount per booking or per player, and the free-cancel window in hours.
+  - When the late fee is taken: "Hold at the cutoff, refunded at check-in" (charged when the window closes, refunded when they check in), "Only if they cancel late" (charged the moment they cancel inside the window), or "If they cancel late or don't show".
+  - No-show fee: an optional separate amount per booking or per player. "Mark no-shows automatically" marks a group not checked in N minutes after its tee time (checked hourly); "Still coming" on the Tee Sheet undoes it and refunds what it charged.
+  - A card is asked for at booking only when a late or no-show fee is set. With no fees, golfers book without a card and get a link (the "Pay link" hours before the round) to check in and pay, or pay at the course.
+- GreenReserve's $1.50/player booking fee is collected when the golfer pays, and is charged along with the course's late or no-show fee when one is charged.
+- Weather cancellations are always free and refund any hold.
 
 ## Check-in and payment
-- Nothing is charged at booking. Golfers save a card; the green fee is charged at check-in (staff check-in on the Tee Sheet, or the golfer's own check-in link from their confirmation email). Counter payments can be marked "paid at the counter".
+- Nothing is charged at booking. Golfers save a card when the course's policy has a fee (otherwise no card); the green fee is charged at check-in (staff check-in on the Tee Sheet, or the golfer's own check-in link from their confirmation email). Counter payments can be marked "paid at the counter".
 - The check-in window (how early a golfer can self check in) is in Settings.
 
 ## Stripe (/dashboard/money?tab=payouts)
@@ -50,7 +55,7 @@ export const OPERATOR_KNOWLEDGE = `
 - Create membership tiers (dues, per-round rate, advance-booking days). Members sign in on the course's own page and see member pricing. Add a member by email; they get an invite.
 
 ## Settings (/dashboard/settings)
-- Course info (name, address, holes, par), photos and brand colour (the golfer page wears it), cancellation policy, check-in window, walking policy, staff logins (tee-sheet access), and Course & Layout for nines and bookable rounds.
+- Course info (name, address, holes, par), photos and brand colour (the golfer page wears it), cancellation policy, check-in window, walking policy, staff logins and what each person can do (Settings → Staff & permissions — per person, with Starter / Front desk / Manager presets), and Course & Layout for nines and bookable rounds.
 - The course goes live when GreenReserve flips it after the preview is approved and Stripe is connected.
 
 ## Messages (/dashboard/messages)

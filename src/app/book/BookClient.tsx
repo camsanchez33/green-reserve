@@ -1,7 +1,9 @@
 'use client';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
+// SP-B: the /pure entry injects Stripe.js only when loadStripe() is called — the
+// main entry injects it on import, which loaded Stripe even on no-card courses.
+import { loadStripe } from '@stripe/stripe-js/pure';
 import type { Stripe } from '@stripe/stripe-js';
 import {
   Elements, CardElement, useStripe, useElements,
@@ -10,6 +12,7 @@ import { ChevronLeft, Lock, Loader2, AlertCircle } from 'lucide-react';
 import { ACCESS_FEE_PER_PLAYER, serviceFeeLabel, hoursLabel } from '@/lib/booking-fees';
 import { TrustNote } from '@/components/TrustNote';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
+import { describePolicy, policyFrom, type CancelPolicy } from '@/lib/cancel-policy';
 
 // Deferred: only load Stripe when a card is actually needed (fee-policy courses).
 // No-fee courses never touch Stripe JS at all.
@@ -33,6 +36,8 @@ export type CourseInfo = {
   range_balls_large_price: number;
   cancellation_hours: number;
   late_cancellation_fee: number;
+  /** SP-B: the full policy (cents). Older payloads fall back to the two fields above. */
+  cancel_policy?: CancelPolicy;
   brand_color?: string;
 };
 type GolferProfile = { firstName: string; lastName: string; email: string; phone: string };
@@ -280,7 +285,10 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   const accessTotal  = ACCESS_FEE_PER_PLAYER * players;
   const total         = greenTotal + cartTotal + rangeBallsTotal + accessTotal;
 
-  const hasNoFeePolicy = !course.late_cancellation_fee;
+  // SP-B: the course's policy decides whether a card is asked for at all, and
+  // describePolicy() is the same wording the course page and the email use.
+  const policy = course.cancel_policy ?? policyFrom({ cancellationHours: course.cancellation_hours, lateCancellationFeeCents: Math.round((course.late_cancellation_fee || 0) * 100) });
+  const terms = describePolicy(policy);
 
   return (
     <div className="min-h-screen bg-paper">
@@ -291,7 +299,9 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
 
         <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mb-2">Confirm Your Tee Time</h1>
         <p className="text-ink-soft text-sm mb-8">
-          Save your card to lock in your tee time at {course.name} — you won&apos;t be charged today.
+          {terms.cardNeeded
+            ? <>Save your card to lock in your tee time at {course.name} — you won&apos;t be charged today.</>
+            : <>Reserve your tee time at {course.name} — no card needed. You pay when you check in.</>}
         </p>
 
         <div className="grid gap-6">
@@ -376,9 +386,8 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
             </div>
           </div>
 
-          {/* FB-3 (Cam 2026-09-29): every course collects a card — a no-show or a
-              round paid at the counter is charged GreenReserve's booking fee. */}
-            <Elements stripe={getStripePromise()}>
+          {/* SP-B: Stripe JS loads only when this course's policy needs a card. */}
+            <Elements stripe={terms.cardNeeded ? getStripePromise() : null}>
               <CheckoutForm
                 teeTimeId={teeTime.id}
                 players={players}
@@ -386,26 +395,22 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 cartSelected={cartSelected}
                 rangeBallsSize={rangeBallsTotal > 0 ? rangeBallsSize : ''}
                 accent={accent}
+                needsCard={terms.cardNeeded}
                 onConfirmed={setConfirmedData}
               />
             </Elements>
 
 
-          {/* The question golfers actually ask, answered with the policy facts
-              that were already on this page. */}
+          {/* SP-B: the course's cancellation terms, in the words describePolicy()
+              gives every golfer surface. */}
           <div className="bg-white rounded-lg p-5 border border-line">
-            <p className="text-ink text-sm font-medium mb-1.5">
-              Why a card, if nothing is charged?
-            </p>
-            {hasNoFeePolicy ? (
-              <p className="text-ink-soft text-xs leading-relaxed">
-                We save your card to hold your tee time — you&apos;re not charged now. You pay for your round when you check in. If you don&apos;t show up, or you pay at the counter instead, only the ${(ACCESS_FEE_PER_PLAYER * players).toFixed(2)} booking fee (${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player) is charged to this card.
-              </p>
-            ) : (
-              <p className="text-ink-soft text-xs leading-relaxed">
-                We save your card to hold your tee time — you&apos;re not charged now. Cancel at least {hoursLabel(course.cancellation_hours)} ahead and it&apos;s free; cancelling later (or no-showing) triggers a ${course.late_cancellation_fee.toFixed(2)} late-cancellation fee. Otherwise, you pay for your round when you check in at the course. If you don&apos;t show up, or you pay at the counter instead, the ${(ACCESS_FEE_PER_PLAYER * players).toFixed(2)} booking fee is also charged to this card.
-              </p>
-            )}
+            <p className="text-ink text-sm font-medium mb-1.5">Cancellation policy</p>
+            <ul className="space-y-1">
+              {terms.lines.map((l, i) => <li key={i} className="text-ink-soft text-xs leading-relaxed">{l}</li>)}
+              {terms.cardNeeded && (
+                <li className="text-ink-soft text-xs leading-relaxed">When a fee above is charged, or if you pay at the counter instead of checking in, the ${(ACCESS_FEE_PER_PLAYER * players).toFixed(2)} booking fee (${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player) is charged to this card too.</li>
+              )}
+            </ul>
           </div>
         </div>
       </div>
@@ -413,13 +418,15 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   );
 }
 
-function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize, accent, onConfirmed }: {
+function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize, accent, needsCard, onConfirmed }: {
   teeTimeId: string;
   players: number;
   golfer: GolferProfile | null;
   cartSelected: boolean;
   rangeBallsSize: string;
   accent: string;
+  /** SP-B: false when the course's policy charges nothing — no card is asked for. */
+  needsCard: boolean;
   onConfirmed: (data: ConfirmedData) => void;
 }) {
   const stripe   = useStripe();
@@ -443,13 +450,14 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
     setError('');
     if (!name.trim() || !email.trim()) { setError('Please enter your name and email.'); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Please enter a valid email address.'); return; }
-    if (!stripe || !elements) { setError('Payment form is still loading — try again in a moment.'); return; }
-
-    const cardElement = elements.getElement(CardElement);
-    if (!cardElement) { setError('Card details are required.'); return; }
-
     setLoading(true);
     try {
+      // SP-B: no card at this course — book straight away; they pay at check-in.
+      let setupIntentId: string | undefined;
+      if (needsCard) {
+      if (!stripe || !elements) { setError('Payment form is still loading — try again in a moment.'); setLoading(false); return; }
+      const cardElement = elements.getElement(CardElement);
+      if (!cardElement) { setError('Card details are required.'); setLoading(false); return; }
       const siRes = await fetch('/api/bookings/setup-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -467,6 +475,8 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
         ? setupIntent.payment_method
         : setupIntent?.payment_method?.id;
       if (!paymentMethodId) { setError('Your card could not be saved. Please try again.'); setLoading(false); return; }
+      setupIntentId = setupIntent.id;
+      }
 
       const res = await fetch('/api/bookings', {
         method: 'POST',
@@ -478,7 +488,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
           golferEmail: email,
           golferPhone: phone,
           // SEC-1: only the SetupIntent — the server reads its customer and card from Stripe.
-          setupIntentId: setupIntent.id,
+          ...(setupIntentId ? { setupIntentId } : {}),
           cartSelected,
           rangeBallsSize,
           termsAccepted: true,
@@ -493,6 +503,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
         accessFeeTotal: data.accessFeeTotal, totalAmount: data.totalAmount,
         cancellationFeeTotal: data.cancellationFeeTotal, cancellationHours: data.cancellationHours ?? 24,
         golferEmail: email,
+        noCard: !needsCard,
       });
     } catch {
       setError('Something went wrong. Please try again.');
@@ -520,6 +531,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
         </div>
       </div>
 
+      {needsCard && <>
       <div className="pt-1 border-t border-line-soft" />
       <StepHeading n={2} title="A card to hold your spot" note="Nothing is charged today." />
       <div>
@@ -529,6 +541,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
         </div>
         <TrustNote className="mt-1.5">Nothing is charged now — you pay at the course when you check in.</TrustNote>
       </div>
+      </>}
 
       {error && <p className="text-bad text-sm">{error}</p>}
 
@@ -538,16 +551,18 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
       </p>
       <button
         onClick={handleSubmit}
-        disabled={loading || !stripe}
+        disabled={loading || (needsCard && !stripe)}
         className="w-full py-3.5 rounded-md font-medium text-white text-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         style={{ backgroundColor: accent }}
       >
-        {loading ? <><Loader2 size={16} className="animate-spin" /> Saving card…</> : 'Confirm Tee Time'}
+        {loading ? <><Loader2 size={16} className="animate-spin" /> {needsCard ? 'Saving card…' : 'Booking…'}</> : 'Confirm Tee Time'}
       </button>
+      {needsCard && (
       <div className="flex items-center justify-center gap-2 text-ink-muted text-xs">
         <Lock size={12} />
         <span>Secured by Stripe</span>
       </div>
+      )}
     </div>
   );
 }

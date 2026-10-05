@@ -21,7 +21,9 @@ export type PaymentEventKind =
   | 'dispute_opened' | 'dispute_closed'
   | 'charge_failed'
   // FB-3: GreenReserve's fee charged on its own (paid offline / no-show).
-  | 'fee_charged' | 'fee_refunded';
+  | 'fee_charged' | 'fee_refunded'
+  // SP-B: the COURSE's no-show charge (on its connected account) and its refund.
+  | 'no_show_fee' | 'no_show_fee_refunded';
 
 export async function recordPaymentEvent(e: {
   bookingId: string; kind: PaymentEventKind; amountCents: number;

@@ -1,3 +1,4 @@
+import { holdsAtCutoff } from '@/lib/cancel-policy';
 import { NextRequest, NextResponse } from 'next/server';
 import { cronAuthFailure } from '@/lib/cron-auth';
 import { cronRoute } from '@/lib/cron-log';
@@ -57,7 +58,9 @@ export const GET = cronRoute('cancellation-cutoff', async (req: NextRequest) => 
     const cutoffMs = teeMs - booking.course.cancellationHours * 60 * 60 * 1000;
     if (cutoffMs > now.getTime()) continue; // cancellation window still open — nothing to do yet
 
-    if (booking.cancellationFeeTotal > 0) {
+    // SP-B: only "hold at the cutoff" bookings are held here; a late-cancel-timing
+    // booking is charged by its cancellation and just gets the check-in email.
+    if (booking.cancellationFeeTotal > 0 && holdsAtCutoff(booking)) {
       // ── Fee policy: charge the card ─────────────────────────────────────────
       if (!booking.stripeCustomerId || !booking.stripePaymentMethodId) { skippedNoCard++; continue; }
       if (!booking.course.stripeAccountActive || !booking.course.stripeAccountId) { skippedNoConnectedAccount++; continue; }

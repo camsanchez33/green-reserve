@@ -11,6 +11,7 @@ import { todayIn, isPastIn } from '@/lib/course-time';
 import { randomUUID } from 'crypto';
 import { chargeAccessFeeSeparately, refundSeparateAccessFee, liveSeparateFee, type FeeChargeResult } from '@/lib/access-fee';
 import { refundOnConnectedAccount } from '@/lib/stripe';
+import { markNoShow, refundNoShowFee } from '@/lib/no-show-fee';
 
 // Used by both the Payments tab (all bookings, transaction ledger) and the
 // Cancellations tab (status=cancelled) — one endpoint, filtered by query param.
@@ -111,12 +112,11 @@ export async function PATCH(req: NextRequest) {
     if (!isPastIn(booking.course.timezone, booking.teeTime.date, booking.teeTime.time)) {
       return NextResponse.json({ error: 'You can mark a no-show once their tee time has passed.' }, { status: 409 });
     }
-    await prisma.$transaction(async (tx) => {
-      await tx.booking.update({ where: { id }, data: { noShowAt: new Date() } });
-      await recordBookingEvent(tx, { ...evBase, type: 'no_show_marked', playerCount: booking.players });
-    });
-    const fee = await chargeAccessFeeSeparately(id, { why: 'no_show', actor: 'operator', actorName });
-    return NextResponse.json({ success: true, noShowAt: new Date().toISOString(), fee: feeNote(fee) });
+    // SP-B: lib/no-show-fee — the same mark and charges as the automatic no-show.
+    const r = await markNoShow(id, staff, { actorName });
+    const courseNote = r.courseFee.charged ? `No-show fee of $${(r.courseFee.amountCents / 100).toFixed(2)} charged.`
+      : r.courseFee.reason === 'no no-show fee on this booking' ? null : `The no-show fee could not be charged (${r.courseFee.reason}).`;
+    return NextResponse.json({ success: true, noShowAt: new Date().toISOString(), fee: [feeNote(r.fee), courseNote].filter(Boolean).join(' ') || null });
   }
   if (action === 'still_coming') {
     await prisma.$transaction(async (tx) => {
@@ -124,9 +124,11 @@ export async function PATCH(req: NextRequest) {
       // Only a real reversal is an event — clearing a mark that was never set is not.
       if (booking.noShowAt) await recordBookingEvent(tx, { ...evBase, type: 'no_show_cleared', playerCount: booking.players });
     });
-    // The no-show fee was taken in error — they are here after all.
+    // The no-show charges were taken in error — they are here after all.
     const r = await refundSeparateAccessFee(id, 'no-show marked in error (still coming)', 'operator', actorName);
-    return NextResponse.json({ success: true, ...(r.ok ? {} : { fee: `The booking fee could not be refunded (${r.error}) — GreenReserve will follow up.` }) });
+    const c = await refundNoShowFee(id, actorName); // SP-B: the course's no-show fee too
+    const notes = [r.ok ? null : `The booking fee could not be refunded (${r.error}) — GreenReserve will follow up.`, c.ok ? null : `The no-show fee could not be refunded (${c.error}) — refund it from Stripe.`].filter(Boolean);
+    return NextResponse.json({ success: true, ...(notes.length ? { fee: notes.join(' ') } : {}) });
   }
   if (action === 'paid_offline') {
     if (booking.status === 'cancelled') return NextResponse.json({ error: 'This booking was cancelled.' }, { status: 409 });

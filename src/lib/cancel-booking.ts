@@ -1,7 +1,9 @@
 import { prisma } from './prisma';
 import { sendCancellationEmail, sendTeeTimeAlertEmail } from './email';
-import { refundOnConnectedAccount } from './stripe';
-import { refundSeparateAccessFee } from './access-fee';
+import { refundOnConnectedAccount, chargeOnConnectedAccount } from './stripe';
+import { refundSeparateAccessFee, chargeAccessFeeSeparately } from './access-fee';
+import { chargesOnLateCancel } from './cancel-policy';
+import { recordPaymentEvent } from './refund-booking';
 import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
 
 export type CancellationOptions = {
@@ -26,7 +28,7 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
     where: { id: bookingId },
     include: {
       teeTime: true,
-      course: { select: { name: true, slug: true, cancellationHours: true, stripeAccountId: true, timezone: true } },
+      course: { select: { name: true, slug: true, cancellationHours: true, stripeAccountId: true, stripeAccountActive: true, timezone: true } },
     },
   });
 
@@ -87,6 +89,40 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
     }
   }
 
+  // SP-B: under "only if they cancel late" / "cancel late or don't show" nothing
+  // was held at the cutoff — a cancellation inside the window charges the late
+  // fee NOW. Best effort: a failed charge is recorded and reported, and never
+  // blocks the cancellation (STAFF_POLICY_SPEC B4).
+  let lateFee: { id: string } | null = null;
+  let lateFeeChargeFailed = '';
+  const teeAt = teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time);
+  const windowHours = booking.cancellationHoursAtBooking ?? booking.course.cancellationHours;
+  const isLate = !!teeAt && teeAt.getTime() - windowHours * 3600_000 <= Date.now();
+  if (!waiveFee && !feeAlreadyCharged && isLate && booking.cancellationFeeTotal > 0 && chargesOnLateCancel(booking)) {
+    if (!booking.stripeCustomerId || !booking.stripePaymentMethodId) lateFeeChargeFailed = 'no card on file';
+    else if (!booking.course.stripeAccountId || !booking.course.stripeAccountActive) lateFeeChargeFailed = 'the course’s Stripe account is not connected';
+    else {
+      try {
+        lateFee = await chargeOnConnectedAccount({
+          customerId: booking.stripeCustomerId,
+          paymentMethodId: booking.stripePaymentMethodId,
+          connectedAccountId: booking.course.stripeAccountId,
+          amountCents: Math.round(booking.cancellationFeeTotal),
+          applicationFeeCents: 0,
+          description: `Late-cancellation fee - ${booking.course.name} - booking ${booking.id}`,
+          idempotencyKey: `latefee-${booking.id}-${booking.stripePaymentMethodId}`,
+        });
+        feeAlreadyCharged = true;
+      } catch (err) {
+        lateFeeChargeFailed = err instanceof Error ? err.message : String(err);
+      }
+    }
+    if (lateFeeChargeFailed) {
+      console.error(JSON.stringify({ ev: 'cancel.late_fee.fail', bookingId, error: lateFeeChargeFailed }));
+      await recordPaymentEvent({ bookingId, kind: 'charge_failed', amountCents: Math.round(booking.cancellationFeeTotal), actor: 'system', detail: `Late-cancellation fee: ${lateFeeChargeFailed}` }).catch(() => {});
+    }
+  }
+
   // MP-1 fix-now #6: a free cancel must not leave a stamped fee behind.
   // Every booking at a fee-policy course carries cancellationFeeTotal from
   // creation. The cutoff cron only charges bookings that are STILL
@@ -108,6 +144,7 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
         ...(clearPhantomFee ? { cancellationFeeTotal: 0 } : {}),
         ...(roundRefunded ? { paymentStatus: 'refunded', roundPaymentIntentId: '' } : {}),
         ...(waiveFee && !feeAlreadyCharged && booking.paymentStatus === 'cancellation_fee_charged' ? { paymentStatus: 'refunded', cancellationFeeApplies: false } : {}),
+        ...(lateFee ? { paymentStatus: 'cancellation_fee_charged', cancellationFeeChargeId: lateFee.id, cancellationFeeChargedAt: new Date(), cancellationFeeApplies: true } : {}),
       },
     });
     await tx.teeTime.update({
@@ -177,10 +214,21 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
     reason,
   }).catch(console.error);
 
-  // FB-3 review: a booking fee charged on its own (a no-show that is then
-  // cancelled) is not kept on a cancelled round — any late-cancellation fee is
-  // the course's hold fee above, not ours. Never blocks the cancellation.
-  await refundSeparateAccessFee(bookingId, 'booking cancelled', 'system');
+  if (lateFee) {
+    await recordBookingEventSafe({
+      bookingId, courseId: booking.courseId, type: 'fee_charged', actor,
+      amountCents: Math.round(booking.cancellationFeeTotal), playerCount: booking.players,
+      teeTimeAt: teeAt, stripeId: lateFee.id, metadata: { reason: 'late_cancel' },
+    });
+  }
 
-  return { success: true, feeCharged: feeAlreadyCharged, roundRefunded, feeRefundFailed } as const;
+  // SP-B (Cam 2026-10-05: "if the course has a cancellation policy then we
+  // uphold that policy with our fee as well"): when the course keeps a late
+  // fee, GreenReserve's fee is charged with it. A free or waived cancel keeps
+  // nothing — any booking fee charged on its own (a no-show then cancelled) is
+  // refunded, as FB-3 did. Neither ever blocks the cancellation.
+  if (feeAlreadyCharged && !waiveFee) await chargeAccessFeeSeparately(bookingId, { why: 'late_cancel', actor: 'system' });
+  else await refundSeparateAccessFee(bookingId, 'booking cancelled', 'system');
+
+  return { success: true, feeCharged: feeAlreadyCharged, roundRefunded, feeRefundFailed, lateFeeChargeFailed } as const;
 }
