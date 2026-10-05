@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { sanitizeHistory, MAX_HISTORY_TURNS, MAX_USER_CHARS } from '../src/lib/birdie/guardrails';
 import { describeCourseContext } from '../src/lib/birdie/course-context';
 import { DASHBOARD_PAGES, OPERATOR_KNOWLEDGE } from '../src/lib/birdie/knowledge-operator';
+import { READ_TOOLS, runReadTool, type ToolContext } from '../src/lib/birdie/tools';
 
 let failed = 0;
 function check(label: string, ok: boolean, detail?: string) {
@@ -70,5 +71,29 @@ const other = describeCourseContext({
 });
 check('facts: one course per block — no leakage between two contexts', !facts.includes('Rival Links') && !other.includes('Hollow Creek'));
 
+// 5. B4a live-data tools: the course is never an input, every read is scoped,
+// and a login without the permission gets an error before any query runs.
+const toolsSrc = readFileSync(new URL('../src/lib/birdie/tools.ts', import.meta.url), 'utf8');
+check('tools: no tool accepts a course', READ_TOOLS.every(t => !/course/i.test(Object.keys((t.input_schema as { properties?: object }).properties ?? {}).join(','))));
+check('tools: no tool writes', !/prisma\.\w+\.(create|update|upsert|delete)/.test(toolsSrc));
+const toolReads = [...toolsSrc.matchAll(/prisma\.(\w+)\.(findMany|findFirst|findUnique|count)\(\{[\s\S]*?where: \{([^}]*)\}/g)];
+check('tools: every direct read filters on ctx.courseId', toolReads.length > 0 && toolReads.every(m => m[3].includes('courseId: ctx.courseId')), `${toolReads.length} reads`);
+check('tools: analytics and schedules go through the session course', /computeAnalytics\(ctx\.courseId/.test(toolsSrc) && /listSchedules\(ctx\.courseId\)/.test(toolsSrc));
+check('route: tool calls run with the session context', /runReadTool\(tu\.name, tu\.input, toolCtx\)/.test(routeSrc) && /courseId: session\.courseId, timezone/.test(routeSrc));
+(async () => {
+const denied: ToolContext = { courseId: 'not-a-real-course', timezone: 'America/New_York', can: () => false };
+const deniedAll = await Promise.all(['get_analytics', 'get_schedules', 'get_tee_sheet'].map(n => runReadTool(n, { from: '2026-01-01', to: '2026-01-31' }, denied)));
+check('tools: a login without permission gets an error, not data', deniedAll.every(o => o.isError && /can't see/.test(o.content)), deniedAll.map(o => o.content).join(' | '));
+const allowed: ToolContext = { ...denied, can: () => true };
+const badDate = await runReadTool('get_analytics', { from: '01/01/2026', to: 'yesterday' }, allowed);
+check('tools: a malformed date is refused before any query', badDate.isError && /YYYY-MM-DD/.test(badDate.content));
+const tooLong = await runReadTool('get_analytics', { from: '2020-01-01', to: '2026-01-01' }, allowed);
+check('tools: a range over 400 days is refused', tooLong.isError && /400 days/.test(tooLong.content));
+const badSheet = await runReadTool('get_tee_sheet', { date: "2026-10-05'; DROP TABLE" }, allowed);
+check('tools: a malformed tee-sheet date is refused', badSheet.isError);
+const unknown = await runReadTool('update_course', { courseId: 'x' }, allowed);
+check('tools: an unknown tool name is an error', unknown.isError);
+
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);
+})();

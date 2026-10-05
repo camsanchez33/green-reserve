@@ -4,34 +4,23 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-05 18:56 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `58260ec` · working tree **20 dirty file(s)**
+Generated 2026-10-05 19:05 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `daa1894` · working tree **9 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-### Uncommitted working tree (20 file(s))
+### Uncommitted working tree (9 file(s))
 
-- `M CLAUDE.md`
+- `M BIRDIE_AI_SPEC.md`
 - `M RUN_QUEUE.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M prisma/schema.prisma`
-- `M src/app/api/admin/golfers/route.ts`
-- `M src/app/api/bookings/route.ts`
-- `M src/app/api/checkin/[bookingId]/route.ts`
-- `M src/app/api/manage/[bookingId]/route.ts`
-- `M src/app/api/operator/bookings/route.ts`
-- `M src/app/api/operator/settings/route.ts`
-- `M src/app/book/BookClient.tsx`
-- `M src/app/checkin/[bookingId]/page.tsx`
-- `M src/app/dashboard/settings/page.tsx`
-- `M src/app/manage/[bookingId]/page.tsx`
-- `M src/components/CourseHeaderBar.tsx`
-- `M src/lib/email.ts`
-- `M src/lib/normalize-course.ts`
-- `M src/lib/settings-validation.ts`
-- `?? prisma/migrations/20261005170000_confirmation_note/`
+- `M scripts/birdie-isolation-test.ts`
+- `M src/app/api/birdie/chat/route.ts`
+- `M src/components/birdie/BirdieWidget.tsx`
+- `M src/lib/birdie/knowledge-operator.ts`
+- `?? src/lib/birdie/tools.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -80,7 +69,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Not started — the actual queue
 
-1. PERS-1 (BUILT 2026-10-05 — CourseHeaderBar photo+logo on book/confirmation/check-in/manage; Course.confirmationNote migration 20261005170000, Settings field, confirmation screen +  — `RUN_QUEUE.md:29`
+1. PERS-1 (MERGED #65) · BIRDIE-B4a (BUILT 2026-10-05 — tools.ts read tools, Haiku→Opus 5.5 escalation on the first tool call, NDJSON stream, isolation tests extended; not yet run aga — `RUN_QUEUE.md:29`
 2. TYPE-2 — strip the AI tells Cam listed 2026-10-05, zero behavior, one run per — `RUN_QUEUE.md:57`
 3. TYPE-3 — icons only where they do a job (Cam approved 2026-10-05: "Ok — `RUN_QUEUE.md:105`
 4. /dashboard — folded into the CLUB-3 shell rebuild (below). — `RUN_QUEUE.md:112`
@@ -208,6 +197,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `17267d1` 2026-10-05 — PERS-1: course photo and logo on golfer pages, plus a note from the course
 - `58260ec` 2026-10-05 — queue/spec update
 - `e8b6902` 2026-10-05 — CLUB-5: booking flow in the club look
 - `e99afbc` 2026-10-05 — CLUB-4b: admin labels in sentence case
@@ -219,7 +209,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `4bc7fe0` 2026-10-05 — CLUB-2: golfer course page in the club look
 - `566e11e` 2026-10-05 — CLUB-1: homepage leads with what GreenReserve is; heavier Garamond site-wide
 - `d9e4bed` 2026-10-05 — Regenerate code map after the CLUB-0 review fixes
-- `90ab223` 2026-10-05 — CLUB-0 security review fixes: escape setup-sheet emails, clean intake fields
 
 ---
 

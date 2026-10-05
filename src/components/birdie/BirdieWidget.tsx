@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { X, Send, ArrowRight } from 'lucide-react';
 import { confirmLeave } from '@/lib/unsaved-guard';
 
-type Turn = { role: 'user' | 'assistant'; content: string; pending?: boolean; error?: boolean };
+type Turn = { role: 'user' | 'assistant'; content: string; pending?: boolean; error?: boolean; status?: string };
 type Meta = { enabled: boolean; greeting: string; chips: string[]; helpsWith: string };
 
 const OPEN_KEY = 'birdie:open';
@@ -98,16 +98,32 @@ export default function BirdieWidget() {
         setTurns([...history, { role: 'assistant', content: String(d.error || `Birdie could not answer (${r.status}).`), error: true }]);
         return;
       }
+      // B4a: the reply is NDJSON — one {"t","d"} event per line. "text" is reply
+      // text; "status" is a short note while Birdie looks something up.
       const reader = r.body.getReader();
       const dec = new TextDecoder();
       let acc = '';
+      let buf = '';
+      let status = '';
+      const apply = (line: string) => {
+        if (!line.trim()) return;
+        try {
+          const ev = JSON.parse(line) as { t?: string; d?: unknown };
+          if (typeof ev.d !== 'string') return;
+          if (ev.t === 'text') { acc += ev.d; status = ''; }
+          else if (ev.t === 'status') status = ev.d;
+        } catch { /* a malformed line is skipped, never shown raw */ }
+      };
       for (;;) {
         const { value, done } = await reader.read();
         if (done) break;
-        acc += dec.decode(value, { stream: true });
-        const snapshot = acc;
-        setTurns([...history, { role: 'assistant', content: snapshot, pending: true }]);
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() ?? '';
+        lines.forEach(apply);
+        setTurns([...history, { role: 'assistant', content: acc, status, pending: true }]);
       }
+      apply(buf + dec.decode());
       setTurns([...history, { role: 'assistant', content: acc || "…I didn't get a reply. Ask again?" , error: !acc }]);
     } catch (err) {
       if ((err as { name?: string }).name === 'AbortError') return;
@@ -151,13 +167,13 @@ export default function BirdieWidget() {
             {turns.map((t, i) => (
               <div key={i} className={t.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
                 <div className={'max-w-[88%] text-sm whitespace-pre-wrap leading-relaxed rounded-md px-3 py-2 ' + (t.role === 'user' ? 'bg-pine text-white' : t.error ? 'bg-bad/5 border border-bad/20 text-bad' : 'bg-paper text-ink')}>
-                  {t.role === 'assistant' && !t.content && t.pending ? <span className="text-ink-faint">Birdie is thinking…</span> : t.role === 'assistant' ? renderReply(t.content) : t.content}
+                  {t.role === 'assistant' && !t.content && t.pending ? <span className="text-ink-muted">{t.status || 'Birdie is thinking…'}</span> : t.role === 'assistant' ? <>{renderReply(t.content)}{t.pending && t.status ? <span className="block mt-1 text-ink-muted">{t.status}</span> : null}</> : t.content}
                 </div>
               </div>
             ))}
           </div>
           <form className="flex items-center gap-2 px-3 py-3 border-t border-line" onSubmit={e => { e.preventDefault(); ask(input); }}>
-            <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} placeholder="Ask how to do something…" className={iCls} maxLength={1500} disabled={busy} aria-label="Message Birdie" />
+            <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} placeholder="Ask about your course…" className={iCls} maxLength={1500} disabled={busy} aria-label="Message Birdie" />
             <button type="submit" disabled={busy || !input.trim()} aria-label="Send" className="w-9 h-9 flex items-center justify-center rounded-md bg-pine hover:bg-pine-hover disabled:opacity-50 text-white transition-colors"><Send className="w-4 h-4" /></button>
           </form>
         </div>

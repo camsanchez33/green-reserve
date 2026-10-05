@@ -62,6 +62,21 @@ The pro-shop owner's guide dog. Tools/knowledge:
 - Admin session required; SUPPORT_PLUS minimum for money/PII answers,
   mirroring existing role gates.
 
+## Phase B4a — live-data READ tools (BUILT 2026-10-05, Cam: "show me what [the] analytics have been")
+- Tools in `src/lib/birdie/tools.ts`: get_analytics (the Analytics tab's own
+  numbers via lib/analytics.ts, compact, dollars), get_schedules (schedules +
+  blocked days), get_tee_sheet (one day). The course is never a tool input —
+  every read filters on the session's courseId — and every tool re-checks the
+  login's permission at run time (analytics.view / schedule.view / sheet.view).
+  The tool list is the same for every session so the cached prefix holds.
+- Routing (Cam: "upgrade for tool turns"): a turn starts on Haiku with the tools
+  offered; plain how-to answers finish there. The moment it calls a tool, the
+  rest of the turn runs on claude-opus-5-5 (effort low, server-side refusal
+  fallback on). At most 4 tool rounds per turn; tool calls are logged
+  (`birdie.tools`).
+- The reply stream is NDJSON events ({"t":"text"} / {"t":"status"}) so B4b can
+  add confirm cards on the same channel.
+
 ## Phase B4 — Operator ACTIONS (propose-and-confirm, later)
 - "Change my weekend rate to $70" → Birdie drafts the change and shows a
   confirm card (old value → new value); NOTHING happens without the
