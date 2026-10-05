@@ -52,7 +52,7 @@ export default function AdminForgotPasswordPage() {
                 onKeyDown={e => e.key === 'Enter' && submit()} className={iCls} autoFocus/></label>
               <button onClick={submit} disabled={loading || !email}
                 className="mt-4 w-full bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
-                {loading ? 'Sending...' : 'Send Reset Link'}
+                {loading ? 'Sending...' : 'Send reset link'}
               </button>
               <p className="mt-5 text-center text-xs text-ink-soft">
                 <a href="/admin/login" className="text-pine font-medium hover:underline">Back to login</a>

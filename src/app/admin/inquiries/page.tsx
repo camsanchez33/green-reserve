@@ -936,7 +936,7 @@ function InquiriesListInner() {
                     (isArchive ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')
                   }
                 >
-                  {bulkRunning ? 'Working…' : isArchive ? 'Archive' : 'Send Sheet'}
+                  {bulkRunning ? 'Working…' : isArchive ? 'Archive' : 'Send sheet'}
                 </button>
               </div>
           </Modal>

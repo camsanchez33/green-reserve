@@ -374,7 +374,7 @@ function WizardContent() {
       <div className="admin-content flex-1 min-h-screen">
         <div className="px-8 py-7 max-w-2xl">
           <div className="mb-7">
-            <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink">Add New Course</h1>
+            <h1 className="text-[30px] leading-none font-serif text-ink">Add a new course</h1>
             <p className="text-sm text-ink-soft mt-0.5">
               {inquiryId ? 'Pre-filled from inquiry · ' : ''}Create an operator account and course page
             </p>

@@ -191,8 +191,8 @@ const LAYOUT36_LABELS: Record<string, string> = {
   two_18s: 'Two 18-hole courses', other: 'Other / non-standard',
 };
 const PASS_TYPE_LABEL: Record<string, string> = {
-  membership: 'Membership', season_pass: 'Season Pass', resident_card: 'Resident Card',
-  resident_rate: 'Resident Rate (no card)', punch_card: 'Punch Card',
+  membership: 'Membership', season_pass: 'Season pass', resident_card: 'Resident card',
+  resident_rate: 'Resident rate (no card)', punch_card: 'Punch card',
 };
 const BOOL_LABELS: Record<string, string> = { yes: 'Yes', no: 'No', true: 'Yes', false: 'No' };
 const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -878,7 +878,7 @@ function InquiryDetailInner() {
               )}
               {inq.status === 'building' && allChangesAddressed && (
                 <button onClick={() => setPendingAction('send_preview')} disabled={sendingPreview} className={btnP}>
-                  {sendingPreview ? 'Sending…' : 'Send Updated Preview'}
+                  {sendingPreview ? 'Sending…' : 'Send updated preview'}
                 </button>
               )}
               {inq.status === 'building' && !pageChangesRequested && !allChangesAddressed && (
@@ -964,7 +964,7 @@ function InquiryDetailInner() {
                     {inq.builtCourseId && !pageApproved && (
                       <button onClick={() => { setMoreOpen(false); setPendingAction('send_preview'); }} disabled={sendingPreview}
                         className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                        {sendingPreview ? 'Sending…' : (previewSentEvent ? 'Send Updated Preview' : 'Send Preview')}
+                        {sendingPreview ? 'Sending…' : (previewSentEvent ? 'Send updated preview' : 'Send preview')}
                       </button>
                     )}
                     {inq.builtCourseId && pageApproved && (
@@ -1266,8 +1266,8 @@ function InquiryDetailInner() {
           {approveResult && (() => {
             const isDetails = !!approveResult.detailsLink;
             const rows: [string, string][] = isDetails
-              ? [['Setup Sheet Link', approveResult.detailsLink as string]]
-              : [['Temp Password', approveResult.tempPassword || ''], ['Setup Link', approveResult.setupLink || '']];
+              ? [['Setup sheet link', approveResult.detailsLink as string]]
+              : [['Temp password', approveResult.tempPassword || ''], ['Setup link', approveResult.setupLink || '']];
             const failed = approveResult.emailSent === false;
             return (
               <div className={'mt-4 rounded-md px-4 py-3 ' + (failed ? 'bg-bad/5 border border-bad/20' : 'bg-ok/5 border border-ok/20')}>
@@ -1752,7 +1752,7 @@ function InquiryDetailInner() {
                   {/* Memberships & Passes */}
                   {shPasses.length > 0 && shPasses.some(p => p.name || p.type) && (
                     <div>
-                      <Eyebrow className="mb-2">Memberships &amp; Passes</Eyebrow>
+                      <Eyebrow className="mb-2">Memberships &amp; passes</Eyebrow>
                       <div className="space-y-3">
                         {shPasses.filter(p => p.name || p.type).map((p, i) => {
                           const isResident = p.type === 'resident_card' || p.type === 'resident_rate';
@@ -1864,7 +1864,7 @@ function InquiryDetailInner() {
                     return (
                       <Card className="p-4">
                         <div className={'text-[12.5px] font-semibold mb-3 ' + (allGood ? 'text-ok' : 'text-warn')}>
-                          {allGood ? 'Ready to Build' : 'Build Checklist'}
+                          {allGood ? 'Ready to build' : 'Build checklist'}
                         </div>
                         <div className="space-y-2">
                           {checks.map(c => {
@@ -2136,7 +2136,7 @@ function InquiryDetailInner() {
               <p className="text-sm text-ink-soft">
                 Sends the setup-sheet link to <strong>{inq.contactName}</strong> at <strong>{inq.email}</strong>. They'll fill in course details, pricing, and policies for us to build from.
               </p>
-              <ModalActions working={working} onCancel={close} onConfirm={() => fire(() => action(isResend ? 'resend_details' : 'request_details'))} confirmLabel={isResend ? 'Resend Sheet' : 'Send Sheet'} disabled={processing}/>
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(() => action(isResend ? 'resend_details' : 'request_details'))} confirmLabel={isResend ? 'Resend sheet' : 'Send sheet'} disabled={processing}/>
             </ModalShell>
           );
         }
@@ -2239,7 +2239,7 @@ function InquiryDetailInner() {
                 working={working}
                 onCancel={close}
                 onConfirm={() => fire(() => action('mark_live'))}
-                confirmLabel={blocked ? 'Blocked' : allOk ? 'Go Live' : 'Override & Go Live'}
+                confirmLabel={blocked ? 'Blocked' : allOk ? 'Go live' : 'Override & go live'}
                 danger={!allOk}
                 disabled={!goLiveChecks || blocked || !canConfirm || processing}
               />

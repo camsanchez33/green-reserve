@@ -147,7 +147,7 @@ export function CourseDialogs() {
                 disabled={sendingPreview}
                 className="flex-1 bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors"
               >
-                {sendingPreview ? 'Sending…' : 'Send Preview'}
+                {sendingPreview ? 'Sending…' : 'Send preview'}
               </button>
             </div>
         </Modal>
@@ -157,7 +157,7 @@ export function CourseDialogs() {
       {manualSlot && (
         <Modal size="sm" pad="p-6" title="Add Manual Booking" onClose={() => setManualSlot(null)}
           titleNode={<div className="flex items-center justify-between mb-5">
-              <h3 className="font-serif font-semibold text-ink">Add Manual Booking</h3>
+              <h3 className="font-serif font-semibold text-ink">Add a manual booking</h3>
               <button
                 onClick={() => setManualSlot(null)}
                 className="text-ink-muted hover:text-ink w-8 h-8 flex items-center justify-center rounded-md hover:bg-paper transition-colors"
@@ -197,7 +197,7 @@ export function CourseDialogs() {
                 disabled={manualSaving}
                 className="flex-1 px-4 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-50 text-white rounded-md text-[12.5px] font-medium transition-colors"
               >
-                {manualSaving ? 'Adding…' : 'Add Booking'}
+                {manualSaving ? 'Adding…' : 'Add booking'}
               </button>
             </div>
         </Modal>

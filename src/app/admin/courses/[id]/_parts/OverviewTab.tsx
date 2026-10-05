@@ -269,7 +269,7 @@ export function OverviewTab() {
                     <dl className="space-y-2 text-sm">
                       <div className="flex justify-between gap-3"><dt className="text-ink-muted">Operator last signed in</dt><dd className="text-ink text-right">{detail.relationship.operatorLastLoginAt ? fmtDate(detail.relationship.operatorLastLoginAt) : 'Never'}</dd></div>
                       <div className="flex justify-between gap-3"><dt className="text-ink-muted">First went live</dt><dd className="text-ink text-right">{detail.relationship.firstWentLiveAt ? fmtDate(detail.relationship.firstWentLiveAt) : 'Not yet'}</dd></div>
-                      <div className="flex justify-between gap-3"><dt className="text-ink-muted">Earned GreenReserve</dt><dd className="text-ink text-right tabular-nums">${(detail.relationship.earnedCents / 100).toFixed(2)} <span className="text-ink-muted">· {detail.relationship.paidRounds} paid round{detail.relationship.paidRounds === 1 ? '' : 's'}</span></dd></div>
+                      <div className="flex justify-between gap-3"><dt className="text-ink-muted">Earned by GreenReserve</dt><dd className="text-ink text-right tabular-nums">${(detail.relationship.earnedCents / 100).toFixed(2)} <span className="text-ink-muted">· {detail.relationship.paidRounds} paid round{detail.relationship.paidRounds === 1 ? '' : 's'}</span></dd></div>
                     </dl>
                   </Card>
                 )}

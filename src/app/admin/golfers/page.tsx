@@ -58,7 +58,7 @@ function statusOf(b: BookingDetail): { dot: 'ok' | 'bad' | 'warn' | 'neutral'; l
   return { dot: 'neutral', label: b.hasCard ? 'Confirmed · card on file' : 'Confirmed · no card' };
 }
 const EVENT_LABEL: Record<string, string> = {
-  refund: 'Refund issued', refund_failed: 'Refund FAILED', dispute_opened: 'Chargeback opened', dispute_closed: 'Chargeback closed', charge_failed: 'Charge failed',
+  refund: 'Refund issued', refund_failed: 'Refund failed', dispute_opened: 'Chargeback opened', dispute_closed: 'Chargeback closed', charge_failed: 'Charge failed',
 };
 
 function GolfersInner() {
