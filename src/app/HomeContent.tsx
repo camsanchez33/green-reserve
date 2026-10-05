@@ -36,7 +36,6 @@ export default function HomeContent() {
       {/* HERO — text left, the working demo right, on the plain ground. */}
       <section className={s.hero}>
         <div className={s.heroText}>
-          <div className={s.eyebrow}>Free online tee sheet for golf courses</div>
           <h1 className={s.display}><span className={s.l}>The tee sheet</span> <span className={s.l}>your course deserves.</span></h1>
           <p>GreenReserve gives your course an online booking page with your name and colors, and one tee sheet your staff run the day from.</p>
           <div className={s.cta}>
@@ -51,7 +50,7 @@ export default function HomeContent() {
       {/* BUILT FOR THE COURSE — three staggered rows, each with its proof. */}
       <section className={`${s.built} ${s.col}`}>
         <div className={s.builtGrid}>
-          <div><div className={s.eyebrow}>Built for the course</div><h2 className={s.display}>Your course, your sheet, your golfers.</h2></div>
+          <h2 className={s.display}>Your course, your sheet, your golfers.</h2>
           <div className={s.rows}>
             <div className={s.row}>
               <div><h3>Fill the tee sheet</h3><p>Golfers book from a “Book a tee time” button on your own website.</p></div>
@@ -95,7 +94,6 @@ export default function HomeContent() {
       <section className={s.setup} id="how">
         <div className={`${s.col} ${s.setupGrid}`}>
           <div>
-            <div className={s.eyebrow}>How it works</div>
             <h2 className={s.display}>From first call<br />to first tee time.</h2>
             <p className={s.lead}>We set it up with you, around how your course already runs.</p>
           </div>
@@ -109,14 +107,13 @@ export default function HomeContent() {
 
       {/* PRICE — one line; the details are for the call (LQ-2). */}
       <section className={`${s.col} ${s.priceLine}`} id="pricing">
-        <div><div className={s.eyebrow}>Price</div><h2 className={s.display}>Free for courses.</h2></div>
+        <h2 className={s.display}>Free for courses.</h2>
         <p>No setup fee and no monthly fee. Golfers pay a small booking fee when they book online. We&apos;ll walk you through the details on a call.</p>
       </section>
 
       {/* SEE IT WORK — the preview before booking a demo (Cam 2026-10-01). */}
       <section className={s.see} id="see">
         <div className={s.col}>
-          <div className={s.eyebrow}>See it work</div>
           <h2 className={s.display}>Book a time. Watch it land on the sheet.</h2>
           <p className={s.lead}>This is how it works, not a picture of it. Pick a time as a golfer, then flip to the sheet your shop runs. Try your course&apos;s color.</p>
           <SeeItWorkDemo />
@@ -129,7 +126,7 @@ export default function HomeContent() {
 
       {/* FAQ — the same array as the FAQPage JSON-LD in page.tsx; every answer printed. Last before the end band (Cam 2026-10-01). */}
       <section className={`${s.col} ${s.faqWrap}`} id="faq">
-        <div><div className={s.eyebrow}>Questions</div><h2 className={s.display}>What courses ask us.</h2></div>
+        <h2 className={s.display}>What courses ask us.</h2>
         <div className={s.faq}>
           {HOME_FAQ.map(f => <div key={f.q}><h3>{f.q}</h3><p>{f.a}</p></div>)}
         </div>
