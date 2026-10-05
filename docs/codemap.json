@@ -7820,7 +7820,7 @@
     },
     {
       "path": "src/components/ui/Eyebrow.tsx",
-      "lines": 17,
+      "lines": 19,
       "purpose": "",
       "brain": [],
       "exports": [

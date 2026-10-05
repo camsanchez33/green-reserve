@@ -56,7 +56,15 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     (empty states, confirmations, fine print, subtitles) full ink; grey kept for
     metadata only (key/value keys, spots, per-player prices, Booking ID, counts,
     calendar weekdays). Muted text links are ink-soft. Zero behavior.
-  - [ ] /dashboard  - [ ] /admin
+  - [x] guards + shared label — BUILT 2026-10-05 (Cam: "now we need to apply
+    these changes across everything"): `<Eyebrow>` renders a sentence-case ink
+    label (13px semibold) everywhere it is still used, and its Title Case
+    children are sentence case; `ink-faint` #979B94 → #70756F (2.7:1 failed
+    WCAG for text; now 4.5:1 on paper); design-guard ratchets `uppercase` and
+    `<Eyebrow>` down across ALL of src (it used to require the eyebrow class);
+    design-auditor checks TYPE-1/TYPE-2.
+  - [ ] /dashboard  - [ ] /admin  - [ ] public leftovers (for-courses, call,
+    contact, legal, not-found)
 - [ ] TYPE-3 — icons only where they do a job (back arrow, close, search): remove
   decorative Lucide icons (74 files; ChevronRight / check / sparkle-type ×108),
   e.g. the icon tiles on admin Overview. Zero behavior. Rewrites CLAUDE.md's

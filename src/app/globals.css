@@ -10,7 +10,7 @@
   --color-ink:         #141814;
   --color-ink-soft:    #50554F;
   --color-ink-muted:   #6B706A;
-  --color-ink-faint:   #979B94;
+  --color-ink-faint:   #70756F; /* TYPE-2: was #979B94 (2.7:1 on paper — failed WCAG for text); now 4.5:1 */
   --color-line:        #E3E4DE;
   --color-line-soft:   #EFF0EB;
   --color-line-strong: #D3D5CD;

@@ -1351,7 +1351,7 @@ function InquiryDetailInner() {
           {activeTab === 'lead' && (
             <div className="max-w-3xl">
               <div className="flex items-center justify-between mb-4">
-                <Eyebrow>Contact Info</Eyebrow>
+                <Eyebrow>Contact info</Eyebrow>
                 {!editContact ? (
                   <button onClick={() => {
                     setContactEdits({
@@ -1687,7 +1687,7 @@ function InquiryDetailInner() {
                   {/* Tee Sets */}
                   {shTeeSets.length > 0 && shTeeSets.some(ts => ts.name) && (
                     <div>
-                      <Eyebrow className="mb-2">Tee Sets</Eyebrow>
+                      <Eyebrow className="mb-2">Tee sets</Eyebrow>
                       <Card className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
@@ -1978,7 +1978,7 @@ function InquiryDetailInner() {
               page a human writes. */}
           {activeTab === 'notes' && (
             <div className="max-w-3xl">
-              <Eyebrow className="mb-3">Internal Notes</Eyebrow>
+              <Eyebrow className="mb-3">Internal notes</Eyebrow>
               {inq.adminNotes && (
                 <pre className="text-sm text-ink-soft bg-white rounded-lg shadow-card px-4 py-3 mb-3 whitespace-pre-wrap font-sans">
                   {inq.adminNotes}

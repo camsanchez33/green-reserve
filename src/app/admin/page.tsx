@@ -377,7 +377,7 @@ export default function AdminOverviewPage() {
             <Card className="p-5 mb-6">
               <div className="flex items-center gap-2 mb-3">
                 <AlertCircle className="w-3.5 h-3.5 text-warn"/>
-                <Eyebrow>Action Queue</Eyebrow>
+                <Eyebrow>Action queue</Eyebrow>
               </div>
 
               {stats.actionQueue.redCount === 0 && stats.actionQueue.amberCount === 0 ? (
@@ -453,7 +453,7 @@ export default function AdminOverviewPage() {
             <Card className="mb-5 grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-line-soft">
               <div onClick={() => router.push('/admin/courses')} className="p-5 cursor-pointer hover:bg-paper transition-colors flex items-center justify-between">
                 <div>
-                  <Eyebrow className="mb-1">Live Courses</Eyebrow>
+                  <Eyebrow className="mb-1">Live courses</Eyebrow>
                   <div className="text-xl font-serif font-medium text-ink">{stats.thirtyDay.activeCourses}</div>
                   <div className="text-xs text-ink-faint mt-0.5">{stats.thirtyDay.archivedCourses > 0 ? `${stats.thirtyDay.totalCourses} active · ${stats.thirtyDay.archivedCourses} archived` : `${stats.thirtyDay.totalCourses} total`}</div>
                 </div>
@@ -500,7 +500,7 @@ export default function AdminOverviewPage() {
               </Card>
 
               <Card className="p-5">
-                <Eyebrow className="mb-3">Today's Tee Sheet</Eyebrow>
+                <Eyebrow className="mb-3">Today's tee sheet</Eyebrow>
                 <div className="space-y-1">
                   <button onClick={() => router.push('/admin/activity')} className="w-full flex items-center justify-between text-left px-2 py-1.5 -mx-2 rounded-md hover:bg-paper transition-colors">
                     <span className="text-sm text-ink">Rounds today</span>
@@ -519,7 +519,7 @@ export default function AdminOverviewPage() {
               </Card>
 
               <Card className="p-5">
-                <Eyebrow className="mb-3">Course Health Watchlist</Eyebrow>
+                <Eyebrow className="mb-3">Course health watchlist</Eyebrow>
                 {stats.bottomTrio.courseHealthWatchlist.length === 0 ? (
                   <div className="text-xs text-ink-faint py-4">No courses trending down.</div>
                 ) : (

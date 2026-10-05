@@ -168,7 +168,7 @@ export function OverviewTab() {
                 {/* Client health block (item 3, top) */}
                 <Card className="p-5">
                   <div className="flex items-center justify-between mb-3">
-                    <Eyebrow>Client Health</Eyebrow>
+                    <Eyebrow>Client health</Eyebrow>
                     <span title={detail.health.reason}><StatusDot status={detail.health.dot} label={detail.health.label} /></span>
                   </div>
                   <p className="text-sm text-ink-soft mb-4">{detail.health.reason}</p>
@@ -216,7 +216,7 @@ export function OverviewTab() {
 
                 {detail.recentBookings.length > 0 && (
                   <div>
-                    <Eyebrow className="mb-2">Recent Bookings</Eyebrow>
+                    <Eyebrow className="mb-2">Recent bookings</Eyebrow>
                     <Card className="divide-y divide-line-soft">
                       {detail.recentBookings.map(b => (
                         <div key={b.id} className="flex items-center gap-4 px-5 py-3">
@@ -314,7 +314,7 @@ export function OverviewTab() {
 
                 <Card className="p-5">
                   <div className="flex items-center justify-between mb-3">
-                    <Eyebrow>Course Contact</Eyebrow>
+                    <Eyebrow>Course contact</Eyebrow>
                   </div>
                   <div className="space-y-2.5">
                     <div className="flex gap-3 text-sm">

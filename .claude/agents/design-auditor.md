@@ -46,7 +46,7 @@ hits and buries the real ones.
    already provides as a shared component. CLAUDE.md names these; find open-coded
    equivalents.
 5. **Icon and emoji policy.** Literal emoji characters in JSX or copy.
-6. **Typography roles.** Page titles, eyebrows, stat numbers — confirm they use the
+6. **Typography roles (TYPE-1/TYPE-2, 2026-10-05).** `font-serif` (EB Garamond) only on headlines, course names and dates — never times, buttons, tables or body. NO small uppercase label above a heading (that is a finding, not a style); real labels are sentence case. Sentences in full ink; grey (`text-ink-muted`/`faint`) only on metadata. Page titles, stat numbers — confirm they use the
    prescribed classes rather than approximations.
 
 ## Evidence rule — non-negotiable

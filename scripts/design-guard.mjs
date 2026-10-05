@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// MP-9 (ADMIN_V4 V4-6 §2) — stops the staff surfaces re-growing hand-typed
-// copies of the shared card, eyebrow and input classes. Without this the
+// MP-9 (ADMIN_V4 V4-6 §2) — stops pages re-growing hand-typed copies of the
+// shared card and input classes, and (TYPE-2) small uppercase labels. Without this the
 // design system regresses within two phases (it did, twice: A0 and A6 were
 // both "audit every page" fixes that drifted straight back).
 //
@@ -14,10 +14,12 @@
 import { readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
-const ROOTS = ['src/app/admin', 'src/components/admin', 'src/app/dashboard', 'src/components/dashboard'];
+const ROOTS = ['src/app', 'src/components']; // TYPE-2: every page, not only staff surfaces
 const RULES = [
   { key: 'card', re: /bg-white rounded-lg shadow-card/g, use: "<Card> from '@/components/ui/Card' (padding/layout in className)" },
-  { key: 'eyebrow', re: /text-\[11px\] uppercase tracking-\[0\.1em\] text-ink-muted/g, use: "<Eyebrow> from '@/components/ui/Eyebrow' (as=\"span\" etc. keeps the element)" },
+  // TYPE-2 (2026-10-05): small uppercase labels are the "AI" eyebrow Cam
+  // banned. Ratchet every `uppercase` class and every <Eyebrow> use down.
+  { key: 'uppercase', re: /\buppercase\b|<Eyebrow\b/g, use: "no small uppercase label (TYPE-2) — if it sits above a heading, delete it; a real label is sentence case: text-[13px] font-semibold text-ink" },
   { key: 'input', re: /bg-paper border border-line rounded-md px-3/g, use: "INPUT / INPUT_COMPACT from '@/components/ui/field'" },
 ];
 const BASELINE = 'scripts/design-guard.baseline.json';
