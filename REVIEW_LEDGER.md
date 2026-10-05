@@ -6,6 +6,20 @@ Generated 2026-10-05 from the full-site review workflow (REVIEW_SPEC.md Phase 1)
 
 Caveat: the skeptics agreed with 89 of 91. That is a high agreement rate, so every S1 below was also opened and confirmed by hand before this ledger was written. Treat S3/S4 as likely-but-unverified until fixed.
 
+## Progress (2026-10-05)
+
+| group | finding(s) | status |
+|---|---|---|
+| G1 no-show then cancel charged the late fee again | R-PAY-002, R-BOOK-003 | **fixed** #71 · test `cancel-after-noshow-test.ts` |
+| G2 "still coming" re-marked and re-charged by the hourly cron | R-CRON-001 | **fixed** #72 · test `still-coming-test.ts` |
+| G3 check-in of a no-show keeps the no-show fee | R-PAY-001, R-OPS-001 | waiting on Cam: should a late arrival who checks in get the no-show fee back? |
+| G4 cutoffs used the course's current window | R-CRON-002, R-GOLF-001, R-PAY-003 | **fixed** #74 · test `cutoff-window-test.ts` |
+| G5 golfer sign-in code crackable offline | R-AUTH-001 | **fixed** #73 · tests `golfer-otp-test.ts`, isolation single-use check |
+| G6 party-size change keeps old per-player fees | R-GOLF-002, R-PAY-007, R-BOOK-010 | waiting on Cam: needs one nullable column (fee basis copied onto the booking) |
+| G7 DST: tee times an hour off on clock-change Sundays | R-BOOK-001 | **fixed** #70 · DST cases in `course-time-test.ts` |
+
+Also landed: #69 runs every `scripts/*-test.ts` in CI (Tests workflow) and repaired three stale tests.
+
 ## Fix first: S1 (money, security)
 
 Fixed one per run, each with a regression test, in this order.

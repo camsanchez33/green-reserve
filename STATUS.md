@@ -4,22 +4,26 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-05 23:15 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `ce494cc` · working tree **2 dirty file(s)**
+Generated 2026-10-05 23:50 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `69fc911` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-05**. 1 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-05**. 6 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `c534f1e` | 2026-10-05 | Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001) |
+| `2e6dec2` | 2026-10-05 | Golfer sign-in code can no longer be cracked offline (R-AUTH-001) |
+| `4f1580c` | 2026-10-05 | "Still coming" sticks: auto no-show never re-marks a cleared booking (R-CRON-001) |
+| `69cc708` | 2026-10-05 | No-show then cancel: never charge the late fee on top (R-PAY-002, R-BOOK-003) |
 | `475ff29` | 2026-10-05 | DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001) |
+| `fa48d8f` | 2026-10-05 | CI: run the test scripts on every PR; fix three stale tests |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (2 file(s))
+### Uncommitted working tree (1 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
+- `M REVIEW_LEDGER.md`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -198,18 +202,18 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `c534f1e` 2026-10-05 — Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)
+- `2e6dec2` 2026-10-05 — Golfer sign-in code can no longer be cracked offline (R-AUTH-001)
+- `4f1580c` 2026-10-05 — "Still coming" sticks: auto no-show never re-marks a cleared booking (R-CRON-001)
+- `69cc708` 2026-10-05 — No-show then cancel: never charge the late fee on top (R-PAY-002, R-BOOK-003)
+- `321902b` 2026-10-05 — queue/spec update
 - `ce494cc` 2026-10-05 — queue/spec update
 - `475ff29` 2026-10-05 — DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)
+- `fa48d8f` 2026-10-05 — CI: run the test scripts on every PR; fix three stale tests
 - `5007cb9` 2026-10-05 — queue/spec update
 - `189dc3b` 2026-10-05 — queue/spec update
 - `2e7f6fc` 2026-10-05 — CARD-1: explicit card-at-booking choice in Settings
 - `10d853c` 2026-10-05 — BIRDIE-B4b: Birdie drafts changes, the operator confirms
-- `e65d5db` 2026-10-05 — BIRDIE-B4a: Birdie answers from live course data
-- `17267d1` 2026-10-05 — PERS-1: course photo and logo on golfer pages, plus a note from the course
-- `58260ec` 2026-10-05 — queue/spec update
-- `e8b6902` 2026-10-05 — CLUB-5: booking flow in the club look
-- `e99afbc` 2026-10-05 — CLUB-4b: admin labels in sentence case
-- `dd0c049` 2026-10-05 — CLUB-4a: admin pages without decorative icons
 
 ---
 

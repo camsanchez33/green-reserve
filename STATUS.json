@@ -1,12 +1,11 @@
 {
-  "generatedAt": "2026-10-05T23:15:32.694Z",
+  "generatedAt": "2026-10-05T23:50:59.648Z",
   "repo": {
-    "head": "ce494cc",
+    "head": "69fc911",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 2,
+    "dirtyCount": 1,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json"
+      "M REVIEW_LEDGER.md"
     ],
     "looksLikeRunInProgress": false
   },
@@ -14,9 +13,44 @@
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
       {
+        "h": "c534f1e",
+        "date": "2026-10-05T23:24:54+00:00",
+        "subject": "Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "2e6dec2",
+        "date": "2026-10-05T23:23:22+00:00",
+        "subject": "Golfer sign-in code can no longer be cracked offline (R-AUTH-001)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4f1580c",
+        "date": "2026-10-05T23:20:41+00:00",
+        "subject": "\"Still coming\" sticks: auto no-show never re-marks a cleared booking (R-CRON-001)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "69cc708",
+        "date": "2026-10-05T23:18:34+00:00",
+        "subject": "No-show then cancel: never charge the late fee on top (R-PAY-002, R-BOOK-003)",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "475ff29",
         "date": "2026-10-05T23:14:40+00:00",
         "subject": "DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "fa48d8f",
+        "date": "2026-10-05T20:22:09+00:00",
+        "subject": "CI: run the test scripts on every PR; fix three stale tests",
         "ids": [],
         "matches": []
       }
@@ -722,6 +756,31 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "c534f1e",
+      "date": "2026-10-05",
+      "subject": "Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)"
+    },
+    {
+      "h": "2e6dec2",
+      "date": "2026-10-05",
+      "subject": "Golfer sign-in code can no longer be cracked offline (R-AUTH-001)"
+    },
+    {
+      "h": "4f1580c",
+      "date": "2026-10-05",
+      "subject": "\"Still coming\" sticks: auto no-show never re-marks a cleared booking (R-CRON-001)"
+    },
+    {
+      "h": "69cc708",
+      "date": "2026-10-05",
+      "subject": "No-show then cancel: never charge the late fee on top (R-PAY-002, R-BOOK-003)"
+    },
+    {
+      "h": "321902b",
+      "date": "2026-10-05",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "ce494cc",
       "date": "2026-10-05",
       "subject": "queue/spec update"
@@ -730,6 +789,11 @@
       "h": "475ff29",
       "date": "2026-10-05",
       "subject": "DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)"
+    },
+    {
+      "h": "fa48d8f",
+      "date": "2026-10-05",
+      "subject": "CI: run the test scripts on every PR; fix three stale tests"
     },
     {
       "h": "5007cb9",
@@ -750,36 +814,6 @@
       "h": "10d853c",
       "date": "2026-10-05",
       "subject": "BIRDIE-B4b: Birdie drafts changes, the operator confirms"
-    },
-    {
-      "h": "e65d5db",
-      "date": "2026-10-05",
-      "subject": "BIRDIE-B4a: Birdie answers from live course data"
-    },
-    {
-      "h": "17267d1",
-      "date": "2026-10-05",
-      "subject": "PERS-1: course photo and logo on golfer pages, plus a note from the course"
-    },
-    {
-      "h": "58260ec",
-      "date": "2026-10-05",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "e8b6902",
-      "date": "2026-10-05",
-      "subject": "CLUB-5: booking flow in the club look"
-    },
-    {
-      "h": "e99afbc",
-      "date": "2026-10-05",
-      "subject": "CLUB-4b: admin labels in sentence case"
-    },
-    {
-      "h": "dd0c049",
-      "date": "2026-10-05",
-      "subject": "CLUB-4a: admin pages without decorative icons"
     }
   ]
 }
