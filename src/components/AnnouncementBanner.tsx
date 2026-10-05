@@ -1,6 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { X, Megaphone } from 'lucide-react';
+import { dfetch } from '@/lib/dashboard-fetch';
+import { toast } from '@/components/dashboard/Toast';
 
 interface Announcement { id: string; title: string; body: string; createdAt: string; }
 
@@ -15,14 +17,13 @@ export default function AnnouncementBanner() {
       .catch(() => {});
   }, []);
 
+  // Review 2026-10-04: a failed dismiss used to vanish silently and the banner
+  // came back on the next page. It now comes back right away and says why.
   async function dismiss() {
     if (!announcement) return;
     setVisible(false);
-    fetch('/api/operator/announcements/dismiss', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ announcementId: announcement.id }),
-    }).catch(() => {});
+    const r = await dfetch('/api/operator/announcements/dismiss', { method: 'POST', body: JSON.stringify({ announcementId: announcement.id }) });
+    if (!r.ok) { setVisible(true); toast(`Couldn’t dismiss that announcement — ${r.error}`); }
   }
 
   if (!announcement || !visible) return null;

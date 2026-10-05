@@ -58,11 +58,12 @@ export async function applyWeatherCancel(courseId: string, plan: WeatherPlan, ac
   const result: WeatherResult = { cancelled: [], failed: [], feeRefundsFailed: 0, blocked: 0 };
   const block = () => prisma.teeTime.updateMany({ where: { courseId, id: { in: plan.teeTimeIds } }, data: { status: 'blocked' } });
 
-  // Block first so nobody books into the window while it is being cancelled.
-  // A cancellation sets its slot back to 'available', so block again after.
+  // Block first so nobody books into the window while it is being cancelled;
+  // each cancellation keeps its slot blocked (review 2026-10-04 — it used to
+  // reopen it for a moment, and a booking could land in that gap).
   await block();
   const cancel = async (g: WeatherGroup) => {
-    const r = await performCancellation(g.bookingId, actor, { notifySlotAlerts: false, reason: why, waiveFee: true })
+    const r = await performCancellation(g.bookingId, actor, { notifySlotAlerts: false, reason: why, waiveFee: true, keepSlotBlocked: true })
       .catch(err => ({ error: err instanceof Error ? err.message : String(err), status: 500 } as const));
     if ('error' in r && r.error) result.failed.push({ ...g, error: r.error });
     else { result.cancelled.push(g); if ('feeRefundFailed' in r && r.feeRefundFailed) result.feeRefundsFailed++; }

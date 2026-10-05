@@ -20,10 +20,13 @@ export type CancellationOptions = {
   /** WX-1 weather cancel: the COURSE cancelled — refund a late-cancel fee already
    *  taken (best effort; a failed refund is reported, never blocks the cancel). */
   waiveFee?: boolean;
+  /** Review 2026-10-04: the course is closing this time (weather) — leave the
+   *  slot BLOCKED instead of reopening it, so nobody books into the gap. */
+  keepSlotBlocked?: boolean;
 };
 
 export async function performCancellation(bookingId: string, actor: EventActor, opts: CancellationOptions = {}) {
-  const { notifySlotAlerts = true, reason, waiveFee = false } = opts;
+  const { notifySlotAlerts = true, reason, waiveFee = false, keepSlotBlocked = false } = opts;
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -149,7 +152,7 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
     });
     await tx.teeTime.update({
       where: { id: booking.teeTimeId },
-      data: { playersBooked: { decrement: booking.players }, status: 'available' },
+      data: { playersBooked: { decrement: booking.players }, status: keepSlotBlocked ? 'blocked' : 'available' },
     });
     await recordBookingEvent(tx, {
       bookingId, courseId: booking.courseId, type: 'booking_cancelled', actor,

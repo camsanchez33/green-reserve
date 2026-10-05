@@ -71,6 +71,13 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   type roles, admin count chips not pills, stale CLAUDE.md sidebar lines. KEPT AS IS (decision):
   frost delay blocks an early slot even when a group on it didn't fit — that time can't be played;
   the group is listed to call.
+- [x] REVIEW 2026-10-04 (/gr-review over 04f2335..037dcf0 — WX-1, MP-8b, MP-7b): HIGH (staff could refund
+  fees via Weather) → fixed by SP-A. Fixed 2026-10-05: announcements "Show all" collapsed on opening the 4th;
+  MP-7b context line gains open items (open change requests + failed charges, linked); weather cancel keeps
+  each slot blocked (no reopen gap) and a mid-run failure says some cancellations may have gone out and
+  refreshes the sheet; banner dismiss failure restores the banner with a toast; System Crons / Stripe cards
+  show Loading / Couldn't load instead of "all fine", and "No run recorded" per job; cron judge reads nested
+  failure counts. STILL CAM'S CALL: should non-live courses see announcements (admin copy says live only).
 - [ ] SP-A — staff permissions (STAFF_POLICY_SPEC.md Part A). Cam 2026-10-04: course owner decides,
   per person with presets, "needs to be very extensive". One additive migration (CourseStaff.permissions /
   preset / permissionsSetAt + StaffPermissionChange audit). Closes the /gr-review 2026-10-04 HIGH (staff

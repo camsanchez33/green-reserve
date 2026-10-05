@@ -272,7 +272,7 @@ export default function AdminSystemPage() {
             </SystemCard>
 
             {/* MP-8b: each job's last recorded run. Red = failed, never finished, or overdue. */}
-            <SystemCard icon={<Clock3 className="w-3.5 h-3.5"/>} title="Crons" tracked
+            <SystemCard icon={<Clock3 className="w-3.5 h-3.5"/>} title="Crons" tracked={!!data}
               right={<span className="text-[11px] text-ink-faint">{data ? `${data.crons.length} scheduled` : ''}</span>}>
               {data && data.crons.length > 0 && (
                 <div className="divide-y divide-line-soft mb-3">
@@ -290,12 +290,15 @@ export default function AdminSystemPage() {
                         <div className="pl-[13px] mt-0.5 text-xs text-ink-muted">
                           {h?.last ? <>Last run {fmtDate(h.last.startedAt)}{h.last.detail ? ` · ${h.last.detail}` : ''}</> : null}
                           {h?.note ? <div className={h.status === 'bad' ? 'text-bad' : 'text-ink-muted'}>{h.note}</div> : null}
+                          {!h && <div>No run recorded.</div>}
                         </div>
                       </div>
                     );
                   })}
                 </div>
               )}
+              {/* Review 2026-10-04: loading and failure are not "all fine". */}
+              {!data && <p className="text-sm text-ink-muted mb-2">{loadError ? 'Couldn’t load cron runs — see the error at the top of the page.' : 'Loading…'}</p>}
               {data && <OutLink href={data.links.vercel} deep={data.links.vercelIsDeep}>Open Vercel logs</OutLink>}
             </SystemCard>
 
@@ -451,11 +454,13 @@ export default function AdminSystemPage() {
             </SystemCard>
 
             {/* MP-8b: the last verified event this endpoint received (CronRunLog, job webhook:stripe). */}
-            <SystemCard icon={<Zap className="w-3.5 h-3.5"/>} title="Stripe Webhook" tracked>
+            <SystemCard icon={<Zap className="w-3.5 h-3.5"/>} title="Stripe Webhook" tracked={!!data}>
               <div className="flex items-start gap-2 mb-2">
                 <span className="mt-1"><StatusDot status={p && !p.integrations.stripeWebhook ? 'bad' : data?.stripeWebhook ? (data.stripeWebhook.outcome === 'error' ? 'bad' : 'ok') : 'neutral'}/></span>
                 <span className="text-sm text-ink-soft">
-                  {p && !p.integrations.stripeWebhook
+                  {!data
+                    ? (loadError ? 'Couldn’t load webhook receipts — see the error at the top of the page.' : 'Loading…')
+                    : p && !p.integrations.stripeWebhook
                     ? <strong className="text-bad">STRIPE_WEBHOOK_SECRET is not set — the webhook cannot be verified and every event is being rejected.</strong>
                     : data?.stripeWebhook
                       ? <>Last event received {fmtDate(data.stripeWebhook.at)}: <code className="font-mono text-xs text-ink">{data.stripeWebhook.detail}</code>{data.stripeWebhook.outcome === 'error' && <span className="block text-bad">The handler failed on it: {data.stripeWebhook.error} — replay it from Stripe once fixed.</span>}</>
