@@ -49,7 +49,7 @@ const selErr = "w-full bg-paper border border-bad rounded-md px-3 py-2.5 text-sm
 
 function Label({ text, required }: { text: string; required?: boolean }) {
   return (
-    <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-1.5">
+    <label className="block text-[13px] font-semibold text-ink mb-1.5">
       {text}{required && <span className="text-bad ml-0.5">*</span>}
     </label>
   );
@@ -266,7 +266,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
             >
               {signinBusy ? 'Sending...' : 'Yes \u2014 send me a code'}
             </button>
-            <p className="text-center text-xs text-ink-muted">
+            <p className="text-center text-xs text-ink-soft">
               No, something else?{' '}
               <a href="mailto:thegreenreserve@outlook.com" className="text-ink-soft underline hover:text-ink">thegreenreserve@outlook.com</a>.
             </p>
@@ -320,7 +320,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
             >
               {signinBusy ? 'Sending...' : 'Send a new code'}
             </button>
-            <p className="text-center text-xs text-ink-muted">
+            <p className="text-center text-xs text-ink-soft">
               Didn&apos;t arrive? Check spam, or{' '}
               <a href="mailto:thegreenreserve@outlook.com" className="text-ink-soft underline hover:text-ink">email us</a>.
             </p>
@@ -345,7 +345,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
                 >
                   Go to sign in
                 </Link>
-                <p className="text-center text-xs text-ink-muted">
+                <p className="text-center text-xs text-ink-soft">
                   Forgotten it?{' '}
                   <Link href="/dashboard/forgot-password" className="text-ink-soft underline hover:text-ink">Reset your password</Link>.
                 </p>
@@ -393,7 +393,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
           We&apos;ve sent <span className="font-medium text-ink">{submittedEmail}</span> a confirmation for <span className="font-medium text-ink">{submittedName}</span>.
           Next is a 20-minute call — pick a time below. On it we&apos;ll go through your green fees, your tee sheet, and what going live looks like.
         </p>
-        <p className="text-ink-muted text-center mb-8 text-sm">Most courses are live within a week of that call.</p>
+        <p className="text-ink-soft text-center mb-8 text-sm">Most courses are live within a week of that call.</p>
 
         {/* FB-1: this used to link a Calendly page that was never set up. Now
             the Cal.com booker, prefilled with what they typed; the booking is
@@ -412,7 +412,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
         ) : (
           <p className="text-center text-sm text-ink-soft mb-3">The email has a link to pick your call time.</p>
         )}
-        <p className="text-center text-xs text-ink-muted">20 minutes, at a time that works for you.</p>
+        <p className="text-center text-xs text-ink-soft">20 minutes, at a time that works for you.</p>
         {/* Cam 2026-09-16: a course that already has a page can't be created
             again — its details change in the dashboard. This line is shown to
             EVERY submitter, not only to the ones whose course is already
@@ -420,7 +420,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
             success screen that only appeared for existing courses would turn a
             public form into a "is this course on GreenReserve yet" lookup. The
             operator who needs it reads it; nobody else learns anything. */}
-        <p className="text-center text-xs text-ink-muted mt-5 pt-5 border-t border-line">
+        <p className="text-center text-xs text-ink-soft mt-5 pt-5 border-t border-line">
           Already have a GreenReserve page? Your course details change in one place —{' '}
           <Link href="/dashboard/login" className="text-ink-soft underline hover:text-ink">sign in to your dashboard</Link>.
         </p>
@@ -442,8 +442,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
         <Link href="/" className="inline-flex items-center gap-1.5 text-ink-muted hover:text-ink transition-colors text-sm">
           <ArrowLeft size={14} /> Back
         </Link>
-        <p className="mt-6 text-[13px] font-semibold uppercase tracking-[0.08em] text-ink-muted">Send an inquiry</p>
-        <h1 className="mt-3 text-ink text-[34px] sm:text-[46px] leading-[1.05] font-serif font-bold tracking-[-0.02em]">Get your course listed</h1>
+        <h1 className="mt-6 text-ink text-[34px] sm:text-[46px] leading-[1.05] font-serif font-bold tracking-[-0.02em]">Get your course listed</h1>
         <p className="mt-3 text-ink-soft text-[17px] max-w-[40em]">Free to list. $0 / month. Golfers pay our $1.50 per player — added to their total, not taken from your green fee.</p>
       </div>
 
@@ -477,7 +476,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
 
           {/* Section 1: You */}
           <div>
-            <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">Contact info</p>
+            <p className="text-[15px] font-semibold text-ink mb-4">Contact info</p>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div id="fld-firstName">
@@ -563,7 +562,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
 
           {/* Section 2: Your course */}
           <div>
-            <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">Course information</p>
+            <p className="text-[15px] font-semibold text-ink mb-4">Course information</p>
             <div className="space-y-4">
               <div id="fld-courseName">
                 <Label text="Course name" required />
@@ -672,13 +671,13 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
             <Calendar className="w-4 h-4 text-pine shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-ink">Next: a 20-minute call</p>
-              <p className="text-xs text-ink-muted mt-0.5">Right after you submit, you&apos;ll pick a time on our calendar. We&apos;ll go through your green fees, your tee sheet, and what going live looks like.</p>
+              <p className="text-xs text-ink-soft mt-0.5">Right after you submit, you&apos;ll pick a time on our calendar. We&apos;ll go through your green fees, your tee sheet, and what going live looks like.</p>
             </div>
           </div>
 
           {/* Section 4: Optional notes */}
           <div>
-            <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">Anything else you&apos;d like to tell us? <span className="normal-case tracking-normal font-normal text-ink-faint">(optional)</span></p>
+            <p className="text-[15px] font-semibold text-ink mb-4">Anything else you&apos;d like to tell us? <span className="normal-case tracking-normal font-normal text-ink-faint">(optional)</span></p>
             <textarea
               rows={3}
               className={inp}
@@ -697,10 +696,10 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
           >
             {submitting ? 'Submitting...' : 'Submit'}
           </button>
-          <p className="text-center text-ink-muted text-xs">
+          <p className="text-center text-ink-soft text-xs">
             We review every submission and reply within 1 business day.
           </p>
-          <p className="text-center text-ink-faint text-xs">
+          <p className="text-center text-ink-soft text-xs">
             No account is created — this just sends us an inquiry.
           </p>
           </div>
@@ -708,7 +707,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
           {/* The pitch — sticky beside the form on desktop */}
           <aside className="mt-12 lg:mt-0 lg:order-first">
             <div className="lg:sticky lg:top-10 space-y-6">
-              <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium">Why list with us</p>
+              <p className="text-[13px] font-semibold text-ink">Why list with us</p>
               <div className="bg-white rounded-lg shadow-card divide-y divide-line-soft">
                 {[
                   { stat: '$1.50', label: "Per player, added to the golfer's total" },
@@ -717,11 +716,11 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
                 ].map(({ stat, label }) => (
                   <div key={stat} className="px-5 py-4">
                     <div className="text-2xl font-serif font-medium text-ink leading-none mb-1.5">{stat}</div>
-                    <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted">{label}</div>
+                    <div className="text-[12.5px] text-ink-muted">{label}</div>
                   </div>
                 ))}
               </div>
-              <p className="text-ink-muted text-xs leading-relaxed">
+              <p className="text-ink-soft text-xs leading-relaxed">
                 You set your green fee; the golfer pays it plus our $1.50 per player in one card payment to your own Stripe account. Stripe&apos;s standard processing fee (currently 2.9% + 30¢ per payment) comes out of that payment, as with any card you take — GreenReserve charges you nothing on top of it. Our $1.50 per player is then passed to GreenReserve. That, plus 50¢ on each membership-dues payment collected through GreenReserve, is our only revenue: no setup fee, no monthly fee, no commission on your green fees.
               </p>
             </div>
@@ -732,7 +731,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
       {/* Short FAQ */}
       <div className="border-t border-line">
         <div className="max-w-xl mx-auto px-4 py-10 pb-16">
-          <p className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-5">Quick answers</p>
+          <p className="text-[15px] font-semibold text-ink mb-5">Quick answers</p>
           <div className="space-y-5">
             {[
               { q: 'What does it cost to list my course?', a: 'Nothing. $0 to set up, $0/month, no long-term contract. Golfers pay $1.50 per player at checkout, on top of your price.' },

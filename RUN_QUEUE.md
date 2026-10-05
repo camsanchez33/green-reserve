@@ -74,7 +74,13 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     warn/bad notes) is sentence case; "Support" above Golfer lookup and
     "Admin" above Revenue are gone; helper sentences are ink-soft (grey kept
     for IDs, hashes and tabular metadata). Zero behavior.
-  - [ ] public leftovers (for-courses, call, contact, legal, not-found)
+  - [x] public leftovers — BUILT 2026-10-05: /for-courses + setup sheet,
+    /call, /contact, /terms, /privacy, /operator-agreement, not-found, the
+    course card and StatGroup. "Legal" and "Contact" above their headings and
+    "Send an inquiry" above Get your course listed are gone; the course name
+    on /call moved under the heading; labels sentence case; helper sentences
+    ink-soft. Emails and the agreement PDF are out of scope (own template, no
+    web fonts). TYPE-2 complete across the site.
 - [ ] TYPE-3 — icons only where they do a job (back arrow, close, search): remove
   decorative Lucide icons (74 files; ChevronRight / check / sparkle-type ×108),
   e.g. the icon tiles on admin Overview. Zero behavior. Rewrites CLAUDE.md's

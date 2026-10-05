@@ -221,7 +221,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/book` | public | public | page | `src/app/book/page.tsx` | 33 |
 | `/call/[token]` | public | public | page | `src/app/call/[token]/page.tsx` | 141 |
 | `/checkin/[bookingId]` | golfer | token | page | `src/app/checkin/[bookingId]/page.tsx` | 291 |
-| `/contact` | public | public | page | `src/app/contact/page.tsx` | 42 |
+| `/contact` | public | public | page | `src/app/contact/page.tsx` | 41 |
 | `/courses/[slug]` | public | public | page | `src/app/courses/[slug]/page.tsx` | 45 |
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 150 |
@@ -249,11 +249,11 @@ this script with a non-zero exit — that is the point of the tag.
 | `/for-courses/details` | public | token | page | `src/app/for-courses/details/page.tsx` | 1893 |
 | `/manage/[bookingId]` | golfer | token | page | `src/app/manage/[bookingId]/page.tsx` | 558 |
 | `/membership/[id]` | public | token | page | `src/app/membership/[id]/page.tsx` | 197 |
-| `/operator-agreement` | public | public | page | `src/app/operator-agreement/page.tsx` | 83 |
+| `/operator-agreement` | public | public | page | `src/app/operator-agreement/page.tsx` | 82 |
 | `/preview/[courseId]` | public | token | page | `src/app/preview/[courseId]/page.tsx` | 58 |
-| `/privacy` | public | public | page | `src/app/privacy/page.tsx` | 250 |
+| `/privacy` | public | public | page | `src/app/privacy/page.tsx` | 249 |
 | `/receipt/[bookingId]` | golfer | token | page | `src/app/receipt/[bookingId]/page.tsx` | 211 |
-| `/terms` | public | public | page | `src/app/terms/page.tsx` | 193 |
+| `/terms` | public | public | page | `src/app/terms/page.tsx` | 192 |
 
 ## Libraries
 
