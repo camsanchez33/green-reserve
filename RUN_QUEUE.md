@@ -77,7 +77,11 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   each slot blocked (no reopen gap) and a mid-run failure says some cancellations may have gone out and
   refreshes the sheet; banner dismiss failure restores the banner with a toast; System Crons / Stripe cards
   show Loading / Couldn't load instead of "all fine", and "No run recorded" per job; cron judge reads nested
-  failure counts. STILL CAM'S CALL: should non-live courses see announcements (admin copy says live only).
+  failure counts. Announcements audience DECIDED Cam 2026-10-05: "only show announcements to live courses
+  also announcements should stay gone after seen … when they press the x" — BUILT: lib/announcement-audience
+  (live courses only; only announcements sent after the course went live); the banner shows only the NEWEST
+  one and never falls back to an older unseen one (the "keeps popping up" cause); X / opening one marks it and
+  everything older as seen.
 - [ ] SP-A — staff permissions (STAFF_POLICY_SPEC.md Part A). Cam 2026-10-04: course owner decides,
   per person with presets, "needs to be very extensive". One additive migration (CourseStaff.permissions /
   preset / permissionsSetAt + StaffPermissionChange audit). Closes the /gr-review 2026-10-04 HIGH (staff
