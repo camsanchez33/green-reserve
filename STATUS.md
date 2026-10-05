@@ -4,11 +4,25 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-05 20:14 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `189dc3b` · working tree clean
+Generated 2026-10-05 23:15 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `ce494cc` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
+`RUN_QUEUE.md` was last committed **2026-10-05**. 1 commit(s) since then are not mentioned anywhere in it:
+
+| commit | date | subject |
+|---|---|---|
+| `475ff29` | 2026-10-05 | DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001) |
+
+**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (2 file(s))
+
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -184,6 +198,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `ce494cc` 2026-10-05 — queue/spec update
+- `475ff29` 2026-10-05 — DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)
+- `5007cb9` 2026-10-05 — queue/spec update
 - `189dc3b` 2026-10-05 — queue/spec update
 - `2e7f6fc` 2026-10-05 — CARD-1: explicit card-at-booking choice in Settings
 - `10d853c` 2026-10-05 — BIRDIE-B4b: Birdie drafts changes, the operator confirms
@@ -193,9 +210,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `e8b6902` 2026-10-05 — CLUB-5: booking flow in the club look
 - `e99afbc` 2026-10-05 — CLUB-4b: admin labels in sentence case
 - `dd0c049` 2026-10-05 — CLUB-4a: admin pages without decorative icons
-- `56cdf9c` 2026-10-05 — CLUB-3c: the rest of the dashboard in the club look
-- `b1ceb6a` 2026-10-05 — CLUB-3b: tee sheet reads like the club demo
-- `f3f834e` 2026-10-05 — queue/spec update
 
 ---
 
