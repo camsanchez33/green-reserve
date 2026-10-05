@@ -1,18 +1,22 @@
 import type { Metadata, Viewport } from 'next';
-import { Archivo } from 'next/font/google';
+import { EB_Garamond, Libre_Franklin } from 'next/font/google';
 import './globals.css';
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import MainOffset from '@/components/MainOffset';
 
-// UI-H-1 (HOMEPAGE_SPEC.md, Cam 2026-10-01): the PUBLIC look is one family,
-// Archivo, using its width axis (expanded headlines, condensed labels). It
-// replaced Fraunces + Inter. --font-serif points at the same family in
-// globals.css; the staff look re-points both to its own fonts, unaffected.
-const archivo = Archivo({
+// TYPE-1 (Cam 2026-10-05, "the font is all so blocky looks ai"): EB Garamond
+// is the display face (headlines, course names, dates — `font-serif`), Libre
+// Franklin is everything else (`font-sans`). It replaced Archivo (FLOW-1).
+// globals.css points --font-serif / --font-sans at these two variables.
+const garamond = EB_Garamond({
   subsets: ['latin'],
-  axes: ['wdth'],
-  variable: '--font-sans',
+  variable: '--font-garamond',
+  display: 'swap',
+});
+const franklin = Libre_Franklin({
+  subsets: ['latin'],
+  variable: '--font-franklin',
   display: 'swap',
 });
 
@@ -44,7 +48,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={archivo.variable}>
+    <html lang="en" className={`${garamond.variable} ${franklin.variable}`}>
       <body className="font-sans bg-paper text-ink antialiased">
         <Nav />
         <MainOffset>{children}</MainOffset>

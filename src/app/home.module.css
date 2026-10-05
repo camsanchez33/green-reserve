@@ -1,7 +1,7 @@
 /* UI-H-1 (HOMEPAGE_SPEC.md, Cam 2026-10-01) — the homepage from the approved
-   plain-background mockup, docs/design/home/index.html. One family, Archivo
-   (root layout --font-sans), in three widths: expanded for headlines, normal
-   for reading, condensed for the tee sheet's labels. Text lives in a ~1240px
+   plain-background mockup, docs/design/home/index.html. Headlines in EB
+   Garamond (--font-serif), everything else Libre Franklin (--font-sans) —
+   TYPE-1, Cam 2026-10-05; it was Archivo in three widths. Text lives in a ~1240px
    column; the forest bands run edge to edge. Only the product pieces cast a
    shadow. No gradients except the photo scrims inside the product mockups. */
 
@@ -16,7 +16,7 @@
   --paper: #FFFFFF;
   --lift: 0 1px 2px rgba(20,24,20,.06), 0 24px 48px -24px rgba(20,24,20,.35);
   background: var(--ground); color: var(--ink);
-  font-family: var(--font-sans), "Archivo", "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-sans);
   font-size: 17px; line-height: 1.55;
   overflow-x: clip;
 }
@@ -25,7 +25,7 @@
 .root :focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
 .col { width: min(1240px, 100% - 48px); margin-inline: auto; }
 .eyebrow { font-stretch: 87.5%; font-weight: 600; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.display { font-stretch: 118%; font-weight: 700; letter-spacing: -.02em; }
+.display { font-family: var(--font-serif); font-weight: 500; letter-spacing: -.01em; font-variant-numeric: lining-nums; }
 .btn { display: inline-flex; align-items: center; gap: 10px; height: 50px; padding: 0 22px; border-radius: 6px; background: var(--forest); color: #fff !important; font-weight: 600; font-size: 16px; text-decoration: none; }
 .btn:hover { background: #0F2C1F; }
 .btn.light { background: #fff; color: var(--forest) !important; }

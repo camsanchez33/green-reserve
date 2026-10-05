@@ -170,12 +170,12 @@ CTAs are Book a demo + Send an inquiry. The spec also lists what is waiting on C
 Cam 2026-10-01: "get this ui build out through /admin and /dashboard and every other
 page so the whole site flows together." The split PUBLIC/STAFF look (UI_REVISE_SPEC §0/§1,
 Sept 2026) is RETIRED. Every page — homepage, /for-courses, legal, golfer pages, /dashboard,
-/admin — uses the homepage's palette, Archivo and corners. Clubhouse *structure* still holds
+/admin — uses the homepage's palette, type (TYPE-1: EB Garamond + Libre Franklin) and corners. Clubhouse *structure* still holds
 (white cards on paper, StatusDot, no pills, no dark mode).
 
 | | Every page |
 |---|---|
-| Fonts | Archivo only (variable, width axis). `font-sans` = Archivo; `font-serif` = Archivo widened to 115% — the display face (globals.css base layer). Newsreader / Source Sans 3 are no longer loaded |
+| Fonts | TYPE-1 (Cam 2026-10-05, "the font is all so blocky looks ai"): `font-serif` = **EB Garamond** (500, lining figures) — the display face, for headlines, course names and dates ONLY; `font-sans` = **Libre Franklin** for everything else — times, buttons, tables, body. Never set times or data in the serif. Both via next/font in layout.tsx. Archivo, Newsreader and Source Sans 3 are no longer loaded |
 | Corners | Tailwind defaults: `rounded-md` 6px buttons/inputs, `rounded-lg` 8px cards; `rounded-full` avatars/dots/swatches |
 | Paper / ink / line | #FAFAF7 / #141814 / #E3E4DE |
 | Accent | `pine` (#173B2A forest) for GreenReserve; per-course `Course.brandColor` on golfer pages and the operator dashboard |
@@ -192,9 +192,9 @@ set there. Self-contained public pages that skip the Nav (/for-courses, setup sh
 ### Shared tokens (Tailwind v4, `globals.css` `@theme {}`)
 - `paper` (#FAFAF7), `card` (#FFFFFF), `ink` (#141814), `ink-soft`, `ink-muted` (#6B706A), `ink-faint`, `line` (#E3E4DE), `line-soft`, `line-strong`
 - `pine` (#173B2A) / `pine-hover` (#0F2C1F, darker); `ok` (#3D7A55), `bad` (#A3452F), `warn` (#9A5B13), `dot-neutral`
-- `font-sans` (Archivo), `font-serif` (Archivo widened — display)
+- `font-sans` (Libre Franklin), `font-serif` (EB Garamond — display)
 
-### Staff-page type scale (§1b — sizes still apply; fonts are Archivo since FLOW-1)
+### Staff-page type scale (§1b — sizes still apply; fonts are TYPE-1's since 2026-10-05)
 - Page title: `font-serif text-[30px] leading-none` (existing 22px titles are acceptable until their reskin run lands)
 - Section title: 15px/600 sans · Eyebrow: `text-[11px] uppercase tracking-[0.1em] text-ink-muted` · body 13.5–14px · tables 13.5px
 - Attention: a 3px **left** border in the semantic color on a white card — the only place borders carry color
