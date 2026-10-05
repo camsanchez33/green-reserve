@@ -1,27 +1,21 @@
 {
-  "generatedAt": "2026-10-05T19:58:24.292Z",
+  "generatedAt": "2026-10-05T20:14:06.860Z",
   "repo": {
-    "head": "1976c6e",
+    "head": "189dc3b",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 5,
-    "dirty": [
-      "M CLAUDE.md",
-      " M RUN_QUEUE.md",
-      " M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M src/app/dashboard/settings/page.tsx"
-    ],
-    "looksLikeRunInProgress": true
+    "dirtyCount": 0,
+    "dirty": [],
+    "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-10-05T19:13:49+00:00",
+    "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": []
   },
   "counts": {
     "runDone": 238,
-    "runAwaiting": 23,
+    "runAwaiting": 21,
     "runInFlight": 1,
-    "runNotStarted": 30,
+    "runNotStarted": 32,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 15,
@@ -44,162 +38,148 @@
   ],
   "awaiting": [
     {
-      "title": "MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin",
-      "line": 983,
-      "hash": "7246a62",
-      "shipDate": "2026-08-29",
-      "ageDays": 36
-    },
-    {
-      "title": "MP-1",
-      "line": 1013,
-      "hash": "41f5ea8",
-      "shipDate": "2026-08-29",
-      "ageDays": 36
-    },
-    {
-      "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
-      "line": 1048,
-      "hash": "4ef11dd",
-      "shipDate": "2026-08-29",
-      "ageDays": 36
-    },
-    {
-      "title": "MP-2",
-      "line": 1089,
-      "hash": "958f229",
-      "shipDate": "2026-08-29",
-      "ageDays": 36
-    },
-    {
-      "title": "MP-2b",
-      "line": 1126,
-      "hash": "a134af5",
-      "shipDate": "2026-08-29",
-      "ageDays": 36
-    },
-    {
-      "title": "MP-2c",
-      "line": 1175,
-      "hash": "e5b5413",
-      "shipDate": "2026-08-29",
-      "ageDays": 36
-    },
-    {
-      "title": "MP-2d",
-      "line": 1223,
-      "hash": "22d0f68",
-      "shipDate": "2026-08-29",
-      "ageDays": 36
-    },
-    {
-      "title": "MP-2e",
-      "line": 1265,
-      "hash": "bf3bcb2",
-      "shipDate": "2026-08-30",
-      "ageDays": 36
-    },
-    {
-      "title": "SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED",
-      "line": 2540,
-      "hash": "951433d",
-      "shipDate": "2026-09-16",
-      "ageDays": 19
-    },
-    {
-      "title": "SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box",
-      "line": 2653,
-      "hash": "cfeb2e1",
-      "shipDate": "2026-09-17",
-      "ageDays": 18
-    },
-    {
       "title": "SD-8d — browser Back still discards unsaved Settings edits (from the",
       "line": 818,
-      "hash": "70a424e",
-      "shipDate": "2026-09-28",
-      "ageDays": 7
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
     },
     {
       "title": "SD-8e — status is rendered as bare coloured text where the design",
       "line": 844,
-      "hash": "9d6dc6a",
-      "shipDate": "2026-09-29",
-      "ageDays": 6
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
     },
     {
       "title": "SD-9c — auth: (1) staff password recovery — CourseStaff has no reset",
       "line": 921,
-      "hash": "0d84aaf",
-      "shipDate": "2026-09-29",
-      "ageDays": 6
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
     },
     {
       "title": "BUG: 56 of 59 email senders report success when Resend rejects the send",
       "line": 942,
-      "hash": "209e652",
-      "shipDate": "2026-09-29",
-      "ageDays": 6
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
+    },
+    {
+      "title": "MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin",
+      "line": 983,
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
+    },
+    {
+      "title": "MP-1",
+      "line": 1013,
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
+    },
+    {
+      "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
+      "line": 1048,
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
+    },
+    {
+      "title": "MP-2",
+      "line": 1089,
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
+    },
+    {
+      "title": "MP-2b",
+      "line": 1126,
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
+    },
+    {
+      "title": "MP-2c",
+      "line": 1175,
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
+    },
+    {
+      "title": "MP-2d",
+      "line": 1223,
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
+    },
+    {
+      "title": "MP-2e",
+      "line": 1265,
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
     },
     {
       "title": "MP-5e part 3 — the Overview relationship feed (notes + settings",
       "line": 1585,
-      "hash": "c6a2142",
-      "shipDate": "2026-09-29",
-      "ageDays": 6
-    },
-    {
-      "title": "BUG: inquiry submissions send no emails",
-      "line": 2856,
-      "hash": "8b9a046",
-      "shipDate": "2026-09-28",
-      "ageDays": 6
-    },
-    {
-      "title": "BUG: perf audit crashed on every page",
-      "line": 2881,
-      "hash": "dd7056a",
-      "shipDate": "2026-09-29",
-      "ageDays": 6
-    },
-    {
-      "title": "RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM).",
-      "line": 2892,
-      "hash": "f57f269",
-      "shipDate": "2026-09-29",
-      "ageDays": 6
-    },
-    {
-      "title": "RV-2 — review follow-ups, small (from /gr-review 2026-09-29):",
-      "line": 2902,
-      "hash": "0eab366",
-      "shipDate": "2026-09-29",
-      "ageDays": 6
-    },
-    {
-      "title": "CAL-2 — Cal.com is the ONLY call scheduler",
-      "line": 3123,
-      "hash": "e082dd0",
-      "shipDate": "2026-09-29",
-      "ageDays": 6
-    },
-    {
-      "title": "BUG: hello@greenreserve.app takes no mail",
-      "line": 3155,
-      "hash": "371ffff",
-      "shipDate": "2026-09-29",
-      "ageDays": 6
-    },
-    {
-      "title": "CAL-1 — Cal.com as the call scheduler",
-      "line": 3173,
-      "hash": "a5ed9d7",
-      "shipDate": "2026-09-29",
-      "ageDays": 6
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
     },
     {
       "title": "UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until r",
       "line": 2498,
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
+    },
+    {
+      "title": "BUG: inquiry submissions send no emails",
+      "line": 2856,
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
+    },
+    {
+      "title": "BUG: perf audit crashed on every page",
+      "line": 2881,
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
+    },
+    {
+      "title": "RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM).",
+      "line": 2892,
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
+    },
+    {
+      "title": "RV-2 — review follow-ups, small (from /gr-review 2026-09-29):",
+      "line": 2902,
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
+    },
+    {
+      "title": "CAL-2 — Cal.com is the ONLY call scheduler",
+      "line": 3123,
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
+    },
+    {
+      "title": "BUG: hello@greenreserve.app takes no mail",
+      "line": 3155,
+      "hash": null,
+      "shipDate": null,
+      "ageDays": null
+    },
+    {
+      "title": "CAL-1 — Cal.com as the call scheduler",
+      "line": 3173,
       "hash": null,
       "shipDate": null,
       "ageDays": null
@@ -334,6 +314,16 @@
     {
       "title": "Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with \"TheGre",
       "line": 1934,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED",
+      "line": 2540,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box",
+      "line": 2653,
       "section": "Queue (run in this order)"
     },
     {
@@ -522,8 +512,8 @@
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 4,
-      "lastTouched": "2026-09-16",
-      "ageDays": 18
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
@@ -538,16 +528,16 @@
       "ageDays": 4
     },
     {
-      "file": "PRIVATE_BILLING_SPEC.md",
+      "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 1,
       "lastTouched": "2026-09-29",
       "ageDays": 6
     },
     {
-      "file": "ADMIN_MASTER_PLAN.md",
+      "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 1,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
@@ -562,7 +552,73 @@
       "ageDays": 0
     },
     {
+      "file": "REVIEW_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-05",
+      "ageDays": 0
+    },
+    {
+      "file": "ADMIN_REBUILD_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
+    },
+    {
+      "file": "ADMIN_V2_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
+    },
+    {
+      "file": "ADMIN_V3_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
+    },
+    {
+      "file": "ADMIN_V4_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
+    },
+    {
+      "file": "AGREEMENT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
+    },
+    {
+      "file": "BACKUP_OPS_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
+    },
+    {
       "file": "CALL_SCHEDULING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
+    },
+    {
+      "file": "CODEMAP_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
+    },
+    {
+      "file": "COURSES_SHEET_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
+    },
+    {
+      "file": "COURSE_LAYOUT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
+    },
+    {
+      "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
       "ageDays": 6
@@ -580,140 +636,90 @@
       "ageDays": 6
     },
     {
-      "file": "ADMIN_REBUILD_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
-    },
-    {
-      "file": "ADMIN_V2_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
-    },
-    {
-      "file": "ADMIN_V3_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
-    },
-    {
-      "file": "ADMIN_V4_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
-    },
-    {
-      "file": "AGREEMENT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
-    },
-    {
-      "file": "BACKUP_OPS_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
-    },
-    {
-      "file": "CODEMAP_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
-    },
-    {
-      "file": "COURSES_SHEET_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
-    },
-    {
-      "file": "COURSE_LAYOUT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
-    },
-    {
-      "file": "DESIGN_SYSTEM_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
-    },
-    {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
     },
     {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-15",
-      "ageDays": 19
+      "lastTouched": "2026-09-29",
+      "ageDays": 6
     }
   ],
   "bank": null,
   "recentCommits": [
+    {
+      "h": "189dc3b",
+      "date": "2026-10-05",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "2e7f6fc",
+      "date": "2026-10-05",
+      "subject": "CARD-1: explicit card-at-booking choice in Settings"
+    },
     {
       "h": "10d853c",
       "date": "2026-10-05",
@@ -763,16 +769,6 @@
       "h": "f3f834e",
       "date": "2026-10-05",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "d450d70",
-      "date": "2026-10-05",
-      "subject": "CLUB-3 (shell, awaiting Cam): dashboard tabs across the top on desktop"
-    },
-    {
-      "h": "4bc7fe0",
-      "date": "2026-10-05",
-      "subject": "CLUB-2: golfer course page in the club look"
     }
   ]
 }

@@ -4,22 +4,11 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-05 19:58 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `1976c6e` · working tree **5 dirty file(s)**
+Generated 2026-10-05 20:14 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `189dc3b` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
-
-### Uncommitted working tree (5 file(s))
-
-- `M CLAUDE.md`
-- `M RUN_QUEUE.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M src/app/dashboard/settings/page.tsx`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -39,29 +28,27 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 36d | `7246a62` | `RUN_QUEUE.md:983` |
-| MP-1 | 2026-08-29 | 36d | `41f5ea8` | `RUN_QUEUE.md:1013` |
-| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 36d | `4ef11dd` | `RUN_QUEUE.md:1048` |
-| MP-2 | 2026-08-29 | 36d | `958f229` | `RUN_QUEUE.md:1089` |
-| MP-2b | 2026-08-29 | 36d | `a134af5` | `RUN_QUEUE.md:1126` |
-| MP-2c | 2026-08-29 | 36d | `e5b5413` | `RUN_QUEUE.md:1175` |
-| MP-2d | 2026-08-29 | 36d | `22d0f68` | `RUN_QUEUE.md:1223` |
-| MP-2e | 2026-08-30 | 36d | `bf3bcb2` | `RUN_QUEUE.md:1265` |
-| SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED | 2026-09-16 | 19d | `951433d` | `RUN_QUEUE.md:2540` |
-| SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box | 2026-09-17 | 18d | `cfeb2e1` | `RUN_QUEUE.md:2653` |
-| SD-8d — browser Back still discards unsaved Settings edits (from the | 2026-09-28 | 7d | `70a424e` | `RUN_QUEUE.md:818` |
-| SD-8e — status is rendered as bare coloured text where the design | 2026-09-29 | 6d | `9d6dc6a` | `RUN_QUEUE.md:844` |
-| SD-9c — auth: (1) staff password recovery — CourseStaff has no reset | 2026-09-29 | 6d | `0d84aaf` | `RUN_QUEUE.md:921` |
-| BUG: 56 of 59 email senders report success when Resend rejects the send | 2026-09-29 | 6d | `209e652` | `RUN_QUEUE.md:942` |
-| MP-5e part 3 — the Overview relationship feed (notes + settings | 2026-09-29 | 6d | `c6a2142` | `RUN_QUEUE.md:1585` |
-| BUG: inquiry submissions send no emails | 2026-09-28 | 6d | `8b9a046` | `RUN_QUEUE.md:2856` |
-| BUG: perf audit crashed on every page | 2026-09-29 | 6d | `dd7056a` | `RUN_QUEUE.md:2881` |
-| RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM). | 2026-09-29 | 6d | `f57f269` | `RUN_QUEUE.md:2892` |
-| RV-2 — review follow-ups, small (from /gr-review 2026-09-29): | 2026-09-29 | 6d | `0eab366` | `RUN_QUEUE.md:2902` |
-| CAL-2 — Cal.com is the ONLY call scheduler | 2026-09-29 | 6d | `e082dd0` | `RUN_QUEUE.md:3123` |
-| BUG: hello@greenreserve.app takes no mail | 2026-09-29 | 6d | `371ffff` | `RUN_QUEUE.md:3155` |
-| CAL-1 — Cal.com as the call scheduler | 2026-09-29 | 6d | `a5ed9d7` | `RUN_QUEUE.md:3173` |
+| SD-8d — browser Back still discards unsaved Settings edits (from the | — | — | — | `RUN_QUEUE.md:818` |
+| SD-8e — status is rendered as bare coloured text where the design | — | — | — | `RUN_QUEUE.md:844` |
+| SD-9c — auth: (1) staff password recovery — CourseStaff has no reset | — | — | — | `RUN_QUEUE.md:921` |
+| BUG: 56 of 59 email senders report success when Resend rejects the send | — | — | — | `RUN_QUEUE.md:942` |
+| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | — | — | — | `RUN_QUEUE.md:983` |
+| MP-1 | — | — | — | `RUN_QUEUE.md:1013` |
+| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | — | — | — | `RUN_QUEUE.md:1048` |
+| MP-2 | — | — | — | `RUN_QUEUE.md:1089` |
+| MP-2b | — | — | — | `RUN_QUEUE.md:1126` |
+| MP-2c | — | — | — | `RUN_QUEUE.md:1175` |
+| MP-2d | — | — | — | `RUN_QUEUE.md:1223` |
+| MP-2e | — | — | — | `RUN_QUEUE.md:1265` |
+| MP-5e part 3 — the Overview relationship feed (notes + settings | — | — | — | `RUN_QUEUE.md:1585` |
 | UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | — | — | — | `RUN_QUEUE.md:2498` |
+| BUG: inquiry submissions send no emails | — | — | — | `RUN_QUEUE.md:2856` |
+| BUG: perf audit crashed on every page | — | — | — | `RUN_QUEUE.md:2881` |
+| RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM). | — | — | — | `RUN_QUEUE.md:2892` |
+| RV-2 — review follow-ups, small (from /gr-review 2026-09-29): | — | — | — | `RUN_QUEUE.md:2902` |
+| CAL-2 — Cal.com is the ONLY call scheduler | — | — | — | `RUN_QUEUE.md:3123` |
+| BUG: hello@greenreserve.app takes no mail | — | — | — | `RUN_QUEUE.md:3155` |
+| CAL-1 — Cal.com as the call scheduler | — | — | — | `RUN_QUEUE.md:3173` |
 
 ## Not started — the actual queue
 
@@ -91,10 +78,12 @@ This is the distinction a raw checkbox count gets wrong.
 24. MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table — `RUN_QUEUE.md:1747`
 25. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1828`
 26. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1934`
-27. PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29: — `RUN_QUEUE.md:2997`
-28. SETUP (Cam 2026-09-29: "we need to do blob storage, birdie ai … we also need — `RUN_QUEUE.md:3002`
-29. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:3197`
-30. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:3371`
+27. SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED — `RUN_QUEUE.md:2540`
+28. SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box — `RUN_QUEUE.md:2653`
+29. PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29: — `RUN_QUEUE.md:2997`
+30. SETUP (Cam 2026-09-29: "we need to do blob storage, birdie ai … we also need — `RUN_QUEUE.md:3002`
+31. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:3197`
+32. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:3371`
 
 ## Waiting on you (not on a build)
 
@@ -159,41 +148,44 @@ This is the distinction a raw checkbox count gets wrong.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 7 | 2026-10-05 | 0d |
-| `ARCHITECTURE.md` | 4 | 2026-09-16 | 18d |
+| `ARCHITECTURE.md` | 4 | 2026-09-29 | 6d |
 | `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 0d |
 | `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 4d |
+| `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-29 | 6d |
 | `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 6d |
-| `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-15 | 19d |
 | `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 0d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-05 | 0d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-05 | 0d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-09-29 | 6d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `CODEMAP_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-09-29 | 6d |
 | `FB2_COPY_SPEC.md` | 0 | 2026-09-29 | 6d |
 | `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `CODEMAP_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `GOLFER_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `HARDENING_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `RECEIPT_SPEC.md` | 0 | 2026-09-15 | 19d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-09-15 | 19d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `GOLFER_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `HARDENING_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `RECEIPT_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-09-29 | 6d |
 
 ## Recent commits
 
+- `189dc3b` 2026-10-05 — queue/spec update
+- `2e7f6fc` 2026-10-05 — CARD-1: explicit card-at-booking choice in Settings
 - `10d853c` 2026-10-05 — BIRDIE-B4b: Birdie drafts changes, the operator confirms
 - `e65d5db` 2026-10-05 — BIRDIE-B4a: Birdie answers from live course data
 - `17267d1` 2026-10-05 — PERS-1: course photo and logo on golfer pages, plus a note from the course
@@ -204,9 +196,7 @@ This is the distinction a raw checkbox count gets wrong.
 - `56cdf9c` 2026-10-05 — CLUB-3c: the rest of the dashboard in the club look
 - `b1ceb6a` 2026-10-05 — CLUB-3b: tee sheet reads like the club demo
 - `f3f834e` 2026-10-05 — queue/spec update
-- `d450d70` 2026-10-05 — CLUB-3 (shell, awaiting Cam): dashboard tabs across the top on desktop
-- `4bc7fe0` 2026-10-05 — CLUB-2: golfer course page in the club look
 
 ---
 
-**Totals:** 238 done · 23 awaiting review · 1 in flight · 30 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 238 done · 21 awaiting review · 1 in flight · 32 not started · 8 revise pages open · 15 ideas · 2 parked.
