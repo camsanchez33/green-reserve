@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-05 20:49 UTC · branch `claude/tests-ci` · HEAD `ef52aef` · working tree **1 dirty file(s)**
+Generated 2026-10-05 23:15 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `ce494cc` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,13 +12,14 @@ Generated 2026-10-05 20:49 UTC · branch `claude/tests-ci` · HEAD `ef52aef` · 
 
 | commit | date | subject |
 |---|---|---|
-| `fa48d8f` | 2026-10-05 | CI: run the test scripts on every PR; fix three stale tests |
+| `475ff29` | 2026-10-05 | DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (1 file(s))
+### Uncommitted working tree (2 file(s))
 
-- `?? REVIEW_LEDGER.md`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -197,7 +198,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `fa48d8f` 2026-10-05 — CI: run the test scripts on every PR; fix three stale tests
+- `ce494cc` 2026-10-05 — queue/spec update
+- `475ff29` 2026-10-05 — DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)
 - `5007cb9` 2026-10-05 — queue/spec update
 - `189dc3b` 2026-10-05 — queue/spec update
 - `2e7f6fc` 2026-10-05 — CARD-1: explicit card-at-booking choice in Settings
@@ -208,7 +210,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `e8b6902` 2026-10-05 — CLUB-5: booking flow in the club look
 - `e99afbc` 2026-10-05 — CLUB-4b: admin labels in sentence case
 - `dd0c049` 2026-10-05 — CLUB-4a: admin pages without decorative icons
-- `56cdf9c` 2026-10-05 — CLUB-3c: the rest of the dashboard in the club look
 
 ---
 

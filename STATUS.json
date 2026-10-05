@@ -1,11 +1,12 @@
 {
-  "generatedAt": "2026-10-05T20:49:04.178Z",
+  "generatedAt": "2026-10-05T23:15:32.694Z",
   "repo": {
-    "head": "ef52aef",
-    "branch": "claude/tests-ci",
-    "dirtyCount": 1,
+    "head": "ce494cc",
+    "branch": "claude/eager-maxwell-qf1pd0",
+    "dirtyCount": 2,
     "dirty": [
-      "?? REVIEW_LEDGER.md"
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json"
     ],
     "looksLikeRunInProgress": false
   },
@@ -13,9 +14,9 @@
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
       {
-        "h": "fa48d8f",
-        "date": "2026-10-05T20:22:09+00:00",
-        "subject": "CI: run the test scripts on every PR; fix three stale tests",
+        "h": "475ff29",
+        "date": "2026-10-05T23:14:40+00:00",
+        "subject": "DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)",
         "ids": [],
         "matches": []
       }
@@ -721,9 +722,14 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "fa48d8f",
+      "h": "ce494cc",
       "date": "2026-10-05",
-      "subject": "CI: run the test scripts on every PR; fix three stale tests"
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "475ff29",
+      "date": "2026-10-05",
+      "subject": "DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)"
     },
     {
       "h": "5007cb9",
@@ -774,11 +780,6 @@
       "h": "dd0c049",
       "date": "2026-10-05",
       "subject": "CLUB-4a: admin pages without decorative icons"
-    },
-    {
-      "h": "56cdf9c",
-      "date": "2026-10-05",
-      "subject": "CLUB-3c: the rest of the dashboard in the club look"
     }
   ]
 }
