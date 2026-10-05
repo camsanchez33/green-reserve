@@ -74,7 +74,7 @@ function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, accent, 
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-1.5">Card Details</label>
+        <label className="block text-[13px] font-semibold text-ink mb-1.5">Card details</label>
         <div className="w-full px-4 py-3.5 rounded-md border border-line bg-paper focus-within:border-pine/40 focus-within:ring-2 focus-within:ring-pine/10 transition-all">
           <CardElement options={cardStyle} />
         </div>
@@ -87,7 +87,7 @@ function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, accent, 
       >
         {loading ? <><Loader2 size={16} className="animate-spin" /> Charging…</> : `Check in · pay $${(totalAmount / 100).toFixed(2)}`}
       </button>
-      <p className="text-center text-xs text-ink-muted leading-relaxed">
+      <p className="text-center text-xs text-ink leading-relaxed">
         Prefer to pay in person? Skip this and check in at the pro shop.
       </p>
       <div className="flex items-center justify-center gap-2 text-ink-muted text-xs">
@@ -175,7 +175,7 @@ function CheckInPageInner() {
                 <p className="text-warn text-xs">Your earlier ${(result.feeRefundAmount / 100).toFixed(2)} late-cancellation fee is owed back to you, but the refund did not go through automatically. The course has been notified — if it hasn&apos;t appeared within a few days, contact them or thegreenreserve@outlook.com.</p>
               </div>
             )}
-            <p className="text-xs text-ink-muted mb-4">A receipt has been emailed to you.</p>
+            <p className="text-xs text-ink mb-4">A receipt has been emailed to you.</p>
             {token && (
               <a href={`/receipt/${bookingId}?token=${encodeURIComponent(token)}`}
                 className="text-sm font-medium hover:underline mb-6 block"
@@ -257,7 +257,7 @@ function CheckInPageInner() {
               </button>
               {/* The other way to do this, as a sentence — not a second button
                   competing with the one above. */}
-              <p className="text-center text-xs text-ink-muted mt-3 leading-relaxed">
+              <p className="text-center text-xs text-ink mt-3 leading-relaxed">
                 This charges the card you saved when you booked. Prefer to pay in person? Skip this and check in at the pro shop.
               </p>
             </>

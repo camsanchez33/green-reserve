@@ -98,7 +98,7 @@ function ReceiptPageInner() {
           <div className="no-print flex justify-end mb-4">
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-2 text-sm text-ink-muted hover:text-ink border border-line rounded-md px-4 py-2 bg-white transition-colors"
+              className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink border border-line rounded-md px-4 py-2 bg-white transition-colors"
             >
               <Printer size={14} /> Print / Save as PDF
             </button>
@@ -118,7 +118,7 @@ function ReceiptPageInner() {
               <div className="mb-5">
                 <StatusDot status={isCompleted ? 'ok' : isCancelled ? 'bad' : 'neutral'} label={statusLabel} />
                 <h1 className="text-[22px] font-serif font-medium tracking-tight text-ink mt-3 mb-1">{data.courseName}</h1>
-                {data.courseLocation && <p className="text-ink-muted text-sm">{data.courseLocation}</p>}
+                {data.courseLocation && <p className="text-ink text-sm">{data.courseLocation}</p>}
               </div>
 
               {/* Booking details */}
@@ -173,7 +173,7 @@ function ReceiptPageInner() {
                 </div>
               )}
               {!isCompleted && !isCancelled && (
-                <div className="text-sm text-ink-muted mb-5">
+                <div className="text-sm text-ink mb-5">
                   Nothing has been charged yet. Payment collected at check-in. · Booking #{data.bookingId.slice(0, 8).toUpperCase()}
                 </div>
               )}

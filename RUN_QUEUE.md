@@ -45,7 +45,18 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     the course, How it works, Price, See it work, Questions); demo captions and
     table headers sentence case in ink; every homepage sentence full ink (lead,
     hero, rows, price, FAQ, steps, links). Zero behavior.
-  - [ ] golfer pages  - [ ] /dashboard  - [ ] /admin
+  - [x] homepage steps — BUILT 2026-10-05 (Cam: "drop the numbers"): the
+    01/02/03 on How it works are gone; the three steps are plain rows.
+  - [x] golfer pages — BUILT 2026-10-05: course page, member portal, golfer
+    account + accept-invite, /book, /checkin, /manage, /receipt, /membership pay
+    link. Every small uppercase label is now a sentence-case label in ink (13px
+    semibold; section ones 15px — Upcoming, Played, Amenities, Member access,
+    What happens next, Updated pricing); "Member Portal" above the member h1 is
+    gone; the course header's "Public" label moved into the meta line. Sentences
+    (empty states, confirmations, fine print, subtitles) full ink; grey kept for
+    metadata only (key/value keys, spots, per-player prices, Booking ID, counts,
+    calendar weekdays). Muted text links are ink-soft. Zero behavior.
+  - [ ] /dashboard  - [ ] /admin
 - [ ] TYPE-3 — icons only where they do a job (back arrow, close, search): remove
   decorative Lucide icons (74 files; ChevronRight / check / sparkle-type ×108),
   e.g. the icon tiles on admin Overview. Zero behavior. Rewrites CLAUDE.md's

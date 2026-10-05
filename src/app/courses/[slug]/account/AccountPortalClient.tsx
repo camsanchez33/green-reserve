@@ -84,7 +84,7 @@ function SignIn({ courseName, courseSlug, accent, prefillEmail, onSignedIn }: {
 
         {step === 'identifier' ? (
           <>
-            <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-1.5">Email or phone</label>
+            <label className="block text-[13px] font-semibold text-ink mb-1.5">Email or phone</label>
             <input
               value={identifier} onChange={e => setIdentifier(e.target.value)}
               placeholder="you@example.com" className={iCls}
@@ -102,7 +102,7 @@ function SignIn({ courseName, courseSlug, accent, prefillEmail, onSignedIn }: {
         ) : (
           <>
             <p className="text-sm text-ink-soft mb-3">We sent a 6-digit code to <strong className="text-ink">{identifier}</strong>.</p>
-            <label className="block text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-1.5">Code</label>
+            <label className="block text-[13px] font-semibold text-ink mb-1.5">Code</label>
             <input
               value={code} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
               placeholder="123456" inputMode="numeric" className={iCls + ' tracking-[0.3em] text-center'}
@@ -117,13 +117,13 @@ function SignIn({ courseName, courseSlug, accent, prefillEmail, onSignedIn }: {
             >
               {verifying ? <><Loader2 size={16} className="animate-spin" /> Verifying...</> : 'Verify & sign in'}
             </button>
-            <button onClick={() => { setStep('identifier'); setCode(''); setError(''); }} className="w-full mt-3 text-xs text-ink-muted hover:text-ink transition-colors">
+            <button onClick={() => { setStep('identifier'); setCode(''); setError(''); }} className="w-full mt-3 text-xs text-ink-soft hover:text-ink transition-colors">
               Use a different email or phone
             </button>
           </>
         )}
 
-        <Link href={`/courses/${courseSlug}`} className="block text-center text-sm text-ink-muted hover:text-ink-soft mt-6 transition-colors">
+        <Link href={`/courses/${courseSlug}`} className="block text-center text-sm text-ink-soft hover:text-ink mt-6 transition-colors">
           &larr; Back to {courseName}
         </Link>
       </div>
@@ -201,12 +201,12 @@ function PortalInner({ params }: { params: Promise<{ slug: string }> }) {
       <div className="border-b border-line bg-white">
         <div className="max-w-2xl mx-auto px-4 py-5 flex items-center justify-between">
           <div>
-            <Link href={`/courses/${slug}`} className="text-xs text-ink-muted hover:text-ink flex items-center gap-1 mb-1.5 transition-colors">
+            <Link href={`/courses/${slug}`} className="text-xs text-ink-soft hover:text-ink flex items-center gap-1 mb-1.5 transition-colors">
               <ArrowLeft size={12} /> {data.course.name}
             </Link>
             <h1 className="text-[20px] font-serif font-medium text-ink">Hi, {data.golfer.firstName}</h1>
           </div>
-          <button onClick={signOut} className="flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink transition-colors">
+          <button onClick={signOut} className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink transition-colors">
             <LogOut size={14} /> Sign out
           </button>
         </div>
@@ -221,9 +221,9 @@ function PortalInner({ params }: { params: Promise<{ slug: string }> }) {
         )}
 
         <section>
-          <h2 className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-3">Upcoming</h2>
+          <h2 className="text-[15px] font-semibold text-ink mb-3">Upcoming</h2>
           {data.upcoming.length === 0 ? (
-            <p className="text-sm text-ink-faint">No upcoming tee times at {data.course.name}.</p>
+            <p className="text-sm text-ink">No upcoming tee times at {data.course.name}.</p>
           ) : (
             <div className="space-y-3">
               {data.upcoming.map(b => (
@@ -250,9 +250,9 @@ function PortalInner({ params }: { params: Promise<{ slug: string }> }) {
         </section>
 
         <section>
-          <h2 className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-3">Played</h2>
+          <h2 className="text-[15px] font-semibold text-ink mb-3">Played</h2>
           {data.past.length === 0 ? (
-            <p className="text-sm text-ink-faint">No past rounds at {data.course.name} yet.</p>
+            <p className="text-sm text-ink">No past rounds at {data.course.name} yet.</p>
           ) : (
             <div className="bg-white rounded-lg shadow-card divide-y divide-line-soft">
               {data.past.map(b => (

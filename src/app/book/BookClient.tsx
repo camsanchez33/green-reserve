@@ -87,7 +87,7 @@ function StepHeading({ n, title, note }: { n: number; title: string; note?: stri
       </span>
       <div>
         <h2 className="font-serif font-medium text-ink text-lg leading-none">{title}</h2>
-        {note && <p className="text-xs text-ink-muted mt-1">{note}</p>}
+        {note && <p className="text-xs text-ink mt-1">{note}</p>}
       </div>
     </div>
   );
@@ -104,7 +104,7 @@ function TimelineStep({ when, what, last = false, accent }: {
         {!last && <span className="w-px flex-1 mt-1" style={{ backgroundColor: '#E6E3D7' }} />}
       </div>
       <div className={last ? 'pb-0' : 'pb-4'}>
-        <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium">{when}</div>
+        <div className="text-[13px] font-semibold text-ink">{when}</div>
         <div className="text-sm text-ink mt-0.5 leading-relaxed">{what}</div>
       </div>
     </div>
@@ -119,7 +119,7 @@ const cardStyle = {
 };
 
 const iCls = "w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors";
-const lCls = "block text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-1.5";
+const lCls = "block text-[13px] font-semibold text-ink mb-1.5";
 
 // PERF-1: what the server already loaded for this URL (see ./page.tsx). When
 // present the page renders the tee time in its first HTML; the course and tee
@@ -190,7 +190,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
             {/* What happens next — the same three facts the policy copy already
                 states, laid out in the order they actually happen. */}
             <div className="rounded-lg border border-line p-5 mb-6 text-left">
-              <div className="text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-4">What happens next</div>
+              <div className="text-[15px] font-semibold text-ink mb-4">What happens next</div>
               <TimelineStep
                 accent={accent}
                 when="Today"
@@ -202,7 +202,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 what={confirmedData.cancellationFeeTotal > 0
                   ? <>
                       {deadlineLabel(confirmedData.date, confirmedData.time, confirmedData.cancellationHours) || `${hoursLabel(confirmedData.cancellationHours)} before your tee time`}
-                      <span className="block text-ink-muted text-xs mt-0.5">
+                      <span className="block text-ink text-xs mt-0.5">
                         After that, a ${confirmedData.cancellationFeeTotal.toFixed(2)} late-cancellation fee is charged to your card on file.
                       </span>
                     </>
@@ -214,7 +214,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 when={displayDate(confirmedData.date)}
                 what={<>
                   Check in at {formatTime(confirmedData.time)} and pay ${confirmedData.totalAmount.toFixed(2)}
-                  <span className="block text-ink-muted text-xs mt-0.5">
+                  <span className="block text-ink text-xs mt-0.5">
                     {confirmedData.noCard ? 'At the pro shop, or online with the link in your email.' : 'Online with the link in your email, or at the pro shop.'}
                   </span>
                 </>}
@@ -243,7 +243,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
             >
               View My Bookings
             </button>
-            <button onClick={() => router.push(`/courses/${courseSlug}`)} className="text-sm text-ink-muted hover:text-ink-soft transition-colors">
+            <button onClick={() => router.push(`/courses/${courseSlug}`)} className="text-sm text-ink-soft hover:text-ink transition-colors">
               Back to {confirmedData.courseName}
             </button>
           </div>
@@ -317,7 +317,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 <div className="flex items-center justify-between border-t border-line pt-3">
                   <div>
                     <p className="font-medium text-ink">Cart</p>
-                    <p className="text-xs text-ink-muted">${teeTime.cart_fee.toFixed(2)} per player</p>
+                    <p className="text-xs text-ink">${teeTime.cart_fee.toFixed(2)} per player</p>
                   </div>
                   {course.cart_required ? (
                     <span className="text-xs font-medium text-ink-muted bg-paper px-2.5 py-1 rounded-md border border-line">Required</span>
@@ -351,7 +351,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                     ))}
                   </div>
                   {rangeBallsSize && (
-                    <p className="text-xs text-ink-muted mt-1.5">${rangeBallsPrice.toFixed(2)} — added to your check-in total</p>
+                    <p className="text-xs text-ink mt-1.5">${rangeBallsPrice.toFixed(2)} — added to your check-in total</p>
                   )}
                 </div>
               )}
@@ -535,7 +535,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
       <div className="pt-1 border-t border-line-soft" />
       <StepHeading n={2} title="A card to hold your spot" note="Nothing is charged today." />
       <div>
-        <label className={lCls}>Card Details</label>
+        <label className={lCls}>Card details</label>
         <div className="w-full px-4 py-3.5 rounded-md border border-line bg-paper focus-within:border-pine/40 focus-within:ring-2 focus-within:ring-pine/10 transition-all">
           <CardElement options={cardStyle} />
         </div>
@@ -546,7 +546,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
       {error && <p className="text-bad text-sm">{error}</p>}
 
       <TrustNote>No charge until check-in.</TrustNote>
-      <p className="text-[11px] text-ink-muted text-center leading-snug">
+      <p className="text-[11px] text-ink text-center leading-snug">
         By confirming, you agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink">Terms of Service</a> and this course&apos;s cancellation policy.
       </p>
       <button

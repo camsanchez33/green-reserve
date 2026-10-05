@@ -225,7 +225,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]` | public | public | page | `src/app/courses/[slug]/page.tsx` | 45 |
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 150 |
-| `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 853 |
+| `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 850 |
 | `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1357 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 102 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 423 |

@@ -15,7 +15,7 @@ export function GolferExitLinks({ courseSlug, courseName, accent }: {
       >
         View My Bookings
       </Link>
-      <Link href={`/courses/${courseSlug}`} className="block text-center text-sm text-ink-muted hover:text-ink-soft transition-colors">
+      <Link href={`/courses/${courseSlug}`} className="block text-center text-sm text-ink-soft hover:text-ink transition-colors">
         Back to {courseName}
       </Link>
     </div>

@@ -6,7 +6,7 @@ import { Loader2, AlertCircle } from 'lucide-react';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
-const lCls = 'block text-[11px] uppercase tracking-[0.06em] text-ink-muted font-medium mb-1.5';
+const lCls = 'block text-[13px] font-semibold text-ink mb-1.5';
 
 type InviteInfo = { email: string; name: string; courseName: string; courseSlug: string; brandColor: string; tierName: string };
 
@@ -91,7 +91,7 @@ function AcceptInviteInner() {
         <div className="bg-white rounded-lg border border-line overflow-hidden">
           <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
           <div className="p-8">
-            <p className="text-xs text-ink-muted text-center mb-4">Set Up Your Member Account</p>
+            <p className="text-xs text-ink text-center mb-4">Set Up Your Member Account</p>
             <div className="bg-ok/5 border border-ok/20 rounded-md px-4 py-3 mb-6">
               <p className="text-ok text-sm font-semibold">{info.tierName} member at {info.courseName}</p>
               <p className="text-ok/80 text-xs mt-0.5">{info.email}</p>
