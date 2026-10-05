@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, Pencil, Check, X, Power, RefreshCw } from 'lucide-react';
+import { Trash2, Pencil, Check, X, Power } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
@@ -114,7 +114,7 @@ export default function SchedulesPage() {
     setBlackoutBusy(false);
     if (!r.ok) { toast(r.error); return; }
     setBlackouts(prev => prev.filter(b => b.id !== id));
-    toast('Block removed — run "Apply to Tee Sheet" to put its times back.', 'ok');
+    toast('Block removed — run "Apply to tee sheet" to put its times back.', 'ok');
   }
 
   useEffect(() => {
@@ -221,17 +221,17 @@ export default function SchedulesPage() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button onClick={regenerate} disabled={regenerating} className="flex items-center gap-2 border border-line text-ink-soft px-3 py-2 rounded-md text-[12.5px] font-medium hover:border-line-strong hover:text-ink disabled:opacity-50 transition-colors">
-              <RefreshCw className={'w-3.5 h-3.5 ' + (regenerating ? 'animate-spin' : '')}/>{regenerating ? 'Regenerating…' : 'Apply to Tee Sheet'}
+              {regenerating ? 'Applying…' : 'Apply to tee sheet'}
             </button>
             <button onClick={openAdd} className="flex items-center gap-2 bg-pine hover:bg-pine-hover text-white px-4 py-2 rounded-md font-medium text-[12.5px] transition-colors">
-              <Plus className="w-4 h-4"/>Add Schedule
+              Add schedule
             </button>
           </div>
         </div>
 
         <div className="max-w-6xl mx-auto px-4 py-6 space-y-4">
           <div className="bg-pine/5 border border-pine/20 rounded-lg p-4 text-sm text-ink-soft leading-relaxed">
-            <span className="font-medium text-ink">How this works:</span> each schedule is a recipe — days, hours, interval, and pricing — and GreenReserve automatically generates your bookable tee times from it every night for the next 8 days. Editing a schedule changes <span className="font-medium text-ink">future</span> generation only; to update the tee sheet right now, hit <span className="font-medium text-ink">Apply to Tee Sheet</span> above. Times that already have bookings are never touched.
+            <span className="font-medium text-ink">How this works:</span> each schedule is a recipe — days, hours, interval, and pricing — and GreenReserve automatically generates your bookable tee times from it every night for the next 8 days. Editing a schedule changes <span className="font-medium text-ink">future</span> generation only; to update the tee sheet right now, hit <span className="font-medium text-ink">Apply to tee sheet</span> above. Times that already have bookings are never touched.
           </div>
 
           {loadError && <LoadError message={loadError} onRetry={loadSchedules} />}
@@ -254,7 +254,7 @@ export default function SchedulesPage() {
                 <div className="text-center py-16 bg-white rounded-lg border border-dashed border-line">
                   <div className="font-medium text-ink mb-1">No schedules yet</div>
                   <p className="text-sm text-ink-soft mb-4">Create a schedule to auto-generate tee times daily</p>
-                  <button onClick={openAdd} className="bg-pine hover:bg-pine-hover text-white px-5 py-2.5 rounded-md text-[12.5px] font-medium transition-colors">Add Your First Schedule</button>
+                  <button onClick={openAdd} className="bg-pine hover:bg-pine-hover text-white px-5 py-2.5 rounded-md text-[12.5px] font-medium transition-colors">Add your first schedule</button>
                 </div>
               ) : (
               <div className="bg-white border border-line overflow-x-auto">
@@ -334,7 +334,7 @@ export default function SchedulesPage() {
                     <input type="date" value={blackoutForm.date} onChange={e => setBlackoutForm(f => ({ ...f, date: e.target.value }))} className={iCls}/>
                     <input type="text" value={blackoutForm.reason} onChange={e => setBlackoutForm(f => ({ ...f, reason: e.target.value }))} placeholder="Reason (outing, maintenance…)" className={iCls}/>
                     {/* WX-1: cancelling bookings for weather lives on the Tee Sheet (Weather), not here. */}
-                    <p className="text-[12px] text-ink-soft">Booked times stay. To cancel bookings for weather, use <b className="font-medium text-ink-soft">Weather</b> on the Tee Sheet.</p>
+                    <p className="text-[12px] text-ink-soft">Booked times stay. To cancel bookings for weather, use <b className="font-medium text-ink-soft">Weather</b> on the tee sheet.</p>
                     <button onClick={addBlackout} disabled={blackoutBusy || !blackoutForm.date} className="w-full border border-ink text-ink py-2 text-[12.5px] font-medium hover:bg-paper disabled:opacity-40 transition-colors">{blackoutBusy ? 'Working…' : 'Block this day'}</button>
                   </div>
                 </div>
@@ -358,7 +358,7 @@ export default function SchedulesPage() {
           <div className="fixed inset-0 bg-ink/20 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div className="bg-white border border-line w-full sm:max-w-xl rounded-t-lg sm:rounded-lg max-h-[92vh] overflow-y-auto pb-[env(safe-area-inset-bottom)] sm:pb-0">
               <div className="sticky top-0 bg-white px-5 pt-5 pb-4 border-b border-line flex items-center justify-between z-10">
-                <span className="font-serif font-semibold text-ink text-[17px]">{editId ? 'Edit Schedule' : 'New Schedule'}</span>
+                <span className="font-serif font-semibold text-ink text-[17px]">{editId ? 'Edit schedule' : 'New schedule'}</span>
                 <button onClick={() => { setShowAdd(false); setEditId(null); }} className="text-ink-muted hover:text-ink transition-colors"><X className="w-5 h-5"/></button>
               </div>
               <div className="px-5 py-4 space-y-4">
@@ -444,7 +444,7 @@ export default function SchedulesPage() {
                 </div>
                 <button onClick={save} disabled={saving}
                   className="w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[12.5px] disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
-                  {saving ? 'Saving...' : <><Check className="w-4 h-4"/>{editId ? 'Save Changes' : 'Create Schedule'}</>}
+                  {saving ? 'Saving...' : <>{editId ? 'Save changes' : 'Create schedule'}</>}
                 </button>
               </div>
             </div>

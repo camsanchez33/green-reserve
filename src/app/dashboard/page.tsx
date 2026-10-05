@@ -892,7 +892,7 @@ function DashboardPageInner() {
                                     onClick={e => { e.stopPropagation(); if (b.checkInFailReason) { setCardModalReason(b.checkInFailReason); setCardModalBooking(b); } else checkInBooking(b); }}
                                     disabled={checkingInId===b.id}
                                     className={'shrink-0 text-white px-2.5 min-h-[36px] md:min-h-0 py-1 rounded-md text-xs font-medium disabled:opacity-50 transition-colors ' + (b.checkInFailReason ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')}>
-                                    {checkingInId===b.id ? 'Charging…' : b.checkInFailReason ? 'Retry with new card' : 'Check In'}
+                                    {checkingInId===b.id ? 'Charging…' : b.checkInFailReason ? 'Retry with new card' : 'Check in'}
                                   </button>
                                 )}
                               </div>
@@ -1130,7 +1130,7 @@ function DashboardPageInner() {
         <div className="fixed inset-0 bg-ink/20 z-50 flex items-center justify-center p-4">
           <div className="bg-white border border-line w-full max-w-sm rounded-lg p-6">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-serif font-semibold text-ink text-[17px]">Course Alert</h3>
+              <h3 className="font-serif font-semibold text-ink text-[17px]">Course alert</h3>
               <button onClick={() => setShowConditions(false)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
             </div>
             <p className="text-sm text-ink-soft mb-3">Shown as a banner to golfers before they book. Leave blank to clear.</p>
@@ -1141,7 +1141,7 @@ function DashboardPageInner() {
               <button onClick={() => setShowConditions(false)} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors">Cancel</button>
               <button onClick={saveConditions} disabled={savingConditions}
                 className="flex-1 bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors">
-                {savingConditions ? 'Saving...' : conditionsInput ? 'Save Alert' : 'Clear Alert'}
+                {savingConditions ? 'Saving...' : conditionsInput ? 'Save alert' : 'Clear alert'}
               </button>
             </div>
           </div>
@@ -1282,7 +1282,7 @@ function AddTeeTimeForm({ date, onSave, onCancel }: { date: string; onSave: ()=>
       <div className="flex gap-3 pt-1">
         <button onClick={onCancel} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors">Cancel</button>
         <button onClick={save} disabled={saving} className="flex-1 bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors">
-          {saving ? 'Adding...' : 'Add Time'}
+          {saving ? 'Adding...' : 'Add time'}
         </button>
       </div>
     </div>
@@ -1321,7 +1321,7 @@ function CardCheckInModal({ booking, reason, onConfirm, onCancel }: {
     <div className="bg-white border border-line w-full max-w-sm rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="font-serif font-semibold text-ink text-[17px]">{reason ? 'Retry with a new card' : 'Check In'} — {booking.golferName}</h3>
+          <h3 className="font-serif font-semibold text-ink text-[17px]">{reason ? 'Retry with a new card' : 'Check in'} — {booking.golferName}</h3>
           <p className="text-xs text-ink-soft mt-0.5">Enter golfer&apos;s card to charge ${(booking.totalAmount / 100).toFixed(2)}</p>
         </div>
         <button onClick={onCancel} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>

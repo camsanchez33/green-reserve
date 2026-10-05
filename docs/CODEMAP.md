@@ -230,20 +230,20 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 99 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 423 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
-| `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 73 |
+| `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 70 |
 | `/dashboard/login` | operator | entry | page | `src/app/dashboard/login/page.tsx` | 78 |
-| `/dashboard/members` | operator | middleware | page | `src/app/dashboard/members/page.tsx` | 719 |
+| `/dashboard/members` | operator | middleware | page | `src/app/dashboard/members/page.tsx` | 713 |
 | `/dashboard/messages` | operator | middleware | page | `src/app/dashboard/messages/page.tsx` | 193 |
 | `/dashboard/money` | operator | middleware | page | `src/app/dashboard/money/page.tsx` | 183 |
-| `/dashboard/onboarding` | operator | **NONE FOUND** | page | `src/app/dashboard/onboarding/page.tsx` | 319 |
+| `/dashboard/onboarding` | operator | **NONE FOUND** | page | `src/app/dashboard/onboarding/page.tsx` | 316 |
 | `/dashboard/outings` | operator | middleware | page | `src/app/dashboard/outings/page.tsx` | 27 |
 | `/dashboard/payments` | operator | middleware | page | `src/app/dashboard/payments/page.tsx` | 18 |
-| `/dashboard/reset-password` | operator | entry | page | `src/app/dashboard/reset-password/page.tsx` | 124 |
+| `/dashboard/reset-password` | operator | entry | page | `src/app/dashboard/reset-password/page.tsx` | 118 |
 | `/dashboard/schedules` | operator | middleware | page | `src/app/dashboard/schedules/page.tsx` | 457 |
-| `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 958 |
+| `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 959 |
 | `/dashboard/sign` | operator | middleware | page | `src/app/dashboard/sign/page.tsx` | 26 |
 | `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 27 |
-| `/dashboard/verify` | operator | token | page | `src/app/dashboard/verify/page.tsx` | 157 |
+| `/dashboard/verify` | operator | token | page | `src/app/dashboard/verify/page.tsx` | 148 |
 | `/demo` | public | public | GET | `src/app/demo/route.ts` | 18 |
 | `/for-courses` | public | public | page | `src/app/for-courses/page.tsx` | 15 |
 | `/for-courses/details` | public | token | page | `src/app/for-courses/details/page.tsx` | 1946 |
@@ -373,12 +373,12 @@ Sorted the same way.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
+| `src/components/ui/StatusDot.tsx` | 35 | 36 |  | `StatusDot` |
 | `src/components/ui/Card.tsx` | 30 | 17 |  | `Card`, `CARD` |
 | `src/components/ui/Eyebrow.tsx` | 28 | 19 |  | `Eyebrow`, `EYEBROW` |
-| `src/components/ui/StatusDot.tsx` | 26 | 36 |  | `StatusDot` |
 | `src/components/ui/field.ts` | 18 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/admin/AdminSidebar.tsx` | 14 | 267 |  | `AdminNavKey`, `default (AdminSidebar)` |
-| `src/components/dashboard/Toast.tsx` | 10 | 69 | SD-2. | `toast`, `Toaster`, `ToastKind` |
+| `src/components/dashboard/Toast.tsx` | 10 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
 | `src/components/OperatorSidebar.tsx` | 10 | 244 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
 | `src/components/ui/ErrorState.tsx` | 7 | 96 |  | `ErrorBanner`, `LoadFailure` |
 | `src/components/dashboard/LoadError.tsx` | 6 | 16 | SD-10. | `LoadError` |
@@ -386,7 +386,7 @@ Sorted the same way.
 | `src/components/CourseHeaderBar.tsx` | 5 | 17 | White-label rule: | `CourseHeaderBar` |
 | `src/components/dashboard/money/types.ts` | 4 | 18 | SD-8 — one booking shape for all three Money tabs. | `MoneyBooking`, `MoneyCourse` |
 | `src/components/admin/CourseCheckInCard.tsx` | 3 | 364 | COURSES_SHEET_SPEC CS-3 §2 — the "Next check-in" card on a live course's Overview. | `CourseCallRow`, `default (CourseCheckInCard)`, `describeCheckIn` |
-| `src/components/dashboard/SignAgreements.tsx` | 3 | 220 | AGREEMENT_SPEC AG-2 §1 — the "Sign" step. | `default (SignAgreements)` |
+| `src/components/dashboard/SignAgreements.tsx` | 3 | 221 | AGREEMENT_SPEC AG-2 §1 — the "Sign" step. | `default (SignAgreements)` |
 | `src/components/dashboard/StaffNotice.tsx` | 3 | 30 | SD-11 / SP-A. | `StaffNotice` |
 | `src/components/EmptyState.tsx` | 3 | 22 |  | `EmptyState` |
 | `src/components/GolferExitLinks.tsx` | 3 | 24 |  | `GolferExitLinks` |
@@ -398,13 +398,13 @@ Sorted the same way.
 | `src/components/admin/OwnerTwoFactorCard.tsx` | 1 | 159 | OWNER TOTP 2FA — the enrolment card on /admin/profile (owner only). | `default (OwnerTwoFactorCard)` |
 | `src/components/AnnouncementBanner.tsx` | 1 | 49 |  | `default (AnnouncementBanner)` |
 | `src/components/birdie/BirdieWidget.tsx` | 1 | 168 | BIRDIE_AI_SPEC B1 — the floating Birdie button and chat panel for the operator dashboard. | `default (BirdieWidget)` |
-| `src/components/dashboard/AgreementNotice.tsx` | 1 | 67 | AGREEMENT_SPEC AG-3 §3 — the re-acceptance banner and, after the deadline, the modal. | `AGREEMENT_REQUIRED_EVENT`, `default (AgreementNotice)` |
+| `src/components/dashboard/AgreementNotice.tsx` | 1 | 68 | AGREEMENT_SPEC AG-3 §3 — the re-acceptance banner and, after the deadline, the modal. | `AGREEMENT_REQUIRED_EVENT`, `default (AgreementNotice)` |
 | `src/components/dashboard/CourseLayoutTab.tsx` | 1 | 469 |  | `default (CourseLayoutTab)` |
-| `src/components/dashboard/CoursePreview.tsx` | 1 | 80 |  | `CoursePreviewProps`, `default (CoursePreview)` |
-| `src/components/dashboard/GettingStartedChecklist.tsx` | 1 | 188 |  | `default (GettingStartedChecklist)` |
-| `src/components/dashboard/money/CancellationsPanel.tsx` | 1 | 178 | SD-8 — the Cancellations half of the Money page. | `CancellationsPanel` |
+| `src/components/dashboard/CoursePreview.tsx` | 1 | 80 | B-6 (UI_REVISE_SPEC §4): | `CoursePreviewProps`, `default (CoursePreview)` |
+| `src/components/dashboard/GettingStartedChecklist.tsx` | 1 | 187 |  | `default (GettingStartedChecklist)` |
+| `src/components/dashboard/money/CancellationsPanel.tsx` | 1 | 179 | SD-8 — the Cancellations half of the Money page. | `CancellationsPanel` |
 | `src/components/dashboard/money/PaymentsPanel.tsx` | 1 | 124 | SD-8 — the Payments half of the Money page. | `PaymentsPanel` |
-| `src/components/dashboard/money/PayoutsPanel.tsx` | 1 | 125 | SD-8 — the Stripe card, moved here out of Settings. | `PayoutsPanel` |
+| `src/components/dashboard/money/PayoutsPanel.tsx` | 1 | 126 | SD-8 — the Stripe card, moved here out of Settings. | `PayoutsPanel` |
 | `src/components/dashboard/StaffPermissions.tsx` | 1 | 243 | SP-A (STAFF_POLICY_SPEC A6): | `StaffPermissions` |
 | `src/components/Footer.tsx` | 1 | 77 |  | `default (Footer)` |
 | `src/components/home/TeeSheetDemo.tsx` | 1 | 228 | UI-H-1 (HOMEPAGE_SPEC.md): | `HeroDemo`, `SeeItWorkDemo` |

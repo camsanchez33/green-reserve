@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { CheckCircle, Circle, ChevronRight, ChevronDown, Eye, CreditCard, Clock, Loader2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { CORE_TABS, LOOK_AROUND_THRESHOLD, getVisitedTabs } from '@/lib/dashboard-visits';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 interface Step {
   key: string;
@@ -122,8 +123,8 @@ export default function GettingStartedChecklist({
         className="w-full flex items-center justify-between bg-white rounded-lg shadow-card px-4 py-2.5 mb-4 text-left hover:border-line-strong transition-colors"
       >
         <span className="flex items-center gap-2 text-sm text-ink">
-          {allDone ? <CheckCircle className="w-4 h-4 text-ok"/> : <span className="w-2 h-2 rounded-full bg-warn" aria-hidden="true"/>}
-          {allDone ? `Getting Started — ${doneCount} of ${steps.length} done` : `Finish setting up — ${doneCount} of ${steps.length} done`}
+          {allDone ? <StatusDot status="ok" /> : <span className="w-2 h-2 rounded-full bg-warn" aria-hidden="true"/>}
+          {allDone ? `Getting started — ${doneCount} of ${steps.length} done` : `Finish setting up — ${doneCount} of ${steps.length} done`}
         </span>
         <ChevronDown className="w-4 h-4 text-ink-muted"/>
       </button>
@@ -134,10 +135,10 @@ export default function GettingStartedChecklist({
     <div className="bg-white rounded-lg shadow-card mb-5 overflow-hidden">
       <button onClick={() => setExpandedOverride(false)} className="w-full flex items-center justify-between px-5 py-4 text-left">
         <div>
-          <div className="text-[15px] font-serif font-semibold text-ink">Getting Started</div>
+          <div className="text-[15px] font-serif font-semibold text-ink">Getting started</div>
           <div className="text-xs text-ink-muted mt-0.5">{doneCount} of {steps.length} done</div>
         </div>
-        <ChevronRight className="w-4 h-4 text-ink-faint"/>
+        <ChevronUp className="w-4 h-4 text-ink-muted" aria-hidden="true"/>
       </button>
       <div className="px-5 pb-2">
         <div className="h-1.5 bg-line-soft overflow-hidden mb-4">
@@ -147,16 +148,14 @@ export default function GettingStartedChecklist({
       <div className="divide-y divide-line-soft border-t border-line-soft">
         {steps.map(s => (
           <div key={s.key} className="flex items-start gap-3 px-5 py-3.5">
-            {s.done
-              ? <CheckCircle className="w-4 h-4 text-ok mt-0.5 shrink-0"/>
-              : <Circle className="w-4 h-4 text-ink-faint mt-0.5 shrink-0"/>}
+            <span className="mt-[7px] shrink-0"><StatusDot status={s.done ? 'ok' : 'neutral'} /></span>
             <div className="flex-1 min-w-0">
               <div className={'text-sm font-medium ' + (s.done ? 'text-ink-soft' : 'text-ink')}>{s.title}</div>
               <div className="text-xs text-ink-muted mt-0.5">{s.blurb}</div>
               {s.key === 'review-page' && !pageReviewed && courseDraft && (
                 <div className="mt-2 flex items-center gap-2">
                   <button onClick={() => onNavigate('#preview')} className="text-xs font-medium text-ink-soft bg-paper border border-line hover:border-line-strong px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5">
-                    <Eye className="w-3.5 h-3.5"/>View your page
+                    View your page
                   </button>
                   {pageApprovalStatus === 'changes_requested' ? (
                     <span className="text-xs text-warn font-medium">Changes requested — we’ll follow up</span>
@@ -175,7 +174,7 @@ export default function GettingStartedChecklist({
                 disabled={s.action.loading || s.action.disabled}
                 className="shrink-0 flex items-center gap-1.5 text-xs font-medium text-white bg-pine hover:bg-pine-hover px-3 py-1.5 rounded-md disabled:opacity-50 transition-colors"
               >
-                {s.action.loading ? <Loader2 className="w-3.5 h-3.5 animate-spin"/> : s.key === 'stripe' ? <CreditCard className="w-3.5 h-3.5"/> : s.key === 'schedule' ? <Clock className="w-3.5 h-3.5"/> : null}
+                {s.action.loading ? <Loader2 className="w-3.5 h-3.5 animate-spin"/> : null}
                 {s.action.label}
               </button>
             )}

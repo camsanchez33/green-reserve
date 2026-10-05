@@ -5,7 +5,7 @@
 // bookmark, email link and tee-sheet deep link still lands in the right place.
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2, RefreshCw } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { dfetch } from '@/lib/dashboard-fetch';
@@ -123,7 +123,7 @@ function MoneyPageInner() {
               </p>
             </div>
             <button onClick={refresh} className="shrink-0 flex items-center gap-1.5 text-[12.5px] text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
-              <RefreshCw className="w-3.5 h-3.5"/>Refresh
+              Refresh
             </button>
           </div>
 

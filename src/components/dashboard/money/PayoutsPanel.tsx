@@ -3,9 +3,10 @@
 // not configuration, and an operator looking for "where is my money" was
 // being sent to a settings sub-tab.
 import { useState } from 'react';
-import { CreditCard, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { CreditCard, Loader2 } from 'lucide-react';
 import { ACCESS_FEE_PER_PLAYER } from '@/lib/booking-fees';
 import type { MoneyCourse } from './types';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 export function PayoutsPanel({ course, stripeParam, onConnected }: {
   course: MoneyCourse;
@@ -51,31 +52,31 @@ export function PayoutsPanel({ course, stripeParam, onConnected }: {
               all, which reads as "nothing happened". */}
           {stripeParam === 'success' && (
             <div className="flex items-start gap-2 bg-ok/5 border border-ok/20 rounded-md p-3 text-ok text-sm">
-              <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0"/>
+              <StatusDot status="ok" />
               Stripe is connected. Payouts are enabled — green fees go straight to your bank account.
             </div>
           )}
           {stripeParam === 'pending' && (
             <div className="flex items-start gap-2 bg-warn/5 border border-warn/20 rounded-md p-3 text-warn text-sm">
-              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0"/>
+              <StatusDot status="bad" />
               Stripe says your account isn&apos;t fully verified yet. Finish any remaining steps on Stripe, or click Connect again to pick back up.
             </div>
           )}
           {stripeParam === 'refresh' && (
             <div className="flex items-start gap-2 bg-warn/5 border border-warn/20 rounded-md p-3 text-warn text-sm">
-              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0"/>
+              <StatusDot status="bad" />
               That Stripe link expired before you finished. Nothing was lost — click Connect to pick up where you left off.
             </div>
           )}
           {stripeParam === 'error' && (
             <div className="flex items-start gap-2 bg-bad/5 border border-bad/20 rounded-md p-3 text-bad text-sm">
-              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0"/>
+              <StatusDot status="bad" />
               Something went wrong connecting to Stripe. Try again below.
             </div>
           )}
           {stripeError && (
             <div className="flex items-start gap-2 bg-bad/5 border border-bad/20 rounded-md p-3 text-bad text-sm">
-              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0"/>
+              <StatusDot status="bad" />
               {stripeError}
             </div>
           )}
@@ -83,7 +84,7 @@ export function PayoutsPanel({ course, stripeParam, onConnected }: {
           {course.stripeAccountActive ? (
             <div className="space-y-3">
               <div className="flex items-center gap-3 bg-ok/5 border border-ok/20 rounded-md p-4">
-                <CheckCircle2 className="w-6 h-6 text-ok shrink-0"/>
+                
                 <div>
                   <div className="font-medium text-ok text-sm">Stripe connected</div>
                   <div className="text-xs text-ink-soft mt-0.5">Charges and payouts are enabled. Green fees go straight to your bank account.</div>

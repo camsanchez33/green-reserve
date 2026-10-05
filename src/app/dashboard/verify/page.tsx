@@ -1,7 +1,7 @@
 'use client';
 import { useState, Suspense, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CheckCircle, Mail, Loader2, XCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -96,9 +96,6 @@ function VerifyContent() {
             </div>
           ) : (
             <>
-              <div className="w-16 h-16 bg-pine/10 rounded-md flex items-center justify-center mx-auto mb-5">
-                <Mail className="w-8 h-8 text-pine"/>
-              </div>
               <h1 className="text-[30px] font-serif font-semibold leading-none text-ink mb-2">We sent a link to {email || 'your inbox'}</h1>
               <p className="text-sm text-ink-soft mb-6">
                 {courseIsLive
@@ -129,18 +126,12 @@ function VerifyContent() {
         )}
         {status === 'done' && (
           <div className="py-4">
-            <div className="w-16 h-16 bg-ok/10 rounded-md flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-ok"/>
-            </div>
             <h2 className="text-[24px] font-serif font-semibold leading-none text-ink">Email verified</h2>
             <p className="text-ink-soft text-sm mt-2">Redirecting to setup...</p>
           </div>
         )}
         {status === 'error' && (
           <div className="py-4">
-            <div className="w-16 h-16 bg-bad/10 rounded-md flex items-center justify-center mx-auto mb-4">
-              <XCircle className="w-8 h-8 text-bad"/>
-            </div>
             <p className="text-bad font-medium mb-2">Verification failed.</p>
             <p className="text-ink-soft text-sm mb-4">The link may have expired or already been used.</p>
             <button onClick={() => router.push('/dashboard/login')} className="text-pine underline text-sm">Go to login</button>

@@ -5,7 +5,7 @@
 // — the same file the server enforces with — so a toggle here can never mean a
 // different rule than the route applies.
 import { useCallback, useEffect, useState } from 'react';
-import { Copy, Eye, EyeOff, Plus, Trash2, ChevronDown, ChevronUp, Lock } from 'lucide-react';
+import { Copy, Eye, EyeOff, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { toast } from '@/components/dashboard/Toast';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -184,7 +184,7 @@ export function StaffPermissions({ onCount }: { onCount?: (n: number) => void })
                                   <span className="flex-1 min-w-0">
                                     <span className="text-[13.5px] text-ink font-medium flex items-center gap-2 flex-wrap">
                                       {p.label}
-                                      {p.locked && <span className="inline-flex items-center gap-1 text-[11px] text-ink-muted font-normal"><Lock className="w-3 h-3"/>Always on</span>}
+                                      {p.locked && <span className="inline-flex items-center gap-1 text-[11px] text-ink-muted font-normal">Always on</span>}
                                       {p.movesMoney && <span className="text-[11px] text-warn font-normal">Moves money</span>}
                                     </span>
                                     <span className="block text-[12.5px] text-ink-muted">{p.help}{p.requires?.length ? ` Turns on ${p.requires.map(r => `“${PERMISSIONS.find(x => x.key === r)?.label}”`).join(', ')} too.` : ''}</span>
@@ -214,7 +214,7 @@ export function StaffPermissions({ onCount }: { onCount?: (n: number) => void })
       )}
 
       <div className="bg-paper/70 rounded-md p-4">
-        <div className="font-medium text-ink text-[13.5px] mb-3 flex items-center gap-2"><Plus className="w-4 h-4 text-ink-muted"/>Add a staff member</div>
+        <div className="font-medium text-ink text-[13.5px] mb-3 flex items-center gap-2">Add a staff member</div>
         <div className="grid sm:grid-cols-2 gap-3 mb-3">
           <label className="block"><Eyebrow as="span" className="block mb-1.5">Name</Eyebrow>
             <input value={newStaff.name} onChange={e => setNewStaff(s => ({ ...s, name: e.target.value }))} placeholder="First Last" className={`${INPUT} w-full`}/></label>

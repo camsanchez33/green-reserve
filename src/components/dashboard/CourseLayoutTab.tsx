@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Plus, Trash2, AlertCircle, CheckCircle2, CalendarClock } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { StatusDot } from '@/components/ui/StatusDot';
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
@@ -21,8 +21,8 @@ function SectionCard({ title, hint, children }: { title: string; hint?: string; 
 // never a swallowed catch.
 function RowStatus({ saving, saved, error }: { saving: boolean; saved: boolean; error: string }) {
   if (saving) return <span className="text-xs text-ink-faint">Saving…</span>;
-  if (error) return <span className="text-xs text-bad flex items-center gap-1"><AlertCircle className="w-3 h-3"/>{error}</span>;
-  if (saved) return <span className="text-xs text-ok flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/>Saved</span>;
+  if (error) return <span className="text-xs text-bad flex items-center gap-1"><StatusDot status="bad" />{error}</span>;
+  if (saved) return <span className="text-xs text-ok flex items-center gap-1"><StatusDot status="ok" />Saved</span>;
   return null;
 }
 
@@ -62,7 +62,7 @@ export default function CourseLayoutTab() {
   if (loading) return <div className="text-sm text-ink-muted py-10 text-center">Loading…</div>;
   if (loadError) return (
     <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm flex items-center gap-2">
-      <AlertCircle className="w-4 h-4"/>{loadError}
+      <StatusDot status="bad" />{loadError}
     </div>
   );
 
@@ -157,7 +157,7 @@ function NinesSection({ nines, setNines, products }: { nines: Nine[]; setNines: 
         </div>
       ) : (
         <button onClick={() => setDraft({ name: '', par: '36' })} className="flex items-center gap-1.5 text-xs font-medium text-pine hover:underline">
-          <Plus className="w-3.5 h-3.5"/> Add a nine
+           Add a nine
         </button>
       )}
       {errorId === 'new' && <p className="text-xs text-bad">{errorMsg}</p>}
@@ -267,7 +267,7 @@ function ProductsSection({ products, setProducts, nines }: { products: CoursePro
               const missing = products.filter(p => p.active && !(p.scheduleCount && p.scheduleCount > 0));
               return missing.length > 0 ? (
                 <div className="border border-warn/20 bg-warn/5 rounded-md px-3 py-2.5 text-sm text-ink-soft flex items-start gap-2">
-                  <CalendarClock className="w-4 h-4 text-warn shrink-0 mt-0.5" />
+                  
                   <span>
                     Now build a schedule for each round golfers can book — {missing.map(p => `"${p.label}"`).join(', ')} {missing.length === 1 ? 'has' : 'have'} none yet, so {missing.length === 1 ? 'it generates' : 'they generate'} no tee times.{' '}
                     <Link href="/dashboard/schedules" className="text-pine font-medium hover:underline">Open Schedules →</Link>
@@ -306,7 +306,7 @@ function ProductsSection({ products, setProducts, nines }: { products: CoursePro
             </div>
           ) : (
             <button onClick={() => setDraft({ label: '', holes: '18', nineIds: [] })} className="flex items-center gap-1.5 text-xs font-medium text-pine hover:underline">
-              <Plus className="w-3.5 h-3.5"/> Add a product
+               Add a product
             </button>
           )}
         </>
@@ -459,7 +459,7 @@ function TeeSetsSection({ teeSets, setTeeSets, nines, products }: {
         </div>
       ) : (
         <button onClick={() => setDraft({ name: '', yardage: '', rating: '', slope: '' })} className="flex items-center gap-1.5 text-xs font-medium text-pine hover:underline">
-          <Plus className="w-3.5 h-3.5"/> Add a tee set
+           Add a tee set
         </button>
       )}
       {errorId === 'new' && <p className="text-xs text-bad">{errorMsg}</p>}

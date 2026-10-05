@@ -5,7 +5,8 @@
 // any configuration write (lib/dashboard-fetch) also opens the modal.
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { AlertTriangle } from 'lucide-react';
+import { StatusDot } from '@/components/ui/StatusDot';
+
 import SignAgreements from '@/components/dashboard/SignAgreements';
 
 type Reaccept = { version: string; effectiveAt: string; reacceptBy: string; title: string; changeSummary: string; overdue: boolean; daysLeft: number };
@@ -56,7 +57,7 @@ export default function AgreementNotice() {
 
   return (
     <div className="bg-warn/5 border-b border-warn/20 px-4 py-2 text-sm text-warn flex items-center gap-3">
-      <AlertTriangle className="w-4 h-4 shrink-0" />
+      <StatusDot status="warn" />
       <span className="flex-1 min-w-0">
         The Operator Agreement changed on {fmt(re.effectiveAt)}. Please review and sign by {fmt(re.reacceptBy)}{re.daysLeft <= 7 ? ` (${re.daysLeft} day${re.daysLeft === 1 ? '' : 's'} left)` : ''}.
       </span>

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Send, MessageSquare, Radio, Megaphone } from 'lucide-react';
+import { Send } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { LoadError } from '@/components/dashboard/LoadError';
@@ -105,7 +105,7 @@ function MessagesContent() {
           {announcements.length > 0 && (
             <Card id="announcements">
               <div className="flex items-center gap-2 px-4 pt-3 pb-2">
-                <Megaphone className="w-3.5 h-3.5 text-pine"/>
+                
                 <Eyebrow as="span">From GreenReserve</Eyebrow>
                 {announcements.some(a => !a.read) && <span className="text-[11px] text-pine font-semibold">{announcements.filter(a => !a.read).length} new</span>}
               </div>
@@ -129,7 +129,7 @@ function MessagesContent() {
           {loading && <div className="text-center py-10 text-ink-muted text-sm">Loading...</div>}
           {!loading && messages.length === 0 && (
             <div className="flex-1 flex flex-col items-center justify-center text-center py-20">
-              <MessageSquare className="w-10 h-10 text-line-strong mx-auto mb-3"/>
+              
               <div className="text-sm text-ink-soft mb-1">No messages yet</div>
               <div className="text-xs text-ink-muted">Send a message to reach the GreenReserve team</div>
             </div>
@@ -141,7 +141,7 @@ function MessagesContent() {
                 <div className="max-w-[70%]">
                   {msg.isBroadcast && (
                     <div className="flex items-center gap-1 mb-1 text-[10px] text-warn">
-                      <Radio className="w-3 h-3"/> Platform Announcement
+                       Platform Announcement
                     </div>
                   )}
                   <div className={'px-4 py-2.5 rounded-lg text-sm whitespace-pre-wrap leading-relaxed ' + (
@@ -173,7 +173,7 @@ function MessagesContent() {
             />
             <button onClick={sendMessage} disabled={!compose.trim() || sending}
               className="flex items-center gap-1.5 px-4 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white text-[12.5px] font-medium rounded-md transition-colors shrink-0">
-              <Send className="w-3.5 h-3.5"/>Send
+              Send
             </button>
           </div>
           <div className="text-[10px] text-ink-faint mt-1.5">Cmd/Ctrl + Enter to send</div>

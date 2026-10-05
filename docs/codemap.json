@@ -5807,7 +5807,6 @@
       "auth": "operator",
       "guard": "entry",
       "imports": [
-        "lucide-react",
         "next/image",
         "next/navigation",
         "react"
@@ -5867,7 +5866,7 @@
     },
     {
       "path": "src/app/dashboard/forgot-password/page.tsx",
-      "lines": 73,
+      "lines": 70,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5882,7 +5881,6 @@
       "auth": "operator",
       "guard": "entry",
       "imports": [
-        "lucide-react",
         "next/image",
         "react"
       ],
@@ -5931,7 +5929,7 @@
       "auth": "operator",
       "guard": "entry",
       "imports": [
-        "lucide-react",
+        "@/components/ui/StatusDot",
         "next/image",
         "next/navigation",
         "react"
@@ -5940,7 +5938,7 @@
     },
     {
       "path": "src/app/dashboard/members/page.tsx",
-      "lines": 719,
+      "lines": 713,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6031,7 +6029,7 @@
     },
     {
       "path": "src/app/dashboard/onboarding/page.tsx",
-      "lines": 319,
+      "lines": 316,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6047,6 +6045,7 @@
       "guard": "NONE FOUND",
       "imports": [
         "@/components/dashboard/SignAgreements",
+        "@/components/ui/StatusDot",
         "lucide-react",
         "next/image",
         "next/navigation",
@@ -6138,7 +6137,7 @@
     },
     {
       "path": "src/app/dashboard/reset-password/page.tsx",
-      "lines": 124,
+      "lines": 118,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6193,7 +6192,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 958,
+      "lines": 959,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6215,6 +6214,7 @@
         "@/components/dashboard/StaffPermissions",
         "@/components/dashboard/Toast",
         "@/components/ui/Eyebrow",
+        "@/components/ui/StatusDot",
         "@/lib/cancel-policy",
         "@/lib/course-time",
         "@/lib/image-resize",
@@ -6275,7 +6275,7 @@
     },
     {
       "path": "src/app/dashboard/verify/page.tsx",
-      "lines": 157,
+      "lines": 148,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7282,7 +7282,7 @@
     },
     {
       "path": "src/components/dashboard/AgreementNotice.tsx",
-      "lines": 67,
+      "lines": 68,
       "purpose": "AGREEMENT_SPEC AG-3 §3 — the re-acceptance banner and, after the deadline, the modal.",
       "brain": [],
       "exports": [
@@ -7302,7 +7302,7 @@
       "guard": null,
       "imports": [
         "@/components/dashboard/SignAgreements",
-        "lucide-react",
+        "@/components/ui/StatusDot",
         "next/navigation",
         "react"
       ],
@@ -7339,7 +7339,7 @@
     {
       "path": "src/components/dashboard/CoursePreview.tsx",
       "lines": 80,
-      "purpose": "",
+      "purpose": "B-6 (UI_REVISE_SPEC §4):",
       "brain": [],
       "exports": [
         {
@@ -7356,16 +7356,14 @@
       "methods": [],
       "auth": null,
       "guard": null,
-      "imports": [
-        "lucide-react"
-      ],
+      "imports": [],
       "usedBy": [
         "src/app/dashboard/settings/page.tsx"
       ]
     },
     {
       "path": "src/components/dashboard/GettingStartedChecklist.tsx",
-      "lines": 188,
+      "lines": 187,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7380,6 +7378,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/ui/StatusDot",
         "@/lib/dashboard-visits",
         "lucide-react",
         "react"
@@ -7416,7 +7415,7 @@
     },
     {
       "path": "src/components/dashboard/SignAgreements.tsx",
-      "lines": 220,
+      "lines": 221,
       "purpose": "AGREEMENT_SPEC AG-2 §1 — the \"Sign\" step.",
       "brain": [],
       "exports": [
@@ -7431,6 +7430,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/ui/StatusDot",
         "lucide-react",
         "react"
       ],
@@ -7458,8 +7458,7 @@
       "guard": null,
       "imports": [
         "@/lib/staff-permissions",
-        "@/lib/use-dashboard-access",
-        "lucide-react"
+        "@/lib/use-dashboard-access"
       ],
       "usedBy": [
         "src/app/dashboard/members/page.tsx",
@@ -7525,7 +7524,7 @@
     },
     {
       "path": "src/components/dashboard/Toast.tsx",
-      "lines": 69,
+      "lines": 70,
       "purpose": "SD-2.",
       "brain": [],
       "exports": [
@@ -7548,6 +7547,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/ui/StatusDot",
         "lucide-react",
         "react"
       ],
@@ -7566,7 +7566,7 @@
     },
     {
       "path": "src/components/dashboard/money/CancellationsPanel.tsx",
-      "lines": 178,
+      "lines": 179,
       "purpose": "SD-8 — the Cancellations half of the Money page.",
       "brain": [],
       "exports": [
@@ -7583,10 +7583,10 @@
       "imports": [
         "./types",
         "@/components/dashboard/Toast",
+        "@/components/ui/StatusDot",
         "@/lib/dashboard-fetch",
         "@/lib/format",
         "@/lib/use-dashboard-access",
-        "lucide-react",
         "react"
       ],
       "usedBy": [
@@ -7623,7 +7623,7 @@
     },
     {
       "path": "src/components/dashboard/money/PayoutsPanel.tsx",
-      "lines": 125,
+      "lines": 126,
       "purpose": "SD-8 — the Stripe card, moved here out of Settings.",
       "brain": [],
       "exports": [
@@ -7639,6 +7639,7 @@
       "guard": null,
       "imports": [
         "./types",
+        "@/components/ui/StatusDot",
         "@/lib/booking-fees",
         "lucide-react",
         "react"
@@ -8031,14 +8032,23 @@
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/app/courses/[slug]/account/AccountPortalClient.tsx",
         "src/app/courses/[slug]/member/page.tsx",
+        "src/app/dashboard/login/page.tsx",
         "src/app/dashboard/members/page.tsx",
+        "src/app/dashboard/onboarding/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/app/dashboard/settings/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
+        "src/components/dashboard/AgreementNotice.tsx",
         "src/components/dashboard/CourseLayoutTab.tsx",
+        "src/components/dashboard/GettingStartedChecklist.tsx",
+        "src/components/dashboard/SignAgreements.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
-        "src/components/dashboard/money/PaymentsPanel.tsx"
+        "src/components/dashboard/Toast.tsx",
+        "src/components/dashboard/money/CancellationsPanel.tsx",
+        "src/components/dashboard/money/PaymentsPanel.tsx",
+        "src/components/dashboard/money/PayoutsPanel.tsx"
       ]
     },
     {

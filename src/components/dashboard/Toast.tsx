@@ -10,7 +10,8 @@
 // longer and can be dismissed; successes fade.
 
 import { useEffect, useState } from 'react';
-import { CheckCircle2, AlertTriangle, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 export type ToastKind = 'ok' | 'bad' | 'warn';
 interface ToastItem { id: number; text: string; kind: ToastKind }
@@ -51,8 +52,8 @@ export function Toaster() {
           )}
         >
           {t.kind === 'ok'
-            ? <CheckCircle2 className="w-4 h-4 text-ok shrink-0 mt-0.5" />
-            : <AlertTriangle className={'w-4 h-4 shrink-0 mt-0.5 ' + (t.kind === 'warn' ? 'text-warn' : 'text-bad')} />}
+            ? <StatusDot status="ok" />
+            : <StatusDot status="bad" />}
           <span className="flex-1 leading-snug">{t.text}</span>
           <button
             onClick={() => setItems(list => list.filter(i => i.id !== t.id))}

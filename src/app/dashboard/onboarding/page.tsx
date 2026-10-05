@@ -2,12 +2,13 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { CheckCircle, ChevronRight, Loader2, CreditCard, Plus, Trash2, AlertCircle, PenLine } from 'lucide-react';
+import { ChevronRight, Loader2, Trash2 } from 'lucide-react';
 import SignAgreements from '@/components/dashboard/SignAgreements';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 // AG-2: the single agreement checkbox became its own step — legal name,
 // signer, and each document read to the end before it can be ticked.
-const STEPS = ['Course Details', 'Sign', 'Connect Payments', 'Go Live'];
+const STEPS = ['Course details', 'Sign', 'Connect payments', 'Go live'];
 
 type TeeSet = { id: string; name: string; yardage: string; rating: string; slope: string };
 const blankTeeSet = (): TeeSet => ({ id: Math.random().toString(36).slice(2), name: '', yardage: '', rating: '', slope: '' });
@@ -164,11 +165,10 @@ function OnboardingInner() {
                   i + 1 === step ? 'border-pine text-pine' :
                   'border-line text-ink-faint'
                 )}>
-                  {i + 1 < step ? <CheckCircle className="w-3.5 h-3.5"/> : i + 1}
+                  {i + 1 < step ? <StatusDot status="ok" /> : i + 1}
                 </div>
                 <span className="text-sm font-medium hidden sm:block">{label}</span>
               </div>
-              {i < STEPS.length - 1 && <ChevronRight className="w-4 h-4 text-line-strong"/>}
             </div>
           ))}
         </div>
@@ -203,7 +203,7 @@ function OnboardingInner() {
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-[13px] font-semibold text-ink">Tee sets <span className="font-normal text-ink-muted">(optional)</span></label>
                   <button onClick={addTee} className="text-xs font-medium text-pine hover:text-pine-hover flex items-center gap-1 transition-colors">
-                    <Plus className="w-3.5 h-3.5"/>Add tee
+                    Add tee
                   </button>
                 </div>
                 <p className="text-xs text-ink-soft mb-3">List your tee boxes (Black, Blue, White, Red…) with yardage, rating, and slope. Leave blank to skip.</p>
@@ -233,7 +233,7 @@ function OnboardingInner() {
         {step === 2 && (
           <div className="bg-white rounded-lg shadow-card p-6">
             <h2 className="text-[24px] font-serif font-semibold leading-none text-ink mb-1 flex items-center gap-2">
-              <PenLine className="w-5 h-5 text-pine"/>Sign the agreements
+              Sign the agreements
             </h2>
             <p className="text-sm text-ink-soft mb-6">The terms every course on GreenReserve operates under. Read each one to the end, then sign once — signed copies are emailed to you.</p>
             <SignAgreements onSigned={() => { setSignedAll(true); setStep(3); }} />
@@ -244,7 +244,7 @@ function OnboardingInner() {
         {step === 3 && (
           <div className="bg-white rounded-lg shadow-card p-6">
             <h2 className="text-[24px] font-serif font-semibold leading-none text-ink mb-1 flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-pine"/>Connect your payments
+              Connect your payments
             </h2>
             <p className="text-sm text-ink-soft mb-6">
               Golfers pay through Stripe at checkout — green fees go straight to your bank account. You can explore the rest of your dashboard without connecting, but it&apos;s required before your course can go live.
@@ -252,7 +252,7 @@ function OnboardingInner() {
 
             {isConnected ? (
               <div className="bg-ok/5 border border-ok/20 rounded-md p-4 flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-ok mt-0.5 shrink-0"/>
+                <StatusDot status="ok" />
                 <div>
                   <div className="font-medium text-ok">Stripe connected</div>
                   <div className="text-sm text-ink-soft mt-0.5">You&apos;re all set to accept payments. Manage anytime from Settings → Payments.</div>
@@ -262,12 +262,12 @@ function OnboardingInner() {
               <>
                 {stripeBanner === 'pending' && (
                   <div className="bg-warn/5 border border-warn/20 rounded-md p-4 mb-4 flex items-start gap-2 text-sm text-warn">
-                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0"/>Stripe says your account isn&apos;t fully verified yet — you may need to finish a step on their end. Try connecting again.
+                    <StatusDot status="bad" />Stripe says your account isn&apos;t fully verified yet — you may need to finish a step on their end. Try connecting again.
                   </div>
                 )}
                 {stripeBanner === 'error' && (
                   <div className="bg-bad/5 border border-bad/20 rounded-md p-4 mb-4 flex items-start gap-2 text-sm text-bad">
-                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0"/>Something interrupted the connection. Try again.
+                    <StatusDot status="bad" />Something interrupted the connection. Try again.
                   </div>
                 )}
                 <button onClick={connectStripe} disabled={connecting}
@@ -292,9 +292,6 @@ function OnboardingInner() {
         {/* Step 4 — Done */}
         {step === 4 && (
           <div className="bg-white rounded-lg shadow-card p-10 text-center">
-            <div className="w-14 h-14 rounded-md bg-ok/10 flex items-center justify-center mx-auto mb-5">
-              <CheckCircle className="w-7 h-7 text-ok"/>
-            </div>
             <h2 className="text-[30px] font-serif font-semibold leading-none text-ink mb-2">Setup complete</h2>
             <p className="text-sm text-ink-soft mb-2">Your course details are saved and payments are connected. GreenReserve will review everything and take your course live — usually within 1 business day.</p>
             <p className="text-xs text-ink-soft mb-6">We&apos;ll email you a full walkthrough of your dashboard once you&apos;re live.</p>

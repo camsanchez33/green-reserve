@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useRef, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { toast } from '@/components/dashboard/Toast';
-import { Loader2, Download, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { LoadError } from '@/components/dashboard/LoadError';
@@ -48,7 +48,7 @@ function downloadCsv(name: string, header: string[], rows: (string | number | nu
 }
 
 function CsvBtn({ onClick }: { onClick: () => void }) {
-  return <button onClick={onClick} className="inline-flex items-center gap-1 text-[12px] font-semibold text-ink-muted hover:text-ink"><Download className="w-3.5 h-3.5" />CSV</button>;
+  return <button onClick={onClick} className="inline-flex items-center gap-1 text-[12px] font-semibold text-ink-muted hover:text-ink">CSV</button>;
 }
 
 function Section({ title, note, children, csv }: { title: string; note?: string; children: React.ReactNode; csv?: () => void }) {
@@ -75,7 +75,7 @@ function Stat({ label, value, sub, delta }: { label: string; value: string; sub?
   return (
     <div className="min-w-0">
       <Eyebrow>{label}</Eyebrow>
-      <div className="mt-1 text-[22px] leading-none font-serif font-semibold text-ink tabular-nums">{value}</div>
+      <div className="mt-1.5 text-[22px] leading-none font-semibold text-ink tabular-nums">{value}</div>
       {(sub || delta) && <div className="mt-1.5 text-[12.5px] text-ink-soft flex items-center gap-2 flex-wrap">{delta}{sub}</div>}
     </div>
   );
@@ -96,7 +96,7 @@ function Delta({ now, prev, unit, goodWhenUp = true }: { now: number | null; pre
     : unit === 'cents' ? usd(Math.abs(diff))
     : unit === 'pct' && prev !== 0 ? `${Math.abs(Math.round((diff / prev) * 100))}%`
     : `${Math.abs(Math.round(diff * 10) / 10)}`;
-  return <span className={'inline-flex items-center gap-0.5 font-semibold ' + (good ? 'text-ok' : 'text-bad')}>{up ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}{text}</span>;
+  return <span className={'inline-flex items-center gap-0.5 font-semibold ' + (good ? 'text-ok' : 'text-bad')}>{up ? '+' : '−'}{text}</span>;
 }
 
 function Bar({ value, max, tone = 'pine' }: { value: number; max: number; tone?: 'pine' | 'soft' | 'bad' }) {
@@ -189,7 +189,7 @@ function AnalyticsInner() {
               <label className="ml-1 inline-flex items-center gap-1.5 text-[12.5px] text-ink-soft cursor-pointer">
                 <input type="checkbox" checked={compare} onChange={e => { setCompare(e.target.checked); load(preset, custom, e.target.checked, today); }} className="accent-pine" />Compare to previous period
               </label>
-              <button onClick={() => load(preset, custom, compare, today)} className="inline-flex items-center gap-1 text-[12.5px] text-ink-soft px-2.5 py-1.5 rounded-md border border-line hover:text-ink"><RefreshCw className="w-3.5 h-3.5" />Refresh</button>
+              <button onClick={() => load(preset, custom, compare, today)} className="inline-flex items-center gap-1 text-[12.5px] text-ink-soft px-2.5 py-1.5 rounded-md border border-line hover:text-ink">Refresh</button>
             </div>
           </div>
           {preset === 'custom' && (
