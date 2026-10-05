@@ -15,7 +15,10 @@ import { formatDate as fmtDate, formatMoney as fmtMoney, formatTeeTime as fmtTim
 import { Card } from '@/components/ui/Card';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { onboardingSteps } from './shared';
+import { PERMISSIONS } from '@/lib/staff-permissions';
 import { useCourse } from './context';
+
+const STAFF_PRESET_LABEL: Record<string, string> = { starter: 'Starter', front_desk: 'Front desk', manager: 'Manager', custom: 'Custom', legacy: 'Original staff access' };
 
 export function OverviewTab() {
   const { detail, setTab, checkinFocus, verifyBusy, verifyMsg, phoneState, resendingId, resendMsg, sendingPreview, requestingReReview, liveToggleBusy, reminderNudgeBusy, reminderNudgeSent, reminderNudgeError, loadDetail, markVerified, toggleActive, sendGoLiveReminder, savePhone, resendSetup, sendCoursePreview, requestReReview, c } = useCourse();
@@ -348,16 +351,23 @@ export function OverviewTab() {
                     this rail already. */}
                 {detail.staff.length > 0 && (
                   <Card className="p-5">
-                    <Eyebrow className="mb-3">Staff Contacts</Eyebrow>
+                    <Eyebrow className="mb-3">Staff &amp; access</Eyebrow>
                     <div className="space-y-3">
                       {detail.staff.map(s => (
                         <div key={s.id} className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded bg-pine/10 flex items-center justify-center text-pine font-medium text-sm shrink-0">{s.name[0]}</div>
                           <div className="min-w-0 flex-1">
                             <div className="text-sm font-medium text-ink truncate">
-                              {s.name} <span className="text-xs text-ink-muted font-normal">· {s.role}{s.active ? '' : ' · inactive'}</span>
+                              {s.name} <span className="text-xs text-ink-muted font-normal">· {STAFF_PRESET_LABEL[s.preset] ?? 'Custom'}{s.active ? '' : ' · inactive'}</span>
                             </div>
                             <a href={'mailto:' + s.email} className="text-xs text-pine hover:underline truncate block">{s.email}</a>
+                            {/* SP-A: read-only — the course owner sets this in their Settings. */}
+                            <details className="mt-1">
+                              <summary className="text-[11px] text-ink-muted cursor-pointer hover:text-ink">{s.permissions.length} permission{s.permissions.length === 1 ? '' : 's'}</summary>
+                              <ul className="mt-1 text-[11.5px] text-ink-soft space-y-0.5">
+                                {PERMISSIONS.filter(p => s.permissions.includes(p.key)).map(p => <li key={p.key}>{p.group} · {p.label}{p.movesMoney ? ' (moves money)' : ''}</li>)}
+                              </ul>
+                            </details>
                           </div>
                           <button
                             onClick={() => resendSetup(s.id, s.name)}

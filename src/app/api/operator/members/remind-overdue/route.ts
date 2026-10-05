@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
-import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
+import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { sendMembershipPaymentLinkEmail } from '@/lib/email';
 
 // B-10 (UI_REVISE_SPEC §4): one click reminds every overdue member. "Overdue"
@@ -19,7 +19,7 @@ const REMIND_EVERY_DAYS = 7;
 export async function POST() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
+  { const denied = requirePermission(session, 'members.edit'); if (denied) return denied; } // SP-A
   const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
 
   const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { name: true, stripeAccountActive: true } });

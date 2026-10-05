@@ -8,6 +8,7 @@ import { XCircle, Undo2 } from 'lucide-react';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { toast } from '@/components/dashboard/Toast';
 import type { MoneyBooking, MoneyCourse } from './types';
+import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { formatStamp as fmtStamp, formatTeeTime as fmtTime, formatTeeDay as fmtDate } from '@/lib/format';
 
 const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
@@ -26,6 +27,10 @@ export function CancellationsPanel({ bookings, course, courseLoaded, isStaff, on
   const [policySaving, setPolicySaving] = useState(false);
   const [policySaved, setPolicySaved] = useState(false);
   const [cancelingId, setCancelingId] = useState<string | null>(null);
+  // SP-A: cancelling and waiving the late fee are separate permissions.
+  const access = useDashboardAccess();
+  const canCancel = access.can('sheet.cancel');
+  const canWaive = access.can('sheet.waive_fee');
 
   // Adopt the policy the page loaded — and any later refresh of it — but never
   // over the top of an edit in progress (the SD-8 dirty rule, same as Settings).
@@ -48,18 +53,22 @@ export function CancellationsPanel({ bookings, course, courseLoaded, isStaff, on
     onChanged();
   }
 
-  async function cancelBooking(b: MoneyBooking) {
+  async function cancelBooking(b: MoneyBooking, waive = false) {
     const feeCharged = b.paymentStatus === 'cancellation_fee_charged';
-    const msg = feeCharged
-      ? `Cancel ${b.golferName}'s booking?\n\nTheir $${(b.cancellationFeeTotal / 100).toFixed(2)} late-cancellation fee was already charged and will NOT be refunded.`
-      : `Cancel ${b.golferName}'s booking?\n\nNo money has been charged — their card will simply never be billed.`;
+    const fee = `$${(b.cancellationFeeTotal / 100).toFixed(2)}`;
+    const msg = waive
+      ? `Cancel ${b.golferName}'s booking and waive the late fee?\n\n${feeCharged ? `The ${fee} already charged will be refunded to their card.` : 'No late fee will be charged.'}`
+      : feeCharged
+        ? `Cancel ${b.golferName}'s booking?\n\nTheir ${fee} late-cancellation fee was already charged and will NOT be refunded.`
+        : `Cancel ${b.golferName}'s booking?\n\nNo money has been charged — their card will simply never be billed.`;
     if (!confirm(msg)) return;
     setCancelingId(b.id);
-    const r = await dfetch<{ feeCharged?: boolean }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'cancel' }) });
+    const r = await dfetch<{ feeCharged?: boolean; feeRefundFailed?: string }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'cancel', ...(waive ? { waiveFee: true } : {}) }) });
     setCancelingId(null);
     if (!r.ok) { toast(r.error); return; }
     const data = r.data ?? {};
-    toast(data.feeCharged ? 'Cancelled — the late-cancellation fee already charged is non-refundable.' : 'Cancelled — no charge was made, nothing to refund.', 'ok');
+    if (waive && data.feeRefundFailed) toast(`Cancelled, but the ${fee} refund did not go through (${data.feeRefundFailed}) — refund it from Stripe.`, 'warn');
+    else toast(waive ? (feeCharged ? `Cancelled — the ${fee} fee was refunded.` : 'Cancelled — no fee.') : data.feeCharged ? 'Cancelled — the late-cancellation fee already charged is non-refundable.' : 'Cancelled — no charge was made, nothing to refund.', 'ok');
     onChanged();
   }
 
@@ -101,7 +110,7 @@ export function CancellationsPanel({ bookings, course, courseLoaded, isStaff, on
           <span className="text-xs text-ink-muted pb-0.5">
             {isStaff
               ? 'Changing the policy needs the course operator’s login — you can still cancel bookings below.'
-              : 'Set fee to $0 to skip card collection at booking.'}
+              : 'Set the fee to $0 to turn late-cancellation fees off.'}
           </span>
         </div>
       </div>
@@ -118,10 +127,20 @@ export function CancellationsPanel({ bookings, course, courseLoaded, isStaff, on
                   <div className="font-medium text-ink text-[13.5px]">{b.golferName} <span className="text-ink-muted font-normal">· {b.players} player{b.players !== 1 ? 's' : ''}</span></div>
                   <div className="text-[12.5px] text-ink-soft mt-0.5">{fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)} · {b.golferEmail}</div>
                 </div>
-                <button onClick={() => cancelBooking(b)} disabled={cancelingId === b.id}
-                  className="shrink-0 flex items-center gap-1.5 text-[12.5px] px-3 py-1.5 rounded-md border border-bad/30 text-bad hover:bg-bad/5 disabled:opacity-50 transition-colors">
-                  <XCircle className="w-3.5 h-3.5"/>{cancelingId === b.id ? 'Cancelling...' : 'Cancel'}
-                </button>
+                {canCancel && (
+                <div className="shrink-0 flex items-center gap-2">
+                  {canWaive && b.cancellationFeeTotal > 0 && (
+                    <button onClick={() => cancelBooking(b, true)} disabled={cancelingId === b.id}
+                      className="text-[12.5px] px-3 py-1.5 rounded-md text-ink-soft hover:text-ink hover:bg-paper disabled:opacity-50 transition-colors">
+                      Cancel, no fee
+                    </button>
+                  )}
+                  <button onClick={() => cancelBooking(b)} disabled={cancelingId === b.id}
+                    className="flex items-center gap-1.5 text-[12.5px] px-3 py-1.5 rounded-md border border-bad/30 text-bad hover:bg-bad/5 disabled:opacity-50 transition-colors">
+                    <XCircle className="w-3.5 h-3.5"/>{cancelingId === b.id ? 'Cancelling...' : 'Cancel'}
+                  </button>
+                </div>
+                )}
               </div>
             ))}
           </div>

@@ -1,6 +1,8 @@
 import { cookies } from 'next/headers';
 import { getOperatorSession } from './auth';
+import { NextResponse } from 'next/server';
 import { prisma } from './prisma';
+import { ALL_KEYS, deniedMessage, resolveStaffPermissions, type PermissionKey } from './staff-permissions';
 
 export const ACTIVE_COURSE_COOKIE = 'gr_active_course';
 
@@ -17,6 +19,21 @@ export interface ResolvedSession {
   operatorId: string | null;  // null for staff
   staffId: string | null;     // null for operators
   isStaff: boolean;
+  /** SP-A: what this login may do. Owners have every key. */
+  permissions: PermissionKey[];
+}
+
+/** SP-A: true when the login holds the permission (owners always do). */
+export function can(session: Pick<ResolvedSession, 'isStaff' | 'permissions'>, key: PermissionKey): boolean {
+  return !session.isStaff || session.permissions.includes(key);
+}
+
+/**
+ * SP-A: the server-side gate. Returns a 403 to send back, or null when allowed.
+ * The client hides what a login can't do; this is the control.
+ */
+export function requirePermission(session: Pick<ResolvedSession, 'isStaff' | 'permissions'>, key: PermissionKey): NextResponse | null {
+  return can(session, key) ? null : NextResponse.json({ error: deniedMessage(key), permission: key }, { status: 403 });
 }
 
 /**
@@ -39,7 +56,7 @@ export async function resolveDashboardSession(): Promise<ResolvedSession | null>
     // not actually locking them out — the cookie kept working, and the
     // sliding refresh kept reissuing it. Read the row on every request, like
     // the admin session does.
-    const row = await prisma.courseStaff.findUnique({ where: { id: session.staffId }, select: { active: true, courseId: true } });
+    const row = await prisma.courseStaff.findUnique({ where: { id: session.staffId }, select: { active: true, courseId: true, permissions: true, permissionsSetAt: true } });
     if (!row || !row.active) return null;
     return {
       courseId: row.courseId,
@@ -47,6 +64,7 @@ export async function resolveDashboardSession(): Promise<ResolvedSession | null>
       operatorId: null,
       staffId: session.staffId,
       isStaff: true,
+      permissions: resolveStaffPermissions(row),
     };
   }
 
@@ -75,5 +93,6 @@ export async function resolveDashboardSession(): Promise<ResolvedSession | null>
     operatorId: session.operatorId,
     staffId: null,
     isStaff: false,
+    permissions: [...ALL_KEYS],
   };
 }

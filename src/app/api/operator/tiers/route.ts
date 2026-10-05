@@ -3,11 +3,12 @@ import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
 import { tierToWire } from '@/lib/tier-wire';
-import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
+import { resolveDashboardSession, requirePermission } from '@/lib/session';
 
 export async function GET() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  { const denied = requirePermission(session, 'members.view'); if (denied) return denied; } // SP-A
 
   const tiers = await prisma.membershipTier.findMany({
     where: { courseId: session.courseId },
@@ -20,7 +21,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
+  { const denied = requirePermission(session, 'members.edit'); if (denied) return denied; } // SP-A
   const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
 
   const body = await req.json();
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
+  { const denied = requirePermission(session, 'members.edit'); if (denied) return denied; } // SP-A
   const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
 
   const body = await req.json();
@@ -98,7 +99,7 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
+  { const denied = requirePermission(session, 'members.edit'); if (denied) return denied; } // SP-A
   const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
 
   const { searchParams } = new URL(req.url);

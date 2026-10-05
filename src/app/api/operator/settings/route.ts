@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { courseToWire, courseMoneyFromWire } from '@/lib/course-wire';
-import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
+import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { validateSettingsPatch } from '@/lib/settings-validation';
 
 // Never cache — the dashboard's live/draft status must reflect the DB the
@@ -33,9 +33,15 @@ export async function GET() {
 export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
+  { const denied = requirePermission(session, 'settings.edit'); if (denied) return denied; } // SP-A
   const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
   const body = await req.json();
+  // SP-A: the cancellation & card policy is the owner's alone (STAFF_POLICY_SPEC
+  // A2) — a staff login with "Edit course settings" can change everything else.
+  const OWNER_ONLY_FIELDS = ['cancellationHours', 'checkInWindowHours', 'rainCheckPolicy', 'lateCancellationFee', 'twoFactorMethod', 'twoFactorPhone'];
+  if (session.isStaff && OWNER_ONLY_FIELDS.some(k => k in body)) {
+    return NextResponse.json({ error: 'The cancellation policy can only be changed from the course owner’s login.' }, { status: 403 });
+  }
   // Whitelist what can be updated
   const allowed = [
     // SD-8: name/address/city/state/zipCode are NOT here. They are what

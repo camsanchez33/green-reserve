@@ -5,6 +5,7 @@ import {
   Calendar, BarChart2, Clock, Users, Settings, LogOut, XCircle,
   Trophy, PartyPopper, DollarSign, AlertTriangle, MessageSquare,
 } from 'lucide-react';
+import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
 import BirdieWidget from '@/components/birdie/BirdieWidget';
 import { confirmLeave } from '@/lib/unsaved-guard';
@@ -38,8 +39,9 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   const [identity, setIdentity] = useState<CourseIdentity>({ name: '', type: 'public', brandColor: '#173B2A', establishedYear: null });
   const [myCourses, setMyCourses] = useState<MyCourse[]>([]);
   const [switchingCourse, setSwitchingCourse] = useState(false);
-  // SD-1: staff run the tee sheet; the configuration tabs are not theirs.
-  const [isStaff, setIsStaff] = useState(false);
+  // SP-A: what this login may open — per person, set by the course owner.
+  const access = useDashboardAccess();
+  const isStaff = access.isStaff;
 
   // Every dashboard page renders this sidebar with its tab as `active` — the
   // one place we can credit a tab visit for the Getting Started checklist's
@@ -63,7 +65,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     // switcher stays hidden, same as today.
     fetch('/api/operator/my-courses')
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.courses) setMyCourses(d.courses); setIsStaff(!!d?.isStaff); })
+      .then(d => { if (d?.courses) setMyCourses(d.courses); })
       .catch(() => {});
   }, []);
 
@@ -92,6 +94,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   }
 
   const { brandColor, name, type, establishedYear, slug, logoUrl } = identity;
+  const moneyOnlyCancellations = isStaff && !access.can('money.payments') && !access.can('money.payouts');
   const typeLabel = type === 'semi-private' ? 'Semi-Private' : type === 'municipal' ? 'Municipal' : type === 'resort' ? 'Resort' : 'Public Course';
   const meta = [establishedYear ? `Est. ${establishedYear}` : null, typeLabel].filter(Boolean).join(' · ').toUpperCase();
 
@@ -102,30 +105,36 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     { key: 'outings',       label: 'Outings',      href: '/dashboard/outings',       icon: <PartyPopper className="w-4 h-4"/>, soon: true },
     { key: 'schedule',      label: 'Schedule',     href: '/dashboard/schedules',     icon: <Clock className="w-4 h-4"/> },
     { key: 'members',       label: 'Members',      href: '/dashboard/members',       icon: <Users className="w-4 h-4"/> },
-    // SD-8: Payments + Cancellations + Payouts are one page now. Staff can
-    // only use the Cancellations tab, so that is what their sidebar calls it.
-    { key: 'money',         label: isStaff ? 'Cancellations' : 'Money',
-      href: isStaff ? '/dashboard/money?tab=cancellations' : '/dashboard/money',
-      icon: isStaff ? <XCircle className="w-4 h-4"/> : <DollarSign className="w-4 h-4"/> },
+    // SD-8: Payments + Cancellations + Payouts are one page. A login that can
+    // only see cancellations gets the item named for what it shows.
+    { key: 'money',         label: moneyOnlyCancellations ? 'Cancellations' : 'Money',
+      href: moneyOnlyCancellations ? '/dashboard/money?tab=cancellations' : '/dashboard/money',
+      icon: moneyOnlyCancellations ? <XCircle className="w-4 h-4"/> : <DollarSign className="w-4 h-4"/> },
     { key: 'messages',      label: 'Messages',     href: '/dashboard/messages',      icon: <MessageSquare className="w-4 h-4"/> },
     { key: 'settings',      label: 'Settings',     href: '/dashboard/settings',      icon: <Settings className="w-4 h-4"/> },
   ];
 
-  const STAFF_HIDDEN: OperatorNavKey[] = ['schedule', 'members', 'settings'];
+  // SP-A: each item shows when the login may open it (owners: always). The
+  // routes refuse the rest; this keeps doors that would 403 off the rail.
+  const visible = (k: OperatorNavKey) => !isStaff || ({
+    teesheet: true,
+    analytics: access.can('analytics.view'),
+    tournaments: true,
+    outings: true,
+    schedule: access.can('schedule.view'),
+    members: access.can('members.view'),
+    money: access.can('money.cancellations') || access.can('money.payments') || access.can('money.payouts'),
+    messages: access.can('messages.use'),
+    settings: access.can('settings.edit'),
+  } as Record<string, boolean>)[k] !== false;
   const groups = [
-    // AN-1: Analytics carries revenue and customer spend — owner logins only,
-    // the same line the Money tab draws (the API refuses staff too).
-    { label: 'Dashboard', keys: (isStaff ? ['teesheet'] : ['teesheet', 'analytics']) as OperatorNavKey[] },
-    // Staff see the money item under Bookings, where Cancellations used to sit.
-    { label: 'Bookings',  keys: ((isStaff ? ['money', 'tournaments', 'outings'] : ['tournaments', 'outings']) as OperatorNavKey[]) },
-    { label: 'Manage',    keys: ((isStaff ? ['messages'] : ['schedule', 'members', 'money', 'messages', 'settings']) as OperatorNavKey[]).filter(k => !isStaff || !STAFF_HIDDEN.includes(k)) },
+    { label: 'Dashboard', keys: (['teesheet', 'analytics'] as OperatorNavKey[]).filter(visible) },
+    { label: 'Bookings',  keys: (['tournaments', 'outings'] as OperatorNavKey[]).filter(visible) },
+    { label: 'Manage',    keys: (['schedule', 'members', 'money', 'messages', 'settings'] as OperatorNavKey[]).filter(visible) },
   ];
 
-  // SD-2: what fits in a thumb row. Staff never see the configuration tabs
-  // (SD-1), so their row ends at Messages.
-  const mobileKeys: OperatorNavKey[] = isStaff
-    ? ['teesheet', 'money', 'messages']
-    : ['teesheet', 'money', 'schedule', 'messages', 'settings'];
+  // SD-2: what fits in a thumb row.
+  const mobileKeys: OperatorNavKey[] = (['teesheet', 'money', 'schedule', 'messages', 'settings'] as OperatorNavKey[]).filter(visible);
   const mobileItems = navItems.filter(n => mobileKeys.includes(n.key) && !n.soon);
 
   return (

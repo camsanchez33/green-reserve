@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
+import { resolveDashboardSession, requirePermission } from '@/lib/session';
 
 export async function GET() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  { const denied = requirePermission(session, 'schedule.view'); if (denied) return denied; } // SP-A
   return NextResponse.json(await prisma.blackout.findMany({ where: { courseId: session.courseId } }));
 }
 
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
+  { const denied = requirePermission(session, 'schedule.edit'); if (denied) return denied; } // SP-A
   const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
   const { date, reason } = await req.json();
   if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return NextResponse.json({ error: 'Pick a date.' }, { status: 400 });
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
+  { const denied = requirePermission(session, 'schedule.edit'); if (denied) return denied; } // SP-A
   const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
   const { id } = await req.json();
   // Verify ownership before deleting — never trust a bare ID from the client.

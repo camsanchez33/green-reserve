@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from '@/lib/booking-events';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, can, requirePermission } from '@/lib/session';
+import type { PermissionKey } from '@/lib/staff-permissions';
 import { performCancellation } from '@/lib/cancel-booking';
 import { performCheckIn } from '@/lib/checkin-booking';
 import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
@@ -17,7 +18,13 @@ export async function GET(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const status = req.nextUrl.searchParams.get('status') || undefined;
+  // SP-A: the full ledger needs "See payments". A login with only "See
+  // cancellations" gets what the Cancellations tab uses — confirmed and
+  // cancelled bookings — with the payment amounts taken out (below).
+  const seesPayments = can(session, 'money.payments');
+  if (!seesPayments) { const denied = requirePermission(session, 'money.cancellations'); if (denied) return denied; }
+  const asked = req.nextUrl.searchParams.get('status') || undefined;
+  const status = seesPayments ? asked : (asked === 'cancelled' || asked === 'confirmed' ? asked : { in: ['confirmed', 'cancelled'] });
   const date = req.nextUrl.searchParams.get('date') || undefined;
 
   const bookings = await prisma.booking.findMany({
@@ -43,7 +50,14 @@ export async function GET(req: NextRequest) {
     take: date ? undefined : 200,
   });
 
-  return NextResponse.json(bookings);
+  // SP-A: contact details only with "See golfer email and phone"; payment
+  // amounts only with "See payments" (the late fee stays — it IS the cancellation).
+  const contact = can(session, 'sheet.golfer_contact');
+  return NextResponse.json(bookings.map(b => ({
+    ...b,
+    ...(contact ? {} : { golferEmail: '', golferPhone: '' }),
+    ...(seesPayments ? {} : { greenFeeTotal: 0, cartFeeTotal: 0, rangeBallsTotal: 0, accessFeeTotal: 0, totalAmount: 0 }),
+  })));
 }
 
 // Lets the operator cancel a booking on a golfer's behalf (e.g. a phone-call
@@ -53,7 +67,8 @@ export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id, action, paymentMethodId, checkedInPlayers: cipRaw } = await req.json();
+  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw } = await req.json();
+  const waiveFee = action === 'cancel' && waiveRaw === true;
   // SD-5: partial party — how many actually showed (1 .. players-1); absent = all.
   const cip = cipRaw == null ? undefined : Number(cipRaw);
   if (cip !== undefined && (!Number.isInteger(cip) || cip < 1)) return NextResponse.json({ error: 'Invalid headcount.' }, { status: 400 });
@@ -61,6 +76,12 @@ export async function PATCH(req: NextRequest) {
   if (!id || !ACTIONS.includes(action)) {
     return NextResponse.json({ error: 'Missing id or unsupported action' }, { status: 400 });
   }
+  // SP-A: each counter action is its own permission.
+  const NEEDS: Record<string, PermissionKey> = { cancel: 'sheet.cancel', checkin: 'sheet.checkin', no_show: 'sheet.no_show', still_coming: 'sheet.no_show', paid_offline: 'sheet.counter_payment' };
+  const deniedAction = requirePermission(session, NEEDS[action]);
+  if (deniedAction) return deniedAction;
+  // SP-A: cancelling WITHOUT the late fee refunds a hold already taken — its own permission.
+  if (waiveFee) { const d = requirePermission(session, 'sheet.waive_fee'); if (d) return d; }
 
   const booking = await prisma.booking.findUnique({ where: { id }, select: { courseId: true, status: true, paymentStatus: true, noShowAt: true, players: true, cancellationFeeChargeId: true, teeTime: { select: { date: true, time: true } }, course: { select: { timezone: true, stripeAccountId: true } }, totalAmount: true, checkedInPlayers: true } });
   if (!booking || booking.courseId !== session.courseId) {
@@ -147,7 +168,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   const result = action === 'cancel'
-    ? await performCancellation(id, { type: 'staff', id: session.staffId ?? session.operatorId })
+    ? await performCancellation(id, { type: 'staff', id: session.staffId ?? session.operatorId }, waiveFee ? { waiveFee: true } : {})
     : await performCheckIn(id, { type: 'staff', id: session.staffId ?? session.operatorId }, { ...(paymentMethodId ? { externalPaymentMethodId: paymentMethodId } : {}), ...(cip !== undefined ? { checkedInPlayers: cip } : {}) });
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status });
   return NextResponse.json(result);
@@ -161,6 +182,8 @@ export async function PATCH(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const deniedWalkIn = requirePermission(session, 'sheet.walkin'); // SP-A
+  if (deniedWalkIn) return deniedWalkIn;
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request' }, { status: 400 }); }
 
@@ -172,6 +195,7 @@ export async function POST(req: NextRequest) {
   const source = body.source === 'phone' ? 'phone' : 'walk_in';
   const cartSelected = body.cartSelected === true;
   const checkInNow = body.checkInNow === true;
+  if (checkInNow) { const d = requirePermission(session, 'sheet.counter_payment'); if (d) return d; } // SP-A: checked in = paid at the counter
   if (!teeTimeId || golferName.length < 2) return NextResponse.json({ error: 'Enter the golfer’s name.' }, { status: 400 });
   if (!Number.isInteger(players) || players < 1 || players > 8) return NextResponse.json({ error: 'Players must be between 1 and 8.' }, { status: 400 });
   if (golferEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(golferEmail)) return NextResponse.json({ error: 'That email doesn’t look right.' }, { status: 400 });

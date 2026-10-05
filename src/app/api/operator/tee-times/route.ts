@@ -3,7 +3,7 @@ import { todayIn, isPastIn } from '@/lib/course-time';
 import { prisma } from '@/lib/prisma';
 import { dollarsToCentsOr0 } from '@/lib/money';
 import { teeTimeToWire } from '@/lib/schedule-wire';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, can, requirePermission } from '@/lib/session';
 import { setTeeTimeBlocked } from '@/lib/schedule-service';
 
 export async function GET(req: NextRequest) {
@@ -35,12 +35,18 @@ export async function GET(req: NextRequest) {
     },
   });
 
+  // SP-A: contact details only with "See golfer email and phone".
+  if (withBookings && !can(session, 'sheet.golfer_contact')) {
+    return NextResponse.json(teeTimes.map(t => ({ ...t, bookings: (t as { bookings?: { golferEmail: string; golferPhone: string }[] }).bookings?.map(b => ({ ...b, golferEmail: '', golferPhone: '' })) })));
+  }
   return NextResponse.json(teeTimes);
 }
 
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const denied = requirePermission(session, 'sheet.edit_times'); // SP-A
+  if (denied) return denied;
 
   const body = await req.json();
   // SD-11: these were written raw — "garbage" dates made rows nothing renders.
@@ -84,6 +90,8 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const denied = requirePermission(session, 'sheet.block'); // SP-A
+  if (denied) return denied;
 
   const { id, status } = await req.json();
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
@@ -101,6 +109,8 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const denied = requirePermission(session, 'sheet.edit_times'); // SP-A
+  if (denied) return denied;
 
   const { id } = await req.json();
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });

@@ -7,6 +7,7 @@ import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, RefreshCw } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { PaymentsPanel } from '@/components/dashboard/money/PaymentsPanel';
@@ -21,9 +22,8 @@ const TABS = [
 ] as const;
 type TabKey = typeof TABS[number]['key'];
 
-// Staff run the tee sheet (SD-1). They could always see Cancellations and
-// never Payments; merging the pages must not quietly widen that.
-const STAFF_TABS: TabKey[] = ['cancellations'];
+// SP-A: each tab is a permission the course owner grants per person.
+const TAB_PERMISSION = { payments: 'money.payments', cancellations: 'money.cancellations', payouts: 'money.payouts' } as const;
 
 const EMPTY_COURSE: MoneyCourse = { cancellationHours: 24, lateCancellationFee: 10, stripeAccountActive: false, liveStatus: 'draft' };
 
@@ -40,18 +40,15 @@ function MoneyPageInner() {
   const [course, setCourse] = useState<MoneyCourse>(EMPTY_COURSE);
   const [courseLoaded, setCourseLoaded] = useState(false);
   const [courseError, setCourseError] = useState('');
-  // SD-8 review: null = not yet known. The tab list assumes STAFF until the
-  // probe says otherwise, so a slow or failed probe cannot flash the Payments
-  // ledger and the revenue tiles at a staff login. (Those tabs are a UI
-  // control, not a boundary — every action behind them is refused server-side
-  // — but they still must not widen what staff are shown.)
-  const [isStaff, setIsStaff] = useState<boolean | null>(null);
-  const [roleUnknown, setRoleUnknown] = useState(false);
+  // SP-A (was SD-8's isStaff probe): until the login's permissions load, no tab
+  // that needs one is shown, so a slow or failed load can't flash the ledger.
+  const access = useDashboardAccess();
+  const roleUnknown = access.failed;
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
 
-  const treatAsStaff = isStaff !== false;
-  const tabs = TABS.filter(t => !treatAsStaff || STAFF_TABS.includes(t.key));
+  const treatAsStaff = access.isStaff;
+  const tabs = TABS.filter(t => access.can(TAB_PERMISSION[t.key]));
   const requested = (tabParam && TABS.some(t => t.key === tabParam) ? tabParam : (stripeParam ? 'payouts' : 'payments')) as TabKey;
   const active: TabKey = tabs.some(t => t.key === requested) ? requested : (tabs[0]?.key ?? 'cancellations');
 
@@ -101,15 +98,6 @@ function MoneyPageInner() {
 
   useEffect(() => { loadBookings(); }, [loadBookings]);
   useEffect(() => { loadCourse(); }, [loadCourse]);
-  useEffect(() => {
-    let cancelled = false;
-    fetch('/api/operator/my-courses')
-      .then(r => r.ok ? r.json() : Promise.reject(new Error(String(r.status))))
-      .then(d => { if (!cancelled) { setIsStaff(!!d?.isStaff); setRoleUnknown(false); } })
-      .catch(() => { if (!cancelled) setRoleUnknown(true); });
-    return () => { cancelled = true; };
-  }, []);
-
   const refresh = () => { loadBookings(); loadCourse(); };
 
   // With a date asked for but not loaded, show nothing rather than the
@@ -152,10 +140,15 @@ function MoneyPageInner() {
 
           {roleUnknown && (
             <div className="bg-white border border-line border-l-[3px] border-l-warn rounded-md px-4 py-3 text-[13.5px] text-ink-soft mb-4">
-              We couldn&apos;t confirm your access level, so this is the limited view. If you own this course, reload to see Payments and Payouts.
+              We couldn&apos;t confirm what your login can see, so nothing is shown yet. Reload the page to try again.
             </div>
           )}
-          {loadError && <LoadError message={loadError} onRetry={loadBookings} />}
+          {access.loaded && tabs.length === 0 && (
+            <div className="bg-white border border-line border-l-[3px] border-l-warn rounded-md px-4 py-3 text-[13.5px] text-ink-soft mb-4">
+              Your login doesn&apos;t include any of the Money pages — ask the course owner if you need them.
+            </div>
+          )}
+          {loadError && tabs.length > 0 && <LoadError message={loadError} onRetry={loadBookings} />}
           {datedError && active === 'payments' && (
             <LoadError message={`Couldn't load that day's bookings — ${datedError}`} onRetry={loadBookings} />
           )}
@@ -165,7 +158,7 @@ function MoneyPageInner() {
             </div>
           )}
 
-          {loading ? (
+          {!access.loaded || tabs.length === 0 ? null : loading ? (
             <div className="flex items-center justify-center py-16 text-ink-muted gap-2"><Loader2 className="w-5 h-5 animate-spin"/>Loading...</div>
           ) : active === 'payments' ? (
             <PaymentsPanel bookings={paymentRows} dateFilter={datedError ? '' : dateFilter} onClearDate={() => router.push('/dashboard/money?tab=payments')}/>

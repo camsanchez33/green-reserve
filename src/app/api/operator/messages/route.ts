@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { sendMessageNotificationEmail } from '@/lib/email';
 
 const ADMIN_EMAIL = 'thegreenreserve@outlook.com';
@@ -11,6 +11,7 @@ const ONE_HOUR_MS = 60 * 60 * 1000;
 export async function GET(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  { const denied = requirePermission(session, 'messages.use'); if (denied) return denied; } // SP-A
 
   const { searchParams } = new URL(req.url);
   if (searchParams.get('unreadCount') === '1') {
@@ -33,6 +34,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  { const denied = requirePermission(session, 'messages.use'); if (denied) return denied; } // SP-A
 
   const { body } = await req.json();
   if (!body?.trim()) return NextResponse.json({ error: 'Missing body' }, { status: 400 });
@@ -104,6 +106,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  { const denied = requirePermission(session, 'messages.use'); if (denied) return denied; } // SP-A
   // req body not needed — always marks own thread
   void req;
 

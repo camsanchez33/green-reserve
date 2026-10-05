@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { todayIn, addDaysStr } from '@/lib/course-time';
 import { computeAnalytics, headline, previousRange, type Range } from '@/lib/analytics';
 
@@ -15,7 +15,7 @@ const MAX_DAYS = 400;
 export async function GET(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (session.isStaff) return NextResponse.json({ error: 'Analytics is available to the course owner’s login.' }, { status: 403 });
+  { const denied = requirePermission(session, 'analytics.view'); if (denied) return denied; } // SP-A
 
   const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { timezone: true } });
   const today = todayIn(course?.timezone);
