@@ -266,6 +266,7 @@ export async function POST(req: NextRequest) {
         greenFeeTotal, cartFeeTotal, accessFeeTotal, totalAmount,
         bookingId: claimed.id, appliedRate: 'standard',
         cancellationHours: teeTime.course.cancellationHours,
+        confirmationNote: teeTime.course.confirmationNote,
         checkInToken: claimed.checkInToken ?? undefined,
         noCard: true,
       });

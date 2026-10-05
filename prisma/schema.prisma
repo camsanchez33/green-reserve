@@ -123,6 +123,9 @@ model Course {
   establishedYear       Int?
   logoUrl               String             @default("")
   heroImageUrl          String             @default("")
+  /// PERS-1: optional short note from the course, shown on the golfer's
+  /// confirmation page and in the confirmation email ("Check in at the pro shop").
+  confirmationNote      String?
   featured              Boolean            @default(false)
   active                Boolean            @default(false)
   liveStatus            String             @default("draft")

@@ -26,7 +26,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 ## Queue (run in this order)
 
-- [ ] PERS-1 + BIRDIE-B4 — Cam 2026-10-05 ("golfer facing pages that belong to the
+- [ ] PERS-1 (BUILT 2026-10-05 — CourseHeaderBar photo+logo on book/confirmation/check-in/manage; Course.confirmationNote migration 20261005170000, Settings field, confirmation screen + all three confirmation-email senders) + BIRDIE-B4 — Cam 2026-10-05 ("golfer facing pages that belong to the
   course can be personalized … the ai should be capable of making changes for the
   course"). Decisions (Cam picked all three recommendations):
   (a) PERS-1 personalization = REUSE what the course already uploads — hero photo,

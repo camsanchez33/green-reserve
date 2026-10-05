@@ -32,6 +32,7 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     logo_url: c.logoUrl ?? '',
     conditions: c.conditions ?? '',
     hero_image_url: c.heroImageUrl ?? '',
+    confirmation_note: c.confirmationNote ?? '',
     featured: c.featured ?? false,
     base_green_fee: startingGreenFee,
     cart_fee: 0,

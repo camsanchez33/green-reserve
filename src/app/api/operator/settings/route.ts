@@ -64,6 +64,8 @@ export async function PATCH(req: NextRequest) {
     'hasTournaments','tournamentFrequency','hasCaddies','caddieType','caddieNote',
     'amenities',
     'brandColor','establishedYear','giftCardUrl',
+    // PERS-1: the golfer-facing note on the confirmation page and email.
+    'confirmationNote',
   ];
   // SD-1: this used to copy every allow-listed key straight into the row —
   // negative hole counts, a 40KB description, a javascript: gift-card URL that

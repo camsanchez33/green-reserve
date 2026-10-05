@@ -14,6 +14,7 @@ type BookingInfo = {
   courseSlug: string;
   courseAddress: string;
   brandColor: string;
+  heroImageUrl?: string; logoUrl?: string;
   date: string;
   time: string;
   holes: number;
@@ -253,7 +254,7 @@ function ManagePageInner() {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
-          <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
+          <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
           <div className="p-8 text-center">
             <h1 className="text-[30px] font-serif leading-none text-ink mb-3">Booking cancelled</h1>
             <p className="text-ink-soft text-sm mb-6">Your spot at {info.courseName} on {fmtDate(info.date)} has been cancelled.</p>
@@ -274,7 +275,7 @@ function ManagePageInner() {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
-          <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
+          <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
           <div className="p-8 text-center">
             <h1 className="text-[30px] font-serif leading-none text-ink mb-3">Booking updated</h1>
             <p className="text-ink-soft text-sm mb-6">A confirmation email has been sent with your updated details.</p>
@@ -463,7 +464,7 @@ function ManagePageInner() {
   return (
     <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
       <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
-        <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
+        <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
         <div className="p-8">
           <h1 className="text-[30px] font-serif leading-none text-ink mb-2">
             {alreadyCancelled ? 'Booking cancelled' : alreadyCompleted ? 'Round complete' : `Hi, ${info.golferName.split(' ')[0]}`}

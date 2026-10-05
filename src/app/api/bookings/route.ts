@@ -324,6 +324,7 @@ export async function POST(req: NextRequest) {
       checkInToken: claimed.checkInToken || undefined,
       noCard: !savedPaymentMethodId,
       policyLines: describePolicy(policy).lines,
+      confirmationNote: teeTimeFull.course.confirmationNote,
     };
     await sendBookingConfirmation(emailData);
     if (teeTimeFull.course.operator?.email) {
