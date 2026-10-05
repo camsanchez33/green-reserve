@@ -3570,7 +3570,7 @@
     },
     {
       "path": "src/app/api/inquiries/route.ts",
-      "lines": 291,
+      "lines": 296,
       "purpose": "",
       "brain": [],
       "exports": [
