@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
-import { verifyOtpChallenge, verifyOtpCode } from '@/lib/golfer-otp';
+import { verifyOtpChallenge, otpCodeMatches, otpUsedKey } from '@/lib/golfer-otp';
 import { signGolferToken } from '@/lib/auth';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 
@@ -45,8 +45,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Too many attempts. Request a new code.' }, { status: 429 });
   }
 
-  const valid = await verifyOtpCode(String(code).trim(), challenge.codeHash);
+  const valid = otpCodeMatches(challenge, String(code).trim());
   if (!valid) return NextResponse.json({ error: 'Incorrect code.' }, { status: 400 });
+  // Single use: a challenge + code seen once (a shared screen, a logged
+  // request) cannot sign anyone in a second time inside its 10 minutes.
+  if (!(await rateLimit(otpUsedKey(challenge.cid), 1, 600))) {
+    return NextResponse.json({ error: 'That code was already used. Request a new one.' }, { status: 400 });
+  }
 
   const isEmail = challenge.type === 'email';
 
