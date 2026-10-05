@@ -336,11 +336,11 @@ function WizardContent() {
               )}
               {result.notesItems && result.notesItems.length > 0 && (
                 <div className="bg-warn/5 border border-warn/20 rounded-md px-4 py-3 mb-4">
-                  <div className="text-[11px] uppercase tracking-[0.1em] text-warn mb-1.5">Stored as description notes</div>
+                  <div className="text-[13px] font-semibold text-warn mb-1.5">Stored as description notes</div>
                   <ul className="text-xs text-ink-soft space-y-0.5">
                     {result.notesItems.map((n: string, i: number) => <li key={i}>• {n}</li>)}
                   </ul>
-                  <p className="text-[10px] text-ink-faint mt-1.5">Visible in Course Settings → Description.</p>
+                  <p className="text-[10px] text-ink-soft mt-1.5">Visible in Course Settings → Description.</p>
                 </div>
               )}
               {result.emailError && (
@@ -447,7 +447,7 @@ function WizardContent() {
                     className={slugInputCls}
                     placeholder="pine-brook-golf-club"
                   /></label>
-                  <p className="text-[10px] text-ink-muted mt-1">greenreserve.app/courses/{basics.slug || '...'}</p>
+                  <p className="text-[10px] text-ink-soft mt-1">greenreserve.app/courses/{basics.slug || '...'}</p>
                 </div>
                 <div>
                   <label className="block"><Eyebrow as="span" className="block mb-1.5">Address</Eyebrow>
@@ -601,7 +601,7 @@ function WizardContent() {
                         <input type="number" min="1" max="365" value={fees.memberAdvanceDays} onChange={e => setFees(f => ({ ...f, memberAdvanceDays: e.target.value }))} className={iCls + ' w-24'}/>
                         <span className="text-sm text-ink-soft">days</span>
                       </div></label>
-                      <p className="text-[10px] text-ink-muted mt-1">Public booking window defaults to 7 days.</p>
+                      <p className="text-[10px] text-ink-soft mt-1">Public booking window defaults to 7 days.</p>
                     </div>
                     <div className="space-y-3">
                       <label className="flex items-center gap-2 text-sm text-ink cursor-pointer select-none">
@@ -647,7 +647,7 @@ function WizardContent() {
             <div className="space-y-5">
               <Card className="p-6 space-y-4">
                 <Eyebrow>Operator account</Eyebrow>
-                <p className="text-xs text-ink-muted">Creates their dashboard login. They receive a welcome email with a temp password and setup link.</p>
+                <p className="text-xs text-ink-soft">Creates their dashboard login. They receive a welcome email with a temp password and setup link.</p>
                 <div>
                   <label className="block"><Eyebrow as="span" className="block mb-1.5">Full name *</Eyebrow>
                   <input value={op.contactName} onChange={e => setOp(f => ({ ...f, contactName: e.target.value }))} className={iCls} placeholder="John Smith" autoFocus/></label>
@@ -659,7 +659,7 @@ function WizardContent() {
                 <div>
                   <label className="block"><Eyebrow as="span" className="block mb-1.5">Phone *</Eyebrow>
                   <input type="tel" value={op.contactPhone} onChange={e => setOp(f => ({ ...f, contactPhone: e.target.value }))} className={iCls} placeholder="(201) 555-0100"/></label>
-                  <p className="text-[10px] text-ink-muted mt-1">Used for SMS two-factor login codes.</p>
+                  <p className="text-[10px] text-ink-soft mt-1">Used for SMS two-factor login codes.</p>
                 </div>
               </Card>
               {step4Attempted && !step4Valid && (
@@ -691,7 +691,7 @@ function WizardContent() {
                 <div className="grid grid-cols-2 gap-x-8 gap-y-3">
                   {reviewCourseRows.map(([label, val]) => (
                     <div key={label}>
-                      <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-0.5">{label}</div>
+                      <div className="text-[13px] font-semibold text-ink mb-0.5">{label}</div>
                       <div className="text-ink font-medium text-sm break-all">{val}</div>
                     </div>
                   ))}
@@ -702,7 +702,7 @@ function WizardContent() {
                   <div className="grid grid-cols-2 gap-x-8 gap-y-2">
                     {reviewFeeRows.map(([label, val]) => (
                       <div key={label}>
-                        <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-0.5">{label}</div>
+                        <div className="text-[13px] font-semibold text-ink mb-0.5">{label}</div>
                         <div className="text-ink text-sm">{val}</div>
                       </div>
                     ))}
@@ -714,7 +714,7 @@ function WizardContent() {
                   <div className="grid grid-cols-3 gap-4">
                     {([['Name', op.contactName], ['Email', op.contactEmail], ['Phone', op.contactPhone]] as [string, string][]).map(([label, val]) => (
                       <div key={label}>
-                        <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-0.5">{label}</div>
+                        <div className="text-[13px] font-semibold text-ink mb-0.5">{label}</div>
                         <div className="text-ink font-medium text-sm break-all">{val}</div>
                       </div>
                     ))}

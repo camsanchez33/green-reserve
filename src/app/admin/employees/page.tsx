@@ -217,7 +217,7 @@ export default function EmployeesPage() {
             <div className="grid grid-cols-2 gap-2">
               {ROLES.map(r => (
                 <div key={r.value} className="flex items-start gap-2">
-                  <span className={`text-[10px] uppercase tracking-[0.1em] shrink-0 ${roleTextClass(r.value)}`}>{r.label}</span>
+                  <span className={`text-[12.5px] font-semibold shrink-0 ${roleTextClass(r.value)}`}>{r.label}</span>
                   <span className="text-xs text-ink-muted">{r.desc}</span>
                 </div>
               ))}
@@ -300,7 +300,7 @@ export default function EmployeesPage() {
                             {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                           </select>
                         ) : (
-                          <span className={`text-[11px] uppercase tracking-[0.1em] ${roleTextClass(admin.role)}`}>
+                          <span className={`text-[12.5px] font-semibold ${roleTextClass(admin.role)}`}>
                             {ROLES.find(r => r.value === admin.role)?.label || admin.role}
                           </span>
                         )}

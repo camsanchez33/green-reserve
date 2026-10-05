@@ -239,14 +239,14 @@ export default function AdminSystemPage() {
                     {p.publicUrl && <div><span className="text-ink-muted">Public URL</span><div className="text-ink font-medium truncate">{p.publicUrl}</div></div>}
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Integrations with keys set</div>
+                    <div className="text-[13px] font-semibold text-ink mb-1.5">Integrations with keys set</div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1.5">
                       {integrations.map(([name, ok]) => <StatusDot key={name} status={ok ? 'ok' : 'bad'} label={name} />)}
                     </div>
                   </div>
                   {isOwner && (
                     <div className="pt-3 border-t border-line-soft">
-                      <div className="text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1.5">Platform Stripe balance</div>
+                      <div className="text-[13px] font-semibold text-ink mb-1.5">Platform Stripe balance</div>
                       {stripe ? (
                         <div className="flex items-center gap-6 text-sm">
                           <div><span className="text-ink-muted">Available</span> <span className="text-ink font-medium tabular-nums">{fmtMoney(stripe.balance.available)}</span></div>
@@ -256,7 +256,7 @@ export default function AdminSystemPage() {
                       ) : stripeNote ? (
                         <p className="text-xs text-warn">{stripeNote}</p>
                       ) : (
-                        <p className="text-xs text-ink-faint">Loading…</p>
+                        <p className="text-xs text-ink-soft">Loading…</p>
                       )}
                     </div>
                   )}
@@ -268,7 +268,7 @@ export default function AdminSystemPage() {
                     <p className="text-[11px] text-ink-faint">Set <code className="font-mono">ADMIN_VERCEL_PROJECT_URL</code> in Vercel env to make that link land on this project — Vercel does not expose the team slug to the app.</p>
                   )}
                 </div>
-              ) : !loadError && <p className="text-sm text-ink-muted">Loading…</p>}
+              ) : !loadError && <p className="text-sm text-ink-soft">Loading…</p>}
             </SystemCard>
 
             {/* MP-8b: each job's last recorded run. Red = failed, never finished, or overdue. */}
@@ -298,7 +298,7 @@ export default function AdminSystemPage() {
                 </div>
               )}
               {/* Review 2026-10-04: loading and failure are not "all fine". */}
-              {!data && <p className="text-sm text-ink-muted mb-2">{loadError ? 'Couldn’t load cron runs — see the error at the top of the page.' : 'Loading…'}</p>}
+              {!data && <p className="text-sm text-ink-soft mb-2">{loadError ? 'Couldn’t load cron runs — see the error at the top of the page.' : 'Loading…'}</p>}
               {data && <OutLink href={data.links.vercel} deep={data.links.vercelIsDeep}>Open Vercel logs</OutLink>}
             </SystemCard>
 
@@ -329,9 +329,9 @@ export default function AdminSystemPage() {
                   )}
                 </div>
               ) : loadError ? (
-                <p className="text-sm text-ink-muted">Could not read the booking setup — the system status above says why.</p>
+                <p className="text-sm text-ink-soft">Could not read the booking setup — the system status above says why.</p>
               ) : (
-                <p className="text-sm text-ink-muted">Loading…</p>
+                <p className="text-sm text-ink-soft">Loading…</p>
               )}
             </SystemCard>
 
@@ -358,9 +358,9 @@ export default function AdminSystemPage() {
                   </div>
                 </div>
               ) : loadError ? (
-                <p className="text-sm text-ink-muted">Could not read Birdie's state — the system status above says why.</p>
+                <p className="text-sm text-ink-soft">Could not read Birdie's state — the system status above says why.</p>
               ) : (
-                <p className="text-sm text-ink-muted">Loading…</p>
+                <p className="text-sm text-ink-soft">Loading…</p>
               )}
             </SystemCard>
 
@@ -382,8 +382,8 @@ export default function AdminSystemPage() {
               <p className="text-sm text-ink-soft mb-3">
                 Every course should trace back to the inquiry it came from, and every accepted inquiry to a course. This finds the ones that do not — read-only until you act.
               </p>
-              {!orphanChecked && <p className="text-xs text-ink-faint">Not run yet this visit.</p>}
-              {orphanNote && <p className="text-xs text-ink-muted">{orphanNote}</p>}
+              {!orphanChecked && <p className="text-xs text-ink-soft">Not run yet this visit.</p>}
+              {orphanNote && <p className="text-xs text-ink-soft">{orphanNote}</p>}
               {orphanChecked && !orphanNote && orphanItems.length === 0 && orphanAcknowledged.length === 0 && (
                 <div className="flex items-center gap-2"><StatusDot status="ok" label="No orphaned records" /></div>
               )}
@@ -502,13 +502,13 @@ export default function AdminSystemPage() {
         <Modal title={`Permanently delete "${forceDeleteTarget.name}"?`}
           titleNode={<div className="text-sm font-medium text-ink mb-1">Permanently delete &quot;{forceDeleteTarget.name}&quot;?</div>}
           onClose={() => { setForceDeleteTarget(null); setForceDeleteConfirm(''); setForceDeleteError(''); }}>
-            <p className="text-xs text-ink-muted mb-3">
+            <p className="text-xs text-ink-soft mb-3">
               This cannot be undone — deletes the course, its bookings, tee times, and staff, and the operator&apos;s login if this was their only course. Owner-authorized override: this bypasses the usual archive-only rule because this course is an acknowledged orphan with no real history behind the doctrine&apos;s protection.
             </p>
             {forceDeleteError && (
               <div className="text-xs text-bad mb-2">{forceDeleteError}</div>
             )}
-            <label className="block"><span className="block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1">Type &quot;{forceDeleteTarget.name}&quot; to confirm</span>
+            <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1">Type &quot;{forceDeleteTarget.name}&quot; to confirm</span>
             <input
               value={forceDeleteConfirm}
               onChange={e => setForceDeleteConfirm(e.target.value)}

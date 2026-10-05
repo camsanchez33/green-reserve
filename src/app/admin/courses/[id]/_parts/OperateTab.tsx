@@ -158,7 +158,7 @@ export function OperateTab() {
                   <div className="space-y-2">
                     {schedules.map(s => editSched?.id === s.id ? (
                       <div key={s.id} className="bg-paper border border-pine/30 rounded-md p-4 space-y-3">
-                        <div className="text-[11px] uppercase tracking-[0.1em] text-pine">Editing schedule</div>
+                        <div className="text-[13px] font-semibold text-pine">Editing schedule</div>
                         <ScheduleFields products={(detail?.layout?.products ?? []).filter(p => p.active)}
                           value={editSched.form}
                           onChange={p => setEditSched(e => e ? { ...e, form: { ...e.form, ...p } } : e)}
@@ -215,7 +215,7 @@ export function OperateTab() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-ink-muted bg-paper rounded-md p-4 border border-line">
+                  <p className="text-sm text-ink-soft bg-paper rounded-md p-4 border border-line">
                     No schedule yet — add one to make this course bookable.
                   </p>
                 )}
@@ -263,7 +263,7 @@ export function OperateTab() {
                 )}
                 {!membersLoading && !membersError && membersData && (
                   membersData.tiers.length === 0 && membersData.members.length === 0 ? (
-                    <p className="text-sm text-ink-muted mt-2">No membership programme set up.</p>
+                    <p className="text-sm text-ink-soft mt-2">No membership programme set up.</p>
                   ) : (
                     <div className="space-y-4 mt-3">
                       {membersData.tiers.length > 0 && (
@@ -284,7 +284,7 @@ export function OperateTab() {
                           {membersData.members.length} member{membersData.members.length === 1 ? '' : 's'}
                         </Eyebrow>
                         {membersData.members.length === 0 ? (
-                          <p className="text-sm text-ink-muted">No members yet.</p>
+                          <p className="text-sm text-ink-soft">No members yet.</p>
                         ) : (
                           <div className="border border-line rounded-md divide-y divide-line-soft">
                             {membersData.members.map(m => {

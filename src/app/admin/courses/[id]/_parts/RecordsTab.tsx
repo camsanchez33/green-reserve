@@ -40,7 +40,7 @@ export function RecordsTab() {
                             {(docsData.acceptances ?? []).map(a => (
                               <div key={a.id} className="grid grid-cols-[1.3fr_1.2fr_auto] gap-3 px-3 py-2 items-center">
                                 <div className="min-w-0">
-                                  <div className="text-xs text-ink truncate">{a.title} <span className="text-ink-faint">v{a.version}</span>{a.legacy && <span className="ml-1.5 text-[9px] font-medium uppercase tracking-[0.1em] bg-line-soft text-ink-muted px-1.5 py-0.5">Legacy</span>}</div>
+                                  <div className="text-xs text-ink truncate">{a.title} <span className="text-ink-faint">v{a.version}</span>{a.legacy && <span className="ml-1.5 text-[11px] font-medium bg-line-soft text-ink-muted px-1.5 py-0.5">Legacy</span>}</div>
                                   <div className="text-[11px] text-ink-faint truncate">{a.signerName ? `${a.signerName}${a.signerTitle ? ', ' + a.signerTitle : ''}` : a.signerEmail || 'no signer recorded'}</div>
                                 </div>
                                 <div className="min-w-0">
@@ -105,7 +105,7 @@ export function RecordsTab() {
                       </label>
                     </div>
                     {docsData.documents.length === 0 ? (
-                      <p className="text-sm text-ink-muted">No documents uploaded yet.</p>
+                      <p className="text-sm text-ink-soft">No documents uploaded yet.</p>
                     ) : (
                       <div className="divide-y divide-line-soft">
                         {docsData.documents.map((doc, i) => (
@@ -141,7 +141,7 @@ export function RecordsTab() {
                       </button>
                     </div>
                     {docsData.notes.length === 0 ? (
-                      <p className="text-sm text-ink-muted">No notes yet.</p>
+                      <p className="text-sm text-ink-soft">No notes yet.</p>
                     ) : (
                       <div className="space-y-3">
                         {docsData.notes.map((n, i) => (

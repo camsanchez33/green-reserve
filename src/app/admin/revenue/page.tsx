@@ -305,7 +305,7 @@ export default function RevenuePage() {
   function SortHead({ col, label, right }: { col: SortKey; label: string; right?: boolean }) {
     const Icon = sortKey !== col ? ChevronUp : sortDir === 'asc' ? ChevronUp : ChevronDown;
     return (
-      <button onClick={() => toggleSort(col)} className={`flex items-center gap-1 text-[11px] uppercase tracking-[0.1em] text-ink-muted hover:text-ink transition-colors ${right ? 'ml-auto' : ''}`}>
+      <button onClick={() => toggleSort(col)} className={`flex items-center gap-1 text-[13px] font-semibold text-ink hover:text-ink transition-colors ${right ? 'ml-auto' : ''}`}>
         {label}<Icon className={'w-3 h-3 ' + (sortKey === col ? 'text-pine' : 'opacity-20')}/>
       </button>
     );
@@ -334,7 +334,6 @@ export default function RevenuePage() {
           {/* Header + one period picker that rules the whole page */}
           <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
             <div>
-              <Eyebrow as="p" className="mb-1">Admin</Eyebrow>
               <h1 className="text-[30px] leading-none font-serif font-medium text-ink">Revenue</h1>
               {/* U-A (UI_REVISE_SPEC §3): say whose money this page counts. Courses
                   collect their green fees on their own Stripe accounts; none of that is on this page. */}
@@ -399,7 +398,7 @@ export default function RevenuePage() {
                     {hasProblems ? 'Money problems' : 'No money problems'}
                   </span>
                 </div>
-                <span className="text-[10px] uppercase tracking-[0.1em] text-ink-faint">All time · not filtered by period</span>
+                <span className="text-[13px] font-semibold text-ink">All time · not filtered by period</span>
               </div>
 
               {/* Reconciliation (owner): collected vs what Stripe shows. Same
@@ -493,7 +492,7 @@ export default function RevenuePage() {
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-ink-muted mt-3">Retry collects payment on the saved card. It does not check the golfer in. A hard decline needs a new card or in-person payment.</p>
+                  <p className="text-xs text-ink-soft mt-3">Retry collects payment on the saved card. It does not check the golfer in. A hard decline needs a new card or in-person payment.</p>
                 </div>
               )}
 
@@ -526,13 +525,13 @@ export default function RevenuePage() {
                     ))}
                   </div>
                   {data.problems.missedTotal > 25 && (
-                    <p className="text-[11px] text-ink-faint mt-2">Showing the 25 most recent of {data.problems.missedTotal}.</p>
+                    <p className="text-[11px] text-ink-soft mt-2">Showing the 25 most recent of {data.problems.missedTotal}.</p>
                   )}
                 </div>
               )}
 
               {!hasProblems && (
-                <p className="text-xs text-ink-muted mt-1">Every charge attempted has gone through, every past tee time was checked in{isOwner && recon ? ', and the period reconciles with Stripe' : ''}.</p>
+                <p className="text-xs text-ink-soft mt-1">Every charge attempted has gone through, every past tee time was checked in{isOwner && recon ? ', and the period reconciles with Stripe' : ''}.</p>
               )}
             </div>
           )}
@@ -600,7 +599,7 @@ export default function RevenuePage() {
             <Card className="p-5 mb-6">
               <div className="flex items-center justify-between gap-3 mb-1">
                 <Eyebrow as="span">Money in motion</Eyebrow>
-                <span className="text-[10px] uppercase tracking-[0.1em] text-ink-faint">Expected · not booked revenue</span>
+                <span className="text-[13px] font-semibold text-ink">Expected · not booked revenue</span>
               </div>
 
               {/* Upcoming check-ins with today/tomorrow toggle */}
@@ -617,7 +616,7 @@ export default function RevenuePage() {
                 </div>
               </div>
               {upcoming.length === 0 ? (
-                <p className="text-xs text-ink-muted py-2">No check-ins scheduled for {motionDay}.</p>
+                <p className="text-xs text-ink-soft py-2">No check-ins scheduled for {motionDay}.</p>
               ) : (
                 <div className="divide-y divide-line-soft">
                   {upcoming.map(u => (
@@ -641,7 +640,7 @@ export default function RevenuePage() {
                 <div className="mt-5 pt-4 border-t border-line-soft">
                   <div className="flex items-center justify-between gap-3 mb-2">
                     <span className="text-sm font-medium text-ink">Late-cancellation fees</span>
-                    <span className="text-[10px] uppercase tracking-[0.1em] text-ink-faint">Course revenue · GR takes $0</span>
+                    <span className="text-[13px] font-semibold text-ink">Course revenue · GR takes $0</span>
                   </div>
                   <div className="divide-y divide-line-soft">
                     {motion!.lateCancelFees.map(f => (
@@ -784,7 +783,7 @@ export default function RevenuePage() {
                       <span className="text-[11px] text-ink-faint">{fmtMoney(platform.paidOutRecent)} paid out, last {platform.payouts.length}</span>
                     </div>
                     {platform.payouts.length === 0 ? (
-                      <p className="text-sm text-ink-muted">No payouts yet.</p>
+                      <p className="text-sm text-ink-soft">No payouts yet.</p>
                     ) : (
                       <div className="border border-line rounded-md divide-y divide-line-soft">
                         {platform.payouts.map(p => (
@@ -803,14 +802,14 @@ export default function RevenuePage() {
                   <div>
                     <Eyebrow className="mb-2">Unit economics · last {platform.period}</Eyebrow>
                     {platform.unitEconomics.charges === 0 ? (
-                      <p className="text-sm text-ink-muted">No fees collected in this period yet.</p>
+                      <p className="text-sm text-ink-soft">No fees collected in this period yet.</p>
                     ) : (
                       <div className="space-y-1.5 text-sm">
                         <div className="flex justify-between"><span className="text-ink-muted">Fees collected</span><span className="text-ink tabular-nums">{platform.unitEconomics.charges} charge{platform.unitEconomics.charges === 1 ? '' : 's'}{platform.unitEconomics.avgPlayersPerRound !== null ? ` · ${platform.unitEconomics.avgPlayersPerRound.toFixed(1)} players/round` : ''}</span></div>
                         <div className="flex justify-between"><span className="text-ink-muted">Average fee per charge</span><span className="text-ink tabular-nums">{fmtMoney(platform.unitEconomics.grossFeePerCharge)}</span></div>
                         <div className="flex justify-between"><span className="text-ink-muted">Stripe&apos;s cut per charge</span><span className="text-bad tabular-nums">−{fmtMoney(platform.unitEconomics.stripeCostPerCharge)}</span></div>
                         <div className="flex justify-between border-t border-line pt-1.5"><span className="text-ink font-medium">Net per charge</span><span className="text-ink font-medium tabular-nums">{fmtMoney(platform.unitEconomics.netFeePerCharge)}{platform.unitEconomics.takeRate !== null ? <span className="text-ink-muted font-normal"> · {(platform.unitEconomics.takeRate * 100).toFixed(0)}% kept</span> : null}</span></div>
-                        <p className="text-[11px] text-ink-faint pt-1">Stripe takes a fixed amount plus a percentage of each fee, so a single-player round nets far less than a foursome. Period total: {fmtMoney(platform.unitEconomics.netTotal)} net of {fmtMoney(platform.unitEconomics.stripeCostTotal)} in Stripe costs.</p>
+                        <p className="text-[11px] text-ink-soft pt-1">Stripe takes a fixed amount plus a percentage of each fee, so a single-player round nets far less than a foursome. Period total: {fmtMoney(platform.unitEconomics.netTotal)} net of {fmtMoney(platform.unitEconomics.stripeCostTotal)} in Stripe costs.</p>
                       </div>
                     )}
                   </div>

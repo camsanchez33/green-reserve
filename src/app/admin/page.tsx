@@ -389,7 +389,7 @@ export default function AdminOverviewPage() {
                 <div className="space-y-5">
                   {stats.actionQueue.redCount > 0 && (
                     <div>
-                      <div className="text-[10px] uppercase tracking-[0.1em] text-bad font-medium mb-2">Money Broken ({stats.actionQueue.redCount})</div>
+                      <div className="text-[13px] font-semibold text-bad mb-2">Money broken ({stats.actionQueue.redCount})</div>
                       <div className="space-y-1.5">
                         {stats.actionQueue.red.map(row => (
                           <QueueRow key={row.id} row={row} severity="bad" router={router}
@@ -406,7 +406,7 @@ export default function AdminOverviewPage() {
                   )}
                   {stats.actionQueue.amberCount > 0 && (
                     <div>
-                      <div className="text-[10px] uppercase tracking-[0.1em] text-warn font-medium mb-2">Stalled ({stats.actionQueue.amberCount})</div>
+                      <div className="text-[13px] font-semibold text-warn mb-2">Stalled ({stats.actionQueue.amberCount})</div>
                       <div className="space-y-1.5">
                         {stats.actionQueue.amber.map(row => (
                           <QueueRow key={row.id} row={row} severity="warn" router={router}

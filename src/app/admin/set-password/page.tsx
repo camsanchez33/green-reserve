@@ -116,7 +116,7 @@ function SetPasswordForm() {
             className={iCls}
             placeholder="Min. 10 characters"
           /></label>
-          <p className="text-xs text-ink-faint mt-1.5">{PASSWORD_REQUIREMENTS_HINT}</p>
+          <p className="text-xs text-ink-soft mt-1.5">{PASSWORD_REQUIREMENTS_HINT}</p>
         </div>
         <div>
           <label className="block"><Eyebrow as="span" className="block mb-1.5">Confirm password</Eyebrow>

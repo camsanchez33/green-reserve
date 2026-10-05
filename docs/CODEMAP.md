@@ -60,14 +60,14 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/create` | admin | client-side | page | `src/app/admin/create/page.tsx` | 760 |
 | `/admin/employees` | admin | client-side | page | `src/app/admin/employees/page.tsx` | 406 |
 | `/admin/forgot-password` | admin | client-side | page | `src/app/admin/forgot-password/page.tsx` | 70 |
-| `/admin/golfers` | admin | client-side | page | `src/app/admin/golfers/page.tsx` | 464 |
+| `/admin/golfers` | admin | client-side | page | `src/app/admin/golfers/page.tsx` | 463 |
 | `/admin/inquiries` | admin | client-side | page | `src/app/admin/inquiries/page.tsx` | 990 |
 | `/admin/inquiries/[id]` | admin | client-side | page | `src/app/admin/inquiries/[id]/page.tsx` | 2266 |
 | `/admin/login` | admin | client-side | page | `src/app/admin/login/page.tsx` | 154 |
 | `/admin/messages` | admin | client-side | page | `src/app/admin/messages/page.tsx` | 696 |
 | `/admin/owner-login` | admin | client-side | page | `src/app/admin/owner-login/page.tsx` | 147 |
 | `/admin/profile` | admin | client-side | page | `src/app/admin/profile/page.tsx` | 130 |
-| `/admin/revenue` | admin | client-side | page | `src/app/admin/revenue/page.tsx` | 910 |
+| `/admin/revenue` | admin | client-side | page | `src/app/admin/revenue/page.tsx` | 909 |
 | `/admin/set-password` | admin | client-side | page | `src/app/admin/set-password/page.tsx` | 159 |
 | `/admin/system` | admin | client-side | page | `src/app/admin/system/page.tsx` | 537 |
 | `/api/admin/activity` | admin | file | GET | `src/app/api/admin/activity/route.ts` | 145 |

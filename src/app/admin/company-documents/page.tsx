@@ -118,7 +118,7 @@ export default function CompanyDocumentsPage() {
           {loadError ? (
             <LoadFailure message={loadError.msg} kind={loadError.kind} onRetry={load} compact />
           ) : docs === null ? (
-            <p className="text-sm text-ink-muted">Loading documents…</p>
+            <p className="text-sm text-ink-soft">Loading documents…</p>
           ) : docs.length === 0 ? (
             <Card className="p-6 text-center">
               <p className="text-sm text-ink-soft">No company documents yet. Add the LLC filing first: choose Formation, then the PDF.</p>

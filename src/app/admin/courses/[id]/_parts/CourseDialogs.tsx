@@ -44,11 +44,11 @@ export function CourseDialogs() {
                   <div className="flex justify-between"><span className="text-warn">Already took money</span><span className="text-warn font-medium">{impact.withMoney}</span></div>
                 )}
               </div>
-              <p className="text-xs text-ink-muted mb-1">
+              <p className="text-xs text-ink-soft mb-1">
                 Continuing cancels {impact.bookings === 1 ? 'it' : 'them all'} and emails {impact.golfers === 1 ? 'the golfer' : 'each golfer'} to explain why.
                 {impact.withMoney > 0 && ' Anything already charged is refunded.'}
               </p>
-              <p className="text-xs text-ink-muted mb-4">
+              <p className="text-xs text-ink-soft mb-4">
                 Golfers watching for an opening at these times are deliberately NOT told — the course is closing, not freeing up.
               </p>
               {closureError && <p className="text-xs text-bad mb-3">{closureError}</p>}

@@ -58,7 +58,7 @@ type Props = {
 
 const H = { 'Content-Type': 'application/json' };
 const iCls = `${INPUT_COMPACT} w-full`;
-const lbl = 'block text-[10px] uppercase tracking-[0.1em] text-ink-muted mb-1';
+const lbl = 'block text-[13px] font-semibold text-ink mb-1';
 const btnP = 'bg-pine hover:bg-pine-hover disabled:opacity-50 text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
 const btnO = 'bg-paper hover:bg-line border border-line text-ink disabled:opacity-50 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
 const LENGTHS = [15, 30, 45, 60];
@@ -288,7 +288,7 @@ function SetupCard({ inquiry, sheet, needs, calls, disabled, busy, setBusy, setE
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
           <div className="flex items-center gap-2 text-sm font-medium text-ink"><Phone className="w-4 h-4 text-pine" />Set up the call</div>
-          <p className="text-xs text-ink-muted mt-0.5">Required before the draft course is built — you can send the setup sheet before or after.</p>
+          <p className="text-xs text-ink-soft mt-0.5">Required before the draft course is built — you can send the setup sheet before or after.</p>
         </div>
       </div>
 
@@ -539,7 +539,7 @@ function LogCard({ call, inquiry, calls, sheet, needs, disabled, busy, setBusy, 
             <Phone className={'w-4 h-4 ' + (overdue ? 'text-warn' : 'text-pine')} />
             {open ? 'Log the call' : 'Call set up'}
           </div>
-          <p className="text-xs text-ink-muted mt-0.5">{header}{overdue ? ' · went by without a log' : ''}</p>
+          <p className="text-xs text-ink-soft mt-0.5">{header}{overdue ? ' · went by without a log' : ''}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {!open && <button onClick={onForceOpen} className="text-xs font-medium text-pine hover:underline">Log it now</button>}
@@ -713,7 +713,7 @@ function CallGuide({ inquiry, answers, setItem, notes, setNotes, draftState, onR
       {/* CG-2 (Cam, after the first live send): anything they mention is noted
           here and arrives pre-filled on their sheet — they confirm or fix it. */}
       <div className="border border-line rounded-md px-3 py-2.5 mb-3">
-        <span className={lbl}>Details they mentioned <span className="normal-case tracking-normal text-ink-faint">— pre-fills their sheet; leave blank what didn&apos;t come up</span></span>
+        <span className={lbl}>Details they mentioned <span className="font-normal text-ink-muted">— pre-fills their sheet; leave blank what didn&apos;t come up</span></span>
         <div className="grid sm:grid-cols-3 gap-x-3 gap-y-2.5 mt-1">
           {DETAIL_FIELDS.filter(([item]) => item !== 'cancellation' || get('shape', 'cancelFee') === true).map(([item, key, wide]) => {
             const spec = (CALL_FIELDS[item] ?? []).find(f => f.key === key);
@@ -739,7 +739,7 @@ function CallGuide({ inquiry, answers, setItem, notes, setNotes, draftState, onR
         </div>
       </div>
 
-      <label className="block"><span className={lbl}>Notes <span className="normal-case tracking-normal text-ink-faint">— private, never sent</span></span>
+      <label className="block"><span className={lbl}>Notes <span className="font-normal text-ink-muted">— private, never sent</span></span>
         <textarea rows={3} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Anything worth remembering — pain points, questions, what they liked" className={iCls + ' mb-3'} disabled={disabled} /></label>
 
       {preview && (
@@ -747,8 +747,8 @@ function CallGuide({ inquiry, answers, setItem, notes, setNotes, draftState, onR
           <span className={lbl}>{contactFirst} gets this recap, their setup link, the next steps and the fee model</span>
           {recap.length ? (
             <ul className="list-disc pl-5 text-[12.5px] text-ink space-y-0.5">{recap.map(l => <li key={l}>{l}</li>)}</ul>
-          ) : <p className="text-[12.5px] text-ink-muted">Nothing tapped yet — they&apos;ll get the link and next steps without a recap.</p>}
-          <p className="text-[11px] text-ink-faint mt-1.5">Their sheet only asks the sections these answers call for, pre-filled.</p>
+          ) : <p className="text-[12.5px] text-ink-soft">Nothing tapped yet — they&apos;ll get the link and next steps without a recap.</p>}
+          <p className="text-[11px] text-ink-soft mt-1.5">Their sheet only asks the sections these answers call for, pre-filled.</p>
         </div>
       )}
 

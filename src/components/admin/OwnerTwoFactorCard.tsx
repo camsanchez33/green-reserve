@@ -76,7 +76,7 @@ export default function OwnerTwoFactorCard({ mfaSession }: { mfaSession: boolean
         <ShieldCheck className="w-4 h-4 text-pine" />
         <span className="text-sm font-medium text-ink">Two-factor authentication</span>
       </div>
-      <p className="text-xs text-ink-muted mb-4">An authenticator app on your phone replaces the emailed code. Once set up, the owner login requires it — holding the inbox is no longer enough.</p>
+      <p className="text-xs text-ink-soft mb-4">An authenticator app on your phone replaces the emailed code. Once set up, the owner login requires it — holding the inbox is no longer enough.</p>
 
       {!mfaSession && (
         <p className="text-sm text-ink-soft">Sign in through the <a href="/admin/owner-login" className="text-pine underline">owner login</a> (with 2FA) to manage this.</p>
@@ -84,7 +84,7 @@ export default function OwnerTwoFactorCard({ mfaSession }: { mfaSession: boolean
       {mfaSession && loadError && (
         <div className="bg-bad/5 border border-bad/20 rounded-md px-3 py-2 text-bad text-sm flex items-center justify-between gap-3">{loadError}<button onClick={load} className="text-xs underline">Retry</button></div>
       )}
-      {mfaSession && !loadError && !status && <p className="text-xs text-ink-faint">Loading…</p>}
+      {mfaSession && !loadError && !status && <p className="text-xs text-ink-soft">Loading…</p>}
 
       {status && !setup && !codes && (
         <div>
@@ -113,7 +113,7 @@ export default function OwnerTwoFactorCard({ mfaSession }: { mfaSession: boolean
               </div>
               <button onClick={regenerate} disabled={busy || code.length < 6} className={btnP}>{busy ? 'Working…' : 'Replace all ten'}</button>
               <button onClick={() => setRegenOpen(false)} className="text-xs text-ink-muted hover:text-ink px-1 py-2">Cancel</button>
-              <p className="w-full text-[11px] text-ink-faint">The ten codes you have now stop working the moment new ones are issued.</p>
+              <p className="w-full text-[11px] text-ink-soft">The ten codes you have now stop working the moment new ones are issued.</p>
             </div>
           )}
         </div>
@@ -133,7 +133,7 @@ export default function OwnerTwoFactorCard({ mfaSession }: { mfaSession: boolean
                 <button onClick={confirm} disabled={busy || code.length < 6} className={btnP}>{busy ? 'Checking…' : 'Confirm'}</button>
                 <button onClick={() => { setSetup(null); setCode(''); setError(''); }} disabled={busy} className="text-xs text-ink-muted hover:text-ink px-1 py-2">Cancel</button>
               </div>
-              <p className="text-[11px] text-ink-faint mt-2">Nothing is saved until a code matches — an unverified secret would lock you out.</p>
+              <p className="text-[11px] text-ink-soft mt-2">Nothing is saved until a code matches — an unverified secret would lock you out.</p>
               {error && <div className="bg-bad/5 border border-bad/20 rounded-md px-3 py-2 text-bad text-sm mt-3">{error}</div>}
             </div>
           </div>
