@@ -17,6 +17,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
+import { hashOtpCode, signOtpChallenge } from '../src/lib/golfer-otp';
 
 const BASE_URL = process.env.TEST_URL || 'http://localhost:3000';
 const prisma = new PrismaClient();
@@ -78,11 +79,18 @@ async function loginOp(email: string, password: string): Promise<string> {
   return getCookie(verifyRes);
 }
 
-async function loginGolfer(email: string, password: string): Promise<string> {
-  const res = await fetch(`${BASE_URL}/api/golfer/auth/login`, {
+// Golfer sign-in is one-time-code only (the password route is gone). The code
+// is only ever emailed/texted, so the script signs the same challenge
+// /api/golfer/auth/otp/request would (same JWT_SECRET as the server) and then
+// goes through the real verify route.
+const GOLFER_TEST_CODE = '424242';
+
+async function loginGolfer(email: string): Promise<string> {
+  const challengeToken = await signOtpChallenge(email, 'email', await hashOtpCode(GOLFER_TEST_CODE));
+  const res = await fetch(`${BASE_URL}/api/golfer/auth/otp/verify`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ challengeToken, code: GOLFER_TEST_CODE }),
   });
   return getCookie(res);
 }
@@ -241,9 +249,19 @@ async function main() {
 
   const cookieA = await loginOp(`${TS}-opa@test.local`, PASS);
   const cookieB = await loginOp(`${TS}-opb@test.local`, PASS);
-  const golferCookieA = await loginGolfer(`${TS}-golfera@test.local`, PASS);
-  const golferCookieB = await loginGolfer(`${TS}-golferb@test.local`, PASS);
+  const golferCookieA = await loginGolfer(`${TS}-golfera@test.local`);
+  const golferCookieB = await loginGolfer(`${TS}-golferb@test.local`);
   const viewerCookie = await loginAdmin(`${TS}-viewer@test.local`, PASS);
+
+  // An empty cookie turns every check below into a logged-out request, which
+  // "passes" the deny cases for the wrong reason. Refuse to run that way.
+  const logins = { cookieA, cookieB, golferCookieA, golferCookieB, viewerCookie };
+  const empty = Object.entries(logins).filter(([, c]) => !c.includes('=') || c.endsWith('='));
+  if (empty.length) {
+    console.error(`\n❌ Login failed for: ${empty.map(([k]) => k).join(', ')} — the test cannot prove isolation without real sessions.`);
+    await cleanup(data);
+    process.exit(1);
+  }
 
   console.log('\n── Auth guard: no credentials ────────────────────────────────────');
   {
@@ -411,8 +429,10 @@ async function main() {
     checkStatus('Golfer B (non-member) member-session on Course A → 401', r.status, 401);
   }
   {
-    // Member tee-times endpoint mirrors the same cross-course guarantee.
-    const dateStr = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    // Member tee-times endpoint mirrors the same cross-course guarantee. The
+    // date must sit inside the member booking window (default 14 days) or the
+    // route answers 403 "outside window" before isolation is even tested.
+    const dateStr = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const rA = await api(`/api/member/${courseA.slug}/tee-times?date=${dateStr}`, { cookie: golferCookieA });
     checkStatus('Golfer A member tee-times on Course A → 200', rA.status, 200);
     const rB = await api(`/api/member/${courseB.slug}/tee-times?date=${dateStr}`, { cookie: golferCookieA });

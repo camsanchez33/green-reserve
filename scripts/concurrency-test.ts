@@ -55,13 +55,17 @@ async function main() {
       active: true,
       timezone: 'America/Los_Angeles',
       cancellationHours: 24,
+      // No fees → cardRequired() is false → the no-card path, no Stripe needed.
+      lateCancellationFeeCents: 0,
+      noShowFeeCents: 0,
     },
-    update: { active: true, liveStatus: 'live' },
+    update: { active: true, liveStatus: 'live', lateCancellationFeeCents: 0, noShowFeeCents: 0 },
   });
 
-  // One tee time slot with 4-player capacity (far future to avoid PAST rejection)
+  // One tee time slot with 4-player capacity, 3 days out: past the PAST check
+  // and inside the default 7-day public booking window (else every request 403s).
   const futureDate = new Date();
-  futureDate.setDate(futureDate.getDate() + 30);
+  futureDate.setDate(futureDate.getDate() + 3);
   const dateStr = futureDate.toISOString().split('T')[0];
 
   // Remove any existing test tee time for idempotency
@@ -97,6 +101,7 @@ async function main() {
         golferName: `Test Golfer ${i + 1}`,
         golferEmail: `golfer${i + 1}@test.greenreserve.local`,
         golferPhone: '5550000000',
+        termsAccepted: true,
         // No paymentMethodId/customerId → no-card flow (course has no Stripe)
       }),
     }).then(async (res) => {
