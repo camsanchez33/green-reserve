@@ -1,15 +1,26 @@
 {
-  "generatedAt": "2026-10-05T20:14:06.860Z",
+  "generatedAt": "2026-10-05T23:15:32.694Z",
   "repo": {
-    "head": "189dc3b",
+    "head": "ce494cc",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 0,
-    "dirty": [],
+    "dirtyCount": 2,
+    "dirty": [
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json"
+    ],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
-    "unrecorded": []
+    "unrecorded": [
+      {
+        "h": "475ff29",
+        "date": "2026-10-05T23:14:40+00:00",
+        "subject": "DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)",
+        "ids": [],
+        "matches": []
+      }
+    ]
   },
   "counts": {
     "runDone": 238,
@@ -711,6 +722,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "ce494cc",
+      "date": "2026-10-05",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "475ff29",
+      "date": "2026-10-05",
+      "subject": "DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)"
+    },
+    {
+      "h": "5007cb9",
+      "date": "2026-10-05",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "189dc3b",
       "date": "2026-10-05",
       "subject": "queue/spec update"
@@ -754,21 +780,6 @@
       "h": "dd0c049",
       "date": "2026-10-05",
       "subject": "CLUB-4a: admin pages without decorative icons"
-    },
-    {
-      "h": "56cdf9c",
-      "date": "2026-10-05",
-      "subject": "CLUB-3c: the rest of the dashboard in the club look"
-    },
-    {
-      "h": "b1ceb6a",
-      "date": "2026-10-05",
-      "subject": "CLUB-3b: tee sheet reads like the club demo"
-    },
-    {
-      "h": "f3f834e",
-      "date": "2026-10-05",
-      "subject": "queue/spec update"
     }
   ]
 }

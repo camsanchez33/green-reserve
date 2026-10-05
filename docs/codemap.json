@@ -13400,7 +13400,7 @@
     },
     {
       "path": "src/lib/tee-time-utils.ts",
-      "lines": 36,
+      "lines": 41,
       "purpose": "Converts a stored tee-time (date \"YYYY-MM-DD\", time \"HH:MM\" in the course's local timezone) to a UTC millisecond timestamp.",
       "brain": [],
       "exports": [
