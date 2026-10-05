@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
   const optStr = (v: unknown, max = 4000) => (typeof v === 'string' ? v.slice(0, max) : '');
   if (body.courseType != null && body.courseType !== '' && !COURSE_TYPES.has(String(body.courseType))) return NextResponse.json({ error: 'Invalid: courseType' }, { status: 400 });
   if (body.courseType === 'semi-private') body.courseType = 'public';
-  const currentBookingMethod = optStr(body.currentBookingMethod, 80).trim();
+  const currentBookingMethod = optStr(body.currentBookingMethod, 80).replace(/[\r\n]+/g, ' ').trim();
   const callPreference = callPreferenceFrom(body.callPreference);
   const needsJson = callPreference ? JSON.stringify({ callPreference }) : '';
 
@@ -74,6 +74,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'invalid_email' }, { status: 400 });
   }
 
+  // Security review (CLUB-0): names reach admin email HTML and subjects — strip
+  // line breaks and cap at intake, like courseName.
+  const clean = (v: unknown, max: number) => String(v ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, max);
+  body.firstName = clean(body.firstName, 80);
+  body.lastName = clean(body.lastName, 80);
   const contactName = `${body.firstName} ${body.lastName}`.trim();
 
   // Duplicate-intake guard (MP-4a). This form is public and unauthenticated, so
@@ -90,8 +95,8 @@ export async function POST(req: NextRequest) {
   // Every neighbouring field is capped; this one never was. Strip newlines and
   // cap at intake so neither subject can carry a header break.
   const courseName = String(body.courseName).trim().replace(/[\r\n]+/g, ' ').slice(0, 200);
-  const city = String(body.city).trim();
-  const state = String(body.state).trim();
+  const city = clean(body.city, 100);
+  const state = clean(body.state, 40);
 
   // A duplicate is the same COURSE, not the same person. The first version of
   // this guard also matched on email alone, which is wrong twice over: a
@@ -187,7 +192,7 @@ export async function POST(req: NextRequest) {
           courseType: optStr(body.courseType), currentBookingMethod,
           teeTimesPerDay: typeof body.teeTimesPerDay === 'number' ? body.teeTimesPerDay : null,
           greenFeeRange: optStr(body.greenFeeRange), pricingNotes: optStr(body.pricingNotes),
-          additionalNotes: optStr(body.additionalNotes),
+          additionalNotes: optStr(body.additionalNotes, 2000),
           lookingFor: Array.isArray(body.lookingFor) ? body.lookingFor.filter((x): x is string => typeof x === 'string') : [],
         }),
       },
@@ -204,7 +209,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   }
   const firstName = (body.firstName as string).trim();
-  const contactTitle = optStr(body.contactTitle, 120).trim();
+  const contactTitle = optStr(body.contactTitle, 120).replace(/[\r\n]+/g, ' ').trim();
   const phone = optStr(body.phone, 40).replace(/[\r\n]+/g, ' ').trim();
   const courseType = optStr(body.courseType, 20);
   // The question itself. Capped; escaped where it is rendered (email.ts escHtml).

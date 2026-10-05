@@ -1192,14 +1192,14 @@ export async function sendDetailsSheetConfirmationEmail(data: {
     .filter(([k, v]) => !skipKeys.has(k) && v !== '' && v !== null && !(Array.isArray(v) && v.length === 0) && typeof v !== 'object')
     .map(([k, v]) => `
     <tr>
-      <td style="padding:5px 0;color:#6b7280;font-size:13px;width:48%;vertical-align:top;">${DETAIL_LABELS[k] || k}</td>
-      <td style="padding:5px 0;color:#111827;font-size:13px;">${Array.isArray(v) ? (v as string[]).join(', ') : String(v)}</td>
+      <td style="padding:5px 0;color:#6b7280;font-size:13px;width:48%;vertical-align:top;">${escHtml(DETAIL_LABELS[k] || k)}</td>
+      <td style="padding:5px 0;color:#111827;font-size:13px;">${escHtml(Array.isArray(v) ? (v as string[]).join(', ') : String(v))}</td>
     </tr>`).join('');
 
   const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">We got your details, ${data.firstName}.</h1>
+    <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">We got your details, ${escHtml(data.firstName)}.</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
-      Here's everything you submitted for <strong>${data.courseName}</strong>.
+      Here's everything you submitted for <strong>${escHtml(data.courseName)}</strong>.
       If anything looks wrong, just reply to this email and we'll fix it.
     </p>
     <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:18px 20px;margin-bottom:24px;">
@@ -1433,7 +1433,7 @@ export async function sendDetailsSubmittedNotification(data: { courseName: strin
   const html = baseTemplate(`
     <h2 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:700;">Setup sheet submitted ✅</h2>
     <p style="margin:0 0 20px;color:#6b7280;font-size:14px;">
-      <strong>${data.contactName}</strong> from <strong>${data.courseName}</strong> just submitted their detail sheet.
+      <strong>${escHtml(data.contactName)}</strong> from <strong>${escHtml(data.courseName)}</strong> just submitted their detail sheet.
       It's ready to build.
     </p>
     <a href="${process.env.NEXT_PUBLIC_URL}/admin" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;">
